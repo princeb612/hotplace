@@ -1,0 +1,268 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file {file}
+ * @author Soo han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ *
+ * Revision History
+ * Date         Name                Description
+ */
+
+#include <hotplace/sdk/io/multiplexer/multiplexer.hpp>
+#include <map>
+
+namespace hotplace {
+namespace io {
+
+#define MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE 0x20151208
+
+typedef std::map<arch_t, uint32> MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP;
+typedef struct _MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT : public multiplexer_controller_context_t {
+    uint32 signature;
+    critical_section lock;
+    MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP control;
+} MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT;
+
+multiplexer_controller::multiplexer_controller ()
+{
+    // do nothing
+}
+
+multiplexer_controller::~multiplexer_controller ()
+{
+    // do nothing
+}
+
+return_t multiplexer_controller::open (multiplexer_controller_context_t** handle)
+{
+    return_t ret = errorcode_t::success;
+    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = nullptr;
+
+    __try2
+    {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        __try_new_catch (context, new MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT, ret, __leave2);
+
+        context->signature = MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE;
+        *handle = context;
+    }
+    __finally2
+    {
+        // do nothing
+    }
+
+    return ret;
+}
+
+return_t multiplexer_controller::close (multiplexer_controller_context_t* handle)
+{
+    return_t ret = errorcode_t::success;
+    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+
+    __try2
+    {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE != context->signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        context->signature = 0;
+        delete context;
+    }
+    __finally2
+    {
+        // do nothing
+    }
+
+    return ret;
+}
+
+return_t multiplexer_controller::event_loop_new (multiplexer_controller_context_t* handle, arch_t* token_handle)
+{
+    return_t ret = errorcode_t::success;
+    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+
+    MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP::iterator iter;
+
+    arch_t tid = (arch_t) handle;
+
+    __try2
+    {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE != context->signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        __try2
+        {
+            context->lock.enter ();
+            iter = context->control.find (tid);
+            if (context->control.end () == iter) {
+                context->control.insert (std::make_pair (tid, 1));
+            } else {
+                ret = errorcode_t::already_exist;
+            }
+        }
+        __finally2
+        {
+            context->lock.leave ();
+
+            if (nullptr != token_handle) {
+                *token_handle = tid;
+            }
+        }
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t multiplexer_controller::event_loop_break (multiplexer_controller_context_t* handle, arch_t* token_handle)
+{
+    return_t ret = errorcode_t::success;
+    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+
+    MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP::iterator iter;
+
+    __try2
+    {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE != context->signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        /* signal */
+
+        context->lock.enter ();
+        if (nullptr == token_handle) {
+            for (iter = context->control.begin (); iter != context->control.end (); iter++) {
+                iter->second = 0;
+            }
+        } else {
+            iter = context->control.find (*token_handle);
+            if (context->control.end () != iter) {
+                iter->second = 0;
+            }
+        }
+        context->lock.leave ();
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t multiplexer_controller::event_loop_break_concurrent (multiplexer_controller_context_t* handle, size_t concurrent)
+{
+    return_t ret = errorcode_t::success;
+    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+
+    MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP::iterator iter;
+
+    __try2
+    {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE != context->signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        /* signal */
+
+        size_t i = 0;
+        context->lock.enter ();
+        for (iter = context->control.begin (); iter != context->control.end (); iter++) {
+            if (i >= concurrent) {
+                break;
+            }
+            if (iter->second) {
+                iter->second = 0;
+                i++;
+            }
+        }
+        context->lock.leave ();
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+bool multiplexer_controller::event_loop_test_broken (multiplexer_controller_context_t* handle, arch_t token_handle)
+{
+    bool ret_value = false;
+    //return_t ret = errorcode_t::success;
+    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+
+    MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP::iterator iter;
+
+    __try2
+    {
+        context->lock.enter ();
+        iter = context->control.find (token_handle);
+        if (context->control.end () != iter) {
+            if (0 == iter->second) {
+                ret_value = true;
+            }
+        } else {
+            ret_value = true;
+        }
+        context->lock.leave ();
+    }
+    __finally2
+    {
+        // do nothing
+    }
+
+    return ret_value;
+}
+
+return_t multiplexer_controller::event_loop_close (multiplexer_controller_context_t* handle, arch_t token_handle)
+{
+    return_t ret = errorcode_t::success;
+    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+
+    __try2
+    {
+        MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP::iterator iter;
+
+        context->lock.enter ();
+        iter = context->control.find (token_handle);
+        if (context->control.end () != iter) {
+            context->control.erase (iter);
+        }
+        context->lock.leave ();
+    }
+    __finally2
+    {
+        // do nothing
+    }
+
+    return ret;
+}
+
+}
+}  // namespace
