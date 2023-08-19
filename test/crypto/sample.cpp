@@ -15,7 +15,6 @@
 using namespace hotplace;
 using namespace hotplace::io;
 using namespace hotplace::crypto;
-using namespace hotplace::test;
 
 test_case _test_case;
 
@@ -53,21 +52,24 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_symmetric_t algori
             if (errorcode_t::success == ret) {
                 dump.printf ("crypt engine %d algorithm %d %s",
                              crypt_object->get_type (), algorithm, display.c_str ());
-                std::cout << dump << std::endl;
+                std::cout << dump.c_str () << std::endl;
+                dump.flush ();
 
                 size_t crypt_key_size = 0;
                 size_t crypt_iv_size = 0;
                 crypt_object->query (crypt_handle, 1, crypt_key_size);
                 crypt_object->query (crypt_handle, 2, crypt_iv_size);
                 dump.printf ("key size %zi iv size %zi", crypt_key_size, crypt_iv_size);
-                std::cout << dump << std::endl;
+                std::cout << dump.c_str () << std::endl;
+                dump.flush ();
 
                 if (crypt_mode_t::gcm == mode) {
                     openssl_prng rand;
                     rand.random (aad, 32);
                     std::cout << "aad" << std::endl;
                     dump_memory (&aad[0], aad.size (), &dump);
-                    std::cout << dump << std::endl;
+                    std::cout << dump.c_str () << std::endl;
+                    dump.flush ();
                 }
 
                 ret = crypt_object->encrypt2 (crypt_handle, data, size, encrypted, &aad, &tag);
@@ -76,15 +78,15 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_symmetric_t algori
                     if (errorcode_t::success == ret) {
                         std::cout << "sourcce" << std::endl;
                         dump_memory (data, size, &dump, 16, 0);
-                        std::cout << dump << std::endl;
+                        std::cout << dump.c_str () << std::endl;
 
                         std::cout << "encrypted" << std::endl;
                         dump_memory (&encrypted[0], encrypted.size (), &dump, 16, 0);
-                        std::cout << dump << std::endl;
+                        std::cout << dump.c_str () << std::endl;
 
                         std::cout << "decrypted" << std::endl;
                         dump_memory (&decrypted[0], decrypted.size (), &dump, 16, 0);
-                        std::cout << dump << std::endl;
+                        std::cout << dump.c_str () << std::endl;
 
                         if (size != decrypted.size ()) {
                             ret = errorcode_t::internal_error;
@@ -323,21 +325,8 @@ void test_keywrap ()
                           "RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK");
 }
 
-int main ()
+void test ()
 {
-#if 0
-    ossl_set_cooltime (10);
-    ossl_set_unitsize (10);
-    cprintf (0, 31, "cooltime %i unitsize %i\n", ossl_get_cooltime (), ossl_get_unitsize ());
-#endif
-
-    openssl_startup ();
-    openssl_thread_setup ();
-
-#if 0
-    ossl_set_cooltime (1);
-    ossl_set_ctblksize (16);
-#endif
 
     byte_t pKey[32] = { 'S', 'i', 'm', 'o', 'n', ' ', '&', ' ', 'G', 'a', 'r', 'f', 'u', 'n', 'k', 'e', 'l', };
     byte_t iv[32] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, };
@@ -417,33 +406,36 @@ int main ()
         hash_algorithm_t::ripemd160,
         hash_algorithm_t::whirlpool,
     };
+
     openssl_crypt openssl_crypt;
     openssl_hash openssl_hash;
 
     __try2
     {
-        _test_case.begin ("openssl_crypt crypt_mode_t::cbc");
+        std::string condition = format ("[test condition cooltime %zi unitsize %zi]", ossl_get_cooltime (), ossl_get_unitsize ());
+
+        _test_case.begin ("openssl_crypt crypt_mode_t::cbc %s", condition.c_str ());
         test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cbc, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
-        _test_case.begin ("openssl_crypt crypt_mode_t::cfb");
+        _test_case.begin ("openssl_crypt crypt_mode_t::cfb %s", condition.c_str ());
         test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cfb, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
-        _test_case.begin ("openssl_crypt crypt_mode_t::cfb1");
+        _test_case.begin ("openssl_crypt crypt_mode_t::cfb1 %s", condition.c_str ());
         test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb1, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
-        _test_case.begin ("openssl_crypt crypt_mode_t::cfb8");
+        _test_case.begin ("openssl_crypt crypt_mode_t::cfb8 %s", condition.c_str ());
         test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb8, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
-        _test_case.begin ("openssl_crypt crypt_mode_t::ofb");
+        _test_case.begin ("openssl_crypt crypt_mode_t::ofb %s", condition.c_str ());
         test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ofb, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
-        _test_case.begin ("openssl_crypt crypt_mode_t::ecb");
+        _test_case.begin ("openssl_crypt crypt_mode_t::ecb %s", condition.c_str ());
         test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ecb, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
-        _test_case.begin ("openssl_crypt crypt_mode_t::ctr");
+        _test_case.begin ("openssl_crypt crypt_mode_t::ctr %s", condition.c_str ());
         test_crypt (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::ctr, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
-        _test_case.begin ("openssl_crypt crypt_mode_t::gcm");
+        _test_case.begin ("openssl_crypt crypt_mode_t::gcm %s", condition.c_str ());
         test_crypt (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::gcm, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
 
@@ -461,12 +453,40 @@ int main ()
     }
     __finally2
     {
-        _test_case.report ();
+        // do nothing
+    }
+}
+
+int main ()
+{
+    openssl_startup ();
+    openssl_thread_setup ();
+
+    console_color col;
+
+    struct {
+        uint32 cooltime;
+        uint32 unitsize;
+    } _test_condition [] = {
+        { 0, 0, },
+        { 10, 4096, },
+    };
+
+    for (unsigned i = 0; i < sizeof (_test_condition) / sizeof (_test_condition [0]); i++) {
+        ossl_set_cooltime (_test_condition[i].cooltime);
+        ossl_set_unitsize (_test_condition[i].unitsize);
+
+        std::cout << col.set_style (console_style_t::bold).set_fgcolor (console_color_t::white).turnon ()
+                  << "cooltime " << ossl_get_cooltime ()
+                  << "unitsize " << ossl_get_unitsize ()
+                  << std::endl;
+        test ();
     }
 
     openssl_thread_cleanup ();
     openssl_cleanup ();
 
     _test_case.report ();
+    std::cout << "openssl 3 deprected bf, idea, seed" << std::endl;
     return _test_case.result ();
 }

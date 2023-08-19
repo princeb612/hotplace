@@ -14,7 +14,6 @@
 
 using namespace hotplace;
 using namespace hotplace::io;
-using namespace hotplace::test;
 
 test_case _test_case;
 

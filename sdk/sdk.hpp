@@ -14,6 +14,5 @@
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/io.hpp>
 #include <hotplace/sdk/crypto.hpp>
-#include <hotplace/sdk/test.hpp>
 
 #endif

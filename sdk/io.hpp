@@ -27,5 +27,6 @@
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/io/system/signalwait_threads.hpp>
 #include <hotplace/sdk/io/system/thread.hpp>
+#include <hotplace/sdk/io/unittest/testcase.hpp>
 
 #endif

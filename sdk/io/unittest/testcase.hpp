@@ -9,8 +9,8 @@
  * 2023.08.15   Soo Han, Kim        elapsed time
  */
 
-#ifndef __HOTPLACE_SDK_TEST_UNITEST_TESTCASE__
-#define __HOTPLACE_SDK_TEST_UNITEST_TESTCASE__
+#ifndef __HOTPLACE_SDK_IO_UNITEST_TESTCASE__
+#define __HOTPLACE_SDK_IO_UNITEST_TESTCASE__
 
 #include <hotplace/sdk/base.hpp>
 #include <list>
@@ -19,13 +19,13 @@
 #include <time.h>
 
 namespace hotplace {
-namespace test {
+namespace io {
 
 class test_case
 {
 public:
     test_case ();
-    void begin (const char* case_name, const char* file_path = nullptr);
+    void begin (const char* case_name, ...);
     void start ();
     void assert (bool expect, const char* test_function, const char* message = nullptr);
     void test (return_t result, const char* test_function, const char* message = nullptr);
@@ -61,17 +61,16 @@ private:
         }
     } test_status_t;
     typedef std::map<std::string, test_status_t> unittest_map_t;    /* test case to test_status_t */
-    typedef std::map<std::string, std::string> unittest_file_t;     /* test case to file path */
 
     critical_section _lock;
     unittest_map_t _test_map;
-    unittest_file_t _test_file;
+
     uint32 _count_success;
     uint32 _count_fail;
     uint32 _count_not_supported;
     uint32 _count_low_security;
+
     std::string _current_case_name;
-    std::string _current_file_path;
 
     struct timespec _timestamp;
 };

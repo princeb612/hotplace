@@ -13,13 +13,12 @@
 #include <hotplace/sdk/io/stream/console_color.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
-#include <hotplace/sdk/test/unittest/testcase.hpp>
+#include <hotplace/sdk/io/unittest/testcase.hpp>
 #include <fstream>
 #include <iostream>
 
 namespace hotplace {
-using namespace io;
-namespace test {
+namespace io {
 
 test_case::test_case ()
     : _count_success (0),
@@ -31,23 +30,27 @@ test_case::test_case ()
     stopwatch::read (_timestamp);
 }
 
-void test_case::begin (const char* case_name, const char* file_path)
+void test_case::begin (const char* case_name, ...)
 {
     if (nullptr != case_name) {
-        _current_case_name = case_name;
         console_color col;
+        ansi_string stream;
+
+        va_list ap;
+        va_start (ap, case_name);
+        stream.vprintf (case_name, ap);
+        va_end (ap);
+
+        _current_case_name = stream.c_str ();
+
         /* "test case" */
         char STRING_TEST_CASE[] = { '[', '*', ' ', 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', ' ', '-', ' ', 0, };
         std::cout   << col.set_fgcolor (console_color_t::magenta).turnon ()
                     << STRING_TEST_CASE << case_name << " ]" << col.turnoff () << std::endl;
+    } else {
+        _current_case_name.clear ();
     }
-    if (nullptr != file_path) {
-        _current_file_path = file_path;
-        unittest_file_t::iterator iter = _test_file.find (_current_case_name);
-        if (_test_file.end () == iter) {
-            _test_file.insert (std::make_pair (_current_case_name, _current_file_path));
-        }
-    }
+
     stopwatch::read (_timestamp);
 }
 
@@ -150,8 +153,6 @@ void test_case::report ()
     console_color col;
     console_color_t fgcolor = console_color_t::white;
 
-    _lock.enter ();
-
     /* "report success" */
     char STRING_REPORT[] = { 'r', 'e', 'p', 'o', 'r', 't', 0, };
     /* "success" */
@@ -187,20 +188,14 @@ void test_case::report ()
     // compose
     //
 
+    _lock.enter ();
+
+    stream.fill (80, '=');
+    stream << "\n";
     stream << col.set_style (console_style_t::bold).set_fgcolor (fgcolor).turnon () << STRING_REPORT << "\n";
 
     for (unittest_map_t::iterator iter = _test_map.begin (); iter != _test_map.end (); iter++) {
         test_status_t status = iter->second;
-
-        std::string file_path;
-        unittest_file_t::iterator iter_file = _test_file.find (iter->first);
-
-        if (_test_file.end () != iter_file) {
-            file_path = iter_file->second;
-        } else {
-            // not found
-            file_path.clear ();
-        }
 
         stream  << "@ "
                 << STRING_TEST_CASE << " \"" << iter->first.c_str () << "\" "
@@ -214,7 +209,7 @@ void test_case::report ()
         if (status._count_low_security) {
             stream << " " << PRINT_STRING_LOW_SECURITY << " " << status._count_low_security;
         }
-        stream << file_path.c_str () << "\n";
+        stream << "\n";
 
         stream.fill (80, '-');
         stream << "\n";
@@ -251,28 +246,23 @@ void test_case::report ()
         stream << " " << PRINT_STRING_LOW_SECURITY << " " << _count_low_security;
     }
     stream << col.turnoff () << "\n";
+    stream.fill (80, '=');
+    stream << "\n";
+    if (_count_fail) {
+        stream << col.set_fgcolor (console_color_t::red).turnon () << STRING_UPPERCASE_TEST_FAILED << col.turnoff () << "\n";
+    }
 
     _lock.leave ();
 
     //
     // print
     //
-    ansi_string line;
 
-    line.fill (80, '=');
-    line << "\n";
-    std::cout << line.c_str ();
-    printf ("%s", stream.c_str ());
-    if (_count_fail) {
-        std::cout << col.set_fgcolor (console_color_t::red).turnon () << STRING_UPPERCASE_TEST_FAILED << col.turnoff () << std::endl;
-    }
-    std::cout << line.c_str ();
+    std::cout << stream.c_str ();
 
-#if 1
     std::ofstream file (STRING_REPORT, std::ios::trunc);
     file << stream.c_str ();
     file.close ();
-#endif
 }
 
 return_t test_case::result ()

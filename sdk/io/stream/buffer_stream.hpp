@@ -49,8 +49,6 @@ public:
     bool operator < (buffer_stream obj);
     bool operator > (buffer_stream obj);
 
-    friend std::ostream& operator << (std::ostream& os, buffer_stream& bs);
-
 protected:
     bufferio _bio;
     bufferio_context_t* _handle;

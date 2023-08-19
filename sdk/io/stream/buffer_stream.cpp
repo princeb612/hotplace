@@ -153,12 +153,5 @@ bool buffer_stream::operator > (buffer_stream obj)
     return 0 > strcmp ((*this).c_str (), obj.c_str ());
 }
 
-std::ostream& operator << (std::ostream& os, buffer_stream& bs)
-{
-    os << bs.c_str ();
-    bs.flush ();
-    return os;
-}
-
 }
 }  // namespace

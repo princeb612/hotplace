@@ -3,14 +3,6 @@
 # Revision History
 # Date         Name                Description
 #
-# 1 tool chain
-# sudo yum install # RHEL family
-# sudo apt install # ubundu family
-# pacman -S        # mingw
-#
-# 2 packages to install
-# gcc, g++, binutils, cmake, gdb, valgrind
-# openssl-devel, jansson-devel
 
 cmake_minimum_required (VERSION 2.6)
 project (hotplace)
@@ -33,8 +25,7 @@ set (PROJECT_SDK_MODULE_BASE ${CMAKE_PROJECT_NAME}-sdk-base)
 set (PROJECT_SDK_MODULE_IO ${CMAKE_PROJECT_NAME}-sdk-io)
 set (PROJECT_SDK_MODULE_CRYPTO ${CMAKE_PROJECT_NAME}-sdk-crypto)
 set (PROJECT_SDK_MODULE_NET ${CMAKE_PROJECT_NAME}-sdk-net)
-set (PROJECT_SDK_MODULE_TEST ${CMAKE_PROJECT_NAME}-sdk-test)
-set (PROJECT_SDK_MODULE_DEPENDENCIES ${PROJECT_SDK_MODULE_BASE}-static ${PROJECT_SDK_MODULE_IO}-static ${PROJECT_SDK_MODULE_TEST}-static ${PROJECT_SDK_MODULE_CRYPTO}-static)
+set (PROJECT_SDK_MODULE_DEPENDENCIES ${PROJECT_SDK_MODULE_BASE}-static ${PROJECT_SDK_MODULE_IO}-static ${PROJECT_SDK_MODULE_CRYPTO}-static)
 
 if (UNIX)
 set (PROJECT_SDK_PLATFORM_DEPENDENCIES pthread crypto ssl jansson)
