@@ -90,7 +90,7 @@ void openssl_thread_setup_implementation (void)
         openssl_threadsafe = (HANDLE *) OPENSSL_malloc (CRYPTO_num_locks () * sizeof (HANDLE));
     #endif
         if (nullptr == openssl_threadsafe) {
-            ret = ERROR_OUTOFMEMORY;
+            ret = errorcode_t::out_of_memory;
             __leave2_trace (ret);
         }
         for (int i = 0; i < CRYPTO_num_locks (); i++) {
@@ -329,7 +329,7 @@ uint32 ossl_get_unitsize ()
     }
 }
 
-return_t nidof_evp_pkey (const EVP_PKEY* pkey, uint32& nid)
+return_t nidof_evp_pkey (EVP_PKEY* pkey, uint32& nid)
 {
     return_t ret = errorcode_t::success;
 
@@ -364,7 +364,7 @@ return_t nidof_evp_pkey (const EVP_PKEY* pkey, uint32& nid)
     return ret;
 }
 
-bool kindof_ecc (const EVP_PKEY* pkey)
+bool kindof_ecc (EVP_PKEY* pkey)
 {
     bool test = false;
 
@@ -376,7 +376,28 @@ bool kindof_ecc (const EVP_PKEY* pkey)
     return test;
 }
 
-crypto_key_t typeof_crypto_key (const EVP_PKEY* pkey)
+bool kindof_ecc (crypto_key_t type)
+{
+    return (CRYPTO_KEY_EC == type) || (CRYPTO_KEY_OKP == type);
+}
+
+const char* nameof_key_type (crypto_key_t type)
+{
+    const char* name = "";
+
+    if (CRYPTO_KEY_HMAC == type) {
+        name = "oct";
+    } else if (CRYPTO_KEY_RSA == type) {
+        name = "RSA";
+    } else if (CRYPTO_KEY_EC == type) {
+        name = "EC";
+    } else if (CRYPTO_KEY_OKP == type) {
+        name = "OKP";
+    }
+    return name;
+}
+
+crypto_key_t typeof_crypto_key (EVP_PKEY* pkey)
 {
     crypto_key_t kty = CRYPTO_KEY_NONE;
     int type = EVP_PKEY_id ((EVP_PKEY *) pkey);
@@ -403,7 +424,7 @@ crypto_key_t typeof_crypto_key (const EVP_PKEY* pkey)
     return kty;
 }
 
-return_t is_private_key (const EVP_PKEY* pkey, bool& result)
+return_t is_private_key (EVP_PKEY* pkey, bool& result)
 {
     return_t ret = errorcode_t::success;
 

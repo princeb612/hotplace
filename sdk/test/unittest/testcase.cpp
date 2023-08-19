@@ -89,7 +89,6 @@ void test_case::test (return_t result, const char* test_function, const char* me
 
         unittest_map_t::iterator iter = _test_map.find (_current_case_name);
 
-
         unittest_item_t item;
         memcpy (&item._time, &diff, sizeof (diff));
         item._result = result;

@@ -269,6 +269,33 @@ return_t base64_encode (const byte_t* source, size_t source_size, binary_t& enco
     return ret;
 }
 
+std::string base64_encode (binary_t source, int encoding)
+{
+    return base64_encode (&source[0], source.size (), encoding);
+}
+
+std::string base64_encode (const byte_t* source, size_t source_size, int encoding)
+{
+    std::string encoded;
+    size_t size = 0;
+
+    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
+    encoded.resize (size);
+    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
+    return encoded;
+}
+
+std::string base64_encode (const char* source, size_t source_size, int encoding)
+{
+    std::string encoded;
+    size_t size = 0;
+
+    base64_encode ((byte_t*) source, source_size, (byte_t*) &encoded[0], &size, encoding);
+    encoded.resize (size);
+    base64_encode ((byte_t*) source, source_size, (byte_t*) &encoded[0], &size, encoding);
+    return encoded;
+}
+
 return_t base64_decode (const byte_t *source, size_t source_size, binary_t& decoded, int encoding)
 {
     return_t ret = errorcode_t::success;
@@ -278,6 +305,28 @@ return_t base64_decode (const byte_t *source, size_t source_size, binary_t& deco
     decoded.resize (size);
     ret = base64_decode (source, source_size, &decoded[0], &size, encoding);
     return ret;
+}
+
+binary_t base64_decode (const byte_t* source, size_t source_size, int encoding)
+{
+    binary_t decoded;
+    size_t size = 0;
+
+    base64_decode (source, source_size, &decoded[0], &size, encoding);
+    decoded.resize (size);
+    base64_decode (source, source_size, &decoded[0], &size, encoding);
+    return decoded;
+}
+
+std::string base64_decode_becareful (const char* source, size_t source_size, int encoding)
+{
+    std::string decoded;
+    size_t size = 0;
+
+    base64_decode ((const byte_t*) source, source_size, (byte_t*) &decoded[0], &size, encoding);
+    decoded.resize (size);
+    base64_decode ((const byte_t*) source, source_size, (byte_t*) &decoded[0], &size, encoding);
+    return decoded;
 }
 
 }

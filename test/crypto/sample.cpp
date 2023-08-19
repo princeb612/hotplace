@@ -19,567 +19,29 @@ using namespace hotplace::test;
 
 test_case _test_case;
 
-typedef struct _CRYPT_TABLE {
-    int algorithm;
-    int mode;
-    const char* name;
-} CRYPT_TABLE;
-CRYPT_TABLE _crypt_table[] =
-{
-    {
-        crypt_symmetric_t::seed,
-        crypt_mode_t::cbc,
-        "-seed",
-    },
-    {
-        crypt_symmetric_t::seed,
-        crypt_mode_t::cbc,
-        "-seed-cbc",
-    },
-    {
-        crypt_symmetric_t::seed,
-        crypt_mode_t::cfb,
-        "-seed-cfb",
-    },
-    {
-        crypt_symmetric_t::seed,
-        crypt_mode_t::ofb,
-        "-seed-ofb",
-    },
-    {
-        crypt_symmetric_t::seed,
-        crypt_mode_t::ecb,
-        "-seed-ecb",
-    },
 
-    {
-        crypt_symmetric_t::aes128,
-        crypt_mode_t::cbc,
-        "-aes128",
-    },
-    {
-        crypt_symmetric_t::aes128,
-        crypt_mode_t::cbc,
-        "-aes-128-cbc",
-    },
-    {
-        crypt_symmetric_t::aes128,
-        crypt_mode_t::cfb,
-        "-aes-128-cfb",
-    },
-    {
-        crypt_symmetric_t::aes128,
-        crypt_mode_t::ofb,
-        "-aes-128-ofb",
-    },
-    {
-        crypt_symmetric_t::aes128,
-        crypt_mode_t::ecb,
-        "-aes-128-ecb",
-    },
-    {
-        crypt_symmetric_t::aes128,
-        crypt_mode_t::gcm,
-        "-aes-128-gcm",
-    },
-    {
-        crypt_symmetric_t::aes128,
-        crypt_mode_t::cfb1,
-        "-aes-128-cfb1",
-    },
-    {
-        crypt_symmetric_t::aes128,
-        crypt_mode_t::cfb8,
-        "-aes-128-cfb8",
-    },
-    {
-        crypt_symmetric_t::aes128,
-        crypt_mode_t::ctr,
-        "-aes-128-ctr",
-    },
-
-    {
-        crypt_symmetric_t::aes192,
-        crypt_mode_t::cbc,
-        "-aes192",
-    },
-    {
-        crypt_symmetric_t::aes192,
-        crypt_mode_t::cbc,
-        "-aes-192-cbc",
-    },
-    {
-        crypt_symmetric_t::aes192,
-        crypt_mode_t::cfb,
-        "-aes-192-cfb",
-    },
-    {
-        crypt_symmetric_t::aes192,
-        crypt_mode_t::ofb,
-        "-aes-192-ofb",
-    },
-    {
-        crypt_symmetric_t::aes192,
-        crypt_mode_t::ecb,
-        "-aes-192-ecb",
-    },
-    {
-        crypt_symmetric_t::aes192,
-        crypt_mode_t::gcm,
-        "-aes-192-gcm",
-    },
-    {
-        crypt_symmetric_t::aes192,
-        crypt_mode_t::cfb1,
-        "-aes-192-cfb1",
-    },
-    {
-        crypt_symmetric_t::aes192,
-        crypt_mode_t::cfb8,
-        "-aes-192-cfb8",
-    },
-    {
-        crypt_symmetric_t::aes192,
-        crypt_mode_t::ctr,
-        "-aes-192-ctr",
-    },
-
-    {
-        crypt_symmetric_t::aes256,
-        crypt_mode_t::cbc,
-        "-aes256",
-    },
-    {
-        crypt_symmetric_t::aes256,
-        crypt_mode_t::cbc,
-        "-aes-256-cbc",
-    },
-    {
-        crypt_symmetric_t::aes256,
-        crypt_mode_t::cfb,
-        "-aes-256-cfb",
-    },
-    {
-        crypt_symmetric_t::aes256,
-        crypt_mode_t::ofb,
-        "-aes-256-ofb",
-    },
-    {
-        crypt_symmetric_t::aes256,
-        crypt_mode_t::ecb,
-        "-aes-256-ecb",
-    },
-    {
-        crypt_symmetric_t::aes256,
-        crypt_mode_t::gcm,
-        "-aes-256-gcm",
-    },
-    {
-        crypt_symmetric_t::aes256,
-        crypt_mode_t::cfb1,
-        "-aes-256-cfb1",
-    },
-    {
-        crypt_symmetric_t::aes256,
-        crypt_mode_t::cfb8,
-        "-aes-256-cfb8",
-    },
-    {
-        crypt_symmetric_t::aes256,
-        crypt_mode_t::ctr,
-        "-aes-256-ctr",
-    },
-
-    {
-        crypt_symmetric_t::blowfish,
-        crypt_mode_t::cbc,
-        "-bf",
-    },
-    {
-        crypt_symmetric_t::blowfish,
-        crypt_mode_t::cbc,
-        "-bf-cbc",
-    },
-    {
-        crypt_symmetric_t::blowfish,
-        crypt_mode_t::cfb,
-        "-bf-cfb",
-    },
-    {
-        crypt_symmetric_t::blowfish,
-        crypt_mode_t::ofb,
-        "-bf-ofb",
-    },
-    {
-        crypt_symmetric_t::blowfish,
-        crypt_mode_t::ecb,
-        "-bf-ecb",
-    },
-
-    {
-        crypt_symmetric_t::idea,
-        crypt_mode_t::cbc,
-        "-idea",
-    },
-    {
-        crypt_symmetric_t::idea,
-        crypt_mode_t::cbc,
-        "-idea-cbc",
-    },
-    {
-        crypt_symmetric_t::idea,
-        crypt_mode_t::cfb,
-        "-idea-cfb",
-    },
-    {
-        crypt_symmetric_t::idea,
-        crypt_mode_t::ofb,
-        "-idea-ofb",
-    },
-    {
-        crypt_symmetric_t::idea,
-        crypt_mode_t::ecb,
-        "-idea-ecb",
-    },
-
-    {
-        crypt_symmetric_t::aria128,
-        crypt_mode_t::cbc,
-        "-aria128",
-    },
-    {
-        crypt_symmetric_t::aria128,
-        crypt_mode_t::cbc,
-        "-aria-128-cbc",
-    },
-    {
-        crypt_symmetric_t::aria128,
-        crypt_mode_t::cfb,
-        "-aria-128-cfb",
-    },
-    {
-        crypt_symmetric_t::aria128,
-        crypt_mode_t::ofb,
-        "-aria-128-ofb",
-    },
-    {
-        crypt_symmetric_t::aria128,
-        crypt_mode_t::ecb,
-        "-aria-128-ecb",
-    },
-    {
-        crypt_symmetric_t::aria128,
-        crypt_mode_t::gcm,
-        "-aria-128-gcm",
-    },
-    {
-        crypt_symmetric_t::aria128,
-        crypt_mode_t::cfb1,
-        "-aria-128-cfb1",
-    },
-    {
-        crypt_symmetric_t::aria128,
-        crypt_mode_t::cfb8,
-        "-aria-128-cfb8",
-    },
-    {
-        crypt_symmetric_t::aria128,
-        crypt_mode_t::ctr,
-        "-aria-128-ctr",
-    },
-
-    {
-        crypt_symmetric_t::aria192,
-        crypt_mode_t::cbc,
-        "-aria192",
-    },
-    {
-        crypt_symmetric_t::aria192,
-        crypt_mode_t::cbc,
-        "-aria-192-cbc",
-    },
-    {
-        crypt_symmetric_t::aria192,
-        crypt_mode_t::cfb,
-        "-aria-192-cfb",
-    },
-    {
-        crypt_symmetric_t::aria192,
-        crypt_mode_t::ofb,
-        "-aria-192-ofb",
-    },
-    {
-        crypt_symmetric_t::aria192,
-        crypt_mode_t::ecb,
-        "-aria-192-ecb",
-    },
-    {
-        crypt_symmetric_t::aria192,
-        crypt_mode_t::gcm,
-        "-aria-192-gcm",
-    },
-    {
-        crypt_symmetric_t::aria192,
-        crypt_mode_t::cfb1,
-        "-aria-192-cfb1",
-    },
-    {
-        crypt_symmetric_t::aria192,
-        crypt_mode_t::cfb8,
-        "-aria-192-cfb8",
-    },
-    {
-        crypt_symmetric_t::aria192,
-        crypt_mode_t::ctr,
-        "-aria-192-ctr",
-    },
-
-    {
-        crypt_symmetric_t::aria256,
-        crypt_mode_t::cbc,
-        "-aria256",
-    },
-    {
-        crypt_symmetric_t::aria256,
-        crypt_mode_t::cbc,
-        "-aria-256-cbc",
-    },
-    {
-        crypt_symmetric_t::aria256,
-        crypt_mode_t::cfb,
-        "-aria-256-cfb",
-    },
-    {
-        crypt_symmetric_t::aria256,
-        crypt_mode_t::ofb,
-        "-aria-256-ofb",
-    },
-    {
-        crypt_symmetric_t::aria256,
-        crypt_mode_t::ecb,
-        "-aria-256-ecb",
-    },
-    {
-        crypt_symmetric_t::aria256,
-        crypt_mode_t::gcm,
-        "-aria-256-gcm",
-    },
-    {
-        crypt_symmetric_t::aria256,
-        crypt_mode_t::cfb1,
-        "-aria-256-cfb1",
-    },
-    {
-        crypt_symmetric_t::aria256,
-        crypt_mode_t::cfb8,
-        "-aria-256-cfb8",
-    },
-    {
-        crypt_symmetric_t::aria256,
-        crypt_mode_t::ctr,
-        "-aria-256-ctr",
-    },
-
-    {
-        crypt_symmetric_t::camellia128,
-        crypt_mode_t::cbc,
-        "-camellia128",
-    },
-    {
-        crypt_symmetric_t::camellia128,
-        crypt_mode_t::cbc,
-        "-camellia-128-cbc",
-    },
-    {
-        crypt_symmetric_t::camellia128,
-        crypt_mode_t::cfb,
-        "-camellia-128-cfb",
-    },
-    {
-        crypt_symmetric_t::camellia128,
-        crypt_mode_t::ofb,
-        "-camellia-128-ofb",
-    },
-    {
-        crypt_symmetric_t::camellia128,
-        crypt_mode_t::ecb,
-        "-camellia-128-ecb",
-    },
-    {
-        crypt_symmetric_t::camellia128,
-        crypt_mode_t::cfb1,
-        "-camellia-128-cfb1",
-    },
-    {
-        crypt_symmetric_t::camellia128,
-        crypt_mode_t::cfb8,
-        "-camellia-128-cfb8",
-    },
-
-    {
-        crypt_symmetric_t::camellia192,
-        crypt_mode_t::cbc,
-        "-camellia192",
-    },
-    {
-        crypt_symmetric_t::camellia192,
-        crypt_mode_t::cbc,
-        "-camellia-192-cbc",
-    },
-    {
-        crypt_symmetric_t::camellia192,
-        crypt_mode_t::cfb,
-        "-camellia-192-cfb",
-    },
-    {
-        crypt_symmetric_t::camellia192,
-        crypt_mode_t::ofb,
-        "-camellia-192-ofb",
-    },
-    {
-        crypt_symmetric_t::camellia192,
-        crypt_mode_t::ecb,
-        "-camellia-192-ecb",
-    },
-    {
-        crypt_symmetric_t::camellia192,
-        crypt_mode_t::cfb1,
-        "-camellia-192-cfb1",
-    },
-    {
-        crypt_symmetric_t::camellia192,
-        crypt_mode_t::cfb8,
-        "-camellia-192-cfb8",
-    },
-
-    {
-        crypt_symmetric_t::camellia256,
-        crypt_mode_t::cbc,
-        "-camellia256",
-    },
-    {
-        crypt_symmetric_t::camellia256,
-        crypt_mode_t::cbc,
-        "-camellia-256-cbc",
-    },
-    {
-        crypt_symmetric_t::camellia256,
-        crypt_mode_t::cfb,
-        "-camellia-256-cfb",
-    },
-    {
-        crypt_symmetric_t::camellia256,
-        crypt_mode_t::ofb,
-        "-camellia-256-ofb",
-    },
-    {
-        crypt_symmetric_t::camellia256,
-        crypt_mode_t::ecb,
-        "-camellia-256-ecb",
-    },
-    {
-        crypt_symmetric_t::camellia256,
-        crypt_mode_t::cfb1,
-        "-camellia-256-cfb1",
-    },
-    {
-        crypt_symmetric_t::camellia256,
-        crypt_mode_t::cfb8,
-        "-camellia-256-cfb8",
-    },
-};
-
-typedef struct _HASH_ALGORITHM_TABLE {
-    int alg;
-    const char* name;
-} HASH_ALGORITHM_TABLE;
-HASH_ALGORITHM_TABLE hash_algorithm_table[] =
-{
-    {
-        hash_algorithm_t::md4,
-        "md4",
-    },
-    {
-        hash_algorithm_t::md5,
-        "md5",
-    },
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    {
-        HASH_ALGORITHM_SHA,
-        "sha",
-    },
-#endif
-    {
-        hash_algorithm_t::sha1,
-        "sha1",
-    },
-    {
-        hash_algorithm_t::ripemd160,
-        "ripemd160",
-    },
-    {
-        hash_algorithm_t::sha2_224,
-        "sha224",
-    },
-    {
-        hash_algorithm_t::sha2_256,
-        "sha256",
-    },
-    {
-        hash_algorithm_t::sha2_384,
-        "sha384",
-    },
-    {
-        hash_algorithm_t::sha2_512,
-        "sha512",
-    },
-    {
-        hash_algorithm_t::whirlpool,
-        "whirlpool",
-    },
-    {
-        hash_algorithm_t::sha3_224,
-        "sha3-224"
-    },
-    {
-        hash_algorithm_t::sha3_256,
-        "sha3-256"
-    },
-    {
-        hash_algorithm_t::sha3_384,
-        "sha3-384"
-    },
-    {
-        hash_algorithm_t::sha3_512,
-        "sha3-512"
-    },
-    {
-        hash_algorithm_t::shake128,
-        "shake128"
-    },
-    {
-        hash_algorithm_t::shake256,
-        "shake256"
-    },
-};
-
-void test_crypt1 (crypt_interface* crypt_object, crypt_symmetric_t algorithm, crypt_mode_t mode, unsigned key_size,
-                  const byte_t* key_data, unsigned iv_size, const byte_t* iv_data, byte_t* data, size_t size)
+void test_crypt_routine (crypt_interface* crypt_object, crypt_symmetric_t algorithm, crypt_mode_t mode, unsigned key_size,
+                         const byte_t* key_data, unsigned iv_size, const byte_t* iv_data, byte_t* data, size_t size)
 {
     return_t ret = errorcode_t::success;
 
     crypto_advisor* advisor = crypto_advisor::get_instance ();
     crypt_context_t* crypt_handle = nullptr;
-    byte_t* data_encrypted = nullptr;
-    byte_t* data_decrypted = nullptr;
+
+    binary_t encrypted;
+    binary_t decrypted;
 
     buffer_stream dump;
 
     const char* alg = advisor->nameof_cipher (algorithm, mode);
     std::string display = format ("%s (alg %i mode %i)", alg ? alg : "", algorithm, mode);
+    binary_t aad;
+    binary_t tag;
 
     __try2
     {
+        _test_case.start ();
+
         if (nullptr == crypt_object || nullptr == data) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
@@ -589,68 +51,53 @@ void test_crypt1 (crypt_interface* crypt_object, crypt_symmetric_t algorithm, cr
         {
             ret = crypt_object->open (&crypt_handle, algorithm, mode, key_data, key_size, iv_data, iv_size);
             if (errorcode_t::success == ret) {
-                std::cout   << "crypt engine " << crypt_object->get_type ()
-                            << " algorithm " << algorithm << " " << display.c_str ()
-                            << std::endl;
+                dump.printf ("crypt engine %d algorithm %d %s",
+                             crypt_object->get_type (), algorithm, display.c_str ());
+                std::cout << dump << std::endl;
+
                 size_t crypt_key_size = 0;
                 size_t crypt_iv_size = 0;
                 crypt_object->query (crypt_handle, 1, crypt_key_size);
                 crypt_object->query (crypt_handle, 2, crypt_iv_size);
-                std::cout << "key size " << crypt_key_size << " iv size " << crypt_iv_size << std::endl;
+                dump.printf ("key size %zi iv size %zi", crypt_key_size, crypt_iv_size);
+                std::cout << dump << std::endl;
 
-                size_t dwEncrypt = 0;
-                size_t dwPlain = 0;
-                ret = crypt_object->encrypt (crypt_handle, (byte_t*) data, size, &data_encrypted, &dwEncrypt);
+                if (crypt_mode_t::gcm == mode) {
+                    openssl_prng rand;
+                    rand.random (aad, 32);
+                    std::cout << "aad" << std::endl;
+                    dump_memory (&aad[0], aad.size (), &dump);
+                    std::cout << dump << std::endl;
+                }
+
+                ret = crypt_object->encrypt2 (crypt_handle, data, size, encrypted, &aad, &tag);
                 if (errorcode_t::success == ret) {
-                    ret = crypt_object->decrypt (crypt_handle, data_encrypted, dwEncrypt, &data_decrypted, &dwPlain);
+                    ret = crypt_object->decrypt2 (crypt_handle, &encrypted[0], encrypted.size (), decrypted, &aad, &tag);
                     if (errorcode_t::success == ret) {
+                        std::cout << "sourcce" << std::endl;
                         dump_memory (data, size, &dump, 16, 0);
-                        printf ("%s\n", dump.c_str ());
-                        dump_memory (data_encrypted, dwEncrypt, &dump, 16, 0);
-                        std::cout << dump.c_str () << std::endl;
-                        dump_memory (data_decrypted, dwPlain, &dump, 16, 0);
-                        printf ("%s\n", dump.c_str ());
+                        std::cout << dump << std::endl;
 
-                        if (size != dwPlain) {
-                            ret = ERROR_INTERNAL_ERROR;
-                        } else if (memcmp (data, data_decrypted, size)) {
-                            ret = ERROR_INTERNAL_ERROR;
+                        std::cout << "encrypted" << std::endl;
+                        dump_memory (&encrypted[0], encrypted.size (), &dump, 16, 0);
+                        std::cout << dump << std::endl;
+
+                        std::cout << "decrypted" << std::endl;
+                        dump_memory (&decrypted[0], decrypted.size (), &dump, 16, 0);
+                        std::cout << dump << std::endl;
+
+                        if (size != decrypted.size ()) {
+                            ret = errorcode_t::internal_error;
+                        } else if (memcmp (data, &decrypted[0], size)) {
+                            ret = errorcode_t::internal_error;
                         }
-
-#if PERFORMANCE_TEST_OPENSSL
-                        {
-                            Process process;
-                            std::string stream;
-                            std::string command = format ("echo %.*s|openssl enc -e %s -K 41686E6C61625365637265744B657900 -iv 01020304 | "
-                                                          "xxd -c 256 -p", size, (char*) data, name);
-                            process.run (command.c_str (), stream);
-
-                            std::string enc ((char*) data_encrypted, dwEncrypt);
-                            std::string tohex;
-                            tohex = string2hex (enc, 0);
-
-                            std::cout << "!openssl = " << command.c_str () << std::endl;
-                            std::cout << ">openssl = " << stream.c_str (); /* including new-line */
-                            std::cout << ">routine = " << tohex.c_str () << std::endl;
-
-                        }
-#endif
-                    } else {
-                        __leave2_trace (ret);
                     }
-                } else {
-                    __leave2_trace (ret);
                 }
             }
-            /* else do nothing - algorithm and mode not supported */
         }
         __finally2
         {
-            crypt_object->free_data (data_encrypted);
-            crypt_object->free_data (data_decrypted);
-            if (nullptr != crypt_handle) {
-                crypt_object->close (crypt_handle);
-            }
+            crypt_object->close (crypt_handle);
         }
     }
     __finally2
@@ -663,11 +110,11 @@ void test_crypt (crypt_interface* crypt_object, unsigned count_algorithms, crypt
                  const byte_t* key_data, unsigned iv_size, const byte_t* iv_data, byte_t* data, size_t size)
 {
     for (unsigned index_algorithms = 0; index_algorithms < count_algorithms; index_algorithms++) {
-        test_crypt1 (crypt_object, algorithms [index_algorithms], mode, key_size, key_data, iv_size, iv_data, data, size);
+        test_crypt_routine (crypt_object, algorithms [index_algorithms], mode, key_size, key_data, iv_size, iv_data, data, size);
     } // foreach algorithm
 }
 
-void test_hash1 (hash_interface* hash_object, hash_algorithm_t algorithm, unsigned key_size, const byte_t* key_data,
+void test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm, unsigned key_size, const byte_t* key_data,
                  byte_t* data, size_t size)
 {
     return_t ret = errorcode_t::success;
@@ -726,7 +173,7 @@ void test_hash (hash_interface* hash_object, unsigned count_algorithms, hash_alg
                 byte_t* data, size_t size)
 {
     for (unsigned index_algorithms = 0; index_algorithms < count_algorithms; index_algorithms++) {
-        test_hash1 (hash_object, algorithms [index_algorithms], key_size, key_data, data, size);
+        test_hash_routine (hash_object, algorithms [index_algorithms], key_size, key_data, data, size);
     }
 }
 
@@ -892,17 +339,28 @@ int main ()
     ossl_set_ctblksize (16);
 #endif
 
-    byte_t pKey[32] = { 'N', 'i', 'n', 'e', 't', 'y', 'N', 'i', 'n', 'e', 'R', 'e', 'd', 'B', 'a', 'l', 'l', 'o', 'o', 'n', };
-    byte_t iv[32] = { 0, };
+    byte_t pKey[32] = { 'S', 'i', 'm', 'o', 'n', ' ', '&', ' ', 'G', 'a', 'r', 'f', 'u', 'n', 'k', 'e', 'l', };
+    byte_t iv[32] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, };
     const char* szText = "still a man hears what he wants to hear and disregards the rest"; // the boxer - Simon & Garfunkel
 
-    crypt_symmetric_t crypt_algorithm[] = {
-        crypt_symmetric_t::seed,
+    crypt_symmetric_t algorithm_table [] = {
         crypt_symmetric_t::aes128,
         crypt_symmetric_t::aes192,
         crypt_symmetric_t::aes256,
         crypt_symmetric_t::blowfish,
+        crypt_symmetric_t::aria128,
+        crypt_symmetric_t::aria192,
+        crypt_symmetric_t::aria256,
+        crypt_symmetric_t::camellia128,
+        crypt_symmetric_t::camellia192,
+        crypt_symmetric_t::camellia256,
         crypt_symmetric_t::idea,
+        crypt_symmetric_t::seed,
+    };
+    crypt_symmetric_t cfbx_algorithm_table [] = {
+        crypt_symmetric_t::aes128,
+        crypt_symmetric_t::aes192,
+        crypt_symmetric_t::aes256,
         crypt_symmetric_t::aria128,
         crypt_symmetric_t::aria192,
         crypt_symmetric_t::aria256,
@@ -910,7 +368,7 @@ int main ()
         crypt_symmetric_t::camellia192,
         crypt_symmetric_t::camellia256,
     };
-    crypt_symmetric_t crypt_algorithm_ctr[] = {
+    crypt_symmetric_t ctr_algorithm_table [] = {
         crypt_symmetric_t::aes128,
         crypt_symmetric_t::aes192,
         crypt_symmetric_t::aes256,
@@ -918,53 +376,82 @@ int main ()
         crypt_symmetric_t::aria192,
         crypt_symmetric_t::aria256,
     };
-    hash_algorithm_t hash_algorithm[] = {
+
+    hash_algorithm_t hash_table [] =
+    {
         hash_algorithm_t::md4,
         hash_algorithm_t::md5,
         hash_algorithm_t::sha1,
+        hash_algorithm_t::sha2_224,
         hash_algorithm_t::sha2_256,
         hash_algorithm_t::sha2_384,
-        hash_algorithm_t::sha2_512
+        hash_algorithm_t::sha2_512,
+        hash_algorithm_t::sha3_224,
+        hash_algorithm_t::sha3_256,
+        hash_algorithm_t::sha3_384,
+        hash_algorithm_t::sha3_512,
+        hash_algorithm_t::shake128,
+        hash_algorithm_t::shake256,
+        hash_algorithm_t::blake2b_512,
+        hash_algorithm_t::blake2s_256,
+        hash_algorithm_t::ripemd160,
+        hash_algorithm_t::whirlpool,
     };
-
+    hash_algorithm_t hmac_table [] =
+    {
+        hash_algorithm_t::md4,
+        hash_algorithm_t::md5,
+        hash_algorithm_t::sha1,
+        hash_algorithm_t::sha2_224,
+        hash_algorithm_t::sha2_256,
+        hash_algorithm_t::sha2_384,
+        hash_algorithm_t::sha2_512,
+        hash_algorithm_t::sha3_224,
+        hash_algorithm_t::sha3_256,
+        hash_algorithm_t::sha3_384,
+        hash_algorithm_t::sha3_512,
+        //hash_algorithm_t::shake128,
+        //hash_algorithm_t::shake256,
+        hash_algorithm_t::blake2b_512,
+        hash_algorithm_t::blake2s_256,
+        hash_algorithm_t::ripemd160,
+        hash_algorithm_t::whirlpool,
+    };
     openssl_crypt openssl_crypt;
     openssl_hash openssl_hash;
 
     __try2
     {
         _test_case.begin ("openssl_crypt crypt_mode_t::cbc");
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (crypt_algorithm), crypt_algorithm, crypt_mode_t::cbc, 16, pKey, 16, iv, (byte_t*) szText,
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cbc, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
         _test_case.begin ("openssl_crypt crypt_mode_t::cfb");
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (crypt_algorithm), crypt_algorithm, crypt_mode_t::cfb, 16, pKey, 16, iv, (byte_t*) szText,
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cfb, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
         _test_case.begin ("openssl_crypt crypt_mode_t::cfb1");
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (crypt_algorithm), crypt_algorithm, crypt_mode_t::cfb1, 16, pKey, 16, iv, (byte_t*) szText,
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb1, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
         _test_case.begin ("openssl_crypt crypt_mode_t::cfb8");
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (crypt_algorithm), crypt_algorithm, crypt_mode_t::cfb8, 16, pKey, 16, iv, (byte_t*) szText,
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb8, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
         _test_case.begin ("openssl_crypt crypt_mode_t::ofb");
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (crypt_algorithm), crypt_algorithm, crypt_mode_t::ofb, 16, pKey, 16, iv, (byte_t*) szText,
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ofb, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
         _test_case.begin ("openssl_crypt crypt_mode_t::ecb");
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (crypt_algorithm), crypt_algorithm, crypt_mode_t::ecb, 16, pKey, 16, iv, (byte_t*) szText,
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ecb, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
         _test_case.begin ("openssl_crypt crypt_mode_t::ctr");
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (crypt_algorithm_ctr), crypt_algorithm_ctr, crypt_mode_t::ctr, 16, pKey, 16, iv, (byte_t*) szText,
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::ctr, 16, pKey, 16, iv, (byte_t*) szText,
+                    strlen (szText));
+        _test_case.begin ("openssl_crypt crypt_mode_t::gcm");
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::gcm, 16, pKey, 16, iv, (byte_t*) szText,
                     strlen (szText));
 
-        _test_case.begin ("openssl_hash");
-        test_hash (&openssl_hash, RTL_NUMBER_OF (hash_algorithm), hash_algorithm, 0, nullptr, (byte_t*) szText, strlen (szText));
-        test_hash (&openssl_hash, RTL_NUMBER_OF (hash_algorithm), hash_algorithm, 32, (byte_t*) pKey, (byte_t*) szText, strlen (szText));
+        _test_case.begin ("openssl_hash hash");
+        test_hash (&openssl_hash, RTL_NUMBER_OF (hash_table), hash_table, 0, nullptr, (byte_t*) szText, strlen (szText));
 
-        _test_case.begin ("openssl_hash SHA-3");
-        test_hash1 (&openssl_hash, hash_algorithm_t::sha3_224, 0, nullptr, (byte_t*) "", 0);
-        test_hash1 (&openssl_hash, hash_algorithm_t::sha3_256, 0, nullptr, (byte_t*) "", 0);
-        test_hash1 (&openssl_hash, hash_algorithm_t::sha3_384, 0, nullptr, (byte_t*) "", 0);
-        test_hash1 (&openssl_hash, hash_algorithm_t::sha3_512, 0, nullptr, (byte_t*) "", 0);
-        test_hash1 (&openssl_hash, hash_algorithm_t::shake128, 0, nullptr, (byte_t*) "", 0);
-        test_hash1 (&openssl_hash, hash_algorithm_t::shake256, 0, nullptr, (byte_t*) "", 0);
+        _test_case.begin ("openssl_hash hmac");
+        test_hash (&openssl_hash, RTL_NUMBER_OF (hmac_table), hmac_table, 32, (byte_t*) pKey, (byte_t*) szText, strlen (szText));
 
         _test_case.begin ("random");
         test_random ();

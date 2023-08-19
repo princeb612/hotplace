@@ -65,7 +65,7 @@ return_t crypto_key::add (crypto_key_object_t key, bool up_ref)
     return ret;
 }
 
-return_t crypto_key::add (const EVP_PKEY* pkey, const char* kid, bool up_ref)
+return_t crypto_key::add (EVP_PKEY* pkey, const char* kid, bool up_ref)
 {
     return_t ret = errorcode_t::success;
     crypto_key_object_t key (pkey, CRYPTO_USE_ANY, kid, nullptr);
@@ -74,7 +74,7 @@ return_t crypto_key::add (const EVP_PKEY* pkey, const char* kid, bool up_ref)
     return ret;
 }
 
-return_t crypto_key::add (const EVP_PKEY* pkey, const char* kid, crypto_use_t use, bool up_ref)
+return_t crypto_key::add (EVP_PKEY* pkey, const char* kid, crypto_use_t use, bool up_ref)
 {
     return_t ret = errorcode_t::success;
     crypto_key_object_t key (pkey, use, kid, nullptr);
@@ -289,9 +289,9 @@ static bool find_discriminant (crypto_key_object_t item, const char* kid, const 
     return ret;
 }
 
-const EVP_PKEY* crypto_key::any (bool up_ref)
+EVP_PKEY* crypto_key::any (bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
 
     //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -318,9 +318,9 @@ const EVP_PKEY* crypto_key::any (bool up_ref)
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select (crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
 
     //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -351,9 +351,9 @@ const EVP_PKEY* crypto_key::select (crypto_use_t use, bool up_ref)
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select (crypto_key_t kty, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (crypto_key_t kty, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
 
     //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -384,9 +384,9 @@ const EVP_PKEY* crypto_key::select (crypto_key_t kty, crypto_use_t use, bool up_
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select (crypt_alg_t alg, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (crypt_alg_t alg, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
@@ -424,9 +424,9 @@ const EVP_PKEY* crypto_key::select (crypt_alg_t alg, crypto_use_t use, bool up_r
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select (crypt_sig_t sig, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (crypt_sig_t sig, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
@@ -463,9 +463,9 @@ const EVP_PKEY* crypto_key::select (crypt_sig_t sig, crypto_use_t use, bool up_r
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select (std::string& kid, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (std::string& kid, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
 
     //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -499,9 +499,9 @@ const EVP_PKEY* crypto_key::select (std::string& kid, crypto_use_t use, bool up_
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select (std::string& kid, crypto_key_t kty, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (std::string& kid, crypto_key_t kty, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
 
     //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -535,9 +535,9 @@ const EVP_PKEY* crypto_key::select (std::string& kid, crypto_key_t kty, crypto_u
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select (std::string& kid, crypt_alg_t alg, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (std::string& kid, crypt_alg_t alg, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
@@ -578,9 +578,9 @@ const EVP_PKEY* crypto_key::select (std::string& kid, crypt_alg_t alg, crypto_us
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select (std::string& kid, crypt_sig_t sig, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (std::string& kid, crypt_sig_t sig, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
@@ -620,9 +620,9 @@ const EVP_PKEY* crypto_key::select (std::string& kid, crypt_sig_t sig, crypto_us
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::find (const char* kid, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::find (const char* kid, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
 
     //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -665,9 +665,9 @@ const EVP_PKEY* crypto_key::find (const char* kid, crypto_use_t use, bool up_ref
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::find (const char* kid, crypto_key_t kt, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::find (const char* kid, crypto_key_t kt, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
 
     //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -710,9 +710,9 @@ const EVP_PKEY* crypto_key::find (const char* kid, crypto_key_t kt, crypto_use_t
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::find (const char* kid, crypt_alg_t alg, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::find (const char* kid, crypt_alg_t alg, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
@@ -767,9 +767,9 @@ const EVP_PKEY* crypto_key::find (const char* kid, crypt_alg_t alg, crypto_use_t
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::find (const char* kid, crypt_sig_t alg, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::find (const char* kid, crypt_sig_t alg, crypto_use_t use, bool up_ref)
 {
-    const EVP_PKEY* ret_value = nullptr;
+    EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
@@ -823,7 +823,7 @@ const EVP_PKEY* crypto_key::find (const char* kid, crypt_sig_t alg, crypto_use_t
     return ret_value;
 }
 
-return_t crypto_key::get_public_key (const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2)
+return_t crypto_key::get_public_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2)
 {
     return_t ret = errorcode_t::success;
 
@@ -866,7 +866,7 @@ return_t crypto_key::get_public_key (const EVP_PKEY* pkey, binary_t& pub1, binar
     return ret;
 }
 
-return_t crypto_key::get_private_key (const EVP_PKEY* pkey, binary_t& priv)
+return_t crypto_key::get_private_key (EVP_PKEY* pkey, binary_t& priv)
 {
     return_t ret = errorcode_t::success;
 
@@ -898,21 +898,21 @@ return_t crypto_key::get_private_key (const EVP_PKEY* pkey, binary_t& priv)
     return ret;
 }
 
-return_t crypto_key::get_key (const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv)
+return_t crypto_key::get_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv)
 {
     crypto_key_t type = CRYPTO_KEY_NONE;
 
     return get_key (pkey, 1, type, pub1, pub2, priv);
 }
 
-return_t crypto_key::get_key (const EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv)
+return_t crypto_key::get_key (EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv)
 {
     crypto_key_t type = CRYPTO_KEY_NONE;
 
     return get_key (pkey, flag, type, pub1, pub2, priv);
 }
 
-return_t crypto_key::get_key (const EVP_PKEY* pkey, int flag, crypto_key_t& type,
+return_t crypto_key::get_key (EVP_PKEY* pkey, int flag, crypto_key_t& type,
                               binary_t& pub1, binary_t& pub2, binary_t& priv)
 {
     return_t ret = errorcode_t::success;
@@ -976,7 +976,7 @@ return_t crypto_key::get_key (const EVP_PKEY* pkey, int flag, crypto_key_t& type
     return ret;
 }
 
-return_t crypto_key::extract (const EVP_PKEY* pkey, int flag, crypto_key_t& type, crypt_datamap_t& datamap)
+return_t crypto_key::extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, crypt_datamap_t& datamap)
 {
     return_t ret = errorcode_t::success;
     int ret_openssl = 1;
@@ -1209,26 +1209,26 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
 
         pkey_context = EVP_PKEY_CTX_new_id (EVP_PKEY_RSA, nullptr);
         if (nullptr == pkey_context) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         ret_openssl = EVP_PKEY_keygen_init (pkey_context);
         if (ret_openssl <= 0) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         /* EVP_PKEY_CTX_set_rsa_keygen_bits(pkey_context, bits) */
         ret_openssl = EVP_PKEY_CTX_ctrl (pkey_context, EVP_PKEY_RSA, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, param, nullptr);
         if (ret_openssl <= 0) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         ret_openssl = EVP_PKEY_keygen (pkey_context, &pkey);
         if (ret_openssl <= 0) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
@@ -1274,7 +1274,7 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
 
         rsa = RSA_new ();
         if (nullptr == rsa) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
@@ -1293,7 +1293,7 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
         pkey = EVP_PKEY_new ();
         ret_openssl = EVP_PKEY_assign_RSA (pkey, rsa);
         if (ret_openssl <= 0) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
@@ -1351,7 +1351,7 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
 
         rsa = RSA_new ();
         if (nullptr == rsa) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
@@ -1393,7 +1393,7 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
         pkey = EVP_PKEY_new ();
         ret_openssl = EVP_PKEY_assign_RSA (pkey, rsa);
         if (ret_openssl <= 0) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
@@ -1499,36 +1499,36 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
         if (EVP_PKEY_EC == type) {
             ret_openssl = EVP_PKEY_paramgen_init (ctx);
             if (FAILED (ret_openssl)) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             ret_openssl = EVP_PKEY_CTX_set_ec_paramgen_curve_nid (ctx, nid);
             if (FAILED (ret_openssl)) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             ret_openssl = EVP_PKEY_paramgen (ctx, &params);
             if (FAILED (ret_openssl)) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             keyctx = EVP_PKEY_CTX_new (params, nullptr);
             if (nullptr == keyctx) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             ret_openssl = EVP_PKEY_keygen_init (keyctx);
             if (FAILED (ret_openssl)) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             ret_openssl = EVP_PKEY_keygen (keyctx, &pkey);
             if (FAILED (ret_openssl)) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             if (nullptr == pkey) { /* [openssl 3.0.3] return success but pkey is nullptr */
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             // set ASN.1 OPENSSL_EC_NAMED_CURVE flag for PEM export (PEM_write_bio_PUBKEY, PEM_write_bio_PrivateKey)
@@ -1536,12 +1536,12 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
         } else {
             ret_openssl = EVP_PKEY_keygen_init (ctx);
             if (FAILED (ret_openssl)) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             ret_openssl = EVP_PKEY_keygen (ctx, &pkey);
             if (FAILED (ret_openssl)) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
         }
@@ -1636,53 +1636,53 @@ return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid,
         }
 
         if (nullptr == bn_x && nullptr == bn_y) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         ec = EC_KEY_new_by_curve_name (nid);
         if (nullptr == ec) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         const EC_GROUP* group = EC_KEY_get0_group (ec);
         point = EC_POINT_new (group);
         if (nullptr == point) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         if (nullptr != bn_d) {
             ret_openssl = EC_KEY_set_private_key (ec, bn_d);
             if (ret_openssl != 1) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
             }
 
             ret_openssl = EC_POINT_mul (group, point, bn_d, nullptr, nullptr, nullptr);
             if (ret_openssl != 1) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
             }
         } else {
             ret_openssl = EC_POINT_set_affine_coordinates_GFp (group, point, bn_x, bn_y, nullptr);
             if (ret_openssl != 1) {
-                ret = errorcode_t::oss_inside;
+                ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
             }
         }
 
         ret_openssl = EC_KEY_set_public_key (ec, point);
         if (ret_openssl != 1) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         pkey = EVP_PKEY_new ();
         EVP_PKEY_set1_EC_KEY (pkey, ec); // EC_KEY_up_ref
         if (ret_openssl != 1) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
@@ -1808,7 +1808,7 @@ return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, const
 
         pkey = EVP_PKEY_new_mac_key (EVP_PKEY_HMAC, nullptr, &k[0], k.size ());
         if (nullptr == pkey) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
@@ -1890,7 +1890,7 @@ return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, const
             pkey = EVP_PKEY_new_mac_key (EVP_PKEY_HMAC, nullptr, &temp[0], size);
         }
         if (nullptr == pkey) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
@@ -1923,7 +1923,7 @@ crypto_key_t typeof_crypto_key (crypto_key_object_t key)
     return typeof_crypto_key (key.pkey);
 }
 
-bool is_kindof (const EVP_PKEY* pkey, crypto_key_t type)
+bool is_kindof (EVP_PKEY* pkey, crypto_key_t type)
 {
     bool test = false;
     crypto_key_t kty = typeof_crypto_key (pkey);

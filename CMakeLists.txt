@@ -10,7 +10,7 @@
 #
 # 2 packages to install
 # gcc, g++, binutils, cmake, gdb, valgrind
-# openssl-devel
+# openssl-devel, jansson-devel
 
 cmake_minimum_required (VERSION 2.6)
 project (hotplace)
@@ -27,7 +27,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,noexecstack")
 endif ()
 
 set (SUPPORT_STATIC 1)
-set (SUPPORT_SHARED 0)
+set (SUPPORT_SHARED 1)
 
 set (PROJECT_SDK_MODULE_BASE ${CMAKE_PROJECT_NAME}-sdk-base)
 set (PROJECT_SDK_MODULE_IO ${CMAKE_PROJECT_NAME}-sdk-io)
@@ -37,9 +37,9 @@ set (PROJECT_SDK_MODULE_TEST ${CMAKE_PROJECT_NAME}-sdk-test)
 set (PROJECT_SDK_MODULE_DEPENDENCIES ${PROJECT_SDK_MODULE_BASE}-static ${PROJECT_SDK_MODULE_IO}-static ${PROJECT_SDK_MODULE_TEST}-static ${PROJECT_SDK_MODULE_CRYPTO}-static)
 
 if (UNIX)
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES pthread crypto ssl)
+set (PROJECT_SDK_PLATFORM_DEPENDENCIES pthread crypto ssl jansson)
 elseif (WIN32)
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl)
+set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson)
 endif ()
 
 function(copy_headers_with_hierarchy SOURCE_DIR DESTINATION_DIR)

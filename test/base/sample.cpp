@@ -75,7 +75,7 @@ void test_sharedinstance1 ()
     inst->dosomething ();
     inst->release ();                               // --refcounter, delete here
 
-    _test_case.assert (true, __FUNCTION__, "shared refence");
+    _test_case.assert (true, __FUNCTION__, "shared reference");
 }
 
 void test_sharedinstance2 ()

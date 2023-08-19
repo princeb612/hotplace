@@ -17,7 +17,7 @@ namespace hotplace {
 namespace crypto {
 
 typedef struct _crypto_key_object_t {
-    const EVP_PKEY* pkey;
+    EVP_PKEY* pkey;
     std::string kid;
     uint32 use;     // crypto_use_t
     uint32 keybits; // todo
@@ -27,7 +27,7 @@ typedef struct _crypto_key_object_t {
     {
         // do nothing
     }
-    _crypto_key_object_t (const EVP_PKEY* _key, crypto_use_t _use, const char* _kid, const char* _alg)
+    _crypto_key_object_t (EVP_PKEY* _key, crypto_use_t _use, const char* _kid, const char* _alg)
         : pkey (_key), use (_use), keybits (0)
     {
         if (_kid) {
@@ -37,7 +37,7 @@ typedef struct _crypto_key_object_t {
             alg = _alg;
         }
     }
-    _crypto_key_object_t& set (const EVP_PKEY* _key, crypto_use_t _use, const char* _kid, const char* _alg)
+    _crypto_key_object_t& set (EVP_PKEY* _key, crypto_use_t _use, const char* _kid, const char* _alg)
     {
         pkey = _key;
         use = _use;
@@ -108,21 +108,21 @@ public:
     return_t add (crypto_key_object_t key, bool up_ref = false);
     /*
      * @brief add
-     * @param const EVP_PKEY* key [in]
+     * @param EVP_PKEY* key [in]
      * @param const char* kid [inopt]
      * @param bool up_ref [inopt] false by default
      * @return error code (see error.h)
      */
-    return_t add (const EVP_PKEY* key, const char* kid = nullptr, bool up_ref = false);
+    return_t add (EVP_PKEY* key, const char* kid = nullptr, bool up_ref = false);
     /*
      * @brief add
-     * @param const EVP_PKEY* key [in]
+     * @param EVP_PKEY* key [in]
      * @param const char* kid [inopt]
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt] false by default
      * @return error code (see error.h)
      */
-    return_t add (const EVP_PKEY* key, const char* kid, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    return_t add (EVP_PKEY* key, const char* kid, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief generate
      * @param crypto_key_t type [in] CRYPTO_KEY_TYPE
@@ -152,34 +152,34 @@ public:
      * @brief return any key
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* any (bool up_ref = false);
+    EVP_PKEY* any (bool up_ref = false);
     /*
      * @brief find
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select (crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param crypto_key_t kty [in]
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select (crypto_key_t kty, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (crypto_key_t kty, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param crypt_alg_t alg [in]
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select (crypt_alg_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (crypt_alg_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param crypt_sig_t alg [in]
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select (crypt_sig_t sig, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (crypt_sig_t sig, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param std::string& kid [out]
@@ -187,14 +187,14 @@ public:
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select (std::string& kid, crypto_key_t kty, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (std::string& kid, crypto_key_t kty, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param std::string& kid [out]
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select (std::string& kid, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (std::string& kid, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param std::string& kid [out]
@@ -202,7 +202,7 @@ public:
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select (std::string& kid, crypt_alg_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (std::string& kid, crypt_alg_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param std::string& kid [out]
@@ -210,14 +210,14 @@ public:
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select (std::string& kid, crypt_sig_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (std::string& kid, crypt_sig_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param const char* kid [out]
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find (const char* kid, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* find (const char* kid, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param const char* kid [in]
@@ -225,7 +225,7 @@ public:
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find (const char* kid, crypto_key_t kty, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* find (const char* kid, crypto_key_t kty, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param const char* kid [in]
@@ -233,7 +233,7 @@ public:
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find (const char* kid, crypt_alg_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* find (const char* kid, crypt_alg_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
     /*
      * @brief find
      * @param const char* kid [in]
@@ -241,48 +241,48 @@ public:
      * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find (const char* kid, crypt_sig_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* find (const char* kid, crypt_sig_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
 
     /*
      * @brief public key
-     * @param const EVP_PKEY* pkey [in]
+     * @param EVP_PKEY* pkey [in]
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      */
-    static return_t get_public_key (const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2);
+    static return_t get_public_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2);
     /*
      * @brief public key
-     * @param const EVP_PKEY* pkey [in]
+     * @param EVP_PKEY* pkey [in]
      * @parambinary_t& priv [out]
      */
-    static return_t get_private_key (const EVP_PKEY* pkey, binary_t& priv);
+    static return_t get_private_key (EVP_PKEY* pkey, binary_t& priv);
     /*
      * @brief public key
-     * @param const EVP_PKEY* pkey [in]
+     * @param EVP_PKEY* pkey [in]
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      * @parambinary_t& priv [out]
      */
-    static return_t get_key (const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv);
+    static return_t get_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv);
     /*
      * @brief public key
-     * @param const EVP_PKEY* pkey [in]
+     * @param EVP_PKEY* pkey [in]
      * @param int flag [in] 0 public only, 1 also private
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      * @parambinary_t& priv [out]
      */
-    static return_t get_key (const EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv);
+    static return_t get_key (EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv);
     /*
      * @brief public key
-     * @param const EVP_PKEY* pkey [in]
+     * @param EVP_PKEY* pkey [in]
      * @param int flag [in] 0 public only, 1 also private
      * @param crypto_key_t type [out] CRYPTO_KEY_HMAC, CRYPTO_KEY_RSA, CRYPTO_KEY_EC
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      * @parambinary_t& priv [out]
      */
-    static return_t get_key (const EVP_PKEY* pkey, int flag, crypto_key_t& type,
+    static return_t get_key (EVP_PKEY* pkey, int flag, crypto_key_t& type,
                              binary_t& pub1, binary_t& pub2, binary_t& priv);
 
 
@@ -304,12 +304,12 @@ public:
 protected:
     /*
      * @brief extract
-     * @param const EVP_PKEY* pkey [in]
+     * @param EVP_PKEY* pkey [in]
      * @param CRYPTO_KEY_FLAG flag [in] CRYPTO_KEY_PUBLIC, CRYPTO_KEY_PRIVATE
      * @param crypto_key_t type [out]
      * @param crypt_datamap_t& datamap [out]
      */
-    static return_t extract (const EVP_PKEY* pkey, int flag, crypto_key_t& type, crypt_datamap_t& datamap);
+    static return_t extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, crypt_datamap_t& datamap);
 
 private:
     /*
@@ -362,7 +362,7 @@ public:
      * @sample
      *    crypto_keychain keyset;
      *    std::string kid;
-     *    const EVP_PKEY* pkey1 = nullptr, pkey2 = nullptr;
+     *    EVP_PKEY* pkey1 = nullptr, pkey2 = nullptr;
      *    keygen.add_rsa(&crypto_key, "kid.1", 2048);
      *    keygen.add_rsa(&crypto_key, "kid.2", 2048);
      *    pkey1 = crypto_key.find_first_of(CRYPTO_KEY_RSA, kid);
@@ -758,10 +758,10 @@ protected:
 crypto_key_t typeof_crypto_key (crypto_key_object_t key);
 /*
  * @brief compare
- * @param const EVP_PKEY* pkey [in]
+ * @param EVP_PKEY* pkey [in]
  * @param crypto_key_t type [in]
  */
-bool is_kindof (const EVP_PKEY* pkey, crypto_key_t type);
+bool is_kindof (EVP_PKEY* pkey, crypto_key_t type);
 
 }
 }  // namespace

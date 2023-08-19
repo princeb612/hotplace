@@ -91,20 +91,20 @@ public:
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [outopt]
      */
-    return_t encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted,
-                       binary_t* aad = nullptr,
-                       binary_t* tag = nullptr);
+    virtual return_t encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted,
+                               binary_t* aad = nullptr,
+                               binary_t* tag = nullptr);
     /*
      * @brief encrypte
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* data_plain [in]
      * @param size_t size_plain [in]
-     * @param byte_t* out_encrypted [in]
-     * @param size_t* size* size_encrypted [inout]
+     * @param unsigned char* out_encrypted [out] allocated buffer
+     * @param size_t* size* size_encrypted [inout] should be at least size_encrypted + EVP_MAX_BLOCK_LENGTH
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [inopt]
      */
-    return_t encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, byte_t* out_encrypted, size_t* size_encrypted,
+    return_t encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char* out_encrypted, size_t* size_encrypted,
                        binary_t* aad = nullptr,
                        binary_t* tag = nullptr);
     /**
@@ -141,15 +141,15 @@ public:
      * @param binary_t* aad [inpot]
      * @param binary_t* tag [inopt]
      */
-    return_t decrypt2 (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
-                       binary_t* aad = nullptr,
-                       binary_t* tag = nullptr);
+    virtual return_t decrypt2 (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
+                               binary_t* aad = nullptr,
+                               binary_t* tag = nullptr);
     /*
      * @brief decrypt
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* data_encrypted [in]
      * @param size_t size_encrypted [in]
-     * @param byte_t* out_decrypted [in]
+     * @param byte_t* out_decrypted [out] allocated buffer
      * @param size_t* size_decrypted [inout] should be at least size_encrypted + EVP_MAX_BLOCK_LENGTH
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [inopt]

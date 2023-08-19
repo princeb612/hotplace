@@ -39,18 +39,22 @@ enum crypt_poweredby_t {
  */
 enum crypt_symmetric_t {
     crypt_alg_unknown   = 0,
-    seed                = 2,
-    aes128              = 3,
-    aes192              = 4,
-    aes256              = 5,
-    blowfish            = 7,
-    idea                = 8,
-    aria128             = 9,
-    aria192             = 10,
-    aria256             = 11,
-    camellia128         = 12,
-    camellia192         = 13,
-    camellia256         = 14,
+    des                 = 1,
+    aes128              = 2,
+    aes192              = 3,
+    aes256              = 4,
+    blowfish            = 5,
+    aria128             = 6,
+    aria192             = 7,
+    aria256             = 8,
+    camellia128         = 9,
+    camellia192         = 10,
+    camellia256         = 11,
+    idea                = 12,
+    rc2                 = 13,
+    rc5                 = 14,
+    seed                = 15,
+    sm4                 = 16,
 };
 
 /*
@@ -81,47 +85,52 @@ enum crypt_symmetric_t {
  *    CAMELLIA256 : CBC, CFB, CFB1, CFB8, OFB, ECB,
  */
 enum crypt_mode_t {
-    mode_unknown    = 0,
-    cbc             = 1,
-    cfb             = 2,
-    cfb1            = 7,
-    cfb8            = 8,
-    ctr             = 4,
-    ecb             = 5,
-    gcm             = 6,
-    ofb             = 3,
-    // next         = 9
-
-    wrap            = 20,
-    pbkdf2_hmac,
+    crypt_mode_unknown  = 0,
+    ecb                 = 1,
+    cbc                 = 2,
+    cfb                 = 3,
+    cfb1                = 4,
+    cfb8                = 5,
+    ofb                 = 6,
+    ctr                 = 7,
+    gcm                 = 8,
+    wrap                = 9,
 };
 
 enum hash_algorithm_t {
-    /* 0 reserved */
     hash_alg_unknown    = 0,
 
-    md4                 = 2,
-    md5                 = 3,
-    sha1                = 5,
+    md4                 = 1,
+    md5                 = 2,
 
-    ripemd160           = 8,
+    sha1                = 3,
 
-    sha2_224            = 15,
-    sha2_256            = 11,
-    sha2_384            = 12,
-    sha2_512            = 13,
+    sha2_224            = 4,
+    sha2_256            = 5,
+    sha2_384            = 6,
+    sha2_512            = 7,
 
-    whirlpool           = 16,
+    sha3_224            = 8,
+    sha3_256            = 9,
+    sha3_384            = 10,
+    sha3_512            = 11,
 
-    sha3_224            = 17,
-    sha3_256            = 18,
-    sha3_384            = 19,
-    sha3_512            = 20,
-    shake128            = 21,
-    shake256            = 22,
+    shake128            = 12,
+    shake256            = 13,
 
-    blake2b_512         = 23,
-    blake2s_256         = 24,
+    blake2b_512         = 14,
+    blake2s_256         = 15,
+
+    ripemd160           = 16,
+    whirlpool           = 17,
+};
+
+enum crypt_asymmetric_t {
+    crypt_asymmetric_unknown    = 0,
+    CRYPT_MODE_RSA_1_5          = 1,
+    CRYPT_MODE_RSA_OAEP         = 2,
+    CRYPT_MODE_RSA_OAEP256      = 3,
+    CRYPT_MODE_EC_DH            = 4,
 };
 
 enum crypt_data_type_t {
@@ -161,15 +170,6 @@ enum crypt_data_type_t {
     CRYPT_ITEM_EPK          = 256,  // ephemeral public key
     CRYPT_ITEM_P2C          = 257,  // PBES2 count
 };
-
-enum crypt_asymmetric_t {
-    crypt_asymmetric_unknown    = 0,
-    CRYPT_MODE_RSA_1_5          = 1,
-    CRYPT_MODE_RSA_OAEP         = 2,
-    CRYPT_MODE_RSA_OAEP256      = 3,
-    CRYPT_MODE_EC_DH            = 4,
-};
-
 
 enum CRYPTO_KEY_FLAG {
     CRYPTO_KEY_PUBLIC   = (1 << 0),
@@ -307,8 +307,6 @@ typedef struct _hint_jose_encryption_t {
     crypt_mode_t crypt_mode;        // crypt_mode_t::wrap, crypt_mode_t::gcm
     int keysize;                    // 16, 24, 32
     int hash_alg;
-
-    //int ivsize;               // kw (8), gcm (12), cbc (16)
 } hint_jose_encryption_t;
 
 typedef struct _hint_curves_t {

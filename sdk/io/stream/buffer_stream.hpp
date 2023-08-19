@@ -15,6 +15,7 @@
 #include <hotplace/sdk/io/stream/stream.hpp>
 #include <hotplace/sdk/io/stream/bufferio.hpp>
 #include <stdarg.h>
+#include <iostream>
 
 namespace hotplace {
 namespace io {
@@ -47,6 +48,8 @@ public:
     static int compare (buffer_stream lhs, buffer_stream rhs);
     bool operator < (buffer_stream obj);
     bool operator > (buffer_stream obj);
+
+    friend std::ostream& operator << (std::ostream& os, buffer_stream& bs);
 
 protected:
     bufferio _bio;

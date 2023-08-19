@@ -37,7 +37,7 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
         : signature (0),
         crypto_type (crypt_poweredby_t::openssl),
         algorithm (crypt_symmetric_t::crypt_alg_unknown),
-        mode (crypt_mode_t::mode_unknown),
+        mode (crypt_mode_t::crypt_mode_unknown),
         encrypt_context (nullptr),
         decrypt_context (nullptr),
         key (nullptr)
@@ -239,8 +239,7 @@ return_t openssl_crypt::close (crypt_context_t* handle)
     return ret;
 }
 
-return_t openssl_crypt::encrypt (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted,
-                                 size_t* size_encrypted)
+return_t openssl_crypt::encrypt (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted, size_t* size_encrypted)
 {
     return_t ret = errorcode_t::success;
     byte_t* output_allocated = nullptr;
@@ -282,13 +281,9 @@ return_t openssl_crypt::encrypt (crypt_context_t* handle, const unsigned char* d
     return encrypt2 (handle, data_plain, size_plain, out_encrypted);
 }
 
-return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted,
-                                  binary_t* aad, binary_t* tag)
+return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted, binary_t* aad, binary_t* tag)
 {
     return_t ret = errorcode_t::success;
-
-    //openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
-    //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {
@@ -312,8 +307,7 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
     return ret;
 }
 
-return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, byte_t* out_encrypted, size_t* size_encrypted,
-                                  binary_t* aad, binary_t* tag)
+return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char* out_encrypted, size_t* size_encrypted, binary_t* aad, binary_t* tag)
 {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
@@ -350,7 +344,7 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
         if (crypt_mode_t::gcm == context->mode) { /* A128GCM, A92GCM, A256GCM */
             ret_cipher = EVP_CipherUpdate (context->encrypt_context, nullptr, &size_update, &(*aad)[0], aad->size ());
             if (1 > ret_cipher) {
-                ret = ERROR_INTERNAL_ERROR;
+                ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
             }
         }
@@ -368,7 +362,7 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
             crypto_advisor* advisor = crypto_advisor::get_instance ();
             const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher (context->algorithm);
             if (nullptr == hint_cipher) {
-                ret = ERROR_INTERNAL_ERROR;
+                ret = errorcode_t::internal_error;
                 __leave2;
             }
             uint16 blocksize = hint_cipher->_blocksize;
@@ -395,14 +389,14 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
 
             ret_cipher = EVP_CipherUpdate (context->encrypt_context, out_encrypted, &size_update, data_plain, size_plain);
             if (1 > ret_cipher) {
-                ret = ERROR_INTERNAL_ERROR;
+                ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
             }
         }
 
         ret_cipher = EVP_CipherFinal (context->encrypt_context, out_encrypted + size_update, &size_final);
         if (1 > ret_cipher) {
-            ret = ERROR_INTERNAL_ERROR;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
@@ -410,7 +404,7 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
             tag->resize (16);
             ret_cipher = EVP_CIPHER_CTX_ctrl (context->encrypt_context, EVP_CTRL_GCM_GET_TAG, tag->size (), &(*tag)[0]);
             if (1 > ret_cipher) {
-                ret = ERROR_INTERNAL_ERROR;
+                ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
             }
         }
@@ -429,8 +423,7 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
     return ret;
 }
 
-return_t openssl_crypt::decrypt (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** data_plain,
-                                 size_t* size_plain)
+return_t openssl_crypt::decrypt (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** data_plain, size_t* size_plain)
 {
     return_t ret = errorcode_t::success;
     byte_t* output_allocated = nullptr;
@@ -472,12 +465,9 @@ return_t openssl_crypt::decrypt (crypt_context_t* handle, const unsigned char* d
     return decrypt2 (handle, data_encrypted, size_encrypted, out_decrypted);
 }
 
-return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
-                                  binary_t* aad, binary_t* tag)
+return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted, binary_t* aad, binary_t* tag)
 {
     return_t ret = errorcode_t::success;
-
-    //openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
     __try2
     {
@@ -502,7 +492,7 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
 }
 
 return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted,
-                                  byte_t* out_decrypted, size_t* size_decrypted, binary_t* aad, binary_t* tag)
+                                  unsigned char* out_decrypted, size_t* size_decrypted, binary_t* aad, binary_t* tag)
 {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
@@ -539,12 +529,12 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
         if ((crypt_mode_t::gcm == context->mode)) {
             ret_cipher = EVP_CIPHER_CTX_ctrl (context->decrypt_context, EVP_CTRL_GCM_SET_TAG, tag->size (), &(*tag)[0]);
             if (1 != ret_cipher) {
-                ret = ERROR_INTERNAL_ERROR;
+                ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
             }
             ret_cipher = EVP_CipherUpdate (context->decrypt_context, nullptr, &size_update, &(*aad)[0], aad->size ());
             if (1 != ret_cipher) {
-                ret = ERROR_INTERNAL_ERROR;
+                ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
             }
         }
@@ -562,7 +552,7 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
             crypto_advisor* advisor = crypto_advisor::get_instance ();
             const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher (context->algorithm);
             if (nullptr == hint_cipher) {
-                ret = ERROR_INTERNAL_ERROR;
+                ret = errorcode_t::internal_error;
                 __leave2;
             }
             uint16 blocksize = hint_cipher->_blocksize;
@@ -589,14 +579,14 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
 
             ret_cipher = EVP_CipherUpdate (context->decrypt_context, out_decrypted, &size_update, data_encrypted, size_encrypted);
             if (1 != ret_cipher) {
-                ret = ERROR_INTERNAL_ERROR;
+                ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
             }
         }
 
         ret_cipher = EVP_CipherFinal (context->decrypt_context, out_decrypted + size_update, &size_final);
         if (1 != ret_cipher) {
-            ret = ERROR_INTERNAL_ERROR;
+            ret = errorcode_t::internal_error;
             __leave2;
         }
 
@@ -649,17 +639,16 @@ return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
             __leave2_trace (ret);
         }
 
-        EVP_PKEY* key = (EVP_PKEY*) (pkey);
-        pkey_context = EVP_PKEY_CTX_new (key, nullptr);
+        pkey_context = EVP_PKEY_CTX_new (pkey, nullptr);
 
         if (nullptr == pkey_context) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         EVP_PKEY_encrypt_init (pkey_context);
 
-        int id = EVP_PKEY_id (key);
+        int id = EVP_PKEY_id (pkey);
         if (EVP_PKEY_RSA == id) {
             const EVP_MD* md = EVP_sha1 ();
             if (CRYPT_MODE_RSA_OAEP256 == mode) {
@@ -683,14 +672,14 @@ return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
         size_t size = 0;
         ret_openssl = EVP_PKEY_encrypt (pkey_context, nullptr, &size, &input[0], input.size ());
         if (-2 == ret_openssl) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         output.resize (size);
         ret_openssl = EVP_PKEY_encrypt (pkey_context, &output[0], &size, &input[0], input.size ());
         if (ret_openssl < 1) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
     }
@@ -726,17 +715,16 @@ return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
             __leave2_trace (ret);
         }
 
-        EVP_PKEY* key = (EVP_PKEY*) (pkey);
-        pkey_context = EVP_PKEY_CTX_new (key, nullptr);
+        pkey_context = EVP_PKEY_CTX_new (pkey, nullptr);
 
         if (nullptr == pkey_context) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         EVP_PKEY_decrypt_init (pkey_context);
 
-        if (EVP_PKEY_RSA == EVP_PKEY_id (key)) {
+        if (EVP_PKEY_RSA == EVP_PKEY_id (pkey)) {
             const EVP_MD* md = EVP_sha1 ();
             if (CRYPT_MODE_RSA_OAEP256 == mode) {
                 md = EVP_sha256 ();
@@ -759,14 +747,14 @@ return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
         size_t size = 0;
         ret_openssl = EVP_PKEY_decrypt (pkey_context, nullptr, &size, &input[0], input.size ());
         if (-2 == ret_openssl) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
         output.resize (size);
         ret_openssl = EVP_PKEY_decrypt (pkey_context, &output[0], &size, &input[0], input.size ());
         if (ret_openssl < 1) {
-            ret = errorcode_t::oss_inside;
+            ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
         output.resize (size);

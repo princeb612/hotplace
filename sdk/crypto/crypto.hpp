@@ -55,6 +55,21 @@ public:
      */
     virtual return_t encrypt (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted, size_t* size_encrypted) = 0;
     virtual return_t encrypt (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out) = 0;
+
+    /*
+     * @brief encrypt (GCM)
+     * @param crypt_context_t* handle [in]
+     * @param const unsigned char* data_plain
+     * @param size_t size_plain [in]
+     * @param binary_t& out_encrypte [out]
+     * @param binary_t* aad [inopt]
+     * @param binary_t* tag [outopt]
+     */
+    virtual return_t encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted,
+                               binary_t* aad = nullptr,
+                               binary_t* tag = nullptr)
+    = 0;
+
     /**
      * @brief decrypt
      * @param crypt_context_t* handle [in]
@@ -69,6 +84,20 @@ public:
      */
     virtual return_t decrypt (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** data_plain, size_t* size_plain) = 0;
     virtual return_t decrypt (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out) = 0;
+
+    /*
+     * @brief decrypt (GCM)
+     * @param crypt_context_t* handle [in]
+     * @param const unsigned char* data_encrypted [in]
+     * @param size_t size_encrypted [in]
+     * @param binary_t& out_decrypted [out]
+     * @param binary_t* aad [inpot]
+     * @param binary_t* tag [inopt]
+     */
+    virtual return_t decrypt2 (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
+                               binary_t* aad = nullptr,
+                               binary_t* tag = nullptr)
+    = 0;
 
     /**
      * @brief free

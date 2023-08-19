@@ -20,7 +20,6 @@
 #include <vector>
 
 namespace hotplace {
-namespace io {
 
 static inline void memcpy_inline (void* dest, size_t size_dest, const void* src, size_t size_src)
 {
@@ -35,8 +34,8 @@ static inline std::string& ltrim (std::string& source)
 {
 #if __cplusplus >= 201103L // c++11
     source.erase (source.begin (), std::find_if (source.begin (), source.end (), [] (int c) {
-                return !std::isspace (c);
-            }));
+            return !std::isspace (c);
+        }));
 #else
     source.erase (source.begin (), std::find_if (source.begin (), source.end (), std::not1 (std::ptr_fun<int, int>(std::isspace))));
 #endif
@@ -48,8 +47,8 @@ static inline std::string& rtrim (std::string& source)
 {
 #if __cplusplus >= 201103L // c++11
     source.erase (std::find_if (source.rbegin (), source.rend (), [] (int c) {
-                return !std::isspace (c);
-            }).base (), source.end ());
+            return !std::isspace (c);
+        }).base (), source.end ());
 #else
     source.erase (std::find_if (source.rbegin (), source.rend (), std::not1 (std::ptr_fun<int, int>(std::isspace))).base (), source.end ());
 #endif
@@ -103,46 +102,6 @@ static inline std::string lowername (std::string input)
         // do nothing
     }
     return ret_value;
-}
-
-/*
- * @brief string to binary_t
- * @param std::string source [in]
- */
-static inline binary_t convert (std::string source)
-{
-    binary_t target;
-
-    target.insert (target.end (), source.begin (), source.end ());
-    return target;
-}
-
-/*
- * @brief string to binary_t
- * @param const char* source [in]
- */
-static inline binary_t convert (const char* source)
-{
-    binary_t target;
-
-    if (source) {
-        target.insert (target.end (), source, source + strlen (source));
-    }
-    return target;
-}
-
-/*
- * @brief string to binary_t
- * @param binary_t& target [out]
- * @param const char* source [in]
- */
-static inline binary_t& convert (binary_t& target, const char* source)
-{
-    target.clear ();
-    if (source) {
-        target.insert (target.end (), source, source + strlen (source));
-    }
-    return target;
 }
 
 /*
@@ -209,7 +168,6 @@ static inline std::string concat_filepath (const std::string& path, const std::s
     return result;
 }
 
-}
 }  // namespace
 
 #endif

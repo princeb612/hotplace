@@ -73,7 +73,6 @@ typedef struct _openssl_evp_md_method_t {
  #define NID_secp521r1              716
  */
 
-
 }
 }  // namespace
 

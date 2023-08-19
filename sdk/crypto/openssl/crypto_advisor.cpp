@@ -139,13 +139,13 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_symmetric_t::aria128, crypt_mode_t::ofb,  EVP_aria_128_ofb (),  "aria-128-ofb", },
 
     { crypt_symmetric_t::aria192, crypt_mode_t::cbc,  EVP_aria_192_cbc (),  "aria-192-cbc", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::cfb,  EVP_aria_192_cfb (),  "aria-192-cbc", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::cfb1, EVP_aria_192_cfb1 (), "aria-192-cbc", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::cfb8, EVP_aria_192_cfb8 (), "aria-192-cbc", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::ctr,  EVP_aria_192_ctr (),  "aria-192-cbc", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::ecb,  EVP_aria_192_ecb (),  "aria-192-cbc", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::gcm,  EVP_aria_192_gcm (),  "aria-192-cbc", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::ofb,  EVP_aria_192_ofb (),  "aria-192-cbc", },
+    { crypt_symmetric_t::aria192, crypt_mode_t::cfb,  EVP_aria_192_cfb (),  "aria-192-cfb", },
+    { crypt_symmetric_t::aria192, crypt_mode_t::cfb1, EVP_aria_192_cfb1 (), "aria-192-cfb1", },
+    { crypt_symmetric_t::aria192, crypt_mode_t::cfb8, EVP_aria_192_cfb8 (), "aria-192-cfb8", },
+    { crypt_symmetric_t::aria192, crypt_mode_t::ctr,  EVP_aria_192_ctr (),  "aria-192-ctr", },
+    { crypt_symmetric_t::aria192, crypt_mode_t::ecb,  EVP_aria_192_ecb (),  "aria-192-ecb", },
+    { crypt_symmetric_t::aria192, crypt_mode_t::gcm,  EVP_aria_192_gcm (),  "aria-192-gcm", },
+    { crypt_symmetric_t::aria192, crypt_mode_t::ofb,  EVP_aria_192_ofb (),  "aria-192-ofb", },
 
     { crypt_symmetric_t::aria256, crypt_mode_t::cbc,  EVP_aria_256_cbc (),  "aria-256-cbc", },
     { crypt_symmetric_t::aria256, crypt_mode_t::cfb,  EVP_aria_256_cfb (),  "aria-256-cfb", },
@@ -466,7 +466,7 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher (const EVP_CIPHER* cip
         _lock.enter ();
 
         crypt_symmetric_t alg = crypt_symmetric_t::crypt_alg_unknown;
-        crypt_mode_t mode = crypt_mode_t::mode_unknown;
+        crypt_mode_t mode = crypt_mode_t::crypt_mode_unknown;
         ret = find_evp_cipher (cipher, alg, mode);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -939,7 +939,7 @@ return_t crypto_advisor::ktyof_ec_curve (const char* curve, uint32& kty)
     return ret;
 }
 
-return_t crypto_advisor::ktyof_ec_curve (const EVP_PKEY* pkey, std::string& kty)
+return_t crypto_advisor::ktyof_ec_curve (EVP_PKEY* pkey, std::string& kty)
 {
     return_t ret = errorcode_t::success;
 
@@ -975,7 +975,7 @@ return_t crypto_advisor::ktyof_ec_curve (const EVP_PKEY* pkey, std::string& kty)
     return ret;
 }
 
-return_t crypto_advisor::nameof_ec_curve (const EVP_PKEY* pkey, std::string& name)
+return_t crypto_advisor::nameof_ec_curve (EVP_PKEY* pkey, std::string& name)
 {
     return_t ret = errorcode_t::success;
     uint32 nid = 0;
@@ -997,7 +997,7 @@ return_t crypto_advisor::nameof_ec_curve (const EVP_PKEY* pkey, std::string& nam
     return ret;
 }
 
-bool crypto_advisor::is_kindof (const EVP_PKEY* pkey, const char* alg)
+bool crypto_advisor::is_kindof (EVP_PKEY* pkey, const char* alg)
 {
     bool test = false;
 
@@ -1025,7 +1025,7 @@ bool crypto_advisor::is_kindof (const EVP_PKEY* pkey, const char* alg)
     return test;
 }
 
-bool crypto_advisor::is_kindof (const EVP_PKEY* pkey, crypt_alg_t alg)
+bool crypto_advisor::is_kindof (EVP_PKEY* pkey, crypt_alg_t alg)
 {
     bool test = false;
 
@@ -1047,7 +1047,7 @@ bool crypto_advisor::is_kindof (const EVP_PKEY* pkey, crypt_alg_t alg)
     return test;
 }
 
-bool crypto_advisor::is_kindof (const EVP_PKEY* pkey, crypt_sig_t sig)
+bool crypto_advisor::is_kindof (EVP_PKEY* pkey, crypt_sig_t sig)
 {
     bool test = false;
 

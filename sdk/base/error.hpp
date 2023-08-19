@@ -53,7 +53,8 @@ enum errorcode_t {
     /* 0xef010016 4009820182 */ out_of_range,
     /* 0xef010017 4009820183 */ request,
 
-    /* 0xef010018 4009820184 */ reserved1,
+    /* 0xef010018 4009820184 */ verify,
+
     /* 0xef010019 4009820185 */ reserved2,
     /* 0xef01001a 4009820186 */ reserved3,
     /* 0xef01001b 4009820187 */ reserved4,
@@ -64,7 +65,7 @@ enum errorcode_t {
 
     /* 0xef010100 4009820416 */ not_supported,
     /* 0xef010101 4009820417 */ low_security,
-    /* 0xef010102 4009820418 */ oss_inside,
+    /* 0xef010102 4009820418 */ reserved9,
 };
 
 }

@@ -13,8 +13,8 @@
 namespace hotplace {
 namespace crypto {
 
-enum OPENSSL_HASH_CONTEXT_FLAG {
-    OPENSSL_HASH_CONTEXT_HMAC = (1 << 0),
+enum openssl_hash_context_flag_t {
+    hmac = (1 << 0),
 };
 
 #define OPENSSL_HASH_CONTEXT_SIGNATURE 0x20090912
@@ -88,18 +88,18 @@ return_t openssl_hash::open (hash_context_t** handle, hash_algorithm_t algorithm
             md_context = EVP_MD_CTX_create (); /* OPENSSL_malloc, EVP_MD_CTX_init */
 
             if (nullptr == md_context) {
-                ret = ERROR_INTERNAL_ERROR;
+                ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             context->_md_context = md_context;
 
             EVP_DigestInit_ex (context->_md_context, context->_evp_md, nullptr);
         } else {
-            context->_flags |= OPENSSL_HASH_CONTEXT_HMAC;
+            context->_flags |= openssl_hash_context_flag_t::hmac;
 
             hmac_context = HMAC_CTX_new ();
             if (nullptr == hmac_context) {
-                ret = ERROR_OUTOFMEMORY;
+                ret = errorcode_t::out_of_memory;
                 __leave2_trace (ret);
             }
             context->_hmac_context = hmac_context;
@@ -183,7 +183,7 @@ return_t openssl_hash::init (hash_context_t* handle)
             __leave2_trace (ret);
         }
 
-        if (OPENSSL_HASH_CONTEXT_HMAC == (context->_flags & OPENSSL_HASH_CONTEXT_HMAC)) {
+        if (context->_flags & openssl_hash_context_flag_t::hmac) {
             HMAC_Init_ex (context->_hmac_context, &context->_key[0], context->_key.size (), context->_evp_md, nullptr);
         } else {
             EVP_DigestInit_ex (context->_md_context, context->_evp_md, nullptr);
@@ -216,7 +216,7 @@ return_t openssl_hash::update (hash_context_t* handle, byte_t* source_data, size
             __leave2_trace (ret);
         }
 
-        if (OPENSSL_HASH_CONTEXT_HMAC == (context->_flags & OPENSSL_HASH_CONTEXT_HMAC)) {
+        if (context->_flags & openssl_hash_context_flag_t::hmac) {
             HMAC_Update (context->_hmac_context, source_data, source_size);
         } else {
             EVP_DigestUpdate (context->_md_context, source_data, source_size);
@@ -286,7 +286,7 @@ return_t openssl_hash::finalize (hash_context_t* handle, binary_t& output)
         unsigned int size_digest = EVP_MD_size (context->_evp_md);
         output.resize (size_digest);
 
-        if (OPENSSL_HASH_CONTEXT_HMAC == (context->_flags & OPENSSL_HASH_CONTEXT_HMAC)) {
+        if (context->_flags & openssl_hash_context_flag_t::hmac) {
             HMAC_Final (context->_hmac_context, &output[0], &size_digest);
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
             HMAC_CTX_reset (context->_hmac_context);
@@ -345,7 +345,7 @@ return_t openssl_hash::hash (hash_context_t* handle, byte_t* source_data, size_t
         unsigned int size_digest = EVP_MD_size (context->_evp_md);
         output.resize (size_digest);
 
-        if (OPENSSL_HASH_CONTEXT_HMAC == (context->_flags & OPENSSL_HASH_CONTEXT_HMAC)) {
+        if (context->_flags & openssl_hash_context_flag_t::hmac) {
             HMAC_Init_ex (context->_hmac_context, &context->_key[0], context->_key.size (), context->_evp_md, nullptr);
             HMAC_Update (context->_hmac_context, source_data, source_size);
             HMAC_Final (context->_hmac_context, &output[0], &size_digest);
