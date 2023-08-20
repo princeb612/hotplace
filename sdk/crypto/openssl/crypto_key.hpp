@@ -299,6 +299,23 @@ public:
     int addref ();
     int release ();
 
+    /**
+     * @brief dump
+     * @sample
+     *  void dump_crypto_key (crypto_key_object_t* key, void*)
+     *  {
+     *      uint32 nid = 0;
+     *      nidof_evp_pkey (key->pkey, nid);
+     *      printf ("nid %i kid %s alg %s use %i\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
+     *  }
+     *  void load_key_and_dump ()
+     *  {
+     *      crypto_key key;
+     *      json_web_key jwk;
+     *      jwk.load_file (&key, "rfc7515.jwk", 0);
+     *      key.for_each (dump_crypto_key, nullptr);
+     *  }
+     */
     void for_each (void (*)(crypto_key_object_t*, void*), void* param);
 
 protected:

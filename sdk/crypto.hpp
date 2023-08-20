@@ -19,5 +19,8 @@
 #include <hotplace/sdk/crypto/openssl/openssl_prng.hpp>
 #include <hotplace/sdk/crypto/openssl/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/openssl/crypto_key.hpp>
+#include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
+#include <hotplace/sdk/crypto/jose/json_web_signature.hpp>
+#include <hotplace/sdk/crypto/jose/json_web_key.hpp>
 
 #endif

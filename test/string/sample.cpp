@@ -17,52 +17,33 @@ using namespace hotplace::io;
 
 test_case _test_case;
 
-return_t base64_encode (int mode, const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, int encoding = BASE64_ENCODING)
+void test_base64_routine (const char* source, size_t source_size, int encoding)
 {
     return_t ret = errorcode_t::success;
-
-    if (mode) {
-        ret = base64_encode (source, source_size, buffer, buffer_size, encoding);
-    } else {
-        ret = base64_decode (source, source_size, buffer, buffer_size, encoding);
-    }
-    return ret;
-}
-
-return_t encode (int mode, const byte_t* source, size_t source_size, binary_t& out, int encoding)
-{
-    return_t ret = errorcode_t::success;
-
     buffer_stream bs;
-    size_t size = 0;
+    std::string encoded_b64;
+    binary_t decoded_b64;
 
     _test_case.start ();
+    base64_encode ((byte_t*) source, source_size, encoded_b64, encoding);
+    base64_decode (encoded_b64, decoded_b64, encoding);
+    _test_case.assert (0 == memcmp (source, &decoded_b64[0], source_size), __FUNCTION__, "base64_decode");
 
-    base64_encode (mode, source, source_size, &out[0], &size, encoding);
-    out.resize (size);
-    ret = base64_encode (mode, source, source_size, &out[0], &size, encoding);
-    out.resize (size);
-
-    _test_case.test (ret, __FUNCTION__, format ("base64.encode mode %d encoding %d", mode, encoding).c_str ());
-
-    dump_memory (&out[0], out.size (), &bs);
-    printf ("%.*s\n", (unsigned) bs.size (), bs.c_str ());
-
-    return ret;
+    dump_memory ((byte_t*) source, source_size, &bs);
+    printf ("input\n%s\n", bs.c_str ());
+    dump_memory ((byte_t*) &encoded_b64[0], encoded_b64.size (), &bs);
+    printf ("encoded\n%.*s\n", (int) bs.size (), bs.c_str ());
+    dump_memory (&decoded_b64[0], decoded_b64.size (), &bs);
+    printf ("decoded\n%.*s\n", (int) bs.size (), bs.c_str ());
 }
 
 void test_base64 ()
 {
-    _test_case.begin ("base64");
-    std::string sample = "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9";
-
-    binary_t enc, dec;
-
-    encode (1, (const byte_t*) sample.c_str (), sample.size (), enc, BASE64_ENCODING);
-    encode (0, &enc[0], enc.size (), dec, BASE64_ENCODING);
-    _test_case.assert ((0 == memcmp (sample.c_str (), &dec[0], dec.size ())), __FUNCTION__, "compare");
-
-    encode (0, (const byte_t*) sample.c_str (), sample.size (), dec, BASE64URL_ENCODING);
+    _test_case.begin ("base64 encoding");
+    const char* lyrics = "still a man hears what he wants to hear and disregards the rest";
+    size_t len = strlen (lyrics);
+    test_base64_routine (lyrics, len, BASE64_ENCODING);
+    test_base64_routine (lyrics, len, BASE64URL_ENCODING);
 }
 
 void test_format ()

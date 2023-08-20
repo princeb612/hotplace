@@ -121,11 +121,11 @@ return_t base64_encode (const byte_t* source, size_t source_size, byte_t* buffer
         // 7 => 12, 10; 8 => 12, 11; 9 => 12, 12
 
         const byte_t* table = MIME_BASE64_ENCODE;
-        size_t size_need = (4 * (source_size / 3)) + (source_size % 3 ? 4 : 0);
         if (BASE64URL_ENCODING == encoding) {
             table = MIME_BASE64URL_ENCODE;
-            size_need = (4 * (source_size / 3)) + (source_size % 3 ? (source_size % 3) + 1 : 0);
         }
+
+        size_t size_need = (4 * (source_size / 3)) + (source_size % 3 ? 4 : 0);
 
         if (*buffer_size < size_need) {
             *buffer_size = size_need;
@@ -163,6 +163,10 @@ return_t base64_encode (const byte_t* source, size_t source_size, byte_t* buffer
             }
         }
 
+        if (BASE64URL_ENCODING == encoding) {
+            size_need = (4 * (source_size / 3)) + (source_size % 3 ? (source_size % 3) + 1 : 0);
+        }
+
         *buffer_size = size_need;
     }
     __finally2
@@ -178,11 +182,10 @@ return_t base64_decode (const byte_t *source, size_t source_size, byte_t *buffer
     return_t ret = errorcode_t::success;
     size_t i, j = 0;
     base64_conv_t temp;
-    const int* table = MIME_BASE64_DECODE;
 
     __try2
     {
-        if (nullptr == table || nullptr == source || nullptr == buffer_size) {
+        if (nullptr == source || nullptr == buffer_size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -191,6 +194,11 @@ return_t base64_decode (const byte_t *source, size_t source_size, byte_t *buffer
         // (( n + (x - 1)) / x) * x , (n > 0)
         // if x=3 then 1~3 -> 3, 4~6 -> 6
         // if x=4 then 1~4 -> 4, 5~8 -> 8
+
+        const int* table = MIME_BASE64_DECODE;
+        if (BASE64URL_ENCODING == encoding) {
+            table = MIME_BASE64URL_DECODE;
+        }
 
         size_t size_buffer = *buffer_size;
         size_t size_need = (source_size * 3 / 4) + 2; /* trailing == */
@@ -210,10 +218,6 @@ return_t base64_decode (const byte_t *source, size_t source_size, byte_t *buffer
             } else {
                 break;
             }
-        }
-
-        if (BASE64URL_ENCODING == encoding) {
-            table = MIME_BASE64URL_DECODE;
         }
 
         for (i = 0; i < source_size; i = i + 4, j = j + 3) {
@@ -261,17 +265,29 @@ return_t base64_decode (const byte_t *source, size_t source_size, byte_t *buffer
 return_t base64_encode (const byte_t* source, size_t source_size, binary_t& encoded, int encoding)
 {
     return_t ret = errorcode_t::success;
+
     size_t size = 0;
 
     base64_encode (source, source_size, &encoded[0], &size, encoding);
     encoded.resize (size);
     ret = base64_encode (source, source_size, &encoded[0], &size, encoding);
+    encoded.resize (size);
+
     return ret;
 }
 
-std::string base64_encode (binary_t source, int encoding)
+return_t base64_encode (const byte_t* source, size_t source_size, std::string& encoded, int encoding)
 {
-    return base64_encode (&source[0], source.size (), encoding);
+    return_t ret = errorcode_t::success;
+
+    size_t size = 0;
+
+    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
+    encoded.resize (size);
+    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
+    encoded.resize (size);
+
+    return ret;
 }
 
 std::string base64_encode (const byte_t* source, size_t source_size, int encoding)
@@ -282,50 +298,80 @@ std::string base64_encode (const byte_t* source, size_t source_size, int encodin
     base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
     base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
-    return encoded;
-}
-
-std::string base64_encode (const char* source, size_t source_size, int encoding)
-{
-    std::string encoded;
-    size_t size = 0;
-
-    base64_encode ((byte_t*) source, source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
-    base64_encode ((byte_t*) source, source_size, (byte_t*) &encoded[0], &size, encoding);
     return encoded;
 }
 
-return_t base64_decode (const byte_t *source, size_t source_size, binary_t& decoded, int encoding)
+std::string base64_encode (binary_t source, int encoding)
+{
+    return base64_encode (&source [0], source.size (), encoding);
+}
+
+std::string base64_encode (std::string source, int encoding)
+{
+    return base64_encode ((byte_t*) source.c_str (), source.size (), encoding);
+}
+
+return_t base64_decode (const char* source, size_t source_size, binary_t& decoded, int encoding)
 {
     return_t ret = errorcode_t::success;
+
     size_t size = 0;
 
-    base64_decode (source, source_size, &decoded[0], &size, encoding);
+    base64_decode ((byte_t*) source, source_size, &decoded[0], &size, encoding);
     decoded.resize (size);
-    ret = base64_decode (source, source_size, &decoded[0], &size, encoding);
+    base64_decode ((byte_t*) source, source_size, &decoded[0], &size, encoding);
+    decoded.resize (size);
+
     return ret;
 }
 
-binary_t base64_decode (const byte_t* source, size_t source_size, int encoding)
+return_t base64_decode (std::string source, binary_t& decoded, int encoding)
 {
-    binary_t decoded;
+    return_t ret = errorcode_t::success;
+
     size_t size = 0;
 
-    base64_decode (source, source_size, &decoded[0], &size, encoding);
+    base64_decode ((byte_t*) source.c_str (), source.size (), &decoded[0], &size, encoding);
     decoded.resize (size);
-    base64_decode (source, source_size, &decoded[0], &size, encoding);
+    base64_decode ((byte_t*) source.c_str (), source.size (), &decoded[0], &size, encoding);
+    decoded.resize (size);
+
+    return ret;
+}
+
+binary_t base64_decode (const char* source, size_t source_size, int encoding)
+{
+    binary_t decoded;
+
+    base64_decode (source, source_size, decoded, encoding);
     return decoded;
 }
 
-std::string base64_decode_becareful (const char* source, size_t source_size, int encoding)
+binary_t base64_decode (binary_t source, int encoding)
+{
+    return base64_decode ((char*) &source[0], source.size (), encoding);
+}
+
+binary_t base64_decode (std::string source, int encoding)
+{
+    return base64_decode (source.c_str (), source.size (), encoding);
+}
+
+std::string base64_decode_careful (std::string source, int encoding)
+{
+    return base64_decode_careful (source.c_str (), source.size (), encoding);
+}
+
+std::string base64_decode_careful (const char* source, size_t source_size, int encoding)
 {
     std::string decoded;
     size_t size = 0;
 
-    base64_decode ((const byte_t*) source, source_size, (byte_t*) &decoded[0], &size, encoding);
+    base64_decode ((byte_t*) source, source_size, (byte_t*) &decoded[0], &size, encoding);
     decoded.resize (size);
-    base64_decode ((const byte_t*) source, source_size, (byte_t*) &decoded[0], &size, encoding);
+    base64_decode ((byte_t*) source, source_size, (byte_t*) &decoded[0], &size, encoding);
+    decoded.resize (size);
     return decoded;
 }
 

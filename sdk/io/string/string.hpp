@@ -321,9 +321,10 @@ std::string format (const char* fmt, va_list ap);
  *  conv.h2b (hex, bin);
  */
 
-enum hexbin_flag_t {
+enum hex2bin_flag_t {
     prefix_0x   = 1 << 0,
     uppercase   = 1 << 1,
+    refresh     = 1 << 2, // clear before convert
 };
 
 class hex2bin

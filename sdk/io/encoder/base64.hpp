@@ -51,10 +51,10 @@ enum BASE64_FLAG {
 return_t base64_encode (const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, int encoding = BASE64_ENCODING);
 
 return_t base64_encode (const byte_t* source, size_t source_size, binary_t& encoded, int encoding = BASE64_ENCODING);
-
-std::string base64_encode (binary_t source, int encoding = BASE64_ENCODING);
+return_t base64_encode (const byte_t* source, size_t source_size, std::string& encoded, int encoding = BASE64_ENCODING);
 std::string base64_encode (const byte_t* source, size_t source_size, int encoding = BASE64_ENCODING);
-std::string base64_encode (const char* source, size_t source_size, int encoding = BASE64_ENCODING);
+std::string base64_encode (binary_t source, int encoding = BASE64_ENCODING);
+std::string base64_encode (std::string source, int encoding = BASE64_ENCODING);
 
 /*
  * decode base64 and base64url
@@ -74,11 +74,13 @@ std::string base64_encode (const char* source, size_t source_size, int encoding 
  */
 return_t base64_decode (const byte_t* source, size_t source_size, byte_t *buffer, size_t * buffer_size, int encoding = BASE64_ENCODING);
 
-return_t base64_decode (const byte_t* source, size_t source_size, binary_t& decoded, int encoding = BASE64_ENCODING);
-
-binary_t base64_decode (const byte_t* source, size_t source_size, int encoding = BASE64_ENCODING);
-
-std::string base64_decode_becareful (const char* source, size_t source_size, int encoding = BASE64_ENCODING);
+return_t base64_decode (const char* source, size_t source_size, binary_t& decoded, int encoding = BASE64_ENCODING);
+return_t base64_decode (std::string source, binary_t& decoded, int encoding = BASE64_ENCODING);
+binary_t base64_decode (const char* source, size_t source_size, int encoding = BASE64_ENCODING);
+binary_t base64_decode (binary_t source, int encoding = BASE64_ENCODING);
+binary_t base64_decode (std::string source, int encoding = BASE64_ENCODING);
+std::string base64_decode_careful (std::string source, int encoding = BASE64_ENCODING);
+std::string base64_decode_careful (const char* source, size_t source_size, int encoding = BASE64_ENCODING);
 
 }
 }  // namespace

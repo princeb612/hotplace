@@ -50,29 +50,6 @@ typedef struct _openssl_evp_md_method_t {
     const char* _fetchname;
 } openssl_evp_md_method_t;
 
-/* opensource native type
-
- # define EVP_PKEY_HMAC     NID_hmac
- # define EVP_PKEY_RSA      NID_rsaEncryption
- # define EVP_PKEY_EC       NID_X9_62_id_ecPublicKey
- # define EVP_PKEY_X25519   NID_X25519
- # define EVP_PKEY_X448     NID_X448
- # define EVP_PKEY_ED25519  NID_ED25519
- # define EVP_PKEY_ED448    NID_ED448
-
- #define NID_hmac                   855
- #define NID_rsaEncryption          6
- #define NID_X9_62_id_ecPublicKey   408
- #define NID_X25519                 1034
- #define NID_X448                   1035
- #define NID_ED25519                1087
- #define NID_ED448                  1088
-
- #define NID_X9_62_prime256v1       415
- #define NID_secp384r1              715
- #define NID_secp521r1              716
- */
-
 }
 }  // namespace
 

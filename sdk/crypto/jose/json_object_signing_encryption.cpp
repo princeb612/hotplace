@@ -325,8 +325,8 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::lis
                 }
             }
 
-            std::string header_encoded = base64_encode (header.c_str (), header.size (), BASE64URL_ENCODING);
-            std::string claims_encoded = base64_encode (input.c_str (), input.size (), BASE64URL_ENCODING);
+            std::string header_encoded = base64_encode ((byte_t*) header.c_str (), header.size (), BASE64URL_ENCODING);
+            std::string claims_encoded = base64_encode ((byte_t*) input.c_str (), input.size (), BASE64URL_ENCODING);
 
             binary_t header_claims;
 
@@ -345,7 +345,8 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::lis
 
             item.header = header_encoded;
             item.payload = claims_encoded;
-            item.signature = base64_encode ((char*) &signature[0], signature.size (), BASE64URL_ENCODING);
+            item.signature = base64_encode (&signature[0], signature.size (), BASE64URL_ENCODING);
+
             item.kid = kid;
             item.sig = sig;
             handle->signs.push_back (item);
@@ -390,7 +391,7 @@ return_t json_object_signing_encryption::verify (jose_context_t* context, std::s
 
             bool result_per_signature = false;
 
-            std::string protected_header = base64_decode_becareful (item.header.c_str (), item.header.size (), BASE64URL_ENCODING);
+            std::string protected_header = base64_decode_careful (item.header, BASE64URL_ENCODING);
             crypt_sig_t sig;
             std::string header_kid;
 
@@ -420,7 +421,7 @@ return_t json_object_signing_encryption::verify (jose_context_t* context, std::s
             }
             binary_t signature_decoded;
 
-            base64_decode ((byte_t*) item.signature.c_str (), item.signature.size (), signature_decoded, BASE64URL_ENCODING);
+            base64_decode (item.signature, signature_decoded, BASE64URL_ENCODING);
             ret = sign.verify (handle->key, kid, sig, header_claims, signature_decoded, result_per_signature);
             if (errorcode_t::success != ret) {
                 break;
@@ -724,7 +725,7 @@ return_t json_object_signing_encryption::prepare_decryption_item (jose_context_t
     {
         type = CRYPT_ENC_UNKNOWN;
 
-        std::string protected_header_decoded = base64_decode_becareful ( protected_header, strlen (protected_header), BASE64URL_ENCODING);
+        std::string protected_header_decoded = base64_decode_careful (protected_header, strlen (protected_header), BASE64URL_ENCODING);
         ret = json_open_stream (&json_protected, protected_header_decoded.c_str ());
         if (errorcode_t::success != ret) {
             __leave2;
@@ -744,9 +745,9 @@ return_t json_object_signing_encryption::prepare_decryption_item (jose_context_t
         item.datamap[CRYPT_ITEM_AAD].clear ();
         item.datamap[CRYPT_ITEM_AAD] << protected_header; // base64url encoded
         item.header = protected_header_decoded;
-        base64_decode ((byte_t*) iv, strlen (iv), item.datamap[CRYPT_ITEM_IV], BASE64URL_ENCODING);
-        base64_decode ((byte_t*) tag, strlen (tag), item.datamap[CRYPT_ITEM_TAG], BASE64URL_ENCODING);
-        base64_decode ((byte_t*) ciphertext, strlen (ciphertext), item.datamap[CRYPT_ITEM_CIPHERTEXT], BASE64URL_ENCODING);
+        base64_decode (iv, strlen (iv), item.datamap[CRYPT_ITEM_IV], BASE64URL_ENCODING);
+        base64_decode (tag, strlen (tag), item.datamap[CRYPT_ITEM_TAG], BASE64URL_ENCODING);
+        base64_decode (ciphertext, strlen (ciphertext), item.datamap[CRYPT_ITEM_CIPHERTEXT], BASE64URL_ENCODING);
     }
     __finally2
     {
@@ -774,7 +775,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
 
         const char* enc = nullptr;
         return_t ret_test = errorcode_t::success;
-        std::string protected_header_decoded = base64_decode_becareful (protected_header, strlen (protected_header), BASE64URL_ENCODING);
+        std::string protected_header_decoded = base64_decode_careful (protected_header, strlen (protected_header), BASE64URL_ENCODING);
         ret_test = json_open_stream (&json_protected, protected_header_decoded.c_str ());
         if (errorcode_t::success != ret_test) {
             ret = ERROR_BAD_FORMAT;
@@ -802,7 +803,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
             enckey = encrypted_key;
         }
         if (enckey) {
-            base64_decode ((byte_t*) enckey, strlen (enckey), recipient.datamap[CRYPT_ITEM_ENCRYPTEDKEY], BASE64URL_ENCODING);
+            base64_decode (enckey, strlen (enckey), recipient.datamap[CRYPT_ITEM_ENCRYPTEDKEY], BASE64URL_ENCODING);
         }
 
         const char* alg = nullptr;
@@ -856,10 +857,10 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
             jwk.add_ec (&key, nullptr, nullptr, crv_value, x_value, y_value, nullptr);
             recipient.epk = key.select (CRYPTO_USE_ENC, true); // EVP_PKEY_up_ref
             if (apu_value) {
-                base64_decode ((byte_t*) apu_value, strlen (apu_value), recipient.datamap[CRYPT_ITEM_APU], BASE64URL_ENCODING);
+                base64_decode (apu_value, strlen (apu_value), recipient.datamap[CRYPT_ITEM_APU], BASE64URL_ENCODING);
             }
             if (apv_value) {
-                base64_decode ((byte_t*) apv_value, strlen (apv_value), recipient.datamap[CRYPT_ITEM_APV], BASE64URL_ENCODING);
+                base64_decode (apv_value, strlen (apv_value), recipient.datamap[CRYPT_ITEM_APV], BASE64URL_ENCODING);
             }
         } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) { // iv, tag
             const char* iv_value = nullptr;
@@ -876,8 +877,8 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
                     __leave2;
                 }
             }
-            base64_decode ((byte_t*) iv_value, strlen (iv_value), recipient.datamap[CRYPT_ITEM_IV], BASE64URL_ENCODING);
-            base64_decode ((byte_t*) tag_value, strlen (tag_value), recipient.datamap[CRYPT_ITEM_TAG], BASE64URL_ENCODING);
+            base64_decode (iv_value, strlen (iv_value), recipient.datamap[CRYPT_ITEM_IV], BASE64URL_ENCODING);
+            base64_decode (tag_value, strlen (tag_value), recipient.datamap[CRYPT_ITEM_TAG], BASE64URL_ENCODING);
         } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) { // p2s, p2c
             const char* p2s = nullptr;
             int p2c = -1;
@@ -893,7 +894,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
                     __leave2;
                 }
             }
-            base64_decode ((byte_t*) p2s, strlen (p2s), recipient.datamap[CRYPT_ITEM_P2S], BASE64URL_ENCODING);
+            base64_decode (p2s, strlen (p2s), recipient.datamap[CRYPT_ITEM_P2S], BASE64URL_ENCODING);
             recipient.p2c = p2c;
         }
     }
@@ -1198,12 +1199,12 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
                                     json_object_set_new (header, "epk", json_epk);
                                 }
                             } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) {
-                                std::string b64_iv = base64_encode ((char*) &recipient.datamap[CRYPT_ITEM_IV][0], recipient.datamap[CRYPT_ITEM_IV].size (), BASE64URL_ENCODING);
-                                std::string b64_tag = base64_encode ((char*) &recipient.datamap[CRYPT_ITEM_TAG][0], recipient.datamap[CRYPT_ITEM_TAG].size (), BASE64URL_ENCODING);
+                                std::string b64_iv = base64_encode (&recipient.datamap[CRYPT_ITEM_IV][0], recipient.datamap[CRYPT_ITEM_IV].size (), BASE64URL_ENCODING);
+                                std::string b64_tag = base64_encode (&recipient.datamap[CRYPT_ITEM_TAG][0], recipient.datamap[CRYPT_ITEM_TAG].size (), BASE64URL_ENCODING);
                                 json_object_set_new (header, "iv", json_string (b64_iv.c_str ()));
                                 json_object_set_new (header, "tag", json_string (b64_tag.c_str ()));
                             } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) {
-                                std::string b64_p2s = base64_encode ((char*) &recipient.datamap[CRYPT_ITEM_P2S][0], recipient.datamap[CRYPT_ITEM_P2S].size (), BASE64URL_ENCODING);
+                                std::string b64_p2s = base64_encode (&recipient.datamap[CRYPT_ITEM_P2S][0], recipient.datamap[CRYPT_ITEM_P2S].size (), BASE64URL_ENCODING);
                                 json_object_set_new (header, "p2s", json_string (b64_p2s.c_str ()));
                                 json_object_set_new (header, "p2c", json_integer (recipient.p2c));
                             }

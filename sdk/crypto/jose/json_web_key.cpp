@@ -13,8 +13,10 @@
 #include <jansson.h>
 #include <fstream>
 
+#include <hotplace/sdk/io/stream/buffer_stream.hpp>
+using namespace hotplace::io;
+
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 json_web_key::json_web_key ()
@@ -46,10 +48,10 @@ return_t json_web_key::add_rsa (crypto_key* crypto_key, const char* kid, const c
         std::string e_decoded;
         std::string d_decoded;
 
-        n_decoded = base64_decode_becareful (n_value, strlen (n_value), BASE64URL_ENCODING);
-        e_decoded = base64_decode_becareful (e_value, strlen (e_value), BASE64URL_ENCODING);
+        n_decoded = base64_decode_careful (n_value, strlen (n_value), BASE64URL_ENCODING);
+        e_decoded = base64_decode_careful (e_value, strlen (e_value), BASE64URL_ENCODING);
         if (nullptr != d_value) {
-            d_decoded = base64_decode_becareful (d_value, strlen (d_value), BASE64URL_ENCODING);
+            d_decoded = base64_decode_careful (d_value, strlen (d_value), BASE64URL_ENCODING);
         }
 
         std::string p_decoded;
@@ -59,11 +61,11 @@ return_t json_web_key::add_rsa (crypto_key* crypto_key, const char* kid, const c
         std::string qi_decoded;
 
         if (p_value && q_value && dp_value && dq_value && qi_value) {
-            p_decoded = base64_decode_becareful (p_value, strlen (p_value), BASE64URL_ENCODING);
-            q_decoded = base64_decode_becareful (q_value, strlen (q_value), BASE64URL_ENCODING);
-            dp_decoded = base64_decode_becareful (dp_value, strlen (dp_value), BASE64URL_ENCODING);
-            dq_decoded = base64_decode_becareful (dq_value, strlen (dq_value), BASE64URL_ENCODING);
-            qi_decoded = base64_decode_becareful (qi_value, strlen (qi_value), BASE64URL_ENCODING);
+            p_decoded = base64_decode_careful (p_value, strlen (p_value), BASE64URL_ENCODING);
+            q_decoded = base64_decode_careful (q_value, strlen (q_value), BASE64URL_ENCODING);
+            dp_decoded = base64_decode_careful (dp_value, strlen (dp_value), BASE64URL_ENCODING);
+            dq_decoded = base64_decode_careful (dq_value, strlen (dq_value), BASE64URL_ENCODING);
+            qi_decoded = base64_decode_careful (qi_value, strlen (qi_value), BASE64URL_ENCODING);
         }
 
         binary_t n;
@@ -119,14 +121,14 @@ return_t json_web_key::add_ec (crypto_key* crypto_key, const char* kid, const ch
             __leave2_trace (ret);
         }
 
-        x_decoded = base64_decode_becareful (x_value, strlen (x_value), BASE64URL_ENCODING);
+        x_decoded = base64_decode_careful (x_value, strlen (x_value), BASE64URL_ENCODING);
         if (y_value) {
             /* kty EC */
-            y_decoded = base64_decode_becareful (y_value, strlen (y_value), BASE64URL_ENCODING);
+            y_decoded = base64_decode_careful (y_value, strlen (y_value), BASE64URL_ENCODING);
         }
         if (d_value) {
             /* private key */
-            d_decoded = base64_decode_becareful (d_value, strlen (d_value), BASE64URL_ENCODING);
+            d_decoded = base64_decode_careful (d_value, strlen (d_value), BASE64URL_ENCODING);
         }
 
         binary_t x;
@@ -157,10 +159,18 @@ return_t json_web_key::add_oct (crypto_key* crypto_key, const char* kid, const c
             __leave2;
         }
 
-        std::string k_decoded = base64_decode_becareful (k_value, strlen (k_value), BASE64URL_ENCODING);
+        std::string k_decoded = base64_decode_careful (k_value, strlen (k_value), BASE64URL_ENCODING);
 
         binary_t k;
         k.insert (k.end (), k_decoded.begin (), k_decoded.end ());
+
+{
+    buffer_stream bs;
+    dump_memory ((byte_t*) k_value, strlen(k_value), &bs);
+    printf ("add oct\n%s\n", bs.c_str ());
+    dump_memory (&k[0], k.size(), &bs);
+    printf ("add oct\n%s\n", bs.c_str ());
+}
 
         crypto_keychain keyset;
         keyset.add_oct (crypto_key, kid, alg, k, use);

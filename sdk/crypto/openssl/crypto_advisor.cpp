@@ -205,18 +205,9 @@ const hint_blockcipher_t hint_blockciphers [] = {
 };
 
 const openssl_evp_md_method_t evp_md_methods[] = {
-    /*
-       EVP_md5_sha1
-       EVP_mdc2
-       EVP_sha512_224
-       EVP_sha512_256
-     */
     { hash_algorithm_t::md4, EVP_md4 (), "md4", },
     { hash_algorithm_t::md5, EVP_md5 (), "md5", },
 
-#if OPENSSL_VERSION_NUMBER < 10100000L
-    { HASH_ALGORITHM_SHA, EVP_sha (), "sha", },
-#endif
     { hash_algorithm_t::sha1, EVP_sha1 (), "sha1", },
 
     { hash_algorithm_t::sha2_224, EVP_sha224 (), "sha224", },
@@ -238,7 +229,6 @@ const openssl_evp_md_method_t evp_md_methods[] = {
 
     { hash_algorithm_t::shake128, EVP_shake128 (), "shake128", },
     { hash_algorithm_t::shake256, EVP_shake256 (), "shake256", },
-
 };
 
 const hint_jose_encryption_t hint_jose_algorithms [] =

@@ -10,6 +10,9 @@
 
 #include <hotplace/sdk/crypto/jose/json_object_signing.hpp>
 
+#include <hotplace/sdk/io/stream/buffer_stream.hpp>
+using namespace hotplace::io;
+
 namespace hotplace {
 namespace crypto {
 
@@ -52,16 +55,11 @@ return_t json_object_signing::sign (crypto_key* key, crypt_sig_t sig, binary_t i
         } SIGN_TABLE;
 
         SIGN_TABLE sign_table [] = {
-            { SIGN_TYPE_HMAC,
-              &json_object_signing::sign_general,    },
-            { SIGN_TYPE_RSASSA_PKCS15,
-              &json_object_signing::sign_general,    },
-            { SIGN_TYPE_ECDSA,
-              &json_object_signing::sign_ecdsa,      },
-            { SIGN_TYPE_RSASSA_PSS,
-              &json_object_signing::sign_rsassa_pss, },
-            { SIGN_TYPE_EDDSA,
-              &json_object_signing::sign_eddsa,      },
+            { SIGN_TYPE_HMAC,           &json_object_signing::sign_general, },
+            { SIGN_TYPE_RSASSA_PKCS15,  &json_object_signing::sign_general, },
+            { SIGN_TYPE_ECDSA,          &json_object_signing::sign_ecdsa, },
+            { SIGN_TYPE_RSASSA_PSS,     &json_object_signing::sign_rsassa_pss, },
+            { SIGN_TYPE_EDDSA,          &json_object_signing::sign_eddsa, },
         };
 
         sign_function_t signer = nullptr;
@@ -138,16 +136,11 @@ return_t json_object_signing::verify (crypto_key* key, const char* kid, crypt_si
         } SIGN_TABLE;
 
         SIGN_TABLE sign_table [] = {
-            { SIGN_TYPE_HMAC,
-              &json_object_signing::verify_hmac, },
-            { SIGN_TYPE_RSASSA_PKCS15,
-              &json_object_signing::verify_rsassa_pkcs1_v1_5, },
-            { SIGN_TYPE_ECDSA,
-              &json_object_signing::verify_ecdsa, },
-            { SIGN_TYPE_RSASSA_PSS,
-              &json_object_signing::verify_rsassa_pss, },
-            { SIGN_TYPE_EDDSA,
-              &json_object_signing::verify_eddsa, },
+            { SIGN_TYPE_HMAC,           &json_object_signing::verify_hmac, },
+            { SIGN_TYPE_RSASSA_PKCS15,  &json_object_signing::verify_rsassa_pkcs1_v1_5, },
+            { SIGN_TYPE_ECDSA,          &json_object_signing::verify_ecdsa, },
+            { SIGN_TYPE_RSASSA_PSS,     &json_object_signing::verify_rsassa_pss, },
+            { SIGN_TYPE_EDDSA,          &json_object_signing::verify_eddsa, },
         };
 
         verify_function_t verifier = nullptr;
@@ -206,6 +199,12 @@ return_t json_object_signing::sign_general (EVP_PKEY* pkey, crypt_sig_t sig, bin
     EVP_MD_CTX* md_context = nullptr;
     int ret_openssl = 1;
     size_t size = 0;
+
+{
+buffer_stream bs;
+dump_memory (&input[0], input.size (), &bs);
+printf ("%s\n", bs.c_str ());
+}
 
     __try2
     {

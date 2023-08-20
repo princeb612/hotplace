@@ -15,7 +15,7 @@
 
 COMMENTS
 
-mkdir -p build include lib
+mkdir -p build
 cd build
 cmake -G 'Unix Makefiles' ..
 time make

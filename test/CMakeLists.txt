@@ -15,5 +15,6 @@ add_subdirectory (thread)
 
 # crypto
 add_subdirectory (crypto)
+add_subdirectory (jose)
 
 # net

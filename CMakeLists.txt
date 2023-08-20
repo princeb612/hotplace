@@ -89,6 +89,7 @@ link_directories (${CMAKE_INSTALL_RPATH})
 
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 file (COPY ${PROJECT_SOURCE_DIR}/test/test.sh DESTINATION ${PROJECT_SOURCE_DIR}/build/test/)
+
 copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/sdk ${PROJECT_SOURCE_DIR}/include)
 
 add_subdirectory (sdk)

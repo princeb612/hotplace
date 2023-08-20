@@ -32,6 +32,9 @@ uint32 hex2bin::get_flags ()
 
 return_t hex2bin::convert (binary_t inpart, std::string& outpart)
 {
+    if (_flags & hex2bin_flag_t::refresh) {
+        outpart.clear ();
+    }
     return convert (&inpart[0], inpart.size (), outpart);
 }
 
@@ -41,7 +44,9 @@ return_t hex2bin::convert (const byte_t* source, size_t size, std::string& outpa
 
     __try2
     {
-        outpart.clear ();
+        if (_flags & hex2bin_flag_t::refresh) {
+            outpart.clear ();
+        }
 
         if (nullptr == source) {
             ret = errorcode_t::invalid_parameter;
@@ -50,10 +55,10 @@ return_t hex2bin::convert (const byte_t* source, size_t size, std::string& outpa
 
         bool is_be = is_big_endian ();
         uint32 flags = get_flags ();
-        if (flags & hexbin_flag_t::prefix_0x) {
+        if (flags & hex2bin_flag_t::prefix_0x) {
             outpart += "0x";
         }
-        bool uppercase = (flags & hexbin_flag_t::uppercase) ? true : false;
+        bool uppercase = (flags & hex2bin_flag_t::uppercase) ? true : false;
         char buf[3];
         size_t buflen = sizeof (buf);
         for (size_t cur = 0; cur < size; cur++) {
@@ -84,6 +89,10 @@ return_t hex2bin::convert (const char* source, size_t size, binary_t& outpart)
 {
     return_t ret = errorcode_t::success;
     bool is_be = is_big_endian ();
+
+    if (_flags & hex2bin_flag_t::refresh) {
+        outpart.clear ();
+    }
 
     for (size_t cur = 0; cur < size; cur += 2) {
         byte_t i = 0;
