@@ -141,10 +141,10 @@ return_t base64_encode (const byte_t* source, size_t source_size, byte_t* buffer
         for (i = 0; i < source_size; i += 3, j += 4) {
             temp.i32 = 0;
             temp.c3 = source[i];
-            if ((i + 1) <= source_size) {
+            if ((i + 1) < source_size) {
                 temp.c2 = source[i + 1];
             }
-            if ((i + 2) <= source_size) {
+            if ((i + 2) < source_size) {
                 temp.c1 = source[i + 2];
             }
 
@@ -266,14 +266,10 @@ return_t base64_encode (const byte_t* source, size_t source_size, binary_t& enco
 {
     return_t ret = errorcode_t::success;
 
-    binary_t src;
-    src.insert (src.end (), source, source + source_size);
-    src.push_back (0);
-
     size_t size = 0;
-    base64_encode (&src[0], source_size, &encoded[0], &size, encoding);
+    base64_encode (source, source_size, &encoded[0], &size, encoding);
     encoded.resize (size);
-    ret = base64_encode (&src[0], source_size, &encoded[0], &size, encoding);
+    ret = base64_encode (source, source_size, &encoded[0], &size, encoding);
     encoded.resize (size);
 
     return ret;
@@ -283,14 +279,10 @@ return_t base64_encode (const byte_t* source, size_t source_size, std::string& e
 {
     return_t ret = errorcode_t::success;
 
-    binary_t src;
-    src.insert (src.end (), source, source + source_size);
-    src.push_back (0);
-
     size_t size = 0;
-    base64_encode (&src[0], source_size, (byte_t*) &encoded[0], &size, encoding);
+    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
-    base64_encode (&src[0], source_size, (byte_t*) &encoded[0], &size, encoding);
+    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
 
     return ret;
@@ -300,14 +292,10 @@ std::string base64_encode (const byte_t* source, size_t source_size, int encodin
 {
     std::string encoded;
 
-    binary_t src;
-    src.insert (src.end (), source, source + source_size);
-    src.push_back (0);
-
     size_t size = 0;
-    base64_encode (&src[0], source_size, (byte_t*) &encoded[0], &size, encoding);
+    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
-    base64_encode (&src[0], source_size, (byte_t*) &encoded[0], &size, encoding);
+    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
     return encoded;
 }

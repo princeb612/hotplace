@@ -27,15 +27,7 @@ std::string format (const char* fmt, ...)
 
     while (true) {
         va_start (ap, fmt);
-#ifdef __GNUC__
-        ret = vsnprintf (&buf[0], buf.size (), fmt, ap);
-#else
-    #if defined __STDC_WANT_SECURE_LIB__
-        ret = _vsnprintf_s (&buf[0], buf.size (), _TRUNCATE, fmt, ap);
-    #else
-        ret = _vsnprintf (&buf[0], buf.size (), fmt, ap);
-    #endif
-#endif
+        ret = vsnprintf_inline (&buf[0], buf.size (), fmt, ap);
         va_end (ap);
         if ((ret < 0) || (ret >= needed)) {
             needed *= 2;

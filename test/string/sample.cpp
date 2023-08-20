@@ -21,6 +21,7 @@ void test_base16 ()
 {
     const char* text = "0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[{]}\\|;:'\",<.>/\?";
     std::string encoded;
+
     base16_encode ((byte_t*) text, strlen (text), encoded);
     binary_t decoded;
     base16_decode (encoded, decoded);

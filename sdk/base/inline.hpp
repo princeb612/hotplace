@@ -30,6 +30,22 @@ static inline void memcpy_inline (void* dest, size_t size_dest, const void* src,
 #endif
 }
 
+static inline int vsnprintf_inline (char *buffer, size_t size, const char *fmt, va_list ap)
+{
+    int ret = 0;
+
+#ifdef __GNUC__
+    ret = vsnprintf (buffer, size, fmt, ap);
+#else
+    #if defined __STDC_WANT_SECURE_LIB__
+    ret = _vsnprintf_s (buffer, size, _TRUNCATE, fmt, ap);
+    #else
+    ret = _vsnprintf (buffer, size, fmt, ap);
+    #endif
+#endif
+    return ret;
+}
+
 static inline std::string& ltrim (std::string& source)
 {
 #if __cplusplus >= 201103L // c++11
@@ -171,6 +187,7 @@ static inline std::string concat_filepath (const std::string& path, const std::s
 static inline std::string convert (binary_t bin)
 {
     std::string result;
+
     result.assign ((char*) &bin[0], bin.size ());
     return result;
 }
@@ -178,6 +195,7 @@ static inline std::string convert (binary_t bin)
 static inline binary_t convert (std::string source)
 {
     binary_t result;
+
     result.insert (result.end (), source.begin (), source.end ());
     return result;
 }

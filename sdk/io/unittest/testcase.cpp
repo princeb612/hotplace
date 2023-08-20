@@ -46,7 +46,7 @@ void test_case::begin (const char* case_name, ...)
         /* "test case" */
         char STRING_TEST_CASE[] = { '[', '*', ' ', 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', ' ', '-', ' ', 0, };
         std::cout   << col.set_fgcolor (console_color_t::magenta).turnon ()
-                    << STRING_TEST_CASE << case_name << " ]" << col.turnoff () << std::endl;
+                    << STRING_TEST_CASE << stream.c_str () << " ]" << col.turnoff () << std::endl;
     } else {
         _current_case_name.clear ();
     }

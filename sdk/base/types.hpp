@@ -30,7 +30,7 @@ typedef unsigned char byte_t;
 typedef std::vector<byte_t> binary_t;
 
 #ifndef RTL_NUMBER_OF
-#define RTL_NUMBER_OF(x) (sizeof (x) / sizeof (x[0]))
+    #define RTL_NUMBER_OF(x) (sizeof (x) / sizeof (x[0]))
 #endif
 
 } // namespace

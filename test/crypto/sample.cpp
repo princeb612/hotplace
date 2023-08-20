@@ -29,7 +29,7 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_algorithm_t algori
     binary_t encrypted;
     binary_t decrypted;
 
-    buffer_stream dump;
+    buffer_stream bs;
 
     binary_t aad;
     binary_t tag;
@@ -47,41 +47,27 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_algorithm_t algori
         {
             ret = crypt_object->open (&crypt_handle, algorithm, mode, key_data, key_size, iv_data, iv_size);
             if (errorcode_t::success == ret) {
-                std::cout << dump.c_str () << std::endl;
-                dump.flush ();
-
                 size_t crypt_key_size = 0;
                 size_t crypt_iv_size = 0;
                 crypt_object->query (crypt_handle, 1, crypt_key_size);
                 crypt_object->query (crypt_handle, 2, crypt_iv_size);
-                dump.printf ("key size %zi iv size %zi", crypt_key_size, crypt_iv_size);
-                std::cout << dump.c_str () << std::endl;
-                dump.flush ();
 
                 if (crypt_mode_t::gcm == mode) {
                     openssl_prng rand;
                     rand.random (aad, 32);
-                    std::cout << "aad" << std::endl;
-                    dump_memory (&aad[0], aad.size (), &dump);
-                    std::cout << dump.c_str () << std::endl;
-                    dump.flush ();
                 }
 
                 ret = crypt_object->encrypt2 (crypt_handle, data, size, encrypted, &aad, &tag);
                 if (errorcode_t::success == ret) {
                     ret = crypt_object->decrypt2 (crypt_handle, &encrypted[0], encrypted.size (), decrypted, &aad, &tag);
                     if (errorcode_t::success == ret) {
-                        std::cout << "sourcce" << std::endl;
-                        dump_memory (data, size, &dump, 16, 0);
-                        std::cout << dump.c_str () << std::endl;
-
                         std::cout << "encrypted" << std::endl;
-                        dump_memory (&encrypted[0], encrypted.size (), &dump, 16, 0);
-                        std::cout << dump.c_str () << std::endl;
+                        dump_memory (&encrypted[0], encrypted.size (), &bs);
+                        std::cout << bs.c_str () << std::endl;
 
                         std::cout << "decrypted" << std::endl;
-                        dump_memory (&decrypted[0], decrypted.size (), &dump, 16, 0);
-                        std::cout << dump.c_str () << std::endl;
+                        dump_memory (&decrypted[0], decrypted.size (), &bs);
+                        std::cout << bs.c_str () << std::endl;
 
                         if (size != decrypted.size ()) {
                             ret = errorcode_t::internal_error;
@@ -247,8 +233,6 @@ return_t test_hash_routine (hash_interface* hash_object, hash_algorithm_t algori
 
     const char* alg = advisor->nameof_md (algorithm);
 
-    printf ("%s (alg %i)", alg ? alg : "", algorithm);
-
     __try2
     {
         if (nullptr == hash_object) {
@@ -287,6 +271,7 @@ return_t test_hash_routine (hash_interface* hash_object, hash_algorithm_t algori
     }
     __finally2
     {
+        _test_case.test (ret, __FUNCTION__, format ("algmrithm %d", algorithm).c_str ());
     }
     return ret;
 }
@@ -615,6 +600,7 @@ int main ()
 
     __try2
     {
+
         console_color col;
 
         struct {
@@ -631,9 +617,8 @@ int main ()
             ossl_set_unitsize (_test_condition[i].unitsize);
 
             std::cout   << col.set_style (console_style_t::bold).set_fgcolor (console_color_t::white).turnon ()
-                        << "cooltime " << ossl_get_cooltime ()
-                        << "unitsize " << ossl_get_unitsize ()
-                        << col.turnoff ()
+                        << "cooltime " << ossl_get_cooltime () << " unitsize " << ossl_get_unitsize ()
+                        << col.turnoff () 
                         << std::endl;
             test_encryption ();
         }

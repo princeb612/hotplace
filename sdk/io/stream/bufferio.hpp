@@ -311,18 +311,6 @@ protected:
 #endif
 };
 
-class bufferio_pair
-{
-public:
-    bufferio_pair ();
-
-    return_t pairing ();
-
-private:
-    bufferio_context_t* _bio_in;
-    bufferio_context_t* _bio_out;
-};
-
 }
 }  // namespace
 

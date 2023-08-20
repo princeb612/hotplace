@@ -51,6 +51,7 @@ return_t base16_encode (binary_t source, std::string& outpart)
 static byte_t conv (char c)
 {
     byte_t ret = 0;
+
     if (('0' <= c) && (c <= '9')) {
         ret = c - '0'; // 0~9
     }
