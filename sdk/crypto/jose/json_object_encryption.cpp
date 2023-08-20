@@ -28,7 +28,7 @@ json_object_encryption::~json_object_encryption ()
     // do nothing
 }
 
-return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t enc, crypt_alg_t alg, binary_t input, binary_t& output)
+return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     JOSE_CONTEXT* handle = static_cast <JOSE_CONTEXT*> (context);
@@ -99,7 +99,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
             }
 
             uint32 alg_type = CRYPT_ALG_TYPE (alg);
-            if (CRYPT_ALG_TYPE_RSA == alg_type) {
+            if (jwa_type_t::jwa_type_rsa == alg_type) {
                 /*
                  * RSA1_5, RSA-OAEP, RSA-OAEP-256
                  * RFC7518 4.2.  Key Encryption with RSAES-PKCS1-v1_5
@@ -110,7 +110,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                  * RFC7520 5.2. Key Encryption Using RSA-OAEP with AES-GCM
                  */
                 ret = crypt.encrypt (pkey, cek, encrypted_key, crypt_mode);
-            } else if (CRYPT_ALG_TYPE_AESKW == alg_type) {
+            } else if (jwa_type_t::jwa_type_aeskw == alg_type) {
                 /*
                  * A128KW, A192KW, A256KW
                  * RFC7518 4.4. Key Wrapping with AES Key Wrap
@@ -120,7 +120,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                 crypt.open (&handle_kw, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size (), &kw_iv[0], kw_iv.size ());
                 ret = crypt.encrypt (handle_kw, &cek[0], cek.size (), encrypted_key);
                 crypt.close (handle_kw);
-            } else if (CRYPT_ALG_TYPE_DIR == alg_type) {
+            } else if (jwa_type_t::jwa_type_dir == alg_type) {
                 /*
                  * dir
                  * RFC7518 4.5. Direct Encryption with a Shared Symmetric Key
@@ -129,7 +129,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
 
                 /* read cek from HMAC key and then make it the only one cek */
                 cek = oct;
-            } else if (CRYPT_ALG_TYPE_ECDH == alg_type) {
+            } else if (jwa_type_t::jwa_type_ecdh == alg_type) {
                 /*
                  * ECDH-ES
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman Ephemeral Static (ECDH-ES)
@@ -140,13 +140,13 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                 EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = enc_info->keysize;
                 uint32 enc_type = CRYPT_ENC_TYPE (enc);
-                if (CRYPT_ENC_TYPE_AESCBC_HS == enc_type) {
+                if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
                     keylen *= 2;
                 }
 
                 ret = ecdh_es (epk, pkey, enc_info->alg_name, "", "", keylen, cek);
                 encrypted_key = cek;
-            } else if (CRYPT_ALG_TYPE_ECDH_AESKW == alg_type) {
+            } else if (jwa_type_t::jwa_type_ecdh_aeskw == alg_type) {
                 /*
                  * ECDH-ES+A128KW, ECDH-ES+A192KW, ECDH-ES+A256KW
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman Ephemeral Static (ECDH-ES)
@@ -159,7 +159,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                 EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = alg_info->keysize;
                 uint32 enc_type = CRYPT_ENC_TYPE (enc);
-                if (CRYPT_ENC_TYPE_AESCBC_HS == enc_type) {
+                if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
                     //keylen *= 2;
                 }
                 ret = ecdh_es (epk, pkey, alg_info->alg_name, "", "", keylen, derived_key);
@@ -168,7 +168,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                 crypt.open (&handle_kw, alg_crypt_alg, alg_crypt_mode, &derived_key[0], derived_key.size (), &kw_iv[0], kw_iv.size ());
                 ret = crypt.encrypt (handle_kw, &cek[0], cek.size (), encrypted_key);
                 crypt.close (handle_kw);
-            } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) {
+            } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {
                 /*
                  * A128GCMKW, A192GCMKW, A256GCMKW
                  * RFC7518 4.7. Key Encryption with AES GCM
@@ -198,7 +198,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                     }
                 }
 
-            } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) {
+            } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {
                 /*
                  * RFC7518 4.8. Key Encryption with PBES2
                  * PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW
@@ -245,7 +245,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
             hash_algorithm_t enc_hash_alg = (hash_algorithm_t) enc_info->hash_alg;
 
             uint32 enc_type = CRYPT_ENC_TYPE (enc);
-            if (CRYPT_ENC_TYPE_AESCBC_HS == enc_type) {
+            if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
                 int cek_size = cek.size ();
                 int64 aad_length = aad.size () * 8;
                 int64 al = htonll (aad_length);
@@ -289,7 +289,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                     hash.close (handle_hash);
                     crypt.close (handle_crypt);
                 }
-            } else if (CRYPT_ENC_TYPE_AESGCM == enc_type) {
+            } else if (jwe_type_t::jwe_type_aesgcm == enc_type) {
                 crypt_context_t* handle_crypt = nullptr;
                 crypt.open (&handle_crypt, (crypt_algorithm_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
                             &cek[0], cek.size (), &iv[0], iv.size ());
@@ -306,12 +306,12 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
     return ret;
 }
 
-return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t enc, crypt_alg_t alg, binary_t input, binary_t& output)
+return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, binary_t& output)
 {
     return decrypt (context, enc, alg, nullptr, input, output);
 }
 
-return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t enc, crypt_alg_t alg, const char* kid, binary_t input, binary_t& output)
+return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jwa_t alg, const char* kid, binary_t input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     JOSE_CONTEXT* handle = static_cast <JOSE_CONTEXT*> (context);
@@ -390,7 +390,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
             }
 
             uint32 alg_type = CRYPT_ALG_TYPE (alg);
-            if (CRYPT_ALG_TYPE_RSA == alg_type) {
+            if (jwa_type_t::jwa_type_rsa == alg_type) {
                 /*
                  * RSA1_5, RSA-OAEP, RSA-OAEP-256
                  * RFC7518 4.2.  Key Encryption with RSAES-PKCS1-v1_5
@@ -401,7 +401,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                  * RFC7520 5.2. Key Encryption Using RSA-OAEP with AES-GCM
                  */
                 ret = crypt.decrypt (pkey, encrypted_key, cek, crypt_mode);
-            } else if (CRYPT_ALG_TYPE_AESKW == alg_type) {
+            } else if (jwa_type_t::jwa_type_aeskw == alg_type) {
                 /*
                  * A128KW, A192KW, A256KW
                  * RFC7518 4.4. Key Wrapping with AES Key Wrap
@@ -411,14 +411,14 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                 crypt.open (&handle_kw, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size (), &kw_iv[0], kw_iv.size ());
                 ret = crypt.decrypt (handle_kw, &encrypted_key[0], encrypted_key.size (), cek);
                 crypt.close (handle_kw);
-            } else if (CRYPT_ALG_TYPE_DIR == alg_type) {
+            } else if (jwa_type_t::jwa_type_dir == alg_type) {
                 /*
                  * dir
                  * RFC7518 4.5. Direct Encryption with a Shared Symmetric Key
                  * RFC7520 5.6. Direct Encryption Using AES-GCM
                  */
                 cek = oct;
-            } else if (CRYPT_ALG_TYPE_ECDH == alg_type) {
+            } else if (jwa_type_t::jwa_type_ecdh == alg_type) {
                 /*
                  * ECDH-ES
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman Ephemeral Static (ECDH-ES)
@@ -429,12 +429,12 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                 EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = enc_info->keysize;
                 uint32 enc_type = CRYPT_ENC_TYPE (enc);
-                if (CRYPT_ENC_TYPE_AESCBC_HS == enc_type) {
+                if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
                     keylen *= 2;
                 }
 
                 ret = ecdh_es (pkey, epk, enc_info->alg_name, "", "", keylen, cek);
-            } else if (CRYPT_ALG_TYPE_ECDH_AESKW == alg_type) {
+            } else if (jwa_type_t::jwa_type_ecdh_aeskw == alg_type) {
                 /*
                  * ECDH-ES+A128KW, ECDH-ES+A192KW, ECDH-ES+A256KW
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman Ephemeral Static (ECDH-ES)
@@ -447,7 +447,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                 EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = alg_info->keysize;
                 uint32 enc_type = CRYPT_ENC_TYPE (enc);
-                if (CRYPT_ENC_TYPE_AESCBC_HS == enc_type) {
+                if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
                     //keylen *= 2;
                 }
                 ret = ecdh_es (pkey, epk, alg_info->alg_name, "", "", keylen, derived_key);
@@ -456,7 +456,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                 crypt.open (&handle_kw, alg_crypt_alg, alg_crypt_mode, &derived_key[0], derived_key.size (), &kw_iv[0], kw_iv.size ());
                 ret = crypt.decrypt (handle_kw, &encrypted_key[0], encrypted_key.size (), cek);
                 crypt.close (handle_kw);
-            } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) {
+            } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {
                 /*
                  * A128GCMKW, A192GCMKW, A256GCMKW
                  * RFC7518 4.7. Key Encryption with AES GCM
@@ -471,7 +471,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                 crypt.open (&handle_crypt, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size (), &iv1[0], iv1.size ());
                 ret = crypt.decrypt2 (handle_crypt, &encrypted_key[0], encrypted_key.size (), cek, &aad1, &tag1);
                 crypt.close (handle_crypt);
-            } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) {
+            } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {
                 /*
                  * RFC7518 4.8. Key Encryption with PBES2
                  * PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW
@@ -516,7 +516,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
             hash_algorithm_t enc_hash_alg = (hash_algorithm_t) enc_info->hash_alg;
 
             uint32 enc_type = CRYPT_ENC_TYPE (enc);
-            if (CRYPT_ENC_TYPE_AESCBC_HS == enc_type) {
+            if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
                 int cek_size = cek.size ();
                 int64 aad_length = aad.size () * 8;
                 int64 al = htonll (aad_length);
@@ -570,7 +570,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                         crypt.close (handle_crypt);
                     }
                 }
-            } else if (CRYPT_ENC_TYPE_AESGCM == enc_type) {
+            } else if (jwe_type_t::jwe_type_aesgcm == enc_type) {
                 crypt_context_t* handle_crypt = nullptr;
                 crypt.open (&handle_crypt, (crypt_algorithm_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
                             &cek[0], cek.size (), &iv[0], iv.size ());
@@ -587,7 +587,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
     return ret;
 }
 
-return_t json_object_encryption::check_constraints (crypt_alg_t alg, EVP_PKEY* pkey)
+return_t json_object_encryption::check_constraints (jwa_t alg, EVP_PKEY* pkey)
 {
     return_t ret = errorcode_t::success;
 
@@ -604,9 +604,9 @@ return_t json_object_encryption::check_constraints (crypt_alg_t alg, EVP_PKEY* p
          * A key of size 2048 bits or larger MUST be used with this algorithm.
          */
         switch (alg) {
-            case CRYPT_ALG_RSA1_5:
-            case CRYPT_ALG_RSA_OAEP:
-            case CRYPT_ALG_RSA_OAEP_256:
+            case jwa_t::jwa_rsa_1_5:
+            case jwa_t::jwa_rsa_oaep:
+            case jwa_t::jwa_rsa_oaep_256:
             {
                 int bits = EVP_PKEY_bits ((EVP_PKEY*) pkey);
                 if (bits < 2048) {

@@ -170,16 +170,16 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::camellia256, crypt_mode_t::ecb,  EVP_camellia_256_ecb (),  "camellia-256-ecb", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::ofb,  EVP_camellia_256_ofb (),  "camellia-256-ofb", },
 
-    { crypt_algorithm_t::cast, crypt_mode_t::cbc,  EVP_cast5_cbc (),  "cast5-cbc", },
-    { crypt_algorithm_t::cast, crypt_mode_t::cfb,  EVP_cast5_cfb (),  "cast5-cfb", },
-    { crypt_algorithm_t::cast, crypt_mode_t::ecb,  EVP_cast5_ecb (),  "cast5-ecb", },
-    { crypt_algorithm_t::cast, crypt_mode_t::ofb,  EVP_cast5_ofb (),  "cast5-ofb", },
+    { crypt_algorithm_t::cast, crypt_mode_t::cbc,  EVP_cast5_cbc (), "cast5-cbc", },
+    { crypt_algorithm_t::cast, crypt_mode_t::cfb,  EVP_cast5_cfb (), "cast5-cfb", },
+    { crypt_algorithm_t::cast, crypt_mode_t::ecb,  EVP_cast5_ecb (), "cast5-ecb", },
+    { crypt_algorithm_t::cast, crypt_mode_t::ofb,  EVP_cast5_ofb (), "cast5-ofb", },
 
 #ifndef OPENSSL_NO_IDEA
-    { crypt_algorithm_t::idea, crypt_mode_t::cbc,  EVP_idea_cbc (),  "idea-cbc", },
-    { crypt_algorithm_t::idea, crypt_mode_t::cfb,  EVP_idea_cfb (),  "idea-cfb", },
-    { crypt_algorithm_t::idea, crypt_mode_t::ecb,  EVP_idea_ecb (),  "idea-ecb", },
-    { crypt_algorithm_t::idea, crypt_mode_t::ofb,  EVP_idea_ofb (),  "idea-ofb", },
+    { crypt_algorithm_t::idea, crypt_mode_t::cbc,  EVP_idea_cbc (), "idea-cbc", },
+    { crypt_algorithm_t::idea, crypt_mode_t::cfb,  EVP_idea_cfb (), "idea-cfb", },
+    { crypt_algorithm_t::idea, crypt_mode_t::ecb,  EVP_idea_ecb (), "idea-ecb", },
+    { crypt_algorithm_t::idea, crypt_mode_t::ofb,  EVP_idea_ofb (), "idea-ofb", },
 #endif
 
     { crypt_algorithm_t::rc2, crypt_mode_t::cbc, EVP_sm4_cbc (), "rc2-cbc", },
@@ -256,55 +256,55 @@ const openssl_evp_md_method_t evp_md_methods[] = {
 const hint_jose_encryption_t hint_jose_algorithms [] =
 {
     { "RSA1_5",
-      CRYPT_ALG_RSA1_5, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_1_5, },
+      jwa_t::jwa_rsa_1_5, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_1_5, },
     { "RSA-OAEP",
-      CRYPT_ALG_RSA_OAEP, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_oaep, },
+      jwa_t::jwa_rsa_oaep, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_oaep, },
     { "RSA-OAEP-256",
-      CRYPT_ALG_RSA_OAEP_256, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_oaep256, },
+      jwa_t::jwa_rsa_oaep_256, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_oaep256, },
     { "A128KW",
-      CRYPT_ALG_A128KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a128kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::wrap, 16,
       hash_algorithm_t::sha2_256, },
     { "A192KW",
-      CRYPT_ALG_A192KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a192kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::wrap, 24,
       hash_algorithm_t::sha2_384, },
     { "A256KW",
-      CRYPT_ALG_A256KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a256kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::wrap, 32,
       hash_algorithm_t::sha2_512, },
     { "dir",
-      CRYPT_ALG_DIR, crypto_key_t::hmac_key, crypto_key_t::none_key, 0, },
+      jwa_t::jwa_dir, crypto_key_t::hmac_key, crypto_key_t::none_key, 0, },
     { "ECDH-ES",
-      CRYPT_ALG_ECDH_ES, crypto_key_t::ec_key, crypto_key_t::okp_key, },
+      jwa_t::jwa_ecdh_es, crypto_key_t::ec_key, crypto_key_t::okp_key, },
     { "ECDH-ES+A128KW",
-      CRYPT_ALG_ECDH_ES_A128KW, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
+      jwa_t::jwa_ecdh_es_a128kw, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::wrap, 16, },
     { "ECDH-ES+A192KW",
-      CRYPT_ALG_ECDH_ES_A192KW, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
+      jwa_t::jwa_ecdh_es_a192kw, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::wrap, 24, },
     { "ECDH-ES+A256KW",
-      CRYPT_ALG_ECDH_ES_A256KW, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
+      jwa_t::jwa_ecdh_es_a256kw, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::wrap, 32, },
     { "A128GCMKW",
-      CRYPT_ALG_A128GCMKW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a128gcmkw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::gcm, 16, },
     { "A192GCMKW",
-      CRYPT_ALG_A192GCMKW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a192gcmkw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::gcm, 24, },
     { "A256GCMKW",
-      CRYPT_ALG_A256GCMKW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a256gcmkw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::gcm, 32, },
     { "PBES2-HS256+A128KW",
-      CRYPT_ALG_PBES2_HS256_A128KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_pbes2_hs256_a128kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::wrap, 16,
       hash_algorithm_t::sha2_256, },
     { "PBES2-HS384+A192KW",
-      CRYPT_ALG_PBES2_HS384_A192KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_pbes2_hs384_a192kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::wrap, 24,
       hash_algorithm_t::sha2_384, },
     { "PBES2-HS512+A256KW",
-      CRYPT_ALG_PBES2_HS512_A256KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_pbes2_hs512_a256kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::wrap, 32,
       hash_algorithm_t::sha2_512, },
 };
@@ -312,42 +312,42 @@ const hint_jose_encryption_t hint_jose_algorithms [] =
 const hint_jose_encryption_t hint_jose_encryptions [] =
 {
     { "A128CBC-HS256",
-      CRYPT_ENC_A128CBC_HS256, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a128cbc_hs256, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::cbc, 16,
       hash_algorithm_t::sha2_256, },
     { "A192CBC-HS384",
-      CRYPT_ENC_A192CBC_HS384, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a192cbc_hs384, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::cbc, 24,
       hash_algorithm_t::sha2_384, },
     { "A256CBC-HS512",
-      CRYPT_ENC_A256CBC_HS512, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a256cbc_hs512, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::cbc, 32,
       hash_algorithm_t::sha2_512, },
     { "A128GCM",
-      CRYPT_ENC_A128GCM, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a128gcm, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::gcm, 16, },
     { "A192GCM",
-      CRYPT_ENC_A192GCM, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a192gcm, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::gcm, 24, },
     { "A256GCM",
-      CRYPT_ENC_A256GCM, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a256gcm, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::gcm, 32, },
 };
 
 const hint_jose_signature_t hint_jose_signatures [] = {
-    { "HS256", SIGN_HS256, crypto_key_t::hmac_key, hash_algorithm_t::sha2_256, 1, NID_hmac, },
-    { "HS384", SIGN_HS384, crypto_key_t::hmac_key, hash_algorithm_t::sha2_384, 1, NID_hmac, },
-    { "HS512", SIGN_HS512, crypto_key_t::hmac_key, hash_algorithm_t::sha2_512, 1, NID_hmac, },
-    { "RS256", SIGN_RS256, crypto_key_t::rsa_key, hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
-    { "RS384", SIGN_RS384, crypto_key_t::rsa_key, hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
-    { "RS512", SIGN_RS512, crypto_key_t::rsa_key, hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
-    { "ES256", SIGN_ES256, crypto_key_t::ec_key, hash_algorithm_t::sha2_256, 1, NID_X9_62_prime256v1, },
-    { "ES384", SIGN_ES384, crypto_key_t::ec_key, hash_algorithm_t::sha2_384, 1, NID_secp384r1, },
-    { "ES512", SIGN_ES512, crypto_key_t::ec_key, hash_algorithm_t::sha2_512, 1, NID_secp521r1, },
-    { "PS256", SIGN_PS256, crypto_key_t::rsa_key, hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
-    { "PS384", SIGN_PS384, crypto_key_t::rsa_key, hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
-    { "PS512", SIGN_PS512, crypto_key_t::rsa_key, hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
-    { "EdDSA", SIGN_EDDSA, crypto_key_t::okp_key, hash_algorithm_t::hash_alg_unknown, 2, NID_ED25519, NID_ED448, },
+    { "HS256", jws_t::jws_hs256, crypto_key_t::hmac_key, hash_algorithm_t::sha2_256, 1, NID_hmac, },
+    { "HS384", jws_t::jws_hs384, crypto_key_t::hmac_key, hash_algorithm_t::sha2_384, 1, NID_hmac, },
+    { "HS512", jws_t::jws_hs512, crypto_key_t::hmac_key, hash_algorithm_t::sha2_512, 1, NID_hmac, },
+    { "RS256", jws_t::jws_rs256, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
+    { "RS384", jws_t::jws_rs384, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
+    { "RS512", jws_t::jws_rs512, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
+    { "ES256", jws_t::jws_es256, crypto_key_t::ec_key,   hash_algorithm_t::sha2_256, 1, NID_X9_62_prime256v1, },
+    { "ES384", jws_t::jws_es384, crypto_key_t::ec_key,   hash_algorithm_t::sha2_384, 1, NID_secp384r1, },
+    { "ES512", jws_t::jws_es512, crypto_key_t::ec_key,   hash_algorithm_t::sha2_512, 1, NID_secp521r1, },
+    { "PS256", jws_t::jws_ps256, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
+    { "PS384", jws_t::jws_ps384, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
+    { "PS512", jws_t::jws_ps512, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
+    { "EdDSA", jws_t::jws_eddsa, crypto_key_t::okp_key,  hash_algorithm_t::hash_alg_unknown, 2, NID_ED25519, NID_ED448, },
 };
 
 const hint_curve_t hint_curves [] = {
@@ -361,10 +361,10 @@ const hint_curve_t hint_curves [] = {
 };
 
 const hint_kty_name_t hint_kty_names [] = {
-    { crypto_key_t::hmac_key,  "oct", },
-    { crypto_key_t::rsa_key,   "RSA", },
-    { crypto_key_t::ec_key,    "EC", },
-    { crypto_key_t::okp_key,   "OKP", },
+    { crypto_key_t::hmac_key, "oct", },
+    { crypto_key_t::rsa_key,  "RSA", },
+    { crypto_key_t::ec_key,   "EC", },
+    { crypto_key_t::okp_key,  "OKP", },
 };
 
 const size_t sizeof_hint_jose_algorithms = RTL_NUMBER_OF (hint_jose_algorithms);
@@ -587,7 +587,7 @@ const EVP_MD* crypto_advisor::find_evp_md (hash_algorithm_t algorithm)
     return ret_value;
 }
 
-const EVP_MD* crypto_advisor::find_evp_md (crypt_sig_t sig)
+const EVP_MD* crypto_advisor::find_evp_md (jws_t sig)
 {
     const EVP_MD* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -609,7 +609,7 @@ const EVP_MD* crypto_advisor::find_evp_md (crypt_sig_t sig)
     return ret_value;
 }
 
-hash_algorithm_t crypto_advisor::get_algorithm (crypt_sig_t sig)
+hash_algorithm_t crypto_advisor::get_algorithm (jws_t sig)
 {
     hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -694,7 +694,7 @@ return_t crypto_advisor::jose_for_each_signature (std::function <void (const hin
 }
 #endif
 
-const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm (crypt_alg_t alg)
+const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm (jwa_t alg)
 {
     const hint_jose_encryption_t* item = nullptr;
 
@@ -709,7 +709,7 @@ const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm (crypt_alg_t
     return item;
 }
 
-const hint_jose_encryption_t* crypto_advisor::hintof_jose_encryption (crypt_enc_t enc)
+const hint_jose_encryption_t* crypto_advisor::hintof_jose_encryption (jwe_t enc)
 {
     const hint_jose_encryption_t* item = nullptr;
 
@@ -724,7 +724,7 @@ const hint_jose_encryption_t* crypto_advisor::hintof_jose_encryption (crypt_enc_
     return item;
 }
 
-const hint_jose_signature_t* crypto_advisor::hintof_jose_signature (crypt_sig_t sig)
+const hint_jose_signature_t* crypto_advisor::hintof_jose_signature (jws_t sig)
 {
     const hint_jose_signature_t* item = nullptr;
 
@@ -818,7 +818,7 @@ const hint_curve_t* crypto_advisor::hintof_curve (const char* curve)
     return item;
 }
 
-const char* crypto_advisor::nameof_jose_algorithm (crypt_alg_t alg)
+const char* crypto_advisor::nameof_jose_algorithm (jwa_t alg)
 {
     const char* name = nullptr;
 
@@ -830,7 +830,7 @@ const char* crypto_advisor::nameof_jose_algorithm (crypt_alg_t alg)
     return name;
 }
 
-const char* crypto_advisor::nameof_jose_encryption (crypt_enc_t enc)
+const char* crypto_advisor::nameof_jose_encryption (jwe_t enc)
 {
     const char* name = nullptr;
 
@@ -842,7 +842,7 @@ const char* crypto_advisor::nameof_jose_encryption (crypt_enc_t enc)
     return name;
 }
 
-const char* crypto_advisor::nameof_jose_signature (crypt_sig_t sig)
+const char* crypto_advisor::nameof_jose_signature (jws_t sig)
 {
     const char* name = nullptr;
 
@@ -854,45 +854,45 @@ const char* crypto_advisor::nameof_jose_signature (crypt_sig_t sig)
     return name;
 }
 
-return_t crypto_advisor::typeof_jose_algorithm (const char* alg, crypt_alg_t& type)
+return_t crypto_advisor::typeof_jose_algorithm (const char* alg, jwa_t& type)
 {
     return_t ret = errorcode_t::success;
 
-    type = CRYPT_ALG_UNKNOWN;
+    type = jwa_t::jwa_unknown;
     const hint_jose_encryption_t* item = hintof_jose_algorithm (alg);
 
     if (item) {
-        type = (crypt_alg_t) item->type;
+        type = (jwa_t) item->type;
     } else {
         ret = errorcode_t::not_found;
     }
     return ret;
 }
 
-return_t crypto_advisor::typeof_jose_encryption (const char* enc, crypt_enc_t& type)
+return_t crypto_advisor::typeof_jose_encryption (const char* enc, jwe_t& type)
 {
     return_t ret = errorcode_t::success;
 
-    type = CRYPT_ENC_UNKNOWN;
+    type = jwe_t::jwe_unknown;
     const hint_jose_encryption_t* item = hintof_jose_encryption (enc);
 
     if (item) {
-        type = (crypt_enc_t) item->type;
+        type = (jwe_t) item->type;
     } else {
         ret = errorcode_t::not_found;
     }
     return ret;
 }
 
-return_t crypto_advisor::typeof_jose_signature (const char* sig, crypt_sig_t& type)
+return_t crypto_advisor::typeof_jose_signature (const char* sig, jws_t& type)
 {
     return_t ret = errorcode_t::success;
 
-    type = SIGN_UNSECURED;
+    type = jws_t::jws_unknown;
     const hint_jose_signature_t* item = hintof_jose_signature (sig);
 
     if (item) {
-        type = (crypt_sig_t) item->sig;
+        type = (jws_t) item->sig;
     } else {
         ret = errorcode_t::not_found;
     }
@@ -1017,7 +1017,7 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, const char* alg)
     {
         const hint_jose_encryption_t* hint_alg = hintof_jose_algorithm (alg);
         if (hint_alg) {
-            test = is_kindof (pkey, (crypt_alg_t) hint_alg->type);
+            test = is_kindof (pkey, (jwa_t) hint_alg->type);
             if (test) {
                 __leave2;
             }
@@ -1037,7 +1037,7 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, const char* alg)
     return test;
 }
 
-bool crypto_advisor::is_kindof (EVP_PKEY* pkey, crypt_alg_t alg)
+bool crypto_advisor::is_kindof (EVP_PKEY* pkey, jwa_t alg)
 {
     bool test = false;
 
@@ -1059,7 +1059,7 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, crypt_alg_t alg)
     return test;
 }
 
-bool crypto_advisor::is_kindof (EVP_PKEY* pkey, crypt_sig_t sig)
+bool crypto_advisor::is_kindof (EVP_PKEY* pkey, jws_t sig)
 {
     bool test = false;
 

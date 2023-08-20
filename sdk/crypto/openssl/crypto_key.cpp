@@ -146,7 +146,7 @@ enum {
     SEARCH_ALT  = 0x8,
 };
 
-static bool find_discriminant (crypto_key_object_t item, const char* kid, crypt_alg_t alg, crypto_key_t kt, crypto_key_t alt, crypto_use_t use, uint32 flags)
+static bool find_discriminant (crypto_key_object_t item, const char* kid, jwa_t alg, crypto_key_t kt, crypto_key_t alt, crypto_use_t use, uint32 flags)
 {
     bool ret = false;
 
@@ -191,7 +191,7 @@ static bool find_discriminant (crypto_key_object_t item, const char* kid, crypt_
     return ret;
 }
 
-static bool find_discriminant (crypto_key_object_t item, const char* kid, crypt_sig_t alg, crypto_key_t kt, crypto_key_t alt, crypto_use_t use, uint32 flags)
+static bool find_discriminant (crypto_key_object_t item, const char* kid, jws_t alg, crypto_key_t kt, crypto_key_t alt, crypto_use_t use, uint32 flags)
 {
     bool ret = false;
 
@@ -244,7 +244,7 @@ static bool find_discriminant (crypto_key_object_t item, const char* kid, const 
         if (alg) {
             const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);
             if (alg_info) {
-                ret = find_discriminant (item, kid, (crypt_alg_t) alg_info->type, kt, alt, use, flags);
+                ret = find_discriminant (item, kid, (jwa_t) alg_info->type, kt, alt, use, flags);
                 if (ret) {
                     __leave2;
                 }
@@ -384,7 +384,7 @@ EVP_PKEY* crypto_key::select (crypto_key_t kty, crypto_use_t use, bool up_ref)
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select (crypt_alg_t alg, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (jwa_t alg, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -424,7 +424,7 @@ EVP_PKEY* crypto_key::select (crypt_alg_t alg, crypto_use_t use, bool up_ref)
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select (crypt_sig_t sig, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (jws_t sig, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -535,7 +535,7 @@ EVP_PKEY* crypto_key::select (std::string& kid, crypto_key_t kty, crypto_use_t u
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select (std::string& kid, crypt_alg_t alg, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (std::string& kid, jwa_t alg, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -578,7 +578,7 @@ EVP_PKEY* crypto_key::select (std::string& kid, crypt_alg_t alg, crypto_use_t us
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select (std::string& kid, crypt_sig_t sig, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::select (std::string& kid, jws_t sig, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -710,7 +710,7 @@ EVP_PKEY* crypto_key::find (const char* kid, crypto_key_t kt, crypto_use_t use, 
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::find (const char* kid, crypt_alg_t alg, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::find (const char* kid, jwa_t alg, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -767,7 +767,7 @@ EVP_PKEY* crypto_key::find (const char* kid, crypt_alg_t alg, crypto_use_t use, 
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::find (const char* kid, crypt_sig_t alg, crypto_use_t use, bool up_ref)
+EVP_PKEY* crypto_key::find (const char* kid, jws_t alg, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -1246,7 +1246,7 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
     return ret;
 }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, size_t param, crypto_use_t use)
+return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, size_t param, crypto_use_t use)
 {
     crypto_advisor* advisor = crypto_advisor::get_instance ();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
@@ -1322,7 +1322,7 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
     return ret;
 }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, binary_t n, binary_t e, binary_t d, crypto_use_t use)
+return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t n, binary_t e, binary_t d, crypto_use_t use)
 {
     crypto_advisor* advisor = crypto_advisor::get_instance ();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
@@ -1422,7 +1422,7 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
     return ret;
 }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, binary_t n, binary_t e, binary_t d,
+return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t n, binary_t e, binary_t d,
                                    binary_t p, binary_t q, binary_t dp, binary_t dq, binary_t qi, crypto_use_t use)
 {
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -1578,7 +1578,7 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, int ni
     return add_ec (cryptokey, kid, nullptr, nid, x, y, d, use);
 }
 
-return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, int nid, binary_t x, binary_t y, binary_t d, crypto_use_t use)
+return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, jwa_t alg, int nid, binary_t x, binary_t y, binary_t d, crypto_use_t use)
 {
     crypto_advisor* advisor = crypto_advisor::get_instance ();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
@@ -1828,7 +1828,7 @@ return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, const
     return ret;
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, binary_t k, crypto_use_t use)
+return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t k, crypto_use_t use)
 {
     crypto_advisor* advisor = crypto_advisor::get_instance ();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
@@ -1851,7 +1851,7 @@ return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, const
     return add_oct (cryptokey, kid, alg, nullptr, size, use);
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, size_t size, crypto_use_t use)
+return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, size_t size, crypto_use_t use)
 {
     crypto_advisor* advisor = crypto_advisor::get_instance ();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
@@ -1910,7 +1910,7 @@ return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, const
     return ret;
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, const byte_t* k, size_t size, crypto_use_t use)
+return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, const byte_t* k, size_t size, crypto_use_t use)
 {
     crypto_advisor* advisor = crypto_advisor::get_instance ();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);

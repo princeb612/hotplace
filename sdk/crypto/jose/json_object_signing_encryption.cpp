@@ -84,7 +84,7 @@ return_t json_object_signing_encryption::close (jose_context_t* context)
     return ret;
 }
 
-return_t json_object_signing_encryption::encrypt (jose_context_t* context, crypt_enc_t enc, crypt_alg_t alg, binary_t input, std::string& output, jose_serialization_t type)
+return_t json_object_signing_encryption::encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, std::string& output, jose_serialization_t type)
 {
     return_t ret = errorcode_t::success;
     json_object_encryption encryption;
@@ -98,7 +98,7 @@ return_t json_object_signing_encryption::encrypt (jose_context_t* context, crypt
             __leave2;
         }
 
-        std::list <crypt_alg_t> algs;
+        std::list <jwa_t> algs;
         algs.push_back (alg);
         prepare_encryption (context, enc, algs);
 
@@ -119,7 +119,7 @@ return_t json_object_signing_encryption::encrypt (jose_context_t* context, crypt
     return ret;
 }
 
-return_t json_object_signing_encryption::encrypt (jose_context_t* context, crypt_enc_t enc, std::list <crypt_alg_t> algs, binary_t input, std::string& output, jose_serialization_t type)
+return_t json_object_signing_encryption::encrypt (jose_context_t* context, jwe_t enc, std::list <jwa_t> algs, binary_t input, std::string& output, jose_serialization_t type)
 {
     return_t ret = errorcode_t::success;
     json_object_encryption encryption;
@@ -133,8 +133,8 @@ return_t json_object_signing_encryption::encrypt (jose_context_t* context, crypt
             __leave2;
         }
 
-        for (std::list <crypt_alg_t>::iterator it = algs.begin (); it != algs.end (); ) {
-            if (CRYPT_ALG_DIR == *it || CRYPT_ALG_ECDH_ES == *it) {
+        for (std::list <jwa_t>::iterator it = algs.begin (); it != algs.end (); ) {
+            if (jwa_t::jwa_dir == *it || jwa_t::jwa_ecdh_es == *it) {
                 // support "dir" for decryption only ...
                 it = algs.erase (it);
             } else {
@@ -146,8 +146,8 @@ return_t json_object_signing_encryption::encrypt (jose_context_t* context, crypt
 
         prepare_encryption (context, enc, algs);
 
-        for (std::list <crypt_alg_t>::iterator iter = algs.begin (); iter != algs.end (); iter++) {
-            crypt_alg_t alg = *iter;
+        for (std::list <jwa_t>::iterator iter = algs.begin (); iter != algs.end (); iter++) {
+            jwa_t alg = *iter;
 
             return_t check = encryption.encrypt (context, enc, alg, input, encrypted);
 
@@ -195,11 +195,11 @@ return_t json_object_signing_encryption::decrypt (jose_context_t* context, std::
         return_t ret_test = errorcode_t::success;
         std::list <bool> results;
         for (jose_encryptions_t::iterator eit = handle->encryptions.begin (); eit != handle->encryptions.end (); eit++) {
-            crypt_enc_t enc = eit->first;
+            jwe_t enc = eit->first;
             jose_encryption_t& item = eit->second;
 
             for (jose_recipients_t::iterator rit = item.recipients.begin (); rit != item.recipients.end (); rit++) {
-                crypt_alg_t alg = rit->first;
+                jwa_t alg = rit->first;
 
                 bool run = true;
 
@@ -245,15 +245,15 @@ return_t json_object_signing_encryption::decrypt (jose_context_t* context, std::
     return ret;
 }
 
-return_t json_object_signing_encryption::sign (jose_context_t* context, crypt_sig_t sig, std::string input, std::string& output, jose_serialization_t type)
+return_t json_object_signing_encryption::sign (jose_context_t* context, jws_t sig, std::string input, std::string& output, jose_serialization_t type)
 {
-    std::list <crypt_sig_t> methods;
+    std::list <jws_t> methods;
 
     methods.push_back (sig);
     return sign (context, methods, input, output, type);
 }
 
-return_t json_object_signing_encryption::sign (jose_context_t* context, std::list <crypt_sig_t> methods, std::string input, std::string& output, jose_serialization_t type)
+return_t json_object_signing_encryption::sign (jose_context_t* context, std::list <jws_t> methods, std::string input, std::string& output, jose_serialization_t type)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -261,8 +261,8 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::lis
     output.clear ();
     std::list<std::string> headers;
 
-    for (std::list <crypt_sig_t>::iterator method_iter = methods.begin (); method_iter != methods.end (); method_iter++) {
-        crypt_sig_t sig = *method_iter;
+    for (std::list <jws_t>::iterator method_iter = methods.begin (); method_iter != methods.end (); method_iter++) {
+        jws_t sig = *method_iter;
 
         const hint_jose_signature_t* hint = advisor->hintof_jose_signature (sig);
 
@@ -311,11 +311,11 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::lis
         for (std::list<std::string>::iterator iter = headers.begin (); iter != headers.end (); iter++) {
             std::string header = *iter;
 
-            crypt_sig_t sig = SIGN_UNSECURED;
+            jws_t sig = jws_t::jws_unknown;
             std::string kid;
 
             parse_signature_header (context, header.c_str (), sig, kid);
-            if (SIGN_UNSECURED == sig) {
+            if (jws_t::jws_unknown == sig) {
                 size_t header_size = headers.size ();
                 if (header_size > 1) {
                     continue;
@@ -392,13 +392,13 @@ return_t json_object_signing_encryption::verify (jose_context_t* context, std::s
             bool result_per_signature = false;
 
             std::string protected_header = base64_decode_careful (item.header, BASE64URL_ENCODING);
-            crypt_sig_t sig;
+            jws_t sig;
             std::string header_kid;
 
             parse_signature_header (context, protected_header.c_str (), sig, header_kid);
-            if (SIGN_UNSECURED == sig) {
+            if (jws_t::jws_unknown == sig) {
                 // RFC 7520 4.7. Protecting Content Only
-                if (SIGN_UNSECURED == item.sig) {
+                if (jws_t::jws_unknown == item.sig) {
                     continue;
                 } else {
                     sig = item.sig;
@@ -449,7 +449,7 @@ return_t json_object_signing_encryption::verify (jose_context_t* context, std::s
     return ret;
 }
 
-return_t json_object_signing_encryption::prepare_encryption (jose_context_t* context, crypt_enc_t enc, std::list <crypt_alg_t> algs)
+return_t json_object_signing_encryption::prepare_encryption (jose_context_t* context, jwe_t enc, std::list <jwa_t> algs)
 {
     return_t ret = errorcode_t::success;
     JOSE_CONTEXT* handle = static_cast <JOSE_CONTEXT*> (context);
@@ -493,7 +493,7 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
              */
             constraint_range (keysize, 0, EVP_MAX_KEY_LENGTH);
             constraint_range (ivsize, 0, EVP_MAX_IV_LENGTH);
-            if (CRYPT_ENC_TYPE_AESCBC_HS == enc_type) {
+            if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
                 keysize *= 2;
             }
 
@@ -507,7 +507,7 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
             binary_t protected_header;
 
             if (1 == algs.size ()) {
-                crypt_alg_t alg = algs.front ();
+                jwa_t alg = algs.front ();
 
                 //const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);  // key management
                 std::string kid;
@@ -524,7 +524,7 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
 
                 binary_t header;
                 compose_encryption_header (enc, alg, JOSE_HEADER_ENC_ALG, kid, datamap, variantmap, protected_header);
-                compose_encryption_header (CRYPT_ENC_UNKNOWN, alg, JOSE_HEADER_ALG_ONLY, kid, datamap, variantmap, header);
+                compose_encryption_header (jwe_t::jwe_unknown, alg, JOSE_HEADER_ALG_ONLY, kid, datamap, variantmap, header);
 
                 item.header.assign ((char*) &protected_header[0], protected_header.size ());
                 base64_encode (&protected_header[0], protected_header.size (), item.datamap[crypt_item_t::item_aad], BASE64URL_ENCODING);
@@ -533,12 +533,12 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
                 recipient.kid = kid;
                 item.recipients.insert (std::make_pair (alg, recipient));
             } else if (algs.size () > 1) {
-                compose_encryption_header (enc, CRYPT_ALG_UNKNOWN, JOSE_HEADER_ENC_ONLY, "", protected_header);
+                compose_encryption_header (enc, jwa_t::jwa_unknown, JOSE_HEADER_ENC_ONLY, "", protected_header);
                 item.header.assign ((char*) &protected_header[0], protected_header.size ());
                 base64_encode (&protected_header[0], protected_header.size (), item.datamap[crypt_item_t::item_aad], BASE64URL_ENCODING);
 
-                for (std::list <crypt_alg_t>::iterator iter = algs.begin (); iter != algs.end (); iter++) {
-                    crypt_alg_t alg = *iter;
+                for (std::list <jwa_t>::iterator iter = algs.begin (); iter != algs.end (); iter++) {
+                    jwa_t alg = *iter;
 
                     //const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);  // key management
                     std::string kid;
@@ -552,7 +552,7 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
                     prepare_encryption_recipient (alg, pkey, recipient, datamap, variantmap);
 
                     binary_t header;
-                    compose_encryption_header (CRYPT_ENC_UNKNOWN, alg, JOSE_HEADER_ALG_ONLY, kid, datamap, variantmap, header);
+                    compose_encryption_header (jwe_t::jwe_unknown, alg, JOSE_HEADER_ALG_ONLY, kid, datamap, variantmap, header);
                     recipient.header = std::string ((char*) &header[0], header.size ());
                     item.recipients.insert (std::make_pair (alg, recipient));
                 }
@@ -569,7 +569,7 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
     return ret;
 }
 
-return_t json_object_signing_encryption::prepare_encryption_recipient (crypt_alg_t alg, EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap, crypt_variantmap_t& variantmap)
+return_t json_object_signing_encryption::prepare_encryption_recipient (jwa_t alg, EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap, crypt_variantmap_t& variantmap)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -578,7 +578,7 @@ return_t json_object_signing_encryption::prepare_encryption_recipient (crypt_alg
     uint32 alg_type = CRYPT_ALG_TYPE (alg);
 
     recipient.alg_info = alg_info;
-    if ((CRYPT_ALG_TYPE_ECDH == alg_type) || (CRYPT_ALG_TYPE_ECDH_AESKW == alg_type)) {
+    if ((jwa_type_t::jwa_type_ecdh == alg_type) || (jwa_type_t::jwa_type_ecdh_aeskw == alg_type)) {
         // epk, apu, apv
         uint32 nid = 0;
         crypto_key key;
@@ -590,7 +590,7 @@ return_t json_object_signing_encryption::prepare_encryption_recipient (crypt_alg
         variant_t vt;
         variant_set_pointer (vt, recipient.epk);
         variantmap[crypt_item_t::item_epk] = vt;
-    } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) {
+    } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {
         // iv, tag
         const EVP_CIPHER* alg_evp_cipher = (const EVP_CIPHER*) advisor->find_evp_cipher (alg_info->crypt_alg, alg_info->crypt_mode);
         int ivsize = EVP_CIPHER_iv_length (alg_evp_cipher);
@@ -598,7 +598,7 @@ return_t json_object_signing_encryption::prepare_encryption_recipient (crypt_alg
         rand.random (recipient.datamap[crypt_item_t::item_iv], ivsize);
         datamap[crypt_item_t::item_iv] = recipient.datamap[crypt_item_t::item_iv];
         datamap[crypt_item_t::item_tag] = recipient.datamap[crypt_item_t::item_tag];
-    } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) {
+    } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {
         // p2s, p2c
         openssl_prng rand;
         rand.random (recipient.datamap[crypt_item_t::item_p2s], 64);
@@ -611,7 +611,7 @@ return_t json_object_signing_encryption::prepare_encryption_recipient (crypt_alg
     return ret;
 }
 
-return_t json_object_signing_encryption::compose_encryption_header (crypt_enc_t enc, crypt_alg_t alg, jose_compose_t flag, std::string kid, binary_t& header)
+return_t json_object_signing_encryption::compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string kid, binary_t& header)
 {
     return_t ret = errorcode_t::success;
     crypt_datamap_t datamap;
@@ -621,7 +621,7 @@ return_t json_object_signing_encryption::compose_encryption_header (crypt_enc_t 
     return ret;
 }
 
-return_t json_object_signing_encryption::compose_encryption_header (crypt_enc_t enc, crypt_alg_t alg, jose_compose_t flag, std::string kid, crypt_datamap_t datamap, crypt_variantmap_t variantmap, binary_t& header)
+return_t json_object_signing_encryption::compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string kid, crypt_datamap_t datamap, crypt_variantmap_t variantmap, binary_t& header)
 {
     return_t ret = errorcode_t::success;
     json_t* json_header = nullptr;
@@ -658,7 +658,7 @@ return_t json_object_signing_encryption::compose_encryption_header (crypt_enc_t 
                 json_object_set_new (json_header, "kid", json_string (kid.c_str ()));
             }
             uint32 alg_type = CRYPT_ALG_TYPE (alg);
-            if ((CRYPT_ALG_TYPE_ECDH == alg_type) || (CRYPT_ALG_TYPE_ECDH_AESKW == alg_type)) {
+            if ((jwa_type_t::jwa_type_ecdh == alg_type) || (jwa_type_t::jwa_type_ecdh_aeskw == alg_type)) {
                 // epk, apu, apv
                 binary_t pub1;
                 binary_t pub2;
@@ -679,13 +679,13 @@ return_t json_object_signing_encryption::compose_encryption_header (crypt_enc_t 
                     }
                     json_object_set_new (json_header, "epk", json_epk);
                 }
-            } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) {
+            } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {
                 // iv, tag
                 binary_t iv1 = datamap[crypt_item_t::item_iv];
                 binary_t tag1 = datamap[crypt_item_t::item_tag];
                 json_object_set_new (json_header, "iv", json_string (base64_encode (&iv1[0], iv1.size (), BASE64URL_ENCODING).c_str ()));
                 json_object_set_new (json_header, "tag", json_string (base64_encode (&tag1[0], tag1.size (), BASE64URL_ENCODING).c_str ()));
-            } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) {
+            } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {
                 // p2s, p2c
                 binary_t p2s = datamap[crypt_item_t::item_p2s];
                 uint32 p2c = variantmap[crypt_item_t::item_p2c].data.i32;
@@ -715,7 +715,7 @@ return_t json_object_signing_encryption::compose_encryption_header (crypt_enc_t 
 
 return_t json_object_signing_encryption::prepare_decryption_item (jose_context_t* context,
                                                                   const char* protected_header, const char* encrypted_key, const char* iv, const char* ciphertext, const char* tag,
-                                                                  void* json, crypt_enc_t& type, jose_encryption_t& item)
+                                                                  void* json, jwe_t& type, jose_encryption_t& item)
 {
     return_t ret = errorcode_t::success;
     json_t* json_protected = nullptr;
@@ -723,7 +723,7 @@ return_t json_object_signing_encryption::prepare_decryption_item (jose_context_t
 
     __try2
     {
-        type = CRYPT_ENC_UNKNOWN;
+        type = jwe_t::jwe_unknown;
 
         std::string protected_header_decoded = base64_decode_careful (protected_header, strlen (protected_header), BASE64URL_ENCODING);
         ret = json_open_stream (&json_protected, protected_header_decoded.c_str ());
@@ -739,7 +739,7 @@ return_t json_object_signing_encryption::prepare_decryption_item (jose_context_t
             __leave2;
         }
 
-        type = (crypt_enc_t) hintof_enc->type;
+        type = (jwe_t) hintof_enc->type;
 
         item.enc_info = hintof_enc;
         item.datamap[crypt_item_t::item_aad] = convert (protected_header); // base64url encoded
@@ -758,7 +758,7 @@ return_t json_object_signing_encryption::prepare_decryption_item (jose_context_t
 }
 
 return_t json_object_signing_encryption::prepare_decryption_recipient (jose_context_t* context,
-                                                                       const char* protected_header, const char* encrypted_key, void* json, crypt_alg_t& type, jose_recipient_t& recipient)
+                                                                       const char* protected_header, const char* encrypted_key, void* json, jwa_t& type, jose_recipient_t& recipient)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -770,7 +770,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
     {
         recipient.datamap[crypt_item_t::item_encryptedkey].clear ();
 
-        type = CRYPT_ALG_UNKNOWN;
+        type = jwa_t::jwa_unknown;
 
         const char* enc = nullptr;
         return_t ret_test = errorcode_t::success;
@@ -820,9 +820,9 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
             recipient.kid = kid;
         }
 
-        type = (crypt_alg_t) hintof_alg->type;
-        uint32 alg_type = CRYPT_ALG_TYPE ((crypt_alg_t) hintof_alg->type);
-        if ((CRYPT_ALG_TYPE_ECDH == alg_type) || (CRYPT_ALG_TYPE_ECDH_AESKW == alg_type)) { // epk
+        type = (jwa_t) hintof_alg->type;
+        uint32 alg_type = CRYPT_ALG_TYPE ((jwa_t) hintof_alg->type);
+        if ((jwa_type_t::jwa_type_ecdh == alg_type) || (jwa_type_t::jwa_type_ecdh_aeskw == alg_type)) { // epk
             json_t* epk = nullptr;
             const char* kty_value = nullptr;
             const char* crv_value = nullptr;
@@ -861,7 +861,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
             if (apv_value) {
                 base64_decode (apv_value, strlen (apv_value), recipient.datamap[crypt_item_t::item_apv], BASE64URL_ENCODING);
             }
-        } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) { // iv, tag
+        } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) { // iv, tag
             const char* iv_value = nullptr;
             const char* tag_value = nullptr;
             if (json_header) {
@@ -878,7 +878,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
             }
             base64_decode (iv_value, strlen (iv_value), recipient.datamap[crypt_item_t::item_iv], BASE64URL_ENCODING);
             base64_decode (tag_value, strlen (tag_value), recipient.datamap[crypt_item_t::item_tag], BASE64URL_ENCODING);
-        } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) { // p2s, p2c
+        } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) { // p2s, p2c
             const char* p2s = nullptr;
             int p2c = -1;
             if (json_header) {
@@ -938,7 +938,7 @@ return_t json_object_signing_encryption::prepare_decryption (jose_context_t* con
                                  "protected", &protected_header, "iv", &iv, "ciphertext", &ciphertext, "tag", &tag);
 
                     jose_encryption_t item;
-                    crypt_enc_t enc_type = CRYPT_ENC_UNKNOWN;
+                    jwe_t enc_type = jwe_t::jwe_unknown;
                     prepare_decryption_item (context, protected_header, nullptr, iv, ciphertext, tag, nullptr, enc_type, item);
 
                     size_t array_size = json_array_size (json_recipients);
@@ -946,7 +946,7 @@ return_t json_object_signing_encryption::prepare_decryption (jose_context_t* con
                         json_t* json_recipient = json_array_get (json_recipients, index);
                         json_t* json_header = nullptr;
                         jose_recipient_t recipient;
-                        crypt_alg_t alg_type = CRYPT_ALG_UNKNOWN;
+                        jwa_t alg_type = jwa_t::jwa_unknown;
 
                         const char* encrypted_key = nullptr;
                         //char* header = nullptr;
@@ -975,8 +975,8 @@ return_t json_object_signing_encryption::prepare_decryption (jose_context_t* con
 
                 jose_encryption_t item;
                 jose_recipient_t recipient;
-                crypt_enc_t enc_type = CRYPT_ENC_UNKNOWN;
-                crypt_alg_t alg_type = CRYPT_ALG_UNKNOWN;
+                jwe_t enc_type = jwe_t::jwe_unknown;
+                jwa_t alg_type = jwa_t::jwa_unknown;
                 prepare_decryption_item (context, protected_header, encrypted_key, iv, ciphertext, tag, nullptr, enc_type, item);
                 prepare_decryption_recipient (context, protected_header, encrypted_key, nullptr, alg_type, recipient);
 
@@ -1007,8 +1007,8 @@ return_t json_object_signing_encryption::prepare_decryption (jose_context_t* con
 
             jose_encryption_t item;
             jose_recipient_t recipient;
-            crypt_enc_t enc_type = CRYPT_ENC_UNKNOWN;
-            crypt_alg_t alg_type = CRYPT_ALG_UNKNOWN;
+            jwe_t enc_type = jwe_t::jwe_unknown;
+            jwa_t alg_type = jwa_t::jwa_unknown;
             prepare_decryption_item (context, protected_header.c_str (), encrypted_key.c_str (), iv.c_str (), ciphertext.c_str (), tag.c_str (), nullptr, enc_type, item);
             prepare_decryption_recipient (context, protected_header.c_str (), encrypted_key.c_str (), nullptr, alg_type, recipient);
 
@@ -1162,7 +1162,7 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
                 }
                 json_object_set_new (json_serialization, "protected", json_string (b64_header.c_str ()));
                 for (jose_recipients_t::iterator rit = encryption.recipients.begin (); rit != encryption.recipients.end (); rit++) {
-                    crypt_alg_t alg = rit->first;
+                    jwa_t alg = rit->first;
 
                     jose_recipient_t& recipient = rit->second;
 
@@ -1177,7 +1177,7 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
                             }
 
                             uint32 alg_type = CRYPT_ALG_TYPE (alg);
-                            if ((CRYPT_ALG_TYPE_ECDH == alg_type) || (CRYPT_ALG_TYPE_ECDH_AESKW == alg_type)) {
+                            if ((jwa_type_t::jwa_type_ecdh == alg_type) || (jwa_type_t::jwa_type_ecdh_aeskw == alg_type)) {
                                 binary_t pub1;
                                 binary_t pub2;
                                 EVP_PKEY* epk = recipient.epk;
@@ -1197,12 +1197,12 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
                                     }
                                     json_object_set_new (header, "epk", json_epk);
                                 }
-                            } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) {
+                            } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {
                                 std::string b64_iv = base64_encode (&recipient.datamap[crypt_item_t::item_iv][0], recipient.datamap[crypt_item_t::item_iv].size (), BASE64URL_ENCODING);
                                 std::string b64_tag = base64_encode (&recipient.datamap[crypt_item_t::item_tag][0], recipient.datamap[crypt_item_t::item_tag].size (), BASE64URL_ENCODING);
                                 json_object_set_new (header, "iv", json_string (b64_iv.c_str ()));
                                 json_object_set_new (header, "tag", json_string (b64_tag.c_str ()));
-                            } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) {
+                            } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {
                                 std::string b64_p2s = base64_encode (&recipient.datamap[crypt_item_t::item_p2s][0], recipient.datamap[crypt_item_t::item_p2s].size (), BASE64URL_ENCODING);
                                 json_object_set_new (header, "p2s", json_string (b64_p2s.c_str ()));
                                 json_object_set_new (header, "p2c", json_integer (recipient.p2c));
@@ -1281,7 +1281,7 @@ return_t json_object_signing_encryption::update_header (std::string source_encod
     return ret;
 }
 
-return_t json_object_signing_encryption::parse_signature_header (jose_context_t* context, const char* header, crypt_sig_t& sig, std::string& keyid)
+return_t json_object_signing_encryption::parse_signature_header (jose_context_t* context, const char* header, jws_t& sig, std::string& keyid)
 {
     return_t ret = errorcode_t::success;
     //JOSE_CONTEXT* handle = static_cast <JOSE_CONTEXT*> (context);
@@ -1290,7 +1290,7 @@ return_t json_object_signing_encryption::parse_signature_header (jose_context_t*
 
     __try2
     {
-        sig = SIGN_UNSECURED;
+        sig = jws_t::jws_unknown;
         keyid.clear ();
 
         if (nullptr == context) {
@@ -1371,7 +1371,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
                     for (size_t index = 0; index < array_size; index++) {
                         json_t* json_signature = json_array_get (json_signatures, index);
 
-                        crypt_sig_t sig = SIGN_UNSECURED;
+                        jws_t sig = jws_t::jws_unknown;
                         const char* protected_value = nullptr;  /* protected:base64_url_encode(header) */
                         const char* kid_value = nullptr;        /* header:{kid:kid_value} */
                         const char* alg_value = nullptr;        /* header:{alg:alg_value} */
@@ -1414,7 +1414,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
             } else {
                 // 7.2.2.  Flattened JWS JSON Serialization Syntax
 
-                crypt_sig_t sig = SIGN_UNSECURED;
+                jws_t sig = jws_t::jws_unknown;
                 const char* protected_value = nullptr;  /* protected:base64_url_encode(header) */
                 const char* kid_value = nullptr;        /* header:{kid:kid_value} */
                 const char* alg_value = nullptr;        /* header:{alg:alg_value} */

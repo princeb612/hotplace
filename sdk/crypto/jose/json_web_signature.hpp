@@ -80,7 +80,7 @@ public:
      *          crypto_key key;
      *          json_web_key jwk;
      *          jwk.load_file (&key, "rfc7515.jwk", 0);
-     *          jws.sign (&key, SIGN_ES256, claim, signature);
+     *          jws.sign (&key, jws_t::jws_es256, claim, signature);
      *          //  eyJhbGciOiJFUzI1NiJ9
      *          //  .
      *          //  eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ
@@ -108,33 +108,33 @@ public:
     /*
      * @brief sign
      * @param crypto_key* crypto_key [in]
-     * @param crypt_sig_t alg header [in]
+     * @param jws_t alg header [in]
      * @param std::string claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
      * @return error code (see error.h)
      * @remarks see json_object_signing_encryption::sign
      * @sample
-     *          jws.sign (&crypto_key, SIGN_HS256, claim, signature);
+     *          jws.sign (&crypto_key, jws_t::jws_hs256, claim, signature);
      */
-    return_t sign (crypto_key* crypto_key, crypt_sig_t alg, std::string claims, std::string& signature, jose_serialization_t mode = JOSE_COMPACT);
+    return_t sign (crypto_key* crypto_key, jws_t alg, std::string claims, std::string& signature, jose_serialization_t mode = JOSE_COMPACT);
     /*
      * @brief sign
      * @param crypto_key* crypto_key [in]
-     * @param std::list<crypt_sig_t> algs [in]
+     * @param std::list<jws_t> algs [in]
      * @param std::string claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
      * @return error code (see error.h)
      * @remarks see json_object_signing_encryption::sign
      * @sample
-     *          algs.push_back (SIGN_HS256);
-     *          algs.push_back (SIGN_RS256);
-     *          algs.push_back (SIGN_ES256);
-     *          algs.push_back (SIGN_PS256);
+     *          algs.push_back (jws_t::jws_hs256);
+     *          algs.push_back (jws_t::jws_rs256);
+     *          algs.push_back (jws_t::jws_es256);
+     *          algs.push_back (jws_t::jws_ps256);
      *          jws.sign (&crypto_key, algs, claim, signature);
      */
-    return_t sign (crypto_key* crypto_key, std::list<crypt_sig_t> algs, std::string claims, std::string& signature, jose_serialization_t mode = JOSE_COMPACT);
+    return_t sign (crypto_key* crypto_key, std::list<jws_t> algs, std::string claims, std::string& signature, jose_serialization_t mode = JOSE_COMPACT);
     /*
      * @brief verify
      * @param crypto_key* crypto_key [in]

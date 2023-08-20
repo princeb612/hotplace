@@ -114,7 +114,7 @@ void test_case::test (return_t result, const char* test_function, const char* me
                 status._count_fail++;
             }
 
-            status._test_results.push_back (item);                                 /* append a unittest_item_t */
+            status._test_results.push_back (item);                              /* append a unittest_item_t */
             _test_map.insert (std::make_pair (_current_case_name, status));     /* insert a new test_status_t */
             _test_list.push_back (_current_case_name);                          /* ordered test cases */
         } else {

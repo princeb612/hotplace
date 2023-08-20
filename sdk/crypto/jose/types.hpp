@@ -65,7 +65,7 @@ typedef struct _jose_recipient_t {
         // do nothing
     }
 } jose_recipient_t;
-typedef std::map<crypt_alg_t, jose_recipient_t> jose_recipients_t;
+typedef std::map<jwa_t, jose_recipient_t> jose_recipients_t;
 typedef std::pair<jose_recipients_t::iterator, bool> jose_recipients_pib_t;
 
 /*
@@ -104,7 +104,7 @@ typedef struct _jose_encryption_t {
         // do nothing
     }
 }  jose_encryption_t;
-typedef std::map<crypt_enc_t, jose_encryption_t> jose_encryptions_t;
+typedef std::map<jwe_t, jose_encryption_t> jose_encryptions_t;
 typedef std::pair<jose_encryptions_t::iterator, bool> jose_encryptions_pib_t;
 
 /* JWS */
@@ -113,7 +113,7 @@ typedef struct _jose_sign_t {
     std::string payload;
     std::string signature;
     std::string kid;
-    crypt_sig_t sig;
+    jws_t sig;
 } jose_sign_t;
 typedef std::list<jose_sign_t> jose_signs_t;
 

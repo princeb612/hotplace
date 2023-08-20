@@ -79,8 +79,8 @@ public:
      *          const EVP_MD* sha3_512 = (const EVP_MD*) find_evp_md (hash_algorithm_t::sha3_512); // EVP_sha3_512 ()
      */
     const EVP_MD* find_evp_md (hash_algorithm_t algorithm);
-    const EVP_MD* find_evp_md (crypt_sig_t sig);
-    hash_algorithm_t get_algorithm (crypt_sig_t sig);
+    const EVP_MD* find_evp_md (jws_t sig);
+    hash_algorithm_t get_algorithm (jws_t sig);
     /*
      * @brief find md string
      * @param hash_algorithm_t algorithm [in] hash_algorithm_t
@@ -116,31 +116,31 @@ public:
 
     /*
      * @brief hint
-     * @param crypt_alg_t alg [in]
-     *          CRYPT_ALG_RSA1_5, CRYPT_ALG_RSA_OAEP, CRYPT_ALG_RSA_OAEP_256,CRYPT_ALG_A128KW series,
-     *          CRYPT_ALG_ECDH_ES, CRYPT_ALG_ECDH_ES_A128KW series,
-     *          CRYPT_ALG_A128GCMKW series, CRYPT_ALG_PBES2_HS256_A128KW series
+     * @param jwa_t alg [in]
+     *          jwa_t::jwa_rsa_1_5, jwa_t::jwa_rsa_oaep, jwa_t::jwa_rsa_oaep_256,jwa_t::jwa_a128kw series,
+     *          jwa_t::jwa_ecdh_es, jwa_t::jwa_ecdh_es_a128kw series,
+     *          jwa_t::jwa_a128gcmkw series, jwa_t::jwa_pbes2_hs256_a128kw series
      * @return const hint_jose_encryption_t*
      * @sample
      *          const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);
      */
-    const hint_jose_encryption_t* hintof_jose_algorithm (crypt_alg_t alg);
+    const hint_jose_encryption_t* hintof_jose_algorithm (jwa_t alg);
     /*
      * @brief hint
-     * @param crypt_enc_t enc [in]
-     *          CRYPT_ENC_A128CBC_HS256 series, CRYPT_ENC_A128GCM series
+     * @param jwe_t enc [in]
+     *          jwe_t::jwe_a128cbc_hs256 series, jwe_t::jwe_a128gcm series
      * @return const hint_jose_encryption_t*
      * @sample
      *          const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption (enc);
      */
-    const hint_jose_encryption_t* hintof_jose_encryption (crypt_enc_t enc);
+    const hint_jose_encryption_t* hintof_jose_encryption (jwe_t enc);
     /*
      * @brief hint
-     * @param crypt_sig_t sig [in]
-     *          SIGN_HS256 series, SIGN_RS256 series, SIGN_ES256 series, SIGN_PS256 series, SIGN_EDDSA
+     * @param jws_t sig [in]
+     *          jws_t::jws_hs256 series, jws_t::jws_rs256 series, jws_t::jws_es256 series, jws_t::jws_ps256 series, jws_t::jws_eddsa
      * @return const hint_jose_signature_t*
      */
-    const hint_jose_signature_t* hintof_jose_signature (crypt_sig_t sig);
+    const hint_jose_signature_t* hintof_jose_signature (jws_t sig);
     /*
      * @brief hint
      * @param uint32 nid [in]
@@ -186,7 +186,7 @@ public:
 
     /*
      * @brief JWA
-     * @param crypt_alg_t alg [in]
+     * @param jwa_t alg [in]
      * @return
      *          RSA1_5
      *          RSA-OAEP
@@ -206,10 +206,10 @@ public:
      *          PBES2-HS384+A192KW
      *          PBES2-HS512+A256KW
      */
-    const char* nameof_jose_algorithm (crypt_alg_t alg);
+    const char* nameof_jose_algorithm (jwa_t alg);
     /*
      * @brief JWE
-     * @param crypt_enc_t enc [in]
+     * @param jwe_t enc [in]
      * @return
      *          A128CBC-HS256
      *          A192CBC-HS384
@@ -218,10 +218,10 @@ public:
      *          A192GCM
      *          A256GCM
      */
-    const char* nameof_jose_encryption (crypt_enc_t enc);
+    const char* nameof_jose_encryption (jwe_t enc);
     /*
      * @brief JWS
-     * @param crypt_sig_t enc [in]
+     * @param jws_t enc [in]
      * @return
      *          HS256
      *          HS384
@@ -237,71 +237,71 @@ public:
      *          PS512
      *          EdDSA
      */
-    const char* nameof_jose_signature (crypt_sig_t sig);
+    const char* nameof_jose_signature (jws_t sig);
 
     /*
      * @brief type
      * @param const char* alg [in]
-     * @param crypt_alg_t& type [out]
+     * @param jwa_t& type [out]
      * @remarks
      *          --------------------+-----------------------------
-     *          "RSA1_5"            | CRYPT_ALG_RSA1_5
-     *          "RSA-OAEP"          | CRYPT_ALG_RSA_OAEP
-     *          "RSA-OAEP-256"      | CRYPT_ALG_RSA_OAEP_256
-     *          "A128KW"            | CRYPT_ALG_A128KW
-     *          "A192KW"            | CRYPT_ALG_A192KW
-     *          "A256KW"            | CRYPT_ALG_A256KW
-     *          "dir"               | CRYPT_ALG_DIR
-     *          "ECDH-ES"           | CRYPT_ALG_ECDH_ES
-     *          "ECDH-ES+A128KW"    | CRYPT_ALG_ECDH_ES_A128KW
-     *          "ECDH-ES+A192KW"    | CRYPT_ALG_ECDH_ES_A192KW
-     *          "ECDH-ES+A256KW"    | CRYPT_ALG_ECDH_ES_A256KW
-     *          "A128GCMKW"         | CRYPT_ALG_A128GCMKW
-     *          "A192GCMKW"         | CRYPT_ALG_A192GCMKW
-     *          "A256GCMKW"         | CRYPT_ALG_A256GCMKW
-     *          "PBES2-HS256+A128KW"| CRYPT_ALG_PBES2_HS256_A128KW
-     *          "PBES2-HS384+A192KW"| CRYPT_ALG_PBES2_HS384_A192KW
-     *          "PBES2-HS512+A256KW"| CRYPT_ALG_PBES2_HS512_A256KW
+     *          "RSA1_5"            | jwa_t::jwa_rsa_1_5
+     *          "RSA-OAEP"          | jwa_t::jwa_rsa_oaep
+     *          "RSA-OAEP-256"      | jwa_t::jwa_rsa_oaep_256
+     *          "A128KW"            | jwa_t::jwa_a128kw
+     *          "A192KW"            | jwa_t::jwa_a192kw
+     *          "A256KW"            | jwa_t::jwa_a256kw
+     *          "dir"               | jwa_t::jwa_dir
+     *          "ECDH-ES"           | jwa_t::jwa_ecdh_es
+     *          "ECDH-ES+A128KW"    | jwa_t::jwa_ecdh_es_a128kw
+     *          "ECDH-ES+A192KW"    | jwa_t::jwa_ecdh_es_a192kw
+     *          "ECDH-ES+A256KW"    | jwa_t::jwa_ecdh_es_a256kw
+     *          "A128GCMKW"         | jwa_t::jwa_a128gcmkw
+     *          "A192GCMKW"         | jwa_t::jwa_a192gcmkw
+     *          "A256GCMKW"         | jwa_t::jwa_a256gcmkw
+     *          "PBES2-HS256+A128KW"| jwa_t::jwa_pbes2_hs256_a128kw
+     *          "PBES2-HS384+A192KW"| jwa_t::jwa_pbes2_hs384_a192kw
+     *          "PBES2-HS512+A256KW"| jwa_t::jwa_pbes2_hs512_a256kw
      *          --------------------+-----------------------------
      */
-    return_t typeof_jose_algorithm (const char* alg, crypt_alg_t& type);
+    return_t typeof_jose_algorithm (const char* alg, jwa_t& type);
     /*
      * @brief type
      * @param const char* enc [in]
-     * @param crypt_enc_t& type [out]
+     * @param jwe_t& type [out]
      * @remarks
      *          --------------------+------------------------
-     *          "A128CBC-HS256"     | CRYPT_ENC_A128CBC_HS256
-     *          "A192CBC-HS384"     | CRYPT_ENC_A192CBC_HS384
-     *          "A256CBC-HS512"     | CRYPT_ENC_A256CBC_HS512
-     *          "A128GCM"           | CRYPT_ENC_A128GCM
-     *          "A192GCM"           | CRYPT_ENC_A192GCM
-     *          "A256GCM"           | CRYPT_ENC_A256GCM
+     *          "A128CBC-HS256"     | jwe_t::jwe_a128cbc_hs256
+     *          "A192CBC-HS384"     | jwe_t::jwe_a192cbc_hs384
+     *          "A256CBC-HS512"     | jwe_t::jwe_a256cbc_hs512
+     *          "A128GCM"           | jwe_t::jwe_a128gcm
+     *          "A192GCM"           | jwe_t::jwe_a192gcm
+     *          "A256GCM"           | jwe_t::jwe_a256gcm
      *          --------------------+------------------------
      */
-    return_t typeof_jose_encryption (const char* enc, crypt_enc_t& type);
+    return_t typeof_jose_encryption (const char* enc, jwe_t& type);
     /*
      * @brief type
      * @param const char* sig [in]
-     * @param crypt_sig_t& type [out]
+     * @param jws_t& type [out]
      * @remarks
      *          --------------------+-----------
-     *          "HS256"             | SIGN_HS256
-     *          "HS384"             | SIGN_HS384
-     *          "HS512"             | SIGN_HS512
-     *          "RS256"             | SIGN_RS256
-     *          "RS384"             | SIGN_RS384
-     *          "RS512"             | SIGN_RS512
-     *          "ES256"             | SIGN_ES256
-     *          "ES384"             | SIGN_ES384
-     *          "ES512"             | SIGN_ES512
-     *          "PS256"             | SIGN_PS256
-     *          "PS384"             | SIGN_PS384
-     *          "PS512"             | SIGN_PS512
-     *          "EdDSA"             | SIGN_EDDSA
+     *          "HS256"             | jws_t::jws_hs256
+     *          "HS384"             | jws_t::jws_hs384
+     *          "HS512"             | jws_t::jws_hs512
+     *          "RS256"             | jws_t::jws_rs256
+     *          "RS384"             | jws_t::jws_rs384
+     *          "RS512"             | jws_t::jws_rs512
+     *          "ES256"             | jws_t::jws_es256
+     *          "ES384"             | jws_t::jws_es384
+     *          "ES512"             | jws_t::jws_es512
+     *          "PS256"             | jws_t::jws_ps256
+     *          "PS384"             | jws_t::jws_ps384
+     *          "PS512"             | jws_t::jws_ps512
+     *          "EdDSA"             | jws_t::jws_eddsa
      *          --------------------+-----------
      */
-    return_t typeof_jose_signature (const char* sig, crypt_sig_t& type);
+    return_t typeof_jose_signature (const char* sig, jws_t& type);
 
     /*
      * @brief nid
@@ -367,17 +367,17 @@ public:
     /*
      * @brief kind of
      * @param EVP_PKEY* pkey [in]
-     * @param crypt_alg_t alg [in]
+     * @param jwa_t alg [in]
      * @return true if match, false if not
      */
-    bool is_kindof (EVP_PKEY* pkey, crypt_alg_t alg);
+    bool is_kindof (EVP_PKEY* pkey, jwa_t alg);
     /*
      * @brief kind of
      * @param EVP_PKEY* pkey [in]
-     * @param crypt_sig_t sig [in]
+     * @param jws_t sig [in]
      * @return true if match, false if not
      */
-    bool is_kindof (EVP_PKEY* pkey, crypt_sig_t sig);
+    bool is_kindof (EVP_PKEY* pkey, jws_t sig);
     /*
      * @brief kind of
      * @param EVP_PKEY* pkey [in]

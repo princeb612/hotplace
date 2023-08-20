@@ -56,8 +56,8 @@ public:
     /*
      * @brief encrypt
      * @param jose_context_t* context [in]
-     * @param crypt_enc_t enc [in]
-     * @param crypt_alg_t alg [in] support all algorithms including CRYPT_ALG_DIR, CRYPT_ALG_ECDH_ES
+     * @param jwe_t enc [in]
+     * @param jwa_t alg [in] support all algorithms including jwa_t::jwa_dir, jwa_t::jwa_ecdh_es
      * @param binary_t input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
@@ -74,18 +74,18 @@ public:
      *          jose_context_t* handle_decrypt = nullptr;
      *          jose.open (&handle_encrypt, &crypto_pubkey);
      *          jose.open (&handle_decrypt, &crypto_privkey);
-     *          ret = jose.encrypt (handle_encrypt, CRYPT_ENC_A128CBC_HS256, CRYPT_ALG_ECDH_ES, convert (input), encrypted, JOSE_JSON);
+     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_ecdh_es, convert (input), encrypted, JOSE_JSON);
      *          ret = jose.decrypt (handle_decrypt, encrypted, output, result);
      *          jose.close (handle_encrypt);
      *          jose.close (handle_decrypt);
      */
-    return_t encrypt (jose_context_t* context, crypt_enc_t enc, crypt_alg_t alg, binary_t input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
     /*
      * @brief encrypt
      * @param jose_context_t* context [in]
-     * @param crypt_enc_t enc [in]
-     * @param std::list <crypt_alg_t> alg [in]
-     *  do not support CRYPT_ALG_DIR, CRYPT_ALG_ECDH_ES
+     * @param jwe_t enc [in]
+     * @param std::list <jwa_t> alg [in]
+     *  do not support jwa_t::jwa_dir, jwa_t::jwa_ecdh_es
      *  case "dir"
      *      read cek from HMAC key and then make it the only one cek
      *      protected, iv, ciphertext, tag, recipients:[ header {alg:dir}, encrypted_key(empty) ]
@@ -105,26 +105,26 @@ public:
      *          json_object_signing_encryption jose;
      *          jose_context_t* handle_encrypt = nullptr;
      *          jose.open (&handle_encrypt, &crypto_pubkey);
-     *          std::list<crypt_alg_t> algs;
-     *          algs.push_back (CRYPT_ALG_RSA1_5);
-     *          algs.push_back (CRYPT_ALG_RSA_OAEP);
-     *          algs.push_back (CRYPT_ALG_RSA_OAEP_256);
-     *          algs.push_back (CRYPT_ALG_A128KW);
-     *          algs.push_back (CRYPT_ALG_A192KW);
-     *          algs.push_back (CRYPT_ALG_A256KW);
-     *          algs.push_back (CRYPT_ALG_ECDH_ES_A128KW);
-     *          algs.push_back (CRYPT_ALG_ECDH_ES_A192KW);
-     *          algs.push_back (CRYPT_ALG_ECDH_ES_A256KW);
-     *          algs.push_back (CRYPT_ALG_A128GCMKW);
-     *          algs.push_back (CRYPT_ALG_A192GCMKW);
-     *          algs.push_back (CRYPT_ALG_A256GCMKW);
-     *          algs.push_back (CRYPT_ALG_PBES2_HS256_A128KW);
-     *          algs.push_back (CRYPT_ALG_PBES2_HS384_A192KW);
-     *          algs.push_back (CRYPT_ALG_PBES2_HS512_A256KW);
-     *          ret = jose.encrypt (handle_encrypt, CRYPT_ENC_A128CBC_HS256, algs, convert (input), encrypted, JOSE_JSON);
+     *          std::list<jwa_t> algs;
+     *          algs.push_back (jwa_t::jwa_rsa_1_5);
+     *          algs.push_back (jwa_t::jwa_rsa_oaep);
+     *          algs.push_back (jwa_t::jwa_rsa_oaep_256);
+     *          algs.push_back (jwa_t::jwa_a128kw);
+     *          algs.push_back (jwa_t::jwa_a192kw);
+     *          algs.push_back (jwa_t::jwa_a256kw);
+     *          algs.push_back (jwa_t::jwa_ecdh_es_a128kw);
+     *          algs.push_back (jwa_t::jwa_ecdh_es_a192kw);
+     *          algs.push_back (jwa_t::jwa_ecdh_es_a256kw);
+     *          algs.push_back (jwa_t::jwa_a128gcmkw);
+     *          algs.push_back (jwa_t::jwa_a192gcmkw);
+     *          algs.push_back (jwa_t::jwa_a256gcmkw);
+     *          algs.push_back (jwa_t::jwa_pbes2_hs256_a128kw);
+     *          algs.push_back (jwa_t::jwa_pbes2_hs384_a192kw);
+     *          algs.push_back (jwa_t::jwa_pbes2_hs512_a256kw);
+     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, algs, convert (input), encrypted, JOSE_JSON);
      *          jose.close (handle_encrypt);
      */
-    return_t encrypt (jose_context_t* context, crypt_enc_t enc, std::list <crypt_alg_t> algs, binary_t input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t encrypt (jose_context_t* context, jwe_t enc, std::list <jwa_t> algs, binary_t input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
     /*
      * @brief decrypt
      * @param jose_context_t* context [in]
@@ -189,7 +189,7 @@ public:
     /*
      * @brief sign
      * @param jose_context_t* context [in]
-     * @param crypt_sig_t method [in]
+     * @param jws_t method [in]
      * @param std::string input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
@@ -204,15 +204,15 @@ public:
      *
      *          jose_context_t* jose_context = nullptr;
      *          jose.open (&jose_context, &crypto_key);
-     *          jose.sign (jose_context, SIGN_HS256, claim, jws_result);
+     *          jose.sign (jose_context, jws_t::jws_hs256, claim, jws_result);
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign (jose_context_t* context, crypt_sig_t method, std::string input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t sign (jose_context_t* context, jws_t method, std::string input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
     /*
      * @brief sign
      * @param jose_context_t* context [in]
-     * @param std::list <crypt_sig_t> methods [in]
+     * @param std::list <jws_t> methods [in]
      * @param std::string input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
@@ -224,10 +224,10 @@ public:
      *          json_object_signing_encryption jose;
      *          bool result = false;
      *          std::string jws_result;
-     *          std::list <crypt_sig_t> methods;
-     *          methods.push_back (SIGN_HS256);
-     *          methods.push_back (SIGN_RS256);
-     *          methods.push_back (SIGN_ES256);
+     *          std::list <jws_t> methods;
+     *          methods.push_back (jws_t::jws_hs256);
+     *          methods.push_back (jws_t::jws_rs256);
+     *          methods.push_back (jws_t::jws_es256);
      *
      *          jose_context_t* jose_context = nullptr;
      *          jose.open (&jose_context, &crypto_key);
@@ -235,7 +235,7 @@ public:
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign (jose_context_t* context, std::list <crypt_sig_t> methods, std::string input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t sign (jose_context_t* context, std::list <jws_t> methods, std::string input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
     /*
      * @brief sign
      * @param jose_context_t* context [in]
@@ -281,38 +281,38 @@ public:
 protected:
     /*
      * @brief encryption
-     * @param crypt_enc_t enc [in]
-     * @param std::list<crypt_alg_t> algs [in]
+     * @param jwe_t enc [in]
+     * @param std::list<jwa_t> algs [in]
      * @remarks
      *          compose recipient and header
      *          see also compose_encryption_header, prepare_encryption_recipient
      */
-    return_t prepare_encryption (jose_context_t* context, crypt_enc_t enc, std::list<crypt_alg_t> algs);
+    return_t prepare_encryption (jose_context_t* context, jwe_t enc, std::list<jwa_t> algs);
     /*
      * @brief header
-     * @param crypt_enc_t enc [in]
-     * @param crypt_alg_t alg [in]
+     * @param jwe_t enc [in]
+     * @param jwa_t alg [in]
      * @param jose_compose_t flag [in]
      * @param std::string kid [in]
      * @param binary_t& header [out]
      * @remarks
-     *      compose_encryption_header (CRYPT_ENC_A128CBC_HS256, CRYPT_ALG_UNKNOWN, JOSE_HEADER_ENC_ALG, "", header);
+     *      compose_encryption_header (jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_unknown, JOSE_HEADER_ENC_ALG, "", header);
      */
-    return_t compose_encryption_header (crypt_enc_t enc, crypt_alg_t alg, jose_compose_t flag, std::string kid, binary_t& header);
+    return_t compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string kid, binary_t& header);
     /*
      * @brief header
-     * @param crypt_enc_t enc [in]
-     * @param crypt_alg_t alg [in]
+     * @param jwe_t enc [in]
+     * @param jwa_t alg [in]
      * @param jose_compose_t flag [in]
      * @param std::string kid [in]
      * @param crypt_datamap_t datamap [in]
      * @param crypt_variantmap_t variantmap [in]
      * @param binary_t& header [out]
      */
-    return_t compose_encryption_header (crypt_enc_t enc, crypt_alg_t alg, jose_compose_t flag, std::string kid, crypt_datamap_t datamap, crypt_variantmap_t variantmap, binary_t& header);
+    return_t compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string kid, crypt_datamap_t datamap, crypt_variantmap_t variantmap, binary_t& header);
     /*
      * @biref recipient
-     * @param crypt_alg_t alg [in]
+     * @param jwa_t alg [in]
      * @param EVP_PKEY* pkey [in]
      * @param jose_recipient_t& recipient [out]
      * @param crypt_datamap_t& datamap [out]
@@ -320,11 +320,11 @@ protected:
      * @remarks
      *      read from key or generate random value
      *
-     *      CRYPT_ALG_TYPE_ECDH, CRYPT_ALG_TYPE_ECDH_AESKW : epk
-     *      CRYPT_ALG_TYPE_AESGCMKW : iv, tag
-     *      CRYPT_ALG_TYPE_PBES2_HS_AESKW : p2s, p2c
+     *      jwa_type_t::jwa_type_ecdh, jwa_type_t::jwa_type_ecdh_aeskw : epk
+     *      jwa_type_t::jwa_type_aesgcmkw : iv, tag
+     *      jwa_type_t::jwa_type_pbes_hs_aeskw : p2s, p2c
      */
-    return_t prepare_encryption_recipient (crypt_alg_t alg, EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap, crypt_variantmap_t& variantmap);
+    return_t prepare_encryption_recipient (jwa_t alg, EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap, crypt_variantmap_t& variantmap);
     /*
      * @brief parse
      * @param jose_context_t* context [in]
@@ -346,23 +346,23 @@ protected:
      * @param const char* ciphertext [in]
      * @param const char* tag [in]
      * @param void* json [in]
-     * @param crypt_enc_t& type [out]
+     * @param jwe_t& type [out]
      * @param jose_encryption_t& item [out]
      */
     return_t prepare_decryption_item (jose_context_t* context,
                                       const char* protected_header, const char* encrypted_key, const char* iv, const char* ciphertext, const char* tag,
-                                      void* json, crypt_enc_t& type, jose_encryption_t& item);
+                                      void* json, jwe_t& type, jose_encryption_t& item);
     /*
      * @brief decrypt
      * @param jose_context_t* context [in]
      * @param const char* protected_header [in]
      * @param const char* encrypted_key [in]
      * @param void* json [in]
-     * @param crypt_alg_t& type [out]
+     * @param jwa_t& type [out]
      * @param jose_recipient_t& recipient [out]
      */
     return_t prepare_decryption_recipient (jose_context_t* context,
-                                           const char* protected_header, const char* encrypted_key, void* json, crypt_alg_t& type, jose_recipient_t& recipient);
+                                           const char* protected_header, const char* encrypted_key, void* json, jwa_t& type, jose_recipient_t& recipient);
 
     /*
      * @brief write
@@ -383,10 +383,10 @@ protected:
      * @brief parse
      * @param jose_context_t* context [in]
      * @param const char* protected_header [in]
-     * @param crypt_sig_t& method [out]
+     * @param jws_t& method [out]
      * @param std::string& keyid [out]
      */
-    return_t parse_signature_header (jose_context_t* context, const char* protected_header, crypt_sig_t& method, std::string& keyid);
+    return_t parse_signature_header (jose_context_t* context, const char* protected_header, jws_t& method, std::string& keyid);
     /*
      * @brief parse
      * @param jose_context_t* context [in]

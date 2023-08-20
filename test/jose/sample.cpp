@@ -185,19 +185,19 @@ void test_rfc7515_HS ()
     jose_context_t* jose_context = nullptr;
     jose.open (&jose_context, &key);
 
-    ret = jose.sign (jose_context, SIGN_HS256, claim, jws_result);
+    ret = jose.sign (jose_context, jws_t::jws_hs256, claim, jws_result);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS compact) - Sign");
     ret = jose.verify (jose_context, jws_result, result);
     std::cout << "JWS " << std::endl << jws_result.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS compact) - Verify");
 
-    ret = jose.sign (jose_context, SIGN_HS256, claim, jws_result, JOSE_FLATJSON);
+    ret = jose.sign (jose_context, jws_t::jws_hs256, claim, jws_result, JOSE_FLATJSON);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS flat) - Sign");
     ret = jose.verify (jose_context, jws_result, result);
     std::cout << "JWS " << std::endl << jws_result.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS flat) - Verify");
 
-    ret = jose.sign (jose_context, SIGN_HS256, claim, jws_result, JOSE_JSON);
+    ret = jose.sign (jose_context, jws_t::jws_hs256, claim, jws_result, JOSE_JSON);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS json) - Sign");
     ret = jose.verify (jose_context, jws_result, result);
     std::cout << "JWS " << std::endl << jws_result.c_str () << std::endl;
@@ -297,7 +297,7 @@ void test_rfc7515_A3 ()
        pmWQxfKTUJqPP3-Kg6NU1Q
      */
 
-    ret = jws.sign (&key, SIGN_ES256, claim, signature);
+    ret = jws.sign (&key, jws_t::jws_es256, claim, signature);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS compact) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS compact" << std::endl << signature.c_str () << std::endl;
@@ -305,13 +305,13 @@ void test_rfc7515_A3 ()
     // so test in https://jwt.io
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS compact) - Verify");
 
-    ret = jws.sign (&key, SIGN_ES256, claim, signature, JOSE_FLATJSON);
+    ret = jws.sign (&key, jws_t::jws_es256, claim, signature, JOSE_FLATJSON);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON flattended) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON flattened" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON flattended) - Verify");
 
-    ret = jws.sign (&key, SIGN_ES256, claim, signature, JOSE_JSON);
+    ret = jws.sign (&key, jws_t::jws_es256, claim, signature, JOSE_JSON);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON serialization) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON serialization" << std::endl << signature.c_str () << std::endl;
@@ -351,7 +351,7 @@ void test_rfc7515_A4 ()
 
     //claimconst char payload[] = { 80, 97, 121, 108, 111, 97, 100, 0 };
 
-    ret = jws.sign (&key, SIGN_ES512, claim, signature);
+    ret = jws.sign (&key, jws_t::jws_es512, claim, signature);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS compact) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS compact" << std::endl << signature.c_str () << std::endl;
@@ -359,13 +359,13 @@ void test_rfc7515_A4 ()
     // so test in https://jwt.io
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS compact) - Verify");
 
-    ret = jws.sign (&key, SIGN_ES512, claim, signature, JOSE_FLATJSON);
+    ret = jws.sign (&key, jws_t::jws_es512, claim, signature, JOSE_FLATJSON);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON flattened) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON flattened" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON flattened) - Verify");
 
-    ret = jws.sign (&key, SIGN_ES512, claim, signature, JOSE_JSON);
+    ret = jws.sign (&key, jws_t::jws_es512, claim, signature, JOSE_JSON);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON serialization) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON serialization" << std::endl << signature.c_str () << std::endl;
@@ -428,9 +428,9 @@ void test_rfc7515_A6 ()
     std::string signature;
     bool result = false;
 
-    std::list <crypt_sig_t> headers;
-    headers.push_back (SIGN_RS256);
-    headers.push_back (SIGN_ES256);
+    std::list <jws_t> headers;
+    headers.push_back (jws_t::jws_rs256);
+    headers.push_back (jws_t::jws_es256);
     jws.sign (&key, headers, claim, signature, JOSE_JSON);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON serialization" << std::endl << signature.c_str () << std::endl;
@@ -452,7 +452,7 @@ void test_rfc7515_A7 ()
     std::string signature;
     bool result = false;
 
-    jws.sign (&key, SIGN_RS256, claim, signature, JOSE_FLATJSON);
+    jws.sign (&key, jws_t::jws_rs256, claim, signature, JOSE_FLATJSON);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON flattened" << std::endl << signature.c_str () << std::endl;
 
@@ -893,15 +893,15 @@ void test_rfc7516_A1 ()
     jose_context_t* context = nullptr;
     jose.open (&context, &key);
 
-    jose.encrypt (context, CRYPT_ENC_A256GCM, CRYPT_ALG_RSA_OAEP, convert (input), compact, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, convert (input), compact, JOSE_COMPACT);
     ret = jose.decrypt (context, compact, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (compact)");
 
-    jose.encrypt (context, CRYPT_ENC_A256GCM, CRYPT_ALG_RSA_OAEP, convert (input), json_flat, JOSE_FLATJSON);
+    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, convert (input), json_flat, JOSE_FLATJSON);
     ret = jose.decrypt (context, json_flat, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (flat)");
 
-    jose.encrypt (context, CRYPT_ENC_A256GCM, CRYPT_ALG_RSA_OAEP, convert (input), json_serial, JOSE_JSON);
+    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, convert (input), json_serial, JOSE_JSON);
     ret = jose.decrypt (context, json_serial, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (json)");
 
@@ -933,7 +933,7 @@ void test_rsa_oaep ()
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
 
     jose.open (&context, &key);
-    jose.encrypt (context, CRYPT_ENC_A128GCM, CRYPT_ALG_RSA_OAEP, convert (input), output, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a128gcm, jwa_t::jwa_rsa_oaep, convert (input), output, JOSE_COMPACT);
     ret = jose.decrypt (context, output, plain, result);
     jose.close (context);
 
@@ -961,7 +961,7 @@ void test_rsa_oaep_256 ()
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
 
     jose.open (&context, &key);
-    jose.encrypt (context, CRYPT_ENC_A256GCM, CRYPT_ALG_RSA_OAEP_256, convert (input), output, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep_256, convert (input), output, JOSE_COMPACT);
     ret = jose.decrypt (context, output, plain, result);
     jose.close (context);
 
@@ -994,15 +994,15 @@ void test_rfc7516_A2 ()
     jose_context_t* context = nullptr;
     jose.open (&context, &key);
 
-    jose.encrypt (context, CRYPT_ENC_A128CBC_HS256, CRYPT_ALG_RSA1_5, convert (input), compact, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, convert (input), compact, JOSE_COMPACT);
     ret = jose.decrypt (context, compact, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (compact)");
 
-    jose.encrypt (context, CRYPT_ENC_A128CBC_HS256, CRYPT_ALG_RSA1_5, convert (input), json_flat, JOSE_FLATJSON);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, convert (input), json_flat, JOSE_FLATJSON);
     ret = jose.decrypt (context, compact, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (flat)");
 
-    jose.encrypt (context, CRYPT_ENC_A128CBC_HS256, CRYPT_ALG_RSA1_5, convert (input), json_serial, JOSE_JSON);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, convert (input), json_serial, JOSE_JSON);
     ret = jose.decrypt (context, compact, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (json)");
 
@@ -1038,13 +1038,13 @@ void test_rfc7516_A3 ()
 
     jose_context_t* context = nullptr;
     jose.open (&context, &key);
-    jose.encrypt (context, CRYPT_ENC_A128CBC_HS256, CRYPT_ALG_A128KW, convert (input), compact, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, convert (input), compact, JOSE_COMPACT);
     ret = jose.decrypt (context, compact, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (compact)");
-    jose.encrypt (context, CRYPT_ENC_A128CBC_HS256, CRYPT_ALG_A128KW, convert (input), json_flat, JOSE_FLATJSON);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, convert (input), json_flat, JOSE_FLATJSON);
     ret = jose.decrypt (context, json_flat, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (flat)");
-    jose.encrypt (context, CRYPT_ENC_A128CBC_HS256, CRYPT_ALG_A128KW, convert (input), json_serial, JOSE_JSON);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, convert (input), json_serial, JOSE_JSON);
     ret = jose.decrypt (context, json_serial, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (json)");
     jose.close (context);
@@ -1077,11 +1077,11 @@ void test_rfc7516_A4 ()
 
     jose_context_t* context = nullptr;
     jose.open (&context, &key);
-    std::list <crypt_alg_t> algs;
-    //algs.push_back (CRYPT_ALG_RSA1_5);
-    //algs.push_back (CRYPT_ALG_A128KW);
-    algs.push_back (CRYPT_ALG_PBES2_HS256_A128KW);
-    jose.encrypt (context, CRYPT_ENC_A128CBC_HS256, algs, convert (input), json_serial, JOSE_JSON);
+    std::list <jwa_t> algs;
+    //algs.push_back (jwa_t::jwa_rsa_1_5);
+    //algs.push_back (jwa_t::jwa_a128kw);
+    algs.push_back (jwa_t::jwa_pbes2_hs256_a128kw);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, algs, convert (input), json_serial, JOSE_JSON);
     ret = jose.decrypt (context, json_serial, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.4. JWE Using General JWE JSON Serialization (json)");
     jose.close (context);
@@ -1295,10 +1295,10 @@ void test_rfc7517_C ()
 
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
     const char* passphrase = "Thus from my lips, by yours, my sin is purged.";
-    keygen.add_oct (&key, nullptr, CRYPT_ALG_PBES2_HS256_A128KW, (byte_t*) passphrase, strlen (passphrase), crypto_use_t::use_enc);
+    keygen.add_oct (&key, nullptr, jwa_t::jwa_pbes2_hs256_a128kw, (byte_t*) passphrase, strlen (passphrase), crypto_use_t::use_enc);
 
     jose.open (&context, &key);
-    jose.encrypt (context, CRYPT_ENC_A128CBC_HS256, CRYPT_ALG_PBES2_HS256_A128KW, convert (input), output, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_pbes2_hs256_a128kw, convert (input), output, JOSE_COMPACT);
     ret = jose.decrypt (context, output, plain, result);
     jose.close (context);
 
@@ -1616,7 +1616,7 @@ void test_rfc7520 ()
     binary_t password_figure96;
     // entrap_o\xe2\x80\x93peter_long\xe2\x80\x93credit_tun
     const char* figure96 = "entrap_o\xe2\x80\x93" "peter_long\xe2\x80\x93" "credit_tun";
-    keygen.add_oct (&crypto_key2, nullptr, CRYPT_ALG_PBES2_HS512_A256KW, (byte_t*) figure96, strlen (figure96), crypto_use_t::use_enc);
+    keygen.add_oct (&crypto_key2, nullptr, jwa_t::jwa_pbes2_hs512_a256kw, (byte_t*) figure96, strlen (figure96), crypto_use_t::use_enc);
     test_rfc7520_jwe (&crypto_key2, "rfc7520_figure105.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 105)");
     test_rfc7520_jwe (&crypto_key2, "rfc7520_figure106.json", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 106)");
     test_rfc7520_jwe (&crypto_key2, "rfc7520_figure107.json", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 107)");
@@ -1671,26 +1671,26 @@ void test_jwe_flattened ()
         jose.open (&handle_encrypt, &crypto_pubkey);
         jose.open (&handle_decrypt, &crypto_privkey);
 
-        crypt_enc_t encs [] = {
-            CRYPT_ENC_A128CBC_HS256, CRYPT_ENC_A192CBC_HS384, CRYPT_ENC_A256CBC_HS512,
-            CRYPT_ENC_A128GCM, CRYPT_ENC_A192GCM, CRYPT_ENC_A256GCM,
+        jwe_t encs [] = {
+            jwe_t::jwe_a128cbc_hs256, jwe_t::jwe_a192cbc_hs384, jwe_t::jwe_a256cbc_hs512,
+            jwe_t::jwe_a128gcm, jwe_t::jwe_a192gcm, jwe_t::jwe_a256gcm,
         };
-        crypt_alg_t algs [] = {
-            CRYPT_ALG_RSA1_5, CRYPT_ALG_RSA_OAEP, CRYPT_ALG_RSA_OAEP_256,
-            CRYPT_ALG_A128KW, CRYPT_ALG_A192KW, CRYPT_ALG_A256KW,
-            CRYPT_ALG_DIR,
-            CRYPT_ALG_ECDH_ES,
-            CRYPT_ALG_ECDH_ES_A128KW, CRYPT_ALG_ECDH_ES_A192KW, CRYPT_ALG_ECDH_ES_A256KW,
-            CRYPT_ALG_A128GCMKW, CRYPT_ALG_A192GCMKW, CRYPT_ALG_A256GCMKW,
-            CRYPT_ALG_PBES2_HS256_A128KW, CRYPT_ALG_PBES2_HS384_A192KW, CRYPT_ALG_PBES2_HS512_A256KW,
+        jwa_t algs [] = {
+            jwa_t::jwa_rsa_1_5, jwa_t::jwa_rsa_oaep, jwa_t::jwa_rsa_oaep_256,
+            jwa_t::jwa_a128kw, jwa_t::jwa_a192kw, jwa_t::jwa_a256kw,
+            jwa_t::jwa_dir,
+            jwa_t::jwa_ecdh_es,
+            jwa_t::jwa_ecdh_es_a128kw, jwa_t::jwa_ecdh_es_a192kw, jwa_t::jwa_ecdh_es_a256kw,
+            jwa_t::jwa_a128gcmkw, jwa_t::jwa_a192gcmkw, jwa_t::jwa_a256gcmkw,
+            jwa_t::jwa_pbes2_hs256_a128kw, jwa_t::jwa_pbes2_hs384_a192kw, jwa_t::jwa_pbes2_hs512_a256kw,
         };
 
         for (size_t i = 0; i < RTL_NUMBER_OF (encs); i++) {
-            crypt_enc_t enc = encs [i];
+            jwe_t enc = encs [i];
             const char* nameof_enc = advisor->nameof_jose_encryption (encs [i]);
 
             for (size_t j = 0; j < RTL_NUMBER_OF (algs); j++) {
-                crypt_alg_t alg = algs [j];
+                jwa_t alg = algs [j];
                 const char* nameof_alg = advisor->nameof_jose_algorithm (algs [j]);
                 if (nameof_alg) {
                     print_text ("JWE enc %s alg %s", nameof_enc, nameof_alg);
@@ -1715,7 +1715,7 @@ void test_jwe_flattened ()
     }
 }
 
-void test_jwe_json (crypt_enc_t enc)
+void test_jwe_json (jwe_t enc)
 {
     print_text ("JWE");
 
@@ -1743,25 +1743,25 @@ void test_jwe_json (crypt_enc_t enc)
 
         jose.open (&handle_encrypt, &crypto_pubkey);
         jose.open (&handle_decrypt, &crypto_privkey);
-        std::list<crypt_alg_t> algs;
+        std::list<jwa_t> algs;
 
-        algs.push_back (CRYPT_ALG_RSA1_5);
-        algs.push_back (CRYPT_ALG_RSA_OAEP);
-        algs.push_back (CRYPT_ALG_RSA_OAEP_256);
-        algs.push_back (CRYPT_ALG_A128KW);
-        algs.push_back (CRYPT_ALG_A192KW);
-        algs.push_back (CRYPT_ALG_A256KW);
-        algs.push_back (CRYPT_ALG_DIR);
-        //algs.push_back (CRYPT_ALG_ECDH_ES);
-        algs.push_back (CRYPT_ALG_ECDH_ES_A128KW);
-        algs.push_back (CRYPT_ALG_ECDH_ES_A192KW);
-        algs.push_back (CRYPT_ALG_ECDH_ES_A256KW);
-        algs.push_back (CRYPT_ALG_A128GCMKW);
-        algs.push_back (CRYPT_ALG_A192GCMKW);
-        algs.push_back (CRYPT_ALG_A256GCMKW);
-        algs.push_back (CRYPT_ALG_PBES2_HS256_A128KW);
-        algs.push_back (CRYPT_ALG_PBES2_HS384_A192KW);
-        algs.push_back (CRYPT_ALG_PBES2_HS512_A256KW);
+        algs.push_back (jwa_t::jwa_rsa_1_5);
+        algs.push_back (jwa_t::jwa_rsa_oaep);
+        algs.push_back (jwa_t::jwa_rsa_oaep_256);
+        algs.push_back (jwa_t::jwa_a128kw);
+        algs.push_back (jwa_t::jwa_a192kw);
+        algs.push_back (jwa_t::jwa_a256kw);
+        algs.push_back (jwa_t::jwa_dir);
+        //algs.push_back (jwa_t::jwa_ecdh_es);
+        algs.push_back (jwa_t::jwa_ecdh_es_a128kw);
+        algs.push_back (jwa_t::jwa_ecdh_es_a192kw);
+        algs.push_back (jwa_t::jwa_ecdh_es_a256kw);
+        algs.push_back (jwa_t::jwa_a128gcmkw);
+        algs.push_back (jwa_t::jwa_a192gcmkw);
+        algs.push_back (jwa_t::jwa_a256gcmkw);
+        algs.push_back (jwa_t::jwa_pbes2_hs256_a128kw);
+        algs.push_back (jwa_t::jwa_pbes2_hs384_a192kw);
+        algs.push_back (jwa_t::jwa_pbes2_hs512_a256kw);
 
         print_text ("JWE enc %s", nameof_enc);
 
@@ -1937,7 +1937,7 @@ void test_rfc8037 ()
     std::string signature;
     bool result = false;
 
-    ret = jws.sign (&key, SIGN_EDDSA, claim, signature);
+    ret = jws.sign (&key, jws_t::jws_eddsa, claim, signature);
     printf ("%s\n", signature.c_str ());
     _test_case.test (ret, __FUNCTION__, "RFC 8037 A.4.  Ed25519 Signing");
 
@@ -1959,7 +1959,7 @@ void test_rfc8037 ()
     crypto_key jwk_x25519;
     jwk.load_file (&jwk_x25519, "rfc8037_A_X25519.jwk", 0);
     jose.open (&handle, &jwk_x25519);
-    ret = jose.encrypt (handle, CRYPT_ENC_A128GCM, CRYPT_ALG_ECDH_ES_A128KW, convert (claim), encrypted, JOSE_FLATJSON);
+    ret = jose.encrypt (handle, jwe_t::jwe_a128gcm, jwa_t::jwa_ecdh_es_a128kw, convert (claim), encrypted, JOSE_FLATJSON);
     if (errorcode_t::success == ret) {
         printf ("RFC 8037 A.6.  ECDH-ES with X25519\n%s\n", encrypted.c_str ());
     }
@@ -1969,7 +1969,7 @@ void test_rfc8037 ()
     crypto_key jwk_x448;
     jwk.load_file (&jwk_x448, "rfc8037_A_X448.jwk", 0);
     jose.open (&handle, &jwk_x448);
-    ret = jose.encrypt (handle, CRYPT_ENC_A256GCM, CRYPT_ALG_ECDH_ES_A256KW, convert (claim), encrypted, JOSE_FLATJSON);
+    ret = jose.encrypt (handle, jwe_t::jwe_a256gcm, jwa_t::jwa_ecdh_es_a256kw, convert (claim), encrypted, JOSE_FLATJSON);
     if (errorcode_t::success == ret) {
         printf ("RFC 8037 A.7.  ECDH-ES with X448\n%s\n", encrypted.c_str ());
     }
@@ -2000,19 +2000,19 @@ void test_okp ()
 
     jose.open (&handle, &key);
 
-    crypt_enc_t encs [] = {
-        CRYPT_ENC_A128CBC_HS256,
-        CRYPT_ENC_A192CBC_HS384,
-        CRYPT_ENC_A256CBC_HS512,
-        CRYPT_ENC_A128GCM,
-        //CRYPT_ENC_A192GCM, // fail ?
-        //CRYPT_ENC_A256GCM, // fail ?
+    jwe_t encs [] = {
+        jwe_t::jwe_a128cbc_hs256,
+        jwe_t::jwe_a192cbc_hs384,
+        jwe_t::jwe_a256cbc_hs512,
+        jwe_t::jwe_a128gcm,
+        //jwe_t::jwe_a192gcm, // fail ?
+        //jwe_t::jwe_a256gcm, // fail ?
     };
-    crypt_alg_t algs [] = {
-        CRYPT_ALG_ECDH_ES,
-        CRYPT_ALG_ECDH_ES_A128KW,
-        CRYPT_ALG_ECDH_ES_A192KW,
-        CRYPT_ALG_ECDH_ES_A256KW,
+    jwa_t algs [] = {
+        jwa_t::jwa_ecdh_es,
+        jwa_t::jwa_ecdh_es_a128kw,
+        jwa_t::jwa_ecdh_es_a192kw,
+        jwa_t::jwa_ecdh_es_a256kw,
     };
 
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -2037,7 +2037,7 @@ void test_okp ()
         }
     }
 
-    ret = jose.sign (handle, SIGN_EDDSA, claim, signature, JOSE_FLATJSON);
+    ret = jose.sign (handle, jws_t::jws_eddsa, claim, signature, JOSE_FLATJSON);
     if (errorcode_t::success == ret) {
         printf ("%s\n", signature.c_str ());
         ret = jose.verify (handle, signature, result);
@@ -2046,7 +2046,7 @@ void test_okp ()
     jose.close (handle);
 }
 
-void key_dump (crypto_key* key, crypt_alg_t alg, crypto_use_t use)
+void key_dump (crypto_key* key, jwa_t alg, crypto_use_t use)
 {
     EVP_PKEY* pkey = nullptr;
     //size_t key_length = 0;
@@ -2105,7 +2105,7 @@ void key_dump (crypto_key* key, crypt_alg_t alg, crypto_use_t use)
     }
 }
 
-void key_dump (crypto_key* key, crypt_sig_t sig, crypto_use_t use)
+void key_dump (crypto_key* key, jws_t sig, crypto_use_t use)
 {
     EVP_PKEY* pkey = nullptr;
     //size_t key_length = 0;
@@ -2175,13 +2175,13 @@ void key_match_test ()
         crypto_key crypto_key;
         jwk.load_file (&crypto_key, "keys.jwk", 0);
 
-        crypt_alg_t algs [] = {
-            CRYPT_ALG_RSA1_5, CRYPT_ALG_RSA_OAEP, CRYPT_ALG_RSA_OAEP_256,
-            CRYPT_ALG_A128KW, CRYPT_ALG_A192KW, CRYPT_ALG_A256KW,
-            CRYPT_ALG_ECDH_ES,
-            CRYPT_ALG_ECDH_ES_A128KW, CRYPT_ALG_ECDH_ES_A192KW, CRYPT_ALG_ECDH_ES_A256KW,
-            CRYPT_ALG_A128GCMKW, CRYPT_ALG_A192GCMKW, CRYPT_ALG_A256GCMKW,
-            CRYPT_ALG_PBES2_HS256_A128KW, CRYPT_ALG_PBES2_HS384_A192KW, CRYPT_ALG_PBES2_HS512_A256KW
+        jwa_t algs [] = {
+            jwa_t::jwa_rsa_1_5, jwa_t::jwa_rsa_oaep, jwa_t::jwa_rsa_oaep_256,
+            jwa_t::jwa_a128kw, jwa_t::jwa_a192kw, jwa_t::jwa_a256kw,
+            jwa_t::jwa_ecdh_es,
+            jwa_t::jwa_ecdh_es_a128kw, jwa_t::jwa_ecdh_es_a192kw, jwa_t::jwa_ecdh_es_a256kw,
+            jwa_t::jwa_a128gcmkw, jwa_t::jwa_a192gcmkw, jwa_t::jwa_a256gcmkw,
+            jwa_t::jwa_pbes2_hs256_a128kw, jwa_t::jwa_pbes2_hs384_a192kw, jwa_t::jwa_pbes2_hs512_a256kw
         };
         for (unsigned int i = 0; i < RTL_NUMBER_OF (algs); i++) {
             key_dump (&crypto_key, algs[i], crypto_use_t::use_enc);
@@ -2196,11 +2196,11 @@ void key_match_test ()
         crypto_key crypto_key;
         jwk.load_file (&crypto_key, "rfc7515.jwk", 0);
 
-        crypt_sig_t algs [] = {
-            SIGN_HS256, SIGN_HS384, SIGN_HS512,
-            SIGN_RS256, SIGN_RS384, SIGN_RS512,
-            SIGN_ES256, SIGN_ES384, SIGN_ES512,
-            SIGN_PS256, SIGN_PS384, SIGN_PS512,
+        jws_t algs [] = {
+            jws_t::jws_hs256, jws_t::jws_hs384, jws_t::jws_hs512,
+            jws_t::jws_rs256, jws_t::jws_rs384, jws_t::jws_rs512,
+            jws_t::jws_es256, jws_t::jws_es384, jws_t::jws_es512,
+            jws_t::jws_ps256, jws_t::jws_ps384, jws_t::jws_ps512,
         };
         for (unsigned int i = 0; i < RTL_NUMBER_OF (algs); i++) {
             key_dump (&crypto_key, algs[i], crypto_use_t::use_sig);
@@ -2264,12 +2264,12 @@ int main ()
     test_rfc7520 ();
 
     test_jwe_flattened ();
-    test_jwe_json (CRYPT_ENC_A128CBC_HS256);
-    test_jwe_json (CRYPT_ENC_A192CBC_HS384);
-    test_jwe_json (CRYPT_ENC_A256CBC_HS512);
-    test_jwe_json (CRYPT_ENC_A128GCM);
-    test_jwe_json (CRYPT_ENC_A192GCM);
-    test_jwe_json (CRYPT_ENC_A256GCM);
+    test_jwe_json (jwe_t::jwe_a128cbc_hs256);
+    test_jwe_json (jwe_t::jwe_a192cbc_hs384);
+    test_jwe_json (jwe_t::jwe_a256cbc_hs512);
+    test_jwe_json (jwe_t::jwe_a128gcm);
+    test_jwe_json (jwe_t::jwe_a192gcm);
+    test_jwe_json (jwe_t::jwe_a256gcm);
 
     _test_case.begin ("RFC 7638");
     test_jwk_thumbprint ();

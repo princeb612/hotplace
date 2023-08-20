@@ -25,6 +25,6 @@
  * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2144 The CAST-128 Encryption Algorithm
  * RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
- * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
+ * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
  * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
