@@ -3,13 +3,11 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 4648 The Base16, Base32, and Base64 Data Encodings
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.16   Soo Han, Kim        fix : base64_encode encoded size
  *
- * @remakrs
- *  RFC 4648 The Base16, Base32, and Base64 Data Encodings
  */
 
 #ifndef __HOTPLACE_SDK_IO_ENCODER_BASE16__

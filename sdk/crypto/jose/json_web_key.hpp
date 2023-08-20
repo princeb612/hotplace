@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo han, Kim (princeb612.kr@gmail.com)
  * @desc
+ * @desc
+ *  RFC 7517 JSON Web Key (JWK)
  *
  * Revision History
  * Date         Name                Description

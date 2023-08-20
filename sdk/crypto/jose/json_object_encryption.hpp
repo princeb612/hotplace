@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 7516 JSON Web Encryption (JWE)
+ *  RFC 7518 JSON Web Algorithms (JWA)
  *
  * Revision History
  * Date         Name                Description
