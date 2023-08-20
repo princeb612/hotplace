@@ -44,13 +44,13 @@ private:
         {
         }
     } unittest_item_t;
-    typedef std::list<unittest_item_t> unittest_list_t;
+    typedef std::list<unittest_item_t> unittest_result_t;
     typedef struct _test_status_t {
         uint32 _count_success;
         uint32 _count_fail;
         uint32 _count_not_supported;
         uint32 _count_low_security;
-        unittest_list_t _test_list;
+        unittest_result_t _test_results;
 
         _test_status_t ()
             : _count_success (0),
@@ -60,9 +60,11 @@ private:
         {
         }
     } test_status_t;
-    typedef std::map<std::string, test_status_t> unittest_map_t;    /* test case to test_status_t */
+    typedef std::list<std::string> unittest_index_t;                /* ordered test cases */
+    typedef std::map<std::string, test_status_t> unittest_map_t;    /* pair (test case, test_status_t) */
 
     critical_section _lock;
+    unittest_index_t _test_list;
     unittest_map_t _test_map;
 
     uint32 _count_success;

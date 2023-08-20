@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_SOCKET_CLIENTSOCKET__
-#define __HOTPLACE_SDK_NET_SOCKET_CLIENTSOCKET__
+#ifndef __HOTPLACE_SDK_NET_TYPES__
+#define __HOTPLACE_SDK_NET_TYPES__
 
-#include <hotplace/sdk/net/types.hpp>
+#include <hotplace/sdk/base.hpp>
 
 namespace hotplace {
 namespace net {

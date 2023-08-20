@@ -8,10 +8,7 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_SOCKET_CLIENTSOCKET__
-#define __HOTPLACE_SDK_NET_SOCKET_CLIENTSOCKET__
-
-#include <hotplace/sdk/net/types.hpp>
+#include <hotplace/sdk/net/socket/tls_server.hpp>
 
 namespace hotplace {
 namespace net {
@@ -19,5 +16,3 @@ namespace net {
 
 }
 }  // namespace
-
-#endif

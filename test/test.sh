@@ -9,7 +9,7 @@ COMMENTS
 cwd=$(pwd)
 valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 
-if [ $# -gt 1 ]; then
+if [ $# -eq 0 ]; then
     array=(base string bufferio stream thread crypto jose)
 else
     if [ -d $1 ]; then

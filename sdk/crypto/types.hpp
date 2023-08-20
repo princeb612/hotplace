@@ -39,22 +39,23 @@ enum crypt_poweredby_t {
  */
 enum crypt_algorithm_t {
     crypt_alg_unknown   = 0,
-    des                 = 1,
-    aes128              = 2,
-    aes192              = 3,
-    aes256              = 4,
-    blowfish            = 5,
-    aria128             = 6,
-    aria192             = 7,
-    aria256             = 8,
-    camellia128         = 9,
-    camellia192         = 10,
-    camellia256         = 11,
-    idea                = 12,
-    rc2                 = 13,
-    rc5                 = 14,
-    seed                = 15,
-    sm4                 = 16,
+    aes128              = 1,
+    aes192              = 2,
+    aes256              = 3,
+    aria128             = 4,
+    aria192             = 5,
+    aria256             = 6,
+    blowfish            = 7,
+    camellia128         = 8,
+    camellia192         = 9,
+    camellia256         = 10,
+    cast                = 11,
+    des                 = 12,
+    idea                = 13,
+    rc2                 = 14,
+    rc5                 = 15,
+    seed                = 16,
+    sm4                 = 17,
 };
 
 /*
@@ -70,19 +71,20 @@ enum crypt_algorithm_t {
  *    OFB output feedback
  *    CTR counter
  * supports
- *    DES         : CBC, CFB, CFB1, CFB8, OFB, ECB,
  *    SEED        : CBC, CFB,             OFB, ECB,
  *    AES128      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, KEYWRAP
  *    AES192      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, KEYWRAP
  *    AES256      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, KEYWRAP
- *    BF          : CBC, CFB,             OFB, ECB
- *    IDEA        : CBC, CFB,             OFB, ECB
  *    ARIA128     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM
  *    ARIA192     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM
  *    ARIA256     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM
+ *    BF          : CBC, CFB,             OFB, ECB
  *    CAMELLIA128 : CBC, CFB, CFB1, CFB8, OFB, ECB,
  *    CAMELLIA192 : CBC, CFB, CFB1, CFB8, OFB, ECB,
  *    CAMELLIA256 : CBC, CFB, CFB1, CFB8, OFB, ECB,
+ *    DES         : CBC, CFB, CFB1, CFB8, OFB, ECB,
+ *    IDEA        : CBC, CFB,             OFB, ECB
+ *    SM4         : CBC, CFB,             OFB, ECB, CTR
  */
 enum crypt_mode_t {
     crypt_mode_unknown  = 0,
@@ -122,6 +124,7 @@ enum hash_algorithm_t {
     blake2s_256         = 15,
 
     ripemd160           = 16,
+
     whirlpool           = 17,
 };
 

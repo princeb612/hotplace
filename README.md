@@ -2,9 +2,9 @@
 
 ## implemented
 
- * RFC 4226 hmac_otp: An HMAC-Based One-Time Password Algorithm
+ * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
  * RFC 4648 The Base16, Base32, and Base64 Data Encodings
- * RFC 6238 time_otp: Time-Based One-Time Password Algorithm
+ * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
  * RFC 7049 Concise Binary Object Representation (CBOR)
  * RFC 7515 JSON Web Signature (JWS)
  * RFC 7516 JSON Web Encryption (JWE)
@@ -23,6 +23,7 @@
  * RFC 1951 : DEFLATE Compressed Data Format Specification version 1.3
  * RFC 1952 : GZIP file format specification version 4.3
  * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
+ * RFC 2144 The CAST-128 Encryption Algorithm
  * RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm

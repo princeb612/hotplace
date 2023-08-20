@@ -22,5 +22,7 @@
 #include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
 #include <hotplace/sdk/crypto/jose/json_web_signature.hpp>
 #include <hotplace/sdk/crypto/jose/json_web_key.hpp>
+#include <hotplace/sdk/crypto/otp/hmac_otp.hpp>
+#include <hotplace/sdk/crypto/otp/time_otp.hpp>
 
 #endif

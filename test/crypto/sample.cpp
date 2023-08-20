@@ -85,7 +85,8 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_algorithm_t algori
     }
     __finally2
     {
-        _test_case.test (ret, __FUNCTION__, format ("algmrithm %d", algorithm).c_str ());
+        const char* alg = advisor->nameof_cipher (algorithm, mode);
+        _test_case.test (ret, __FUNCTION__, format ("algmrithm %d mode %d (%s)", algorithm, mode, alg ? alg : "unknown").c_str ());
     }
 }
 
@@ -103,14 +104,17 @@ void test_encryption ()
         crypt_algorithm_t::aes128,
         crypt_algorithm_t::aes192,
         crypt_algorithm_t::aes256,
-        crypt_algorithm_t::blowfish,
         crypt_algorithm_t::aria128,
         crypt_algorithm_t::aria192,
         crypt_algorithm_t::aria256,
+        crypt_algorithm_t::blowfish,
+        crypt_algorithm_t::cast,
         crypt_algorithm_t::camellia128,
         crypt_algorithm_t::camellia192,
         crypt_algorithm_t::camellia256,
         crypt_algorithm_t::idea,
+        crypt_algorithm_t::rc2,
+        crypt_algorithm_t::rc5,
         crypt_algorithm_t::seed,
     };
     crypt_algorithm_t cfbx_algorithm_table [] = {
@@ -125,6 +129,15 @@ void test_encryption ()
         crypt_algorithm_t::camellia256,
     };
     crypt_algorithm_t ctr_algorithm_table [] = {
+        crypt_algorithm_t::aes128,
+        crypt_algorithm_t::aes192,
+        crypt_algorithm_t::aes256,
+        crypt_algorithm_t::aria128,
+        crypt_algorithm_t::aria192,
+        crypt_algorithm_t::aria256,
+        crypt_algorithm_t::sm4,
+    };
+    crypt_algorithm_t gcm_algorithm_table [] = {
         crypt_algorithm_t::aes128,
         crypt_algorithm_t::aes192,
         crypt_algorithm_t::aes256,
@@ -164,7 +177,7 @@ void test_encryption ()
         test_crypt (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::ctr, 16, keydata, 16, iv, (byte_t*) text,
                     strlen (text));
         _test_case.begin ("openssl_crypt crypt_mode_t::gcm %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::gcm, 16, keydata, 16, iv, (byte_t*) text,
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::gcm, 16, keydata, 16, iv, (byte_t*) text,
                     strlen (text));
     }
     __finally2
@@ -218,11 +231,12 @@ void test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm,
     }
     __finally2
     {
-        _test_case.test (ret, __FUNCTION__, format ("algmrithm %d", algorithm).c_str ());
+        const char* alg = advisor->nameof_md (algorithm);
+        _test_case.test (ret, __FUNCTION__, format ("algmrithm %d (%s)", algorithm, alg ? alg : "unknown").c_str ());
     }
 }
 
-return_t test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm, binary_t key, binary_t data, binary_t expect)
+return_t test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm, binary_t key, binary_t data, binary_t expect, const char* text)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -271,7 +285,8 @@ return_t test_hash_routine (hash_interface* hash_object, hash_algorithm_t algori
     }
     __finally2
     {
-        _test_case.test (ret, __FUNCTION__, format ("algmrithm %d", algorithm).c_str ());
+        const char* alg = advisor->nameof_md (algorithm);
+        _test_case.test (ret, __FUNCTION__, format ("%s algmrithm %d (%s)", text ? text : "", algorithm, alg ? alg : "unknown").c_str ());
     }
     return ret;
 }
@@ -379,14 +394,10 @@ void test_rfc4231_testcase ()
         base16_decode (item.expect_sha512, strlen (item.expect_sha512), bin_expect_sha512);
 
         _test_case.start ();
-        ret = test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_224, bin_key, bin_data, bin_expect_sha224);
-        _test_case.test (ret, __FUNCTION__, item.text);
-        ret = test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_256, bin_key, bin_data, bin_expect_sha256);
-        _test_case.test (ret, __FUNCTION__, item.text);
-        ret = test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_384, bin_key, bin_data, bin_expect_sha384);
-        _test_case.test (ret, __FUNCTION__, item.text);
-        ret = test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_512, bin_key, bin_data, bin_expect_sha512);
-        _test_case.test (ret, __FUNCTION__, item.text);
+        test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_224, bin_key, bin_data, bin_expect_sha224, item.text);
+        test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_256, bin_key, bin_data, bin_expect_sha256, item.text);
+        test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_384, bin_key, bin_data, bin_expect_sha384, item.text);
+        test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_512, bin_key, bin_data, bin_expect_sha512, item.text);
     }
 }
 
@@ -618,7 +629,7 @@ int main ()
 
             std::cout   << col.set_style (console_style_t::bold).set_fgcolor (console_color_t::white).turnon ()
                         << "cooltime " << ossl_get_cooltime () << " unitsize " << ossl_get_unitsize ()
-                        << col.turnoff () 
+                        << col.turnoff ()
                         << std::endl;
             test_encryption ();
         }

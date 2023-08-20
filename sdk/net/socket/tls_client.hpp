@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_SOCKET_CLIENTSOCKET__
-#define __HOTPLACE_SDK_NET_SOCKET_CLIENTSOCKET__
+#ifndef __HOTPLACE_SDK_NET_SOCKET_TLSCLIENT__
+#define __HOTPLACE_SDK_NET_SOCKET_TLSCLIENT__
 
 #include <hotplace/sdk/net/types.hpp>
 

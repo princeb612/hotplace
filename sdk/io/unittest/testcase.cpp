@@ -114,8 +114,9 @@ void test_case::test (return_t result, const char* test_function, const char* me
                 status._count_fail++;
             }
 
-            status._test_list.push_back (item);                                 /* append a unittest_item_t */
+            status._test_results.push_back (item);                                 /* append a unittest_item_t */
             _test_map.insert (std::make_pair (_current_case_name, status));     /* insert a new test_status_t */
+            _test_list.push_back (_current_case_name);                          /* ordered test cases */
         } else {
             test_status_t& status = iter->second;
             if (errorcode_t::success == result) {
@@ -128,7 +129,7 @@ void test_case::test (return_t result, const char* test_function, const char* me
                 status._count_fail++;
             }
 
-            status._test_list.push_back (item); /* append a unittest_item_t */
+            status._test_results.push_back (item); /* append a unittest_item_t */
         }
 
         console_color col;
@@ -197,11 +198,13 @@ void test_case::report ()
     stream << "\n";
     stream << col.set_style (console_style_t::bold).set_fgcolor (fgcolor).turnon () << STRING_REPORT << "\n";
 
-    for (unittest_map_t::iterator iter = _test_map.begin (); iter != _test_map.end (); iter++) {
-        test_status_t status = iter->second;
+    for (unittest_index_t::iterator iter = _test_list.begin (); iter != _test_list.end (); iter++) {
+        std::string testcase = *iter;
+        unittest_map_t::iterator map_iter = _test_map.find (testcase);
+        test_status_t status = map_iter->second;
 
         stream  << "@ "
-                << STRING_TEST_CASE << " \"" << iter->first.c_str () << "\" "
+                << STRING_TEST_CASE << " \"" << testcase.c_str () << "\" "
                 << PRINT_STRING_SUCCESS << " " << status._count_success;
         if (status._count_fail) {
             stream << " " << PRINT_STRING_FAIL << " " << status._count_fail;
@@ -218,7 +221,7 @@ void test_case::report ()
         stream << "\n";
         stream.printf ("%-6s | %-10s | %-20s | %-10s | %s\n", STRING_RESULT, STRING_ERRORCODE, STRING_TEST_FUNCTION, STRING_TIME, STRING_MESSAGE);
 
-        for (unittest_list_t::iterator list_iterator = status._test_list.begin (); list_iterator != status._test_list.end (); list_iterator++) {
+        for (unittest_result_t::iterator list_iterator = status._test_results.begin (); list_iterator != status._test_results.end (); list_iterator++) {
             unittest_item_t item = *list_iterator;
 
             ansi_string error_message;

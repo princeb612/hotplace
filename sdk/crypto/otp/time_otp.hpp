@@ -1,0 +1,68 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file {file}
+ * @author Soo han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ *
+ * Revision History
+ * Date         Name                Description
+ */
+
+#ifndef __HOTPLACE_SDK_CRYPTO_OTP_TIMEOTP__
+#define __HOTPLACE_SDK_CRYPTO_OTP_TIMEOTP__
+
+#include <hotplace/sdk/crypto/types.hpp>
+
+namespace hotplace {
+namespace crypto {
+
+class time_otp
+{
+public:
+    time_otp ();
+    ~time_otp ();
+    /*
+     * @brief open
+     * @param void** handle [out]
+     * @param unsigned int digit_length [in]
+     * @param time_t interval [in] 0 is ignored
+     * @param hash_algorithm_t algorithm [in]
+     * @param const byte_t* key_data [in]
+     * @param size_t key_size [in]
+     * @return error code (see error.h)
+     * @sample
+     *        otp.open(&handle, 8, 30, HASH_ALGORITHM_SHA_512, key, keysize);
+     *        otp.close(handle);
+     */
+    uint32 open (void** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm,
+                 const byte_t* key_data, size_t key_size);
+    /*
+     * @brief close
+     * @param void* handle [in]
+     * @return error code (see error.h)
+     */
+    uint32 close (void* handle);
+    /*
+     * @brief close
+     * @param void* handle [in]
+     * @param time64_t time [in]
+     * @param uint32& code [out]
+     * @return error code (see error.h)
+     * @sample
+     *        otp.get(handle, time, code);
+     */
+    uint32 get (void* handle, time64_t time, uint32& code);
+    /*
+     * @brief close
+     * @param void* handle [in]
+     * @param time64_t time [in]
+     * @param uint32 code [in]
+     * @return error code (see error.h)
+     */
+    uint32 verify (void* handle, time64_t time, uint32 code);
+};
+
+}
+}  // namespace
+
+#endif

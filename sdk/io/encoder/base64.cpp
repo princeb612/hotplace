@@ -268,6 +268,7 @@ return_t base64_encode (const byte_t* source, size_t source_size, binary_t& enco
     return_t ret = errorcode_t::success;
 
     size_t size = 0;
+
     base64_encode (source, source_size, &encoded[0], &size, encoding);
     encoded.resize (size);
     ret = base64_encode (source, source_size, &encoded[0], &size, encoding);
@@ -281,6 +282,7 @@ return_t base64_encode (const byte_t* source, size_t source_size, std::string& e
     return_t ret = errorcode_t::success;
 
     size_t size = 0;
+
     base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
     base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
@@ -294,6 +296,7 @@ std::string base64_encode (const byte_t* source, size_t source_size, int encodin
     std::string encoded;
 
     size_t size = 0;
+
     base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
     base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);

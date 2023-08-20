@@ -84,11 +84,6 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
        EVP_chacha20_poly1305
      */
 
-    { crypt_algorithm_t::seed, crypt_mode_t::cbc, EVP_seed_cbc (), "seed-cbc", },
-    { crypt_algorithm_t::seed, crypt_mode_t::cfb, EVP_seed_cfb (), "seed-cfb", },
-    { crypt_algorithm_t::seed, crypt_mode_t::ecb, EVP_seed_ecb (), "seed-ecb", },
-    { crypt_algorithm_t::seed, crypt_mode_t::ofb, EVP_seed_ofb (), "seed-ofb", },
-
     { crypt_algorithm_t::aes128, crypt_mode_t::cbc,  EVP_aes_128_cbc (),  "aes-128-cbc", },
     { crypt_algorithm_t::aes128, crypt_mode_t::cfb,  EVP_aes_128_cfb (),  "aes-128-cfb", },
     { crypt_algorithm_t::aes128, crypt_mode_t::cfb1, EVP_aes_128_cfb1 (), "aes-128-cfb1", },
@@ -119,18 +114,6 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::aes256, crypt_mode_t::ofb,  EVP_aes_256_ofb (),  "aes-256-ofb", },
     { crypt_algorithm_t::aes256, crypt_mode_t::wrap, EVP_aes_256_wrap (), "aes-256-wrap", },
 
-    { crypt_algorithm_t::blowfish, crypt_mode_t::cbc, EVP_bf_cbc (), "bf-cbc", },
-    { crypt_algorithm_t::blowfish, crypt_mode_t::cfb, EVP_bf_cfb (), "bf-cfb", },
-    { crypt_algorithm_t::blowfish, crypt_mode_t::ecb, EVP_bf_ecb (), "bf-ecb", },
-    { crypt_algorithm_t::blowfish, crypt_mode_t::ofb, EVP_bf_ofb (), "bf-ofb", },
-
-#ifndef OPENSSL_NO_IDEA
-    { crypt_algorithm_t::idea, crypt_mode_t::cbc,  EVP_idea_cbc (),  "idea-cbc", },
-    { crypt_algorithm_t::idea, crypt_mode_t::cfb,  EVP_idea_cfb (),  "idea-cfb", },
-    { crypt_algorithm_t::idea, crypt_mode_t::ecb,  EVP_idea_ecb (),  "idea-ecb", },
-    { crypt_algorithm_t::idea, crypt_mode_t::ofb,  EVP_idea_ofb (),  "idea-ofb", },
-#endif
-
     { crypt_algorithm_t::aria128, crypt_mode_t::cbc,  EVP_aria_128_cbc (),  "aria-128-cbc", },
     { crypt_algorithm_t::aria128, crypt_mode_t::cfb,  EVP_aria_128_cfb (),  "aria-128-cfb", },
     { crypt_algorithm_t::aria128, crypt_mode_t::cfb1, EVP_aria_128_cfb1 (), "aria-128-cfb1", },
@@ -158,6 +141,11 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::aria256, crypt_mode_t::gcm,  EVP_aria_256_gcm (),  "aria-256-gcm", },
     { crypt_algorithm_t::aria256, crypt_mode_t::ofb,  EVP_aria_256_ofb (),  "aria-256-ofb", },
 
+    { crypt_algorithm_t::blowfish, crypt_mode_t::cbc, EVP_bf_cbc (), "bf-cbc", },
+    { crypt_algorithm_t::blowfish, crypt_mode_t::cfb, EVP_bf_cfb (), "bf-cfb", },
+    { crypt_algorithm_t::blowfish, crypt_mode_t::ecb, EVP_bf_ecb (), "bf-ecb", },
+    { crypt_algorithm_t::blowfish, crypt_mode_t::ofb, EVP_bf_ofb (), "bf-ofb", },
+
     { crypt_algorithm_t::camellia128, crypt_mode_t::cbc,  EVP_camellia_128_cbc (),  "camellia-128-cbc", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::cfb,  EVP_camellia_128_cfb (),  "camellia-128-cfb", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::cfb1, EVP_camellia_128_cfb1 (), "camellia-128-cfb1", },
@@ -182,6 +170,38 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::camellia256, crypt_mode_t::ecb,  EVP_camellia_256_ecb (),  "camellia-256-ecb", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::ofb,  EVP_camellia_256_ofb (),  "camellia-256-ofb", },
 
+    { crypt_algorithm_t::cast, crypt_mode_t::cbc,  EVP_cast5_cbc (),  "cast5-cbc", },
+    { crypt_algorithm_t::cast, crypt_mode_t::cfb,  EVP_cast5_cfb (),  "cast5-cfb", },
+    { crypt_algorithm_t::cast, crypt_mode_t::ecb,  EVP_cast5_ecb (),  "cast5-ecb", },
+    { crypt_algorithm_t::cast, crypt_mode_t::ofb,  EVP_cast5_ofb (),  "cast5-ofb", },
+
+#ifndef OPENSSL_NO_IDEA
+    { crypt_algorithm_t::idea, crypt_mode_t::cbc,  EVP_idea_cbc (),  "idea-cbc", },
+    { crypt_algorithm_t::idea, crypt_mode_t::cfb,  EVP_idea_cfb (),  "idea-cfb", },
+    { crypt_algorithm_t::idea, crypt_mode_t::ecb,  EVP_idea_ecb (),  "idea-ecb", },
+    { crypt_algorithm_t::idea, crypt_mode_t::ofb,  EVP_idea_ofb (),  "idea-ofb", },
+#endif
+
+    { crypt_algorithm_t::rc2, crypt_mode_t::cbc, EVP_sm4_cbc (), "rc2-cbc", },
+    { crypt_algorithm_t::rc2, crypt_mode_t::cfb, EVP_sm4_cfb (), "rc2-cfb", },
+    { crypt_algorithm_t::rc2, crypt_mode_t::ecb, EVP_sm4_ecb (), "rc2-ecb", },
+    { crypt_algorithm_t::rc2, crypt_mode_t::ofb, EVP_sm4_ofb (), "rc2-ofb", },
+
+    { crypt_algorithm_t::rc5, crypt_mode_t::cbc, EVP_sm4_cbc (), "rc5-cbc", },
+    { crypt_algorithm_t::rc5, crypt_mode_t::cfb, EVP_sm4_cfb (), "rc5-cfb", },
+    { crypt_algorithm_t::rc5, crypt_mode_t::ecb, EVP_sm4_ecb (), "rc5-ecb", },
+    { crypt_algorithm_t::rc5, crypt_mode_t::ofb, EVP_sm4_ofb (), "rc5-ofb", },
+
+    { crypt_algorithm_t::seed, crypt_mode_t::cbc, EVP_seed_cbc (), "seed-cbc", },
+    { crypt_algorithm_t::seed, crypt_mode_t::cfb, EVP_seed_cfb (), "seed-cfb", },
+    { crypt_algorithm_t::seed, crypt_mode_t::ecb, EVP_seed_ecb (), "seed-ecb", },
+    { crypt_algorithm_t::seed, crypt_mode_t::ofb, EVP_seed_ofb (), "seed-ofb", },
+
+    { crypt_algorithm_t::sm4, crypt_mode_t::cbc, EVP_sm4_cbc (), "sm4-cbc", },
+    { crypt_algorithm_t::sm4, crypt_mode_t::cfb, EVP_sm4_cfb (), "sm4-cfb", },
+    { crypt_algorithm_t::sm4, crypt_mode_t::ecb, EVP_sm4_ecb (), "sm4-ecb", },
+    { crypt_algorithm_t::sm4, crypt_mode_t::ofb, EVP_sm4_ofb (), "sm4-ofb", },
+    { crypt_algorithm_t::sm4, crypt_mode_t::ctr, EVP_sm4_ctr (), "sm4-ctr", },
 };
 
 /* something wrong EVP_CIPHER_CTX_iv_length, EVP_CIPHER_CTX_block_size (openssl-1.1.1) */
@@ -217,13 +237,6 @@ const openssl_evp_md_method_t evp_md_methods[] = {
     { hash_algorithm_t::sha2_384, EVP_sha384 (), "sha384", },
     { hash_algorithm_t::sha2_512, EVP_sha512 (), "sha512", },
 
-    { hash_algorithm_t::ripemd160, EVP_ripemd160 (), "ripemd160", },
-
-    { hash_algorithm_t::whirlpool, EVP_whirlpool (), "whirlpool", },
-
-    { hash_algorithm_t::blake2b_512, EVP_blake2b512 (), "blake2b512", },
-    { hash_algorithm_t::blake2s_256, EVP_blake2s256 (), "blake2s256", },
-
     { hash_algorithm_t::sha3_224, EVP_sha3_224 (), "sha3-224", },
     { hash_algorithm_t::sha3_256, EVP_sha3_256 (), "sha3-256", },
     { hash_algorithm_t::sha3_384, EVP_sha3_384 (), "sha3-384", },
@@ -231,6 +244,13 @@ const openssl_evp_md_method_t evp_md_methods[] = {
 
     { hash_algorithm_t::shake128, EVP_shake128 (), "shake128", },
     { hash_algorithm_t::shake256, EVP_shake256 (), "shake256", },
+
+    { hash_algorithm_t::blake2b_512, EVP_blake2b512 (), "blake2b512", },
+    { hash_algorithm_t::blake2s_256, EVP_blake2s256 (), "blake2s256", },
+
+    { hash_algorithm_t::ripemd160, EVP_ripemd160 (), "ripemd160", },
+
+    { hash_algorithm_t::whirlpool, EVP_whirlpool (), "whirlpool", },
 };
 
 const hint_jose_encryption_t hint_jose_algorithms [] =

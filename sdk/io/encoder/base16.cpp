@@ -51,6 +51,7 @@ return_t base16_encode (binary_t source, std::string& outpart)
 std::string base16_encode (binary_t source)
 {
     std::string outpart;
+
     base16_encode (source, outpart);
     return outpart;
 }
@@ -95,6 +96,7 @@ return_t base16_decode (std::string source, binary_t& outpart)
 binary_t base64_decode (std::string source)
 {
     binary_t outpart;
+
     base16_decode (source, outpart);
     return outpart;
 }
