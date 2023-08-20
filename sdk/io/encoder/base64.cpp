@@ -7,6 +7,7 @@
  * Revision History
  * Date         Name                Description
  * 2023.08.16   Soo Han, Kim        fix : base64_encode encoded size
+ * 2023.08.20   Soo Han, Kim        fix : base64_encode source access range
  */
 
 #include <hotplace/sdk/io/encoder/base64.hpp>

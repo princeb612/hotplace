@@ -1250,8 +1250,6 @@ void test_jwk ()
         << (char*) &buffer[0]
         << std::endl;
 
-
-    // bug ? - what's different ?
     // RFC 7520 "kid": "bilbo.baggins@hobbiton.example"
     // x org AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt
     //       0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
@@ -1269,13 +1267,13 @@ void test_jwk ()
         << x1.c_str ()
         << std::endl
         << "     "
-        << convert (b1).c_str ()
+        << base16_encode (b1).c_str ()
         << std::endl
         << "x2 : "
         << x2.c_str ()
         << std::endl
         << "     "
-        << convert (b2).c_str ()
+        << base16_encode (b2).c_str ()
         << std::endl;
 }
 
@@ -1375,29 +1373,29 @@ int test_ecdh ()
 
     std::cout
         << "alice public key  x : "
-        << convert (x_alice).c_str ()
+        << base16_encode (x_alice).c_str ()
         << std::endl
         << "alice public key  y : "
-        << convert (y_alice).c_str ()
+        << base16_encode (y_alice).c_str ()
         << std::endl
         << "alice private key d : "
-        << convert (d_alice).c_str ()
+        << base16_encode (d_alice).c_str ()
         << std::endl
         << "bob   public key  x : "
-        << convert (x_bob).c_str ()
+        << base16_encode (x_bob).c_str ()
         << std::endl
         << "bob   public key  y : "
-        << convert (y_bob).c_str ()
+        << base16_encode (y_bob).c_str ()
         << std::endl
         << "bob   private key d : "
-        << convert (d_bob).c_str ()
+        << base16_encode (d_bob).c_str ()
         << std::endl
 
         << "secret computed by alice : "
-        << convert (secret_alice).c_str ()
+        << base16_encode (secret_alice).c_str ()
         << std::endl
         << "secret computed by bob   : "
-        << convert (secret_bob).c_str ()
+        << base16_encode (secret_bob).c_str ()
 
         << std::endl;
 
@@ -1427,7 +1425,7 @@ void test_rfc7518_C ()
     std::cout
         << "Z (ECDH-ES key agreement output) : "
         << std::endl
-        << convert (secret_bob).c_str ()
+        << base16_encode (secret_bob).c_str ()
         << std::endl;
 #if __cplusplus >= 201103L    // c++11
     for_each (secret_bob.begin (), secret_bob.end (), [] (byte_t c) {
@@ -1844,10 +1842,10 @@ void test_jwk_thumbprint ()
 
     std::cout
         << "x : "
-        << convert (pub1).c_str ()
+        << base16_encode (pub1).c_str ()
         << std::endl
         << "y : "
-        << convert (pub2).c_str ()
+        << base16_encode (pub2).c_str ()
         << std::endl;
 
     json_root = json_object ();
@@ -1892,7 +1890,7 @@ void test_jwk_thumbprint ()
         << std::endl
         << "hash : "
         << std::endl
-        << convert (hash_value).c_str ()
+        << base16_encode (hash_value).c_str ()
         << std::endl
         << "thumbprint :"
         << std::endl
@@ -1928,10 +1926,10 @@ void test_rfc8037 ()
 
     std::cout
         << "x : "
-        << convert (pub1).c_str ()
+        << base16_encode (pub1).c_str ()
         << std::endl
         << "d : "
-        << convert (priv).c_str ()
+        << base16_encode (priv).c_str ()
         << std::endl;
 
     // {"alg":"EdDSA"}

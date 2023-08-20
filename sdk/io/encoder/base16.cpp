@@ -6,7 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.13   Soo Han, Kim        reboot base16
+ * 2023.08.13   Soo Han, Kim        reboot : bin2hex, hex2bin
  */
 
 #include <hotplace/sdk/io/encoder/base16.hpp>
@@ -48,6 +48,13 @@ return_t base16_encode (binary_t source, std::string& outpart)
     return base16_encode (&source[0], source.size (), outpart);
 }
 
+std::string base16_encode (binary_t source)
+{
+    std::string outpart;
+    base16_encode (source, outpart);
+    return outpart;
+}
+
 static byte_t conv (char c)
 {
     byte_t ret = 0;
@@ -83,6 +90,13 @@ return_t base16_decode (const char* source, size_t size, binary_t& outpart)
 return_t base16_decode (std::string source, binary_t& outpart)
 {
     return base16_decode (source.c_str (), source.size (), outpart);
+}
+
+binary_t base64_decode (std::string source)
+{
+    binary_t outpart;
+    base16_decode (source, outpart);
+    return outpart;
 }
 
 }
