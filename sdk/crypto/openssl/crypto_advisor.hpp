@@ -26,15 +26,15 @@ public:
 
     /*
      * @brief find blockcipher hint
-     * @param int alg [in] crypt_symmetric_t
+     * @param int alg [in] crypt_algorithm_t
      * @return hint_blockcipher_t*
      * @remarks EVP_CIPHER_CTX_block_size works wrong ?
      * @sample
      *      crypto_advisor* advisor = crypto_advisor::get_instance ();
-     *      const hint_blockcipher_t* blockcipher = advisor->hintof_blockcipher (crypt_symmetric_t::aes256);
+     *      const hint_blockcipher_t* blockcipher = advisor->hintof_blockcipher (crypt_algorithm_t::aes256);
      *      size_t blocksize = blockcipher->_blocksize;
      */
-    const hint_blockcipher_t* hintof_blockcipher (crypt_symmetric_t alg);
+    const hint_blockcipher_t* hintof_blockcipher (crypt_algorithm_t alg);
     /*
      * @brief find blockcipher hint
      * @param const EVP_CIPHER* cipher [in]
@@ -42,35 +42,35 @@ public:
     const hint_blockcipher_t* find_evp_cipher (const EVP_CIPHER* cipher);
     /*
      * @brief find cipher method
-     * @param crypt_symmetric_t algorithm [in] crypt_symmetric_t
+     * @param crypt_algorithm_t algorithm [in] crypt_algorithm_t
      * @param crypt_mode_t mode [in] crypt_mode_t
      * @return EVP_CIPHER*
      * @remarks
-     *          const EVP_CIPHER* aes_128_cbc = (const EVP_CIPHER*) find_evp_cipher (crypt_symmetric_t::aes128, crypt_mode_t::cbc); // EVP_aes_128_cbc ()
+     *          const EVP_CIPHER* aes_128_cbc = (const EVP_CIPHER*) find_evp_cipher (crypt_algorithm_t::aes128, crypt_mode_t::cbc); // EVP_aes_128_cbc ()
      *
      *          can be nullptr
      *          for example, seed deprecated since openssl 3.0
      */
-    const EVP_CIPHER* find_evp_cipher (crypt_symmetric_t algorithm, crypt_mode_t mode);
+    const EVP_CIPHER* find_evp_cipher (crypt_algorithm_t algorithm, crypt_mode_t mode);
     /*
      * @brief find alg and mode
      * @param const EVP_CIPHER* cipher [in]
      * @param int& algorithm [out]
      * @param int& mode [out]
      */
-    return_t find_evp_cipher (const EVP_CIPHER* cipher, crypt_symmetric_t& algorithm, crypt_mode_t& mode);
+    return_t find_evp_cipher (const EVP_CIPHER* cipher, crypt_algorithm_t& algorithm, crypt_mode_t& mode);
     /*
      * @brief find cipher string
-     * @param crypt_symmetric_t algorithm [in] crypt_symmetric_t
+     * @param crypt_algorithm_t algorithm [in] crypt_algorithm_t
      * @param crypt_mode_t mode [in] crypt_mode_t
      * @return const char*
      * @remarks
-     *          const char* cipher_string = advisor->nameof_cipher (crypt_symmetric_t::aes128, crypt_mode_t::cbc);
+     *          const char* cipher_string = advisor->nameof_cipher (crypt_algorithm_t::aes128, crypt_mode_t::cbc);
      *          // return "aes-128-cbc"
      *          EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch ("aes-128-cbc", nullptr);
      *          // return EVP_aes_128_cbc ()
      */
-    const char* nameof_cipher (crypt_symmetric_t algorithm, crypt_mode_t mode);
+    const char* nameof_cipher (crypt_algorithm_t algorithm, crypt_mode_t mode);
     /*
      * @brief find md method
      * @param hash_algorithm_t algorithm [in] hash_algorithm_t
@@ -328,8 +328,8 @@ public:
      * @return error code (see error.h)
      * @remarks
      *          --------------------------------+----------------
-     *          P-256, P-384, P521              | CRYPTO_KEY_EC
-     *          Ed25519, Ed448, X25519, X448    | CRYPTO_KEY_OKP
+     *          P-256, P-384, P521              | crypto_key_t::ec_key
+     *          Ed25519, Ed448, X25519, X448    | crypto_key_t::okp_key
      *          --------------------------------+----------------
      */
     return_t ktyof_ec_curve (const char* curve, uint32& kty);
@@ -347,7 +347,7 @@ public:
     /*
      * @brief kty
      * @param EVP_PKEY* pkey [in]
-     * @param crypto_key_t& kty [out] CRYPTO_KEY_HMAC, CRYPTO_KEY_RSA, CRYPTO_KEY_EC, CRYPTO_KEY_OKP
+     * @param crypto_key_t& kty [out] crypto_key_t::hmac_key, crypto_key_t::rsa_key, crypto_key_t::ec_key, crypto_key_t::okp_key
      * @return error code (see error.h)
      */
     return_t ktyof_ec_curve (EVP_PKEY* pkey, crypto_key_t& kty);

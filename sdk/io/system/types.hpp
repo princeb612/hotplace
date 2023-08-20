@@ -8,11 +8,10 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_DATETIME__
-#define __HOTPLACE_SDK_IO_SYSTEM_DATETIME__
+#ifndef __HOTPLACE_SDK_IO_SYSTEM_TYPES__
+#define __HOTPLACE_SDK_IO_SYSTEM_TYPES__
 
 #include <hotplace/sdk/base.hpp>
-//#include <string>
 
 namespace hotplace {
 namespace io {

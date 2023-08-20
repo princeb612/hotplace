@@ -21,7 +21,7 @@ namespace crypto {
 typedef struct _openssl_crypt_context_t : public crypt_context_t {
     uint32 signature;
     crypt_poweredby_t crypto_type;  // see crypt_poweredby_t
-    crypt_symmetric_t algorithm;    // see crypt_symmetric_t
+    crypt_algorithm_t algorithm;    // see crypt_algorithm_t
     crypt_mode_t mode;              // see crypt_mode_t
     EVP_CIPHER_CTX* encrypt_context;
     EVP_CIPHER_CTX* decrypt_context;
@@ -36,7 +36,7 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
     _openssl_crypt_context_t ()
         : signature (0),
         crypto_type (crypt_poweredby_t::openssl),
-        algorithm (crypt_symmetric_t::crypt_alg_unknown),
+        algorithm (crypt_algorithm_t::crypt_alg_unknown),
         mode (crypt_mode_t::crypt_mode_unknown),
         encrypt_context (nullptr),
         decrypt_context (nullptr),
@@ -56,11 +56,11 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
     ~_openssl_crypt_context_t ()
     {
 #if __cplusplus >= 201103L    // c++11
-        for_each (datamap.begin (), datamap.end (), [] (std::pair<const crypt_data_type_t, binary_t>& item) {
+        for_each (datamap.begin (), datamap.end (), [] (std::pair<const crypt_item_t, binary_t>& item) {
                     binary_t& data = item.second;
                     std::fill (data.begin (), data.end (), 0);
                 });
-        for_each (variantmap.begin (), variantmap.end (), [] (std::pair<const crypt_data_type_t, variant_t>& item) {
+        for_each (variantmap.begin (), variantmap.end (), [] (std::pair<const crypt_item_t, variant_t>& item) {
                     item.second.data.i64 = 0;
                 });
 #else
@@ -97,7 +97,7 @@ openssl_crypt::~openssl_crypt ()
     // do nothing
 }
 
-return_t openssl_crypt::open (crypt_context_t** handle, crypt_symmetric_t algorithm, crypt_mode_t mode,
+return_t openssl_crypt::open (crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode,
                               const unsigned char* key, unsigned size_key, const unsigned char* iv, unsigned size_iv)
 {
     return_t ret = errorcode_t::success;
@@ -167,7 +167,7 @@ return_t openssl_crypt::open (crypt_context_t** handle, crypt_symmetric_t algori
         temp_iv.resize (internal_size_iv);
         memcpy (&temp_iv[0], iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
 
-        context->datamap.insert (std::make_pair (CRYPT_ITEM_IV, temp_iv));
+        context->datamap.insert (std::make_pair (crypt_item_t::item_iv, temp_iv));
 
         /* key, iv */
         /* encrypt and decrypt re-initialize iv */
@@ -337,7 +337,7 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
         int ret_cipher = 0;
         int size_update = 0;
         int size_final = 0;
-        binary_t& iv = context->datamap[CRYPT_ITEM_IV];
+        binary_t& iv = context->datamap[crypt_item_t::item_iv];
 
         EVP_CipherInit (context->encrypt_context, nullptr, nullptr, &iv[0], 1);
 
@@ -522,7 +522,7 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
         int ret_cipher = 0;
         int size_update = 0;
         int size_final = 0;
-        binary_t& iv = context->datamap[CRYPT_ITEM_IV];
+        binary_t& iv = context->datamap[crypt_item_t::item_iv];
 
         EVP_CipherInit (context->decrypt_context, nullptr, nullptr, &iv[0], 0);
 
@@ -623,7 +623,7 @@ return_t openssl_crypt::free_data (unsigned char* data)
     return ret;
 }
 
-return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t input, binary_t& output, crypt_asymmetric_t mode)
+return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t input, binary_t& output, crypt_mode2_t mode)
 {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
@@ -651,15 +651,15 @@ return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
         int id = EVP_PKEY_id (pkey);
         if (EVP_PKEY_RSA == id) {
             const EVP_MD* md = EVP_sha1 ();
-            if (CRYPT_MODE_RSA_OAEP256 == mode) {
+            if (crypt_mode2_t::rsa_oaep256 == mode) {
                 md = EVP_sha256 ();
             }
             switch (mode) {
-                case CRYPT_MODE_RSA_1_5:
+                case crypt_mode2_t::rsa_1_5:
                     EVP_PKEY_CTX_set_rsa_padding (pkey_context, RSA_PKCS1_PADDING);
                     break;
-                case CRYPT_MODE_RSA_OAEP:
-                case CRYPT_MODE_RSA_OAEP256:
+                case crypt_mode2_t::rsa_oaep:
+                case crypt_mode2_t::rsa_oaep256:
                     EVP_PKEY_CTX_set_rsa_padding (pkey_context, RSA_PKCS1_OAEP_PADDING);
                     EVP_PKEY_CTX_set_rsa_oaep_md (pkey_context, md);
                     EVP_PKEY_CTX_set_rsa_mgf1_md (pkey_context, md);
@@ -692,7 +692,7 @@ return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
     return ret;
 }
 
-return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t input, binary_t& output, crypt_asymmetric_t mode)
+return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t input, binary_t& output, crypt_mode2_t mode)
 {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
@@ -726,15 +726,15 @@ return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
 
         if (EVP_PKEY_RSA == EVP_PKEY_id (pkey)) {
             const EVP_MD* md = EVP_sha1 ();
-            if (CRYPT_MODE_RSA_OAEP256 == mode) {
+            if (crypt_mode2_t::rsa_oaep256 == mode) {
                 md = EVP_sha256 ();
             }
             switch (mode) {
-                case CRYPT_MODE_RSA_1_5:
+                case crypt_mode2_t::rsa_1_5:
                     EVP_PKEY_CTX_set_rsa_padding (pkey_context, RSA_PKCS1_PADDING);
                     break;
-                case CRYPT_MODE_RSA_OAEP:
-                case CRYPT_MODE_RSA_OAEP256:
+                case crypt_mode2_t::rsa_oaep:
+                case crypt_mode2_t::rsa_oaep256:
                     EVP_PKEY_CTX_set_rsa_padding (pkey_context, RSA_PKCS1_OAEP_PADDING);
                     EVP_PKEY_CTX_set_rsa_oaep_md (pkey_context, md);
                     EVP_PKEY_CTX_set_rsa_mgf1_md (pkey_context, md);

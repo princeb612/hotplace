@@ -22,7 +22,7 @@ public:
     /**
      * @brief create a context handle
      * @param crypt_context_t** handle [out]
-     * @param crypt_symmetric_t algorithm [in]
+     * @param crypt_algorithm_t algorithm [in]
      * @param crypt_mode_t mode [in]
      * @param const unsigned char* key [in]
      * @param unsigned size_key [in]
@@ -31,10 +31,10 @@ public:
      * @return error code (see error.h)
      * @sample
      *        crypt_context_t* handle = nullptr;
-     *        crypt.open(&handle, crypt_symmetric_t::aes256, crypt_mode_t::cbc, key, size_key, iv, size_iv);
+     *        crypt.open(&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, key, size_key, iv, size_iv);
      *        crypt.close(handle);
      */
-    virtual return_t open (crypt_context_t** handle, crypt_symmetric_t algorithm, crypt_mode_t mode, const unsigned char* key, unsigned size_key, const unsigned char* iv, unsigned size_iv) = 0;
+    virtual return_t open (crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, unsigned size_key, const unsigned char* iv, unsigned size_iv) = 0;
     /**
      * @brief destroy a context handle
      * @param crypt_context_t* handle [in]

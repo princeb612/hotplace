@@ -337,8 +337,12 @@ public:
     return_t convert (const byte_t* source, size_t size, std::string& outpart);
     return_t convert (std::string inpart, binary_t& outpart);
     return_t convert (const char* source, size_t size, binary_t& outpart);
-    int c2i (char c);
 
+    static std::string convert (binary_t bin);
+    static binary_t convert (std::string hex);
+
+protected:
+    static int c2i (char c);
 private:
     uint32 _flags;
 };

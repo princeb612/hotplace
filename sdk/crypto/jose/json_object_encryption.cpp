@@ -51,18 +51,18 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
         const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption (enc);     // content encryption
 
         jose_encryption_t& item = iter->second;
-        binary_t cek = item.datamap[CRYPT_ITEM_CEK];                                        // in, enc
-        binary_t iv = item.datamap[CRYPT_ITEM_IV];                                          // in, enc
-        binary_t& aad = item.datamap[CRYPT_ITEM_AAD];                                       // in, enc
-        binary_t& encrypted_key = item.recipients[alg].datamap[CRYPT_ITEM_ENCRYPTEDKEY];    // out, alg
-        binary_t& tag = item.datamap[CRYPT_ITEM_TAG];                                       // out, enc
-        binary_t& ciphertext = item.datamap[CRYPT_ITEM_CIPHERTEXT];                         // out, enc
+        binary_t cek = item.datamap[crypt_item_t::item_cek];                                        // in, enc
+        binary_t iv = item.datamap[crypt_item_t::item_iv];                                          // in, enc
+        binary_t& aad = item.datamap[crypt_item_t::item_aad];                                       // in, enc
+        binary_t& encrypted_key = item.recipients[alg].datamap[crypt_item_t::item_encryptedkey];    // out, alg
+        binary_t& tag = item.datamap[crypt_item_t::item_tag];                                       // out, enc
+        binary_t& ciphertext = item.datamap[crypt_item_t::item_ciphertext];                         // out, enc
 
         // alg part - encrypted_key from cek
         {
             const char* alg_name = alg_info->alg_name;
-            crypt_asymmetric_t crypt_mode = (crypt_asymmetric_t) alg_info->mode;
-            crypt_symmetric_t alg_crypt_alg = (crypt_symmetric_t) alg_info->crypt_alg;
+            crypt_mode2_t crypt_mode = (crypt_mode2_t) alg_info->mode;
+            crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t) alg_info->crypt_alg;
             crypt_mode_t alg_crypt_mode = (crypt_mode_t) alg_info->crypt_mode;
             int alg_keysize = alg_info->keysize;
             hash_algorithm_t alg_hash_alg = (hash_algorithm_t) alg_info->hash_alg;
@@ -77,7 +77,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
             memset (&kw_iv[0], 0xa6, kw_iv.size ());
 
             std::string kid;
-            EVP_PKEY* pkey = handle->key->select (kid, alg, CRYPTO_USE_ENC);
+            EVP_PKEY* pkey = handle->key->select (kid, alg, crypto_use_t::use_enc);
 
             if (nullptr == pkey) {
                 ret = errorcode_t::not_found;
@@ -87,7 +87,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
             if (errorcode_t::success != ret) {
                 __leave2;
             }
-            if (CRYPTO_KEY_HMAC == alg_info->kty) {
+            if (crypto_key_t::hmac_key == alg_info->kty) {
                 /* EVP_KEY_HMAC key data and length */
                 size_t key_length = 0;
                 EVP_PKEY_get_raw_private_key ((EVP_PKEY *) pkey, nullptr, &key_length);
@@ -171,9 +171,9 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                  * RFC7518 4.7. Key Encryption with AES GCM
                  * RFC7520 5.7. Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2
                  */
-                binary_t iv1 = item.recipients[alg].datamap[CRYPT_ITEM_IV];
-                binary_t aad1;                                                  // empty
-                binary_t& tag1 = item.recipients[alg].datamap[CRYPT_ITEM_TAG];  // compute authencation tag here
+                binary_t iv1 = item.recipients[alg].datamap[crypt_item_t::item_iv];
+                binary_t aad1;                                                          // empty
+                binary_t& tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];  // compute authencation tag here
 
                 crypt_context_t* handle_crypt = nullptr;
                 crypt.open (&handle_crypt, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size (), &iv1[0], iv1.size ());
@@ -201,7 +201,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                  * PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW
                  * RFC7520 5.3. Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2
                  */
-                binary_t p2s = item.recipients[alg].datamap[CRYPT_ITEM_P2S];
+                binary_t p2s = item.recipients[alg].datamap[crypt_item_t::item_p2s];
                 uint32 p2c = item.recipients[alg].p2c;
 
                 const EVP_MD* alg_evp_md = (const EVP_MD*) advisor->find_evp_md (alg_hash_alg);
@@ -224,7 +224,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                                    pbkdf2_derived_key.size (), &pbkdf2_derived_key[0]);
 
                 crypt_context_t* crypt_handle = nullptr;
-                crypt.open (&crypt_handle, (crypt_symmetric_t) alg_crypt_alg, alg_crypt_mode,
+                crypt.open (&crypt_handle, (crypt_algorithm_t) alg_crypt_alg, alg_crypt_mode,
                             &pbkdf2_derived_key[0], pbkdf2_derived_key.size (), &kw_iv[0], kw_iv.size ());
                 ret = crypt.encrypt (crypt_handle, &cek[0], cek.size (), encrypted_key);
                 crypt.close (crypt_handle);
@@ -237,7 +237,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
 
         // enc part - ciphertext using cek, iv
         {
-            crypt_symmetric_t enc_crypt_alg = (crypt_symmetric_t) enc_info->crypt_alg;
+            crypt_algorithm_t enc_crypt_alg = (crypt_algorithm_t) enc_info->crypt_alg;
             crypt_mode_t enc_crypt_mode = (crypt_mode_t) enc_info->crypt_mode;
             hash_algorithm_t enc_hash_alg = (hash_algorithm_t) enc_info->hash_alg;
 
@@ -250,7 +250,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                 crypt_context_t* handle_crypt = nullptr;
                 hash_context_t* handle_hash = nullptr;
                 __try2 {
-                    ret = crypt.open (&handle_crypt, (crypt_symmetric_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
+                    ret = crypt.open (&handle_crypt, (crypt_algorithm_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
                                       &cek[0] + (cek_size / 2), cek_size / 2, &iv[0], iv.size ());
                     if (errorcode_t::success != ret) {
                         __leave2_trace (ret);
@@ -288,7 +288,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
                 }
             } else if (CRYPT_ENC_TYPE_AESGCM == enc_type) {
                 crypt_context_t* handle_crypt = nullptr;
-                crypt.open (&handle_crypt, (crypt_symmetric_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
+                crypt.open (&handle_crypt, (crypt_algorithm_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
                             &cek[0], cek.size (), &iv[0], iv.size ());
                 /* Content Encryption */
                 ret = crypt.encrypt2 (handle_crypt, &input[0], input.size (), ciphertext, &aad, &tag);
@@ -333,20 +333,20 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
         const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption (enc);     // content encryption
 
         jose_encryption_t& item = iter->second;
-        binary_t cek;                                                                   // local, enc, from encrypted_key
-        binary_t iv = item.datamap[CRYPT_ITEM_IV];                                      // in, enc
-        binary_t aad = item.datamap[CRYPT_ITEM_AAD];                                    // in, enc
-        binary_t encrypted_key = item.recipients[alg].datamap[CRYPT_ITEM_ENCRYPTEDKEY]; // in, alg
-        binary_t tag = item.datamap[CRYPT_ITEM_TAG];                                    // in, enc
-        binary_t ciphertext = item.datamap[CRYPT_ITEM_CIPHERTEXT];                      // in, enc
-        binary_t apu = item.recipients[alg].datamap[CRYPT_ITEM_APU];
-        binary_t apv = item.recipients[alg].datamap[CRYPT_ITEM_APV];
+        binary_t cek;                                                                           // local, enc, from encrypted_key
+        binary_t iv = item.datamap[crypt_item_t::item_iv];                                      // in, enc
+        binary_t aad = item.datamap[crypt_item_t::item_aad];                                    // in, enc
+        binary_t encrypted_key = item.recipients[alg].datamap[crypt_item_t::item_encryptedkey]; // in, alg
+        binary_t tag = item.datamap[crypt_item_t::item_tag];                                    // in, enc
+        binary_t ciphertext = item.datamap[crypt_item_t::item_ciphertext];                      // in, enc
+        binary_t apu = item.recipients[alg].datamap[crypt_item_t::item_apu];
+        binary_t apv = item.recipients[alg].datamap[crypt_item_t::item_apv];
 
         // alg part - encrypted_key from cek
         {
             const char* alg_name = alg_info->alg_name;
-            crypt_asymmetric_t crypt_mode = (crypt_asymmetric_t) alg_info->mode;
-            crypt_symmetric_t alg_crypt_alg = (crypt_symmetric_t) alg_info->crypt_alg;
+            crypt_mode2_t crypt_mode = (crypt_mode2_t) alg_info->mode;
+            crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t) alg_info->crypt_alg;
             crypt_mode_t alg_crypt_mode = (crypt_mode_t) alg_info->crypt_mode;
             int alg_keysize = alg_info->keysize;
             hash_algorithm_t alg_hash_alg = (hash_algorithm_t) alg_info->hash_alg;
@@ -362,10 +362,10 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
 
             EVP_PKEY* pkey = nullptr;
             if (kid) {
-                pkey = handle->key->find (kid, alg, CRYPTO_USE_ENC);
+                pkey = handle->key->find (kid, alg, crypto_use_t::use_enc);
             } else {
                 std::string kid_selected;
-                pkey = handle->key->select (kid_selected, alg, CRYPTO_USE_ENC);
+                pkey = handle->key->select (kid_selected, alg, crypto_use_t::use_enc);
             }
 
             if (nullptr == pkey) {
@@ -376,7 +376,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
             if (errorcode_t::success != ret) {
                 __leave2;
             }
-            if (CRYPTO_KEY_HMAC == alg_info->kty) {
+            if (crypto_key_t::hmac_key == alg_info->kty) {
 
                 /* EVP_KEY_HMAC key data and length */
                 size_t key_length = 0;
@@ -458,9 +458,9 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                  * RFC7518 4.7. Key Encryption with AES GCM
                  * RFC7520 5.7. Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2
                  */
-                binary_t iv1 = item.recipients[alg].datamap[CRYPT_ITEM_IV];
+                binary_t iv1 = item.recipients[alg].datamap[crypt_item_t::item_iv];
                 binary_t aad1; // empty
-                binary_t tag1 = item.recipients[alg].datamap[CRYPT_ITEM_TAG];
+                binary_t tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];
 
                 /* cek, aad(null), tag = AESGCM (HMAC.key, iv).decrypt (encryted_key) */
                 crypt_context_t* handle_crypt = nullptr;
@@ -473,7 +473,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                  * PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW
                  * RFC7520 5.3. Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2
                  */
-                binary_t p2s = item.recipients[alg].datamap[CRYPT_ITEM_P2S];
+                binary_t p2s = item.recipients[alg].datamap[crypt_item_t::item_p2s];
                 uint32 p2c = item.recipients[alg].p2c;
 
                 const EVP_MD* alg_evp_md = (const EVP_MD*) advisor->find_evp_md (alg_hash_alg);
@@ -507,7 +507,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
 
         // enc part - ciphertext using cek, iv
         {
-            crypt_symmetric_t enc_crypt_alg = (crypt_symmetric_t) enc_info->crypt_alg;
+            crypt_algorithm_t enc_crypt_alg = (crypt_algorithm_t) enc_info->crypt_alg;
             crypt_mode_t enc_crypt_mode = (crypt_mode_t) enc_info->crypt_mode;
             hash_algorithm_t enc_hash_alg = (hash_algorithm_t) enc_info->hash_alg;
 
@@ -545,7 +545,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                         __leave2_trace (ret);
                     }
 
-                    ret = crypt.open (&handle_crypt, (crypt_symmetric_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
+                    ret = crypt.open (&handle_crypt, (crypt_algorithm_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
                                       &cek[0] + (cek_size / 2), cek_size / 2, &iv[0], iv.size ());
                     if (errorcode_t::success != ret) {
                         __leave2_trace (ret);
@@ -568,7 +568,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                 }
             } else if (CRYPT_ENC_TYPE_AESGCM == enc_type) {
                 crypt_context_t* handle_crypt = nullptr;
-                crypt.open (&handle_crypt, (crypt_symmetric_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
+                crypt.open (&handle_crypt, (crypt_algorithm_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
                             &cek[0], cek.size (), &iv[0], iv.size ());
                 /* Content Encryption */
                 ret = crypt.decrypt2 (handle_crypt, &ciphertext[0], ciphertext.size (), output, &aad, &tag);

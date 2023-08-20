@@ -25,6 +25,7 @@
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
+#include <hotplace/sdk/io/system/types.hpp>
 #include <hotplace/sdk/io/system/signalwait_threads.hpp>
 #include <hotplace/sdk/io/system/thread.hpp>
 #include <hotplace/sdk/io/unittest/testcase.hpp>

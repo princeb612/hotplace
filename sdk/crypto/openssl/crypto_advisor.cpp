@@ -84,101 +84,101 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
        EVP_chacha20_poly1305
      */
 
-    { crypt_symmetric_t::seed, crypt_mode_t::cbc, EVP_seed_cbc (), "seed-cbc", },
-    { crypt_symmetric_t::seed, crypt_mode_t::cfb, EVP_seed_cfb (), "seed-cfb", },
-    { crypt_symmetric_t::seed, crypt_mode_t::ecb, EVP_seed_ecb (), "seed-ecb", },
-    { crypt_symmetric_t::seed, crypt_mode_t::ofb, EVP_seed_ofb (), "seed-ofb", },
+    { crypt_algorithm_t::seed, crypt_mode_t::cbc, EVP_seed_cbc (), "seed-cbc", },
+    { crypt_algorithm_t::seed, crypt_mode_t::cfb, EVP_seed_cfb (), "seed-cfb", },
+    { crypt_algorithm_t::seed, crypt_mode_t::ecb, EVP_seed_ecb (), "seed-ecb", },
+    { crypt_algorithm_t::seed, crypt_mode_t::ofb, EVP_seed_ofb (), "seed-ofb", },
 
-    { crypt_symmetric_t::aes128, crypt_mode_t::cbc,  EVP_aes_128_cbc (),  "aes-128-cbc", },
-    { crypt_symmetric_t::aes128, crypt_mode_t::cfb,  EVP_aes_128_cfb (),  "aes-128-cfb", },
-    { crypt_symmetric_t::aes128, crypt_mode_t::cfb1, EVP_aes_128_cfb1 (), "aes-128-cfb1", },
-    { crypt_symmetric_t::aes128, crypt_mode_t::cfb8, EVP_aes_128_cfb8 (), "aes-128-cfb8", },
-    { crypt_symmetric_t::aes128, crypt_mode_t::ctr,  EVP_aes_128_ctr (),  "aes-128-ctr", },
-    { crypt_symmetric_t::aes128, crypt_mode_t::ecb,  EVP_aes_128_ecb (),  "aes-128-ecb", },
-    { crypt_symmetric_t::aes128, crypt_mode_t::gcm,  EVP_aes_128_gcm (),  "aes-128-gcm", },
-    { crypt_symmetric_t::aes128, crypt_mode_t::ofb,  EVP_aes_128_ofb (),  "aes-128-ofb", },
-    { crypt_symmetric_t::aes128, crypt_mode_t::wrap, EVP_aes_128_wrap (), "aes-128-wrap", },
+    { crypt_algorithm_t::aes128, crypt_mode_t::cbc,  EVP_aes_128_cbc (),  "aes-128-cbc", },
+    { crypt_algorithm_t::aes128, crypt_mode_t::cfb,  EVP_aes_128_cfb (),  "aes-128-cfb", },
+    { crypt_algorithm_t::aes128, crypt_mode_t::cfb1, EVP_aes_128_cfb1 (), "aes-128-cfb1", },
+    { crypt_algorithm_t::aes128, crypt_mode_t::cfb8, EVP_aes_128_cfb8 (), "aes-128-cfb8", },
+    { crypt_algorithm_t::aes128, crypt_mode_t::ctr,  EVP_aes_128_ctr (),  "aes-128-ctr", },
+    { crypt_algorithm_t::aes128, crypt_mode_t::ecb,  EVP_aes_128_ecb (),  "aes-128-ecb", },
+    { crypt_algorithm_t::aes128, crypt_mode_t::gcm,  EVP_aes_128_gcm (),  "aes-128-gcm", },
+    { crypt_algorithm_t::aes128, crypt_mode_t::ofb,  EVP_aes_128_ofb (),  "aes-128-ofb", },
+    { crypt_algorithm_t::aes128, crypt_mode_t::wrap, EVP_aes_128_wrap (), "aes-128-wrap", },
 
-    { crypt_symmetric_t::aes192, crypt_mode_t::cbc,  EVP_aes_192_cbc (),  "aes-192-cbc", },
-    { crypt_symmetric_t::aes192, crypt_mode_t::cfb,  EVP_aes_192_cfb (),  "aes-192-cfb", },
-    { crypt_symmetric_t::aes192, crypt_mode_t::cfb1, EVP_aes_192_cfb1 (), "aes-192-cfb1", },
-    { crypt_symmetric_t::aes192, crypt_mode_t::cfb8, EVP_aes_192_cfb8 (), "aes-192-cfb8", },
-    { crypt_symmetric_t::aes192, crypt_mode_t::ctr,  EVP_aes_192_ctr (),  "aes-192-ctr", },
-    { crypt_symmetric_t::aes192, crypt_mode_t::ecb,  EVP_aes_192_ecb (),  "aes-192-ecb", },
-    { crypt_symmetric_t::aes192, crypt_mode_t::gcm,  EVP_aes_192_gcm (),  "aes-192-gcm", },
-    { crypt_symmetric_t::aes192, crypt_mode_t::ofb,  EVP_aes_192_ofb (),  "aes-192-ofb", },
-    { crypt_symmetric_t::aes192, crypt_mode_t::wrap, EVP_aes_192_wrap (), "aes-192-wrap", },
+    { crypt_algorithm_t::aes192, crypt_mode_t::cbc,  EVP_aes_192_cbc (),  "aes-192-cbc", },
+    { crypt_algorithm_t::aes192, crypt_mode_t::cfb,  EVP_aes_192_cfb (),  "aes-192-cfb", },
+    { crypt_algorithm_t::aes192, crypt_mode_t::cfb1, EVP_aes_192_cfb1 (), "aes-192-cfb1", },
+    { crypt_algorithm_t::aes192, crypt_mode_t::cfb8, EVP_aes_192_cfb8 (), "aes-192-cfb8", },
+    { crypt_algorithm_t::aes192, crypt_mode_t::ctr,  EVP_aes_192_ctr (),  "aes-192-ctr", },
+    { crypt_algorithm_t::aes192, crypt_mode_t::ecb,  EVP_aes_192_ecb (),  "aes-192-ecb", },
+    { crypt_algorithm_t::aes192, crypt_mode_t::gcm,  EVP_aes_192_gcm (),  "aes-192-gcm", },
+    { crypt_algorithm_t::aes192, crypt_mode_t::ofb,  EVP_aes_192_ofb (),  "aes-192-ofb", },
+    { crypt_algorithm_t::aes192, crypt_mode_t::wrap, EVP_aes_192_wrap (), "aes-192-wrap", },
 
-    { crypt_symmetric_t::aes256, crypt_mode_t::cbc,  EVP_aes_256_cbc (),  "aes-256-cbc", },
-    { crypt_symmetric_t::aes256, crypt_mode_t::cfb,  EVP_aes_256_cfb (),  "aes-256-cfb", },
-    { crypt_symmetric_t::aes256, crypt_mode_t::cfb1, EVP_aes_256_cfb1 (), "aes-256-cfb1", },
-    { crypt_symmetric_t::aes256, crypt_mode_t::cfb8, EVP_aes_256_cfb8 (), "aes-256-cfb8", },
-    { crypt_symmetric_t::aes256, crypt_mode_t::ctr,  EVP_aes_256_ctr (),  "aes-256-ctr", },
-    { crypt_symmetric_t::aes256, crypt_mode_t::ecb,  EVP_aes_256_ecb (),  "aes-256-ecb", },
-    { crypt_symmetric_t::aes256, crypt_mode_t::gcm,  EVP_aes_256_gcm (),  "aes-256-gcm", },
-    { crypt_symmetric_t::aes256, crypt_mode_t::ofb,  EVP_aes_256_ofb (),  "aes-256-ofb", },
-    { crypt_symmetric_t::aes256, crypt_mode_t::wrap, EVP_aes_256_wrap (), "aes-256-wrap", },
+    { crypt_algorithm_t::aes256, crypt_mode_t::cbc,  EVP_aes_256_cbc (),  "aes-256-cbc", },
+    { crypt_algorithm_t::aes256, crypt_mode_t::cfb,  EVP_aes_256_cfb (),  "aes-256-cfb", },
+    { crypt_algorithm_t::aes256, crypt_mode_t::cfb1, EVP_aes_256_cfb1 (), "aes-256-cfb1", },
+    { crypt_algorithm_t::aes256, crypt_mode_t::cfb8, EVP_aes_256_cfb8 (), "aes-256-cfb8", },
+    { crypt_algorithm_t::aes256, crypt_mode_t::ctr,  EVP_aes_256_ctr (),  "aes-256-ctr", },
+    { crypt_algorithm_t::aes256, crypt_mode_t::ecb,  EVP_aes_256_ecb (),  "aes-256-ecb", },
+    { crypt_algorithm_t::aes256, crypt_mode_t::gcm,  EVP_aes_256_gcm (),  "aes-256-gcm", },
+    { crypt_algorithm_t::aes256, crypt_mode_t::ofb,  EVP_aes_256_ofb (),  "aes-256-ofb", },
+    { crypt_algorithm_t::aes256, crypt_mode_t::wrap, EVP_aes_256_wrap (), "aes-256-wrap", },
 
-    { crypt_symmetric_t::blowfish, crypt_mode_t::cbc, EVP_bf_cbc (), "bf-cbc", },
-    { crypt_symmetric_t::blowfish, crypt_mode_t::cfb, EVP_bf_cfb (), "bf-cfb", },
-    { crypt_symmetric_t::blowfish, crypt_mode_t::ecb, EVP_bf_ecb (), "bf-ecb", },
-    { crypt_symmetric_t::blowfish, crypt_mode_t::ofb, EVP_bf_ofb (), "bf-ofb", },
+    { crypt_algorithm_t::blowfish, crypt_mode_t::cbc, EVP_bf_cbc (), "bf-cbc", },
+    { crypt_algorithm_t::blowfish, crypt_mode_t::cfb, EVP_bf_cfb (), "bf-cfb", },
+    { crypt_algorithm_t::blowfish, crypt_mode_t::ecb, EVP_bf_ecb (), "bf-ecb", },
+    { crypt_algorithm_t::blowfish, crypt_mode_t::ofb, EVP_bf_ofb (), "bf-ofb", },
 
-    { crypt_symmetric_t::idea, crypt_mode_t::cbc,  EVP_idea_cbc (),  "idea-cbc", },
-    { crypt_symmetric_t::idea, crypt_mode_t::cfb,  EVP_idea_cfb (),  "idea-cfb", },
-    { crypt_symmetric_t::idea, crypt_mode_t::ecb,  EVP_idea_ecb (),  "idea-ecb", },
-    { crypt_symmetric_t::idea, crypt_mode_t::ofb,  EVP_idea_ofb (),  "idea-ofb", },
+    { crypt_algorithm_t::idea, crypt_mode_t::cbc,  EVP_idea_cbc (),  "idea-cbc", },
+    { crypt_algorithm_t::idea, crypt_mode_t::cfb,  EVP_idea_cfb (),  "idea-cfb", },
+    { crypt_algorithm_t::idea, crypt_mode_t::ecb,  EVP_idea_ecb (),  "idea-ecb", },
+    { crypt_algorithm_t::idea, crypt_mode_t::ofb,  EVP_idea_ofb (),  "idea-ofb", },
 
-    { crypt_symmetric_t::aria128, crypt_mode_t::cbc,  EVP_aria_128_cbc (),  "aria-128-cbc", },
-    { crypt_symmetric_t::aria128, crypt_mode_t::cfb,  EVP_aria_128_cfb (),  "aria-128-cfb", },
-    { crypt_symmetric_t::aria128, crypt_mode_t::cfb1, EVP_aria_128_cfb1 (), "aria-128-cfb1", },
-    { crypt_symmetric_t::aria128, crypt_mode_t::cfb8, EVP_aria_128_cfb8 (), "aria-128-cfb8", },
-    { crypt_symmetric_t::aria128, crypt_mode_t::ctr,  EVP_aria_128_ctr (),  "aria-128-ctr", },
-    { crypt_symmetric_t::aria128, crypt_mode_t::ecb,  EVP_aria_128_ecb (),  "aria-128-ecb", },
-    { crypt_symmetric_t::aria128, crypt_mode_t::gcm,  EVP_aria_128_gcm (),  "aria-128-gcm", },
-    { crypt_symmetric_t::aria128, crypt_mode_t::ofb,  EVP_aria_128_ofb (),  "aria-128-ofb", },
+    { crypt_algorithm_t::aria128, crypt_mode_t::cbc,  EVP_aria_128_cbc (),  "aria-128-cbc", },
+    { crypt_algorithm_t::aria128, crypt_mode_t::cfb,  EVP_aria_128_cfb (),  "aria-128-cfb", },
+    { crypt_algorithm_t::aria128, crypt_mode_t::cfb1, EVP_aria_128_cfb1 (), "aria-128-cfb1", },
+    { crypt_algorithm_t::aria128, crypt_mode_t::cfb8, EVP_aria_128_cfb8 (), "aria-128-cfb8", },
+    { crypt_algorithm_t::aria128, crypt_mode_t::ctr,  EVP_aria_128_ctr (),  "aria-128-ctr", },
+    { crypt_algorithm_t::aria128, crypt_mode_t::ecb,  EVP_aria_128_ecb (),  "aria-128-ecb", },
+    { crypt_algorithm_t::aria128, crypt_mode_t::gcm,  EVP_aria_128_gcm (),  "aria-128-gcm", },
+    { crypt_algorithm_t::aria128, crypt_mode_t::ofb,  EVP_aria_128_ofb (),  "aria-128-ofb", },
 
-    { crypt_symmetric_t::aria192, crypt_mode_t::cbc,  EVP_aria_192_cbc (),  "aria-192-cbc", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::cfb,  EVP_aria_192_cfb (),  "aria-192-cfb", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::cfb1, EVP_aria_192_cfb1 (), "aria-192-cfb1", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::cfb8, EVP_aria_192_cfb8 (), "aria-192-cfb8", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::ctr,  EVP_aria_192_ctr (),  "aria-192-ctr", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::ecb,  EVP_aria_192_ecb (),  "aria-192-ecb", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::gcm,  EVP_aria_192_gcm (),  "aria-192-gcm", },
-    { crypt_symmetric_t::aria192, crypt_mode_t::ofb,  EVP_aria_192_ofb (),  "aria-192-ofb", },
+    { crypt_algorithm_t::aria192, crypt_mode_t::cbc,  EVP_aria_192_cbc (),  "aria-192-cbc", },
+    { crypt_algorithm_t::aria192, crypt_mode_t::cfb,  EVP_aria_192_cfb (),  "aria-192-cfb", },
+    { crypt_algorithm_t::aria192, crypt_mode_t::cfb1, EVP_aria_192_cfb1 (), "aria-192-cfb1", },
+    { crypt_algorithm_t::aria192, crypt_mode_t::cfb8, EVP_aria_192_cfb8 (), "aria-192-cfb8", },
+    { crypt_algorithm_t::aria192, crypt_mode_t::ctr,  EVP_aria_192_ctr (),  "aria-192-ctr", },
+    { crypt_algorithm_t::aria192, crypt_mode_t::ecb,  EVP_aria_192_ecb (),  "aria-192-ecb", },
+    { crypt_algorithm_t::aria192, crypt_mode_t::gcm,  EVP_aria_192_gcm (),  "aria-192-gcm", },
+    { crypt_algorithm_t::aria192, crypt_mode_t::ofb,  EVP_aria_192_ofb (),  "aria-192-ofb", },
 
-    { crypt_symmetric_t::aria256, crypt_mode_t::cbc,  EVP_aria_256_cbc (),  "aria-256-cbc", },
-    { crypt_symmetric_t::aria256, crypt_mode_t::cfb,  EVP_aria_256_cfb (),  "aria-256-cfb", },
-    { crypt_symmetric_t::aria256, crypt_mode_t::cfb1, EVP_aria_256_cfb1 (), "aria-256-cfb1", },
-    { crypt_symmetric_t::aria256, crypt_mode_t::cfb8, EVP_aria_256_cfb8 (), "aria-256-cfb8", },
-    { crypt_symmetric_t::aria256, crypt_mode_t::ctr,  EVP_aria_256_ctr (),  "aria-256-ctr", },
-    { crypt_symmetric_t::aria256, crypt_mode_t::ecb,  EVP_aria_256_ecb (),  "aria-256-ecb", },
-    { crypt_symmetric_t::aria256, crypt_mode_t::gcm,  EVP_aria_256_gcm (),  "aria-256-gcm", },
-    { crypt_symmetric_t::aria256, crypt_mode_t::ofb,  EVP_aria_256_ofb (),  "aria-256-ofb", },
+    { crypt_algorithm_t::aria256, crypt_mode_t::cbc,  EVP_aria_256_cbc (),  "aria-256-cbc", },
+    { crypt_algorithm_t::aria256, crypt_mode_t::cfb,  EVP_aria_256_cfb (),  "aria-256-cfb", },
+    { crypt_algorithm_t::aria256, crypt_mode_t::cfb1, EVP_aria_256_cfb1 (), "aria-256-cfb1", },
+    { crypt_algorithm_t::aria256, crypt_mode_t::cfb8, EVP_aria_256_cfb8 (), "aria-256-cfb8", },
+    { crypt_algorithm_t::aria256, crypt_mode_t::ctr,  EVP_aria_256_ctr (),  "aria-256-ctr", },
+    { crypt_algorithm_t::aria256, crypt_mode_t::ecb,  EVP_aria_256_ecb (),  "aria-256-ecb", },
+    { crypt_algorithm_t::aria256, crypt_mode_t::gcm,  EVP_aria_256_gcm (),  "aria-256-gcm", },
+    { crypt_algorithm_t::aria256, crypt_mode_t::ofb,  EVP_aria_256_ofb (),  "aria-256-ofb", },
 
-    { crypt_symmetric_t::camellia128, crypt_mode_t::cbc,  EVP_camellia_128_cbc (),  "camellia-128-cbc", },
-    { crypt_symmetric_t::camellia128, crypt_mode_t::cfb,  EVP_camellia_128_cfb (),  "camellia-128-cfb", },
-    { crypt_symmetric_t::camellia128, crypt_mode_t::cfb1, EVP_camellia_128_cfb1 (), "camellia-128-cfb1", },
-    { crypt_symmetric_t::camellia128, crypt_mode_t::cfb8, EVP_camellia_128_cfb8 (), "camellia-128-cfb8", },
-    { crypt_symmetric_t::camellia128, crypt_mode_t::ctr,  EVP_camellia_128_ctr (),  "camellia-128-ctr", },
-    { crypt_symmetric_t::camellia128, crypt_mode_t::ecb,  EVP_camellia_128_ecb (),  "camellia-128-ecb", },
-    { crypt_symmetric_t::camellia128, crypt_mode_t::ofb,  EVP_camellia_128_ofb (),  "camellia-128-ofb", },
+    { crypt_algorithm_t::camellia128, crypt_mode_t::cbc,  EVP_camellia_128_cbc (),  "camellia-128-cbc", },
+    { crypt_algorithm_t::camellia128, crypt_mode_t::cfb,  EVP_camellia_128_cfb (),  "camellia-128-cfb", },
+    { crypt_algorithm_t::camellia128, crypt_mode_t::cfb1, EVP_camellia_128_cfb1 (), "camellia-128-cfb1", },
+    { crypt_algorithm_t::camellia128, crypt_mode_t::cfb8, EVP_camellia_128_cfb8 (), "camellia-128-cfb8", },
+    { crypt_algorithm_t::camellia128, crypt_mode_t::ctr,  EVP_camellia_128_ctr (),  "camellia-128-ctr", },
+    { crypt_algorithm_t::camellia128, crypt_mode_t::ecb,  EVP_camellia_128_ecb (),  "camellia-128-ecb", },
+    { crypt_algorithm_t::camellia128, crypt_mode_t::ofb,  EVP_camellia_128_ofb (),  "camellia-128-ofb", },
 
-    { crypt_symmetric_t::camellia192, crypt_mode_t::cbc,  EVP_camellia_192_cbc (),  "camellia-192-cbc", },
-    { crypt_symmetric_t::camellia192, crypt_mode_t::cfb,  EVP_camellia_192_cfb (),  "camellia-192-cfb", },
-    { crypt_symmetric_t::camellia192, crypt_mode_t::cfb1, EVP_camellia_192_cfb1 (), "camellia-192-cfb1", },
-    { crypt_symmetric_t::camellia192, crypt_mode_t::cfb8, EVP_camellia_192_cfb8 (), "camellia-192-cfb8", },
-    { crypt_symmetric_t::camellia192, crypt_mode_t::ctr,  EVP_camellia_192_ctr (),  "camellia-192-ctr", },
-    { crypt_symmetric_t::camellia192, crypt_mode_t::ecb,  EVP_camellia_192_ecb (),  "camellia-192-ecb", },
-    { crypt_symmetric_t::camellia192, crypt_mode_t::ofb,  EVP_camellia_192_ofb (),  "camellia-192-ofb", },
+    { crypt_algorithm_t::camellia192, crypt_mode_t::cbc,  EVP_camellia_192_cbc (),  "camellia-192-cbc", },
+    { crypt_algorithm_t::camellia192, crypt_mode_t::cfb,  EVP_camellia_192_cfb (),  "camellia-192-cfb", },
+    { crypt_algorithm_t::camellia192, crypt_mode_t::cfb1, EVP_camellia_192_cfb1 (), "camellia-192-cfb1", },
+    { crypt_algorithm_t::camellia192, crypt_mode_t::cfb8, EVP_camellia_192_cfb8 (), "camellia-192-cfb8", },
+    { crypt_algorithm_t::camellia192, crypt_mode_t::ctr,  EVP_camellia_192_ctr (),  "camellia-192-ctr", },
+    { crypt_algorithm_t::camellia192, crypt_mode_t::ecb,  EVP_camellia_192_ecb (),  "camellia-192-ecb", },
+    { crypt_algorithm_t::camellia192, crypt_mode_t::ofb,  EVP_camellia_192_ofb (),  "camellia-192-ofb", },
 
-    { crypt_symmetric_t::camellia256, crypt_mode_t::cbc,  EVP_camellia_256_cbc (),  "camellia-256-cbc", },
-    { crypt_symmetric_t::camellia256, crypt_mode_t::cfb,  EVP_camellia_256_cfb (),  "camellia-256-cfb", },
-    { crypt_symmetric_t::camellia256, crypt_mode_t::cfb1, EVP_camellia_256_cfb1 (), "camellia-256-cfb1", },
-    { crypt_symmetric_t::camellia256, crypt_mode_t::cfb8, EVP_camellia_256_cfb8 (), "camellia-256-cfb8", },
-    { crypt_symmetric_t::camellia256, crypt_mode_t::ctr,  EVP_camellia_256_ctr (),  "camellia-256-ctr", },
-    { crypt_symmetric_t::camellia256, crypt_mode_t::ecb,  EVP_camellia_256_ecb (),  "camellia-256-ecb", },
-    { crypt_symmetric_t::camellia256, crypt_mode_t::ofb,  EVP_camellia_256_ofb (),  "camellia-256-ofb", },
+    { crypt_algorithm_t::camellia256, crypt_mode_t::cbc,  EVP_camellia_256_cbc (),  "camellia-256-cbc", },
+    { crypt_algorithm_t::camellia256, crypt_mode_t::cfb,  EVP_camellia_256_cfb (),  "camellia-256-cfb", },
+    { crypt_algorithm_t::camellia256, crypt_mode_t::cfb1, EVP_camellia_256_cfb1 (), "camellia-256-cfb1", },
+    { crypt_algorithm_t::camellia256, crypt_mode_t::cfb8, EVP_camellia_256_cfb8 (), "camellia-256-cfb8", },
+    { crypt_algorithm_t::camellia256, crypt_mode_t::ctr,  EVP_camellia_256_ctr (),  "camellia-256-ctr", },
+    { crypt_algorithm_t::camellia256, crypt_mode_t::ecb,  EVP_camellia_256_ecb (),  "camellia-256-ecb", },
+    { crypt_algorithm_t::camellia256, crypt_mode_t::ofb,  EVP_camellia_256_ofb (),  "camellia-256-ofb", },
 
 };
 
@@ -186,22 +186,22 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
 const hint_blockcipher_t hint_blockciphers [] = {
     // 16 (128), 24 (192), 32 (256)
 
-    { crypt_symmetric_t::seed, 16, 16, 16, },
+    { crypt_algorithm_t::seed, 16, 16, 16, },
 
-    { crypt_symmetric_t::aes128, 16, 16, 16, 16, },
-    { crypt_symmetric_t::aes192, 24, 16, 16, 24, },
-    { crypt_symmetric_t::aes256, 32, 16, 16, 32, },
-    { crypt_symmetric_t::blowfish, 16, 8, 8, },
+    { crypt_algorithm_t::aes128, 16, 16, 16, 16, },
+    { crypt_algorithm_t::aes192, 24, 16, 16, 24, },
+    { crypt_algorithm_t::aes256, 32, 16, 16, 32, },
+    { crypt_algorithm_t::blowfish, 16, 8, 8, },
 
-    { crypt_symmetric_t::idea, 16, 8, 8, },
+    { crypt_algorithm_t::idea, 16, 8, 8, },
 
-    { crypt_symmetric_t::aria128, 16, 16, 16, },
-    { crypt_symmetric_t::aria192, 24, 16, 16, },
-    { crypt_symmetric_t::aria256, 32, 16, 16, },
+    { crypt_algorithm_t::aria128, 16, 16, 16, },
+    { crypt_algorithm_t::aria192, 24, 16, 16, },
+    { crypt_algorithm_t::aria256, 32, 16, 16, },
 
-    { crypt_symmetric_t::camellia128, 16, 16, 16, },
-    { crypt_symmetric_t::camellia192, 24, 16, 16, },
-    { crypt_symmetric_t::camellia256, 32, 16, 16, },
+    { crypt_algorithm_t::camellia128, 16, 16, 16, },
+    { crypt_algorithm_t::camellia192, 24, 16, 16, },
+    { crypt_algorithm_t::camellia256, 32, 16, 16, },
 };
 
 const openssl_evp_md_method_t evp_md_methods[] = {
@@ -234,115 +234,115 @@ const openssl_evp_md_method_t evp_md_methods[] = {
 const hint_jose_encryption_t hint_jose_algorithms [] =
 {
     { "RSA1_5",
-      CRYPT_ALG_RSA1_5, CRYPTO_KEY_RSA, CRYPTO_KEY_NONE, CRYPT_MODE_RSA_1_5, },
+      CRYPT_ALG_RSA1_5, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_1_5, },
     { "RSA-OAEP",
-      CRYPT_ALG_RSA_OAEP, CRYPTO_KEY_RSA, CRYPTO_KEY_NONE, CRYPT_MODE_RSA_OAEP, },
+      CRYPT_ALG_RSA_OAEP, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_oaep, },
     { "RSA-OAEP-256",
-      CRYPT_ALG_RSA_OAEP_256, CRYPTO_KEY_RSA, CRYPTO_KEY_NONE, CRYPT_MODE_RSA_OAEP256, },
+      CRYPT_ALG_RSA_OAEP_256, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_oaep256, },
     { "A128KW",
-      CRYPT_ALG_A128KW, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes128, crypt_mode_t::wrap, 16,
+      CRYPT_ALG_A128KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes128, crypt_mode_t::wrap, 16,
       hash_algorithm_t::sha2_256, },
     { "A192KW",
-      CRYPT_ALG_A192KW, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes192, crypt_mode_t::wrap, 24,
+      CRYPT_ALG_A192KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes192, crypt_mode_t::wrap, 24,
       hash_algorithm_t::sha2_384, },
     { "A256KW",
-      CRYPT_ALG_A256KW, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes256, crypt_mode_t::wrap, 32,
+      CRYPT_ALG_A256KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes256, crypt_mode_t::wrap, 32,
       hash_algorithm_t::sha2_512, },
     { "dir",
-      CRYPT_ALG_DIR, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0, },
+      CRYPT_ALG_DIR, crypto_key_t::hmac_key, crypto_key_t::none_key, 0, },
     { "ECDH-ES",
-      CRYPT_ALG_ECDH_ES, CRYPTO_KEY_EC, CRYPTO_KEY_OKP, },
+      CRYPT_ALG_ECDH_ES, crypto_key_t::ec_key, crypto_key_t::okp_key, },
     { "ECDH-ES+A128KW",
-      CRYPT_ALG_ECDH_ES_A128KW, CRYPTO_KEY_EC, CRYPTO_KEY_OKP, 0,
-      crypt_symmetric_t::aes128, crypt_mode_t::wrap, 16, },
+      CRYPT_ALG_ECDH_ES_A128KW, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
+      crypt_algorithm_t::aes128, crypt_mode_t::wrap, 16, },
     { "ECDH-ES+A192KW",
-      CRYPT_ALG_ECDH_ES_A192KW, CRYPTO_KEY_EC, CRYPTO_KEY_OKP, 0,
-      crypt_symmetric_t::aes192, crypt_mode_t::wrap, 24, },
+      CRYPT_ALG_ECDH_ES_A192KW, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
+      crypt_algorithm_t::aes192, crypt_mode_t::wrap, 24, },
     { "ECDH-ES+A256KW",
-      CRYPT_ALG_ECDH_ES_A256KW, CRYPTO_KEY_EC, CRYPTO_KEY_OKP, 0,
-      crypt_symmetric_t::aes256, crypt_mode_t::wrap, 32, },
+      CRYPT_ALG_ECDH_ES_A256KW, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
+      crypt_algorithm_t::aes256, crypt_mode_t::wrap, 32, },
     { "A128GCMKW",
-      CRYPT_ALG_A128GCMKW, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes128, crypt_mode_t::gcm, 16, },
+      CRYPT_ALG_A128GCMKW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes128, crypt_mode_t::gcm, 16, },
     { "A192GCMKW",
-      CRYPT_ALG_A192GCMKW, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes192, crypt_mode_t::gcm, 24, },
+      CRYPT_ALG_A192GCMKW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes192, crypt_mode_t::gcm, 24, },
     { "A256GCMKW",
-      CRYPT_ALG_A256GCMKW, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes256, crypt_mode_t::gcm, 32, },
+      CRYPT_ALG_A256GCMKW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes256, crypt_mode_t::gcm, 32, },
     { "PBES2-HS256+A128KW",
-      CRYPT_ALG_PBES2_HS256_A128KW, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes128, crypt_mode_t::wrap, 16,
+      CRYPT_ALG_PBES2_HS256_A128KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes128, crypt_mode_t::wrap, 16,
       hash_algorithm_t::sha2_256, },
     { "PBES2-HS384+A192KW",
-      CRYPT_ALG_PBES2_HS384_A192KW, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes192, crypt_mode_t::wrap, 24,
+      CRYPT_ALG_PBES2_HS384_A192KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes192, crypt_mode_t::wrap, 24,
       hash_algorithm_t::sha2_384, },
     { "PBES2-HS512+A256KW",
-      CRYPT_ALG_PBES2_HS512_A256KW, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes256, crypt_mode_t::wrap, 32,
+      CRYPT_ALG_PBES2_HS512_A256KW, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes256, crypt_mode_t::wrap, 32,
       hash_algorithm_t::sha2_512, },
 };
 
 const hint_jose_encryption_t hint_jose_encryptions [] =
 {
     { "A128CBC-HS256",
-      CRYPT_ENC_A128CBC_HS256, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes128, crypt_mode_t::cbc, 16,
+      CRYPT_ENC_A128CBC_HS256, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes128, crypt_mode_t::cbc, 16,
       hash_algorithm_t::sha2_256, },
     { "A192CBC-HS384",
-      CRYPT_ENC_A192CBC_HS384, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes192, crypt_mode_t::cbc, 24,
+      CRYPT_ENC_A192CBC_HS384, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes192, crypt_mode_t::cbc, 24,
       hash_algorithm_t::sha2_384, },
     { "A256CBC-HS512",
-      CRYPT_ENC_A256CBC_HS512, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes256, crypt_mode_t::cbc, 32,
+      CRYPT_ENC_A256CBC_HS512, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes256, crypt_mode_t::cbc, 32,
       hash_algorithm_t::sha2_512, },
     { "A128GCM",
-      CRYPT_ENC_A128GCM, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes128, crypt_mode_t::gcm, 16, },
+      CRYPT_ENC_A128GCM, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes128, crypt_mode_t::gcm, 16, },
     { "A192GCM",
-      CRYPT_ENC_A192GCM, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes192, crypt_mode_t::gcm, 24, },
+      CRYPT_ENC_A192GCM, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes192, crypt_mode_t::gcm, 24, },
     { "A256GCM",
-      CRYPT_ENC_A256GCM, CRYPTO_KEY_HMAC, CRYPTO_KEY_NONE, 0,
-      crypt_symmetric_t::aes256, crypt_mode_t::gcm, 32, },
+      CRYPT_ENC_A256GCM, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      crypt_algorithm_t::aes256, crypt_mode_t::gcm, 32, },
 };
 
 const hint_jose_signature_t hint_jose_signatures [] = {
-    { "HS256", SIGN_HS256, CRYPTO_KEY_HMAC, hash_algorithm_t::sha2_256, 1, NID_hmac, },
-    { "HS384", SIGN_HS384, CRYPTO_KEY_HMAC, hash_algorithm_t::sha2_384, 1, NID_hmac, },
-    { "HS512", SIGN_HS512, CRYPTO_KEY_HMAC, hash_algorithm_t::sha2_512, 1, NID_hmac, },
-    { "RS256", SIGN_RS256, CRYPTO_KEY_RSA, hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
-    { "RS384", SIGN_RS384, CRYPTO_KEY_RSA, hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
-    { "RS512", SIGN_RS512, CRYPTO_KEY_RSA, hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
-    { "ES256", SIGN_ES256, CRYPTO_KEY_EC, hash_algorithm_t::sha2_256, 1, NID_X9_62_prime256v1, },
-    { "ES384", SIGN_ES384, CRYPTO_KEY_EC, hash_algorithm_t::sha2_384, 1, NID_secp384r1, },
-    { "ES512", SIGN_ES512, CRYPTO_KEY_EC, hash_algorithm_t::sha2_512, 1, NID_secp521r1, },
-    { "PS256", SIGN_PS256, CRYPTO_KEY_RSA, hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
-    { "PS384", SIGN_PS384, CRYPTO_KEY_RSA, hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
-    { "PS512", SIGN_PS512, CRYPTO_KEY_RSA, hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
-    { "EdDSA", SIGN_EDDSA, CRYPTO_KEY_OKP, hash_algorithm_t::hash_alg_unknown, 2, NID_ED25519, NID_ED448, },
+    { "HS256", SIGN_HS256, crypto_key_t::hmac_key, hash_algorithm_t::sha2_256, 1, NID_hmac, },
+    { "HS384", SIGN_HS384, crypto_key_t::hmac_key, hash_algorithm_t::sha2_384, 1, NID_hmac, },
+    { "HS512", SIGN_HS512, crypto_key_t::hmac_key, hash_algorithm_t::sha2_512, 1, NID_hmac, },
+    { "RS256", SIGN_RS256, crypto_key_t::rsa_key, hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
+    { "RS384", SIGN_RS384, crypto_key_t::rsa_key, hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
+    { "RS512", SIGN_RS512, crypto_key_t::rsa_key, hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
+    { "ES256", SIGN_ES256, crypto_key_t::ec_key, hash_algorithm_t::sha2_256, 1, NID_X9_62_prime256v1, },
+    { "ES384", SIGN_ES384, crypto_key_t::ec_key, hash_algorithm_t::sha2_384, 1, NID_secp384r1, },
+    { "ES512", SIGN_ES512, crypto_key_t::ec_key, hash_algorithm_t::sha2_512, 1, NID_secp521r1, },
+    { "PS256", SIGN_PS256, crypto_key_t::rsa_key, hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
+    { "PS384", SIGN_PS384, crypto_key_t::rsa_key, hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
+    { "PS512", SIGN_PS512, crypto_key_t::rsa_key, hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
+    { "EdDSA", SIGN_EDDSA, crypto_key_t::okp_key, hash_algorithm_t::hash_alg_unknown, 2, NID_ED25519, NID_ED448, },
 };
 
 const hint_curve_t hint_curves [] = {
-    { NID_X9_62_prime256v1, CRYPTO_KEY_EC,  CRYPTO_USE_ANY, "P-256", },
-    { NID_secp384r1,        CRYPTO_KEY_EC,  CRYPTO_USE_ANY, "P-384", },
-    { NID_secp521r1,        CRYPTO_KEY_EC,  CRYPTO_USE_ANY, "P-521", },
-    { NID_ED25519,          CRYPTO_KEY_OKP, CRYPTO_USE_SIG, "Ed25519", },
-    { NID_ED448,            CRYPTO_KEY_OKP, CRYPTO_USE_SIG, "Ed448", },
-    { NID_X25519,           CRYPTO_KEY_OKP, CRYPTO_USE_ENC, "X25519", },
-    { NID_X448,             CRYPTO_KEY_OKP, CRYPTO_USE_ENC, "X448", },
+    { NID_X9_62_prime256v1, crypto_key_t::ec_key,  crypto_use_t::use_any, "P-256", },
+    { NID_secp384r1,        crypto_key_t::ec_key,  crypto_use_t::use_any, "P-384", },
+    { NID_secp521r1,        crypto_key_t::ec_key,  crypto_use_t::use_any, "P-521", },
+    { NID_ED25519,          crypto_key_t::okp_key, crypto_use_t::use_sig, "Ed25519", },
+    { NID_ED448,            crypto_key_t::okp_key, crypto_use_t::use_sig, "Ed448", },
+    { NID_X25519,           crypto_key_t::okp_key, crypto_use_t::use_enc, "X25519", },
+    { NID_X448,             crypto_key_t::okp_key, crypto_use_t::use_enc, "X448", },
 };
 
 const hint_kty_name_t hint_kty_names [] = {
-    { CRYPTO_KEY_HMAC,  "oct", },
-    { CRYPTO_KEY_RSA,   "RSA", },
-    { CRYPTO_KEY_EC,    "EC", },
-    { CRYPTO_KEY_OKP,   "OKP", },
+    { crypto_key_t::hmac_key,  "oct", },
+    { crypto_key_t::rsa_key,   "RSA", },
+    { crypto_key_t::ec_key,    "EC", },
+    { crypto_key_t::okp_key,   "OKP", },
 };
 
 const size_t sizeof_hint_jose_algorithms = RTL_NUMBER_OF (hint_jose_algorithms);
@@ -430,7 +430,7 @@ return_t crypto_advisor::build_if_necessary ()
     return ret;
 }
 
-const hint_blockcipher_t* crypto_advisor::hintof_blockcipher (crypt_symmetric_t alg)
+const hint_blockcipher_t* crypto_advisor::hintof_blockcipher (crypt_algorithm_t alg)
 {
     const hint_blockcipher_t* item = nullptr;
 
@@ -455,7 +455,7 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher (const EVP_CIPHER* cip
     {
         _lock.enter ();
 
-        crypt_symmetric_t alg = crypt_symmetric_t::crypt_alg_unknown;
+        crypt_algorithm_t alg = crypt_algorithm_t::crypt_alg_unknown;
         crypt_mode_t mode = crypt_mode_t::crypt_mode_unknown;
         ret = find_evp_cipher (cipher, alg, mode);
         if (errorcode_t::success != ret) {
@@ -471,7 +471,7 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher (const EVP_CIPHER* cip
     return blockcipher;
 }
 
-const EVP_CIPHER* crypto_advisor::find_evp_cipher (crypt_symmetric_t algorithm, crypt_mode_t mode)
+const EVP_CIPHER* crypto_advisor::find_evp_cipher (crypt_algorithm_t algorithm, crypt_mode_t mode)
 {
     EVP_CIPHER* ret_value = nullptr;
 
@@ -488,7 +488,7 @@ const EVP_CIPHER* crypto_advisor::find_evp_cipher (crypt_symmetric_t algorithm, 
     return ret_value;
 }
 
-return_t crypto_advisor::find_evp_cipher (const EVP_CIPHER* cipher, crypt_symmetric_t& algorithm, crypt_mode_t& mode)
+return_t crypto_advisor::find_evp_cipher (const EVP_CIPHER* cipher, crypt_algorithm_t& algorithm, crypt_mode_t& mode)
 {
     return_t ret = errorcode_t::success;
 
@@ -524,7 +524,7 @@ return_t crypto_advisor::find_evp_cipher (const EVP_CIPHER* cipher, crypt_symmet
     return ret;
 }
 
-const char* crypto_advisor::nameof_cipher (crypt_symmetric_t algorithm, crypt_mode_t mode)
+const char* crypto_advisor::nameof_cipher (crypt_algorithm_t algorithm, crypt_mode_t mode)
 {
     return_t ret = errorcode_t::success;
     const char* ret_value = nullptr;
@@ -1027,7 +1027,7 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, crypt_alg_t alg)
         }
         crypto_key_t kty = typeof_crypto_key (pkey);
         bool cmp1 = (hint_enc->kty == kty);
-        bool cmp2 = (hint_enc->alt == CRYPTO_KEY_NONE) ? true : (hint_enc->alt == kty);
+        bool cmp2 = (hint_enc->alt == crypto_key_t::none_key) ? true : (hint_enc->alt == kty);
         test = (cmp1 || cmp2);
     }
     __finally2

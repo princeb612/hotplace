@@ -91,7 +91,7 @@ return_t json_object_signing::sign (crypto_key* key, crypt_sig_t sig, binary_t i
 #endif
 
         EVP_PKEY* pkey = nullptr;
-        pkey = key->select (kid, sig, CRYPTO_USE_SIG);
+        pkey = key->select (kid, sig, crypto_use_t::use_sig);
         if (nullptr == pkey) {
             ret = errorcode_t::not_found;
             __leave2_trace (ret);
@@ -172,7 +172,7 @@ return_t json_object_signing::verify (crypto_key* key, const char* kid, crypt_si
 #endif
 
         EVP_PKEY* pkey = nullptr;
-        pkey = key->find (kid, sig, CRYPTO_USE_SIG);
+        pkey = key->find (kid, sig, crypto_use_t::use_sig);
         if (nullptr == pkey) {
             ret = errorcode_t::not_found;
             __leave2;
@@ -200,11 +200,11 @@ return_t json_object_signing::sign_general (EVP_PKEY* pkey, crypt_sig_t sig, bin
     int ret_openssl = 1;
     size_t size = 0;
 
-{
-buffer_stream bs;
-dump_memory (&input[0], input.size (), &bs);
-printf ("%s\n", bs.c_str ());
-}
+    {
+        buffer_stream bs;
+        dump_memory (&input[0], input.size (), &bs);
+        printf ("%s\n", bs.c_str ());
+    }
 
     __try2
     {

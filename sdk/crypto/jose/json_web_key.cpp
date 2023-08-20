@@ -33,7 +33,7 @@ return_t json_web_key::add_rsa (crypto_key* crypto_key, const char* kid, const c
                                 const char* n_value, const char* e_value, const char* d_value,
                                 const char* p_value, const char* q_value,
                                 const char* dp_value, const char* dq_value, const char* qi_value,
-                                CRYPTO_USE_FLAG use)
+                                crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -100,7 +100,7 @@ return_t json_web_key::add_rsa (crypto_key* crypto_key, const char* kid, const c
 }
 
 return_t json_web_key::add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                               const char* x_value, const char* y_value, const char* d_value, CRYPTO_USE_FLAG use)
+                               const char* x_value, const char* y_value, const char* d_value, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -148,7 +148,7 @@ return_t json_web_key::add_ec (crypto_key* crypto_key, const char* kid, const ch
     return ret;
 }
 
-return_t json_web_key::add_oct (crypto_key* crypto_key, const char* kid, const char* alg, const char* k_value, CRYPTO_USE_FLAG use)
+return_t json_web_key::add_oct (crypto_key* crypto_key, const char* kid, const char* alg, const char* k_value, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -164,13 +164,13 @@ return_t json_web_key::add_oct (crypto_key* crypto_key, const char* kid, const c
         binary_t k;
         k.insert (k.end (), k_decoded.begin (), k_decoded.end ());
 
-{
-    buffer_stream bs;
-    dump_memory ((byte_t*) k_value, strlen(k_value), &bs);
-    printf ("add oct\n%s\n", bs.c_str ());
-    dump_memory (&k[0], k.size(), &bs);
-    printf ("add oct\n%s\n", bs.c_str ());
-}
+        {
+            buffer_stream bs;
+            dump_memory ((byte_t*) k_value, strlen (k_value), &bs);
+            printf ("add oct\n%s\n", bs.c_str ());
+            dump_memory (&k[0], k.size (), &bs);
+            printf ("add oct\n%s\n", bs.c_str ());
+        }
 
         crypto_keychain keyset;
         keyset.add_oct (crypto_key, kid, alg, k, use);
@@ -204,12 +204,12 @@ return_t json_web_key::read_json_item (crypto_key* crypto_key, void* json)
         json_unpack (temp, "{s:s}", "use", &use);
         json_unpack (temp, "{s:s}", "alg", &alg);
 
-        CRYPTO_USE_FLAG usage = CRYPTO_USE_ANY;
+        crypto_use_t usage = crypto_use_t::use_any;
         if (nullptr != use) {
             if (0 == strcmp (use, "sig")) {
-                usage = CRYPTO_USE_SIG;
+                usage = crypto_use_t::use_sig;
             } else if (0 == strcmp (use, "enc")) {
-                usage = CRYPTO_USE_ENC;
+                usage = crypto_use_t::use_enc;
             }
         }
 
@@ -333,7 +333,7 @@ return_t json_web_key::load_file (crypto_key* crypto_key, const char* file, int 
     return ret;
 }
 
-return_t json_web_key::load_pem (crypto_key* cryptokey, const char* buffer, int flags, CRYPTO_USE_FLAG use)
+return_t json_web_key::load_pem (crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
     BIO* bio_pub = BIO_new (BIO_s_mem ());
@@ -384,7 +384,7 @@ return_t json_web_key::load_pem (crypto_key* cryptokey, const char* buffer, int 
     return ret;
 }
 
-return_t json_web_key::load_pem_file (crypto_key* cryptokey, const char* file, int flags, CRYPTO_USE_FLAG use)
+return_t json_web_key::load_pem_file (crypto_key* cryptokey, const char* file, int flags, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -417,7 +417,7 @@ typedef struct _json_mapper_item_t {
     EVP_PKEY* pkey;
     crypto_key_t type;
     std::string kid;
-    int use; // CRYPTO_USE_FLAG
+    int use; // crypto_use_t
     std::string alg;
     binary_t pub1;
     binary_t pub2;
@@ -444,10 +444,10 @@ static void jwk_serialize_item (int flag, json_mapper_item_t item, json_t* json_
     }
 
     /* use */
-    if (CRYPTO_USE_SIG == item.use) {
+    if (crypto_use_t::use_sig == item.use) {
         json_object_set_new (json_item, "use", json_string ("sig"));
     }
-    if (CRYPTO_USE_ENC == item.use) {
+    if (crypto_use_t::use_enc == item.use) {
         json_object_set_new (json_item, "use", json_string ("enc"));
     }
 
@@ -462,22 +462,22 @@ static void jwk_serialize_item (int flag, json_mapper_item_t item, json_t* json_
     }
 
     /* param */
-    if (CRYPTO_KEY_HMAC == item.type) {
+    if (crypto_key_t::hmac_key == item.type) {
         json_object_set_new (json_item, "k", json_string (base64_encode (item.priv, BASE64URL_ENCODING).c_str ()));
-    } else if (CRYPTO_KEY_RSA == item.type) {
+    } else if (crypto_key_t::rsa_key == item.type) {
         json_object_set_new (json_item, "n", json_string (base64_encode (item.pub1, BASE64URL_ENCODING).c_str ()));
         json_object_set_new (json_item, "e", json_string (base64_encode (item.pub2, BASE64URL_ENCODING).c_str ()));
         if (flag) {
             json_object_set_new (json_item, "d", json_string (base64_encode (item.priv, BASE64URL_ENCODING).c_str ()));
         }
-    } else if (CRYPTO_KEY_EC == item.type) {
+    } else if (crypto_key_t::ec_key == item.type) {
         json_object_set_new (json_item, "crv", json_string (curve_name.c_str ()));
         json_object_set_new (json_item, "x", json_string (base64_encode (item.pub1, BASE64URL_ENCODING).c_str ()));
         json_object_set_new (json_item, "y", json_string (base64_encode (item.pub2, BASE64URL_ENCODING).c_str ()));
         if (flag) {
             json_object_set_new (json_item, "d", json_string (base64_encode (item.priv, BASE64URL_ENCODING).c_str ()));
         }
-    } else if (CRYPTO_KEY_OKP == item.type) {
+    } else if (crypto_key_t::okp_key == item.type) {
         json_object_set_new (json_item, "crv", json_string (curve_name.c_str ()));
         json_object_set_new (json_item, "x", json_string (base64_encode (item.pub1, BASE64URL_ENCODING).c_str ()));
         if (flag) {

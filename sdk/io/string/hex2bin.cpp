@@ -109,6 +109,48 @@ return_t hex2bin::convert (const char* source, size_t size, binary_t& outpart)
     return ret;
 }
 
+std::string hex2bin::convert (binary_t bin)
+{
+    std::string outpart;
+
+    bool is_be = is_big_endian ();
+    char buf[3];
+    size_t buflen = sizeof (buf);
+
+    for (size_t cur = 0; cur < bin.size (); cur++) {
+        byte_t item = bin[cur];
+        snprintf (buf, buflen, "%02x", item);
+        if (is_be) {
+            outpart += buf[1];
+            outpart += buf[0];
+        } else {
+            outpart += buf[0];
+            outpart += buf[1];
+        }
+    }
+
+    return outpart;
+}
+
+binary_t hex2bin::convert (std::string hex)
+{
+    binary_t outpart;
+    bool is_be = is_big_endian ();
+
+    for (size_t cur = 0; cur < hex.size (); cur += 2) {
+        byte_t i = 0;
+        if (is_be) {
+            i = c2i (hex[cur]);
+            i += c2i (hex[cur + 1]) << 4;
+        } else {
+            i = c2i (hex[cur]) << 4;
+            i += c2i (hex[cur + 1]);
+        }
+        outpart.insert (outpart.end (), i);
+    }
+    return outpart;
+}
+
 int hex2bin::c2i (char c)
 {
     int ret = 0;

@@ -215,9 +215,9 @@ return_t json_object_signing_encryption::decrypt (jose_context_t* context, std::
                     }
 
                     if (kid.empty ()) {
-                        ret_test = encryption.decrypt (context, enc, alg, item.datamap[CRYPT_ITEM_CIPHERTEXT], output);
+                        ret_test = encryption.decrypt (context, enc, alg, item.datamap[crypt_item_t::item_ciphertext], output);
                     } else {
-                        ret_test = encryption.decrypt (context, enc, alg, kid.c_str (), item.datamap[CRYPT_ITEM_CIPHERTEXT], output);
+                        ret_test = encryption.decrypt (context, enc, alg, kid.c_str (), item.datamap[crypt_item_t::item_ciphertext], output);
                     }
 
                     results.push_back ((bool) (errorcode_t::success == ret_test));
@@ -501,8 +501,8 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
 
             item.enc_info = enc_info;
             /* generate cek if not included "dir", "ECDH-ES" */
-            rand.random (item.datamap[CRYPT_ITEM_CEK], keysize);
-            rand.random (item.datamap[CRYPT_ITEM_IV], ivsize);
+            rand.random (item.datamap[crypt_item_t::item_cek], keysize);
+            rand.random (item.datamap[crypt_item_t::item_iv], ivsize);
 
             binary_t protected_header;
 
@@ -511,7 +511,7 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
 
                 //const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);  // key management
                 std::string kid;
-                EVP_PKEY* pkey = handle->key->select (kid, alg, CRYPTO_USE_ENC);
+                EVP_PKEY* pkey = handle->key->select (kid, alg, crypto_use_t::use_enc);
                 if (nullptr == pkey) {
                     ret = errorcode_t::not_found;
                     __leave2_trace (ret);
@@ -527,7 +527,7 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
                 compose_encryption_header (CRYPT_ENC_UNKNOWN, alg, JOSE_HEADER_ALG_ONLY, kid, datamap, variantmap, header);
 
                 item.header.assign ((char*) &protected_header[0], protected_header.size ());
-                base64_encode (&protected_header[0], protected_header.size (), item.datamap[CRYPT_ITEM_AAD], BASE64URL_ENCODING);
+                base64_encode (&protected_header[0], protected_header.size (), item.datamap[crypt_item_t::item_aad], BASE64URL_ENCODING);
 
                 recipient.header = std::string ((char*) &header[0], header.size ());
                 recipient.kid = kid;
@@ -535,14 +535,14 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
             } else if (algs.size () > 1) {
                 compose_encryption_header (enc, CRYPT_ALG_UNKNOWN, JOSE_HEADER_ENC_ONLY, "", protected_header);
                 item.header.assign ((char*) &protected_header[0], protected_header.size ());
-                base64_encode (&protected_header[0], protected_header.size (), item.datamap[CRYPT_ITEM_AAD], BASE64URL_ENCODING);
+                base64_encode (&protected_header[0], protected_header.size (), item.datamap[crypt_item_t::item_aad], BASE64URL_ENCODING);
 
                 for (std::list <crypt_alg_t>::iterator iter = algs.begin (); iter != algs.end (); iter++) {
                     crypt_alg_t alg = *iter;
 
                     //const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);  // key management
                     std::string kid;
-                    EVP_PKEY* pkey = handle->key->select (kid, alg, CRYPTO_USE_ENC);
+                    EVP_PKEY* pkey = handle->key->select (kid, alg, crypto_use_t::use_enc);
 
                     crypt_datamap_t datamap;
                     crypt_variantmap_t variantmap;
@@ -584,29 +584,29 @@ return_t json_object_signing_encryption::prepare_encryption_recipient (crypt_alg
         crypto_key key;
         crypto_keychain keyset;
         std::string kid;
-        nidof_evp_pkey (pkey, nid);                         // "crv" of key
-        keyset.add_ec (&key, nid);                          // same "crv"
-        recipient.epk = key.select (CRYPTO_USE_ENC, true);  // EVP_PKEY_up_ref
+        nidof_evp_pkey (pkey, nid);                                 // "crv" of key
+        keyset.add_ec (&key, nid);                                  // same "crv"
+        recipient.epk = key.select (crypto_use_t::use_enc, true);   // EVP_PKEY_up_ref
         variant_t vt;
         variant_set_pointer (vt, recipient.epk);
-        variantmap[CRYPT_ITEM_EPK] = vt;
+        variantmap[crypt_item_t::item_epk] = vt;
     } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) {
         // iv, tag
         const EVP_CIPHER* alg_evp_cipher = (const EVP_CIPHER*) advisor->find_evp_cipher (alg_info->crypt_alg, alg_info->crypt_mode);
         int ivsize = EVP_CIPHER_iv_length (alg_evp_cipher);
         openssl_prng rand;
-        rand.random (recipient.datamap[CRYPT_ITEM_IV], ivsize);
-        datamap[CRYPT_ITEM_IV] = recipient.datamap[CRYPT_ITEM_IV];
-        datamap[CRYPT_ITEM_TAG] = recipient.datamap[CRYPT_ITEM_TAG];
+        rand.random (recipient.datamap[crypt_item_t::item_iv], ivsize);
+        datamap[crypt_item_t::item_iv] = recipient.datamap[crypt_item_t::item_iv];
+        datamap[crypt_item_t::item_tag] = recipient.datamap[crypt_item_t::item_tag];
     } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) {
         // p2s, p2c
         openssl_prng rand;
-        rand.random (recipient.datamap[CRYPT_ITEM_P2S], 64);
+        rand.random (recipient.datamap[crypt_item_t::item_p2s], 64);
         rand.random (recipient.p2c, 0xffff);
         variant_t vt;
         variant_set_int32 (vt, recipient.p2c);
-        datamap[CRYPT_ITEM_P2S] = recipient.datamap[CRYPT_ITEM_P2S];
-        variantmap[CRYPT_ITEM_P2C] = vt;
+        datamap[crypt_item_t::item_p2s] = recipient.datamap[crypt_item_t::item_p2s];
+        variantmap[crypt_item_t::item_p2c] = vt;
     }
     return ret;
 }
@@ -662,7 +662,7 @@ return_t json_object_signing_encryption::compose_encryption_header (crypt_enc_t 
                 // epk, apu, apv
                 binary_t pub1;
                 binary_t pub2;
-                EVP_PKEY* epk = (EVP_PKEY*) variantmap[CRYPT_ITEM_EPK].data.p;
+                EVP_PKEY* epk = (EVP_PKEY*) variantmap[crypt_item_t::item_epk].data.p;
                 crypto_key::get_public_key (epk, pub1, pub2);
                 json_t* json_epk = json_object ();
                 if (json_epk) {
@@ -681,14 +681,14 @@ return_t json_object_signing_encryption::compose_encryption_header (crypt_enc_t 
                 }
             } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) {
                 // iv, tag
-                binary_t iv1 = datamap[CRYPT_ITEM_IV];
-                binary_t tag1 = datamap[CRYPT_ITEM_TAG];
+                binary_t iv1 = datamap[crypt_item_t::item_iv];
+                binary_t tag1 = datamap[crypt_item_t::item_tag];
                 json_object_set_new (json_header, "iv", json_string (base64_encode (&iv1[0], iv1.size (), BASE64URL_ENCODING).c_str ()));
                 json_object_set_new (json_header, "tag", json_string (base64_encode (&tag1[0], tag1.size (), BASE64URL_ENCODING).c_str ()));
             } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) {
                 // p2s, p2c
-                binary_t p2s = datamap[CRYPT_ITEM_P2S];
-                uint32 p2c = variantmap[CRYPT_ITEM_P2C].data.i32;
+                binary_t p2s = datamap[crypt_item_t::item_p2s];
+                uint32 p2c = variantmap[crypt_item_t::item_p2c].data.i32;
                 json_object_set_new (json_header, "p2s", json_string (base64_encode (&p2s[0], p2s.size (), BASE64URL_ENCODING).c_str ()));
                 json_object_set_new (json_header, "p2c", json_integer (p2c));
             }
@@ -742,12 +742,12 @@ return_t json_object_signing_encryption::prepare_decryption_item (jose_context_t
         type = (crypt_enc_t) hintof_enc->type;
 
         item.enc_info = hintof_enc;
-        item.datamap[CRYPT_ITEM_AAD].clear ();
-        item.datamap[CRYPT_ITEM_AAD] << protected_header; // base64url encoded
+        item.datamap[crypt_item_t::item_aad].clear ();
+        item.datamap[crypt_item_t::item_aad] << protected_header; // base64url encoded
         item.header = protected_header_decoded;
-        base64_decode (iv, strlen (iv), item.datamap[CRYPT_ITEM_IV], BASE64URL_ENCODING);
-        base64_decode (tag, strlen (tag), item.datamap[CRYPT_ITEM_TAG], BASE64URL_ENCODING);
-        base64_decode (ciphertext, strlen (ciphertext), item.datamap[CRYPT_ITEM_CIPHERTEXT], BASE64URL_ENCODING);
+        base64_decode (iv, strlen (iv), item.datamap[crypt_item_t::item_iv], BASE64URL_ENCODING);
+        base64_decode (tag, strlen (tag), item.datamap[crypt_item_t::item_tag], BASE64URL_ENCODING);
+        base64_decode (ciphertext, strlen (ciphertext), item.datamap[crypt_item_t::item_ciphertext], BASE64URL_ENCODING);
     }
     __finally2
     {
@@ -769,7 +769,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
 
     __try2
     {
-        recipient.datamap[CRYPT_ITEM_ENCRYPTEDKEY].clear ();
+        recipient.datamap[crypt_item_t::item_encryptedkey].clear ();
 
         type = CRYPT_ALG_UNKNOWN;
 
@@ -803,7 +803,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
             enckey = encrypted_key;
         }
         if (enckey) {
-            base64_decode (enckey, strlen (enckey), recipient.datamap[CRYPT_ITEM_ENCRYPTEDKEY], BASE64URL_ENCODING);
+            base64_decode (enckey, strlen (enckey), recipient.datamap[crypt_item_t::item_encryptedkey], BASE64URL_ENCODING);
         }
 
         const char* alg = nullptr;
@@ -855,12 +855,12 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
             json_web_key jwk;
             crypto_key key;
             jwk.add_ec (&key, nullptr, nullptr, crv_value, x_value, y_value, nullptr);
-            recipient.epk = key.select (CRYPTO_USE_ENC, true); // EVP_PKEY_up_ref
+            recipient.epk = key.select (crypto_use_t::use_enc, true); // EVP_PKEY_up_ref
             if (apu_value) {
-                base64_decode (apu_value, strlen (apu_value), recipient.datamap[CRYPT_ITEM_APU], BASE64URL_ENCODING);
+                base64_decode (apu_value, strlen (apu_value), recipient.datamap[crypt_item_t::item_apu], BASE64URL_ENCODING);
             }
             if (apv_value) {
-                base64_decode (apv_value, strlen (apv_value), recipient.datamap[CRYPT_ITEM_APV], BASE64URL_ENCODING);
+                base64_decode (apv_value, strlen (apv_value), recipient.datamap[crypt_item_t::item_apv], BASE64URL_ENCODING);
             }
         } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) { // iv, tag
             const char* iv_value = nullptr;
@@ -877,8 +877,8 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
                     __leave2;
                 }
             }
-            base64_decode (iv_value, strlen (iv_value), recipient.datamap[CRYPT_ITEM_IV], BASE64URL_ENCODING);
-            base64_decode (tag_value, strlen (tag_value), recipient.datamap[CRYPT_ITEM_TAG], BASE64URL_ENCODING);
+            base64_decode (iv_value, strlen (iv_value), recipient.datamap[crypt_item_t::item_iv], BASE64URL_ENCODING);
+            base64_decode (tag_value, strlen (tag_value), recipient.datamap[crypt_item_t::item_tag], BASE64URL_ENCODING);
         } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) { // p2s, p2c
             const char* p2s = nullptr;
             int p2c = -1;
@@ -894,7 +894,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
                     __leave2;
                 }
             }
-            base64_decode (p2s, strlen (p2s), recipient.datamap[CRYPT_ITEM_P2S], BASE64URL_ENCODING);
+            base64_decode (p2s, strlen (p2s), recipient.datamap[crypt_item_t::item_p2s], BASE64URL_ENCODING);
             recipient.p2c = p2c;
         }
     }
@@ -1097,14 +1097,14 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
         std::string b64_encryptedkey;
 
         b64_header = base64_encode ((byte_t*) encryption.header.c_str (), encryption.header.size (), BASE64URL_ENCODING);
-        b64_iv = base64_encode (&encryption.datamap[CRYPT_ITEM_IV][0], encryption.datamap[CRYPT_ITEM_IV].size (), BASE64URL_ENCODING);
-        b64_tag = base64_encode (&encryption.datamap[CRYPT_ITEM_TAG][0], encryption.datamap[CRYPT_ITEM_TAG].size (), BASE64URL_ENCODING);
-        b64_ciphertext = base64_encode (&encryption.datamap[CRYPT_ITEM_CIPHERTEXT][0], encryption.datamap[CRYPT_ITEM_CIPHERTEXT].size (), BASE64URL_ENCODING);
+        b64_iv = base64_encode (&encryption.datamap[crypt_item_t::item_iv][0], encryption.datamap[crypt_item_t::item_iv].size (), BASE64URL_ENCODING);
+        b64_tag = base64_encode (&encryption.datamap[crypt_item_t::item_tag][0], encryption.datamap[crypt_item_t::item_tag].size (), BASE64URL_ENCODING);
+        b64_ciphertext = base64_encode (&encryption.datamap[crypt_item_t::item_ciphertext][0], encryption.datamap[crypt_item_t::item_ciphertext].size (), BASE64URL_ENCODING);
 
         if (JOSE_COMPACT == type) {
-            b64_encryptedkey = base64_encode (&recipient.datamap[CRYPT_ITEM_ENCRYPTEDKEY][0], recipient.datamap[CRYPT_ITEM_ENCRYPTEDKEY].size (), BASE64URL_ENCODING);
+            b64_encryptedkey = base64_encode (&recipient.datamap[crypt_item_t::item_encryptedkey][0], recipient.datamap[crypt_item_t::item_encryptedkey].size (), BASE64URL_ENCODING);
 
-            output += b64_header; //std::string ((char*) &encryption.datamap[CRYPT_ITEM_AAD][0], encryption.datamap[CRYPT_ITEM_AAD].size ());
+            output += b64_header; //std::string ((char*) &encryption.datamap[crypt_item_t::item_aad][0], encryption.datamap[crypt_item_t::item_aad].size ());
             output += ".";
             output += b64_encryptedkey;
             output += ".";
@@ -1114,7 +1114,7 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
             output += ".";
             output += b64_tag;
         } else if (JOSE_FLATJSON == type) {
-            b64_encryptedkey = base64_encode (&recipient.datamap[CRYPT_ITEM_ENCRYPTEDKEY][0], recipient.datamap[CRYPT_ITEM_ENCRYPTEDKEY].size (), BASE64URL_ENCODING);
+            b64_encryptedkey = base64_encode (&recipient.datamap[crypt_item_t::item_encryptedkey][0], recipient.datamap[crypt_item_t::item_encryptedkey].size (), BASE64URL_ENCODING);
 
             json_t* json_serialization = nullptr;
             __try2
@@ -1199,12 +1199,12 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
                                     json_object_set_new (header, "epk", json_epk);
                                 }
                             } else if (CRYPT_ALG_TYPE_AESGCMKW == alg_type) {
-                                std::string b64_iv = base64_encode (&recipient.datamap[CRYPT_ITEM_IV][0], recipient.datamap[CRYPT_ITEM_IV].size (), BASE64URL_ENCODING);
-                                std::string b64_tag = base64_encode (&recipient.datamap[CRYPT_ITEM_TAG][0], recipient.datamap[CRYPT_ITEM_TAG].size (), BASE64URL_ENCODING);
+                                std::string b64_iv = base64_encode (&recipient.datamap[crypt_item_t::item_iv][0], recipient.datamap[crypt_item_t::item_iv].size (), BASE64URL_ENCODING);
+                                std::string b64_tag = base64_encode (&recipient.datamap[crypt_item_t::item_tag][0], recipient.datamap[crypt_item_t::item_tag].size (), BASE64URL_ENCODING);
                                 json_object_set_new (header, "iv", json_string (b64_iv.c_str ()));
                                 json_object_set_new (header, "tag", json_string (b64_tag.c_str ()));
                             } else if (CRYPT_ALG_TYPE_PBES2_HS_AESKW == alg_type) {
-                                std::string b64_p2s = base64_encode (&recipient.datamap[CRYPT_ITEM_P2S][0], recipient.datamap[CRYPT_ITEM_P2S].size (), BASE64URL_ENCODING);
+                                std::string b64_p2s = base64_encode (&recipient.datamap[crypt_item_t::item_p2s][0], recipient.datamap[crypt_item_t::item_p2s].size (), BASE64URL_ENCODING);
                                 json_object_set_new (header, "p2s", json_string (b64_p2s.c_str ()));
                                 json_object_set_new (header, "p2c", json_integer (recipient.p2c));
                             }
@@ -1212,7 +1212,7 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
                             json_object_set_new (json_recipient, "header", header);
                         }
 
-                        b64_encryptedkey = base64_encode (&recipient.datamap[CRYPT_ITEM_ENCRYPTEDKEY][0], recipient.datamap[CRYPT_ITEM_ENCRYPTEDKEY].size (), BASE64URL_ENCODING);
+                        b64_encryptedkey = base64_encode (&recipient.datamap[crypt_item_t::item_encryptedkey][0], recipient.datamap[crypt_item_t::item_encryptedkey].size (), BASE64URL_ENCODING);
                         json_object_set_new (json_recipient, "encrypted_key", json_string (b64_encryptedkey.c_str ()));
 
                         json_array_append_new (json_recipients, json_recipient);

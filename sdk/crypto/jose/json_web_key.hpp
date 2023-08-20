@@ -57,16 +57,16 @@ public:
      * @param int flags [in]
      * @return error code (see error.h)
      */
-    return_t load_pem (crypto_key* cryptokey, const char* buffer, int flags, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t load_pem (crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief load from a PEM file
      * @param crypto_key * crypto_key [in]
      * @param const char* file [in]
      * @param int flags [in] reserved
-     * @param CRYPTO_USE_FLAG use [inopt] CRYPTO_USE_ANY by default
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
      * @return error code (see error.h)
      */
-    return_t load_pem_file (crypto_key* crypto_key, const char* file, int flags, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t load_pem_file (crypto_key* crypto_key, const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief write PEM to the file
      * @param crypto_key * cryptokey [in]
@@ -108,12 +108,12 @@ protected:
      * @param const char* dp [inopt]
      * @param const char* dq [inopt]
      * @param const char* qi [inopt]
-     * @param CRYPTO_USE_FLAG use [inopt]
+     * @param crypto_use_t use [inopt]
      * @return error code (see error.h)
      */
     return_t add_rsa (crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d,
                       const char* p                                                                                                         = nullptr, const char* q= nullptr, const char* dp = nullptr, const char* dq = nullptr, const char* qi = nullptr,
-                      CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                      crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief add
      * @param crypto_key* crypto_key
@@ -123,22 +123,22 @@ protected:
      * @param const char* x [in] public key
      * @param const char* y [in] public key
      * @param const char* d [inopt] private key
-     * @param CRYPTO_USE_FLAG use [inopt]
+     * @param crypto_use_t use [inopt]
      * @return error code (see error.h)
      */
     return_t add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                     const char* x, const char* y, const char* d, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                     const char* x, const char* y, const char* d, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief add
      * @param crypto_key* crypto_key
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
      * @param const char* k [in]
-     * @param CRYPTO_USE_FLAG use [inopt]
+     * @param crypto_use_t use [inopt]
      * @return error code (see error.h)
      */
     return_t add_oct (crypto_key* crypto_key, const char* kid, const char* alg, const char* k,
-                      CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                      crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief parse
      * @param crypto_key* crypto_key [in]

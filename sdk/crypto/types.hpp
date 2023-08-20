@@ -37,7 +37,7 @@ enum crypt_poweredby_t {
  *
  * International Data Encryption Algorithm (1991)
  */
-enum crypt_symmetric_t {
+enum crypt_algorithm_t {
     crypt_alg_unknown   = 0,
     des                 = 1,
     aes128              = 2,
@@ -125,76 +125,70 @@ enum hash_algorithm_t {
     whirlpool           = 17,
 };
 
-enum crypt_asymmetric_t {
-    crypt_asymmetric_unknown    = 0,
-    CRYPT_MODE_RSA_1_5          = 1,
-    CRYPT_MODE_RSA_OAEP         = 2,
-    CRYPT_MODE_RSA_OAEP256      = 3,
-    CRYPT_MODE_EC_DH            = 4,
+enum crypt_mode2_t {
+    rsa_1_5     = 1,
+    rsa_oaep    = 2,
+    rsa_oaep256 = 3,
 };
 
-enum crypt_data_type_t {
+enum crypt_item_t {
     /* binary */
-    CRYPT_ITEM_AAD          = 1,    // P - protected_header.encoded, additional authenticated data
-    CRYPT_ITEM_CEK          = 2,    // k - content encryption key
-    CRYPT_ITEM_ENCRYPTEDKEY = 3,    // K - encrypted cek
-    CRYPT_ITEM_IV           = 4,    // I - initial vector
-    CRYPT_ITEM_CIPHERTEXT   = 5,    // C - ciphertext
-    CRYPT_ITEM_TAG          = 6,    // T - authentication tag
-    CRYPT_ITEM_APU          = 7,    // APU - agreement partyUinfo
-    CRYPT_ITEM_APV          = 8,    // APV - agreement partyVinfo
-    CRYPT_ITEM_P2S          = 9,    // P2S - PBES2 salt
+    item_aad            = 1,    // P - protected_header.encoded, additional authenticated data
+    item_cek            = 2,    // k - content encryption key
+    item_encryptedkey   = 3,    // K - encrypted cek
+    item_iv             = 4,    // I - initial vector
+    item_ciphertext     = 5,    // C - ciphertext
+    item_tag            = 6,    // T - authentication tag
+    item_apu            = 7,    // APU - agreement partyUinfo
+    item_apv            = 8,    // APV - agreement partyVinfo
+    item_p2s            = 9,    // P2S - PBES2 salt
 
     /* key */
-    CRYPT_ITEM_RSA_N        = 64,
-    CRYPT_ITEM_RSA_E        = 65,
-    CRYPT_ITEM_RSA_D        = 66,
-    CRYPT_ITEM_RSA_P        = 67,
-    CRYPT_ITEM_RSA_Q        = 68,
-    CRYPT_ITEM_RSA_DP       = 69,
-    CRYPT_ITEM_RSA_DQ       = 70,
-    CRYPT_ITEM_RSA_QI       = 71,
+    item_rsa_n          = 64,
+    item_rsa_e          = 65,
+    item_rsa_d          = 66,
+    item_rsa_p          = 67,
+    item_rsa_q          = 68,
+    item_rsa_dp         = 69,
+    item_rsa_dq         = 70,
+    item_rsa_qi         = 71,
 
-    CRYPT_ITEM_EC_CRV       = 72,
-    CRYPT_ITEM_EC_X         = 73,
-    CRYPT_ITEM_EC_Y         = 74,
-    CRYPT_ITEM_EC_D         = 75,
+    item_ec_crv         = 72,
+    item_ec_x           = 73,
+    item_ec_y           = 74,
+    item_ec_d           = 75,
 
-    CRYPT_ITEM_HMAC_K       = 76,
+    item_hmac_k         = 76,
 
     /* string */
-    CRYPT_ITEM_HEADER       = 128,  // p - header (protected_header.decoded)
-    CRYPT_ITEM_KID          = 129,  // kid
+    item_header         = 128,  // p - header (protected_header.decoded)
+    item_kid            = 129,  // kid
 
     /* variant */
-    CRYPT_ITEM_EPK          = 256,  // ephemeral public key
-    CRYPT_ITEM_P2C          = 257,  // PBES2 count
+    item_epk            = 256,  // ephemeral public key
+    item_p2c            = 257,  // PBES2 count
 };
 
-enum CRYPTO_KEY_FLAG {
-    CRYPTO_KEY_PUBLIC   = (1 << 0),
-    CRYPTO_KEY_PRIVATE  = (1 << 1),
+enum crypt_access_t {
+    public_key  = (1 << 0),
+    private_key = (1 << 1),
 };
 
-enum CRYPTO_KEY_TYPE {
-    CRYPTO_KEY_NONE         = 0,
-    CRYPTO_KEY_UNSECURED    = 0,
-    CRYPTO_KEY_HMAC         = 1,        // EVP_PKEY_HMAC    NID_hmac
-    CRYPTO_KEY_RSA          = 2,        // EVP_PKEY_RSA     NID_rsaEncryption
-    CRYPTO_KEY_EC           = 3,        // EVP_PKEY_EC      NID_X9_62_id_ecPublicKey
-    CRYPTO_KEY_OKP          = 4,        // EVP_PKEY_ED25519 NID_ED25519
-                                        // EVP_PKEY_ED448   NID_ED448
-    CRYPTO_KEY_BAD          = 0xffff,
+enum crypto_key_t {
+    none_key    = 0,
+    hmac_key    = 1,    // EVP_PKEY_HMAC    NID_hmac
+    rsa_key     = 2,    // EVP_PKEY_RSA     NID_rsaEncryption
+    ec_key      = 3,    // EVP_PKEY_EC      NID_X9_62_id_ecPublicKey
+    okp_key     = 4,    // EVP_PKEY_ED25519 NID_ED25519, EVP_PKEY_ED448   NID_ED448
+    bad_key     = 0xffff,
 };
-typedef CRYPTO_KEY_TYPE crypto_key_t;
 
-enum CRYPTO_USE_FLAG {
-    CRYPTO_USE_UNKNOWN  = 0,
-    CRYPTO_USE_ENC      = 1,
-    CRYPTO_USE_SIG      = 2,
-    CRYPTO_USE_ANY      = (CRYPTO_USE_ENC | CRYPTO_USE_SIG),
+enum crypto_use_t {
+    use_unknown = 0,
+    use_enc     = 1,
+    use_sig     = 2,
+    use_any     = (use_enc | use_sig),
 };
-typedef CRYPTO_USE_FLAG crypto_use_t;
 
 enum crypt_alg_type_t {
     CRYPT_ALG_TYPE_RSA              = 1,
@@ -288,7 +282,7 @@ enum crypt_sig_t {
 };
 
 typedef struct _hint_blockcipher_t {
-    crypt_symmetric_t _alg;
+    crypt_algorithm_t _alg;
     uint16 _keysize;    // size of key
     uint16 _ivsize;     // size of initial vector
     uint16 _blocksize;  // blocksize for en/de-cryption
@@ -299,11 +293,11 @@ typedef struct _hint_jose_encryption_t {
     const char* alg_name;
 
     int type;                       // crypt_alg_t, crypt_enc_t
-    crypto_key_t kty;               // CRYPTO_KEY_RSA, CRYPTO_KEY_EC, CRYPTO_KEY_HMAC
-    crypto_key_t alt;               // for example CRYPTO_KEY_OKP, if kt is CRYPTO_KEY_EC
-    int mode;                       // CRYPT_MODE_RSA_1_5, CRYPT_MODE_RSA_OAEP, CRYPT_MODE_RSA_OAEP256
+    crypto_key_t kty;               // crypto_key_t::rsa_key, crypto_key_t::ec_key, crypto_key_t::hmac_key
+    crypto_key_t alt;               // for example crypto_key_t::okp_key, if kt is crypto_key_t::ec_key
+    int mode;                       // crypt_mode2_t::rsa_1_5, crypt_mode2_t::rsa_oaep, crypt_mode2_t::rsa_oaep256
 
-    crypt_symmetric_t crypt_alg;    // algorithm for keywrap or GCM
+    crypt_algorithm_t crypt_alg;    // algorithm for keywrap or GCM
     crypt_mode_t crypt_mode;        // crypt_mode_t::wrap, crypt_mode_t::gcm
     int keysize;                    // 16, 24, 32
     int hash_alg;
@@ -330,8 +324,8 @@ typedef struct _hint_kty_name_t {
     const char* name;
 } hint_kty_name_t;
 
-typedef std::map <crypt_data_type_t, binary_t> crypt_datamap_t;
-typedef std::map <crypt_data_type_t, variant_t> crypt_variantmap_t;
+typedef std::map <crypt_item_t, binary_t> crypt_datamap_t;
+typedef std::map <crypt_item_t, variant_t> crypt_variantmap_t;
 
 struct _crypt_context_t {};
 typedef struct _crypt_context_t crypt_context_t;

@@ -38,7 +38,7 @@ namespace hotplace {
 namespace crypto {
 
 typedef struct _openssl_evp_cipher_method_t {
-    crypt_symmetric_t _algorithm;
+    crypt_algorithm_t _algorithm;
     crypt_mode_t _mode;
     const EVP_CIPHER* _cipher; //const EVP_CIPHER* _cipher;
     const char* _fetchname;

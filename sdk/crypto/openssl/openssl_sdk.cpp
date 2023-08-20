@@ -378,20 +378,20 @@ bool kindof_ecc (EVP_PKEY* pkey)
 
 bool kindof_ecc (crypto_key_t type)
 {
-    return (CRYPTO_KEY_EC == type) || (CRYPTO_KEY_OKP == type);
+    return (crypto_key_t::ec_key == type) || (crypto_key_t::okp_key == type);
 }
 
 const char* nameof_key_type (crypto_key_t type)
 {
     const char* name = "";
 
-    if (CRYPTO_KEY_HMAC == type) {
+    if (crypto_key_t::hmac_key == type) {
         name = "oct";
-    } else if (CRYPTO_KEY_RSA == type) {
+    } else if (crypto_key_t::rsa_key == type) {
         name = "RSA";
-    } else if (CRYPTO_KEY_EC == type) {
+    } else if (crypto_key_t::ec_key == type) {
         name = "EC";
-    } else if (CRYPTO_KEY_OKP == type) {
+    } else if (crypto_key_t::okp_key == type) {
         name = "OKP";
     }
     return name;
@@ -399,24 +399,24 @@ const char* nameof_key_type (crypto_key_t type)
 
 crypto_key_t typeof_crypto_key (EVP_PKEY* pkey)
 {
-    crypto_key_t kty = CRYPTO_KEY_NONE;
+    crypto_key_t kty = crypto_key_t::none_key;
     int type = EVP_PKEY_id ((EVP_PKEY *) pkey);
 
     switch (type) {
         case EVP_PKEY_HMAC:
-            kty = CRYPTO_KEY_HMAC;
+            kty = crypto_key_t::hmac_key;
             break;
         case EVP_PKEY_RSA:
-            kty = CRYPTO_KEY_RSA;
+            kty = crypto_key_t::rsa_key;
             break;
         case EVP_PKEY_EC:
-            kty = CRYPTO_KEY_EC;
+            kty = crypto_key_t::ec_key;
             break;
         case EVP_PKEY_X25519:
         case EVP_PKEY_X448:
         case EVP_PKEY_ED25519:
         case EVP_PKEY_ED448:
-            kty = CRYPTO_KEY_OKP;
+            kty = crypto_key_t::okp_key;
             break;
         default:
             break;

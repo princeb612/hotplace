@@ -118,11 +118,11 @@ public:
      * @brief add
      * @param EVP_PKEY* key [in]
      * @param const char* kid [inopt]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt] false by default
      * @return error code (see error.h)
      */
-    return_t add (EVP_PKEY* key, const char* kid, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    return_t add (EVP_PKEY* key, const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief generate
      * @param crypto_key_t type [in] CRYPTO_KEY_TYPE
@@ -131,22 +131,22 @@ public:
      *                                CRYPTO_KEY_EC 256, 384, 521
      *                                CRYPTO_KEY_OKP 25518, 448
      * @param const char* kid [in]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY by default
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
      * @return error code (see error.h)
      * @remarks
-     *          key.generate (CRYPTO_KEY_HMAC, 32,    "kid", CRYPTO_USE_ANY); // oct
-     *          key.generate (CRYPTO_KEY_RSA,  2048,  "kid", CRYPTO_USE_ANY); // RSA
-     *          key.generate (CRYPTO_KEY_EC,   256,   "kid", CRYPTO_USE_ANY); // EC, P-256
-     *          key.generate (CRYPTO_KEY_EC,   384,   "kid", CRYPTO_USE_ANY); // EC, P-384
-     *          key.generate (CRYPTO_KEY_EC,   521,   "kid", CRYPTO_USE_ANY); // EC, P-521
-     *          key.generate (CRYPTO_KEY_OKP,  25519, "kid", CRYPTO_USE_ANY); // OKP, X25519 *
-     *          key.generate (CRYPTO_KEY_OKP,  448,   "kid", CRYPTO_USE_ANY); // OKP, X448 *
+     *          key.generate (CRYPTO_KEY_HMAC, 32,    "kid", crypto_use_t::use_any); // oct
+     *          key.generate (CRYPTO_KEY_RSA,  2048,  "kid", crypto_use_t::use_any); // RSA
+     *          key.generate (CRYPTO_KEY_EC,   256,   "kid", crypto_use_t::use_any); // EC, P-256
+     *          key.generate (CRYPTO_KEY_EC,   384,   "kid", crypto_use_t::use_any); // EC, P-384
+     *          key.generate (CRYPTO_KEY_EC,   521,   "kid", crypto_use_t::use_any); // EC, P-521
+     *          key.generate (CRYPTO_KEY_OKP,  25519, "kid", crypto_use_t::use_any); // OKP, X25519 *
+     *          key.generate (CRYPTO_KEY_OKP,  448,   "kid", crypto_use_t::use_any); // OKP, X448 *
      *          key.generate (CRYPTO_KEY_OKP,  25519, "kid", CRYPTO_USE_ENC); // OKP, X25519
      *          key.generate (CRYPTO_KEY_OKP,  448,   "kid", CRYPTO_USE_ENC); // OKP, X448
      *          key.generate (CRYPTO_KEY_OKP,  25519, "kid", CRYPTO_USE_SIG); // OKP, Ed25519
      *          key.generate (CRYPTO_KEY_OKP,  448,   "kid", CRYPTO_USE_SIG); // OKP, Ed448
      */
-    return_t generate (crypto_key_t type, unsigned int param, const char* kid, crypto_use_t use = CRYPTO_USE_ANY);
+    return_t generate (crypto_key_t type, unsigned int param, const char* kid, crypto_use_t use = crypto_use_t::use_any);
 
     /*
      * @brief return any key
@@ -155,93 +155,93 @@ public:
     EVP_PKEY* any (bool up_ref = false);
     /*
      * @brief find
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* select (crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param crypto_key_t kty [in]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* select (crypto_key_t kty, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (crypto_key_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param crypt_alg_t alg [in]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* select (crypt_alg_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (crypt_alg_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param crypt_sig_t alg [in]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* select (crypt_sig_t sig, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (crypt_sig_t sig, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param std::string& kid [out]
      * @param crypto_key_t kty [in]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* select (std::string& kid, crypto_key_t kty, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (std::string& kid, crypto_key_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param std::string& kid [out]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* select (std::string& kid, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (std::string& kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param std::string& kid [out]
      * @param crypt_alg_t alg [in]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* select (std::string& kid, crypt_alg_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (std::string& kid, crypt_alg_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param std::string& kid [out]
      * @param crypt_sig_t alg [in]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* select (std::string& kid, crypt_sig_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* select (std::string& kid, crypt_sig_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param const char* kid [out]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* find (const char* kid, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* find (const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param const char* kid [in]
      * @param crypto_key_t kty [in]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* find (const char* kid, crypto_key_t kty, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* find (const char* kid, crypto_key_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param const char* kid [in]
      * @param crypt_alg_t alg [in]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* find (const char* kid, crypt_alg_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* find (const char* kid, crypt_alg_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
      * @brief find
      * @param const char* kid [in]
      * @param crypt_sig_t alg [in]
-     * @param crypto_use_t use [inopt] CRYPTO_USE_ANY
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* find (const char* kid, crypt_sig_t alg, crypto_use_t use = CRYPTO_USE_ANY, bool up_ref = false);
+    EVP_PKEY* find (const char* kid, crypt_sig_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
 
     /*
      * @brief public key
@@ -369,7 +369,7 @@ public:
      * @param size_t bits [in] 1024, 2048, ...
      * @return error code (see error.h)
      */
-    return_t add_rsa (crypto_key* cryptokey, size_t bits, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_rsa (crypto_key* cryptokey, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
@@ -385,7 +385,7 @@ public:
      *    pkey1 = crypto_key.find_first_of(CRYPTO_KEY_RSA, kid);
      *    pkey2 = crypto_key.get_by_name(CRYPTO_KEY_RSA, "kid.2");
      */
-    return_t add_rsa (crypto_key* cryptokey, const char* kid, size_t bits, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_rsa (crypto_key* cryptokey, const char* kid, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
@@ -394,7 +394,7 @@ public:
      * @param size_t bits [in] 1024, 2048, ...
      * @return error code (see error.h)
      */
-    return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, size_t bits, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
@@ -403,7 +403,7 @@ public:
      * @param size_t bits [in] 1024, 2048, ...
      * @return error code (see error.h)
      */
-    return_t add_rsa (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, size_t bits, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_rsa (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
@@ -415,7 +415,7 @@ public:
      * @return error code (see error.h)
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, binary_t n, binary_t e, binary_t d,
-                      CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                      crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
@@ -427,7 +427,7 @@ public:
      * @return error code (see error.h)
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, binary_t n, binary_t e, binary_t d,
-                      CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                      crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
@@ -439,7 +439,7 @@ public:
      * @return error code (see error.h)
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, binary_t n, binary_t e, binary_t d,
-                      binary_t p, binary_t q, binary_t dp, binary_t dq, binary_t qi, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                      binary_t p, binary_t q, binary_t dp, binary_t dq, binary_t qi, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
@@ -456,7 +456,7 @@ public:
      * @return error code (see error.h)
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, binary_t n, binary_t e, binary_t d,
-                      binary_t p, binary_t q, binary_t dp, binary_t dq, binary_t qi, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                      binary_t p, binary_t q, binary_t dp, binary_t dq, binary_t qi, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -470,7 +470,7 @@ public:
      *    1088: NID_ED448
      * @return error code (see error.h)
      */
-    return_t add_ec (crypto_key* cryptokey, int nid, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_ec (crypto_key* cryptokey, int nid, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -517,7 +517,7 @@ public:
      *      crypto_key_free (alicePublicKey);
      *      crypto_key_free (bobPublicKey);
      */
-    return_t add_ec (crypto_key* cryptokey, const char* kid, int nid, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_ec (crypto_key* cryptokey, const char* kid, int nid, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -533,7 +533,7 @@ public:
      *    1088: NID_ED448
      * @return error code (see error.h)
      */
-    return_t add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -550,7 +550,7 @@ public:
      * @param binary_t d [inopt] private key
      * @return error code (see error.h)
      */
-    return_t add_ec (crypto_key* cryptokey, int nid, binary_t x, binary_t y, binary_t d, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_ec (crypto_key* cryptokey, int nid, binary_t x, binary_t y, binary_t d, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -569,7 +569,7 @@ public:
      * @return error code (see error.h)
      */
     return_t add_ec (crypto_key* cryptokey, const char* kid, int nid, binary_t x, binary_t y, binary_t d,
-                     CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                     crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -589,7 +589,7 @@ public:
      * @return error code (see error.h)
      */
     return_t add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t x, binary_t y, binary_t d,
-                     CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                     crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -605,7 +605,7 @@ public:
      * @return error code (see error.h)
      */
     return_t add_ec_nid_EC (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t x, binary_t y, binary_t d,
-                            CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                            crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate Ed25519, Ed448
      * @param crypto_key* cryptokey [in]
@@ -636,7 +636,7 @@ public:
      *      and small signatures (64 or 114 bytes) with high security level at the same time (128-bit or 224-bit respectively).
      */
     return_t add_ec_nid_OKP (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t x, binary_t d,
-                             CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                             crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -656,14 +656,14 @@ public:
      * @return error code (see error.h)
      */
     return_t add_ec (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, int nid, binary_t x, binary_t y, binary_t d,
-                     CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                     crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
      * @param binary_t k [in]
      * @return error code (see error.h)
      */
-    return_t add_oct (crypto_key* cryptokey, binary_t k, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_oct (crypto_key* cryptokey, binary_t k, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -671,7 +671,7 @@ public:
      * @param binary_t k [in]
      * @return error code (see error.h)
      */
-    return_t add_oct (crypto_key* cryptokey, const char* kid, binary_t k, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_oct (crypto_key* cryptokey, const char* kid, binary_t k, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -680,7 +680,7 @@ public:
      * @param binary_t k [in]
      * @return error code (see error.h)
      */
-    return_t add_oct (crypto_key* cryptokey, const char* kid, const char* alg, binary_t k, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_oct (crypto_key* cryptokey, const char* kid, const char* alg, binary_t k, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -689,14 +689,14 @@ public:
      * @param binary_t k [in]
      * @return error code (see error.h)
      */
-    return_t add_oct (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, binary_t k, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_oct (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, binary_t k, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
      * @param size_t size [in]
      * @return error code (see error.h)
      */
-    return_t add_oct (crypto_key* cryptokey, size_t size, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_oct (crypto_key* cryptokey, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -704,7 +704,7 @@ public:
      * @param size_t size [in]
      * @return error code (see error.h)
      */
-    return_t add_oct (crypto_key* cryptokey, const char* kid, size_t size, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_oct (crypto_key* cryptokey, const char* kid, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -713,7 +713,7 @@ public:
      * @param size_t size [in]
      * @return error code (see error.h)
      */
-    return_t add_oct (crypto_key* cryptokey, const char* kid, const char* alg, size_t size, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_oct (crypto_key* cryptokey, const char* kid, const char* alg, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -722,7 +722,7 @@ public:
      * @param size_t size [in] bytes
      * @return error code (see error.h)
      */
-    return_t add_oct (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, size_t size, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_oct (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -730,7 +730,7 @@ public:
      * @param size_t size [in]
      * @return error code (see error.h)
      */
-    return_t add_oct (crypto_key* cryptokey, const byte_t* k, size_t size, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_oct (crypto_key* cryptokey, const byte_t* k, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -739,7 +739,7 @@ public:
      * @param size_t size [in]
      * @return error code (see error.h)
      */
-    return_t add_oct (crypto_key* cryptokey, const char* kid, const byte_t* k, size_t size, CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+    return_t add_oct (crypto_key* cryptokey, const char* kid, const byte_t* k, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -753,7 +753,7 @@ public:
      *          keygen.add_oct (&key, nullptr, CRYPT_ALG_PBES2_HS256_A128KW, (byte_t*) passphrase, strlen (passphrase), CRYPTO_USE_ENC);
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, const char* alg, const byte_t* k, size_t size,
-                      CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                      crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -764,7 +764,7 @@ public:
      * @return error code (see error.h)
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, crypt_alg_t alg, const byte_t* k, size_t size,
-                      CRYPTO_USE_FLAG use = CRYPTO_USE_ANY);
+                      crypto_use_t use = crypto_use_t::use_any);
 
 protected:
 };
