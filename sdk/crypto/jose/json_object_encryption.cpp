@@ -545,7 +545,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
                     tag1.resize (tag1.size () / 2);
 
                     if (tag1 != tag) {
-                        ret = ERROR_INVALID_DATA;
+                        ret = errorcode_t::mismatch;
                         __leave2_trace (ret);
                     }
 

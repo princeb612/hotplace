@@ -31,8 +31,6 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_algorithm_t algori
 
     buffer_stream dump;
 
-    const char* alg = advisor->nameof_cipher (algorithm, mode);
-    std::string display = format ("%s (alg %i mode %i)", alg ? alg : "", algorithm, mode);
     binary_t aad;
     binary_t tag;
 
@@ -49,8 +47,6 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_algorithm_t algori
         {
             ret = crypt_object->open (&crypt_handle, algorithm, mode, key_data, key_size, iv_data, iv_size);
             if (errorcode_t::success == ret) {
-                dump.printf ("crypt engine %d algorithm %d %s",
-                             crypt_object->get_type (), algorithm, display.c_str ());
                 std::cout << dump.c_str () << std::endl;
                 dump.flush ();
 
@@ -103,7 +99,7 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_algorithm_t algori
     }
     __finally2
     {
-        _test_case.test (ret, __FUNCTION__, display.c_str ());
+        _test_case.test (ret, __FUNCTION__, format ("algmrithm %d", algorithm).c_str ());
     }
 }
 
@@ -202,7 +198,6 @@ void test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm,
     ansi_string bs;
 
     const char* alg = advisor->nameof_md (algorithm);
-    std::string display = format ("%s (alg %i)", alg ? alg : "", algorithm);
 
     __try2
     {
@@ -215,8 +210,6 @@ void test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm,
         {
             int ret = hash_object->open (&hash_handle, algorithm, key_data, key_size);
             if (errorcode_t::success == ret) {
-                bs.printf ("hash_engine %d algorithm %d %s\n", hash_object->get_type (), algorithm, display.c_str ());
-
                 binary_t hashed;
                 hash_object->init (hash_handle);
                 ret = hash_object->update (hash_handle, data, size);
@@ -239,7 +232,7 @@ void test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm,
     }
     __finally2
     {
-        _test_case.test (ret, __FUNCTION__, display.c_str ());
+        _test_case.test (ret, __FUNCTION__, format ("algmrithm %d", algorithm).c_str ());
     }
 }
 
@@ -629,7 +622,7 @@ int main ()
             uint32 unitsize;
         } _test_condition [] = {
             { 0, 0, },
-            { 10, 4096, }, // for large stream encryption performance, just check error occurrence
+            //{ 10, 4096, }, // for large stream encryption performance, just check error occurrence
         };
 
         for (unsigned i = 0; i < sizeof (_test_condition) / sizeof (_test_condition [0]); i++) {

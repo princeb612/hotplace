@@ -4,14 +4,12 @@
 @remarks
     platform support - mingw, linux
 
-    1 tool chain
-    sudo yum install package # RHEL family
-    sudo apt install package # ubundu family
-    pacman -S        package # mingw
-
-    2 packages to install
-    gcc, g++, binutils, cmake, gdb, valgrind
-    openssl-devel, jansson-devel
+    packages to install
+        gcc, g++, binutils, cmake, gdb, valgrind
+    MINGW, RHEL
+        openssl-devel, jansson-devel
+    ubuntu
+        openssl libssl-dev libjansson-dev
 
 COMMENTS
 

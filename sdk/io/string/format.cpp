@@ -25,9 +25,18 @@ std::string format (const char* fmt, ...)
     int ret = 0;
     int needed = size;
 
-    va_start (ap, fmt);
     while (true) {
-        ret = vsnprintf (&buf[0], buf.size (), fmt, ap); /* gcc only, msvc always return -1 */
+        va_start (ap, fmt);
+#ifdef __GNUC__
+        ret = vsnprintf (&buf[0], buf.size (), fmt, ap);
+#else
+    #if defined __STDC_WANT_SECURE_LIB__
+        ret = _vsnprintf_s (&buf[0], buf.size (), _TRUNCATE, fmt, ap);
+    #else
+        ret = _vsnprintf (&buf[0], buf.size (), fmt, ap);
+    #endif
+#endif
+        va_end (ap);
         if ((ret < 0) || (ret >= needed)) {
             needed *= 2;
             buf.resize (needed + 1);
@@ -35,7 +44,6 @@ std::string format (const char* fmt, ...)
             break;
         }
     }
-    va_end (ap);
 
     return std::string (&buf[0]);
 }
@@ -51,9 +59,18 @@ std::string format (const char* fmt, va_list ap)
     int ret = 0;
     int needed = size;
 
-    va_copy (vl, ap); // c++99
     while (true) {
+        va_copy (vl, ap); // c++99
+    #ifdef __GNUC__
         ret = vsnprintf (&buf[0], buf.size (), fmt, vl);
+    #else
+        #if defined __STDC_WANT_SECURE_LIB__
+        ret = _vsnprintf_s (&buf[0], buf.size (), _TRUNCATE, fmt, vl);
+        #else
+        ret = _vsnprintf (&buf[0], buf.size (), fmt, vl);
+        #endif
+    #endif
+        va_end (vl);
         if ((ret < 0) || (ret >= needed)) {
             needed *= 2;
             buf.resize (needed + 1);
@@ -61,7 +78,6 @@ std::string format (const char* fmt, va_list ap)
             break;
         }
     }
-    va_end (vl);
 
     return std::string (&buf[0]);
 }
@@ -69,3 +85,4 @@ std::string format (const char* fmt, va_list ap)
 
 }
 }
+

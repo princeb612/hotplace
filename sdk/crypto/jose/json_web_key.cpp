@@ -253,7 +253,6 @@ return_t json_web_key::read_json_item (crypto_key* crypto_key, void* json)
 
 return_t json_web_key::load (crypto_key* crypto_key, const char* buffer, int flags)
 {
-    UNREFERENCED_PARAMETER (flags);
     return_t ret = errorcode_t::success;
     json_t* root = nullptr;
 
@@ -272,7 +271,7 @@ return_t json_web_key::load (crypto_key* crypto_key, const char* buffer, int fla
         json_t* keys_node = json_object_get (root, "keys");
         if (nullptr != keys_node) {
             if (JSON_ARRAY != json_typeof (keys_node)) {
-                ret = ERROR_BAD_FORMAT;
+                ret = errorcode_t::bad_data;
                 __leave2;
             }
 
@@ -390,7 +389,7 @@ return_t json_web_key::load_pem_file (crypto_key* cryptokey, const char* file, i
         if (fs.is_open ()) {
             std::getline (fs, buffer, (char) fs.eof ());
         } else {
-            ret = ERROR_OPEN_FAILED;
+            ret = errorcode_t::failed;
             __leave2_trace (ret);
         }
 
@@ -486,7 +485,7 @@ static return_t jwk_serialize (json_mapper_t mapper, std::string& buffer)
 
         size_t size = mapper.items.size ();
         if (0 == size) {
-            ret = ERROR_NO_DATA;
+            ret = errorcode_t::no_data;
             __leave2;
         }
 
@@ -621,7 +620,7 @@ return_t json_web_key::write_pem_file (crypto_key* cryptokey, const char* file, 
             }
             fclose (fp);
         } else {
-            ret = ERROR_OPEN_FAILED;
+            ret = errorcode_t::failed;
             __leave2;
         }
     }

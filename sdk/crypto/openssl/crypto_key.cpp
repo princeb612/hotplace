@@ -1498,17 +1498,17 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
         ctx = EVP_PKEY_CTX_new_id (type, nullptr);
         if (EVP_PKEY_EC == type) {
             ret_openssl = EVP_PKEY_paramgen_init (ctx);
-            if (FAILED (ret_openssl)) {
+            if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             ret_openssl = EVP_PKEY_CTX_set_ec_paramgen_curve_nid (ctx, nid);
-            if (FAILED (ret_openssl)) {
+            if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             ret_openssl = EVP_PKEY_paramgen (ctx, &params);
-            if (FAILED (ret_openssl)) {
+            if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
@@ -1518,12 +1518,12 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
                 __leave2_trace (ret);
             }
             ret_openssl = EVP_PKEY_keygen_init (keyctx);
-            if (FAILED (ret_openssl)) {
+            if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             ret_openssl = EVP_PKEY_keygen (keyctx, &pkey);
-            if (FAILED (ret_openssl)) {
+            if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
@@ -1535,12 +1535,12 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
             EC_KEY_set_asn1_flag ((EC_KEY*) EVP_PKEY_get0_EC_KEY (pkey), OPENSSL_EC_NAMED_CURVE); // openssl 3.0 EVP_PKEY_get0 family return const key pointer
         } else {
             ret_openssl = EVP_PKEY_keygen_init (ctx);
-            if (FAILED (ret_openssl)) {
+            if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }
             ret_openssl = EVP_PKEY_keygen (ctx, &pkey);
-            if (FAILED (ret_openssl)) {
+            if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace (ret);
             }

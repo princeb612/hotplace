@@ -9,6 +9,9 @@
  */
 
 #include <hotplace/sdk/crypto/openssl/openssl_crypt.hpp>
+#if defined __linux__
+    #include <arpa/inet.h>
+#endif
 
 namespace hotplace {
 namespace crypto {

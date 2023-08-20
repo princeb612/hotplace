@@ -24,6 +24,7 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
+#include <openssl/idea.h>
 #include <openssl/md4.h>
 #include <openssl/md5.h>
 #include <openssl/pem.h>

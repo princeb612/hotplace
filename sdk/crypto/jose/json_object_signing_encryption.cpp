@@ -777,7 +777,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
         std::string protected_header_decoded = base64_decode_careful (protected_header, strlen (protected_header), BASE64URL_ENCODING);
         ret_test = json_open_stream (&json_protected, protected_header_decoded.c_str ());
         if (errorcode_t::success != ret_test) {
-            ret = ERROR_BAD_FORMAT;
+            ret = errorcode_t::bad_data;
             __leave2;
         }
 
@@ -843,11 +843,11 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
             if (epk) {
                 json_unpack (epk, "{s:s,s:s,s:s,s:s}", "kty", &kty_value, "crv", &crv_value, "x", &x_value, "y", &y_value);
                 if (nullptr == kty_value || nullptr == crv_value || nullptr == x_value) {
-                    ret = ERROR_BAD_FORMAT;
+                    ret = errorcode_t::bad_data;
                     __leave2_trace (ret);
                 }
             } else {
-                ret = ERROR_BAD_FORMAT;
+                ret = errorcode_t::bad_data;
                 __leave2_trace (ret);
             }
 
@@ -872,7 +872,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
                 json_unpack (json_protected, "{s:s}", "iv", &iv_value);
                 json_unpack (json_protected, "{s:s}", "tag", &tag_value);
                 if (nullptr == iv_value || nullptr == tag_value) {
-                    ret = ERROR_BAD_FORMAT;
+                    ret = errorcode_t::bad_data;
                     __leave2;
                 }
             }
@@ -889,7 +889,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
                 json_unpack (json_protected, "{s:s}", "p2s", &p2s);
                 json_unpack (json_protected, "{s:i}", "p2c", &p2c);
                 if (nullptr == p2s || -1 == p2c) {
-                    ret = ERROR_BAD_FORMAT;
+                    ret = errorcode_t::bad_data;
                     __leave2;
                 }
             }
@@ -959,7 +959,7 @@ return_t json_object_signing_encryption::prepare_decryption (jose_context_t* con
                     }
                     handle->encryptions.insert (std::make_pair (enc_type, item));
                 } else {
-                    ret = ERROR_BAD_FORMAT;
+                    ret = errorcode_t::bad_data;
                     __leave2;
                 }
             } else {                                    // JOSE_FLATJSON
@@ -988,7 +988,7 @@ return_t json_object_signing_encryption::prepare_decryption (jose_context_t* con
             split_begin (&split_handle, input, ".");
             split_count (split_handle, count);
             if (5 != count) {
-                ret = ERROR_BAD_FORMAT;
+                ret = errorcode_t::bad_data;
                 __leave2;
             }
 
@@ -1076,7 +1076,7 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
         }
 
         if (handle->encryptions.empty ()) {
-            ret = ERROR_NO_DATA;
+            ret = errorcode_t::no_data;
             __leave2;
         }
 
@@ -1352,7 +1352,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
             const char* payload_value = nullptr; /* payload:base64_url_encode(claims) */
             json_unpack (json_root, "{s:s}", "payload", &payload_value);
             if (nullptr == payload_value) {
-                ret = ERROR_BAD_FORMAT;
+                ret = errorcode_t::bad_data;
                 __leave2_trace (ret);
             }
 
@@ -1364,7 +1364,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
                 if (json_is_array (json_signatures)) {
                     size_t array_size = json_array_size (json_signatures);
                     if (0 == array_size) {
-                        ret = ERROR_BAD_FORMAT;
+                        ret = errorcode_t::bad_data;
                         __leave2_trace (ret);
                     }
 
@@ -1380,14 +1380,14 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
                         json_unpack (json_signature, "{s:s}", "signature", &signature_value);
                         json_unpack (json_signature, "{s:{s:s}}", "header", "kid", &kid_value);
                         if (nullptr == signature_value) {
-                            ret = ERROR_BAD_FORMAT;
+                            ret = errorcode_t::bad_data;
                             break;
                         }
                         if (nullptr == protected_value) {
                             // RFC 7520 4.7. Protecting Content Only
                             json_unpack (json_signature, "{s:{s:s}}", "header", "alg", &alg_value);
                             if (nullptr == alg_value) {
-                                ret = ERROR_BAD_FORMAT;
+                                ret = errorcode_t::bad_data;
                                 break;
                             } else {
                                 advisor->typeof_jose_signature (alg_value, sig);
@@ -1408,7 +1408,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
 
                     }
                 } else {
-                    ret = ERROR_BAD_FORMAT;
+                    ret = errorcode_t::bad_data;
                     __leave2;
                 }
             } else {
@@ -1423,13 +1423,13 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
                 json_unpack (json_root, "{s:s}", "signature", &signature_value);
                 json_unpack (json_root, "{s:{s:s}}", "header", "kid", &kid_value);
                 if (nullptr == signature_value) {
-                    ret = ERROR_BAD_FORMAT;
+                    ret = errorcode_t::bad_data;
                     __leave2_trace (ret);
                 }
                 if (nullptr == protected_value) {
                     json_unpack (json_root, "{s:{s:s}}", "header", "alg", &alg_value);
                     if (nullptr == kid_value) {
-                        ret = ERROR_BAD_FORMAT;
+                        ret = errorcode_t::bad_data;
                         break;
                     } else {
                         advisor->typeof_jose_signature (alg_value, sig);
@@ -1456,7 +1456,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
             switch (count) {
                 case 3: break;
                 case 2: ret = errorcode_t::low_security; break;  // not support low security reason - "alg":"none"
-                default: ret = ERROR_BAD_FORMAT; break;
+                default: ret = errorcode_t::bad_data; break;
             }
             jose_sign_t item;
             split_get (split_handle, 0, item.header);
@@ -1466,7 +1466,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
         }
 
         if (handle->signs.empty ()) {
-            ret = ERROR_BAD_FORMAT;
+            ret = errorcode_t::bad_data;
             __leave2;
         }
     }

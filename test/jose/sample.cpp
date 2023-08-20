@@ -2262,7 +2262,6 @@ int main ()
     test_ecdh ();
     test_rfc7518_C ();
 
-    fflush (stdout);
     _test_case.begin ("RFC 7520");
     test_rfc7520 ();
 

@@ -124,10 +124,12 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::blowfish, crypt_mode_t::ecb, EVP_bf_ecb (), "bf-ecb", },
     { crypt_algorithm_t::blowfish, crypt_mode_t::ofb, EVP_bf_ofb (), "bf-ofb", },
 
+#ifndef OPENSSL_NO_IDEA
     { crypt_algorithm_t::idea, crypt_mode_t::cbc,  EVP_idea_cbc (),  "idea-cbc", },
     { crypt_algorithm_t::idea, crypt_mode_t::cfb,  EVP_idea_cfb (),  "idea-cfb", },
     { crypt_algorithm_t::idea, crypt_mode_t::ecb,  EVP_idea_ecb (),  "idea-ecb", },
     { crypt_algorithm_t::idea, crypt_mode_t::ofb,  EVP_idea_ofb (),  "idea-ofb", },
+#endif
 
     { crypt_algorithm_t::aria128, crypt_mode_t::cbc,  EVP_aria_128_cbc (),  "aria-128-cbc", },
     { crypt_algorithm_t::aria128, crypt_mode_t::cfb,  EVP_aria_128_cfb (),  "aria-128-cfb", },
