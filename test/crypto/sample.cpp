@@ -18,7 +18,7 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 
-void test_crypt_routine (crypt_interface* crypt_object, crypt_symmetric_t algorithm, crypt_mode_t mode, unsigned key_size,
+void test_crypt_routine (crypt_interface* crypt_object, crypt_algorithm_t algorithm, crypt_mode_t mode, unsigned key_size,
                          const byte_t* key_data, unsigned iv_size, const byte_t* iv_data, byte_t* data, size_t size)
 {
     return_t ret = errorcode_t::success;
@@ -107,7 +107,7 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_symmetric_t algori
     }
 }
 
-void test_crypt (crypt_interface* crypt_object, unsigned count_algorithms, crypt_symmetric_t* algorithms, crypt_mode_t mode, unsigned key_size,
+void test_crypt (crypt_interface* crypt_object, unsigned count_algorithms, crypt_algorithm_t* algorithms, crypt_mode_t mode, unsigned key_size,
                  const byte_t* key_data, unsigned iv_size, const byte_t* iv_data, byte_t* data, size_t size)
 {
     for (unsigned index_algorithms = 0; index_algorithms < count_algorithms; index_algorithms++) {
@@ -117,38 +117,38 @@ void test_crypt (crypt_interface* crypt_object, unsigned count_algorithms, crypt
 
 void test_encryption ()
 {
-    crypt_symmetric_t algorithm_table [] = {
-        crypt_symmetric_t::aes128,
-        crypt_symmetric_t::aes192,
-        crypt_symmetric_t::aes256,
-        crypt_symmetric_t::blowfish,
-        crypt_symmetric_t::aria128,
-        crypt_symmetric_t::aria192,
-        crypt_symmetric_t::aria256,
-        crypt_symmetric_t::camellia128,
-        crypt_symmetric_t::camellia192,
-        crypt_symmetric_t::camellia256,
-        crypt_symmetric_t::idea,
-        crypt_symmetric_t::seed,
+    crypt_algorithm_t algorithm_table [] = {
+        crypt_algorithm_t::aes128,
+        crypt_algorithm_t::aes192,
+        crypt_algorithm_t::aes256,
+        crypt_algorithm_t::blowfish,
+        crypt_algorithm_t::aria128,
+        crypt_algorithm_t::aria192,
+        crypt_algorithm_t::aria256,
+        crypt_algorithm_t::camellia128,
+        crypt_algorithm_t::camellia192,
+        crypt_algorithm_t::camellia256,
+        crypt_algorithm_t::idea,
+        crypt_algorithm_t::seed,
     };
-    crypt_symmetric_t cfbx_algorithm_table [] = {
-        crypt_symmetric_t::aes128,
-        crypt_symmetric_t::aes192,
-        crypt_symmetric_t::aes256,
-        crypt_symmetric_t::aria128,
-        crypt_symmetric_t::aria192,
-        crypt_symmetric_t::aria256,
-        crypt_symmetric_t::camellia128,
-        crypt_symmetric_t::camellia192,
-        crypt_symmetric_t::camellia256,
+    crypt_algorithm_t cfbx_algorithm_table [] = {
+        crypt_algorithm_t::aes128,
+        crypt_algorithm_t::aes192,
+        crypt_algorithm_t::aes256,
+        crypt_algorithm_t::aria128,
+        crypt_algorithm_t::aria192,
+        crypt_algorithm_t::aria256,
+        crypt_algorithm_t::camellia128,
+        crypt_algorithm_t::camellia192,
+        crypt_algorithm_t::camellia256,
     };
-    crypt_symmetric_t ctr_algorithm_table [] = {
-        crypt_symmetric_t::aes128,
-        crypt_symmetric_t::aes192,
-        crypt_symmetric_t::aes256,
-        crypt_symmetric_t::aria128,
-        crypt_symmetric_t::aria192,
-        crypt_symmetric_t::aria256,
+    crypt_algorithm_t ctr_algorithm_table [] = {
+        crypt_algorithm_t::aes128,
+        crypt_algorithm_t::aes192,
+        crypt_algorithm_t::aes256,
+        crypt_algorithm_t::aria128,
+        crypt_algorithm_t::aria192,
+        crypt_algorithm_t::aria256,
     };
 
     openssl_crypt openssl_crypt;
@@ -389,18 +389,16 @@ void test_rfc4231_testcase ()
 
     return_t ret = errorcode_t::success;
     openssl_hash openssl_hash;
-    hex2bin h2b;
-    h2b.set_flags (hex2bin_flag_t::refresh);
     binary_t bin_key, bin_data, bin_expect_sha224, bin_expect_sha256, bin_expect_sha384, bin_expect_sha512;
     for (int i = 0; i < sizeof (testvector) / sizeof (testvector[0]); i++) {
         struct _testvector& item = testvector[i];
 
-        h2b.convert (item.key, strlen (item.key), bin_key);
-        h2b.convert (item.data, strlen (item.data), bin_data);
-        h2b.convert (item.expect_sha224, strlen (item.expect_sha224), bin_expect_sha224);
-        h2b.convert (item.expect_sha256, strlen (item.expect_sha256), bin_expect_sha256);
-        h2b.convert (item.expect_sha384, strlen (item.expect_sha384), bin_expect_sha384);
-        h2b.convert (item.expect_sha512, strlen (item.expect_sha512), bin_expect_sha512);
+        base16_decode (item.key, strlen (item.key), bin_key);
+        base16_decode (item.data, strlen (item.data), bin_data);
+        base16_decode (item.expect_sha224, strlen (item.expect_sha224), bin_expect_sha224);
+        base16_decode (item.expect_sha256, strlen (item.expect_sha256), bin_expect_sha256);
+        base16_decode (item.expect_sha384, strlen (item.expect_sha384), bin_expect_sha384);
+        base16_decode (item.expect_sha512, strlen (item.expect_sha512), bin_expect_sha512);
 
         _test_case.start ();
         ret = test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_224, bin_key, bin_data, bin_expect_sha224);
@@ -491,7 +489,7 @@ void test_random ()
     _test_case.test (ret, __FUNCTION__, "random");
 }
 
-void test_keywrap_routine (crypt_symmetric_t alg, byte_t* key, size_t key_size, byte_t* kek, size_t kek_size,
+void test_keywrap_routine (crypt_algorithm_t alg, byte_t* key, size_t key_size, byte_t* kek, size_t kek_size,
                            byte_t* expect, size_t expect_size,
                            const char* msg)
 {
@@ -533,13 +531,12 @@ void test_keywrap ()
     std::string string_key1 = "00112233445566778899AABBCCDDEEFF";
     std::string string_kw1 = "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5";
     binary_t kek1, key1, kw1;
-    hex2bin h2b;
 
-    h2b.convert (string_kek1, kek1);
-    h2b.convert (string_key1, key1);
-    h2b.convert (string_kw1, kw1);
+    base16_decode (string_kek1, kek1);
+    base16_decode (string_key1, key1);
+    base16_decode (string_kw1, kw1);
 
-    test_keywrap_routine (crypt_symmetric_t::aes128, &kek1[0], kek1.size (), &key1[0], key1.size (), &kw1[0], kw1.size (),
+    test_keywrap_routine (crypt_algorithm_t::aes128, &kek1[0], kek1.size (), &key1[0], key1.size (), &kw1[0], kw1.size (),
                           "RFC 3394 4.1 Wrap 128 bits of Key Data with a 128-bit KEK");
 
     // RFC 3394 4.2 Wrap 128 bits of Key Data with a 192-bit KEK
@@ -550,11 +547,11 @@ void test_keywrap ()
     std::string string_key2 = "00112233445566778899AABBCCDDEEFF";
     std::string string_kw2 = "96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D";
     binary_t kek2, key2, kw2;
-    h2b.convert (string_kek2, kek2);
-    h2b.convert (string_key2, key2);
-    h2b.convert (string_kw2, kw2);
+    base16_decode (string_kek2, kek2);
+    base16_decode (string_key2, key2);
+    base16_decode (string_kw2, kw2);
 
-    test_keywrap_routine (crypt_symmetric_t::aes192, &kek2[0], kek2.size (), &key2[0], key2.size (), &kw2[0], kw2.size (),
+    test_keywrap_routine (crypt_algorithm_t::aes192, &kek2[0], kek2.size (), &key2[0], key2.size (), &kw2[0], kw2.size (),
                           "RFC 3394 4.2 Wrap 128 bits of Key Data with a 192-bit KEK");
 
     // RFC 3394 4.3 Wrap 128 bits of Key Data with a 256-bit KEK
@@ -565,11 +562,11 @@ void test_keywrap ()
     std::string string_key3 = "00112233445566778899AABBCCDDEEFF";
     std::string string_kw3 = "64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7";
     binary_t kek3, key3, kw3;
-    h2b.convert (string_kek3, kek3);
-    h2b.convert (string_key3, key3);
-    h2b.convert (string_kw3, kw3);
+    base16_decode (string_kek3, kek3);
+    base16_decode (string_key3, key3);
+    base16_decode (string_kw3, kw3);
 
-    test_keywrap_routine (crypt_symmetric_t::aes256, &kek3[0], kek3.size (), &key3[0], key3.size (), &kw3[0], kw3.size (),
+    test_keywrap_routine (crypt_algorithm_t::aes256, &kek3[0], kek3.size (), &key3[0], key3.size (), &kw3[0], kw3.size (),
                           "RFC 3394 4.3 Wrap 128 bits of Key Data with a 256-bit KEK");
 
     // RFC 3394 4.4 Wrap 192 bits of Key Data with a 192-bit KEK
@@ -580,11 +577,11 @@ void test_keywrap ()
     std::string string_key4 = "00112233445566778899AABBCCDDEEFF0001020304050607";
     std::string string_kw4 = "031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2";
     binary_t kek4, key4, kw4;
-    h2b.convert (string_kek4, kek4);
-    h2b.convert (string_key4, key4);
-    h2b.convert (string_kw4, kw4);
+    base16_decode (string_kek4, kek4);
+    base16_decode (string_key4, key4);
+    base16_decode (string_kw4, kw4);
 
-    test_keywrap_routine (crypt_symmetric_t::aes192, &kek4[0], kek4.size (), &key4[0], key4.size (), &kw4[0], kw4.size (),
+    test_keywrap_routine (crypt_algorithm_t::aes192, &kek4[0], kek4.size (), &key4[0], key4.size (), &kw4[0], kw4.size (),
                           "RFC 3394 4.4 Wrap 192 bits of Key Data with a 192-bit KEK");
 
     // RFC 3394 4.5 Wrap 192 bits of Key Data with a 256-bit KEK
@@ -595,11 +592,11 @@ void test_keywrap ()
     std::string string_key5 = "00112233445566778899AABBCCDDEEFF0001020304050607";
     std::string string_kw5 = "A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1";
     binary_t kek5, key5, kw5;
-    h2b.convert (string_kek5, kek5);
-    h2b.convert (string_key5, key5);
-    h2b.convert (string_kw5, kw5);
+    base16_decode (string_kek5, kek5);
+    base16_decode (string_key5, key5);
+    base16_decode (string_kw5, kw5);
 
-    test_keywrap_routine (crypt_symmetric_t::aes256, &kek5[0], kek5.size (), &key5[0], key5.size (), &kw5[0], kw5.size (),
+    test_keywrap_routine (crypt_algorithm_t::aes256, &kek5[0], kek5.size (), &key5[0], key5.size (), &kw5[0], kw5.size (),
                           "RFC 3394 4.5 Wrap 192 bits of Key Data with a 256-bit KEK");
 
     // RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK
@@ -610,11 +607,11 @@ void test_keywrap ()
     std::string string_key6 = "00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F";
     std::string string_kw6 = "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21";
     binary_t kek6, key6, kw6;
-    h2b.convert (string_kek6, kek6);
-    h2b.convert (string_key6, key6);
-    h2b.convert (string_kw6, kw6);
+    base16_decode (string_kek6, kek6);
+    base16_decode (string_key6, key6);
+    base16_decode (string_kw6, kw6);
 
-    test_keywrap_routine (crypt_symmetric_t::aes256, &kek6[0], kek6.size (), &key6[0], key6.size (), &kw6[0], kw6.size (),
+    test_keywrap_routine (crypt_algorithm_t::aes256, &kek6[0], kek6.size (), &key6[0], key6.size (), &kw6[0], kw6.size (),
                           "RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK");
 }
 

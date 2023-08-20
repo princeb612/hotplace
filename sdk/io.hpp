@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_IO__
 #define __HOTPLACE_SDK_IO__
 
+#include <hotplace/sdk/io/encoder/base16.hpp>
 #include <hotplace/sdk/io/encoder/base64.hpp>
 
 #include <hotplace/sdk/io/data/keyvalue.hpp>

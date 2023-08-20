@@ -12,6 +12,8 @@
 #include <hotplace/sdk/crypto/openssl/openssl_sdk.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 
+#include <hotplace/sdk/io/stream/buffer_stream.hpp>
+
 namespace hotplace {
 using namespace io;
 namespace crypto {
@@ -78,15 +80,16 @@ return_t json_object_encryption::encrypt (jose_context_t* context, crypt_enc_t e
 
             std::string kid;
             EVP_PKEY* pkey = handle->key->select (kid, alg, crypto_use_t::use_enc);
-
             if (nullptr == pkey) {
                 ret = errorcode_t::not_found;
                 __leave2_trace (ret);
             }
+
             ret = check_constraints (alg, pkey);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
+
             if (crypto_key_t::hmac_key == alg_info->kty) {
                 /* EVP_KEY_HMAC key data and length */
                 size_t key_length = 0;
@@ -376,6 +379,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, crypt_enc_t e
             if (errorcode_t::success != ret) {
                 __leave2;
             }
+
             if (crypto_key_t::hmac_key == alg_info->kty) {
 
                 /* EVP_KEY_HMAC key data and length */

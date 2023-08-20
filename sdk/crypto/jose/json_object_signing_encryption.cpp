@@ -742,8 +742,7 @@ return_t json_object_signing_encryption::prepare_decryption_item (jose_context_t
         type = (crypt_enc_t) hintof_enc->type;
 
         item.enc_info = hintof_enc;
-        item.datamap[crypt_item_t::item_aad].clear ();
-        item.datamap[crypt_item_t::item_aad] << protected_header; // base64url encoded
+        item.datamap[crypt_item_t::item_aad] = convert (protected_header); // base64url encoded
         item.header = protected_header_decoded;
         base64_decode (iv, strlen (iv), item.datamap[crypt_item_t::item_iv], BASE64URL_ENCODING);
         base64_decode (tag, strlen (tag), item.datamap[crypt_item_t::item_tag], BASE64URL_ENCODING);

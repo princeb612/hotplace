@@ -10,9 +10,6 @@
 
 #include <hotplace/sdk/crypto/jose/json_object_signing.hpp>
 
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
-using namespace hotplace::io;
-
 namespace hotplace {
 namespace crypto {
 
@@ -199,12 +196,6 @@ return_t json_object_signing::sign_general (EVP_PKEY* pkey, crypt_sig_t sig, bin
     EVP_MD_CTX* md_context = nullptr;
     int ret_openssl = 1;
     size_t size = 0;
-
-    {
-        buffer_stream bs;
-        dump_memory (&input[0], input.size (), &bs);
-        printf ("%s\n", bs.c_str ());
-    }
 
     __try2
     {

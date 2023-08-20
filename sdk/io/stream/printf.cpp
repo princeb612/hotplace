@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/io/string/string.hpp>
 #include <hotplace/sdk/io/string/valist.hpp>
+#include <hotplace/sdk/io/encoder/base16.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <map>
@@ -224,9 +225,8 @@ return_t vtprintf (stream_interface* stream, variant_t vt)
                 break;
             case TYPE_BINARY:
             {
-                hex2bin hb;
                 std::string temp;
-                hb.convert (vt.data.bstr32.data, vt.data.bstr32.size, temp);
+                base16_encode (vt.data.bstr32.data, vt.data.bstr32.size, temp);
                 stream->printf ("%s", temp.c_str ());
                 break;
             }

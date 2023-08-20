@@ -17,6 +17,19 @@ using namespace hotplace::io;
 
 test_case _test_case;
 
+void test_base16 ()
+{
+    const char* text = "0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[{]}\\|;:'\",<.>/\?";
+    std::string encoded;
+    base16_encode ((byte_t*) text, strlen (text), encoded);
+    binary_t decoded;
+    base16_decode (encoded, decoded);
+    printf ("%s\n", encoded.c_str ());
+    buffer_stream bs;
+    dump_memory (&decoded[0], decoded.size (), &bs);
+    printf ("%s\n", bs.c_str ());
+}
+
 void test_base64_routine (const char* source, size_t source_size, int encoding)
 {
     return_t ret = errorcode_t::success;
@@ -109,21 +122,23 @@ void test_gettoken ()
 
 void test_hexbin ()
 {
-    _test_case.begin ("hex2bin");
+    _test_case.begin ("base16");
     _test_case.start ();
 
-    hex2bin conv;
     const char* message = "sample";
     const byte_t* inpart = (const byte_t*) message;
 
     std::string hex;
-    conv.convert (inpart, 5, hex);
+    base16_encode (inpart, 5, hex);
     std::cout << hex.c_str () << std::endl;
 
     binary_t bin;
-    conv.convert (hex, bin);
+    base16_decode (hex, bin);
+    buffer_stream bs;
+    dump_memory (&bin[0], bin.size (), &bs);
+    printf ("%s\n", bs.c_str ());
 
-    _test_case.assert (true, __FUNCTION__, "hex2bin");
+    _test_case.assert (true, __FUNCTION__, "base16");
 }
 
 typedef struct {
@@ -267,6 +282,7 @@ void test_tokenize ()
 
 int main ()
 {
+    test_base16 ();
     test_base64 ();
     test_format ();
     test_getline ();

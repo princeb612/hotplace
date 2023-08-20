@@ -168,6 +168,20 @@ static inline std::string concat_filepath (const std::string& path, const std::s
     return result;
 }
 
+static inline std::string convert (binary_t bin)
+{
+    std::string result;
+    result.assign ((char*) &bin[0], bin.size ());
+    return result;
+}
+
+static inline binary_t convert (std::string source)
+{
+    binary_t result;
+    result.insert (result.end (), source.begin (), source.end ());
+    return result;
+}
+
 }  // namespace
 
 #endif

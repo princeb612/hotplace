@@ -12,7 +12,7 @@
  * 2018.06.15   Soo Han, Kim        printf %zi, %zu, %zd (code.grape)
  * 2020.02.06   Soo Han, Kim        printf %I128i, %1284u (code.unicorn)
  * 2021.06.29   Soo Han, Kim        printf unicode (code.unicorn)
- * 2023.08.13   Soo Han, Kim        reboot hex2bin
+ * 2023.08.13   Soo Han, Kim        reboot base16
  *
  * printf license
  *  Copyright (c) 1990 Regents of the University of California.
@@ -301,51 +301,6 @@ std::string format (const char* fmt, ...);
 #if __cplusplus > 199711L    // c++98
 std::string format (const char* fmt, va_list ap);
 #endif
-
-//
-// part - hex2bin and vice versa
-//
-
-/**
- * @brief hex2bin
- * @sample
- *  hex2bin conv;
- *  const char* message = "sample";
- *  const byte_t* inpart = (const byte_t*) message;
- *
- *  std::string hex;
- *  conv.b2h (inpart, 5, hex);
- *  std::cout << hex.c_str () << std::endl;
- *
- *  binary_t bin;
- *  conv.h2b (hex, bin);
- */
-
-enum hex2bin_flag_t {
-    prefix_0x   = 1 << 0,
-    uppercase   = 1 << 1,
-    refresh     = 1 << 2, // clear before convert
-};
-
-class hex2bin
-{
-public:
-    hex2bin ();
-    hex2bin& set_flags (uint32 flags);
-    uint32 get_flags ();
-    return_t convert (binary_t inpart, std::string& outpart);
-    return_t convert (const byte_t* source, size_t size, std::string& outpart);
-    return_t convert (std::string inpart, binary_t& outpart);
-    return_t convert (const char* source, size_t size, binary_t& outpart);
-
-    static std::string convert (binary_t bin);
-    static binary_t convert (std::string hex);
-
-protected:
-    static int c2i (char c);
-private:
-    uint32 _flags;
-};
 
 }
 }

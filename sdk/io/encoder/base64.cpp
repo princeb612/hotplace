@@ -266,11 +266,14 @@ return_t base64_encode (const byte_t* source, size_t source_size, binary_t& enco
 {
     return_t ret = errorcode_t::success;
 
-    size_t size = 0;
+    binary_t src;
+    src.insert (src.end (), source, source + source_size);
+    src.push_back (0);
 
-    base64_encode (source, source_size, &encoded[0], &size, encoding);
+    size_t size = 0;
+    base64_encode (&src[0], source_size, &encoded[0], &size, encoding);
     encoded.resize (size);
-    ret = base64_encode (source, source_size, &encoded[0], &size, encoding);
+    ret = base64_encode (&src[0], source_size, &encoded[0], &size, encoding);
     encoded.resize (size);
 
     return ret;
@@ -280,11 +283,14 @@ return_t base64_encode (const byte_t* source, size_t source_size, std::string& e
 {
     return_t ret = errorcode_t::success;
 
-    size_t size = 0;
+    binary_t src;
+    src.insert (src.end (), source, source + source_size);
+    src.push_back (0);
 
-    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
+    size_t size = 0;
+    base64_encode (&src[0], source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
-    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
+    base64_encode (&src[0], source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
 
     return ret;
@@ -293,11 +299,15 @@ return_t base64_encode (const byte_t* source, size_t source_size, std::string& e
 std::string base64_encode (const byte_t* source, size_t source_size, int encoding)
 {
     std::string encoded;
-    size_t size = 0;
 
-    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
+    binary_t src;
+    src.insert (src.end (), source, source + source_size);
+    src.push_back (0);
+
+    size_t size = 0;
+    base64_encode (&src[0], source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
-    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
+    base64_encode (&src[0], source_size, (byte_t*) &encoded[0], &size, encoding);
     encoded.resize (size);
     return encoded;
 }

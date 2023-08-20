@@ -13,10 +13,8 @@
 #include <jansson.h>
 #include <fstream>
 
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
-using namespace hotplace::io;
-
 namespace hotplace {
+using namespace io;
 namespace crypto {
 
 json_web_key::json_web_key ()
@@ -163,14 +161,6 @@ return_t json_web_key::add_oct (crypto_key* crypto_key, const char* kid, const c
 
         binary_t k;
         k.insert (k.end (), k_decoded.begin (), k_decoded.end ());
-
-        {
-            buffer_stream bs;
-            dump_memory ((byte_t*) k_value, strlen (k_value), &bs);
-            printf ("add oct\n%s\n", bs.c_str ());
-            dump_memory (&k[0], k.size (), &bs);
-            printf ("add oct\n%s\n", bs.c_str ());
-        }
 
         crypto_keychain keyset;
         keyset.add_oct (crypto_key, kid, alg, k, use);

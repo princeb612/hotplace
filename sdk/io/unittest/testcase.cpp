@@ -133,8 +133,11 @@ void test_case::test (return_t result, const char* test_function, const char* me
 
         console_color col;
         ansi_string buf;
-        buf << col.set_fgcolor (console_color_t::yellow).turnon ()
-            << format ("[%08x][%s] %s", result, test_function ? test_function : "", message ? message : "").c_str ()
+        buf << col.turnon ()
+            << col.set_fgcolor (result ? console_color_t::red : console_color_t::yellow)
+            << format ("[%08x]", result).c_str ()
+            << col.set_fgcolor (console_color_t::yellow)
+            << format ("[%s] %s", test_function ? test_function : "", message ? message : "").c_str ()
             << col.turnoff ();
 
         std::cout << buf.c_str ()  << std::endl;
