@@ -35,7 +35,7 @@ public:
      * @param hash_algorithm_t alg [in]
      * @param const unsigned char* key [inopt]
      * @param unsigned keysize [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     virtual return_t open (hash_context_t** handle, hash_algorithm_t alg,
                            const unsigned char* key = nullptr,
@@ -43,13 +43,13 @@ public:
     /**
      * @brief close
      * @param hash_context_t* handle [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     virtual return_t close (hash_context_t* handle);
     /**
      * @brief init
      * @param hash_context_t* handle [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
@@ -62,7 +62,7 @@ public:
      * @param hash_context_t* handle [in]
      * @param byte_t* data [in]
      * @param size_t datasize [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
@@ -75,7 +75,7 @@ public:
      * @param hash_context_t* handle [in]
      * @param byte_t** output [out]
      * @param size_t * outputsize [out] call free_data to free
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
@@ -92,7 +92,7 @@ public:
     /**
      * @brief free
      * @param void* data [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
@@ -106,7 +106,7 @@ public:
      * @param byte_t* data [in]
      * @param size_t datasize [in]
      * @param binary_t& output [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks
      *        simply replace a serial method call (init, update, finalize, free_data in a low)
      */

@@ -16,5 +16,9 @@
 #include <hotplace/sdk/net/socket/server_socket.hpp>
 #include <hotplace/sdk/net/socket/sdk.hpp>
 #include <hotplace/sdk/net/socket/ipaddr_acl.hpp>
+#include <hotplace/sdk/net/tls/sdk.hpp>
+#include <hotplace/sdk/net/tls/x509.hpp>
+#include <hotplace/sdk/net/tls/tls_client.hpp>
+#include <hotplace/sdk/net/tls/tls_server.hpp>
 
 #endif

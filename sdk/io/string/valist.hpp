@@ -110,7 +110,7 @@ public:
      * @brief at
      * @param size_t index [in]
      * @param variant_t& v [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t at (size_t index, variant_t& v);
 

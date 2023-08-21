@@ -39,7 +39,7 @@ public:
      * @brief fill buffer with random-generated n-bytes data
      * @param unsigned char* buf [out] not nullptr
      * @param size_t size [in] size > 0
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t random (unsigned char* buf, size_t size);
     return_t random (binary_t& buffer, size_t size);

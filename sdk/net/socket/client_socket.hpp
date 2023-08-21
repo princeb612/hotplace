@@ -33,14 +33,14 @@ public:
      * @param   const char*     address         [IN]
      * @param   uint16          port            [IN]
      * @param   uint32          timeout         [IN]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     virtual return_t connect (socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
     /*
      * @brief   close
      * @param   socket_t        sock            [IN] see connect
      * @param   tls_context_t*  tls_handle      [IN] ignore
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     virtual return_t close (socket_t sock, tls_context_t* tls_handle);
 
@@ -51,7 +51,7 @@ public:
      * @param   char*           ptr_data        [OUT]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbread          [OUT]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     virtual return_t read (socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
     /*
@@ -61,7 +61,7 @@ public:
      * @param   const char*     ptr_data        [IN]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         size_sent       [OUT]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     virtual return_t send (socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent);
 };

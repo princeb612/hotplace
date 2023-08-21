@@ -28,7 +28,7 @@ public:
      * @param hash_algorithm_t algorithm [in]
      * @param const byte_t* key_data [in]
      * @param size_t key_size [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        uint32 code = 0;
      *        otp.open (&handle, 6, HASH_ALGORITHM_SHA_256, key, keysize);
@@ -40,14 +40,14 @@ public:
     /*
      * @brief close
      * @param otp_context_t* handle [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     uint32 close (otp_context_t* handle);
     /*
      * @brief set count
      * @param otp_context_t* handle [in]
      * @param uint32 count [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        otp.set(handle, 100);
      *        otp.get(handle, code); // otp.get(handle, 100, code) - same expression
@@ -58,7 +58,7 @@ public:
      * @brief get code
      * @param otp_context_t* handle [in]
      * @param uint32& code [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks
      *        internal counter is increased automatically
      */
@@ -68,7 +68,7 @@ public:
      * @param otp_context_t* handle [in]
      * @param uint32 counter [in]
      * @param uint32& code [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        otp.get(handle, 100, code);
      */
@@ -78,7 +78,7 @@ public:
      * @param otp_context_t* handle [in]
      * @param binary_t counter [in]
      * @param uint32& code [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     uint32 get (otp_context_t* handle, binary_t counter, uint32& code);
     /*
@@ -86,7 +86,7 @@ public:
      * @param otp_context_t* handle [in]
      * @param uint32 counter [in]
      * @param uint32 code [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     uint32 verify (otp_context_t* handle, uint32 counter, uint32 code);
 };

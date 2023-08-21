@@ -82,14 +82,14 @@ public:
      * @param   signalwait_thread_routine   thread_routine  [IN] thread.handler
      * @param   signalwait_thread_routine   signal_callback [IN] stop thread
      * @param   void*                       thread_param    [IN] parameter
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks if a threads running, it fails.
      */
     return_t set (size_t max_concurrent, SIGNALWAITTHREADS_CALLBACK_ROUTINE thread_routine,
                   SIGNALWAITTHREADS_CALLBACK_ROUTINE signal_callback, void* thread_param);
     /*
      * @brief create a thread
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks
      *          if a maximum number of threads running, it returns errorcode_t::max_reached.
      */
@@ -113,7 +113,7 @@ public:
     size_t running ();
     /*
      * @brief dummy signal handler
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks
      *          do nothing
      */
@@ -129,7 +129,7 @@ protected:
     /*
      * @brief join
      * @param thread_t tid
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t join (thread_t tid);
 

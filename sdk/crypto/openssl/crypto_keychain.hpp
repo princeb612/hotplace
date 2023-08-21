@@ -35,7 +35,7 @@ public:
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
      * @param size_t bits [in] 1024, 2048, ...
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_rsa (crypto_key* cryptokey, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -43,7 +43,7 @@ public:
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param size_t bits [in] 1024, 2048, ...
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *    crypto_keychain keyset;
      *    std::string kid;
@@ -60,7 +60,7 @@ public:
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
      * @param size_t bits [in] 1024, 2048, ...
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -69,7 +69,7 @@ public:
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
      * @param size_t bits [in] 1024, 2048, ...
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -80,7 +80,7 @@ public:
      * @param binary_t n [in]
      * @param binary_t e [in]
      * @param binary_t d [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, binary_t n, binary_t e, binary_t d,
                       crypto_use_t use = crypto_use_t::use_any);
@@ -92,7 +92,7 @@ public:
      * @param binary_t n [in]
      * @param binary_t e [in]
      * @param binary_t d [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t n, binary_t e, binary_t d,
                       crypto_use_t use = crypto_use_t::use_any);
@@ -104,7 +104,7 @@ public:
      * @param binary_t n [in]
      * @param binary_t e [in]
      * @param binary_t d [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, binary_t n, binary_t e, binary_t d,
                       binary_t p, binary_t q, binary_t dp, binary_t dq, binary_t qi, crypto_use_t use = crypto_use_t::use_any);
@@ -121,7 +121,7 @@ public:
      * @param binary_t dp [inopt]
      * @param binary_t dq [inopt]
      * @param binary_t qi [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t n, binary_t e, binary_t d,
                       binary_t p, binary_t q, binary_t dp, binary_t dq, binary_t qi, crypto_use_t use = crypto_use_t::use_any);
@@ -136,7 +136,7 @@ public:
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_ec (crypto_key* cryptokey, int nid, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -151,7 +151,7 @@ public:
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *      crypto_key keys;
      *      crypto_keychain keyset;
@@ -199,7 +199,7 @@ public:
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -216,7 +216,7 @@ public:
      * @param binary_t x [in]
      * @param binary_t y [in]
      * @param binary_t d [inopt] private key
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_ec (crypto_key* cryptokey, int nid, binary_t x, binary_t y, binary_t d, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -234,7 +234,7 @@ public:
      * @param binary_t x [in]
      * @param binary_t y [in]
      * @param binary_t d [inopt] private key
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_ec (crypto_key* cryptokey, const char* kid, int nid, binary_t x, binary_t y, binary_t d,
                      crypto_use_t use = crypto_use_t::use_any);
@@ -254,7 +254,7 @@ public:
      * @param binary_t x [in]
      * @param binary_t y [in]
      * @param binary_t d [inopt] private key
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t x, binary_t y, binary_t d,
                      crypto_use_t use = crypto_use_t::use_any);
@@ -270,7 +270,7 @@ public:
      * @param binary_t x [in]
      * @param binary_t y [in]
      * @param binary_t d [inopt] private key
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_ec_nid_EC (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t x, binary_t y, binary_t d,
                             crypto_use_t use = crypto_use_t::use_any);
@@ -287,7 +287,7 @@ public:
      * @param binary_t x [in]
      * @param binary_t y [in]
      * @param binary_t d [inopt] private key
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks
      *      1 EdDSA provides high performance on a variety of platforms;
      *      2 The use of a unique random number for each signature is not required;
@@ -321,7 +321,7 @@ public:
      * @param binary_t x [in]
      * @param binary_t y [in]
      * @param binary_t d [inopt] private key
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_ec (crypto_key* cryptokey, const char* kid, jwa_t alg, int nid, binary_t x, binary_t y, binary_t d,
                      crypto_use_t use = crypto_use_t::use_any);
@@ -329,7 +329,7 @@ public:
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
      * @param binary_t k [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, binary_t k, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -337,7 +337,7 @@ public:
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param binary_t k [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, binary_t k, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -346,7 +346,7 @@ public:
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
      * @param binary_t k [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, const char* alg, binary_t k, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -355,14 +355,14 @@ public:
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
      * @param binary_t k [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t k, crypto_use_t use = crypto_use_t::use_any);
     /*
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
      * @param size_t size [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -370,7 +370,7 @@ public:
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param size_t size [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -379,7 +379,7 @@ public:
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
      * @param size_t size [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, const char* alg, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -388,7 +388,7 @@ public:
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
      * @param size_t size [in] bytes
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -396,7 +396,7 @@ public:
      * @param crypto_key* cryptokey [in]
      * @param const byte_t* k [in]
      * @param size_t size [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, const byte_t* k, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -405,7 +405,7 @@ public:
      * @param const char* kid [inopt]
      * @param const byte_t* k [in]
      * @param size_t size [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, const byte_t* k, size_t size, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -415,7 +415,7 @@ public:
      * @param const char* alg [inopt]
      * @param const byte_t* k [in]
      * @param size_t size [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *          const char* passphrase = "password";
      *          keygen.add_oct (&key, nullptr, jwa_t::jwa_pbes2_hs256_a128kw, (byte_t*) passphrase, strlen (passphrase), CRYPTO_USE_ENC);
@@ -429,7 +429,7 @@ public:
      * @param jwa_t alg [in]
      * @param const byte_t* k [in]
      * @param size_t size [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, const byte_t* k, size_t size,
                       crypto_use_t use = crypto_use_t::use_any);

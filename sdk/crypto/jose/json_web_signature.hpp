@@ -73,7 +73,7 @@ public:
      * @param std::string claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      * @sample
      *          const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
@@ -95,7 +95,7 @@ public:
      * @param std::string claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      * @sample
      *          headers.push_back (hs256_header);
@@ -112,7 +112,7 @@ public:
      * @param std::string claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      * @sample
      *          jws.sign (&crypto_key, jws_t::jws_hs256, claim, signature);
@@ -125,7 +125,7 @@ public:
      * @param std::string claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      * @sample
      *          algs.push_back (jws_t::jws_hs256);
@@ -140,7 +140,7 @@ public:
      * @param crypto_key* crypto_key [in]
      * @param std::string signature [in]
      * @param bool& result [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::verify
      */
     return_t verify (crypto_key* crypto_key, std::string signature, bool& result);

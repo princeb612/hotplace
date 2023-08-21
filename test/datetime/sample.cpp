@@ -88,12 +88,12 @@ void test_time ()
     print_datetime (&dt5);
 
     _test_case.begin ("struct asn1 time");
-    ASN1TIME asn1sample1 (V_ASN1_GENERALIZEDTIME, "19851106210627.3");
-    ASN1TIME asn1sample2 (V_ASN1_GENERALIZEDTIME, "19851106210627.3Z");
-    ASN1TIME asn1sample3 (V_ASN1_GENERALIZEDTIME, "19851106210627.3+0900");
-    ASN1TIME asn1sample4 (V_ASN1_GENERALIZEDTIME, "19851106210627.3000+0900");
-    ASN1TIME asn1sample5 (V_ASN1_UTCTIME, "9901020700Z");
-    ASN1TIME asn1sample6 (V_ASN1_UTCTIME, "9901020700+0900");
+    asn1time_t asn1sample1 (V_ASN1_GENERALIZEDTIME, "19851106210627.3");
+    asn1time_t asn1sample2 (V_ASN1_GENERALIZEDTIME, "19851106210627.3Z");
+    asn1time_t asn1sample3 (V_ASN1_GENERALIZEDTIME, "19851106210627.3+0900");
+    asn1time_t asn1sample4 (V_ASN1_GENERALIZEDTIME, "19851106210627.3000+0900");
+    asn1time_t asn1sample5 (V_ASN1_UTCTIME, "9901020700Z");
+    asn1time_t asn1sample6 (V_ASN1_UTCTIME, "9901020700+0900");
 
     datetime dt6 (asn1sample1);
     print_datetime (&dt6);

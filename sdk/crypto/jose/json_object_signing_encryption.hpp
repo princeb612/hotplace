@@ -42,13 +42,13 @@ public:
      * @brief open
      * @param jose_context_t** context [out]
      * @param crypto_key* crypto_key [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t open (jose_context_t** context, crypto_key* crypto_key);
     /*
      * @brief close
      * @param jose_context_t* context [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t close (jose_context_t* context);
 
@@ -60,7 +60,7 @@ public:
      * @param binary_t input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *          json_web_key jwk;
      *          crypto_key crypto_pubkey;
@@ -95,7 +95,7 @@ public:
      * @param binary_t input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *          json_web_key jwk;
      *          crypto_key crypto_pubkey;
@@ -130,7 +130,7 @@ public:
      * @param std::string input [in]
      * @param binary_t& output [out]
      * @param bool& result [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *          json_web_key jwk;
      *          crypto_key crypto_privkey;
@@ -192,7 +192,7 @@ public:
      * @param std::string input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *          json_web_key jwk;
      *          crypto_key crypto_key;
@@ -215,7 +215,7 @@ public:
      * @param std::string input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *          json_web_key jwk;
      *          crypto_key crypto_key;
@@ -242,7 +242,7 @@ public:
      * @param std::string input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *          json_web_key jwk;
      *          crypto_key crypto_key;
@@ -265,7 +265,7 @@ public:
      * @param std::string input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t sign (jose_context_t* context, std::list<std::string> headers, std::string input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
     /*
@@ -273,7 +273,7 @@ public:
      * @param jose_context_t* context [in]
      * @param std::string input [in]
      * @param bool& result [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t verify (jose_context_t* context, std::string input, bool& result);
 

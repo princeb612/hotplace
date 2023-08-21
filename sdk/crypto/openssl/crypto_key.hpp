@@ -103,7 +103,7 @@ public:
      * @brief add
      * @param crypto_key_object_t key [in]
      * @param bool up_ref [inopt] false by default
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add (crypto_key_object_t key, bool up_ref = false);
     /*
@@ -111,7 +111,7 @@ public:
      * @param EVP_PKEY* key [in]
      * @param const char* kid [inopt]
      * @param bool up_ref [inopt] false by default
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add (EVP_PKEY* key, const char* kid = nullptr, bool up_ref = false);
     /*
@@ -120,7 +120,7 @@ public:
      * @param const char* kid [inopt]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt] false by default
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add (EVP_PKEY* key, const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /*
@@ -132,7 +132,7 @@ public:
      *                                CRYPTO_KEY_OKP 25518, 448
      * @param const char* kid [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks
      *          key.generate (CRYPTO_KEY_HMAC, 32,    "kid", crypto_use_t::use_any); // oct
      *          key.generate (CRYPTO_KEY_RSA,  2048,  "kid", crypto_use_t::use_any); // RSA

@@ -27,7 +27,7 @@ test_case::test_case ()
     _count_low_security (0)
 {
     // do nothing
-    stopwatch::read (_timestamp);
+    stopwatch_read (_timestamp);
 }
 
 void test_case::begin (const char* case_name, ...)
@@ -51,12 +51,12 @@ void test_case::begin (const char* case_name, ...)
         _current_case_name.clear ();
     }
 
-    stopwatch::read (_timestamp);
+    stopwatch_read (_timestamp);
 }
 
 void test_case::start ()
 {
-    stopwatch::read (_timestamp);
+    stopwatch_read (_timestamp);
 }
 
 void test_case::assert (bool expect, const char* test_function, const char* message)
@@ -75,8 +75,8 @@ void test_case::test (return_t result, const char* test_function, const char* me
 
     __try2
     {
-        stopwatch::read (now);
-        stopwatch::diff (diff, _timestamp, now);
+        stopwatch_read (now);
+        stopwatch_diff (diff, _timestamp, now);
 
         _lock.enter ();
 
@@ -147,7 +147,7 @@ void test_case::test (return_t result, const char* test_function, const char* me
     {
         _lock.leave ();
 
-        stopwatch::read (_timestamp);
+        stopwatch_read (_timestamp);
     }
 }
 

@@ -31,7 +31,7 @@ public:
      * @param jwa_t alg [in]
      * @param binary_t input [in]
      * @param binary_t& output [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::encrypt
      */
     return_t encrypt (jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t input, binary_t& output);
@@ -42,7 +42,7 @@ public:
      * @param jwa_t alg [in]
      * @param binary_t input [in]
      * @param binary_t& output [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::decrypt
      */
     return_t decrypt (jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t input, binary_t& output);
@@ -54,7 +54,7 @@ public:
      * @param const char* kid [in]
      * @param binary_t input [in]
      * @param binary_t& output [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::decrypt
      */
     return_t decrypt (jose_context_t* handle, jwe_t enc, jwa_t alg, const char* kid, binary_t input, binary_t& output);

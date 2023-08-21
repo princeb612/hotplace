@@ -35,14 +35,14 @@ public:
      * @param   socket_t*       sock            [OUT] listen socket
      * @param   unsigned int    family          [IN] AF_INET, AF_INET6
      * @param   uint16          port            [IN]
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      */
     virtual return_t listen (socket_t* sock, unsigned int family, uint16 port);
     /*
      * @brief   close
      * @param   socket_t        sock            [IN]
      * @param   tls_context_t*  tls_handle      [IN]
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      * @remarks
      *          tls_svr_sock.accept (listen_socket, &client_socket, &tls_context, &sockaddr, &sockaddrlen);
      *          // client connection established...
@@ -58,14 +58,14 @@ public:
      * @param   socket_t*       clisock         [OUT] client socket
      * @param   struct sockaddr* addr           [OUT]
      * @param   socklen_t*      addrlen         [IN]
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      */
     virtual return_t accept (socket_t sock, socket_t* clisock, struct sockaddr* addr, socklen_t* addrlen);
     /*
      * @brief   Tls accept
      * @param   socket_t        clisock         [IN] client socket
      * @param   tls_context_t** tls_handle      [OUT] Tls context
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      * @remarks
      *          do nothing, return errorcode_t::success
      */
@@ -79,7 +79,7 @@ public:
      * @param   char*           ptr_data        [OUT]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbread          [OUT]
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      * @remarks
      *          ERROR_CONNECTION_CLOSED
      */
@@ -91,14 +91,14 @@ public:
      * @param   const char*     ptr_data        [IN]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbsent          [OUT]
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      */
     virtual return_t send (socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
     /*
      * @brief   query socket layer spec
      * @param   int             specid          [IN] see SERVER_SOCKET_QUERY
      * @param   arch_t*         data_ptr        [OUT]
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      * @remarks
      *          server_socket.query (SERVER_SOCKET_QUERY_SUPPORT_TLS, &value);
      */

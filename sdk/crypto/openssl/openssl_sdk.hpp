@@ -240,7 +240,7 @@ uint32 ossl_get_unitsize ();
  * @brief is private key
  * @param EVP_PKEY* pkey [in]
  * @param bool& result [out]
- * @return error code (see error.h)
+ * @return error code (see error.hpp)
  */
 return_t is_private_key (EVP_PKEY * pkey, bool& result);
 

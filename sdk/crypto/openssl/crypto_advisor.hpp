@@ -314,7 +314,7 @@ public:
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks
      *      if following method needed, use nidof_evp_pkey
      *      >> return_t nidof_ec_curve (EVP_PKEY* pkey, uint32& nid);
@@ -325,7 +325,7 @@ public:
      * @brief kty
      * @param const char* curve [in] P-256, P-384, P521, Ed25519, Ed448, X25519, X448
      * @param uint32& kty [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks
      *          --------------------------------+----------------
      *          P-256, P-384, P521              | crypto_key_t::ec_key
@@ -341,14 +341,14 @@ public:
      *          RSA
      *          EC
      *          OKP
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t ktyof_ec_curve (EVP_PKEY* pkey, std::string& kty);
     /*
      * @brief kty
      * @param EVP_PKEY* pkey [in]
      * @param crypto_key_t& kty [out] crypto_key_t::hmac_key, crypto_key_t::rsa_key, crypto_key_t::ec_key, crypto_key_t::okp_key
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t ktyof_ec_curve (EVP_PKEY* pkey, crypto_key_t& kty);
     /*
@@ -356,7 +356,7 @@ public:
      * @param EVP_PKEY* pkey [in]
      * @param std::string& curve_name [out]
      *          "P-256", "P384", "P-521", "Ed25519", "Ed448", "X25519", "X448"
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *          if (kindof_ecc (pkey)) {
      *              advisor->nameof_ec_curve (pkey, curve_name);

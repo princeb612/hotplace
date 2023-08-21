@@ -53,13 +53,13 @@ typedef struct _timespan_t {
 
 #pragma pack(pop)
 
-/* ASN1TIME - openssl ASN1_TIME compatible */
+/* asn1time_t - openssl ASN1_TIME compatible */
 #define V_ASN1_UTCTIME          23  /* "YYMMDDhhmm[ss]Z" (UTC) or "YYMMDDhhmm[ss](+|-)hhmm" (difference) */
 #define V_ASN1_GENERALIZEDTIME  24  /* "YYYYMMDDHHMM[SS[.fff]]Z" (UTC) or "YYYYMMDDHHMM[SS[.fff]]" (local) or "YYYYMMDDHHMM[SS[.fff]]+-HHMM" (difference) */
 /* RFC 5280 time format */
 #define V_ASN1_STRING_FLAG_X509_TIME 0x100
 
-typedef struct _ASN1TIME {
+typedef struct _asn1time_t {
     int length;
     int type;
     unsigned char *data;
@@ -70,11 +70,11 @@ typedef struct _ASN1TIME {
     long flags;
     binary_t internal;
 
-    _ASN1TIME () : length (0), type (0), data (nullptr), flags (0)
+    _asn1time_t () : length (0), type (0), data (nullptr), flags (0)
     {
         // do nothing
     }
-    _ASN1TIME (int typ, const char* dat)
+    _asn1time_t (int typ, const char* dat)
     {
         type = typ;
         if (dat) {
@@ -104,7 +104,7 @@ typedef struct _ASN1TIME {
         }
         flags = 0;
     }
-} ASN1TIME;
+} asn1time_t;
 
 enum DAYOFWEEK {
     SUN = 0,
@@ -128,7 +128,7 @@ public:
     datetime (datetime_t& dt, long* nsec = nullptr);
     datetime (filetime_t& ft);
     datetime (systemtime_t& st);
-    datetime (ASN1TIME& at);
+    datetime (asn1time_t& at);
     datetime (datetime& rhs);
 
     /*
@@ -154,17 +154,17 @@ public:
     return_t getgmtime (datetime_t* dt, long* nsec = nullptr);
     return_t getfiletime (filetime_t* ft);
     return_t getsystemtime (int mode, systemtime_t* ft);
-    return_t getasn1time (ASN1TIME* at);
+    return_t getasn1time (asn1time_t* at);
 
     datetime& operator = (time_t timestamp);
     datetime& operator = (struct timespec& ts);
     datetime& operator = (filetime_t& ft);
     datetime& operator = (systemtime_t& st);
-    datetime& operator = (ASN1TIME& at);
+    datetime& operator = (asn1time_t& at);
     datetime& operator >> (struct timespec& ts);
     datetime& operator >> (filetime_t& ft);
     datetime& operator >> (systemtime_t& st); // localtime
-    datetime& operator >> (ASN1TIME& at);
+    datetime& operator >> (asn1time_t& at);
 
     /*
      * @brief compare
@@ -230,17 +230,17 @@ public:
     /*
      * @brief timespec to asn1time
      * @param struct timespec ts [in]
-     * @param ASN1TIME* at [out]
+     * @param asn1time_t* at [out]
      * @return error code (see error.hpp)
      */
-    static return_t timespec_to_asn1time (struct timespec ts, ASN1TIME* at);
+    static return_t timespec_to_asn1time (struct timespec ts, asn1time_t* at);
     /*
      * @brief asn1time to timespec
-     * @param ASN1TIME at [in]
+     * @param asn1time_t at [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t asn1time_to_timespec (ASN1TIME at, struct timespec& ts);
+    static return_t asn1time_to_timespec (asn1time_t at, struct timespec& ts);
 
 
 protected:
@@ -249,14 +249,8 @@ private:
     struct timespec _timespec; /* time_t tv_sec(UTC seconds) + long tv_nsec(nanoseconds) */
 };
 
-class stopwatch
-{
-public:
-    stopwatch ();
-
-    static void read (struct timespec& timespec);
-    static return_t diff (struct timespec& timespec, struct timespec begin, struct timespec end);
-};
+void stopwatch_read (struct timespec& timespec);
+return_t stopwatch_diff (struct timespec& timespec, struct timespec begin, struct timespec end);
 
 static inline void msleep (uint32 msecs)
 {

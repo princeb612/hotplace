@@ -363,7 +363,7 @@ return_t connect_socket_addr (socket_t sock, sockaddr_storage_t* pSockAddr, size
 #endif
             {
                 fd_set fds;
-                struct timeval tv = { (int32) dwTimeout, 0 }; // linux { time_t, suseconds_t }, windows { long, long }
+                struct timeval tv = { (int32) dwTimeout, 0 };                       // linux { time_t, suseconds_t }, windows { long, long }
                 FD_ZERO (&fds);
                 FD_SET (sock, &fds);                                                /* VC 6.0 - C4127 */
                 ret_routine = select ((int) sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, SOCKET_ERROR if an error occurred */

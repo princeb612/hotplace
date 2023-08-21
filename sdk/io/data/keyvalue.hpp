@@ -40,7 +40,7 @@ public:
      * @param   const char*     name    [IN]
      * @param   const char*     value   [IN]
      * @param   uint32           flags   [INOPT] 1 overwrite, 0 keep old
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      * @remarks
      *          set (key1, value1); // return errorcode_t::success
      *          set (key1, value2); // return errorcode_t::already_exist
@@ -51,7 +51,7 @@ public:
      * @brief   update
      * @param   const char* name [in]
      * @param   const char* value [in]
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      * @remarks
      *          set(name, value, key_value_mode_t::update);
      */
@@ -59,12 +59,12 @@ public:
     /*
      * @brief   remove
      * @param   const char*     name    [IN]
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      */
     return_t remove (const char* name);
     /*
      * @brief   clear
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      */
     return_t clear ();
     /*
@@ -88,7 +88,7 @@ public:
      * @brief   query
      * @param   const char*     name    [IN]
      * @param   std::string&    value   [OUT]
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      * @remarks
      *          kv.update ("key", "value");
      *          kv.query ("key", value); // "value"
@@ -100,7 +100,7 @@ public:
      * @brief   copy
      * @param   key_value&       rhs   [IN]
      * @param   int             mode  [IN]
-     * @return  error code (see error.h)
+     * @return  error code (see error.hpp)
      * @remarks
      *          kv1 [ ("key1", "value1"), ("key2", "value2") ]
      *          kv2 [ ("key2", "item2"), ("key3", "item3") ]

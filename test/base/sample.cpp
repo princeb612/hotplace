@@ -91,12 +91,30 @@ void test_sharedinstance2 ()
     _test_case.assert (true, __FUNCTION__, "shared instance");
 }
 
+void test_endian ()
+{
+    bool ret = false;
+    std::string text;
+    bool is_be = is_big_endian ();
+    bool is_le = is_little_endian ();
+
+#if defined __LITTLE_ENDIAN__
+    text = "__LITTLE_ENDIAN__";
+    ret = (true == is_le);
+#elif defined __BIG_ENDIAN__
+    text = "__BIG_ENDIAN__";
+    ret = (true == is_be);
+#endif
+    _test_case.assert ((true == ret), __FUNCTION__, text.c_str ());
+}
+
 int main ()
 {
     _test_case.begin ("smart pointer");
 
     test_sharedinstance1 ();
     test_sharedinstance2 ();
+    test_endian ();
 
     _test_case.report ();
     return _test_case.result ();

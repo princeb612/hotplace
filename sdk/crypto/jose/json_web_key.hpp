@@ -41,7 +41,7 @@ public:
      * @param crypto_key * crypto_key [in]
      * @param const char* buffer [in]
      * @param int flags [in] reserved
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t load (crypto_key* crypto_key, const char* buffer, int flags = 0);
     /*
@@ -49,7 +49,7 @@ public:
      * @param crypto_key * crypto_key [in]
      * @param const char* file [in]
      * @param int flags [in] reserved
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t load_file (crypto_key* crypto_key, const char* file, int flags = 0);
     /*
@@ -57,7 +57,7 @@ public:
      * @param crypto_key * cryptokey [in]
      * @param const char* buffer [in]
      * @param int flags [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t load_pem (crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -66,7 +66,7 @@ public:
      * @param const char* file [in]
      * @param int flags [in] reserved
      * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t load_pem_file (crypto_key* crypto_key, const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
     /*
@@ -74,7 +74,7 @@ public:
      * @param crypto_key * cryptokey [in]
      * @param const char* file [in]
      * @param int flag [in] reserved
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t write_pem_file (crypto_key* cryptokey, const char* file, int flags = 0);
     /*
@@ -82,7 +82,7 @@ public:
      * @param crypto_key * crypto_key [in]
      * @param const char* file [in]
      * @param int flag [in] 0 public only, 1 also private
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t write_json (crypto_key* crypto_key, const char* file, int flags = 0);
     /*
@@ -91,7 +91,7 @@ public:
      * @param char* buf [out] null-terminated
      * @param size_t* buflen [inout]
      * @param int flag [in] 0 public only, 1 also private
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
 
@@ -111,7 +111,7 @@ protected:
      * @param const char* dq [inopt]
      * @param const char* qi [inopt]
      * @param crypto_use_t use [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_rsa (crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d,
                       const char* p                                                                                                         = nullptr, const char* q= nullptr, const char* dp = nullptr, const char* dq = nullptr, const char* qi = nullptr,
@@ -126,7 +126,7 @@ protected:
      * @param const char* y [in] public key
      * @param const char* d [inopt] private key
      * @param crypto_use_t use [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
                      const char* x, const char* y, const char* d, crypto_use_t use = crypto_use_t::use_any);
@@ -137,7 +137,7 @@ protected:
      * @param const char* alg [inopt]
      * @param const char* k [in]
      * @param crypto_use_t use [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_oct (crypto_key* crypto_key, const char* kid, const char* alg, const char* k,
                       crypto_use_t use = crypto_use_t::use_any);

@@ -41,7 +41,7 @@ public:
      * @param unsigned size_key [in]
      * @param const unsigned char* iv [in]
      * @param unsigned size_iv [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        openssl_crypt crypt;
      *        crypt_context_t* handle = nullptr;
@@ -53,7 +53,7 @@ public:
     /**
      * @brief destroy a context handle
      * @param crypt_context_t* handle [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     virtual return_t close (crypt_context_t* handle);
 
@@ -64,7 +64,7 @@ public:
      * @param size_t size_plain [in]
      * @param unsigned char** data_encrypted [out]
      * @param size_t* size_encrypted [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        crypt.encrypt(handle, data_plain, size_plain, &data_encrypted, &size_encrypted);
      *        crypt.free_data(data_encrypted);
@@ -76,7 +76,7 @@ public:
      * @param const unsigned char* data_plain [in]
      * @param size_t size_plain [in]
      * @param binary_t& out_encrypted [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        crypt.encrypt(handle, data_plain, size_plain, data_encrypted);
      */
@@ -114,7 +114,7 @@ public:
      * @param size_t size_encrypted [in]
      * @param unsigned char** data_plain [out]
      * @param size_t* size_plain [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        crypt.decrypt(handle, data_encrypted, size_encrypted, &data_decrypted, &size_decrypted);
      *        crypt.free_data(data_decrypted);
@@ -126,7 +126,7 @@ public:
      * @param const unsigned char* data_encrypted [in]
      * @param size_t size_encrypted [in]
      * @param binary_t& out_decrypted [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        crypt.decrypt(handle, data_encrypted, size_encrypted, data_decrypted);
      */
@@ -185,7 +185,7 @@ public:
      * @param crypt_context_t* handle [in]
      * @param size_t size_data [in]
      * @param size_t* size_expect [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     //virtual return_t expect(crypt_context_t* handle, size_t size_data, size_t* size_expect);
     /**

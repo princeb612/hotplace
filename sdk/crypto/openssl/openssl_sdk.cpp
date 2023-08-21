@@ -29,6 +29,8 @@ void openssl_startup_implementation ()
 #else
     SSL_library_init ();
     SSL_load_error_strings ();
+    ERR_load_BIO_strings ();
+    ERR_load_SSL_strings ();
     OpenSSL_add_all_algorithms ();
 #endif
 }

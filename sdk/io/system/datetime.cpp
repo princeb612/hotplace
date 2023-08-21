@@ -56,7 +56,7 @@ datetime::datetime (systemtime_t& st)
     systemtime_to_timespec (st, _timespec);
 }
 
-datetime::datetime (ASN1TIME& at)
+datetime::datetime (asn1time_t& at)
 {
     asn1time_to_timespec (at, _timespec);
 }
@@ -176,7 +176,7 @@ return_t datetime::getsystemtime (int mode, systemtime_t* ft)
     return ret;
 }
 
-return_t datetime::getasn1time (ASN1TIME* at)
+return_t datetime::getasn1time (asn1time_t* at)
 {
     return_t ret = errorcode_t::success;
 
@@ -209,7 +209,7 @@ datetime & datetime::operator = (systemtime_t & st)
     return *this;
 }
 
-datetime & datetime::operator = (ASN1TIME & at)
+datetime & datetime::operator = (asn1time_t & at)
 {
     asn1time_to_timespec (at, _timespec);
     return *this;
@@ -233,7 +233,7 @@ datetime & datetime::operator >> (systemtime_t & st)
     return *this;
 }
 
-datetime & datetime::operator >> (ASN1TIME & at)
+datetime & datetime::operator >> (asn1time_t & at)
 {
     getasn1time (&at);
     return *this;
@@ -514,7 +514,7 @@ return_t datetime::systemtime_to_timespec (systemtime_t st, struct timespec& ts)
     return ret;
 }
 
-return_t datetime::timespec_to_asn1time (struct timespec ts, ASN1TIME* at)
+return_t datetime::timespec_to_asn1time (struct timespec ts, asn1time_t* at)
 {
     return_t ret = errorcode_t::success;
 
@@ -571,7 +571,7 @@ static void determine_days (struct tm *tm)
     tm->tm_wday = (d + (13 * m) / 5 + y + y / 4 + c / 4 + 5 * c + 6) % 7;
 }
 
-return_t datetime::asn1time_to_timespec (ASN1TIME at, struct timespec& ts)
+return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
 {
     return_t ret = errorcode_t::success;
 
@@ -825,17 +825,12 @@ return_t datetime::asn1time_to_timespec (ASN1TIME at, struct timespec& ts)
     return ret;
 }
 
-stopwatch::stopwatch ()
-{
-    // do nothing
-}
-
-void stopwatch::read (struct timespec& timespec)
+void stopwatch_read (struct timespec& timespec)
 {
     clock_gettime (CLOCK_MONOTONIC, &timespec);
 }
 
-return_t stopwatch::diff (struct timespec& timespec, struct timespec begin, struct timespec end)
+return_t stopwatch_diff (struct timespec& timespec, struct timespec begin, struct timespec end)
 {
     return_t ret = errorcode_t::success;
 
@@ -868,7 +863,6 @@ return_t stopwatch::diff (struct timespec& timespec, struct timespec begin, stru
 
     return ret;
 }
-
 
 }
 }  // namespace

@@ -28,3 +28,13 @@
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
  * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
  * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+
+## personal projects
+
+| code name | period                | platform      | disclosure | comments            |
+| hush      | 2004                  | windows       | private    | no comments         |
+| merlin(1) | 2007.04.08~           | windows       | private    | no comments         |
+| merlin(2) | 2010.03.24~2017.03.31 | windows/linux | private    | no comments         |
+| grape     | 2017.05.31~2019.10.24 | linux         | private    | no comments         |
+| unicorn   | 2019.11.21~2023.07.04 | mingw/linux   | private    | no comments         |
+| hotplace  | 2023.08.12~           | mingw/linux   | public     | unrelated to my job |

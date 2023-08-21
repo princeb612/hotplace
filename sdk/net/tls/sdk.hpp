@@ -36,7 +36,7 @@ enum ADDRESS_TYPE {
  * @param   int                 address_type [in]
  * @param   const char*         address [in] 127.0.0.1 socket ipv4, ::1 socket ipv6
  * @param   uint16              port [in]
- * @return  error code (see error.h)
+ * @return  error code (see error.hpp)
  * @sample
  *          address = "127.0.0.1";
  *          port = 1234;
@@ -55,7 +55,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
  * @param   int protocol_type           [in] PROTOCOL_TCP
  * @param   uint32 port                 [in]
  * @param   bool support_win32_acceptex [inopt]
- * @error   error code (see error.h)
+ * @error   error code (see error.hpp)
  * @sample
  *          unsigned int nFamily[2] = { AF_INET, AF_INET6 };  // IPv4 and IPv6
  *          socket_t Sockets[2] = { INVALID_SOCKET, INVALID_SOCKET };
@@ -72,7 +72,7 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
  * @param   const char* address [in]
  * @param   uint16      port    [in]
  * @param   uint32      timeout [in]
- * @error   error code (see error.h)
+ * @error   error code (see error.hpp)
  */
 return_t connect_socket (socket_t* socket, int nType, const char* address, uint16 port, uint32 timeout);
 /*
@@ -94,7 +94,7 @@ return_t close_socket (socket_t sock, bool onoff, uint16 linger);
  * @brief   stop listen
  * @param   unsigned int    nSockets    [in]
  * @param   socket_t*       Sockets     [in]
- * @return  error code (see error.h)
+ * @return  error code (see error.hpp)
  * @sample  see create_listener
  */
 return_t close_listener (unsigned int nSockets, socket_t* Sockets);

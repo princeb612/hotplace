@@ -29,7 +29,7 @@ public:
      * @param hash_algorithm_t algorithm [in]
      * @param const byte_t* key_data [in]
      * @param size_t key_size [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        otp.open(&handle, 8, 30, HASH_ALGORITHM_SHA_512, key, keysize);
      *        otp.close(handle);
@@ -39,7 +39,7 @@ public:
     /*
      * @brief close
      * @param otp_context_t* handle [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     uint32 close (otp_context_t* handle);
     /*
@@ -47,7 +47,7 @@ public:
      * @param otp_context_t* handle [in]
      * @param time64_t time [in]
      * @param uint32& code [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *        otp.get(handle, time, code);
      */
@@ -57,7 +57,7 @@ public:
      * @param otp_context_t* handle [in]
      * @param time64_t time [in]
      * @param uint32 code [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     uint32 verify (otp_context_t* handle, time64_t time, uint32 code);
 };
