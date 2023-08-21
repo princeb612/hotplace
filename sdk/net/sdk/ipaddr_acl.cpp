@@ -76,13 +76,13 @@ return_t ipaddr_acl::add_rule (const char* addr, bool allow)
                 __leave2;
             }
 #endif
-            IPADDRESS_RULE_ITEM item;
+            ipaddress_rule_item_t item;
             item.mode = ipaddr_acl_t::single_addr;
             item.addr = 0;
             item.allow = allow;
 
             _lock.enter ();
-            IPADDRESS_RULE_MAP_PIB pib = _single_type_rule.insert (std::make_pair (address, item));
+            ipaddress_rule_map_pib_t pib = _single_type_rule.insert (std::make_pair (address, item));
             if (false == pib.second) {
                 ret = errorcode_t::already_exist;
             }
@@ -115,13 +115,13 @@ return_t ipaddr_acl::add_rule (const sockaddr_storage_t* sockaddr, bool allow)
             __leave2;
         }
 #endif
-        IPADDRESS_RULE_ITEM item;
+        ipaddress_rule_item_t item;
         item.mode = ipaddr_acl_t::single_addr;
         item.addr = 0;
         item.allow = allow;
 
         _lock.enter ();
-        IPADDRESS_RULE_MAP_PIB pib = _single_type_rule.insert (std::make_pair (address, item));
+        ipaddress_rule_map_pib_t pib = _single_type_rule.insert (std::make_pair (address, item));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
@@ -155,9 +155,9 @@ return_t ipaddr_acl::add_rule (const char* addr, int mask, bool allow)
 #endif
         ipaddr_t subnet_mask = 0;
         if (AF_INET6 == family) {
-            subnet_mask = CIDRSubNetMaskTemplate<ipaddr_t> (mask);
+            subnet_mask = t_cidr_subnet_mask<ipaddr_t> (mask);
         } else {
-            subnet_mask = CIDRSubNetMaskTemplate<uint32> (mask);
+            subnet_mask = t_cidr_subnet_mask<uint32> (mask);
         }
         ipaddr_t address_from = (address & subnet_mask);
         ipaddr_t address_to = (address & subnet_mask) | ~subnet_mask;
@@ -166,13 +166,13 @@ return_t ipaddr_acl::add_rule (const char* addr, int mask, bool allow)
             address_to &= 0xffffffff;
         }
 
-        IPADDRESS_RULE_ITEM item;
+        ipaddress_rule_item_t item;
         item.mode = ipaddr_acl_t::cidr_addr;
         item.addr = address_to;
         item.allow = allow;
 
         _lock.enter ();
-        IPADDRESS_RULE_MAP_PIB pib = _range_type_rule.insert (std::make_pair (address_from, item));
+        ipaddress_rule_map_pib_t pib = _range_type_rule.insert (std::make_pair (address_from, item));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
@@ -205,17 +205,17 @@ return_t ipaddr_acl::add_rule (const sockaddr_storage_t* sockaddr, int mask, boo
         }
 #endif
         mask = (AF_INET6 == family) ? mask : mask % 0xffffffff;
-        ipaddr_t subnet_mask = CIDRSubNetMaskTemplate<ipaddr_t> (mask);
+        ipaddr_t subnet_mask = t_cidr_subnet_mask<ipaddr_t> (mask);
         ipaddr_t address_from = (address & subnet_mask);
         ipaddr_t address_to = (address & subnet_mask) | ~subnet_mask;
 
-        IPADDRESS_RULE_ITEM item;
+        ipaddress_rule_item_t item;
         item.mode = ipaddr_acl_t::cidr_addr;
         item.addr = address_to;
         item.allow = allow;
 
         _lock.enter ();
-        IPADDRESS_RULE_MAP_PIB pib = _range_type_rule.insert (std::make_pair (address_from, item));
+        ipaddress_rule_map_pib_t pib = _range_type_rule.insert (std::make_pair (address_from, item));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
@@ -259,13 +259,13 @@ return_t ipaddr_acl::add_rule (const char* addr_from, const char* addr_to, bool 
             __leave2;
         }
 
-        IPADDRESS_RULE_ITEM item;
+        ipaddress_rule_item_t item;
         item.mode = ipaddr_acl_t::range_addr;
         item.addr = address_to;
         item.allow = allow;
 
         _lock.enter ();
-        IPADDRESS_RULE_MAP_PIB pib = _range_type_rule.insert (std::make_pair (address_from, item));
+        ipaddress_rule_map_pib_t pib = _range_type_rule.insert (std::make_pair (address_from, item));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
@@ -309,13 +309,13 @@ return_t ipaddr_acl::add_rule (const sockaddr_storage_t* sockaddr_from, const so
             __leave2;
         }
 
-        IPADDRESS_RULE_ITEM item;
+        ipaddress_rule_item_t item;
         item.mode = ipaddr_acl_t::range_addr;
         item.addr = address_to;
         item.allow = allow;
 
         _lock.enter ();
-        IPADDRESS_RULE_MAP_PIB pib = _range_type_rule.insert (std::make_pair (address_from, item));
+        ipaddress_rule_map_pib_t pib = _range_type_rule.insert (std::make_pair (address_from, item));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
@@ -368,13 +368,13 @@ return_t ipaddr_acl::determine (const char* addr, bool& accept)
         std::list<bool> result;
 
         _lock.enter ();
-        IPADDRESS_RULE_MAP::iterator iter = _single_type_rule.find (address);
+        ipaddress_rule_map_t::iterator iter = _single_type_rule.find (address);
         if (_single_type_rule.end () != iter) {
             result.push_back (iter->second.allow);
         }
-        for (IPADDRESS_RULE_MAP::iterator iter = _range_type_rule.begin (); iter != _range_type_rule.end (); iter++) {
+        for (ipaddress_rule_map_t::iterator iter = _range_type_rule.begin (); iter != _range_type_rule.end (); iter++) {
             ipaddr_t begin = iter->first;
-            IPADDRESS_RULE_ITEM& item = iter->second;
+            ipaddress_rule_item_t& item = iter->second;
             ipaddr_t end = item.addr;
 
             if ((begin <= address) && (address <= end)) {
@@ -433,14 +433,14 @@ return_t ipaddr_acl::determine (const sockaddr_storage_t* sockaddr, bool& accept
         std::list<bool> result;
 
         _lock.enter ();
-        IPADDRESS_RULE_MAP::iterator iter = _single_type_rule.find (address);
+        ipaddress_rule_map_t::iterator iter = _single_type_rule.find (address);
         if (_single_type_rule.end () != iter) {
             result.push_back (iter->second.allow);
         }
-        for (IPADDRESS_RULE_MAP::iterator iter = _range_type_rule.begin (); iter != _range_type_rule.end (); iter++) {
+        for (ipaddress_rule_map_t::iterator iter = _range_type_rule.begin (); iter != _range_type_rule.end (); iter++) {
             ipaddr_t begin = iter->first;
 
-            IPADDRESS_RULE_ITEM& item = iter->second;
+            ipaddress_rule_item_t& item = iter->second;
             ipaddr_t end = item.addr;
 
             if ((begin <= address) && (address <= end)) {

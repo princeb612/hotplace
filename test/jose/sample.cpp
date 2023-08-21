@@ -152,13 +152,13 @@ void test_rfc7515_A1 ()
     }
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS compact) - Verify");
 
-    ret = jws.sign (&key, (char*) hs256_header, claim, signature, JOSE_FLATJSON);
+    ret = jws.sign (&key, (char*) hs256_header, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS JSON flattened) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON flattened" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS JSON flattened) - Verify");
 
-    ret = jws.sign (&key, (char*) hs256_header, claim, signature, JOSE_JSON);
+    ret = jws.sign (&key, (char*) hs256_header, claim, signature, jose_serialization_t::jose_json);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS JSON serialization) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON serialization" << std::endl << signature.c_str () << std::endl;
@@ -191,13 +191,13 @@ void test_rfc7515_HS ()
     std::cout << "JWS " << std::endl << jws_result.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS compact) - Verify");
 
-    ret = jose.sign (jose_context, jws_t::jws_hs256, claim, jws_result, JOSE_FLATJSON);
+    ret = jose.sign (jose_context, jws_t::jws_hs256, claim, jws_result, jose_serialization_t::jose_flatjson);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS flat) - Sign");
     ret = jose.verify (jose_context, jws_result, result);
     std::cout << "JWS " << std::endl << jws_result.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS flat) - Verify");
 
-    ret = jose.sign (jose_context, jws_t::jws_hs256, claim, jws_result, JOSE_JSON);
+    ret = jose.sign (jose_context, jws_t::jws_hs256, claim, jws_result, jose_serialization_t::jose_json);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS json) - Sign");
     ret = jose.verify (jose_context, jws_result, result);
     std::cout << "JWS " << std::endl << jws_result.c_str () << std::endl;
@@ -256,13 +256,13 @@ void test_rfc7515_A2 ()
     }
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS compact) - Verify");
 
-    ret = jws.sign (&key, (char*) rs256_header, claim, signature, JOSE_FLATJSON);
+    ret = jws.sign (&key, (char*) rs256_header, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS JSON flattened) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON flattened" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS JSON flattened) - Verify");
 
-    ret = jws.sign (&key, (char*) rs256_header, claim, signature, JOSE_JSON);
+    ret = jws.sign (&key, (char*) rs256_header, claim, signature, jose_serialization_t::jose_json);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS JSON serialization) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON serialization" << std::endl << signature.c_str () << std::endl;
@@ -305,13 +305,13 @@ void test_rfc7515_A3 ()
     // so test in https://jwt.io
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS compact) - Verify");
 
-    ret = jws.sign (&key, jws_t::jws_es256, claim, signature, JOSE_FLATJSON);
+    ret = jws.sign (&key, jws_t::jws_es256, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON flattended) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON flattened" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON flattended) - Verify");
 
-    ret = jws.sign (&key, jws_t::jws_es256, claim, signature, JOSE_JSON);
+    ret = jws.sign (&key, jws_t::jws_es256, claim, signature, jose_serialization_t::jose_json);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON serialization) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON serialization" << std::endl << signature.c_str () << std::endl;
@@ -359,13 +359,13 @@ void test_rfc7515_A4 ()
     // so test in https://jwt.io
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS compact) - Verify");
 
-    ret = jws.sign (&key, jws_t::jws_es512, claim, signature, JOSE_FLATJSON);
+    ret = jws.sign (&key, jws_t::jws_es512, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON flattened) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON flattened" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON flattened) - Verify");
 
-    ret = jws.sign (&key, jws_t::jws_es512, claim, signature, JOSE_JSON);
+    ret = jws.sign (&key, jws_t::jws_es512, claim, signature, jose_serialization_t::jose_json);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON serialization) - Sign");
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON serialization" << std::endl << signature.c_str () << std::endl;
@@ -431,7 +431,7 @@ void test_rfc7515_A6 ()
     std::list <jws_t> headers;
     headers.push_back (jws_t::jws_rs256);
     headers.push_back (jws_t::jws_es256);
-    jws.sign (&key, headers, claim, signature, JOSE_JSON);
+    jws.sign (&key, headers, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON serialization" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.6. Example JWS Using General JWS JSON Serialization");
@@ -452,7 +452,7 @@ void test_rfc7515_A7 ()
     std::string signature;
     bool result = false;
 
-    jws.sign (&key, jws_t::jws_rs256, claim, signature, JOSE_FLATJSON);
+    jws.sign (&key, jws_t::jws_rs256, claim, signature, jose_serialization_t::jose_flatjson);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON flattened" << std::endl << signature.c_str () << std::endl;
 
@@ -489,28 +489,28 @@ void test_rfc7515_bypem ()
     bool result = false;
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-    jws.sign (&key, (char*) hs256_header, claim, signature, JOSE_JSON);
+    jws.sign (&key, (char*) hs256_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS HS256" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "HS256");
 #endif
 
-    jws.sign (&key, (char*) rs256_header, claim, signature, JOSE_JSON);
+    jws.sign (&key, (char*) rs256_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS RS256" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RS256");
 
-    jws.sign (&key, (char*) es256_header, claim, signature, JOSE_JSON);
+    jws.sign (&key, (char*) es256_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS ES256" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "ES256");
 
-    jws.sign (&key, (char*) es512_header, claim, signature, JOSE_JSON);
+    jws.sign (&key, (char*) es512_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS ES512" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "ES512");
 
-    jws.sign (&key, (char*) ps256_header, claim, signature, JOSE_JSON);
+    jws.sign (&key, (char*) ps256_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS PS256" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "PS256");
@@ -616,7 +616,7 @@ void test_rfc7515_bykeygen ()
     headers.push_back ((char*) rs256_header);
     headers.push_back ((char*) es256_header);
     headers.push_back ((char*) ps256_header);
-    jws.sign (&key, headers, claim, signature, JOSE_JSON);
+    jws.sign (&key, headers, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS HS256,RS256,ES256,PS256" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "HS256");
@@ -893,15 +893,15 @@ void test_rfc7516_A1 ()
     jose_context_t* context = nullptr;
     jose.open (&context, &key);
 
-    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, convert (input), compact, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, convert (input), compact, jose_serialization_t::jose_compact);
     ret = jose.decrypt (context, compact, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (compact)");
 
-    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, convert (input), json_flat, JOSE_FLATJSON);
+    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, convert (input), json_flat, jose_serialization_t::jose_flatjson);
     ret = jose.decrypt (context, json_flat, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (flat)");
 
-    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, convert (input), json_serial, JOSE_JSON);
+    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, convert (input), json_serial, jose_serialization_t::jose_json);
     ret = jose.decrypt (context, json_serial, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (json)");
 
@@ -933,7 +933,7 @@ void test_rsa_oaep ()
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
 
     jose.open (&context, &key);
-    jose.encrypt (context, jwe_t::jwe_a128gcm, jwa_t::jwa_rsa_oaep, convert (input), output, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a128gcm, jwa_t::jwa_rsa_oaep, convert (input), output, jose_serialization_t::jose_compact);
     ret = jose.decrypt (context, output, plain, result);
     jose.close (context);
 
@@ -961,7 +961,7 @@ void test_rsa_oaep_256 ()
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
 
     jose.open (&context, &key);
-    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep_256, convert (input), output, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep_256, convert (input), output, jose_serialization_t::jose_compact);
     ret = jose.decrypt (context, output, plain, result);
     jose.close (context);
 
@@ -994,15 +994,15 @@ void test_rfc7516_A2 ()
     jose_context_t* context = nullptr;
     jose.open (&context, &key);
 
-    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, convert (input), compact, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, convert (input), compact, jose_serialization_t::jose_compact);
     ret = jose.decrypt (context, compact, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (compact)");
 
-    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, convert (input), json_flat, JOSE_FLATJSON);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, convert (input), json_flat, jose_serialization_t::jose_flatjson);
     ret = jose.decrypt (context, compact, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (flat)");
 
-    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, convert (input), json_serial, JOSE_JSON);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, convert (input), json_serial, jose_serialization_t::jose_json);
     ret = jose.decrypt (context, compact, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (json)");
 
@@ -1038,13 +1038,13 @@ void test_rfc7516_A3 ()
 
     jose_context_t* context = nullptr;
     jose.open (&context, &key);
-    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, convert (input), compact, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, convert (input), compact, jose_serialization_t::jose_compact);
     ret = jose.decrypt (context, compact, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (compact)");
-    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, convert (input), json_flat, JOSE_FLATJSON);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, convert (input), json_flat, jose_serialization_t::jose_flatjson);
     ret = jose.decrypt (context, json_flat, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (flat)");
-    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, convert (input), json_serial, JOSE_JSON);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, convert (input), json_serial, jose_serialization_t::jose_json);
     ret = jose.decrypt (context, json_serial, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (json)");
     jose.close (context);
@@ -1081,7 +1081,7 @@ void test_rfc7516_A4 ()
     //algs.push_back (jwa_t::jwa_rsa_1_5);
     //algs.push_back (jwa_t::jwa_a128kw);
     algs.push_back (jwa_t::jwa_pbes2_hs256_a128kw);
-    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, algs, convert (input), json_serial, JOSE_JSON);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, algs, convert (input), json_serial, jose_serialization_t::jose_json);
     ret = jose.decrypt (context, json_serial, source, result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.4. JWE Using General JWE JSON Serialization (json)");
     jose.close (context);
@@ -1298,7 +1298,7 @@ void test_rfc7517_C ()
     keygen.add_oct (&key, nullptr, jwa_t::jwa_pbes2_hs256_a128kw, (byte_t*) passphrase, strlen (passphrase), crypto_use_t::use_enc);
 
     jose.open (&context, &key);
-    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_pbes2_hs256_a128kw, convert (input), output, JOSE_COMPACT);
+    jose.encrypt (context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_pbes2_hs256_a128kw, convert (input), output, jose_serialization_t::jose_compact);
     ret = jose.decrypt (context, output, plain, result);
     jose.close (context);
 
@@ -1326,12 +1326,12 @@ void test_rfc7518_RSASSA_PSS ()
     std::cout << "JWS compact" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7518 3.5.  Digital Signature with RSASSA-PSS (JWS compact)");
 
-    jws.sign (&key, (char*) ps256_header, claim, signature, JOSE_FLATJSON);
+    jws.sign (&key, (char*) ps256_header, claim, signature, jose_serialization_t::jose_flatjson);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON flattened" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7518 3.5.  Digital Signature with RSASSA-PSS (JWS JSON flattened)");
 
-    jws.sign (&key, (char*) ps256_header, claim, signature, JOSE_JSON);
+    jws.sign (&key, (char*) ps256_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify (&key, signature, result);
     std::cout << "JWS JSON serialization" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7518 3.5.  Digital Signature with RSASSA-PSS (JWS JSON serialization)");
@@ -1695,7 +1695,7 @@ void test_jwe_flattened ()
                 if (nameof_alg) {
                     print_text ("JWE enc %s alg %s", nameof_enc, nameof_alg);
 
-                    ret = jose.encrypt (handle_encrypt, enc, alg, convert (input), encrypted, JOSE_FLATJSON);
+                    ret = jose.encrypt (handle_encrypt, enc, alg, convert (input), encrypted, jose_serialization_t::jose_flatjson);
                     if (errorcode_t::success == ret) {
                         printf ("encrypted\n%s\n", encrypted.c_str ());
 
@@ -1765,7 +1765,7 @@ void test_jwe_json (jwe_t enc)
 
         print_text ("JWE enc %s", nameof_enc);
 
-        ret = jose.encrypt (handle_encrypt, enc, algs, convert (input), encrypted, JOSE_JSON);
+        ret = jose.encrypt (handle_encrypt, enc, algs, convert (input), encrypted, jose_serialization_t::jose_json);
         if (errorcode_t::success != ret) {
             __leave2_trace (ret);
         }
@@ -1959,7 +1959,7 @@ void test_rfc8037 ()
     crypto_key jwk_x25519;
     jwk.load_file (&jwk_x25519, "rfc8037_A_X25519.jwk", 0);
     jose.open (&handle, &jwk_x25519);
-    ret = jose.encrypt (handle, jwe_t::jwe_a128gcm, jwa_t::jwa_ecdh_es_a128kw, convert (claim), encrypted, JOSE_FLATJSON);
+    ret = jose.encrypt (handle, jwe_t::jwe_a128gcm, jwa_t::jwa_ecdh_es_a128kw, convert (claim), encrypted, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
         printf ("RFC 8037 A.6.  ECDH-ES with X25519\n%s\n", encrypted.c_str ());
     }
@@ -1969,7 +1969,7 @@ void test_rfc8037 ()
     crypto_key jwk_x448;
     jwk.load_file (&jwk_x448, "rfc8037_A_X448.jwk", 0);
     jose.open (&handle, &jwk_x448);
-    ret = jose.encrypt (handle, jwe_t::jwe_a256gcm, jwa_t::jwa_ecdh_es_a256kw, convert (claim), encrypted, JOSE_FLATJSON);
+    ret = jose.encrypt (handle, jwe_t::jwe_a256gcm, jwa_t::jwa_ecdh_es_a256kw, convert (claim), encrypted, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
         printf ("RFC 8037 A.7.  ECDH-ES with X448\n%s\n", encrypted.c_str ());
     }
@@ -2024,7 +2024,7 @@ void test_okp ()
             const char* nameof_alg = advisor->nameof_jose_algorithm (algs [j]);
             claim = format ("JWE with OKP enc %s alg %s", nameof_enc, nameof_alg);
 
-            ret = jose.encrypt (handle, encs [i], algs [i], convert (claim), encrypted, JOSE_FLATJSON);
+            ret = jose.encrypt (handle, encs [i], algs [i], convert (claim), encrypted, jose_serialization_t::jose_flatjson);
             if (errorcode_t::success == ret) {
                 printf ("%s\n", encrypted.c_str ());
                 ret = jose.decrypt (handle, encrypted, source, result);
@@ -2037,7 +2037,7 @@ void test_okp ()
         }
     }
 
-    ret = jose.sign (handle, jws_t::jws_eddsa, claim, signature, JOSE_FLATJSON);
+    ret = jose.sign (handle, jws_t::jws_eddsa, claim, signature, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
         printf ("%s\n", signature.c_str ());
         ret = jose.verify (handle, signature, result);

@@ -31,7 +31,7 @@ json_object_encryption::~json_object_encryption ()
 return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
-    JOSE_CONTEXT* handle = static_cast <JOSE_CONTEXT*> (context);
+    jose_context_t* handle = static_cast <jose_context_t*> (context);
     openssl_crypt crypt;
     openssl_hash hash;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -43,7 +43,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
             __leave2_trace (ret);
         }
 
-        jose_encryptions_t::iterator iter = handle->encryptions.find (enc);
+        jose_encryptions_map_t::iterator iter = handle->encryptions.find (enc);
         if (handle->encryptions.end () == iter) {
             ret = errorcode_t::internal_error;
             __leave2_trace (ret);
@@ -314,7 +314,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
 return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jwa_t alg, const char* kid, binary_t input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
-    JOSE_CONTEXT* handle = static_cast <JOSE_CONTEXT*> (context);
+    jose_context_t* handle = static_cast <jose_context_t*> (context);
     openssl_crypt crypt;
     openssl_hash hash;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -326,7 +326,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
             __leave2_trace (ret);
         }
 
-        jose_encryptions_t::iterator iter = handle->encryptions.find (enc);
+        jose_encryptions_map_t::iterator iter = handle->encryptions.find (enc);
         if (handle->encryptions.end () == iter) {
             ret = errorcode_t::internal_error;
             __leave2_trace (ret);

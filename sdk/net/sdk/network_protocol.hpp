@@ -182,7 +182,7 @@ public:
      * @param   network_protocol**   ptr_protocol    [OUT] referenced, use release to free (important)
      * @return error code (see error.hpp)
      * @remarks
-     *          if input stream is too short, return ERROR_MORE_DATA
+     *          if input stream is too short, return errorcode_t::more_data
      */
     virtual return_t is_kind_of (void* stream, size_t stream_size, network_protocol** ptr_protocol);
 
@@ -199,7 +199,7 @@ protected:
     t_shared_reference < network_protocol_group> _shared;
 
     typedef std::map<uint32, network_protocol*> protocol_map_t;
-    typedef std::pair<protocol_map_t::iterator, bool> protocol_pib_t;
+    typedef std::pair<protocol_map_t::iterator, bool> protocol_map_pib_t;
 
     critical_section _lock;
     protocol_map_t _protocols;

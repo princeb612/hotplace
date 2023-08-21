@@ -73,12 +73,12 @@ public:
      *          jose_context_t* handle_decrypt = nullptr;
      *          jose.open (&handle_encrypt, &crypto_pubkey);
      *          jose.open (&handle_decrypt, &crypto_privkey);
-     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_ecdh_es, convert (input), encrypted, JOSE_JSON);
+     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_ecdh_es, convert (input), encrypted, jose_serialization_t::jose_json);
      *          ret = jose.decrypt (handle_decrypt, encrypted, output, result);
      *          jose.close (handle_encrypt);
      *          jose.close (handle_decrypt);
      */
-    return_t encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
     /*
      * @brief encrypt
      * @param jose_context_t* context [in]
@@ -120,10 +120,10 @@ public:
      *          algs.push_back (jwa_t::jwa_pbes2_hs256_a128kw);
      *          algs.push_back (jwa_t::jwa_pbes2_hs384_a192kw);
      *          algs.push_back (jwa_t::jwa_pbes2_hs512_a256kw);
-     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, algs, convert (input), encrypted, JOSE_JSON);
+     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, algs, convert (input), encrypted, jose_serialization_t::jose_json);
      *          jose.close (handle_encrypt);
      */
-    return_t encrypt (jose_context_t* context, jwe_t enc, std::list <jwa_t> algs, binary_t input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t encrypt (jose_context_t* context, jwe_t enc, std::list <jwa_t> algs, binary_t input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
     /*
      * @brief decrypt
      * @param jose_context_t* context [in]
@@ -207,7 +207,7 @@ public:
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign (jose_context_t* context, jws_t method, std::string input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t sign (jose_context_t* context, jws_t method, std::string input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
     /*
      * @brief sign
      * @param jose_context_t* context [in]
@@ -234,7 +234,7 @@ public:
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign (jose_context_t* context, std::list <jws_t> methods, std::string input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t sign (jose_context_t* context, std::list <jws_t> methods, std::string input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
     /*
      * @brief sign
      * @param jose_context_t* context [in]
@@ -257,7 +257,7 @@ public:
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign (jose_context_t* context, std::string protected_header, std::string input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t sign (jose_context_t* context, std::string protected_header, std::string input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
     /*
      * @brief sign
      * @param jose_context_t* context [in]
@@ -267,7 +267,7 @@ public:
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
      */
-    return_t sign (jose_context_t* context, std::list<std::string> headers, std::string input, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t sign (jose_context_t* context, std::list<std::string> headers, std::string input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
     /*
      * @brief verify
      * @param jose_context_t* context [in]
@@ -295,7 +295,7 @@ protected:
      * @param std::string kid [in]
      * @param binary_t& header [out]
      * @remarks
-     *      compose_encryption_header (jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_unknown, JOSE_HEADER_ENC_ALG, "", header);
+     *      compose_encryption_header (jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_unknown, jose_compose_t::jose_enc_alg, "", header);
      */
     return_t compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string kid, binary_t& header);
     /*
@@ -369,7 +369,7 @@ protected:
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      */
-    return_t write_encryption (jose_context_t* context, std::string& output, jose_serialization_t type = JOSE_COMPACT);
+    return_t write_encryption (jose_context_t* context, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
     /*
      * @brief update tag after AESGCMKW
      * @param std::string source_encoded [in]
@@ -398,7 +398,7 @@ protected:
      * @param std::string& signature [out]
      * @param jose_serialization_t type [inopt]
      */
-    return_t write_signature (jose_context_t* context, std::string& signature, jose_serialization_t type = JOSE_COMPACT);
+    return_t write_signature (jose_context_t* context, std::string& signature, jose_serialization_t type = jose_serialization_t::jose_compact);
 };
 
 typedef json_object_signing_encryption JOSE;

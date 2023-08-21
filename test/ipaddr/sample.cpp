@@ -113,7 +113,7 @@ void test2 ()
     uint32 mask = 0;
     uint32 i = 0;
     for (i = 0; i <= 32; i++) {
-        mask = CIDRSubNetMaskTemplate<uint32> (i);
+        mask = t_cidr_subnet_mask<uint32> (i);
         std::string pad ("   ", pad_bytes (i));
         stream.printf ("%s/%d%s %08x & %08x => %08x ~ %08x\n",
                        address, i, pad.c_str (), (ipv4), (mask), (ipv4 & mask), ((ipv4 & mask) | ~mask));
@@ -141,7 +141,7 @@ void test3 ()
     //uint cidr = 0;
     uint i = 0;
     for (i = 0; i <= 128; i++) {
-        mask = CIDRSubNetMaskTemplate<ipaddr_t> (i);
+        mask = t_cidr_subnet_mask<ipaddr_t> (i);
         std::string pad ("   ", pad_bytes (i));
         stream.printf ("%s/%d%s %032I128x & %032I128x => %032I128x ~ %032I128x\n",
                        address, i, pad.c_str (), (ipv6), (mask), (ipv6 & mask), ((ipv6 & mask) | ~mask));

@@ -41,7 +41,7 @@ typedef uint32 ipaddr_t;
  *          uint i = 0;
  *          for (i = 0; i <= 128; i++)
  *          {
- *              mask = CIDRSubNetMaskTemplate<ipaddr_t> (i);
+ *              mask = t_cidr_subnet_mask<ipaddr_t> (i);
  *              stream.printf("%s/%d %032I128x & %032I128x => %032I128x ~ %032I128x\n",
  *                            address, i, ipv6, mask, ipv6 & mask, (ipv6 & mask)|~mask);
  *          }
@@ -53,7 +53,7 @@ typedef uint32 ipaddr_t;
  *          // => 3ffeffff0000f1010000000000000000 ~ 3ffeffff0000f101ffffffffffffffff
  *          //    ...
  */
-template<typename T> T CIDRSubNetMaskTemplate (uint cidr)
+template<typename T> T t_cidr_subnet_mask (uint cidr)
 {
     T ret = 0;
     uint i = 0;
@@ -167,13 +167,13 @@ protected:
         int mode;   // 0 single 1 cidr 2 range
         ipaddr_t addr;
         bool allow; // allow/deny
-    } IPADDRESS_RULE_ITEM;
-    typedef std::map<ipaddr_t, IPADDRESS_RULE_ITEM> IPADDRESS_RULE_MAP;
-    typedef std::pair<IPADDRESS_RULE_MAP::iterator, bool> IPADDRESS_RULE_MAP_PIB;
+    } ipaddress_rule_item_t;
+    typedef std::map<ipaddr_t, ipaddress_rule_item_t> ipaddress_rule_map_t;
+    typedef std::pair<ipaddress_rule_map_t::iterator, bool> ipaddress_rule_map_pib_t;
 
     critical_section _lock;
-    IPADDRESS_RULE_MAP _single_type_rule;   // 0 single
-    IPADDRESS_RULE_MAP _range_type_rule;    // 1 cidr, 2 range
+    ipaddress_rule_map_t _single_type_rule;     // 0 single
+    ipaddress_rule_map_t _range_type_rule;      // 1 cidr, 2 range
 };
 
 }

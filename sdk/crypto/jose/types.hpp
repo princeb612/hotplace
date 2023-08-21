@@ -21,16 +21,16 @@ namespace hotplace {
 namespace crypto {
 
 enum jose_serialization_t {
-    JOSE_COMPACT    = 0,
-    JOSE_JSON       = 1,
-    JOSE_FLATJSON   = 2,
+    jose_compact    = 0,
+    jose_json       = 1,
+    jose_flatjson   = 2,
 };
-#define JOSE_JSON_FORMAT JOSE_FLATJSON
+#define JOSE_JSON_FORMAT jose_serialization_t::jose_flatjson
 
 enum jose_compose_t {
-    JOSE_HEADER_ENC_ONLY    = 1,
-    JOSE_HEADER_ALG_ONLY    = 2,
-    JOSE_HEADER_ENC_ALG     = 3,
+    jose_enc_only   = 1,
+    jose_alg_only   = 2,
+    jose_enc_alg    = 3,
 };
 
 enum jose_type_t {
@@ -40,8 +40,8 @@ enum jose_type_t {
 };
 
 enum jose_part_t {
-    ENCRYPTION_PART = 1,
-    ALGORITHM_PART  = 2,
+    jose_enc_part   = 1,
+    jose_alg_part   = 2,
 };
 
 typedef struct _jose_recipient_t {
@@ -104,8 +104,8 @@ typedef struct _jose_encryption_t {
         // do nothing
     }
 }  jose_encryption_t;
-typedef std::map<jwe_t, jose_encryption_t> jose_encryptions_t;
-typedef std::pair<jose_encryptions_t::iterator, bool> jose_encryptions_pib_t;
+typedef std::map<jwe_t, jose_encryption_t> jose_encryptions_map_t;
+typedef std::pair<jose_encryptions_map_t::iterator, bool> jose_encryptions_map_pib_t;
 
 /* JWS */
 typedef struct _jose_sign_t {
@@ -117,22 +117,19 @@ typedef struct _jose_sign_t {
 } jose_sign_t;
 typedef std::list<jose_sign_t> jose_signs_t;
 
-struct _jose_context_t {};
-typedef struct _jose_context_t jose_context_t;
-
-typedef struct _JOSE_CONTEXT : _jose_context_t {
+typedef struct _jose_context_t {
     crypto_key* key;
 
-    binary_t protected_header;      // compact, flat
+    binary_t protected_header;          // compact, flat
 
-    jose_encryptions_t encryptions; // JSON Object Encryption
-    jose_signs_t signs;             // JSON Object Signing
+    jose_encryptions_map_t encryptions; // JSON Object Encryption
+    jose_signs_t signs;                 // JSON Object Signing
 
-    _JOSE_CONTEXT () : key (nullptr)
+    _jose_context_t () : key (nullptr)
     {
         // do nothing
     }
-} JOSE_CONTEXT;
+} jose_context_t;
 
 }
 }  // namespace

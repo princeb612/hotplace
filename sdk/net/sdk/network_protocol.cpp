@@ -36,7 +36,7 @@ return_t network_protocol_group::add (network_protocol* protocol)
         }
 
         _lock.enter ();
-        protocol_pib_t pib = _protocols.insert (std::make_pair (protocol->protocol_id (), protocol));
+        protocol_map_pib_t pib = _protocols.insert (std::make_pair (protocol->protocol_id (), protocol));
         if (true == pib.second) {
             protocol->addref ();
         }
@@ -172,7 +172,7 @@ return_t network_protocol_group::is_kind_of (void* stream, size_t stream_size, n
                 protocol_match = protocol;
                 protocol_match->addref ();
                 break;
-            } else if (ERROR_MORE_DATA == dwResult) {
+            } else if (errorcode_t::more_data == dwResult) {
                 ret = dwResult;
                 protocol_match = protocol;
             }
