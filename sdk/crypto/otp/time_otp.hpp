@@ -23,7 +23,7 @@ public:
     ~time_otp ();
     /*
      * @brief open
-     * @param void** handle [out]
+     * @param otp_context_t** handle [out]
      * @param unsigned int digit_length [in]
      * @param time_t interval [in] 0 is ignored
      * @param hash_algorithm_t algorithm [in]
@@ -34,32 +34,32 @@ public:
      *        otp.open(&handle, 8, 30, HASH_ALGORITHM_SHA_512, key, keysize);
      *        otp.close(handle);
      */
-    uint32 open (void** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm,
+    uint32 open (otp_context_t** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm,
                  const byte_t* key_data, size_t key_size);
     /*
      * @brief close
-     * @param void* handle [in]
+     * @param otp_context_t* handle [in]
      * @return error code (see error.h)
      */
-    uint32 close (void* handle);
+    uint32 close (otp_context_t* handle);
     /*
      * @brief close
-     * @param void* handle [in]
+     * @param otp_context_t* handle [in]
      * @param time64_t time [in]
      * @param uint32& code [out]
      * @return error code (see error.h)
      * @sample
      *        otp.get(handle, time, code);
      */
-    uint32 get (void* handle, time64_t time, uint32& code);
+    uint32 get (otp_context_t* handle, time64_t time, uint32& code);
     /*
      * @brief close
-     * @param void* handle [in]
+     * @param otp_context_t* handle [in]
      * @param time64_t time [in]
      * @param uint32 code [in]
      * @return error code (see error.h)
      */
-    uint32 verify (void* handle, time64_t time, uint32 code);
+    uint32 verify (otp_context_t* handle, time64_t time, uint32 code);
 };
 
 }

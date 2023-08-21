@@ -336,6 +336,9 @@ typedef struct _crypt_context_t crypt_context_t;
 struct _hash_context_t {};
 typedef struct _hash_context_t hash_context_t;
 
+struct _otp_context_t {};
+typedef struct _otp_context_t otp_context_t;
+
 }
 }  // namespace
 

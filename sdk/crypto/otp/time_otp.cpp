@@ -15,12 +15,11 @@ namespace hotplace {
 namespace crypto {
 
 #define TOTP_CONTEXT_SIGNATURE 0x20170703
-typedef struct _TOTP_CONTEXT {
+typedef struct _totp_context_t : public otp_context_t {
     uint32 _signature;
-    void* _hotp_handle;
-//time_t _init_time;
+    otp_context_t* _hotp_handle;
     time_t _interval;
-} TOTP_CONTEXT;
+} totp_context_t;
 
 time_otp::time_otp ()
 {
@@ -32,13 +31,13 @@ time_otp::~time_otp ()
     // do nothing
 }
 
-uint32 time_otp::open (void** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm,
+uint32 time_otp::open (otp_context_t** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm,
                        const byte_t* key_data, size_t key_size)
 {
     uint32 ret = errorcode_t::success;
-    TOTP_CONTEXT* context = nullptr;
+    totp_context_t* context = nullptr;
     hmac_otp hotp;
-    void* hotp_handle = nullptr;
+    otp_context_t* hotp_handle = nullptr;
 
     __try2
     {
@@ -51,7 +50,7 @@ uint32 time_otp::open (void** handle, unsigned int digit_length, time_t interval
             __leave2_trace (ret);
         }
 
-        __try_new_catch (context, new TOTP_CONTEXT, ret, __leave2_trace (ret));
+        __try_new_catch (context, new totp_context_t, ret, __leave2_trace (ret));
 
         context->_signature = TOTP_CONTEXT_SIGNATURE;
         context->_hotp_handle = hotp_handle;
@@ -78,10 +77,10 @@ uint32 time_otp::open (void** handle, unsigned int digit_length, time_t interval
     return ret;
 }
 
-uint32 time_otp::close (void* handle)
+uint32 time_otp::close (otp_context_t* handle)
 {
     uint32 ret = errorcode_t::success;
-    TOTP_CONTEXT* context = static_cast<TOTP_CONTEXT*>(handle);
+    totp_context_t* context = static_cast<totp_context_t*>(handle);
     hmac_otp hotp;
 
     __try2
@@ -107,10 +106,10 @@ uint32 time_otp::close (void* handle)
     return ret;
 }
 
-uint32 time_otp::get (void* handle, time64_t time, uint32& code)
+uint32 time_otp::get (otp_context_t* handle, time64_t time, uint32& code)
 {
     uint32 ret = errorcode_t::success;
-    TOTP_CONTEXT* context = static_cast<TOTP_CONTEXT*>(handle);
+    totp_context_t* context = static_cast<totp_context_t*>(handle);
     hmac_otp hotp;
 
     __try2
@@ -134,10 +133,10 @@ uint32 time_otp::get (void* handle, time64_t time, uint32& code)
     return ret;
 }
 
-uint32 time_otp::verify (void* handle, time64_t time, uint32 code)
+uint32 time_otp::verify (otp_context_t* handle, time64_t time, uint32 code)
 {
     uint32 ret = errorcode_t::success;
-    TOTP_CONTEXT* context = static_cast<TOTP_CONTEXT*>(handle);
+    totp_context_t* context = static_cast<totp_context_t*>(handle);
 
     __try2
     {

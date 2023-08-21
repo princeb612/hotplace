@@ -40,18 +40,18 @@ datetime::datetime (struct timespec ts)
     memcpy (&_timespec, &ts, sizeof (struct timespec));
 }
 
-datetime::datetime (DATETIME& dt, long* nsec)
+datetime::datetime (datetime_t& dt, long* nsec)
 {
     datetime_to_timespec (dt, _timespec);
     _timespec.tv_nsec = (nsec) ? *nsec : 0;
 }
 
-datetime::datetime (FILETIME& ft)
+datetime::datetime (filetime_t& ft)
 {
     filetime_to_timespec (ft, _timespec);
 }
 
-datetime::datetime (SYSTEMTIME& st)
+datetime::datetime (systemtime_t& st)
 {
     systemtime_to_timespec (st, _timespec);
 }
@@ -82,7 +82,7 @@ bool datetime::update_if_elapsed (unsigned long msecs)
 
     datetime now;
     datetime temp (_timespec);
-    TIMESPAN ts = { 0, };
+    timespan_t ts = { 0, };
 
     ts.milliseconds = msecs;
     temp += ts;
@@ -130,7 +130,7 @@ return_t datetime::getgmtime (struct tm* tm, long* nsec)
     return ret;
 }
 
-return_t datetime::getlocaltime (DATETIME* dt, long* nsec)
+return_t datetime::getlocaltime (datetime_t* dt, long* nsec)
 {
     return_t ret = errorcode_t::success;
 
@@ -138,7 +138,7 @@ return_t datetime::getlocaltime (DATETIME* dt, long* nsec)
     return ret;
 }
 
-return_t datetime::getgmtime (DATETIME* dt, long* nsec)
+return_t datetime::getgmtime (datetime_t* dt, long* nsec)
 {
     return_t ret = errorcode_t::success;
 
@@ -146,7 +146,7 @@ return_t datetime::getgmtime (DATETIME* dt, long* nsec)
     return ret;
 }
 
-return_t datetime::getfiletime (FILETIME* ft)
+return_t datetime::getfiletime (filetime_t* ft)
 {
     return_t ret = errorcode_t::success;
 
@@ -168,7 +168,7 @@ return_t datetime::getfiletime (FILETIME* ft)
     return ret;
 }
 
-return_t datetime::getsystemtime (int mode, SYSTEMTIME* ft)
+return_t datetime::getsystemtime (int mode, systemtime_t* ft)
 {
     return_t ret = errorcode_t::success;
 
@@ -197,13 +197,13 @@ datetime& datetime::operator = (struct timespec& ts)
     return *this;
 }
 
-datetime& datetime::operator = (FILETIME& ft)
+datetime& datetime::operator = (filetime_t& ft)
 {
     filetime_to_timespec (ft, _timespec);
     return *this;
 }
 
-datetime & datetime::operator = (SYSTEMTIME & st)
+datetime & datetime::operator = (systemtime_t & st)
 {
     systemtime_to_timespec (st, _timespec);
     return *this;
@@ -221,13 +221,13 @@ datetime & datetime::operator >> (struct timespec& ts)
     return *this;
 }
 
-datetime & datetime::operator >> (FILETIME & ft)
+datetime & datetime::operator >> (filetime_t & ft)
 {
     getfiletime (&ft);
     return *this;
 }
 
-datetime & datetime::operator >> (SYSTEMTIME & st)
+datetime & datetime::operator >> (systemtime_t & st)
 {
     getsystemtime (1, &st);
     return *this;
@@ -316,7 +316,7 @@ bool datetime::operator < (datetime rhs)
 #define EXP7 10000000
 #define EXP9 1000000000
 
-datetime& datetime::operator += (TIMESPAN ts)
+datetime& datetime::operator += (timespan_t ts)
 {
     _timespec.tv_sec += ts.days * 60 * 60 * 24;
     _timespec.tv_sec += ts.seconds;
@@ -329,7 +329,7 @@ datetime& datetime::operator += (TIMESPAN ts)
     return *this;
 }
 
-datetime& datetime::operator -= (TIMESPAN ts)
+datetime& datetime::operator -= (timespan_t ts)
 {
     _timespec.tv_sec -= ts.days * 60 * 60 * 24;
     _timespec.tv_sec -= ts.seconds;
@@ -385,7 +385,7 @@ return_t datetime::timespec_to_tm (int mode, struct timespec ts, struct tm* tm_p
     return ret;
 }
 
-return_t datetime::timespec_to_datetime (int mode, struct timespec ts, DATETIME* dt, long* nsec)
+return_t datetime::timespec_to_datetime (int mode, struct timespec ts, datetime_t* dt, long* nsec)
 {
     return_t ret = errorcode_t::success;
 
@@ -425,7 +425,7 @@ return_t datetime::timespec_to_datetime (int mode, struct timespec ts, DATETIME*
     return ret;
 }
 
-return_t datetime::timespec_to_systemtime (int mode, struct timespec ts, SYSTEMTIME* st)
+return_t datetime::timespec_to_systemtime (int mode, struct timespec ts, systemtime_t* st)
 {
     return_t ret = errorcode_t::success;
 
@@ -461,7 +461,7 @@ return_t datetime::timespec_to_systemtime (int mode, struct timespec ts, SYSTEMT
     return ret;
 }
 
-return_t datetime::datetime_to_timespec (DATETIME dt, struct timespec& ts)
+return_t datetime::datetime_to_timespec (datetime_t dt, struct timespec& ts)
 {
     return_t ret = errorcode_t::success;
 
@@ -482,7 +482,7 @@ return_t datetime::datetime_to_timespec (DATETIME dt, struct timespec& ts)
     return ret;
 }
 
-return_t datetime::filetime_to_timespec (FILETIME ft, struct timespec& ts)
+return_t datetime::filetime_to_timespec (filetime_t ft, struct timespec& ts)
 {
     return_t ret = errorcode_t::success;
     int64 i64 = *(int64 *) &ft;
@@ -493,7 +493,7 @@ return_t datetime::filetime_to_timespec (FILETIME ft, struct timespec& ts)
     return ret;
 }
 
-return_t datetime::systemtime_to_timespec (SYSTEMTIME st, struct timespec& ts)
+return_t datetime::systemtime_to_timespec (systemtime_t st, struct timespec& ts)
 {
     return_t ret = errorcode_t::success;
 
@@ -519,7 +519,7 @@ return_t datetime::timespec_to_asn1time (struct timespec ts, ASN1TIME* at)
     return_t ret = errorcode_t::success;
 
     if (at) {
-        SYSTEMTIME st;
+        systemtime_t st;
         ret = timespec_to_systemtime (1, ts, &st);
 
         at->set (V_ASN1_GENERALIZEDTIME, format ("04d%02d%02d%02d%02d%02d.%d", st.year, st.month, st.day, st.hour, st.minute, st.second, st.milliseconds).c_str ());

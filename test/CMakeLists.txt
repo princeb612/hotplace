@@ -11,6 +11,7 @@ add_subdirectory (base)
 add_subdirectory (string)
 add_subdirectory (stream)
 add_subdirectory (bufferio)
+add_subdirectory (datetime)
 add_subdirectory (thread)
 
 # crypto

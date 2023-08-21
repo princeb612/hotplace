@@ -98,7 +98,7 @@ void test_crypt (crypt_interface* crypt_object, unsigned count_algorithms, crypt
     } // foreach algorithm
 }
 
-void test_encryption ()
+void test_crypt_algorithms ()
 {
     crypt_algorithm_t algorithm_table [] = {
         crypt_algorithm_t::aes128,
@@ -183,6 +183,30 @@ void test_encryption ()
     __finally2
     {
         // do nothing
+    }
+}
+
+void test_crypt ()
+{
+    console_color col;
+
+    struct {
+        uint32 cooltime;
+        uint32 unitsize;
+    } _test_condition [] = {
+        { 0, 0, },
+        //{ 10, 4096, }, // for large stream encryption performance, just check error occurrence
+    };
+
+    for (unsigned i = 0; i < sizeof (_test_condition) / sizeof (_test_condition [0]); i++) {
+        ossl_set_cooltime (_test_condition[i].cooltime);
+        ossl_set_unitsize (_test_condition[i].unitsize);
+
+        std::cout   << col.set_style (console_style_t::bold).set_fgcolor (console_color_t::white).turnon ()
+                    << "cooltime " << ossl_get_cooltime () << " unitsize " << ossl_get_unitsize ()
+                    << col.turnoff ()
+                    << std::endl;
+        test_crypt_algorithms ();
     }
 }
 
@@ -311,9 +335,6 @@ void test_rfc4231_testcase ()
     // HMAC-SHA-256 = b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7
     // HMAC-SHA-384 = afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6
     // HMAC-SHA-512 = 87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854
-
-    //void test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm, unsigned key_size, const byte_t* key_data,
-    //                        byte_t* data, size_t size)
 
     struct _testvector {
         const char* text;
@@ -604,6 +625,113 @@ void test_keywrap ()
                           "RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK");
 }
 
+uint32 test_hotp ()
+{
+    uint32 ret = errorcode_t::success;
+    otp_context_t* handle = NULL;
+
+    _test_case.begin ("hmac_otp (RFC4226)");
+
+    hmac_otp hotp;
+    std::vector<uint32> output;
+    byte_t* key = (byte_t*) "12345678901234567890"; // 20
+    ret = hotp.open (&handle, 6, hash_algorithm_t::sha1, key, 20);
+    if (ERROR_SUCCESS == ret) {
+        uint32 code = 0;
+        for (int i = 0; i < 10; i++) {
+            hotp.get (handle, code);
+            output.push_back (code);
+            std::cout << "counter " << i << " code " << code << std::endl;
+        }
+
+        hotp.close (handle);
+    }
+
+    uint32 sha1_hotp_result[10] = { 755224, 287082, 359152, 969429, 338314, 254676, 287922, 162583, 399871, 520489, };
+    if (0 != memcmp (&output[0], &sha1_hotp_result[0], 10 * sizeof (uint32))) {
+        ret = errorcode_t::internal_error;
+    }
+
+    std::cout << std::endl;
+
+    _test_case.test (ret, __FUNCTION__, "hotp");
+
+    return ret;
+}
+
+typedef struct _TOTP_TEST_DATA {
+    hash_algorithm_t algorithm;
+    byte_t* key;
+    size_t key_size;
+    uint32 result[6];
+} TOTP_TEST_DATA;
+TOTP_TEST_DATA _totp_test_data[] =
+{
+    { hash_algorithm_t::sha1,    (byte_t*) "12345678901234567890", 20, { 94287082, 7081804, 14050471, 89005924, 69279037, 65353130, } }, /* sha1 */
+    { hash_algorithm_t::sha2_256, (byte_t*) "12345678901234567890123456789012", 32, { 46119246, 68084774, 67062674,  91819424,  90698825, 77737706, } }, /* sha256 */
+    { hash_algorithm_t::sha2_512, (byte_t*) "1234567890123456789012345678901234567890123456789012345678901234", 64, { 90693936, 25091201, 99943326, 93441116, 38618901, 47863826, } }, /* sha512 */
+};
+
+uint32 test_totp (hash_algorithm_t algorithm)
+{
+    uint32 ret = errorcode_t::success;
+    otp_context_t* handle = NULL;
+    TOTP_TEST_DATA* test_data = NULL;
+
+    __try2
+    {
+        for (size_t index = 0; index < RTL_NUMBER_OF (_totp_test_data); index++) {
+            if (algorithm == _totp_test_data[index].algorithm) {
+                test_data = _totp_test_data + index;
+                break;
+            }
+        }
+        if (NULL == test_data) {
+            ret = errorcode_t::not_supported;
+            __leave2_trace (ret);
+        }
+
+        time_otp totp;
+        std::vector<uint32> output;
+        ret = totp.open (&handle, 8, 30, algorithm, test_data->key, test_data->key_size);
+        if (ERROR_SUCCESS == ret) {
+            uint32 code = 0;
+            uint64 counter[] = { 59, 1111111109, 1111111111, 1234567890, 2000000000LL, 20000000000LL };
+            for (int i = 0; i < (int) RTL_NUMBER_OF (counter); i++) {
+                totp.get (handle, counter[i], code);
+                output.push_back (code);
+                std::cout << "counter " << counter[i] << " code " << code << std::endl;
+            }
+            totp.close (handle);
+        }
+
+        if (0 != memcmp (&output[0], test_data->result, 6 * sizeof (uint32))) {
+            ret = errorcode_t::internal_error;
+        }
+    }
+    __finally2
+    {
+        _test_case.test (ret, __FUNCTION__, "totp");
+    }
+
+    return ret;
+}
+
+void test_otp ()
+{
+    _test_case.begin ("hmac_otp");
+    test_hotp ();
+
+    _test_case.begin ("time_otp/SHA1 (RFC6238)");
+    test_totp (hash_algorithm_t::sha1);
+
+    _test_case.begin ("time_otp/SHA256 (RFC6238)");
+    test_totp (hash_algorithm_t::sha2_256);
+
+    _test_case.begin ("time_otp/SHA512 (RFC6238)");
+    test_totp (hash_algorithm_t::sha2_512);
+}
+
 int main ()
 {
     openssl_startup ();
@@ -611,34 +739,15 @@ int main ()
 
     __try2
     {
-
-        console_color col;
-
-        struct {
-            uint32 cooltime;
-            uint32 unitsize;
-        } _test_condition [] = {
-            { 0, 0, },
-            //{ 10, 4096, }, // for large stream encryption performance, just check error occurrence
-        };
-
-        for (unsigned i = 0; i < sizeof (_test_condition) / sizeof (_test_condition [0]); i++) {
-            /*  */
-            ossl_set_cooltime (_test_condition[i].cooltime);
-            ossl_set_unitsize (_test_condition[i].unitsize);
-
-            std::cout   << col.set_style (console_style_t::bold).set_fgcolor (console_color_t::white).turnon ()
-                        << "cooltime " << ossl_get_cooltime () << " unitsize " << ossl_get_unitsize ()
-                        << col.turnoff ()
-                        << std::endl;
-            test_encryption ();
-        }
+        test_crypt ();
 
         test_digest ();
 
         test_random ();
 
         test_keywrap ();
+
+        test_otp ();
     }
     __finally2
     {

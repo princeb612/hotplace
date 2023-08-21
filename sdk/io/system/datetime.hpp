@@ -19,7 +19,7 @@ namespace io {
 
 #pragma pack(push, 1)
 
-typedef struct _SYSTEMTIME {
+typedef struct _systemtime_t {
     uint16 year;
     uint16 month;
     uint16 dayofweek;
@@ -28,14 +28,14 @@ typedef struct _SYSTEMTIME {
     uint16 minute;
     uint16 second;
     uint16 milliseconds;
-} SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
+} systemtime_t;
 
-typedef struct _FILETIME {
+typedef struct _filetime_t {
     uint32 low;
     uint32 high;
-} FILETIME, *PFILETIME, *LPFILETIME;
+} filetime_t;
 
-typedef struct _DATETIME {
+typedef struct _datetime_t {
     uint16 year;
     uint16 month;
     uint16 day;
@@ -43,13 +43,13 @@ typedef struct _DATETIME {
     uint16 minute;
     uint16 second;
     uint32 milliseconds;
-}   DATETIME;
+}   datetime_t;
 
-typedef struct _TIMESPAN {
+typedef struct _timespan_t {
     int32 days;
     int32 seconds;
     int32 milliseconds;
-} TIMESPAN;
+} timespan_t;
 
 #pragma pack(pop)
 
@@ -125,9 +125,9 @@ public:
     datetime ();
     datetime (time_t t, long* nsec = nullptr);
     datetime (struct timespec ts);
-    datetime (DATETIME& dt, long* nsec = nullptr);
-    datetime (FILETIME& ft);
-    datetime (SYSTEMTIME& st);
+    datetime (datetime_t& dt, long* nsec = nullptr);
+    datetime (filetime_t& ft);
+    datetime (systemtime_t& st);
     datetime (ASN1TIME& at);
     datetime (datetime& rhs);
 
@@ -150,20 +150,20 @@ public:
     return_t gettimespec (struct timespec* ts);
     return_t getlocaltime (struct tm* tm, long* nsec = nullptr);
     return_t getgmtime (struct tm* tm, long* nsec = nullptr);
-    return_t getlocaltime (DATETIME* dt, long* nsec = nullptr);
-    return_t getgmtime (DATETIME* dt, long* nsec = nullptr);
-    return_t getfiletime (FILETIME* ft);
-    return_t getsystemtime (int mode, SYSTEMTIME* ft);
+    return_t getlocaltime (datetime_t* dt, long* nsec = nullptr);
+    return_t getgmtime (datetime_t* dt, long* nsec = nullptr);
+    return_t getfiletime (filetime_t* ft);
+    return_t getsystemtime (int mode, systemtime_t* ft);
     return_t getasn1time (ASN1TIME* at);
 
     datetime& operator = (time_t timestamp);
     datetime& operator = (struct timespec& ts);
-    datetime& operator = (FILETIME& ft);
-    datetime& operator = (SYSTEMTIME& st);
+    datetime& operator = (filetime_t& ft);
+    datetime& operator = (systemtime_t& st);
     datetime& operator = (ASN1TIME& at);
     datetime& operator >> (struct timespec& ts);
-    datetime& operator >> (FILETIME& ft);
-    datetime& operator >> (SYSTEMTIME& st); // localtime
+    datetime& operator >> (filetime_t& ft);
+    datetime& operator >> (systemtime_t& st); // localtime
     datetime& operator >> (ASN1TIME& at);
 
     /*
@@ -177,8 +177,8 @@ public:
     bool operator <= (datetime rhs);
     bool operator <  (datetime rhs);
 
-    datetime& operator += (TIMESPAN ts);
-    datetime& operator -= (TIMESPAN ts);
+    datetime& operator += (timespan_t ts);
+    datetime& operator -= (timespan_t ts);
 
     /*
      * @brief timespec to tm
@@ -193,40 +193,40 @@ public:
      * @brief timespec to datetime
      * @param int mode [in] 0 gmtime 1 localtime
      * @param struct timespec ts [in]
-     * @param DATETIME* dt [out]
+     * @param datetime_t* dt [out]
      * @param long* nsec [outopt]
      * @return error code (see error.hpp)
      */
-    static return_t timespec_to_datetime (int mode, struct timespec ts, DATETIME* dt, long* nsec = nullptr);
+    static return_t timespec_to_datetime (int mode, struct timespec ts, datetime_t* dt, long* nsec = nullptr);
     /*
      * @brief timespec to systemtime
      * @param int mode [in] 0 gmtime 1 localtime
      * @param struct timespec ts [in]
-     * @param SYSTEMTIME* st [out]
+     * @param systemtime_t* st [out]
      * @return error code (see error.hpp)
      */
-    static return_t timespec_to_systemtime (int mode, struct timespec ts, SYSTEMTIME* st);
+    static return_t timespec_to_systemtime (int mode, struct timespec ts, systemtime_t* st);
     /*
      * @brief datetime to timespec
-     * @param DATETIME ft [in]
+     * @param datetime_t ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t datetime_to_timespec (DATETIME ft, struct timespec& ts);
+    static return_t datetime_to_timespec (datetime_t ft, struct timespec& ts);
     /*
      * @brief filetime to timespec
-     * @param FILETIME ft [in]
+     * @param filetime_t ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t filetime_to_timespec (FILETIME ft, struct timespec& ts);
+    static return_t filetime_to_timespec (filetime_t ft, struct timespec& ts);
     /*
      * @brief systemtime to timespec
-     * @param SYSTEMTIME ft [in]
+     * @param systemtime_t ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t systemtime_to_timespec (SYSTEMTIME ft, struct timespec& ts);
+    static return_t systemtime_to_timespec (systemtime_t ft, struct timespec& ts);
     /*
      * @brief timespec to asn1time
      * @param struct timespec ts [in]

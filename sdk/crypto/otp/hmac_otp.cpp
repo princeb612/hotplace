@@ -18,7 +18,7 @@ namespace crypto {
 
 #define HOTP_CONTEXT_SIGNATURE 0x20170701
 
-typedef struct _HOTP_CONTEXT {
+typedef struct _hotp_context_t : public otp_context_t {
     uint32 _signature;
     hash_context_t* _hmac_context;
     unsigned int _digit_length;
@@ -26,7 +26,7 @@ typedef struct _HOTP_CONTEXT {
     critical_section _lock;
     std::list<uint32> _window;
     unsigned int _window_size;
-} HOTP_CONTEXT;
+} hotp_context_t;
 
 hmac_otp::hmac_otp ()
 {
@@ -38,10 +38,10 @@ hmac_otp::~hmac_otp ()
     // do nothing
 }
 
-uint32 hmac_otp::open (void** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size)
+uint32 hmac_otp::open (otp_context_t** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size)
 {
     uint32 ret = errorcode_t::success;
-    HOTP_CONTEXT* context = nullptr;
+    hotp_context_t* context = nullptr;
     openssl_hash hash;
     hash_context_t* hash_handle = nullptr;
 
@@ -57,7 +57,7 @@ uint32 hmac_otp::open (void** handle, unsigned int digit_length, hash_algorithm_
             __leave2_trace (ret);
         }
 
-        __try_new_catch (context, new HOTP_CONTEXT, ret, __leave2_trace (ret));
+        __try_new_catch (context, new hotp_context_t, ret, __leave2_trace (ret));
 
         context->_signature = HOTP_CONTEXT_SIGNATURE;
         context->_hmac_context = hash_handle;
@@ -87,10 +87,10 @@ uint32 hmac_otp::open (void** handle, unsigned int digit_length, hash_algorithm_
     return ret;
 }
 
-uint32 hmac_otp::close (void* handle)
+uint32 hmac_otp::close (otp_context_t* handle)
 {
     uint32 ret = errorcode_t::success;
-    HOTP_CONTEXT* context = static_cast<HOTP_CONTEXT*>(handle);
+    hotp_context_t* context = static_cast<hotp_context_t*>(handle);
     openssl_hash hash;
 
     __try2
@@ -116,10 +116,10 @@ uint32 hmac_otp::close (void* handle)
     return ret;
 }
 
-uint32 hmac_otp::set (void* handle, uint32 count)
+uint32 hmac_otp::set (otp_context_t* handle, uint32 count)
 {
     uint32 ret = errorcode_t::success;
-    HOTP_CONTEXT* context = static_cast<HOTP_CONTEXT*>(handle);
+    hotp_context_t* context = static_cast<hotp_context_t*>(handle);
 
     __try2
     {
@@ -141,10 +141,10 @@ uint32 hmac_otp::set (void* handle, uint32 count)
     return ret;
 }
 
-uint32 hmac_otp::get (void* handle, uint32& code)
+uint32 hmac_otp::get (otp_context_t* handle, uint32& code)
 {
     uint32 ret = errorcode_t::success;
-    HOTP_CONTEXT* context = static_cast<HOTP_CONTEXT*>(handle);
+    hotp_context_t* context = static_cast<hotp_context_t*>(handle);
 
     __try2
     {
@@ -168,7 +168,7 @@ uint32 hmac_otp::get (void* handle, uint32& code)
     return ret;
 }
 
-uint32 hmac_otp::get (void* handle, uint32 counter, uint32& code)
+uint32 hmac_otp::get (otp_context_t* handle, uint32 counter, uint32& code)
 {
     uint64 c = htonll (counter);
     binary_t input;
@@ -178,10 +178,10 @@ uint32 hmac_otp::get (void* handle, uint32 counter, uint32& code)
     return get (handle, input, code);
 }
 
-uint32 hmac_otp::get (void* handle, binary_t counter, uint32& code)
+uint32 hmac_otp::get (otp_context_t* handle, binary_t counter, uint32& code)
 {
     uint32 ret = errorcode_t::success;
-    HOTP_CONTEXT* context = static_cast<HOTP_CONTEXT*>(handle);
+    hotp_context_t* context = static_cast<hotp_context_t*>(handle);
     openssl_hash hash;
     byte_t* output_allocated = nullptr;
     size_t output_size = 0;
@@ -232,10 +232,10 @@ uint32 hmac_otp::get (void* handle, binary_t counter, uint32& code)
     return ret;
 }
 
-uint32 hmac_otp::verify (void* handle, uint32 counter, uint32 code)
+uint32 hmac_otp::verify (otp_context_t* handle, uint32 counter, uint32 code)
 {
     uint32 ret = errorcode_t::success;
-    HOTP_CONTEXT* context = static_cast<HOTP_CONTEXT*>(handle);
+    hotp_context_t* context = static_cast<hotp_context_t*>(handle);
 
     __try2
     {

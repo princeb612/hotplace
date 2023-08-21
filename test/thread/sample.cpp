@@ -50,14 +50,13 @@ return_t thread_signal (void* param)
     return errorcode_t::success;
 }
 
-int main ()
+void test_signalwait_threads ()
 {
     return_t test = errorcode_t::success;
+
     signalwait_threads threads;
 
     _mutex.make_share (new semaphore);
-
-    _test_case.begin ("thread");
 
     int count = 4;
     threads.set (count, thread_routine, thread_signal, nullptr);
@@ -81,6 +80,12 @@ int main ()
     thread_printfln ("terminating all threads (running %d)", threads.running ());
     threads.signal_and_wait_all ();
     _test_case.assert (0 == threads.running (), __FUNCTION__, "all thread terminated");
+}
+
+int main ()
+{
+    _test_case.begin ("thread");
+    test_signalwait_threads ();
 
     _test_case.report ();
     return _test_case.result ();
