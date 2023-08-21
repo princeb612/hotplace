@@ -23,6 +23,7 @@ void test_x509 ()
 {
     return_t ret = errorcode_t::success;
     x509_t* x509 = nullptr;
+
     ret = x509_open_pem (&x509, "server.crt", "server.key", "", "ca.crt");
     x509_close (x509);
     _test_case.test (ret, __FUNCTION__, "x509");

@@ -12,10 +12,10 @@
 #define __HOTPLACE_SDK_NET__
 
 #include <hotplace/sdk/net/types.hpp>
-#include <hotplace/sdk/net/socket/client_socket.hpp>
-#include <hotplace/sdk/net/socket/server_socket.hpp>
-#include <hotplace/sdk/net/socket/sdk.hpp>
-#include <hotplace/sdk/net/socket/ipaddr_acl.hpp>
+#include <hotplace/sdk/net/sdk/client_socket.hpp>
+#include <hotplace/sdk/net/sdk/server_socket.hpp>
+#include <hotplace/sdk/net/sdk/sdk.hpp>
+#include <hotplace/sdk/net/sdk/ipaddr_acl.hpp>
 #include <hotplace/sdk/net/tls/sdk.hpp>
 #include <hotplace/sdk/net/tls/x509.hpp>
 #include <hotplace/sdk/net/tls/tls_client.hpp>

@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_SOCKET_IPADDRACL__
-#define __HOTPLACE_SDK_NET_SOCKET_IPADDRACL__
+#ifndef __HOTPLACE_SDK_NET_SDK_IPADDRACL__
+#define __HOTPLACE_SDK_NET_SDK_IPADDRACL__
 
 #include <hotplace/sdk/base.hpp>
 #include <map>

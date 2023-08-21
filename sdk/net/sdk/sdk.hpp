@@ -8,26 +8,13 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_SOCKET_SDK__
-#define __HOTPLACE_SDK_NET_SOCKET_SDK__
+#ifndef __HOTPLACE_SDK_NET_SDK_SDK__
+#define __HOTPLACE_SDK_NET_SDK_SDK__
 
 #include <hotplace/sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {
-
-enum PROTOCOL_TYPE {
-    PROTOCOL_TCP    = IPPROTO_TCP,
-    PROTOCOL_UDP    = IPPROTO_UDP,
-};
-
-#define NET_DEFAULT_TIMEOUT 10
-typedef struct linger linger_t;
-enum ADDRESS_TYPE {
-    ADDRESS_TYPE_HOST   = 0,    // aa.bb.cc
-    ADDRESS_TYPE_IPV4   = 1,    // 127.0.0.1
-    ADDRESS_TYPE_IPV6   = 2,    // fe80::f086:5f15:2045:5008%10
-};
 
 /*
  * @brief   create a socket, see alse close_socket to free

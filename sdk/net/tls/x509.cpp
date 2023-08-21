@@ -69,10 +69,10 @@ return_t x509_open (x509_t** context)
 
 static int set_default_passwd_callback_routine (char *buf, int num, int rwflag, void *userdata)
 {
-    stream_interface* stream = (stream_interface*)userdata;
+    stream_interface* stream = (stream_interface*) userdata;
     size_t len = stream->size ();
+
     strncpy (buf, (char*) stream->data (), len);
-    //printf ("password callback %.*s\n", (int)len, (char*)stream->data ());
     return len;
 }
 

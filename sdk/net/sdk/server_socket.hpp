@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_SOCKET_SERVERSOCKET__
-#define __HOTPLACE_SDK_NET_SOCKET_SERVERSOCKET__
+#ifndef __HOTPLACE_SDK_NET_SDK_SERVERSOCKET__
+#define __HOTPLACE_SDK_NET_SDK_SERVERSOCKET__
 
 #include <hotplace/sdk/net/types.hpp>
 

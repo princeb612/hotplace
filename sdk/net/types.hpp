@@ -71,6 +71,19 @@ enum TLS_READ_FLAG {
     TLS_SEND_ALL            = (TLS_SEND_SSL_WRITE | TLS_SEND_BIO_READ | TLS_SEND_SOCKET_SEND),
 };
 
+enum PROTOCOL_TYPE {
+    PROTOCOL_TCP    = IPPROTO_TCP,
+    PROTOCOL_UDP    = IPPROTO_UDP,
+};
+
+#define NET_DEFAULT_TIMEOUT 10
+typedef struct linger linger_t;
+enum ADDRESS_TYPE {
+    ADDRESS_TYPE_HOST   = 0,    // aa.bb.cc
+    ADDRESS_TYPE_IPV4   = 1,    // 127.0.0.1
+    ADDRESS_TYPE_IPV6   = 2,    // fe80::f086:5f15:2045:5008%10
+};
+
 struct _TLS_CONTEXT;
 typedef struct _TLS_CONTEXT tls_context_t;
 
