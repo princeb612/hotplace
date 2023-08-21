@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/openssl/openssl_crypt.hpp>
+#include <hotplace/sdk/crypto/openssl/openssl_ecdh.hpp>
 #if defined __linux__
     #include <arpa/inet.h>
 #endif

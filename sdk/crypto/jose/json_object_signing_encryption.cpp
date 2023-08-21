@@ -11,6 +11,7 @@
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
 #include <hotplace/sdk/io/encoder/base64.hpp>
+#include <hotplace/sdk/io/json/json.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
 
 namespace hotplace {

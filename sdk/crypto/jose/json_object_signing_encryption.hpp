@@ -20,7 +20,6 @@
 
 #include <hotplace/sdk/crypto/openssl/types.hpp>
 #include <hotplace/sdk/crypto/jose/types.hpp>
-#include <hotplace/sdk/crypto/jose/jansson.hpp>
 
 namespace hotplace {
 namespace crypto {

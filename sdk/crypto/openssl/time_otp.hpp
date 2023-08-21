@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_OTP_TIMEOTP__
-#define __HOTPLACE_SDK_CRYPTO_OTP_TIMEOTP__
+#ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_TIMEOTP__
+#define __HOTPLACE_SDK_CRYPTO_OPENSSL_TIMEOTP__
 
 #include <hotplace/sdk/crypto/types.hpp>
 

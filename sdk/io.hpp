@@ -16,6 +16,8 @@
 
 #include <hotplace/sdk/io/data/keyvalue.hpp>
 
+#include <hotplace/sdk/io/json/json.hpp>
+
 #include <hotplace/sdk/io/string/string.hpp>
 #include <hotplace/sdk/io/string/valist.hpp>
 

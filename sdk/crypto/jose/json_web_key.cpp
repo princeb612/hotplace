@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/crypto/jose/json_web_key.hpp>
 #include <hotplace/sdk/io/encoder/base64.hpp>
-#include <jansson.h>
+#include <hotplace/sdk/io/json/json.hpp>
 #include <fstream>
 
 namespace hotplace {
