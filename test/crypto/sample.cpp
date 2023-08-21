@@ -628,7 +628,7 @@ void test_keywrap ()
 uint32 test_hotp ()
 {
     uint32 ret = errorcode_t::success;
-    otp_context_t* handle = NULL;
+    otp_context_t* handle = nullptr;
 
     _test_case.begin ("hmac_otp (RFC4226)");
 
@@ -636,7 +636,7 @@ uint32 test_hotp ()
     std::vector<uint32> output;
     byte_t* key = (byte_t*) "12345678901234567890"; // 20
     ret = hotp.open (&handle, 6, hash_algorithm_t::sha1, key, 20);
-    if (ERROR_SUCCESS == ret) {
+    if (errorcode_t::success == ret) {
         uint32 code = 0;
         for (int i = 0; i < 10; i++) {
             hotp.get (handle, code);
@@ -667,16 +667,16 @@ typedef struct _TOTP_TEST_DATA {
 } TOTP_TEST_DATA;
 TOTP_TEST_DATA _totp_test_data[] =
 {
-    { hash_algorithm_t::sha1,    (byte_t*) "12345678901234567890", 20, { 94287082, 7081804, 14050471, 89005924, 69279037, 65353130, } }, /* sha1 */
-    { hash_algorithm_t::sha2_256, (byte_t*) "12345678901234567890123456789012", 32, { 46119246, 68084774, 67062674,  91819424,  90698825, 77737706, } }, /* sha256 */
-    { hash_algorithm_t::sha2_512, (byte_t*) "1234567890123456789012345678901234567890123456789012345678901234", 64, { 90693936, 25091201, 99943326, 93441116, 38618901, 47863826, } }, /* sha512 */
+    { hash_algorithm_t::sha1,    (byte_t*) "12345678901234567890", 20, { 94287082, 7081804, 14050471, 89005924, 69279037, 65353130, } },                                                /* sha1 */
+    { hash_algorithm_t::sha2_256, (byte_t*) "12345678901234567890123456789012", 32, { 46119246, 68084774, 67062674,  91819424,  90698825, 77737706, } },                                /* sha256 */
+    { hash_algorithm_t::sha2_512, (byte_t*) "1234567890123456789012345678901234567890123456789012345678901234", 64, { 90693936, 25091201, 99943326, 93441116, 38618901, 47863826, } },  /* sha512 */
 };
 
 uint32 test_totp (hash_algorithm_t algorithm)
 {
     uint32 ret = errorcode_t::success;
-    otp_context_t* handle = NULL;
-    TOTP_TEST_DATA* test_data = NULL;
+    otp_context_t* handle = nullptr;
+    TOTP_TEST_DATA* test_data = nullptr;
 
     __try2
     {
@@ -686,7 +686,7 @@ uint32 test_totp (hash_algorithm_t algorithm)
                 break;
             }
         }
-        if (NULL == test_data) {
+        if (nullptr == test_data) {
             ret = errorcode_t::not_supported;
             __leave2_trace (ret);
         }
@@ -694,7 +694,7 @@ uint32 test_totp (hash_algorithm_t algorithm)
         time_otp totp;
         std::vector<uint32> output;
         ret = totp.open (&handle, 8, 30, algorithm, test_data->key, test_data->key_size);
-        if (ERROR_SUCCESS == ret) {
+        if (errorcode_t::success == ret) {
             uint32 code = 0;
             uint64 counter[] = { 59, 1111111109, 1111111111, 1234567890, 2000000000LL, 20000000000LL };
             for (int i = 0; i < (int) RTL_NUMBER_OF (counter); i++) {

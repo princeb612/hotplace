@@ -10,7 +10,7 @@ cwd=$(pwd)
 valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 
 if [ $# -eq 0 ]; then
-    array=(base string bufferio stream datetime thread crypto jose)
+    array=(base string bufferio stream datetime thread crypto jose ipaddr)
 else
     if [ -d $1 ]; then
         array=($1)

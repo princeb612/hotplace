@@ -29,7 +29,7 @@ void print_datetime (datetime* d)
 
 void apply_timespan (datetime* dt, timespan_t ts)
 {
-    return_t ret = ERROR_SUCCESS;
+    return_t ret = errorcode_t::success;
 
     printf ("class datetime\n");
     print_datetime (dt);
@@ -83,7 +83,7 @@ void test_time ()
     datetime dt4 (dt1);
     apply_timespan (&dt4, ts);
 
-    time_t timestamp = time (NULL);
+    time_t timestamp = time (nullptr);
     datetime dt5 (timestamp);
     print_datetime (&dt5);
 

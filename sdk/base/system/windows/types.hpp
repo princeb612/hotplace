@@ -11,6 +11,8 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_TYPES__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_TYPES__
 
+// #warning Please include winsock2.h before windows.h
+#include <winsock2.h>
 #include <windows.h>
 
 namespace hotplace {

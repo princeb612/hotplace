@@ -11,6 +11,9 @@
     ubuntu
         openssl libssl-dev libjansson-dev
 
+    make sure root directory hotplace (not hotplace-master and so on ...)
+    $ hotplace ./make.sh
+
 COMMENTS
 
 mkdir -p build

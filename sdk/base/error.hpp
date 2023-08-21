@@ -54,18 +54,23 @@ enum errorcode_t {
     /* 0xef010017 4009820183 */ request,
 
     /* 0xef010018 4009820184 */ verify,
-
-    /* 0xef010019 4009820185 */ reserved2,
+    /* 0xef010019 4009820185 */ closed,
     /* 0xef01001a 4009820186 */ reserved3,
     /* 0xef01001b 4009820187 */ reserved4,
     /* 0xef01001c 4009820188 */ reserved5,
     /* 0xef01001d 4009820189 */ reserved6,
     /* 0xef01001e 4009820190 */ reserved7,
     /* 0xef01001f 4009820191 */ reserved8,
+    /* 0xef010020 4009820192 */ reserved9,
+    /* 0xef010021 4009820193 */ reserved10,
+    /* 0xef010022 4009820194 */ reserved11,
+    /* 0xef010023 4009820195 */ reserved12,
+    /* 0xef010024 4009820196 */ reserved13,
+    /* 0xef010025 4009820197 */ reserved14,
+    /* 0xef010026 4009820198 */ reserved15,
 
     /* 0xef010100 4009820416 */ not_supported,
     /* 0xef010101 4009820417 */ low_security,
-    /* 0xef010102 4009820418 */ reserved9,
 };
 
 }

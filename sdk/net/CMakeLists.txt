@@ -6,24 +6,31 @@
 
 file (GLOB FILEGROUP_SDK_HEADER_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/socket/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/server/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.hpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_NET
+    ${PROJECT_SOURCE_DIR}/sdk/net/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/socket/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/server/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.cpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_NET_LINUX
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_NET_WIN32
+    ${PROJECT_SOURCE_DIR}/sdk/net/socket/windows/*.cpp
 )
 
 if (UNIX)
 set (FILEGROUP_SDK_NET ${FILEGROUP_SDK_HEADER_NET} ${FILEGROUP_SDK_SOURCE_NET} ${FILEGROUP_SDK_SOURCE_NET_LINUX})
-set (PLATFORM_LIB_SDK_NET )
+set (PLATFORM_LIB_SDK_NET crypto ssl)
 elseif (WIN32)
 set (FILEGROUP_SDK_NET ${FILEGROUP_SDK_HEADER_NET} ${FILEGROUP_SDK_SOURCE_NET} ${FILEGROUP_SDK_SOURCE_NET_WIN32})
-set (PLATFORM_LIB_SDK_NET )
+set (PLATFORM_LIB_SDK_NET crypto ssl)
 endif ()
 
 if (SUPPORT_STATIC GREATER 0)

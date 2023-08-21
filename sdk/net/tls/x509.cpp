@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/net/socket/tls_client.hpp>
+#include <hotplace/sdk/net/tls/x509.hpp>
 
 namespace hotplace {
 namespace net {

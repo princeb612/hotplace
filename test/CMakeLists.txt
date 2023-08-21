@@ -19,3 +19,4 @@ add_subdirectory (crypto)
 add_subdirectory (jose)
 
 # net
+add_subdirectory (ipaddr)
