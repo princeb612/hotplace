@@ -5,18 +5,14 @@
 #
 
 file (GLOB FILEGROUP_SDK_HEADER_IO
-    ${PROJECT_SOURCE_DIR}/sdk/io/data/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/io/encoder/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/io/multiplexer/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/basic/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/unittest/*.hpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_IO
-    ${PROJECT_SOURCE_DIR}/sdk/io/data/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/io/encoder/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/io/multiplexer/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/system/*.cpp
@@ -24,13 +20,11 @@ file (GLOB FILEGROUP_SDK_SOURCE_IO
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_IO_LINUX
-    ${PROJECT_SOURCE_DIR}/sdk/io/multiplexer/linux/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/linux/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/system/linux/*.cpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_IO_WIN32
-    ${PROJECT_SOURCE_DIR}/sdk/io/multiplexer/windows/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/windows/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/windows/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/system/windows/*.cpp

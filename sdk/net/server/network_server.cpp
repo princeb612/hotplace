@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/net/server/network_stream.hpp>
-#include <hotplace/sdk/io/multiplexer/multiplexer.hpp>
+#include <hotplace/sdk/io/system/multiplexer.hpp>
 #include <hotplace/sdk/io/system/signalwait_threads.hpp>
 
 namespace hotplace {

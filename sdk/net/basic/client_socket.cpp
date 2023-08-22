@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/net/sdk/client_socket.hpp>
-#include <hotplace/sdk/net/sdk/sdk.hpp>
+#include <hotplace/sdk/net/basic/client_socket.hpp>
+#include <hotplace/sdk/net/basic/sdk.hpp>
 
 namespace hotplace {
 namespace net {

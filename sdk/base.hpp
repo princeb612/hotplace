@@ -17,8 +17,7 @@
 #include <hotplace/sdk/base/syntax.hpp>
 #include <hotplace/sdk/base/inline.hpp>
 #include <hotplace/sdk/base/variant.hpp>
-
-#include <hotplace/sdk/base/charset/charset.hpp>
+#include <hotplace/sdk/base/charset.hpp>
 
 #include <hotplace/sdk/base/system/atomic.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>

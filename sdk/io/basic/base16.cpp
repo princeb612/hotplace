@@ -9,7 +9,7 @@
  * 2023.08.13   Soo Han, Kim        reboot : bin2hex, hex2bin
  */
 
-#include <hotplace/sdk/io/encoder/base16.hpp>
+#include <hotplace/sdk/io/basic/base16.hpp>
 
 namespace hotplace {
 namespace io {

@@ -6,14 +6,14 @@
 
 file (GLOB FILEGROUP_SDK_HEADER_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/net/sdk/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/basic/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.hpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/net/sdk/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.cpp
 )

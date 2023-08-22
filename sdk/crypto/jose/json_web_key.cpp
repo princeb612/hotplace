@@ -9,8 +9,8 @@
  */
 
 #include <hotplace/sdk/crypto/jose/json_web_key.hpp>
-#include <hotplace/sdk/io/encoder/base64.hpp>
-#include <hotplace/sdk/io/json/json.hpp>
+#include <hotplace/sdk/io/basic/base64.hpp>
+#include <hotplace/sdk/io/basic/json.hpp>
 #include <fstream>
 
 namespace hotplace {

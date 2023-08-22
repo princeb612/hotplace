@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 
-#include <hotplace/sdk/io/data/keyvalue.hpp>
+#include <hotplace/sdk/io/basic/keyvalue.hpp>
 #include <hotplace/sdk/net/types.hpp>
 #include <hotplace/sdk/net/server/network_stream.hpp>
 

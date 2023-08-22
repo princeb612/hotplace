@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_MULTIPLEXER__
-#define __HOTPLACE_SDK_IO_MULTIPLEXER__
+#ifndef __HOTPLACE_SDK_IO_SYSTEM_MULTIPLEXER__
+#define __HOTPLACE_SDK_IO_SYSTEM_MULTIPLEXER__
 
 #include <hotplace/sdk/base.hpp>
 
