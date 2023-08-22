@@ -117,7 +117,7 @@ return_t network_server::open (void** handle, unsigned int family, unsigned int 
 
         __try_new_catch (context, new network_multiplexer_context_t, ret, __leave2);
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
 
         mplexer.bind (mplexer_handle, sock, nullptr);
 
@@ -569,11 +569,14 @@ return_t network_server::accept_routine (void* handle)
         ret = svr_socket->accept (listen_sock, &accpt_ctx.client_socket, (struct sockaddr*) &accpt_ctx.client_addr,
                                   &accpt_ctx.client_addr_len);
         if (INVALID_SOCKET == accpt_ctx.client_socket) {
-            ret = GetLastError ();
 
             /* mingw environments GetLastError () return 0 */
 #if defined __MINGW32__
             ret = errorcode_t::canceled;
+#elif defined __linux__
+            ret = get_errno (ret);
+#elif defined _WIN32 || defined _WIN64
+            ret = GetLastError ();
 #endif
 
             __leave2;
@@ -585,7 +588,7 @@ return_t network_server::accept_routine (void* handle)
             CALLBACK_CONTROL control = CONTINUE_CONTROL;
             context->accept_control_handler (accpt_ctx.client_socket, &accpt_ctx.client_addr, &control, context->callback_param);
             if (STOP_CONTROL == control) {
-                close_socket (accpt_ctx.client_socket, TRUE, 0);
+                close_socket (accpt_ctx.client_socket, true, 0);
                 __leave2;
             }
         }
@@ -689,7 +692,7 @@ return_t network_server::tls_accept_routine (void* handle)
             accpt_ctx = context->accept_queue.front ();
             context->accept_queue.pop ();
         } else {
-            ret = ERROR_EMPTY;
+            ret = errorcode_t::empty;
         }
         context->accept_queue_lock.leave ();
 
@@ -706,7 +709,7 @@ return_t network_server::tls_accept_routine (void* handle)
             svr.session_accepted (context, tls_handle, (handle_t) accpt_ctx.client_socket, &accpt_ctx.client_addr);
             /* tls_handle is release in session_closed member. */
         } else {
-            close_socket (accpt_ctx.client_socket, TRUE, 0);
+            close_socket (accpt_ctx.client_socket, true, 0);
         }
     }
     __finally2
@@ -749,7 +752,7 @@ return_t network_server::cleanup_tls_accept (void* handle)
         if (false == context->accept_queue.empty ()) {
             accpt_ctx = context->accept_queue.front ();
             context->accept_queue.pop ();
-            close_socket (accpt_ctx.client_socket, TRUE, 0);
+            close_socket (accpt_ctx.client_socket, true, 0);
         }
         context->accept_queue_lock.leave ();
     }
@@ -797,9 +800,6 @@ return_t network_server::network_thread (void* user_context)
 return_t network_server::network_routine (uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control,
                                           void* user_context)
 {
-    UNREFERENCED_PARAMETER (data_count);
-    UNREFERENCED_PARAMETER (callback_control);
-
     return_t ret = errorcode_t::success;
     network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(user_context);
     network_server svr;
@@ -835,7 +835,7 @@ return_t network_server::network_routine (uint32 type, uint32 data_count, void* 
         // do nothing
     }
 
-#elif defined __linux__ || defined __APPLE__
+#elif defined __linux__
 
     //void* handle = data_array[0];
 

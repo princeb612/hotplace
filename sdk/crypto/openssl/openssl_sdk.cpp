@@ -61,13 +61,13 @@ void openssl_cleanup_implementation ()
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
 static pthread_mutex_t * openssl_threadsafe = nullptr;
 #elif defined _WIN32 || defined _WIN64
 static HANDLE * openssl_threadsafe = nullptr;
 #endif
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
 static unsigned long (get_thread_id_callback) (){
     return (unsigned long) pthread_self ();
 }
@@ -85,7 +85,7 @@ void openssl_thread_setup_implementation (void)
             __leave2_trace (ret);
         }
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
         openssl_threadsafe = (pthread_mutex_t *) OPENSSL_malloc (CRYPTO_num_locks () * sizeof (pthread_mutex_t));
 #elif defined _WIN32 || defined _WIN64
         openssl_threadsafe = (HANDLE *) OPENSSL_malloc (CRYPTO_num_locks () * sizeof (HANDLE));
@@ -95,14 +95,14 @@ void openssl_thread_setup_implementation (void)
             __leave2_trace (ret);
         }
         for (int i = 0; i < CRYPTO_num_locks (); i++) {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
             pthread_mutex_init (&openssl_threadsafe[i], nullptr);
 #elif defined _WIN32 || defined _WIN64
             openssl_threadsafe[i] = CreateMutex (nullptr, FALSE, nullptr);
 #endif
         }
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
         CRYPTO_set_id_callback (get_thread_id_callback);
 #endif
         CRYPTO_set_locking_callback ((void (*)(int, int, const char *, int))opensslthread_locking_callback);
@@ -120,7 +120,7 @@ void openssl_thread_cleanup_implementation (void)
     if (nullptr != openssl_threadsafe) {
         CRYPTO_set_locking_callback (nullptr);
         for (int i = 0; i < CRYPTO_num_locks (); i++) {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
             pthread_mutex_destroy (&openssl_threadsafe[i]);
 #elif defined _WIN32 || defined _WIN64
             CloseHandle (openssl_threadsafe[i]);
@@ -137,13 +137,13 @@ void opensslthread_locking_callback (int mode, int type, const char *file, int l
     assert (nullptr != openssl_threadsafe);
 
     if (mode & CRYPTO_LOCK) {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
         pthread_mutex_lock (&openssl_threadsafe[type]);
 #elif defined _WIN32 || defined _WIN64
         WaitForSingleObject (openssl_threadsafe[type], INFINITE);
 #endif
     } else {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
         pthread_mutex_unlock (&openssl_threadsafe[type]);
 #elif defined _WIN32 || defined _WIN64
         ReleaseMutex (openssl_threadsafe[type]);

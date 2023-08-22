@@ -56,6 +56,8 @@ typedef union _LARGE_INTEGER {
     uint64 QuadPart;
 } LARGE_INTEGER, * PLARGE_INTEGER;
 
+#define INVALID_SOCKET -1
+
 } // namespace
 
 #endif

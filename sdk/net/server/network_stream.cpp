@@ -107,8 +107,6 @@ return_t network_stream::read (network_protocol_group* protocol_group, network_s
 
 return_t network_stream::write_wo_protocol (network_protocol_group* protocol_group, network_stream* target)
 {
-    UNREFERENCED_PARAMETER (protocol_group);
-
     return_t ret = errorcode_t::success;
 
     __try2

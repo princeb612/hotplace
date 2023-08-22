@@ -50,14 +50,13 @@ return_t server_socket::close (socket_t sock, tls_context_t* tls_handle)
 {
     return_t ret = errorcode_t::success;
 
-    UNREFERENCED_PARAMETER (tls_handle);
     __try2
     {
         if (INVALID_SOCKET == sock) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
         ::close (sock);
 #elif defined _WIN32 || defined _WIN64
         closesocket (sock);
@@ -85,7 +84,11 @@ return_t server_socket::accept (socket_t sock, socket_t* clisock, struct sockadd
 
         client_socket = ::accept (sock, addr, addrlen);
         if (INVALID_SOCKET == client_socket) {
+#if defined __linux__
+            ret = get_errno (client_socket);
+#elif defined _WIN32 || defined _WIN64
             ret = GetLastError ();
+#endif
             __leave2;
         }
 
@@ -122,11 +125,15 @@ return_t server_socket::read (socket_t sock, tls_context_t* tls_handle, int mode
     {
 #if defined _WIN32 || defined _WIN64
         int ret_routine = ::recv (sock, ptr_data, (int) size_data, 0);
-#elif defined __linux__ || defined __APPLE__
+#elif defined __linux__
         int ret_routine = ::recv (sock, ptr_data, size_data, 0);
 #endif
-        if (SOCKET_ERROR == ret_routine) {
+        if (-1 == ret_routine) {
+#if defined __linux__
+            ret = get_errno (ret_routine);
+#elif defined _WIN32 || defined _WIN64
             ret = GetLastError ();
+#endif
         } else if (0 == ret_routine) {
             ret = errorcode_t::closed;
         }
@@ -149,11 +156,15 @@ return_t server_socket::send (socket_t sock, tls_context_t* tls_handle, const ch
     {
 #if defined _WIN32 || defined _WIN64
         int ret_routine = ::send (sock, ptr_data, (int) size_data, 0);
-#elif defined __linux__ || defined __APPLE__
+#elif defined __linux__
         int ret_routine = ::send (sock, ptr_data, size_data, 0);
 #endif
-        if (SOCKET_ERROR == ret_routine) {
+        if (-1 == ret_routine) {
+#if defined __linux__
+            ret = get_errno (ret_routine);
+#elif defined _WIN32 || defined _WIN64
             ret = GetLastError ();
+#endif
         } else if (0 == ret_routine) {
             // closed
         }
@@ -185,7 +196,7 @@ return_t server_socket::query (int specid, arch_t* data_ptr)
                 *data_ptr = 0;
                 break;
             default:
-                ret = ERROR_BAD_COMMAND;
+                ret = errorcode_t::request;
                 break;
         }
     }

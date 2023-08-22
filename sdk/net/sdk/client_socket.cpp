@@ -49,7 +49,7 @@ return_t client_socket::close (socket_t sock, tls_context_t* tls_handle)
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
         ::close (sock);
 #elif defined _WIN32 || defined _WIN64
         closesocket (sock);
@@ -70,11 +70,15 @@ return_t client_socket::read (socket_t sock, tls_context_t* tls_handle, char* pt
     if (errorcode_t::success == ret) {
 #if defined _WIN32 || defined _WIN64
         int ret_recv = recv (sock, ptr_data, (int) size_data, 0);
-#elif defined __linux__ || defined __APPLE__
+#elif defined __linux__
         int ret_recv = recv (sock, ptr_data, size_data, 0);
 #endif
-        if (SOCKET_ERROR == ret_recv) {
+        if (-1 == ret_recv) {
+#if defined __linux__
+            ret = get_errno (ret_recv);
+#elif defined _WIN32 || defined _WIN64
             ret = GetLastError ();
+#endif
         } else if (0 == ret_recv) {
             ret = errorcode_t::closed;
         }
@@ -91,13 +95,15 @@ return_t client_socket::send (socket_t sock, tls_context_t* tls_handle, const ch
 
     __try2
     {
-#if defined _WIN32 || defined _WIN64
-        int ret_send = ::send (sock, ptr_data, (int) size_data, 0);
-#elif defined __linux__ || defined __APPLE__
+#if defined __linux__
         int ret_send = ::send (sock, ptr_data, size_data, 0);
-#endif
-        if (SOCKET_ERROR == ret_send) {
+        if (-1 == ret_send) {
+            ret = get_errno (ret_send);
+#elif defined _WIN32 || defined _WIN64
+        int ret_send = ::send (sock, ptr_data, (int) size_data, 0);
+        if (-1 == ret_send) {
             ret = GetLastError ();
+#endif
         } else if (0 == ret_send) {
             // closed
         }

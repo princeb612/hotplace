@@ -21,7 +21,7 @@ add_subdirectory (jose)
 
 # net
 add_subdirectory (ipaddr)
-add_subdirectory (netserver)
+add_subdirectory (tcpserver)
 
 # etc
 add_subdirectory (incubator)

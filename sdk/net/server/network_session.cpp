@@ -133,7 +133,7 @@ return_t network_session::produce (network_priority_queue* q, void* buf_read, si
 
 #if defined _WIN32 || defined _WIN64
         // buf_read, size_buf_read transmitted
-#elif defined __linux__ || defined __APPLE__
+#elif defined __linux__
         // read
         size_buf_read = RTL_NUMBER_OF (_session.buffer);
         buf_read = _session.buffer;
@@ -146,7 +146,7 @@ return_t network_session::produce (network_priority_queue* q, void* buf_read, si
             bool data_ready = false;
             server_socket* server_socket_intf = get_server_socket ();
             int mode = 0;
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
             mode = TLS_READ_EPOLL;
 #elif defined _WIN32 || defined _WIN64
             mode = TLS_READ_IOCP;
@@ -231,7 +231,7 @@ return_t network_session_manager::connected (handle_t client_socket, sockaddr_st
             session_object->connected (client_socket, sockaddr, tls_handle);
             *ptr_session_object = session_object;
         } else {
-            ret = ERROR_ALREADY_ASSIGNED;
+            ret = errorcode_t::already_assigned;
         }
         _session_lock.leave ();
     }

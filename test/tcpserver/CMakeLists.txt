@@ -4,7 +4,7 @@
 # Date         Name                Description
 #
 
-set (module netserver)
+set (module tcpserver)
 file (GLOB SOURCE_FILES *.cpp)
 
 maketest (${module} SOURCE_FILES PROJECT_SDK_MODULE_DEPENDENCIES PROJECT_SDK_PLATFORM_DEPENDENCIES)

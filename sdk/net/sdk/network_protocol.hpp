@@ -61,7 +61,7 @@ typedef struct _net_session_t {
 
 #if defined _WIN32 || defined _WIN64
     net_session_wsabuf_pair_t wsabuf_pair;
-#elif defined __linux__ || defined __APPLE__
+#elif defined __linux__
     char buffer[1 << 10];
 #endif
 

@@ -54,7 +54,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
                     break;
                 }
 
-                ret_isdigit = _istdigit (tchTemp);
+                ret_isdigit = isdigit (tchTemp);
                 if (0 == ret_isdigit && '.' != tchTemp) {
                     address_type_adjusted = ADDRESS_TYPE_HOST;
                     break;
@@ -88,8 +88,8 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
 
         ret_function = getaddrinfo (address_pointer, string_port, &hints, &addrinf);
         if (0 != ret_function) {
-#if defined __linux__ || defined __APPLE__
-            ret = GetEAIError (ret_function);
+#if defined __linux__
+            ret = get_eai_error (ret_function);
 #elif defined _WIN32 || defined _WIN64
             ret = GetLastError ();
 #endif
@@ -108,7 +108,11 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
         } while (nullptr != addrinf_traverse);
 
         if (INVALID_SOCKET == s) {
+#if defined __linux__
+            ret = get_errno (s);
+#elif defined _WIN32 || defined _WIN64
             ret = GetLastError ();
+#endif
             __leave2_trace (ret);
         }
 
@@ -140,7 +144,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
 
         if (errorcode_t::success != ret) {
             if (INVALID_SOCKET != s) {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
                 close (s);
 #elif defined _WIN32 || defined _WIN64
                 closesocket (s);
@@ -199,8 +203,8 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
         snprintf (szPort, 10, ("%d"), port);
         ret_function = getaddrinfo (nullptr, szPort, &hints, &addrinf);
         if (0 != ret_function) {
-#if defined __linux__ || defined __APPLE__
-            ret = GetEAIError (ret_function);
+#if defined __linux__
+            ret = get_eai_error (ret_function);
 #elif defined _WIN32 || defined _WIN64
             ret = GetLastError ();
 #endif
@@ -215,17 +219,21 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
                     socket_t sock = INVALID_SOCKET;
                     __try2
                     {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
                         sock = socket (addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol);
 #elif defined _WIN32 || defined _WIN64
                         sock = WSASocket (addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol,
                                           nullptr, 0, WSA_FLAG_OVERLAPPED);
 #endif
                         if (INVALID_SOCKET == sock) {
+#if defined __linux__
+                            ret = get_errno (sock);
+#elif defined _WIN32 || defined _WIN64
                             ret = GetLastError ();
+#endif
                             __leave2_trace (ret);
                         }
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
                         if (PF_INET6 == addrinf_traverse->ai_family) {
                             int only_ipv6 = 1;
                             setsockopt (sock, IPPROTO_IPV6, IPV6_V6ONLY, &only_ipv6, sizeof (only_ipv6));
@@ -236,7 +244,11 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
 
                         ret_function = bind (sock, addrinf_traverse->ai_addr, (int) addrinf_traverse->ai_addrlen);
                         if (0 != ret_function) {
+#if defined __linux__
+                            ret = get_errno (ret_function);
+#elif defined _WIN32 || defined _WIN64
                             ret = GetLastError ();
+#endif
                             __leave2_trace (ret);
                         }
 
@@ -249,8 +261,12 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
 #endif
 
                             ret_function = listen (sock, SOMAXCONN);
-                            if (SOCKET_ERROR == ret_function) {
+                            if (-1 == ret_function) {
+#if defined __linux__
+                                ret = get_errno (ret_function);
+#elif defined _WIN32 || defined _WIN64
                                 ret = GetLastError ();
+#endif
                                 __leave2_trace (ret);
                             }
                         }
@@ -282,7 +298,7 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
             if (nullptr != vector_socket) {
                 for (index = 0; index < size_vector; index++) {
                     if (INVALID_SOCKET != vector_socket[index]) {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
                         close (vector_socket[index]);
 #elif defined _WIN32 || defined _WIN64
                         closesocket (vector_socket[index]);
@@ -301,8 +317,6 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
 
 return_t connect_socket (socket_t* socket, int nType, const char* tszAddress, uint16 wPort, uint32 dwTimeout)
 {
-    UNREFERENCED_PARAMETER (nType);
-
     socket_t sock = INVALID_SOCKET;
     sockaddr_storage_t Addr;
     return_t ret = errorcode_t::success;
@@ -322,7 +336,7 @@ return_t connect_socket (socket_t* socket, int nType, const char* tszAddress, ui
     __finally2
     {
         if ( errorcode_t::success != ret) {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
             close (sock);
 #elif defined _WIN32 || defined _WIN64
             closesocket (sock);
@@ -353,9 +367,9 @@ return_t connect_socket_addr (socket_t sock, sockaddr_storage_t* pSockAddr, size
         set_sock_nbio (sock, 1);
 
         ret_routine = connect (sock, reinterpret_cast<sockaddr*>(pSockAddr), (int) sizeSockAddr);
-        if (SOCKET_ERROR == ret_routine) {
+        if (-1 == ret_routine) {
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
             if (EINPROGRESS == errno)
 #elif defined _WIN32 || defined _WIN64
             DWORD dwWsaGle = GetLastError ();
@@ -366,17 +380,21 @@ return_t connect_socket_addr (socket_t sock, sockaddr_storage_t* pSockAddr, size
                 struct timeval tv = { (int32) dwTimeout, 0 };                       // linux { time_t, suseconds_t }, windows { long, long }
                 FD_ZERO (&fds);
                 FD_SET (sock, &fds);                                                /* VC 6.0 - C4127 */
-                ret_routine = select ((int) sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, SOCKET_ERROR if an error occurred */
+                ret_routine = select ((int) sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, -1 if an error occurred */
                 if (0 == ret_routine) {
-                    ret = ERROR_TIMEOUT;
+                    ret = errorcode_t::timeout;
                 }
-#if defined __linux__ || defined __APPLE__
-                else if (SOCKET_ERROR == ret_routine)
+#if defined __linux__
+                else if (-1 == ret_routine)
 #elif defined _WIN32 || defined _WIN64
                 else if (0 > ret_routine)
 #endif
                 {
+#if defined __linux__
+                    ret = get_errno (ret_routine);
+#elif defined _WIN32 || defined _WIN64
                     ret = GetLastError ();
+#endif
                 }
             }
 
@@ -409,14 +427,14 @@ return_t close_socket (socket_t sock, bool bOnOff, uint16 wLinger)
         linger.l_linger = wLinger;
         setsockopt (sock, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&linger), sizeof (linger));
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
         int nRet = close (sock);
 #elif defined _WIN32 || defined _WIN64
         int nRet = closesocket (sock);
 #endif
         if (0 != wLinger) {
             while (nRet < 0) {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
                 if (EWOULDBLOCK == nRet) {
 #elif defined _WIN32 || defined _WIN64
                 if (WSAEWOULDBLOCK == nRet) {
@@ -432,7 +450,7 @@ return_t close_socket (socket_t sock, bool bOnOff, uint16 wLinger)
 
                     nRet = select ((int) sock + 1, &fds, nullptr, nullptr, &tv);
                     if (nRet > 0) {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
                         nRet = close (sock);
 #elif defined _WIN32 || defined _WIN64
                         nRet = closesocket (sock);
@@ -461,7 +479,7 @@ return_t close_listener (unsigned int nSockets, socket_t* Sockets)
 
         for (uint16 i = 0; i < nSockets; i++) {
             if (INVALID_SOCKET != Sockets[i]) {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
                 close (Sockets[i]);
 #elif defined _WIN32 || defined _WIN64
                 closesocket (Sockets[i]);
@@ -511,7 +529,11 @@ return_t wait_socket (socket_t sock, uint32 dwMilliSeconds, uint32 dwFlag)
     if (0 == ret_select) {
         ret = errorcode_t::timeout;
     } else if (0 > ret_select) {
+#if defined __linux__
+        ret = get_errno (ret_select);
+#elif defined _WIN32 || defined _WIN64
         ret = GetLastError ();
+#endif
     }
 
     return ret;
@@ -522,7 +544,7 @@ return_t set_sock_nbio (socket_t sock, uint32 nbio_mode)
     return_t ret = errorcode_t::success;
     int ret_fcntl = 0;
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
     int flags = fcntl (sock, F_GETFL, 0);
     if (nbio_mode > 0) {
         if (0 == (O_NONBLOCK & flags)) {
@@ -536,8 +558,12 @@ return_t set_sock_nbio (socket_t sock, uint32 nbio_mode)
 #elif defined _WIN32 || defined _WIN64
     ret_fcntl = ioctlsocket (sock, FIONBIO, &nbio_mode);
 #endif
-    if (SOCKET_ERROR == ret_fcntl) {
+    if (-1 == ret_fcntl) {
+#if defined __linux__
+        ret = get_errno (ret_fcntl);
+#elif defined _WIN32 || defined _WIN64
         ret = GetLastError ();
+#endif
     }
     return ret;
 }

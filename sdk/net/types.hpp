@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_TYPES__
 #define __HOTPLACE_SDK_NET_TYPES__
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -36,7 +36,7 @@
 namespace hotplace {
 namespace net {
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
 typedef int socket_t;
 #elif defined _WIN32 || defined _WIN64
 typedef SOCKET socket_t;
