@@ -196,7 +196,7 @@ void test_split ()
     binary_t data;
     for (size_t i = 0; i < count; i++) {
         split_get (handle, i, data);
-        printf ("[%i] (%zi) %.*s\n", i, data.size (), (unsigned) data.size (), &data [0]);
+        printf ("[%zi] (%zi) %.*s\n", i, data.size (), (unsigned) data.size (), &data [0]);
     }
     split_end (handle);
 
