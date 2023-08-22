@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/openssl/crypto_key.hpp>
-#include <hotplace/sdk/crypto/openssl/openssl_prng.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 
 namespace hotplace {
 namespace crypto {

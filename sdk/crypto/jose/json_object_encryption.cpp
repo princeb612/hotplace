@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/jose/json_object_encryption.hpp>
-#include <hotplace/sdk/crypto/openssl/openssl_sdk.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 
 #include <hotplace/sdk/io/stream/buffer_stream.hpp>

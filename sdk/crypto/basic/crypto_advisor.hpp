@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOADVISOR__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOADVISOR__
 
-#include <hotplace/sdk/crypto/openssl/types.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
 #include <algorithm>
 #include <functional>
 #include <map>

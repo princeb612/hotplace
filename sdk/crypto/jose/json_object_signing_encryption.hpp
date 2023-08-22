@@ -18,7 +18,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_JOSE__
 #define __HOTPLACE_SDK_CRYPTO_JOSE__
 
-#include <hotplace/sdk/crypto/openssl/types.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
 #include <hotplace/sdk/crypto/jose/types.hpp>
 
 namespace hotplace {

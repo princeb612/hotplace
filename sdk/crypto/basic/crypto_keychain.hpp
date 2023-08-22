@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEYCHAIN__
 
 #include <hotplace/sdk/crypto/types.hpp>
-#include <hotplace/sdk/crypto/openssl/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 
 namespace hotplace {
 namespace crypto {

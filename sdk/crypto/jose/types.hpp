@@ -12,8 +12,8 @@
 #define __HOTPLACE_SDK_CRYPTO_JOSE_TYPES__
 
 #include <hotplace/sdk/crypto/types.hpp>
-#include <hotplace/sdk/crypto/openssl/types.hpp>
-#include <hotplace/sdk/crypto/openssl/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <list>
 #include <map>
 

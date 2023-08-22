@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/openssl/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 
 namespace hotplace {
 namespace crypto {

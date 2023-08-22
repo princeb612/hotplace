@@ -22,7 +22,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_NET_LINUX
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_NET_WIN32
-    ${PROJECT_SOURCE_DIR}/sdk/net/sdk/windows/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/basic/windows/*.cpp
 )
 
 if (UNIX)
