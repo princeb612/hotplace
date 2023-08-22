@@ -17,13 +17,13 @@ namespace io {
 
 #define MULTIPLEXER_EPOLL_CONTEXT_SIGNATURE 0x20151030
 
-typedef struct _MULTIPLEXER_EPOLL_CONTEXT : public multiplexer_context_t {
+typedef struct _multiplexer_epoll_context_t : public multiplexer_context_t {
     uint32 signature;
     handle_t epoll_fd;
     int concurrent;
     struct epoll_event* events;
     multiplexer_controller_context_t* handle_event_loop;
-} MULTIPLEXER_EPOLL_CONTEXT;
+} multiplexer_epoll_context_t;
 
 multiplexer_epoll::multiplexer_epoll ()
 {
@@ -38,7 +38,7 @@ multiplexer_epoll::~multiplexer_epoll ()
 return_t multiplexer_epoll::open (multiplexer_context_t** handle, size_t concurrent)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EPOLL_CONTEXT* context = nullptr;
+    multiplexer_epoll_context_t* context = nullptr;
     handle_t epollfd = -1;
     struct epoll_event* events = nullptr;
     multiplexer_controller_context_t* handle_event_loop = nullptr;
@@ -46,7 +46,7 @@ return_t multiplexer_epoll::open (multiplexer_context_t** handle, size_t concurr
 
     __try2
     {
-        __try_new_catch (context, new MULTIPLEXER_EPOLL_CONTEXT, ret, __leave2);
+        __try_new_catch (context, new multiplexer_epoll_context_t, ret, __leave2);
 
         ret = controller.open (&handle_event_loop);
         if (errorcode_t::success != ret) {
@@ -94,7 +94,7 @@ return_t multiplexer_epoll::open (multiplexer_context_t** handle, size_t concurr
 return_t multiplexer_epoll::close (multiplexer_context_t* handle)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EPOLL_CONTEXT* context = (MULTIPLEXER_EPOLL_CONTEXT *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
     multiplexer_controller controller;
 
     __try2
@@ -129,7 +129,7 @@ return_t multiplexer_epoll::close (multiplexer_context_t* handle)
 return_t multiplexer_epoll::bind (multiplexer_context_t* handle, handle_t eventsource, void* data)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EPOLL_CONTEXT* context = (MULTIPLEXER_EPOLL_CONTEXT *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
 
     __try2
     {
@@ -163,7 +163,7 @@ return_t multiplexer_epoll::bind (multiplexer_context_t* handle, handle_t events
 return_t multiplexer_epoll::unbind (multiplexer_context_t* handle, handle_t eventsource, void* data)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EPOLL_CONTEXT* context = (MULTIPLEXER_EPOLL_CONTEXT *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
 
     __try2
     {
@@ -197,7 +197,7 @@ return_t multiplexer_epoll::event_loop_run (multiplexer_context_t* handle, handl
                                             void* parameter)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EPOLL_CONTEXT* context = (MULTIPLEXER_EPOLL_CONTEXT *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
     arch_t token_handle = 0;
     multiplexer_controller controller;
 
@@ -265,7 +265,7 @@ return_t multiplexer_epoll::event_loop_run (multiplexer_context_t* handle, handl
 return_t multiplexer_epoll::event_loop_break (multiplexer_context_t* handle, arch_t* token_handle)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EPOLL_CONTEXT* context = (MULTIPLEXER_EPOLL_CONTEXT *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
     multiplexer_controller controller;
 
     __try2
@@ -293,7 +293,7 @@ return_t multiplexer_epoll::event_loop_break (multiplexer_context_t* handle, arc
 return_t multiplexer_epoll::event_loop_break_concurrent (multiplexer_context_t* handle, size_t concurrent)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EPOLL_CONTEXT* context = (MULTIPLEXER_EPOLL_CONTEXT *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
     multiplexer_controller controller;
 
     __try2

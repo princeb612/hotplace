@@ -18,9 +18,9 @@ namespace hotplace {
 namespace net {
 
 #if defined __SIZEOF_INT128__
-    #ifndef SUPPORT_IPV6
-        #define SUPPORT_IPV6
-    #endif
+#ifndef SUPPORT_IPV6
+#define SUPPORT_IPV6
+#endif
 typedef uint128 ipaddr_t;
 #else
 typedef uint32 ipaddr_t;

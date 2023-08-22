@@ -35,9 +35,9 @@ typedef return_t (*TYPE_CALLBACK_HANDLEREXV)(uint32 type, uint32 count, void* da
  * @param   void*      lpContext   [IN]
  */
 #if defined _MBCS || defined MBCS
-    #define ENUM_CALLBACK_HANDLER ENUM_CALLBACK_HANDLERA
+#define ENUM_CALLBACK_HANDLER ENUM_CALLBACK_HANDLERA
 #elif defined _UNICODE || defined UNICODE
-    #define ENUM_CALLBACK_HANDLER ENUM_CALLBACK_HANDLERW
+#define ENUM_CALLBACK_HANDLER ENUM_CALLBACK_HANDLERW
 #endif
 typedef return_t (* ENUM_CALLBACK_HANDLERA)(const char* tszName, void* lpParameter, void* lpContext);
 typedef return_t (* ENUM_CALLBACK_HANDLERW)(const wchar_t* tszName, void* lpParameter, void* lpContext);
@@ -50,9 +50,9 @@ typedef return_t (* ENUM_CALLBACK_HANDLERW)(const wchar_t* tszName, void* lpPara
  * @param   void*      lpContext   [IN]
  */
 #if defined _MBCS || defined MBCS
-    #define ENUMTYPE_CALLBACK_HANDLER ENUMTYPE_CALLBACK_HANDLERA
+#define ENUMTYPE_CALLBACK_HANDLER ENUMTYPE_CALLBACK_HANDLERA
 #elif defined _UNICODE || defined UNICODE
-    #define ENUMTYPE_CALLBACK_HANDLER ENUMTYPE_CALLBACK_HANDLERW
+#define ENUMTYPE_CALLBACK_HANDLER ENUMTYPE_CALLBACK_HANDLERW
 #endif
 typedef return_t (* ENUMTYPE_CALLBACK_HANDLERA)(const char* tszName, intptr_t dwType, void* lpParameter, void* lpContext);
 typedef return_t (* ENUMTYPE_CALLBACK_HANDLERW)(const wchar_t* tszName, intptr_t dwType, void* lpParameter, void* lpContext);

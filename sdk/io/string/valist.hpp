@@ -43,9 +43,9 @@ typedef struct VA_LIST {
         void* va_ptr;           /* linux, windows */
 
 #if defined __linux__
-    #if __WORDSIZE == 64
+#if __WORDSIZE == 64
         GCC_VA_LIST64 gcc_va_list64;             /* gcc 64bits */
-    #endif
+#endif
 #endif
     };
 } VA_LIST;

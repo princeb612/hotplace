@@ -122,7 +122,7 @@ return_t base64_encode (const byte_t* source, size_t source_size, byte_t* buffer
         // 7 => 12, 10; 8 => 12, 11; 9 => 12, 12
 
         const byte_t* table = MIME_BASE64_ENCODE;
-        if (BASE64URL_ENCODING == encoding) {
+        if (base64_encoding_t::base64url_encoding == encoding) {
             table = MIME_BASE64URL_ENCODE;
         }
 
@@ -154,7 +154,7 @@ return_t base64_encode (const byte_t* source, size_t source_size, byte_t* buffer
             buffer[j + 2] = table[temp.e2];
             buffer[j + 3] = table[temp.e1];
 
-            if (BASE64_ENCODING == encoding) {
+            if (base64_encoding_t::base64_encoding == encoding) {
                 if ((i + 2) > source_size) {
                     buffer[j + 2] = '=';
                 }
@@ -164,7 +164,7 @@ return_t base64_encode (const byte_t* source, size_t source_size, byte_t* buffer
             }
         }
 
-        if (BASE64URL_ENCODING == encoding) {
+        if (base64_encoding_t::base64url_encoding == encoding) {
             size_need = (4 * (source_size / 3)) + (source_size % 3 ? (source_size % 3) + 1 : 0);
         }
 
@@ -197,7 +197,7 @@ return_t base64_decode (const byte_t *source, size_t source_size, byte_t *buffer
         // if x=4 then 1~4 -> 4, 5~8 -> 8
 
         const int* table = MIME_BASE64_DECODE;
-        if (BASE64URL_ENCODING == encoding) {
+        if (base64_encoding_t::base64url_encoding == encoding) {
             table = MIME_BASE64URL_DECODE;
         }
 

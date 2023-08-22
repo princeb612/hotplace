@@ -46,10 +46,10 @@ return_t json_web_key::add_rsa (crypto_key* crypto_key, const char* kid, const c
         std::string e_decoded;
         std::string d_decoded;
 
-        n_decoded = base64_decode_careful (n_value, strlen (n_value), BASE64URL_ENCODING);
-        e_decoded = base64_decode_careful (e_value, strlen (e_value), BASE64URL_ENCODING);
+        n_decoded = base64_decode_careful (n_value, strlen (n_value), base64_encoding_t::base64url_encoding);
+        e_decoded = base64_decode_careful (e_value, strlen (e_value), base64_encoding_t::base64url_encoding);
         if (nullptr != d_value) {
-            d_decoded = base64_decode_careful (d_value, strlen (d_value), BASE64URL_ENCODING);
+            d_decoded = base64_decode_careful (d_value, strlen (d_value), base64_encoding_t::base64url_encoding);
         }
 
         std::string p_decoded;
@@ -59,11 +59,11 @@ return_t json_web_key::add_rsa (crypto_key* crypto_key, const char* kid, const c
         std::string qi_decoded;
 
         if (p_value && q_value && dp_value && dq_value && qi_value) {
-            p_decoded = base64_decode_careful (p_value, strlen (p_value), BASE64URL_ENCODING);
-            q_decoded = base64_decode_careful (q_value, strlen (q_value), BASE64URL_ENCODING);
-            dp_decoded = base64_decode_careful (dp_value, strlen (dp_value), BASE64URL_ENCODING);
-            dq_decoded = base64_decode_careful (dq_value, strlen (dq_value), BASE64URL_ENCODING);
-            qi_decoded = base64_decode_careful (qi_value, strlen (qi_value), BASE64URL_ENCODING);
+            p_decoded = base64_decode_careful (p_value, strlen (p_value), base64_encoding_t::base64url_encoding);
+            q_decoded = base64_decode_careful (q_value, strlen (q_value), base64_encoding_t::base64url_encoding);
+            dp_decoded = base64_decode_careful (dp_value, strlen (dp_value), base64_encoding_t::base64url_encoding);
+            dq_decoded = base64_decode_careful (dq_value, strlen (dq_value), base64_encoding_t::base64url_encoding);
+            qi_decoded = base64_decode_careful (qi_value, strlen (qi_value), base64_encoding_t::base64url_encoding);
         }
 
         binary_t n;
@@ -119,14 +119,14 @@ return_t json_web_key::add_ec (crypto_key* crypto_key, const char* kid, const ch
             __leave2_trace (ret);
         }
 
-        x_decoded = base64_decode_careful (x_value, strlen (x_value), BASE64URL_ENCODING);
+        x_decoded = base64_decode_careful (x_value, strlen (x_value), base64_encoding_t::base64url_encoding);
         if (y_value) {
             /* kty EC */
-            y_decoded = base64_decode_careful (y_value, strlen (y_value), BASE64URL_ENCODING);
+            y_decoded = base64_decode_careful (y_value, strlen (y_value), base64_encoding_t::base64url_encoding);
         }
         if (d_value) {
             /* private key */
-            d_decoded = base64_decode_careful (d_value, strlen (d_value), BASE64URL_ENCODING);
+            d_decoded = base64_decode_careful (d_value, strlen (d_value), base64_encoding_t::base64url_encoding);
         }
 
         binary_t x;
@@ -157,7 +157,7 @@ return_t json_web_key::add_oct (crypto_key* crypto_key, const char* kid, const c
             __leave2;
         }
 
-        std::string k_decoded = base64_decode_careful (k_value, strlen (k_value), BASE64URL_ENCODING);
+        std::string k_decoded = base64_decode_careful (k_value, strlen (k_value), base64_encoding_t::base64url_encoding);
 
         binary_t k;
         k.insert (k.end (), k_decoded.begin (), k_decoded.end ());
@@ -452,25 +452,25 @@ static void jwk_serialize_item (int flag, json_mapper_item_t item, json_t* json_
 
     /* param */
     if (crypto_key_t::hmac_key == item.type) {
-        json_object_set_new (json_item, "k", json_string (base64_encode (item.priv, BASE64URL_ENCODING).c_str ()));
+        json_object_set_new (json_item, "k", json_string (base64_encode (item.priv, base64_encoding_t::base64url_encoding).c_str ()));
     } else if (crypto_key_t::rsa_key == item.type) {
-        json_object_set_new (json_item, "n", json_string (base64_encode (item.pub1, BASE64URL_ENCODING).c_str ()));
-        json_object_set_new (json_item, "e", json_string (base64_encode (item.pub2, BASE64URL_ENCODING).c_str ()));
+        json_object_set_new (json_item, "n", json_string (base64_encode (item.pub1, base64_encoding_t::base64url_encoding).c_str ()));
+        json_object_set_new (json_item, "e", json_string (base64_encode (item.pub2, base64_encoding_t::base64url_encoding).c_str ()));
         if (flag) {
-            json_object_set_new (json_item, "d", json_string (base64_encode (item.priv, BASE64URL_ENCODING).c_str ()));
+            json_object_set_new (json_item, "d", json_string (base64_encode (item.priv, base64_encoding_t::base64url_encoding).c_str ()));
         }
     } else if (crypto_key_t::ec_key == item.type) {
         json_object_set_new (json_item, "crv", json_string (curve_name.c_str ()));
-        json_object_set_new (json_item, "x", json_string (base64_encode (item.pub1, BASE64URL_ENCODING).c_str ()));
-        json_object_set_new (json_item, "y", json_string (base64_encode (item.pub2, BASE64URL_ENCODING).c_str ()));
+        json_object_set_new (json_item, "x", json_string (base64_encode (item.pub1, base64_encoding_t::base64url_encoding).c_str ()));
+        json_object_set_new (json_item, "y", json_string (base64_encode (item.pub2, base64_encoding_t::base64url_encoding).c_str ()));
         if (flag) {
-            json_object_set_new (json_item, "d", json_string (base64_encode (item.priv, BASE64URL_ENCODING).c_str ()));
+            json_object_set_new (json_item, "d", json_string (base64_encode (item.priv, base64_encoding_t::base64url_encoding).c_str ()));
         }
     } else if (crypto_key_t::okp_key == item.type) {
         json_object_set_new (json_item, "crv", json_string (curve_name.c_str ()));
-        json_object_set_new (json_item, "x", json_string (base64_encode (item.pub1, BASE64URL_ENCODING).c_str ()));
+        json_object_set_new (json_item, "x", json_string (base64_encode (item.pub1, base64_encoding_t::base64url_encoding).c_str ()));
         if (flag) {
-            json_object_set_new (json_item, "d", json_string (base64_encode (item.priv, BASE64URL_ENCODING).c_str ()));
+            json_object_set_new (json_item, "d", json_string (base64_encode (item.priv, base64_encoding_t::base64url_encoding).c_str ()));
         }
     }
 }

@@ -243,11 +243,11 @@ public:
     wide_string& operator << (double buf);
     wide_string& operator << (wide_string& buf);
 
-    #if defined __SIZEOF_INT128__
+#if defined __SIZEOF_INT128__
     wide_string& operator = (uint128 buf);
     wide_string& operator += (uint128 buf);
     wide_string& operator << (uint128 buf);
-    #endif
+#endif
 
     int compare (wide_string& buf);
     static int compare (wide_string& lhs, wide_string& rhs);

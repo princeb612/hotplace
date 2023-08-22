@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/crypto/openssl/openssl_ecdh.hpp>
 #if defined __linux__
-    #include <arpa/inet.h>
+#include <arpa/inet.h>
 #endif
 
 namespace hotplace {

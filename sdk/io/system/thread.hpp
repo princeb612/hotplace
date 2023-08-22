@@ -13,9 +13,9 @@
 
 #include <hotplace/sdk/base.hpp>
 #if defined _WIN32 || defined _WIN64
-    #include <windows.h>
+#include <windows.h>
 #elif defined __linux__
-    #include <pthread.h>
+#include <pthread.h>
 #endif
 
 namespace hotplace {
@@ -40,9 +40,9 @@ public:
 }
 
 #if defined _WIN32 || defined _WIN64
-    #include <hotplace/sdk/io/system/windows/thread.hpp>
+#include <hotplace/sdk/io/system/windows/thread.hpp>
 #elif defined __linux__
-    #include <hotplace/sdk/io/system/linux/thread.hpp>
+#include <hotplace/sdk/io/system/linux/thread.hpp>
 #endif
 
 #endif

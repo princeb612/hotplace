@@ -16,12 +16,12 @@ namespace io {
 
 #define MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE 0x20151208
 
-typedef std::map<arch_t, uint32> MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP;
-typedef struct _MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT : public multiplexer_controller_context_t {
+typedef std::map<arch_t, uint32> multiplexer_event_loop_controler_map_t;
+typedef struct _multiplexer_event_loop_controller_context_t : public multiplexer_controller_context_t {
     uint32 signature;
     critical_section lock;
-    MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP control;
-} MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT;
+    multiplexer_event_loop_controler_map_t control;
+} multiplexer_event_loop_controller_context_t;
 
 multiplexer_controller::multiplexer_controller ()
 {
@@ -36,7 +36,7 @@ multiplexer_controller::~multiplexer_controller ()
 return_t multiplexer_controller::open (multiplexer_controller_context_t** handle)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = nullptr;
+    multiplexer_event_loop_controller_context_t* context = nullptr;
 
     __try2
     {
@@ -45,7 +45,7 @@ return_t multiplexer_controller::open (multiplexer_controller_context_t** handle
             __leave2;
         }
 
-        __try_new_catch (context, new MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT, ret, __leave2);
+        __try_new_catch (context, new multiplexer_event_loop_controller_context_t, ret, __leave2);
 
         context->signature = MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE;
         *handle = context;
@@ -61,7 +61,7 @@ return_t multiplexer_controller::open (multiplexer_controller_context_t** handle
 return_t multiplexer_controller::close (multiplexer_controller_context_t* handle)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+    multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
 
     __try2
     {
@@ -88,9 +88,9 @@ return_t multiplexer_controller::close (multiplexer_controller_context_t* handle
 return_t multiplexer_controller::event_loop_new (multiplexer_controller_context_t* handle, arch_t* token_handle)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+    multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
 
-    MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP::iterator iter;
+    multiplexer_event_loop_controler_map_t::iterator iter;
 
     arch_t tid = (arch_t) handle;
 
@@ -134,9 +134,9 @@ return_t multiplexer_controller::event_loop_new (multiplexer_controller_context_
 return_t multiplexer_controller::event_loop_break (multiplexer_controller_context_t* handle, arch_t* token_handle)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+    multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
 
-    MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP::iterator iter;
+    multiplexer_event_loop_controler_map_t::iterator iter;
 
     __try2
     {
@@ -174,9 +174,9 @@ return_t multiplexer_controller::event_loop_break (multiplexer_controller_contex
 return_t multiplexer_controller::event_loop_break_concurrent (multiplexer_controller_context_t* handle, size_t concurrent)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+    multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
 
-    MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP::iterator iter;
+    multiplexer_event_loop_controler_map_t::iterator iter;
 
     __try2
     {
@@ -215,9 +215,9 @@ bool multiplexer_controller::event_loop_test_broken (multiplexer_controller_cont
 {
     bool ret_value = false;
     //return_t ret = errorcode_t::success;
-    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+    multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
 
-    MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP::iterator iter;
+    multiplexer_event_loop_controler_map_t::iterator iter;
 
     __try2
     {
@@ -243,11 +243,11 @@ bool multiplexer_controller::event_loop_test_broken (multiplexer_controller_cont
 return_t multiplexer_controller::event_loop_close (multiplexer_controller_context_t* handle, arch_t token_handle)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT* context = static_cast<MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT*>(handle);
+    multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
 
     __try2
     {
-        MULTIPLEXER_EVENT_LOOP_CONTROLER_MAP::iterator iter;
+        multiplexer_event_loop_controler_map_t::iterator iter;
 
         context->lock.enter ();
         iter = context->control.find (token_handle);

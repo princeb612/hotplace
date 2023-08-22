@@ -352,9 +352,9 @@ size_t bufferio::wfind_last_of_routine (bufferio_context_t* handle, int mode, in
 }
 
 #if defined _MBCS || defined MBCS
-    #define imp_find_first_of find_first_of
+#define imp_find_first_of find_first_of
 #elif defined _UNICODE || defined UNICODE
-    #define imp_find_first_of wfind_first_of
+#define imp_find_first_of wfind_first_of
 #endif
 
 #if defined _MBCS || defined MBCS

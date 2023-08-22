@@ -93,11 +93,11 @@ void test0 ()
     crypto_key_es521.get_key (pkey, pub1, pub2, priv);
 
     std::string encoded;
-    encoded = base64_encode (&pub1[0], pub1.size (), BASE64URL_ENCODING);
+    encoded = base64_encode (&pub1[0], pub1.size (), base64_encoding_t::base64url_encoding);
     std::cout << "x " << encoded.c_str () << std::endl;
-    encoded = base64_encode (&pub2[0], pub2.size (), BASE64URL_ENCODING);
+    encoded = base64_encode (&pub2[0], pub2.size (), base64_encoding_t::base64url_encoding);
     std::cout << "y " << encoded.c_str () << std::endl;
-    encoded = base64_encode (&priv[0], priv.size (), BASE64URL_ENCODING);
+    encoded = base64_encode (&priv[0], priv.size (), base64_encoding_t::base64url_encoding);
     std::cout << "d " << encoded.c_str () << std::endl;
 
     _test_case.assert (true, __FUNCTION__, "baseic informations");
@@ -783,10 +783,10 @@ void test_rfc7516_A1_test ()
     printf ("tag\n%s\n", bs.c_str ());
 
     // A.1.1
-    jose_header_encoded = base64_encode ((byte_t*) jose_header.c_str (), jose_header.size (), BASE64URL_ENCODING);
+    jose_header_encoded = base64_encode ((byte_t*) jose_header.c_str (), jose_header.size (), base64_encoding_t::base64url_encoding);
     printf ("jose_header_encoded\n%s\n", jose_header_encoded.c_str ());
     // A.1.3
-    encrypted_key_encoded = base64_encode (encrypted_key, RTL_NUMBER_OF (encrypted_key), BASE64URL_ENCODING);
+    encrypted_key_encoded = base64_encode (encrypted_key, RTL_NUMBER_OF (encrypted_key), base64_encoding_t::base64url_encoding);
     printf ("encrypted_key_encoded\n%s\n", encrypted_key_encoded.c_str ());
 
     encrypted_key_data.insert (encrypted_key_data.end (), encrypted_key, encrypted_key + RTL_NUMBER_OF (encrypted_key));
@@ -807,7 +807,7 @@ void test_rfc7516_A1_test ()
                      "RFC 7516 Appendix A - A.1.  Example JWE using RSAES-OAEP and AES GCM (A.1.3)");
 
     // A.1.4
-    iv_encoded = base64_encode (iv, RTL_NUMBER_OF (iv), BASE64URL_ENCODING);
+    iv_encoded = base64_encode (iv, RTL_NUMBER_OF (iv), base64_encoding_t::base64url_encoding);
     printf ("iv_encoded\n%s\n", iv_encoded.c_str ());
     // A.1.5
     aad_data.insert (aad_data.end (), aad, aad + RTL_NUMBER_OF (aad));
@@ -854,9 +854,9 @@ void test_rfc7516_A1_test ()
     dump_memory (&plain[0], plain.size (), &bs);
     printf ("plain\n%s\n", bs.c_str ());
 
-    ciphertext_encoded = base64_encode (&data[0], data.size (), BASE64URL_ENCODING);
+    ciphertext_encoded = base64_encode (&data[0], data.size (), base64_encoding_t::base64url_encoding);
     printf ("ciphertext_encoded\n%s\n", ciphertext_encoded.c_str ());
-    tag_encoded = base64_encode (&tag_gen[0], tag_gen.size (), BASE64URL_ENCODING);
+    tag_encoded = base64_encode (&tag_gen[0], tag_gen.size (), base64_encoding_t::base64url_encoding);
     printf ("tag_encoded\n%s\n", tag_encoded.c_str ());
 
     crypt.close (crypt_handle);
@@ -1258,8 +1258,8 @@ void test_jwk ()
     std::string x1 = "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt";
     std::string x2 = "cpkss6wI7PPlxj3t7A1RqMH3nvL4L5Tzxze_XeeYZnHqxiX-gle70DlGRMqqOq-PJ6RYX7vK0PJFdiAIXlyPQq0";
     binary_t b1, b2;
-    base64_decode (x1.c_str (), x1.size (), b1, BASE64URL_ENCODING);
-    base64_decode (x2.c_str (), x2.size (), b2, BASE64URL_ENCODING);
+    base64_decode (x1.c_str (), x1.size (), b1, base64_encoding_t::base64url_encoding);
+    base64_decode (x2.c_str (), x2.size (), b2, base64_encoding_t::base64url_encoding);
     std::cout
         << "what's different ?"
         << std::endl
@@ -1482,7 +1482,7 @@ void test_rfc7518_C ()
     std::cout << "]" << std::endl;
 
     std::string sample = "VqqN6vgjbSBcIijNcacQGg";
-    std::string computation = base64_encode (derived, BASE64URL_ENCODING);
+    std::string computation = base64_encode (derived, base64_encoding_t::base64url_encoding);
     std::cout << computation.c_str () << std::endl;
 
     bool result = (sample == computation);
@@ -1849,9 +1849,9 @@ void test_jwk_thumbprint ()
         << std::endl;
 
     json_root = json_object ();
-    json_object_set_new (json_root, "e", json_string (base64_encode (pub2, BASE64URL_ENCODING).c_str ()));
+    json_object_set_new (json_root, "e", json_string (base64_encode (pub2, base64_encoding_t::base64url_encoding).c_str ()));
     json_object_set_new (json_root, "kty", json_string ("RSA"));
-    json_object_set_new (json_root, "n", json_string (base64_encode (pub1, BASE64URL_ENCODING).c_str ()));
+    json_object_set_new (json_root, "n", json_string (base64_encode (pub1, base64_encoding_t::base64url_encoding).c_str ()));
     char* contents = json_dumps (json_root, JSON_COMPACT);
     if (contents) {
         buffer = contents;
@@ -1881,7 +1881,7 @@ void test_jwk_thumbprint ()
     std::cout << "]" << std::endl;
 
     hash_stream ("sha256", (byte_t*) buffer.c_str (), buffer.size (), hash_value);
-    thumbprint = base64_encode (hash_value, BASE64URL_ENCODING);
+    thumbprint = base64_encode (hash_value, base64_encoding_t::base64url_encoding);
 
     std::cout
         << "in lexicographic order : "
@@ -2067,35 +2067,35 @@ void key_dump (crypto_key* key, jwa_t alg, crypto_use_t use)
         switch (alg_info->kty) {
             case crypto_key_t::hmac_key:
 
-                hex = base64_encode (priv, BASE64URL_ENCODING);
+                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
                 print_text ("> k %s", hex.c_str ());
 
                 break;
             case crypto_key_t::rsa_key:
 
-                hex = base64_encode (pub1, BASE64URL_ENCODING);
+                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> n %s", hex.c_str ());
-                hex = base64_encode (pub2, BASE64URL_ENCODING);
+                hex = base64_encode (pub2, base64_encoding_t::base64url_encoding);
                 print_text ("> e %s", hex.c_str ());
-                hex = base64_encode (priv, BASE64URL_ENCODING);
+                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
                 print_text ("> d %s", hex.c_str ());
 
                 break;
             case crypto_key_t::ec_key:
 
-                hex = base64_encode (pub1, BASE64URL_ENCODING);
+                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> x %s", hex.c_str ());
-                hex = base64_encode (pub2, BASE64URL_ENCODING);
+                hex = base64_encode (pub2, base64_encoding_t::base64url_encoding);
                 print_text ("> y %s", hex.c_str ());
-                hex = base64_encode (priv, BASE64URL_ENCODING);
+                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
                 print_text ("> d %s", hex.c_str ());
 
                 break;
             case crypto_key_t::okp_key:
 
-                hex = base64_encode (pub1, BASE64URL_ENCODING);
+                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> x %s", hex.c_str ());
-                hex = base64_encode (priv, BASE64URL_ENCODING);
+                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
                 print_text ("> d %s", hex.c_str ());
 
                 break;
@@ -2126,35 +2126,35 @@ void key_dump (crypto_key* key, jws_t sig, crypto_use_t use)
         switch (alg_info->kty) {
             case crypto_key_t::hmac_key:
 
-                hex = base64_encode (priv, BASE64URL_ENCODING);
+                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
                 print_text ("> k %s", hex.c_str ());
 
                 break;
             case crypto_key_t::rsa_key:
 
-                hex = base64_encode (pub1, BASE64URL_ENCODING);
+                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> n %s", hex.c_str ());
-                hex = base64_encode (pub2, BASE64URL_ENCODING);
+                hex = base64_encode (pub2, base64_encoding_t::base64url_encoding);
                 print_text ("> e %s", hex.c_str ());
-                hex = base64_encode (priv, BASE64URL_ENCODING);
+                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
                 print_text ("> d %s", hex.c_str ());
 
                 break;
             case crypto_key_t::ec_key:
 
-                hex = base64_encode (pub1, BASE64URL_ENCODING);
+                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> x %s", hex.c_str ());
-                hex = base64_encode (pub2, BASE64URL_ENCODING);
+                hex = base64_encode (pub2, base64_encoding_t::base64url_encoding);
                 print_text ("> y %s", hex.c_str ());
-                hex = base64_encode (priv, BASE64URL_ENCODING);
+                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
                 print_text ("> d %s", hex.c_str ());
 
                 break;
             case crypto_key_t::okp_key:
 
-                hex = base64_encode (pub1, BASE64URL_ENCODING);
+                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> x %s", hex.c_str ());
-                hex = base64_encode (priv, BASE64URL_ENCODING);
+                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
                 print_text ("> d %s", hex.c_str ());
 
                 break;

@@ -130,11 +130,11 @@ valist& valist::operator << (long value)
 
     v.type = TYPE_LONG;
 #if defined __linux__
-    #if __WORDSIZE == 64
+#if __WORDSIZE == 64
     v.data.i64 = value;
-    #else
+#else
     v.data.i32 = value;
-    #endif
+#endif
 #elif defined _WIN32 || defined _WIN64
     v.data.i32 = value;
 #endif
@@ -148,11 +148,11 @@ valist& valist::operator << (unsigned long value)
 
     v.type = TYPE_LONG;
 #if defined __linux__
-    #if __WORDSIZE == 64
+#if __WORDSIZE == 64
     v.data.ui64 = value;
-    #else
+#else
     v.data.ui32 = value;
-    #endif
+#endif
 #elif defined _WIN32 || defined _WIN64
     v.data.ui32 = value;
 #endif
@@ -274,7 +274,7 @@ va_list& valist::get ()
     }
 
 #if defined __linux__
-    #if __WORDSIZE == 64
+#if __WORDSIZE == 64
     /*
      * #if (defined(__linux__) && defined(__x86_64__))
      *
@@ -287,9 +287,9 @@ va_list& valist::get ()
     _type.gcc_va_list64[0].fp_offset = 304;
     _type.gcc_va_list64[0].reg_save_area = nullptr;
     _type.gcc_va_list64[0].overflow_arg_area = _va_internal;         /* arg here !*/
-    #else
+#else
     _type.va_ptr = _va_internal;
-    #endif
+#endif
 #else
     /*
      * va_list ap;
@@ -306,14 +306,14 @@ va_list& valist::get ()
 }
 
 #if defined __linux__
-    #if (defined ( __linux__) && defined (__x86_64__))
+#if (defined ( __linux__) && defined (__x86_64__))
 // AMD64 byte-aligns elements to 8 bytes
-        #define VLIST_CHUNK_SIZE 8
-    #else
-        #define VLIST_CHUNK_SIZE 4
-    #endif
+#define VLIST_CHUNK_SIZE 8
 #else
-    #define VLIST_CHUNK_SIZE sizeof (arch_t)
+#define VLIST_CHUNK_SIZE 4
+#endif
+#else
+#define VLIST_CHUNK_SIZE sizeof (arch_t)
 #endif
 
 union va_union {
@@ -491,8 +491,8 @@ void valist::build ()
         u.ptr = arg_list;
         ap = u.ap;
 
-    #define va_assign_type_promotion_int(x) int
-    #define va_assign_type_promotion_double(x) double
+#define va_assign_type_promotion_int(x) int
+#define va_assign_type_promotion_double(x) double
 
         for (args_t::iterator iter = _args.begin (); iter != _args.end (); iter++) {
             variant_t& vt = *iter;

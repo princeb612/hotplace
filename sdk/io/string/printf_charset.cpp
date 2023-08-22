@@ -55,9 +55,9 @@ namespace io {
 #define MAXFRACT  39
 
 #if __cplusplus >= 201703L // c++17
-    #define __register
+#define __register
 #else
-    #define __register register
+#define __register register
 #endif
 
 static inline int tochar (int c)

@@ -21,11 +21,11 @@ void openssl_startup_implementation ()
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
     OPENSSL_init_ssl (0, nullptr);
     OPENSSL_init_ssl (OPENSSL_INIT_LOAD_SSL_STRINGS | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, nullptr);
-    #ifdef OPENSSL_LOAD_CONF
+#ifdef OPENSSL_LOAD_CONF
     OPENSSL_init_crypto (OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS | OPENSSL_INIT_LOAD_CONFIG, nullptr);
-    #else
+#else
     OPENSSL_init_crypto (OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS, nullptr);
-    #endif
+#endif
 #else
     SSL_library_init ();
     SSL_load_error_strings ();
@@ -61,18 +61,18 @@ void openssl_cleanup_implementation ()
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 
-    #if defined __linux__ || defined __APPLE__
+#if defined __linux__ || defined __APPLE__
 static pthread_mutex_t * openssl_threadsafe = nullptr;
-    #elif defined _WIN32 || defined _WIN64
+#elif defined _WIN32 || defined _WIN64
 static HANDLE * openssl_threadsafe = nullptr;
-    #endif
+#endif
 
-    #if defined __linux__ || defined __APPLE__
-static unsigned long UNREFERENCED (get_thread_id_callback) (){
+#if defined __linux__ || defined __APPLE__
+static unsigned long (get_thread_id_callback) (){
     return (unsigned long) pthread_self ();
 }
-    #endif
-static void UNREFERENCED (opensslthread_locking_callback) (int mode, int type, const char *file, int line);
+#endif
+static void (opensslthread_locking_callback) (int mode, int type, const char *file, int line);
 
 /* openssl-0.9.8 thread-safe */
 void openssl_thread_setup_implementation (void)
@@ -82,30 +82,29 @@ void openssl_thread_setup_implementation (void)
     __try2
     {
         if (nullptr != openssl_threadsafe) {
-            ret = ERROR_ALREADY_INITIALIZED;
             __leave2_trace (ret);
         }
 
-    #if defined __linux__ || defined __APPLE__
+#if defined __linux__ || defined __APPLE__
         openssl_threadsafe = (pthread_mutex_t *) OPENSSL_malloc (CRYPTO_num_locks () * sizeof (pthread_mutex_t));
-    #elif defined _WIN32 || defined _WIN64
+#elif defined _WIN32 || defined _WIN64
         openssl_threadsafe = (HANDLE *) OPENSSL_malloc (CRYPTO_num_locks () * sizeof (HANDLE));
-    #endif
+#endif
         if (nullptr == openssl_threadsafe) {
             ret = errorcode_t::out_of_memory;
             __leave2_trace (ret);
         }
         for (int i = 0; i < CRYPTO_num_locks (); i++) {
-    #if defined __linux__ || defined __APPLE__
+#if defined __linux__ || defined __APPLE__
             pthread_mutex_init (&openssl_threadsafe[i], nullptr);
-    #elif defined _WIN32 || defined _WIN64
+#elif defined _WIN32 || defined _WIN64
             openssl_threadsafe[i] = CreateMutex (nullptr, FALSE, nullptr);
-    #endif
+#endif
         }
 
-    #if defined __linux__ || defined __APPLE__
+#if defined __linux__ || defined __APPLE__
         CRYPTO_set_id_callback (get_thread_id_callback);
-    #endif
+#endif
         CRYPTO_set_locking_callback ((void (*)(int, int, const char *, int))opensslthread_locking_callback);
         /* id callback defined */
     }
@@ -121,11 +120,11 @@ void openssl_thread_cleanup_implementation (void)
     if (nullptr != openssl_threadsafe) {
         CRYPTO_set_locking_callback (nullptr);
         for (int i = 0; i < CRYPTO_num_locks (); i++) {
-    #if defined __linux__ || defined __APPLE__
+#if defined __linux__ || defined __APPLE__
             pthread_mutex_destroy (&openssl_threadsafe[i]);
-    #elif defined _WIN32 || defined _WIN64
+#elif defined _WIN32 || defined _WIN64
             CloseHandle (openssl_threadsafe[i]);
-    #endif
+#endif
         }
         OPENSSL_free (openssl_threadsafe);
         openssl_threadsafe = nullptr;
@@ -135,23 +134,20 @@ void openssl_thread_cleanup_implementation (void)
 /* openssl-0.9.8 thread-safe */
 void opensslthread_locking_callback (int mode, int type, const char *file, int line)
 {
-    UNREFERENCED_PARAMETER (file);
-    UNREFERENCED_PARAMETER (line);
-
     assert (nullptr != openssl_threadsafe);
 
     if (mode & CRYPTO_LOCK) {
-    #if defined __linux__ || defined __APPLE__
+#if defined __linux__ || defined __APPLE__
         pthread_mutex_lock (&openssl_threadsafe[type]);
-    #elif defined _WIN32 || defined _WIN64
+#elif defined _WIN32 || defined _WIN64
         WaitForSingleObject (openssl_threadsafe[type], INFINITE);
-    #endif
+#endif
     } else {
-    #if defined __linux__ || defined __APPLE__
+#if defined __linux__ || defined __APPLE__
         pthread_mutex_unlock (&openssl_threadsafe[type]);
-    #elif defined _WIN32 || defined _WIN64
+#elif defined _WIN32 || defined _WIN64
         ReleaseMutex (openssl_threadsafe[type]);
-    #endif
+#endif
     }
 }
 #else

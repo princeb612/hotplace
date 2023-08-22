@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/io/system/types.hpp>
 #if defined __linux__
-    #include <arpa/inet.h>
+#include <arpa/inet.h>
 #endif
 
 namespace hotplace {

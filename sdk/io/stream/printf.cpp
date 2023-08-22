@@ -18,19 +18,19 @@
 namespace hotplace {
 namespace io {
 
-typedef struct _VARIANT_CONVERSION {
+typedef struct _variant_conversion_t {
     int type;
     const char* formatter;
-} VARIANT_CONVERSION;
+} variant_conversion_t;
 
 #if __cplusplus >= 201103L    // c++11
-    #define VARIANT_CONVERSION_ITEM(t, f) { .type = t, .formatter = f, \
+#define VARIANT_CONVERSION_ITEM(t, f) { .type = t, .formatter = f, \
 }
 #else
-    #define VARIANT_CONVERSION_ITEM(t, f) { t, f, }
+#define VARIANT_CONVERSION_ITEM(t, f) { t, f, }
 #endif
 
-static VARIANT_CONVERSION type_formatter[] =
+static variant_conversion_t type_formatter[] =
 {
     VARIANT_CONVERSION_ITEM (TYPE_CHAR,   "%c"),
     VARIANT_CONVERSION_ITEM (TYPE_BYTE,   "%c"),
@@ -132,9 +132,9 @@ return_t sprintf (stream_interface* stream, const char* fmt, valist va)
             va_new.at (i, v);
             order = i + 1;
 #if __cplusplus >= 201103L    // c++11
-            const VARIANT_CONVERSION * item = nullptr;
+            const variant_conversion_t * item = nullptr;
             item = std::find_if (std::begin (type_formatter), std::end (type_formatter),
-                                 [v] (const VARIANT_CONVERSION& item) {
+                                 [v] (const variant_conversion_t& item) {
                         return item.type == v.type;
                     });
             if (std::end (type_formatter) != item) {
@@ -142,7 +142,7 @@ return_t sprintf (stream_interface* stream, const char* fmt, valist va)
             }
 #else
             for (size_t k = 0; k < size_type_formatter; k++) {
-                VARIANT_CONVERSION* member = type_formatter + k;
+                variant_conversion_t* member = type_formatter + k;
                 if (member->type == v.type) {
                     formatter.replace1 (format ("{%d}", order).c_str (), member->formatter);
                     break;

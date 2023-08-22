@@ -44,7 +44,7 @@ typedef uint64 arch_t;
 #elif defined _WIN32
 typedef uint32 arch_t;
 #else
-    #error _WIN32 or _WIN64 not defined
+#error _WIN32 or _WIN64 not defined
 #endif
 typedef __int128_t time64_t;
 

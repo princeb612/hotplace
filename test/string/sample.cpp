@@ -56,8 +56,8 @@ void test_base64 ()
     _test_case.begin ("base64 encoding");
     const char* lyrics = "still a man hears what he wants to hear and disregards the rest";
     size_t len = strlen (lyrics);
-    test_base64_routine (lyrics, len, BASE64_ENCODING);
-    test_base64_routine (lyrics, len, BASE64URL_ENCODING);
+    test_base64_routine (lyrics, len, base64_encoding_t::base64_encoding);
+    test_base64_routine (lyrics, len, base64_encoding_t::base64url_encoding);
 }
 
 void test_format ()

@@ -44,9 +44,9 @@ return_t x509_open (x509_t** context)
         long option_flags = 0;
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L)
         /* 1.0.x defines SSL_OP_NO_SSLv2~SSL_OP_NO_TLSv1_1 */
-    #ifndef SSL_OP_NO_TLSv1_2
-        #define SSL_OP_NO_TLSv1_2   0x0
-    #endif
+#ifndef SSL_OP_NO_TLSv1_2
+#define SSL_OP_NO_TLSv1_2   0x0
+#endif
 #endif
         /*
          * RFC 8996 Deprecating TLS 1.0 and TLS 1.1

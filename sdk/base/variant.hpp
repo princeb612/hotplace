@@ -57,11 +57,11 @@ enum vartype_t {
     TYPE_ULONGLONG  = 10,
     TYPE_UINT64     = TYPE_ULONGLONG,
 #if defined __linux__
-    #if __WORDSIZE == 32
+#if __WORDSIZE == 32
     TYPE_LONG       = TYPE_INT32,
-    #elif __WORDSIZE == 64
+#elif __WORDSIZE == 64
     TYPE_LONG       = TYPE_INT64,
-    #endif
+#endif
 #elif defined _WIN32 || defined _WIN64
     TYPE_LONG       = TYPE_INT32,
 #endif
@@ -149,8 +149,8 @@ typedef struct _variant_t {
 #define variant_set_int64(vt, value) { vt.type = TYPE_INT64; vt.data.i64 = (value); }
 #define variant_set_uint64(vt, value) { vt.type = TYPE_UINT64; vt.data.ui64 = (value); }
 #if defined __SIZEOF_INT128__
-    #define variant_set_int128(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = (value); }
-    #define variant_set_uint128(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = (value); }
+#define variant_set_int128(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = (value); }
+#define variant_set_uint128(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = (value); }
 #endif
 #define variant_set_float(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = (value); }
 #define variant_set_double(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = (value); }
@@ -165,8 +165,8 @@ typedef struct _variant_t {
 #define variant_set_int64_ptr(vt, value) { vt.type = TYPE_INT64; vt.data.i64 = *(int64*) (value); }
 #define variant_set_uint64_ptr(vt, value) { vt.type = TYPE_UINT64; vt.data.ui64 = *(uint64*) (value); }
 #if defined __SIZEOF_INT128__
-    #define variant_set_int128_ptr(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = *(int128*) (value); }
-    #define variant_set_uint128_ptr(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = *(uint128*) (value); }
+#define variant_set_int128_ptr(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = *(int128*) (value); }
+#define variant_set_uint128_ptr(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = *(uint128*) (value); }
 #endif
 #define variant_set_float_ptr(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = *(float*) (value); }
 #define variant_set_double_ptr(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = *(double*) (value); }

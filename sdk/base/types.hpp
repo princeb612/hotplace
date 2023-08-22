@@ -12,9 +12,9 @@
 #define __HOTPLACE_SDK_BASE_TYPES__
 
 #if defined __linux__
-    #include <hotplace/sdk/base/system/linux/types.hpp>
+#include <hotplace/sdk/base/system/linux/types.hpp>
 #elif defined _WIN32 || defined _WIN64
-    #include <hotplace/sdk/base/system/windows/types.hpp>
+#include <hotplace/sdk/base/system/windows/types.hpp>
 #endif
 
 #include <vector>
@@ -30,7 +30,7 @@ typedef unsigned char byte_t;
 typedef std::vector<byte_t> binary_t;
 
 #ifndef RTL_NUMBER_OF
-    #define RTL_NUMBER_OF(x) (sizeof (x) / sizeof (x[0]))
+#define RTL_NUMBER_OF(x) (sizeof (x) / sizeof (x[0]))
 #endif
 
 } // namespace

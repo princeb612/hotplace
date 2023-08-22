@@ -17,11 +17,11 @@
 #define __leave2_trace(x) break
 
 #ifdef __cplusplus
-    #define __trynew try
-    #define __catchnew(expt) catch (std::bad_alloc)
+#define __trynew try
+#define __catchnew(expt) catch (std::bad_alloc)
 #else
-    #define __trynew
-    #define __catchnew(expr) if (expr)
+#define __trynew
+#define __catchnew(expr) if (expr)
 #endif
 
 #define __try_new_catch(ptr, statement, return_variable, leave_statement) \

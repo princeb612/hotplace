@@ -40,9 +40,9 @@ public:
 }  // namespace
 
 #if defined _WIN32 || defined _WIN64
-    #include <hotplace/sdk/base/system/windows/semaphore.hpp>
+#include <hotplace/sdk/base/system/windows/semaphore.hpp>
 #elif defined __linux__
-    #include <hotplace/sdk/base/system/linux/semaphore.hpp>
+#include <hotplace/sdk/base/system/linux/semaphore.hpp>
 #endif
 
 #endif

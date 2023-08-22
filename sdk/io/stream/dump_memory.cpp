@@ -83,5 +83,11 @@ return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_inter
     return ret;
 }
 
+return_t dump_memory (const binary_t& data, stream_interface* stream_object, unsigned hex_part,
+                      unsigned indent, const byte_t* rebase, int flags)
+{
+    return dump_memory (&data[0], data.size (), stream_object, hex_part, indent, rebase, flags);
+}
+
 }
 }  // namespace

@@ -37,11 +37,11 @@ static inline int vsnprintf_inline (char *buffer, size_t size, const char *fmt, 
 #ifdef __GNUC__
     ret = vsnprintf (buffer, size, fmt, ap);
 #else
-    #if defined __STDC_WANT_SECURE_LIB__
+#if defined __STDC_WANT_SECURE_LIB__
     ret = _vsnprintf_s (buffer, size, _TRUNCATE, fmt, ap);
-    #else
+#else
     ret = _vsnprintf (buffer, size, fmt, ap);
-    #endif
+#endif
 #endif
     return ret;
 }
@@ -157,16 +157,16 @@ static inline binary_t& operator << (binary_t& lhs, binary_t rhs)
 
 #ifndef DIRECTORY_SEPARATOR
 
-    #if defined _WIN32
-        #define DIRECTORY_SEPARATORA          '\\'
-        #define DIRECTORY_SEPARATOR_STRINGA   "\\"
-    #elif defined __linux__
-        #define DIRECTORY_SEPARATORA          '/'
-        #define DIRECTORY_SEPARATOR_STRINGA   "/"
-    #endif
+#if defined _WIN32
+#define DIRECTORY_SEPARATORA          '\\'
+#define DIRECTORY_SEPARATOR_STRINGA   "\\"
+#elif defined __linux__
+#define DIRECTORY_SEPARATORA          '/'
+#define DIRECTORY_SEPARATOR_STRINGA   "/"
+#endif
 
-    #define DIRECTORY_SEPARATOR         DIRECTORY_SEPARATORA
-    #define DIRECTORY_SEPARATOR_STRING  DIRECTORY_SEPARATOR_STRINGA
+#define DIRECTORY_SEPARATOR         DIRECTORY_SEPARATORA
+#define DIRECTORY_SEPARATOR_STRING  DIRECTORY_SEPARATOR_STRINGA
 
 #endif
 

@@ -16,11 +16,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 #if defined __linux__
-    #include <sys/mman.h>   // mmap
-    #include <sys/file.h>   // flock
-    #include <sys/types.h>
-    #include <sys/stat.h>
-    #include <unistd.h>
+#include <sys/mman.h>       // mmap
+#include <sys/file.h>       // flock
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 namespace hotplace {

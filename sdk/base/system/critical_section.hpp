@@ -26,9 +26,9 @@ public:
 } // namespace
 
 #if defined _WIN32 || defined _WIN64
-    #include <hotplace/sdk/base/system/windows/critical_section.hpp>
+#include <hotplace/sdk/base/system/windows/critical_section.hpp>
 #elif defined __linux__
-    #include <hotplace/sdk/base/system/linux/critical_section.hpp>
+#include <hotplace/sdk/base/system/linux/critical_section.hpp>
 #endif
 
 #endif

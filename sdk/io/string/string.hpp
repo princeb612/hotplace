@@ -76,13 +76,13 @@ typedef int (*CALLBACK_PRINTFA)(void *context, const char * buf, int len);
 typedef int (*CALLBACK_PRINTFW)(void *context, const wchar_t * buf, int len);
 
 #if defined _MBCS || defined MBCS
-    #define CALLBACK_PRINTF CALLBACK_PRINTFA
-    #define printf_runtime    printf_runtime
-    #define vprintf_runtime   vprintf_runtime
+#define CALLBACK_PRINTF CALLBACK_PRINTFA
+#define printf_runtime    printf_runtime
+#define vprintf_runtime   vprintf_runtime
 #elif defined _UNICODE || defined UNICODE
-    #define CALLBACK_PRINTF CALLBACK_PRINTFW
-    #define printf_runtime    printf_runtimew
-    #define vprintf_runtime   vprintf_runtimew
+#define CALLBACK_PRINTF CALLBACK_PRINTFW
+#define printf_runtime    printf_runtimew
+#define vprintf_runtime   vprintf_runtimew
 #endif
 
 /**

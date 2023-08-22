@@ -15,41 +15,41 @@ namespace hotplace {
 
 #if defined __GNUC__
 
-    #if defined __MINGW32__
-        #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-            #define __BIG_ENDIAN__
-            #define __BIG_ENDIAN
-            #define   BIG_ENDIAN
-        #else
-            #define __LITTLE_ENDIAN__
-            #define __LITTLE_ENDIAN
-            #define   LITTLE_ENDIAN
-        #endif
-    #else
-        #include <endian.h>
-    #endif
+#if defined __MINGW32__
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define __BIG_ENDIAN__
+#define __BIG_ENDIAN
+#define   BIG_ENDIAN
+#else
+#define __LITTLE_ENDIAN__
+#define __LITTLE_ENDIAN
+#define   LITTLE_ENDIAN
+#endif
+#else
+#include <endian.h>
+#endif
 
 #else
 
-    #define LITTLE_ENDIANESS 0x41424344UL
-    #define BIG_ENDIANESS    0x44434241UL
-    #define PDP_ENDIANESS    0x42414443UL
-    #define ENDIAN_ORDER     ('ABCD')
+#define LITTLE_ENDIANESS 0x41424344UL
+#define BIG_ENDIANESS    0x44434241UL
+#define PDP_ENDIANESS    0x42414443UL
+#define ENDIAN_ORDER     ('ABCD')
 
-    #if ENDIAN_ORDER == LITTLE_ENDIANESS
-        #define __LITTLE_ENDIAN__
-        #define __LITTLE_ENDIAN
-        #define   LITTLE_ENDIAN
-    #elif ENDIAN_ORDER == BIG_ENDIANESS
-        #define __BIG_ENDIAN__
-        #define __BIG_ENDIAN
-        #define   BIG_ENDIAN
-    #elif ENDIAN_ORDER == PDP_ENDIANESS
-        #define __PDP_ENDIAN__
-        #define __PDP_ENDIAN
-        #define   PDP_ENDIAN
-    #else
-    #endif
+#if ENDIAN_ORDER == LITTLE_ENDIANESS
+#define __LITTLE_ENDIAN__
+#define __LITTLE_ENDIAN
+#define   LITTLE_ENDIAN
+#elif ENDIAN_ORDER == BIG_ENDIANESS
+#define __BIG_ENDIAN__
+#define __BIG_ENDIAN
+#define   BIG_ENDIAN
+#elif ENDIAN_ORDER == PDP_ENDIANESS
+#define __PDP_ENDIAN__
+#define __PDP_ENDIAN
+#define   PDP_ENDIAN
+#else
+#endif
 
 #endif
 

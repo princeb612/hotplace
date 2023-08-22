@@ -15,11 +15,11 @@ namespace io {
 
 #define MULTIPLEXER_IOCP_CONTEXT_SIGNATURE 0x20151030
 
-typedef struct _MULTIPLEXER_IOCP_CONTEXT : public multiplexer_context_t {
+typedef struct _multiplexer_iocp_context_t : public multiplexer_context_t {
     uint32 signature;
     HANDLE hIocp;
     multiplexer_controller_context_t* handle_event_loop;
-} MULTIPLEXER_IOCP_CONTEXT;
+} multiplexer_iocp_context_t;
 
 multiplexer_iocp::multiplexer_iocp ()
 {
@@ -34,7 +34,7 @@ multiplexer_iocp::~multiplexer_iocp ()
 return_t multiplexer_iocp::open (multiplexer_context_t** handle, size_t concurrent)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_IOCP_CONTEXT* pContext = nullptr;
+    multiplexer_iocp_context_t* pContext = nullptr;
     HANDLE hIocp = nullptr;
     multiplexer_controller_context_t* handle_event_loop = nullptr;
     multiplexer_controller controller;
@@ -45,7 +45,7 @@ return_t multiplexer_iocp::open (multiplexer_context_t** handle, size_t concurre
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        __try_new_catch (pContext, new MULTIPLEXER_IOCP_CONTEXT, ret, __leave2);
+        __try_new_catch (pContext, new multiplexer_iocp_context_t, ret, __leave2);
 
         ret = controller.open (&handle_event_loop);
         if (errorcode_t::success != ret) {
@@ -71,7 +71,7 @@ return_t multiplexer_iocp::open (multiplexer_context_t** handle, size_t concurre
 return_t multiplexer_iocp::close (multiplexer_context_t* handle)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_IOCP_CONTEXT* pContext = (MULTIPLEXER_IOCP_CONTEXT*) handle;
+    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*) handle;
     multiplexer_controller controller;
 
     __try2
@@ -104,7 +104,7 @@ return_t multiplexer_iocp::close (multiplexer_context_t* handle)
 return_t multiplexer_iocp::bind (multiplexer_context_t* handle, handle_t eventsource, void* data)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_IOCP_CONTEXT* pContext = (MULTIPLEXER_IOCP_CONTEXT*) handle;
+    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*) handle;
 
     __try2
     {
@@ -145,7 +145,7 @@ return_t multiplexer_iocp::event_loop_run (multiplexer_context_t* handle, handle
                                            void* parameter)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_IOCP_CONTEXT* pContext = (MULTIPLEXER_IOCP_CONTEXT*) handle;
+    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*) handle;
     UINT_PTR token_handle = 0;
     multiplexer_controller controller;
 
@@ -217,7 +217,7 @@ return_t multiplexer_iocp::event_loop_run (multiplexer_context_t* handle, handle
 return_t multiplexer_iocp::event_loop_break (multiplexer_context_t* handle, arch_t* token_handle)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_IOCP_CONTEXT* pContext = (MULTIPLEXER_IOCP_CONTEXT*) handle;
+    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*) handle;
     multiplexer_controller controller;
 
     __try2
@@ -244,7 +244,7 @@ return_t multiplexer_iocp::event_loop_break (multiplexer_context_t* handle, arch
 return_t multiplexer_iocp::event_loop_break_concurrent (multiplexer_context_t* handle, size_t concurrent)
 {
     return_t ret = errorcode_t::success;
-    MULTIPLEXER_IOCP_CONTEXT* pContext = (MULTIPLEXER_IOCP_CONTEXT*) handle;
+    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*) handle;
     multiplexer_controller controller;
 
     __try2
@@ -273,7 +273,7 @@ return_t multiplexer_iocp::post (multiplexer_context_t* handle, uint32 size_veco
 {
     return_t ret = errorcode_t::success;
 
-    MULTIPLEXER_IOCP_CONTEXT* pContext = (MULTIPLEXER_IOCP_CONTEXT*) handle;
+    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*) handle;
 
     __try2
     {

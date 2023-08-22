@@ -12,23 +12,23 @@
 #define __HOTPLACE_SDK_NET_TYPES__
 
 #if defined __linux__ || defined __APPLE__
-    #include <fcntl.h>
-    #include <sys/types.h>
-    #include <sys/file.h>
-    #include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/file.h>
+#include <unistd.h>
 
-    #if __GLIBC_MINOR__ >= 3
-        #include <sys/epoll.h>
-    #endif
-    #include <sys/socket.h>
-    #include <netdb.h>
-    #include <netinet/in.h>
-    #include <netinet/tcp.h>
-    #include <arpa/inet.h>
+#if __GLIBC_MINOR__ >= 3
+#include <sys/epoll.h>
+#endif
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
 #elif defined _WIN32 || defined _WIN64
-    #include <winsock2.h>
-    #include <ws2tcpip.h>
-    #include <mswsock.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <mswsock.h>
 #endif
 
 #include <hotplace/sdk/base.hpp>

@@ -18,10 +18,10 @@ namespace hotplace {
 namespace io {
 
 #ifndef __to_int64
-    #define __to_int64(a, b)  ((int64) (((int64) ((int32) (a))) * ((int32) (b))))
+#define __to_int64(a, b)  ((int64) (((int64) ((int32) (a))) * ((int32) (b))))
 #endif
 #ifndef __to_uint64
-    #define __to_uint64(a, b) ((uint64) (((uint) ((uint32) (a))) * ((uint) (b))))
+#define __to_uint64(a, b) ((uint64) (((uint) ((uint32) (a))) * ((uint) (b))))
 #endif
 
 datetime::datetime ()
@@ -346,8 +346,8 @@ datetime& datetime::operator -= (timespan_t ts)
 
 #if defined __linux__
 #elif defined _WIN32 || defined _WIN64
-    #define gmtime_r(a, b) gmtime_s (b, a)
-    #define localtime_r(a, b) localtime_s (b, a)
+#define gmtime_r(a, b) gmtime_s (b, a)
+#define localtime_r(a, b) localtime_s (b, a)
 #endif
 
 return_t datetime::timespec_to_tm (int mode, struct timespec ts, struct tm* tm_ptr, long* nsec)
