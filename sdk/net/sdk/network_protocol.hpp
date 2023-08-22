@@ -19,14 +19,14 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-enum PROTOCOL_STATE {
-    PROTOCOL_STATE_INVALID = 0, /* unknown state */
-    PROTOCOL_STATE_IDENT,       /* IsKindOf returns IDENT */
-    PROTOCOL_STATE_HEADER,      /* header completed */
-    PROTOCOL_STATE_DATA,        /* data complete */
-    PROTOCOL_STATE_COMPLETE,    /* all data complete */
-    PROTOCOL_STATE_FORGED,      /* forgery */
-    PROTOCOL_STATE_CRASH,       /* reserved */
+enum protocol_state_t {
+    protocol_state_invalid = 0, /* unknown state */
+    protocol_state_ident,       /* iskindof returns IDENT */
+    protocol_state_header,      /* header completed */
+    protocol_state_data,        /* data complete */
+    protocol_state_complete,    /* all data complete */
+    protocol_state_forged,      /* forgery */
+    protocol_state_crash,       /* reserved */
 };
 
 /*
@@ -35,34 +35,34 @@ enum PROTOCOL_STATE {
 
 /* windows overlapped */
 #if defined _WIN32 || defined _WIN64
-typedef struct _NET_SESSION_WSABUF {
+typedef struct _net_session_wsabuf_t {
     OVERLAPPED overlapped;
     WSABUF wsabuf;
     char buffer[1 << 10];
-}NET_SESSION_WSABUF;
+} net_session_wsabuf_t;
 
-typedef struct _OVL_WSABUF_PAIR {
-    NET_SESSION_WSABUF r;
-    NET_SESSION_WSABUF w;
-}NET_SESSION_WSABUF_PAIR;
+typedef struct _net_session_wsabuf_pair_t {
+    net_session_wsabuf_t r;
+    net_session_wsabuf_t w;
+} net_session_wsabuf_pair_t;
 
 #endif
 
-typedef struct _NET_SESSION_SOCKET {
+typedef struct _net_session_socket_t {
     handle_t client_socket;
     sockaddr_storage_t client_addr; // both ipv4 and ipv6
 
-} NET_SESSION_SOCKET;
+} net_session_socket_t;
 
 class server_socket;
-typedef struct _NET_SESSION {
-    NET_SESSION_SOCKET netsock;
+typedef struct _net_session_t {
+    net_session_socket_t netsock;
     void* mplexer_handle;
 
 #if defined _WIN32 || defined _WIN64
-    NET_SESSION_WSABUF_PAIR wsabuf_pair;
+    net_session_wsabuf_pair_t wsabuf_pair;
 #elif defined __linux__ || defined __APPLE__
-    char buffer[BUFSIZE1K];
+    char buffer[1 << 10];
 #endif
 
     server_socket* svr_socket;
@@ -70,7 +70,7 @@ typedef struct _NET_SESSION {
     int priority;
     reference_counter refcount;
 
-} NET_SESSION;
+} net_session_t;
 
 class network_session;
 class network_session_manager;
@@ -97,11 +97,12 @@ public:
      * @brief read stream
      * @param   IBufferStream*  stream          [IN]
      * @param   size_t*         request_size    [IN]
-     * @param   PROTOCOL_STATE* state           [OUT]
+     * @param   protocol_state_t* state           [OUT]
      */
-    virtual return_t read_stream (buffer_stream* stream, size_t* request_size, PROTOCOL_STATE* state)
+    virtual return_t read_stream (buffer_stream* stream, size_t* request_size, protocol_state_t* state)
     {
-        *state = PROTOCOL_STATE_COMPLETE;
+        *state = protocol_state_t::protocol_state_complete;
+        return errorcode_t::success;
     }
     /*
      * @brief   id

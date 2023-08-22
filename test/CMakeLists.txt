@@ -8,6 +8,7 @@
 add_subdirectory (base)
 
 # io
+add_subdirectory (encoder)
 add_subdirectory (string)
 add_subdirectory (stream)
 add_subdirectory (bufferio)
@@ -20,6 +21,7 @@ add_subdirectory (jose)
 
 # net
 add_subdirectory (ipaddr)
+add_subdirectory (netserver)
 
 # etc
 add_subdirectory (incubator)

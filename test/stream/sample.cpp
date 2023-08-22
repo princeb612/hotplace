@@ -74,7 +74,7 @@ void test_dumpmemory ()
     std::cout << "dump " << std::endl << bs.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "dump const char*");
 
-    std::string str(text);
+    std::string str (text);
     ret = dump_memory (str, &bs);
     std::cout << "dump " << std::endl << bs.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "dump std::string");
