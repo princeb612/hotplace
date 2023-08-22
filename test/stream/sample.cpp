@@ -47,7 +47,6 @@ void test_consolecolor ()
     std::cout << std::endl;
     _test_case.assert (true, __FUNCTION__, format ("console color.1 loop %i times", loop).c_str ());
 
-    _test_case.start ();
     col.set_style (console_style_t::normal);
     col.set_fgcolor (console_color_t::yellow);
     col.set_bgcolor (console_color_t::black);
@@ -55,7 +54,6 @@ void test_consolecolor ()
     std::cout << col.turnon () << "color" << col.turnoff () << "default" << std::endl;
     _test_case.assert (true, __FUNCTION__, "console color.2");
 
-    _test_case.start ();
     std::cout   << col.set_style (console_style_t::bold)
         .set_fgcolor (console_color_t::yellow)
         .set_bgcolor (console_color_t::black)
@@ -65,10 +63,36 @@ void test_consolecolor ()
     _test_case.assert (true, __FUNCTION__, "console color.3");
 }
 
+void test_dumpmemory ()
+{
+    _test_case.begin ("dump_memory");
+    return_t ret = errorcode_t::success;
+    ansi_string bs;
+    const char* text = "still a man hears what he wants to hear and disregards the rest"; // the boxer - Simon & Garfunkel
+
+    ret = dump_memory ((byte_t*) text, strlen (text), &bs);
+    std::cout << "dump " << std::endl << bs.c_str () << std::endl;
+    _test_case.test (ret, __FUNCTION__, "dump const char*");
+
+    std::string str(text);
+    ret = dump_memory (str, &bs);
+    std::cout << "dump " << std::endl << bs.c_str () << std::endl;
+    _test_case.test (ret, __FUNCTION__, "dump std::string");
+
+    binary_t bin = convert (str);
+    ret = dump_memory (bin, &bs);
+    std::cout << "dump " << std::endl << bs.c_str () << std::endl;
+    _test_case.test (ret, __FUNCTION__, "dump std::vector<byte_t>");
+
+    binary_t bin2;
+    ret = dump_memory (bin2, &bs);
+    std::cout << "dump " << std::endl << bs.c_str () << std::endl;
+    _test_case.test (ret, __FUNCTION__, "dump blank");
+}
+
 void test_sprintf ()
 {
     _test_case.begin ("sprintf");
-    _test_case.start ();
 
     buffer_stream bs;
     valist va;
@@ -85,7 +109,6 @@ void test_sprintf ()
 void test_stream ()
 {
     _test_case.begin ("stream");
-    _test_case.start ();
 
     buffer_stream bs;
     valist va;
@@ -114,8 +137,6 @@ void test_stream_getline ()
     ansi_string stream (" line1 \nline2 \n  line3\nline4");
     ansi_string line;
 
-    _test_case.start ();
-
     size_t pos = 0;
     size_t brk = 0;
 
@@ -136,7 +157,6 @@ void test_stream_getline ()
 void test_vtprintf ()
 {
     _test_case.begin ("tokenize");
-    _test_case.start ();
 
     buffer_stream bs;
     variant_t v;
@@ -156,6 +176,7 @@ void test_vtprintf ()
 int main ()
 {
     test_consolecolor ();
+    test_dumpmemory ();
     test_sprintf ();
     test_stream ();
     test_stream_getline ();

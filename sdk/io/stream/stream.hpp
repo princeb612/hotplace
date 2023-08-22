@@ -121,6 +121,11 @@ return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_inter
                       unsigned indent = 0,
                       const byte_t* rebase = 0x0,
                       int flags = 0);
+return_t dump_memory (const std::string& data, stream_interface* stream_object,
+                      unsigned hex_part = 16,
+                      unsigned indent = 0,
+                      const byte_t* rebase = 0x0,
+                      int flags = 0);
 return_t dump_memory (const binary_t& data, stream_interface* stream_object,
                       unsigned hex_part = 16,
                       unsigned indent = 0,

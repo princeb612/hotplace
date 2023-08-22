@@ -25,6 +25,9 @@ return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_inter
             stream_object->flush ();
         }
 
+        if (0 == dump_size) {
+            __leave2;
+        }
         if (nullptr == dump_address || nullptr == stream_object || 0 == hex_part) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -81,6 +84,12 @@ return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_inter
         // do nothing
     }
     return ret;
+}
+
+return_t dump_memory (const std::string& data, stream_interface* stream_object, unsigned hex_part,
+                      unsigned indent, const byte_t* rebase, int flags)
+{
+    return dump_memory ((byte_t*) data.c_str (), data.size (), stream_object, hex_part, indent, rebase, flags);
 }
 
 return_t dump_memory (const binary_t& data, stream_interface* stream_object, unsigned hex_part,
