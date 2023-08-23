@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/io/system/multiplexer.hpp>
+#include <hotplace/sdk/io/system/thread.hpp>
 #include <map>
 
 namespace hotplace {
@@ -17,6 +18,8 @@ namespace io {
 #define MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE 0x20151208
 
 typedef std::map<arch_t, uint32> multiplexer_event_loop_controler_map_t;
+typedef std::pair<multiplexer_event_loop_controler_map_t::iterator, bool> multiplexer_event_loop_controler_map_pib_t;
+
 typedef struct _multiplexer_event_loop_controller_context_t : public multiplexer_controller_context_t {
     uint32 signature;
     critical_section lock;
@@ -90,10 +93,6 @@ return_t multiplexer_controller::event_loop_new (multiplexer_controller_context_
     return_t ret = errorcode_t::success;
     multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
 
-    multiplexer_event_loop_controler_map_t::iterator iter;
-
-    arch_t tid = (arch_t) handle;
-
     __try2
     {
         if (nullptr == handle) {
@@ -105,23 +104,18 @@ return_t multiplexer_controller::event_loop_new (multiplexer_controller_context_
             __leave2;
         }
 
-        __try2
-        {
-            context->lock.enter ();
-            iter = context->control.find (tid);
-            if (context->control.end () == iter) {
-                context->control.insert (std::make_pair (tid, 1));
-            } else {
-                ret = errorcode_t::already_exist;
-            }
-        }
-        __finally2
-        {
-            context->lock.leave ();
+        arch_t tid = (arch_t) self_thread_id ();
 
-            if (nullptr != token_handle) {
-                *token_handle = tid;
-            }
+        context->lock.enter ();
+        multiplexer_event_loop_controler_map_pib_t pib = context->control.insert (std::make_pair (tid, 1));
+        if (false == pib.second) {
+            ret = errorcode_t::already_exist;
+        }
+
+        context->lock.leave ();
+
+        if (nullptr != token_handle) {
+            *token_handle = tid;
         }
     }
     __finally2

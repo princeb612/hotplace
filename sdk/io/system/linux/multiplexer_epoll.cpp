@@ -22,7 +22,7 @@ typedef struct _multiplexer_epoll_context_t : public multiplexer_context_t {
     handle_t epoll_fd;
     int concurrent;
     struct epoll_event* events;
-    multiplexer_controller_context_t* handle_event_loop;
+    multiplexer_controller_context_t* handle_controller;
 } multiplexer_epoll_context_t;
 
 multiplexer_epoll::multiplexer_epoll ()
@@ -41,14 +41,14 @@ return_t multiplexer_epoll::open (multiplexer_context_t** handle, size_t concurr
     multiplexer_epoll_context_t* context = nullptr;
     handle_t epollfd = -1;
     struct epoll_event* events = nullptr;
-    multiplexer_controller_context_t* handle_event_loop = nullptr;
+    multiplexer_controller_context_t* handle_controller = nullptr;
     multiplexer_controller controller;
 
     __try2
     {
         __try_new_catch (context, new multiplexer_epoll_context_t, ret, __leave2);
 
-        ret = controller.open (&handle_event_loop);
+        ret = controller.open (&handle_controller);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -69,7 +69,7 @@ return_t multiplexer_epoll::open (multiplexer_context_t** handle, size_t concurr
         context->epoll_fd = epollfd;
         context->events = events;
         context->concurrent = concurrent;
-        context->handle_event_loop = handle_event_loop;
+        context->handle_controller = handle_controller;
 
         *handle = context;
     }
@@ -113,7 +113,7 @@ return_t multiplexer_epoll::close (multiplexer_context_t* handle)
         ::close (context->epoll_fd);
         free (context->events);
 
-        controller.close (context->handle_event_loop);
+        controller.close (context->handle_controller);
 
         context->signature = 0;
         delete context;
@@ -212,14 +212,13 @@ return_t multiplexer_epoll::event_loop_run (multiplexer_context_t* handle, handl
             __leave2;
         }
 
-        ret = controller.event_loop_new (context->handle_event_loop, &token_handle);
+        ret = controller.event_loop_new (context->handle_controller, &token_handle);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        //BOOL bRet = TRUE;
         while (true) {
-            bool ret_event_loop_test_broken = controller.event_loop_test_broken (context->handle_event_loop, token_handle);
+            bool ret_event_loop_test_broken = controller.event_loop_test_broken (context->handle_controller, token_handle);
             if (true == ret_event_loop_test_broken) {
                 break;
             }
@@ -252,7 +251,7 @@ return_t multiplexer_epoll::event_loop_run (multiplexer_context_t* handle, handl
             }
         }
 
-        controller.event_loop_close (context->handle_event_loop, token_handle);
+        controller.event_loop_close (context->handle_controller, token_handle);
     }
     __finally2
     {
@@ -280,7 +279,7 @@ return_t multiplexer_epoll::event_loop_break (multiplexer_context_t* handle, arc
         }
 
         /* signal */
-        ret = controller.event_loop_break (context->handle_event_loop, token_handle);
+        ret = controller.event_loop_break (context->handle_controller, token_handle);
     }
     __finally2
     {
@@ -308,7 +307,7 @@ return_t multiplexer_epoll::event_loop_break_concurrent (multiplexer_context_t* 
         }
 
         /* signal */
-        ret = controller.event_loop_break_concurrent (context->handle_event_loop, concurrent);
+        ret = controller.event_loop_break_concurrent (context->handle_controller, concurrent);
     }
     __finally2
     {

@@ -203,7 +203,7 @@ return_t trace_openssl (return_t nError);
 #endif
 
 /*
- * @brief set a cooltime to sleep while inflate and deflate
+ * @brief set a cooltime to sleep while encryt and decrypt
  * @param uint32 ms [in] milliseconds, it can't be greater than ossl_cooltime_max.
  * @return
  *      errorcode_t::success
@@ -213,7 +213,7 @@ return_t trace_openssl (return_t nError);
  */
 return_t ossl_set_cooltime (uint32 ms);
 /*
- * @brief set a max cooltime to sleep while inflate and deflate
+ * @brief set a max cooltime to sleep while encryt and decrypt
  * @param uint32 ms [in] milliseconds, cannot be zero
  * @return
  *      errorcode_t::invalid_parameter - if given value is zero or lesser than current ossl_cooltime

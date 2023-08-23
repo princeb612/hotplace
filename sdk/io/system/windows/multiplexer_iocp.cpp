@@ -18,7 +18,7 @@ namespace io {
 typedef struct _multiplexer_iocp_context_t : public multiplexer_context_t {
     uint32 signature;
     HANDLE hIocp;
-    multiplexer_controller_context_t* handle_event_loop;
+    multiplexer_controller_context_t* handle_controller;
 } multiplexer_iocp_context_t;
 
 multiplexer_iocp::multiplexer_iocp ()
@@ -36,7 +36,7 @@ return_t multiplexer_iocp::open (multiplexer_context_t** handle, size_t concurre
     return_t ret = errorcode_t::success;
     multiplexer_iocp_context_t* pContext = nullptr;
     HANDLE hIocp = nullptr;
-    multiplexer_controller_context_t* handle_event_loop = nullptr;
+    multiplexer_controller_context_t* handle_controller = nullptr;
     multiplexer_controller controller;
 
     __try2
@@ -47,7 +47,7 @@ return_t multiplexer_iocp::open (multiplexer_context_t** handle, size_t concurre
         }
         __try_new_catch (pContext, new multiplexer_iocp_context_t, ret, __leave2);
 
-        ret = controller.open (&handle_event_loop);
+        ret = controller.open (&handle_controller);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -56,7 +56,7 @@ return_t multiplexer_iocp::open (multiplexer_context_t** handle, size_t concurre
 
         pContext->signature = MULTIPLEXER_IOCP_CONTEXT_SIGNATURE;
         pContext->hIocp = hIocp;
-        pContext->handle_event_loop = handle_event_loop;
+        pContext->handle_controller = handle_controller;
 
         *handle = pContext;
     }
@@ -89,7 +89,7 @@ return_t multiplexer_iocp::close (multiplexer_context_t* handle)
 
         CloseHandle (pContext->hIocp);
 
-        controller.close (pContext->handle_event_loop);
+        controller.close (pContext->handle_controller);
 
         pContext->signature = 0;
         delete pContext;
@@ -160,11 +160,11 @@ return_t multiplexer_iocp::event_loop_run (multiplexer_context_t* handle, handle
             __leave2;
         }
 
-        ret = controller.event_loop_new (pContext->handle_event_loop, &token_handle);
+        ret = controller.event_loop_new (pContext->handle_controller, &token_handle);
 
         BOOL bRet = TRUE;
         while (true) {
-            bool broken = controller.event_loop_test_broken (pContext->handle_event_loop, token_handle);
+            bool broken = controller.event_loop_test_broken (pContext->handle_controller, token_handle);
             if (true == broken) {
                 break;
             }
@@ -205,7 +205,7 @@ return_t multiplexer_iocp::event_loop_run (multiplexer_context_t* handle, handle
             event_callback_routine (type, 4, tblData, nullptr, parameter);
         }
 
-        controller.event_loop_close (pContext->handle_event_loop, token_handle);
+        controller.event_loop_close (pContext->handle_controller, token_handle);
     }
     __finally2
     {
@@ -232,7 +232,7 @@ return_t multiplexer_iocp::event_loop_break (multiplexer_context_t* handle, arch
         }
 
         /* signal */
-        ret = controller.event_loop_break (pContext->handle_event_loop, token_handle);
+        ret = controller.event_loop_break (pContext->handle_controller, token_handle);
     }
     __finally2
     {
@@ -259,7 +259,7 @@ return_t multiplexer_iocp::event_loop_break_concurrent (multiplexer_context_t* h
         }
 
         /* signal */
-        ret = controller.event_loop_break_concurrent (pContext->handle_event_loop, concurrent);
+        ret = controller.event_loop_break_concurrent (pContext->handle_controller, concurrent);
     }
     __finally2
     {
