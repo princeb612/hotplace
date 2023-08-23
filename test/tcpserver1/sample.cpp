@@ -105,8 +105,6 @@ return_t async_handler (netsocket_event_t* netsocket_context)
 {
     return_t ret = errorcode_t::success;
 
-    UNREFERENCED_PARAMETER (netsocket_context);
-
 #if defined _WIN32 || defined _WIN64
     DWORD flags = 0;
     DWORD bytes_received = 0;
@@ -195,7 +193,7 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
 #elif defined __linux__ || defined __APPLE__
 
     multiplexer_epoll mplexer;
-    void* handle = data_array[0];
+    multiplexer_context_t* handle = (multiplexer_context_t*) data_array[0];
 
     if (mux_connect == type) {
         int socklisten = (int) (long) data_array[1];
