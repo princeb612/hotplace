@@ -30,9 +30,10 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
     return_t ret = errorcode_t::success;
     net_session_socket_t* session_socket = (net_session_socket_t*) data_array[0];
     network_session* session = (network_session*) data_array[3];
-    char* buf = (char*) data_array[1];
+    byte_t* buf = (byte_t*) data_array[1];
     size_t bufsize = (size_t) data_array[2];
 
+    buffer_stream bs;
     std::string message;
 
     switch (type) {
@@ -40,10 +41,9 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
             std::cout << "connect " << session_socket->client_socket << std::endl;
             break;
         case mux_read:
-            message = format ("%.*s", bufsize, buf);
-            rtrim (message);
-            std::cout << "read " << session_socket->client_socket << " msg [" << message.c_str () << "]" << std::endl;
-            session->send (buf, bufsize);
+            dump_memory (buf, bufsize, &bs);
+            std::cout << "read " << session_socket->client_socket << bs.c_str () << std::endl;
+            session->send ((char*) buf, bufsize);
             break;
         case mux_disconnect:
             std::cout << "disconnect " << session_socket->client_socket << std::endl;

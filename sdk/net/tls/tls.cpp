@@ -187,8 +187,6 @@ return_t transport_layer_security::connect (tls_context_t** handle, socket_t soc
     __finally2
     {
         if (errorcode_t::success != ret) {
-            /* [in parameter] _socket 은 close 하지 않는다. */
-
             if (nullptr != ssl) {
                 SSL_free (ssl);
             }

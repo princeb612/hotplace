@@ -91,17 +91,22 @@ return_t sprintf (stream_interface* stream, const char* fmt, valist va)
 
 #endif
 
-        // Step1. build pair(fmt[?], argv[?])
+        // Step1. check order ... build pair(fmt[?], argv[?])
         typedef std::map<size_t, size_t> va_map_t;
+        typedef std::list <int> va_array_t;
         va_map_t va_map; /* pair(fmt[?], argv[?]) */
+        va_array_t va_array;
         for (i = 0; i != va.size (); i++) {
-            int order = i + 1;
-            std::string find = format ("{%d}", order);
+            size_t key = i + 1;
+            std::string find = format ("{%d}", key);
             size_t pos = 0;
-            pos = formatter.find_first_of (find.c_str (), pos);
-            while ((size_t) -1 != pos) {
+            while (true) {
+                pos = formatter.find_first_of (find.c_str (), pos);
+                if ((size_t) -1 == pos) {
+                    break;
+                }
                 va_map.insert (std::make_pair (pos, i));
-                pos = formatter.find_first_of (find.c_str (), pos + find.size ());
+                pos += find.size ();
             }
         }
 
@@ -110,49 +115,30 @@ return_t sprintf (stream_interface* stream, const char* fmt, valist va)
         va_map_t::iterator iter;
         i = 0;
         for (va_map_t::iterator iter = va_map.begin (); iter != va_map.end (); iter++) {
-            int index = iter->second;
-
-            va.at (index, v);
+            size_t idx = iter->second;
+            va.at (idx, v);
             va_new << v;
+            va_array.push_back (idx);
         }
 
-        // Step3. modify format specifier order
-        int order = 1;
-        for (va_map_t::iterator iter = va_map.begin (); iter != va_map.end (); iter++) {
-            size_t pos = iter->first;
-            int index = iter->second;
-            std::string source = format ("{%d}", index + 1);
-            std::string target = format ("{%d}", order++);
-
-            formatter.replace (source.c_str (), target.c_str (), pos, bufferio_flag_t::run_once);
+        // Step3. replace format specifier
+        typedef std::map<size_t, std::string> formatter_map_t;
+        formatter_map_t formats;
+        for (i = 0; i < RTL_NUMBER_OF (type_formatter); i++) {
+            variant_conversion_t* item = type_formatter + i;
+            formats.insert (std::make_pair (item->type, item->formatter));
         }
-
-        // Step4. replace format specifier
-        for (i = 0; i != va_new.size (); i++) {
+        va_array_t::iterator array_it;
+        for (i = 0, array_it = va_array.begin (); array_it != va_array.end (); i++, array_it++) {
+            size_t idx = *array_it;
             va_new.at (i, v);
-            order = i + 1;
-#if __cplusplus >= 201103L    // c++11
-            const variant_conversion_t * item = nullptr;
-            item = std::find_if (std::begin (type_formatter), std::end (type_formatter),
-                                 [v] (const variant_conversion_t& item) {
-                        return item.type == v.type;
-                    });
-            if (std::end (type_formatter) != item) {
-                formatter.replace (format ("{%d}", order).c_str (), item->formatter, bufferio_flag_t::run_once);
+            formatter_map_t::iterator fmt_it = formats.find (v.type);
+            if (formats.end () != fmt_it) {
+                formatter.replace (format ("{%d}", idx + 1).c_str (), fmt_it->second.c_str (), bufferio_flag_t::run_once);
             }
-#else
-            for (size_t k = 0; k < size_type_formatter; k++) {
-                variant_conversion_t* member = type_formatter + k;
-                if (member->type == v.type) {
-                    formatter.replace1 (format ("{%d}", order).c_str (), member->formatter);
-                    break;
-                }
-            }
-#endif
         }
 
         stream->vprintf ((char *) formatter.data (), va_new.get ());
-
     }
     __finally2
     {

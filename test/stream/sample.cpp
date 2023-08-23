@@ -90,18 +90,34 @@ void test_dumpmemory ()
     _test_case.test (ret, __FUNCTION__, "dump blank");
 }
 
+void test_sprintf_routine (const valist& va, const char* fmt, const char* expect)
+{
+    buffer_stream bs;
+    sprintf (&bs, fmt, va);
+    printf ("formatter %s\n", fmt);
+    printf ("result    %s\n", bs.c_str ());
+    if (expect) {
+        _test_case.assert (0 == strcmp (expect, bs.c_str ()), __FUNCTION__, "sprintf");
+    }
+}
+
 void test_sprintf ()
 {
     _test_case.begin ("sprintf");
 
     buffer_stream bs;
     valist va;
+    va << 3.141592 << "phi" << 123;
 
-    va << 1 << "test string";                               // argc 2
+    printf ("{1} 3.141592 {2} phi {3} 123\n");
 
-    sprintf (&bs, "value1={1} value2={2}", va);             // value1=1 value2=test string
-    sprintf (&bs, "value1={2} value2={1}", va);             // value1=test string value2=1
-    sprintf (&bs, "value1={2} value2={1} value3={3}", va);  // value1=test string value2=1 value3={3}
+    _test_case.start ();
+    test_sprintf_routine (va, "value={1} value={2} value={3}", "value=3.141592 value=phi value=123");
+    test_sprintf_routine (va, "value={2} value={3} value={1}", "value=phi value=123 value=3.141592");
+    test_sprintf_routine (va, "value={3} value={2} value={1}", "value=123 value=phi value=3.141592");
+    test_sprintf_routine (va, "value={2} value={1} value={3}", "value=phi value=3.141592 value=123");
+    test_sprintf_routine (va, "value={2} value={1} value={3} value={2}", "value=phi value=3.141592 value=123 value=phi");
+    test_sprintf_routine (va, "value={3} value={2} value={2} value={1} value={4} value={5}", "value=123 value=phi value=phi value=3.141592 value={4} value={5}");
 
     _test_case.assert (true, __FUNCTION__, "sprintf");
 }

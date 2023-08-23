@@ -92,7 +92,7 @@ return_t x509_open (SSL_CTX** context, const char* cert_file, const char* key_fi
 
         buffer_stream bs;
         if (password) {
-            bs.printf (password);
+            //bs.printf (password);
         }
 
         SSL_CTX_set_default_passwd_cb_userdata (ssl_ctx, &bs);
