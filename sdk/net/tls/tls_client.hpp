@@ -12,9 +12,8 @@
 #define __HOTPLACE_SDK_NET_TLS_TLSCLIENT__
 
 #include <hotplace/sdk/net/basic/client_socket.hpp>
-#include <hotplace/sdk/net/tls/x509.hpp>
 #include <hotplace/sdk/net/tls/tls.hpp>
-//#include <hotplace/sdk/net/types.hpp>
+#include <hotplace/sdk/net/tls/x509.hpp>
 
 namespace hotplace {
 namespace net {

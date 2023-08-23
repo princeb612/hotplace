@@ -46,46 +46,23 @@ typedef struct sockaddr sockaddr_t;
 typedef struct sockaddr_storage sockaddr_storage_t;
 typedef struct linger linger_t;
 
-typedef struct _URL_INFO {
-    std::string protocol;
-    std::string domainip;
-    int port;
-    std::string uri;
-    std::string uripath;
-    std::string urifile;
-
-    _URL_INFO () : port (0)
-    {
-    }
-} URL_INFO;
-
-enum TLS_READ_FLAG {
-    TLS_READ_SSL_READ       = (1 << 0),
-    TLS_READ_BIO_WRITE      = (1 << 1),
-    TLS_READ_SOCKET_RECV    = (1 << 2),
-    TLS_SEND_SSL_WRITE      = (1 << 3),
-    TLS_SEND_BIO_READ       = (1 << 4),
-    TLS_SEND_SOCKET_SEND    = (1 << 5),
-    TLS_READ_IOCP           = (TLS_READ_BIO_WRITE),
-    TLS_READ_EPOLL          = (TLS_READ_BIO_WRITE | TLS_READ_SOCKET_RECV),
-    TLS_SEND_ALL            = (TLS_SEND_SSL_WRITE | TLS_SEND_BIO_READ | TLS_SEND_SOCKET_SEND),
-};
-
-enum PROTOCOL_TYPE {
-    PROTOCOL_TCP    = IPPROTO_TCP,
-    PROTOCOL_UDP    = IPPROTO_UDP,
+enum tls_io_flag_t {
+    read_ssl_read       = (1 << 0), // 0000 0001
+    read_bio_write      = (1 << 1), // 0000 0010
+    read_socket_recv    = (1 << 2), // 0000 0100
+    send_ssl_write      = (1 << 3), // 0000 1000
+    send_bio_read       = (1 << 4), // 0001 0000
+    send_socket_send    = (1 << 5), // 0010 0000
+    read_iocp           = (read_bio_write), // 0000 0010
+    read_epoll          = (read_bio_write | read_socket_recv), // 0000 0110
+    send_all            = (send_ssl_write | send_bio_read | send_socket_send), // 0011 1000
 };
 
 #define NET_DEFAULT_TIMEOUT 10
 typedef struct linger linger_t;
-enum ADDRESS_TYPE {
-    ADDRESS_TYPE_HOST   = 0,    // aa.bb.cc
-    ADDRESS_TYPE_IPV4   = 1,    // 127.0.0.1
-    ADDRESS_TYPE_IPV6   = 2,    // fe80::f086:5f15:2045:5008%10
-};
 
-struct _TLS_CONTEXT;
-typedef struct _TLS_CONTEXT tls_context_t;
+struct _tls_context_t;
+typedef struct _tls_context_t tls_context_t;
 
 }
 }  // namespace

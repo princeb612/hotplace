@@ -13,11 +13,17 @@
 namespace hotplace {
 namespace net {
 
+enum address_t {
+    addr_host   = 0,    // aa.bb.cc
+    addr_ipv4   = 1,    // 127.0.0.1
+    addr_ipv6   = 2,    // fe80::f086:5f15:2045:5008%10
+};
+
 return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_created, int address_type, const char* address, uint16 port)
 {
     return_t ret = errorcode_t::success;
     socket_t s = INVALID_SOCKET;
-    ADDRESS_TYPE address_type_adjusted = ADDRESS_TYPE_IPV4;
+    address_t address_type_adjusted = address_t::addr_ipv4;
     int ret_function = 0;
     char* address_pointer = nullptr;
     addrinfo *addrinf = nullptr;
@@ -43,7 +49,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
          * IPv6 128bit  ::1
          */
         if (nullptr != strstr (address, ":")) {
-            address_type_adjusted = ADDRESS_TYPE_IPV6;
+            address_type_adjusted = address_t::addr_ipv6;
         } else {
             int ret_isdigit = 0;
             char tchTemp = 0;
@@ -56,7 +62,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
 
                 ret_isdigit = isdigit (tchTemp);
                 if (0 == ret_isdigit && '.' != tchTemp) {
-                    address_type_adjusted = ADDRESS_TYPE_HOST;
+                    address_type_adjusted = address_t::addr_host;
                     break;
                 }
             }
@@ -67,7 +73,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
            minimum supported : Windows Server 2003, Windows Vista, Windows XP with SP2
 
            ADDRINFOW  hints, *res = nullptr;
-           ret_routine = GetAddrInfoW(tszAddress, szPort, &hints, &res);
+           ret_routine = GetAddrInfoW(tszAddress, port_value, &hints, &res);
          */
 
         struct addrinfo hints;
@@ -80,7 +86,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
         char string_port[1 << 7];
         snprintf (string_port, RTL_NUMBER_OF (string_port), "%d", port);
 
-        if (ADDRESS_TYPE_HOST == address_type_adjusted) {
+        if (address_t::addr_host == address_type_adjusted) {
             hints.ai_flags = AI_PASSIVE;
         } else {
             hints.ai_flags = AI_NUMERICHOST;
@@ -185,7 +191,7 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
             vector_socket[index] = INVALID_SOCKET;
         }
 
-        if (PROTOCOL_TCP == protocol_type) {
+        if (IPPROTO_TCP == protocol_type) {
             socket_type = SOCK_STREAM;
             ipprotocol = IPPROTO_TCP;
         } else {
@@ -199,9 +205,9 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
         hints.ai_protocol = ipprotocol;
         hints.ai_flags = AI_PASSIVE;
 
-        char szPort[10];
-        snprintf (szPort, 10, ("%d"), port);
-        ret_function = getaddrinfo (nullptr, szPort, &hints, &addrinf);
+        char port_value[10];
+        snprintf (port_value, 10, ("%d"), port);
+        ret_function = getaddrinfo (nullptr, port_value, &hints, &addrinf);
         if (0 != ret_function) {
 #if defined __linux__
             ret = get_eai_error (ret_function);
@@ -252,7 +258,7 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
                             __leave2_trace (ret);
                         }
 
-                        if (PROTOCOL_TCP == protocol_type) {
+                        if (IPPROTO_TCP == protocol_type) {
 #if defined _WIN32 || defined _WIN64
                             if (true == support_win32_acceptex) {
                                 BOOL on = TRUE;
@@ -568,7 +574,7 @@ return_t set_sock_nbio (socket_t sock, uint32 nbio_mode)
     return ret;
 }
 
-return_t split_url (const char* url, URL_INFO* info)
+return_t split_url (const char* url, url_info_t* info)
 {
     return_t ret = errorcode_t::success;
 

@@ -34,7 +34,7 @@ return_t server_socket::listen (socket_t* sock, unsigned int family, uint16 port
             __leave2;
         }
 
-        ret = create_listener (1, &family, sock, PROTOCOL_TCP, port);
+        ret = create_listener (1, &family, sock, IPPROTO_TCP, port);
         if (errorcode_t::success != ret) {
             __leave2;
         }

@@ -308,7 +308,7 @@ return_t echo_server (void* param)
         unsigned int family[2] = { AF_INET, AF_INET6 }; // IPv4 and IPv6
         socket_t socket_list[2] = { INVALID_SOCKET, INVALID_SOCKET };
 
-        create_listener (2, family, socket_list, PROTOCOL_TCP, 9000);
+        create_listener (2, family, socket_list, IPPROTO_TCP, 9000);
         printf ("socket ipv4[%d], ipv6[%d] created\n", (int) socket_list[0], (int) socket_list[1]);
 
         accept_context_t accept_context_ipv4;

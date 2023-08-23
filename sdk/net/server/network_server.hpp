@@ -88,7 +88,7 @@ public:
      * @brief   open
      * @param   void**                      handle              [OUT] handle
      * @param   unsigned int                family              [IN] AF_INET for ipv4, AF_INET6 for ipv6
-     * @param   unsigned int                type                [IN] ip protocol, IPPROTO_TCP(or PROTOCOL_TCP)
+     * @param   unsigned int                type                [IN] ip protocol, IPPROTO_TCP(or IPPROTO_TCP)
      * @param   uint16                      port                [IN] port
      * @param   uint32                      concurrent          [IN] concurrent (linux epoll concerns, windows ignore)
      *                                                               see epoll_wait

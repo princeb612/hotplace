@@ -12,8 +12,6 @@
 #define __HOTPLACE_SDK_NET_TLS_X509__
 
 #include <hotplace/sdk/io/stream/stream.hpp>
-#include <hotplace/sdk/io/system/datetime.hpp>
-//#include <hotplace/sdk/net/types.hpp>
 
 namespace hotplace {
 using namespace io;

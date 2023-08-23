@@ -91,14 +91,14 @@ return_t sprintf (stream_interface* stream, const char* fmt, valist va)
 
 #endif
 
-        // Step1. check order ... build pair(fmt[?], argv[?])
+        // Step1. check order using map ...
         typedef std::map<size_t, size_t> va_map_t;
         typedef std::list <int> va_array_t;
-        va_map_t va_map; /* pair(fmt[?], argv[?]) */
+        va_map_t va_map; /* pair(position, {id}) */
         va_array_t va_array;
         for (i = 0; i != va.size (); i++) {
-            size_t key = i + 1;
-            std::string find = format ("{%d}", key);
+            size_t id = i + 1;
+            std::string find = format ("{%d}", id);
             size_t pos = 0;
             while (true) {
                 pos = formatter.find_first_of (find.c_str (), pos);
@@ -110,7 +110,7 @@ return_t sprintf (stream_interface* stream, const char* fmt, valist va)
             }
         }
 
-        // Step2. relocate valist
+        // Step2. relocate valist, build list
         valist va_new;
         va_map_t::iterator iter;
         i = 0;

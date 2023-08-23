@@ -139,7 +139,7 @@ return_t network_session::produce (network_priority_queue* q, void* buf_read, si
         buf_read = _session.buffer;
 #endif
 
-        return_t dwResult = errorcode_t::success;
+        return_t result = errorcode_t::success;
 
         if (_session.tls_handle) { /* TLS */
             size_t cbread = 0;
@@ -147,9 +147,9 @@ return_t network_session::produce (network_priority_queue* q, void* buf_read, si
             server_socket* server_socket_intf = get_server_socket ();
             int mode = 0;
 #if defined __linux__
-            mode = TLS_READ_EPOLL;
+            mode = tls_io_flag_t::read_epoll;
 #elif defined _WIN32 || defined _WIN64
-            mode = TLS_READ_IOCP;
+            mode = tls_io_flag_t::read_iocp;
 #endif
             ret = server_socket_intf->read ((socket_t) _session.netsock.client_socket, _session.tls_handle, mode,
                                             (char *) buf_read, size_buf_read, nullptr);
@@ -158,9 +158,9 @@ return_t network_session::produce (network_priority_queue* q, void* buf_read, si
             }
 
             while (true) {
-                dwResult = server_socket_intf->read ((socket_t) _session.netsock.client_socket, _session.tls_handle,
-                                                     TLS_READ_SSL_READ, (char *) buf_read, size_buf_read, &cbread);  /*SSL_read */
-                if (errorcode_t::success == dwResult) {
+                result = server_socket_intf->read ((socket_t) _session.netsock.client_socket, _session.tls_handle,
+                                                   tls_io_flag_t::read_ssl_read, (char *) buf_read, size_buf_read, &cbread);  /*SSL_read */
+                if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream ()->produce (buf_read, cbread);
                     data_ready = true;
                 } else {

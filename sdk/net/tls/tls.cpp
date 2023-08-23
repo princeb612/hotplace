@@ -15,18 +15,18 @@ namespace net {
 
 #define TLS_CONTEXT_SIGNATURE 0x20120119
 
-enum TLS_CONTEXT_FLAG {
-    TLS_CONTEXT_CLOSESOCKET_ONDESTROY = (1 << 0),
+enum tls_context_flag_t {
+    closesocket_ondestroy = (1 << 0),
 };
 
-typedef struct _TLS_CONTEXT {
-    uint32 _signature;
-    uint32 _flags;
+typedef struct _tls_context_t {
+    uint32   _signature;
+    uint32   _flags;
     socket_t _socket;
     SSL*     _ssl;
     BIO*     _sbio_read;
     BIO*     _sbio_write;
-} TLS_CONTEXT;
+} tls_context_t;
 
 transport_layer_security::transport_layer_security (SSL_CTX* x509) : _x509 (x509)
 {
@@ -59,7 +59,7 @@ return_t transport_layer_security::connect (tls_context_t** handle, int type, co
     BIO* sbio_read = nullptr;
     BIO* sbio_write = nullptr;
     SSL* ssl = nullptr;
-    TLS_CONTEXT* context = nullptr;
+    tls_context_t* context = nullptr;
     sockaddr_storage_t sockaddr_address;
 
     __try2
@@ -75,9 +75,9 @@ return_t transport_layer_security::connect (tls_context_t** handle, int type, co
         }
         SSL_CTX* tls_ctx = _x509;
 
-        __try_new_catch (context, new TLS_CONTEXT, ret, __leave2_trace (ret));
+        __try_new_catch (context, new tls_context_t, ret, __leave2_trace (ret));
 
-        memset (context, 0, sizeof (TLS_CONTEXT));
+        memset (context, 0, sizeof (tls_context_t));
         memset (&sockaddr_address, 0, sizeof sockaddr_address);
 
         ret = create_socket (&sock, &sockaddr_address, SOCK_STREAM, address, port);
@@ -107,7 +107,7 @@ return_t transport_layer_security::connect (tls_context_t** handle, int type, co
         SSL_set_bio (ssl, sbio_read, sbio_write);
         //SSL_set_mode (ssl, SSL_MODE_AUTO_RETRY);
 
-        context->_flags = TLS_CONTEXT_CLOSESOCKET_ONDESTROY;
+        context->_flags = tls_context_flag_t::closesocket_ondestroy;
         context->_socket = sock;
         context->_ssl = ssl;
 
@@ -140,7 +140,7 @@ return_t transport_layer_security::connect (tls_context_t** handle, socket_t soc
     BIO* sbio_read = nullptr;
     BIO* sbio_write = nullptr;
     SSL* ssl = nullptr;
-    TLS_CONTEXT* context = nullptr;
+    tls_context_t* context = nullptr;
 
     __try2
     {
@@ -155,9 +155,9 @@ return_t transport_layer_security::connect (tls_context_t** handle, socket_t soc
         }
         SSL_CTX* tls_ctx = _x509;
 
-        __try_new_catch (context, new TLS_CONTEXT, ret, __leave2_trace (ret));
+        __try_new_catch (context, new tls_context_t, ret, __leave2_trace (ret));
 
-        memset (context, 0, sizeof (TLS_CONTEXT));
+        memset (context, 0, sizeof (tls_context_t));
 
         ssl = SSL_new (tls_ctx);
         if (nullptr == ssl) {
@@ -206,7 +206,7 @@ return_t transport_layer_security::accept (tls_context_t** handle, socket_t fd)
     BIO* sbio_read = nullptr;
     BIO* sbio_write = nullptr;
     SSL* ssl = nullptr;
-    TLS_CONTEXT* context = nullptr;
+    tls_context_t* context = nullptr;
 
     __try2
     {
@@ -221,9 +221,9 @@ return_t transport_layer_security::accept (tls_context_t** handle, socket_t fd)
         }
         SSL_CTX* tls_ctx = _x509;
 
-        __try_new_catch (context, new TLS_CONTEXT, ret, __leave2_trace (ret));
+        __try_new_catch (context, new tls_context_t, ret, __leave2_trace (ret));
 
-        memset (context, 0, sizeof (TLS_CONTEXT));
+        memset (context, 0, sizeof (tls_context_t));
 
         /* SSL_accept */
         ssl = SSL_new (tls_ctx);
@@ -327,7 +327,7 @@ return_t transport_layer_security::accept (tls_context_t** handle, socket_t fd)
 return_t transport_layer_security::close (tls_context_t* handle)
 {
     return_t ret = errorcode_t::success;
-    TLS_CONTEXT* context = nullptr;
+    tls_context_t* context = nullptr;
 
     __try2
     {
@@ -336,7 +336,7 @@ return_t transport_layer_security::close (tls_context_t* handle)
             __leave2_trace (ret);
         }
 
-        context = static_cast<TLS_CONTEXT*>(handle);
+        context = static_cast<tls_context_t*>(handle);
         if (TLS_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
             __leave2_trace (ret);
@@ -345,8 +345,8 @@ return_t transport_layer_security::close (tls_context_t* handle)
         SSL_shutdown (context->_ssl);
         SSL_free (context->_ssl);
 
-        if (TLS_CONTEXT_CLOSESOCKET_ONDESTROY
-            == (context->_flags & TLS_CONTEXT_CLOSESOCKET_ONDESTROY)) {
+        if (tls_context_flag_t::closesocket_ondestroy
+            == (context->_flags & tls_context_flag_t::closesocket_ondestroy)) {
             close_socket (context->_socket, true, 0);
         }
 
@@ -364,7 +364,7 @@ return_t transport_layer_security::read (tls_context_t* handle, int mode, void* 
 {
     return_t ret = errorcode_t::success;
 
-    TLS_CONTEXT* context = nullptr;
+    tls_context_t* context = nullptr;
     int ret_recv = 0;
 
     __try2
@@ -374,7 +374,7 @@ return_t transport_layer_security::read (tls_context_t* handle, int mode, void* 
             __leave2_trace (ret);
         }
 
-        context = static_cast<TLS_CONTEXT*>(handle);
+        context = static_cast<tls_context_t*>(handle);
         if (TLS_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
             __leave2_trace (ret);
@@ -385,7 +385,7 @@ return_t transport_layer_security::read (tls_context_t* handle, int mode, void* 
         }
 
         size_t size_read = buffer_size;
-        if (TLS_READ_SOCKET_RECV & mode) {
+        if (tls_io_flag_t::read_socket_recv & mode) {
             ret_recv = ::recv (context->_socket, (char *) buffer, buffer_size, 0);
             if (0 == ret_recv) { /* gracefully closed */
                 ret = errorcode_t::disconnect;
@@ -405,11 +405,10 @@ return_t transport_layer_security::read (tls_context_t* handle, int mode, void* 
                 *cbread = ret_recv;
             }
         }
-        if (TLS_READ_BIO_WRITE & mode) {
-            /* SSL 을 통해 수신한 암호화 상태의 데이터 */
+        if (tls_io_flag_t::read_bio_write & mode) {
             BIO_write (context->_sbio_read, buffer, (int) size_read);
         }
-        if (TLS_READ_SSL_READ & mode) {
+        if (tls_io_flag_t::read_ssl_read & mode) {
             int written = BIO_number_written (context->_sbio_read);
             ret_recv = SSL_read (context->_ssl, buffer, (int) buffer_size);
             if (ret_recv <= 0) {
@@ -444,7 +443,7 @@ return_t transport_layer_security::read (tls_context_t* handle, int mode, void* 
 return_t transport_layer_security::send (tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent)
 {
     return_t ret = errorcode_t::success;
-    TLS_CONTEXT* context = nullptr;
+    tls_context_t* context = nullptr;
 
     __try2
     {
@@ -457,13 +456,13 @@ return_t transport_layer_security::send (tls_context_t* handle, int mode, const 
             *size_sent = 0;
         }
 
-        context = static_cast<TLS_CONTEXT*>(handle);
+        context = static_cast<tls_context_t*>(handle);
         if (TLS_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
             __leave2_trace (ret);
         }
 
-        if (TLS_SEND_SSL_WRITE & mode) {
+        if (tls_io_flag_t::send_ssl_write & mode) {
             int ret_write = SSL_write (context->_ssl, data, (int) size_data);
 
             if (ret_write < 1) {
@@ -481,14 +480,14 @@ return_t transport_layer_security::send (tls_context_t* handle, int mode, const 
         std::vector <char> buf;
         buf.resize (written);
 
-        if (TLS_SEND_BIO_READ & mode) {
+        if (tls_io_flag_t::send_bio_read & mode) {
             ret_read = BIO_read (context->_sbio_write, &buf [0], buf.size ());
             if (ret_read < 1) {
                 ret = errorcode_t::internal_error;
                 __leave2;   /* too many traces here */
             }
 
-            if (TLS_SEND_SOCKET_SEND & mode) {
+            if (tls_io_flag_t::send_socket_send & mode) {
                 ::send (context->_socket, &buf [0], ret_read, 0);
             }
         }

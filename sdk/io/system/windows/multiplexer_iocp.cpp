@@ -189,11 +189,11 @@ return_t multiplexer_iocp::event_loop_run (multiplexer_context_t* handle, handle
                 // response event_loop_break
                 break;
             }
-            void* tblData[4] = { nullptr, };
-            tblData[0] = (void*) handle;
-            tblData[1] = (void*) (arch_t) size_transfered;
-            tblData[2] = (void*) completion_key;
-            tblData[3] = (void*) overlapped;
+            void* data_vector[4] = { nullptr, };
+            data_vector[0] = (void*) handle;
+            data_vector[1] = (void*) (arch_t) size_transfered;
+            data_vector[2] = (void*) completion_key;
+            data_vector[3] = (void*) overlapped;
 
             DWORD type = 0;
             if (0 == size_transfered) {
@@ -202,7 +202,7 @@ return_t multiplexer_iocp::event_loop_run (multiplexer_context_t* handle, handle
                 type = multiplexer_event_type_t::mux_read;
             }
 
-            event_callback_routine (type, 4, tblData, nullptr, parameter);
+            event_callback_routine (type, 4, data_vector, nullptr, parameter);
         }
 
         controller.event_loop_close (pContext->handle_controller, token_handle);

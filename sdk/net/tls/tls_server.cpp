@@ -104,7 +104,7 @@ return_t transport_layer_security_server::send (socket_t sock, tls_context_t* tl
 
     __try2
     {
-        ret = _tls->send (tls_handle, TLS_SEND_ALL, ptr_data, size_data, cbsent);
+        ret = _tls->send (tls_handle, tls_io_flag_t::send_all, ptr_data, size_data, cbsent);
     }
     __finally2
     {

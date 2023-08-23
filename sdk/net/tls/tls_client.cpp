@@ -93,7 +93,7 @@ return_t transport_layer_security_client::read (socket_t sock, tls_context_t* tl
     while (true) {
         ret = wait_socket (sock, 1000, SOCK_WAIT_READABLE);
         if (errorcode_t::success == ret) {
-            ret = _tls->read (tls_handle, TLS_READ_SSL_READ | TLS_READ_BIO_WRITE | TLS_READ_SOCKET_RECV, ptr_data, size_data, cbread);
+            ret = _tls->read (tls_handle, tls_io_flag_t::read_ssl_read | tls_io_flag_t::read_bio_write | tls_io_flag_t::read_socket_recv, ptr_data, size_data, cbread);
             if (errorcode_t::pending == ret) {
                 continue;
             } else {
@@ -110,7 +110,7 @@ return_t transport_layer_security_client::more (socket_t sock, tls_context_t* tl
 {
     return_t ret = errorcode_t::success;
 
-    ret = _tls->read (tls_handle, TLS_READ_SSL_READ, ptr_data, size_data, cbread);
+    ret = _tls->read (tls_handle, tls_io_flag_t::read_ssl_read, ptr_data, size_data, cbread);
     return ret;
 }
 
@@ -118,7 +118,7 @@ return_t transport_layer_security_client::send (socket_t sock, tls_context_t* tl
 {
     return_t ret = errorcode_t::success;
 
-    ret = _tls->send (tls_handle, TLS_SEND_ALL, ptr_data, size_data, cbsent);
+    ret = _tls->send (tls_handle, tls_io_flag_t::send_all, ptr_data, size_data, cbsent);
     return ret;
 }
 

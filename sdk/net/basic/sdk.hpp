@@ -39,14 +39,14 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
  * @param   unsigned int size_vector    [in]
  * @param   unsigned int* vector_family [in] AF_INET, AF_INET6
  * @param   socket_t* vector_socket     [out]
- * @param   int protocol_type           [in] PROTOCOL_TCP
+ * @param   int protocol_type           [in] IPPROTO_TCP
  * @param   uint32 port                 [in]
  * @param   bool support_win32_acceptex [inopt]
  * @error   error code (see error.hpp)
  * @sample
  *          unsigned int nFamily[2] = { AF_INET, AF_INET6 };  // IPv4 and IPv6
  *          socket_t Sockets[2] = { INVALID_SOCKET, INVALID_SOCKET };
- *          create_listener (2, nFamily, Sockets, PROTOCOL_TCP, 9000);
+ *          create_listener (2, nFamily, Sockets, IPPROTO_TCP, 9000);
  *          // ...
  *          close_listener (2, Sockets);
  */
@@ -105,10 +105,23 @@ return_t winsock_startup ();
 void winsock_cleanup ();
 #endif
 
+typedef struct _url_info_t {
+    std::string protocol;
+    std::string domainip;
+    int port;
+    std::string uri;
+    std::string uripath;
+    std::string urifile;
+
+    _url_info_t () : port (0)
+    {
+    }
+} url_info_t;
+
 /*
  * split url
  * @sample
- *        URL_INFO info;
+ *        url_info_t info;
  *        const char *url = "http://test.com/download/meta/file.txt";
  *        split_url(url, &info);
  *        // info.protocol => http
@@ -128,7 +141,7 @@ void winsock_cleanup ();
  *        /download/file.txt                -> NA   / NA       / download / file.txt
  *        /download/                        -> NA   / NA       / download / N/A
  */
-return_t split_url (const char* url, URL_INFO* info);
+return_t split_url (const char* url, url_info_t* info);
 
 }
 }  // namespace

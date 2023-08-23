@@ -12,15 +12,10 @@
 #define __HOTPLACE_SDK_NET_TLS_TLS__
 
 #include <hotplace/sdk/crypto/basic/types.hpp>
-//#include <hotplace/sdk/net/types.hpp>
 #include <hotplace/sdk/net/tls/x509.hpp>
 
 namespace hotplace {
 namespace net {
-
-enum SOCKETLAYER_FLAG {
-    SOCKETLAYER_HAS_PENDING = 1,
-};
 
 /*
  * @brief TLS
@@ -106,7 +101,7 @@ public:
     /*
      * @brief   read (network_Server_v2 specification)
      * @param   tls_context_t*  handle      [IN]
-     * @param   int             mode        [IN] see TLS_READ_FLAG (2 recv 1 BIO_write 0 SSL_read)
+     * @param   int             mode        [IN] see tls_io_flag_t (2 recv 1 BIO_write 0 SSL_read)
      * @param   void*           buffer      [IN]
      * @param   size_t          buffer_size [IN]
      * @param   size_t*         size_read   [OUT]
