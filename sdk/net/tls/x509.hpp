@@ -84,7 +84,7 @@ return_t x509_open_simple (SSL_CTX** context);
  *        unencrypted key (ex. -----BEGIN PRIVATE KEY-----)
  *          works good, password parameter useless
  */
-return_t x509_open (SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file);
+return_t x509_open (SSL_CTX** context, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
 
 }
 }  // namespace

@@ -41,8 +41,9 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
             std::cout << "connect " << session_socket->client_socket << std::endl;
             break;
         case mux_read:
-            dump_memory (buf, bufsize, &bs);
-            std::cout << "read " << session_socket->client_socket << bs.c_str () << std::endl;
+            printf ("read %zi (%zi) %.*s\n", session_socket->client_socket, bufsize, bufsize, buf);
+            //dump_memory (buf, bufsize, &bs, 16, 4);
+            //std::cout << bs.c_str () << std::endl;
             session->send ((char*) buf, bufsize);
             break;
         case mux_disconnect:
@@ -71,7 +72,7 @@ return_t echo_server (void*)
     __try2
     {
         // part of ssl certificate
-        ret = x509_open (&x509, "server.crt", "server.key", nullptr, "ca.crt");
+        ret = x509_open (&x509, "server.crt", "server.key");
         _test_case.test (ret, __FUNCTION__, "x509");
 
         SSL_CTX_set_cipher_list (x509, "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256");
@@ -134,7 +135,7 @@ void test_tlsserver ()
 
     __try2
     {
-        _test_case.begin ("echo server");
+        _test_case.begin ("tls server");
 
         thread1.start ();
     }

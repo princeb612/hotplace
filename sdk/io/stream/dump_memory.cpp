@@ -15,7 +15,7 @@ namespace hotplace {
 namespace io {
 
 return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_interface* stream_object, unsigned hex_part,
-                      unsigned indent, const byte_t* rebase, int flags)
+                      unsigned indent, size_t rebase, int flags)
 {
     return_t ret = errorcode_t::success;
 
@@ -87,13 +87,13 @@ return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_inter
 }
 
 return_t dump_memory (const std::string& data, stream_interface* stream_object, unsigned hex_part,
-                      unsigned indent, const byte_t* rebase, int flags)
+                      unsigned indent, size_t rebase, int flags)
 {
     return dump_memory ((byte_t*) data.c_str (), data.size (), stream_object, hex_part, indent, rebase, flags);
 }
 
 return_t dump_memory (const binary_t& data, stream_interface* stream_object, unsigned hex_part,
-                      unsigned indent, const byte_t* rebase, int flags)
+                      unsigned indent, size_t rebase, int flags)
 {
     return dump_memory (&data[0], data.size (), stream_object, hex_part, indent, rebase, flags);
 }

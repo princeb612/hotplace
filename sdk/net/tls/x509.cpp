@@ -124,7 +124,8 @@ return_t x509_open (SSL_CTX** context, const char* cert_file, const char* key_fi
             }
         }
 
-        // invalid not_before valid not_after invalid
+        //    ~   not_before  ~  not_after   ~
+        // invalid          valid         invalid
         {
             ssl = SSL_new (ssl_ctx);
             if (nullptr == ssl) {

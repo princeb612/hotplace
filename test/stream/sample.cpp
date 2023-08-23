@@ -63,6 +63,18 @@ void test_consolecolor ()
     _test_case.assert (true, __FUNCTION__, "console color.3");
 }
 
+void test_dumpmxx_routine (const byte_t* dump_address, size_t dump_size, stream_interface* stream_object, unsigned hex_part = 16,
+                              unsigned indent = 0, size_t rebase = 0x0)
+{
+    return_t ret = errorcode_t::success;
+    ansi_string bs;
+
+    ret = dump_memory (dump_address, dump_size, &bs, hex_part, indent, rebase);
+
+    printf ("dump addr %p size %zi hex %i indent %i rebase %p\n%s\n", dump_address, dump_size, hex_part, indent, rebase, bs.c_str ());
+    _test_case.test (ret, __FUNCTION__, "dump");
+}
+
 void test_dumpmemory ()
 {
     _test_case.begin ("dump_memory");
@@ -70,9 +82,10 @@ void test_dumpmemory ()
     ansi_string bs;
     const char* text = "still a man hears what he wants to hear and disregards the rest"; // the boxer - Simon & Garfunkel
 
-    ret = dump_memory ((byte_t*) text, strlen (text), &bs);
-    std::cout << "dump " << std::endl << bs.c_str () << std::endl;
-    _test_case.test (ret, __FUNCTION__, "dump const char*");
+    test_dumpmxx_routine ((byte_t*) text, strlen (text), &bs);
+    test_dumpmxx_routine ((byte_t*) text, strlen (text), &bs, 32);
+    test_dumpmxx_routine ((byte_t*) text, strlen (text), &bs, 16, 4);
+    test_dumpmxx_routine ((byte_t*) text, strlen (text), &bs, 16, 4, 0x1000);
 
     std::string str (text);
     ret = dump_memory (str, &bs);
