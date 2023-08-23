@@ -243,11 +243,11 @@ return_t multiplexer_epoll::event_loop_run (multiplexer_context_t* handle, handl
                 data_vector[1] = (void *) (arch_t) context->events[i].data.fd;
 
                 if (context->events[i].data.fd == listenfd) {
-                    event_callback_routine (mux_connect, 2, data_vector, &callback_control, parameter);
+                    event_callback_routine (multiplexer_event_type_t::mux_connect, 2, data_vector, &callback_control, parameter);
                 } else if (context->events[i].events & EPOLLIN) {
-                    event_callback_routine (mux_read, 2, data_vector, &callback_control, parameter);
+                    event_callback_routine (multiplexer_event_type_t::mux_read, 2, data_vector, &callback_control, parameter);
                 } else if ((context->events[i].events & EPOLLHUP) || (context->events[i].events & EPOLLERR)) {
-                    event_callback_routine (mux_disconnect, 2, data_vector, &callback_control, parameter);
+                    event_callback_routine (multiplexer_event_type_t::mux_disconnect, 2, data_vector, &callback_control, parameter);
                 }
             }
         }

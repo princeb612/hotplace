@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_SDK_CLIENTSOCKET__
-#define __HOTPLACE_SDK_NET_SDK_CLIENTSOCKET__
+#ifndef __HOTPLACE_SDK_NET_BASIC_CLIENTSOCKET__
+#define __HOTPLACE_SDK_NET_BASIC_CLIENTSOCKET__
 
 #include <hotplace/sdk/net/types.hpp>
 

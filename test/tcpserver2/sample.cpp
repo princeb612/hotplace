@@ -14,6 +14,7 @@
 
 using namespace hotplace;
 using namespace hotplace::io;
+using namespace hotplace::crypto;
 using namespace hotplace::net;
 
 test_case _test_case;
@@ -43,14 +44,14 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
     size_t bufsize = (size_t) data_array[2];
 
     switch (type) {
-        case mux_connect:
+        case multiplexer_event_type_t::mux_connect:
             std::cout << "connect " << network_session->client_socket << std::endl;
             break;
-        case mux_read:
+        case multiplexer_event_type_t::mux_read:
             std::cout << "read " << network_session->client_socket << " msg [" << std::string (buf, bufsize).c_str () << "]" << std::endl;
             send ((socket_t) network_session->client_socket, buf, bufsize, 0);
             break;
-        case mux_disconnect:
+        case multiplexer_event_type_t::mux_disconnect:
             std::cout << "disconnect " << network_session->client_socket << std::endl;
             break;
     }
@@ -118,6 +119,8 @@ return_t echo_server (void* param)
 
 void test1 ()
 {
+    _test_case.begin ("echo server");
+
     thread thread1 (echo_server, nullptr);
     std::string result;
 
@@ -134,13 +137,16 @@ void test1 ()
 
 int main ()
 {
-    _test_case.begin ("smart pointer");
-
 #if defined _WIN32 || defined _WIN64
     winsock_startup ();
 #endif
+    openssl_startup ();
+    openssl_thread_setup ();
 
     test1 ();
+
+    openssl_thread_end ();
+    openssl_cleanup ();
 
 #if defined _WIN32 || defined _WIN64
     winsock_cleanup ();

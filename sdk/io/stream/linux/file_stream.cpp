@@ -167,7 +167,7 @@ bool file_stream::is_mmapped ()
     return nullptr != _filemap_handle && nullptr != _file_data;
 }
 
-return_t file_stream::begin_mmap (size_t dwAdditionalMappingSize)
+return_t file_stream::begin_mmap (size_t additional_mapping_size)
 {
     return_t ret = errorcode_t::success;
 
@@ -180,8 +180,8 @@ return_t file_stream::begin_mmap (size_t dwAdditionalMappingSize)
         if (true == is_mmapped ()) {
             __leave2;
         }
-        /* dwAdditionalMappingSize do not work at mmap, unlike Windows API CreateFileMapping */
-        if (dwAdditionalMappingSize) {
+        /* additional_mapping_size do not work at mmap, unlike Windows API CreateFileMapping */
+        if (additional_mapping_size) {
             ret = errorcode_t::not_supported;
             __leave2_trace (ret);
         }
@@ -194,13 +194,13 @@ return_t file_stream::begin_mmap (size_t dwAdditionalMappingSize)
         if (O_RDWR == (_mode & O_RDWR)) {
             nprot |= PROT_WRITE;
         }
-        _filemap_handle = mmap (0, _filesize_low + dwAdditionalMappingSize, nprot, MAP_SHARED, _file_handle, 0);
+        _filemap_handle = mmap (0, _filesize_low + additional_mapping_size, nprot, MAP_SHARED, _file_handle, 0);
         if (MAP_FAILED == _filemap_handle) {
             ret = errno;
             __leave2_trace (ret);
         }
         _file_data = (byte_t *) _filemap_handle;
-        _mapping_size = dwAdditionalMappingSize;
+        _mapping_size = additional_mapping_size;
     }
     __finally2
     {
@@ -247,23 +247,23 @@ uint64 file_stream::size ()
     return ret_value;
 }
 
-void file_stream::truncate (int64 lFilePos, int64* plFilePos)
+void file_stream::truncate (int64 file_pos, int64* ptr_file_pos)
 {
     if (true == is_open ()) {
-        //::lseek(_file_handle, lFilePos, SEEK_SET);
-        ::ftruncate (_file_handle, lFilePos);
-        _filesize_low = lFilePos;
+        //::lseek(_file_handle, file_pos, SEEK_SET);
+        ::ftruncate (_file_handle, file_pos);
+        _filesize_low = file_pos;
     }
 }
 
-void file_stream::seek (int64 lFilePos, int64* plFilePos, uint32 dwMethod)
+void file_stream::seek (int64 file_pos, int64* ptr_file_pos, uint32 method)
 {
     if (true == is_open ()) {
         LARGE_INTEGER li;
-        li.QuadPart = lFilePos;
+        li.QuadPart = file_pos;
 
         if (true == is_mmapped ()) {
-            switch (dwMethod) {
+            switch (method) {
                 case FILE_BEGIN:
                     _filepos_low = li.LowPart;
                     _filepos_high = li.HighPart;
@@ -274,26 +274,26 @@ void file_stream::seek (int64 lFilePos, int64* plFilePos, uint32 dwMethod)
                     _filepos_low = _filesize_low;
                     _filepos_high = _filesize_high;
                     break;
-                    if (nullptr != plFilePos) {
+                    if (nullptr != ptr_file_pos) {
                         li.LowPart = _filepos_low;
                         li.HighPart = _filepos_high;
-                        *plFilePos = li.QuadPart;
+                        *ptr_file_pos = li.QuadPart;
                     }
             }
         } else {
-            int ret_lseek = lseek (_file_handle, lFilePos, dwMethod);
-            if (nullptr != plFilePos) {
+            int ret_lseek = lseek (_file_handle, file_pos, method);
+            if (nullptr != ptr_file_pos) {
                 if (errorcode_t::success == errno) {
-                    *plFilePos = ret_lseek;
+                    *ptr_file_pos = ret_lseek;
                 } else {
-                    *plFilePos = 0;
+                    *ptr_file_pos = 0;
                 }
             }
         }
     }
 }
 
-return_t file_stream::write (void* lpData, size_t sizeData)
+return_t file_stream::write (void* data, size_t size_data)
 {
     return_t ret = errorcode_t::success;
 
@@ -301,27 +301,26 @@ return_t file_stream::write (void* lpData, size_t sizeData)
     {
         if (true == is_open ()) {
             if (true == is_mmapped ()) {
-                if ((_filepos_high > 0) || (((uint32) - 1 - _filepos_low) < sizeData)) {
+                if ((_filepos_high > 0) || (((uint32) - 1 - _filepos_low) < size_data)) {
                     ret = errorcode_t::not_supported;
                 } else {
-                    memcpy (reinterpret_cast<byte_t*>(lpData) + _filepos_low, lpData, sizeData);
-                    uint32 dwSizeMask = ~_filepos_low;
-                    if (dwSizeMask < sizeData) {
+                    memcpy (reinterpret_cast<byte_t*>(data) + _filepos_low, data, size_data);
+                    uint32 size_mask = ~_filepos_low;
+                    if (size_mask < size_data) {
                         _filepos_high++;
                     }
-                    _filepos_low += sizeData;
+                    _filepos_low += size_data;
                 }
             } else {
-                byte_t* pMem = (byte_t *) lpData;
                 uint32 dwIndex = 0;
                 int len = 0;
-                while (sizeData) {
-                    len = ::write (_file_handle, pMem + dwIndex, sizeData);
+                while (size_data) {
+                    len = ::write (_file_handle, (byte_t *) data + dwIndex, size_data);
                     if (-1 == len) {
                         ret = errno;
                         break;
                     }
-                    sizeData -= len;
+                    size_data -= len;
                     dwIndex += len;
                 }
             }
@@ -345,34 +344,34 @@ return_t file_stream::fill (size_t l, char c)
     return ret;
 }
 
-return_t file_stream::read (void* lpData, uint32 cbBuffer, uint32* cbRead)
+return_t file_stream::read (void* data, uint32 buffer, uint32* size_read)
 {
     return_t ret = errorcode_t::success;
 
     __try2
     {
-        if (nullptr == lpData || 0 == cbBuffer) {
+        if (nullptr == data || 0 == buffer) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
         if (true == is_mmapped ()) {
-            if ((_filepos_high > 0) || (-1 - _filepos_low < cbBuffer)) {
+            if ((_filepos_high > 0) || (-1 - _filepos_low < buffer)) {
                 ret = errorcode_t::not_supported;
             } else {
-                memcpy (lpData, _file_data + _filepos_low, cbBuffer);
-                if (nullptr != cbRead) {
-                    *cbRead = cbBuffer;
+                memcpy (data, _file_data + _filepos_low, buffer);
+                if (nullptr != size_read) {
+                    *size_read = buffer;
                 }
-                _filepos_low += cbBuffer;
+                _filepos_low += buffer;
             }
         } else {
-            int ret_readfile = ::read (_file_handle, lpData, cbBuffer);
+            int ret_readfile = ::read (_file_handle, data, buffer);
             if (-1 == ret_readfile) {
                 ret = errno;
                 __leave2;
             }
-            if (nullptr != cbRead) {
-                *cbRead = ret_readfile;
+            if (nullptr != size_read) {
+                *size_read = ret_readfile;
             }
         }
     }
@@ -389,11 +388,11 @@ return_t file_stream::flush ()
 }
 
 #if 0
-void file_stream::get_filetime (FILETIME* pCreationTime, FILETIME* pLastAccessTime, FILETIME* pLastWriteTime)
+void file_stream::get_filetime (FILETIME* time_created, FILETIME* time_last_accessed, FILETIME* time_last_written)
 {
 }
 
-void file_stream::set_filetime (FILETIME* pCreationTime, FILETIME* pLastAccessTime, FILETIME* pLastWriteTime)
+void file_stream::set_filetime (FILETIME* time_created, FILETIME* time_last_accessed, FILETIME* time_last_written)
 {
 }
 #endif
@@ -403,34 +402,34 @@ file_stream::operator handle_t ()
     return reinterpret_cast<handle_t>(_file_handle);
 }
 
-return_t file_stream::printf (const char* szFormat, ...)
+return_t file_stream::printf (const char* fmt, ...)
 {
     return_t ret = errorcode_t::success;
     bufferio io;
     bufferio_context_t* handle = nullptr;
-    void* pData = nullptr;
-    size_t cbData = 0;
+    byte_t* data = nullptr;
+    size_t size_data = 0;
     va_list ap;
 
     __try2
     {
-        va_start (ap, szFormat);
+        va_start (ap, fmt);
         ret = io.open (&handle, (1 << 12));
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = io.vprintf (handle, szFormat, ap);
+        ret = io.vprintf (handle, fmt, ap);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = io.get (handle, (byte_t**) &pData, &cbData, 0);
+        ret = io.get (handle, &data, &size_data, 0);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         va_end (ap);
 
-        write (pData, cbData);
+        write (data, size_data);
     }
     __finally2
     {
@@ -444,13 +443,13 @@ return_t file_stream::printf (const char* szFormat, ...)
     return ret;
 }
 
-return_t file_stream::vprintf (const char* szFormat, va_list ap)
+return_t file_stream::vprintf (const char* fmt, va_list ap)
 {
     return_t ret = errorcode_t::success;
     bufferio io;
     bufferio_context_t* handle = nullptr;
-    void* pData = nullptr;
-    size_t cbData = 0;
+    void* data = nullptr;
+    size_t size_data = 0;
 
     __try2
     {
@@ -458,16 +457,16 @@ return_t file_stream::vprintf (const char* szFormat, va_list ap)
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = io.vprintf (handle, szFormat, ap);
+        ret = io.vprintf (handle, fmt, ap);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = io.get (handle, (byte_t**) &pData, &cbData, 0);
+        ret = io.get (handle, (byte_t**) &data, &size_data, 0);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        write (pData, cbData);
+        write (data, size_data);
     }
     __finally2
     {

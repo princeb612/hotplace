@@ -8,20 +8,19 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/net/tls/x509.hpp>
 #include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 #include <hotplace/sdk/io/system/datetime.hpp>
+#include <hotplace/sdk/net/tls/x509.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
 
-return_t x509_open (x509_t** context)
+return_t x509_open_simple (SSL_CTX** context)
 {
     return_t ret = errorcode_t::success;
-    x509_t* handle = nullptr;
-    SSL_CTX* ctx = nullptr;
+    SSL_CTX* ssl_ctx = nullptr;
 
     __try2
     {
@@ -35,8 +34,8 @@ return_t x509_open (x509_t** context)
 #else
         const SSL_METHOD* method = SSLv23_method ();
 #endif
-        ctx = SSL_CTX_new (method);
-        if (nullptr == ctx) {
+        ssl_ctx = SSL_CTX_new (method);
+        if (nullptr == ssl_ctx) {
             ret = errorcode_t::internal_error;
             __leave2_trace (ret);
         }
@@ -52,13 +51,10 @@ return_t x509_open (x509_t** context)
          * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
          */
         option_flags = (SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1); /* TLS 1.2 and above */
-        SSL_CTX_set_options (ctx, option_flags);
+        SSL_CTX_set_options (ssl_ctx, option_flags);
+        SSL_CTX_set_verify (ssl_ctx, 0, nullptr);
 
-        __try_new_catch (handle, new x509_t, ret, __leave2);
-
-        handle->ssl_ctx = ctx;
-
-        *context = handle;
+        *context = ssl_ctx;
     }
     __finally2
     {
@@ -76,10 +72,10 @@ static int set_default_passwd_callback_routine (char *buf, int num, int rwflag, 
     return len;
 }
 
-return_t x509_open_pem (x509_t** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file)
+return_t x509_open (SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file)
 {
     return_t ret = errorcode_t::success;
-    x509_t* handle = nullptr;
+    SSL_CTX* ssl_ctx = nullptr;
     SSL* ssl = nullptr;
 
     __try2
@@ -89,12 +85,10 @@ return_t x509_open_pem (x509_t** context, const char* cert_file, const char* key
             __leave2;
         }
 
-        ret = x509_open (&handle);
+        ret = x509_open_simple (&ssl_ctx);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-
-        SSL_CTX* ssl_ctx = handle->ssl_ctx;
 
         buffer_stream bs;
         if (password) {
@@ -130,38 +124,39 @@ return_t x509_open_pem (x509_t** context, const char* cert_file, const char* key
             }
         }
 
-        ssl = SSL_new (ssl_ctx);
-        if (nullptr == ssl) {
-            ret = errorcode_t::internal_error_5;
-            __leave2;
-        }
-
-        X509* x509 = SSL_get_certificate (ssl);
-        if (nullptr == x509) {
-            ret = errorcode_t::internal_error_6;
-            __leave2;
-        }
-
-        ASN1_TIME* time_not_before = X509_get_notBefore (x509);
-        ASN1_TIME* time_not_after = X509_get_notAfter (x509);
-        if (time_not_before && time_not_after) {
-            asn1time_t asn1_not_before (time_not_before->type, (char*) time_not_before->data);
-            asn1time_t asn1_not_after (time_not_after->type, (char*) time_not_after->data);
-            datetime now;
-            datetime not_before (asn1_not_before);
-            datetime not_after (asn1_not_after);
-
-            if ((not_before < now) && (now < not_after)) {
-                // do nothing
-            } else {
-                ret = errorcode_t::expired;
+        // invalid not_before valid not_after invalid
+        {
+            ssl = SSL_new (ssl_ctx);
+            if (nullptr == ssl) {
+                ret = errorcode_t::internal_error_5;
                 __leave2;
+            }
+
+            X509* x509 = SSL_get_certificate (ssl);
+            if (nullptr == x509) {
+                ret = errorcode_t::internal_error_6;
+                __leave2;
+            }
+
+            ASN1_TIME* time_not_before = X509_get_notBefore (x509);
+            ASN1_TIME* time_not_after = X509_get_notAfter (x509);
+            if (time_not_before && time_not_after) {
+                asn1time_t asn1_not_before (time_not_before->type, (char*) time_not_before->data);
+                asn1time_t asn1_not_after (time_not_after->type, (char*) time_not_after->data);
+                datetime now;
+                datetime not_before (asn1_not_before);
+                datetime not_after (asn1_not_after);
+
+                if ((not_before < now) && (now < not_after)) {
+                    // do nothing
+                } else {
+                    ret = errorcode_t::expired;
+                    __leave2;
+                }
             }
         }
 
-        SSL_CTX_set_verify (ssl_ctx, 0, nullptr);
-
-        *context = handle;
+        *context = ssl_ctx;
     }
     __finally2
     {
@@ -169,69 +164,8 @@ return_t x509_open_pem (x509_t** context, const char* cert_file, const char* key
             SSL_free (ssl);
         }
         if (errorcode_t::success != ret) {
-            x509_close (handle);
+            SSL_CTX_free (ssl_ctx);
         }
-    }
-    return ret;
-}
-
-return_t x509_set_ciphersuites (x509_t* context, const char* ciphersuites)
-{
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        if (nullptr == context || nullptr == ciphersuites) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        SSL_CTX_set_cipher_list (context->ssl_ctx, ciphersuites);
-    }
-    __finally2
-    {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t x509_set_verify (x509_t* context, int flags)
-{
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        if (nullptr == context) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        SSL_CTX_set_verify (context->ssl_ctx, flags, nullptr);
-    }
-    __finally2
-    {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t x509_close (x509_t* context)
-{
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        if (nullptr == context) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        SSL_CTX_free (context->ssl_ctx);
-        delete context;
-    }
-    __finally2
-    {
-        // do nothing
     }
     return ret;
 }

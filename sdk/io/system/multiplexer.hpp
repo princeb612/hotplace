@@ -50,16 +50,16 @@ typedef struct {} multiplexer_controller_context_t;
  *          WSARecv (client_socket, ...);
  *
  *          // step.4 network routine
- *          return_t NetworkRoutine (uint32 dwType, uint32 dwDataCount, void* pData[], CALLBACK_CONTROL* pControl, void* user_context)
+ *          return_t NetworkRoutine (uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* user_context)
  *          {
- *              uint32 BytesTransferred = (uint32)pData[1];
- *              LPNETSOCKET_CONTEXT* pData = (LPNETSOCKET_CONTEXT)pData[2];
- *              if (mux_read == dwType)
+ *              uint32 BytesTransferred = (uint32)data[1];
+ *              LPNETSOCKET_CONTEXT* data = (LPNETSOCKET_CONTEXT)data[2];
+ *              if (multiplexer_event_type_t::mux_read == type)
  *              {
  *                  ...
  *                  WSARecv (client_socket, ...);
  *              }
- *              if (mux_disconnect == dwType) ...
+ *              if (multiplexer_event_type_t::mux_disconnect == type) ...
  *              // ...
  *          }
  *
@@ -92,18 +92,18 @@ public:
      * @brief bind
      * @param   void* multiplexer_context_t [IN] handle
      * @param   handle_t eventsource [IN] client socket
-     * @param   void* pData [IN] completion key, cannot be nullptr
+     * @param   void* data [IN] completion key, cannot be nullptr
      * @return error code (see error.hpp)
      */
-    return_t bind (multiplexer_context_t* handle, handle_t eventsource, void* pData);
+    return_t bind (multiplexer_context_t* handle, handle_t eventsource, void* data);
     /*
      * @brief unbind
      * @param   multiplexer_context_t* handle [IN] handle
      * @param   handle_t eventsource [IN] client socket
-     * @param   void* pData [IN] completion key, cannot be nullptr
+     * @param   void* data [IN] completion key, cannot be nullptr
      * @return error code (see error.hpp)
      */
-    return_t unbind (multiplexer_context_t* handle, handle_t eventsource, void* pData);
+    return_t unbind (multiplexer_context_t* handle, handle_t eventsource, void* data);
     /*
      * @brief loop
      * @param   multiplexer_context_t* handle [IN]
@@ -114,7 +114,7 @@ public:
      * @reamrks
      *
      *   // see post method
-     *   return_t NetworkRoutine (uint32 dwType, uint32 dwDataCount, void* pData[], CALLBACK_CONTROL* pControl, void* user_context)
+     *   return_t NetworkRoutine (uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* user_context)
      */
     return_t event_loop_run (multiplexer_context_t* handle, handle_t listenfd, TYPE_CALLBACK_HANDLEREXV callback_routine, void* user_context);
     /*
@@ -134,16 +134,16 @@ public:
     /*
      * @brief post
      * @param   multiplexer_context_t* handle [IN]
-     * @param   uint32 dwDataCount [IN]
-     * @pram    void* pData[] [IN]
-     *                pData[0] ignore (multiplexer_iocp handle)
-     *                pData[1] bytes transferred
-     *                pData[2] completion key
-     *                        see bind(void*, handle_t, void* pData)
-     *                pData[3] overlapped (win32)
+     * @param   uint32 count [IN]
+     * @pram    void* data[] [IN]
+     *                data[0] ignore (multiplexer_iocp handle)
+     *                data[1] bytes transferred
+     *                data[2] completion key
+     *                        see bind(void*, handle_t, void* data)
+     *                data[3] overlapped (win32)
      * @return error code (see error.hpp)
      */
-    return_t post (multiplexer_context_t* handle, uint32 dwDataCount, void* pData[]);
+    return_t post (multiplexer_context_t* handle, uint32 count, void* data[]);
     /*
      * @brief setoption
      * @param   multiplexer_context_t* handle [IN]
@@ -178,12 +178,12 @@ protected:
  *    mplexer.bind (handle, client_socket, param);
  *
  *    // step.4 network routine
- *    return_t NetworkRoutine (uint32 dwType, uint32 dwDataCount, void* pData[], CALLBACK_CONTROL* pControl, void* user_context)
+ *    return_t NetworkRoutine (uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* user_context)
  *    {
- *        uint32 BytesTransferred = (uint32)pData[1];
- *        LPNETSOCKET_CONTEXT* pData = (LPNETSOCKET_CONTEXT)pData[2];
- *        if (mux_connect == dwType) ...
- *        if (mux_read == dwType) ...
+ *        uint32 BytesTransferred = (uint32)data[1];
+ *        LPNETSOCKET_CONTEXT* data = (LPNETSOCKET_CONTEXT)data[2];
+ *        if (multiplexer_event_type_t::mux_connect == type) ...
+ *        if (multiplexer_event_type_t::mux_read == type) ...
  *        // ...
  *    }
  *
@@ -216,28 +216,28 @@ public:
      * @brief bind
      * @param   multiplexer_context_t* handle [IN] handle
      * @param   handle_t eventsource [IN] client socket
-     * @param   void* pData [IN] can be nullptr
+     * @param   void* data [IN] can be nullptr
      * @return error code (see error.hpp)
      */
-    return_t bind (multiplexer_context_t* handle, handle_t eventsource, void* pData);
+    return_t bind (multiplexer_context_t* handle, handle_t eventsource, void* data);
     /*
      * @brief unbind
      * @param   multiplexer_context_t* handle [IN] handle
      * @param   handle_t eventsource [IN] client socket
-     * @param   void* pData [IN] can be nullptr
+     * @param   void* data [IN] can be nullptr
      * @return error code (see error.hpp)
      */
-    return_t unbind (multiplexer_context_t* handle, handle_t eventsource, void* pData);
+    return_t unbind (multiplexer_context_t* handle, handle_t eventsource, void* data);
 
     /*
      * @brief loop
      * @param   multiplexer_context_t* handle [IN]
      * @param   handle_t listenfd [IN]
      * @param   TYPE_CALLBACK_HANDLEREXV lpfnEventHandler [IN]
-     *              pData[0] multiplexer_epoll handle
-     *              pData[1] eventsource depends on multiplexer_event_type_t
-     *              mux_connect listen-socket
-     *              mux_read client-socket
+     *              data[0] multiplexer_epoll handle
+     *              data[1] eventsource depends on multiplexer_event_type_t
+     *              multiplexer_event_type_t::mux_connect listen-socket
+     *              multiplexer_event_type_t::mux_read client-socket
      * @param   void* user_context [IN]
      * @return error code (see error.hpp)
      * @reamrks
@@ -260,13 +260,13 @@ public:
     /*
      * @brief post
      * @param   multiplexer_context_t* handle [IN]
-     * @param   uint32 dwDataCount [IN]
-     * @pram    void* pData[] [IN]
+     * @param   uint32 count [IN]
+     * @pram    void* data[] [IN]
      * @return error code (see error.hpp)
      * @remarks
      *          do nothing
      */
-    return_t post (multiplexer_context_t* handle, uint32 dwDataCount, void* pData[]);
+    return_t post (multiplexer_context_t* handle, uint32 count, void* data[]);
     /*
      * @brief setoption
      * @param   multiplexer_context_t* handle [IN]

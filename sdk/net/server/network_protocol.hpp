@@ -8,12 +8,11 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_SDK_NETWORKPROTOCOL__
-#define __HOTPLACE_SDK_NET_SDK_NETWORKPROTOCOL__
+#ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKPROTOCOL__
+#define __HOTPLACE_SDK_NET_SERVER_NETWORKPROTOCOL__
 
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/io/stream/buffer_stream.hpp>
-#include <time.h>
 
 namespace hotplace {
 using namespace io;
@@ -92,7 +91,10 @@ public:
      * @return  errorcode_t::success
      *          errorcode_t::not_supported (if error, do not return errorcode_t::success)
      */
-    virtual return_t is_kind_of (void* stream, size_t stream_size) = 0;
+    virtual return_t is_kind_of (void* stream, size_t stream_size)
+    {
+        return errorcode_t::success;
+    }
     /*
      * @brief read stream
      * @param   IBufferStream*  stream          [IN]
@@ -108,7 +110,10 @@ public:
      * @brief   id
      * @remarks default port number
      */
-    virtual uint32 protocol_id () = 0;
+    virtual uint32 protocol_id ()
+    {
+        return 0;
+    }
 
     int addref ()
     {

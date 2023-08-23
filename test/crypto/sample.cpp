@@ -734,11 +734,11 @@ void test_otp ()
 
 int main ()
 {
-    openssl_startup ();
-    openssl_thread_setup ();
-
     __try2
     {
+        openssl_startup ();
+        openssl_thread_setup ();
+
         test_crypt ();
 
         test_digest ();

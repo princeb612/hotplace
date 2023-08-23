@@ -171,11 +171,11 @@ return_t multiplexer_iocp::event_loop_run (multiplexer_context_t* handle, handle
 
             // GetQueuedCompletionStatus
             // GetQueuedCompletionStatusEx : retrieves multiple completion port entries simultaneously
-            DWORD dwTransfered = 0;
-            ULONG_PTR dwCompletionKey = 0;
-            LPOVERLAPPED lpOverlapped = nullptr;
-            bRet = GetQueuedCompletionStatus (pContext->hIocp, &dwTransfered, &dwCompletionKey, &lpOverlapped, 100);
-            if ((FALSE == bRet) && (nullptr == lpOverlapped)) {
+            DWORD size_transfered = 0;
+            ULONG_PTR completion_key = 0;
+            LPOVERLAPPED overlapped = nullptr;
+            bRet = GetQueuedCompletionStatus (pContext->hIocp, &size_transfered, &completion_key, &overlapped, 100);
+            if ((FALSE == bRet) && (nullptr == overlapped)) {
                 ret = GetLastError ();
                 if (WAIT_TIMEOUT == ret) {                  /* timeout */
                     continue;
@@ -185,24 +185,24 @@ return_t multiplexer_iocp::event_loop_run (multiplexer_context_t* handle, handle
                     break; // GLE - Windows 2003 returns 87, Windows 7 returns 735
                 }
             }
-            if (0 == dwCompletionKey) {
+            if (0 == completion_key) {
                 // response event_loop_break
                 break;
             }
             void* tblData[4] = { nullptr, };
             tblData[0] = (void*) handle;
-            tblData[1] = (void*) (arch_t) dwTransfered;
-            tblData[2] = (void*) dwCompletionKey;
-            tblData[3] = (void*) lpOverlapped;
+            tblData[1] = (void*) (arch_t) size_transfered;
+            tblData[2] = (void*) completion_key;
+            tblData[3] = (void*) overlapped;
 
-            DWORD dwType = 0;
-            if (0 == dwTransfered) {
-                dwType = mux_disconnect;
+            DWORD type = 0;
+            if (0 == size_transfered) {
+                type = multiplexer_event_type_t::mux_disconnect;
             } else {
-                dwType = mux_read;
+                type = multiplexer_event_type_t::mux_read;
             }
 
-            event_callback_routine (dwType, 4, tblData, nullptr, parameter);
+            event_callback_routine (type, 4, tblData, nullptr, parameter);
         }
 
         controller.event_loop_close (pContext->handle_event_loop, token_handle);

@@ -36,7 +36,7 @@ typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(
  *  1. network i/o event (based on network_multiplexer - iocp, epoll, kqueue) - MultiplexerKqueue not implemented yet
  *  2. produce (network_thread in event_loop_run, put into raw stream)
  *  3. consume (consumer_thread in consumer_loop_run, put raw stream into composed stream, using protocol interpreter)
- *  4. call user_defined_callback (mux_read, vector data)
+ *  4. call user_defined_callback (multiplexer_event_type_t::mux_read, vector data)
  *
  * @sample
  *
@@ -64,13 +64,13 @@ typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(
  *
  *     switch(type)
  *     {
- *     case mux_connect:
+ *     case multiplexer_event_type_t::mux_connect:
  *         _log(LOGHELPER_DEBUG, "connect %d", pSession->client_socket);
  *         break;
- *     case mux_read:
+ *     case multiplexer_event_type_t::mux_read:
  *         _log(LOGHELPER_DEBUG, "read %d msg [\n%.*s]", pSession->client_socket, bufsize, buf);
  *         break;
- *     case mux_disconnect:
+ *     case multiplexer_event_type_t::mux_disconnect:
  *         _log(LOGHELPER_DEBUG, "disconnect %d", pSession->client_socket);
  *         break;
  *     }
@@ -96,10 +96,10 @@ public:
      *            return_t (*TYPE_CALLBACK_HANDLEREXV)
      *                         (uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* parameter);
      *            parameter 1
-     *              mux_connect
-     *              mux_read
-     *              mux_write
-     *              mux_disconnect
+     *              multiplexer_event_type_t::mux_connect
+     *              multiplexer_event_type_t::mux_read
+     *              multiplexer_event_type_t::mux_write
+     *              multiplexer_event_type_t::mux_disconnect
      *            parameter 2
      *              RTL_NUMBER_OF(third parameter)
      *            parameter 3
@@ -117,7 +117,7 @@ public:
      *              see void* callback_param
      *
      *            parameter 1
-     *              mux_tryconnect
+     *              multiplexer_event_type_t::mux_tryconnect
      *            parameter 2
      *              RTL_NUMBER_OF(third parameter)
      *            parameter 3

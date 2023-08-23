@@ -136,7 +136,7 @@ public:
      * @remarks
      * @sa
      */
-    return_t begin_mmap (size_t dwAdditionalMappingSize = 0);
+    return_t begin_mmap (size_t additional_mapping_size = 0);
     /**
      * @brief munmap
      * @param
@@ -152,78 +152,78 @@ public:
      * @remarks
      * @sa
      */
-    void truncate (int64 lFilePos = 0,
-                   int64* plFilePos = nullptr);
+    void truncate (int64 file_pos = 0,
+                   int64* ptr_file_pos = nullptr);
     /**
      * @brief seek
-     * @param   int64     lFilePos    [IN]  position
-     * @param   int64*    plFilePos   [OUT] position
-     * @param   uint32       dwMethod    [IN]
+     * @param   int64     file_pos      [IN]  position
+     * @param   int64*    ptr_file_pos  [OUT] position
+     * @param   uint32    method        [IN]
      *                                      FILE_BEGIN
      *                                      FILE_CURRENT
      *                                      FILE_END
      * @return
      * @remarks
      *          replacement
-     *          void Seek(LONG lPosLo, PLONG plPosLo, PLONG plPosHi, uint32 dwMethod);
+     *          void Seek(LONG lPosLo, PLONG plPosLo, PLONG plPosHi, uint32 method);
      * @sa
      */
-    void seek (int64 lFilePos, int64* plFilePos, uint32 dwMethod);
+    void seek (int64 file_pos, int64* ptr_file_pos, uint32 method);
     /**
      * @brief printf
-     * @param   LPCTSTR     szFormat        [IN]
+     * @param   LPCTSTR     fmt        [IN]
      * @return
      * @remarks
      * @sa
      */
-    virtual return_t printf (const char* szFormat, ...);
+    virtual return_t printf (const char* fmt, ...);
 
     /**
      * @brief vprintf
-     * @param   LPCTSTR     szFormat        [IN]
-     * @param   va_list     ap              [IN]
+     * @param   LPCTSTR     fmt        [IN]
+     * @param   va_list     ap         [IN]
      * @return
      * @remarks
      * @sa
      */
-    virtual return_t vprintf (const char* szFormat, va_list ap);
+    virtual return_t vprintf (const char* fmt, va_list ap);
 
     /**
      * @brief write
-     * @param   void*      lpData          [IN]
-     * @param   size_t      sizeData        [IN]
+     * @param   void*      data          [IN]
+     * @param   size_t     size_data     [IN]
      * @return
      * @remarks
      *          in case of mmaped status, all write operation work up to (4G - 1) bytes
      * @sa
      */
-    virtual return_t write (void* lpData, size_t sizeData);
+    virtual return_t write (void* data, size_t size_data);
     virtual return_t fill (size_t l, char c);
     /**
      * @brief read
-     * @param   void*      lpData          [IN]
-     * @param   uint32       cbBuffer        [IN]
-     * @param   uint32*      cbRead          [OUT]
+     * @param   void*      data          [IN]
+     * @param   uint32     cbBuffer      [IN]
+     * @param   uint32*    cbRead        [OUT]
      * @return
      * @remarks
      */
-    return_t read (void* lpData, uint32 cbBuffer, uint32* cbRead);
+    return_t read (void* data, uint32 buffer, uint32* size_read);
 
 #if 0
     /*
      * @brief
-     * @param   FILETIME*   pCreationTime   [OUT]
-     * @param   FILETIME*   pLastAccessTime [OUT]
-     * @param   FILETIME*   pLastWriteTime  [OUT]
+     * @param   FILETIME*   time_created        [OUT]
+     * @param   FILETIME*   time_last_accessed  [OUT]
+     * @param   FILETIME*   time_last_written   [OUT]
      */
-    void get_filetime (FILETIME* pCreationTime, FILETIME* pLastAccessTime, FILETIME* pLastWriteTime);
+    void get_filetime (FILETIME* time_created, FILETIME* time_last_accessed, FILETIME* time_last_written);
     /*
      * @brief
-     * @param   FILETIME*   pCreationTime   [IN]
-     * @param   FILETIME*   pLastAccessTime [IN]
-     * @param   FILETIME*   pLastWriteTime  [IN]
+     * @param   FILETIME*   time_created        [IN]
+     * @param   FILETIME*   time_last_accessed  [IN]
+     * @param   FILETIME*   time_last_written   [IN]
      */
-    void set_filetime (FILETIME* pCreationTime, FILETIME* pLastAccessTime, FILETIME* pLastWriteTime);
+    void set_filetime (FILETIME* time_created, FILETIME* time_last_accessed, FILETIME* time_last_written);
 #endif
 
     operator handle_t ();

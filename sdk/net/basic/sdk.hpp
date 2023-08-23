@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_SDK_SDK__
-#define __HOTPLACE_SDK_NET_SDK_SDK__
+#ifndef __HOTPLACE_SDK_NET_BASIC_SDK__
+#define __HOTPLACE_SDK_NET_BASIC_SDK__
 
 #include <hotplace/sdk/net/types.hpp>
 
@@ -104,6 +104,31 @@ return_t set_sock_nbio (socket_t sock, uint32 nbio_mode);
 return_t winsock_startup ();
 void winsock_cleanup ();
 #endif
+
+/*
+ * split url
+ * @sample
+ *        URL_INFO info;
+ *        const char *url = "http://test.com/download/meta/file.txt";
+ *        split_url(url, &info);
+ *        // info.protocol => http
+ *        // info.domainip => test.com
+ *        // info.port => 80
+ *        // info.uri => /download/meta/file.txt
+ *        // info.uripath => download/meta
+ *        // info.urifile => file.txt
+ * @remarks
+ *        input                             -> prot / domainip / uripath  / urifile
+ *        http://test.com/download/file.txt -> http / test.com / download / file.txt
+ *        http://test.com/download/         -> http / test.com / download / NA
+ *        http://test.com/download          -> http / test.com / NA       / download
+ *        http://test.com/a/b/              -> http / test.com / a/b      / NA
+ *        http://test.com/a/b               -> http / test.com / a        / b
+ *        http://test.com                   -> http / test.com / NA       / NA
+ *        /download/file.txt                -> NA   / NA       / download / file.txt
+ *        /download/                        -> NA   / NA       / download / N/A
+ */
+return_t split_url (const char* url, URL_INFO* info);
 
 }
 }  // namespace

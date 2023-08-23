@@ -40,7 +40,7 @@ return_t network_session::connected (handle_t client_socket, sockaddr_storage_t*
 
 return_t network_session::ready_to_read ()
 {
-    return_t dwret = errorcode_t::success;
+    return_t ret = errorcode_t::success;
 
 #if defined _WIN32 || defined _WIN64
     /* asynchronous read */
@@ -53,7 +53,7 @@ return_t network_session::ready_to_read ()
     WSARecv ((socket_t) _session.netsock.client_socket, &(_session.wsabuf_pair.r.wsabuf), 1, &dwRecvBytes, &dwFlags,
              &(_session.wsabuf_pair.r.overlapped), nullptr);
 #endif
-    return dwret;
+    return ret;
 }
 
 return_t network_session::send (const char* data_ptr, size_t size_data)

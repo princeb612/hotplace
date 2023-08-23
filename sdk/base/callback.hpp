@@ -30,32 +30,32 @@ typedef return_t (*TYPE_CALLBACK_HANDLEREXV)(uint32 type, uint32 count, void* da
 
 /**
  * @brief   enumerate
- * @param   LPCTSTR     tszName     [IN]
- * @param   void*      lpParameter [IN]
- * @param   void*      lpContext   [IN]
+ * @param   LPCTSTR    name     [IN]
+ * @param   void*      parameter [IN]
+ * @param   void*      context   [IN]
  */
 #if defined _MBCS || defined MBCS
 #define ENUM_CALLBACK_HANDLER ENUM_CALLBACK_HANDLERA
 #elif defined _UNICODE || defined UNICODE
 #define ENUM_CALLBACK_HANDLER ENUM_CALLBACK_HANDLERW
 #endif
-typedef return_t (* ENUM_CALLBACK_HANDLERA)(const char* tszName, void* lpParameter, void* lpContext);
-typedef return_t (* ENUM_CALLBACK_HANDLERW)(const wchar_t* tszName, void* lpParameter, void* lpContext);
+typedef return_t (* ENUM_CALLBACK_HANDLERA)(const char* name, void* parameter, void* context);
+typedef return_t (* ENUM_CALLBACK_HANDLERW)(const wchar_t* name, void* parameter, void* context);
 
 /**
  * @brief   enumerate by type
- * @param   LPCTSTR     tszName     [IN]
- * @param   intptr_t    dwType      [IN]
- * @param   void*      lpParameter [IN]
- * @param   void*      lpContext   [IN]
+ * @param   LPCTSTR    name     [IN]
+ * @param   intptr_t   type      [IN]
+ * @param   void*      parameter [IN]
+ * @param   void*      context   [IN]
  */
 #if defined _MBCS || defined MBCS
 #define ENUMTYPE_CALLBACK_HANDLER ENUMTYPE_CALLBACK_HANDLERA
 #elif defined _UNICODE || defined UNICODE
 #define ENUMTYPE_CALLBACK_HANDLER ENUMTYPE_CALLBACK_HANDLERW
 #endif
-typedef return_t (* ENUMTYPE_CALLBACK_HANDLERA)(const char* tszName, intptr_t dwType, void* lpParameter, void* lpContext);
-typedef return_t (* ENUMTYPE_CALLBACK_HANDLERW)(const wchar_t* tszName, intptr_t dwType, void* lpParameter, void* lpContext);
+typedef return_t (* ENUMTYPE_CALLBACK_HANDLERA)(const char* name, intptr_t type, void* parameter, void* context);
+typedef return_t (* ENUMTYPE_CALLBACK_HANDLERW)(const wchar_t* name, intptr_t type, void* parameter, void* context);
 
 typedef return_t (*THREAD_CALLBACK_ROUTINE)(void*);
 

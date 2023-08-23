@@ -349,8 +349,8 @@ return_t file_stream::write (void* data, size_t size_data)
                     ret = errorcode_t::not_supported;
                 } else {
                     memcpy (reinterpret_cast<byte_t*>(data) + _filepos_low, data, size_data);
-                    uint32 dwSizeMask = ~_filepos_low;
-                    if (dwSizeMask < size_data) {
+                    uint32 size_mask = ~_filepos_low;
+                    if (size_mask < size_data) {
                         _filepos_high++;
                     }
                     _filepos_low += size_data;

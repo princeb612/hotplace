@@ -13,18 +13,16 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_connect (socket_t sock, void* openssl_ssl, uint32 dwSeconds, uint32 nbio)
+return_t tls_connect (socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio)
 {
     return_t ret = errorcode_t::success;
 
     __try2
     {
-        if (nullptr == openssl_ssl) {
+        if (nullptr == ssl) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
-
-        SSL* ssl = static_cast<SSL *>(openssl_ssl);
 
         if (0 == nbio) { /* blocking */
             int nRet = 0;

@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/net/server/network_stream.hpp>
 #include <hotplace/sdk/io/system/multiplexer.hpp>
 #include <hotplace/sdk/io/system/signalwait_threads.hpp>
+#include <hotplace/sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
 using namespace io;
@@ -653,17 +653,17 @@ return_t network_server::tls_accept_thread (void* user_context)
     network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(user_context);
 
     network_server svr;
-    uint32 dwWait = 0;
-    uint32 dwInterval = 1;
+    uint32 ret_wait = 0;
+    uint32 interval = 1;
     bool ready = false;
 
     while (true) {
         ready = false;
         svr.tls_accept_ready (context, &ready);
 
-        dwInterval = (true == ready) ? 1 : 100; /* control cpu usage */
-        dwWait = context->tls_accept_mutex.wait (dwInterval);
-        if (0 == dwWait) {
+        interval = (true == ready) ? 1 : 100; /* control cpu usage */
+        ret_wait = context->tls_accept_mutex.wait (interval);
+        if (0 == ret_wait) {
             break;
         }
 
@@ -820,13 +820,13 @@ return_t network_server::network_routine (uint32 type, uint32 data_count, void* 
 
     __try2
     {
-        if (mux_read == type) {
+        if (multiplexer_event_type_t::mux_read == type) {
             /* consumer_routine (decrease), close_if_not_referenced (delete) */
             session_object->produce (&context->priority_queue, session_object->wsabuf_read ()->buf, BytesTransferred);
             /* asynchronous write */
             session_object->ready_to_read ();
         }
-        if (mux_disconnect == type) {
+        if (multiplexer_event_type_t::mux_disconnect == type) {
             svr.session_closed (context, session_object->socket_info ()->client_socket);
         }
     }
@@ -839,9 +839,9 @@ return_t network_server::network_routine (uint32 type, uint32 data_count, void* 
 
     //void* handle = data_array[0];
 
-    if (mux_connect == type) {
+    if (multiplexer_event_type_t::mux_connect == type) {
         svr.accept_routine (context);
-    } else if (mux_read == type) {
+    } else if (multiplexer_event_type_t::mux_read == type) {
         int sockcli = (int) (long) data_array[1];
 
         network_session* session_object = nullptr;
@@ -859,7 +859,7 @@ return_t network_server::network_routine (uint32 type, uint32 data_count, void* 
             }
         }
     }
-    // else if (mux_disconnect == type) /* no event catchable */
+    // else if (multiplexer_event_type_t::mux_disconnect == type) /* no event catchable */
 
 #endif
 
@@ -890,11 +890,11 @@ return_t network_server::consumer_thread (void* user_context)
     network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(user_context);
 
     network_server svr;
-    uint32 dwWait = 0;
+    uint32 ret_wait = 0;
 
     while (true) {
-        dwWait = context->consumer_mutex.wait (100);
-        if (0 == dwWait) {
+        ret_wait = context->consumer_mutex.wait (100);
+        if (0 == ret_wait) {
             break;
         }
 
@@ -930,7 +930,7 @@ return_t network_server::consumer_routine (void* handle)
                     tblData[2] = (void *) buffer_item->size ();     /* netserver_callback_type_t::netserver_callback_type_datasize */
                     tblData[3] = session_object;                    /* netserver_callback_type_t::netserver_callback_type_session */
 
-                    context->callback_routine (mux_read, 4, tblData, nullptr, context->callback_param);
+                    context->callback_routine (multiplexer_event_type_t::mux_read, 4, tblData, nullptr, context->callback_param);
 
                     buffer_object = buffer_object->next ();
 
@@ -994,7 +994,7 @@ return_t network_server::session_accepted (void* handle, tls_context_t* tls_hand
 
         void* tblData[4] = { nullptr, };
         tblData[0] = (void *) session_object->socket_info ();  /* NET_OBJECT_SOCKET* */
-        context->callback_routine (mux_connect, 4, tblData, nullptr, context->callback_param);
+        context->callback_routine (multiplexer_event_type_t::mux_connect, 4, tblData, nullptr, context->callback_param);
 
     }
     __finally2
@@ -1038,7 +1038,7 @@ return_t network_server::session_closed (void* handle, handle_t client_socket)
 
             void* tblData[4] = { nullptr, };
             tblData[0] = (void *) session_object->socket_info ();  /* NET_OBJECT_SOCKET* */
-            context->callback_routine (mux_disconnect, 4, tblData, nullptr, context->callback_param);
+            context->callback_routine (multiplexer_event_type_t::mux_disconnect, 4, tblData, nullptr, context->callback_param);
 
             /* end-of-life. if reference counter is 0, close a socket and delete an instance */
             /* and release tls_handle here */
@@ -1072,7 +1072,7 @@ return_t network_server::try_connect (void* handle, socket_t client_socket, sock
         void* tblData[4] = { nullptr, };
         tblData[0] = (void *) client_socket;
         tblData[1] = client_addr;
-        context->callback_routine (mux_tryconnect, 4, tblData, nullptr, context->callback_param);
+        context->callback_routine (multiplexer_event_type_t::mux_tryconnect, 4, tblData, nullptr, context->callback_param);
     }
     __finally2
     {
