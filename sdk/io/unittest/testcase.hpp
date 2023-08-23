@@ -25,11 +25,40 @@ class test_case
 {
 public:
     test_case ();
+    /**
+     * @brief   test group
+     * @param   const char* case_name [in]
+     * @desc    reset stopwatch
+     */
     void begin (const char* case_name, ...);
+    /**
+     * @brief   start
+     * @desc    reset stopwatch
+     */
     void start ();
+    /**
+     * @brief   test
+     * @param   bool expect [in]
+     * @param   const char* test_function [in]
+     * @param   const char* message [inopt]
+     * @desc    check result and time
+     */
     void assert (bool expect, const char* test_function, const char* message = nullptr);
+    /**
+     * @brief   test
+     * @param   return_t result [in]
+     * @param   const char* test_function [in]
+     * @param   const char* message [inopt]
+     * @desc    check result and time
+     */
     void test (return_t result, const char* test_function, const char* message = nullptr);
+    /**
+     * @brief   report
+     */
     void report ();
+    /**
+     * @brief   result indicator
+     */
     return_t result ();
 
 private:

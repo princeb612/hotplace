@@ -17,6 +17,10 @@ using namespace hotplace::io;
 
 test_case _test_case;
 
+int simple_instance1_dtor = 0;
+int simple_instance2_dtor = 0;
+
+
 class simple_instance1
 {
 public:
@@ -28,6 +32,8 @@ public:
     ~simple_instance1 ()
     {
         std::cout << "destructor" << std::endl;
+
+        simple_instance1_dtor = 1;
     }
 
     void dosomething ()
@@ -56,6 +62,8 @@ public:
     ~simple_instance2 ()
     {
         std::cout << "destructor" << std::endl;
+
+        simple_instance2_dtor = 1;
     }
     void dosomething ()
     {
@@ -74,7 +82,7 @@ void test_sharedinstance1 ()
     inst->dosomething ();
     inst->release ();                               // --refcounter, delete here
 
-    _test_case.assert (true, __FUNCTION__, "shared reference");
+    _test_case.assert (1 == simple_instance1_dtor, __FUNCTION__, "shared reference");
 }
 
 void test_sharedinstance2 ()
@@ -88,7 +96,7 @@ void test_sharedinstance2 ()
         inst2->dosomething ();
         // delete here (2 times ~t_shared_instance)
     } // curly brace for instance lifetime
-    _test_case.assert (true, __FUNCTION__, "shared instance");
+    _test_case.assert (1 == simple_instance2_dtor, __FUNCTION__, "shared instance");
 }
 
 void test_endian ()

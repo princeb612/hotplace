@@ -88,7 +88,7 @@ return_t test_scenario::producer_scenario (void* parameter)
     int i = 0;
     for (i = 0; i < _test_loop; i++) {
         return_t wait = obj->__producer_signal.wait (10);
-        if (ERROR_SUCCESS == wait) {
+        if (errorcode_t::success == wait) {
             break;
         }
 
@@ -110,15 +110,15 @@ return_t test_scenario::consumer_scenario (void* parameter)
 
     while (true) {
         return_t wait = obj->__consumer_signal.wait (10);
-        if (ERROR_SUCCESS == wait) {
+        if (errorcode_t::success == wait) {
             break;
         }
 
-        return_t ret = ERROR_SUCCESS;
+        return_t ret = errorcode_t::success;
         int pri = 0;
         int *data = NULL;
         ret = obj->__mfq.get (&pri, &data, 1);
-        if (ERROR_SUCCESS == ret) {
+        if (errorcode_t::success == ret) {
             valgrind_warning_printf ("get  %d %d\n", pri, *data);
             fflush (stdout);
 
@@ -152,7 +152,7 @@ return_t test_scenario::consumer_signal (void* parameter)
 
 return_t scenario (void*)
 {
-    return_t ret = ERROR_SUCCESS;
+    return_t ret = errorcode_t::success;
     test_scenario test;
 
     test.make_scenario ();

@@ -57,6 +57,8 @@ return_t network_stream::consume (network_stream_data** ptr_buffer_object)
     if (nullptr == ptr_buffer_object) {
         ret = errorcode_t::invalid_parameter;
     } else {
+        *ptr_buffer_object = nullptr;
+
         network_stream_data* buffer_object = nullptr;
         network_stream_data* first = nullptr;
         network_stream_data* prev = nullptr;

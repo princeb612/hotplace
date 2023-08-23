@@ -71,7 +71,7 @@ return_t echo_server (void*)
     __try2
     {
         // part of ssl certificate
-        ret = x509_open (&x509, "server.crt", "server.key", "password", "ca.crt");
+        ret = x509_open (&x509, "server.crt", "server.key", nullptr, "ca.crt");
         _test_case.test (ret, __FUNCTION__, "x509");
 
         SSL_CTX_set_cipher_list (x509, "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256");

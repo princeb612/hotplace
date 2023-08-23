@@ -80,11 +80,14 @@ void test_case::test (return_t result, const char* test_function, const char* me
 
         _lock.enter ();
 
+        console_color_t color = console_color_t::yellow;
         if (errorcode_t::success == result) {
             _count_success++;
         } else if (errorcode_t::not_supported == result) {
+            color = console_color_t::cyan;
             _count_not_supported++;
         } else if (errorcode_t::low_security == result) {
+            color = console_color_t::yellow;
             _count_low_security++;
         } else {
             _count_fail++;
@@ -134,8 +137,9 @@ void test_case::test (return_t result, const char* test_function, const char* me
 
         console_color col;
         ansi_string buf;
+
         buf << col.turnon ()
-            << col.set_fgcolor (result ? console_color_t::red : console_color_t::yellow)
+            << col.set_fgcolor (color)
             << format ("[%08x]", result).c_str ()
             << col.set_fgcolor (console_color_t::yellow)
             << format ("[%s] %s", test_function ? test_function : "", message ? message : "").c_str ()
@@ -229,7 +233,7 @@ void test_case::report ()
                 case errorcode_t::success:       error_message << STRING_PASS; break;
                 case errorcode_t::not_supported: error_message << PRINT_STRING_NOT_SUPPORTED; break;
                 case errorcode_t::low_security:  error_message << PRINT_STRING_LOW_SECURITY; break;
-                default:                     error_message << PRINT_STRING_FAIL; break;
+                default:                         error_message << PRINT_STRING_FAIL; break;
             }
 
             stream.printf (" %-5s | 0x%08x | %-20s | %-10s | %s\n",

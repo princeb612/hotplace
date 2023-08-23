@@ -208,14 +208,10 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
 const hint_blockcipher_t hint_blockciphers [] = {
     // 16 (128), 24 (192), 32 (256)
 
-    { crypt_algorithm_t::seed, 16, 16, 16, },
-
     { crypt_algorithm_t::aes128, 16, 16, 16, 16, },
     { crypt_algorithm_t::aes192, 24, 16, 16, 24, },
     { crypt_algorithm_t::aes256, 32, 16, 16, 32, },
     { crypt_algorithm_t::blowfish, 16, 8, 8, },
-
-    { crypt_algorithm_t::idea, 16, 8, 8, },
 
     { crypt_algorithm_t::aria128, 16, 16, 16, },
     { crypt_algorithm_t::aria192, 24, 16, 16, },
@@ -224,6 +220,12 @@ const hint_blockcipher_t hint_blockciphers [] = {
     { crypt_algorithm_t::camellia128, 16, 16, 16, },
     { crypt_algorithm_t::camellia192, 24, 16, 16, },
     { crypt_algorithm_t::camellia256, 32, 16, 16, },
+
+    { crypt_algorithm_t::idea, 16, 8, 8, },
+
+    { crypt_algorithm_t::seed, 16, 16, 16, },
+
+    { crypt_algorithm_t::sm4, 16, 16, 16, },
 };
 
 const openssl_evp_md_method_t evp_md_methods[] = {

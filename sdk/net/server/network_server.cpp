@@ -815,14 +815,14 @@ return_t network_server::network_routine (uint32 type, uint32 data_count, void* 
 
 #if defined _WIN32 || defined _WIN64
 
-    uint32 BytesTransferred = (uint32) (arch_t) data_array[1];
+    uint32 transferred = (uint32) (arch_t) data_array[1];
     network_session* session_object = (network_session *) data_array[2];
 
     __try2
     {
         if (multiplexer_event_type_t::mux_read == type) {
             /* consumer_routine (decrease), close_if_not_referenced (delete) */
-            session_object->produce (&context->priority_queue, session_object->wsabuf_read ()->buf, BytesTransferred);
+            session_object->produce (&context->priority_queue, session_object->wsabuf_read ()->buf, transferred);
             /* asynchronous write */
             session_object->ready_to_read ();
         }
@@ -924,13 +924,13 @@ return_t network_server::consumer_routine (void* handle)
                         break;
                     }
 
-                    void* tblData[4] = { nullptr, };
-                    tblData[0] = session_object->socket_info ();    /* netserver_callback_type_t::netserver_callback_type_socket */
-                    tblData[1] = buffer_item->content ();           /* netserver_callback_type_t::netserver_callback_type_dataptr */
-                    tblData[2] = (void *) buffer_item->size ();     /* netserver_callback_type_t::netserver_callback_type_datasize */
-                    tblData[3] = session_object;                    /* netserver_callback_type_t::netserver_callback_type_session */
+                    void* dispatch_data[4] = { nullptr, };
+                    dispatch_data[0] = session_object->socket_info ();    /* netserver_callback_type_t::netserver_callback_type_socket */
+                    dispatch_data[1] = buffer_item->content ();           /* netserver_callback_type_t::netserver_callback_type_dataptr */
+                    dispatch_data[2] = (void *) buffer_item->size ();     /* netserver_callback_type_t::netserver_callback_type_datasize */
+                    dispatch_data[3] = session_object;                    /* netserver_callback_type_t::netserver_callback_type_session */
 
-                    context->callback_routine (multiplexer_event_type_t::mux_read, 4, tblData, nullptr, context->callback_param);
+                    context->callback_routine (multiplexer_event_type_t::mux_read, 4, dispatch_data, nullptr, context->callback_param);
 
                     buffer_object = buffer_object->next ();
 
@@ -992,9 +992,9 @@ return_t network_server::session_accepted (void* handle, tls_context_t* tls_hand
         session_object->ready_to_read ();
 #endif
 
-        void* tblData[4] = { nullptr, };
-        tblData[0] = (void *) session_object->socket_info ();  /* NET_OBJECT_SOCKET* */
-        context->callback_routine (multiplexer_event_type_t::mux_connect, 4, tblData, nullptr, context->callback_param);
+        void* dispatch_data[4] = { nullptr, };
+        dispatch_data[0] = (void *) session_object->socket_info ();  /* NET_OBJECT_SOCKET* */
+        context->callback_routine (multiplexer_event_type_t::mux_connect, 4, dispatch_data, nullptr, context->callback_param);
 
     }
     __finally2
@@ -1036,9 +1036,9 @@ return_t network_server::session_closed (void* handle, handle_t client_socket)
             /* no more associated, control_delete */
             mplexer.unbind (context->mplexer_handle, session_object->socket_info ()->client_socket, nullptr);
 
-            void* tblData[4] = { nullptr, };
-            tblData[0] = (void *) session_object->socket_info ();  /* NET_OBJECT_SOCKET* */
-            context->callback_routine (multiplexer_event_type_t::mux_disconnect, 4, tblData, nullptr, context->callback_param);
+            void* dispatch_data[4] = { nullptr, };
+            dispatch_data[0] = (void *) session_object->socket_info ();  /* NET_OBJECT_SOCKET* */
+            context->callback_routine (multiplexer_event_type_t::mux_disconnect, 4, dispatch_data, nullptr, context->callback_param);
 
             /* end-of-life. if reference counter is 0, close a socket and delete an instance */
             /* and release tls_handle here */
@@ -1069,10 +1069,10 @@ return_t network_server::try_connect (void* handle, socket_t client_socket, sock
             __leave2;
         }
 
-        void* tblData[4] = { nullptr, };
-        tblData[0] = (void *) client_socket;
-        tblData[1] = client_addr;
-        context->callback_routine (multiplexer_event_type_t::mux_tryconnect, 4, tblData, nullptr, context->callback_param);
+        void* dispatch_data[4] = { nullptr, };
+        dispatch_data[0] = (void *) client_socket;
+        dispatch_data[1] = client_addr;
+        context->callback_routine (multiplexer_event_type_t::mux_tryconnect, 4, dispatch_data, nullptr, context->callback_param);
     }
     __finally2
     {

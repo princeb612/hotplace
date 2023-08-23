@@ -78,6 +78,13 @@ return_t x509_open_simple (SSL_CTX** context);
  *      internal_error_5  : SSL_new fails
  *      intternal_eror_6  : SSL_get_certificate fails
  *      expired           : expired
+ * @desc
+ *      SSL_CTX_set_default_passwd_cb : set passwd callback for encrypted PEM file handling
+ *        encrypted primary key (ex. -----BEGIN ENCRYPTED PRIVATE KEY-----)
+ *          openssl 1.x set password parameter
+ *          openssl 3.x connection failure ? message (SSL alert number 40, 70)
+ *        unencrypted key (ex. -----BEGIN PRIVATE KEY-----)
+ *          works good, password parameter useless
  */
 return_t x509_open (SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file);
 

@@ -87,7 +87,7 @@ return_t sprintf (stream_interface* stream, const char* fmt, valist va)
             }
         }
 
-        stream->vprintf ((char *) formatter.data (), GET_VA_LIST (va.get ()));
+        stream->vprintf ((char *) formatter.data (), va.get ());
 
 #endif
 
