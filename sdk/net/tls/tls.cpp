@@ -20,12 +20,12 @@ enum tls_context_flag_t {
 };
 
 typedef struct _tls_context_t {
-    uint32   _signature;
-    uint32   _flags;
+    uint32 _signature;
+    uint32 _flags;
     socket_t _socket;
-    SSL*     _ssl;
-    BIO*     _sbio_read;
-    BIO*     _sbio_write;
+    SSL* _ssl;
+    BIO* _sbio_read;
+    BIO* _sbio_write;
 } tls_context_t;
 
 transport_layer_security::transport_layer_security (SSL_CTX* x509) : _x509 (x509)

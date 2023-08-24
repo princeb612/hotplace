@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace io {
 
-class buffer_stream : public stream_interface
+class buffer_stream : public stream_t
 {
 public:
     buffer_stream (size_t allocsize = (1 << 12), uint32 flags = 0);

@@ -10,7 +10,7 @@ cwd=$(pwd)
 valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 
 if [ $# -eq 0 ]; then
-    array=(base encode string bufferio stream datetime thread mlfq crypto jose ipaddr tcpserver1 tcpserver2 tlsserver incubator)
+    array=(base encode string bufferio stream datetime thread mlfq crypto jose ipaddr tcpserver1 tcpserver2 tlsserver httpserver incubator)
 else
     if [ -d $1 ]; then
         array=($1)

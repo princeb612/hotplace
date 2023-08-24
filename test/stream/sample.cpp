@@ -63,8 +63,10 @@ void test_consolecolor ()
     _test_case.assert (true, __FUNCTION__, "console color.3");
 }
 
-void test_dumpmxx_routine (const byte_t* dump_address, size_t dump_size, stream_interface* stream_object, unsigned hex_part = 16,
-                              unsigned indent = 0, size_t rebase = 0x0)
+void test_dumpmxx_routine (const byte_t* dump_address, size_t dump_size, stream_t* stream_object,
+                           unsigned hex_part = 16,
+                           unsigned indent = 0,
+                           size_t rebase = 0x0)
 {
     return_t ret = errorcode_t::success;
     ansi_string bs;
@@ -106,6 +108,7 @@ void test_dumpmemory ()
 void test_sprintf_routine (const valist& va, const char* fmt, const char* expect)
 {
     buffer_stream bs;
+
     sprintf (&bs, fmt, va);
     printf ("formatter %s\n", fmt);
     printf ("result    %s\n", bs.c_str ());

@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace io {
 
-return_t W2A (stream_interface* stream, const wchar_t* source, uint32 codepage)
+return_t W2A (stream_t* stream, const wchar_t* source, uint32 codepage)
 {
     return_t ret = errorcode_t::success;
 

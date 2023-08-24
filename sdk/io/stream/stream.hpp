@@ -45,10 +45,10 @@ enum filestream_flag_t {
 #define FILE_CURRENT 1
 #define FILE_END 2
 
-class stream_interface
+class stream_t
 {
 public:
-    virtual ~stream_interface ()
+    virtual ~stream_t ()
     {
     }
 
@@ -63,9 +63,9 @@ public:
 };
 
 #if defined _WIN32 || defined _WIN64
-return_t A2W (stream_interface* stream, const char* source, uint32 codepage = 0);
+return_t A2W (stream_t* stream, const char* source, uint32 codepage = 0);
 
-return_t W2A (stream_interface* stream, const wchar_t* source, uint32 codepage = 0);
+return_t W2A (stream_t* stream, const wchar_t* source, uint32 codepage = 0);
 #endif
 
 /*
@@ -81,7 +81,7 @@ return_t W2A (stream_interface* stream, const wchar_t* source, uint32 codepage =
  *          sprintf (&bs, "value1={2} value2={1}", va); // value1=test string value2=1
  *          sprintf (&bs, "value1={2} value2={1} value3={3}", va); // value1=test string value2=1 value3={3}
  */
-return_t sprintf (stream_interface* stream, const char* fmt, valist va);
+return_t sprintf (stream_t* stream, const char* fmt, valist va);
 /**
  * @brief printf variant_t
  * @sample
@@ -97,7 +97,7 @@ return_t sprintf (stream_interface* stream, const char* fmt, valist va);
  *
  *  std::cout << bs.c_str () << std::endl;
  */
-return_t vtprintf (stream_interface* stream, variant_t vt);
+return_t vtprintf (stream_t* stream, variant_t vt);
 
 //
 // part - dump
@@ -116,17 +116,17 @@ return_t vtprintf (stream_interface* stream, variant_t vt);
 enum dump_memory_flag_t {
     header = (1 << 0),
 };
-return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_interface* stream_object,
+return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_t* stream_object,
                       unsigned hex_part = 16,
                       unsigned indent = 0,
                       size_t rebase = 0x0,
                       int flags = 0);
-return_t dump_memory (const std::string& data, stream_interface* stream_object,
+return_t dump_memory (const std::string& data, stream_t* stream_object,
                       unsigned hex_part = 16,
                       unsigned indent = 0,
                       size_t rebase = 0x0,
                       int flags = 0);
-return_t dump_memory (const binary_t& data, stream_interface* stream_object,
+return_t dump_memory (const binary_t& data, stream_t* stream_object,
                       unsigned hex_part = 16,
                       unsigned indent = 0,
                       size_t rebase = 0x0,

@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_IO_ENCODER_BASE16__
-#define __HOTPLACE_SDK_IO_ENCODER_BASE16__
+#ifndef __HOTPLACE_SDK_IO_BASIC_BASE16__
+#define __HOTPLACE_SDK_IO_BASIC_BASE16__
 
 #include <hotplace/sdk/base.hpp>
 

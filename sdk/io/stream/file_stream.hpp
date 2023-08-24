@@ -37,7 +37,7 @@ namespace io {
  *              fs.close ();
  *          }
  */
-class file_stream : public stream_interface
+class file_stream : public stream_t
 {
 public:
     /**

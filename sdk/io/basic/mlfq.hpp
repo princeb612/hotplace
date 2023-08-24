@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_DATA_MLFQ__
-#define __HOTPLACE_SDK_IO_DATA_MLFQ__
+#ifndef __HOTPLACE_SDK_IO_BASIC_MLFQ__
+#define __HOTPLACE_SDK_IO_BASIC_MLFQ__
 
 #include <hotplace/sdk/base.hpp>
 #include <map>

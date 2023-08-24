@@ -65,7 +65,7 @@ return_t x509_open_simple (SSL_CTX** context)
 
 static int set_default_passwd_callback_routine (char *buf, int num, int rwflag, void *userdata)
 {
-    stream_interface* stream = (stream_interface*) userdata;
+    stream_t* stream = (stream_t*) userdata;
     size_t len = stream->size ();
 
     strncpy (buf, (char*) stream->data (), len);

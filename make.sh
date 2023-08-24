@@ -7,9 +7,9 @@
     packages to install
         gcc, g++, binutils, cmake, gdb, valgrind
     MINGW, RHEL
-        openssl-devel, jansson-devel
+        openssl-devel, jansson-devel zlib-devel
     ubuntu
-        openssl libssl-dev libjansson-dev
+        openssl libssl-dev libjansson-dev zlib1g-dev
 
     make sure root directory hotplace (not hotplace-master and so on ...)
     $ hotplace ./make.sh

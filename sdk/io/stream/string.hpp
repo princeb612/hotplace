@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace io {
 
-class ansi_string : public stream_interface
+class ansi_string : public stream_t
 {
 public:
     ansi_string (size_t allocsize = (1 << 12), uint32 flags = 0);
@@ -145,7 +145,7 @@ protected:
 };
 
 #if defined _WIN32 || defined _WIN64
-class wide_string : public stream_interface
+class wide_string : public stream_t
 {
 public:
     wide_string (size_t allocsize = (1 << 12), uint32 flags = 0);

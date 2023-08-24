@@ -82,7 +82,9 @@ public:
     {
         _shared.make_share (this);
     }
-    virtual ~network_protocol ();
+    virtual ~network_protocol ()
+    {
+    }
 
     /*
      * @brief check protocol

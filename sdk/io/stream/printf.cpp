@@ -47,7 +47,7 @@ static variant_conversion_t type_formatter[] =
 };
 size_t size_type_formatter = sizeof (type_formatter) / sizeof (type_formatter[0]);
 
-return_t sprintf (stream_interface* stream, const char* fmt, valist va)
+return_t sprintf (stream_t* stream, const char* fmt, valist va)
 {
     return_t ret = errorcode_t::success;
 
@@ -147,7 +147,7 @@ return_t sprintf (stream_interface* stream, const char* fmt, valist va)
     return ret;
 }
 
-return_t vtprintf (stream_interface* stream, variant_t vt)
+return_t vtprintf (stream_t* stream, variant_t vt)
 {
     return_t ret = errorcode_t::success;
 

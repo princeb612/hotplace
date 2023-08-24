@@ -19,6 +19,8 @@
 #include <hotplace/sdk/net/basic/ipaddr_acl.hpp>
 #include <hotplace/sdk/net/basic/sdk.hpp>
 #include <hotplace/sdk/net/basic/server_socket.hpp>
+#include <hotplace/sdk/net/http/http.hpp>
+#include <hotplace/sdk/net/http/http_protocol.hpp>
 #include <hotplace/sdk/net/server/network_priority_queue.hpp>
 #include <hotplace/sdk/net/server/network_protocol.hpp>
 #include <hotplace/sdk/net/server/network_server.hpp>

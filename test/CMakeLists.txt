@@ -25,6 +25,7 @@ add_subdirectory (ipaddr)
 add_subdirectory (tcpserver1)
 add_subdirectory (tcpserver2)
 add_subdirectory (tlsserver)
+add_subdirectory (httpserver)
 
 # etc
 add_subdirectory (incubator)

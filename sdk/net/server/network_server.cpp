@@ -926,10 +926,10 @@ return_t network_server::consumer_routine (void* handle)
                     }
 
                     void* dispatch_data[4] = { nullptr, };
-                    dispatch_data[0] = session_object->socket_info ();    /* netserver_callback_type_t::netserver_callback_type_socket */
-                    dispatch_data[1] = buffer_item->content ();           /* netserver_callback_type_t::netserver_callback_type_dataptr */
-                    dispatch_data[2] = (void *) buffer_item->size ();     /* netserver_callback_type_t::netserver_callback_type_datasize */
-                    dispatch_data[3] = session_object;                    /* netserver_callback_type_t::netserver_callback_type_session */
+                    dispatch_data[0] = session_object->socket_info ();      /* netserver_callback_type_t::netserver_callback_type_socket */
+                    dispatch_data[1] = buffer_item->content ();             /* netserver_callback_type_t::netserver_callback_type_dataptr */
+                    dispatch_data[2] = (void *) buffer_item->size ();       /* netserver_callback_type_t::netserver_callback_type_datasize */
+                    dispatch_data[3] = session_object;                      /* netserver_callback_type_t::netserver_callback_type_session */
 
                     context->callback_routine (multiplexer_event_type_t::mux_read, 4, dispatch_data, nullptr, context->callback_param);
 

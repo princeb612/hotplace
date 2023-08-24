@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace io {
 
-return_t A2W (stream_interface* stream, const char* source, uint32 codepage)
+return_t A2W (stream_t* stream, const char* source, uint32 codepage)
 {
     return_t ret = errorcode_t::success;
 

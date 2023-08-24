@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_DATA_KEYVALUE__
-#define __HOTPLACE_SDK_IO_DATA_KEYVALUE__
+#ifndef __HOTPLACE_SDK_IO_BASIC_KEYVALUE__
+#define __HOTPLACE_SDK_IO_BASIC_KEYVALUE__
 
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>

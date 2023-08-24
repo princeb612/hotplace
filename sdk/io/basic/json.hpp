@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_JSON__
-#define __HOTPLACE_SDK_IO_JSON__
+#ifndef __HOTPLACE_SDK_IO_BASIC_JSON__
+#define __HOTPLACE_SDK_IO_BASIC_JSON__
 
 #include <jansson.h>
 

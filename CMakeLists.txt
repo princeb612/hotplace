@@ -19,7 +19,11 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,noexecstack")
 endif ()
 
 set (SUPPORT_STATIC 1)
+if (UNIX)
 set (SUPPORT_SHARED 0)
+elseif (WIN32)
+set (SUPPORT_SHARED 1)
+endif ()
 
 set (PROJECT_SDK_MODULE_BASE ${CMAKE_PROJECT_NAME}-sdk-base)
 set (PROJECT_SDK_MODULE_IO ${CMAKE_PROJECT_NAME}-sdk-io)
@@ -28,9 +32,9 @@ set (PROJECT_SDK_MODULE_NET ${CMAKE_PROJECT_NAME}-sdk-net)
 set (PROJECT_SDK_MODULE_DEPENDENCIES ${PROJECT_SDK_MODULE_BASE}-static ${PROJECT_SDK_MODULE_IO}-static ${PROJECT_SDK_MODULE_CRYPTO}-static ${PROJECT_SDK_MODULE_NET}-static)
 
 if (UNIX)
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES pthread crypto ssl jansson)
+set (PROJECT_SDK_PLATFORM_DEPENDENCIES pthread crypto ssl jansson z)
 elseif (WIN32)
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson)
+set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z)
 endif ()
 
 function(copy_headers_with_hierarchy SOURCE_DIR DESTINATION_DIR)

@@ -83,7 +83,7 @@ void test_scenario::stop_scenario ()
 
 return_t test_scenario::producer_scenario (void* parameter)
 {
-    srand (time (NULL));
+    srand (time (nullptr));
     test_scenario* obj = (test_scenario*) parameter;
     int i = 0;
     for (i = 0; i < _test_loop; i++) {
@@ -116,7 +116,7 @@ return_t test_scenario::consumer_scenario (void* parameter)
 
         return_t ret = errorcode_t::success;
         int pri = 0;
-        int *data = NULL;
+        int *data = nullptr;
         ret = obj->__mfq.get (&pri, &data, 1);
         if (errorcode_t::success == ret) {
             valgrind_warning_printf ("get  %d %d\n", pri, *data);
@@ -186,7 +186,7 @@ void confirm ()
 
 int main ()
 {
-    thread thread1 (scenario, NULL);
+    thread thread1 (scenario, nullptr);
 
     thread1.start ();
 
