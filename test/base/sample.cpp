@@ -113,15 +113,17 @@ void test_sharedinstance2 ()
 
 void test_endian ()
 {
+    _test_case.begin ("endian");
+
     bool ret = false;
     std::string text;
     bool is_be = is_big_endian ();
     bool is_le = is_little_endian ();
 
-#if defined __LITTLE_ENDIAN__
+#if defined __LITTLE_ENDIAN
     text = "__LITTLE_ENDIAN__";
     ret = (true == is_le);
-#elif defined __BIG_ENDIAN__
+#elif defined __BIG_ENDIAN
     text = "__BIG_ENDIAN__";
     ret = (true == is_be);
 #endif

@@ -221,7 +221,13 @@ const hint_blockcipher_t hint_blockciphers [] = {
     { crypt_algorithm_t::camellia192, 24, 16, 16, },
     { crypt_algorithm_t::camellia256, 32, 16, 16, },
 
+    { crypt_algorithm_t::cast, 16, 8, 8, },
+
     { crypt_algorithm_t::idea, 16, 8, 8, },
+
+    { crypt_algorithm_t::rc2, 8, 8, 8, },
+
+    { crypt_algorithm_t::rc5, 16, 8, 8, },
 
     { crypt_algorithm_t::seed, 16, 16, 16, },
 

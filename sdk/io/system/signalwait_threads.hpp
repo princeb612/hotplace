@@ -128,17 +128,17 @@ protected:
     return_t thread_routine_implementation (void* param);
     /*
      * @brief join
-     * @param thread_t tid
+     * @param threadid_t tid
      * @return error code (see error.hpp)
      */
-    return_t join (thread_t tid);
+    return_t join (threadid_t tid);
 
     size_t _capacity;                                               ///<< max number of concurrent thread
     SIGNALWAITTHREADS_CALLBACK_ROUTINE _thread_callback_routine;    ///<< thread
     SIGNALWAITTHREADS_CALLBACK_ROUTINE _signal_callback_routine;    ///<< signal handler
     void* _thread_callback_param;                                   ///<< parameter
 
-    typedef std::map<thread_t, thread_info*> SIGNALWAITTHREADS_MAP;
+    typedef std::map<threadid_t, thread_info*> SIGNALWAITTHREADS_MAP;
     critical_section _lock;
     SIGNALWAITTHREADS_MAP _container;
 };

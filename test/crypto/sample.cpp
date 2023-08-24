@@ -18,7 +18,7 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 
-void test_crypt_routine (crypt_interface* crypt_object, crypt_algorithm_t algorithm, crypt_mode_t mode, unsigned key_size,
+void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, crypt_mode_t mode, unsigned key_size,
                          const byte_t* key_data, unsigned iv_size, const byte_t* iv_data, byte_t* data, size_t size)
 {
     return_t ret = errorcode_t::success;
@@ -90,7 +90,7 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_algorithm_t algori
     }
 }
 
-void test_crypt (crypt_interface* crypt_object, unsigned count_algorithms, crypt_algorithm_t* algorithms, crypt_mode_t mode, unsigned key_size,
+void test_crypt (crypt_t* crypt_object, unsigned count_algorithms, crypt_algorithm_t* algorithms, crypt_mode_t mode, unsigned key_size,
                  const byte_t* key_data, unsigned iv_size, const byte_t* iv_data, byte_t* data, size_t size)
 {
     for (unsigned index_algorithms = 0; index_algorithms < count_algorithms; index_algorithms++) {
@@ -210,7 +210,7 @@ void test_crypt ()
     }
 }
 
-void test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm,
+void test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm,
                         const byte_t* key_data, unsigned key_size, byte_t* data, size_t size)
 {
     return_t ret = errorcode_t::success;
@@ -260,7 +260,7 @@ void test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm,
     }
 }
 
-return_t test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm, binary_t key, binary_t data, binary_t expect, const char* text)
+return_t test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm, binary_t key, binary_t data, binary_t expect, const char* text)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -315,7 +315,7 @@ return_t test_hash_routine (hash_interface* hash_object, hash_algorithm_t algori
     return ret;
 }
 
-void test_hash (hash_interface* hash_object, unsigned count_algorithms, hash_algorithm_t* algorithms,
+void test_hash (hash_t* hash_object, unsigned count_algorithms, hash_algorithm_t* algorithms,
                 const byte_t* key_data, unsigned key_size, byte_t* data, size_t size)
 {
     for (unsigned index_algorithms = 0; index_algorithms < count_algorithms; index_algorithms++) {

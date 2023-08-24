@@ -65,7 +65,7 @@ return_t thread::start ()
     return ret;
 }
 
-return_t thread::join (thread_t tid)
+return_t thread::join (threadid_t tid)
 {
     return_t ret = errorcode_t::success;
 
@@ -100,7 +100,7 @@ return_t thread::wait (unsigned msec)
             dt.gettimespec (&ts);
 
             // glibc 2.3.3
-            ret_value = pthread_timedjoin_np (_tid, nullptr, &ts);
+            ret_value = pthreadid_timedjoin_np (_tid, nullptr, &ts);
             if (0 != ret_value) {
                 ret = errorcode_t::timeout;
             }
@@ -112,7 +112,7 @@ return_t thread::wait (unsigned msec)
     return ret;
 }
 
-thread_t thread::gettid ()
+threadid_t thread::gettid ()
 {
     return _tid;
 }

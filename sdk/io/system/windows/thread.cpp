@@ -54,7 +54,7 @@ return_t thread::start ()
     return ret;
 }
 
-return_t thread::join (thread_t tid)
+return_t thread::join (threadid_t tid)
 {
     return_t ret = errorcode_t::success;
 
@@ -83,7 +83,7 @@ return_t thread::wait (unsigned msec)
     return ret;
 }
 
-thread_t thread::gettid ()
+threadid_t thread::gettid ()
 {
     return _tid;
 }

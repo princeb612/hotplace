@@ -20,7 +20,7 @@ namespace crypto {
 /**
  * @brief openssl_crypt
  */
-class openssl_crypt : public crypt_interface
+class openssl_crypt : public crypt_t
 {
 public:
     /**

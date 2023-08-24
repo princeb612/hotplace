@@ -13,10 +13,10 @@
 
 namespace hotplace {
 
-class critical_section_interface
+class critical_section_t
 {
 public:
-    virtual ~critical_section_interface ()
+    virtual ~critical_section_t ()
     {
     }
     virtual void enter () = 0;

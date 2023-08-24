@@ -148,7 +148,7 @@ return_t network_server::open (void** handle, unsigned int family, unsigned int 
         context->accept_threads.create ();
 #endif
         arch_t use_tls = 0;
-        svr_socket->query (SERVER_SOCKET_QUERY_SUPPORT_TLS, &use_tls);
+        svr_socket->query (server_socket_query_t::query_support_tls, &use_tls);
         if (1 == use_tls) {
             context->tls_accept_threads.create ();
         }
@@ -297,7 +297,7 @@ return_t network_server::tls_accept_loop_run (void* handle, uint32 concurrent_lo
 
         server_socket* svr_socket = context->svr_socket;
         arch_t use_tls = 0;
-        svr_socket->query (SERVER_SOCKET_QUERY_SUPPORT_TLS, &use_tls);
+        svr_socket->query (server_socket_query_t::query_support_tls, &use_tls);
         if (1 == use_tls) {
             for (uint32 i = 0; i < concurrent_loop; i++) {
                 context->tls_accept_threads.create ();
@@ -605,7 +605,7 @@ return_t network_server::accept_routine (void* handle)
          */
 
         arch_t use_tls = 0;
-        svr_socket->query (SERVER_SOCKET_QUERY_SUPPORT_TLS, &use_tls);
+        svr_socket->query (server_socket_query_t::query_support_tls, &use_tls);
         if (0 == use_tls) {
             /* wo thread overhead */
             ret = svr.session_accepted (handle, nullptr, (handle_t) accpt_ctx.client_socket, &accpt_ctx.client_addr);
@@ -1071,7 +1071,7 @@ return_t network_server::try_connect (void* handle, socket_t client_socket, sock
         }
 
         void* dispatch_data[4] = { nullptr, };
-        dispatch_data[0] = (void *) client_socket;
+        dispatch_data[0] = (void *) (arch_t) client_socket;
         dispatch_data[1] = client_addr;
         context->callback_routine (multiplexer_event_type_t::mux_tryconnect, 4, dispatch_data, nullptr, context->callback_param);
     }

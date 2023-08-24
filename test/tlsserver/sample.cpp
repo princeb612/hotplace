@@ -41,7 +41,7 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
             std::cout << "connect " << session_socket->client_socket << std::endl;
             break;
         case mux_read:
-            printf ("read %zi (%zi) %.*s\n", session_socket->client_socket, bufsize, bufsize, buf);
+            printf ("read %i (%zi) %.*s\n", session_socket->client_socket, bufsize, (unsigned) bufsize, buf);
             //dump_memory (buf, bufsize, &bs, 16, 4);
             //std::cout << bs.c_str () << std::endl;
             session->send ((char*) buf, bufsize);

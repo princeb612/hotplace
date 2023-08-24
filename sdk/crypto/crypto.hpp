@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace crypto {
 
-class crypt_interface
+class crypt_t
 {
 public:
     /**
@@ -123,19 +123,19 @@ public:
 protected:
 };
 
-class hash_interface
+class hash_t
 {
 public:
     /**
      * @brief constructor
      */
-    hash_interface ()
+    hash_t ()
     {
     }
     /**
      * @brief destructor
      */
-    virtual ~hash_interface ()
+    virtual ~hash_t ()
     {
     }
 

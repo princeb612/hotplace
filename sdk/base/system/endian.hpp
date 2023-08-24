@@ -16,6 +16,7 @@ namespace hotplace {
 #if defined __GNUC__
 
 #if defined __MINGW32__
+
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define __BIG_ENDIAN__
 #define __BIG_ENDIAN
@@ -25,11 +26,14 @@ namespace hotplace {
 #define __LITTLE_ENDIAN
 #define   LITTLE_ENDIAN
 #endif
-#else
-#include <endian.h>
-#endif
 
 #else
+
+#include <endian.h>
+
+#endif // __MINGW32__
+
+#else // __GNUC__
 
 #define LITTLE_ENDIANESS 0x41424344UL
 #define BIG_ENDIANESS    0x44434241UL

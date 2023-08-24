@@ -31,3 +31,5 @@ for item in ${array[@]}; do
         done
     fi
 done
+
+grep fail `find . -name report`

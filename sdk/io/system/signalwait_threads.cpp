@@ -69,7 +69,7 @@ return_t signalwait_threads::create ()
                 // thread starts here
                 ret = thread_obj->start ();   /* CreateThread, pthread_create here */
                 if (errorcode_t::success == ret) {
-                    thread_t tid = thread_obj->gettid ();
+                    threadid_t tid = thread_obj->gettid ();
                     _container.insert (std::make_pair (tid, thread_rt));
                 }
             } else {
@@ -170,7 +170,7 @@ return_t signalwait_threads::thread_routine_implementation (void* param)
     return ret;
 }
 
-return_t signalwait_threads::join (thread_t tid)
+return_t signalwait_threads::join (threadid_t tid)
 {
     return_t ret = errorcode_t::success;
 

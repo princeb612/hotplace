@@ -22,7 +22,7 @@ namespace hotplace {
 /**
  * @brief semaphore
  */
-class semaphore_interface
+class semaphore_t
 {
 public:
     /**

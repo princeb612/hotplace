@@ -75,7 +75,7 @@ public:
      * @param   arch_t*     data_ptr        [OUT]
      * @return  error code (see error.hpp)
      * @remarks
-     *          server_socket.query(SERVER_SOCKET_QUERY_SUPPORT_TLS, &value);
+     *          server_socket.query(server_socket_query_t::query_support_tls, &value);
      */
     virtual return_t query (int specid, arch_t* data_ptr);
 

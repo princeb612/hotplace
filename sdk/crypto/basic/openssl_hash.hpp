@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace crypto {
 
-class openssl_hash : public hash_interface
+class openssl_hash : public hash_t
 {
 public:
     /**

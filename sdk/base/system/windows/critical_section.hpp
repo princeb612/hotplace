@@ -15,7 +15,7 @@
 
 namespace hotplace {
 
-class critical_section : public critical_section_interface
+class critical_section : public critical_section_t
 {
 public:
     /**

@@ -146,7 +146,7 @@ size_t bufferio::wfind_first_of_routine (bufferio_context_t* handle, int mode, c
             if (offset < contents_size) {
                 size_t pos = offset;
                 LPTSTR cur = nullptr;
-                while (true) {
+                while (pos < contents_size) {
                     cur = contents + pos;
                     if (0 == *cur) {
                         break;
@@ -204,7 +204,7 @@ size_t bufferio::wfind_first_of_routine (bufferio_context_t* handle, int mode, i
             if (offset < contents_size) {
                 size_t pos = offset;
                 LPTSTR cur = nullptr;
-                while (true) {
+                while (pos < contents_size) {
                     cur = contents + pos;
                     if (0 == *cur) {
                         break;
@@ -262,7 +262,7 @@ size_t bufferio::wfind_last_of_routine (bufferio_context_t* handle, int mode, co
             if (find_length <= contents_size) {
                 size_t pos = contents_size - find_length;
                 LPTSTR cur = nullptr;
-                while (true) {
+                while (pos < contents_size) {
                     cur = contents + pos;
                     if (0 == pos) {
                         break;
@@ -326,7 +326,7 @@ size_t bufferio::wfind_last_of_routine (bufferio_context_t* handle, int mode, in
 #endif
             size_t pos = (contents_size / sizeof (TCHAR));
             LPTSTR cur = nullptr;
-            while (true) {
+            while (pos < contents_size) {
                 cur = contents + pos - 1;
                 if (0 == pos) {
                     break;

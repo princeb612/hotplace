@@ -108,7 +108,7 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
             std::cout << "connect " << session_socket->client_socket << std::endl;
             break;
         case mux_read:
-            printf ("read %zi (%zi) %.*s\n", session_socket->client_socket, bufsize, bufsize, buf);
+            printf ("read %i (%zi) %.*s\n", session_socket->client_socket, bufsize, (unsigned) bufsize, buf);
             {
                 http_request request;
                 http_response response;

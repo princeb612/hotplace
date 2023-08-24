@@ -20,7 +20,7 @@ namespace io {
 /**
  * @brief semaphore
  */
-class semaphore : public semaphore_interface
+class semaphore : public semaphore_t
 {
 public:
     semaphore ();

@@ -22,18 +22,18 @@ namespace hotplace {
 namespace io {
 
 #if defined _WIN32 || defined _WIN64
-typedef HANDLE thread_t;
+typedef HANDLE threadid_t;
 #elif defined __linux__
-typedef pthread_t thread_t;
+typedef pthread_t threadid_t;
 #endif
 
-class thread_interface
+class thread_t
 {
 public:
     virtual return_t start () = 0;
-    virtual return_t join (thread_t tid) = 0;
+    virtual return_t join (threadid_t tid) = 0;
     virtual return_t wait (unsigned msec) = 0;
-    virtual thread_t gettid () = 0;
+    virtual threadid_t gettid () = 0;
 };
 
 }

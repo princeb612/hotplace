@@ -23,7 +23,7 @@ namespace io {
 /**
  * @brief thread
  */
-class thread : public thread_interface
+class thread : public thread_t
 {
 public:
     /**
@@ -36,7 +36,7 @@ public:
     ~thread ();
 
     virtual return_t start ();
-    virtual return_t join (thread_t tid);
+    virtual return_t join (threadid_t tid);
 
     /**
      * @brief wait
@@ -45,7 +45,7 @@ public:
      */
     virtual return_t wait (unsigned msec);
 
-    virtual thread_t gettid ();
+    virtual threadid_t gettid ();
 
     //virtual int addref ();
     //virtual int release ();
@@ -54,7 +54,7 @@ private:
     static void* thread_routine (void* param);
     void thread_routine_implementation ();
 
-    thread_t _tid;
+    threadid_t _tid;
     THREAD_CALLBACK_ROUTINE _callback;
     void* _param;
 

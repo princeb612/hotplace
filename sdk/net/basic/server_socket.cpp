@@ -192,7 +192,7 @@ return_t server_socket::query (int specid, arch_t* data_ptr)
         }
         *data_ptr = 0;
         switch (specid) {
-            case SERVER_SOCKET_QUERY_SUPPORT_TLS:
+            case server_socket_query_t::query_support_tls:
                 *data_ptr = 0;
                 break;
             default:
