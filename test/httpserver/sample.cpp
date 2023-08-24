@@ -26,52 +26,52 @@ test_case _test_case;
 
 typedef return_t (*http_handler_t)(const char* method, const char* uri, const char* action, const char* request,
                                    http_response* response);
-typedef std::map<std::string, http_handler_t> handler_container_t;
-typedef std::pair<handler_container_t::iterator, bool> handler_container_pib_t;
+typedef std::map<std::string, http_handler_t> handler_http_handlers_t;
+typedef std::pair<handler_http_handlers_t::iterator, bool> handler_http_handlers_pib_t;
 
-class http_handler_container
+class http_handler_http_handlers
 {
 public:
-    http_handler_container ();
-    ~http_handler_container ();
+    http_handler_http_handlers ();
+    ~http_handler_http_handlers ();
 
     return_t add (const char* uri, http_handler_t handler);
     http_handler_t find (const char* uri);
 protected:
-    handler_container_t _container;
+    handler_http_handlers_t _http_handlers;
 };
 
-http_handler_container::http_handler_container ()
+http_handler_http_handlers::http_handler_http_handlers ()
 {
     // do nothing
 }
 
-http_handler_container::~http_handler_container ()
+http_handler_http_handlers::~http_handler_http_handlers ()
 {
     // do nothing
 }
 
-return_t http_handler_container::add (const char* uri, http_handler_t handler)
+return_t http_handler_http_handlers::add (const char* uri, http_handler_t handler)
 {
     return_t ret = errorcode_t::success;
-    handler_container_pib_t pib = _container.insert (std::make_pair (uri, handler));
+    handler_http_handlers_pib_t pib = _http_handlers.insert (std::make_pair (uri, handler));
 
     if (false == pib.second) {
         ret = errorcode_t::already_exist;
     }
     return ret;
 }
-http_handler_t http_handler_container::find (const char* uri)
+http_handler_t http_handler_http_handlers::find (const char* uri)
 {
     http_handler_t handler = nullptr;
-    handler_container_t::iterator iter = _container.find (std::string (uri));
+    handler_http_handlers_t::iterator iter = _http_handlers.find (std::string (uri));
 
-    if (_container.end () != iter) {
+    if (_http_handlers.end () != iter) {
         handler = iter->second;
     }
     return handler;
 }
-// end of http_handler_container
+// end of http_handler_http_handlers
 
 // sample handler
 return_t api_test_handler (const char* method, const char* uri, const char* action, const char* request,
@@ -87,6 +87,8 @@ return_t api_v1_test_handler (const char* method, const char* uri, const char* a
     return 0;
 }
 
+t_shared_instance <http_handler_http_handlers> _http_handlers;
+
 return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context)
 {
     return_t ret = errorcode_t::success;
@@ -94,6 +96,9 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
     network_session* session = (network_session*) data_array[3];
     char* buf = (char*) data_array[1];
     size_t bufsize = (size_t) data_array[2];
+
+    /* route */
+    t_shared_instance <http_handler_http_handlers> router = _http_handlers;
 
     buffer_stream bs;
     std::string message;
@@ -127,12 +132,7 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
                 header->get ("Accept-Encoding", encoding);
                 std::cout << "encoding " << encoding.c_str () << std::endl;
 
-                /* route */
-                http_handler_container container;
-                container.add ("/api/test1", api_test_handler);
-                container.add ("/api/v1/test", api_v1_test_handler);
-
-                http_handler_t handler = container.find (request.get_url ());
+                http_handler_t handler = router->find (request.get_url ());
                 if (nullptr != handler) {
                     (*handler)(request.get_method (), request.get_url (), "", request.get_request (), &response);
                 } else {
@@ -199,6 +199,12 @@ return_t echo_server (void*)
         //SSL_CTX_set_cipher_list (x509, "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES128-SHA256:AES256-GCM-SHA384:AES256-SHA256:!aNULL:!eNULL:!LOW:!EXP:!RC4");
         SSL_CTX_set_verify (x509, 0, nullptr);
 
+        /* route */
+        _http_handlers.make_share (new http_handler_http_handlers);
+        _http_handlers->add ("/api/test1", api_test_handler);
+        _http_handlers->add ("/api/v1/test", api_v1_test_handler);
+
+        /* server */
         __try_new_catch (tls, new transport_layer_security (x509), ret, __leave2);
         __try_new_catch (http_prot, new http_protocol, ret, __leave2);
         __try_new_catch (tls_server, new transport_layer_security_server (tls), ret, __leave2);
