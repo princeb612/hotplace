@@ -43,7 +43,7 @@ public:
      * @param   const char* message [inopt]
      * @desc    check result and time
      */
-    void assert (bool expect, const char* test_function, const char* message = nullptr);
+    void assert (bool expect, const char* test_function, const char* message, ...);
     /**
      * @brief   test
      * @param   return_t result [in]
@@ -51,7 +51,7 @@ public:
      * @param   const char* message [inopt]
      * @desc    check result and time
      */
-    void test (return_t result, const char* test_function, const char* message = nullptr);
+    void test (return_t result, const char* test_function, const char* message, ...);
     /**
      * @brief   report
      */

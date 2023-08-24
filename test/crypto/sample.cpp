@@ -86,7 +86,7 @@ void test_crypt_routine (crypt_interface* crypt_object, crypt_algorithm_t algori
     __finally2
     {
         const char* alg = advisor->nameof_cipher (algorithm, mode);
-        _test_case.test (ret, __FUNCTION__, format ("encrypt+dectypt+dump algmrithm %d mode %d (%s)", algorithm, mode, alg ? alg : "unknown").c_str ());
+        _test_case.test (ret, __FUNCTION__, "encrypt+dectypt+dump algmrithm %d mode %d (%s)", algorithm, mode, alg ? alg : "unknown");
     }
 }
 
@@ -194,8 +194,8 @@ void test_crypt ()
         uint32 cooltime;
         uint32 unitsize;
     } _test_condition [] = {
-        { 10, 4096, }, // for large stream encryption performance, just check error occurrence
-        { 0, 0, },
+        { 10, 4096, },  // performance (for large stream encryption performance, just check error occurrence)
+        { 0, 0, },      // speed
     };
 
     for (unsigned i = 0; i < sizeof (_test_condition) / sizeof (_test_condition [0]); i++) {
@@ -256,7 +256,7 @@ void test_hash_routine (hash_interface* hash_object, hash_algorithm_t algorithm,
     __finally2
     {
         const char* alg = advisor->nameof_md (algorithm);
-        _test_case.test (ret, __FUNCTION__, format ("digest+dump algmrithm %d (%s)", algorithm, alg ? alg : "unknown").c_str ());
+        _test_case.test (ret, __FUNCTION__, "digest+dump algmrithm %d (%s)", algorithm, alg ? alg : "unknown");
     }
 }
 
@@ -310,7 +310,7 @@ return_t test_hash_routine (hash_interface* hash_object, hash_algorithm_t algori
     __finally2
     {
         const char* alg = advisor->nameof_md (algorithm);
-        _test_case.test (ret, __FUNCTION__, format ("digest+dump %s algmrithm %d (%s)", text ? text : "", algorithm, alg ? alg : "unknown").c_str ());
+        _test_case.test (ret, __FUNCTION__, "digest+dump %s algmrithm %d (%s)", text ? text : "", algorithm, alg ? alg : "unknown");
     }
     return ret;
 }

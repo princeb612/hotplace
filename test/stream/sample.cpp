@@ -45,7 +45,7 @@ void test_consolecolor ()
         }
     }
     std::cout << std::endl;
-    _test_case.assert (true, __FUNCTION__, format ("console color.1 loop %i times", loop).c_str ());
+    _test_case.assert (true, __FUNCTION__, "console color.1 loop %i times", loop);
 
     col.set_style (console_style_t::normal);
     col.set_fgcolor (console_color_t::yellow);

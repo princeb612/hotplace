@@ -28,7 +28,7 @@ static bool determine (ipaddr_acl* acl, const char* ip, bool expect)
     if (expect != check) {
         ret = errorcode_t::internal_error;
     }
-    _test_case.test (ret, __FUNCTION__, format ("access control %s -> %d", ip, expect ? 1 : 0).c_str ());
+    _test_case.test (ret, __FUNCTION__, "access control %s -> %d", ip, expect ? 1 : 0);
     return check;
 }
 

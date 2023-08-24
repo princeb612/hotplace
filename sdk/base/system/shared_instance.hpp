@@ -95,6 +95,10 @@ public:
         }
         return ret;
     }
+    int getref ()
+    {
+        return _counter;
+    }
 
 private:
     int _counter;

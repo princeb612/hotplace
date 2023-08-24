@@ -29,6 +29,19 @@ void dump (bufferio_context_t* handle)
     printf ("dump\n%.*s\n", (unsigned) bs.size (), bs.c_str ());
 }
 
+void test_vprintf (bufferio_context_t* handle, const char* fmt, ...)
+{
+    return_t ret = errorcode_t::success;
+    bufferio io;
+    va_list ap;
+
+    va_start (ap, fmt);
+    ret = io.vprintf (handle, fmt, ap);
+    va_end (ap);
+
+    _test_case.test (ret, __FUNCTION__, "vprintf");
+}
+
 void test_bufferio ()
 {
     return_t ret = errorcode_t::success;
@@ -46,6 +59,10 @@ void test_bufferio ()
     dump (handle);
 
     _test_case.start ();
+    test_vprintf (handle, "%s %f %i", "phi", 3.141592, 123);
+    dump (handle);
+
+    _test_case.start ();
     ret = bio.replace (handle, "sample", "example", 0, 0);
     _test_case.test (ret, __FUNCTION__, "replace");
     dump (handle);
@@ -58,6 +75,23 @@ void test_bufferio ()
     _test_case.start ();
     ret = bio.insert (handle, 0, "sample ", 7);
     _test_case.test (ret, __FUNCTION__, "insert");
+    dump (handle);
+
+    _test_case.start ();
+    size_t size = 0;
+    ret = bio.size (handle, &size);
+    _test_case.test (ret, __FUNCTION__, "size %zi", size);
+
+    _test_case.start ();
+    uint32 begin = 7;
+    uint32 length = size - begin;
+    ret = bio.cut (handle, begin, length);
+    _test_case.test (ret, __FUNCTION__, "cut from %i len %i", begin, length);
+    dump (handle);
+
+    _test_case.start ();
+    ret = bio.write (handle, "test", 4);
+    _test_case.test (ret, __FUNCTION__, "write");
     dump (handle);
 
     _test_case.start ();
@@ -80,23 +114,23 @@ void test_bufferio ()
 
     _test_case.start ();
     pos = bio.find_first_of (handle, "world");
-    _test_case.assert ((6 == pos), __FUNCTION__, format ("find_first_of -> %i", pos).c_str ());
+    _test_case.assert ((6 == pos), __FUNCTION__, "find_first_of -> %i", pos);
 
     _test_case.start ();
     pos = bio.find_not_first_of (handle, "hello");
-    _test_case.assert ((5 == pos), __FUNCTION__, format ("find_not_first_of -> %i", pos).c_str ());
+    _test_case.assert ((5 == pos), __FUNCTION__, "find_not_first_of -> %i", pos);
 
     _test_case.start ();
     pos = bio.find_last_of (handle, "world");
-    _test_case.assert ((6 == pos), __FUNCTION__, format ("find_last_of -> %i", pos).c_str ());
+    _test_case.assert ((6 == pos), __FUNCTION__, "find_last_of -> %i", pos);
 
     _test_case.start ();
     pos = bio.find_not_last_of (handle, "world");
-    _test_case.assert ((5 == pos), __FUNCTION__, format ("find_not_last_of -> %i", pos).c_str ());
+    _test_case.assert ((5 == pos), __FUNCTION__, "find_not_last_of -> %i", pos);
 
     _test_case.start ();
     pos = bio.find_first_of (handle, isspace);
-    _test_case.assert ((5 == pos), __FUNCTION__, format ("find_first_of -> %i", pos).c_str ());
+    _test_case.assert ((5 == pos), __FUNCTION__, "find_first_of -> %i", pos);
 
     _test_case.start ();
     ret = bio.cut (handle, bio.find_first_of (handle, isspace), 1);

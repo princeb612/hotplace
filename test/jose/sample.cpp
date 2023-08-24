@@ -1703,7 +1703,7 @@ void test_jwe_flattened ()
                         dump_memory (&output [0], output.size (), &bs);
                         printf ("decrypted\n%s\n", bs.c_str ());
                     }
-                    _test_case.test (ret, __FUNCTION__, format ("RFC 7520 JWE enc %s alg %s", nameof_enc, nameof_alg).c_str ());
+                    _test_case.test (ret, __FUNCTION__, "RFC 7520 JWE enc %s alg %s", nameof_enc, nameof_alg);
                 }
             }
         }
@@ -1781,7 +1781,7 @@ void test_jwe_json (jwe_t enc)
         jose.close (handle_encrypt);
         jose.close (handle_decrypt);
     }
-    _test_case.test (ret, __FUNCTION__, format ("RFC 7520 JWE enc %s", nameof_enc).c_str ());
+    _test_case.test (ret, __FUNCTION__, "RFC 7520 JWE enc %s", nameof_enc);
 }
 
 return_t hash_stream (const char* algorithm, byte_t* stream, size_t size, binary_t& value)
@@ -2033,7 +2033,7 @@ void test_okp ()
                     printf ("%s\n", bs.c_str ());
                 }
             }
-            _test_case.test (ret, __FUNCTION__, format ("RFC 8037 JWE with OKP enc %s alg %s", nameof_enc, nameof_alg).c_str ());
+            _test_case.test (ret, __FUNCTION__, "RFC 8037 JWE with OKP enc %s alg %s", nameof_enc, nameof_alg);
         }
     }
 

@@ -59,17 +59,25 @@ void test_case::start ()
     stopwatch_read (_timestamp);
 }
 
-void test_case::assert (bool expect, const char* test_function, const char* message)
+void test_case::assert (bool expect, const char* test_function, const char* message, ...)
 {
     return_t ret = errorcode_t::success;
 
     if (false == expect) {
         ret = errorcode_t::unexpected;
     }
-    test (ret, test_function, message);
+
+    ansi_string msg;
+    if (nullptr != message) {
+        va_list ap;
+        va_start (ap, message);
+        msg.vprintf (message, ap);
+        va_end (ap);
+    }
+    test (ret, test_function, msg.c_str ());
 }
 
-void test_case::test (return_t result, const char* test_function, const char* message)
+void test_case::test (return_t result, const char* test_function, const char* message, ...)
 {
     struct timespec now, diff;
 
@@ -77,6 +85,14 @@ void test_case::test (return_t result, const char* test_function, const char* me
     {
         stopwatch_read (now);
         stopwatch_diff (diff, _timestamp, now);
+
+        ansi_string msg;
+        if (nullptr != message) {
+            va_list ap;
+            va_start (ap, message);
+            msg.vprintf (message, ap);
+            va_end (ap);
+        }
 
         _lock.enter ();
 
@@ -101,9 +117,7 @@ void test_case::test (return_t result, const char* test_function, const char* me
         if (nullptr != test_function) {
             item._test_function = test_function;
         }
-        if (nullptr != message) {
-            item._message = message;
-        }
+        item._message = msg.c_str ();
 
         if (_test_map.end () == iter) {
             test_status_t status;
@@ -142,7 +156,8 @@ void test_case::test (return_t result, const char* test_function, const char* me
             << col.set_fgcolor (color)
             << format ("[%08x]", result).c_str ()
             << col.set_fgcolor (console_color_t::yellow)
-            << format ("[%s] %s", test_function ? test_function : "", message ? message : "").c_str ()
+            << format ("[%s] ", test_function ? test_function : "").c_str ()
+            << msg.c_str ()
             << col.turnoff ();
 
         std::cout << buf.c_str ()  << std::endl;
