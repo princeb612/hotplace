@@ -91,6 +91,7 @@ private:
     } test_status_t;
     typedef std::list<std::string> unittest_index_t;                /* ordered test cases */
     typedef std::map<std::string, test_status_t> unittest_map_t;    /* pair (test case, test_status_t) */
+    typedef std::pair<unittest_map_t::iterator, bool> unittest_map_pib_t;
 
     critical_section _lock;
     unittest_index_t _test_list;

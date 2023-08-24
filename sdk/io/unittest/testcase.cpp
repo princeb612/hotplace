@@ -109,7 +109,6 @@ void test_case::test (return_t result, const char* test_function, const char* me
             _count_fail++;
         }
 
-        unittest_map_t::iterator iter = _test_map.find (_current_case_name);
 
         unittest_item_t item;
         memcpy (&item._time, &diff, sizeof (diff));
@@ -119,34 +118,26 @@ void test_case::test (return_t result, const char* test_function, const char* me
         }
         item._message = msg.c_str ();
 
-        if (_test_map.end () == iter) {
-            test_status_t status;
-            if (errorcode_t::success == result) {
-                status._count_success++;
-            } else if (errorcode_t::not_supported == result) {
-                status._count_not_supported++;
-            } else if (errorcode_t::low_security == result) {
-                status._count_low_security++;
-            } else {
-                status._count_fail++;
-            }
 
-            status._test_results.push_back (item);                              /* append a unittest_item_t */
-            _test_map.insert (std::make_pair (_current_case_name, status));     /* insert a new test_status_t */
-            _test_list.push_back (_current_case_name);                          /* ordered test cases */
+        test_status_t clean_status;
+        unittest_map_pib_t pib = _test_map.insert (std::make_pair (_current_case_name, clean_status));
+        unittest_map_t::iterator it = pib.first;
+        test_status_t& status = it->second;
+
+        if (errorcode_t::success == result) {
+            status._count_success++;
+        } else if (errorcode_t::not_supported == result) {
+            status._count_not_supported++;
+        } else if (errorcode_t::low_security == result) {
+            status._count_low_security++;
         } else {
-            test_status_t& status = iter->second;
-            if (errorcode_t::success == result) {
-                status._count_success++;
-            } else if (errorcode_t::not_supported == result) {
-                status._count_not_supported++;
-            } else if (errorcode_t::low_security == result) {
-                status._count_low_security++;
-            } else {
-                status._count_fail++;
-            }
+            status._count_fail++;
+        }
 
-            status._test_results.push_back (item); /* append a unittest_item_t */
+        status._test_results.push_back (item); /* append a unittest_item_t */
+
+        if (true == pib.second) {
+            _test_list.push_back (_current_case_name); /* ordered test cases */
         }
 
         console_color col;

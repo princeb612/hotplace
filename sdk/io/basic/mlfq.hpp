@@ -182,19 +182,15 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::post (int pri, TYPENAME_T* source, void* 
                 __leave2;
             }
 
-            // find a priority queue first
-            typename mlfq_map_t::iterator qit = _mfq.find (pri);
-            if (_mfq.end () == qit) {
-                // if not found, new priority queue
-                mlfq_queue_t q;
-                mlfq_map_pib_t pib = _mfq.insert (std::make_pair (pri, q));
-                qit = pib.first;
-            }
-
             _binder.binder (mlfq_binder_operation_t::binder_v, source, param); // reference counter ++
-
             _size++;
-            qit->second.push (source); // insert into a queue
+
+            mlfq_queue_t clean_q;
+            mlfq_map_pib_t pib = _mfq.insert (std::make_pair (pri, clean_q));
+            typename mlfq_map_t::iterator qit = pib.first;
+            mlfq_queue_t& q = qit->second;
+            q.push (source);
+
             _workingset.insert (source);
             _semaphore.signal ();
         }
