@@ -402,7 +402,7 @@ return_t http_uri::query (unsigned index, std::string& key, std::string& value)
         key = iter->first;
         value = iter->second;
     } else {
-        ret = ERROR_INVALID_ACCESS;
+        ret = errorcode_t::out_of_range;
     }
     return ret;
 }
