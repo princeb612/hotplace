@@ -12,7 +12,7 @@ set (CMAKE_VERBOSE_MAKEFILE ON)
 
 set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")}
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 if (UNIX)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,noexecstack")
@@ -20,7 +20,7 @@ endif ()
 
 set (SUPPORT_STATIC 1)
 if (UNIX)
-set (SUPPORT_SHARED 0)
+set (SUPPORT_SHARED 0) # linux
 elseif (WIN32)
 set (SUPPORT_SHARED 1)
 endif ()

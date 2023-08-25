@@ -8,10 +8,13 @@
    * gcc, g++, binutils, cmake, gdb
    * openssl-devel jansson-devel zlib-devel (MINGW)
    * openssl-devel jansson zlib-devel (RHEL)
-   * openssl libssl-dev libjansson-dev zlib1g-dev (ubuntu)
+   * libssl-dev libjansson-dev zlib1g-dev (ubuntu)
    * valgrind (linux)
  * important
    * openssl 1.1.1 or newer
+   * custom build required in RHEL (RHEL, centos, rocky)
+     * -fPIC required
+     * algoritm
  * build custom openssl (example)
    * install perl
      * $ sudo yum install perl
@@ -22,7 +25,7 @@
    * cd
      * $ cd openssl-1.1.1v
    * prefix variable
-     * $ install_dir=...
+     * $ install_dir=somewhere/thirdparty
    * configure linux ex.
      * $ ./Configure linux-x86_64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=devrandom -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
    * configure mingw ex.
@@ -34,6 +37,14 @@
      * $ make
    * no thanks man pages
      * $ make install_sw install_ssldirs
+ * build custom jansson (example)
+   * see https://github.com/akheron/jansson
+   * aclocal; autoheader; autoconf;
+   * libtoolize --automake --copy --force
+   * automake --foreign --copy --add-missing
+   * $ install_dir=somewhere/thirdparty
+   * ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
+   * make
  * make sure root directory hotplace (not hotplace-master and so on ...)
    * $ hotplace ./make.sh
 

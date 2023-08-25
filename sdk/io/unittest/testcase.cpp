@@ -307,7 +307,7 @@ void test_case::test (return_t result, const char* test_function, const char* me
 #define PRINT_STRING_NOT_SUPPORTED col.set_fgcolor (console_color_t::cyan) << STRING_NOT_SUPPORTED << col.set_fgcolor (fgcolor)
 #define PRINT_STRING_LOW_SECURITY col.set_fgcolor (console_color_t::yellow) << STRING_LOW_SECURITY  << col.set_fgcolor (fgcolor)
 
-void test_case::write_to_stream (unittest_list_t& array, ansi_string& stream)
+void test_case::write_unittest_list_to_stream (unittest_list_t& array, ansi_string& stream)
 {
     /* "success" */
     char STRING_SUCCESS[] = { 's', 'u', 'c', 'c', 'e', 's', 's', 0, };
@@ -419,7 +419,7 @@ void test_case::report ()
         stream.fill (80, '-');
         stream.endl ();
 
-        write_to_stream (status._test_list, stream);
+        write_unittest_list_to_stream (status._test_list, stream);
 
         stream.fill (80, '-');
         stream.endl ();
@@ -459,7 +459,7 @@ void test_case::report ()
 bool test_case::compare_timespec (const unittest_item_t& lhs, const unittest_item_t& rhs)
 {
     bool ret = false;
-    if ((lhs._time.tv_sec >= rhs._time.tv_sec) && (lhs._time.tv_nsec >= rhs._time.tv_nsec)) {
+    if ((lhs._time.tv_sec > rhs._time.tv_sec) && (lhs._time.tv_nsec > rhs._time.tv_nsec)) { // > older one first, >= later one first
         ret = true;
     }
     return ret;
@@ -489,7 +489,7 @@ void test_case::time_report (uint32 top_count)
         stream.endl ();
 
         stream.printf ("sort by time (top %zi)\n", array.size ());
-        write_to_stream (array, stream);
+        write_unittest_list_to_stream (array, stream);
 
         stream.fill (80, '-');
         stream.endl ();
