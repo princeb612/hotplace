@@ -10,7 +10,7 @@ cwd=$(pwd)
 valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 
 if [ $# -eq 0 ]; then
-    array=(base encode string bufferio stream datetime thread mlfq crypto jose ipaddr incubator)
+    array=(base unittest encode string bufferio stream datetime thread mlfq crypto jose ipaddr incubator)
     # following test file is user interaction required
     # tcpserver1 tcpserver2 tlsserver httpserver 
 else
@@ -19,17 +19,18 @@ else
     fi
 fi
 
-tool=(memcheck helgrind drd)
+tool=(memcheck helgrind drd cachegrind)
 for item in ${array[@]}; do
     cd $cwd/$item
     binary=./test-$item
     $binary
     if [ -z $test_valgrind ]; then
         for tool in ${tool[@]}; do
-            valgrind --tool=$tool --log-file=report-$tool $binary
+            valgrind -v --tool=$tool --log-file=report-$tool $binary
             cat report-$tool
         done
     fi
 done
 
+echo --------------------------------------------------------------------------------
 grep fail `find . -name report`

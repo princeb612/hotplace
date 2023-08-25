@@ -22,7 +22,7 @@ void test_consolecolor ()
     _test_case.begin ("console_color");
     console_color col;
 
-    _test_case.start ();
+    _test_case.reset_time ();
     console_style_t styles [] = { console_style_t::normal, console_style_t::bold, console_style_t::dim, console_style_t::italic, console_style_t::underline, console_style_t::invert, };
     console_color_t fgcolors [] = { console_color_t::black, console_color_t::red, console_color_t::green, console_color_t::yellow, console_color_t::blue, console_color_t::magenta, console_color_t::cyan, console_color_t::white, };
     console_color_t bgcolors [] = { console_color_t::black, console_color_t::white, };
@@ -127,7 +127,7 @@ void test_sprintf ()
 
     printf ("{1} 3.141592 {2} phi {3} 123\n");
 
-    _test_case.start ();
+    _test_case.reset_time ();
     test_sprintf_routine (va, "value={1} value={2} value={3}", "value=3.141592 value=phi value=123");
     test_sprintf_routine (va, "value={2} value={3} value={1}", "value=phi value=123 value=3.141592");
     test_sprintf_routine (va, "value={3} value={2} value={1}", "value=123 value=phi value=3.141592");
@@ -172,7 +172,7 @@ void test_stream_getline ()
     size_t pos = 0;
     size_t brk = 0;
 
-    _test_case.start ();
+    _test_case.reset_time ();
     while (1) {
         ret = stream.getline (pos, &brk, line);
         if (errorcode_t::success != ret) {

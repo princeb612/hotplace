@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_IO_UNITEST_TESTCASE__
 
 #include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/io/system/thread.hpp>
 #include <list>
 #include <map>
 #include <string>
@@ -21,6 +22,45 @@
 namespace hotplace {
 namespace io {
 
+/**
+ * @brief   unit test
+ * @desc
+ *  report example
+ *    part of pseudo code
+ *      int main (void)
+ *      {
+ *          test_case _test_case;
+ *          _test_case.begin ("test case 1");
+ *          _test_case.test (return_code, __FUNCTION__, "case 1 desc1");
+ *          _test_case.test (return_code, __FUNCTION__, "case 1 desc2");
+ *          _test_case.begin ("test case 2");
+ *          _test_case.test (return_code, __FUNCTION__, "case 2 desc1");
+ *          _test_case.test (return_code, __FUNCTION__, "case 2 desc2");
+ *          _test_case.report ();
+ *          return _test_case.result ();
+ *      }
+ *    part of report
+ *      test case 1 | passfail
+ *      passfail | errorcode | function | time | case 1 desc1
+ *      passfail | errorcode | function | time | case 1 desc2
+ *      test case 2 | passfail
+ *      passfail | errorcode | function | time | case 2 desc1
+ *      passfail | errorcode | function | time | case 2 desc2
+ *      success / fail
+ *
+ *  time check
+ *    case1
+ *      test_case _test_case;   // reset
+ *      _test_case.test (..);   // check time
+ *    case1
+ *      test_case _test_case;   // reset
+ *      _test_case.begin (...); // reset, same in start method
+ *      _test_case.test (..);   // check time, same in assert method
+ *    case2
+ *      test_case _test_case;   // reset
+ *      _test_case.begin (...); // reset, same in start method
+ *      _test_case.assert (..); // check time, same in assert method
+ */
 class test_case
 {
 public:
@@ -32,10 +72,18 @@ public:
      */
     void begin (const char* case_name, ...);
     /**
-     * @brief   start
-     * @desc    reset stopwatch
+     * @brief   reset timer
+     * @desc    to capture first unittest-time in thread, call reset_time at each thread startup code
      */
-    void start ();
+    void reset_time ();
+    /**
+     * @brief   pause timer
+     */
+    void pause_time ();
+    /**
+     * @brief   resume timer
+     */
+    void resume_time ();
     /**
      * @brief   test
      * @param   bool expect [in]
@@ -58,8 +106,14 @@ public:
     void report ();
     /**
      * @brief   result indicator
+     * @return
+     *          errorcode_t::internal_error
+     *          errorcode_t::success
      */
     return_t result ();
+
+protected:
+    void check_time (struct timespec& time);
 
 private:
     typedef struct _unittest_item_t {
@@ -71,22 +125,27 @@ private:
         _unittest_item_t ()
             : _result (0)
         {
+            // do nothing
         }
     } unittest_item_t;
-    typedef std::list<unittest_item_t> unittest_result_t;
-    typedef struct _test_status_t {
+    typedef std::list<unittest_item_t> unittest_list_t;
+    typedef struct _test_stat_t {
         uint32 _count_success;
         uint32 _count_fail;
         uint32 _count_not_supported;
         uint32 _count_low_security;
-        unittest_result_t _test_results;
+        _test_stat_t () : _count_success (0), _count_fail (0), _count_not_supported (0), _count_low_security (0)
+        {
+            // do nothing
+        }
+    } test_stat_t;
+    typedef struct _test_status_t {
+        unittest_list_t _test_list;
+        test_stat_t _test_stat;
 
         _test_status_t ()
-            : _count_success (0),
-            _count_fail (0),
-            _count_not_supported (0),
-            _count_low_security (0)
         {
+            // do nothing
         }
     } test_status_t;
     typedef std::list<std::string> unittest_index_t;                /* ordered test cases */
@@ -96,15 +155,23 @@ private:
     critical_section _lock;
     unittest_index_t _test_list;
     unittest_map_t _test_map;
-
-    uint32 _count_success;
-    uint32 _count_fail;
-    uint32 _count_not_supported;
-    uint32 _count_low_security;
+    test_stat_t _total;
 
     std::string _current_case_name;
 
-    struct timespec _timestamp;
+    typedef std::list <struct timespec> time_slice_t;
+    typedef std::map <arch_t, bool> time_flag_per_thread_t;
+    typedef std::map <arch_t, struct timespec> timestamp_per_thread_t;
+    typedef std::map <arch_t, time_slice_t> time_slice_per_thread_t;
+
+    typedef std::pair <time_slice_t::iterator, bool> time_slice_pib_t;
+    typedef std::pair <time_flag_per_thread_t::iterator, bool> time_flag_per_thread_pib_t;
+    typedef std::pair <timestamp_per_thread_t::iterator, bool> timestamp_per_thread_pib_t;
+    typedef std::pair <time_slice_per_thread_t::iterator, bool> time_slice_per_thread_pib_t;
+
+    time_flag_per_thread_t _time_flag_per_threads;
+    timestamp_per_thread_t _timestamp_per_threads;
+    time_slice_per_thread_t _time_slice_per_threads;
 };
 
 }

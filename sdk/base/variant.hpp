@@ -12,7 +12,6 @@
 #define __HOTPLACE_SDK_BASE_VARIANT__
 
 #include <hotplace/sdk/base/types.hpp>
-//#include <vector>
 
 namespace hotplace {
 

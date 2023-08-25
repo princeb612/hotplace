@@ -114,10 +114,44 @@ void test_time ()
     print_datetime (&dt6);
 }
 
+void test_timespec ()
+{
+    _test_case.begin ("timespec");
+    std::list <struct timespec> slices;
+    struct timespec ts1, ts2, ts3, ts4;
+    struct timespec diff;
+    struct timespec result;
+
+    ts1.tv_sec = 1;
+    ts1.tv_nsec = 999999999;
+
+    ts2.tv_sec = 2;
+    ts2.tv_nsec = 899999999;
+
+    ts3.tv_sec = 0;
+    ts3.tv_nsec = 100000002;
+
+    ts4.tv_sec = 2;
+    ts4.tv_nsec = 777777777;
+
+    slices.push_back (ts1);
+    slices.push_back (ts2);
+    slices.push_back (ts3);
+    slices.push_back (ts4);
+
+    time_diff (diff, ts1, ts2);
+    printf ("diff %zi.%ld\n", diff.tv_sec, diff.tv_nsec);
+    _test_case.assert ((0 == diff.tv_sec) && (900000000 == diff.tv_nsec), __FUNCTION__, "time_diff");
+
+    time_sum (result, slices);
+    printf ("sum  %zi.%ld\n", result.tv_sec, result.tv_nsec);
+    _test_case.assert ((7 == result.tv_sec) && (777777777 == result.tv_nsec), __FUNCTION__, "time_sum");
+}
+
 int main ()
 {
-    _test_case.begin ("time");
     test_time ();
+    test_timespec ();
 
     _test_case.report ();
     return _test_case.result ();

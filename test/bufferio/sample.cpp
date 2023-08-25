@@ -19,6 +19,8 @@ test_case _test_case;
 
 void dump (bufferio_context_t* handle)
 {
+    _test_case.pause_time ();
+
     bufferio bio;
     byte_t* data = nullptr;
     size_t size_data = 0;
@@ -27,6 +29,8 @@ void dump (bufferio_context_t* handle)
     bio.get (handle, &data, &size_data);
     dump_memory (data, size_data, &bs);
     printf ("dump\n%.*s\n", (unsigned) bs.size (), bs.c_str ());
+
+    _test_case.resume_time ();
 }
 
 void test_vprintf (bufferio_context_t* handle, const char* fmt, ...)
@@ -58,43 +62,35 @@ void test_bufferio ()
     _test_case.test (ret, __FUNCTION__, "printf");
     dump (handle);
 
-    _test_case.start ();
     test_vprintf (handle, "%s %f %i", "phi", 3.141592, 123);
     dump (handle);
 
-    _test_case.start ();
     ret = bio.replace (handle, "sample", "example", 0, 0);
     _test_case.test (ret, __FUNCTION__, "replace");
     dump (handle);
 
-    _test_case.start ();
     ret = bio.cut (handle, 0, 8);
     _test_case.test (ret, __FUNCTION__, "cut");
     dump (handle);
 
-    _test_case.start ();
     ret = bio.insert (handle, 0, "sample ", 7);
     _test_case.test (ret, __FUNCTION__, "insert");
     dump (handle);
 
-    _test_case.start ();
     size_t size = 0;
     ret = bio.size (handle, &size);
     _test_case.test (ret, __FUNCTION__, "size %zi", size);
 
-    _test_case.start ();
     uint32 begin = 7;
     uint32 length = size - begin;
     ret = bio.cut (handle, begin, length);
     _test_case.test (ret, __FUNCTION__, "cut from %i len %i", begin, length);
     dump (handle);
 
-    _test_case.start ();
     ret = bio.write (handle, "test", 4);
     _test_case.test (ret, __FUNCTION__, "write");
     dump (handle);
 
-    _test_case.start ();
     ret = bio.flush (handle);
     _test_case.test (ret, __FUNCTION__, "flush");
     dump (handle);
@@ -102,83 +98,66 @@ void test_bufferio ()
     // 0123456789a
     // hello world
 
-    _test_case.start ();
     ret = bio.printf (handle, "hello world");
     _test_case.test (ret, __FUNCTION__, "printf");
     dump (handle);
 
-    _test_case.start ();
     bio.size (handle, &len);
     _test_case.assert ((11 == len), __FUNCTION__, "size");
     dump (handle);
 
-    _test_case.start ();
     pos = bio.find_first_of (handle, "world");
     _test_case.assert ((6 == pos), __FUNCTION__, "find_first_of -> %i", pos);
 
-    _test_case.start ();
     pos = bio.find_not_first_of (handle, "hello");
     _test_case.assert ((5 == pos), __FUNCTION__, "find_not_first_of -> %i", pos);
 
-    _test_case.start ();
     pos = bio.find_last_of (handle, "world");
     _test_case.assert ((6 == pos), __FUNCTION__, "find_last_of -> %i", pos);
 
-    _test_case.start ();
     pos = bio.find_not_last_of (handle, "world");
     _test_case.assert ((5 == pos), __FUNCTION__, "find_not_last_of -> %i", pos);
 
-    _test_case.start ();
     pos = bio.find_first_of (handle, isspace);
     _test_case.assert ((5 == pos), __FUNCTION__, "find_first_of -> %i", pos);
 
-    _test_case.start ();
     ret = bio.cut (handle, bio.find_first_of (handle, isspace), 1);
     _test_case.test (ret, __FUNCTION__, "cut");
 
-    _test_case.start ();
     bio.size (handle, &len);
     _test_case.assert ((10 == len), __FUNCTION__, "size");
     dump (handle);
 
     std::string sample ("helloworld");
 
-    _test_case.start ();
     test = bio.compare (handle, sample.c_str (), sample.size ());
     _test_case.assert ((true == test), __FUNCTION__, "compare");
 
-    _test_case.start ();
     ret = bio.flush (handle);
     _test_case.test (ret, __FUNCTION__, "flush");
 
-    _test_case.start ();
     ret = bio.printf (handle, "sample sample sample");
     _test_case.test (ret, __FUNCTION__, "printf");
     dump (handle);
 
-    _test_case.start ();
     ret = bio.replace (handle, "sample", "example");
     _test_case.test (ret, __FUNCTION__, "replace");
     dump (handle);
 
     std::string sample2 ("example example example");
 
-    _test_case.start ();
     test = bio.compare (handle, sample2.c_str (), sample2.size ());
     _test_case.assert ((true == test), __FUNCTION__, "compare");
 
-    _test_case.start ();
     ret = bio.replace (handle, "example", "sample", 1, bufferio_flag_t::run_once);
     _test_case.test (ret, __FUNCTION__, "replace");
     dump (handle);
 
     std::string sample3 ("example sample example");
 
-    _test_case.start ();
     test = bio.compare (handle, sample3.c_str (), sample3.size ());
     _test_case.assert ((true == test), __FUNCTION__, "compare");
 
-    _test_case.start ();
     ret = bio.close (handle);
     _test_case.test (ret, __FUNCTION__, "close");
 }

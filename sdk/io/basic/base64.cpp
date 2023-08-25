@@ -11,7 +11,6 @@
  */
 
 #include <hotplace/sdk/io/basic/base64.hpp>
-//#include <stdio.h>
 
 namespace hotplace {
 namespace io {

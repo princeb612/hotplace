@@ -9,10 +9,7 @@
  * 2023.08.15   Soo Han, Kin        added : stopwatch
  */
 
-//#include <hotplace/sdk/io/string/string.hpp>
 #include <hotplace/sdk/io/system/datetime.hpp>
-//#include <string.h>
-//#include <stdio.h>
 
 namespace hotplace {
 namespace io {
@@ -825,18 +822,18 @@ return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
     return ret;
 }
 
-void stopwatch_read (struct timespec& timespec)
+void time_monotonic (struct timespec& ts)
 {
-    clock_gettime (CLOCK_MONOTONIC, &timespec);
+    clock_gettime (CLOCK_MONOTONIC, &ts);
 }
 
-return_t stopwatch_diff (struct timespec& timespec, struct timespec begin, struct timespec end)
+return_t time_diff (struct timespec& ts, struct timespec begin, struct timespec end)
 {
     return_t ret = errorcode_t::success;
 
     __try2
     {
-        memset (&timespec, 0, sizeof (timespec));
+        memset (&ts, 0, sizeof (ts));
 
         if (begin.tv_sec > end.tv_sec) {
             ret = errorcode_t::request;
@@ -844,22 +841,57 @@ return_t stopwatch_diff (struct timespec& timespec, struct timespec begin, struc
         }
 
         if (end.tv_nsec > begin.tv_nsec) {
-            timespec.tv_sec = end.tv_sec - begin.tv_sec;
-            timespec.tv_nsec = end.tv_nsec - begin.tv_nsec;
+            ts.tv_sec = end.tv_sec - begin.tv_sec;
+            ts.tv_nsec = end.tv_nsec - begin.tv_nsec;
         } else {
             if (begin.tv_sec == end.tv_sec) {
                 ret = errorcode_t::request;
                 __leave2;
             }
 
-            timespec.tv_nsec = 1 - end.tv_nsec + begin.tv_nsec;
-            timespec.tv_sec = end.tv_sec - begin.tv_sec - 1;
+            // struct timespec
+            //  time_t tv_sec       valid values are >= 0
+            //  tv_nsec	nanoseconds [0, 999999999]
+
+            // Int8 — [-128 : 127]
+            // Int16 — [-32768 : 32767]
+            // Int32 — [-2147483648 : 2147483647]
+            // Int64 — [-9223372036854775808 : 9223372036854775807]
+            // Int128 — [-170141183460469231731687303715884105728 : 170141183460469231731687303715884105727]
+            // Int256 — [-57896044618658097711785492504343953926634992332820282019728792003956564819968 : 57896044618658097711785492504343953926634992332820282019728792003956564819967]
+
+            int64 tv_nsec = (int64) EXP9;
+            tv_nsec += end.tv_nsec;
+            tv_nsec -= begin.tv_nsec;
+            ts.tv_nsec = tv_nsec;
+            ts.tv_sec = end.tv_sec - begin.tv_sec - 1;
         }
     }
     __finally2
     {
         // do nothing
     }
+
+    return ret;
+}
+
+return_t time_sum (struct timespec& ts, std::list <struct timespec>& slices)
+{
+    return_t ret = errorcode_t::success;
+    std::list <struct timespec>::iterator it;
+    size_t sec = 0;
+    uint64 nsec = 0;
+
+    memset (&ts, 0, sizeof (ts));
+
+    for (it = slices.begin (); it != slices.end (); it++) {
+        struct timespec& item = *it;
+        sec += item.tv_sec;
+        nsec += item.tv_nsec;
+    }
+
+    ts.tv_sec = sec + (nsec / EXP9);
+    ts.tv_nsec = nsec % EXP9;
 
     return ret;
 }

@@ -242,15 +242,26 @@ public:
      */
     static return_t asn1time_to_timespec (asn1time_t at, struct timespec& ts);
 
-
 protected:
 
 private:
     struct timespec _timespec; /* time_t tv_sec(UTC seconds) + long tv_nsec(nanoseconds) */
 };
 
-void stopwatch_read (struct timespec& timespec);
-return_t stopwatch_diff (struct timespec& timespec, struct timespec begin, struct timespec end);
+void time_monotonic (struct timespec& timespec);
+/**
+ * @brief   calculate difference
+ * @param   struct timespec& timespec [out]
+ * @param   struct timespec begin [in]
+ * @param   struct timespec end [in]
+ */
+return_t time_diff (struct timespec& timespec, struct timespec begin, struct timespec end);
+/**
+ * @brief   sum
+ * @param   struct timespec& timespec [out]
+ * @param   std::list <struct timespec>& slices [in]
+ */
+return_t time_sum (struct timespec& timespec, std::list <struct timespec>& slices);
 
 static inline void msleep (uint32 msecs)
 {

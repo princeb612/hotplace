@@ -11,7 +11,6 @@
 #ifndef __HOTPLACE_SDK_IO_STREAM_STRING__
 #define __HOTPLACE_SDK_IO_STREAM_STRING__
 
-//#include <hotplace/sdk/io/string/string.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
 #include <hotplace/sdk/io/stream/bufferio.hpp>
 

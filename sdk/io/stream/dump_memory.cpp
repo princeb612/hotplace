@@ -9,7 +9,6 @@
  */
 
 #include <hotplace/sdk/io/stream/stream.hpp>
-//#include <hotplace/sdk/io/string/string.hpp>
 
 namespace hotplace {
 namespace io {

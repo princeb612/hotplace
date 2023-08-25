@@ -11,7 +11,6 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_SIGNALWAITTHREADS__
 #define __HOTPLACE_SDK_IO_SYSTEM_SIGNALWAITTHREADS__
 
-//#include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/io/system/thread.hpp>
 #include <map>
 

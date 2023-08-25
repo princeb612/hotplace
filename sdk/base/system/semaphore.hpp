@@ -12,10 +12,6 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_SEMAPHORE__
 
 #include <hotplace/sdk/base/types.hpp>
-//#include <hotplace/sdk/base/error.hpp>
-//#include <limits.h>
-//#include <stdint.h> // int64_t
-//#include <pthread.h>
 
 namespace hotplace {
 

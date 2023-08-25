@@ -20,7 +20,7 @@ test_case _test_case;
 void test_format ()
 {
     _test_case.begin ("format");
-    _test_case.start ();
+    _test_case.reset_time ();
     std::string text = format ("%s %d %1.1f\n", "sample", 1, 1.1f);
     std::cout << text.c_str () << std::endl;
     _test_case.assert (true, __FUNCTION__, "format");
@@ -36,7 +36,7 @@ void test_getline ()
     size_t pos = 0;
     size_t brk = 0;
 
-    _test_case.start ();
+    _test_case.reset_time ();
 
     for (;;) {
         ret = getline (stream_data, stream_size, pos, &brk);
@@ -63,7 +63,7 @@ void test_gettoken ()
     std::string token = "=|", value;
     std::string data = "key=item1|value1|link1";
 
-    _test_case.start ();
+    _test_case.reset_time ();
 
     gettoken (data, token, 0, value);  // "key"
     _test_case.assert (value == "key", __FUNCTION__, "gettoken");
@@ -81,7 +81,7 @@ void test_gettoken ()
 void test_hexbin ()
 {
     _test_case.begin ("base16");
-    _test_case.start ();
+    _test_case.reset_time ();
 
     const char* message = "sample";
     const byte_t* inpart = (const byte_t*) message;
@@ -114,7 +114,7 @@ int callback_printf (void* context, const char* buf, int len)
 void test_printf ()
 {
     _test_case.begin ("printf");
-    _test_case.start ();
+    _test_case.reset_time ();
 
     myprintf_context_t context;
     printf_runtime (&context, &callback_printf, "%s %i %1.1f", "sample", 1, 1.1);
@@ -126,7 +126,7 @@ void test_printf ()
 void test_replace ()
 {
     _test_case.begin ("replace");
-    _test_case.start ();
+    _test_case.reset_time ();
 
     std::string data ("hello world");
     replace (data, "world", "neighbor");
@@ -138,7 +138,7 @@ void test_replace ()
 void test_scan ()
 {
     _test_case.begin ("scan");
-    _test_case.start ();
+    _test_case.reset_time ();
 
     return_t ret = errorcode_t::success;
     const char* data = "hello world\n ";
@@ -162,7 +162,7 @@ void test_scan ()
 void test_scan2 ()
 {
     _test_case.begin ("scan");
-    _test_case.start ();
+    _test_case.reset_time ();
 
     return_t ret = errorcode_t::success;
     const char* data = "hello world\n wide world\n";
@@ -187,7 +187,7 @@ void test_scan2 ()
 void test_split ()
 {
     _test_case.begin ("split");
-    _test_case.start ();
+    _test_case.reset_time ();
 
     split_context_t* handle = nullptr;
     size_t count = 0;
@@ -206,7 +206,7 @@ void test_split ()
 void test_string ()
 {
     _test_case.begin ("ansi_string");
-    _test_case.start ();
+    _test_case.reset_time ();
 
     ansi_string astr;
     astr << "sample "
@@ -222,7 +222,7 @@ void test_string ()
 void test_tokenize ()
 {
     _test_case.begin ("tokenize");
-    _test_case.start ();
+    _test_case.reset_time ();
 
     std::string data = "key=item1|value1|link1";
     size_t pos = 0;

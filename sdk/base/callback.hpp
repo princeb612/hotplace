@@ -12,7 +12,6 @@
 #ifndef __HOTPLACE_SDK_BASE_CALLBACK__
 #define __HOTPLACE_SDK_BASE_CALLBACK__
 
-//#include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/error.hpp>
 

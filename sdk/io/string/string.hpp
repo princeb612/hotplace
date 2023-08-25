@@ -36,8 +36,6 @@
 #define __HOTPLACE_SDK_IO_STRING_STRING__
 
 #include <hotplace/sdk/base.hpp>
-//#include <hotplace/sdk/io/stream/stream.hpp>
-//#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <string>
 
 namespace hotplace {
@@ -131,7 +129,7 @@ return_t W2A (std::string& target, const wchar_t* source, uint32 codepage = 0);
  *  std::string token = "=|", value;
  *  std::string data = "key=item1|value1|link1";
  *
- *  _test_case.start ();
+ *  _test_case.reset_time ();
  *
  *  gettoken (data, token, 0, value);  // "key"
  *  _test_case.assert (value == "key", __FUNCTION__, "gettoken");

@@ -9,8 +9,6 @@
  */
 
 #include <hotplace/sdk/io/string/string.hpp>
-//#include <string.h>
-//#include <string>
 
 namespace hotplace {
 namespace io {

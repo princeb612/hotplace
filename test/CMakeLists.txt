@@ -8,6 +8,7 @@
 add_subdirectory (base)
 
 # io
+add_subdirectory (unittest)
 add_subdirectory (encode)
 add_subdirectory (string)
 add_subdirectory (stream)

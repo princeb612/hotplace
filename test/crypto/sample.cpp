@@ -21,6 +21,8 @@ test_case _test_case;
 void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, crypt_mode_t mode, unsigned key_size,
                          const byte_t* key_data, unsigned iv_size, const byte_t* iv_data, byte_t* data, size_t size)
 {
+    _test_case.reset_time ();
+
     return_t ret = errorcode_t::success;
 
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -36,7 +38,7 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
 
     __try2
     {
-        _test_case.start ();
+        _test_case.reset_time ();
 
         if (nullptr == crypt_object || nullptr == data) {
             ret = errorcode_t::invalid_parameter;
@@ -61,6 +63,8 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
                 if (errorcode_t::success == ret) {
                     ret = crypt_object->decrypt2 (crypt_handle, &encrypted[0], encrypted.size (), decrypted, &aad, &tag);
                     if (errorcode_t::success == ret) {
+                        _test_case.pause_time ();
+
                         std::cout << "encrypted" << std::endl;
                         dump_memory (&encrypted[0], encrypted.size (), &bs);
                         std::cout << bs.c_str () << std::endl;
@@ -74,6 +78,8 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
                         } else if (memcmp (data, &decrypted[0], size)) {
                             ret = errorcode_t::internal_error;
                         }
+
+                        _test_case.resume_time ();
                     }
                 }
             }
@@ -213,6 +219,8 @@ void test_crypt ()
 void test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm,
                         const byte_t* key_data, unsigned key_size, byte_t* data, size_t size)
 {
+    _test_case.reset_time ();
+
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -239,14 +247,21 @@ void test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm,
                 if (errorcode_t::success == ret) {
                     ret = hash_object->finalize (hash_handle, hashed);
                     if (errorcode_t::success == ret) {
+                        _test_case.pause_time ();
+
                         buffer_stream dump;
                         dump_memory (&hashed[0], hashed.size (), &dump, 16, 0);
                         bs.printf ("%s\n",  dump.c_str ());
+
+                        _test_case.resume_time ();
                     }
                 }
                 hash_object->close (hash_handle);
             }
+
+            _test_case.pause_time ();
             printf ("%s", bs.c_str ());
+            _test_case.resume_time ();
         }
         __finally2
         {
@@ -262,6 +277,8 @@ void test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm,
 
 return_t test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm, binary_t key, binary_t data, binary_t expect, const char* text)
 {
+    _test_case.reset_time ();
+
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -288,6 +305,8 @@ return_t test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm, bin
                 if (errorcode_t::success == ret) {
                     ret = hash_object->finalize (hash_handle, hashed);
                     if (errorcode_t::success == ret) {
+                        _test_case.pause_time ();
+
                         buffer_stream dump;
                         dump_memory (&hashed[0], hashed.size (), &dump, 16, 0);
                         bs.printf ("%s\n",  dump.c_str ());
@@ -297,6 +316,8 @@ return_t test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm, bin
                         } else {
                             ret = errorcode_t::mismatch;
                         }
+
+                        _test_case.resume_time ();
                     }
                 }
                 hash_object->close (hash_handle);
@@ -414,7 +435,6 @@ void test_rfc4231_testcase ()
         base16_decode (item.expect_sha384, strlen (item.expect_sha384), bin_expect_sha384);
         base16_decode (item.expect_sha512, strlen (item.expect_sha512), bin_expect_sha512);
 
-        _test_case.start ();
         test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_224, bin_key, bin_data, bin_expect_sha224, item.text);
         test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_256, bin_key, bin_data, bin_expect_sha256, item.text);
         test_hash_routine (&openssl_hash, hash_algorithm_t::sha2_384, bin_key, bin_data, bin_expect_sha384, item.text);
@@ -503,6 +523,8 @@ void test_keywrap_routine (crypt_algorithm_t alg, byte_t* key, size_t key_size, 
                            byte_t* expect, size_t expect_size,
                            const char* msg)
 {
+
+    _test_case.reset_time ();
     openssl_crypt crypt;
     crypt_context_t* handle = nullptr;
     byte_t iv [8];
@@ -517,14 +539,26 @@ void test_keywrap_routine (crypt_algorithm_t alg, byte_t* key, size_t key_size, 
 
     crypt.open (&handle, alg, crypt_mode_t::wrap, key, key_size, iv, RTL_NUMBER_OF (iv));
     crypt.encrypt (handle, kek, kek_size, out_kw);
+
+    _test_case.pause_time ();
+
     dump_memory (&out_kw[0], out_kw.size (), &bs);
     printf ("%.*s\n", (int) bs.size (), bs.c_str ());
     if ((out_kw.size () == expect_size) && (0 == memcmp (&out_kw[0], expect, out_kw.size ()))) {
         compare = true;
     }
+
+    _test_case.resume_time ();
+
     crypt.decrypt (handle, &out_kw[0], out_kw.size (), out_kuw);
+
+    _test_case.pause_time ();
+
     dump_memory (&out_kuw[0], out_kuw.size (), &bs);
     printf ("%.*s\n", (int) bs.size (), bs.c_str ());
+
+    _test_case.resume_time ();
+
     crypt.close (handle);
     _test_case.test (compare ? errorcode_t::success : errorcode_t::mismatch, __FUNCTION__, msg ? msg : "");
 }
@@ -641,7 +675,12 @@ uint32 test_hotp ()
         for (int i = 0; i < 10; i++) {
             hotp.get (handle, code);
             output.push_back (code);
+
+            _test_case.pause_time ();
+
             std::cout << "counter " << i << " code " << code << std::endl;
+
+            _test_case.resume_time ();
         }
 
         hotp.close (handle);
@@ -678,6 +717,8 @@ uint32 test_totp (hash_algorithm_t algorithm)
     otp_context_t* handle = nullptr;
     TOTP_TEST_DATA* test_data = nullptr;
 
+    _test_case.begin ("time_otp (RFC6238)");
+
     __try2
     {
         for (size_t index = 0; index < RTL_NUMBER_OF (_totp_test_data); index++) {
@@ -700,7 +741,12 @@ uint32 test_totp (hash_algorithm_t algorithm)
             for (int i = 0; i < (int) RTL_NUMBER_OF (counter); i++) {
                 totp.get (handle, counter[i], code);
                 output.push_back (code);
+
+                _test_case.pause_time ();
+
                 std::cout << "counter " << counter[i] << " code " << code << std::endl;
+
+                _test_case.resume_time ();
             }
             totp.close (handle);
         }

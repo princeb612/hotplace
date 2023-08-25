@@ -39,14 +39,12 @@ typedef __int128 sint128;
 typedef unsigned __int128 uint128;
 #endif
 
-#ifdef _WIN64
+#ifdef __x86_64__
 typedef uint64 arch_t;
-#elif defined _WIN32
-typedef uint32 arch_t;
 #else
-#error _WIN32 or _WIN64 not defined
+typedef uint32 arch_t;
 #endif
-typedef __int128_t time64_t;
+typedef uint64 time64_t;
 
 //typedef __int16 wchar;
 
