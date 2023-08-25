@@ -17,5 +17,8 @@ COMMENTS
 
 mkdir -p build
 cd build
+if [ $OSTYPE = "msys" ]; then
+    set SUPPORT_SHARED=1
+fi
 cmake -G 'Unix Makefiles' ..
 time make

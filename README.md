@@ -49,7 +49,8 @@
      * $ install_dir=somewhere/thirdparty
      * ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
      * make
- * make sure root directory hotplace (not hotplace-master and so on ...)
+     * make install
+ * make sure root directory hotplace (not hotplace-master nor so on ...)
    * $ hotplace ./make.sh
  * os support
    * linux x86-64 minimum version FC4 (libc 2.3.5, ft. gcc 4.8 toolchain, since unicorn project)
