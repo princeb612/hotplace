@@ -3,18 +3,22 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 4648 The Base16, Base32, and Base64 Data Encodings
  *
  * Revision History
  * Date         Name                Description
+ *
  */
 
-#ifndef __HOTPLACE_SDK__
-#define __HOTPLACE_SDK__
+#ifndef __HOTPLACE_SDK_IO_CBOR__
+#define __HOTPLACE_SDK_IO_CBOR__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/crypto.hpp>
-#include <hotplace/sdk/io.hpp>
-#include <hotplace/sdk/net.hpp>
-#include <hotplace/sdk/odbc.hpp>
+
+namespace hotplace {
+namespace io {
+
+}
+}  // namespace
 
 #endif

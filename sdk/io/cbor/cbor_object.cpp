@@ -6,15 +6,13 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2023.08.13   Soo Han, Kim        reboot : bin2hex, hex2bin
  */
 
-#ifndef __HOTPLACE_SDK__
-#define __HOTPLACE_SDK__
+#include <hotplace/sdk/io/cbor/cbor.hpp>
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/crypto.hpp>
-#include <hotplace/sdk/io.hpp>
-#include <hotplace/sdk/net.hpp>
-#include <hotplace/sdk/odbc.hpp>
+namespace hotplace {
+namespace io {
 
-#endif
+}
+}

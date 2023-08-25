@@ -19,6 +19,7 @@
 #include <hotplace/sdk/io/basic/keyvalue.hpp>
 #include <hotplace/sdk/io/basic/mlfq.hpp>
 #include <hotplace/sdk/io/basic/zlib.hpp>
+#include <hotplace/sdk/io/cbor/cbor.hpp>
 #include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <hotplace/sdk/io/stream/bufferio.hpp>
 #include <hotplace/sdk/io/stream/console_color.hpp>
