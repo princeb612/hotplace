@@ -459,7 +459,7 @@ void test_case::report ()
 bool test_case::compare_timespec (const unittest_item_t& lhs, const unittest_item_t& rhs)
 {
     bool ret = false;
-    if ((lhs._time.tv_sec > rhs._time.tv_sec) && (lhs._time.tv_nsec > rhs._time.tv_nsec)) { // > older one first, >= later one first
+    if ((lhs._time.tv_sec >= rhs._time.tv_sec) && (lhs._time.tv_nsec >= rhs._time.tv_nsec)) {
         ret = true;
     }
     return ret;
