@@ -54,11 +54,10 @@ void test_consolecolor ()
     std::cout << col.turnon () << "color" << col.turnoff () << "default" << std::endl;
     _test_case.assert (true, __FUNCTION__, "console color.2");
 
-    std::cout   << col.set_style (console_style_t::bold)
-        .set_fgcolor (console_color_t::yellow)
-        .set_bgcolor (console_color_t::black)
-        .turnon ()
-                << "color" << col.turnoff () << "default" << std::endl;
+    std::cout   << col.turnon ()
+                << col.set_style (console_style_t::bold).set_fgcolor (console_color_t::yellow).set_bgcolor (console_color_t::black)
+                << "color"
+                << col.turnoff () << "default" << std::endl;
 
     _test_case.assert (true, __FUNCTION__, "console color.3");
 }

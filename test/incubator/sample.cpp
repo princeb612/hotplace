@@ -22,9 +22,18 @@ test_case _test_case;
 class simple_instance
 {
 public:
-    simple_instance () { std::cout << "constructor" << std::endl; }
-    ~simple_instance () { std::cout << "destructor" << std::endl; }
-    void dosomething () { std::cout << "hello world" << std::endl; }
+    simple_instance ()
+    {
+        std::cout << "constructor" << std::endl;
+    }
+    ~simple_instance ()
+    {
+        std::cout << "destructor" << std::endl;
+    }
+    void dosomething ()
+    {
+        std::cout << "hello world" << std::endl;
+    }
 };
 
 void code_careful_shared_instance ()

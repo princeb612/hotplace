@@ -208,7 +208,7 @@ void test_crypt ()
         ossl_set_cooltime (_test_condition[i].cooltime);
         ossl_set_unitsize (_test_condition[i].unitsize);
 
-        std::cout   << col.set_style (console_style_t::bold).set_fgcolor (console_color_t::white).turnon ()
+        std::cout   << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::white)
                     << "cooltime " << ossl_get_cooltime () << " unitsize " << ossl_get_unitsize ()
                     << col.turnoff ()
                     << std::endl;

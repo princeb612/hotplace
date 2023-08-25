@@ -56,10 +56,10 @@ enum console_color_t {
  *      col.set_fgcolor (console_color_t::yellow);
  *      col.set_bgcolor (console_color_t::black);
  *      std::cout << col.turnon () << "color" << col.turnoff () << "default" << std::endl;
- *      std::cout << col.set_style (console_style_t::bold)
+ *      std::cout << col.turnon ()
+ *                      .set_style (console_style_t::bold)
  *                      .set_fgcolor (console_color_t::yellow)
  *                      .set_bgcolor (console_color_t::black)
- *                      .turnon ()
  *                << "color" << col.turnoff () << "default" << std::endl;
  */
 

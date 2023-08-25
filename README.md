@@ -29,6 +29,8 @@
      * cd
        * $ cd openssl-1.1.1v
      * prefix variable
+       * # never overwrite system libraries (must not set install_dir=/usr)
+       * # RHEL openssl package customized (krb, kdf ??)
        * $ install_dir=somewhere/thirdparty
      * configure linux ex.
        * $ ./Configure linux-x86_64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=devrandom -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared

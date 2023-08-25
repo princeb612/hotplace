@@ -41,7 +41,7 @@ void test_case::begin (const char* case_name, ...)
         /* "test case" */
         stream.flush ();
         char STRING_TEST_CASE[] = { '[', '*', ' ', 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', ' ', '-', ' ', 0, };
-        stream  << col.set_fgcolor (console_color_t::magenta).turnon ()
+        stream  << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::magenta)
                 << STRING_TEST_CASE
                 << _current_case_name.c_str ()
                 << " ]" << col.turnoff ();
@@ -285,6 +285,7 @@ void test_case::test (return_t result, const char* test_function, const char* me
         ansi_string stream;
 
         stream  << col.turnon ()
+                << set_style (console_style_t::bold)
                 << col.set_fgcolor (color)
                 << format ("[%08x]", result).c_str ()
                 << col.set_fgcolor (console_color_t::yellow)
@@ -395,7 +396,7 @@ void test_case::report ()
 
     stream.fill (80, '=');
     stream.endl ();
-    stream << col.set_style (console_style_t::bold).set_fgcolor (fgcolor).turnon () << STRING_REPORT << "\n";
+    stream << col.turnon ().set_style (console_style_t::bold).set_fgcolor (fgcolor) << STRING_REPORT << stream.endl ();
 
     for (unittest_index_t::iterator iter = _test_list.begin (); iter != _test_list.end (); iter++) {
         std::string testcase = *iter;
@@ -440,7 +441,7 @@ void test_case::report ()
     stream.fill (80, '=');
     stream.endl ();
     if (_total._count_fail) {
-        stream << col.set_fgcolor (console_color_t::red).turnon () << STRING_UPPERCASE_TEST_FAILED << col.turnoff () << "\n";
+        stream << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::red) << STRING_UPPERCASE_TEST_FAILED << col.turnoff () << "\n";
     }
 
     _lock.leave ();
@@ -459,6 +460,7 @@ void test_case::report ()
 bool test_case::compare_timespec (const unittest_item_t& lhs, const unittest_item_t& rhs)
 {
     bool ret = false;
+
     if ((lhs._time.tv_sec >= rhs._time.tv_sec) && (lhs._time.tv_nsec >= rhs._time.tv_nsec)) {
         ret = true;
     }
@@ -472,6 +474,7 @@ void test_case::time_report (uint32 top_count)
 
     // copy from unittest
     unittest_map_t::iterator it;
+
     for (it = _test_map.begin (); it != _test_map.end (); it++) {
         test_status_t& status = it->second;
         array.insert (array.end (), status._test_list.begin (), status._test_list.end ());
