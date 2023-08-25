@@ -148,7 +148,7 @@ void test3 ()
     }
     printf ("%s", stream.c_str ());
 
-    _test_case.assert (true, __FUNCTION__, "IPv6");
+    _test_case.assert (true, __FUNCTION__, "IPv6 supported");
 #else
     _test_case.test (errorcode_t::not_supported, __FUNCTION__, "IPv6 not supported");
 #endif

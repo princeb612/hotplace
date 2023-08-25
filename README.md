@@ -3,30 +3,39 @@
 
 ## build
 
-* platform support - mingw, linux
-* packages to install
- * gcc, g++, binutils, cmake, gdb
- * openssl-devel, jansson-devel zlib-devel (MINGW, RHEL)
- * openssl libssl-dev libjansson-dev zlib1g-dev (ubuntu)
- * valgrind (linux)
-* important
-  openssl 1.1.1 or newer
-* build custom openssl (example)
-  $ sudo yum install perl
-  $ wget https://www.openssl.org/source/openssl-1.1.1v.tar.gz
-  $ tar xvfz openssl-1.1.1v.tar.gz
-  $ cd openssl-1.1.1v
-  $ install_dir=...
-  linux
-  $ ./Configure linux-x86_64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=devrandom shared
-  mingw
-  $ ./Configure mingw64 --prefix=${install_dir} --with-rand-seed=os shared
-  $ make
-  $ touch crypto/rand/drbg_ctr.c
-  $ make
-  $ make install_sw install_ssldirs
-* make sure root directory hotplace (not hotplace-master and so on ...)
- $ hotplace ./make.sh
+ * platform support - mingw, linux
+ * packages to install
+   * gcc, g++, binutils, cmake, gdb
+   * openssl-devel jansson-devel zlib-devel (MINGW)
+   * openssl-devel jansson zlib-devel (RHEL)
+   * openssl libssl-dev libjansson-dev zlib1g-dev (ubuntu)
+   * valgrind (linux)
+ * important
+   * openssl 1.1.1 or newer
+ * build custom openssl (example)
+   * install perl
+     * $ sudo yum install perl
+   * download openssl
+     * $ wget https://www.openssl.org/source/openssl-1.1.1v.tar.gz
+   * extract and unzip
+     * $ tar xvfz openssl-1.1.1v.tar.gz
+   * cd
+     * $ cd openssl-1.1.1v
+   * prefix variable
+     * $ install_dir=...
+   * configure linux ex.
+     * $ ./Configure linux-x86_64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=devrandom -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
+   * configure mingw ex.
+     * $ ./Configure mingw64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=os -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
+   * make
+     * $ make
+   * openssl SEGV ctr_update - FC4, centos5
+     * $ touch crypto/rand/drbg_ctr.c
+     * $ make
+   * no thanks man pages
+     * $ make install_sw install_ssldirs
+ * make sure root directory hotplace (not hotplace-master and so on ...)
+   * $ hotplace ./make.sh
 
 ## implemented
 
