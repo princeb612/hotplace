@@ -12,41 +12,47 @@
    * valgrind (linux)
  * important
    * openssl 1.1.1 or newer
-   * custom build required in RHEL (RHEL, centos, rocky)
+     * RSA-OAEP-256
+     * Ed25519 Ed448 X25519 X448
+     * sha3
+   * custom build required in RHEL (RHEL, centos, rocky) and older version
      * -fPIC required
-     * algoritm
- * build custom openssl (example)
-   * install perl
-     * $ sudo yum install perl
-   * download openssl
-     * $ wget https://www.openssl.org/source/openssl-1.1.1v.tar.gz
-   * extract and unzip
-     * $ tar xvfz openssl-1.1.1v.tar.gz
-   * cd
-     * $ cd openssl-1.1.1v
-   * prefix variable
+     * algoritm test, random SEGV, ...
+ * how to custom build
+   * build custom openssl (example)
+     * install perl
+       * $ sudo yum install perl
+     * download openssl
+       * $ wget https://www.openssl.org/source/openssl-1.1.1v.tar.gz
+     * extract and unzip
+       * $ tar xvfz openssl-1.1.1v.tar.gz
+     * cd
+       * $ cd openssl-1.1.1v
+     * prefix variable
+       * $ install_dir=somewhere/thirdparty
+     * configure linux ex.
+       * $ ./Configure linux-x86_64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=devrandom -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
+     * configure mingw ex.
+       * $ ./Configure mingw64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=os -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
+     * make
+       * $ make
+     * openssl SEGV ctr_update - FC4, centos5
+       * $ touch crypto/rand/drbg_ctr.c
+       * $ make
+     * no thanks man pages
+       * $ make install_sw install_ssldirs
+   * build custom jansson (example)
+     * see https://github.com/akheron/jansson
+     * aclocal; autoheader; autoconf;
+     * libtoolize --automake --copy --force
+     * automake --foreign --copy --add-missing
      * $ install_dir=somewhere/thirdparty
-   * configure linux ex.
-     * $ ./Configure linux-x86_64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=devrandom -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
-   * configure mingw ex.
-     * $ ./Configure mingw64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=os -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
-   * make
-     * $ make
-   * openssl SEGV ctr_update - FC4, centos5
-     * $ touch crypto/rand/drbg_ctr.c
-     * $ make
-   * no thanks man pages
-     * $ make install_sw install_ssldirs
- * build custom jansson (example)
-   * see https://github.com/akheron/jansson
-   * aclocal; autoheader; autoconf;
-   * libtoolize --automake --copy --force
-   * automake --foreign --copy --add-missing
-   * $ install_dir=somewhere/thirdparty
-   * ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
-   * make
+     * ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
+     * make
  * make sure root directory hotplace (not hotplace-master and so on ...)
    * $ hotplace ./make.sh
+ * os support
+   * linux x86-64 minimum version FC4 (libc 2.3.5, ft. gcc 4.8 toolchain, since unicorn project)
 
 ## implemented
 
