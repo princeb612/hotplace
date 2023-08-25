@@ -14,6 +14,10 @@
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/io.hpp>
 
+#include <hotplace/sdk/crypto/authenticode/authenticode.hpp>
+#include <hotplace/sdk/crypto/authenticode/authenticode_plugin.hpp>
+#include <hotplace/sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
+#include <hotplace/sdk/crypto/authenticode/authenticode_verifier.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>

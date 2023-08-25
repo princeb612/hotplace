@@ -14,10 +14,10 @@
 #include <hotplace/sdk/base.hpp>
 
 #include <hotplace/sdk/odbc/types.hpp>
-#include <hotplace/sdk/odbc/odbc_connector.hpp>
-#include <hotplace/sdk/odbc/odbc_diagnose.hpp>
-#include <hotplace/sdk/odbc/odbc_field.hpp>
-#include <hotplace/sdk/odbc/odbc_record.hpp>
-#include <hotplace/sdk/odbc/odbc_recordset.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_connector.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_field.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_record.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_recordset.hpp>
 
 #endif

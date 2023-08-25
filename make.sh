@@ -19,6 +19,7 @@ mkdir -p build
 cd build
 if [ $OSTYPE = "msys" ]; then
     set SUPPORT_SHARED=1
+    set SUPPORT_ODBC=1
 fi
 cmake -G 'Unix Makefiles' ..
 time make
