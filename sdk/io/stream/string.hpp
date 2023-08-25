@@ -126,6 +126,8 @@ public:
     ansi_string& operator << (uint128 buf);
 #endif
 
+    ansi_string& endl ();
+
     int compare (ansi_string& buf);
     static int compare (ansi_string& lhs, ansi_string& rhs);
 
@@ -247,6 +249,8 @@ public:
     wide_string& operator += (uint128 buf);
     wide_string& operator << (uint128 buf);
 #endif
+
+    wide_string& endl ();
 
     int compare (wide_string& buf);
     static int compare (wide_string& lhs, wide_string& rhs);

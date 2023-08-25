@@ -15,7 +15,7 @@ set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}") #  -Wl,--rpath,${CMAKE_INSTALL_RPATH}
 
 if (UNIX)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,noexecstack")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,-z,noexecstack")
 endif ()
 
 set (SUPPORT_STATIC 1)
@@ -55,7 +55,9 @@ function (makelib module_name module_type group_source group_header module_libra
     message (STATUS "\\- module_library ${${module_library}}")
     string (TOLOWER ${module_type} postfix)
     add_library(${module_name}-${postfix} ${module_type} ${${group_source}})
-    target_precompile_headers(${module_name}-${postfix} PRIVATE ${${group_header}})
+    if(CMAKE_VERSION VERSION_GREATER 3.8)
+        target_precompile_headers(${module_name}-${postfix} PRIVATE ${${group_header}})
+    endif ()
     set_target_properties(${module_name}-${postfix} PROPERTIES OUTPUT_NAME ${module_name} CLEAN_DIRECT_OUTPUT 1 LINKER_LANGUAGE CXX)
     target_link_libraries(${module_name}-${postfix} ${${module_library}})
     add_custom_command(TARGET ${module_name}-${postfix} POST_BUILD
@@ -69,7 +71,9 @@ function (makelibdep module_name module_type group_source group_header module_de
     message (STATUS "\\- module_library ${${module_library}}")
     string (TOLOWER ${module_type} postfix)
     add_library(${module_name}-${postfix} ${module_type} ${${group_source}})
-    target_precompile_headers(${module_name}-${postfix} PRIVATE ${${group_header}})
+    if(CMAKE_VERSION VERSION_GREATER 3.8)
+        target_precompile_headers(${module_name}-${postfix} PRIVATE ${${group_header}})
+    endif ()
     set_target_properties(${module_name}-${postfix} PROPERTIES OUTPUT_NAME ${module_name} CLEAN_DIRECT_OUTPUT 1 LINKER_LANGUAGE CXX)
     target_link_libraries(${module_name}-${postfix} ${${module_dependency}} ${${module_library}})
     add_dependencies(${module_name}-${postfix} ${${module_dependency}})

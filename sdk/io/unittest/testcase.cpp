@@ -302,6 +302,59 @@ void test_case::test (return_t result, const char* test_function, const char* me
     }
 }
 
+#define PRINT_STRING_SUCCESS col.set_fgcolor (console_color_t::green) << STRING_SUCCESS << col.set_fgcolor (fgcolor)
+#define PRINT_STRING_FAIL col.set_fgcolor (console_color_t::red) << STRING_FAIL << col.set_fgcolor (fgcolor)
+#define PRINT_STRING_NOT_SUPPORTED col.set_fgcolor (console_color_t::cyan) << STRING_NOT_SUPPORTED << col.set_fgcolor (fgcolor)
+#define PRINT_STRING_LOW_SECURITY col.set_fgcolor (console_color_t::yellow) << STRING_LOW_SECURITY  << col.set_fgcolor (fgcolor)
+
+void test_case::write_to_stream (unittest_list_t& array, ansi_string& stream)
+{
+    /* "success" */
+    char STRING_SUCCESS[] = { 's', 'u', 'c', 'c', 'e', 's', 's', 0, };
+    /* "pass" */
+    char STRING_PASS[] = { 'p', 'a', 's', 's', 0, };
+    /* "fail" */
+    char STRING_FAIL[] = { 'f', 'a', 'i', 'l', ' ', 0, };
+    /* "skip" */
+    char STRING_NOT_SUPPORTED[] = { 's', 'k', 'i', 'p', ' ', 0, };
+    /* "low" */
+    char STRING_LOW_SECURITY[] = { 'l', 'o', 'w', ' ', ' ', 0, };
+    /* "test case" */
+    char STRING_TEST_CASE[] = { 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', 0, };
+    /* "result" */
+    char STRING_RESULT[] = { 'r', 'e', 's', 'u', 'l', 't', 0, };
+    /* "errorcode" */
+    char STRING_ERRORCODE[] = { 'e', 'r', 'r', 'o', 'r', 'c', 'o', 'd', 'e', 0, };
+    /* "test function" */
+    char STRING_TEST_FUNCTION[] = { 't', 'e', 's', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', 0, };
+    /* "time" */
+    char STRING_TIME[] = { 't', 'i', 'm', 'e', 0, };
+    /* "message" */
+    char STRING_MESSAGE[] = { 'm', 'e', 's', 's', 'a', 'g', 'e', 0, };
+
+    console_color col;
+    console_color_t fgcolor = console_color_t::white;
+
+    stream.printf ("%-6s | %-10s | %-20s | %-12s | %s\n", STRING_RESULT, STRING_ERRORCODE, STRING_TEST_FUNCTION, STRING_TIME, STRING_MESSAGE);
+
+    for (unittest_list_t::iterator list_iterator = array.begin (); list_iterator != array.end (); list_iterator++) {
+        unittest_item_t item = *list_iterator;
+
+        ansi_string error_message;
+        switch (item._result) {
+            case errorcode_t::success:       error_message << STRING_PASS; break;
+            case errorcode_t::not_supported: error_message << PRINT_STRING_NOT_SUPPORTED; break;
+            case errorcode_t::low_security:  error_message << PRINT_STRING_LOW_SECURITY; break;
+            default:                         error_message << PRINT_STRING_FAIL; break;
+        }
+
+        stream.printf (" %-5s | 0x%08x | %-20s | %-12s | %s\n",
+                       error_message.c_str (), item._result, item._test_function.c_str (),
+                       format ("%lld.%09ld", item._time.tv_sec, item._time.tv_nsec / 100).c_str (),
+                       item._message.c_str ());
+    }
+}
+
 void test_case::report ()
 {
     ansi_string stream;
@@ -334,11 +387,6 @@ void test_case::report ()
     char STRING_MESSAGE[] = { 'm', 'e', 's', 's', 'a', 'g', 'e', 0, };
     char STRING_UPPERCASE_TEST_FAILED[] = { 'T', 'E', 'S', 'T', ' ', 'F', 'A', 'I', 'L', 'E', 'D', 0, };
 
-#define PRINT_STRING_SUCCESS col.set_fgcolor (console_color_t::green) << STRING_SUCCESS << col.set_fgcolor (fgcolor)
-#define PRINT_STRING_FAIL col.set_fgcolor (console_color_t::red) << STRING_FAIL << col.set_fgcolor (fgcolor)
-#define PRINT_STRING_NOT_SUPPORTED col.set_fgcolor (console_color_t::cyan) << STRING_NOT_SUPPORTED << col.set_fgcolor (fgcolor)
-#define PRINT_STRING_LOW_SECURITY col.set_fgcolor (console_color_t::yellow) << STRING_LOW_SECURITY  << col.set_fgcolor (fgcolor)
-
     //
     // compose
     //
@@ -346,7 +394,7 @@ void test_case::report ()
     _lock.enter ();
 
     stream.fill (80, '=');
-    stream << "\n";
+    stream.endl ();
     stream << col.set_style (console_style_t::bold).set_fgcolor (fgcolor).turnon () << STRING_REPORT << "\n";
 
     for (unittest_index_t::iterator iter = _test_list.begin (); iter != _test_list.end (); iter++) {
@@ -366,30 +414,15 @@ void test_case::report ()
         if (status._test_stat._count_low_security) {
             stream << " " << PRINT_STRING_LOW_SECURITY << " " << status._test_stat._count_low_security;
         }
-        stream << "\n";
+        stream.endl ();
 
         stream.fill (80, '-');
-        stream << "\n";
-        stream.printf ("%-6s | %-10s | %-20s | %-10s | %s\n", STRING_RESULT, STRING_ERRORCODE, STRING_TEST_FUNCTION, STRING_TIME, STRING_MESSAGE);
+        stream.endl ();
 
-        for (unittest_list_t::iterator list_iterator = status._test_list.begin (); list_iterator != status._test_list.end (); list_iterator++) {
-            unittest_item_t item = *list_iterator;
+        write_to_stream (status._test_list, stream);
 
-            ansi_string error_message;
-            switch (item._result) {
-                case errorcode_t::success:       error_message << STRING_PASS; break;
-                case errorcode_t::not_supported: error_message << PRINT_STRING_NOT_SUPPORTED; break;
-                case errorcode_t::low_security:  error_message << PRINT_STRING_LOW_SECURITY; break;
-                default:                         error_message << PRINT_STRING_FAIL; break;
-            }
-
-            stream.printf (" %-5s | 0x%08x | %-20s | %-10s | %s\n",
-                           error_message.c_str (), item._result, item._test_function.c_str (),
-                           format ("%lld.%07ld", item._time.tv_sec, item._time.tv_nsec / 100).c_str (),
-                           item._message.c_str ());
-        }
         stream.fill (80, '-');
-        stream << "\n";
+        stream.endl ();
     }
 
     stream << "# " << PRINT_STRING_SUCCESS << " " << _total._count_success;
@@ -402,9 +435,10 @@ void test_case::report ()
     if (_total._count_low_security) {
         stream << " " << PRINT_STRING_LOW_SECURITY << " " << _total._count_low_security;
     }
-    stream << col.turnoff () << "\n";
+    stream << col.turnoff ();
+    stream.endl ();
     stream.fill (80, '=');
-    stream << "\n";
+    stream.endl ();
     if (_total._count_fail) {
         stream << col.set_fgcolor (console_color_t::red).turnon () << STRING_UPPERCASE_TEST_FAILED << col.turnoff () << "\n";
     }
@@ -420,6 +454,48 @@ void test_case::report ()
     std::ofstream file (STRING_REPORT, std::ios::trunc);
     file << stream.c_str ();
     file.close ();
+}
+
+bool test_case::compare_timespec (const unittest_item_t& lhs, const unittest_item_t& rhs)
+{
+    bool ret = false;
+    if ((lhs._time.tv_sec >= rhs._time.tv_sec) && (lhs._time.tv_nsec >= rhs._time.tv_nsec)) {
+        ret = true;
+    }
+    return ret;
+}
+
+void test_case::time_report (uint32 top_count)
+{
+    ansi_string stream;
+    unittest_list_t array;
+
+    // copy from unittest
+    unittest_map_t::iterator it;
+    for (it = _test_map.begin (); it != _test_map.end (); it++) {
+        test_status_t& status = it->second;
+        array.insert (array.end (), status._test_list.begin (), status._test_list.end ());
+    }
+
+    if (array.size ()) {
+        array.sort (compare_timespec);
+
+        // top N
+        if (array.size () > top_count) {
+            array.resize (top_count);
+        }
+
+        stream.fill (80, '-');
+        stream.endl ();
+
+        stream.printf ("sort by time (top %zi)\n", array.size ());
+        write_to_stream (array, stream);
+
+        stream.fill (80, '-');
+        stream.endl ();
+
+        std::cout << stream.c_str () << std::endl;
+    }
 }
 
 return_t test_case::result ()

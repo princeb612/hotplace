@@ -197,5 +197,6 @@ int main ()
     confirm ();
 
     _test_case.report ();
+    _test_case.time_report (5);
     return _test_case.result ();
 }

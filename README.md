@@ -1,5 +1,33 @@
 # hotplace
 
+
+## build
+
+* platform support - mingw, linux
+* packages to install
+ * gcc, g++, binutils, cmake, gdb
+ * openssl-devel, jansson-devel zlib-devel (MINGW, RHEL)
+ * openssl libssl-dev libjansson-dev zlib1g-dev (ubuntu)
+ * valgrind (linux)
+* important
+  openssl 1.1.1 or newer
+* build custom openssl (example)
+  $ sudo yum install perl
+  $ wget https://www.openssl.org/source/openssl-1.1.1v.tar.gz
+  $ tar xvfz openssl-1.1.1v.tar.gz
+  $ cd openssl-1.1.1v
+  $ install_dir=...
+  linux
+  $ ./Configure linux-x86_64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=devrandom shared
+  mingw
+  $ ./Configure mingw64 --prefix=${install_dir} --with-rand-seed=os shared
+  $ make
+  $ touch crypto/rand/drbg_ctr.c
+  $ make
+  $ make install_sw install_ssldirs
+* make sure root directory hotplace (not hotplace-master and so on ...)
+ $ hotplace ./make.sh
+
 ## implemented
 
  * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm

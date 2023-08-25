@@ -104,6 +104,7 @@ public:
      * @brief   report
      */
     void report ();
+    void time_report (uint32 top_count = -1);
     /**
      * @brief   result indicator
      * @return
@@ -112,10 +113,6 @@ public:
      */
     return_t result ();
 
-protected:
-    void check_time (struct timespec& time);
-
-private:
     typedef struct _unittest_item_t {
         uint32 _result;
         std::string _test_function;
@@ -148,16 +145,10 @@ private:
             // do nothing
         }
     } test_status_t;
+
     typedef std::list<std::string> unittest_index_t;                /* ordered test cases */
     typedef std::map<std::string, test_status_t> unittest_map_t;    /* pair (test case, test_status_t) */
     typedef std::pair<unittest_map_t::iterator, bool> unittest_map_pib_t;
-
-    critical_section _lock;
-    unittest_index_t _test_list;
-    unittest_map_t _test_map;
-    test_stat_t _total;
-
-    std::string _current_case_name;
 
     typedef std::list <struct timespec> time_slice_t;
     typedef std::map <arch_t, bool> time_flag_per_thread_t;
@@ -168,6 +159,20 @@ private:
     typedef std::pair <time_flag_per_thread_t::iterator, bool> time_flag_per_thread_pib_t;
     typedef std::pair <timestamp_per_thread_t::iterator, bool> timestamp_per_thread_pib_t;
     typedef std::pair <time_slice_per_thread_t::iterator, bool> time_slice_per_thread_pib_t;
+
+protected:
+    void write_to_stream (unittest_list_t& array, ansi_string& stream);
+
+    void check_time (struct timespec& time);
+    static bool compare_timespec (const unittest_item_t& lhs, const unittest_item_t& rhs);
+
+private:
+    critical_section _lock;
+    unittest_index_t _test_list;
+    unittest_map_t _test_map;
+    test_stat_t _total;
+
+    std::string _current_case_name;
 
     time_flag_per_thread_t _time_flag_per_threads;
     timestamp_per_thread_t _timestamp_per_threads;

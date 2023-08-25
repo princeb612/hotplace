@@ -483,6 +483,12 @@ ansi_string & ansi_string::operator << (uint128 buf)
 
 #endif
 
+ansi_string& ansi_string::endl ()
+{
+    printf ("\n");
+    return *this;
+}
+
 int ansi_string::compare (ansi_string& buf)
 {
     return strcmp ((*this).c_str (), buf.c_str ());

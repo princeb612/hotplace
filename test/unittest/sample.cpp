@@ -40,5 +40,6 @@ int main ()
     _test_case.assert (false, "function9", "case 2 desc 3 - intentional fail");     // fail
 
     _test_case.report ();
+    _test_case.time_report (5);
     return _test_case.result ();
 }

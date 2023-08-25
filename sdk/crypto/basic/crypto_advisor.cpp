@@ -182,6 +182,7 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::idea, crypt_mode_t::ofb,  EVP_idea_ofb (), "idea-ofb", },
 #endif
 
+#ifndef OPENSSL_NO_SM4
     { crypt_algorithm_t::rc2, crypt_mode_t::cbc, EVP_sm4_cbc (), "rc2-cbc", },
     { crypt_algorithm_t::rc2, crypt_mode_t::cfb, EVP_sm4_cfb (), "rc2-cfb", },
     { crypt_algorithm_t::rc2, crypt_mode_t::ecb, EVP_sm4_ecb (), "rc2-ecb", },
@@ -192,16 +193,17 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::rc5, crypt_mode_t::ecb, EVP_sm4_ecb (), "rc5-ecb", },
     { crypt_algorithm_t::rc5, crypt_mode_t::ofb, EVP_sm4_ofb (), "rc5-ofb", },
 
-    { crypt_algorithm_t::seed, crypt_mode_t::cbc, EVP_seed_cbc (), "seed-cbc", },
-    { crypt_algorithm_t::seed, crypt_mode_t::cfb, EVP_seed_cfb (), "seed-cfb", },
-    { crypt_algorithm_t::seed, crypt_mode_t::ecb, EVP_seed_ecb (), "seed-ecb", },
-    { crypt_algorithm_t::seed, crypt_mode_t::ofb, EVP_seed_ofb (), "seed-ofb", },
-
     { crypt_algorithm_t::sm4, crypt_mode_t::cbc, EVP_sm4_cbc (), "sm4-cbc", },
     { crypt_algorithm_t::sm4, crypt_mode_t::cfb, EVP_sm4_cfb (), "sm4-cfb", },
     { crypt_algorithm_t::sm4, crypt_mode_t::ecb, EVP_sm4_ecb (), "sm4-ecb", },
     { crypt_algorithm_t::sm4, crypt_mode_t::ofb, EVP_sm4_ofb (), "sm4-ofb", },
     { crypt_algorithm_t::sm4, crypt_mode_t::ctr, EVP_sm4_ctr (), "sm4-ctr", },
+#endif
+
+    { crypt_algorithm_t::seed, crypt_mode_t::cbc, EVP_seed_cbc (), "seed-cbc", },
+    { crypt_algorithm_t::seed, crypt_mode_t::cfb, EVP_seed_cfb (), "seed-cfb", },
+    { crypt_algorithm_t::seed, crypt_mode_t::ecb, EVP_seed_ecb (), "seed-ecb", },
+    { crypt_algorithm_t::seed, crypt_mode_t::ofb, EVP_seed_ofb (), "seed-ofb", },
 };
 
 /* something wrong EVP_CIPHER_CTX_iv_length, EVP_CIPHER_CTX_block_size (openssl-1.1.1) */

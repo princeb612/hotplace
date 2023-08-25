@@ -10,6 +10,7 @@
  */
 
 #include <hotplace/sdk/io/system/datetime.hpp>
+#include <hotplace/sdk/io/string/string.hpp>
 
 namespace hotplace {
 namespace io {
