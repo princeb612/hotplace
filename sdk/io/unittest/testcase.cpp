@@ -285,7 +285,7 @@ void test_case::test (return_t result, const char* test_function, const char* me
         ansi_string stream;
 
         stream  << col.turnon ()
-                << set_style (console_style_t::bold)
+                << col.set_style (console_style_t::bold)
                 << col.set_fgcolor (color)
                 << format ("[%08x]", result).c_str ()
                 << col.set_fgcolor (console_color_t::yellow)
