@@ -40,11 +40,11 @@ void test_case::begin (const char* case_name, ...)
 
         /* "test case" */
         stream.flush ();
-        char STRING_TEST_CASE[] = { '[', '*', ' ', 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', ' ', '-', ' ', 0, };
+        char STRING_TEST_CASE[] = { '[', ' ', 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', ' ', ']', 0, };
         stream  << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::magenta)
                 << STRING_TEST_CASE
                 << _current_case_name.c_str ()
-                << " ]" << col.turnoff ();
+                << col.turnoff ();
         std::cout << stream.c_str () << std::endl;
     } else {
         _current_case_name.clear ();
@@ -308,7 +308,7 @@ void test_case::test (return_t result, const char* test_function, const char* me
 #define PRINT_STRING_NOT_SUPPORTED col.set_fgcolor (console_color_t::cyan) << STRING_NOT_SUPPORTED << col.set_fgcolor (fgcolor)
 #define PRINT_STRING_LOW_SECURITY col.set_fgcolor (console_color_t::yellow) << STRING_LOW_SECURITY  << col.set_fgcolor (fgcolor)
 
-void test_case::write_unittest_list_to_stream (unittest_list_t& array, ansi_string& stream)
+void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stream)
 {
     /* "success" */
     char STRING_SUCCESS[] = { 's', 'u', 'c', 'c', 'e', 's', 's', 0, };
@@ -336,7 +336,7 @@ void test_case::write_unittest_list_to_stream (unittest_list_t& array, ansi_stri
     console_color col;
     console_color_t fgcolor = console_color_t::white;
 
-    stream.printf ("%-6s | %-10s | %-20s | %-12s | %s\n", STRING_RESULT, STRING_ERRORCODE, STRING_TEST_FUNCTION, STRING_TIME, STRING_MESSAGE);
+    stream.printf ("%-6s | %-10s | %-20s | %-11s | %s\n", STRING_RESULT, STRING_ERRORCODE, STRING_TEST_FUNCTION, STRING_TIME, STRING_MESSAGE);
 
     for (unittest_list_t::iterator list_iterator = array.begin (); list_iterator != array.end (); list_iterator++) {
         unittest_item_t item = *list_iterator;
@@ -349,8 +349,15 @@ void test_case::write_unittest_list_to_stream (unittest_list_t& array, ansi_stri
             default:                         error_message << PRINT_STRING_FAIL; break;
         }
 
-        stream.printf (" %-5s | 0x%08x | %-20s | %-12s | %s\n",
-                       error_message.c_str (), item._result, item._test_function.c_str (),
+        std::string funcname;
+        if (item._test_function.size () > 20) {
+            funcname = item._test_function.substr (0, 17);
+            funcname += "...";
+        } else {
+            funcname = item._test_function;
+        }
+        stream.printf (" %-5s | 0x%08x | %-20s | %-11s | %s\n",
+                       error_message.c_str (), item._result, funcname.c_str (),
                        format ("%lld.%09ld", item._time.tv_sec, item._time.tv_nsec / 100).c_str (),
                        item._message.c_str ());
     }
@@ -394,9 +401,10 @@ void test_case::report ()
 
     _lock.enter ();
 
+    stream << col.turnon ().set_style (console_style_t::bold);
     stream.fill (80, '=');
     stream.endl ();
-    stream << col.turnon ().set_style (console_style_t::bold).set_fgcolor (fgcolor) << STRING_REPORT << stream.endl ();
+    stream << col.set_fgcolor (fgcolor) << STRING_REPORT << stream.endl ();
 
     for (unittest_index_t::iterator iter = _test_list.begin (); iter != _test_list.end (); iter++) {
         std::string testcase = *iter;
@@ -420,7 +428,7 @@ void test_case::report ()
         stream.fill (80, '-');
         stream.endl ();
 
-        write_unittest_list_to_stream (status._test_list, stream);
+        dump_list_into_stream (status._test_list, stream);
 
         stream.fill (80, '-');
         stream.endl ();
@@ -436,13 +444,14 @@ void test_case::report ()
     if (_total._count_low_security) {
         stream << " " << PRINT_STRING_LOW_SECURITY << " " << _total._count_low_security;
     }
-    stream << col.turnoff ();
     stream.endl ();
     stream.fill (80, '=');
     stream.endl ();
     if (_total._count_fail) {
-        stream << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::red) << STRING_UPPERCASE_TEST_FAILED << col.turnoff () << "\n";
+        stream << col.set_fgcolor (console_color_t::red) << STRING_UPPERCASE_TEST_FAILED << stream.endl ();
     }
+
+    stream << col.turnoff ();
 
     _lock.leave ();
 
@@ -461,7 +470,7 @@ bool test_case::compare_timespec (const unittest_item_t& lhs, const unittest_ite
 {
     bool ret = false;
 
-    if ((lhs._time.tv_sec >= rhs._time.tv_sec) && (lhs._time.tv_nsec >= rhs._time.tv_nsec)) {
+    if ((lhs._time.tv_sec >= rhs._time.tv_sec) && (lhs._time.tv_nsec > rhs._time.tv_nsec)) {
         ret = true;
     }
     return ret;
@@ -469,36 +478,54 @@ bool test_case::compare_timespec (const unittest_item_t& lhs, const unittest_ite
 
 void test_case::time_report (uint32 top_count)
 {
+    _lock.enter ();
+
     ansi_string stream;
     unittest_list_t array;
-
-    // copy from unittest
+    typedef std::map <uint128, unittest_item_t*> temp_map_t;
+    temp_map_t temp_map;
     unittest_map_t::iterator it;
 
     for (it = _test_map.begin (); it != _test_map.end (); it++) {
-        test_status_t& status = it->second;
-        array.insert (array.end (), status._test_list.begin (), status._test_list.end ());
+        // not efficient and unsatisfied results
+            //test_status_t& status = it->second;
+            //unittest_list_t copied = it->second._test_list;
+            //array.sort (compare_timespec);
+            //copied.sort (compare_timespec);
+            //array.merge (copied, compare_timespec);
+        // so... using map
+        unittest_list_t::iterator unittest_it;
+        for (unittest_it = it->second._test_list.begin (); unittest_it != it->second._test_list.end (); unittest_it++) {
+            struct timespec* t = &((*unittest_it)._time);
+            uint128 timekey = ((uint128) t->tv_sec << 64) | (t->tv_nsec);
+            temp_map.insert (std::make_pair (timekey, &(*unittest_it))); // build pair(timekey, pointer)
+        }
+    }
+    temp_map_t::reverse_iterator rit;
+    for (rit = temp_map.rbegin (); rit != temp_map.rend (); rit++) {
+        array.push_back (*rit->second); // copy unittest_item_t here
     }
 
+    // top N
+    if (array.size () > top_count) {
+        array.resize (top_count);
+    }
+
+    // dump and cout
     if (array.size ()) {
-        array.sort (compare_timespec);
-
-        // top N
-        if (array.size () > top_count) {
-            array.resize (top_count);
-        }
-
         stream.fill (80, '-');
         stream.endl ();
 
         stream.printf ("sort by time (top %zi)\n", array.size ());
-        write_unittest_list_to_stream (array, stream);
+        dump_list_into_stream (array, stream);
 
         stream.fill (80, '-');
         stream.endl ();
 
         std::cout << stream.c_str () << std::endl;
     }
+
+    _lock.leave ();
 }
 
 return_t test_case::result ()

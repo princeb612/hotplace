@@ -2282,6 +2282,6 @@ int main ()
     openssl_cleanup ();
 
     _test_case.report ();
-    _test_case.time_report (5);
+    _test_case.time_report (20);
     return _test_case.result ();
 }

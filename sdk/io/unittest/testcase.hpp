@@ -161,7 +161,7 @@ public:
     typedef std::pair <time_slice_per_thread_t::iterator, bool> time_slice_per_thread_pib_t;
 
 protected:
-    void write_unittest_list_to_stream (unittest_list_t& array, ansi_string& stream);
+    void dump_list_into_stream (unittest_list_t& array, ansi_string& stream);
 
     void check_time (struct timespec& time);
     static bool compare_timespec (const unittest_item_t& lhs, const unittest_item_t& rhs);

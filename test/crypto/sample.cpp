@@ -73,13 +73,13 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
                         dump_memory (&decrypted[0], decrypted.size (), &bs);
                         std::cout << bs.c_str () << std::endl;
 
+                        _test_case.resume_time ();
+
                         if (size != decrypted.size ()) {
                             ret = errorcode_t::internal_error;
                         } else if (memcmp (data, &decrypted[0], size)) {
                             ret = errorcode_t::internal_error;
                         }
-
-                        _test_case.resume_time ();
                     }
                 }
             }
@@ -92,7 +92,7 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
     __finally2
     {
         const char* alg = advisor->nameof_cipher (algorithm, mode);
-        _test_case.test (ret, __FUNCTION__, "encrypt+dectypt+dump algmrithm %d mode %d (%s)", algorithm, mode, alg ? alg : "unknown");
+        _test_case.test (ret, __FUNCTION__, "encrypt+dectypt algmrithm %d mode %d (%s)", algorithm, mode, alg ? alg : "unknown");
     }
 }
 
@@ -271,7 +271,7 @@ void test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm,
     __finally2
     {
         const char* alg = advisor->nameof_md (algorithm);
-        _test_case.test (ret, __FUNCTION__, "digest+dump algmrithm %d (%s)", algorithm, alg ? alg : "unknown");
+        _test_case.test (ret, __FUNCTION__, "digest algmrithm %d (%s)", algorithm, alg ? alg : "unknown");
     }
 }
 
@@ -510,13 +510,14 @@ void test_random ()
     uint32 value = 0;
     openssl_prng random;
     int i = 0;
+    int times = 30;
 
-    for (i = 0; i < 30; i++) {
+    for (i = 0; i < times; i++) {
         value = random.rand32 ();
         printf ("rand %08x\n", (int) value);
     }
 
-    _test_case.test (ret, __FUNCTION__, "random");
+    _test_case.test (ret, __FUNCTION__, "random loop %i times", times);
 }
 
 void test_keywrap_routine (crypt_algorithm_t alg, byte_t* key, size_t key_size, byte_t* kek, size_t kek_size,
@@ -544,11 +545,12 @@ void test_keywrap_routine (crypt_algorithm_t alg, byte_t* key, size_t key_size, 
 
     dump_memory (&out_kw[0], out_kw.size (), &bs);
     printf ("%.*s\n", (int) bs.size (), bs.c_str ());
+
+    _test_case.resume_time ();
+
     if ((out_kw.size () == expect_size) && (0 == memcmp (&out_kw[0], expect, out_kw.size ()))) {
         compare = true;
     }
-
-    _test_case.resume_time ();
 
     crypt.decrypt (handle, &out_kw[0], out_kw.size (), out_kuw);
 
@@ -674,9 +676,10 @@ uint32 test_hotp ()
         uint32 code = 0;
         for (int i = 0; i < 10; i++) {
             hotp.get (handle, code);
-            output.push_back (code);
 
             _test_case.pause_time ();
+
+            output.push_back (code);
 
             std::cout << "counter " << i << " code " << code << std::endl;
 
@@ -693,7 +696,7 @@ uint32 test_hotp ()
 
     std::cout << std::endl;
 
-    _test_case.test (ret, __FUNCTION__, "hotp");
+    _test_case.test (ret, __FUNCTION__, "RFC4226 HOTP algoritm sha1 + 10 test vectors tested");
 
     return ret;
 }
@@ -716,6 +719,7 @@ uint32 test_totp (hash_algorithm_t algorithm)
     uint32 ret = errorcode_t::success;
     otp_context_t* handle = nullptr;
     TOTP_TEST_DATA* test_data = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     _test_case.begin ("time_otp (RFC6238)");
 
@@ -757,7 +761,8 @@ uint32 test_totp (hash_algorithm_t algorithm)
     }
     __finally2
     {
-        _test_case.test (ret, __FUNCTION__, "totp");
+        const char* alg = advisor->nameof_md (algorithm);
+        _test_case.test (ret, __FUNCTION__, "RFC6238 TOTP algorithm %s + 6 test vectors tested", alg ? alg : "");
     }
 
     return ret;
