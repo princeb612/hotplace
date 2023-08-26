@@ -252,7 +252,6 @@ int main ()
     test_string ();
     test_tokenize ();
 
-    _test_case.report ();
-    _test_case.time_report (5);
+    _test_case.report (5);
     return _test_case.result ();
 }

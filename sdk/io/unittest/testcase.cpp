@@ -315,11 +315,11 @@ void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stre
     /* "pass" */
     char STRING_PASS[] = { 'p', 'a', 's', 's', 0, };
     /* "fail" */
-    char STRING_FAIL[] = { 'f', 'a', 'i', 'l', ' ', 0, };
+    char STRING_FAIL[] = { 'f', 'a', 'i', 'l', 0, };
     /* "skip" */
-    char STRING_NOT_SUPPORTED[] = { 's', 'k', 'i', 'p', ' ', 0, };
+    char STRING_NOT_SUPPORTED[] = { 's', 'k', 'i', 'p', 0, };
     /* "low" */
-    char STRING_LOW_SECURITY[] = { 'l', 'o', 'w', ' ', ' ', 0, };
+    char STRING_LOW_SECURITY[] = { 'l', 'o', 'w', ' ', 0, };
     /* "test case" */
     char STRING_TEST_CASE[] = { 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', 0, };
     /* "result" */
@@ -336,7 +336,7 @@ void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stre
     console_color col;
     console_color_t fgcolor = console_color_t::white;
 
-    stream.printf ("%-6s | %-10s | %-20s | %-11s | %s\n", STRING_RESULT, STRING_ERRORCODE, STRING_TEST_FUNCTION, STRING_TIME, STRING_MESSAGE);
+    stream.printf ("%-5s|%-10s|%-20s|%-11s|%s\n", STRING_RESULT, STRING_ERRORCODE, STRING_TEST_FUNCTION, STRING_TIME, STRING_MESSAGE);
 
     for (unittest_list_t::iterator list_iterator = array.begin (); list_iterator != array.end (); list_iterator++) {
         unittest_item_t item = *list_iterator;
@@ -351,36 +351,63 @@ void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stre
 
         std::string funcname;
         if (item._test_function.size () > 20) {
-            funcname = item._test_function.substr (0, 17);
-            funcname += "...";
+            funcname = item._test_function.substr (0, 18);
+            funcname += "..";
         } else {
             funcname = item._test_function;
         }
-        stream.printf (" %-5s | 0x%08x | %-20s | %-11s | %s\n",
+        stream.printf (" %-4s |0x%08x|%-20s|%-11s|%s\n",
                        error_message.c_str (), item._result, funcname.c_str (),
                        format ("%lld.%09ld", item._time.tv_sec, item._time.tv_nsec / 100).c_str (),
                        item._message.c_str ());
     }
 }
 
-void test_case::report ()
+void test_case::report (uint32 top_count)
 {
     ansi_string stream;
+
+    _lock.enter ();
+
+    report_unittest (stream);
+    report_testtime (stream, top_count);
+
+    _lock.leave ();
+
+    //
+    // print
+    //
+
+    std::cout << stream.c_str ();
+
+    //
+    // file
+    //
+
+    char STRING_REPORT[] = { 'r', 'e', 'p', 'o', 'r', 't', 0, };
+
+    std::ofstream file (STRING_REPORT, std::ios::trunc);
+    file << stream.c_str ();
+    file.close ();
+}
+
+void test_case::report_unittest (ansi_string& stream)
+{
     console_color col;
     console_color_t fgcolor = console_color_t::white;
 
-    /* "report success" */
+    /* test */
     char STRING_REPORT[] = { 'r', 'e', 'p', 'o', 'r', 't', 0, };
     /* "success" */
     char STRING_SUCCESS[] = { 's', 'u', 'c', 'c', 'e', 's', 's', 0, };
     /* "pass" */
     char STRING_PASS[] = { 'p', 'a', 's', 's', 0, };
     /* "fail" */
-    char STRING_FAIL[] = { 'f', 'a', 'i', 'l', ' ', 0, };
+    char STRING_FAIL[] = { 'f', 'a', 'i', 'l', 0, };
     /* "skip" */
-    char STRING_NOT_SUPPORTED[] = { 's', 'k', 'i', 'p', ' ', 0, };
+    char STRING_NOT_SUPPORTED[] = { 's', 'k', 'i', 'p', 0, };
     /* "low" */
-    char STRING_LOW_SECURITY[] = { 'l', 'o', 'w', ' ', ' ', 0, };
+    char STRING_LOW_SECURITY[] = { 'l', 'o', 'w', ' ', 0, };
     /* "test case" */
     char STRING_TEST_CASE[] = { 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', 0, };
     /* "result" */
@@ -454,19 +481,10 @@ void test_case::report ()
     stream << col.turnoff ();
 
     _lock.leave ();
-
-    //
-    // print
-    //
-
-    std::cout << stream.c_str ();
-
-    std::ofstream file (STRING_REPORT, std::ios::trunc);
-    file << stream.c_str ();
-    file.close ();
 }
 
-bool test_case::compare_timespec (const unittest_item_t& lhs, const unittest_item_t& rhs)
+#if 0
+bool compare_timespec (const unittest_item_t& lhs, const unittest_item_t& rhs)
 {
     bool ret = false;
 
@@ -475,16 +493,19 @@ bool test_case::compare_timespec (const unittest_item_t& lhs, const unittest_ite
     }
     return ret;
 }
+#endif
 
-void test_case::time_report (uint32 top_count)
+void test_case::report_testtime (ansi_string& stream, uint32 top_count)
 {
     _lock.enter ();
 
-    ansi_string stream;
+    console_color col;
     unittest_list_t array;
     typedef std::map <uint128, unittest_item_t*> temp_map_t;
     temp_map_t temp_map;
     unittest_map_t::iterator it;
+
+    stream << col.turnon ().set_style (console_style_t::bold);
 
     for (it = _test_map.begin (); it != _test_map.end (); it++) {
         // not efficient and unsatisfied results
@@ -513,17 +534,18 @@ void test_case::time_report (uint32 top_count)
 
     // dump and cout
     if (array.size ()) {
+        stream.printf ("sort by time (top %zi)\n", array.size ());
+
         stream.fill (80, '-');
         stream.endl ();
 
-        stream.printf ("sort by time (top %zi)\n", array.size ());
         dump_list_into_stream (array, stream);
 
         stream.fill (80, '-');
         stream.endl ();
-
-        std::cout << stream.c_str () << std::endl;
     }
+
+    stream << col.turnoff ();
 
     _lock.leave ();
 }

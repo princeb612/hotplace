@@ -93,7 +93,6 @@ int main ()
     code_careful_tls_client ();
     code_careful_tls_server ();
 
-    _test_case.report ();
-    _test_case.time_report (5);
+    _test_case.report (5);
     return _test_case.result ();
 }

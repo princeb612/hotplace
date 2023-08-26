@@ -66,7 +66,6 @@ int main ()
     test_base16 ();
     test_base64 ();
 
-    _test_case.report ();
-    _test_case.time_report (5);
+    _test_case.report (5);
     return _test_case.result ();
 }

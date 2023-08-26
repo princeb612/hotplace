@@ -87,7 +87,6 @@ int main ()
     _test_case.begin ("thread");
     test_signalwait_threads ();
 
-    _test_case.report ();
-    _test_case.time_report (5);
+    _test_case.report (5);
     return _test_case.result ();
 }

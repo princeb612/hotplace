@@ -102,9 +102,9 @@ public:
     void test (return_t result, const char* test_function, const char* message, ...);
     /**
      * @brief   report
+     * @param   uint32 top_count [inopt] oder by test-time, and list top
      */
-    void report ();
-    void time_report (uint32 top_count = -1);
+    void report (uint32 top_count = -1);
     /**
      * @brief   result indicator
      * @return
@@ -161,10 +161,12 @@ public:
     typedef std::pair <time_slice_per_thread_t::iterator, bool> time_slice_per_thread_pib_t;
 
 protected:
+    void report_unittest (ansi_string& stream);
+    void report_testtime (ansi_string& stream, uint32 top_count = -1);
+
     void dump_list_into_stream (unittest_list_t& array, ansi_string& stream);
 
     void check_time (struct timespec& time);
-    static bool compare_timespec (const unittest_item_t& lhs, const unittest_item_t& rhs);
 
 private:
     critical_section _lock;

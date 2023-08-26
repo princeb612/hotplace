@@ -806,8 +806,7 @@ int main ()
         openssl_cleanup ();
     }
 
-    _test_case.report ();
-    _test_case.time_report (5);
+    _test_case.report (5);
     std::cout << "openssl 3 deprected bf, idea, seed" << std::endl;
     return _test_case.result ();
 }
