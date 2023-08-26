@@ -14,6 +14,7 @@
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <hotplace/sdk/net/server/network_protocol.hpp>
+#include <map>
 
 namespace hotplace {
 using namespace io;
@@ -71,9 +72,9 @@ public:
     return_t get_headers (std::string& contents);
 
 protected:
-    typedef std::map<std::string, std::string> HTTP_HEADER_MAP;
-    typedef std::pair<HTTP_HEADER_MAP::iterator, bool> HTTP_HEADER_MAP_PIB;
-    HTTP_HEADER_MAP _headers;
+    typedef std::map<std::string, std::string> http_header_map_t;
+    typedef std::pair<http_header_map_t::iterator, bool> http_header_map_pib_t;
+    http_header_map_t _headers;
     critical_section _lock;
 };
 

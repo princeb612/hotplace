@@ -33,6 +33,10 @@ typedef std::vector<byte_t> binary_t;
 #define RTL_NUMBER_OF(x) (sizeof (x) / sizeof (x[0]))
 #endif
 
+#define __min(a, b) (((a) < (b)) ? (a) : (b))
+#define __max(a, b) (((a) > (b)) ? (a) : (b))
+#define adjust_range(var, minimum, maximum) { var = __max (var, minimum); var = __min (var, maximum); }
+
 } // namespace
 
 #endif

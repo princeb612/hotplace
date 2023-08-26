@@ -8,6 +8,9 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_signing.hpp>
 
 namespace hotplace {

@@ -9,6 +9,7 @@ file (GLOB FILEGROUP_SDK_HEADER_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/cbor/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/system/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/unittest/*.hpp
 )
 

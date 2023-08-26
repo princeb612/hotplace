@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/hmac_otp.hpp>
 #include <hotplace/sdk/crypto/basic/time_otp.hpp>
 
 namespace hotplace {

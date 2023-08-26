@@ -9,7 +9,13 @@
  */
 
 #include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
+#include <hotplace/sdk/crypto/jose/json_object_encryption.hpp>
+#include <hotplace/sdk/crypto/jose/json_object_signing.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
+#include <hotplace/sdk/crypto/jose/json_web_key.hpp>
 #include <hotplace/sdk/io/basic/base64.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
@@ -492,8 +498,8 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
              * [openssl 3.0.3] compatibility problem
              * EVP_CIPHER_..._length return EVP_CTRL_RET_UNSUPPORTED(-1)
              */
-            constraint_range (keysize, 0, EVP_MAX_KEY_LENGTH);
-            constraint_range (ivsize, 0, EVP_MAX_IV_LENGTH);
+            adjust_range (keysize, 0, EVP_MAX_KEY_LENGTH);
+            adjust_range (ivsize, 0, EVP_MAX_IV_LENGTH);
             if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
                 keysize *= 2;
             }

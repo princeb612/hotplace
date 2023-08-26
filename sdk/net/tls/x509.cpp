@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/crypto/basic/types.hpp>
 #include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 #include <hotplace/sdk/io/system/datetime.hpp>

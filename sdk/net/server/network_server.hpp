@@ -12,6 +12,9 @@
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSERVER__
 
 #include <hotplace/sdk/net/types.hpp>
+#include <hotplace/sdk/net/basic/sdk.hpp>
+#include <hotplace/sdk/net/basic/server_socket.hpp>
+#include <hotplace/sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
 namespace net {

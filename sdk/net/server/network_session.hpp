@@ -18,6 +18,9 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
+class network_priority_queue;
+class server_socket;
+
 /*
  * @brief session data
  */

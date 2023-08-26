@@ -9,7 +9,9 @@
  */
 
 #include <hotplace/sdk/io/string/string.hpp>
+#include <hotplace/sdk/net/basic/sdk.hpp>
 #include <hotplace/sdk/net/http/http.hpp>
+#include <hotplace/sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 using namespace io;
@@ -78,7 +80,7 @@ const char* http_header::get (const char* header, std::string& content)
     const char* ret_value = nullptr;
 
     if (nullptr != header) {
-        HTTP_HEADER_MAP::iterator iter = _headers.find (std::string (header));
+        http_header_map_t::iterator iter = _headers.find (std::string (header));
         if (_headers.end () != iter) {
             content = iter->second;
             ret_value = content.c_str ();
@@ -96,7 +98,7 @@ const char* http_header::get_token (const char* header, unsigned index, std::str
     std::string temp;
 
     if (nullptr != header) {
-        HTTP_HEADER_MAP::iterator iter = _headers.find (std::string (header));
+        http_header_map_t::iterator iter = _headers.find (std::string (header));
         if (_headers.end () != iter) {
             content = iter->second;
 
@@ -128,7 +130,7 @@ return_t http_header::get_headers (std::string& contents)
         //_tclean(contents);
 
         _lock.enter ();
-        for (HTTP_HEADER_MAP::iterator it = _headers.begin (); it != _headers.end (); it++) {
+        for (http_header_map_t::iterator it = _headers.begin (); it != _headers.end (); it++) {
             std::string key = it->first;
             std::string value = it->second;
 

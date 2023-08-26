@@ -8,7 +8,9 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/net/basic/sdk.hpp>
 #include <hotplace/sdk/net/http/http_protocol.hpp>
+#include <hotplace/sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 namespace net {

@@ -81,7 +81,7 @@ return_t client_disconnected_handler (netsocket_event_t* netsocket_context, void
 
     printf ("closed [%d]\n", (int) netsocket_context->client_socket);
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
     multiplexer_epoll mplexer;
 #elif defined _WIN32 || defined _WIN64
     multiplexer_iocp mplexer;
@@ -89,7 +89,7 @@ return_t client_disconnected_handler (netsocket_event_t* netsocket_context, void
 
     mplexer.unbind (accept_context->mplex_handle, (handle_t) netsocket_context->client_socket, nullptr);
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
     close (netsocket_context->client_socket);
 #elif defined _WIN32 || defined _WIN64
     closesocket (netsocket_context->client_socket);
@@ -123,7 +123,7 @@ return_t accept_thread_routine (void* user_context)
 {
     accept_context_t* context = (accept_context_t*) user_context;
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
     multiplexer_epoll mplexer;
 #elif defined _WIN32 || defined _WIN64
     multiplexer_iocp mplexer;
@@ -190,7 +190,7 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
         // do nothing
     }
 
-#elif defined __linux__ || defined __APPLE__
+#elif defined __linux__
 
     multiplexer_epoll mplexer;
     multiplexer_context_t* handle = (multiplexer_context_t*) data_array[0];
@@ -246,7 +246,7 @@ return_t network_thread_routine (void* user_context)
 
 #if defined _WIN32 || defined _WIN64
     multiplexer_iocp mplexer;
-#elif defined __linux__ || defined __APPLE__
+#elif defined __linux__
     multiplexer_epoll mplexer;
 #endif
     mplexer.event_loop_run (accept_context->mplex_handle, (handle_t) accept_context->server_socket, network_routine, user_context);
@@ -259,7 +259,7 @@ return_t network_signal_routine (void* param)
     return_t ret = errorcode_t::success;
     accept_context_t* accept_context = (accept_context_t*) param;
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
     multiplexer_epoll mplexer;
 #elif defined _WIN32 || defined _WIN64
     multiplexer_iocp mplexer;
@@ -278,7 +278,7 @@ return_t echo_server (void* param)
 
     fclose (fp);
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
     multiplexer_epoll mplexer;
 #elif defined _WIN32 || defined _WIN64
     multiplexer_iocp mplexer;
@@ -325,7 +325,7 @@ return_t echo_server (void* param)
         networkipv6_threads.set (64, network_thread_routine, network_signal_routine, &accept_context_ipv6);
 
         int network_thread_count = 1;
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
 
         /* epoll 은 listen socket 바인딩 */
         /* listen socket 이벤트를 수신하면 accept 호출, client socket 은 listen socket 바인딩 */
@@ -355,7 +355,7 @@ return_t echo_server (void* param)
         while (true) {
             msleep (1000);
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
             int chk = access (FILENAME_RUN, F_OK);
             if (errorcode_t::success != chk) {
                 break;

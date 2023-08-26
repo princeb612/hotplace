@@ -13,6 +13,8 @@
 
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/io/stream/buffer_stream.hpp>
+#include <hotplace/sdk/net/types.hpp>
+#include <map>
 
 namespace hotplace {
 using namespace io;

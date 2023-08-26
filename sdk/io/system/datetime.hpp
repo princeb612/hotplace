@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_IO_SYSTEM_DATETIME__
 
 #include <hotplace/sdk/base.hpp>
+#include <time.h>
 
 namespace hotplace {
 namespace io {

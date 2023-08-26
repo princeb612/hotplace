@@ -8,6 +8,10 @@
  * Date         Name                Description
  */
 
+
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/net/basic/sdk.hpp>
+#include <hotplace/sdk/net/tls/sdk.hpp>
 #include <hotplace/sdk/net/tls/tls.hpp>
 
 namespace hotplace {
@@ -304,7 +308,7 @@ return_t transport_layer_security::accept (tls_context_t** handle, socket_t fd)
     {
         if (errorcode_t::success != ret) {
             if (INVALID_SOCKET != fd) {
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
                 ::close (fd);
 #elif defined _WIN32 || defined _WIN64
                 closesocket (fd);

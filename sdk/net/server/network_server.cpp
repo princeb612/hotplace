@@ -11,7 +11,11 @@
 #include <hotplace/sdk/io/system/datetime.hpp>
 #include <hotplace/sdk/io/system/multiplexer.hpp>
 #include <hotplace/sdk/io/system/signalwait_threads.hpp>
+#include <hotplace/sdk/net/server/network_priority_queue.hpp>
+#include <hotplace/sdk/net/server/network_server.hpp>
+#include <hotplace/sdk/net/server/network_session.hpp>
 #include <hotplace/sdk/net/server/network_stream.hpp>
+#include <queue>
 
 namespace hotplace {
 using namespace io;

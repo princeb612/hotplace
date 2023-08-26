@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_ECDH__
 
 #include <hotplace/sdk/crypto/types.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
 namespace crypto {

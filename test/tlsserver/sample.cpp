@@ -96,7 +96,7 @@ return_t echo_server (void*)
         while (true) {
             msleep (1000);
 
-#if defined __linux__ || defined __APPLE__
+#if defined __linux__
             int chk = access (FILENAME_RUN, F_OK);
             if (errorcode_t::success != chk) {
                 break;

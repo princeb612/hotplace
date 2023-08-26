@@ -12,7 +12,6 @@
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKPRIORITYQUEUE__
 
 #include <hotplace/sdk/io/basic/mlfq.hpp>
-#include <hotplace/sdk/net/types.hpp>
 
 namespace hotplace {
 using namespace io;
