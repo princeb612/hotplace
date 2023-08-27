@@ -3,7 +3,11 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  mingw
  *      ./test-authenticate /c/windows/explorer.exe
+ *  linux
+ *      copy explorer.exe by using scp
+ *      ./test-authenticate explorer.exe
  *
  * Revision History
  * Date         Name                Description

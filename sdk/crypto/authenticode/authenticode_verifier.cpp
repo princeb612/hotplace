@@ -551,7 +551,7 @@ return_t authenticode_verifier::remove_trusted_signer (authenticode_context_t* h
         handle->lock.enter ();
         authenticode_signer_set_t::iterator iter = handle->signer.find (std::string (signer));
         if (handle->signer.end () == iter) {
-            ret = ERROR_NOT_FOUND;
+            ret = errorcode_t::not_found;
         } else {
             handle->signer.erase (iter);
         }
@@ -745,7 +745,6 @@ int verify_callback (int ok, X509_STORE_CTX *ctx)
 
 return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, void* pkcs7_pointer, uint32 flags, uint32& result)
 {
-    UNREFERENCED_PARAMETER (flags);
     return_t ret = errorcode_t::success;
     //result = authenticode_verify_t::verify_unknown;
 

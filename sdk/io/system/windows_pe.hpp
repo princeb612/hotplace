@@ -14,7 +14,7 @@
 
 #include <hotplace/sdk/base.hpp>
 #if defined __linux__
-#include <hotplace/sdk/io/system/windows/winnt.hpp>
+#include <hotplace/sdk/io/system/linux/winnt.hpp>
 #elif defined _WIN32
 #include <winnt.h>
 #endif

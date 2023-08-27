@@ -14,6 +14,8 @@
 
 #include <hotplace/sdk/base.hpp>
 
+using namespace hotplace;
+
 #pragma pack(push, 1)
 
 #define UNALIGNED
@@ -1575,7 +1577,7 @@ typedef struct _IMAGE_DEBUG_MISC {
     uint32 DataType;            // type of misc data, see defines
     uint32 Length;              // total length of record, rounded to four
                                 // byte multiple.
-    BOOLEAN Unicode;            // TRUE if data is unicode string
+    uint32 Unicode;             // TRUE if data is unicode string
     byte_t Reserved[3];
     byte_t Data[1];             // Actual data
 } IMAGE_DEBUG_MISC, *PIMAGE_DEBUG_MISC;

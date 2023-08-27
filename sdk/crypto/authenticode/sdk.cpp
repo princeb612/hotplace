@@ -24,7 +24,7 @@ return_t crl_distribution_point (X509* cert, std::set<std::string>& crls)
         int nid = NID_crl_distribution_points;
         STACK_OF (DIST_POINT) * dist_points = (STACK_OF (DIST_POINT)*)X509_get_ext_d2i (cert, nid, NULL, NULL);
         if (NULL == dist_points) {
-            ret = ERROR_INTERNAL_ERROR;
+            ret = errorcode_t::internal_error;
             __leave2;
         }
         for (int i = 0; i < sk_DIST_POINT_num (dist_points); i++) {
