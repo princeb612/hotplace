@@ -22,7 +22,7 @@ void thread_printfln (const char* msg, ...)
 {
     va_list arg;
 
-    printf ("[%08x] ", (unsigned int) self_thread_id ());
+    printf ("[%08x] ", get_thread_id ());
     va_start (arg, msg);
     vprintf (msg, arg);
     va_end (arg);

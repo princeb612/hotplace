@@ -483,10 +483,9 @@ ansi_string & ansi_string::operator << (uint128 buf)
 
 #endif
 
-ansi_string& ansi_string::endl ()
+void ansi_string::endl ()
 {
     printf ("\n");
-    return *this;
 }
 
 int ansi_string::compare (ansi_string& buf)

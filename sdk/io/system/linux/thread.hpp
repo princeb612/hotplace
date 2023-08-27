@@ -17,8 +17,8 @@
 namespace hotplace {
 namespace io {
 
-#define self_thread() pthread_self ()
-#define self_thread_id() pthread_self ()
+#define get_thread() pthread_self ()
+#define get_thread_id() (arch_t) pthread_self ()
 
 /**
  * @brief thread

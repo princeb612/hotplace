@@ -29,8 +29,9 @@ template <typename RETURN_T, typename TYPE> RETURN_T type_cast (TYPE param)
 typedef unsigned char byte_t;
 typedef std::vector<byte_t> binary_t;
 
-#ifndef RTL_NUMBER_OF
+#ifndef _WIN32 // winnt.h
 #define RTL_NUMBER_OF(x) (sizeof (x) / sizeof (x[0]))
+#define RTL_FIELD_SIZE(type, field) (sizeof (((type *) 0)->field))
 #endif
 
 #define __min(a, b) (((a) < (b)) ? (a) : (b))

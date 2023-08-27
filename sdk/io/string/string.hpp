@@ -300,6 +300,47 @@ std::string format (const char* fmt, ...);
 std::string format (const char* fmt, va_list ap);
 #endif
 
+//
+// split_url
+//
+typedef struct _url_info_t {
+    std::string protocol;
+    std::string domainip;
+    int port;
+    std::string uri;
+    std::string uripath;
+    std::string urifile;
+
+    _url_info_t () : port (0)
+    {
+    }
+} url_info_t;
+
+/*
+ * split url
+ * @sample
+ *        url_info_t info;
+ *        const char *url = "http://test.com/download/meta/file.txt";
+ *        split_url(url, &info);
+ *        // info.protocol => http
+ *        // info.domainip => test.com
+ *        // info.port => 80
+ *        // info.uri => /download/meta/file.txt
+ *        // info.uripath => download/meta
+ *        // info.urifile => file.txt
+ * @remarks
+ *        input                             -> prot / domainip / uripath  / urifile
+ *        http://test.com/download/file.txt -> http / test.com / download / file.txt
+ *        http://test.com/download/         -> http / test.com / download / NA
+ *        http://test.com/download          -> http / test.com / NA       / download
+ *        http://test.com/a/b/              -> http / test.com / a/b      / NA
+ *        http://test.com/a/b               -> http / test.com / a        / b
+ *        http://test.com                   -> http / test.com / NA       / NA
+ *        /download/file.txt                -> NA   / NA       / download / file.txt
+ *        /download/                        -> NA   / NA       / download / N/A
+ */
+return_t split_url (const char* url, url_info_t* info);
+
 }
 }
 

@@ -104,7 +104,7 @@ return_t multiplexer_controller::event_loop_new (multiplexer_controller_context_
             __leave2;
         }
 
-        arch_t tid = (arch_t) self_thread_id ();
+        arch_t tid = get_thread_id ();
 
         context->lock.enter ();
         multiplexer_event_loop_controler_map_pib_t pib = context->control.insert (std::make_pair (tid, 1));

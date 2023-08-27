@@ -483,10 +483,9 @@ wide_string & wide_string::operator << (wide_string & buf)
     return *this;
 }
 
-wide_string& wide_string::endl ()
+void wide_string::endl ()
 {
     printf (L"\n");
-    return *this;
 }
 
 int wide_string::compare (wide_string& buf)

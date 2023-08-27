@@ -31,6 +31,9 @@ endif ()
 if (NOT "$ENV{SUPPORT_ODBC}" STREQUAL "")
     set (SUPPORT_ODBC $ENV{SUPPORT_ODBC})
 endif ()
+if (MINGW)
+    set (SUPPORT_SHARED 1)
+endif ()
 if(CMAKE_VERSION VERSION_GREATER 3.8)
     set (SUPPORT_PCH 1)
 endif ()
@@ -112,14 +115,17 @@ function (makelibdep module_name module_type group_source group_header module_de
 endfunction ()
 
 # maketest name source dependency library
-function (maketest module_name group_source module_dependency module_library)
+function (maketest module_name group_source module_dependency module_library ctest)
     message (STATUS "maketest ${module_name} ${group_source} ${module_dependency} ${module_library}")
     message (STATUS "\\- module_dependency ${${module_dependency}}")
     message (STATUS "\\- module_library ${${module_library}}")
+    message (STATUS "\\- ctest ${ctest}")
     add_executable (test-${module_name} ${${group_source}})
     target_link_libraries (test-${module_name} ${${module_dependency}} ${${module_library}})
     add_dependencies (test-${module_name} ${${module_dependency}})
-    add_test (NAME test-${module_name} COMMAND test-${module_name})
+    if (${ctest})
+        add_test (NAME test-${module_name} COMMAND test-${module_name})
+    endif ()
 endfunction ()
 
 # -Ixxx
@@ -137,7 +143,7 @@ copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/sdk ${PROJECT_SOURCE_DIR}/incl
 
 # build
 add_subdirectory (sdk)
-add_subdirectory (test)
-
 # test
 enable_testing ()
+add_subdirectory (test)
+

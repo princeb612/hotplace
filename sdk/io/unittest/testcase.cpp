@@ -9,10 +9,10 @@
  * 2023.08.15   Soo Han, Kim        elapsed time
  */
 
-#include <hotplace/sdk/io/system/datetime.hpp>
-#include <hotplace/sdk/io/stream/console_color.hpp>
+#include <hotplace/sdk/io/basic/console_color.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
+#include <hotplace/sdk/io/system/datetime.hpp>
 #include <hotplace/sdk/io/unittest/testcase.hpp>
 #include <fstream>
 #include <iostream>
@@ -61,7 +61,7 @@ void test_case::reset_time ()
 
     _lock.enter ();
 
-    arch_t tid = (arch_t) self_thread_id ();
+    arch_t tid = get_thread_id ();
 
     // turn on flag
     time_flag_per_thread_pib_t flag_pib;
@@ -94,7 +94,7 @@ void test_case::pause_time ()
 {
     _lock.enter ();
 
-    arch_t tid = (arch_t) self_thread_id ();
+    arch_t tid = get_thread_id ();
 
     time_flag_per_thread_pib_t flag_pib;
     flag_pib = _time_flag_per_threads.insert (std::make_pair (tid, false));
@@ -133,7 +133,7 @@ void test_case::resume_time ()
 {
     _lock.enter ();
 
-    arch_t tid = (arch_t) self_thread_id ();
+    arch_t tid = get_thread_id ();
 
     time_flag_per_thread_pib_t flag_pib;
     flag_pib = _time_flag_per_threads.insert (std::make_pair (tid, false));
@@ -165,7 +165,7 @@ void test_case::check_time (struct timespec& ts)
 
     _lock.enter ();
 
-    arch_t tid = (arch_t) self_thread_id ();
+    arch_t tid = get_thread_id ();
 
     time_flag_per_thread_pib_t flag_pib;
     flag_pib = _time_flag_per_threads.insert (std::make_pair (tid, false));
@@ -431,7 +431,8 @@ void test_case::report_unittest (ansi_string& stream)
     stream << col.turnon ().set_style (console_style_t::bold);
     stream.fill (80, '=');
     stream.endl ();
-    stream << col.set_fgcolor (fgcolor) << STRING_REPORT << stream.endl ();
+    stream << col.set_fgcolor (fgcolor) << STRING_REPORT;
+    stream.endl ();
 
     for (unittest_index_t::iterator iter = _test_list.begin (); iter != _test_list.end (); iter++) {
         std::string testcase = *iter;
@@ -475,7 +476,8 @@ void test_case::report_unittest (ansi_string& stream)
     stream.fill (80, '=');
     stream.endl ();
     if (_total._count_fail) {
-        stream << col.set_fgcolor (console_color_t::red) << STRING_UPPERCASE_TEST_FAILED << stream.endl ();
+        stream << col.set_fgcolor (console_color_t::red) << STRING_UPPERCASE_TEST_FAILED;
+        stream.endl ();
     }
 
     stream << col.turnoff ();
@@ -505,20 +507,21 @@ void test_case::report_testtime (ansi_string& stream, uint32 top_count)
     temp_map_t temp_map;
     unittest_map_t::iterator it;
 
+    unsigned int field_nsec = (RTL_FIELD_SIZE (struct timespec, tv_nsec) << 3);
     stream << col.turnon ().set_style (console_style_t::bold);
 
     for (it = _test_map.begin (); it != _test_map.end (); it++) {
-        // not efficient and unsatisfied results
-            //test_status_t& status = it->second;
-            //unittest_list_t copied = it->second._test_list;
-            //array.sort (compare_timespec);
-            //copied.sort (compare_timespec);
-            //array.merge (copied, compare_timespec);
+        // not efficient nor unsatisfied results
+        //     test_status_t& status = it->second;
+        //     unittest_list_t copied = it->second._test_list;
+        //     array.sort (compare_timespec);
+        //     copied.sort (compare_timespec);
+        //     array.merge (copied, compare_timespec);
         // so... using map
         unittest_list_t::iterator unittest_it;
         for (unittest_it = it->second._test_list.begin (); unittest_it != it->second._test_list.end (); unittest_it++) {
             struct timespec* t = &((*unittest_it)._time);
-            uint128 timekey = ((uint128) t->tv_sec << 64) | (t->tv_nsec);
+            uint128 timekey = ((uint128) t->tv_sec << field_nsec) | (t->tv_nsec);
             temp_map.insert (std::make_pair (timekey, &(*unittest_it))); // build pair(timekey, pointer)
         }
     }

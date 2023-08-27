@@ -16,8 +16,10 @@
 namespace hotplace {
 namespace io {
 
-#define self_thread() GetCurrentThread ()
-#define self_thread_id() GetCurrentThreadId ()
+// HANDLE GetCurrentThread()
+#define get_thread() GetCurrentThread ()
+// DWORD GetCurrentThreadId ()
+#define get_thread_id() (arch_t) GetCurrentThreadId ()
 
 /**
  * @brief thread

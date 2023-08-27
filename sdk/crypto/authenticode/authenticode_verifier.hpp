@@ -13,97 +13,160 @@
 
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_plugin.hpp>
-#include <hotplace/sdk/io/stream/file_stream.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+//#include <hotplace/sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
-using namespace io;
+//using namespace io;
 namespace crypto {
 
+class authenticode_plugin;
+struct _authenticode_context_t;
+typedef struct _authenticode_context_t authenticode_context_t;
+
+enum {
+    AUTHENTICODE_SET_PROXY              = 1,    // "http://127.0.0.1:3128/"
+    AUTHENTICODE_SET_PROXY_USER         = 2,    // "user:password"
+    AUTHENTICODE_SET_GENDER             = 3,    // generate DER (for test) int
+    AUTHENTICODE_SET_CRL                = 4,    // crl download (for test) int
+    AUTHENTICODE_SET_DIGICERT_PATH      = 5,    // ahc path
+    AUTHENTICODE_RESET_DIGICERT_PATH    = 6,
+    AUTHENTICODE_SET_CRL_PATH           = 7,    // crl download path
+};
+enum {
+    AUTHENTICODE_FLAG_SEPARATED = 1,
+};
+
 /**
- * @brief Windows PE authenticode
+ * @brief verifier
+ * @sample
+ *        openssl_startup(); // begin of application
+ *        openssl_thread_setup();
+ *        authenticode_verifier verifier;
+ *        verifier.open(&handle, filepath);
+ *        addTrustedRootCert(handle, "trust.crt", NULL);
+ *        verifier.verify_file(handle, filepathname, result);
+ *        verifier.close(handle);
+ *        openssl_thread_cleanup();
+ *        openssl_cleanup(); // end of application
  */
-class authenticode_plugin_pe : public authenticode_plugin
+class authenticode_verifier
 {
 public:
-    authenticode_plugin_pe ();
-    virtual ~authenticode_plugin_pe ();
+    authenticode_verifier ();
+    ~authenticode_verifier ();
 
     /*
-     * @brief is kind of
-     * @param file_stream* filestream [in]
+     * @brief open
+     * @param authenticode_context_t** handle [out]
+     * @return error code (see error.h)
+     * @remarks
+     *      // check
+     *      openssl_startup();
+     *      openssl_thread_setup();
+     *      // ...
+     *      openssl_thread_cleanup();
+     *      openssl_cleanup();
      */
-    virtual bool is_kind_of (file_stream* filestream);
+    return_t open (authenticode_context_t** handle);
     /*
-     * @brief extract IMAGE_DIRECTORY_ENTRY_SECURITY(4) data
-     * @param file_stream* filestream [in]
-     * @param binary_t& data [out]
-     * @return error code (see error.hpp)
+     * @brief set
+     * @param authenticode_context_t* handle [in]
+     * @param int option [in]
+     * @param void* data [in]
+     * @param size_t size [in]
      */
-    virtual return_t read_authenticode (file_stream* filestream, binary_t& data);
+    return_t set (authenticode_context_t* handle, int option, void* data, size_t size);
     /*
-     * @brief where is the authenticode located at ?
-     * @param file_stream* filestream [in]
-     * @param size_t& begin [out]
-     * @param size_t& size [out]
-     * @return error code (see error.hpp)
+     * @brief verify
+     * @param authenticode_context_t* handle [in]
+     * @param const char* name [in]
+     * @param uint32 flags [in] reserved
+     * @param uint32& result [out] reserved
+     * @return error code (see error.h)
      */
-    return_t read_authenticode (file_stream* filestream, size_t& begin, size_t& size);
+    return_t verify (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result, uint32* engine_id = NULL);
     /*
-     * @brief write directory entry data
-     * @param file_stream* filestream [in]
-     * @param binary_t data [in]
-     * @return error code (see error.hpp)
+     * @brief close
+     * @param authenticode_context_t* handle [in]
+     * @return error code (see error.h)
      */
-    virtual return_t write_authenticode (file_stream* filestream, binary_t data);
+    return_t close (authenticode_context_t* handle);
+    /*
+     * @brief add a trusted signer
+     * @param authenticode_context_t* handle [in]
+     * @parm const char* signer [in]
+     * @return error code (see error.h)
+     * @remarks
+     *        if signer not added, verify fails X509_V_ERR_CERT_UNTRUSTED (27)
+     */
+    return_t add_trusted_signer (authenticode_context_t* handle, const char* signer);
+    /*
+     * @brief remove a trusted signer
+     * @param authenticode_context_t* handle [in]
+     * @parm const char* signer [in]
+     * @return error code (see error.h)
+     */
+    return_t remove_trusted_signer (authenticode_context_t* handle, const char* signer);
+    /*
+     * @brief remove all trusted signer
+     * @param authenticode_context_t* handle [in]
+     * @return error code (see error.h)
+     */
+    return_t remove_all_trusted_signer (authenticode_context_t* handle);
+    /*
+     * @brief add trusted root certificate
+     * @param authenticode_context_t* handle [in]
+     * @param const char* file [inopt]
+     * @param const char* path [inopt]
+     * @return error code (see error.h)
+     */
+    return_t add_trusted_rootcert (authenticode_context_t* handle, const char* file, const char* path);
+    /*
+     * @brief add engine
+     * @param authenticode_context_t* handle [in]
+     * @param authenticode_plugin* engine
+     * @return error code (see error.h)
+     * @sample
+     *      engine = new AuthenticodeEngineImpl;
+     *      ret = add_engine(handle, engine);
+     *      if (errorcode_t::success != ret) {
+     *          engine->release ();
+     *      }
+     */
+    return_t add_engine (authenticode_context_t* handle, authenticode_plugin* engine);
+
+protected:
+    /*
+     * @brief verify pkcs7 der
+     * @param authenticode_context_t* handle [in]
+     * @param void* pkcs7 [in]
+     * @param uint32 flags [in]
+     * @param uint32& result [out]
+     * @return error code (see error.h)
+     */
+    return_t verify_pkcs7 (authenticode_context_t* handle, void* pkcs7, uint32 flags, uint32& result);
+
+    return_t verify_separated (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result);
+    /*
+     * @brief hash
+     * @param const char* filename [in]
+     * @param HASH_ALGORITHM algorithm [in]
+     * @param std::string& hash [out]
+     * @return error code (see error.h)
+     */
+    return_t hash (const char* filename, hash_algorithm_t algorithm, std::string& hash);
 
     /*
-     * @brief calcurate hash
-     * @param file_stream* filestream [in]
-     * @parm const char* algorithm [in] "sha1", ...
-     * @param binary_t& output [out]
+     * @brief load engines
+     * @param authenticode_context_t* handle [in]
      */
-    virtual return_t digest (file_stream* filestream, const char* algorithm, binary_t& output);
-
-    /* separated authenticode */
-
+    return_t load_engines (authenticode_context_t* handle);
     /*
-     * @brief is a signed separated file
+     * @brief free engines
+     * @param authenticode_context_t* handle [in]
      */
-    virtual bool separated ();
-    /*
-     * @brief find a separated file list
-     * @param std::list<std::string> pathlist [in]
-     * @param std::string filepathname_not_signed [in]
-     * @param std::list<std::string>& filelist [out] signed files
-     */
-    virtual return_t find_if_separated (std::string filepathname_not_signed, std::list<std::string> pathlist, std::list<std::string>& filelist);
-    /*
-     * @brief verify a separated file
-     * @param std::string file_not_signed [in] not signed file
-     * @param std::string file_signed [in] signed file
-     * @param uint32* result [out]
-     */
-    virtual return_t verify_if_separated (std::string file_not_signed, std::string file_signed, uint32* result);
-    /*
-     * @brief extract PE checksum
-     * @param file_stream* filestream [in]
-     * @param uint32* out_checksum_value [out]
-     * @return error code (see error.hpp)
-     */
-    return_t read_checksum (file_stream* filestream, uint32* out_checksum_value);
-    /*
-     * @brief update and extract PE checksum
-     * @param file_stream* filestream [in]
-     * @param uint32* out_checksum_value [out]
-     * @return error code (see error.hpp)
-     */
-    return_t update_checksum (file_stream* filestream, uint32* out_checksum_value);
-    return_t calc_checksum (file_stream* filestream, uint32* out_checksum_value);
-
-    /*
-     * @return AUTHENTICODE_ENGINE_ID
-     */
-    virtual AUTHENTICODE_ENGINE_ID id ();
+    return_t free_engines (authenticode_context_t* handle);
 };
 
 }

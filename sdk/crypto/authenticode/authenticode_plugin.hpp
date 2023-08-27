@@ -17,22 +17,17 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-enum AUTHENTICODE_ENGINE_ID {
-    AUTHENTICODE_ENGINE_ID_PEFILE       = 1,
-    AUTHENTICODE_ENGINE_ID_MSIFILE      = 2,
-    AUTHENTICODE_ENGINE_ID_CABINETFILE  = 3,
-    AUTHENTICODE_ENGINE_ID_AHC          = 4,
+enum authenticode_engine_id_t {
+    authenticode_engine_id_pe   = 1,
+    authenticode_engine_id_msi  = 2,
+    authenticode_engine_id_cab  = 3,
 };
 
-enum {
+enum authenticode_verify_t {
     AUTHENTICODE_VERIFY_OK      = 0,
     AUTHENTICODE_VERIFY_UNKNOWN = 1,
     AUTHENTICODE_VERIFY_FAIL    = 2,
     AUTHENTICODE_VERIFY_HASH    = 3, // hash mismatch
-};
-
-enum AUTHENTICODE_FLAG {
-    //AUTHENTICODE_LOOSELY_TEST_SIGNER = 1, /* test only - do not test signer */
 };
 
 /**
@@ -48,7 +43,7 @@ public:
      * @brief read a PKCS7 context
      * @param void* file_stream* filestream [in]
      * @param binary_t& bin [out]
-     * @return ERROR_NOT_AVAILABLE
+     * @return errorcode_t::not_available
      */
     virtual return_t extract (file_stream* filestream, binary_t& bin);
 
@@ -103,12 +98,12 @@ public:
     virtual return_t verify_if_separated (std::string file_not_signed, std::string file_signed, uint32* result) = 0;
 
     /*
-     * @return AUTHENTICODE_ENGINE_ID
+     * @return authenticode_engine_id_t
      */
-    virtual AUTHENTICODE_ENGINE_ID id () = 0;
+    virtual authenticode_engine_id_t id () = 0;
 
 private:
-    t_shared_reference <authenticode_plugin> _shared; //<<< reference counter
+    t_shared_reference <authenticode_plugin> _shared;
 };
 
 }
