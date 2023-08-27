@@ -24,17 +24,17 @@ class authenticode_plugin;
 struct _authenticode_context_t;
 typedef struct _authenticode_context_t authenticode_context_t;
 
-enum {
-    AUTHENTICODE_SET_PROXY              = 1,    // "http://127.0.0.1:3128/"
-    AUTHENTICODE_SET_PROXY_USER         = 2,    // "user:password"
-    AUTHENTICODE_SET_GENDER             = 3,    // generate DER (for test) int
-    AUTHENTICODE_SET_CRL                = 4,    // crl download (for test) int
-    AUTHENTICODE_SET_DIGICERT_PATH      = 5,    // ahc path
-    AUTHENTICODE_RESET_DIGICERT_PATH    = 6,
-    AUTHENTICODE_SET_CRL_PATH           = 7,    // crl download path
+enum authenticode_ctrl_t {
+    set_proxy             = 1,        // "http://127.0.0.1:3128/"
+    set_proxy_user        = 2,        // "user:password"
+    set_gen_der           = 3,        // generate DER (for test) int
+    set_crl               = 4,        // crl download (for test) int
+    set_digicert_path     = 5,        // path
+    reset_digicert_path   = 6,
+    set_crl_path          = 7,        // crl download path
 };
-enum {
-    AUTHENTICODE_FLAG_SEPARATED = 1,
+enum authenticode_flag_t {
+    flag_separated = 1,
 };
 
 /**
@@ -44,7 +44,7 @@ enum {
  *        openssl_thread_setup();
  *        authenticode_verifier verifier;
  *        verifier.open(&handle, filepath);
- *        addTrustedRootCert(handle, "trust.crt", NULL);
+ *        verifier.add_trusted_rootcert(handle, "trust.crt", NULL);
  *        verifier.verify_file(handle, filepathname, result);
  *        verifier.close(handle);
  *        openssl_thread_cleanup();

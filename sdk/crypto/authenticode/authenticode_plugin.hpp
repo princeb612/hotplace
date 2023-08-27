@@ -12,6 +12,8 @@
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN__
 
 #include <hotplace/sdk/io/stream/file_stream.hpp>
+#include <list>
+#include <string>
 
 namespace hotplace {
 using namespace io;
@@ -24,10 +26,10 @@ enum authenticode_engine_id_t {
 };
 
 enum authenticode_verify_t {
-    AUTHENTICODE_VERIFY_OK      = 0,
-    AUTHENTICODE_VERIFY_UNKNOWN = 1,
-    AUTHENTICODE_VERIFY_FAIL    = 2,
-    AUTHENTICODE_VERIFY_HASH    = 3, // hash mismatch
+    verify_ok       = 0,
+    verify_unknown  = 1,
+    verify_fail     = 2,
+    verify_hash     = 3,  // hash mismatch
 };
 
 /**

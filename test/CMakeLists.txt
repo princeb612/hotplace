@@ -20,6 +20,7 @@ add_subdirectory (mlfq)
 # crypto
 add_subdirectory (crypto)
 add_subdirectory (jose)
+add_subdirectory (authenticode)
 
 # net
 add_subdirectory (ipaddr)
@@ -30,4 +31,3 @@ add_subdirectory (httpserver)
 
 # etc
 add_subdirectory (incubator)
-

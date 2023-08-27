@@ -227,45 +227,45 @@ return_t authenticode_verifier::set (authenticode_context_t* handle, int option,
 
         handle->lock.enter ();
         switch (option) {
-            case AUTHENTICODE_SET_PROXY:
+            case authenticode_ctrl_t::set_proxy:
                 if (NULL == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
                     handle->proxy_url = std::string ((char *) data, size);
                 }
                 break;
-            case AUTHENTICODE_SET_PROXY_USER:
+            case authenticode_ctrl_t::set_proxy_user:
                 if (NULL == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
                     handle->proxy_user = std::string ((char *) data, size);
                 }
                 break;
-            case AUTHENTICODE_SET_GENDER:
+            case authenticode_ctrl_t::set_gen_der:
                 if ((NULL != data) && (sizeof (bool) == size)) {
                     handle->gender = *(bool *) data;
                 } else {
                     ret = errorcode_t::invalid_parameter;
                 }
                 break;
-            case AUTHENTICODE_SET_CRL:
+            case authenticode_ctrl_t::set_crl:
                 if ((NULL != data) && (sizeof (int) == size)) {
                     handle->crl_download = *(int *) data;
                 } else {
                     ret = errorcode_t::invalid_parameter;
                 }
                 break;
-            case AUTHENTICODE_RESET_DIGICERT_PATH:
+            case authenticode_ctrl_t::reset_digicert_path:
                 handle->digicert_path.clear ();
                 break;
-            case AUTHENTICODE_SET_DIGICERT_PATH:
+            case authenticode_ctrl_t::set_digicert_path:
                 if (NULL == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
                     handle->digicert_path.push_back (std::string ((char *) data, size));
                 }
                 break;
-            case AUTHENTICODE_SET_CRL_PATH:
+            case authenticode_ctrl_t::set_crl_path:
                 if (NULL == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
@@ -326,8 +326,8 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
         }
 
         if (errorcode_t::success != ret) {
-            if (AUTHENTICODE_FLAG_SEPARATED & flags) {
-                ret = verify_separated (handle, file_name, AUTHENTICODE_FLAG_SEPARATED, result);
+            if (authenticode_flag_t::flag_separated & flags) {
+                ret = verify_separated (handle, file_name, authenticode_flag_t::flag_separated, result);
             }
             __leave2;
         }
@@ -421,9 +421,9 @@ return_t authenticode_verifier::verify_separated (authenticode_context_t* handle
             __leave2_trace (ret);
         }
 
-        result = AUTHENTICODE_VERIFY_UNKNOWN;
+        result = authenticode_verify_t::verify_unknown;
 
-        if (AUTHENTICODE_FLAG_SEPARATED & flags) {
+        if (authenticode_flag_t::flag_separated & flags) {
             authenticode_engine_list_t engines;
             handle->lock.enter ();
             for (authenticode_engines_map_t::iterator engine_iter1 = handle->engines.begin (); engine_iter1 != handle->engines.end (); engine_iter1++) {
@@ -455,14 +455,14 @@ return_t authenticode_verifier::verify_separated (authenticode_context_t* handle
 
                 for (std::list<std::string>::iterator file_iter = filelist.begin (); file_iter != filelist.end (); file_iter++) {
                     std::string file = *file_iter;
-                    uint32 sep_result = AUTHENTICODE_VERIFY_UNKNOWN;
+                    uint32 sep_result = authenticode_verify_t::verify_unknown;
 
                     ret_file = verify (handle, file.c_str (), 0, sep_result);
                     if (errorcode_t::success == ret_file) {
                         ret_file = engine->verify_if_separated (file_name, file, &sep_result);
-                        if (AUTHENTICODE_VERIFY_OK == sep_result) {
+                        if (authenticode_verify_t::verify_ok == sep_result) {
                             ret = errorcode_t::success;
-                            result = AUTHENTICODE_VERIFY_OK;
+                            result = authenticode_verify_t::verify_ok;
                             break;
                         }
                     }
@@ -747,7 +747,7 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
 {
     UNREFERENCED_PARAMETER (flags);
     return_t ret = errorcode_t::success;
-    //result = AUTHENTICODE_VERIFY_UNKNOWN;
+    //result = authenticode_verify_t::verify_unknown;
 
     int ret_verify = 0;
     PKCS7* pkcs7 = reinterpret_cast<PKCS7*>(pkcs7_pointer);

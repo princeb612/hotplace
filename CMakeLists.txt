@@ -35,7 +35,7 @@ if (MINGW)
     set (SUPPORT_SHARED 1)
 endif ()
 if(CMAKE_VERSION VERSION_GREATER 3.8)
-    set (SUPPORT_PCH 1)
+    #set (SUPPORT_PCH 1)
 endif ()
 
 # verbose
