@@ -1,7 +1,7 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file {file}
- * @author Soo han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *  RFC 7516 JSON Web Encryption (JWE)
  *  RFC 7518 JSON Web Algorithms (JWA)

@@ -1,11 +1,23 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file {file}
- * @author Soo han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *      verification
+ *        PKCS7 format verification
+ *        contents hash verification
+ *        CRL revocation verification (temporary disabled, file download)
+ *        PE checksum
+ *        signer
+ *      msi, cabinet plugin excluded
  *
  * Revision History
  * Date         Name                Description
+ * 2005.07.07   Soo Han, Kim        implemented using windows sdk
+ * 2012.03.08   Soo Han, Kim        refactor (merlin)
+ * 2017.07.06   Soo Han, Kim        implemented using openssl (grape)
+ * 2023.02.06   Soo Han, Kim        refactor plugin_pe, plugin_msi, plugin_cabinet (unicorn)
+ * 2023.08.27   Soo Han, Kim        refactor (hotplace)
  */
 
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_VERIFIER__
@@ -25,13 +37,13 @@ struct _authenticode_context_t;
 typedef struct _authenticode_context_t authenticode_context_t;
 
 enum authenticode_ctrl_t {
-    set_proxy             = 1,        // "http://127.0.0.1:3128/"
-    set_proxy_user        = 2,        // "user:password"
-    set_gen_der           = 3,        // generate DER (for test) int
-    set_crl               = 4,        // crl download (for test) int
-    set_digicert_path     = 5,        // path
-    reset_digicert_path   = 6,
-    set_crl_path          = 7,        // crl download path
+    set_proxy           = 1,            // "http://127.0.0.1:3128/"
+    set_proxy_user      = 2,            // "user:password"
+    set_gen_der         = 3,            // generate DER (for test) int
+    set_crl             = 4,            // crl download (for test) int
+    set_digicert_path   = 5,            // path
+    reset_digicert_path = 6,
+    set_crl_path        = 7,            // crl download path
 };
 enum authenticode_flag_t {
     flag_separated = 1,
@@ -59,7 +71,7 @@ public:
     /*
      * @brief open
      * @param authenticode_context_t** handle [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks
      *      // check
      *      openssl_startup();
@@ -83,20 +95,20 @@ public:
      * @param const char* name [in]
      * @param uint32 flags [in] reserved
      * @param uint32& result [out] reserved
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t verify (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result, uint32* engine_id = NULL);
     /*
      * @brief close
      * @param authenticode_context_t* handle [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t close (authenticode_context_t* handle);
     /*
      * @brief add a trusted signer
      * @param authenticode_context_t* handle [in]
      * @parm const char* signer [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @remarks
      *        if signer not added, verify fails X509_V_ERR_CERT_UNTRUSTED (27)
      */
@@ -105,13 +117,13 @@ public:
      * @brief remove a trusted signer
      * @param authenticode_context_t* handle [in]
      * @parm const char* signer [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t remove_trusted_signer (authenticode_context_t* handle, const char* signer);
     /*
      * @brief remove all trusted signer
      * @param authenticode_context_t* handle [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t remove_all_trusted_signer (authenticode_context_t* handle);
     /*
@@ -119,14 +131,14 @@ public:
      * @param authenticode_context_t* handle [in]
      * @param const char* file [inopt]
      * @param const char* path [inopt]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t add_trusted_rootcert (authenticode_context_t* handle, const char* file, const char* path);
     /*
      * @brief add engine
      * @param authenticode_context_t* handle [in]
      * @param authenticode_plugin* engine
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      * @sample
      *      engine = new AuthenticodeEngineImpl;
      *      ret = add_engine(handle, engine);
@@ -143,7 +155,7 @@ protected:
      * @param void* pkcs7 [in]
      * @param uint32 flags [in]
      * @param uint32& result [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t verify_pkcs7 (authenticode_context_t* handle, void* pkcs7, uint32 flags, uint32& result);
 
@@ -153,7 +165,7 @@ protected:
      * @param const char* filename [in]
      * @param HASH_ALGORITHM algorithm [in]
      * @param std::string& hash [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t hash (const char* filename, hash_algorithm_t algorithm, std::string& hash);
 

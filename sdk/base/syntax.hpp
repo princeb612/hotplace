@@ -35,4 +35,8 @@
 #define __try_new_catch_only(ptr, statement) \
     __trynew { ptr = statement; } __catchnew (nullptr == ptr) { }
 
+/* backtrace and leave */
+#define __trace_inside(x)
+#define __trace(x, ...)
+
 #endif

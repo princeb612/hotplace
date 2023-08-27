@@ -1,7 +1,7 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file {file}
- * @author Soo han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
  * Revision History
@@ -38,12 +38,12 @@ bool authenticode_plugin_pe::is_kind_of (file_stream* filestream)
             __leave2_trace (ret);
         }
 
-        if (true != filestream->is_open ()) {
+        if (TRUE != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
 
-        if (false == filestream->is_mmapped ()) {
+        if (FALSE == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -93,12 +93,12 @@ return_t authenticode_plugin_pe::read_authenticode (file_stream* filestream, siz
             __leave2_trace (ret);
         }
 
-        if (true != filestream->is_open ()) {
+        if (TRUE != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
 
-        if (false == filestream->is_mmapped ()) {
+        if (FALSE == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -237,7 +237,7 @@ return_t authenticode_plugin_pe::write_authenticode (file_stream* filestream, bi
             __leave2_trace (ret);
         }
 
-        if (true != filestream->is_open ()) {
+        if (TRUE != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
@@ -262,7 +262,7 @@ return_t authenticode_plugin_pe::write_authenticode (file_stream* filestream, bi
 
         size_t size_new = authenticode_begin + blob_start + data.size ();
 
-        if (true == filestream->is_mmapped ()) {
+        if (TRUE == filestream->is_mmapped ()) {
             filestream->end_mmap ();
         }
         filestream->truncate (size_new);
@@ -345,12 +345,12 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
-        if (true != filestream->is_open ()) {
+        if (TRUE != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
 
-        if (false == filestream->is_mmapped ()) {
+        if (FALSE == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -411,7 +411,7 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
             __leave2;
         }
 
-        if (true != filestream->is_open ()) {
+        if (TRUE != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
@@ -419,7 +419,7 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
         byte_t* stream_data = NULL;
         //size_t stream_size = 0;
 
-        if (false == filestream->is_mmapped ()) {
+        if (FALSE == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -469,11 +469,17 @@ bool authenticode_plugin_pe::separated ()
 
 return_t authenticode_plugin_pe::find_if_separated (std::string filepathname_not_signed, std::list<std::string> pathlist, std::list<std::string>& filelist)
 {
+    UNREFERENCED_PARAMETER (filepathname_not_signed);
+    UNREFERENCED_PARAMETER (pathlist);
+    UNREFERENCED_PARAMETER (filelist);
     return errorcode_t::not_available;
 }
 
 return_t authenticode_plugin_pe::verify_if_separated (std::string file_not_signed, std::string file_signed, uint32* result)
 {
+    UNREFERENCED_PARAMETER (file_signed);
+    UNREFERENCED_PARAMETER (file_not_signed);
+    UNREFERENCED_PARAMETER (result);
     return errorcode_t::not_available;
 }
 
@@ -487,7 +493,7 @@ return_t authenticode_plugin_pe::read_checksum (file_stream* filestream, uint32*
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
-        if (true != filestream->is_open ()) {
+        if (TRUE != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
@@ -495,7 +501,7 @@ return_t authenticode_plugin_pe::read_checksum (file_stream* filestream, uint32*
         byte_t* stream_data = NULL;
         size_t stream_size = 0;
 
-        if (false == filestream->is_mmapped ()) {
+        if (FALSE == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -554,7 +560,7 @@ return_t authenticode_plugin_pe::calc_checksum (file_stream* filestream, uint32*
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
-        if (true != filestream->is_open ()) {
+        if (TRUE != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
@@ -562,7 +568,7 @@ return_t authenticode_plugin_pe::calc_checksum (file_stream* filestream, uint32*
         byte_t* stream_data = NULL;
         size_t stream_size = 0;
 
-        if (false == filestream->is_mmapped ()) {
+        if (FALSE == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -630,7 +636,7 @@ return_t authenticode_plugin_pe::update_checksum (file_stream* filestream, uint3
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
-        if (true != filestream->is_open ()) {
+        if (TRUE != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
@@ -638,7 +644,7 @@ return_t authenticode_plugin_pe::update_checksum (file_stream* filestream, uint3
         byte_t* stream_data = NULL;
         size_t stream_size = 0;
 
-        if (false == filestream->is_mmapped ()) {
+        if (FALSE == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);

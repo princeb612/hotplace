@@ -1,11 +1,12 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file {file}
- * @author Soo han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
  * Revision History
  * Date         Name                Description
+ * 2016.03.16   Soo Han, Kim        implemented using openssl (merlin)
  */
 
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEY__

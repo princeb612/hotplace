@@ -1,11 +1,12 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file {file}
- * @author Soo han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
  * Revision History
  * Date         Name                Description
+ * 2023.08.27   Soo Han, Kim        get_crl - temporary disabled, under construction
  */
 
 #include <hotplace/sdk/crypto/authenticode/authenticode_plugin_pe.hpp>

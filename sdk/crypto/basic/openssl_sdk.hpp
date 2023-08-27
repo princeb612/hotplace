@@ -1,7 +1,7 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file {file}
- * @author Soo han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
  * Revision History
@@ -24,9 +24,6 @@ namespace crypto {
 
 #define __trace_openssl(x) {  }
 #define __leave2_trace_openssl(x) { __leave2; }
-
-#define __trace_inside(x)
-#define __trace(x, ...)
 
 /*
  * @brief strings, algorithms

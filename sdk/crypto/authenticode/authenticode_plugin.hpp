@@ -1,11 +1,16 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file {file}
- * @author Soo han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
  * Revision History
  * Date         Name                Description
+ * 2005.07.07   Soo Han, Kim        implemented using windows sdk
+ * 2012.03.08   Soo Han, Kim        refactor (merlin)
+ * 2017.07.06   Soo Han, Kim        implemented using openssl (grape)
+ * 2023.02.06   Soo Han, Kim        refactor plugin_pe, plugin_msi, plugin_cabinet (unicorn)
+ * 2023.08.27   Soo Han, Kim        refactor (hotplace)
  */
 
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN__

@@ -6,7 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.15   Soo han, Kim        fix : insert (lock)
+ * 2023.08.15   Soo Han, Kim        fix : insert (lock)
                                     fix : find_not_first_of, replace
  *                                  removed : replace1
  */

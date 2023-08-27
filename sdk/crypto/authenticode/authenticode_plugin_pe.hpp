@@ -1,11 +1,16 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file {file}
- * @author Soo han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
  * Revision History
  * Date         Name                Description
+ * 2005.07.07   Soo Han, Kim        implemented using windows sdk
+ * 2012.03.08   Soo Han, Kim        refactor (merlin)
+ * 2017.07.06   Soo Han, Kim        implemented using openssl (grape)
+ * 2023.02.06   Soo Han, Kim        refactor plugin_pe, plugin_msi, plugin_cabinet (unicorn)
+ * 2023.08.27   Soo Han, Kim        refactor (hotplace)
  */
 
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN_PE__
@@ -36,7 +41,7 @@ public:
      * @brief extract IMAGE_DIRECTORY_ENTRY_SECURITY(4) data
      * @param file_stream* filestream [in]
      * @param binary_t& data [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     virtual return_t read_authenticode (file_stream* filestream, binary_t& data);
     /*
@@ -44,14 +49,14 @@ public:
      * @param file_stream* filestream [in]
      * @param size_t& begin [out]
      * @param size_t& size [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t read_authenticode (file_stream* filestream, size_t& begin, size_t& size);
     /*
      * @brief write directory entry data
      * @param file_stream* filestream [in]
      * @param binary_t data [in]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     virtual return_t write_authenticode (file_stream* filestream, binary_t data);
 
@@ -87,14 +92,14 @@ public:
      * @brief extract PE checksum
      * @param file_stream* filestream [in]
      * @param uint32* out_checksum_value [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t read_checksum (file_stream* filestream, uint32* out_checksum_value);
     /*
      * @brief update and extract PE checksum
      * @param file_stream* filestream [in]
      * @param uint32* out_checksum_value [out]
-     * @return error code (see error.h)
+     * @return error code (see error.hpp)
      */
     return_t update_checksum (file_stream* filestream, uint32* out_checksum_value);
     return_t calc_checksum (file_stream* filestream, uint32* out_checksum_value);
