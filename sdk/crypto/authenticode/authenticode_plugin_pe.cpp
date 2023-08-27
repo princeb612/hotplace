@@ -33,24 +33,24 @@ bool authenticode_plugin_pe::is_kind_of (file_stream* filestream)
 
     __try2
     {
-        if (NULL == filestream) {
+        if (nullptr == filestream) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
 
-        if (TRUE != filestream->is_open ()) {
+        if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
 
-        if (FALSE == filestream->is_mmapped ()) {
+        if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
             }
         }
 
-        byte_t* stream_data = NULL;
+        byte_t* stream_data = nullptr;
         size_t stream_size = 0;
         stream_data = filestream->data ();
         stream_size = filestream->size ();
@@ -88,24 +88,24 @@ return_t authenticode_plugin_pe::read_authenticode (file_stream* filestream, siz
         authenticode_begin = (size_t) -1;
         authenticode_size = 0;
 
-        if (NULL == filestream) {
+        if (nullptr == filestream) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
 
-        if (TRUE != filestream->is_open ()) {
+        if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
 
-        if (FALSE == filestream->is_mmapped ()) {
+        if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
             }
         }
 
-        byte_t* stream_data = NULL;
+        byte_t* stream_data = nullptr;
         size_t stream_size = 0;
         stream_data = filestream->data ();
         stream_size = filestream->size ();
@@ -191,7 +191,7 @@ return_t authenticode_plugin_pe::read_authenticode (file_stream* filestream, bin
             __leave2;
         }
 
-        byte_t* stream_data = NULL;
+        byte_t* stream_data = nullptr;
         //size_t stream_size = 0;
         stream_data = filestream->data ();
         //stream_size = filestream->size();
@@ -232,12 +232,12 @@ return_t authenticode_plugin_pe::write_authenticode (file_stream* filestream, bi
 
     __try2
     {
-        if (NULL == filestream) {
+        if (nullptr == filestream) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
 
-        if (TRUE != filestream->is_open ()) {
+        if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
@@ -257,12 +257,12 @@ return_t authenticode_plugin_pe::write_authenticode (file_stream* filestream, bi
         }
 
         size_t blob_start = FIELD_OFFSET (WIN_CERTIFICATE, bCertificate);
-        byte_t* stream_data = NULL;
+        byte_t* stream_data = nullptr;
         size_t stream_size = 0;
 
         size_t size_new = authenticode_begin + blob_start + data.size ();
 
-        if (TRUE == filestream->is_mmapped ()) {
+        if (true == filestream->is_mmapped ()) {
             filestream->end_mmap ();
         }
         filestream->truncate (size_new);
@@ -331,9 +331,9 @@ return_t authenticode_plugin_pe::write_authenticode (file_stream* filestream, bi
 return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* algorithm, binary_t& output)
 {
     return_t ret = errorcode_t::success;
-    hash_context_t* hash_handle = NULL;
+    hash_context_t* hash_handle = nullptr;
     openssl_hash hash;
-    byte_t* stream_data = NULL;
+    byte_t* stream_data = nullptr;
     size_t stream_size = 0;
     size_t authenticode_begin = 0;
     size_t checksum_offset = 0;
@@ -341,16 +341,16 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
 
     __try2
     {
-        if (NULL == filestream) {
+        if (nullptr == filestream) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
-        if (TRUE != filestream->is_open ()) {
+        if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
 
-        if (FALSE == filestream->is_mmapped ()) {
+        if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -368,8 +368,8 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
             }
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
-                uint32* checksum_pointer = NULL; /* *checksum_pointer is CheckSum */
-                uint32* securitydir_pointer = NULL;
+                uint32* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
+                uint32* securitydir_pointer = nullptr;
                 IMAGE_OPTIONAL_HEADER* optional_header = &nt_headers->OptionalHeader;
                 if (IMAGE_NT_OPTIONAL_HDR64_MAGIC == optional_header->Magic) {
                     if (stream_size < dos_header->e_lfanew + sizeof (IMAGE_NT_HEADERS) + sizeof (IMAGE_OPTIONAL_HEADER64)) {
@@ -411,15 +411,15 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
             __leave2;
         }
 
-        if (TRUE != filestream->is_open ()) {
+        if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
 
-        byte_t* stream_data = NULL;
+        byte_t* stream_data = nullptr;
         //size_t stream_size = 0;
 
-        if (FALSE == filestream->is_mmapped ()) {
+        if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -469,17 +469,11 @@ bool authenticode_plugin_pe::separated ()
 
 return_t authenticode_plugin_pe::find_if_separated (std::string filepathname_not_signed, std::list<std::string> pathlist, std::list<std::string>& filelist)
 {
-    UNREFERENCED_PARAMETER (filepathname_not_signed);
-    UNREFERENCED_PARAMETER (pathlist);
-    UNREFERENCED_PARAMETER (filelist);
     return errorcode_t::not_available;
 }
 
 return_t authenticode_plugin_pe::verify_if_separated (std::string file_not_signed, std::string file_signed, uint32* result)
 {
-    UNREFERENCED_PARAMETER (file_signed);
-    UNREFERENCED_PARAMETER (file_not_signed);
-    UNREFERENCED_PARAMETER (result);
     return errorcode_t::not_available;
 }
 
@@ -489,19 +483,19 @@ return_t authenticode_plugin_pe::read_checksum (file_stream* filestream, uint32*
 
     __try2
     {
-        if (NULL == filestream || NULL == out_checksum_value) {
+        if (nullptr == filestream || nullptr == out_checksum_value) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
-        if (TRUE != filestream->is_open ()) {
+        if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
 
-        byte_t* stream_data = NULL;
+        byte_t* stream_data = nullptr;
         size_t stream_size = 0;
 
-        if (FALSE == filestream->is_mmapped ()) {
+        if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -519,7 +513,7 @@ return_t authenticode_plugin_pe::read_checksum (file_stream* filestream, uint32*
             }
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
-                uint32* checksum_pointer = NULL; /* *checksum_pointer is CheckSum */
+                uint32* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
                 IMAGE_OPTIONAL_HEADER* optional_header = &nt_headers->OptionalHeader;
                 if (IMAGE_NT_OPTIONAL_HDR64_MAGIC == optional_header->Magic) {
                     IMAGE_OPTIONAL_HEADER64* optional_header64 = reinterpret_cast<IMAGE_OPTIONAL_HEADER64*>(optional_header);
@@ -556,19 +550,19 @@ return_t authenticode_plugin_pe::calc_checksum (file_stream* filestream, uint32*
 
     __try2
     {
-        if (NULL == filestream || NULL == out_checksum_value) {
+        if (nullptr == filestream || nullptr == out_checksum_value) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
-        if (TRUE != filestream->is_open ()) {
+        if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
 
-        byte_t* stream_data = NULL;
+        byte_t* stream_data = nullptr;
         size_t stream_size = 0;
 
-        if (FALSE == filestream->is_mmapped ()) {
+        if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -582,7 +576,7 @@ return_t authenticode_plugin_pe::calc_checksum (file_stream* filestream, uint32*
         if (IMAGE_DOS_SIGNATURE == dos_header->e_magic) {
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
-                uint32* checksum_pointer = NULL; /* *checksum_pointer is CheckSum */
+                uint32* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
                 IMAGE_OPTIONAL_HEADER* optional_header = &nt_headers->OptionalHeader;
                 if (IMAGE_NT_OPTIONAL_HDR64_MAGIC == optional_header->Magic) {
                     IMAGE_OPTIONAL_HEADER64* optional_header64 = reinterpret_cast<IMAGE_OPTIONAL_HEADER64*>(optional_header);
@@ -632,19 +626,19 @@ return_t authenticode_plugin_pe::update_checksum (file_stream* filestream, uint3
 
     __try2
     {
-        if (NULL == filestream || NULL == out_checksum_value) {
+        if (nullptr == filestream || nullptr == out_checksum_value) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
-        if (TRUE != filestream->is_open ()) {
+        if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
             __leave2_trace (ret);
         }
 
-        byte_t* stream_data = NULL;
+        byte_t* stream_data = nullptr;
         size_t stream_size = 0;
 
-        if (FALSE == filestream->is_mmapped ()) {
+        if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
                 __leave2_trace (ret);
@@ -658,7 +652,7 @@ return_t authenticode_plugin_pe::update_checksum (file_stream* filestream, uint3
         if (IMAGE_DOS_SIGNATURE == dos_header->e_magic) {
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
-                uint32* checksum_pointer = NULL; /* *checksum_pointer is CheckSum */
+                uint32* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
                 IMAGE_OPTIONAL_HEADER* optional_header = &nt_headers->OptionalHeader;
                 if (IMAGE_NT_OPTIONAL_HDR64_MAGIC == optional_header->Magic) {
                     IMAGE_OPTIONAL_HEADER64* optional_header64 = reinterpret_cast<IMAGE_OPTIONAL_HEADER64*>(optional_header);

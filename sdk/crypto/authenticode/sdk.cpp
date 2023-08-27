@@ -22,9 +22,9 @@ return_t crl_distribution_point (X509* cert, std::set<std::string>& crls)
         crls.clear ();
 
         int nid = NID_crl_distribution_points;
-        STACK_OF (DIST_POINT) * dist_points = (STACK_OF (DIST_POINT)*)X509_get_ext_d2i (cert, nid, NULL, NULL);
-        if (NULL == dist_points) {
-            ret = ERROR_INTERNAL_ERROR;
+        STACK_OF (DIST_POINT) * dist_points = (STACK_OF (DIST_POINT)*)X509_get_ext_d2i (cert, nid, nullptr, nullptr);
+        if (nullptr == dist_points) {
+            ret = errorcode_t::internal_error;
             __leave2;
         }
         for (int i = 0; i < sk_DIST_POINT_num (dist_points); i++) {
@@ -157,7 +157,7 @@ return_t pkcs7_digest_info (PKCS7* pkcs7, std::string& md, binary_t& digest)
         md.clear ();
         digest.resize (0);
 
-        if (NULL == pkcs7) {
+        if (nullptr == pkcs7) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -173,7 +173,7 @@ return_t pkcs7_digest_info (PKCS7* pkcs7, std::string& md, binary_t& digest)
         if (!OBJ_cmp (pkcs7->d.sign->contents->type, indir_objid) && pkcs7->d.sign->contents->d.other->type == V_ASN1_SEQUENCE) {
             ASN1_STRING *astr = pkcs7->d.sign->contents->d.other->value.sequence;
             const unsigned char *p = astr->data;
-            SpcIndirectDataContent *idc = d2i_SpcIndirectDataContent (NULL, &p, astr->length);
+            SpcIndirectDataContent *idc = d2i_SpcIndirectDataContent (nullptr, &p, astr->length);
             if (idc) {
                 if (idc->messageDigest && idc->messageDigest->digest && idc->messageDigest->digestAlgorithm) {
                     mdtype = OBJ_obj2nid (idc->messageDigest->digestAlgorithm->algorithm);
@@ -203,9 +203,9 @@ return_t pkcs7_digest_info (PKCS7* pkcs7, std::string& md, binary_t& digest)
 return_t X509_NAME_to_string (X509_NAME *name, std::string& data)
 {
     return_t ret = errorcode_t::success;
-    char *s = NULL;
-    char *c = NULL;
-    char *b = NULL;
+    char *s = nullptr;
+    char *c = nullptr;
+    char *b = nullptr;
     int l = 0;
     int i = 0;
 
@@ -213,15 +213,15 @@ return_t X509_NAME_to_string (X509_NAME *name, std::string& data)
     {
         data.clear ();
 
-        if (NULL == name) {
+        if (nullptr == name) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         l = 80 - 2;
 
-        b = X509_NAME_oneline (name, NULL, 0);
-        if (NULL == b) {
+        b = X509_NAME_oneline (name, nullptr, 0);
+        if (nullptr == b) {
             ret = errorcode_t::no_data;
             __leave2;
         }
@@ -258,7 +258,7 @@ return_t X509_NAME_to_string (X509_NAME *name, std::string& data)
     }
     __finally2
     {
-        if (NULL != b) {
+        if (nullptr != b) {
             OPENSSL_free (b);
         }
     }

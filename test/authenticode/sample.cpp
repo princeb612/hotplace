@@ -27,7 +27,7 @@ return_t test1 (int argc, char** argv)
 {
     return_t ret = errorcode_t::success;
     authenticode_verifier verifier;
-    authenticode_context_t* handle = NULL;
+    authenticode_context_t* handle = nullptr;
     uint32 result = 0;
 
     __try2
@@ -36,7 +36,7 @@ return_t test1 (int argc, char** argv)
         verifier.open (&handle);
         int option = 0;
         verifier.set (handle, authenticode_ctrl_t::set_crl, &option, sizeof (option));
-        verifier.add_trusted_rootcert (handle, "trust.crt", NULL);
+        verifier.add_trusted_rootcert (handle, "trust.crt", nullptr);
         ret = verifier.verify (handle, argv[1], authenticode_flag_t::flag_separated, result);
         printf ("file verification : %08x\n", ret);
     }

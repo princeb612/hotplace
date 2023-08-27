@@ -7,6 +7,7 @@
  * Revision History
  * Date         Name                Description
  * 2016.03.16   Soo Han, Kim        implemented using openssl (merlin)
+ * 2021.01.23   Soo Han, Kim        RFC 8037 OKP (unicorn)
  */
 
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEY__

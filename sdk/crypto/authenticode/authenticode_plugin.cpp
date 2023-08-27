@@ -29,7 +29,7 @@ return_t authenticode_plugin::extract (file_stream* filestream, binary_t& bin)
 
     __try2
     {
-        if (NULL == filestream) {
+        if (nullptr == filestream) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }

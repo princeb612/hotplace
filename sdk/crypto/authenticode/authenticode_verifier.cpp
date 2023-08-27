@@ -97,7 +97,7 @@ return_t authenticode_verifier::add_engine (authenticode_context_t* handle, auth
 
     __try2
     {
-        if (NULL == handle) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -105,7 +105,7 @@ return_t authenticode_verifier::add_engine (authenticode_context_t* handle, auth
             ret = errorcode_t::invalid_context;
             __leave2_trace (ret);
         }
-        if (NULL == engine) {
+        if (nullptr == engine) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -132,7 +132,7 @@ return_t authenticode_verifier::load_engines (authenticode_context_t* handle)
 
     __try2
     {
-        if (NULL == handle) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -160,7 +160,7 @@ return_t authenticode_verifier::free_engines (authenticode_context_t* handle)
 
     __try2
     {
-        if (NULL == handle) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -188,7 +188,7 @@ return_t authenticode_verifier::free_engines (authenticode_context_t* handle)
 return_t authenticode_verifier::open (authenticode_context_t** handle)
 {
     return_t ret = errorcode_t::success;
-    authenticode_context_t* context = NULL;
+    authenticode_context_t* context = nullptr;
 
     __try2
     {
@@ -203,7 +203,7 @@ return_t authenticode_verifier::open (authenticode_context_t** handle)
     __finally2
     {
         if (errorcode_t::success != ret) {
-            if (NULL != context) {
+            if (nullptr != context) {
                 delete context;
             }
         }
@@ -217,7 +217,7 @@ return_t authenticode_verifier::set (authenticode_context_t* handle, int option,
 
     __try2
     {
-        if (NULL == handle) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -229,28 +229,28 @@ return_t authenticode_verifier::set (authenticode_context_t* handle, int option,
         handle->lock.enter ();
         switch (option) {
             case authenticode_ctrl_t::set_proxy:
-                if (NULL == data) {
+                if (nullptr == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
                     handle->proxy_url = std::string ((char *) data, size);
                 }
                 break;
             case authenticode_ctrl_t::set_proxy_user:
-                if (NULL == data) {
+                if (nullptr == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
                     handle->proxy_user = std::string ((char *) data, size);
                 }
                 break;
             case authenticode_ctrl_t::set_gen_der:
-                if ((NULL != data) && (sizeof (bool) == size)) {
+                if ((nullptr != data) && (sizeof (bool) == size)) {
                     handle->gender = *(bool *) data;
                 } else {
                     ret = errorcode_t::invalid_parameter;
                 }
                 break;
             case authenticode_ctrl_t::set_crl:
-                if ((NULL != data) && (sizeof (int) == size)) {
+                if ((nullptr != data) && (sizeof (int) == size)) {
                     handle->crl_download = *(int *) data;
                 } else {
                     ret = errorcode_t::invalid_parameter;
@@ -260,14 +260,14 @@ return_t authenticode_verifier::set (authenticode_context_t* handle, int option,
                 handle->digicert_path.clear ();
                 break;
             case authenticode_ctrl_t::set_digicert_path:
-                if (NULL == data) {
+                if (nullptr == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
                     handle->digicert_path.push_back (std::string ((char *) data, size));
                 }
                 break;
             case authenticode_ctrl_t::set_crl_path:
-                if (NULL == data) {
+                if (nullptr == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
                     handle->crl_path = std::string ((char *) data, size);
@@ -286,12 +286,12 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
 {
     return_t ret = errorcode_t::success;
     file_stream filestream;
-    authenticode_plugin* engine_matched = NULL;
+    authenticode_plugin* engine_matched = nullptr;
 
     __try2
     {
         result = 0;
-        if (NULL == handle || NULL == file_name) {
+        if (nullptr == handle || nullptr == file_name) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -320,7 +320,7 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
         }
         handle->lock.leave ();
 
-        if (NULL == engine_matched) {
+        if (nullptr == engine_matched) {
             ret = errorcode_t::bad_format;
         } else {
             ret = engine_matched->extract (&filestream, binary);
@@ -344,8 +344,8 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
             bin.close ();
         }
 
-        PKCS7* pkcs7 = NULL;
-        BIO* in = NULL;
+        PKCS7* pkcs7 = nullptr;
+        BIO* in = nullptr;
         __try2
         {
             in = BIO_new (BIO_s_mem ());
@@ -354,8 +354,8 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
              * openssl asn1parse -inform der -i -in bCerficiate.saved
              * openssl pkcs7 -inform DER -print_certs -text -in bCerficiate.saved
              */
-            pkcs7 = d2i_PKCS7_bio (in, NULL);
-            if (NULL == pkcs7) {
+            pkcs7 = d2i_PKCS7_bio (in, nullptr);
+            if (nullptr == pkcs7) {
                 ret = errorcode_t::bad_format;
                 __leave2;
             }
@@ -386,10 +386,10 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
         }
         __finally2
         {
-            if (NULL != in) {
+            if (nullptr != in) {
                 BIO_free (in);
             }
-            if (NULL != pkcs7) {
+            if (nullptr != pkcs7) {
                 PKCS7_free (pkcs7);
             }
         }
@@ -398,7 +398,7 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
     {
         // do nothing
         if (engine_matched) {
-            if (NULL != engine_id) {
+            if (nullptr != engine_id) {
                 *engine_id = engine_matched->id ();
             }
             engine_matched->release ();
@@ -413,7 +413,7 @@ return_t authenticode_verifier::verify_separated (authenticode_context_t* handle
 
     __try2
     {
-        if (NULL == handle) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -486,7 +486,7 @@ return_t authenticode_verifier::close (authenticode_context_t* handle)
 
     __try2
     {
-        if (NULL == handle) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -514,7 +514,7 @@ return_t authenticode_verifier::add_trusted_signer (authenticode_context_t* hand
 
     __try2
     {
-        if (NULL == handle || NULL == signer) {
+        if (nullptr == handle || nullptr == signer) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -540,7 +540,7 @@ return_t authenticode_verifier::remove_trusted_signer (authenticode_context_t* h
 
     __try2
     {
-        if (NULL == handle || NULL == signer) {
+        if (nullptr == handle || nullptr == signer) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -571,7 +571,7 @@ return_t authenticode_verifier::remove_all_trusted_signer (authenticode_context_
 
     __try2
     {
-        if (NULL == handle) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -597,11 +597,11 @@ return_t authenticode_verifier::add_trusted_rootcert (authenticode_context_t* ha
 
     __try2
     {
-        if (NULL == handle) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
-        if (NULL == file && NULL == path) {
+        if (nullptr == file && nullptr == path) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -664,13 +664,13 @@ int verify_callback (int ok, X509_STORE_CTX *ctx)
 
     if (0 == depth) {
         // find the thread-specified authenticode_context_t
-        authenticode_context_t* context = NULL;
+        authenticode_context_t* context = nullptr;
         _contexts_lock.enter ();
         authenticode_contexts_map_t::iterator iter = _contexts.find (get_thread_id ());
         context = iter->second;
         _contexts_lock.leave ();
 
-        if (NULL != context) {
+        if (nullptr != context) {
             context->lock.enter ();
             if (false == context->signer.empty ()) {
                 bool match = false;
@@ -751,16 +751,16 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
 
     int ret_verify = 0;
     PKCS7* pkcs7 = reinterpret_cast<PKCS7*>(pkcs7_pointer);
-    X509_STORE_CTX* store_context = NULL;
-    X509_STORE* store = NULL;
+    X509_STORE_CTX* store_context = nullptr;
+    X509_STORE* store = nullptr;
 
-    //STACK_OF(X509)* chain = NULL;
-    BIO* bio = NULL;
+    //STACK_OF(X509)* chain = nullptr;
+    BIO* bio = nullptr;
     authenticode_contexts_map_pib_t pib;
 
     __try2
     {
-        if (NULL == handle || NULL == pkcs7) {
+        if (nullptr == handle || nullptr == pkcs7) {
             ret = errorcode_t::invalid_parameter;
             __leave2_trace (ret);
         }
@@ -779,7 +779,7 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
 
         {
             int i = 0;
-            STACK_OF (X509) * signers = PKCS7_get0_signers (pkcs7, NULL, 0);
+            STACK_OF (X509) * signers = PKCS7_get0_signers (pkcs7, nullptr, 0);
             for (i = 0; i < sk_X509_num (signers); i++) {
                 X509 *cert = sk_X509_value (signers, i);
                 get_crl (handle, cert, crl_map);
@@ -794,7 +794,7 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
 
 #if 0
         int i = 0;
-        STACK_OF (X509) * signers = PKCS7_get0_signers (pkcs7, NULL, 0);
+        STACK_OF (X509) * signers = PKCS7_get0_signers (pkcs7, nullptr, 0);
         printf ("\nNumber of signers: %d\n", sk_X509_num (signers));
         for (i = 0; i < sk_X509_num (signers); i++) {
             X509* cert = sk_X509_value (signers, i);
@@ -827,19 +827,19 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
 
         store = X509_STORE_new ();
         X509_STORE_set_default_paths (store);
-        //X509_STORE_load_locations(store, NULL, "/etc/pki/tls/certs/");
+        //X509_STORE_load_locations(store, nullptr, "/etc/pki/tls/certs/");
         // prevent error 20
         // X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
         // unable to get local issuer certificate
-        //X509_STORE_load_locations(store, "trust.crt", NULL);
+        //X509_STORE_load_locations(store, "trust.crt", nullptr);
 
         handle->lock.enter ();
         for (authenticode_trusted_cert_map_t::iterator trusted_cert_it = handle->trusted_cert.begin (); trusted_cert_it != handle->trusted_cert.end (); trusted_cert_it++) {
             std::string cert_file = trusted_cert_it->first;
             std::string cert_path = trusted_cert_it->second;
 
-            //X509_STORE_load_locations (store, cert_file.empty () ? NULL : cert_file.c_str (),
-            //                           cert_path.empty () ? NULL : cert_path.c_str ());
+            //X509_STORE_load_locations (store, cert_file.empty () ? nullptr : cert_file.c_str (),
+            //                           cert_path.empty () ? nullptr : cert_path.c_str ());
             // load cert wo path
             if (cert_file.size ()) {
                 X509_LOOKUP* lookup = X509_STORE_add_lookup (store, X509_LOOKUP_file ());
@@ -859,7 +859,7 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
         // unsupported certificate purpose
         // http://securitypad.blogspot.kr/2017/01/openssl-pkcs7-verification-unsupported.html
         store_context = X509_STORE_CTX_new ();
-        X509_STORE_CTX_init (store_context, store, NULL, NULL);
+        X509_STORE_CTX_init (store_context, store, nullptr, nullptr);
         X509_VERIFY_PARAM* vparam = X509_STORE_CTX_get0_param (store_context);
         int purpose = X509_PURPOSE_ANY;
         X509_VERIFY_PARAM_set_purpose (vparam, purpose);
@@ -878,7 +878,7 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
         }
 
         int flag = 0;
-        ret_verify = PKCS7_verify (pkcs7, pkcs7->d.sign->cert, store, bio, NULL, flag);
+        ret_verify = PKCS7_verify (pkcs7, pkcs7->d.sign->cert, store, bio, nullptr, flag);
         //__trace(0, format("PKCS7_verify %d", ret_verify).c_str());
         //printf("Signature verification: %s\n\n", ret_verify ? "ok" : "failed");
         if (ret_verify < 1) {
@@ -888,20 +888,20 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
     }
     __finally2
     {
-        //if (NULL != chain)
+        //if (nullptr != chain)
         //{
         //  sk_X509_free(chain);
         //}
-        if (NULL != bio) {
+        if (nullptr != bio) {
             BIO_free (bio);
         }
-        if (NULL != store) {
+        if (nullptr != store) {
             X509_STORE_free (store);
         }
-        if (NULL != store_context) {
+        if (nullptr != store_context) {
             X509_STORE_CTX_free (store_context);
         }
-        if (NULL != handle) {
+        if (nullptr != handle) {
             _contexts_lock.enter ();
             if (true == pib.second) {
                 _contexts.erase (pib.first);
@@ -932,7 +932,7 @@ static return_t get_crl (authenticode_context_t* context, X509* cert, authentico
 
     __try2
     {
-        if (NULL == context || NULL == cert) {
+        if (nullptr == context || nullptr == cert) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -1000,10 +1000,10 @@ static return_t get_crl (authenticode_context_t* context, X509* cert, authentico
                 unlink (nonce.c_str ());
 
                 BIO* bio = BIO_new_file (crl_file.c_str (), "r");
-                X509_CRL* crl = d2i_X509_CRL_bio (bio, NULL);
+                X509_CRL* crl = d2i_X509_CRL_bio (bio, nullptr);
                 BIO_free (bio);
 
-                if (NULL == crl) {
+                if (nullptr == crl) {
                     unlink (crl_file.c_str ());
                 }
 
@@ -1031,7 +1031,7 @@ static return_t clear_crl (authenticode_context_t* context)
 
     __try2
     {
-        if (NULL == context) {
+        if (nullptr == context) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }

@@ -56,7 +56,7 @@ enum authenticode_flag_t {
  *        openssl_thread_setup();
  *        authenticode_verifier verifier;
  *        verifier.open(&handle, filepath);
- *        verifier.add_trusted_rootcert(handle, "trust.crt", NULL);
+ *        verifier.add_trusted_rootcert(handle, "trust.crt", nullptr);
  *        verifier.verify_file(handle, filepathname, result);
  *        verifier.close(handle);
  *        openssl_thread_cleanup();
@@ -97,7 +97,7 @@ public:
      * @param uint32& result [out] reserved
      * @return error code (see error.hpp)
      */
-    return_t verify (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result, uint32* engine_id = NULL);
+    return_t verify (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result, uint32* engine_id = nullptr);
     /*
      * @brief close
      * @param authenticode_context_t* handle [in]
