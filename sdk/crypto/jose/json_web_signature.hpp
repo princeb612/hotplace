@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace crypto {
 
-/*
+/**
  * @brief RFC 7515 JSON Web Signature (JWS)
  *
  * @remarks
@@ -66,7 +66,7 @@ public:
     json_web_signature ();
     ~json_web_signature ();
 
-    /*
+    /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
      * @param std::string header [in]
@@ -75,7 +75,7 @@ public:
      * @param jose_serialization_t mode [in]
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
-     * @sample
+     * @example
      *          const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
      *          crypto_key key;
      *          json_web_key jwk;
@@ -88,7 +88,7 @@ public:
      *          // DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8ISlSApmWQxfKTUJqPP3-Kg6NU1Q
      */
     return_t sign (crypto_key* crypto_key, std::string header, std::string claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
      * @param std::list<std::string> headers [in]
@@ -97,7 +97,7 @@ public:
      * @param jose_serialization_t mode [in]
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
-     * @sample
+     * @example
      *          headers.push_back (hs256_header);
      *          headers.push_back (rs256_header);
      *          headers.push_back (es256_header);
@@ -105,7 +105,7 @@ public:
      *          jws.sign (&crypto_key, headers, claim, signature);
      */
     return_t sign (crypto_key* crypto_key, std::list<std::string> headers, std::string claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
      * @param jws_t alg header [in]
@@ -114,11 +114,11 @@ public:
      * @param jose_serialization_t mode [in]
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
-     * @sample
+     * @example
      *          jws.sign (&crypto_key, jws_t::jws_hs256, claim, signature);
      */
     return_t sign (crypto_key* crypto_key, jws_t alg, std::string claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
      * @param std::list<jws_t> algs [in]
@@ -127,7 +127,7 @@ public:
      * @param jose_serialization_t mode [in]
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
-     * @sample
+     * @example
      *          algs.push_back (jws_t::jws_hs256);
      *          algs.push_back (jws_t::jws_rs256);
      *          algs.push_back (jws_t::jws_es256);
@@ -135,7 +135,7 @@ public:
      *          jws.sign (&crypto_key, algs, claim, signature);
      */
     return_t sign (crypto_key* crypto_key, std::list<jws_t> algs, std::string claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief verify
      * @param crypto_key* crypto_key [in]
      * @param std::string signature [in]

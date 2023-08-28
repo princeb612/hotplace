@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace net {
 
-/*
+/**
  * @brief   create a socket, see alse close_socket to free
  * @param   socket_t*           socket_created [out] socket
  * @param   sockaddr_storage_t* sockaddr_created [out] socket address
@@ -24,7 +24,7 @@ namespace net {
  * @param   const char*         address [in] 127.0.0.1 socket ipv4, ::1 socket ipv6
  * @param   uint16              port [in]
  * @return  error code (see error.hpp)
- * @sample
+ * @example
  *          address = "127.0.0.1";
  *          port = 1234;
  *          socket_t sock = INVALID_SOCKET;
@@ -34,7 +34,7 @@ namespace net {
  *          close_socket (sock, true, 0);
  */
 return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_created, int address_type, const char* address, uint16 port);
-/*
+/**
  * @brief   create a socket and listen, see alse CloseListener to free
  * @param   unsigned int size_vector    [in]
  * @param   unsigned int* vector_family [in] AF_INET, AF_INET6
@@ -43,7 +43,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
  * @param   uint32 port                 [in]
  * @param   bool support_win32_acceptex [inopt]
  * @error   error code (see error.hpp)
- * @sample
+ * @example
  *          unsigned int nFamily[2] = { AF_INET, AF_INET6 };  // IPv4 and IPv6
  *          socket_t Sockets[2] = { INVALID_SOCKET, INVALID_SOCKET };
  *          create_listener (2, nFamily, Sockets, IPPROTO_TCP, 9000);
@@ -52,7 +52,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
  */
 return_t create_listener (unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type,
                           uint32 port, bool support_win32_acceptex = false);
-/*
+/**
  * @brief   create_socket and connect_socket_addr
  * @param   socket_t*   socket  [out]
  * @param   int         nType   [in]
@@ -62,7 +62,7 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
  * @error   error code (see error.hpp)
  */
 return_t connect_socket (socket_t* socket, int nType, const char* address, uint16 port, uint32 timeout);
-/*
+/**
  * @brief   connect to address
  * @param   socket_t            sock            [in]
  * @param   sockaddr_storage_t* pSockAddr       [in]
@@ -70,19 +70,19 @@ return_t connect_socket (socket_t* socket, int nType, const char* address, uint1
  * @param   uint32              dwTimeout       [in]
  */
 return_t connect_socket_addr (socket_t sock, sockaddr_storage_t* pSockAddr, size_t sizeSockAddr, uint32 dwTimeout);
-/*
+/**
  * @brief   disconnect
  * @param   socket_t    sock    [in]
  * @param   bool        onoff   [in]
  * @param   uint16      linger  [in]
  */
 return_t close_socket (socket_t sock, bool onoff, uint16 linger);
-/*
+/**
  * @brief   stop listen
  * @param   unsigned int    nSockets    [in]
  * @param   socket_t*       Sockets     [in]
  * @return  error code (see error.hpp)
- * @sample  see create_listener
+ * @example  see create_listener
  */
 return_t close_listener (unsigned int nSockets, socket_t* Sockets);
 
@@ -90,7 +90,7 @@ enum SOCK_WAIT_FLAGS {
     SOCK_WAIT_READABLE  = 1 << 0,
     SOCK_WAIT_WRITABLE  = 1 << 1,
 };
-/*
+/**
  * @brief   wait
  * @param   socket_t    sock            [in]
  * @param   uint32      dwMilliSeconds  [in]

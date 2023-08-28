@@ -19,7 +19,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-/*
+/**
  * @brief   protocol interpreter
  */
 class http_protocol : public network_protocol
@@ -27,7 +27,7 @@ class http_protocol : public network_protocol
 public:
     http_protocol ();
     virtual ~http_protocol ();
-    /*
+    /**
      * @brief   check protocol
      * @param   void*           stream          [IN]
      * @param   size_t          stream_size     [IN]
@@ -35,7 +35,7 @@ public:
      *          errorcode_t::not_supported (if error, do not return errorcode_t::success)
      */
     virtual return_t is_kind_of (void* stream, size_t stream_size);
-    /*
+    /**
      * @brief   read stream
      * @param   IBufferStream*  stream          [IN]
      * @param   size_t*         request_size    [INOUT]
@@ -46,7 +46,7 @@ public:
      * @remarks
      */
     virtual return_t read_stream (buffer_stream* stream, size_t* request_size, protocol_state_t* state);
-    /*
+    /**
      * @brief   id
      * @remarks default port number
      */

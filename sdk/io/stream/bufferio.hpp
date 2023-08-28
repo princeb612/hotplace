@@ -171,7 +171,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t cut (bufferio_context_t* handle, uint32 begin_pos, uint32 length);
-    /*
+    /**
      * @brief insert
      * @param bufferio_context_t* handle [IN] handle
      * @param size_t      begin       [in]
@@ -180,7 +180,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t insert (bufferio_context_t* handle, size_t begin, const void* data, size_t data_size);
-    /*
+    /**
      * @brief find_first_of, find_not_first_of
      * @param bufferio_context_t* handle [IN] handle
      * @param const char* find        [IN]
@@ -196,7 +196,7 @@ public:
     size_t wfind_first_of (bufferio_context_t* handle, const wchar_t* find, size_t offset = 0);
     size_t wfind_first_of (bufferio_context_t* handle, int (*func)(wint_t), size_t offset = 0);
 #endif
-    /*
+    /**
      * @brief find_first_of, find_not_first_of
      * @param bufferio_context_t* handle [IN] handle
      * @param const char* find        [IN]
@@ -212,7 +212,7 @@ public:
     size_t wfind_not_first_of (bufferio_context_t* handle, const wchar_t* find, size_t offset = 0);
     size_t wfind_not_first_of (bufferio_context_t* handle, int (*func)(wint_t), size_t offset = 0);
 #endif
-    /*
+    /**
      * @brief find_last_of, find_not_last_of
      * @param bufferio_context_t* handle [IN] handle
      * @param const char* find        [IN]
@@ -227,7 +227,7 @@ public:
     size_t wfind_last_of (bufferio_context_t* handle, const wchar_t* find);
     size_t wfind_last_of (bufferio_context_t* handle, int (*func)(wint_t));
 #endif
-    /*
+    /**
      * @brief find_last_of, find_not_last_of
      * @param bufferio_context_t* handle [IN] handle
      * @param const char* find        [IN]
@@ -240,7 +240,7 @@ public:
     size_t wfind_not_last_of (bufferio_context_t* handle, int (*func)(wint_t));
 #endif
 
-    /*
+    /**
      * @brief replace
      * @param const wchar_t* from [in]
      * @param const wchar_t* to [in]
@@ -256,16 +256,16 @@ public:
                        int flag = 0);
 #endif
 
-    /*
+    /**
      * @brief lock
      */
     return_t lock (bufferio_context_t* handle);
-    /*
+    /**
      * @brief unlock
      */
     return_t unlock (bufferio_context_t* handle);
 
-    /*
+    /**
      * @brief in-class static const integral initializer
      * enum { npos = -1; }; // MSVC 6.0
      */
@@ -284,7 +284,7 @@ protected:
      */
     return_t extend (bufferio_context_t* handle, size_t alloc_size, bufferio_t** allocated_pointer, uint32 flag = 0);
 
-    /*
+    /**
      * @brief find
      * @param bufferio_context_t* handle [IN] handle
      * @param mode [in] 1 find_first_of, 0 find_not_first_of
@@ -296,7 +296,7 @@ protected:
     size_t wfind_first_of_routine (bufferio_context_t* handle, int mode, const wchar_t* find, size_t offset = 0);
     size_t wfind_first_of_routine (bufferio_context_t* handle, int mode, int (*func)(wint_t), size_t offset = 0);
 #endif
-    /*
+    /**
      * @brief find
      * @param bufferio_context_t* handle [IN] handle
      * @param mode [in] 1 find_last_of, 0 find_not_last_of

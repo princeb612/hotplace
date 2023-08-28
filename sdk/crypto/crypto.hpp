@@ -29,7 +29,7 @@ public:
      * @param const unsigned char* iv [in]
      * @param unsigned size_iv [in]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        crypt_context_t* handle = nullptr;
      *        crypt.open(&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, key, size_key, iv, size_iv);
      *        crypt.close(handle);
@@ -49,14 +49,14 @@ public:
      * @param unsigned char** data_encrypted [out]
      * @param size_t* size_encrypted [out]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        crypt.encrypt(handle, data_plain, size_plain, &data_encrypted, &size_encrypted);
      *        crypt.free_data(data_encrypted);
      */
     virtual return_t encrypt (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted, size_t* size_encrypted) = 0;
     virtual return_t encrypt (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out) = 0;
 
-    /*
+    /**
      * @brief encrypt (GCM)
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* data_plain
@@ -78,14 +78,14 @@ public:
      * @param unsigned char** data_plain [out]
      * @param size_t* size_plain [out]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        crypt.decrypt(handle, data_encrypted, size_encrypted, &data_decrypted, &size_decrypted);
      *        crypt.free_data(data_decrypted);
      */
     virtual return_t decrypt (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** data_plain, size_t* size_plain) = 0;
     virtual return_t decrypt (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out) = 0;
 
-    /*
+    /**
      * @brief decrypt (GCM)
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* data_encrypted [in]
@@ -111,7 +111,7 @@ public:
      * @return see crypt_poweredby_t
      */
     virtual crypt_poweredby_t get_type () = 0;
-    /*
+    /**
      * @brief query
      * @param crypt_context_t* handle [in]
      * @param size_t cmd [in] 1 key size, 2 iv size
@@ -184,7 +184,7 @@ public:
         }
         return ret;
     }
-    /*
+    /**
      * @brief expect hash size
      * @param hash_algorithm_t algorithm [in]
      * @param size_t& digest_size [out]
@@ -233,7 +233,7 @@ public:
      * @param const unsigned char* key [inopt]
      * @param unsigned keysize [inopt]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *    binary_t hash_data;
      *    // hash
      *    hash.open(&handle, hash_algorithm_t::sha2_256);
@@ -257,11 +257,11 @@ public:
      * @return error code (see error.hpp)
      */
     virtual return_t close (hash_context_t* handle) = 0;
-    /*
+    /**
      * @brief initialize a new digest operation
      * @param hash_context_t* handle [in]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
      *        hash.finalize(handle, &output_data, &output_size);
@@ -274,7 +274,7 @@ public:
      * @param byte_t* data [out]
      * @param size_t datasize [in]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
      *        hash.finalize(handle, &output_data, &output_size);
@@ -287,14 +287,14 @@ public:
      * @param byte_t** data [out]
      * @param size_t * datasize [out] call free_data to free
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
      *        hash.finalize(handle, &output_data, &output_size);
      *        hash.free_data(output_data);
      */
     virtual return_t finalize (hash_context_t* handle, byte_t** data, size_t* datasize) = 0;
-    /*
+    /**
      * @brief finalize
      * @param hash_context_t* handle [in]
      * @param binary_t& hash [out]
@@ -307,7 +307,7 @@ public:
      * @param size_t source_size [in]
      * @param binary_t& output [out]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        hash.hash(handle, input_data, input_size, output);
      */
     virtual return_t hash (hash_context_t* handle, byte_t* source_data, size_t source_size, binary_t& output) = 0;

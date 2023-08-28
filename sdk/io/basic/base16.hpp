@@ -20,7 +20,7 @@ namespace io {
 
 /**
  * @brief base16
- * @sample
+ * @example
  *  const char* message = "sample";
  *  std::string hex;
  *  binary_t bin;

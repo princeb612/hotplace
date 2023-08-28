@@ -28,7 +28,7 @@ enum mlfq_mode_t {
     mlfq_block = 1, // 0 block, else unblock
 };
 
-/*
+/**
  * @brief binder method manipulates the p and v operation.
  * @remarks see t_mlfq (default second template parameter)
  */
@@ -57,7 +57,7 @@ template<typename TYPENAME_T> struct mlfq_nonshared_binder {
     }
 };
 
-/*
+/**
  * @brief MFQ
  * @param   typename TYPENAME_T [IN] Queue
  * @param   typename BINDER_T [INOPT] binder member manipulates the semaphore operation (p and v).
@@ -76,7 +76,7 @@ public:
     t_mlfq ();
     ~t_mlfq ();
 
-    /*
+    /**
      * @brief post
      * @param   int pri [IN] priority
      * @param   TYPENAME_T* source  [IN] internally increase reference counter, cannot be null
@@ -88,14 +88,14 @@ public:
     return_t post (int pri, TYPENAME_T* source, void* param = nullptr);
     return_t push (int pri, TYPENAME_T* source, void* param = nullptr);
 
-    /*
+    /**
      * @brief   operator <<
      * @param   TYPENAME_T*   source  [IN] internally increase reference counter, cannot be null
      * @remarks
      *          post source into priority 0 without parameter
      */
     t_mlfq& operator << (TYPENAME_T* source);
-    /*
+    /**
      * @brief   get
      * @param   int*          pri     [IN]
      * @param   TYPENAME_T**  source  [OUT]
@@ -106,7 +106,7 @@ public:
      *          ERROR_CAMCELED/errorcode_t::not_found canceled
      * @remarks
      *          wait signal with timeout and pop source from queue
-     * @sample
+     * @example
      *          ret = mfq.get(&pri, &source, 10);
      *          if (errorcode_t::success == ret)
      *          {
@@ -119,14 +119,14 @@ public:
 
     return_t cancel (TYPENAME_T* source, void* param);
 
-    /*
+    /**
      * @brief   clear
      * @param   void*             param   [IN] see binder(..., void* param)
      * @return  error code (see error.hpp)
      */
     return_t clear (void* param);
 
-    /*
+    /**
      * @brief   set
      */
     return_t set (int mode, int value);

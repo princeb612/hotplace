@@ -73,12 +73,12 @@ return_t W2A (stream_t* stream, const wchar_t* source, uint32 codepage = 0);
 // valist
 //
 
-/*
+/**
  * @brief   safe format printer
  * @remakrs
  *          format specifier replacement (do not supports %c %s %d, but {1} {2} {3} ... available)
  *          standard vprintf(fmt, ap) supports ordered format specifier {1} {2} {3} ...
- * @sample
+ * @example
  *          buffer_stream bs;
  *          valist va;
  *          va << 1 << "test string"; // argc 2
@@ -119,7 +119,7 @@ void make_valist (valist& va, T arg, Args... args)
 }
 
 #if __cplusplus >= 201402L     // c++14
-/*
+/**
  * @brief vprintf
  * @param stream_t*     stream  [out]
  * @param const char*   fmt     [in] "param1 {1} param {2}"
@@ -147,7 +147,7 @@ return_t vprintf (stream_t* stream, const char* fmt, Args... args)
 
 /**
  * @brief printf variant_t
- * @sample
+ * @example
  *  buffer_stream bs;
  *  variant_t v;
  *
@@ -168,7 +168,7 @@ return_t vtprintf (stream_t* stream, variant_t vt);
 
 /**
  * @brief dump memory
- * @sample
+ * @example
  *  const char* data = "hello world\n wide world\n";
  *
  *  buffer_stream bs;

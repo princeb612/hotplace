@@ -18,7 +18,7 @@ using namespace io;
 namespace net {
 
 class network_session;
-/*
+/**
  * @brief priority queue
  * @remarks
  *          implements prosumer pattern
@@ -40,13 +40,13 @@ public:
     network_priority_queue ();
     ~network_priority_queue ();
 
-    /*
+    /**
      * @brief push
      * @param   int               priority    [IN]
      * @param   network_session*   token       [IN] referenced
      */
     return_t push (int priority, network_session* token);
-    /*
+    /**
      * @brief pop
      * @param   int*              priority    [OUT]
      * @param   network_session**  token       [OUT]
@@ -59,7 +59,7 @@ public:
      *          }
      */
     return_t pop (int* priority, network_session** ptr_token);
-    /*
+    /**
      * @brief pop
      * @remarks
      *          network_session* session_object = prique.pop ();

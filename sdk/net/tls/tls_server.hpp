@@ -24,7 +24,7 @@ public:
     transport_layer_security_server (transport_layer_security* tls);
     virtual ~transport_layer_security_server ();
 
-    /*
+    /**
      * @brief   close
      * @param   socket_t        sock            [IN]
      * @param   tls_context_t*  tls_handle      [IN]
@@ -38,7 +38,7 @@ public:
      */
     virtual return_t close (socket_t sock, tls_context_t* tls_handle);
 
-    /*
+    /**
      * @brief   Tls accept
      * @param   socket_t        clisock         [IN] client socket
      * @param   tls_context_t** tls_handle      [OUT] Tls context
@@ -46,7 +46,7 @@ public:
      */
     virtual return_t tls_accept (socket_t clisock, tls_context_t** tls_handle);
     virtual return_t tls_stop_accept ();
-    /*
+    /**
      * @brief   read
      * @param   socket_t        sock        [IN]
      * @param   tls_context_t*  tls_handle  [IN]
@@ -60,7 +60,7 @@ public:
      * @return  error code (see error.hpp)
      */
     virtual return_t read (socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
-    /*
+    /**
      * @brief   send
      * @param   socket_t        sock            [IN]
      * @param   tls_context_t*  tls_handle      [IN]
@@ -70,7 +70,7 @@ public:
      * @return  error code (see error.hpp)
      */
     virtual return_t send (socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
-    /*
+    /**
      * @brief   query socket layer spec
      * @param   int         specid          [IN] see SERVER_SOCKET_QUERY
      * @param   arch_t*     data_ptr        [OUT]

@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace crypto {
 
-/*
+/**
  * @brief RFC 7517 JSON Web Key (JWK)
  * @remarks
  *      support JWK (kty oct, RSA, EC, OKP
@@ -36,7 +36,7 @@ public:
     json_web_key ();
     ~json_web_key ();
 
-    /*
+    /**
      * @brief load JWK from a buffer
      * @param crypto_key * crypto_key [in]
      * @param const char* buffer [in]
@@ -44,7 +44,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t load (crypto_key* crypto_key, const char* buffer, int flags = 0);
-    /*
+    /**
      * @brief load JWK from a file
      * @param crypto_key * crypto_key [in]
      * @param const char* file [in]
@@ -52,7 +52,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t load_file (crypto_key* crypto_key, const char* file, int flags = 0);
-    /*
+    /**
      * @brief load PEM from the buffer
      * @param crypto_key * cryptokey [in]
      * @param const char* buffer [in]
@@ -60,7 +60,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t load_pem (crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use = crypto_use_t::use_any);
-    /*
+    /**
      * @brief load from a PEM file
      * @param crypto_key * crypto_key [in]
      * @param const char* file [in]
@@ -69,7 +69,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t load_pem_file (crypto_key* crypto_key, const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
-    /*
+    /**
      * @brief write PEM to the file
      * @param crypto_key * cryptokey [in]
      * @param const char* file [in]
@@ -77,7 +77,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t write_pem_file (crypto_key* cryptokey, const char* file, int flags = 0);
-    /*
+    /**
      * @brief write JWK to a file
      * @param crypto_key * crypto_key [in]
      * @param const char* file [in]
@@ -85,7 +85,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t write_json (crypto_key* crypto_key, const char* file, int flags = 0);
-    /*
+    /**
      * @brief write
      * @param crypto_key* crypto_key [in]
      * @param char* buf [out] null-terminated
@@ -97,7 +97,7 @@ public:
 
 protected:
 
-    /*
+    /**
      * @brief add
      * @param crypto_key* crypto_key
      * @param const char* kid [inopt]
@@ -116,7 +116,7 @@ protected:
     return_t add_rsa (crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d,
                       const char* p                                                                                                         = nullptr, const char* q= nullptr, const char* dp = nullptr, const char* dq = nullptr, const char* qi = nullptr,
                       crypto_use_t use = crypto_use_t::use_any);
-    /*
+    /**
      * @brief add
      * @param crypto_key* crypto_key
      * @param const char* kid [inopt]
@@ -130,7 +130,7 @@ protected:
      */
     return_t add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
                      const char* x, const char* y, const char* d, crypto_use_t use = crypto_use_t::use_any);
-    /*
+    /**
      * @brief add
      * @param crypto_key* crypto_key
      * @param const char* kid [inopt]
@@ -141,7 +141,7 @@ protected:
      */
     return_t add_oct (crypto_key* crypto_key, const char* kid, const char* alg, const char* k,
                       crypto_use_t use = crypto_use_t::use_any);
-    /*
+    /**
      * @brief parse
      * @param crypto_key* crypto_key [in]
      * @param void* json [in]

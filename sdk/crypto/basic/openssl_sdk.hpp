@@ -25,20 +25,20 @@ namespace crypto {
 #define __trace_openssl(x) {  }
 #define __leave2_trace_openssl(x) { __leave2; }
 
-/*
+/**
  * @brief strings, algorithms
  * @remarks call in main function
  */
 void openssl_startup ();
 void openssl_cleanup ();
-/*
+/**
  * @brief openssl thread safe
  * @remarks call in main function
  */
 void openssl_thread_setup (void);
 void openssl_thread_cleanup (void);
 void openssl_thread_end (void);
-/*
+/**
  * @brief error string
  * @param std::string& str [out]
  */
@@ -200,7 +200,7 @@ return_t trace_openssl (return_t nError);
 
 #endif
 
-/*
+/**
  * @brief set a cooltime to sleep while encryt and decrypt
  * @param uint32 ms [in] milliseconds, it can't be greater than ossl_cooltime_max.
  * @return
@@ -210,31 +210,31 @@ return_t trace_openssl (return_t nError);
  *      by default, ossl_cooltime_max is 1000ms (1second)
  */
 return_t ossl_set_cooltime (uint32 ms);
-/*
+/**
  * @brief set a max cooltime to sleep while encryt and decrypt
  * @param uint32 ms [in] milliseconds, cannot be zero
  * @return
  *      errorcode_t::invalid_parameter - if given value is zero or lesser than current ossl_cooltime
  */
 return_t ossl_set_cooltime_max (uint32 ms);
-/*
+/**
  * @biref return a cooltime
  */
 uint32 ossl_get_cooltime ();
-/*
+/**
  * @brief take a break after processing
  * @param uint32 blocks [in]
  * @return
  *      errorcode_t::invalid_parameter - cannot be zero
  */
 return_t ossl_set_unitsize (uint32 bytes);
-/*
+/**
  * @brief return ossl_cooltime_unitsize
  *        default 4096 bytes
  */
 uint32 ossl_get_unitsize ();
 
-/*
+/**
  * @brief is private key
  * @param EVP_PKEY* pkey [in]
  * @param bool& result [out]
@@ -245,12 +245,12 @@ return_t is_private_key (EVP_PKEY * pkey, bool& result);
 //
 //
 
-/*
+/**
  * @brief kindof
  * @param crypto_key_t type [in]
  */
 bool kindof_ecc (crypto_key_t type);
-/*
+/**
  * @brief kty from key
  * @param crypto_key_t type
  * @return oct, RSA, EC, OKP

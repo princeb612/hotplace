@@ -28,7 +28,7 @@ namespace io {
 
 /**
  * @brief filestream
- * @sample
+ * @example
  *          file_stream fs;
  *          ret = fs.open ("filename", filestream_flag_t::open_write);
  *          if (errorcode_t::success == ret) {
@@ -48,7 +48,7 @@ public:
      * @sa
      */
     file_stream ();
-    /*
+    /**
      * @brief constructor
      * @param const char* filename [in]
      * @param uint32 mode [in] see FILESTREAM_OPEN_FLAG
@@ -210,14 +210,14 @@ public:
     return_t read (void* data, uint32 buffer, uint32* size_read);
 
 #if 0
-    /*
+    /**
      * @brief
      * @param   FILETIME*   time_created        [OUT]
      * @param   FILETIME*   time_last_accessed  [OUT]
      * @param   FILETIME*   time_last_written   [OUT]
      */
     void get_filetime (FILETIME* time_created, FILETIME* time_last_accessed, FILETIME* time_last_written);
-    /*
+    /**
      * @brief
      * @param   FILETIME*   time_created        [IN]
      * @param   FILETIME*   time_last_accessed  [IN]

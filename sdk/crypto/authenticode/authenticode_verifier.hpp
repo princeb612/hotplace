@@ -51,7 +51,7 @@ enum authenticode_flag_t {
 
 /**
  * @brief verifier
- * @sample
+ * @example
  *        openssl_startup(); // begin of application
  *        openssl_thread_setup();
  *        authenticode_verifier verifier;
@@ -68,7 +68,7 @@ public:
     authenticode_verifier ();
     ~authenticode_verifier ();
 
-    /*
+    /**
      * @brief open
      * @param authenticode_context_t** handle [out]
      * @return error code (see error.hpp)
@@ -81,7 +81,7 @@ public:
      *      openssl_cleanup();
      */
     return_t open (authenticode_context_t** handle);
-    /*
+    /**
      * @brief set
      * @param authenticode_context_t* handle [in]
      * @param int option [in]
@@ -89,7 +89,7 @@ public:
      * @param size_t size [in]
      */
     return_t set (authenticode_context_t* handle, int option, void* data, size_t size);
-    /*
+    /**
      * @brief verify
      * @param authenticode_context_t* handle [in]
      * @param const char* name [in]
@@ -98,13 +98,13 @@ public:
      * @return error code (see error.hpp)
      */
     return_t verify (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result, uint32* engine_id = nullptr);
-    /*
+    /**
      * @brief close
      * @param authenticode_context_t* handle [in]
      * @return error code (see error.hpp)
      */
     return_t close (authenticode_context_t* handle);
-    /*
+    /**
      * @brief add a trusted signer
      * @param authenticode_context_t* handle [in]
      * @parm const char* signer [in]
@@ -113,20 +113,20 @@ public:
      *        if signer not added, verify fails X509_V_ERR_CERT_UNTRUSTED (27)
      */
     return_t add_trusted_signer (authenticode_context_t* handle, const char* signer);
-    /*
+    /**
      * @brief remove a trusted signer
      * @param authenticode_context_t* handle [in]
      * @parm const char* signer [in]
      * @return error code (see error.hpp)
      */
     return_t remove_trusted_signer (authenticode_context_t* handle, const char* signer);
-    /*
+    /**
      * @brief remove all trusted signer
      * @param authenticode_context_t* handle [in]
      * @return error code (see error.hpp)
      */
     return_t remove_all_trusted_signer (authenticode_context_t* handle);
-    /*
+    /**
      * @brief add trusted root certificate
      * @param authenticode_context_t* handle [in]
      * @param const char* file [inopt]
@@ -134,12 +134,12 @@ public:
      * @return error code (see error.hpp)
      */
     return_t add_trusted_rootcert (authenticode_context_t* handle, const char* file, const char* path);
-    /*
+    /**
      * @brief add engine
      * @param authenticode_context_t* handle [in]
      * @param authenticode_plugin* engine
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *      engine = new AuthenticodeEngineImpl;
      *      ret = add_engine(handle, engine);
      *      if (errorcode_t::success != ret) {
@@ -149,7 +149,7 @@ public:
     return_t add_engine (authenticode_context_t* handle, authenticode_plugin* engine);
 
 protected:
-    /*
+    /**
      * @brief verify pkcs7 der
      * @param authenticode_context_t* handle [in]
      * @param void* pkcs7 [in]
@@ -160,7 +160,7 @@ protected:
     return_t verify_pkcs7 (authenticode_context_t* handle, void* pkcs7, uint32 flags, uint32& result);
 
     return_t verify_separated (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result);
-    /*
+    /**
      * @brief hash
      * @param const char* filename [in]
      * @param HASH_ALGORITHM algorithm [in]
@@ -169,12 +169,12 @@ protected:
      */
     return_t hash (const char* filename, hash_algorithm_t algorithm, std::string& hash);
 
-    /*
+    /**
      * @brief load engines
      * @param authenticode_context_t* handle [in]
      */
     return_t load_engines (authenticode_context_t* handle);
-    /*
+    /**
      * @brief free engines
      * @param authenticode_context_t* handle [in]
      */

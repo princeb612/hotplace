@@ -18,9 +18,9 @@
 namespace hotplace {
 namespace net {
 
-/*
+/**
  * @brief TLS
- * @sample
+ * @example
  *      transport_layer_security tls;
  *      uint32 ret = errorcode_t::success;
  *      int sock = socket (PF_INET, SOCK_STREAM, 0);
@@ -99,7 +99,7 @@ public:
      */
     return_t close (tls_context_t* handle);
 
-    /*
+    /**
      * @brief   read (network_Server_v2 specification)
      * @param   tls_context_t*  handle      [IN]
      * @param   int             mode        [IN] see tls_io_flag_t (2 recv 1 BIO_write 0 SSL_read)

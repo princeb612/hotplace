@@ -47,7 +47,7 @@ namespace io {
 
 /**
  * @brief printf
- * @sample
+ * @example
  *  typedef struct {
  *      std::string str;
  *  } myprintf_context_t;
@@ -125,7 +125,7 @@ return_t W2A (std::string& target, const wchar_t* source, uint32 codepage = 0);
 /**
  * @brief tokenize
  * @remarks simple to use, but not efficient
- * @sample
+ * @example
  *  std::string token = "=|", value;
  *  std::string data = "key=item1|value1|link1";
  *
@@ -144,7 +144,7 @@ bool gettoken (std::wstring source, std::wstring token, size_t index, std::wstri
 
 /**
  * @brief tokenize
- * @sample
+ * @example
  *  std::string data = "key=item1|value1|link1";
  *  size_t pos = 0;
  *  std::string token;
@@ -163,7 +163,7 @@ std::wstring tokenize (std::wstring source, std::wstring tokens, size_t& pos);
 
 /**
  * @brief replace
- * @sample
+ * @example
  *  std::string data ("hello world");
  *  replace (data, "world", "neighbor");
  */
@@ -175,7 +175,7 @@ void replace (std::wstring& source, std::wstring a, std::wstring b);
 
 /**
  * @brief getline
- * @sample
+ * @example
  *  return_t ret = errorcode_t::success;
  *  const char* stream_data = " line1 \nline2 \n  line3\nline4";
  *  size_t stream_size = strlen (stream_data);
@@ -209,7 +209,7 @@ return_t getline (const wchar_t* stream, size_t sizestream, size_t startpos, siz
  * @param size_t startpos [in]
  * @param size_t *brk [out]
  * @param int (*func)(int) [in]
- * @sample
+ * @example
  *  const char* data = "hello world\n ";
  *  size_t pos = 0;
  *  size_t brk = 0;
@@ -234,7 +234,7 @@ return_t scan (const wchar_t* stream, size_t sizestream, size_t startpos, size_t
  * @param size_t startpos [in]
  * @param size_t *brk [out]
  * @param const char* match [in]
- * @sample
+ * @example
  *  const char* data = "hello world\n wide world\n";
  *  const char* match = " ";
  *  size_t pos = 0;
@@ -259,7 +259,7 @@ return_t scan (const wchar_t* stream, size_t sizestream, size_t startpos, size_t
 
 /**
  * @brief split
- * @sample
+ * @example
  *  split_context_t* handle = nullptr;
  *  size_t count = 0;
  *  split_begin (&handle, "test1.hello2.bye3..", ".");
@@ -292,7 +292,7 @@ return_t split_end (split_context_t* handle);
 
 /**
  * @brief format
- * @sample
+ * @example
  *  std::string text = format ("%s %d %1.1f\n", "sample", 1, 1.1f);
  */
 std::string format (const char* fmt, ...);
@@ -316,9 +316,9 @@ typedef struct _url_info_t {
     }
 } url_info_t;
 
-/*
+/**
  * split url
- * @sample
+ * @example
  *        url_info_t info;
  *        const char *url = "http://test.com/download/meta/file.txt";
  *        split_url(url, &info);

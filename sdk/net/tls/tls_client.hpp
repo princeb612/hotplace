@@ -18,9 +18,9 @@
 namespace hotplace {
 namespace net {
 
-/*
+/**
  * @brief tls client
- * @sample
+ * @example
  *  #if defined _WIN32 || defined _WIN64
  *      winsock_startup ();
  *  #endif
@@ -73,7 +73,7 @@ public:
     transport_layer_security_client (transport_layer_security* tls);
     virtual ~transport_layer_security_client ();
 
-    /*
+    /**
      * @brief   connect
      * @param   socket_t*       sock            [OUT]
      * @param   tls_context_t** tls_handle      [OUT]
@@ -83,14 +83,14 @@ public:
      * @return  error code (see error.hpp)
      */
     virtual return_t connect (socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
-    /*
+    /**
      * @brief   close
      * @param   socket_t        sock            [IN]
      * @param   tls_context_t*  tls_handle      [IN]
      * @return  error code (see error.hpp)
      */
     virtual return_t close (socket_t sock, tls_context_t* tls_handle);
-    /*
+    /**
      * @brief   read
      * @param   socket_t        sock            [IN]
      * @param   tls_context_t*  tls_handle      [IN]
@@ -107,7 +107,7 @@ public:
      *          }
      */
     virtual return_t read (socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
-    /*
+    /**
      * @brief read more
      * @param socket_t          sock
      * @param tls_context_t*    tls_handle
@@ -119,7 +119,7 @@ public:
      *      errorcode_t::more_data more data
      */
     virtual return_t more (socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
-    /*
+    /**
      * @brief   send
      * @param   socket_t        sock            [IN]
      * @param   tls_context_t*  tls_handle      [IN]

@@ -76,7 +76,7 @@ static inline bool ends_with (const std::string& source, const std::string& suff
     return source.rfind (suffix) == (source.size () - suffix.size ());
 }
 
-/*
+/**
  * @brief tolower
  * @param const char* input [in]
  */
@@ -99,7 +99,7 @@ static inline std::string lowername (const char* input)
     return ret_value;
 }
 
-/*
+/**
  * @brief tolower
  * @param std::string source [in]
  */
@@ -119,7 +119,7 @@ static inline std::string lowername (std::string input)
     return ret_value;
 }
 
-/*
+/**
  * @brief append
  * @param binary_t& lhs [inout]
  * @param char* rhs [in]
@@ -132,7 +132,7 @@ static inline binary_t& operator << (binary_t& lhs, char* rhs)
     return lhs;
 }
 
-/*
+/**
  * @brief append
  * @param binary_t& lhs [inout]
  * @param std::string rhs [in]
@@ -143,7 +143,7 @@ static inline binary_t& operator << (binary_t& lhs, std::string rhs)
     return lhs;
 }
 
-/*
+/**
  * @brief append
  * @param binary_t& lhs [inout]
  * @param binary_t rhs [in]

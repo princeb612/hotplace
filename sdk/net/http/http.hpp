@@ -26,7 +26,7 @@ public:
     http_header ();
     virtual ~http_header ();
 
-    /*
+    /**
      * @brief add a header
      * @param   const char*     header      [IN]
      * @param   const char*     value       [IN]
@@ -36,7 +36,7 @@ public:
      */
     return_t add (const char* header, const char* value);
 
-    /*
+    /**
      * @brief add a header
      * @param   std::string     header      [IN]
      * @param   std::string     value       [IN]
@@ -46,14 +46,14 @@ public:
 
     return_t clear ();
 
-    /*
+    /**
      * @brief read a header
      * @param   const char*     header      [IN]
      * @remarks
      *          header.get ("Content-Length", conent_length);
      */
     const char* get (const char* header, std::string& content);
-    /*
+    /**
      * @brief read a header token
      * @param   const char*     header      [IN]
      * @remarks
@@ -65,7 +65,7 @@ public:
      */
     const char* get_token (const char* header, unsigned index, std::string& token);
 
-    /*
+    /**
      * @brief read all headers
      * @return error code (see error.hpp)
      */
@@ -85,22 +85,22 @@ public:
     http_uri ();
     ~http_uri ();
 
-    /*
+    /**
      * @brief open
      * @param std::string url [in]
      */
     return_t open (std::string url);
     return_t open (const char* url);
-    /*
+    /**
      * @brief close
      */
     void close ();
 
-    /*
+    /**
      * @brief url
      */
     const char* get_url ();
-    /*
+    /**
      * @brief query
      * @param   unsigned        index       [IN] 0 <= index < size_parameter ()
      * @param   std::string&    key         [OUT]
@@ -112,12 +112,12 @@ public:
      *          url.query (1, key, value) return period and week
      */
     return_t query (unsigned index, std::string& key, std::string& value);
-    /*
+    /**
      * @brief read a param
      * @return error code (see error.hpp)
      */
     return_t query (std::string key, std::string& value);
-    /*
+    /**
      * @brief count of query
      * @remarks
      */
@@ -141,36 +141,36 @@ public:
     http_request ();
     virtual ~http_request ();
 
-    /*
+    /**
      * @brief open
      * @param   const char*     request         [IN]
      * @param   size_t          size_request    [IN]
      * @return error code (see error.hpp)
      */
     return_t open (const char* request, size_t size_request);
-    /*
+    /**
      * @brief close
      * @return error code (see error.hpp)
      */
     return_t close ();
 
-    /*
+    /**
      * @brief return the http_header object
      */
     http_header* get_header ();
-    /*
+    /**
      * @brief return the http_uri object
      */
     http_uri* get_uri ();
-    /*
+    /**
      * @brief url
      */
     const char* get_url ();
-    /*
+    /**
      * @brief return the method (GET, POST, ...)
      */
     const char* get_method ();
-    /*
+    /**
      * @brief return the request
      */
     const char* get_request ();
@@ -212,7 +212,7 @@ public:
     virtual return_t authenticate (network_session * session, http_request* request, http_response) = 0;
 };
 
-/*
+/**
  * @brief   basic
  *          RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
  *
@@ -227,7 +227,7 @@ public:
     virtual return_t authenticate (network_session * session, http_request* request, http_response);
 };
 
-/*
+/**
  * @brief   digest
  *          RFC 2069 An Extension to HTTP : Digest Access Authentication
  *          RFC 2617 HTTP Authentication: Basic and Digest Access Authentication

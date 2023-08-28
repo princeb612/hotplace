@@ -27,9 +27,9 @@ typedef uint128 ipaddr_t;
 typedef uint32 ipaddr_t;
 #endif
 
-/*
+/**
  * @brief cidr mask
- * @sample
+ * @example
  *          ipaddr_acl acl;
  *          buffer_stream stream;
  *          const char* address = "3ffe:ffff:0:f101::1";
@@ -80,10 +80,10 @@ enum ipaddr_acl_t {
     range_addr  = 2,
 };
 
-/*
+/**
  * @brief network access control
  * @remarks
- * @sample
+ * @example
  *          bool check = true;
  *          ipaddr_acl ac;
  *
@@ -113,13 +113,13 @@ public:
     ipaddr_acl (ipaddr_acl& obj);
     ~ipaddr_acl ();
 
-    /*
+    /**
      * @brief white list, black list
      * @remarks basically runs ipaddr_acl_t::blacklist mode
      */
     return_t setmode (int mode);
 
-    /*
+    /**
      * @brief single address or cidr
      * @param   const char*             addr        [IN] single address (1.2.3.4) or cidr (1.2.3.4/24) is possible.
      *                                                   1.2.3.4/  errorcode_t::invalid_parameter
@@ -127,35 +127,35 @@ public:
      * @param   bool                    allow       [IN]
      */
     return_t add_rule (const char* addr, bool allow);
-    /*
+    /**
      * @brief single address
      * @param   const sockaddr_storage_t* sockaddr  [IN]
      * @param   bool                    allow       [IN]
      */
     return_t add_rule (const sockaddr_storage_t* sockaddr, bool allow);
-    /*
+    /**
      * @brief cidr
      */
     return_t add_rule (const char* addr, int mask, bool allow);
     return_t add_rule (const sockaddr_storage_t* sockaddr, int mask, bool allow);
 
-    /*
+    /**
      * @brief range
      */
     return_t add_rule (const char* addr_from, const char* addr_to, bool allow);
     return_t add_rule (const sockaddr_storage_t* sockaddr_from, const sockaddr_storage_t* sockaddr_to, bool allow);
-    /*
+    /**
      * @brief clear
      */
     return_t clear ();
 
-    /*
+    /**
      * @brief determine
      */
     return_t determine (const char* addr, bool& accept);
     return_t determine (const sockaddr_storage_t* sockaddr, bool& accept);
 
-    /*
+    /**
      * @brief return host byte ordered
      */
     ipaddr_t convert_addr (const char* addr, int& family);

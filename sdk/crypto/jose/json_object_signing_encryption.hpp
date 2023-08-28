@@ -170,7 +170,7 @@
 namespace hotplace {
 namespace crypto {
 
-/*
+/**
  * @brief JSON Object Signing and Encryption
  * @remarks
  *  JOSE - json serialization
@@ -184,21 +184,21 @@ public:
     json_object_signing_encryption ();
     ~json_object_signing_encryption ();
 
-    /*
+    /**
      * @brief open
      * @param jose_context_t** context [out]
      * @param crypto_key* crypto_key [in]
      * @return error code (see error.hpp)
      */
     return_t open (jose_context_t** context, crypto_key* crypto_key);
-    /*
+    /**
      * @brief close
      * @param jose_context_t* context [in]
      * @return error code (see error.hpp)
      */
     return_t close (jose_context_t* context);
 
-    /*
+    /**
      * @brief encrypt
      * @param jose_context_t* context [in]
      * @param jwe_t enc [in]
@@ -207,7 +207,7 @@ public:
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *          json_web_key jwk;
      *          crypto_key crypto_pubkey;
      *          crypto_key crypto_privkey;
@@ -225,7 +225,7 @@ public:
      *          jose.close (handle_decrypt);
      */
     return_t encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief encrypt
      * @param jose_context_t* context [in]
      * @param jwe_t enc [in]
@@ -242,7 +242,7 @@ public:
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *          json_web_key jwk;
      *          crypto_key crypto_pubkey;
      *          jwk.load_file (&crypto_pubkey, "rfc7520_pub.jwk", 0);
@@ -270,14 +270,14 @@ public:
      *          jose.close (handle_encrypt);
      */
     return_t encrypt (jose_context_t* context, jwe_t enc, std::list <jwa_t> algs, binary_t input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief decrypt
      * @param jose_context_t* context [in]
      * @param std::string input [in]
      * @param binary_t& output [out]
      * @param bool& result [out]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *          json_web_key jwk;
      *          crypto_key crypto_privkey;
      *          jwk.load_file (&crypto_privkey, "rfc7520_priv.jwk", 0);
@@ -331,7 +331,7 @@ public:
      *  }
      */
     return_t decrypt (jose_context_t* context, std::string input, binary_t& output, bool& result);
-    /*
+    /**
      * @brief sign
      * @param jose_context_t* context [in]
      * @param jws_t method [in]
@@ -339,7 +339,7 @@ public:
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *          json_web_key jwk;
      *          crypto_key crypto_key;
      *          jwk.load_file (&crypto_key, "rfc7515.jwk", 0);
@@ -354,7 +354,7 @@ public:
      *          jose.close (jose_context);
      */
     return_t sign (jose_context_t* context, jws_t method, std::string input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief sign
      * @param jose_context_t* context [in]
      * @param std::list <jws_t> methods [in]
@@ -362,7 +362,7 @@ public:
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *          json_web_key jwk;
      *          crypto_key crypto_key;
      *          jwk.load_file (&crypto_key, "rfc7515.jwk", 0);
@@ -381,7 +381,7 @@ public:
      *          jose.close (jose_context);
      */
     return_t sign (jose_context_t* context, std::list <jws_t> methods, std::string input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief sign
      * @param jose_context_t* context [in]
      * @param std::string protected_header [in]
@@ -389,7 +389,7 @@ public:
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *          json_web_key jwk;
      *          crypto_key crypto_key;
      *          jwk.load_file (&crypto_key, "rfc7515.jwk", 0);
@@ -404,7 +404,7 @@ public:
      *          jose.close (jose_context);
      */
     return_t sign (jose_context_t* context, std::string protected_header, std::string input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief sign
      * @param jose_context_t* context [in]
      * @param std::list<std::string> headers [in]
@@ -414,7 +414,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t sign (jose_context_t* context, std::list<std::string> headers, std::string input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief verify
      * @param jose_context_t* context [in]
      * @param std::string input [in]
@@ -424,7 +424,7 @@ public:
     return_t verify (jose_context_t* context, std::string input, bool& result);
 
 protected:
-    /*
+    /**
      * @brief encryption
      * @param jwe_t enc [in]
      * @param std::list<jwa_t> algs [in]
@@ -433,7 +433,7 @@ protected:
      *          see also compose_encryption_header, prepare_encryption_recipient
      */
     return_t prepare_encryption (jose_context_t* context, jwe_t enc, std::list<jwa_t> algs);
-    /*
+    /**
      * @brief header
      * @param jwe_t enc [in]
      * @param jwa_t alg [in]
@@ -444,7 +444,7 @@ protected:
      *      compose_encryption_header (jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_unknown, jose_compose_t::jose_enc_alg, "", header);
      */
     return_t compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string kid, binary_t& header);
-    /*
+    /**
      * @brief header
      * @param jwe_t enc [in]
      * @param jwa_t alg [in]
@@ -455,7 +455,7 @@ protected:
      * @param binary_t& header [out]
      */
     return_t compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string kid, crypt_datamap_t datamap, crypt_variantmap_t variantmap, binary_t& header);
-    /*
+    /**
      * @biref recipient
      * @param jwa_t alg [in]
      * @param EVP_PKEY* pkey [in]
@@ -470,19 +470,19 @@ protected:
      *      jwa_type_t::jwa_type_pbes_hs_aeskw : p2s, p2c
      */
     return_t prepare_encryption_recipient (jwa_t alg, EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap, crypt_variantmap_t& variantmap);
-    /*
+    /**
      * @brief parse
      * @param jose_context_t* context [in]
      * @param const char* input [in]
      */
     return_t prepare_decryption (jose_context_t* context, const char* input);
 
-    /*
+    /**
      * @brief clear/reset
      * @param jose_context_t* context [in]
      */
     return_t clear_context (jose_context_t* context);
-    /*
+    /**
      * @brief decrypt
      * @param jose_context_t* context [in]
      * @param const char* protected_header [in]
@@ -497,7 +497,7 @@ protected:
     return_t prepare_decryption_item (jose_context_t* context,
                                       const char* protected_header, const char* encrypted_key, const char* iv, const char* ciphertext, const char* tag,
                                       void* json, jwe_t& type, jose_encryption_t& item);
-    /*
+    /**
      * @brief decrypt
      * @param jose_context_t* context [in]
      * @param const char* protected_header [in]
@@ -509,14 +509,14 @@ protected:
     return_t prepare_decryption_recipient (jose_context_t* context,
                                            const char* protected_header, const char* encrypted_key, void* json, jwa_t& type, jose_recipient_t& recipient);
 
-    /*
+    /**
      * @brief write
      * @param jose_context_t* context [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      */
     return_t write_encryption (jose_context_t* context, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
-    /*
+    /**
      * @brief update tag after AESGCMKW
      * @param std::string source_encoded [in]
      * @param binary_t tag [in]
@@ -524,7 +524,7 @@ protected:
      * @param std::string& output_encoded [out]
      */
     return_t update_header (std::string source_encoded, binary_t tag, binary_t& aad, std::string& output_encoded);
-    /*
+    /**
      * @brief parse
      * @param jose_context_t* context [in]
      * @param const char* protected_header [in]
@@ -532,13 +532,13 @@ protected:
      * @param std::string& keyid [out]
      */
     return_t parse_signature_header (jose_context_t* context, const char* protected_header, jws_t& method, std::string& keyid);
-    /*
+    /**
      * @brief parse
      * @param jose_context_t* context [in]
      * @param const char* signature [in]
      */
     return_t read_signature (jose_context_t* context, const char* signature);
-    /*
+    /**
      * @brief write
      * @param jose_context_t* context [in]
      * @param std::string& signature [out]

@@ -21,7 +21,7 @@ class hmac_otp
 public:
     hmac_otp ();
     ~hmac_otp ();
-    /*
+    /**
      * @brief open
      * @param otp_context_t** handle [in]
      * @param unsigned int digit_length [in]
@@ -29,7 +29,7 @@ public:
      * @param const byte_t* key_data [in]
      * @param size_t key_size [in]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        uint32 code = 0;
      *        otp.open (&handle, 6, HASH_ALGORITHM_SHA_256, key, keysize);
      *        otp.get (handle, code);
@@ -37,24 +37,24 @@ public:
      *        otp.close(handle);
      */
     uint32 open (otp_context_t** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size);
-    /*
+    /**
      * @brief close
      * @param otp_context_t* handle [in]
      * @return error code (see error.hpp)
      */
     uint32 close (otp_context_t* handle);
-    /*
+    /**
      * @brief set count
      * @param otp_context_t* handle [in]
      * @param uint32 count [in]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        otp.set(handle, 100);
      *        otp.get(handle, code); // otp.get(handle, 100, code) - same expression
      *        otp.get(handle, code); // otp.get(handle, 101, code) - same expression
      */
     uint32 set (otp_context_t* handle, uint32 count);
-    /*
+    /**
      * @brief get code
      * @param otp_context_t* handle [in]
      * @param uint32& code [out]
@@ -63,17 +63,17 @@ public:
      *        internal counter is increased automatically
      */
     uint32 get (otp_context_t* handle, uint32& code);
-    /*
+    /**
      * @brief set count and get code
      * @param otp_context_t* handle [in]
      * @param uint32 counter [in]
      * @param uint32& code [out]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        otp.get(handle, 100, code);
      */
     uint32 get (otp_context_t* handle, uint32 counter, uint32& code);
-    /*
+    /**
      * @brief set count and get code
      * @param otp_context_t* handle [in]
      * @param binary_t counter [in]
@@ -81,7 +81,7 @@ public:
      * @return error code (see error.hpp)
      */
     uint32 get (otp_context_t* handle, binary_t counter, uint32& code);
-    /*
+    /**
      * @brief verify
      * @param otp_context_t* handle [in]
      * @param uint32 counter [in]

@@ -26,7 +26,7 @@ enum base64_encoding_t {
     base64url_encoding  = 1,    /* - _ without padding */
 };
 
-/*
+/**
  * encode base64 and base64url (fill padding)
  * @param const byte_t* sources [in]
  * @param size_t source_size [in]
@@ -39,7 +39,7 @@ enum base64_encoding_t {
  *  BASE64 (E)    ZXlKMGVYQWlPaUpLVjFRaUxBMEtJQ0poYkdjaU9pSklVekkxTmlKOQ==
  *  BASE64URL (E) ZXlKMGVYQWlPaUpLVjFRaUxBMEtJQ0poYkdjaU9pSklVekkxTmlKOQ
  *  BASE64 (D)    {"typ":"JWT",\n "alg":"HS256"}
- * @sample
+ * @example
  *        binary_t buffer;
  *        size_t size = 0;
  *        bse64_encode(source, source_size, &buffer[0], &size); // size in=0 out=56
@@ -55,7 +55,7 @@ std::string base64_encode (const byte_t* source, size_t source_size, int encodin
 std::string base64_encode (binary_t source, int encoding = base64_encoding_t::base64_encoding);
 std::string base64_encode (std::string source, int encoding = base64_encoding_t::base64_encoding);
 
-/*
+/**
  * decode base64 and base64url
  * @param const byte_t* sources [in]
  * @param size_t source_size [in]
@@ -63,7 +63,7 @@ std::string base64_encode (std::string source, int encoding = base64_encoding_t:
  * @param size_t* buffer_size [inout]
  * @param int encoding [inopt] base64_encoding_t::base64_encoding, base64_encoding_t::base64url_encoding
  * @return error code (see error.hpp)
- * @sample
+ * @example
  *        binary_t buffer;
  *        size_t size = 0;
  *        bse64_decode(source, source_size, &buffer[0], &size, base64_encoding_t::base64url_encoding); // size in=0 out=42

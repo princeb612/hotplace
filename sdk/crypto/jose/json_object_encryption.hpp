@@ -24,7 +24,7 @@ public:
     json_object_encryption ();
     ~json_object_encryption ();
 
-    /*
+    /**
      * @brief encrypt
      * @param jose_context_t* handle [in] see json_object_signing_encryption::open and close
      * @param jwe_t enc [in]
@@ -35,7 +35,7 @@ public:
      * @remarks see json_object_signing_encryption::encrypt
      */
     return_t encrypt (jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t input, binary_t& output);
-    /*
+    /**
      * @brief decrypt
      * @param jose_context_t* handle
      * @param jwe_t enc [in]
@@ -46,7 +46,7 @@ public:
      * @remarks see json_object_signing_encryption::decrypt
      */
     return_t decrypt (jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t input, binary_t& output);
-    /*
+    /**
      * @brief decrypt
      * @param jose_context_t* handle
      * @param jwe_t enc [in]
@@ -60,7 +60,7 @@ public:
     return_t decrypt (jose_context_t* handle, jwe_t enc, jwa_t alg, const char* kid, binary_t input, binary_t& output);
 
 protected:
-    /*
+    /**
      * @brief constraints
      * @param jwa_t alg [in]
      * @param EVP_PKEY* pkey [in]

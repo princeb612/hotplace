@@ -18,14 +18,14 @@
 namespace hotplace {
 namespace io {
 
-/*
+/**
  * move    clear and assign
  * update  drop older data
  * key     keep older data
  */
 enum key_value_mode_t { move = 0, update, keep };
 
-/*
+/**
  * @brief key-value configuation
  * @remarks
  */
@@ -35,7 +35,7 @@ public:
     key_value ();
     ~key_value ();
 
-    /*
+    /**
      * @brief   add, update
      * @param   const char*     name    [IN]
      * @param   const char*     value   [IN]
@@ -47,7 +47,7 @@ public:
      *          set (key1, value2, key_value::mode_update); // update, return errorcode_t::success
      */
     return_t set (const char* name, const char* value, int mode = key_value_mode_t::update);
-    /*
+    /**
      * @brief   update
      * @param   const char* name [in]
      * @param   const char* value [in]
@@ -56,18 +56,18 @@ public:
      *          set(name, value, key_value_mode_t::update);
      */
     return_t update (const char* name, const char* value);
-    /*
+    /**
      * @brief   remove
      * @param   const char*     name    [IN]
      * @return  error code (see error.hpp)
      */
     return_t remove (const char* name);
-    /*
+    /**
      * @brief   clear
      * @return  error code (see error.hpp)
      */
     return_t clear ();
-    /*
+    /**
      * @brief   exist
      * @remarks
      *          kv.update ("key", "value");
@@ -75,7 +75,7 @@ public:
      *          result = exist ("value"); // false
      */
     bool exist (const char* name);
-    /*
+    /**
      * @brief   return value by key
      * @param   const char* name
      * @remarks
@@ -84,7 +84,7 @@ public:
      *          const char* value = kv ["value"]; // nullptr
      */
     const char* operator [] (const char* name);
-    /*
+    /**
      * @brief   query
      * @param   const char*     name    [IN]
      * @param   std::string&    value   [OUT]
@@ -96,7 +96,7 @@ public:
      */
     return_t query (const char* name, std::string& value);
 
-    /*
+    /**
      * @brief   copy
      * @param   key_value&       rhs   [IN]
      * @param   int             mode  [IN]
@@ -114,14 +114,14 @@ public:
     return_t copyfrom (std::map<std::string, std::string>& source, int mode);
     return_t copyto (std::map<std::string, std::string>& target);
 
-    /*
+    /**
      * @brief   operator =
      * @param   key_value& rhs [in]
      * @return  key_value&
      * @remarks copy with key_value_mode_t::update
      */
     key_value& operator = (key_value& rhs);
-    /*
+    /**
      * @brief   operator <<
      * @param   key_value& rhs [in]
      * @return  key_value&

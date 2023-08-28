@@ -41,7 +41,7 @@ public:
     const char* c_str ();
     size_t find (char* data);
 
-    /*
+    /**
      * @brief replace
      * @param const char* from [in]
      * @param const char* to [in]
@@ -62,12 +62,12 @@ public:
     /* std::string::rfind */
     size_t find_last_of (const char* find);
     size_t find_not_last_of (const char* find);
-    /*
+    /**
      * @brief
      * @param size_t pos [in] current position
      * @param size_t* brk [out] next line position
      * @param ansi_string& line [out] temporary
-     * @sample
+     * @example
      *        size_t pos = 0;
      *        size_t brk = 0;
      *        while (1)
@@ -168,7 +168,7 @@ public:
     const wchar_t* c_str ();
     size_t find (wchar_t* data);
 
-    /*
+    /**
      * @brief replace
      * @param const wchar_t* from [in]
      * @param const wchar_t* to [in]
@@ -192,12 +192,12 @@ public:
     size_t find_last_of (const wchar_t* find);
     size_t find_not_last_of (const wchar_t* find);
 
-    /*
+    /**
      * @brief
      * @param size_t pos [in] current position
      * @param size_t* brk [out] next line position
      * @param wide_string& line [out] temporary
-     * @sample
+     * @example
      *        size_t pos = 0;
      *        size_t brk = 0;
      *        while (1)

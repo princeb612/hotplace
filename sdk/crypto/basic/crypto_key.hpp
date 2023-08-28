@@ -75,7 +75,7 @@ typedef struct _crypto_key_object_t {
     }
 } crypto_key_object_t;
 
-/*
+/**
  * @brief RSA, EC, oct key container
  * @remarks
  *          crypto_key key;
@@ -102,14 +102,14 @@ public:
     crypto_key ();
     ~crypto_key ();
 
-    /*
+    /**
      * @brief add
      * @param crypto_key_object_t key [in]
      * @param bool up_ref [inopt] false by default
      * @return error code (see error.hpp)
      */
     return_t add (crypto_key_object_t key, bool up_ref = false);
-    /*
+    /**
      * @brief add
      * @param EVP_PKEY* key [in]
      * @param const char* kid [inopt]
@@ -117,7 +117,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t add (EVP_PKEY* key, const char* kid = nullptr, bool up_ref = false);
-    /*
+    /**
      * @brief add
      * @param EVP_PKEY* key [in]
      * @param const char* kid [inopt]
@@ -126,7 +126,7 @@ public:
      * @return error code (see error.hpp)
      */
     return_t add (EVP_PKEY* key, const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief generate
      * @param crypto_key_t type [in] CRYPTO_KEY_TYPE
      * @param unsigned int param [in] CRYPTO_KEY_HMAC in bytes
@@ -151,39 +151,39 @@ public:
      */
     return_t generate (crypto_key_t type, unsigned int param, const char* kid, crypto_use_t use = crypto_use_t::use_any);
 
-    /*
+    /**
      * @brief return any key
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* any (bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* select (crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param crypto_key_t kty [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* select (crypto_key_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param jwa_t alg [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* select (jwa_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param jws_t alg [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* select (jws_t sig, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param std::string& kid [out]
      * @param crypto_key_t kty [in]
@@ -191,14 +191,14 @@ public:
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* select (std::string& kid, crypto_key_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param std::string& kid [out]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* select (std::string& kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param std::string& kid [out]
      * @param jwa_t alg [in]
@@ -206,7 +206,7 @@ public:
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* select (std::string& kid, jwa_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param std::string& kid [out]
      * @param jws_t alg [in]
@@ -214,14 +214,14 @@ public:
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* select (std::string& kid, jws_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param const char* kid [out]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* find (const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param const char* kid [in]
      * @param crypto_key_t kty [in]
@@ -229,7 +229,7 @@ public:
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* find (const char* kid, crypto_key_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param const char* kid [in]
      * @param jwa_t alg [in]
@@ -237,7 +237,7 @@ public:
      * @param bool up_ref [inopt]
      */
     EVP_PKEY* find (const char* kid, jwa_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
+    /**
      * @brief find
      * @param const char* kid [in]
      * @param jws_t alg [in]
@@ -246,20 +246,20 @@ public:
      */
     EVP_PKEY* find (const char* kid, jws_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
 
-    /*
+    /**
      * @brief public key
      * @param EVP_PKEY* pkey [in]
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      */
     static return_t get_public_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2);
-    /*
+    /**
      * @brief public key
      * @param EVP_PKEY* pkey [in]
      * @parambinary_t& priv [out]
      */
     static return_t get_private_key (EVP_PKEY* pkey, binary_t& priv);
-    /*
+    /**
      * @brief public key
      * @param EVP_PKEY* pkey [in]
      * @parambinary_t& pub1 [out]
@@ -267,7 +267,7 @@ public:
      * @parambinary_t& priv [out]
      */
     static return_t get_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv);
-    /*
+    /**
      * @brief public key
      * @param EVP_PKEY* pkey [in]
      * @param int flag [in] 0 public only, 1 also private
@@ -276,7 +276,7 @@ public:
      * @parambinary_t& priv [out]
      */
     static return_t get_key (EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv);
-    /*
+    /**
      * @brief public key
      * @param EVP_PKEY* pkey [in]
      * @param int flag [in] 0 public only, 1 also private
@@ -289,12 +289,12 @@ public:
                              binary_t& pub1, binary_t& pub2, binary_t& priv);
 
 
-    /*
+    /**
      * @brief clear
      * @remarks decrement a reference counter of keys and clear a container
      */
     void clear ();
-    /*
+    /**
      * size
      */
     size_t size ();
@@ -304,7 +304,7 @@ public:
 
     /**
      * @brief dump
-     * @sample
+     * @example
      *  void dump_crypto_key (crypto_key_object_t* key, void*)
      *  {
      *      uint32 nid = 0;
@@ -322,7 +322,7 @@ public:
     void for_each (void (*)(crypto_key_object_t*, void*), void* param);
 
 protected:
-    /*
+    /**
      * @brief extract
      * @param EVP_PKEY* pkey [in]
      * @param CRYPTO_KEY_FLAG flag [in] CRYPTO_KEY_PUBLIC, CRYPTO_KEY_PRIVATE
@@ -332,7 +332,7 @@ protected:
     static return_t extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, crypt_datamap_t& datamap);
 
 private:
-    /*
+    /**
      * numberof (kid) = combination (type, enc)
      * @example
      *  "kty"="RSA" "use"="enc" "kid"="key1"    // ok
@@ -351,11 +351,11 @@ private:
     t_shared_reference <crypto_key> _shared;
 };
 
-/*
+/**
  * @param crypto_key_object_t key [in]
  */
 crypto_key_t typeof_crypto_key (crypto_key_object_t key);
-/*
+/**
  * @brief compare
  * @param EVP_PKEY* pkey [in]
  * @param crypto_key_t type [in]

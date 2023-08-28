@@ -120,7 +120,7 @@ enum DAYOFWEEK {
 class datetime
 {
 public:
-    /*
+    /**
      * @brief constructor
      */
     datetime ();
@@ -132,16 +132,16 @@ public:
     datetime (asn1time_t& at);
     datetime (datetime& rhs);
 
-    /*
+    /**
      * @brief destructor
      */
     ~datetime ();
 
-    /*
+    /**
      * @brief update
      */
     void update ();
-    /*
+    /**
      * @brief update
      * @param unsigned long msecs [in]
      * @return if a given milliseconds elapsed return true, else false
@@ -167,7 +167,7 @@ public:
     datetime& operator >> (systemtime_t& st); // localtime
     datetime& operator >> (asn1time_t& at);
 
-    /*
+    /**
      * @brief compare
      * @return true if equal
      */
@@ -181,7 +181,7 @@ public:
     datetime& operator += (timespan_t ts);
     datetime& operator -= (timespan_t ts);
 
-    /*
+    /**
      * @brief timespec to tm
      * @param int mode [in] 0 gmtime 1 localtime
      * @param struct timespec ts [in]
@@ -190,7 +190,7 @@ public:
      * @return error code (see error.hpp)
      */
     static return_t timespec_to_tm (int mode, struct timespec ts, struct tm* target, long* nsec = nullptr);
-    /*
+    /**
      * @brief timespec to datetime
      * @param int mode [in] 0 gmtime 1 localtime
      * @param struct timespec ts [in]
@@ -199,7 +199,7 @@ public:
      * @return error code (see error.hpp)
      */
     static return_t timespec_to_datetime (int mode, struct timespec ts, datetime_t* dt, long* nsec = nullptr);
-    /*
+    /**
      * @brief timespec to systemtime
      * @param int mode [in] 0 gmtime 1 localtime
      * @param struct timespec ts [in]
@@ -207,35 +207,35 @@ public:
      * @return error code (see error.hpp)
      */
     static return_t timespec_to_systemtime (int mode, struct timespec ts, systemtime_t* st);
-    /*
+    /**
      * @brief datetime to timespec
      * @param datetime_t ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
     static return_t datetime_to_timespec (datetime_t ft, struct timespec& ts);
-    /*
+    /**
      * @brief filetime to timespec
      * @param filetime_t ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
     static return_t filetime_to_timespec (filetime_t ft, struct timespec& ts);
-    /*
+    /**
      * @brief systemtime to timespec
      * @param systemtime_t ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
     static return_t systemtime_to_timespec (systemtime_t ft, struct timespec& ts);
-    /*
+    /**
      * @brief timespec to asn1time
      * @param struct timespec ts [in]
      * @param asn1time_t* at [out]
      * @return error code (see error.hpp)
      */
     static return_t timespec_to_asn1time (struct timespec ts, asn1time_t* at);
-    /*
+    /**
      * @brief asn1time to timespec
      * @param asn1time_t at [in]
      * @param struct timespec& ts [out]

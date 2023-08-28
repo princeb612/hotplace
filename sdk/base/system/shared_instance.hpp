@@ -18,7 +18,7 @@ namespace hotplace {
 
 /**
  * @brief wanna support c++9x
- * @sample
+ * @example
  *      class simple_instance1
  *      {
  *      public:
@@ -107,7 +107,7 @@ private:
 
 /**
  * @brief share_ptr like smart pointer (shared_ptr since c++11, however wanna support c++9x)
- * @sample
+ * @example
  *      class simple_instance
  *      {
  *      public:

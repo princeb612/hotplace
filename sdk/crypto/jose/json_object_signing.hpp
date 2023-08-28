@@ -23,7 +23,7 @@ public:
     json_object_signing ();
     ~json_object_signing ();
 
-    /*
+    /**
      * @brief sign
      * @param crypto_key* key [in]
      * @param jws_t method [in]
@@ -32,7 +32,7 @@ public:
      * @remarks see json_object_signing_encryption::sign
      */
     return_t sign (crypto_key* key, jws_t method, binary_t input, binary_t& output);
-    /*
+    /**
      * @brief sign and return signature and kid
      * @param crypto_key* key [in]
      * @param jws_t method [in]
@@ -42,7 +42,7 @@ public:
      * @remarks see json_object_signing_encryption::sign
      */
     return_t sign (crypto_key* key, jws_t method, binary_t input, binary_t& output, std::string& kid);
-    /*
+    /**
      * @brief verify
      * @param crypto_key* key [in]
      * @param jws_t method [in]
@@ -52,7 +52,7 @@ public:
      * @remarks see json_object_signing_encryption::verify
      */
     return_t verify (crypto_key* key, jws_t method, binary_t input, binary_t output, bool& result);
-    /*
+    /**
      * @brief verify with kid
      * @param crypto_key* key [in]
      * @param const char* kid [in]
@@ -65,7 +65,7 @@ public:
     return_t verify (crypto_key* key, const char* kid, jws_t method, binary_t input, binary_t output, bool& result);
 
 protected:
-    /*
+    /**
      * @brief sign
      * @param EVP_PKEY* pkey [in]
      * @param jws_t method [in]
@@ -73,7 +73,7 @@ protected:
      * @param binary_t& output [out]
      */
     return_t sign_general (EVP_PKEY* pkey, jws_t method, binary_t input, binary_t& output);
-    /*
+    /**
      * @brief sign (X9_62_prime256v1, secp384r1, secp521r1)
      * @param EVP_PKEY* pkey [in]
      * @param jws_t method [in]
@@ -81,7 +81,7 @@ protected:
      * @param binary_t& output [out]
      */
     return_t sign_ecdsa (EVP_PKEY* pkey, jws_t method, binary_t input, binary_t& output);
-    /*
+    /**
      * @brief sign (Ed25519, Ed448)
      * @param EVP_PKEY* pkey [in]
      * @param jws_t method [in]
@@ -89,7 +89,7 @@ protected:
      * @param binary_t& output [out]
      */
     return_t sign_eddsa (EVP_PKEY* pkey, jws_t method, binary_t input, binary_t& output);
-    /*
+    /**
      * @brief sign
      * @param EVP_PKEY* pkey [in]
      * @param jws_t method [in]
@@ -98,7 +98,7 @@ protected:
      * @remarks PKCS#1 v2.1
      */
     return_t sign_rsassa_pss (EVP_PKEY* pkey, jws_t method, binary_t input, binary_t& output);
-    /*
+    /**
      * @brief verify
      * @param EVP_PKEY* pkey [in]
      * @param jws_t method [in]
@@ -107,7 +107,7 @@ protected:
      * @param bool& result [out]
      */
     return_t verify_hmac (EVP_PKEY* pkey, jws_t method, binary_t input, binary_t output, bool& result);
-    /*
+    /**
      * @brief verify
      * @param EVP_PKEY* pkey [in]
      * @param jws_t method [in]
@@ -117,7 +117,7 @@ protected:
      * @remarks PKCS#1 v1.5
      */
     return_t verify_rsassa_pkcs1_v1_5 (EVP_PKEY* pkey, jws_t method, binary_t input, binary_t output, bool& result);
-    /*
+    /**
      * @brief verify (X9_62_prime256v1, secp384r1, secp521r1)
      * @param EVP_PKEY* pkey [in]
      * @param jws_t method [in]
@@ -126,7 +126,7 @@ protected:
      * @param bool& result [out]
      */
     return_t verify_ecdsa (EVP_PKEY* pkey, jws_t method, binary_t input, binary_t output, bool& result);
-    /*
+    /**
      * @brief verify (Ed25519, Ed448)
      * @param EVP_PKEY* pkey [in]
      * @param jws_t method [in]
@@ -135,7 +135,7 @@ protected:
      * @param bool& result [out]
      */
     return_t verify_eddsa (EVP_PKEY* pkey, jws_t method, binary_t input, binary_t output, bool& result);
-    /*
+    /**
      * @brief verify
      * @param EVP_PKEY* pkey [in]
      * @param jws_t method [in]
@@ -145,7 +145,7 @@ protected:
      * @remarks PKCS#1 v2.1
      */
     return_t verify_rsassa_pss (EVP_PKEY* pkey, jws_t method, binary_t input, binary_t output, bool& result);
-    /*
+    /**
      * @brief constraints
      * @param jws_t sig [in]
      * @param EVP_PKEY* pkey [in]

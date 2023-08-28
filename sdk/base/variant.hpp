@@ -97,7 +97,7 @@ enum vartype_t {
     TYPE_USER       = 0x10000,
 };
 
-/*
+/**
  * byte type conflict
  *
  * #if __cplusplus >= 201703L

@@ -21,7 +21,7 @@ namespace net {
 class network_priority_queue;
 class server_socket;
 
-/*
+/**
  * @brief session data
  */
 class network_session_data : public key_value
@@ -35,7 +35,7 @@ public:
     }
 };
 
-/*
+/**
  * @brief session
  */
 class network_session
@@ -45,7 +45,7 @@ public:
     network_session (server_socket* svr_socket);
     virtual ~network_session ();
 
-    /*
+    /**
      * @brief   connect handler
      * @param   handle_t            client_socket   [IN]
      * @param   sockaddr_storage_t* sockaddr        [IN]
@@ -54,13 +54,13 @@ public:
      * @remarks copy socket and address
      */
     return_t connected (handle_t client_socket, sockaddr_storage_t* sockaddr, tls_context_t* tls_handle);
-    /*
+    /**
      * @brief in windows call wsarecv to read asynchronously
      * @return error code (see error.hpp)
      */
     return_t ready_to_read ();
 
-    /*
+    /**
      * @brief send
      * @param const char*         data_ptr        [IN]
      * @param size_t              size_data       [IN]
@@ -68,41 +68,41 @@ public:
      */
     return_t send (const char* data_ptr, size_t size_data);
 
-    /*
+    /**
      * @brief return socket information
      */
     net_session_socket_t* socket_info ();
 #if defined _WIN32 || defined _WIN64
-    /*
+    /**
      * @brief in windows return wsabuf structure
      */
     WSABUF* wsabuf_read ();
 #endif
-    /*
+    /**
      * @brief return raw-stream
      */
     network_stream* getstream ();
-    /*
+    /**
      * @brief return composed-stream
      */
     network_stream* getrequest ();
 
-    /*
+    /**
      * @brief return priority
      */
     int get_priority ();
-    /*
+    /**
      * @brief elevate priority
      * @param   int priority        [IN]
      */
     void set_priority (int priority);
 
     int addref ();
-    /*
+    /**
      * @brief release object if not referenced
      */
     virtual int release ();
-    /*
+    /**
      * @brief produce, push into stream
      * @param   network_priority_queue* q               [IN]
      * @param   void*                   buf_read        [IN]
@@ -110,7 +110,7 @@ public:
      * @remarks
      */
     return_t produce (network_priority_queue* q, void* buf_read, size_t size_buf_read);
-    /*
+    /**
      * @brief consume from stream and put into request, then read stream buffer list from request
      * @param   network_protocol_group* protocol_group              [IN]
      * @param   network_stream_data**   ptr_network_stream_buffer   [OUT] see network_stream::consume
@@ -130,7 +130,7 @@ protected:
     critical_section _lock;
 };
 
-/*
+/**
  * @brief network_session container
  */
 class network_session_manager
@@ -139,7 +139,7 @@ public:
     network_session_manager ();
     ~network_session_manager ();
 
-    /*
+    /**
      * @brief   new network_session
      * @param   handle_t            client_socket       [IN]
      * @param   sockaddr_storage_t* sockaddr            [IN]
@@ -150,12 +150,12 @@ public:
      */
     return_t connected (handle_t client_socket, sockaddr_storage_t* sockaddr, server_socket* svr_socket, tls_context_t* tls_handle,
                         network_session** ptr_session_object);
-    /*
+    /**
      * @brief   find a network session
      * @param   handle_t            client_socket       [IN]
      * @param   network_session**    ptr_session_object  [OUT] referenced, call release
      * @return  error code (see error.hpp)
-     * @sample
+     * @example
      *          network_session* session = session_manager.find (client_socket);
      *          if (nullptr != session)
      *          {
@@ -163,11 +163,11 @@ public:
      *          }
      */
     return_t find (handle_t client_socket, network_session** ptr_session_object);
-    /*
+    /**
      * @brief   operator[socket]
      * @return  error code (see error.hpp)
      * @remarks
-     * @sample
+     * @example
      *          network_session* session = session_manager[client_socket];
      *          if (nullptr != session)
      *          {
@@ -175,7 +175,7 @@ public:
      *          }
      */
     network_session* operator[] (handle_t client_socket);
-    /*
+    /**
      * @brief   remove from session list
      * @param   handle_t          client_socket       [IN]
      * @param   network_session**  ptr_session_object  [OUT]

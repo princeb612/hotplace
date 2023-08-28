@@ -51,7 +51,7 @@ public:
      * @brief init
      * @param hash_context_t* handle [in]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
      *        hash.finalize(handle, &output_data, &output_size);
@@ -64,7 +64,7 @@ public:
      * @param byte_t* data [in]
      * @param size_t datasize [in]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
      *        hash.finalize(handle, &output_data, &output_size);
@@ -77,14 +77,14 @@ public:
      * @param byte_t** output [out]
      * @param size_t * outputsize [out] call free_data to free
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
      *        hash.finalize(handle, &output_data, &output_size);
      *        hash.free_data(output_data);
      */
     virtual return_t finalize (hash_context_t* handle, byte_t** output, size_t* outputsize);
-    /*
+    /**
      * @brief finalize
      * @param hash_context_t* handle [in]
      * @param binary_t& output [out]
@@ -94,7 +94,7 @@ public:
      * @brief free
      * @param void* data [in]
      * @return error code (see error.hpp)
-     * @sample
+     * @example
      *        hash.init(handle);
      *        hash.update(handle, input_data, input_size);
      *        hash.finalize(handle, &output_data, &output_size);

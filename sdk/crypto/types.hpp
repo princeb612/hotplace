@@ -21,7 +21,7 @@ enum crypt_poweredby_t {
     openssl = 1,
 };
 
-/*
+/**
  * RFC 2144 The CAST-128 Encryption Algorithm (May 1997)
  * RFC 2612 The CAST-256 Encryption Algorithm (June 1999)
  * RFC 3217 Triple-DES and RC2 Key Wrapping (December 2001)
@@ -58,7 +58,7 @@ enum crypt_algorithm_t {
     sm4                 = 17,
 };
 
-/*
+/**
  * modes
  *  Authenticated encryption with additional data (AEAD) modes
  *    GCM galois counter
@@ -206,7 +206,7 @@ enum jwa_type_t {
 #define CRYPT_ALG_TYPE(v) (v >> 16)
 #define CRYPT_ALG_CODE(v) (v & 0xffff)
 
-/*
+/**
  * @brief Cryptographic Algorithms for Key Management
  */
 enum jwa_t {
@@ -238,7 +238,7 @@ enum jwe_type_t {
 #define CRYPT_ENC_TYPE(v) (v >> 16)
 #define CRYPT_ENC_CODE(v) (v & 0xffff)
 
-/*
+/**
  * @brief Cryptographic Algorithms for Content Encryption
  */
 enum jwe_t {
@@ -262,7 +262,7 @@ enum jws_type_t {
 #define CRYPT_SIG_TYPE(v) (v >> 16)
 #define CRYPT_SIG_CODE(v) (v & 0xffff)
 
-/*
+/**
  * @brief Cryptographic Algorithms for Digital Signatures and MACs
  * RFC 7515 JSON Web Signature (JWS)
  * RFC 8037 CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JSON Object Signing and Encryption (JOSE)

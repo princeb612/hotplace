@@ -25,7 +25,7 @@ typedef struct _GCC_VA_LIST64 {
 } GCC_VA_LIST64[1];
 
 typedef struct VA_LIST {
-    /*
+    /**
      * @brief va_list to va_list
      *
      * 1. operator =
@@ -52,12 +52,12 @@ typedef struct VA_LIST {
 
 //#define GET_VA_LIST(vl) (vl).ap
 
-/*
+/**
  * @brief create va_list dynamically
  *        original idea from http://stackoverflow.com/questions/11695237/creating-va-list-dynamically-in-gcc-can-it-be-done
  * @remarks
  *          tested in gcc x86/x86_64, msvc x86/x86_64
- * @sample
+ * @example
  *          valist va;
  *          va << 42 << "hello\n";
  *          vprintf("format string %d %s", va.data()));
@@ -72,7 +72,7 @@ public:
     valist (const valist& object);
     ~valist ();
 
-    /*
+    /**
      * @brief assign
      * @param const valist& object [in]
      * @return *this
@@ -97,16 +97,16 @@ public:
     valist& operator << (const char* value);
     valist& operator << (variant_t v);
     valist& operator << (const valist& object);
-    /*
+    /**
      * @brief clear
      */
     void clear ();
 
-    /*
+    /**
      * @brief size
      */
     size_t size ();
-    /*
+    /**
      * @brief at
      * @param size_t index [in]
      * @param variant_t& v [out]
@@ -114,17 +114,17 @@ public:
      */
     return_t at (size_t index, variant_t& v);
 
-    /*
+    /**
      * @brief return va_list
      */
     va_list& get ();
 
 protected:
-    /*
+    /**
      * @brief build va_list
      */
     void build ();
-    /*
+    /**
      * @brief insert
      * @param variant_t& v [in]
      */

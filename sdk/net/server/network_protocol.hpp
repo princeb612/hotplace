@@ -30,7 +30,7 @@ enum protocol_state_t {
     protocol_state_crash,       /* reserved */
 };
 
-/*
+/**
  * network_multiplexer_processor data structures
  */
 
@@ -88,7 +88,7 @@ public:
     {
     }
 
-    /*
+    /**
      * @brief check protocol
      * @param   void*           stream          [IN]
      * @param   size_t          stream_size     [IN]
@@ -99,7 +99,7 @@ public:
     {
         return errorcode_t::success;
     }
-    /*
+    /**
      * @brief read stream
      * @param   IBufferStream*  stream          [IN]
      * @param   size_t*         request_size    [IN]
@@ -110,7 +110,7 @@ public:
         *state = protocol_state_t::protocol_state_complete;
         return errorcode_t::success;
     }
-    /*
+    /**
      * @brief   id
      * @remarks default port number
      */
@@ -138,29 +138,29 @@ public:
     network_protocol_group ();
     virtual ~network_protocol_group ();
 
-    /*
+    /**
      * @brief add protocol
      * @param   network_protocol*    protocol        [IN] add protocol and increase reference counter
      * @return error code (see error.hpp)
      */
     virtual return_t add (network_protocol* protocol);
-    /*
+    /**
      * @brief operator <<
      * @param   network_protocol*    protocol        [IN]
      * @remarks
      *          add method replacement wo checking return code
      */
     virtual network_protocol_group& operator << (network_protocol* protocol);
-    /*
+    /**
      * @brief find
      * @param   uint32                   protocol_id     [IN]
      * @param   network_protocol**   ptr_protocol    [OUT] referenced, call release
      * @return error code (see error.hpp)
      */
     virtual return_t find (uint32 protocol_id, network_protocol** ptr_protocol);
-    /*
+    /**
      * @brief operator[protocol_id]
-     * @sample
+     * @example
      *          network_protocol* protocol = protocol_group[80];
      *          if (nullptr != protocol)
      *          {
@@ -169,23 +169,23 @@ public:
      *          }
      */
     virtual network_protocol* operator[] (uint32 protocol_id);
-    /*
+    /**
      * @brief remove protocol
      * @param   network_protocol*    protocol        [IN] remove protocol and decrease reference counter
      * @return error code (see error.hpp)
      */
     virtual return_t remove (network_protocol* protocol);
-    /*
+    /**
      * @brief remove all protocol
      * @return error code (see error.hpp)
      */
     virtual return_t clear ();
-    /*
+    /**
      * @brief is protocol absent
      */
     virtual bool empty ();
 
-    /*
+    /**
      * @brief find appropriate protocol
      * @param   void*                   stream          [IN]
      * @param   size_t                  stream_size     [IN]
@@ -196,11 +196,11 @@ public:
      */
     virtual return_t is_kind_of (void* stream, size_t stream_size, network_protocol** ptr_protocol);
 
-    /*
+    /**
      * @brief increase reference counter
      */
     int addref ();
-    /*
+    /**
      * @brief decrease reference counter. if reference counter 0, delete object.
      */
     int release ();

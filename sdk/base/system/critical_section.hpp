@@ -31,4 +31,25 @@ public:
 #include <hotplace/sdk/base/system/linux/critical_section.hpp>
 #endif
 
+namespace hotplace {
+
+class enter_critical_section
+{
+public:
+    enter_critical_section (critical_section& cs)
+    {
+        cs.enter ();
+        _cs = &cs;
+    }
+    ~enter_critical_section ()
+    {
+        _cs->leave ();
+    }
+
+private:
+    critical_section* _cs;
+};
+
+} // namespace
+
 #endif

@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace io {
 
-/*
+/**
  * @brief register thread-termination signal_routine and wait a signal
  * @remarks
  */
@@ -54,7 +54,7 @@ protected:
 
 };
 
-/*
+/**
  *  signalwait_threads threads;
  *
  *  int count = 4; // ex. 2 * (nr of cpu)
@@ -75,7 +75,7 @@ public:
     signalwait_threads ();
     ~signalwait_threads ();
 
-    /*
+    /**
      * @brief call before create method.
      * @param   size_t                      max_concurrent  [IN] limit
      * @param   signalwait_thread_routine   thread_routine  [IN] thread.handler
@@ -86,31 +86,31 @@ public:
      */
     return_t set (size_t max_concurrent, SIGNALWAITTHREADS_CALLBACK_ROUTINE thread_routine,
                   SIGNALWAITTHREADS_CALLBACK_ROUTINE signal_callback, void* thread_param);
-    /*
+    /**
      * @brief create a thread
      * @return error code (see error.hpp)
      * @remarks
      *          if a maximum number of threads running, it returns errorcode_t::max_reached.
      */
     return_t create ();
-    /*
+    /**
      * @brief call (*signal_callback)(thread_param)
      */
     void signal ();
-    /*
+    /**
      * @brief stop all
      * @param   int     reserved    [INOPT] 0
      */
     void signal_and_wait_all (int reserved = 0);
-    /*
+    /**
      * @brief limit
      */
     size_t capacity ();
-    /*
+    /**
      * @brief number of threads running
      */
     size_t running ();
-    /*
+    /**
      * @brief dummy signal handler
      * @return error code (see error.hpp)
      * @remarks
@@ -120,12 +120,12 @@ public:
 
 protected:
 
-    /*
+    /**
      * @brief thread routine
      */
     static return_t thread_routine (void* thread_param);
     return_t thread_routine_implementation (void* param);
-    /*
+    /**
      * @brief join
      * @param threadid_t tid
      * @return error code (see error.hpp)

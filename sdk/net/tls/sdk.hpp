@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace net {
 
-/*
+/**
  * @brief   SSL_connect
  * @param   socket_t    sock        [in]
  * @param   SSL*        ssl         [in]

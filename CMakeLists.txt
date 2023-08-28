@@ -4,8 +4,8 @@
 # Date         Name                Description
 #
 
-#cmake_minimum_required (VERSION 2.6)
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 2.6)
+#cmake_minimum_required (VERSION 3.5)
 project (hotplace)
 
 set (CMAKE_BUILD_TYPE Debug)
@@ -13,7 +13,7 @@ set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set (SUPPORT_STATIC 1) # always set 1
-set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu 2x, or custom build
+set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu, custom build
 set (SUPPORT_ODBC 1)   # 
 set (SUPPORT_PCH 0)    # cmake 2.x
 
@@ -36,7 +36,7 @@ if (MINGW)
     set (SUPPORT_SHARED 1)
 endif ()
 if(CMAKE_VERSION VERSION_GREATER 3.8)
-    #set (SUPPORT_PCH 1)
+    set (SUPPORT_PCH 1)
 endif ()
 
 # verbose

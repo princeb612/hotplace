@@ -101,6 +101,8 @@ void test_hexbin ()
 
 void test_obfuscate_string ()
 {
+    _test_case.begin ("obfuscate_string");
+
     bool test = false;
     buffer_stream bs;
     binary_t bin;
@@ -131,9 +133,21 @@ void test_obfuscate_string ()
     _test_case.assert ((0 == memcmp (helloworld, str.c_str (), str.size ())), __FUNCTION__, "std::string << obfuscate");
 
     obfuscate_string obf2 (helloworld);
-    bool compare = (obf == obf2);
 
-    _test_case.assert (true == compare, __FUNCTION__, "operator ==");
+    _test_case.assert (obf == obf2, __FUNCTION__, "assign and operator ==");
+
+    obf << helloworld;
+    obf2 << helloworld;
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+
+        bin.clear ();
+        bin << obf;
+        dump_memory (bin, &bs);
+        std::cout << bs.c_str () << std::endl;
+    }
+    _test_case.assert (obf == obf2, __FUNCTION__, "append and operator ==");
 }
 
 typedef struct {

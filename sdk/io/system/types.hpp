@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace io {
 
-/*
+/**
  * host order to network order (64bits)
  */
 uint64 htonll (uint64 value);
@@ -24,7 +24,7 @@ uint64 ntohll (uint64 value);
 
 #if defined __SIZEOF_INT128__
 
-/*
+/**
  * atoi (int128)
  */
 int128 atoi128 (std::string const & in);
@@ -33,7 +33,7 @@ typedef union _ipaddr_byteorder {
     uint128 t128;
     uint32 t32[4];
 } ipaddr_byteorder;
-/*
+/**
  * host order to network order (128bits)
  */
 uint128 hton128 (uint128 value);
