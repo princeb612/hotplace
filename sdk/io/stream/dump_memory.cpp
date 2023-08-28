@@ -97,5 +97,35 @@ return_t dump_memory (const binary_t& data, stream_t* stream_object, unsigned he
     return dump_memory (&data[0], data.size (), stream_object, hex_part, indent, rebase, flags);
 }
 
+return_t dump_memory (bufferio_context_t* handle, stream_t* stream_object, unsigned hex_part,
+                      unsigned indent, size_t rebase, int flags)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == handle || nullptr == stream_object) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        byte_t* src = nullptr;
+        size_t size = 0;
+        bufferio bio;
+
+        ret = bio.get (handle, &src, &size);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = dump_memory (src, size, stream_object, hex_part, indent, rebase, flags);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
 }
 }  // namespace

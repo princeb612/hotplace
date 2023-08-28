@@ -13,12 +13,14 @@
 
 #include <hotplace/sdk/base.hpp>
 
+#include <hotplace/sdk/io/types.hpp>
 #include <hotplace/sdk/io/basic/base16.hpp>
 #include <hotplace/sdk/io/basic/base64.hpp>
 #include <hotplace/sdk/io/basic/console_color.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <hotplace/sdk/io/basic/keyvalue.hpp>
 #include <hotplace/sdk/io/basic/mlfq.hpp>
+#include <hotplace/sdk/io/basic/obfuscate_string.hpp>
 #include <hotplace/sdk/io/basic/zlib.hpp>
 #include <hotplace/sdk/io/cbor/cbor.hpp>
 #include <hotplace/sdk/io/stream/buffer_stream.hpp>

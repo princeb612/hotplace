@@ -16,6 +16,8 @@
      * RSA-OAEP-256
      * Ed25519 Ed448 X25519 X448
      * sha3
+   * openssl 3.0, 3.1
+     * failed to load PEM file containing private key
    * custom build required in RHEL (RHEL, centos, rocky) and older version
      * -fPIC required
      * algoritm test, random SEGV, ctr_update SEGV (older linux), ...
@@ -95,4 +97,4 @@
 | merlin(2) | 2010.03.24~2017.03.31 | windows/linux | private    | no comments         |
 | grape     | 2017.05.31~2019.10.24 | linux         | private    | no comments         |
 | unicorn   | 2019.11.21~2023.07.04 | mingw/linux   | private    | no comments         |
-| hotplace  | 2023.08.12~           | mingw/linux   | public     | unrelated to my job |
+| hotplace  | 2023.08.12~           | mingw/linux   | public     | RFC-related         |

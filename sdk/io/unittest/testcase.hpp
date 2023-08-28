@@ -13,7 +13,7 @@
 #define __HOTPLACE_SDK_IO_UNITEST_TESTCASE__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/system/thread.hpp>
+#include <hotplace/sdk/io/basic/console_color.hpp>
 #include <list>
 #include <map>
 #include <string>
@@ -52,11 +52,11 @@ namespace io {
  *    case1
  *      test_case _test_case;   // reset
  *      _test_case.test (..);   // check time
- *    case1
+ *    case2
  *      test_case _test_case;   // reset
  *      _test_case.begin (...); // reset, same in start method
  *      _test_case.test (..);   // check time, same in assert method
- *    case2
+ *    case3
  *      test_case _test_case;   // reset
  *      _test_case.begin (...); // reset, same in start method
  *      _test_case.assert (..); // check time, same in assert method
@@ -170,6 +170,7 @@ protected:
 
 private:
     critical_section _lock;
+    console_color _color;
     unittest_index_t _test_list;
     unittest_map_t _test_map;
     test_stat_t _total;
@@ -179,6 +180,33 @@ private:
     time_flag_per_thread_t _time_flag_per_threads;
     timestamp_per_thread_t _timestamp_per_threads;
     time_slice_per_thread_t _time_slice_per_threads;
+};
+
+/**
+ * @example
+ *  // as-is
+ *      _test_case.pause_time ();
+ *      // do not count time this code block
+ *      _test_case.resume_time ();
+ *  // replace
+ *      {
+ *          test_case_notimecheck block (_test_case);
+ *          // do not count time this code block
+ *      }
+ */
+class test_case_notimecheck
+{
+public:
+    test_case_notimecheck (test_case& tc)
+    {
+        tc.pause_time ();
+        _tc = &tc;
+    }
+    ~test_case_notimecheck ()
+    {
+        _tc->resume_time ();
+    }
+    test_case* _tc;
 };
 
 }

@@ -99,6 +99,43 @@ void test_hexbin ()
     _test_case.assert (true, __FUNCTION__, "base16");
 }
 
+void test_obfuscate_string ()
+{
+    bool test = false;
+    buffer_stream bs;
+    binary_t bin;
+    std::string str;
+    char helloworld [] = { 'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', 0 };
+
+    _test_case.reset_time ();
+
+    obfuscate_string obf (helloworld);
+    bin << obf;
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        dump_memory (bin, &bs);
+        std::cout << bs.c_str () << std::endl;
+    }
+
+    _test_case.assert ((0 == memcmp (helloworld, &bin[0], bin.size ())), __FUNCTION__, "binary_t << obfuscate");
+
+    str << obf;
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        dump_memory (str, &bs);
+        std::cout << bs.c_str () << std::endl;
+    }
+
+    _test_case.assert ((0 == memcmp (helloworld, str.c_str (), str.size ())), __FUNCTION__, "std::string << obfuscate");
+
+    obfuscate_string obf2 (helloworld);
+    bool compare = (obf == obf2);
+
+    _test_case.assert (true == compare, __FUNCTION__, "operator ==");
+}
+
 typedef struct {
     std::string str;
 } myprintf_context_t;
@@ -244,6 +281,7 @@ int main ()
     test_getline ();
     test_gettoken ();
     test_hexbin ();
+    test_obfuscate_string ();
     test_printf ();
     test_replace ();
     test_scan ();

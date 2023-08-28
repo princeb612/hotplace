@@ -137,6 +137,51 @@ void test_sprintf ()
     _test_case.assert (true, __FUNCTION__, "sprintf");
 }
 
+void test_vprintf ()
+{
+    _test_case.begin ("vprintf");
+
+    return_t ret = errorcode_t::success;
+    ansi_string str;
+
+#if __cplusplus >= 201402L     // c++14
+    valist val;
+    make_valist (val, 1, 3.141592, "hello");
+    ret = sprintf (&str, "param1 {1} param2 {2} param3 {3}", val);
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << str.c_str () << std::endl;
+        str.flush ();
+    }
+
+    _test_case.test (ret, __FUNCTION__, "make_list(Ts... args) and sprintf");
+
+    valist va;
+    ret = sprintf (&str, "param1 {1} param2 {2} param3 {3}", va << 1 << 3.14 << "hello");
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << str.c_str () << std::endl;
+        str.flush ();
+    }
+
+    _test_case.test (ret, __FUNCTION__, "sprintf");
+
+    ret = vprintf (&str, "param1 {1} param2 {2} param3 {3}", 1, 3.141592, "hello");
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << str.c_str () << std::endl;
+        str.flush ();
+    }
+
+    _test_case.test (ret, __FUNCTION__, "vprintf (Ts... args)");
+#else
+    _test_case.test (errorcode_t::not_supported, __FUNCTION__, "skip c++14");
+#endif
+}
+
 void test_stream ()
 {
     _test_case.begin ("stream");
@@ -178,7 +223,11 @@ void test_stream_getline ()
             break;
         }
         line.rtrim ();
-        printf ("%.*s\n", (unsigned) line.size (), line.c_str ());
+
+        {
+            test_case_notimecheck notimecheck (_test_case);
+            printf ("%.*s\n", (unsigned) line.size (), line.c_str ());
+        }
 
         pos = brk;
     }
@@ -209,6 +258,7 @@ int main ()
     test_consolecolor ();
     test_dumpmemory ();
     test_sprintf ();
+    test_vprintf ();
     test_stream ();
     test_stream_getline ();
     test_vtprintf ();

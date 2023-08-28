@@ -26,10 +26,11 @@ int main ()
 
     _test_case.begin ("test case 1");
 
-    _test_case.pause_time ();
-    printf ("pause and resume and estimate time\n");
-    msleep (1000);
-    _test_case.resume_time ();
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        printf ("pause, resume and estimate time\n");
+        msleep (1000);
+    }
 
     _test_case.test (errorcode_t::success, "function5", "case 1 desc 1");                       // pass
     _test_case.test (errorcode_t::unexpected, "function6", "case 1 desc 2 - intentional fail"); // fail

@@ -94,7 +94,6 @@ public:
      * @remarks
      */
     return_t write (bufferio_context_t* handle, const void* data, size_t data_size);
-
     /**
      * @brief printf
      * @param bufferio_context_t* handle [IN] handle
@@ -275,11 +274,11 @@ public:
 protected:
 
     /**
-     * @brief operation 중 메모리가 추가로 필요할 때 호출된다.
+     * @brief extend
      * @param bufferio_context_t* handle [IN] handle
-     * @param size_t        alloc_size          [IN] 할당할 메모리 크기
-     * @param bufferio_t**  allocated_pointer   [OUT] 할당된 메모리 블럭
-     * @param uint32        flag                [IN] bufferio_flag_t 참고
+     * @param size_t        alloc_size          [IN] allcation size
+     * @param bufferio_t**  allocated_pointer   [OUT] allocated block
+     * @param uint32        flag                [IN] see bufferio_flag_t
      * @return
      * @remarks
      */

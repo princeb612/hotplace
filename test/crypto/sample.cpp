@@ -63,17 +63,17 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
                 if (errorcode_t::success == ret) {
                     ret = crypt_object->decrypt2 (crypt_handle, &encrypted[0], encrypted.size (), decrypted, &aad, &tag);
                     if (errorcode_t::success == ret) {
-                        _test_case.pause_time ();
+                        {
+                            test_case_notimecheck notimecheck (_test_case);
 
-                        std::cout << "encrypted" << std::endl;
-                        dump_memory (&encrypted[0], encrypted.size (), &bs);
-                        std::cout << bs.c_str () << std::endl;
+                            std::cout << "encrypted" << std::endl;
+                            dump_memory (&encrypted[0], encrypted.size (), &bs);
+                            std::cout << bs.c_str () << std::endl;
 
-                        std::cout << "decrypted" << std::endl;
-                        dump_memory (&decrypted[0], decrypted.size (), &bs);
-                        std::cout << bs.c_str () << std::endl;
-
-                        _test_case.resume_time ();
+                            std::cout << "decrypted" << std::endl;
+                            dump_memory (&decrypted[0], decrypted.size (), &bs);
+                            std::cout << bs.c_str () << std::endl;
+                        }
 
                         if (size != decrypted.size ()) {
                             ret = errorcode_t::internal_error;
@@ -247,21 +247,15 @@ void test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm,
                 if (errorcode_t::success == ret) {
                     ret = hash_object->finalize (hash_handle, hashed);
                     if (errorcode_t::success == ret) {
-                        _test_case.pause_time ();
+                        test_case_notimecheck notimecheck (_test_case);
 
                         buffer_stream dump;
                         dump_memory (&hashed[0], hashed.size (), &dump, 16, 0);
                         bs.printf ("%s\n",  dump.c_str ());
-
-                        _test_case.resume_time ();
                     }
                 }
                 hash_object->close (hash_handle);
             }
-
-            _test_case.pause_time ();
-            printf ("%s", bs.c_str ());
-            _test_case.resume_time ();
         }
         __finally2
         {
@@ -305,7 +299,7 @@ return_t test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm, bin
                 if (errorcode_t::success == ret) {
                     ret = hash_object->finalize (hash_handle, hashed);
                     if (errorcode_t::success == ret) {
-                        _test_case.pause_time ();
+                        test_case_notimecheck notimecheck (_test_case);
 
                         buffer_stream dump;
                         dump_memory (&hashed[0], hashed.size (), &dump, 16, 0);
@@ -316,8 +310,6 @@ return_t test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm, bin
                         } else {
                             ret = errorcode_t::mismatch;
                         }
-
-                        _test_case.resume_time ();
                     }
                 }
                 hash_object->close (hash_handle);
@@ -541,12 +533,12 @@ void test_keywrap_routine (crypt_algorithm_t alg, byte_t* key, size_t key_size, 
     crypt.open (&handle, alg, crypt_mode_t::wrap, key, key_size, iv, RTL_NUMBER_OF (iv));
     crypt.encrypt (handle, kek, kek_size, out_kw);
 
-    _test_case.pause_time ();
+    {
+        test_case_notimecheck notimecheck (_test_case);
 
-    dump_memory (&out_kw[0], out_kw.size (), &bs);
-    printf ("%.*s\n", (int) bs.size (), bs.c_str ());
-
-    _test_case.resume_time ();
+        dump_memory (&out_kw[0], out_kw.size (), &bs);
+        printf ("%.*s\n", (int) bs.size (), bs.c_str ());
+    }
 
     if ((out_kw.size () == expect_size) && (0 == memcmp (&out_kw[0], expect, out_kw.size ()))) {
         compare = true;
@@ -554,12 +546,12 @@ void test_keywrap_routine (crypt_algorithm_t alg, byte_t* key, size_t key_size, 
 
     crypt.decrypt (handle, &out_kw[0], out_kw.size (), out_kuw);
 
-    _test_case.pause_time ();
+    {
+        test_case_notimecheck notimecheck (_test_case);
 
-    dump_memory (&out_kuw[0], out_kuw.size (), &bs);
-    printf ("%.*s\n", (int) bs.size (), bs.c_str ());
-
-    _test_case.resume_time ();
+        dump_memory (&out_kuw[0], out_kuw.size (), &bs);
+        printf ("%.*s\n", (int) bs.size (), bs.c_str ());
+    }
 
     crypt.close (handle);
     _test_case.test (compare ? errorcode_t::success : errorcode_t::mismatch, __FUNCTION__, msg ? msg : "");
@@ -677,13 +669,11 @@ uint32 test_hotp ()
         for (int i = 0; i < 10; i++) {
             hotp.get (handle, code);
 
-            _test_case.pause_time ();
-
-            output.push_back (code);
-
-            std::cout << "counter " << i << " code " << code << std::endl;
-
-            _test_case.resume_time ();
+            {
+                test_case_notimecheck notimecheck (_test_case);
+                output.push_back (code);
+                std::cout << "counter " << i << " code " << code << std::endl;
+            }
         }
 
         hotp.close (handle);
@@ -746,11 +736,10 @@ uint32 test_totp (hash_algorithm_t algorithm)
                 totp.get (handle, counter[i], code);
                 output.push_back (code);
 
-                _test_case.pause_time ();
-
-                std::cout << "counter " << counter[i] << " code " << code << std::endl;
-
-                _test_case.resume_time ();
+                {
+                    test_case_notimecheck notimecheck (_test_case);
+                    std::cout << "counter " << counter[i] << " code " << code << std::endl;
+                }
             }
             totp.close (handle);
         }

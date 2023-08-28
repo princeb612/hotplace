@@ -9,10 +9,10 @@
  * 2023.08.15   Soo Han, Kim        elapsed time
  */
 
-#include <hotplace/sdk/io/basic/console_color.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
 #include <hotplace/sdk/io/system/datetime.hpp>
+#include <hotplace/sdk/io/system/thread.hpp>
 #include <hotplace/sdk/io/unittest/testcase.hpp>
 #include <fstream>
 #include <iostream>
@@ -28,7 +28,6 @@ test_case::test_case ()
 void test_case::begin (const char* case_name, ...)
 {
     if (nullptr != case_name) {
-        console_color col;
         ansi_string stream;
 
         va_list ap;
@@ -41,10 +40,10 @@ void test_case::begin (const char* case_name, ...)
         /* "test case" */
         stream.flush ();
         char STRING_TEST_CASE[] = { '[', ' ', 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', ' ', ']', 0, };
-        stream  << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::magenta)
+        stream  << _color.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::magenta)
                 << STRING_TEST_CASE
                 << _current_case_name.c_str ()
-                << col.turnoff ();
+                << _color.turnoff ();
         std::cout << stream.c_str () << std::endl;
     } else {
         _current_case_name.clear ();
@@ -281,17 +280,16 @@ void test_case::test (return_t result, const char* test_function, const char* me
             _test_list.push_back (_current_case_name); /* ordered test cases */
         }
 
-        console_color col;
         ansi_string stream;
 
-        stream  << col.turnon ()
-                << col.set_style (console_style_t::bold)
-                << col.set_fgcolor (color)
+        stream  << _color.turnon ()
+                << _color.set_style (console_style_t::bold)
+                << _color.set_fgcolor (color)
                 << format ("[%08x]", result).c_str ()
-                << col.set_fgcolor (console_color_t::yellow)
+                << _color.set_fgcolor (console_color_t::yellow)
                 << format ("[%s] ", test_function ? test_function : "").c_str ()
                 << tltle.c_str ()
-                << col.turnoff ();
+                << _color.turnoff ();
 
         std::cout << stream.c_str ()  << std::endl;
     }
@@ -303,10 +301,10 @@ void test_case::test (return_t result, const char* test_function, const char* me
     }
 }
 
-#define PRINT_STRING_SUCCESS col.set_fgcolor (console_color_t::green) << STRING_SUCCESS << col.set_fgcolor (fgcolor)
-#define PRINT_STRING_FAIL col.set_fgcolor (console_color_t::red) << STRING_FAIL << col.set_fgcolor (fgcolor)
-#define PRINT_STRING_NOT_SUPPORTED col.set_fgcolor (console_color_t::cyan) << STRING_NOT_SUPPORTED << col.set_fgcolor (fgcolor)
-#define PRINT_STRING_LOW_SECURITY col.set_fgcolor (console_color_t::yellow) << STRING_LOW_SECURITY  << col.set_fgcolor (fgcolor)
+#define PRINT_STRING_SUCCESS _color.set_fgcolor (console_color_t::green) << STRING_SUCCESS << _color.set_fgcolor (fgcolor)
+#define PRINT_STRING_FAIL _color.set_fgcolor (console_color_t::red) << STRING_FAIL << _color.set_fgcolor (fgcolor)
+#define PRINT_STRING_NOT_SUPPORTED _color.set_fgcolor (console_color_t::cyan) << STRING_NOT_SUPPORTED << _color.set_fgcolor (fgcolor)
+#define PRINT_STRING_LOW_SECURITY _color.set_fgcolor (console_color_t::yellow) << STRING_LOW_SECURITY  << _color.set_fgcolor (fgcolor)
 
 void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stream)
 {
@@ -333,8 +331,9 @@ void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stre
     /* "message" */
     char STRING_MESSAGE[] = { 'm', 'e', 's', 's', 'a', 'g', 'e', 0, };
 
-    console_color col;
     console_color_t fgcolor = console_color_t::white;
+
+    _color.set_style (console_style_t::bold);
 
     stream.printf ("%-5s|%-10s|%-20s|%-11s|%s\n", STRING_RESULT, STRING_ERRORCODE, STRING_TEST_FUNCTION, STRING_TIME, STRING_MESSAGE);
 
@@ -393,7 +392,6 @@ void test_case::report (uint32 top_count)
 
 void test_case::report_unittest (ansi_string& stream)
 {
-    console_color col;
     console_color_t fgcolor = console_color_t::white;
 
     /* test */
@@ -428,10 +426,10 @@ void test_case::report_unittest (ansi_string& stream)
 
     _lock.enter ();
 
-    stream << col.turnon ().set_style (console_style_t::bold);
+    stream << _color.turnon ().set_style (console_style_t::bold);
     stream.fill (80, '=');
     stream.endl ();
-    stream << col.set_fgcolor (fgcolor) << STRING_REPORT;
+    stream << _color.set_fgcolor (fgcolor) << STRING_REPORT;
     stream.endl ();
 
     for (unittest_index_t::iterator iter = _test_list.begin (); iter != _test_list.end (); iter++) {
@@ -476,11 +474,11 @@ void test_case::report_unittest (ansi_string& stream)
     stream.fill (80, '=');
     stream.endl ();
     if (_total._count_fail) {
-        stream << col.set_fgcolor (console_color_t::red) << STRING_UPPERCASE_TEST_FAILED;
+        stream << _color.set_fgcolor (console_color_t::red) << STRING_UPPERCASE_TEST_FAILED << _color.set_fgcolor (fgcolor);
         stream.endl ();
     }
 
-    stream << col.turnoff ();
+    stream << _color.turnoff ();
 
     _lock.leave ();
 }
@@ -501,23 +499,24 @@ void test_case::report_testtime (ansi_string& stream, uint32 top_count)
 {
     _lock.enter ();
 
-    console_color col;
     unittest_list_t array;
     typedef std::map <uint128, unittest_item_t*> temp_map_t;
     temp_map_t temp_map;
     unittest_map_t::iterator it;
 
     unsigned int field_nsec = (RTL_FIELD_SIZE (struct timespec, tv_nsec) << 3);
-    stream << col.turnon ().set_style (console_style_t::bold);
+    stream << _color.turnon ().set_style (console_style_t::bold);
 
     for (it = _test_map.begin (); it != _test_map.end (); it++) {
-        // not efficient nor unsatisfied results
+        // neither efficient nor satisfactory results
         //     test_status_t& status = it->second;
         //     unittest_list_t copied = it->second._test_list;
         //     array.sort (compare_timespec);
         //     copied.sort (compare_timespec);
         //     array.merge (copied, compare_timespec);
-        // so... using map
+        // so... use map
+        //      pair <time, pointer>
+        //      list of object don't needed right now
         unittest_list_t::iterator unittest_it;
         for (unittest_it = it->second._test_list.begin (); unittest_it != it->second._test_list.end (); unittest_it++) {
             struct timespec* t = &((*unittest_it)._time);
@@ -525,6 +524,8 @@ void test_case::report_testtime (ansi_string& stream, uint32 top_count)
             temp_map.insert (std::make_pair (timekey, &(*unittest_it))); // build pair(timekey, pointer)
         }
     }
+
+    // build list
     temp_map_t::reverse_iterator rit;
     for (rit = temp_map.rbegin (); rit != temp_map.rend (); rit++) {
         array.push_back (*rit->second); // copy unittest_item_t here
@@ -548,7 +549,7 @@ void test_case::report_testtime (ansi_string& stream, uint32 top_count)
         stream.endl ();
     }
 
-    stream << col.turnoff ();
+    stream << _color.turnoff ();
 
     _lock.leave ();
 }

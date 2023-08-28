@@ -9,6 +9,7 @@
 #define __HOTPLACE_SDK_STREAM_STREAM__
 
 #include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/io/stream/bufferio.hpp>
 #include <hotplace/sdk/io/string/valist.hpp>
 
 namespace hotplace {
@@ -68,6 +69,10 @@ return_t A2W (stream_t* stream, const char* source, uint32 codepage = 0);
 return_t W2A (stream_t* stream, const wchar_t* source, uint32 codepage = 0);
 #endif
 
+//
+// valist
+//
+
 /*
  * @brief   safe format printer
  * @remakrs
@@ -82,6 +87,64 @@ return_t W2A (stream_t* stream, const wchar_t* source, uint32 codepage = 0);
  *          sprintf (&bs, "value1={2} value2={1} value3={3}", va); // value1=test string value2=1 value3={3}
  */
 return_t sprintf (stream_t* stream, const char* fmt, valist va);
+
+
+/* @brief   safe format printer (variadic template edition)
+ * @remarks
+ *  ansi_string str;
+ *  // snippet 1
+ *  valist val;
+ *  make_valist (val, 1, 3.141592, "hello");
+ *  sprintf (&str, "param1 {1} param2 {2} param3 {3}\n", val);
+ *  // snippet 2
+ *  valist va;
+ *  sprintf (&str, "param1 {1} param2 {2} param3 {3}\n", va << 1 << 3.14 << "hello");
+ *  // snippet 3
+ *  vprintf (&str, "param1 {1} param2 {2} param3 {3}\n", 1, 3.141592, "hello");
+ */
+
+template <typename T>
+void make_valist (valist& va, T arg)
+{
+    va << arg;
+}
+
+#if __cplusplus >= 201103L    // c++11
+
+template <typename T, typename ... Args>
+void make_valist (valist& va, T arg, Args... args)
+{
+    va << arg;
+    make_valist (va, args ...);
+}
+
+#if __cplusplus >= 201402L     // c++14
+/*
+ * @brief vprintf
+ * @param stream_t*     stream  [out]
+ * @param const char*   fmt     [in] "param1 {1} param {2}"
+ * @param Args...       args    [in] parameter pack (c++11)
+ */
+template<class ... Args>
+return_t vprintf (stream_t* stream, const char* fmt, Args... args)
+{
+    auto s = [&stream, fmt, args ...] {
+                 valist va;
+
+                 make_valist (va, args ...);
+                 return sprintf (stream, fmt, va);
+             };
+
+    return s ();
+}
+
+#endif  // c++14
+#endif  // c++11
+
+//
+// variant_t
+//
+
 /**
  * @brief printf variant_t
  * @sample
@@ -127,6 +190,11 @@ return_t dump_memory (const std::string& data, stream_t* stream_object,
                       size_t rebase = 0x0,
                       int flags = 0);
 return_t dump_memory (const binary_t& data, stream_t* stream_object,
+                      unsigned hex_part = 16,
+                      unsigned indent = 0,
+                      size_t rebase = 0x0,
+                      int flags = 0);
+return_t dump_memory (bufferio_context_t* context, stream_t* stream_object,
                       unsigned hex_part = 16,
                       unsigned indent = 0,
                       size_t rebase = 0x0,

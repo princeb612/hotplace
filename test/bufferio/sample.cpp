@@ -19,7 +19,7 @@ test_case _test_case;
 
 void dump (bufferio_context_t* handle)
 {
-    _test_case.pause_time ();
+    test_case_notimecheck notimecheck (_test_case);
 
     bufferio bio;
     byte_t* data = nullptr;
@@ -29,8 +29,6 @@ void dump (bufferio_context_t* handle)
     bio.get (handle, &data, &size_data);
     dump_memory (data, size_data, &bs);
     printf ("dump\n%.*s\n", (unsigned) bs.size (), bs.c_str ());
-
-    _test_case.resume_time ();
 }
 
 void test_vprintf (bufferio_context_t* handle, const char* fmt, ...)
@@ -132,6 +130,11 @@ void test_bufferio ()
 
     test = bio.compare (handle, sample.c_str (), sample.size ());
     _test_case.assert ((true == test), __FUNCTION__, "compare");
+
+    bio.printf (handle, "\n ");
+    pos = bio.find_not_last_of (handle, isspace);
+    printf ("find_not_last_of %zi\n", pos);
+    _test_case.assert ((10 == pos), __FUNCTION__, "find_not_last_of -> %i", pos);
 
     ret = bio.flush (handle);
     _test_case.test (ret, __FUNCTION__, "flush");

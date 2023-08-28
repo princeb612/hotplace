@@ -326,7 +326,7 @@ size_t bufferio::wfind_last_of_routine (bufferio_context_t* handle, int mode, in
 #endif
             size_t pos = (contents_size / sizeof (TCHAR));
             LPTSTR cur = nullptr;
-            while (pos < contents_size) {
+            while ((0 < pos) && (pos <= contents_size)) {
                 cur = contents + pos - 1;
                 if (0 == pos) {
                     break;
