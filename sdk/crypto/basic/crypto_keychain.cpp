@@ -344,36 +344,36 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
             ret_openssl = EVP_PKEY_paramgen_init (ctx);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
             ret_openssl = EVP_PKEY_CTX_set_ec_paramgen_curve_nid (ctx, nid);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
             ret_openssl = EVP_PKEY_paramgen (ctx, &params);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
             keyctx = EVP_PKEY_CTX_new (params, nullptr);
             if (nullptr == keyctx) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
             ret_openssl = EVP_PKEY_keygen_init (keyctx);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
             ret_openssl = EVP_PKEY_keygen (keyctx, &pkey);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
             if (nullptr == pkey) { /* [openssl 3.0.3] return success but pkey is nullptr */
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
             // set ASN.1 OPENSSL_EC_NAMED_CURVE flag for PEM export (PEM_write_bio_PUBKEY, PEM_write_bio_PrivateKey)
             EC_KEY_set_asn1_flag ((EC_KEY*) EVP_PKEY_get0_EC_KEY (pkey), OPENSSL_EC_NAMED_CURVE); // openssl 3.0 EVP_PKEY_get0 family return const key pointer
@@ -381,12 +381,12 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
             ret_openssl = EVP_PKEY_keygen_init (ctx);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
             ret_openssl = EVP_PKEY_keygen (ctx, &pkey);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
         }
 

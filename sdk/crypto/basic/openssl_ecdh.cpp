@@ -64,7 +64,7 @@ return_t dh_key_agreement (EVP_PKEY* pkey, EVP_PKEY* peer, binary_t& secret)
         pkey_context = EVP_PKEY_CTX_new ((EVP_PKEY*) pkey, nullptr);
         if (nullptr == pkey_context) {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         size_t size_secret = 0;
@@ -75,23 +75,23 @@ return_t dh_key_agreement (EVP_PKEY* pkey, EVP_PKEY* peer, binary_t& secret)
                 ret_test = EVP_PKEY_derive_init (pkey_context);
                 if (1 > ret_test) {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
                 ret_test = EVP_PKEY_derive_set_peer (pkey_context, pkey_peer);
                 if (1 > ret_test) {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
                 ret_test = EVP_PKEY_derive (pkey_context, nullptr, &size_secret);
                 if (1 > ret_test) {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
                 secret.resize (size_secret);
                 ret_test = EVP_PKEY_derive (pkey_context, &secret[0], &size_secret);
                 if (1 > ret_test) {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
             }
             __finally2
@@ -100,7 +100,7 @@ return_t dh_key_agreement (EVP_PKEY* pkey, EVP_PKEY* peer, binary_t& secret)
             }
         } else {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2
@@ -161,15 +161,15 @@ return_t ecdh_es (EVP_PKEY* pkey, EVP_PKEY* peer,
 
         ret = dh_key_agreement (pkey, peer, dh_secret);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
         ret = compose_otherinfo (algid, apu, apv, keylen << 3, otherinfo);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
         ret = concat_kdf (dh_secret, otherinfo, keylen, derived);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2

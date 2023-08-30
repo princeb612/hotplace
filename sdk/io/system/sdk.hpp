@@ -6,7 +6,6 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.15   Soo Han, Kin        added : stopwatch
  */
 
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_SDK__
@@ -16,6 +15,10 @@
 
 namespace hotplace {
 namespace io {
+
+#if defined __linux__
+return_t debug_trace (stream_t* stream);
+#endif
 
 }
 }  // namespace

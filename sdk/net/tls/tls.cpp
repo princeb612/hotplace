@@ -70,12 +70,12 @@ return_t transport_layer_security::connect (tls_context_t** handle, int type, co
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (nullptr == _x509) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
         SSL_CTX* tls_ctx = _x509;
 
@@ -86,24 +86,24 @@ return_t transport_layer_security::connect (tls_context_t** handle, int type, co
 
         ret = create_socket (&sock, &sockaddr_address, SOCK_STREAM, address, port);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         ret = connect_socket_addr (sock, &sockaddr_address, sizeof (sockaddr_address), timeout_connect);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         ssl = SSL_new (tls_ctx);
         if (nullptr == ssl) {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
         SSL_set_fd (ssl, (int) sock);
 
         ret = tls_connect (sock, ssl, timeout_connect, 1);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         sbio_read = BIO_new (BIO_s_mem ());
@@ -150,12 +150,12 @@ return_t transport_layer_security::connect (tls_context_t** handle, socket_t soc
     {
         if (nullptr == handle || INVALID_SOCKET == sock) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (nullptr == _x509) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
         SSL_CTX* tls_ctx = _x509;
 
@@ -166,13 +166,13 @@ return_t transport_layer_security::connect (tls_context_t** handle, socket_t soc
         ssl = SSL_new (tls_ctx);
         if (nullptr == ssl) {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
         SSL_set_fd (ssl, (int) sock);
 
         ret = tls_connect (sock, ssl, timeout_seconds, 1);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         sbio_read = BIO_new (BIO_s_mem ());
@@ -216,12 +216,12 @@ return_t transport_layer_security::accept (tls_context_t** handle, socket_t fd)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (nullptr == _x509) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
         SSL_CTX* tls_ctx = _x509;
 
@@ -337,13 +337,13 @@ return_t transport_layer_security::close (tls_context_t* handle)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         context = static_cast<tls_context_t*>(handle);
         if (TLS_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         SSL_shutdown (context->_ssl);
@@ -375,13 +375,13 @@ return_t transport_layer_security::read (tls_context_t* handle, int mode, void* 
     {
         if (nullptr == handle || nullptr == buffer) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         context = static_cast<tls_context_t*>(handle);
         if (TLS_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (nullptr != cbread) {
@@ -401,7 +401,7 @@ return_t transport_layer_security::read (tls_context_t* handle, int mode, void* 
 #elif defined _WIN32 || defined _WIN64
                 ret = GetLastError ();
 #endif
-                __leave2_trace (ret);
+                __leave2;
             }
 
             size_read = ret_recv;
@@ -453,7 +453,7 @@ return_t transport_layer_security::send (tls_context_t* handle, int mode, const 
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (size_sent) {
@@ -463,7 +463,7 @@ return_t transport_layer_security::send (tls_context_t* handle, int mode, const 
         context = static_cast<tls_context_t*>(handle);
         if (TLS_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (tls_io_flag_t::send_ssl_write & mode) {

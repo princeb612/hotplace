@@ -110,11 +110,11 @@ return_t multiplexer_iocp::bind (multiplexer_context_t* handle, handle_t eventso
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (nullptr == data) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != pContext->signature) {
             ret = errorcode_t::invalid_context;

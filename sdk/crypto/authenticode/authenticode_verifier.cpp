@@ -99,15 +99,15 @@ return_t authenticode_verifier::add_engine (authenticode_context_t* handle, auth
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (nullptr == engine) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->lock.enter ();
@@ -134,11 +134,11 @@ return_t authenticode_verifier::load_engines (authenticode_context_t* handle)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->lock.enter ();
@@ -162,11 +162,11 @@ return_t authenticode_verifier::free_engines (authenticode_context_t* handle)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->lock.enter ();
@@ -219,11 +219,11 @@ return_t authenticode_verifier::set (authenticode_context_t* handle, int option,
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->lock.enter ();
@@ -293,11 +293,11 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
         result = 0;
         if (nullptr == handle || nullptr == file_name) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         ret = filestream.open (file_name, filestream_flag_t::open_existing);
@@ -365,7 +365,7 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
             binary_t md_digest;
             ret = pkcs7_digest_info (pkcs7, md, pkcs7_digest);
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
 
             //std::string hex_pkcs7_digest = bin2hex (&pkcs7_digest[0], pkcs7_digest.size (), 0);
@@ -378,7 +378,7 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
                 bool compare = std::equal (pkcs7_digest.begin (), pkcs7_digest.end (), md_digest.begin ());
                 if (false == compare) {
                     ret = errorcode_t::digest;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
             }
 
@@ -419,7 +419,7 @@ return_t authenticode_verifier::verify_separated (authenticode_context_t* handle
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         result = authenticode_verify_t::verify_unknown;
@@ -492,7 +492,7 @@ return_t authenticode_verifier::close (authenticode_context_t* handle)
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         clear_crl (handle);
@@ -516,11 +516,11 @@ return_t authenticode_verifier::add_trusted_signer (authenticode_context_t* hand
     {
         if (nullptr == handle || nullptr == signer) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->lock.enter ();
@@ -542,11 +542,11 @@ return_t authenticode_verifier::remove_trusted_signer (authenticode_context_t* h
     {
         if (nullptr == handle || nullptr == signer) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->lock.enter ();
@@ -573,11 +573,11 @@ return_t authenticode_verifier::remove_all_trusted_signer (authenticode_context_
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->lock.enter ();
@@ -599,15 +599,15 @@ return_t authenticode_verifier::add_trusted_rootcert (authenticode_context_t* ha
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (nullptr == file && nullptr == path) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->lock.enter ();
@@ -762,7 +762,7 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
     {
         if (nullptr == handle || nullptr == pkcs7) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         _contexts_lock.enter ();
@@ -772,7 +772,7 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
         /* check if it's PKCS#7 signed data */
         if (0 == PKCS7_type_is_signed (pkcs7)) {
             ret = errorcode_t::bad_format;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         authenticode_crl_map_t crl_map;

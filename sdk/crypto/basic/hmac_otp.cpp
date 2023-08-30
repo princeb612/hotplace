@@ -49,12 +49,12 @@ uint32 hmac_otp::open (otp_context_t** handle, unsigned int digit_length, hash_a
     {
         if (nullptr == handle || nullptr == key_data || 0 == key_size) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         ret = hash.open (&hash_handle, algorithm, key_data, key_size);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         __try_new_catch (context, new hotp_context_t, ret, __leave2_trace (ret));
@@ -97,12 +97,12 @@ uint32 hmac_otp::close (otp_context_t* handle)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         hash.close (context->_hmac_context);
@@ -125,11 +125,11 @@ uint32 hmac_otp::set (otp_context_t* handle, uint32 count)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         context->_counter = count;
@@ -150,11 +150,11 @@ uint32 hmac_otp::get (otp_context_t* handle, uint32& code)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         get (handle, context->_counter, code);
@@ -191,11 +191,11 @@ uint32 hmac_otp::get (otp_context_t* handle, binary_t counter, uint32& code)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         /* HS = HMAC(K, C) */
@@ -204,11 +204,11 @@ uint32 hmac_otp::get (otp_context_t* handle, binary_t counter, uint32& code)
 
         ret = hash.update (context->_hmac_context, &counter[0], counter.size ());
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
         ret = hash.finalize (context->_hmac_context, &output_allocated, &output_size);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         /* Sbits = DT(HS) - Dynamic Truncate */
@@ -241,21 +241,21 @@ uint32 hmac_otp::verify (otp_context_t* handle, uint32 counter, uint32 code)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (HOTP_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         uint32 result = 0;
         ret = get (handle, counter, result);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
         if (code != result) {
             ret = errorcode_t::mismatch;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2

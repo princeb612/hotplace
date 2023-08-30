@@ -126,7 +126,7 @@ return_t file_stream::open (const wchar_t* file_name, uint32 flag)
                 }
             }
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
         }
 
@@ -199,7 +199,7 @@ return_t file_stream::begin_mmap (size_t dwAdditionalMappingSize)
     {
         if (false == is_open ()) {
             ret = errorcode_t::not_open;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (true == is_mmapped ()) {
             __leave2;
@@ -231,7 +231,7 @@ return_t file_stream::begin_mmap (size_t dwAdditionalMappingSize)
         _filemap_handle = CreateFileMapping (_file_handle, nullptr, protect, _filesize_high, (uint32) _filesize_low, nullptr);
         if (nullptr == _filemap_handle) {
             ret = GetLastError ();
-            __leave2_trace (ret);
+            __leave2;
         }
         _file_data = (byte_t *) MapViewOfFile (_filemap_handle, access, 0, 0, 0);
         _mapping_size = dwAdditionalMappingSize;
@@ -396,7 +396,7 @@ return_t file_stream::read (void* data, uint32 size_data, uint32* size_read)
     {
         if (nullptr == data || 0 == size_data) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (true == is_mmapped ()) {
             if ((_filepos_high > 0) || (-1 - _filepos_low < size_data)) {

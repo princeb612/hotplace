@@ -119,7 +119,7 @@ return_t json_web_key::add_ec (crypto_key* crypto_key, const char* kid, const ch
         uint32 nid = 0;
         ret = advisor->nidof_ec_curve (curve, nid);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         x_decoded = base64_decode_careful (x_value, strlen (x_value), base64_encoding_t::base64url_encoding);
@@ -393,7 +393,7 @@ return_t json_web_key::load_pem_file (crypto_key* cryptokey, const char* file, i
             std::getline (fs, buffer, (char) fs.eof ());
         } else {
             ret = errorcode_t::failed;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         ret = load_pem (cryptokey, buffer.c_str (), flags, use);

@@ -38,7 +38,7 @@ return_t x509_open_simple (SSL_CTX** context)
         ssl_ctx = SSL_CTX_new (method);
         if (nullptr == ssl_ctx) {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         long option_flags = 0;

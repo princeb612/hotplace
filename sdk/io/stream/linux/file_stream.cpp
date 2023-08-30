@@ -96,7 +96,7 @@ return_t file_stream::open (const char* file_name, uint32 flag)
                 }
             }
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
         }
 
@@ -174,7 +174,7 @@ return_t file_stream::begin_mmap (size_t additional_mapping_size)
     {
         if (false == is_open ()) {
             ret = errorcode_t::not_open;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (true == is_mmapped ()) {
             __leave2;
@@ -182,7 +182,7 @@ return_t file_stream::begin_mmap (size_t additional_mapping_size)
         /* additional_mapping_size do not work at mmap, unlike Windows API CreateFileMapping */
         if (additional_mapping_size) {
             ret = errorcode_t::not_supported;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (0 == _filesize_low) {
@@ -196,7 +196,7 @@ return_t file_stream::begin_mmap (size_t additional_mapping_size)
         _filemap_handle = mmap (0, _filesize_low + additional_mapping_size, nprot, MAP_SHARED, _file_handle, 0);
         if (MAP_FAILED == _filemap_handle) {
             ret = errno;
-            __leave2_trace (ret);
+            __leave2;
         }
         _file_data = (byte_t *) _filemap_handle;
         _mapping_size = additional_mapping_size;
@@ -351,7 +351,7 @@ return_t file_stream::read (void* data, uint32 buffer, uint32* size_read)
     {
         if (nullptr == data || 0 == buffer) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (true == is_mmapped ()) {
             if ((_filepos_high > 0) || (-1 - _filepos_low < buffer)) {

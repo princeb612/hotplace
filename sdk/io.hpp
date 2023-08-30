@@ -33,9 +33,17 @@
 #include <hotplace/sdk/io/system/datetime.hpp>
 #include <hotplace/sdk/io/system/datetime.hpp>
 #include <hotplace/sdk/io/system/multiplexer.hpp>
+#include <hotplace/sdk/io/system/sdk.hpp>
 #include <hotplace/sdk/io/system/signalwait_threads.hpp>
 #include <hotplace/sdk/io/system/thread.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
+#if defined __linux__
+#elif defined _WIN32 || defined _WIN64
+#include <hotplace/sdk/io/system/windows/sdk.hpp>
+#include <hotplace/sdk/io/system/windows/debug_trace.hpp>
+#include <hotplace/sdk/io/system/windows/windows_registry.hpp>
+#include <hotplace/sdk/io/system/windows/windows_version.hpp>
+#endif
 #include <hotplace/sdk/io/unittest/testcase.hpp>
 
 #endif

@@ -127,12 +127,12 @@ size_t bufferio::wfind_first_of_routine (bufferio_context_t* handle, int mode, c
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->bufferio_lock.enter ();
@@ -186,12 +186,12 @@ size_t bufferio::wfind_first_of_routine (bufferio_context_t* handle, int mode, i
     {
         if (nullptr == handle || nullptr == is_ctype_func) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->bufferio_lock.enter ();
@@ -243,12 +243,12 @@ size_t bufferio::wfind_last_of_routine (bufferio_context_t* handle, int mode, co
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->bufferio_lock.enter ();
@@ -301,12 +301,12 @@ size_t bufferio::wfind_last_of_routine (bufferio_context_t* handle, int mode, in
     {
         if (nullptr == handle || nullptr == is_ctype_func) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         handle->bufferio_lock.enter ();
@@ -375,7 +375,7 @@ return_t bufferio::wreplace (bufferio_context_t* handle, const wchar_t* from, co
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         __try2

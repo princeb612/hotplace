@@ -6,7 +6,6 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.15   Soo Han, Kin        added : stopwatch
  */
 
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_BACKTRACE__

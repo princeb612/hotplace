@@ -44,11 +44,11 @@ uint32 time_otp::open (otp_context_t** handle, unsigned int digit_length, time_t
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         ret = hotp.open (&hotp_handle, digit_length, algorithm, key_data, key_size);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         __try_new_catch (context, new totp_context_t, ret, __leave2_trace (ret));
@@ -88,11 +88,11 @@ uint32 time_otp::close (otp_context_t* handle)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (TOTP_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (nullptr != context->_hotp_handle) {
@@ -117,7 +117,7 @@ uint32 time_otp::get (otp_context_t* handle, time64_t time, uint32& code)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (TOTP_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
@@ -143,7 +143,7 @@ uint32 time_otp::verify (otp_context_t* handle, time64_t time, uint32 code)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (TOTP_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
@@ -152,11 +152,11 @@ uint32 time_otp::verify (otp_context_t* handle, time64_t time, uint32 code)
         uint32 result = 0;
         ret = get (handle, time, result);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
         if (code != result) {
             ret = errorcode_t::mismatch;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2

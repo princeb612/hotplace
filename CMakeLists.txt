@@ -59,9 +59,9 @@ endif ()
 
 # dependencies
 if (UNIX)
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES pthread crypto ssl jansson z)
+set (PROJECT_SDK_PLATFORM_DEPENDENCIES dl pthread crypto ssl jansson z)
 elseif (WIN32)
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z)
+set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z bfd)
 endif ()
 if (SUPPORT_ODBC)
 # yum install unixodbc-devel
@@ -131,6 +131,7 @@ endfunction ()
 
 # -Ixxx
 include_directories (..)
+#include_directories ($VSCOMMUNITY/Community/VC/Tools/MSVC/14.37.32822/atlmfc/include) # heavily MSVC-dependent
 # -Lxxx
 link_directories (${CMAKE_INSTALL_RPATH})
 

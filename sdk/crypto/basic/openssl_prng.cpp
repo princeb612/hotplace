@@ -47,7 +47,7 @@ return_t openssl_prng::random (unsigned char* buf, size_t size)
     {
         if (nullptr == buf || 0 == size) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         RAND_bytes (buf, size);

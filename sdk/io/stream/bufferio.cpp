@@ -384,12 +384,12 @@ bool bufferio::compare (bufferio_context_t* handle, const void* data_to_compare,
     {
         if (nullptr == handle || nullptr == data_to_compare) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         const byte_t* target = static_cast<const byte_t*>(data_to_compare);

@@ -31,3 +31,11 @@ add_subdirectory (httpserver)
 
 # etc
 add_subdirectory (incubator)
+
+# platform
+if (UNIX)
+add_subdirectory (linux)
+endif ()
+if (WIN32)
+add_subdirectory (windows)
+endif ()

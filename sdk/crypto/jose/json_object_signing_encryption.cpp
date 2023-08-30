@@ -482,13 +482,13 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
             const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption (enc); // content encryption
             if (nullptr == enc_info) {
                 ret = errorcode_t::not_supported;
-                __leave2_trace (ret);
+                __leave2;
             }
 
             const EVP_CIPHER* enc_evp_cipher = (const EVP_CIPHER*) advisor->find_evp_cipher (enc_info->crypt_alg, enc_info->crypt_mode);
             if (nullptr == enc_evp_cipher) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
 
             uint32 enc_type = CRYPT_ENC_TYPE (enc_info->type);
@@ -521,7 +521,7 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
                 EVP_PKEY* pkey = handle->key->select (kid, alg, crypto_use_t::use_enc);
                 if (nullptr == pkey) {
                     ret = errorcode_t::not_found;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
 
                 crypt_datamap_t datamap;
@@ -707,7 +707,7 @@ return_t json_object_signing_encryption::compose_encryption_header (jwe_t enc, j
             free (contents);
         } else {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2
@@ -851,11 +851,11 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
                 json_unpack (epk, "{s:s,s:s,s:s,s:s}", "kty", &kty_value, "crv", &crv_value, "x", &x_value, "y", &y_value);
                 if (nullptr == kty_value || nullptr == crv_value || nullptr == x_value) {
                     ret = errorcode_t::bad_data;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
             } else {
                 ret = errorcode_t::bad_data;
-                __leave2_trace (ret);
+                __leave2;
             }
 
             json_web_key jwk;
@@ -1128,7 +1128,7 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
                 json_serialization = json_object ();
                 if (nullptr == json_serialization) {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
                 json_object_set_new (json_serialization, "protected", json_string (b64_header.c_str ()));
                 json_object_set_new (json_serialization, "encrypted_key", json_string (b64_encryptedkey.c_str ()));
@@ -1142,7 +1142,7 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
                     free (contents);
                 } else {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
             }
             __finally2
@@ -1160,12 +1160,12 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
                 json_serialization = json_object ();
                 if (nullptr == json_serialization) {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
                 json_recipients = json_array ();
                 if (nullptr == json_recipients) {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
                 json_object_set_new (json_serialization, "protected", json_string (b64_header.c_str ()));
                 for (jose_recipients_t::iterator rit = encryption.recipients.begin (); rit != encryption.recipients.end (); rit++) {
@@ -1235,7 +1235,7 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
                     free (contents);
                 } else {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
             }
             __finally2
@@ -1360,7 +1360,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
             json_unpack (json_root, "{s:s}", "payload", &payload_value);
             if (nullptr == payload_value) {
                 ret = errorcode_t::bad_data;
-                __leave2_trace (ret);
+                __leave2;
             }
 
             json_t* json_signatures = nullptr;
@@ -1372,7 +1372,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
                     size_t array_size = json_array_size (json_signatures);
                     if (0 == array_size) {
                         ret = errorcode_t::bad_data;
-                        __leave2_trace (ret);
+                        __leave2;
                     }
 
                     for (size_t index = 0; index < array_size; index++) {
@@ -1431,7 +1431,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
                 json_unpack (json_root, "{s:{s:s}}", "header", "kid", &kid_value);
                 if (nullptr == signature_value) {
                     ret = errorcode_t::bad_data;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
                 if (nullptr == protected_value) {
                     json_unpack (json_root, "{s:{s:s}}", "header", "alg", &alg_value);
@@ -1518,7 +1518,7 @@ return_t json_object_signing_encryption::write_signature (jose_context_t* contex
                 json_serialization = json_object ();
                 if (nullptr == json_serialization) {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
                 json_object_set_new (json_serialization, "payload", json_string (item.payload.c_str ()));
                 json_object_set_new (json_serialization, "protected", json_string (item.header.c_str ()));
@@ -1532,7 +1532,7 @@ return_t json_object_signing_encryption::write_signature (jose_context_t* contex
                     free (contents);
                 } else {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
             }
             __finally2
@@ -1550,12 +1550,12 @@ return_t json_object_signing_encryption::write_signature (jose_context_t* contex
                 json_serialization = json_object ();
                 if (nullptr == json_serialization) {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
                 json_signatures = json_array ();
                 if (nullptr == json_signatures) {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
 
                 json_object_set_new (json_serialization, "payload", json_string (item.payload.c_str ()));
@@ -1579,7 +1579,7 @@ return_t json_object_signing_encryption::write_signature (jose_context_t* contex
                     free (contents);
                 } else {
                     ret = errorcode_t::internal_error;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
             }
             __finally2

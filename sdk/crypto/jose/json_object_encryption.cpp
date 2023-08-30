@@ -44,13 +44,13 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
     {
         if (nullptr == context) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         jose_encryptions_map_t::iterator iter = handle->encryptions.find (enc);
         if (handle->encryptions.end () == iter) {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);      // key management
@@ -86,7 +86,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
             EVP_PKEY* pkey = handle->key->select (kid, alg, crypto_use_t::use_enc);
             if (nullptr == pkey) {
                 ret = errorcode_t::not_found;
-                __leave2_trace (ret);
+                __leave2;
             }
 
             ret = check_constraints (alg, pkey);
@@ -260,13 +260,13 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
                     ret = crypt.open (&handle_crypt, (crypt_algorithm_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
                                       &cek[0] + (cek_size / 2), cek_size / 2, &iv[0], iv.size ());
                     if (errorcode_t::success != ret) {
-                        __leave2_trace (ret);
+                        __leave2;
                     }
 
                     /* Content Encryption */
                     ret = crypt.encrypt (handle_crypt, &input[0], input.size (), ciphertext);
                     if (errorcode_t::success != ret) {
-                        __leave2_trace (ret);
+                        __leave2;
                     }
 
                     /* Additional Authentication Tag
@@ -280,11 +280,11 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
 
                     ret = hash.open (&handle_hash, (hash_algorithm_t) enc_hash_alg, &cek[0], cek_size / 2);
                     if (errorcode_t::success != ret) {
-                        __leave2_trace (ret);
+                        __leave2;
                     }
                     ret = hash.hash (handle_hash, &hmac_input[0], hmac_input.size (), tag);
                     if (errorcode_t::success != ret) {
-                        __leave2_trace (ret);
+                        __leave2;
                     }
                     tag.resize (tag.size () / 2);
                 }
@@ -327,13 +327,13 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
     {
         if (nullptr == context) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         jose_encryptions_map_t::iterator iter = handle->encryptions.find (enc);
         if (handle->encryptions.end () == iter) {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);      // key management
@@ -377,7 +377,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
 
             if (nullptr == pkey) {
                 ret = errorcode_t::not_found;
-                __leave2_trace (ret);
+                __leave2;
             }
             ret = check_constraints (alg, pkey);
             if (errorcode_t::success != ret) {
@@ -510,7 +510,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
         }
 
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         // enc part - ciphertext using cek, iv
@@ -540,29 +540,29 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
 
                     ret = hash.open (&handle_hash, (hash_algorithm_t) enc_hash_alg, &cek[0], cek_size / 2);
                     if (errorcode_t::success != ret) {
-                        __leave2_trace (ret);
+                        __leave2;
                     }
                     ret = hash.hash (handle_hash, &hmac_input[0], hmac_input.size (), tag1);
                     if (errorcode_t::success != ret) {
-                        __leave2_trace (ret);
+                        __leave2;
                     }
                     tag1.resize (tag1.size () / 2);
 
                     if (tag1 != tag) {
                         ret = errorcode_t::mismatch;
-                        __leave2_trace (ret);
+                        __leave2;
                     }
 
                     ret = crypt.open (&handle_crypt, (crypt_algorithm_t) enc_crypt_alg, (crypt_mode_t) enc_crypt_mode,
                                       &cek[0] + (cek_size / 2), cek_size / 2, &iv[0], iv.size ());
                     if (errorcode_t::success != ret) {
-                        __leave2_trace (ret);
+                        __leave2;
                     }
 
                     /* Content Encryption */
                     ret = crypt.decrypt (handle_crypt, &ciphertext[0], ciphertext.size (), output);
                     if (errorcode_t::success != ret) {
-                        __leave2_trace (ret);
+                        __leave2;
                     }
                 }
                 __finally2
@@ -615,7 +615,7 @@ return_t json_object_encryption::check_constraints (jwa_t alg, EVP_PKEY* pkey)
                 int bits = EVP_PKEY_bits ((EVP_PKEY*) pkey);
                 if (bits < 2048) {
                     ret = errorcode_t::low_security;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
             }
             break;

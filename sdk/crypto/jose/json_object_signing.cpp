@@ -74,7 +74,7 @@ return_t json_object_signing::sign (crypto_key* key, jws_t sig, binary_t input, 
             signer = item->signer;
         } else {
             ret = errorcode_t::not_supported;
-            __leave2_trace (ret);
+            __leave2;
         }
 #else
         for (size_t k = 0; k < RTL_NUMBER_OF (sign_table); k++) {
@@ -86,7 +86,7 @@ return_t json_object_signing::sign (crypto_key* key, jws_t sig, binary_t input, 
         }
         if (nullptr == signer) {
             ret = errorcode_t::not_supported;
-            __leave2_trace (ret);
+            __leave2;
         }
 #endif
 
@@ -94,7 +94,7 @@ return_t json_object_signing::sign (crypto_key* key, jws_t sig, binary_t input, 
         pkey = key->select (kid, sig, crypto_use_t::use_sig);
         if (nullptr == pkey) {
             ret = errorcode_t::not_found;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         ret = check_constraints (sig, pkey);
@@ -104,7 +104,7 @@ return_t json_object_signing::sign (crypto_key* key, jws_t sig, binary_t input, 
 
         ret = (this->*signer)(pkey, sig, input, output);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2
@@ -167,7 +167,7 @@ return_t json_object_signing::verify (crypto_key* key, const char* kid, jws_t si
         }
         if (nullptr == verifier) {
             ret = errorcode_t::not_supported;
-            __leave2_trace (ret);
+            __leave2;
         }
 #endif
 
@@ -395,14 +395,14 @@ return_t json_object_signing::sign_rsassa_pss (EVP_PKEY* pkey, jws_t sig, binary
         ret_openssl = RSA_padding_add_PKCS1_PSS (rsa, &buf[0], &hash_value[0], evp_md, -1);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         output.resize (bufsize);
         ret_openssl = RSA_private_encrypt (bufsize, &buf[0], &output[0], rsa, RSA_NO_PADDING);
         if (ret_openssl != bufsize) {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2
@@ -662,7 +662,7 @@ return_t json_object_signing::verify_rsassa_pss (EVP_PKEY* pkey, jws_t sig, bina
         ret_openssl = RSA_verify_PKCS1_PSS (rsa, &hash_value[0], evp_md, &buf[0], -1);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         result = true;
@@ -698,7 +698,7 @@ return_t json_object_signing::check_constraints (jws_t sig, EVP_PKEY* pkey)
                 int bits = EVP_PKEY_bits ((EVP_PKEY*) pkey);
                 if (bits < 2048) {
                     ret = errorcode_t::low_security;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
             }
             break;

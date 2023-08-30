@@ -31,12 +31,12 @@ return_t authenticode_plugin::extract (file_stream* filestream, binary_t& bin)
     {
         if (nullptr == filestream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         ret = read_authenticode (filestream, bin);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
     }

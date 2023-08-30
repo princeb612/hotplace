@@ -42,7 +42,7 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
 
         if (nullptr == crypt_object || nullptr == data) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         __try2
@@ -234,7 +234,7 @@ void test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm,
     {
         if (nullptr == hash_object || nullptr == data) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         __try2
@@ -286,7 +286,7 @@ return_t test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm, bin
     {
         if (nullptr == hash_object) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         __try2
@@ -723,7 +723,7 @@ uint32 test_totp (hash_algorithm_t algorithm)
         }
         if (nullptr == test_data) {
             ret = errorcode_t::not_supported;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         time_otp totp;

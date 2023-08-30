@@ -23,7 +23,7 @@ public:
      */
     critical_section ()
     {
-        initialize ();
+        startup ();
     }
 
     /**
@@ -31,7 +31,7 @@ public:
      */
     virtual ~critical_section ()
     {
-        finalize ();
+        cleanup ();
     }
 
     /**
@@ -52,16 +52,16 @@ public:
 
 private:
     /**
-     * @brief initialize
+     * @brief startup
      */
-    void initialize ()
+    void startup ()
     {
         ::InitializeCriticalSectionAndSpinCount (&m_cs, 2048);
     }
     /**
-     * @brief finalize
+     * @brief cleanup
      */
-    void finalize ()
+    void cleanup ()
     {
         ::DeleteCriticalSection (&m_cs);
     }

@@ -167,8 +167,8 @@ public:
     friend binary_t& operator << (binary_t& lhs, obfuscate_string& rhs);
 
 protected:
-    void init_if_necessary ();
-    void finalize ();
+    void startup ();
+    void cleanup ();
 
 private:
     uint32 _flags;

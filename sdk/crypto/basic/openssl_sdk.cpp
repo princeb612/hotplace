@@ -82,7 +82,7 @@ void openssl_thread_setup_implementation (void)
     __try2
     {
         if (nullptr != openssl_threadsafe) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
 #if defined __linux__
@@ -92,7 +92,7 @@ void openssl_thread_setup_implementation (void)
 #endif
         if (nullptr == openssl_threadsafe) {
             ret = errorcode_t::out_of_memory;
-            __leave2_trace (ret);
+            __leave2;
         }
         for (int i = 0; i < CRYPTO_num_locks (); i++) {
 #if defined __linux__
@@ -352,7 +352,7 @@ return_t nidof_evp_pkey (EVP_PKEY* pkey, uint32& nid)
         }
         if (0 == nid) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2

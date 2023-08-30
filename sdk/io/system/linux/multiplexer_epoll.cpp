@@ -62,7 +62,7 @@ return_t multiplexer_epoll::open (multiplexer_context_t** handle, size_t concurr
         epollfd = epoll_create (concurrent);
         if (epollfd < 0) {
             ret = errno;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         context->signature = MULTIPLEXER_EPOLL_CONTEXT_SIGNATURE;
@@ -149,7 +149,7 @@ return_t multiplexer_epoll::bind (multiplexer_context_t* handle, handle_t events
         int ret_epoll_ctl = epoll_ctl (context->epoll_fd, EPOLL_CTL_ADD, eventsource, &ev);
         if (ret_epoll_ctl < 0) {
             ret = errno;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2

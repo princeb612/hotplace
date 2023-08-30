@@ -22,7 +22,7 @@ return_t tls_connect (socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio)
     {
         if (nullptr == ssl) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (0 == nbio) { /* blocking */
@@ -84,7 +84,7 @@ return_t tls_connect (socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio)
             set_sock_nbio (sock, 0);
 
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
         }
     }

@@ -46,12 +46,12 @@ obfuscate_string::obfuscate_string (ansi_string& source) : _flags (0)
 
 obfuscate_string::~obfuscate_string ()
 {
-    finalize ();
+    cleanup ();
 }
 
 obfuscate_string& obfuscate_string::assign (const char* source, size_t size)
 {
-    init_if_necessary ();
+    startup ();
     if (source && size) {
         _contents.resize (size);
 
@@ -66,7 +66,7 @@ obfuscate_string& obfuscate_string::assign (const char* source, size_t size)
 
 obfuscate_string& obfuscate_string::append (const char* source, size_t size)
 {
-    init_if_necessary ();
+    startup ();
     if (source && size) {
         size_t size_older = _contents.size ();
         _contents.resize (size_older + size);
@@ -225,7 +225,7 @@ binary_t& operator << (binary_t& lhs, obfuscate_string& rhs)
     return lhs;
 }
 
-void obfuscate_string::init_if_necessary ()
+void obfuscate_string::startup ()
 {
     if (0 == (obfuscate_flag_t::obfuscate_set_factor & _flags)) {
         _factor = 0x30 + (rand () % 0x50);
@@ -233,7 +233,7 @@ void obfuscate_string::init_if_necessary ()
     }
 }
 
-void obfuscate_string::finalize ()
+void obfuscate_string::cleanup ()
 {
     memset (&_contents[0], 0, _contents.size ());
 }

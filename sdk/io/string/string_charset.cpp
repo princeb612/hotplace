@@ -125,7 +125,7 @@ return_t scan (const wchar_t* stream, size_t sizestream, size_t startpos, size_t
     {
         if (nullptr == stream || nullptr == brk || nullptr == func) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (startpos >= sizestream) {
             ret = errorcode_t::out_of_range;
@@ -161,7 +161,7 @@ return_t scan (const wchar_t* stream, size_t sizestream, size_t startpos, size_t
     {
         if (nullptr == stream || nullptr == brk || nullptr == match) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (startpos >= sizestream) {
             ret = errorcode_t::out_of_range;

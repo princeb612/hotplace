@@ -69,13 +69,13 @@ return_t openssl_hash::open (hash_context_t** handle, hash_algorithm_t algorithm
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         const EVP_MD* method = (const EVP_MD*) advisor->find_evp_md (algorithm);
         if (nullptr == method) {
             ret = errorcode_t::not_supported;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         __try_new_catch (context, new openssl_hash_context_t, ret, __leave2_trace (ret));
@@ -92,7 +92,7 @@ return_t openssl_hash::open (hash_context_t** handle, hash_algorithm_t algorithm
 
             if (nullptr == md_context) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace (ret);
+                __leave2;
             }
             context->_md_context = md_context;
 
@@ -103,7 +103,7 @@ return_t openssl_hash::open (hash_context_t** handle, hash_algorithm_t algorithm
             hmac_context = HMAC_CTX_new ();
             if (nullptr == hmac_context) {
                 ret = errorcode_t::out_of_memory;
-                __leave2_trace (ret);
+                __leave2;
             }
             context->_hmac_context = hmac_context;
 
@@ -142,12 +142,12 @@ return_t openssl_hash::close (hash_context_t* handle)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (OPENSSL_HASH_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (nullptr != context->_md_context) {
@@ -178,12 +178,12 @@ return_t openssl_hash::init (hash_context_t* handle)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (OPENSSL_HASH_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (context->_flags & openssl_hash_context_flag_t::hmac) {
@@ -211,12 +211,12 @@ return_t openssl_hash::update (hash_context_t* handle, byte_t* source_data, size
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (OPENSSL_HASH_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (context->_flags & openssl_hash_context_flag_t::hmac) {
@@ -278,12 +278,12 @@ return_t openssl_hash::finalize (hash_context_t* handle, binary_t& output)
 
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (OPENSSL_HASH_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         unsigned int size_digest = EVP_MD_size (context->_evp_md);
@@ -337,12 +337,12 @@ return_t openssl_hash::hash (hash_context_t* handle, byte_t* source_data, size_t
 
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (OPENSSL_HASH_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         unsigned int size_digest = EVP_MD_size (context->_evp_md);

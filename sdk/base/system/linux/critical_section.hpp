@@ -23,7 +23,7 @@ public:
      */
     critical_section ()
     {
-        initialize ();
+        startup ();
     }
 
     /**
@@ -31,7 +31,7 @@ public:
      */
     virtual ~critical_section ()
     {
-        finalize ();
+        cleanup ();
     }
 
     /**
@@ -52,18 +52,18 @@ public:
 
 private:
     /**
-     * @brief initialize
+     * @brief startup
      */
-    void initialize ()
+    void startup ()
     {
         pthread_mutexattr_init (&_mutex_attributes);
         pthread_mutexattr_settype (&_mutex_attributes, PTHREAD_MUTEX_RECURSIVE);
         pthread_mutex_init (&_mutex_handle, &_mutex_attributes);
     }
     /**
-     * @brief finalize
+     * @brief cleanup
      */
-    void finalize ()
+    void cleanup ()
     {
         pthread_mutex_destroy (&_mutex_handle);
     }

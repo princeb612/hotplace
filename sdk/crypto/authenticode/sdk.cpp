@@ -164,7 +164,7 @@ return_t pkcs7_digest_info (PKCS7* pkcs7, std::string& md, binary_t& digest)
 
         if (0 == PKCS7_type_is_signed (pkcs7)) {
             ret = errorcode_t::bad_data;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         ASN1_OBJECT *indir_objid = OBJ_txt2obj (SPC_INDIRECT_DATA_OBJID, 1);
@@ -189,7 +189,7 @@ return_t pkcs7_digest_info (PKCS7* pkcs7, std::string& md, binary_t& digest)
 
         if (-1 == mdtype) {
             ret = errorcode_t::bad_data;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2

@@ -108,7 +108,7 @@ enum vartype_t {
 typedef unsigned char byte_t;
 typedef unsigned int uint;
 
-typedef struct _variant_t {
+typedef struct __variant_t {
     vartype_t type;
     union {
         bool b;

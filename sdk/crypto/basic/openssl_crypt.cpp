@@ -114,13 +114,13 @@ return_t openssl_crypt::open (crypt_context_t** handle, crypt_algorithm_t algori
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         const EVP_CIPHER* cipher = (const EVP_CIPHER*) advisor->find_evp_cipher (algorithm, mode);
         if (nullptr == cipher) {
             ret = errorcode_t::not_supported;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         __try_new_catch (context, new openssl_crypt_context_t, ret, __leave2);
@@ -218,11 +218,11 @@ return_t openssl_crypt::close (crypt_context_t* handle)
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (OPENSSL_CRYPT_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (context->key) {
@@ -251,7 +251,7 @@ return_t openssl_crypt::encrypt (crypt_context_t* handle, const unsigned char* d
     {
         if (nullptr == handle || nullptr == data_plain || nullptr == data_encrypted || nullptr == size_encrypted) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         size_t size_out_allocated = size_plain + EVP_MAX_BLOCK_LENGTH;
@@ -259,7 +259,7 @@ return_t openssl_crypt::encrypt (crypt_context_t* handle, const unsigned char* d
 
         ret = encrypt2 (handle, data_plain, size_plain, output_allocated, &size_out_allocated, nullptr, nullptr);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         output_allocated[size_out_allocated] = 0;
@@ -319,16 +319,16 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
     {
         if (nullptr == handle || nullptr == data_plain || nullptr == size_encrypted) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (OPENSSL_CRYPT_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if ((crypt_mode_t::gcm == context->mode) && ((nullptr == aad) || (nullptr == tag))) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         size_t size_expect = size_plain + EVP_MAX_BLOCK_LENGTH;
@@ -435,7 +435,7 @@ return_t openssl_crypt::decrypt (crypt_context_t* handle, const unsigned char* d
     {
         if (nullptr == handle || nullptr == data_encrypted || nullptr == data_plain || nullptr == size_plain) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         size_t size_out_allocated = size_encrypted + EVP_MAX_BLOCK_LENGTH;
@@ -504,16 +504,16 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
     {
         if (nullptr == handle || nullptr == data_encrypted || 0 == size_encrypted || nullptr == size_decrypted) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (OPENSSL_CRYPT_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if ((crypt_mode_t::gcm == context->mode) && ((nullptr == aad) || (nullptr == tag))) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         size_t size_necessary = size_encrypted + EVP_MAX_BLOCK_LENGTH;
@@ -615,7 +615,7 @@ return_t openssl_crypt::free_data (unsigned char* data)
     {
         if (nullptr == data) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         delete [] (data);
     }
@@ -639,7 +639,7 @@ return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
 
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         pkey_context = EVP_PKEY_CTX_new (pkey, nullptr);
@@ -708,14 +708,14 @@ return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
 
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         bool is_private = false;
         ret = is_private_key (pkey, is_private);
         if (false == is_private) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         pkey_context = EVP_PKEY_CTX_new (pkey, nullptr);
@@ -785,11 +785,11 @@ return_t openssl_crypt::query (crypt_context_t* handle, size_t cmd, size_t& valu
     {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (OPENSSL_CRYPT_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         /* EVP_CIPHER_CTX_key_length, EVP_CIPHER_CTX_iv_length

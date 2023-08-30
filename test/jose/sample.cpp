@@ -1767,13 +1767,13 @@ void test_jwe_json (jwe_t enc)
 
         ret = jose.encrypt (handle_encrypt, enc, algs, convert (input), encrypted, jose_serialization_t::jose_json);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
         printf ("encrypted\n%s\n", encrypted.c_str ());
 
         ret = jose.decrypt (handle_decrypt, encrypted, output, result);
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2

@@ -33,7 +33,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
     {
         if (nullptr == socket_created || nullptr == sockaddr_created || nullptr == address) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         *socket_created = INVALID_SOCKET;
@@ -99,7 +99,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
 #elif defined _WIN32 || defined _WIN64
             ret = GetLastError ();
 #endif
-            __leave2_trace (ret);
+            __leave2;
         }
 
         addrinf_traverse = addrinf;
@@ -119,7 +119,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
 #elif defined _WIN32 || defined _WIN64
             ret = GetLastError ();
 #endif
-            __leave2_trace (ret);
+            __leave2;
         }
 
 #ifdef __STDC_WANT_SECURE_LIB__
@@ -180,11 +180,11 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
     {
         if (nullptr == vector_family) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (nullptr == vector_socket) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         for (index = 0; index < size_vector; index++) {
@@ -214,7 +214,7 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
 #elif defined _WIN32 || defined _WIN64
             ret = GetLastError ();
 #endif
-            __leave2_trace (ret);
+            __leave2;
         }
 
         addrinf_traverse = addrinf;
@@ -237,7 +237,7 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
 #elif defined _WIN32 || defined _WIN64
                             ret = GetLastError ();
 #endif
-                            __leave2_trace (ret);
+                            __leave2;
                         }
 #if defined __linux__
                         if (PF_INET6 == addrinf_traverse->ai_family) {
@@ -255,7 +255,7 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
 #elif defined _WIN32 || defined _WIN64
                             ret = GetLastError ();
 #endif
-                            __leave2_trace (ret);
+                            __leave2;
                         }
 
                         if (IPPROTO_TCP == protocol_type) {
@@ -273,7 +273,7 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
 #elif defined _WIN32 || defined _WIN64
                                 ret = GetLastError ();
 #endif
-                                __leave2_trace (ret);
+                                __leave2;
                             }
                         }
 
@@ -334,7 +334,7 @@ return_t connect_socket (socket_t* socket, int nType, const char* tszAddress, ui
             ret = connect_socket_addr (sock, &Addr, sizeof (Addr), dwTimeout);
         }
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         *socket = sock;
@@ -363,7 +363,7 @@ return_t connect_socket_addr (socket_t sock, sockaddr_storage_t* pSockAddr, size
     {
         if (nullptr == pSockAddr) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (0 == dwTimeout) {
@@ -480,7 +480,7 @@ return_t close_listener (unsigned int nSockets, socket_t* Sockets)
     {
         if (nullptr == Sockets) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         for (uint16 i = 0; i < nSockets; i++) {

@@ -18,6 +18,7 @@
 namespace hotplace {
 namespace io {
 
+typedef return_t (*CALLBACK_HANDLER)(void* data, void* parameter);
 typedef return_t (*TYPE_CALLBACK_HANDLER)(uint32 type, void* data, void* parameter);
 
 enum CALLBACK_CONTROL {

@@ -35,18 +35,18 @@ bool authenticode_plugin_pe::is_kind_of (file_stream* filestream)
     {
         if (nullptr == filestream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
         }
 
@@ -90,18 +90,18 @@ return_t authenticode_plugin_pe::read_authenticode (file_stream* filestream, siz
 
         if (nullptr == filestream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
         }
 
@@ -119,7 +119,7 @@ return_t authenticode_plugin_pe::read_authenticode (file_stream* filestream, siz
         if (IMAGE_DOS_SIGNATURE == dos_header->e_magic) {
             if (stream_size < dos_header->e_lfanew + sizeof (IMAGE_NT_HEADERS)) {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
@@ -162,11 +162,11 @@ return_t authenticode_plugin_pe::read_authenticode (file_stream* filestream, siz
                 authenticode_size = directory_size;
             } else {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
         } else {
             ret = errorcode_t::bad_format;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2
@@ -212,11 +212,11 @@ return_t authenticode_plugin_pe::read_authenticode (file_stream* filestream, bin
                 memcpy (&data[0], stream_data + authenticode_begin + blob_start, blob_size);
             } else {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
         } else {
             ret = errorcode_t::bad_format;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2
@@ -234,12 +234,12 @@ return_t authenticode_plugin_pe::write_authenticode (file_stream* filestream, bi
     {
         if (nullptr == filestream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         size_t authenticode_begin = 0;
@@ -268,7 +268,7 @@ return_t authenticode_plugin_pe::write_authenticode (file_stream* filestream, bi
         filestream->truncate (size_new);
         ret = filestream->begin_mmap ();
         if (errorcode_t::success != ret) {
-            __leave2_trace (ret);
+            __leave2;
         }
 
         stream_data = filestream->data ();
@@ -277,7 +277,7 @@ return_t authenticode_plugin_pe::write_authenticode (file_stream* filestream, bi
         if (IMAGE_DOS_SIGNATURE == dos_header->e_magic) {
             if (stream_size < dos_header->e_lfanew + sizeof (IMAGE_NT_HEADERS)) {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
@@ -314,11 +314,11 @@ return_t authenticode_plugin_pe::write_authenticode (file_stream* filestream, bi
                 memcpy (stream_data + authenticode_begin + blob_start, &data[0], data.size ());
             } else {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
         } else {
             ret = errorcode_t::bad_format;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2
@@ -343,17 +343,17 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
     {
         if (nullptr == filestream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
         }
 
@@ -364,7 +364,7 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
         if (IMAGE_DOS_SIGNATURE == dos_header->e_magic) {
             if (stream_size <= dos_header->e_lfanew + sizeof (IMAGE_NT_HEADERS)) {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
@@ -392,18 +392,18 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
                     authenticode_begin = optional_header32->DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY].VirtualAddress;
                 } else {
                     ret = errorcode_t::bad_format;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
 
                 checksum_offset = (arch_t) checksum_pointer - (arch_t) stream_data;
                 securitydir_offset = (arch_t) securitydir_pointer - (arch_t) stream_data;
             } else {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
         } else {
             ret = errorcode_t::bad_format;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         ret = hash.open_byname (&hash_handle, algorithm);
@@ -413,7 +413,7 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
 
         if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         byte_t* stream_data = nullptr;
@@ -422,7 +422,7 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
         if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
         }
 
@@ -485,11 +485,11 @@ return_t authenticode_plugin_pe::read_checksum (file_stream* filestream, uint32*
     {
         if (nullptr == filestream || nullptr == out_checksum_value) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         byte_t* stream_data = nullptr;
@@ -498,7 +498,7 @@ return_t authenticode_plugin_pe::read_checksum (file_stream* filestream, uint32*
         if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
         }
 
@@ -509,7 +509,7 @@ return_t authenticode_plugin_pe::read_checksum (file_stream* filestream, uint32*
         if (IMAGE_DOS_SIGNATURE == dos_header->e_magic) {
             if (stream_size <= dos_header->e_lfanew + sizeof (IMAGE_NT_HEADERS)) {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
@@ -523,17 +523,17 @@ return_t authenticode_plugin_pe::read_checksum (file_stream* filestream, uint32*
                     checksum_pointer = &optional_header32->CheckSum; /* address */
                 } else {
                     ret = errorcode_t::bad_format;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
 
                 *out_checksum_value = *checksum_pointer;
             } else {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
         } else {
             ret = errorcode_t::bad_format;
-            __leave2_trace (ret);
+            __leave2;
         }
     }
     __finally2
@@ -552,11 +552,11 @@ return_t authenticode_plugin_pe::calc_checksum (file_stream* filestream, uint32*
     {
         if (nullptr == filestream || nullptr == out_checksum_value) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         byte_t* stream_data = nullptr;
@@ -565,7 +565,7 @@ return_t authenticode_plugin_pe::calc_checksum (file_stream* filestream, uint32*
         if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
         }
 
@@ -586,7 +586,7 @@ return_t authenticode_plugin_pe::calc_checksum (file_stream* filestream, uint32*
                     checksum_pointer = &optional_header32->CheckSum; /* address */
                 } else {
                     ret = errorcode_t::bad_format;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
 
                 winpe_checksum pecs;
@@ -604,11 +604,11 @@ return_t authenticode_plugin_pe::calc_checksum (file_stream* filestream, uint32*
 
             } else {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
         } else {
             ret = errorcode_t::bad_format;
-            __leave2_trace (ret);
+            __leave2;
         }
 
     }
@@ -628,11 +628,11 @@ return_t authenticode_plugin_pe::update_checksum (file_stream* filestream, uint3
     {
         if (nullptr == filestream || nullptr == out_checksum_value) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace (ret);
+            __leave2;
         }
         if (true != filestream->is_open ()) {
             ret = errorcode_t::not_ready;
-            __leave2_trace (ret);
+            __leave2;
         }
 
         byte_t* stream_data = nullptr;
@@ -641,7 +641,7 @@ return_t authenticode_plugin_pe::update_checksum (file_stream* filestream, uint3
         if (false == filestream->is_mmapped ()) {
             ret = filestream->begin_mmap ();
             if (errorcode_t::success != ret) {
-                __leave2_trace (ret);
+                __leave2;
             }
         }
 
@@ -662,7 +662,7 @@ return_t authenticode_plugin_pe::update_checksum (file_stream* filestream, uint3
                     checksum_pointer = &optional_header32->CheckSum; /* address */
                 } else {
                     ret = errorcode_t::bad_format;
-                    __leave2_trace (ret);
+                    __leave2;
                 }
 
                 winpe_checksum pecs;
@@ -680,11 +680,11 @@ return_t authenticode_plugin_pe::update_checksum (file_stream* filestream, uint3
                 *checksum_pointer = checksum;
             } else {
                 ret = errorcode_t::bad_format;
-                __leave2_trace (ret);
+                __leave2;
             }
         } else {
             ret = errorcode_t::bad_format;
-            __leave2_trace (ret);
+            __leave2;
         }
 
     }

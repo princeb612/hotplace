@@ -39,7 +39,7 @@ void test_case::begin (const char* case_name, ...)
 
         /* "test case" */
         stream.flush ();
-        char STRING_TEST_CASE[] = { '[', ' ', 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', ' ', ']', 0, };
+        char STRING_TEST_CASE[] = { '[', 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', ']', ' ', 0, };
         stream  << _color.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::magenta)
                 << STRING_TEST_CASE
                 << _current_case_name.c_str ()
