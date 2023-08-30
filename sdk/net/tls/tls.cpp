@@ -79,7 +79,7 @@ return_t transport_layer_security::connect (tls_context_t** handle, int type, co
         }
         SSL_CTX* tls_ctx = _x509;
 
-        __try_new_catch (context, new tls_context_t, ret, __leave2_trace (ret));
+        __try_new_catch (context, new tls_context_t, ret, __leave2);
 
         memset (context, 0, sizeof (tls_context_t));
         memset (&sockaddr_address, 0, sizeof sockaddr_address);
@@ -159,7 +159,7 @@ return_t transport_layer_security::connect (tls_context_t** handle, socket_t soc
         }
         SSL_CTX* tls_ctx = _x509;
 
-        __try_new_catch (context, new tls_context_t, ret, __leave2_trace (ret));
+        __try_new_catch (context, new tls_context_t, ret, __leave2);
 
         memset (context, 0, sizeof (tls_context_t));
 
@@ -225,7 +225,7 @@ return_t transport_layer_security::accept (tls_context_t** handle, socket_t fd)
         }
         SSL_CTX* tls_ctx = _x509;
 
-        __try_new_catch (context, new tls_context_t, ret, __leave2_trace (ret));
+        __try_new_catch (context, new tls_context_t, ret, __leave2);
 
         memset (context, 0, sizeof (tls_context_t));
 

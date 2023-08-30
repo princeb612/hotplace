@@ -14,7 +14,12 @@
 #define __try2 do
 #define __finally2 while (0);
 #define __leave2 break
-#define __leave2_trace(x) break
+/* backtrace and leave */
+#define __leave2_trace(x) { hotplace::io::trace (x); break; }
+/* if faild */
+#define __leave2_if_fail(x) if (errorcode_t::success != x) { break; }
+
+#define __trace
 
 #ifdef __cplusplus
 #define __trynew try
@@ -34,9 +39,5 @@
     __trynew { ptr = statement; } __catchnew (nullptr == ptr) { return_variable = errorcode_t::out_of_memory; }
 #define __try_new_catch_only(ptr, statement) \
     __trynew { ptr = statement; } __catchnew (nullptr == ptr) { }
-
-/* backtrace and leave */
-#define __trace_inside(x)
-#define __trace(x, ...)
 
 #endif

@@ -57,7 +57,7 @@ uint32 hmac_otp::open (otp_context_t** handle, unsigned int digit_length, hash_a
             __leave2;
         }
 
-        __try_new_catch (context, new hotp_context_t, ret, __leave2_trace (ret));
+        __try_new_catch (context, new hotp_context_t, ret, __leave2);
 
         context->_signature = HOTP_CONTEXT_SIGNATURE;
         context->_hmac_context = hash_handle;

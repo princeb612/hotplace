@@ -192,7 +192,7 @@ return_t authenticode_verifier::open (authenticode_context_t** handle)
 
     __try2
     {
-        __try_new_catch (context, new authenticode_context_t, ret, __leave2_trace (ret));
+        __try_new_catch (context, new authenticode_context_t, ret, __leave2);
 
         context->signature = AUTHENTICODE_CONTEXT_SIGNATURE;
 

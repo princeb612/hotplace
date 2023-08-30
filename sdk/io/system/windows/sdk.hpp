@@ -202,7 +202,7 @@
     { \
         function_pointer = (function_type) ::GetProcAddress (module_handle, api_name); \
         if (nullptr == function_pointer) { \
-            err_code = GetLastError (); __trace_inside (err_code); leave; \
+            err_code = GetLastError (); leave; \
         } \
     }
 #define GETPROCADDRESSONLY(function_type, function_pointer, module_handle, api_name) \

@@ -9,13 +9,29 @@
  */
 
 #include <hotplace/sdk/io/stream/stream.hpp>
+#include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/io/system/sdk.hpp>
+#include <hotplace/sdk/io/system/linux/sdk.hpp>
 #include <cxxabi.h>
 #include <dlfcn.h>      // dladdr
 #include <execinfo.h>   // backtrace
 
 namespace hotplace {
 namespace io {
+
+return_t trace (return_t errorcode)
+{
+    return_t ret = errorcode_t::success;
+    if (errorcode_t::success != errorcode) {
+        uint32 option = get_trace_option ();
+        if (trace_option_t::trace_bt & option) {
+            ansi_string stream;
+            debug_trace (&stream);
+            std::cout << stream.c_str () << std::endl;
+        }
+    }
+    return ret;
+}
 
 return_t debug_trace (stream_t* stream)
 {
@@ -61,6 +77,14 @@ return_t debug_trace (stream_t* stream)
         // do nothing
     }
     return ret;
+}
+
+void set_trace_exception ()
+{
+}
+
+void reset_trace_exception ()
+{
 }
 
 }

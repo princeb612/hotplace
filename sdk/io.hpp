@@ -38,6 +38,7 @@
 #include <hotplace/sdk/io/system/thread.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 #if defined __linux__
+#include <hotplace/sdk/io/system/linux/debug_trace.hpp>
 #elif defined _WIN32 || defined _WIN64
 #include <hotplace/sdk/io/system/windows/sdk.hpp>
 #include <hotplace/sdk/io/system/windows/debug_trace.hpp>

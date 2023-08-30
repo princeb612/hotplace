@@ -8,12 +8,36 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/io/system/sdk.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
 #include <hotplace/sdk/io/system/windows/sdk.hpp>
 #include <hotplace/sdk/io/system/windows/debug_trace.hpp>
 
 namespace hotplace {
 namespace io {
+
+return_t trace (return_t errorcode)
+{
+    return_t ret = errorcode_t::success;
+
+    if (errorcode_t::success != errorcode) {
+        uint32 option = get_trace_option ();
+        if (trace_option_t::trace_bt & option) {
+            debug_trace_context_t* handle = nullptr;
+            debug_trace dbg;
+            CONTEXT rtlcontext;
+            ansi_string stream;
+
+            dbg.open (&handle);
+            dbg.capture (&rtlcontext);
+            ret = dbg.trace (handle, &rtlcontext, &stream);
+            dbg.close (handle);
+
+            std::cout << stream.c_str () << std::endl;
+        }
+    }
+    return ret;
+}
 
 #define BACKTRACE_CONTEXT_SIGNATURE 0x20101221
 
@@ -443,13 +467,13 @@ return_t debug_trace::trace (debug_trace_context_t* handle, EXCEPTION_POINTERS* 
 
         EXCEPTION_RECORD* exception_record = exception->ExceptionRecord;
 
-        stream->printf ("exception/**\n");
-        stream->printf ("exception address : 0x%08x/**\n", exception_record->ExceptionAddress);
-        stream->printf ("  exception code  : 0x%08x/**\n", exception_record->ExceptionCode);
-        stream->printf ("  exception flags : 0x%08x/**\n", exception_record->ExceptionFlags);
-        stream->printf ("number parameters : %d/**\n", exception_record->NumberParameters);
+        stream->printf ("exception\n");
+        stream->printf ("exception address : 0x%08x\n", exception_record->ExceptionAddress);
+        stream->printf ("  exception code  : 0x%08x\n", exception_record->ExceptionCode);
+        stream->printf ("  exception flags : 0x%08x\n", exception_record->ExceptionFlags);
+        stream->printf ("number parameters : %d\n", exception_record->NumberParameters);
         for (DWORD i = 0; i < exception_record->NumberParameters; i++) {
-            stream->printf ("  parameter [%d]   : 0x%08x/**\n", i, exception_record->ExceptionInformation[i]);
+            stream->printf ("  parameter [%d]   : 0x%08x\n", i, exception_record->ExceptionInformation[i]);
         }
 
         CONTEXT* rtlcontext = exception->ContextRecord;
@@ -467,6 +491,58 @@ return_t debug_trace::trace (debug_trace_context_t* handle, EXCEPTION_POINTERS* 
     }
 
     return ret;
+}
+
+LONG __stdcall exception_handler (struct _EXCEPTION_POINTERS * exception_ptr)
+{
+    SetErrorMode (SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOALIGNMENTFAULTEXCEPT | SEM_NOOPENFILEERRORBOX);
+
+    LONG lRet = EXCEPTION_EXECUTE_HANDLER;
+    DWORD ret = errorcode_t::success;
+
+    __try2
+    {
+        // __try { ... }
+        // __except(ExceptionExecuteHandler(GetExceptionInformation())) { ... }
+
+        // write minidump
+
+        /* exception record call stack */
+        ansi_string stream;
+        debug_trace trace;
+        HANDLE thread_handle = NULL;
+        BOOL bRet = TRUE;
+        bRet = DuplicateHandle (GetCurrentProcess (), GetCurrentThread (), GetCurrentProcess (), &thread_handle, 0, false, DUPLICATE_SAME_ACCESS);
+        if (TRUE == bRet) {
+            debug_trace_context_t* handle = NULL;
+            trace.open (&handle);
+            trace.trace (handle, exception_ptr, &stream);
+            trace.close (handle);
+
+            std::cout << stream.c_str () << std::endl;
+
+            CloseHandle (thread_handle);
+        }
+    }
+    __finally2
+    {
+        if (errorcode_t::success != ret) {
+            lRet = EXCEPTION_CONTINUE_SEARCH;
+        }
+    }
+
+    return lRet;
+}
+
+LPTOP_LEVEL_EXCEPTION_FILTER old_exception_handler = nullptr;
+
+void set_trace_exception ()
+{
+    old_exception_handler = SetUnhandledExceptionFilter (exception_handler);
+}
+void reset_trace_exception ()
+{
+    SetUnhandledExceptionFilter (old_exception_handler);
 }
 
 }

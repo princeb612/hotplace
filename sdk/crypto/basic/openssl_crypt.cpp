@@ -255,7 +255,7 @@ return_t openssl_crypt::encrypt (crypt_context_t* handle, const unsigned char* d
         }
 
         size_t size_out_allocated = size_plain + EVP_MAX_BLOCK_LENGTH;
-        __try_new_catch (output_allocated, new byte_t[size_out_allocated + 1], ret, __leave2_trace (ret));
+        __try_new_catch (output_allocated, new byte_t[size_out_allocated + 1], ret, __leave2);
 
         ret = encrypt2 (handle, data_plain, size_plain, output_allocated, &size_out_allocated, nullptr, nullptr);
         if (errorcode_t::success != ret) {
@@ -439,7 +439,7 @@ return_t openssl_crypt::decrypt (crypt_context_t* handle, const unsigned char* d
         }
 
         size_t size_out_allocated = size_encrypted + EVP_MAX_BLOCK_LENGTH;
-        __try_new_catch (output_allocated, new byte_t[size_out_allocated + 1], ret, __leave2_trace (ret));
+        __try_new_catch (output_allocated, new byte_t[size_out_allocated + 1], ret, __leave2);
 
         ret = decrypt2 (handle, data_encrypted, size_encrypted, output_allocated, &size_out_allocated, nullptr, nullptr);
         if (errorcode_t::success != ret) {

@@ -17,7 +17,7 @@ using namespace hotplace::io;
 
 test_case _test_case;
 
-int main ()
+void test_unittest ()
 {
     _test_case.test (errorcode_t::success, "function1", "case desc 1");                                 // pass
     _test_case.test (errorcode_t::invalid_parameter, "function2", "case desc 2 - intentional fail");    // fail
@@ -42,6 +42,63 @@ int main ()
 
     return_t ret = _test_case.result ();
     _test_case.assert (errorcode_t::success != ret, __FUNCTION__, "result");
+}
+
+return_t function_always_fail ()
+{
+    return errorcode_t::internal_error;
+}
+
+void test_fail ()
+{
+    _test_case.begin ("structured programming");
+    return_t ret = errorcode_t::success;
+    int test = 0;
+    __try2
+    {
+        ret = function_always_fail ();
+        __leave2_if_fail (ret);
+
+        test = 1;
+    }
+    __finally2
+    {
+        _test_case.assert (0 == test, __FUNCTION__, "__leave2_if_fail");
+    }
+}
+
+void test_trace ()
+{
+    _test_case.begin ("structured programming");
+    return_t ret = errorcode_t::success;
+    __try2
+    {
+        ret = function_always_fail ();
+        if (errorcode_t::success != ret) {
+            __leave2_trace (ret);
+        }
+    }
+    __finally2
+    {
+        _test_case.assert (true, __FUNCTION__, "__leave2_trace");
+    }
+}
+
+void test_except ()
+{
+    _test_case.begin ("segment fault");
+    int* pointer = nullptr;
+    *pointer = 1;
+}
+
+int main ()
+{
+    test_unittest ();
+    test_fail ();
+
+    set_trace_option (trace_option_t::trace_bt | trace_option_t::trace_except);
+    test_trace ();
+    //test_except ();
 
     _test_case.report (5);
     return errorcode_t::success;

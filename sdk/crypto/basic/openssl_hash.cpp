@@ -78,7 +78,7 @@ return_t openssl_hash::open (hash_context_t** handle, hash_algorithm_t algorithm
             __leave2;
         }
 
-        __try_new_catch (context, new openssl_hash_context_t, ret, __leave2_trace (ret));
+        __try_new_catch (context, new openssl_hash_context_t, ret, __leave2);
 
         context->_signature = OPENSSL_HASH_CONTEXT_SIGNATURE;
         context->_algorithm = algorithm;
@@ -250,7 +250,7 @@ return_t openssl_hash::finalize (hash_context_t* handle, byte_t** hash_data, siz
         }
 
         size_t size_digest = output.size ();
-        __try_new_catch (buffer_allocated, (byte_t * ) malloc (size_digest), ret, __leave2_trace (ret));
+        __try_new_catch (buffer_allocated, (byte_t * ) malloc (size_digest), ret, __leave2);
 
         memcpy (buffer_allocated, &output[0], size_digest);
 

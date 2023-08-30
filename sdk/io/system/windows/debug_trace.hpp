@@ -38,6 +38,8 @@ public:
 protected:
 };
 
+LONG __stdcall exception_handler (struct _EXCEPTION_POINTERS * exception_ptr);
+
 }
 }  // namespace
 

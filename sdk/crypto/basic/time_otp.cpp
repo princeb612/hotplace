@@ -51,7 +51,7 @@ uint32 time_otp::open (otp_context_t** handle, unsigned int digit_length, time_t
             __leave2;
         }
 
-        __try_new_catch (context, new totp_context_t, ret, __leave2_trace (ret));
+        __try_new_catch (context, new totp_context_t, ret, __leave2);
 
         context->_signature = TOTP_CONTEXT_SIGNATURE;
         context->_hotp_handle = hotp_handle;

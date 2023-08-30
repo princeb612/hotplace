@@ -76,7 +76,6 @@ return_t is_windows64 (BOOL* result)
     return ret;
 }
 
-
 static return_t enum_modules_toolhelp (HANDLE process_handle, TYPE_CALLBACK_HANDLEREXV callback_handler, LPVOID param)
 {
     return_t ret = errorcode_t::success;

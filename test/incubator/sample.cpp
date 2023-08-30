@@ -104,6 +104,19 @@ void code_careful_tls_server ()
     }
 }
 
+// Secure Programming Cookbook / Chap.12 Anti-Tempering / 12.8 Disguising Boolean Values
+typedef struct _disguised_bool_t {
+    int8 x;
+    int8 y;
+} disguised_bool_t;
+
+#define INIT_DISGUISED_BOOL { 1, -1 }
+#define SET_DISGUISED_BOOL_TRUE(b) do { b.x = 1, b.y = 0; } while (0)
+#define SET_DISGUISED_BOOL_FALSE(b) do { b.x = 1, b.y = -1; } while (0)
+#define TEST_DISGUISED_BOOL(b) (b.x + b.y)
+
+disguised_bool_t bool_type = INIT_DISGUISED_BOOL;
+
 int main ()
 {
     code_careful_shared_instance ();
