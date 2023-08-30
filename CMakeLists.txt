@@ -17,17 +17,15 @@ set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu, custom build
 set (SUPPORT_ODBC 1)   # 
 set (SUPPORT_PCH 0)    # cmake 2.x
 
-# set CXXFLAGS="-std=c++11"
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 if (UNIX)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,noexecstack")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,-z,noexecstack")
 endif ()
 if (NOT "$ENV{CXXFLAGS}" STREQUAL "")
     # specify additional include, lib directories
-    set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} $ENV{SUPPORT_SHARED})
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CXXFLAGS}")
 endif ()
 if (NOT "$ENV{SUPPORT_SHARED}" STREQUAL "")
-    set (SUPPORT_SHARED $ENV{CXXFLAGS})
+    set (SUPPORT_SHARED $ENV{SUPPORT_SHARED})
 endif ()
 if (NOT "$ENV{SUPPORT_ODBC}" STREQUAL "")
     set (SUPPORT_ODBC $ENV{SUPPORT_ODBC})
@@ -131,9 +129,11 @@ endfunction ()
 
 # -Ixxx
 include_directories (..)
-#include_directories ($VSCOMMUNITY/Community/VC/Tools/MSVC/14.37.32822/atlmfc/include) # heavily MSVC-dependent
+include_directories (${PROJECT_SOURCE_DIR}/thirdparty/include)
 # -Lxxx
 link_directories (${CMAKE_INSTALL_RPATH})
+link_directories (${PROJECT_SOURCE_DIR}/thirdparty/lib64)
+link_directories (${PROJECT_SOURCE_DIR}/thirdparty/lib)
 
 # mkdir xxx
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)

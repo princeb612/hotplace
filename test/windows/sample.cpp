@@ -13,7 +13,6 @@
  *
  *  MINGW backtrace
  *      GetSymFromAddr, SymGetLineFromAddr
- *      libbfd link error
  *
  * Revision History
  * Date         Name                Description
@@ -79,17 +78,6 @@ void test_trace ()
 
     _test_case.test (ret, __FUNCTION__, "debug_trace");
 }
-
-#if 0
-#define PACKAGE "bfd_test"
-#include <bfd.h>
-
-bfd_init ();
-
-// # gcc -o test -lbfd test.cc
-// C:/Home/msys64/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/13.1.0/../../../../x86_64-w64-mingw32/bin/ld.exe: C:\Home\msys64\tmp\ccGHFLn4.o:test.cc:(.text+0xe): undefined reference to `bfd_init'
-// collect2.exe: error: ld returned 1 exit status
-#endif
 
 int main (int argc, char** argv)
 {

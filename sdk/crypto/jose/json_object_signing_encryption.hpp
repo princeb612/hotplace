@@ -12,129 +12,129 @@
  *
  *  implementation status
  *  Cryptographic Algorithms for Digital Signatures and MACs
- *    +--------------+-------------------------------+--------------------+
- *    | "alg" Param  | Digital Signature or MAC      | Implementation     |
- *    | Value        | Algorithm                     | Requirements       |
- *    +--------------+-------------------------------+--------------------+
- *  O | HS256        | HMAC using SHA-256            | Required           |
- *  O | HS384        | HMAC using SHA-384            | Optional           |
- *  O | HS512        | HMAC using SHA-512            | Optional           |
- *  O | RS256        | RSASSA-PKCS1-v1_5 using       | Recommended        |
- *    |              | SHA-256                       |                    |
- *  O | RS384        | RSASSA-PKCS1-v1_5 using       | Optional           |
- *    |              | SHA-384                       |                    |
- *  O | RS512        | RSASSA-PKCS1-v1_5 using       | Optional           |
- *    |              | SHA-512                       |                    |
- *  O | ES256        | ECDSA using P-256 and SHA-256 | Recommended+       |
- *  O | ES384        | ECDSA using P-384 and SHA-384 | Optional           |
- *  O | ES512        | ECDSA using P-521 and SHA-512 | Optional           |
- *  O | PS256        | RSASSA-PSS using SHA-256 and  | Optional           |
- *    |              | MGF1 with SHA-256             |                    |
- *  O | PS384        | RSASSA-PSS using SHA-384 and  | Optional           |
- *    |              | MGF1 with SHA-384             |                    |
- *  O | PS512        | RSASSA-PSS using SHA-512 and  | Optional           |
- *    |              | MGF1 with SHA-512             |                    |
- *    | none         | No digital signature or MAC   | Optional           |
- *    |              | performed                     |                    |
- *  O | EdDSA        | RFC 8037                      |                    |
- *    +--------------+-------------------------------+--------------------+
+ *  +---+--------------+-------------------------------+--------------------+
+ *  |   | "alg" Param  | Digital Signature or MAC      | Implementation     |
+ *  |   | Value        | Algorithm                     | Requirements       |
+ *  + --+--------------+-------------------------------+--------------------+
+ *  | O | HS256        | HMAC using SHA-256            | Required           |
+ *  | O | HS384        | HMAC using SHA-384            | Optional           |
+ *  | O | HS512        | HMAC using SHA-512            | Optional           |
+ *  | O | RS256        | RSASSA-PKCS1-v1_5 using       | Recommended        |
+ *  |   |              | SHA-256                       |                    |
+ *  | O | RS384        | RSASSA-PKCS1-v1_5 using       | Optional           |
+ *  |   |              | SHA-384                       |                    |
+ *  | O | RS512        | RSASSA-PKCS1-v1_5 using       | Optional           |
+ *  |   |              | SHA-512                       |                    |
+ *  | O | ES256        | ECDSA using P-256 and SHA-256 | Recommended+       |
+ *  | O | ES384        | ECDSA using P-384 and SHA-384 | Optional           |
+ *  | O | ES512        | ECDSA using P-521 and SHA-512 | Optional           |
+ *  | O | PS256        | RSASSA-PSS using SHA-256 and  | Optional           |
+ *  |   |              | MGF1 with SHA-256             |                    |
+ *  | O | PS384        | RSASSA-PSS using SHA-384 and  | Optional           |
+ *  |   |              | MGF1 with SHA-384             |                    |
+ *  | O | PS512        | RSASSA-PSS using SHA-512 and  | Optional           |
+ *  |   |              | MGF1 with SHA-512             |                    |
+ *  |   | none         | No digital signature or MAC   | Optional           |
+ *  |   |              | performed                     |                    |
+ *  | O | EdDSA        | RFC 8037                      |                    |
+ *  +---+--------------+-------------------------------+--------------------+
  *  Cryptographic Algorithms for Key Management
- *    +--------------------+--------------------+--------+----------------+
- *    | "alg" Param Value  | Key Management     | More   | Implementation |
- *    |                    | Algorithm          | Header | Requirements   |
- *    |                    |                    | Params |                |
- *    +--------------------+--------------------+--------+----------------+
- *  O | RSA1_5             | RSAES-PKCS1-v1_5   | (none) | Recommended-   |
- *  O | RSA-OAEP           | RSAES OAEP using   | (none) | Recommended+   |
- *    |                    | default parameters |        |                |
- *  O | RSA-OAEP-256       | RSAES OAEP using   | (none) | Optional       |
- *    |                    | SHA-256 and MGF1   |        |                |
- *    |                    | with SHA-256       |        |                |
- *  O | A128KW             | AES Key Wrap with  | (none) | Recommended    |
- *    |                    | default initial    |        |                |
- *    |                    | value using        |        |                |
- *    |                    | 128-bit key        |        |                |
- *  O | A192KW             | AES Key Wrap with  | (none) | Optional       |
- *    |                    | default initial    |        |                |
- *    |                    | value using        |        |                |
- *    |                    | 192-bit key        |        |                |
- *  O | A256KW             | AES Key Wrap with  | (none) | Recommended    |
- *    |                    | default initial    |        |                |
- *    |                    | value using        |        |                |
- *    |                    | 256-bit key        |        |                |
- *  - | dir                | Direct use of a    | (none) | Recommended    |
- *    |                    | shared symmetric   |        |                |
- *    |                    | key as the CEK     |        |                |
- *  O | ECDH-ES            | Elliptic Curve     | "epk", | Recommended+   |
- *    |                    | Diffie-Hellman     | "apu", |                |
- *    |                    | Ephemeral Static   | "apv"  |                |
- *    |                    | key agreement      |        |                |
- *    |                    | using Concat KDF   |        |                |
- *  O | ECDH-ES+A128KW     | ECDH-ES using      | "epk", | Recommended    |
- *    |                    | Concat KDF and CEK | "apu", |                |
- *    |                    | wrapped with       | "apv"  |                |
- *    |                    | "A128KW"           |        |                |
- *  O | ECDH-ES+A192KW     | ECDH-ES using      | "epk", | Optional       |
- *    |                    | Concat KDF and CEK | "apu", |                |
- *    |                    | wrapped with       | "apv"  |                |
- *    |                    | "A192KW"           |        |                |
- *  O | ECDH-ES+A256KW     | ECDH-ES using      | "epk", | Recommended    |
- *    |                    | Concat KDF and CEK | "apu", |                |
- *    |                    | wrapped with       | "apv"  |                |
- *    |                    | "A256KW"           |        |                |
- *  O | A128GCMKW          | Key wrapping with  | "iv",  | Optional       |
- *    |                    | AES GCM using      | "tag"  |                |
- *    |                    | 128-bit key        |        |                |
- *  O | A192GCMKW          | Key wrapping with  | "iv",  | Optional       |
- *    |                    | AES GCM using      | "tag"  |                |
- *    |                    | 192-bit key        |        |                |
- *  O | A256GCMKW          | Key wrapping with  | "iv",  | Optional       |
- *    |                    | AES GCM using      | "tag"  |                |
- *    |                    | 256-bit key        |        |                |
- *  O | PBES2-HS256+A128KW | PBES2 with HMAC    | "p2s", | Optional       |
- *    |                    | SHA-256 and        | "p2c"  |                |
- *    |                    | "A128KW" wrapping  |        |                |
- *  O | PBES2-HS384+A192KW | PBES2 with HMAC    | "p2s", | Optional       |
- *    |                    | SHA-384 and        | "p2c"  |                |
- *    |                    | "A192KW" wrapping  |        |                |
- *  O | PBES2-HS512+A256KW | PBES2 with HMAC    | "p2s", | Optional       |
- *    |                    | SHA-512 and        | "p2c"  |                |
- *    |                    | "A256KW" wrapping  |        |                |
- *    +--------------------+--------------------+--------+----------------+
+ *  +---+--------------------+--------------------+--------+----------------+
+ *  |   | "alg" Param Value  | Key Management     | More   | Implementation |
+ *  |   |                    | Algorithm          | Header | Requirements   |
+ *  |   |                    |                    | Params |                |
+ *  +---+--------------------+--------------------+--------+----------------+
+ *  | O | RSA1_5             | RSAES-PKCS1-v1_5   | (none) | Recommended-   |
+ *  | O | RSA-OAEP           | RSAES OAEP using   | (none) | Recommended+   |
+ *  |   |                    | default parameters |        |                |
+ *  | O | RSA-OAEP-256       | RSAES OAEP using   | (none) | Optional       |
+ *  |   |                    | SHA-256 and MGF1   |        |                |
+ *  |   |                    | with SHA-256       |        |                |
+ *  | O | A128KW             | AES Key Wrap with  | (none) | Recommended    |
+ *  |   |                    | default initial    |        |                |
+ *  |   |                    | value using        |        |                |
+ *  |   |                    | 128-bit key        |        |                |
+ *  | O | A192KW             | AES Key Wrap with  | (none) | Optional       |
+ *  |   |                    | default initial    |        |                |
+ *  |   |                    | value using        |        |                |
+ *  |   |                    | 192-bit key        |        |                |
+ *  | O | A256KW             | AES Key Wrap with  | (none) | Recommended    |
+ *  |   |                    | default initial    |        |                |
+ *  |   |                    | value using        |        |                |
+ *  |   |                    | 256-bit key        |        |                |
+ *  | O | dir                | Direct use of a    | (none) | Recommended    |
+ *  |   |                    | shared symmetric   |        |                |
+ *  |   |                    | key as the CEK     |        |                |
+ *  | O | ECDH-ES            | Elliptic Curve     | "epk", | Recommended+   |
+ *  |   |                    | Diffie-Hellman     | "apu", |                |
+ *  |   |                    | Ephemeral Static   | "apv"  |                |
+ *  |   |                    | key agreement      |        |                |
+ *  |   |                    | using Concat KDF   |        |                |
+ *  | O | ECDH-ES+A128KW     | ECDH-ES using      | "epk", | Recommended    |
+ *  |   |                    | Concat KDF and CEK | "apu", |                |
+ *  |   |                    | wrapped with       | "apv"  |                |
+ *  |   |                    | "A128KW"           |        |                |
+ *  | O | ECDH-ES+A192KW     | ECDH-ES using      | "epk", | Optional       |
+ *  |   |                    | Concat KDF and CEK | "apu", |                |
+ *  |   |                    | wrapped with       | "apv"  |                |
+ *  |   |                    | "A192KW"           |        |                |
+ *  | O | ECDH-ES+A256KW     | ECDH-ES using      | "epk", | Recommended    |
+ *  |   |                    | Concat KDF and CEK | "apu", |                |
+ *  |   |                    | wrapped with       | "apv"  |                |
+ *  |   |                    | "A256KW"           |        |                |
+ *  | O | A128GCMKW          | Key wrapping with  | "iv",  | Optional       |
+ *  |   |                    | AES GCM using      | "tag"  |                |
+ *  |   |                    | 128-bit key        |        |                |
+ *  | O | A192GCMKW          | Key wrapping with  | "iv",  | Optional       |
+ *  |   |                    | AES GCM using      | "tag"  |                |
+ *  |   |                    | 192-bit key        |        |                |
+ *  | O | A256GCMKW          | Key wrapping with  | "iv",  | Optional       |
+ *  |   |                    | AES GCM using      | "tag"  |                |
+ *  |   |                    | 256-bit key        |        |                |
+ *  | O | PBES2-HS256+A128KW | PBES2 with HMAC    | "p2s", | Optional       |
+ *  |   |                    | SHA-256 and        | "p2c"  |                |
+ *  |   |                    | "A128KW" wrapping  |        |                |
+ *  | O | PBES2-HS384+A192KW | PBES2 with HMAC    | "p2s", | Optional       |
+ *  |   |                    | SHA-384 and        | "p2c"  |                |
+ *  |   |                    | "A192KW" wrapping  |        |                |
+ *  | O | PBES2-HS512+A256KW | PBES2 with HMAC    | "p2s", | Optional       |
+ *  |   |                    | SHA-512 and        | "p2c"  |                |
+ *  |   |                    | "A256KW" wrapping  |        |                |
+ *  +---+--------------------+--------------------+--------+----------------+
  *  Cryptographic Algorithms for Content Encryption
- *    +---------------+----------------------------------+----------------+
- *    | "enc" Param   | Content Encryption Algorithm     | Implementation |
- *    | Value         |                                  | Requirements   |
- *    +---------------+----------------------------------+----------------+
- *  O | A128CBC-HS256 | AES_128_CBC_HMAC_SHA_256         | Required       |
- *    |               | authenticated encryption         |                |
- *    |               | algorithm, as defined in Section |                |
- *    |               | 5.2.3                            |                |
- *  O | A192CBC-HS384 | AES_192_CBC_HMAC_SHA_384         | Optional       |
- *    |               | authenticated encryption         |                |
- *    |               | algorithm, as defined in Section |                |
- *    |               | 5.2.4                            |                |
- *  O | A256CBC-HS512 | AES_256_CBC_HMAC_SHA_512         | Required       |
- *    |               | authenticated encryption         |                |
- *    |               | algorithm, as defined in Section |                |
- *    |               | 5.2.5                            |                |
- *  O | A128GCM       | AES GCM using 128-bit key        | Recommended    |
- *  O | A192GCM       | AES GCM using 192-bit key        | Optional       |
- *  O | A256GCM       | AES GCM using 256-bit key        | Recommended    |
- *    +---------------+----------------------------------+----------------+
+ *  +---+---------------+----------------------------------+----------------+
+ *  |   | "enc" Param   | Content Encryption Algorithm     | Implementation |
+ *  |   | Value         |                                  | Requirements   |
+ *  +---+---------------+----------------------------------+----------------+
+ *  | O | A128CBC-HS256 | AES_128_CBC_HMAC_SHA_256         | Required       |
+ *  |   |               | authenticated encryption         |                |
+ *  |   |               | algorithm, as defined in Section |                |
+ *  |   |               | 5.2.3                            |                |
+ *  | O | A192CBC-HS384 | AES_192_CBC_HMAC_SHA_384         | Optional       |
+ *  |   |               | authenticated encryption         |                |
+ *  |   |               | algorithm, as defined in Section |                |
+ *  |   |               | 5.2.4                            |                |
+ *  | O | A256CBC-HS512 | AES_256_CBC_HMAC_SHA_512         | Required       |
+ *  |   |               | authenticated encryption         |                |
+ *  |   |               | algorithm, as defined in Section |                |
+ *  |   |               | 5.2.5                            |                |
+ *  | O | A128GCM       | AES GCM using 128-bit key        | Recommended    |
+ *  | O | A192GCM       | AES GCM using 192-bit key        | Optional       |
+ *  | O | A256GCM       | AES GCM using 256-bit key        | Recommended    |
+ *  +---+---------------+----------------------------------+----------------+
  *  JWK
- *    +---------------+----------------------------------+----------------+
- *    | kty           |                                  |                |
- *    +---------------+----------------------------------+----------------+
- *  O | oct           | JWK/PEM(openssl 1.1.1)           |                |
- *  O | RSA           | JWK/PEM                          |                |
- *  O | EC            | JWK/PEM                          |                |
- *    |               | crv "P-256","P-384","P-521"      |                |
- *  O | OKP           | RFC 8037                         |                |
- *    |               | JWK/PEM                          |                |
- *    |               | crv "Ed25519","Ed448"            |                |
- *  O |               | crv "X25519","X448"              |                |
- *    +---------------+----------------------------------+----------------+
+ *  +---+---------------+----------------------------------+----------------+
+ *  |   | kty           |                                  |                |
+ *  +---+---------------+----------------------------------+----------------+
+ *  | O | oct           | JWK/PEM(openssl 1.1.1)           |                |
+ *  | O | RSA           | JWK/PEM                          |                |
+ *  | O | EC            | JWK/PEM                          |                |
+ *  |   |               | crv "P-256","P-384","P-521"      |                |
+ *  | O | OKP           | RFC 8037                         |                |
+ *  |   |               | JWK/PEM                          |                |
+ *  |   |               | crv "Ed25519","Ed448"            |                |
+ *  | O |               | crv "X25519","X448"              |                |
+ *  +---+---------------+----------------------------------+----------------+
  *
  * Revision History
  * Date         Name                Description

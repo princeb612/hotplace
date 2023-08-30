@@ -8,7 +8,7 @@
  * Date         Name                Description
  * 2010.12.21   Soo Han, Kim        backtrace x86 implemented (merlin)
  * 2014.11.06   Soo Han, Kim        backtrace x64 implemented (merlin)
- * 2023.08.30   Soo Han, Kim        bfd
+ * 2023.08.30   Soo Han, Kim        trying bfd
  */
 
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_DEBUGTRACE__
@@ -35,6 +35,7 @@ public:
     return_t trace (debug_trace_context_t* handle, CONTEXT* rtlcontext, stream_t* stream);
 
     return_t trace (debug_trace_context_t* handle, EXCEPTION_POINTERS* exception, stream_t* stream);
+protected:
 };
 
 }
