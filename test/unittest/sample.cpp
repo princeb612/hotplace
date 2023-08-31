@@ -19,6 +19,8 @@ test_case _test_case;
 
 void test_unittest ()
 {
+    _test_case.begin ("");
+
     _test_case.test (errorcode_t::success, "function1", "case desc 1");                                 // pass
     _test_case.test (errorcode_t::invalid_parameter, "function2", "case desc 2 - intentional fail");    // fail
     _test_case.test (errorcode_t::not_supported, "function3", "case desc 4");                           // skip
@@ -51,7 +53,7 @@ return_t function_always_fail ()
 
 void test_fail ()
 {
-    _test_case.begin ("structured programming");
+    _test_case.begin ("try finally");
     return_t ret = errorcode_t::success;
     int test = 0;
     __try2
@@ -69,7 +71,7 @@ void test_fail ()
 
 void test_trace ()
 {
-    _test_case.begin ("structured programming");
+    _test_case.begin ("try finally");
     return_t ret = errorcode_t::success;
     __try2
     {

@@ -25,27 +25,6 @@
 namespace hotplace {
 namespace io {
 
-/* L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion" */
-#define DECLARE_WSTRING_REGPATH_SOFTWARE_MICROSOFT_WINDOWS_NT_CURRENTVERSION WCHAR WSTRING_REGPATH_SOFTWARE_MICROSOFT_WINDOWS_NT_CURRENTVERSION[] = { L'S', L'O', L'F', L'T', L'W', L'A', L'R', L'E', L'\\', L'M', L'i', L'c', L'r', L'o', L's', L'o', L'f', L't', L'\\', L'W', L'i', L'n', L'd', L'o', L'w', L's', L' ', L'N', L'T', L'\\', L'C', L'u', L'r', L'r', L'e', L'n', L't', L'V', L'e', L'r', L's', L'i', L'o', L'n', 0, \
-};
-/* _T("CurrentVersion") */
-#define DECLARE_TSTRING_CURRENTVERSION TCHAR TSTRING_CURRENTVERSION[] = { _T ('C'), _T ('u'), _T ('r'), _T ('r'), _T ('e'), _T ('n'), _T ('t'), _T ('V'), _T ('e'), _T ('r'), _T ('s'), _T ('i'), _T ('o'), _T ('n'), 0, };
-/* _T("ProductName") */
-#define DECLARE_TSTRING_PRODUCTNAME TCHAR TSTRING_PRODUCTNAME[] = { _T ('P'), _T ('r'), _T ('o'), _T ('d'), _T ('u'), _T ('c'), _T ('t'), _T ('N'), _T ('a'), _T ('m'), _T ('e'), 0, };
-/* _T("ProductId") */
-#define DECLARE_TSTRING_PRODUCTID TCHAR TSTRING_PRODUCTID[] = { _T ('P'), _T ('r'), _T ('o'), _T ('d'), _T ('u'), _T ('c'), _T ('t'), _T ('I'), _T ('d'), 0, };
-/* _T("Service Pack") */
-#define DECLARE_TSTRING_SERVICE_PACK TCHAR TSTRING_SERVICE_PACK[] = { _T ('S'), _T ('e'), _T ('r'), _T ('v'), _T ('i'), _T ('c'), _T ('e'), _T (' '), _T ('P'), _T ('a'), _T ('c'), _T ('k'), 0, };
-/* _T("Software\\Microsoft\\Windows\\CurrentVersion") */
-#define DECLARE_TSTRING_REGPATH_SOFTWARE_MICROSOFT_WINDOWS_CURRENTVERSION TCHAR TSTRING_REGPATH_SOFTWARE_MICROSOFT_WINDOWS_CURRENTVERSION[] = { _T ('S'), _T ('o'), _T ('f'), _T ('t'), _T ('w'), _T ('a'), _T ('r'), _T ('e'), _T ('\\'), _T ('M'), _T ('i'), _T ('c'),  _T ('r'), _T ('o'), _T ('s'), _T ('o'), _T ('f'), _T ('t'), _T ('\\'), _T ('W'), _T ('i'), _T ('n'),  _T ('d'), _T ('o'), _T ('w'), _T ('s'), _T ('\\'), _T ('C'), _T ('u'), _T ('r'),  _T ('r'), _T ('e'), _T ('n'), _T ('t'), _T ('V'), _T ('e'), _T ('r'), _T ('s'), _T ('i'), _T ('o'), _T ('n'), 0, };
-/* _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion") */
-#define DECLARE_TSTRING_REGPATH_SOFTWARE_MICROSOFT_WINDOWS_NT_CURRENTVERSION TCHAR TSTRING_REGPATH_SOFTWARE_MICROSOFT_WINDOWS_NT_CURRENTVERSION[] = { _T ('S'), _T ('O'), _T ('F'), _T ('T'), _T ('W'), _T ('A'), _T ('R'), _T ('E'), _T ('\\'), _T ('M'), _T ('i'), _T ('c'),  _T ('r'), _T ('o'), _T ('s'), _T ('o'), _T ('f'), _T ('t'), _T ('\\'), _T ('W'), _T ('i'), _T ('n'),  _T ('d'), _T ('o'), _T ('w'), _T ('s'), _T (' '), _T ('N'), _T ('T'), _T ('\\'), _T ('C'), _T ('u'), _T ('r'),  _T ('r'), _T ('e'), _T ('n'), _T ('t'), _T ('V'), _T ('e'), _T ('r'), _T ('s'), _T ('i'), _T ('o'), _T ('n'), 0, };
-
-#define WINDOWSVERSION_IS_GTE(pOSVersionInfoEx, major, minor)       ((major < pOSVersionInfoEx->dwMajorVersion) || ((major == pOSVersionInfoEx->dwMajorVersion) && (minor <= pOSVersionInfoEx->dwMinorVersion)))
-#define WINDOWSVERSION_IS_GT(pOSVersionInfoEx, major, minor)        ((major < pOSVersionInfoEx->dwMajorVersion) || ((major == pOSVersionInfoEx->dwMajorVersion) && (minor <  pOSVersionInfoEx->dwMinorVersion)))
-#define WINDOWSVERSION_SP_IS_GTE(pOSVersionInfoEx, major, spmajor)  ((major < pOSVersionInfoEx->dwMajorVersion) || ((major == pOSVersionInfoEx->dwMajorVersion) && (spmajor <= pOSVersionInfoEx->wServicePackMajor)))
-#define WINDOWSVERSION_SP_IS_GT(pOSVersionInfoEx, major, spmajor)   ((major < pOSVersionInfoEx->dwMajorVersion) || ((major == pOSVersionInfoEx->dwMajorVersion) && (spmajor <  pOSVersionInfoEx->wServicePackMajor)))
-
 enum windows_version_flag_t {
     winver_detect_getversion            = (1 << 0), ///<< 0000 0001 detect_getversion
     winver_detect_version_lie           = (1 << 1), ///<< 0000 0010 detect_versionlie

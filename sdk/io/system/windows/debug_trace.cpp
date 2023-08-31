@@ -415,12 +415,14 @@ return_t debug_trace::trace (debug_trace_context_t* handle, CONTEXT* rtlcontext,
                         stream->printf ("+0x%x", dwOffsetFromSymbol);
                     }
                 } else {
+                    // bfd
                 }
 
                 bRet = context->mssdk.lpfnSymGetLineFromAddr (process_handle, frame.AddrPC.Offset, &dwOffsetFromSymbol, &Line);
                 if (TRUE == bRet) {
                     stream->printf (" [%s @ %lu]", Line.FileName, Line.LineNumber);
                 } else {
+                    // bfd
                 }
             }
 
