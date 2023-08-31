@@ -18,8 +18,8 @@ namespace hotplace {
 namespace io {
 
 enum trace_option_t {
-    trace_bt = 1,
-    trace_except = 2,
+    trace_bt        = 1,
+    trace_except    = 2,
 };
 uint32 set_trace_option (uint32 option);
 uint32 get_trace_option ();

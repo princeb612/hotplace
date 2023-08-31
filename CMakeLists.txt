@@ -59,7 +59,7 @@ endif ()
 if (UNIX)
 set (PROJECT_SDK_PLATFORM_DEPENDENCIES dl pthread crypto ssl jansson z)
 elseif (WIN32)
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z bfd)
+set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z)
 endif ()
 if (SUPPORT_ODBC)
 # yum install unixodbc-devel

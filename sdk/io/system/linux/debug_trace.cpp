@@ -22,6 +22,7 @@ namespace io {
 return_t trace (return_t errorcode)
 {
     return_t ret = errorcode_t::success;
+
     if (errorcode_t::success != errorcode) {
         uint32 option = get_trace_option ();
         if (trace_option_t::trace_bt & option) {

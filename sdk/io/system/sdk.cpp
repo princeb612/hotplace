@@ -18,6 +18,7 @@ static uint32 _trace_option = 0;
 uint32 set_trace_option (uint32 option)
 {
     uint32 old_option = _trace_option;
+
     _trace_option = option;
 
     if (trace_option_t::trace_except & old_option) {
