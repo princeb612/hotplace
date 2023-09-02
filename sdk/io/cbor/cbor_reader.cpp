@@ -51,9 +51,11 @@ return_t cbor_reader::close (cbor_reader_context_t* handle)
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
         if (handle->root) {
             handle->root->release ();
         }
+
         delete handle;
     }
     __finally2
@@ -195,19 +197,6 @@ return_t cbor_reader::parse (cbor_reader_context_t* handle, binary_t const& expr
                 }
             }
 
-#if 0
-            if (0 == (cbor_flag_t::cbor_indef & flags)) {
-                switch (lead_type) {
-                    case cbor_major_t::cbor_major_bstr:
-                    case cbor_major_t::cbor_major_tstr:
-                        i += value;
-                        break;
-                    default:
-                        break;
-                }
-            }
-#endif
-
             handle->tag_value = 0;
             handle->tag_flag = false;
         }
@@ -231,22 +220,26 @@ return_t cbor_reader::push (cbor_reader_context_t* handle, uint8 type, int128 da
         }
 
         if (cbor_major_t::cbor_major_uint == type) {
-            cbor_data* temp = new cbor_data (data);
+            cbor_data* temp = nullptr;
+            __try_new_catch (temp, new cbor_data (data), ret, __leave2);
             temp->tag (handle->tag_flag, (cbor_tag_t) handle->tag_value);
             insert (handle, temp);
         } else if (cbor_major_t::cbor_major_nint == type) {
-            cbor_data* temp = new cbor_data (data);
+            cbor_data* temp = nullptr;
+            __try_new_catch (temp, new cbor_data (data), ret, __leave2);
             temp->tag (handle->tag_flag, (cbor_tag_t) handle->tag_value);
             insert (handle, temp);
         } else if (cbor_major_t::cbor_major_array == type) {
-            cbor_array* temp = new cbor_array (flags);
+            cbor_array* temp = nullptr;
+            __try_new_catch (temp, new cbor_array (flags), ret, __leave2);
             temp->tag (handle->tag_flag, (cbor_tag_t) handle->tag_value);
             if (0 == flags) {
                 temp->reserve (data);
             }
             insert (handle, temp);
         } else if (cbor_major_t::cbor_major_map == type) {
-            cbor_map* temp = new cbor_map (flags);
+            cbor_map* temp = nullptr;
+            __try_new_catch (temp, new cbor_map (flags), ret, __leave2);
             temp->tag (handle->tag_flag, (cbor_tag_t) handle->tag_value);
             if (0 == flags) {
                 temp->reserve (data);
@@ -254,7 +247,8 @@ return_t cbor_reader::push (cbor_reader_context_t* handle, uint8 type, int128 da
             insert (handle, temp);
         } else if (cbor_major_t::cbor_major_tag == type) {
         } else if (cbor_major_t::cbor_major_simple == type) {
-            cbor_simple* temp = new cbor_simple (data);
+            cbor_simple* temp = nullptr;
+            __try_new_catch (temp, new cbor_simple (data), ret, __leave2);
             temp->tag (handle->tag_flag, (cbor_tag_t) handle->tag_value);
             insert (handle, temp);
         }
@@ -279,10 +273,12 @@ return_t cbor_reader::push (cbor_reader_context_t* handle, uint8 type, const cha
 
         if (cbor_major_t::cbor_major_tstr == type) {
             if (cbor_flag_t::cbor_indef & flags) {
-                cbor_tstrings* temp = new cbor_tstrings ();
+                cbor_tstrings* temp = nullptr;
+                __try_new_catch (temp, new cbor_tstrings (), ret, __leave2);
                 insert (handle, temp);
             } else {
-                cbor_data* temp = new cbor_data (data, size);
+                cbor_data* temp = nullptr;
+                __try_new_catch (temp, new cbor_data (data, size), ret, __leave2);
                 temp->tag (handle->tag_flag, (cbor_tag_t) handle->tag_value);
                 insert (handle, temp);
             }
@@ -308,10 +304,12 @@ return_t cbor_reader::push (cbor_reader_context_t* handle, uint8 type, const byt
 
         if (cbor_major_t::cbor_major_bstr == type) {
             if (cbor_flag_t::cbor_indef & flags) {
-                cbor_bstrings* temp = new cbor_bstrings ();
+                cbor_bstrings* temp = nullptr;
+                __try_new_catch (temp, new cbor_bstrings (), ret, __leave2);
                 insert (handle, temp);
             } else {
-                cbor_data* temp = new cbor_data (data, size);
+                cbor_data* temp = nullptr;
+                __try_new_catch (temp, new cbor_data (data, size), ret, __leave2);
                 temp->tag (handle->tag_flag, (cbor_tag_t) handle->tag_value);
                 insert (handle, temp);
             }
@@ -336,7 +334,8 @@ return_t cbor_reader::push (cbor_reader_context_t* handle, uint8 type, float dat
         }
 
         if (cbor_major_t::cbor_major_float == type) {
-            cbor_data* temp = new cbor_data (data);
+            cbor_data* temp = nullptr;
+            __try_new_catch (temp, new cbor_data (data), ret, __leave2);
             temp->tag (handle->tag_flag, (cbor_tag_t) handle->tag_value);
             insert (handle, temp);
         }
@@ -360,7 +359,8 @@ return_t cbor_reader::push (cbor_reader_context_t* handle, uint8 type, double da
         }
 
         if (cbor_major_t::cbor_major_float == type) {
-            cbor_data* temp = new cbor_data (data);
+            cbor_data* temp = nullptr;
+            __try_new_catch (temp, new cbor_data (data), ret, __leave2);
             temp->tag (handle->tag_flag, (cbor_tag_t) handle->tag_value);
             insert (handle, temp);
         }

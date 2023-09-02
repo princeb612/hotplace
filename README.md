@@ -64,6 +64,7 @@
 
  * RFC 4648 The Base16, Base32, and Base64 Data Encodings
    * sdk/io/basic/
+   * test/encode/
  * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
  * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
    * sdk/crypto/basic/

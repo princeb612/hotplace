@@ -20,7 +20,6 @@ test_case _test_case;
 int simple_instance1_dtor = 0;
 int simple_instance2_dtor = 0;
 
-
 class simple_instance1
 {
 public:

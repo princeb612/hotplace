@@ -75,19 +75,34 @@ void cbor_simple::accept (cbor_visitor* v)
 
 void cbor_simple::represent (stream_t* s)
 {
+/* "false" */
+#define DECLARE_STRING_FALSE char STRING_FALSE[] = { 'f', 'a', 'l', 's', 'e', 0, \
+};
+/* "true" */
+#define DECLARE_STRING_TRUE char STRING_TRUE[] = { 't', 'r', 'u', 'e', 0, };
+/* "null" */
+#define DECLARE_STRING_NULL char STRING_NULL[] = { 'n', 'u', 'l', 'l', 0, };
+/* "undefined" */
+#define DECLARE_STRING_UNDEFINED char STRING_UNDEFINED[] = { 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', 0, };
+
+    DECLARE_STRING_FALSE;
+    DECLARE_STRING_TRUE;
+    DECLARE_STRING_NULL;
+    DECLARE_STRING_UNDEFINED;
+
     if (s) {
         switch (_value) {
             case cbor_simple_t::cbor_simple_false:
-                s->printf ("false");
+                s->printf (STRING_FALSE);
                 break;
             case cbor_simple_t::cbor_simple_true:
-                s->printf ("true");
+                s->printf (STRING_TRUE);
                 break;
             case cbor_simple_t::cbor_simple_null:
-                s->printf ("null");
+                s->printf (STRING_NULL);
                 break;
             case cbor_simple_t::cbor_simple_undef:
-                s->printf ("undefined");
+                s->printf (STRING_UNDEFINED);
                 break;
         }
     }

@@ -21,7 +21,7 @@ cbor_object::cbor_object () : _type (cbor_type_t::cbor_type_null), _flags (0), _
 
 cbor_object::cbor_object (cbor_type_t type, uint32 flags) : _type (type), _flags (flags), _tagged (false), _tag (cbor_tag_t (0)), _reserved_size (0)
 {
-    addref ();
+    _shared.make_share (this);
 }
 
 cbor_object::~cbor_object ()

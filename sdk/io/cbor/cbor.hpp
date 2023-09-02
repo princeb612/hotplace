@@ -547,8 +547,9 @@ private:
  *
  *      publisher.publish (root, &diagnostic); // [1,2,3]
  *      publisher.publish (root, &bin);
- *      // std::string concise = bin2hex (bin);
- *      // 83010203
+ *
+ *      std::string concise;
+ *      base16_encode (bin, concise);   // base16 "83010203"
  */
 class cbor_publisher
 {

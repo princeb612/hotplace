@@ -32,6 +32,7 @@ add_subdirectory (httpserver)
 
 # etc
 add_subdirectory (incubator)
+add_subdirectory (varstring)
 
 # platform
 if (UNIX)
