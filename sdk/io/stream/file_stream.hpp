@@ -120,6 +120,14 @@ public:
      * @remarks
      * @sa
      */
+    virtual return_t clear ();
+    /**
+     * @brief
+     * @param
+     * @return
+     * @remarks
+     * @sa
+     */
     virtual return_t flush ();
     /**
      * @brief

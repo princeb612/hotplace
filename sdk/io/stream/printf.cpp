@@ -58,7 +58,7 @@ return_t sprintf (stream_t* stream, const char* fmt, valist va)
             __leave2;
         }
 
-        stream->flush ();
+        stream->clear ();
 
         if (nullptr == fmt) {
             ret = errorcode_t::invalid_parameter;
@@ -207,7 +207,10 @@ return_t vtprintf (stream_t* stream, variant_t vt)
                 stream->printf ("%s", vt.data.p);
                 break;
             case TYPE_STRING:
-                stream->printf ("%s", vt.data.str);
+                stream->printf ("\"%s\"", vt.data.str);
+                break;
+            case TYPE_NSTRING:
+                stream->printf ("\"%.*s\"", vt.data.nstr32.size, vt.data.nstr32.data);
                 break;
             case TYPE_BINARY:
             {

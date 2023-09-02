@@ -170,7 +170,7 @@ uint32 hmac_otp::get (otp_context_t* handle, uint32& code)
 
 uint32 hmac_otp::get (otp_context_t* handle, uint32 counter, uint32& code)
 {
-    uint64 c = htonll (counter);
+    uint64 c = hton64 (counter);
     binary_t input;
 
     input.resize (sizeof (c));

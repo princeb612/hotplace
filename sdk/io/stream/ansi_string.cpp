@@ -74,9 +74,9 @@ return_t ansi_string::fill (size_t l, char c)
     return ret;
 }
 
-return_t ansi_string::flush ()
+return_t ansi_string::clear ()
 {
-    return _bio.flush (_handle);
+    return _bio.clear (_handle);
 }
 
 return_t ansi_string::printf (const char* buf, ...)
@@ -226,7 +226,7 @@ return_t ansi_string::getline (size_t pos, size_t* brk, ansi_string& line)
 {
     return_t ret = errorcode_t::success;
 
-    line.flush ();
+    line.clear ();
 
     __try2
     {
@@ -255,7 +255,7 @@ return_t ansi_string::getline (size_t pos, size_t* brk, ansi_string& line)
 
 ansi_string& ansi_string::operator = (const char* buf)
 {
-    flush ();
+    clear ();
     if (buf) {
         printf ("%s", buf);
     }
@@ -265,7 +265,7 @@ ansi_string& ansi_string::operator = (const char* buf)
 #if defined _WIN32 || defined _WIN64
 ansi_string& ansi_string::operator = (const wchar_t* buf)
 {
-    flush ();
+    clear ();
     if (nullptr != buf) {
         W2A (this, buf);
     }
@@ -275,56 +275,56 @@ ansi_string& ansi_string::operator = (const wchar_t* buf)
 
 ansi_string& ansi_string::operator = (char buf)
 {
-    flush ();
+    clear ();
     printf ("%c", buf);
     return *this;
 }
 
 ansi_string& ansi_string::operator = (byte_t buf)
 {
-    flush ();
+    clear ();
     printf ("%c", buf);
     return *this;
 }
 
 ansi_string& ansi_string::operator = (uint16 buf)
 {
-    flush ();
+    clear ();
     printf ("%i", buf);
     return *this;
 }
 
 ansi_string& ansi_string::operator = (uint32 buf)
 {
-    flush ();
+    clear ();
     printf ("%i", buf);
     return *this;
 }
 
 ansi_string& ansi_string::operator = (uint64 buf)
 {
-    flush ();
+    clear ();
     printf ("%I64i", buf);
     return *this;
 }
 
 ansi_string& ansi_string::operator = (float buf)
 {
-    flush ();
+    clear ();
     printf ("%f", buf);
     return *this;
 }
 
 ansi_string& ansi_string::operator = (double buf)
 {
-    flush ();
+    clear ();
     printf ("%l", buf);
     return *this;
 }
 
 ansi_string& ansi_string::operator = (ansi_string& buf)
 {
-    flush ();
+    clear ();
     write (buf.data (), buf.size ());
     return *this;
 }
@@ -464,7 +464,7 @@ ansi_string & ansi_string::operator << (ansi_string & buf)
 #if defined __SIZEOF_INT128__
 ansi_string& ansi_string::operator = (uint128 buf)
 {
-    flush ();
+    clear ();
     printf ("%I128i", buf);
     return *this;
 }

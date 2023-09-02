@@ -33,7 +33,7 @@ public:
     virtual uint64 size ();
     virtual return_t write (void* data, size_t size);
     virtual return_t fill (size_t l, char c);
-    virtual return_t flush ();
+    virtual return_t clear ();
 
     virtual return_t printf (const char* buf, ...);
     virtual return_t vprintf (const char* buf, va_list ap);

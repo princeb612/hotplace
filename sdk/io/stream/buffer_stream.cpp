@@ -87,9 +87,9 @@ return_t buffer_stream::fill (size_t l, char c)
     return ret;
 }
 
-return_t buffer_stream::flush ()
+return_t buffer_stream::clear ()
 {
-    return _bio.flush (_handle);
+    return _bio.clear (_handle);
 }
 
 return_t buffer_stream::printf (const char* buf, ...)
@@ -128,7 +128,7 @@ return_t buffer_stream::vprintf (const wchar_t* buf, va_list ap)
 
 buffer_stream& buffer_stream::operator = (buffer_stream obj)
 {
-    flush ();
+    clear ();
     write (obj.data (), obj.size ());
     return *this;
 }

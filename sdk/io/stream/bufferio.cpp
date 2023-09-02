@@ -100,7 +100,7 @@ return_t bufferio::close (bufferio_context_t* handle)
             __leave2;
         }
 
-        flush (handle);
+        clear (handle);
 
         handle->signature = 0;
 
@@ -243,7 +243,7 @@ return_t bufferio::write (bufferio_context_t* handle, const void* data, size_t d
     return ret;
 }
 
-return_t bufferio::flush (bufferio_context_t* handle)
+return_t bufferio::clear (bufferio_context_t* handle)
 {
     return_t ret = errorcode_t::success;
 

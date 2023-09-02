@@ -512,11 +512,11 @@ LONG __stdcall exception_handler (struct _EXCEPTION_POINTERS * exception_ptr)
         /* exception record call stack */
         ansi_string stream;
         debug_trace trace;
-        HANDLE thread_handle = NULL;
+        HANDLE thread_handle = nullptr;
         BOOL bRet = TRUE;
         bRet = DuplicateHandle (GetCurrentProcess (), GetCurrentThread (), GetCurrentProcess (), &thread_handle, 0, false, DUPLICATE_SAME_ACCESS);
         if (TRUE == bRet) {
-            debug_trace_context_t* handle = NULL;
+            debug_trace_context_t* handle = nullptr;
             trace.open (&handle);
             trace.trace (handle, exception_ptr, &stream);
             trace.close (handle);

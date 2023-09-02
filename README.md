@@ -62,32 +62,59 @@
 
 ## implemented
 
- * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
  * RFC 4648 The Base16, Base32, and Base64 Data Encodings
+   * sdk/io/basic/
+ * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
  * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
+   * sdk/crypto/basic/
+   * test/crypto/
  * RFC 7049 Concise Binary Object Representation (CBOR)
+ * RFC 8949 Concise Binary Object Representation (CBOR)
+   * sdk/io/cbor/
+   * test/cbor/
+ * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
  * RFC 7515 JSON Web Signature (JWS)
  * RFC 7516 JSON Web Encryption (JWE)
  * RFC 7517 JSON Web Key (JWK)
  * RFC 7518 JSON Web Algorithms (JWA)
  * RFC 7520 Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)
  * RFC 8037 CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JSON Object Signing and Encryption (JOSE)
+   * sdk/crypto/jose/
+   * test/jose/
 
-## references
+## preparing
 
- * RFC 1341 MIME  (Multipurpose Internet Mail Extensions)
- * RFC 1521 MIME (Multipurpose Internet Mail Extensions) Part One:
-                      Mechanisms for Specifying and Describing
-                      the Format of Internet Message Bodies
- * RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0
+
+## appliying
+
+ * RFC 2144 The CAST-128 Encryption Algorithm (May 1997)
+ * RFC 2612 The CAST-256 Encryption Algorithm (June 1999)
+ * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm (September 2002)
+ * RFC 5649 Advanced Encryption Starndard (AES) Key Wrap with Padding Algorithm (September 2009)
+ * RFC 5794 A Description of the ARIA Encryption Algorithm (March 2010)
+   * sdk/crypto/basic/
  * RFC 1951 : DEFLATE Compressed Data Format Specification version 1.3
  * RFC 1952 : GZIP file format specification version 4.3
+ * RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0
  * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
- * RFC 2144 The CAST-128 Encryption Algorithm
  * RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
+   * test/httpserver/
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
+   * test/crypto/
  * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
+   * test/crypto/
+ * RFC 7638 3.1.  Example JWK Thumbprint Computation
+   * test/jose/
  * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+ * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
+   * sdk/net/tls/x509.cpp
+
+## not applied
+
+  * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+  * RFC 2069 An Extension to HTTP : Digest Access Authentication
+  * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+    * merlin project
 
 ## personal projects
 

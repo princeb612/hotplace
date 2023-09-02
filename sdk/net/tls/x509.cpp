@@ -49,6 +49,7 @@ return_t x509_open_simple (SSL_CTX** context)
 #endif
 #endif
         /*
+         * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
          * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
          */
         option_flags = (SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1); /* TLS 1.2 and above */

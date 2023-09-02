@@ -104,6 +104,90 @@ void test_dumpmemory ()
     _test_case.test (ret, __FUNCTION__, "dump blank");
 }
 
+void test_i128 ()
+{
+    _test_case.begin ("int128");
+    ansi_string stream;
+
+    // int8 — [-128 : 127]
+    // int16 — [-32768 : 32767]
+    // int32 — [-2147483648 : 2147483647]
+    // int64 — [-9223372036854775808 : 9223372036854775807]
+    // int128 — [-170141183460469231731687303715884105728 : 170141183460469231731687303715884105727]
+    // int256 — [-57896044618658097711785492504343953926634992332820282019728792003956564819968 : 57896044618658097711785492504343953926634992332820282019728792003956564819967]
+
+    // uint8 — [0 : 255]
+    // uint16 — [0 : 65535]
+    // uint32 — [0 : 4294967295]
+    // uint64 — [0 : 18446744073709551615]
+    // uint128 — [0 : 340282366920938463463374607431768211455]
+    // uint256 — [0 : 115792089237316195423570985008687907853269984665640564039457584007913129639935]
+
+    stream.printf ("%I128i", (int128) ((int128) 0x7fffffff << 32) + 0xffffffff); // int64 9223372036854775807
+    _test_case.assert (stream == "9223372036854775807", __FUNCTION__, "signed int64 max %s", stream.c_str ());
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << stream.c_str () << std::endl;
+        stream.clear ();
+    }
+
+    stream.printf ("%I128i", (int128) ((int128) 0x7fffffffffffffff << 64) + 0xffffffffffffffff); // int128 170141183460469231731687303715884105727
+    _test_case.assert (stream == "170141183460469231731687303715884105727", __FUNCTION__, "signed int128 max %s", stream.c_str ());
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << stream.c_str () << std::endl;
+        stream.clear ();
+    }
+
+    stream.printf ("%I128u", (uint128) atoi128 ("170141183460469231731687303715884105727")); // 170141183460469231731687303715884105727
+    _test_case.assert (stream == "170141183460469231731687303715884105727", __FUNCTION__, "signed int128 max %s", stream.c_str ());
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << stream.c_str () << std::endl;
+        stream.clear ();
+    }
+
+    stream.printf ("%I128u", (uint128) ((uint128) 0xffffffffffffffff << 64) + 0xffffffffffffffff); // 340282366920938463463374607431768211455
+    _test_case.assert (stream == "340282366920938463463374607431768211455", __FUNCTION__, "unsigned int128 max %s", stream.c_str ());
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << stream.c_str () << std::endl;
+        stream.clear ();
+    }
+
+    stream.printf ("%I128u", (uint128) - 1); // 340282366920938463463374607431768211455
+    _test_case.assert (stream == "340282366920938463463374607431768211455", __FUNCTION__, "unsigned int128 max %s", stream.c_str ());
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << stream.c_str () << std::endl;
+        stream.clear ();
+    }
+
+    stream.printf ("%I128u", (uint128) atou128 ("340282366920938463463374607431768211455")); // 340282366920938463463374607431768211455
+    _test_case.assert (stream == "340282366920938463463374607431768211455", __FUNCTION__, "unsigned int128 max %s", stream.c_str ());
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << stream.c_str () << std::endl;
+        stream.clear ();
+    }
+
+    stream.printf ("%I128i", (int128) ((int128) 0x8000000000000000 << 64) + 0x0000000000000000); // -170141183460469231731687303715884105728
+    _test_case.assert (stream == "-170141183460469231731687303715884105728", __FUNCTION__, "signed int128 min %s", stream.c_str ());
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << stream.c_str () << std::endl;
+        stream.clear ();
+    }
+
+    stream.printf ("%I128i", atoi128 ("-170141183460469231731687303715884105728")); // -170141183460469231731687303715884105728
+    _test_case.assert (stream == "-170141183460469231731687303715884105728", __FUNCTION__, "signed int128 min %s", stream.c_str ());
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        std::cout << stream.c_str () << std::endl;
+        stream.clear ();
+    }
+}
+
 void test_sprintf_routine (const valist& va, const char* fmt, const char* expect)
 {
     buffer_stream bs;
@@ -152,7 +236,7 @@ void test_vprintf ()
     {
         test_case_notimecheck notimecheck (_test_case);
         std::cout << str.c_str () << std::endl;
-        str.flush ();
+        str.clear ();
     }
 
     _test_case.test (ret, __FUNCTION__, "make_list(Ts... args) and sprintf");
@@ -163,7 +247,7 @@ void test_vprintf ()
     {
         test_case_notimecheck notimecheck (_test_case);
         std::cout << str.c_str () << std::endl;
-        str.flush ();
+        str.clear ();
     }
 
     _test_case.test (ret, __FUNCTION__, "sprintf");
@@ -173,7 +257,7 @@ void test_vprintf ()
     {
         test_case_notimecheck notimecheck (_test_case);
         std::cout << str.c_str () << std::endl;
-        str.flush ();
+        str.clear ();
     }
 
     _test_case.test (ret, __FUNCTION__, "vprintf (Ts... args)");
@@ -193,11 +277,11 @@ void test_stream ()
 
     sprintf (&bs, "value1={1} value2={2}", va); // value1=1 value2=test string
     std::cout << bs.c_str () << std::endl;
-    bs.flush ();
+    bs.clear ();
 
     sprintf (&bs, "value1={2} value2={1}", va); // value1=test string value2=1
     std::cout << bs.c_str () << std::endl;
-    bs.flush ();
+    bs.clear ();
 
     sprintf (&bs, "value1={2} value2={1} value3={3}", va); // value1=test string value2=1 value3={3}
     std::cout << bs.c_str () << std::endl;
@@ -257,6 +341,7 @@ int main ()
 {
     test_consolecolor ();
     test_dumpmemory ();
+    test_i128 ();
     test_sprintf ();
     test_vprintf ();
     test_stream ();

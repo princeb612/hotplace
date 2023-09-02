@@ -11,6 +11,7 @@
 #include <hotplace/sdk/io/stream/stream.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/io/system/sdk.hpp>
+#include <hotplace/sdk/io/system/linux/debug_trace.hpp>
 #include <cxxabi.h>
 #include <dlfcn.h>      // dladdr
 #include <execinfo.h>   // backtrace
@@ -49,7 +50,7 @@ return_t debug_trace (stream_t* stream)
         callstack.resize (256);
         int nptrs = backtrace (&callstack[0], callstack.size ());
         char** symbols = backtrace_symbols (&callstack[0], nptrs);
-        if (NULL != symbols) {
+        if (nullptr != symbols) {
             for (int i = 0; i < nptrs; i++) {
                 stream->printf ("#%d 0x%08x ", i, callstack[i]);
 
@@ -58,10 +59,10 @@ return_t debug_trace (stream_t* stream)
                 if (0 != res) {
                     size_t length = 0;
                     int status = 0;
-                    char* function_name = abi::__cxa_demangle (info.dli_sname, NULL, &length, &status);
+                    char* function_name = abi::__cxa_demangle (info.dli_sname, nullptr, &length, &status);
                     const char* disp = function_name ? function_name : info.dli_sname;
 
-                    if (NULL == disp) {
+                    if (nullptr == disp) {
                         stream->printf ("%s ", symbols[i]);
                     } else {
                         stream->printf ("%s!%s + 0x%x ", info.dli_fname, disp, (unsigned long) callstack[i] - (unsigned long) info.dli_saddr);

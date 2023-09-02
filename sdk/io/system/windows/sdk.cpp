@@ -25,15 +25,15 @@ return_t com_runtime_startup (uint32 init)
 #else
     ret = CoInitialize (0);
 #endif
-    ret = CoInitializeSecurity (NULL,
+    ret = CoInitializeSecurity (nullptr,
                                 -1,                             // COM negotiates service
-                                NULL,                           // Authentication services
-                                NULL,
+                                nullptr,                        // Authentication services
+                                nullptr,
                                 RPC_C_AUTHN_LEVEL_DEFAULT,      // Default authentication
                                 RPC_C_IMP_LEVEL_IMPERSONATE,    // Default Impersonation
-                                NULL,                           // Authentication info
+                                nullptr,                        // Authentication info
                                 EOAC_NONE,                      // Additional capabilities
-                                NULL);
+                                nullptr);
     return ret;
 }
 
@@ -331,16 +331,16 @@ return_t is_process_wow64 (HANDLE hprocess, BOOL* result)
 
 return_t open_process_token (PHANDLE process_token, HANDLE process_handle, DWORD access)
 {
-    return_t ret = ERROR_SUCCESS;
-    HMODULE advapi32_handle = NULL;
-    OPENPROCESSTOKEN lpfnOpenProcessToken = NULL;
+    return_t ret = errorcode_t::success;
+    HMODULE advapi32_handle = nullptr;
+    OPENPROCESSTOKEN lpfnOpenProcessToken = nullptr;
 
     __try2
     {
         DECLARE_DLLNAME_ADVAPI32;
 
-        ret = load_library (&advapi32_handle, DLLNAME_ADVAPI32, loadlibrary_path_t::system_path, NULL);
-        if (ERROR_SUCCESS != ret) {
+        ret = load_library (&advapi32_handle, DLLNAME_ADVAPI32, loadlibrary_path_t::system_path, nullptr);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -362,11 +362,11 @@ return_t open_process_token (PHANDLE process_token, HANDLE process_handle, DWORD
     }
     __finally2
     {
-        if (NULL != advapi32_handle) {
+        if (nullptr != advapi32_handle) {
             FreeLibrary (advapi32_handle);
         }
 
-        if (ERROR_SUCCESS != ret) {
+        if (errorcode_t::success != ret) {
             // do nothing
         }
     }

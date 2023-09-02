@@ -37,7 +37,8 @@ return_t base16_encode (binary_t source, std::string& outpart);
 std::string base16_encode (binary_t source);
 return_t base16_decode (const char* source, size_t size, binary_t& outpart);
 return_t base16_decode (std::string source, binary_t& outpart);
-binary_t base64_decode (std::string source);
+binary_t base16_decode (const char* source);
+binary_t base16_decode (std::string source);
 
 }
 }  // namespace

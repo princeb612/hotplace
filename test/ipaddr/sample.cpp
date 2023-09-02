@@ -108,7 +108,7 @@ void test2 ()
 
     stream.printf ("%08x\n", ipv4);
     printf ("%s", stream.c_str ());
-    stream.flush ();
+    stream.clear ();
 
     uint32 mask = 0;
     uint32 i = 0;
@@ -135,7 +135,7 @@ void test3 ()
 
     stream.printf ("%I128x\n", ipv6);
     printf ("%s", stream.c_str ());
-    stream.flush ();
+    stream.clear ();
 
     ipaddr_t mask = 0;
     //uint cidr = 0;

@@ -74,9 +74,9 @@ return_t wide_string::fill (size_t l, char c)
     return ret;
 }
 
-return_t wide_string::flush ()
+return_t wide_string::clear ()
 {
-    return _bio.flush (_handle);
+    return _bio.clear (_handle);
 }
 
 return_t wide_string::printf (const char* buf, ...)
@@ -227,7 +227,7 @@ return_t wide_string::getline (size_t pos, size_t* brk, wide_string& line)
 {
     return_t ret = errorcode_t::success;
 
-    line.flush ();
+    line.clear ();
 
     __try2
     {
@@ -257,7 +257,7 @@ return_t wide_string::getline (size_t pos, size_t* brk, wide_string& line)
 
 wide_string& wide_string::operator = (const char* buf)
 {
-    flush ();
+    clear ();
     if (nullptr != buf) {
         A2W (this, buf);
     }
@@ -266,7 +266,7 @@ wide_string& wide_string::operator = (const char* buf)
 
 wide_string& wide_string::operator = (const wchar_t* buf)
 {
-    flush ();
+    clear ();
     if (buf) {
         printf (L"%s", buf);
     }
@@ -275,35 +275,35 @@ wide_string& wide_string::operator = (const wchar_t* buf)
 
 wide_string& wide_string::operator = (wchar_t buf)
 {
-    flush ();
+    clear ();
     printf (L"%c", buf);
     return *this;
 }
 
 wide_string& wide_string::operator = (byte_t buf)
 {
-    flush ();
+    clear ();
     printf (L"%c", buf);
     return *this;
 }
 
 wide_string& wide_string::operator = (uint16 buf)
 {
-    flush ();
+    clear ();
     printf (L"%i", buf);
     return *this;
 }
 
 wide_string& wide_string::operator = (uint32 buf)
 {
-    flush ();
+    clear ();
     printf (L"%i", buf);
     return *this;
 }
 
 wide_string& wide_string::operator = (uint64 buf)
 {
-    flush ();
+    clear ();
     printf (L"%I64i", buf);
     return *this;
 }
@@ -311,7 +311,7 @@ wide_string& wide_string::operator = (uint64 buf)
 #if defined __SIZEOF_INT128__
 wide_string& wide_string::operator = (uint128 buf)
 {
-    flush ();
+    clear ();
     printf (L"%I128i", buf);
     return *this;
 }
@@ -319,21 +319,21 @@ wide_string& wide_string::operator = (uint128 buf)
 
 wide_string& wide_string::operator = (float buf)
 {
-    flush ();
+    clear ();
     printf (L"%f", buf);
     return *this;
 }
 
 wide_string& wide_string::operator = (double buf)
 {
-    flush ();
+    clear ();
     printf (L"%l", buf);
     return *this;
 }
 
 wide_string& wide_string::operator = (wide_string& buf)
 {
-    flush ();
+    clear ();
     write (buf.data (), buf.size ());
     return *this;
 }

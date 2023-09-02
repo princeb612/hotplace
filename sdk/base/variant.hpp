@@ -71,6 +71,8 @@ enum vartype_t {
     TYPE_BASE64     = 13,
     TYPE_BASE64URL  = 14,
 
+    TYPE_NSTRING    = 15,   ///<< string manipulation wo memory allocation ("abc" from source : "abcdefg" and size : 3)
+
     TYPE_POINTER    = 20,
     TYPE_TCHAR      = 21,
     TYPE_WCHAR      = 22,
@@ -108,6 +110,10 @@ enum vartype_t {
 typedef unsigned char byte_t;
 typedef unsigned int uint;
 
+enum variant_flag_t {
+    flag_free = 1,
+};
+
 typedef struct __variant_t {
     vartype_t type;
     union {
@@ -129,14 +135,19 @@ typedef struct __variant_t {
         //short s;   ushort us;
         void*  p;
         char*  str;
+        struct _nstr32 {
+            uint32 size;
+            char* data;
+        } nstr32;
         struct _bstr32 {
             uint32 size;
             byte_t* data;
         } bstr32;
     } data;
+    uint8 flag;
 } variant_t;
 
-#define variant_init(vt) { vt.type = TYPE_NULL; memset (&vt.data, 0, sizeof (vt.data)); }
+#define variant_init(vt) { vt.type = TYPE_NULL; memset (&vt.data, 0, sizeof (vt.data)); vt.flag = 0; }
 
 #define variant_set_bool(vt, value) { vt.type = TYPE_BOOL; vt.data.b = (value); }
 #define variant_set_int8(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = (value); }
@@ -172,33 +183,39 @@ typedef struct __variant_t {
 
 #define variant_set_pointer(vt, value) { vt.type = TYPE_POINTER; vt.data.p = (void*) (value); }
 #define variant_set_str(vt, value) { vt.type = TYPE_STRING; vt.data.str = (char*) (value); }
+#define variant_set_nstr(vt, value, size) { vt.type = TYPE_NSTRING; vt.data.nstr32.data = (value); vt.data.nstr32.size = (size); }
 #define variant_set_bstr(vt, value, size) { vt.type = TYPE_BINARY; vt.data.bstr32.data = (value); vt.data.bstr32.size = (size); }
 #define variant_set(vt, vttype, value) { vt.type = vttype; vt.data.p = (void*) (value); }
 // strdup
-#define variant_set_str_new(vt, value) { vt.type = TYPE_STRING; vt.data.str = strdup (value); }
+#define variant_set_str_new(vt, value) { vt.type = TYPE_STRING; vt.data.str = strdup (value); vt.flag = variant_flag_t::flag_free; }
 // strndup
-#define variant_set_strn_new(vt, value, len) { vt.type = TYPE_STRING; char* p = (char*) malloc (len + 1); if (p) { strncpy (p, value, len); *(p + len) = 0; }; vt.data.str = p; }
+#define variant_set_strn_new(vt, value, size) { vt.type = TYPE_STRING; char* p = (char*) malloc (size + 1); if (p) { strncpy (p, value, size); *(p + size) = 0; }; vt.data.str = p; vt.flag = variant_flag_t::flag_free; }
 // duplicate
-#define variant_set_bstr_new(vt, value, size) { vt.type = TYPE_BINARY; void* p = malloc (size); if (p) { memcpy (p, value, size); vt.data.bstr32.data = (byte_t*) p; vt.data.bstr32.size = (size); } else { vt.data.bstr32.data = (byte_t*) nullptr; vt.data.bstr32.size = 0; } }
-#define variant_free(vt) \
-    { \
-        switch (vt.type) { \
-            case TYPE_STRING: \
-            case TYPE_POINTER: \
-                if (vt.data.str) { \
-                    free (vt.data.str); \
-                } \
-                break; \
-            case TYPE_BINARY: \
-                if (vt.data.bstr32.data) { \
-                    free (vt.data.bstr32.data); \
-                } \
-                break; \
-            default: \
-                break; \
-        } \
-        variant_init (vt); \
+#define variant_set_bstr_new(vt, value, size) { vt.type = TYPE_BINARY; void* p = malloc (size); if (p) { memcpy (p, value, size); vt.data.bstr32.data = (byte_t*) p; vt.data.bstr32.size = (size); } else { vt.data.bstr32.data = (byte_t*) nullptr; vt.data.bstr32.size = 0; }; vt.flag = variant_flag_t::flag_free; }
+// strndup
+#define variant_set_nstr_new(vt, value, size) { vt.type = TYPE_NSTRING; char* p = (char*) malloc (size + 1); if (p) { strncpy (p, value, size); *(p + size) = 0; }; vt.nstr.data = p; vt.data.nstr32.size = (size); vt.flag = variant_flag_t::flag_free; }
+
+static inline void variant_free (variant_t& vt)
+{
+    if (variant_flag_t::flag_free == vt.flag) {
+        switch (vt.type) {
+            case TYPE_STRING:
+            case TYPE_POINTER:
+                if (vt.data.str) {
+                    free (vt.data.str);
+                }
+                break;
+            case TYPE_BINARY:
+                if (vt.data.bstr32.data) {
+                    free (vt.data.bstr32.data);
+                }
+                break;
+            default:
+                break;
+        }
     }
+    variant_init (vt);
+}
 
 } // namespace
 

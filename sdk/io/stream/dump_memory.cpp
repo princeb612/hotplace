@@ -21,7 +21,7 @@ return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_t* st
     __try2
     {
         if (stream_object) {
-            stream_object->flush ();
+            stream_object->clear ();
         }
 
         if (0 == dump_size) {
@@ -125,6 +125,15 @@ return_t dump_memory (bufferio_context_t* handle, stream_t* stream_object, unsig
         // do nothing
     }
     return ret;
+}
+
+return_t dump_memory (variant_t vt, stream_t* stream_object, unsigned hex_part,
+                      unsigned indent, size_t rebase, int flags)
+{
+    buffer_stream bs;
+
+    vtprintf (&bs, vt);
+    return dump_memory ((byte_t*) bs.c_str (), bs.size (), stream_object, hex_part, indent, rebase, flags);
 }
 
 }

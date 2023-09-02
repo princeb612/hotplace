@@ -38,7 +38,7 @@ void test_case::begin (const char* case_name, ...)
         _current_case_name = stream.c_str ();
 
         /* "test case" */
-        stream.flush ();
+        stream.clear ();
         char STRING_TEST_CASE[] = { '[', 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', ']', ' ', 0, };
         stream  << _color.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::magenta)
                 << STRING_TEST_CASE
@@ -248,6 +248,7 @@ void test_case::test (return_t result, const char* test_function, const char* me
             color = console_color_t::yellow;
             _total._count_low_security++;
         } else {
+            color = console_color_t::red;
             _total._count_fail++;
         }
 

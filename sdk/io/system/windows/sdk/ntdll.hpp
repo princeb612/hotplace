@@ -86,13 +86,13 @@ typedef struct _OBJECT_ATTRIBUTES {
 #endif      // Visual Studio 6.0
 
 #ifndef __MINGW32__
-#define InitializeObjectAttributes( p, n, a, r, s ) {   \
-        (p)->Length = sizeof ( OBJECT_ATTRIBUTES );          \
-        (p)->RootDirectory = r;                             \
-        (p)->Attributes = a;                                \
-        (p)->ObjectName = n;                                \
-        (p)->SecurityDescriptor = s;                        \
-        (p)->SecurityQualityOfService = NULL;               \
+#define InitializeObjectAttributes( p, n, a, r, s ) { \
+        (p)->Length = sizeof ( OBJECT_ATTRIBUTES );   \
+        (p)->RootDirectory = r;                       \
+        (p)->Attributes = a;                          \
+        (p)->ObjectName = n;                          \
+        (p)->SecurityDescriptor = s;                  \
+        (p)->SecurityQualityOfService = nullptr;      \
 }
 #endif
 

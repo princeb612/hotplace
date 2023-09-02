@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace io {
 
-uint64 htonll (uint64 value)
+uint64 hton64 (uint64 value)
 {
     uint64 ret_value = 0;
 
@@ -32,54 +32,20 @@ uint64 htonll (uint64 value)
     return ret_value;
 }
 
-uint64 ntohll (uint64 value)
+uint64 ntoh64 (uint64 value)
 {
-    return htonll (value); /* wo htonl operations */
+    return hton64 (value); /* wo htonl operations */
 }
 
 #if defined __SIZEOF_INT128__
 int128 atoi128 (std::string const & in)
 {
-    return_t ret = errorcode_t::success;
-    int128 res = 0;
+    return t_atoi<int128> (in);
+}
 
-    __try2
-    {
-        size_t i = 0;
-        int sign = 0;
-
-        if (in[i] == '-') {
-            ++i;
-            sign = -1;
-        }
-
-        if (in[i] == '+') {
-            ++i;
-        }
-
-        for (; i < in.size (); ++i) {
-            const char c = in[i];
-            if (not std::isdigit (c)) {
-                ret = errorcode_t::bad_data;
-                break;
-            }
-            res *= 10;
-            res += (c - '0');
-        }
-
-        if (errorcode_t::success != ret) {
-            res = 0;
-            __leave2;
-        }
-
-        if (sign < 0) {
-            res = -res;
-        }
-    }
-    __finally2
-    {
-    }
-    return res;
+uint128 atou128 (std::string const & in)
+{
+    return t_atoi<uint128> (in);
 }
 
 uint128 hton128 (uint128 value)

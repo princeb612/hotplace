@@ -89,8 +89,8 @@ void test_bufferio ()
     _test_case.test (ret, __FUNCTION__, "write");
     dump (handle);
 
-    ret = bio.flush (handle);
-    _test_case.test (ret, __FUNCTION__, "flush");
+    ret = bio.clear (handle);
+    _test_case.test (ret, __FUNCTION__, "clear");
     dump (handle);
 
     // 0123456789a
@@ -136,8 +136,8 @@ void test_bufferio ()
     printf ("find_not_last_of %zi\n", pos);
     _test_case.assert ((10 == pos), __FUNCTION__, "find_not_last_of -> %i", pos);
 
-    ret = bio.flush (handle);
-    _test_case.test (ret, __FUNCTION__, "flush");
+    ret = bio.clear (handle);
+    _test_case.test (ret, __FUNCTION__, "clear");
 
     ret = bio.printf (handle, "sample sample sample");
     _test_case.test (ret, __FUNCTION__, "printf");

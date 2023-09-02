@@ -15,14 +15,13 @@
 namespace hotplace {
 namespace io {
 
-/* DWORD AdjustTokenPrivilegesHelper(HANDLE hToken, LPCTSTR privilege, DWORD attrib, DWORD* old_attrib) */
 #if defined _MBCS || defined MBCS
 return_t adjust_privileges (HANDLE hToken, LPCSTR privilege, DWORD attrib, DWORD* old_attrib)
 #elif defined _UNICODE || defined UNICODE
 return_t adjust_privileges (HANDLE hToken, LPCWSTR privilege, DWORD attrib, DWORD* old_attrib)
 #endif
 {
-    return_t ret = ERROR_SUCCESS;
+    return_t ret = errorcode_t::success;
     TOKEN_PRIVILEGES Token, OldToken;
     LUID luid;
     HMODULE advapi32_handle = nullptr;
@@ -35,7 +34,7 @@ return_t adjust_privileges (HANDLE hToken, LPCWSTR privilege, DWORD attrib, DWOR
         DECLARE_DLLNAME_ADVAPI32;
 
         ret = load_library (&advapi32_handle, DLLNAME_ADVAPI32, loadlibrary_path_t::system_path, nullptr);
-        if (ERROR_SUCCESS != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -78,7 +77,7 @@ return_t adjust_privileges (HANDLE hToken, LPCWSTR privilege, DWORD attrib, DWOR
             FreeLibrary (advapi32_handle);
         }
 
-        if (ERROR_SUCCESS != ret) {
+        if (errorcode_t::success != ret) {
             // do nothing
         }
     }

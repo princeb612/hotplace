@@ -426,6 +426,11 @@ return_t file_stream::read (void* data, uint32 size_data, uint32* size_read)
     return ret;
 }
 
+return_t file_stream::clear ()
+{
+    return errorcode_t::success;
+}
+
 return_t file_stream::flush ()
 {
     if (is_mmapped ()) {

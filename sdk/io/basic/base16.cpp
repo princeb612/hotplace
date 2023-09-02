@@ -93,7 +93,15 @@ return_t base16_decode (std::string source, binary_t& outpart)
     return base16_decode (source.c_str (), source.size (), outpart);
 }
 
-binary_t base64_decode (std::string source)
+binary_t base16_decode (const char* source)
+{
+    binary_t outpart;
+
+    base16_decode (source, strlen (source), outpart);
+    return outpart;
+}
+
+binary_t base16_decode (std::string source)
 {
     binary_t outpart;
 

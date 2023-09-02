@@ -8,7 +8,7 @@
  * Date         Name                Description
  * 2013.05.08   Soo Han, Kim        printf %I64i, %I64u (code.merlin)
  * 2018.06.15   Soo Han, Kim        printf %zi, %zu, %zd (code.grape)
- * 2020.02.06   Soo Han, Kim        printf %I128i, %1284u (code.unicorn)
+ * 2020.02.06   Soo Han, Kim        printf %I128i, %I128u (code.unicorn)
  * 2021.06.29   Soo Han, Kim        printf unicode (code.unicorn)
  *
  * printf license
@@ -433,7 +433,7 @@ int vprintf_runtimew (void *context, CALLBACK_PRINTFW runtime_printf, const wcha
     // 64 bits patched - hush
 #define SARG() \
     (flags & LONGDBL ? va_arg (ap, int64) : \
-     flags&LONGINT ? (int64) va_arg (ap, long) : \
+     flags & LONGINT ? (int64) va_arg (ap, long) : \
      flags & SHORTINT ? (int64) (short) va_arg (ap, int) : \
      (int64) va_arg (ap, int))
 #define UARG() \
@@ -691,6 +691,11 @@ reswitch:
 
                     if ('i' == *fmt) {
                         fmt++;
+                        if ((int128) _ulong < 0) {
+                            _ulong = -(int128) _ulong;
+                            sign = _T ('-');
+                        }
+                        base = DEC;
                         goto number;
                     } else if ('u' == *fmt) {
                         fmt++;

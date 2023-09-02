@@ -252,7 +252,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
             if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
                 int cek_size = cek.size ();
                 int64 aad_length = aad.size () * 8;
-                int64 al = htonll (aad_length);
+                int64 al = hton64 (aad_length);
 
                 crypt_context_t* handle_crypt = nullptr;
                 hash_context_t* handle_hash = nullptr;
@@ -523,7 +523,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
             if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
                 int cek_size = cek.size ();
                 int64 aad_length = aad.size () * 8;
-                int64 al = htonll (aad_length);
+                int64 al = hton64 (aad_length);
 
                 crypt_context_t* handle_crypt = nullptr;
                 hash_context_t* handle_hash = nullptr;

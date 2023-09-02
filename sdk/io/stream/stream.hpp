@@ -57,7 +57,7 @@ public:
     virtual uint64 size () = 0;
     virtual return_t write (void* data, size_t size) = 0;
     virtual return_t fill (size_t l, char c) = 0;
-    virtual return_t flush () = 0;
+    virtual return_t clear () = 0;
 
     virtual return_t printf (const char* buf, ...) = 0;
     virtual return_t vprintf (const char* buf, va_list ap) = 0;
@@ -195,6 +195,11 @@ return_t dump_memory (const binary_t& data, stream_t* stream_object,
                       size_t rebase = 0x0,
                       int flags = 0);
 return_t dump_memory (bufferio_context_t* context, stream_t* stream_object,
+                      unsigned hex_part = 16,
+                      unsigned indent = 0,
+                      size_t rebase = 0x0,
+                      int flags = 0);
+return_t dump_memory (variant_t vt, stream_t* stream_object,
                       unsigned hex_part = 16,
                       unsigned indent = 0,
                       size_t rebase = 0x0,

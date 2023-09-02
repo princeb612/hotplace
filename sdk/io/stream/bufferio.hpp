@@ -136,7 +136,7 @@ public:
      * @return error code (see error.hpp)
      * @remarks
      */
-    return_t flush (bufferio_context_t* handle);
+    return_t clear (bufferio_context_t* handle);
 
     /**
      * @brief size only

@@ -16,6 +16,7 @@ add_subdirectory (bufferio)
 add_subdirectory (datetime)
 add_subdirectory (thread)
 add_subdirectory (mlfq)
+add_subdirectory (cbor)
 
 # crypto
 add_subdirectory (crypto)
