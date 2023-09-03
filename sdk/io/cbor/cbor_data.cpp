@@ -94,13 +94,6 @@ const variant_t& cbor_data::data ()
     return _vt;
 }
 
-void cbor_data::accept (cbor_visitor* v)
-{
-    if (v) {
-        v->visit (this);
-    }
-}
-
 void cbor_data::represent (stream_t* s)
 {
     if (s) {
@@ -119,11 +112,11 @@ void cbor_data::represent (stream_t* s)
                 } else if (cbor_tag_t::cbor_tag_negative_bignum == tag) {
                     variant_set_int128 (vt, -(temp + 1));
                 }
-                vtprintf (s, vt);
+                vtprintf (s, vt, vtprintf_style_t::vtprintf_style_cbor);
 
             }
         } else {
-            vtprintf (s, data ());
+            vtprintf (s, data (), vtprintf_style_t::vtprintf_style_cbor);
         }
     }
 }

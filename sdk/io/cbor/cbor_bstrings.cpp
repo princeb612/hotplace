@@ -99,13 +99,6 @@ cbor_bstrings& cbor_bstrings::operator << (binary_t bin)
     return add (&bin [0], bin.size ());
 }
 
-void cbor_bstrings::accept (cbor_visitor* v)
-{
-    if (v) {
-        v->visit (this);
-    }
-}
-
 void cbor_bstrings::represent (stream_t* s)
 {
     if (s) {

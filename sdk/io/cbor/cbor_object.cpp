@@ -70,7 +70,7 @@ void cbor_object::reserve (size_t size)
     _reserved_size = size;
 }
 
-size_t cbor_object::reserved_size ()
+size_t cbor_object::capacity ()
 {
     return _reserved_size;
 }

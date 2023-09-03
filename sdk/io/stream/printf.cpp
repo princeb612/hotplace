@@ -147,7 +147,7 @@ return_t sprintf (stream_t* stream, const char* fmt, valist va)
     return ret;
 }
 
-return_t vtprintf (stream_t* stream, variant_t vt)
+return_t vtprintf (stream_t* stream, variant_t vt, vtprintf_style_t style)
 {
     return_t ret = errorcode_t::success;
 
@@ -207,18 +207,42 @@ return_t vtprintf (stream_t* stream, variant_t vt)
                 stream->printf ("%s", vt.data.p);
                 break;
             case TYPE_STRING:
-                stream->printf ("\"%s\"", vt.data.str);
+                switch (style) {
+                    case vtprintf_style_t::vtprintf_style_cbor:
+                        stream->printf ("\"%s\"", vt.data.str);
+                        break;
+                    case vtprintf_style_t::vtprintf_style_normal:
+                    default:
+                        stream->printf ("%s", vt.data.str);
+                        break;
+                }
                 break;
             case TYPE_NSTRING:
-                stream->printf ("\"%.*s\"", vt.data.nstr32.size, vt.data.nstr32.data);
+                switch (style) {
+                    case vtprintf_style_t::vtprintf_style_cbor:
+                        stream->printf ("\"%.*s\"", vt.data.nstr32.size, vt.data.nstr32.data);
+                        break;
+                    case vtprintf_style_t::vtprintf_style_normal:
+                    default:
+                        stream->printf ("%.*s", vt.data.nstr32.size, vt.data.nstr32.data);
+                        break;
+                }
                 break;
             case TYPE_BINARY:
-            {
-                std::string temp;
-                base16_encode (vt.data.bstr32.data, vt.data.bstr32.size, temp);
-                stream->printf ("%s", temp.c_str ());
+                {
+                    std::string temp;
+                    base16_encode (vt.data.bstr32.data, vt.data.bstr32.size, temp);
+                    switch (style) {
+                        case vtprintf_style_t::vtprintf_style_cbor:
+                            stream->printf ("h'%s'", temp.c_str ());
+                            break;
+                        case vtprintf_style_t::vtprintf_style_normal:
+                        default:
+                            stream->printf ("%s", temp.c_str ());
+                            break;
+                    }
+                }
                 break;
-            }
             default:
                 break;
         }

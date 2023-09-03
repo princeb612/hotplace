@@ -155,13 +155,6 @@ cbor_array& cbor_array::operator << (cbor_map* object)
     return *this;
 }
 
-void cbor_array::accept (cbor_visitor* v)
-{
-    if (v) {
-        v->visit (this);
-    }
-}
-
 void cbor_array::represent (stream_t* s)
 {
     if (s) {

@@ -99,13 +99,6 @@ cbor_tstrings& cbor_tstrings::operator << (const char* str)
     return add (str);
 }
 
-void cbor_tstrings::accept (cbor_visitor* v)
-{
-    if (v) {
-        v->visit (this);
-    }
-}
-
 void cbor_tstrings::represent (stream_t* s)
 {
     if (s) {

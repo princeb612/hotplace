@@ -440,10 +440,10 @@ bool cbor_reader::is_enough (cbor_object* object)
     if (object) {
         uint32 flags = object->get_flags ();
         if (0 == (cbor_flag_t::cbor_indef & flags)) {
-            size_t reserved_size = object->reserved_size ();
+            size_t capacity = object->capacity ();
             size_t size = object->size ();
 
-            if (reserved_size == size) {
+            if (capacity == size) {
                 ret = true;
             }
         }

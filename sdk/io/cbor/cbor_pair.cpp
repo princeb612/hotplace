@@ -127,13 +127,6 @@ cbor_object* const cbor_pair::right ()
     return _rhs;
 }
 
-void cbor_pair::accept (cbor_visitor* v)
-{
-    if (v) {
-        v->visit (this);
-    }
-}
-
 void cbor_pair::represent (stream_t* s)
 {
     if (s) {

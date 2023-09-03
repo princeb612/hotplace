@@ -22,10 +22,10 @@ test_case _test_case;
 void encode_test (variant_t vt, binary_t& bin, std::string expect)
 {
     return_t ret = errorcode_t::success;
-    cbor_encode state;
+    cbor_encode enc;
 
     bin.clear ();
-    state.encode (bin, vt);
+    enc.encode (bin, vt);
 
     std::string hex;
     base16_encode (bin, hex);
@@ -48,7 +48,7 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
 
 void test1 ()
 {
-    _test_case.begin ("state");
+    _test_case.begin ("encode");
 
     binary_t bin;
     variant_t vt;
@@ -230,7 +230,7 @@ void cbor_test (cbor_object* root, const char* expected)
 
 void test2 ()
 {
-    _test_case.begin ("state");
+    _test_case.begin ("encode");
 
     {
         // []

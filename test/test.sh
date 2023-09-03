@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 :<<COMMENTS
 @author Soo han, Kim (princeb612.kr@gmail.com)
 @remarks
@@ -12,7 +12,7 @@ valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 if [ $# -eq 0 ]; then
     array=(base unittest encode string bufferio stream datetime thread mlfq cbor crypto jose authenticode ipaddr incubator)
     # following test file is user interaction required
-    # tcpserver1 tcpserver2 tlsserver httpserver 
+    # tcpserver1 tcpserver2 tlsserver httpserver
 else
     if [ -d $1 ]; then
         array=($1)
@@ -26,7 +26,11 @@ for item in ${array[@]}; do
     $binary
     if [ -z $test_valgrind ]; then
         for tool in ${tool[@]}; do
-            valgrind -v --tool=$tool --log-file=report-$tool $binary
+            option=
+            if [ $tool = 'memcheck' ]; then
+                option='--leak-check=full --track-origins=yes'
+            fi
+            valgrind -v --tool=$tool $option --log-file=report-$tool $binary
             cat report-$tool
         done
     fi

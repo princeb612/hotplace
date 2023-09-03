@@ -117,7 +117,13 @@ class cbor_visitor;
  */
 class cbor_object
 {
+    friend class cbor_array;
+    friend class cbor_pair;
+    friend class cbor_encode;
+    friend class cbor_publisher;
     friend class cbor_reader;
+    friend class cbor_concise_visitor;
+    friend class cbor_diagnostic_visitor;
 public:
     cbor_object ();
     cbor_object (cbor_type_t type, uint32 flags = 0);
@@ -127,17 +133,18 @@ public:
     virtual size_t size ();
     virtual uint32 get_flags ();
 
+    virtual int addref ();
+    virtual int release ();
+
+protected:
     virtual void tag (bool use, cbor_tag_t tag);
     virtual bool tagged ();
     virtual cbor_tag_t tag_value ();
 
-    virtual void reserve (size_t size);
-    virtual size_t reserved_size ();
+    virtual void reserve (size_t size); ///<< reserve a capacity while parsing
+    virtual size_t capacity (); ///<< reserved size
 
     virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
-
-    virtual int addref ();
-    virtual int release ();
 
     virtual void accept (cbor_visitor* v);
     virtual void represent (stream_t* s);
@@ -154,6 +161,11 @@ private:
 
 class cbor_data : public cbor_object
 {
+    friend class cbor_pair;
+    friend class cbor_bstrings;
+    friend class cbor_tstrings;
+    friend class cbor_concise_visitor;
+    friend class cbor_diagnostic_visitor;
 public:
     cbor_data ();
     cbor_data (bool value);
@@ -173,12 +185,11 @@ public:
 
     const variant_t& data ();
 
-    virtual void accept (cbor_visitor* v);
-    virtual void represent (stream_t* s);
-    virtual void represent (binary_t* b);
-
 protected:
     return_t clear ();
+
+    virtual void represent (stream_t* s);
+    virtual void represent (binary_t* b);
 
 private:
     variant_t _vt;
@@ -196,7 +207,7 @@ public:
     static cbor_simple_t is_kind_of (uint8 first);
     static cbor_simple_t is_kind_of_value (uint8 value);
 
-    virtual void accept (cbor_visitor* v);
+protected:
     virtual void represent (stream_t* s);
     virtual void represent (binary_t* b);
 
@@ -219,23 +230,24 @@ private:
 
 class cbor_bstrings : public cbor_object
 {
+    friend class cbor_concise_visitor;
+    friend class cbor_diagnostic_visitor;
 public:
     cbor_bstrings ();
     virtual ~cbor_bstrings ();
 
     virtual size_t size ();
 
-    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
-
     cbor_bstrings& add (const byte_t * bstr, size_t size);
     cbor_bstrings& operator << (binary_t bin);
 
-    virtual void accept (cbor_visitor* v);
-    virtual void represent (stream_t* s);
-    virtual void represent (binary_t* b);
-
 protected:
     return_t clear ();
+
+    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
+
+    virtual void represent (stream_t* s);
+    virtual void represent (binary_t* b);
 
 private:
     std::list <cbor_data*> _array;
@@ -243,23 +255,24 @@ private:
 
 class cbor_tstrings : public cbor_object
 {
+    friend class cbor_concise_visitor;
+    friend class cbor_diagnostic_visitor;
 public:
     cbor_tstrings ();
     virtual ~cbor_tstrings ();
 
     virtual size_t size ();
 
-    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
-
     cbor_tstrings& add (const char* str);
     cbor_tstrings& operator << (const char* str);
 
-    virtual void accept (cbor_visitor* v);
-    virtual void represent (stream_t* s);
-    virtual void represent (binary_t* b);
-
 protected:
     return_t clear ();
+
+    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
+
+    virtual void represent (stream_t* s);
+    virtual void represent (binary_t* b);
 
 private:
     std::list <cbor_data*> _array;
@@ -278,6 +291,8 @@ private:
 class cbor_pair : public cbor_object
 {
     friend class cbor_map;
+    friend class cbor_concise_visitor;
+    friend class cbor_diagnostic_visitor;
 public:
 #if defined __SIZEOF_INT128__
     cbor_pair (int128 value, cbor_data* object);
@@ -293,14 +308,13 @@ public:
     cbor_object* const left ();
     cbor_object* const right ();
 
-    virtual void accept (cbor_visitor* v);
-    virtual void represent (stream_t* s);
-    virtual void represent (binary_t* b);
-
 protected:
     cbor_pair (cbor_data* key, cbor_object* object);
 
     return_t clear ();
+
+    virtual void represent (stream_t* s);
+    virtual void represent (binary_t* b);
 
 private:
     cbor_data* _lhs;
@@ -318,6 +332,8 @@ private:
  */
 class cbor_map : public cbor_object
 {
+    friend class cbor_concise_visitor;
+    friend class cbor_diagnostic_visitor;
 public:
     cbor_map ();
     cbor_map (uint32 flags);
@@ -326,17 +342,16 @@ public:
 
     virtual size_t size ();
 
-    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
-
     cbor_map& add (cbor_pair* object);
     cbor_map& operator << (cbor_pair* object);
 
-    virtual void accept (cbor_visitor* v);
-    virtual void represent (stream_t* s);
-    virtual void represent (binary_t* b);
-
 protected:
     return_t clear ();
+
+    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
+
+    virtual void represent (stream_t* s);
+    virtual void represent (binary_t* b);
 
 private:
     std::list <cbor_pair*> _array; /* unordered */
@@ -358,14 +373,14 @@ private:
  */
 class cbor_array : public cbor_object
 {
+    friend class cbor_concise_visitor;
+    friend class cbor_diagnostic_visitor;
 public:
     cbor_array ();
     cbor_array (uint32 flags);
     virtual ~cbor_array ();
 
     virtual size_t size ();
-
-    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
 
     cbor_array& add (cbor_array* object);
     cbor_array& add (cbor_data* object);
@@ -375,12 +390,13 @@ public:
     cbor_array& operator << (cbor_data* object);
     cbor_array& operator << (cbor_map* object);
 
-    virtual void accept (cbor_visitor* v);
-    virtual void represent (stream_t* s);
-    virtual void represent (binary_t* b);
-
 protected:
     void clear ();
+
+    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
+
+    virtual void represent (stream_t* s);
+    virtual void represent (binary_t* b);
 
 private:
     std::list <cbor_object*> _array;
@@ -481,12 +497,6 @@ class cbor_visitor
 {
 public:
     virtual return_t visit (cbor_object* object) = 0;
-    virtual return_t visit (cbor_data* object) = 0;
-    virtual return_t visit (cbor_bstrings* object) = 0;
-    virtual return_t visit (cbor_tstrings* object) = 0;
-    virtual return_t visit (cbor_pair* object) = 0;
-    virtual return_t visit (cbor_map* object) = 0;
-    virtual return_t visit (cbor_array* object) = 0;
 };
 
 /*
@@ -499,12 +509,6 @@ public:
     cbor_concise_visitor (binary_t* concise);
     virtual ~cbor_concise_visitor ();
     virtual return_t visit (cbor_object* object);
-    virtual return_t visit (cbor_data* object);
-    virtual return_t visit (cbor_bstrings* object);
-    virtual return_t visit (cbor_tstrings* object);
-    virtual return_t visit (cbor_pair* object);
-    virtual return_t visit (cbor_map* object);
-    virtual return_t visit (cbor_array* object);
 
     binary_t* get_binary ();
 
@@ -522,12 +526,6 @@ public:
     cbor_diagnostic_visitor (stream_t* stream);
     virtual ~cbor_diagnostic_visitor ();
     virtual return_t visit (cbor_object* object);
-    virtual return_t visit (cbor_data* object);
-    virtual return_t visit (cbor_bstrings* object);
-    virtual return_t visit (cbor_tstrings* object);
-    virtual return_t visit (cbor_pair* object);
-    virtual return_t visit (cbor_map* object);
-    virtual return_t visit (cbor_array* object);
 
     stream_t* get_stream ();
 

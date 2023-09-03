@@ -66,13 +66,6 @@ cbor_simple_t cbor_simple::is_kind_of_value (uint8 value)
     return type;
 }
 
-void cbor_simple::accept (cbor_visitor* v)
-{
-    if (v) {
-        v->visit (this);
-    }
-}
-
 void cbor_simple::represent (stream_t* s)
 {
 /* "false" */

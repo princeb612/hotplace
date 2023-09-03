@@ -34,54 +34,6 @@ return_t cbor_concise_visitor::visit (cbor_object* object)
     return ret;
 }
 
-return_t cbor_concise_visitor::visit (cbor_data* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_binary ());
-    return ret;
-}
-
-return_t cbor_concise_visitor::visit (cbor_bstrings* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_binary ());
-    return ret;
-}
-
-return_t cbor_concise_visitor::visit (cbor_tstrings* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_binary ());
-    return ret;
-}
-
-return_t cbor_concise_visitor::visit (cbor_pair* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_binary ());
-    return ret;
-}
-
-return_t cbor_concise_visitor::visit (cbor_map* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_binary ());
-    return ret;
-}
-
-return_t cbor_concise_visitor::visit (cbor_array* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_binary ());
-    return ret;
-}
-
 binary_t* cbor_concise_visitor::get_binary ()
 {
     return _concise;
@@ -100,54 +52,6 @@ cbor_diagnostic_visitor::~cbor_diagnostic_visitor ()
 }
 
 return_t cbor_diagnostic_visitor::visit (cbor_object* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_stream ());
-    return ret;
-}
-
-return_t cbor_diagnostic_visitor::visit (cbor_data* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_stream ());
-    return ret;
-}
-
-return_t cbor_diagnostic_visitor::visit (cbor_bstrings* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_stream ());
-    return ret;
-}
-
-return_t cbor_diagnostic_visitor::visit (cbor_tstrings* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_stream ());
-    return ret;
-}
-
-return_t cbor_diagnostic_visitor::visit (cbor_pair* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_stream ());
-    return ret;
-}
-
-return_t cbor_diagnostic_visitor::visit (cbor_map* object)
-{
-    return_t ret = errorcode_t::success;
-
-    object->represent (get_stream ());
-    return ret;
-}
-
-return_t cbor_diagnostic_visitor::visit (cbor_array* object)
 {
     return_t ret = errorcode_t::success;
 
