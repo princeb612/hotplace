@@ -31,7 +31,7 @@ return_t tls_connect (socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio)
 
             if (nRet <= 0) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace_openssl (ret);
+                __leave2;
             }
         } else {        /* non-blocking */
             set_sock_nbio (sock, 1);

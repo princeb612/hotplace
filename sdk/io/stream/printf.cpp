@@ -229,20 +229,20 @@ return_t vtprintf (stream_t* stream, variant_t vt, vtprintf_style_t style)
                 }
                 break;
             case TYPE_BINARY:
-                {
-                    std::string temp;
-                    base16_encode (vt.data.bstr32.data, vt.data.bstr32.size, temp);
-                    switch (style) {
-                        case vtprintf_style_t::vtprintf_style_cbor:
-                            stream->printf ("h'%s'", temp.c_str ());
-                            break;
-                        case vtprintf_style_t::vtprintf_style_normal:
-                        default:
-                            stream->printf ("%s", temp.c_str ());
-                            break;
-                    }
+            {
+                std::string temp;
+                base16_encode (vt.data.bstr32.data, vt.data.bstr32.size, temp);
+                switch (style) {
+                    case vtprintf_style_t::vtprintf_style_cbor:
+                        stream->printf ("h'%s'", temp.c_str ());
+                        break;
+                    case vtprintf_style_t::vtprintf_style_normal:
+                    default:
+                        stream->printf ("%s", temp.c_str ());
+                        break;
                 }
-                break;
+            }
+            break;
             default:
                 break;
         }

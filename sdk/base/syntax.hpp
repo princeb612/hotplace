@@ -14,10 +14,26 @@
 #define __try2 do
 #define __finally2 while (0);
 #define __leave2 break
-/* backtrace and leave */
-#define __leave2_trace(x) { hotplace::io::trace (x); break; }
-/* if faild */
-#define __leave2_if_fail(x) if (errorcode_t::success != x) { break; }
+
+#if defined DEBUG
+#define __footprints(x) ::printf ("[\e[35m%08x\e[0m][%s @ %d]\n", x, __FILE__, __LINE__)
+#else
+#define __footprints(x)
+#endif
+/**
+ * @brief   leave
+ *      // leave a trace
+ *      ret = do_something ();
+ *      if (errorcode_t::success != ret) {
+ *          __leave2_trace(x);
+ *      }
+ *
+ *      // leave if faild
+ *      ret = do_something ();
+ *      __leave2_if_fail (ret);
+ */
+#define __leave2_trace(x) { __footprints (x); hotplace::io::trace (x); break; }
+#define __leave2_if_fail(x) if (errorcode_t::success != x) { __footprints (x); break; }
 
 #define __trace
 

@@ -13,83 +13,12 @@
 #define __HOTPLACE_SDK_IO_CBOR__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
+#include <hotplace/sdk/io/cbor/types.hpp>
+#include <hotplace/sdk/io/stream/stream.hpp>
+#include <deque>
 
 namespace hotplace {
 namespace io {
-
-enum cbor_major_t {
-    cbor_major_uint     = 0,    ///<< 0000 0
-    cbor_major_nint     = 1,    ///<< 0010 2
-    cbor_major_bstr     = 2,    ///<< 0100 4, 0101 1111 5f (indefinite-length)
-    cbor_major_tstr     = 3,    ///<< 0110 6, 0111 1111 7f (indefinite-length)
-    cbor_major_array    = 4,    ///<< 1000 8, 1001 1111 9f (indefinite-length)
-    cbor_major_map      = 5,    ///<< 1010 a, 1011 1111 bf (indefinite-length)
-    cbor_major_tag      = 6,    ///<< 1100 c
-    cbor_major_float    = 7,    ///<< 1110 e
-    cbor_major_simple   = 7,    ///<< 111x e or f, see additional info
-};
-
-enum cbor_tag_t {
-    cbor_tag_std_datetime       = 0,
-    cbor_tag_epoch_datetime     = 1,
-    cbor_tag_positive_bignum    = 2,
-    cbor_tag_negative_bignum    = 3,
-    cbor_tag_decimal_fraction   = 4,
-    cbor_tag_big_float          = 5,
-    cbor_tag_base64url          = 21,
-    cbor_tag_base64             = 22,
-    cbor_tag_base16             = 23,
-    cbor_tag_encoded            = 24,
-    cbor_tag_uri                = 32,
-    cbor_tag_base64url_utf8     = 33,
-    cbor_tag_base64_utf8        = 34,
-    cbor_tag_regex_utf8         = 35,
-    cbor_tag_mime_utf8          = 36,
-};
-
-enum cbor_type_t {
-    cbor_type_null      = 0,
-    cbor_type_array     = 1,
-    cbor_type_data      = 2,
-    cbor_type_pair      = 3,    // keyvalue
-    cbor_type_map       = 4,    // keyvalues
-    cbor_type_simple    = 5,
-    cbor_type_bstrs     = 6,
-    cbor_type_tstrs     = 7,
-};
-
-/*
- * @desc
- *      RFC 8949 Concise Binary Object Representation (CBOR)
- *      An encoder MUST NOT issue two-byte sequences that start with 0xf8
- *      (major type 7, additional information 24) and continue with a byte
- *      less than 0x20 (32 decimal).
- */
-enum cbor_simple_t {
-    cbor_simple_error       = 0,    // Not applicable, not a type, ...
-    cbor_simple_value       = 19,   // additional info 0..19 : unassigned
-                                    // additional info 24 : following byte (value 32-255)
-    cbor_simple_false       = 20,   // additional info 20 : false
-                                    // f4 111 1 0100
-    cbor_simple_true        = 21,   // additional info 21 : true
-    cbor_simple_null        = 22,   // additional info 22 : null
-    cbor_simple_undef       = 23,   // additional info 23 : undefined value
-    cbor_simple_half_fp     = 25,   // additional info 25 : half-precision floaing point
-    cbor_simple_single_fp   = 26,   // additional info 26 : single-precision floaing point
-    cbor_simple_double_fp   = 27,   // additional info 27 : double-precision floaing point
-    cbor_simple_reserved    = 30,   // additional info 28-30 : unassigned
-    cbor_simple_break       = 31,   // additional info 31 : break
-};
-
-enum cbor_control_t {
-    cbor_control_begin = 0,
-    cbor_control_end,
-};
-
-enum cbor_flag_t {
-    cbor_indef = 1,   // indefinite-length
-};
 
 class cbor_object;
 class cbor_data;
@@ -142,7 +71,7 @@ protected:
     virtual cbor_tag_t tag_value ();
 
     virtual void reserve (size_t size); ///<< reserve a capacity while parsing
-    virtual size_t capacity (); ///<< reserved size
+    virtual size_t capacity ();         ///<< reserved size
 
     virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
 

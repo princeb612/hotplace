@@ -10,6 +10,7 @@
  */
 
 #include <hotplace/sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/io/system/types.hpp>
 
 namespace hotplace {
 namespace io {

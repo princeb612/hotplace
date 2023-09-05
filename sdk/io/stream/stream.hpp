@@ -161,8 +161,8 @@ return_t vprintf (stream_t* stream, const char* fmt, Args... args)
  *  std::cout << bs.c_str () << std::endl;
  */
 enum vtprintf_style_t {
-    vtprintf_style_normal = 0,
-    vtprintf_style_cbor = 1,
+    vtprintf_style_normal   = 0,
+    vtprintf_style_cbor     = 1,
 };
 return_t vtprintf (stream_t* stream, variant_t vt, vtprintf_style_t style = vtprintf_style_normal);
 

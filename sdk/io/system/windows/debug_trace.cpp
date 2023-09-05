@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/system/sdk.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
-#include <hotplace/sdk/io/system/windows/sdk.hpp>
+#include <hotplace/sdk/io/stream/string.hpp>
+#include <hotplace/sdk/io/system/sdk.hpp>
 #include <hotplace/sdk/io/system/windows/debug_trace.hpp>
 
 namespace hotplace {

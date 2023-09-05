@@ -71,20 +71,20 @@ enum crypt_algorithm_t {
  *    OFB output feedback
  *    CTR counter
  * supports
- *    SEED        : CBC, CFB,             OFB, ECB,
- *    AES128      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, KEYWRAP
- *    AES192      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, KEYWRAP
- *    AES256      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, KEYWRAP
- *    ARIA128     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM
- *    ARIA192     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM
- *    ARIA256     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM
+ *    SEED        : CBC, CFB,             OFB, ECB
+ *    AES128      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM, KEYWRAP
+ *    AES192      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM, KEYWRAP
+ *    AES256      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM, KEYWRAP
+ *    ARIA128     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM
+ *    ARIA192     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM
+ *    ARIA256     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM
  *    BF          : CBC, CFB,             OFB, ECB
- *    CAMELLIA128 : CBC, CFB, CFB1, CFB8, OFB, ECB,
- *    CAMELLIA192 : CBC, CFB, CFB1, CFB8, OFB, ECB,
- *    CAMELLIA256 : CBC, CFB, CFB1, CFB8, OFB, ECB,
- *    DES         : CBC, CFB, CFB1, CFB8, OFB, ECB,
+ *    CAMELLIA128 : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR  x    x
+ *    CAMELLIA192 : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR  x    x
+ *    CAMELLIA256 : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR  x    x
+ *    DES         : CBC, CFB, CFB1, CFB8, OFB, ECB
  *    IDEA        : CBC, CFB,             OFB, ECB
- *    SM4         : CBC, CFB,             OFB, ECB, CTR
+ *    SM4         : CBC, CFB,             OFB, ECB
  */
 enum crypt_mode_t {
     crypt_mode_unknown  = 0,
@@ -97,6 +97,7 @@ enum crypt_mode_t {
     ctr                 = 7,
     gcm                 = 8,
     wrap                = 9,
+    ccm                 = 10,
 };
 
 enum hash_algorithm_t {

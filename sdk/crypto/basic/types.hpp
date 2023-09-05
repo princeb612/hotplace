@@ -28,6 +28,9 @@
 #include <openssl/md4.h>
 #include <openssl/md5.h>
 #include <openssl/pem.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/provider.h>
+#endif
 #include <openssl/ripemd.h>
 #include <openssl/rsa.h>
 #include <openssl/sha.h>

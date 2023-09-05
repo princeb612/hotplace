@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/io/system/sdk.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -85,6 +86,7 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
      */
 
     { crypt_algorithm_t::aes128, crypt_mode_t::cbc,  EVP_aes_128_cbc (),  "aes-128-cbc", },
+    { crypt_algorithm_t::aes128, crypt_mode_t::ccm,  EVP_aes_128_ccm (),  "aes-128-ccm", },
     { crypt_algorithm_t::aes128, crypt_mode_t::cfb,  EVP_aes_128_cfb (),  "aes-128-cfb", },
     { crypt_algorithm_t::aes128, crypt_mode_t::cfb1, EVP_aes_128_cfb1 (), "aes-128-cfb1", },
     { crypt_algorithm_t::aes128, crypt_mode_t::cfb8, EVP_aes_128_cfb8 (), "aes-128-cfb8", },
@@ -95,6 +97,7 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::aes128, crypt_mode_t::wrap, EVP_aes_128_wrap (), "aes-128-wrap", },
 
     { crypt_algorithm_t::aes192, crypt_mode_t::cbc,  EVP_aes_192_cbc (),  "aes-192-cbc", },
+    { crypt_algorithm_t::aes192, crypt_mode_t::ccm,  EVP_aes_192_ccm (),  "aes-192-ccm", },
     { crypt_algorithm_t::aes192, crypt_mode_t::cfb,  EVP_aes_192_cfb (),  "aes-192-cfb", },
     { crypt_algorithm_t::aes192, crypt_mode_t::cfb1, EVP_aes_192_cfb1 (), "aes-192-cfb1", },
     { crypt_algorithm_t::aes192, crypt_mode_t::cfb8, EVP_aes_192_cfb8 (), "aes-192-cfb8", },
@@ -105,6 +108,7 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::aes192, crypt_mode_t::wrap, EVP_aes_192_wrap (), "aes-192-wrap", },
 
     { crypt_algorithm_t::aes256, crypt_mode_t::cbc,  EVP_aes_256_cbc (),  "aes-256-cbc", },
+    { crypt_algorithm_t::aes256, crypt_mode_t::ccm,  EVP_aes_256_ccm (),  "aes-256-ccm", },
     { crypt_algorithm_t::aes256, crypt_mode_t::cfb,  EVP_aes_256_cfb (),  "aes-256-cfb", },
     { crypt_algorithm_t::aes256, crypt_mode_t::cfb1, EVP_aes_256_cfb1 (), "aes-256-cfb1", },
     { crypt_algorithm_t::aes256, crypt_mode_t::cfb8, EVP_aes_256_cfb8 (), "aes-256-cfb8", },
@@ -115,6 +119,7 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::aes256, crypt_mode_t::wrap, EVP_aes_256_wrap (), "aes-256-wrap", },
 
     { crypt_algorithm_t::aria128, crypt_mode_t::cbc,  EVP_aria_128_cbc (),  "aria-128-cbc", },
+    { crypt_algorithm_t::aria128, crypt_mode_t::ccm,  EVP_aria_128_ccm (),  "aria-128-ccm", },
     { crypt_algorithm_t::aria128, crypt_mode_t::cfb,  EVP_aria_128_cfb (),  "aria-128-cfb", },
     { crypt_algorithm_t::aria128, crypt_mode_t::cfb1, EVP_aria_128_cfb1 (), "aria-128-cfb1", },
     { crypt_algorithm_t::aria128, crypt_mode_t::cfb8, EVP_aria_128_cfb8 (), "aria-128-cfb8", },
@@ -124,6 +129,7 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::aria128, crypt_mode_t::ofb,  EVP_aria_128_ofb (),  "aria-128-ofb", },
 
     { crypt_algorithm_t::aria192, crypt_mode_t::cbc,  EVP_aria_192_cbc (),  "aria-192-cbc", },
+    { crypt_algorithm_t::aria192, crypt_mode_t::ccm,  EVP_aria_192_ccm (),  "aria-192-ccm", },
     { crypt_algorithm_t::aria192, crypt_mode_t::cfb,  EVP_aria_192_cfb (),  "aria-192-cfb", },
     { crypt_algorithm_t::aria192, crypt_mode_t::cfb1, EVP_aria_192_cfb1 (), "aria-192-cfb1", },
     { crypt_algorithm_t::aria192, crypt_mode_t::cfb8, EVP_aria_192_cfb8 (), "aria-192-cfb8", },
@@ -133,6 +139,7 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::aria192, crypt_mode_t::ofb,  EVP_aria_192_ofb (),  "aria-192-ofb", },
 
     { crypt_algorithm_t::aria256, crypt_mode_t::cbc,  EVP_aria_256_cbc (),  "aria-256-cbc", },
+    { crypt_algorithm_t::aria256, crypt_mode_t::ccm,  EVP_aria_256_ccm (),  "aria-256-ccm", },
     { crypt_algorithm_t::aria256, crypt_mode_t::cfb,  EVP_aria_256_cfb (),  "aria-256-cfb", },
     { crypt_algorithm_t::aria256, crypt_mode_t::cfb1, EVP_aria_256_cfb1 (), "aria-256-cfb1", },
     { crypt_algorithm_t::aria256, crypt_mode_t::cfb8, EVP_aria_256_cfb8 (), "aria-256-cfb8", },
@@ -143,31 +150,38 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
 
     { crypt_algorithm_t::blowfish, crypt_mode_t::cbc, EVP_bf_cbc (), "bf-cbc", },
     { crypt_algorithm_t::blowfish, crypt_mode_t::cfb, EVP_bf_cfb (), "bf-cfb", },
+  //{ crypt_algorithm_t::blowfish, crypt_mode_t::ctr, EVP_bf_ctr (), "bf-ctr", },
     { crypt_algorithm_t::blowfish, crypt_mode_t::ecb, EVP_bf_ecb (), "bf-ecb", },
     { crypt_algorithm_t::blowfish, crypt_mode_t::ofb, EVP_bf_ofb (), "bf-ofb", },
 
     { crypt_algorithm_t::camellia128, crypt_mode_t::cbc,  EVP_camellia_128_cbc (),  "camellia-128-cbc", },
+  //{ crypt_algorithm_t::camellia128, crypt_mode_t::ccm,  EVP_camellia_128_ccm (),  "camellia-128-ccm", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::cfb,  EVP_camellia_128_cfb (),  "camellia-128-cfb", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::cfb1, EVP_camellia_128_cfb1 (), "camellia-128-cfb1", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::cfb8, EVP_camellia_128_cfb8 (), "camellia-128-cfb8", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::ctr,  EVP_camellia_128_ctr (),  "camellia-128-ctr", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::ecb,  EVP_camellia_128_ecb (),  "camellia-128-ecb", },
+  //{ crypt_algorithm_t::camellia128, crypt_mode_t::gcm,  EVP_camellia_128_gcm (),  "camellia-128-gcm", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::ofb,  EVP_camellia_128_ofb (),  "camellia-128-ofb", },
 
     { crypt_algorithm_t::camellia192, crypt_mode_t::cbc,  EVP_camellia_192_cbc (),  "camellia-192-cbc", },
+  //{ crypt_algorithm_t::camellia192, crypt_mode_t::ccm,  EVP_camellia_192_ccm (),  "camellia-192-ccm", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::cfb,  EVP_camellia_192_cfb (),  "camellia-192-cfb", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::cfb1, EVP_camellia_192_cfb1 (), "camellia-192-cfb1", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::cfb8, EVP_camellia_192_cfb8 (), "camellia-192-cfb8", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::ctr,  EVP_camellia_192_ctr (),  "camellia-192-ctr", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::ecb,  EVP_camellia_192_ecb (),  "camellia-192-ecb", },
+  //{ crypt_algorithm_t::camellia192, crypt_mode_t::gcm,  EVP_camellia_192_gcm (),  "camellia-192-gcm", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::ofb,  EVP_camellia_192_ofb (),  "camellia-192-ofb", },
 
     { crypt_algorithm_t::camellia256, crypt_mode_t::cbc,  EVP_camellia_256_cbc (),  "camellia-256-cbc", },
+  //{ crypt_algorithm_t::camellia256, crypt_mode_t::ccm,  EVP_camellia_256_ccm (),  "camellia-256-ccm", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::cfb,  EVP_camellia_256_cfb (),  "camellia-256-cfb", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::cfb1, EVP_camellia_256_cfb1 (), "camellia-256-cfb1", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::cfb8, EVP_camellia_256_cfb8 (), "camellia-256-cfb8", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::ctr,  EVP_camellia_256_ctr (),  "camellia-256-ctr", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::ecb,  EVP_camellia_256_ecb (),  "camellia-256-ecb", },
+  //{ crypt_algorithm_t::camellia256, crypt_mode_t::gcm,  EVP_camellia_256_gcm (),  "camellia-256-gcm", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::ofb,  EVP_camellia_256_ofb (),  "camellia-256-ofb", },
 
     { crypt_algorithm_t::cast, crypt_mode_t::cbc,  EVP_cast5_cbc (), "cast5-cbc", },
@@ -194,8 +208,10 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::rc5, crypt_mode_t::ofb, EVP_sm4_ofb (), "rc5-ofb", },
 
     { crypt_algorithm_t::sm4, crypt_mode_t::cbc, EVP_sm4_cbc (), "sm4-cbc", },
+  //{ crypt_algorithm_t::sm4, crypt_mode_t::ccm, EVP_sm4_ccm (), "sm4-ccm", },
     { crypt_algorithm_t::sm4, crypt_mode_t::cfb, EVP_sm4_cfb (), "sm4-cfb", },
     { crypt_algorithm_t::sm4, crypt_mode_t::ecb, EVP_sm4_ecb (), "sm4-ecb", },
+  //{ crypt_algorithm_t::sm4, crypt_mode_t::gcm, EVP_sm4_gcm (), "sm4-gcm", },
     { crypt_algorithm_t::sm4, crypt_mode_t::ofb, EVP_sm4_ofb (), "sm4-ofb", },
     { crypt_algorithm_t::sm4, crypt_mode_t::ctr, EVP_sm4_ctr (), "sm4-ctr", },
 #endif

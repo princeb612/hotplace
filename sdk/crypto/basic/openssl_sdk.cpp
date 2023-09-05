@@ -21,11 +21,17 @@ void openssl_startup_implementation ()
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
     OPENSSL_init_ssl (0, nullptr);
     OPENSSL_init_ssl (OPENSSL_INIT_LOAD_SSL_STRINGS | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, nullptr);
-#ifdef OPENSSL_LOAD_CONF
-    OPENSSL_init_crypto (OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS | OPENSSL_INIT_LOAD_CONFIG, nullptr);
-#else
-    OPENSSL_init_crypto (OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS, nullptr);
+    OPENSSL_init_crypto (OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, nullptr);
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+// int legacyValue = OSSL_PROVIDER_available (nullptr, "legacy");
+// OSSL_PROVIDER* legacy_provider = OSSL_PROVIDER_try_load (nullptr, "legacy", 1);
+// OSSL_PROVIDER* default_provider = OSSL_PROVIDER_try_load (nullptr, "default", 1);
+// OSSL_PROVIDER* legacy_provider = OSSL_PROVIDER_load(nullptr, "legacy");
+// if (legacy == nullptr) {
+// }
 #endif
+
 #else
     SSL_library_init ();
     SSL_load_error_strings ();
@@ -229,41 +235,6 @@ void openssl_thread_cleanup ()
 #endif
 }
 
-void openssl_error_string (std::string& str)
-{
-    unsigned long l = 0;
-    char buf[256];
-
-    std::string bio;
-    const char *file = nullptr;
-    const char *data = nullptr;
-    int line = 0;
-    int flags = 0;
-
-#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-    while (0 != (l = ERR_get_error_all (&file, &line, nullptr, &data, &flags))) {
-#else
-    while (0 != (l = ERR_get_error_line_data (&file, &line, &data, &flags))) {
-#endif
-        bio += "\n";
-        ERR_error_string_n (l, buf, sizeof (buf));
-        bio += format ("[%s @ %d] %s", file, line, buf);
-    }
-
-    str = bio;
-}
-
-return_t trace_openssl (return_t openssl_error)
-{
-    return_t ret = errorcode_t::success;
-
-    std::string msg;
-
-    openssl_error_string (msg);
-    __trace (openssl_error, msg.data ());
-    return ret;
-}
-
 void openssl_thread_end (void)
 {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L)
@@ -325,140 +296,6 @@ uint32 ossl_get_unitsize ()
     } else {
         return 1; // safe coding
     }
-}
-
-return_t nidof_evp_pkey (EVP_PKEY* pkey, uint32& nid)
-{
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        nid = 0;
-
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        nid = EVP_PKEY_id ((EVP_PKEY *) pkey);
-        if (EVP_PKEY_EC == nid) {
-            EC_KEY* ec = EVP_PKEY_get1_EC_KEY ((EVP_PKEY*) pkey);
-            if (ec) {
-                const EC_GROUP* group = EC_KEY_get0_group (ec);
-                nid = EC_GROUP_get_curve_name (group);
-                //cprintf (1, 33, "nid %d\n", nid);
-                EC_KEY_free (ec);
-            }
-        }
-        if (0 == nid) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-    }
-    __finally2
-    {
-        // do nothing
-    }
-    return ret;
-}
-
-bool kindof_ecc (EVP_PKEY* pkey)
-{
-    bool test = false;
-
-    if (pkey) {
-        int type = EVP_PKEY_id (pkey);
-        test = ((EVP_PKEY_EC == type) || (EVP_PKEY_ED25519 == type) || (EVP_PKEY_ED448 == type)
-                || (EVP_PKEY_X25519 == type) || (EVP_PKEY_X448 == type));
-    }
-    return test;
-}
-
-bool kindof_ecc (crypto_key_t type)
-{
-    return (crypto_key_t::ec_key == type) || (crypto_key_t::okp_key == type);
-}
-
-const char* nameof_key_type (crypto_key_t type)
-{
-    const char* name = "";
-
-    if (crypto_key_t::hmac_key == type) {
-        name = "oct";
-    } else if (crypto_key_t::rsa_key == type) {
-        name = "RSA";
-    } else if (crypto_key_t::ec_key == type) {
-        name = "EC";
-    } else if (crypto_key_t::okp_key == type) {
-        name = "OKP";
-    }
-    return name;
-}
-
-crypto_key_t typeof_crypto_key (EVP_PKEY* pkey)
-{
-    crypto_key_t kty = crypto_key_t::none_key;
-    int type = EVP_PKEY_id ((EVP_PKEY *) pkey);
-
-    switch (type) {
-        case EVP_PKEY_HMAC:
-            kty = crypto_key_t::hmac_key;
-            break;
-        case EVP_PKEY_RSA:
-            kty = crypto_key_t::rsa_key;
-            break;
-        case EVP_PKEY_EC:
-            kty = crypto_key_t::ec_key;
-            break;
-        case EVP_PKEY_X25519:
-        case EVP_PKEY_X448:
-        case EVP_PKEY_ED25519:
-        case EVP_PKEY_ED448:
-            kty = crypto_key_t::okp_key;
-            break;
-        default:
-            break;
-    }
-    return kty;
-}
-
-return_t is_private_key (EVP_PKEY* pkey, bool& result)
-{
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        result = false;
-
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        EVP_PKEY* key = (EVP_PKEY*) (pkey);
-        int type = EVP_PKEY_id (key);
-
-        if (EVP_PKEY_RSA == type) {
-            if (nullptr != RSA_get0_d (EVP_PKEY_get0_RSA (key))) {
-                result = true;
-            }
-        } else if (EVP_PKEY_EC == type) {
-            const BIGNUM* bn = EC_KEY_get0_private_key (EVP_PKEY_get0_EC_KEY (key));
-            if (nullptr != bn) {
-                result = true;
-            }
-        } else if (EVP_PKEY_HMAC == type) {
-            result = true;
-        } else {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-    }
-    __finally2
-    {
-        // do nothing
-    }
-    return ret;
 }
 
 }

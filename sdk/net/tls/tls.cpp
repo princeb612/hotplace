@@ -471,7 +471,7 @@ return_t transport_layer_security::send (tls_context_t* handle, int mode, const 
 
             if (ret_write < 1) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace_openssl (ret);
+                __leave2;
             }
             if (size_sent) {
                 *size_sent = ret_write;

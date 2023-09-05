@@ -174,12 +174,12 @@ return_t openssl_crypt::open (crypt_context_t** handle, crypt_algorithm_t algori
 
         /* key, iv */
         /* encrypt and decrypt re-initialize iv */
-        ret_init = EVP_CipherInit_ex (context->encrypt_context, cipher, nullptr, &temp_key[0], &temp_iv[0], 1);
+        ret_init = EVP_CipherInit_ex (context->encrypt_context, cipher, nullptr, &temp_key[0], nullptr, 1);
         if (1 != ret_init) {
             ret = errorcode_t::request;
             __leave2_trace_openssl (ret);
         }
-        ret_init = EVP_CipherInit_ex (context->decrypt_context, cipher, nullptr, &temp_key[0], &temp_iv[0], 0);
+        ret_init = EVP_CipherInit_ex (context->decrypt_context, cipher, nullptr, &temp_key[0], nullptr, 0);
         if (1 != ret_init) {
             ret = errorcode_t::request;
             __leave2_trace_openssl (ret);
@@ -326,11 +326,6 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
             __leave2;
         }
 
-        if ((crypt_mode_t::gcm == context->mode) && ((nullptr == aad) || (nullptr == tag))) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
         size_t size_expect = size_plain + EVP_MAX_BLOCK_LENGTH;
         if (*size_encrypted < size_expect) {
             ret = errorcode_t::insufficient_buffer;
@@ -340,11 +335,29 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
         int ret_cipher = 0;
         int size_update = 0;
         int size_final = 0;
+        int tag_size = 0;
         binary_t& iv = context->datamap[crypt_item_t::item_iv];
 
         EVP_CipherInit (context->encrypt_context, nullptr, nullptr, &iv[0], 1);
 
-        if (crypt_mode_t::gcm == context->mode) { /* A128GCM, A92GCM, A256GCM */
+        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode)) {
+            if ((nullptr == aad) || (nullptr == tag)) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
+
+            if (crypt_mode_t::gcm == context->mode) {
+                tag_size = 16;
+            } else if (crypt_mode_t::ccm == context->mode) {
+                tag_size = 14;
+                EVP_CIPHER_CTX_ctrl (context->encrypt_context, EVP_CTRL_AEAD_SET_TAG, tag_size, nullptr);
+                ret_cipher = EVP_CipherUpdate (context->encrypt_context, nullptr, &size_update, nullptr, size_plain);
+                if (1 > ret_cipher) {
+                    ret = errorcode_t::internal_error;
+                    __leave2_trace_openssl (ret);
+                }
+            }
+
             ret_cipher = EVP_CipherUpdate (context->encrypt_context, nullptr, &size_update, &(*aad)[0], aad->size ());
             if (1 > ret_cipher) {
                 ret = errorcode_t::internal_error;
@@ -403,10 +416,14 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
             __leave2_trace_openssl (ret);
         }
 
-        if (crypt_mode_t::gcm == context->mode) {
-            tag->resize (16);
-            ret_cipher = EVP_CIPHER_CTX_ctrl (context->encrypt_context, EVP_CTRL_GCM_GET_TAG, tag->size (), &(*tag)[0]);
+        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode)) {
+            tag->resize (tag_size);
+            ret_cipher = EVP_CIPHER_CTX_ctrl (context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag->size (), &(*tag)[0]);
             if (1 > ret_cipher) {
+                // check (openssl 1.1.1, 3.0.x, 3.1.x)
+                // [../openssl-3.1.1/crypto/evp/evp_fetch.c @ 341] error:0308010C:digital envelope routines::unsupported
+                // [../openssl-3.1.1/providers/implementations/ciphers/ciphercommon_ccm.c @ 278] error:1C800066:Provider routines::cipher operation failed
+                // [../openssl-3.1.1/providers/implementations/ciphers/ciphercommon_ccm.c @ 206] error:1C800077:Provider routines::tag not set
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
             }
@@ -511,11 +528,6 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
             __leave2;
         }
 
-        if ((crypt_mode_t::gcm == context->mode) && ((nullptr == aad) || (nullptr == tag))) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
         size_t size_necessary = size_encrypted + EVP_MAX_BLOCK_LENGTH;
         if (*size_decrypted < size_necessary) {
             ret = errorcode_t::insufficient_buffer;
@@ -529,8 +541,17 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
 
         EVP_CipherInit (context->decrypt_context, nullptr, nullptr, &iv[0], 0);
 
-        if ((crypt_mode_t::gcm == context->mode)) {
-            ret_cipher = EVP_CIPHER_CTX_ctrl (context->decrypt_context, EVP_CTRL_GCM_SET_TAG, tag->size (), &(*tag)[0]);
+        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode)) {
+            if ((nullptr == aad) || (nullptr == tag)) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
+
+            if (crypt_mode_t::ccm == context->mode) {
+                ret_cipher = EVP_CipherUpdate (context->decrypt_context, nullptr, &size_update, nullptr, size_encrypted);
+            }
+
+            ret_cipher = EVP_CIPHER_CTX_ctrl (context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag->size (), &(*tag)[0]);
             if (1 != ret_cipher) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl (ret);
@@ -646,7 +667,7 @@ return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
 
         if (nullptr == pkey_context) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2;
         }
 
         EVP_PKEY_encrypt_init (pkey_context);
@@ -722,7 +743,7 @@ return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
 
         if (nullptr == pkey_context) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2;
         }
 
         EVP_PKEY_decrypt_init (pkey_context);

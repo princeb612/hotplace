@@ -13,17 +13,16 @@
 
 #include <hotplace/sdk/crypto/types.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/io/stream/stream.hpp>
 
 namespace hotplace {
+using namespace io;
 namespace crypto {
 
 #define __min(a, b) (((a) < (b)) ? (a) : (b))
 #define __max(a, b) (((a) > (b)) ? (a) : (b))
 #define constraint_range(var, minimum, maximum) { var = __max (var, minimum); var = __min (var, maximum); \
 }
-
-#define __trace_openssl(x) {  }
-#define __leave2_trace_openssl(x) { __leave2; }
 
 /**
  * @brief strings, algorithms
@@ -38,12 +37,10 @@ void openssl_cleanup ();
 void openssl_thread_setup (void);
 void openssl_thread_cleanup (void);
 void openssl_thread_end (void);
-/**
- * @brief error string
- * @param std::string& str [out]
- */
-void openssl_error_string (std::string & str);
-return_t trace_openssl (return_t nError);
+
+return_t trace_openssl (return_t errorcode);
+return_t debug_trace_openssl (stream_t * stream);
+#define __leave2_trace_openssl(x) if (errorcode_t::success != x) { __footprints (x); } hotplace::crypto::trace_openssl (x); __leave2;
 
 /* openssl-1.1.1 no older-version compatibility
  * OPENSSL_VERSION_NUMBER MNNFFPPS (major minor fix patch status)
@@ -256,6 +253,8 @@ bool kindof_ecc (crypto_key_t type);
  * @return oct, RSA, EC, OKP
  */
 const char* nameof_key_type (crypto_key_t type);
+
+return_t debug_trace_openssl (stream_t * stream);
 
 }
 }  // namespace

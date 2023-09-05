@@ -484,18 +484,6 @@ void test_case::report_unittest (ansi_string& stream)
     _lock.leave ();
 }
 
-#if 0
-bool compare_timespec (const unittest_item_t& lhs, const unittest_item_t& rhs)
-{
-    bool ret = false;
-
-    if ((lhs._time.tv_sec >= rhs._time.tv_sec) && (lhs._time.tv_nsec > rhs._time.tv_nsec)) {
-        ret = true;
-    }
-    return ret;
-}
-#endif
-
 void test_case::report_testtime (ansi_string& stream, uint32 top_count)
 {
     _lock.enter ();

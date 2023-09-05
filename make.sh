@@ -19,7 +19,11 @@ mkdir -p build
 cd build
 if [ $OSTYPE = "msys" ]; then
     set SUPPORT_SHARED=1
-    set SUPPORT_ODBC=1
+    #set SUPPORT_ODBC=1
+else
+    #set SUPPORT_SHARED=1
+    true
 fi
+export CXXFLAGS='-DDEBUG'
 cmake -G 'Unix Makefiles' ..
 time make

@@ -119,7 +119,7 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
         rsa = RSA_new ();
         if (nullptr == rsa) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2;
         }
 
         BIGNUM* bn_n = nullptr;
@@ -196,7 +196,7 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
         rsa = RSA_new ();
         if (nullptr == rsa) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2;
         }
 
         BIGNUM* bn_n = nullptr;
@@ -481,7 +481,7 @@ return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid,
 
         if (nullptr == bn_x && nullptr == bn_y) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2;
         }
 
         ec = EC_KEY_new_by_curve_name (nid);

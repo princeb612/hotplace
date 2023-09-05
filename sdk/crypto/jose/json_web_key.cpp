@@ -604,7 +604,7 @@ return_t json_web_key::write_pem_file (crypto_key* cryptokey, const char* file, 
         out = BIO_new (BIO_s_mem ());
         if (nullptr == out) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2;
         }
 
         cryptokey->for_each (pem_writer, out);

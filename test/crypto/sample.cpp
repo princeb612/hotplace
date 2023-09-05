@@ -54,7 +54,7 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
                 crypt_object->query (crypt_handle, 1, crypt_key_size);
                 crypt_object->query (crypt_handle, 2, crypt_iv_size);
 
-                if (crypt_mode_t::gcm == mode) {
+                if ((crypt_mode_t::gcm == mode) || (crypt_mode_t::ccm == mode)) {
                     openssl_prng rand;
                     rand.random (aad, 32);
                 }
@@ -92,7 +92,7 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
     __finally2
     {
         const char* alg = advisor->nameof_cipher (algorithm, mode);
-        _test_case.test (ret, __FUNCTION__, "encrypt+dectypt algmrithm %d mode %d (%s)", algorithm, mode, alg ? alg : "unknown");
+        _test_case.test (ret, __FUNCTION__, "encrypt+decrypt algmrithm %d mode %d (%s)", algorithm, mode, alg ? alg : "unknown");
     }
 }
 
@@ -141,6 +141,9 @@ void test_crypt_algorithms ()
         crypt_algorithm_t::aria128,
         crypt_algorithm_t::aria192,
         crypt_algorithm_t::aria256,
+        crypt_algorithm_t::camellia128,
+        crypt_algorithm_t::camellia192,
+        crypt_algorithm_t::camellia256,
         crypt_algorithm_t::sm4,
     };
     crypt_algorithm_t gcm_algorithm_table [] = {
@@ -162,29 +165,23 @@ void test_crypt_algorithms ()
         std::string condition = format ("[test condition cooltime %zi unitsize %zi]", ossl_get_cooltime (), ossl_get_unitsize ());
 
         _test_case.begin ("openssl_crypt crypt_mode_t::cbc %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cbc, 16, keydata, 16, iv, (byte_t*) text,
-                    strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cbc, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
         _test_case.begin ("openssl_crypt crypt_mode_t::cfb %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cfb, 16, keydata, 16, iv, (byte_t*) text,
-                    strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cfb, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
         _test_case.begin ("openssl_crypt crypt_mode_t::cfb1 %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb1, 16, keydata, 16, iv, (byte_t*) text,
-                    strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb1, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
         _test_case.begin ("openssl_crypt crypt_mode_t::cfb8 %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb8, 16, keydata, 16, iv, (byte_t*) text,
-                    strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb8, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
         _test_case.begin ("openssl_crypt crypt_mode_t::ofb %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ofb, 16, keydata, 16, iv, (byte_t*) text,
-                    strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ofb, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
         _test_case.begin ("openssl_crypt crypt_mode_t::ecb %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ecb, 16, keydata, 16, iv, (byte_t*) text,
-                    strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ecb, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
         _test_case.begin ("openssl_crypt crypt_mode_t::ctr %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::ctr, 16, keydata, 16, iv, (byte_t*) text,
-                    strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::ctr, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
         _test_case.begin ("openssl_crypt crypt_mode_t::gcm %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::gcm, 16, keydata, 16, iv, (byte_t*) text,
-                    strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::gcm, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
+        //_test_case.begin ("openssl_crypt crypt_mode_t::ccm %s", condition.c_str ());
+        //test_crypt (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::ccm, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
     }
     __finally2
     {
@@ -323,7 +320,7 @@ return_t test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm, bin
     __finally2
     {
         const char* alg = advisor->nameof_md (algorithm);
-        _test_case.test (ret, __FUNCTION__, "digest+dump %s algmrithm %d (%s)", text ? text : "", algorithm, alg ? alg : "unknown");
+        _test_case.test (ret, __FUNCTION__, "digest %s algmrithm %d (%s)", text ? text : "", algorithm, alg ? alg : "unknown");
     }
     return ret;
 }
@@ -774,6 +771,8 @@ void test_otp ()
 
 int main ()
 {
+    set_trace_option (trace_option_t::trace_bt);
+
     __try2
     {
         openssl_startup ();

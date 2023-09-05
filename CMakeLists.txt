@@ -18,7 +18,10 @@ set (SUPPORT_ODBC 1)   #
 set (SUPPORT_PCH 0)    # cmake 2.x
 
 if (UNIX)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,-z,noexecstack")
+# -std=c++11
+# -Wl,-z,noexecstack
+# -Wl,--copy-dt-needed-entries # DSO missing from command line
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,-z,noexecstack -Wl,--copy-dt-needed-entries")
 endif ()
 if (NOT "$ENV{CXXFLAGS}" STREQUAL "")
     # specify additional include, lib directories
@@ -38,6 +41,7 @@ if(CMAKE_VERSION VERSION_GREATER 3.8)
 endif ()
 
 # verbose
+message (STATUS "CXXFLAGS $ENV{CXXFLAGS}")
 message (STATUS "CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
 message (STATUS "SUPPORT_STATIC ${SUPPORT_STATIC}")
 message (STATUS "SUPPORT_SHARED ${SUPPORT_SHARED}")
