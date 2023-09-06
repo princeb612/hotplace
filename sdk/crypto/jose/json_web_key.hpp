@@ -114,7 +114,11 @@ protected:
      * @return error code (see error.hpp)
      */
     return_t add_rsa (crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d,
-                      const char* p                                                                                                         = nullptr, const char* q= nullptr, const char* dp = nullptr, const char* dq = nullptr, const char* qi = nullptr,
+                      const char* p = nullptr,
+                      const char* q = nullptr,
+                      const char* dp = nullptr,
+                      const char* dq = nullptr,
+                      const char* qi = nullptr,
                       crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief add

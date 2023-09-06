@@ -250,7 +250,8 @@ public:
      */
     virtual return_t open (hash_context_t** handle, hash_algorithm_t alg,
                            const unsigned char* key = nullptr,
-                           unsigned keysize         = 0)= 0;
+                           unsigned keysize = 0)
+    = 0;
     /**
      * @brief close
      * @param hash_context_t* handle [in]
@@ -271,7 +272,7 @@ public:
     /**
      * @brief update
      * @param hash_context_t* handle [in]
-     * @param byte_t* data [out]
+     * @param const byte_t* data [out]
      * @param size_t datasize [in]
      * @return error code (see error.hpp)
      * @example
@@ -280,7 +281,7 @@ public:
      *        hash.finalize(handle, &output_data, &output_size);
      *        hash.free_data(output_data);
      */
-    virtual return_t update (hash_context_t* handle, byte_t* data, size_t datasize) = 0;
+    virtual return_t update (hash_context_t* handle, const byte_t* data, size_t datasize) = 0;
     /**
      * @brief get
      * @param hash_context_t* handle [in]
@@ -303,14 +304,14 @@ public:
     /**
      * @brief get
      * @param hash_context_t* handle [in]
-     * @param byte_t* source_data [in]
+     * @param const byte_t* source_data [in]
      * @param size_t source_size [in]
      * @param binary_t& output [out]
      * @return error code (see error.hpp)
      * @example
      *        hash.hash(handle, input_data, input_size, output);
      */
-    virtual return_t hash (hash_context_t* handle, byte_t* source_data, size_t source_size, binary_t& output) = 0;
+    virtual return_t hash (hash_context_t* handle, const byte_t* source_data, size_t source_size, binary_t& output) = 0;
     /**
      * @brief free
      * @param void* data [in]

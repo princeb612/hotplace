@@ -69,8 +69,8 @@ public:
     /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
-     * @param std::string header [in]
-     * @param std::string claims [in]
+     * @param std::string const& header [in]
+     * @param std::string const& claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
      * @return error code (see error.hpp)
@@ -87,12 +87,12 @@ public:
      *          //  .
      *          // DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8ISlSApmWQxfKTUJqPP3-Kg6NU1Q
      */
-    return_t sign (crypto_key* crypto_key, std::string header, std::string claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
+    return_t sign (crypto_key* crypto_key, std::string const& header, std::string const& claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
-     * @param std::list<std::string> headers [in]
-     * @param std::string claims [in]
+     * @param std::list<std::string> const& headers [in]
+     * @param std::string const& claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
      * @return error code (see error.hpp)
@@ -104,12 +104,12 @@ public:
      *          headers.push_back (ps256_header);
      *          jws.sign (&crypto_key, headers, claim, signature);
      */
-    return_t sign (crypto_key* crypto_key, std::list<std::string> headers, std::string claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
+    return_t sign (crypto_key* crypto_key, std::list<std::string> const& headers, std::string const& claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
      * @param jws_t alg header [in]
-     * @param std::string claims [in]
+     * @param std::string const& claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
      * @return error code (see error.hpp)
@@ -117,12 +117,12 @@ public:
      * @example
      *          jws.sign (&crypto_key, jws_t::jws_hs256, claim, signature);
      */
-    return_t sign (crypto_key* crypto_key, jws_t alg, std::string claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
+    return_t sign (crypto_key* crypto_key, jws_t alg, std::string const& claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
-     * @param std::list<jws_t> algs [in]
-     * @param std::string claims [in]
+     * @param std::list<jws_t> const& algs [in]
+     * @param std::string const& claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
      * @return error code (see error.hpp)
@@ -134,16 +134,16 @@ public:
      *          algs.push_back (jws_t::jws_ps256);
      *          jws.sign (&crypto_key, algs, claim, signature);
      */
-    return_t sign (crypto_key* crypto_key, std::list<jws_t> algs, std::string claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
+    return_t sign (crypto_key* crypto_key, std::list<jws_t> const& algs, std::string const& claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
      * @brief verify
      * @param crypto_key* crypto_key [in]
-     * @param std::string signature [in]
+     * @param std::string const& signature [in]
      * @param bool& result [out]
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t verify (crypto_key* crypto_key, std::string signature, bool& result);
+    return_t verify (crypto_key* crypto_key, std::string const& signature, bool& result);
 
 };
 

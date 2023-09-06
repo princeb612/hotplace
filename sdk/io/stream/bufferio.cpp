@@ -197,21 +197,19 @@ return_t bufferio::write (bufferio_context_t* handle, const void* data, size_t d
 
             while (data_size > size_copied) {
                 if (true == handle->bufferio_queue.empty ()) {
-                    size_remained = 0;                                                          /* 큐에 bufferio_t 가 없다. 할당할 수 있는 메모리가 없다고 하자. */
+                    size_remained = 0;
                 } else {
-                    bufferin_queue_t::reverse_iterator rit = handle->bufferio_queue.rbegin ();  /* 순서대로 제일 끝의 bufferio_t 조사 */
+                    bufferin_queue_t::reverse_iterator rit = handle->bufferio_queue.rbegin ();
                     bufferio_item = *rit;
-                    size_remained = bufferio_item->limit - bufferio_item->offset;               /* bufferio_t 의 여유 공간 조사 */
+                    size_remained = bufferio_item->limit - bufferio_item->offset;
                 }
 
-                if (0 == size_remained) { /* 여유 공간이 없으므로 메모리 할당 */
-                    /* 할당한 메모리는 bufferio_t 구조체로 전달 */
+                if (0 == size_remained) {
                     ret = extend (handle, handle->block_size, &bufferio_item);
                     if (errorcode_t::success != ret) {
-                        //ret = errorcode_t::internal_error;
                         break;
                     }
-                    size_remained = handle->block_size; /*pIo->dwLimit - pIo->dwOffset */
+                    size_remained = handle->block_size;
                 }
 
                 size_to_copy = data_size - size_copied;
@@ -337,7 +335,6 @@ return_t bufferio::get (bufferio_context_t* handle, byte_t** contents, size_t* c
                 *contents = front->base_address;
                 *contents_size = data_size;
             } else {
-                // allocate
                 pad_size = handle->pad_size;
 
                 ret = extend (handle, data_size + pad_size, &bufferio_newly_allocated, bufferio_flag_t::manual);
@@ -345,17 +342,15 @@ return_t bufferio::get (bufferio_context_t* handle, byte_t** contents, size_t* c
                     __leave2;
                 }
 
-                // defragment
                 data = bufferio_newly_allocated->base_address;
 
                 copy_from_bufferio_queue_nolock (data, index, handle->bufferio_queue);
 
                 memset (data + index, 0, handle->pad_size);
 
-                // clear fragmented
                 clear_bufferio_queue_nolock (handle, handle->bufferio_queue);
 
-                bufferio_newly_allocated->offset = data_size; /* available size = 0 */
+                bufferio_newly_allocated->offset = data_size;
                 handle->bufferio_queue.push_back (bufferio_newly_allocated);
 
                 *contents = data;
@@ -411,8 +406,8 @@ bool bufferio::compare (bufferio_context_t* handle, const void* data_to_compare,
                 break;
             }
 
-            target_index += pIo->offset;        /* in-parameter data_to_compare 에 대한 index (0-based) */
-            dwCompareRemainSize -= pIo->offset; /* compare 에 대한 길이 재정의 */
+            target_index += pIo->offset;
+            dwCompareRemainSize -= pIo->offset;
         }
 
         handle->bufferio_lock.leave ();
@@ -465,7 +460,6 @@ return_t bufferio::cut (bufferio_context_t* handle, uint32 begin_pos, uint32 len
             base = limit;
             limit += bufferio_item->offset;
 
-            // 검사할 필요가 없는 블럭
             if (base > end_pos) {
                 break;
             }
@@ -480,7 +474,6 @@ return_t bufferio::cut (bufferio_context_t* handle, uint32 begin_pos, uint32 len
             bufferio_t* bufferio_previous = nullptr;
             bufferio_t* bufferio_next = nullptr;
 
-            // 블럭의 앞부분 보존
             if (base < begin_pos) {
                 size_bufferio_previous = begin_pos - base;
 
@@ -490,7 +483,6 @@ return_t bufferio::cut (bufferio_context_t* handle, uint32 begin_pos, uint32 len
                     memcpy (bufferio_previous->base_address, bufferio_item->base_address, size_bufferio_previous);
                 }
             }
-            // 블럭의 뒷부분 보존
             if (end_pos < limit) {
                 size_bufferio_next = limit - end_pos;
 
@@ -505,28 +497,21 @@ return_t bufferio::cut (bufferio_context_t* handle, uint32 begin_pos, uint32 len
                 free (bufferio_item->base_address);
                 free (bufferio_item);
 
-                // 현재 블럭 삭제
                 handle->bufferio_queue.erase (iter++);
 
-                // 블럭에서 보존할 영역 삽입
                 if (nullptr != bufferio_next) {
                     iter = handle->bufferio_queue.insert (iter, bufferio_next);
                 }
                 if (nullptr != bufferio_previous) {
                     iter = handle->bufferio_queue.insert (iter, bufferio_previous);
                 }
-                // 입력한 블럭의 다음
                 iter++;
-            }
-            // 중간 블럭은 삭제
-            else if (begin_pos <= base && limit <= end_pos + handle->pad_size) {
+            } else if (begin_pos <= base && limit <= end_pos + handle->pad_size) {
                 free (bufferio_item->base_address);
                 free (bufferio_item);
 
                 handle->bufferio_queue.erase (iter++);
-            }
-            // 다음으로
-            else {
+            } else {
                 iter++;
             }
         }
@@ -545,8 +530,6 @@ return_t bufferio::cut (bufferio_context_t* handle, uint32 begin_pos, uint32 len
 return_t bufferio::insert (bufferio_context_t* handle, size_t begin_pos, const void* data, size_t data_size)
 {
     return_t ret = errorcode_t::success;
-
-    //size_t end_pos = begin_pos + 1;
 
     __try2
     {
@@ -582,7 +565,6 @@ return_t bufferio::insert (bufferio_context_t* handle, size_t begin_pos, const v
                     base = limit;
                     limit += bufferio_item->offset;
 
-                    // 검사할 필요가 없는 블럭
                     if (limit < begin_pos) {
                         iter++;
                         continue;
@@ -594,7 +576,6 @@ return_t bufferio::insert (bufferio_context_t* handle, size_t begin_pos, const v
                     bufferio_t* bufferio_next = nullptr;
                     bufferio_t* bufferio_insert = nullptr;
 
-                    // split and insert
                     if ((base <= begin_pos) && (begin_pos <= limit)) {
                         size_bufferio_previous = begin_pos - base;
 
@@ -621,10 +602,8 @@ return_t bufferio::insert (bufferio_context_t* handle, size_t begin_pos, const v
                         free (bufferio_item->base_address);
                         free (bufferio_item);
 
-                        // 현재 블럭 삭제
                         handle->bufferio_queue.erase (iter++);
 
-                        // 블럭에서 보존할 영역 삽입
                         if (nullptr != bufferio_next) {
                             iter = handle->bufferio_queue.insert (iter, bufferio_next);
                         }
@@ -635,7 +614,7 @@ return_t bufferio::insert (bufferio_context_t* handle, size_t begin_pos, const v
                             iter = handle->bufferio_queue.insert (iter, bufferio_previous);
                         }
 
-                        break;      // loop-break
+                        break;
                     } else {
                         iter++;
                     }
@@ -656,21 +635,6 @@ return_t bufferio::insert (bufferio_context_t* handle, size_t begin_pos, const v
 
     return ret;
 }
-
-// find_first_of
-// wfind_first_of
-// find_not_first_of
-// wfind_not_first_of
-// find_last_of
-// wfind_last_of
-
-// find_first_of_routine
-// wfind_first_of_routine
-// find_last_of_routine
-// wfind_last_of_routine
-
-// printf
-// vprintf
 
 return_t bufferio::lock (bufferio_context_t* handle)
 {

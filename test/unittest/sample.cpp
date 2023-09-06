@@ -86,6 +86,23 @@ void test_trace ()
     }
 }
 
+void test_try_leave ()
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        ret = function_always_fail ();
+        if (errorcode_t::success != ret) {
+            __leave2_tracef (ret, "%s %f %d %s", "debugging formatted message here", 3.14, 3, "phi");
+        }
+    }
+    __finally2
+    {
+        _test_case.assert (true, __FUNCTION__, "__leave2_tracef");
+    }
+}
+
 void test_except ()
 {
     _test_case.begin ("segment fault");
@@ -100,6 +117,7 @@ int main ()
 
     set_trace_option (trace_option_t::trace_bt | trace_option_t::trace_except);
     test_trace ();
+    test_try_leave ();
     //test_except ();
 
     _test_case.report (5);

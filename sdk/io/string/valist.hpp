@@ -78,7 +78,7 @@ public:
      * @return *this
      */
     valist& assign (const valist& object);
-    valist& assign (std::vector<variant_t> args);
+    valist& assign (std::vector<variant_t> const& args);
 
     valist& operator << (bool value);
     valist& operator << (char value);
@@ -95,7 +95,7 @@ public:
     valist& operator << (double value);
     valist& operator << (void* value);
     valist& operator << (const char* value);
-    valist& operator << (variant_t v);
+    valist& operator << (variant_t const& v);
     valist& operator << (const valist& object);
     /**
      * @brief clear
@@ -128,7 +128,7 @@ protected:
      * @brief insert
      * @param variant_t& v [in]
      */
-    void insert (variant_t& v);
+    void insert (variant_t const& v);
 
     typedef std::vector<variant_t> args_t;
 

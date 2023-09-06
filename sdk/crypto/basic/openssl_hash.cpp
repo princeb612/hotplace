@@ -202,7 +202,7 @@ return_t openssl_hash::init (hash_context_t* handle)
     return ret;
 }
 
-return_t openssl_hash::update (hash_context_t* handle, byte_t* source_data, size_t source_size)
+return_t openssl_hash::update (hash_context_t* handle, const byte_t* source_data, size_t source_size)
 {
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = static_cast<openssl_hash_context_t*>(handle);
@@ -326,7 +326,7 @@ return_t openssl_hash::free_data (void* data)
     return ret;
 }
 
-return_t openssl_hash::hash (hash_context_t* handle, byte_t* source_data, size_t source_size, binary_t& output)
+return_t openssl_hash::hash (hash_context_t* handle, const byte_t* source_data, size_t source_size, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = static_cast<openssl_hash_context_t*>(handle);

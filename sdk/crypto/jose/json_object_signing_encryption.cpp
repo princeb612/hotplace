@@ -91,7 +91,7 @@ return_t json_object_signing_encryption::close (jose_context_t* context)
     return ret;
 }
 
-return_t json_object_signing_encryption::encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, std::string& output, jose_serialization_t type)
+return_t json_object_signing_encryption::encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t const& input, std::string& output, jose_serialization_t type)
 {
     return_t ret = errorcode_t::success;
     json_object_encryption encryption;
@@ -126,7 +126,7 @@ return_t json_object_signing_encryption::encrypt (jose_context_t* context, jwe_t
     return ret;
 }
 
-return_t json_object_signing_encryption::encrypt (jose_context_t* context, jwe_t enc, std::list <jwa_t> algs, binary_t input, std::string& output, jose_serialization_t type)
+return_t json_object_signing_encryption::encrypt (jose_context_t* context, jwe_t enc, std::list <jwa_t> algs, binary_t const& input, std::string& output, jose_serialization_t type)
 {
     return_t ret = errorcode_t::success;
     json_object_encryption encryption;
@@ -181,7 +181,7 @@ return_t json_object_signing_encryption::encrypt (jose_context_t* context, jwe_t
     return ret;
 }
 
-return_t json_object_signing_encryption::decrypt (jose_context_t* context, std::string input, binary_t& output, bool& result)
+return_t json_object_signing_encryption::decrypt (jose_context_t* context, std::string const& input, binary_t& output, bool& result)
 {
     return_t ret = errorcode_t::success;
     jose_context_t* handle = static_cast <jose_context_t*> (context);
@@ -252,7 +252,7 @@ return_t json_object_signing_encryption::decrypt (jose_context_t* context, std::
     return ret;
 }
 
-return_t json_object_signing_encryption::sign (jose_context_t* context, jws_t sig, std::string input, std::string& output, jose_serialization_t type)
+return_t json_object_signing_encryption::sign (jose_context_t* context, jws_t sig, std::string const& input, std::string& output, jose_serialization_t type)
 {
     std::list <jws_t> methods;
 
@@ -260,7 +260,7 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, jws_t si
     return sign (context, methods, input, output, type);
 }
 
-return_t json_object_signing_encryption::sign (jose_context_t* context, std::list <jws_t> methods, std::string input, std::string& output, jose_serialization_t type)
+return_t json_object_signing_encryption::sign (jose_context_t* context, std::list <jws_t> const& methods, std::string const& input, std::string& output, jose_serialization_t type)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -268,7 +268,7 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::lis
     output.clear ();
     std::list<std::string> headers;
 
-    for (std::list <jws_t>::iterator method_iter = methods.begin (); method_iter != methods.end (); method_iter++) {
+    for (std::list <jws_t>::const_iterator method_iter = methods.begin (); method_iter != methods.end (); method_iter++) {
         jws_t sig = *method_iter;
 
         const hint_jose_signature_t* hint = advisor->hintof_jose_signature (sig);
@@ -292,7 +292,7 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::lis
     return ret;
 }
 
-return_t json_object_signing_encryption::sign (jose_context_t* context, std::string protected_header, std::string input, std::string& output, jose_serialization_t type)
+return_t json_object_signing_encryption::sign (jose_context_t* context, std::string const& protected_header, std::string const& input, std::string& output, jose_serialization_t type)
 {
     std::list <std::string> headers;
 
@@ -300,7 +300,7 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::str
     return sign (context, headers, input, output, type);
 }
 
-return_t json_object_signing_encryption::sign (jose_context_t* context, std::list<std::string> headers, std::string input, std::string& output, jose_serialization_t type)
+return_t json_object_signing_encryption::sign (jose_context_t* context, std::list<std::string> const& headers, std::string const& input, std::string& output, jose_serialization_t type)
 {
     return_t ret = errorcode_t::success;
     jose_context_t* handle = static_cast <jose_context_t*> (context);
@@ -315,7 +315,7 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::lis
 
         handle->signs.clear ();
 
-        for (std::list<std::string>::iterator iter = headers.begin (); iter != headers.end (); iter++) {
+        for (std::list<std::string>::const_iterator iter = headers.begin (); iter != headers.end (); iter++) {
             std::string header = *iter;
 
             jws_t sig = jws_t::jws_unknown;
@@ -373,7 +373,7 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::lis
     return ret;
 }
 
-return_t json_object_signing_encryption::verify (jose_context_t* context, std::string input, bool& result)
+return_t json_object_signing_encryption::verify (jose_context_t* context, std::string const& input, bool& result)
 {
     return_t ret = errorcode_t::success;
     jose_context_t* handle = static_cast <jose_context_t*> (context);
@@ -456,7 +456,7 @@ return_t json_object_signing_encryption::verify (jose_context_t* context, std::s
     return ret;
 }
 
-return_t json_object_signing_encryption::prepare_encryption (jose_context_t* context, jwe_t enc, std::list <jwa_t> algs)
+return_t json_object_signing_encryption::prepare_encryption (jose_context_t* context, jwe_t enc, std::list <jwa_t> const& algs)
 {
     return_t ret = errorcode_t::success;
     jose_context_t* handle = static_cast <jose_context_t*> (context);
@@ -544,7 +544,7 @@ return_t json_object_signing_encryption::prepare_encryption (jose_context_t* con
                 item.header.assign ((char*) &protected_header[0], protected_header.size ());
                 base64_encode (&protected_header[0], protected_header.size (), item.datamap[crypt_item_t::item_aad], base64_encoding_t::base64url_encoding);
 
-                for (std::list <jwa_t>::iterator iter = algs.begin (); iter != algs.end (); iter++) {
+                for (std::list <jwa_t>::const_iterator iter = algs.begin (); iter != algs.end (); iter++) {
                     jwa_t alg = *iter;
 
                     //const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);  // key management
@@ -618,7 +618,7 @@ return_t json_object_signing_encryption::prepare_encryption_recipient (jwa_t alg
     return ret;
 }
 
-return_t json_object_signing_encryption::compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string kid, binary_t& header)
+return_t json_object_signing_encryption::compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string const& kid, binary_t& header)
 {
     return_t ret = errorcode_t::success;
     crypt_datamap_t datamap;
@@ -628,7 +628,7 @@ return_t json_object_signing_encryption::compose_encryption_header (jwe_t enc, j
     return ret;
 }
 
-return_t json_object_signing_encryption::compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string kid, crypt_datamap_t datamap, crypt_variantmap_t variantmap, binary_t& header)
+return_t json_object_signing_encryption::compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string const& kid, crypt_datamap_t& datamap, crypt_variantmap_t& variantmap, binary_t& header)
 {
     return_t ret = errorcode_t::success;
     json_t* json_header = nullptr;
@@ -930,7 +930,7 @@ return_t json_object_signing_encryption::prepare_decryption (jose_context_t* con
 
         clear_context (context);
 
-        return_t ret_test = json_open_stream (&json_root, input);
+        return_t ret_test = json_open_stream (&json_root, input, true);
         if (errorcode_t::success == ret_test) {
             json_t* json_recipients = nullptr;
             json_unpack (json_root, "{s:o}", "recipients", &json_recipients);
@@ -1253,7 +1253,7 @@ return_t json_object_signing_encryption::write_encryption (jose_context_t* conte
     return ret;
 }
 
-return_t json_object_signing_encryption::update_header (std::string source_encoded, binary_t tag, binary_t& aad, std::string& output_encoded)
+return_t json_object_signing_encryption::update_header (std::string const& source_encoded, binary_t const& tag, binary_t& aad, std::string& output_encoded)
 {
     return_t ret = errorcode_t::success;
     json_t* json_header = nullptr;
@@ -1309,7 +1309,7 @@ return_t json_object_signing_encryption::parse_signature_header (jose_context_t*
             __leave2;
         }
 
-        ret = json_open_stream (&json_root, header);
+        ret = json_open_stream (&json_root, header, true);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -1354,7 +1354,7 @@ return_t json_object_signing_encryption::read_signature (jose_context_t* context
 
         handle->signs.clear ();
 
-        return_t ret_test = json_open_stream (&json_root, signature);
+        return_t ret_test = json_open_stream (&json_root, signature, true);
         if (errorcode_t::success == ret_test) {
             const char* payload_value = nullptr; /* payload:base64_url_encode(claims) */
             json_unpack (json_root, "{s:s}", "payload", &payload_value);

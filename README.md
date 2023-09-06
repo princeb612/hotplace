@@ -73,7 +73,6 @@
  * RFC 8949 Concise Binary Object Representation (CBOR)
    * sdk/io/cbor/
    * test/cbor/
- * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
  * RFC 7515 JSON Web Signature (JWS)
  * RFC 7516 JSON Web Encryption (JWE)
  * RFC 7517 JSON Web Key (JWK)

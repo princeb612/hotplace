@@ -43,7 +43,7 @@ valist& valist::assign (const valist& object)
     return *this;
 }
 
-valist& valist::assign (std::vector<variant_t> args)
+valist& valist::assign (std::vector<variant_t> const& args)
 {
     _lock.enter ();
 
@@ -221,7 +221,7 @@ valist& valist::operator << (const char* value)
     return *this;
 }
 
-valist& valist::operator << (variant_t v)
+valist& valist::operator << (variant_t const& v)
 {
     insert (v);
     return *this;
@@ -559,7 +559,7 @@ void valist::build ()
     }
 }
 
-void valist::insert (variant_t& v)
+void valist::insert (variant_t const& v)
 {
     _lock.enter ();
     _args.push_back (v);

@@ -24,7 +24,7 @@ json_web_signature::~json_web_signature ()
     // do nothing
 }
 
-return_t json_web_signature::sign (crypto_key* crypto_key, std::string header, std::string claims, std::string& signature, jose_serialization_t mode)
+return_t json_web_signature::sign (crypto_key* crypto_key, std::string const& header, std::string const& claims, std::string& signature, jose_serialization_t mode)
 {
     return_t ret = errorcode_t::success;
     json_object_signing_encryption jose;
@@ -48,7 +48,7 @@ return_t json_web_signature::sign (crypto_key* crypto_key, std::string header, s
     return ret;
 }
 
-return_t json_web_signature::sign (crypto_key* crypto_key, std::list<std::string> headers, std::string claims, std::string& signature, jose_serialization_t mode)
+return_t json_web_signature::sign (crypto_key* crypto_key, std::list<std::string> const& headers, std::string const& claims, std::string& signature, jose_serialization_t mode)
 {
     return_t ret = errorcode_t::success;
     json_object_signing_encryption jose;
@@ -72,7 +72,7 @@ return_t json_web_signature::sign (crypto_key* crypto_key, std::list<std::string
     return ret;
 }
 
-return_t json_web_signature::sign (crypto_key* crypto_key, jws_t alg, std::string claims, std::string& signature, jose_serialization_t mode)
+return_t json_web_signature::sign (crypto_key* crypto_key, jws_t alg, std::string const& claims, std::string& signature, jose_serialization_t mode)
 {
     std::list<jws_t> algs;
 
@@ -80,7 +80,7 @@ return_t json_web_signature::sign (crypto_key* crypto_key, jws_t alg, std::strin
     return sign (crypto_key, algs, claims, signature, mode);
 }
 
-return_t json_web_signature::sign (crypto_key* crypto_key, std::list<jws_t> algs, std::string claims, std::string& signature, jose_serialization_t mode)
+return_t json_web_signature::sign (crypto_key* crypto_key, std::list<jws_t> const& algs, std::string const& claims, std::string& signature, jose_serialization_t mode)
 {
     return_t ret = errorcode_t::success;
     json_object_signing_encryption jose;
@@ -104,7 +104,7 @@ return_t json_web_signature::sign (crypto_key* crypto_key, std::list<jws_t> algs
     return ret;
 }
 
-return_t json_web_signature::verify (crypto_key* crypto_key, std::string signature, bool& result)
+return_t json_web_signature::verify (crypto_key* crypto_key, std::string const& signature, bool& result)
 {
     return_t ret = errorcode_t::success;
     json_object_signing_encryption jose;

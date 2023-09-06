@@ -256,7 +256,6 @@ protected:
     uint32 _filepos_high;
     size_t _mapping_size;
 
-    /* file lock - 파일을 열 수 있을 때까지 대기 */
 #if defined _WIN32 || defined _WIN64
     OVERLAPPED _win32_ov;
 #endif

@@ -17,7 +17,7 @@
 
 #if defined DEBUG
 #define __footprints(x) ::printf ("[\e[31m%08x\e[0m][%s @ %d]\n", x, __FILE__, __LINE__)
-#define __footprintf(...) ::printf ("[\e[35m debug  \e[0m][%s @ %d]", __FILE__, __LINE__); ::printf (__VA_ARGS__);
+#define __footprintf(...) ::printf ("[\e[35m debug  \e[0m][%s @ %d] ", __FILE__, __LINE__); ::printf (__VA_ARGS__); printf ("\n");
 #else
 #define __footprints(x)
 #define __footprintf(...)
@@ -36,6 +36,7 @@
  */
 #define __trace(x, ...) { __footprintf (__VA_ARGS__); hotplace::io::trace (x); }
 #define __leave2_trace(x) { __footprints (x); hotplace::io::trace (x); break; }
+#define __leave2_tracef(x, ...) { __footprintf (__VA_ARGS__); hotplace::io::trace (x); break; }
 #define __leave2_if_fail(x) if (errorcode_t::success != x) { __footprints (x); break; }
 
 #ifdef __cplusplus

@@ -236,7 +236,7 @@ enum errorcode_t {
     /* 0xef010024 4009820196 */ verify,
     /* 0xef010025 4009820197 */ busy,
     /* 0xef010026 4009820198 */ debug,
-    /* 0xef010027 4009820199 */ reserved16,
+    /* 0xef010027 4009820199 */ fetch,
     /* 0xef010028 4009820200 */ reserved17,
     /* 0xef010029 4009820201 */ reserved18,
     /* 0xef01002a 4009820202 */ reserved19,

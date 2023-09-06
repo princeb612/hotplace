@@ -36,6 +36,7 @@ return_t trace_openssl (return_t errorcode)
 return_t debug_trace_openssl (stream_t* stream)
 {
     return_t ret = errorcode_t::success;
+
     __try2
     {
         if (nullptr == stream) {
@@ -47,8 +48,8 @@ return_t debug_trace_openssl (stream_t* stream)
         char buf[256];
 
         std::string bio;
-        const char *file = NULL;
-        const char *data = NULL;
+        const char *file = nullptr;
+        const char *data = nullptr;
         int line = 0;
         int flags = 0;
 

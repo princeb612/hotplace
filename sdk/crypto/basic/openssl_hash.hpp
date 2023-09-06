@@ -61,7 +61,7 @@ public:
     /**
      * @brief update
      * @param hash_context_t* handle [in]
-     * @param byte_t* data [in]
+     * @param const byte_t* data [in]
      * @param size_t datasize [in]
      * @return error code (see error.hpp)
      * @example
@@ -70,7 +70,7 @@ public:
      *        hash.finalize(handle, &output_data, &output_size);
      *        hash.free_data(output_data);
      */
-    virtual return_t update (hash_context_t* handle, byte_t* data, size_t datasize);
+    virtual return_t update (hash_context_t* handle, const byte_t* data, size_t datasize);
     /**
      * @brief hash
      * @param hash_context_t* handle [in]
@@ -104,14 +104,14 @@ public:
     /**
      * @brief hash
      * @param hash_context_t* handle [in]
-     * @param byte_t* data [in]
+     * @param const byte_t* data [in]
      * @param size_t datasize [in]
      * @param binary_t& output [out]
      * @return error code (see error.hpp)
      * @remarks
      *        simply replace a serial method call (init, update, finalize, free_data in a low)
      */
-    virtual return_t hash (hash_context_t* handle, byte_t* data, size_t datasize, binary_t& output);
+    virtual return_t hash (hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& output);
     /**
      * @brief type
      * @return crypt_poweredby_t

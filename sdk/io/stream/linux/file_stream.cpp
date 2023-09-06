@@ -418,7 +418,7 @@ return_t file_stream::printf (const char* fmt, ...)
     __try2
     {
         va_start (ap, fmt);
-        ret = io.open (&handle, (1 << 12));
+        ret = io.open (&handle);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -457,7 +457,7 @@ return_t file_stream::vprintf (const char* fmt, va_list ap)
 
     __try2
     {
-        ret = io.open (&handle, (1 << 12));
+        ret = io.open (&handle);
         if (errorcode_t::success != ret) {
             __leave2;
         }

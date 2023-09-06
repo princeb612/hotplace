@@ -16,8 +16,8 @@
 namespace hotplace {
 namespace crypto {
 
-typedef return_t (json_object_signing::*sign_function_t) (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t& output);
-typedef return_t (json_object_signing::*verify_function_t) (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t output, bool& result);
+typedef return_t (json_object_signing::*sign_function_t) (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t& output);
+typedef return_t (json_object_signing::*verify_function_t) (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t const& output, bool& result);
 
 json_object_signing::json_object_signing ()
 {
@@ -29,7 +29,7 @@ json_object_signing::~json_object_signing ()
     openssl_cleanup ();
 }
 
-return_t json_object_signing::sign (crypto_key* key, jws_t sig, binary_t input, binary_t& output)
+return_t json_object_signing::sign (crypto_key* key, jws_t sig, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     std::string kid;
@@ -38,7 +38,7 @@ return_t json_object_signing::sign (crypto_key* key, jws_t sig, binary_t input, 
     return ret;
 }
 
-return_t json_object_signing::sign (crypto_key* key, jws_t sig, binary_t input, binary_t& output, std::string& kid)
+return_t json_object_signing::sign (crypto_key* key, jws_t sig, binary_t const& input, binary_t& output, std::string& kid)
 {
     return_t ret = errorcode_t::success;
 
@@ -114,12 +114,12 @@ return_t json_object_signing::sign (crypto_key* key, jws_t sig, binary_t input, 
     return ret;
 }
 
-return_t json_object_signing::verify (crypto_key* key, jws_t sig, binary_t input, binary_t output, bool& result)
+return_t json_object_signing::verify (crypto_key* key, jws_t sig, binary_t const& input, binary_t const& output, bool& result)
 {
     return verify (key, nullptr, sig, input, output, result);
 }
 
-return_t json_object_signing::verify (crypto_key* key, const char* kid, jws_t sig, binary_t input, binary_t output, bool& result)
+return_t json_object_signing::verify (crypto_key* key, const char* kid, jws_t sig, binary_t const& input, binary_t const& output, bool& result)
 {
     return_t ret = errorcode_t::success;
 
@@ -192,7 +192,7 @@ return_t json_object_signing::verify (crypto_key* key, const char* kid, jws_t si
     return ret;
 }
 
-return_t json_object_signing::sign_general (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t& output)
+return_t json_object_signing::sign_general (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -249,7 +249,7 @@ return_t json_object_signing::sign_general (EVP_PKEY* pkey, jws_t sig, binary_t 
     return ret;
 }
 
-return_t json_object_signing::sign_ecdsa (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t& output)
+return_t json_object_signing::sign_ecdsa (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -323,7 +323,7 @@ return_t json_object_signing::sign_ecdsa (EVP_PKEY* pkey, jws_t sig, binary_t in
     return ret;
 }
 
-return_t json_object_signing::sign_eddsa (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t& output)
+return_t json_object_signing::sign_eddsa (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     EVP_MD_CTX* ctx = nullptr;
@@ -361,7 +361,7 @@ return_t json_object_signing::sign_eddsa (EVP_PKEY* pkey, jws_t sig, binary_t in
     return ret;
 }
 
-return_t json_object_signing::sign_rsassa_pss (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t& output)
+return_t json_object_signing::sign_rsassa_pss (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -412,7 +412,7 @@ return_t json_object_signing::sign_rsassa_pss (EVP_PKEY* pkey, jws_t sig, binary
     return ret;
 }
 
-return_t json_object_signing::verify_hmac (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t output, bool& result)
+return_t json_object_signing::verify_hmac (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t const& output, bool& result)
 {
     return_t ret = errorcode_t::success;
 
@@ -434,7 +434,7 @@ return_t json_object_signing::verify_hmac (EVP_PKEY* pkey, jws_t sig, binary_t i
     return ret;
 }
 
-return_t json_object_signing::verify_rsassa_pkcs1_v1_5 (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t output, bool& result)
+return_t json_object_signing::verify_rsassa_pkcs1_v1_5 (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t const& output, bool& result)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -496,7 +496,7 @@ return_t json_object_signing::verify_rsassa_pkcs1_v1_5 (EVP_PKEY* pkey, jws_t si
     return ret;
 }
 
-return_t json_object_signing::verify_ecdsa (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t output, bool& result)
+return_t json_object_signing::verify_ecdsa (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t const& output, bool& result)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -583,7 +583,7 @@ return_t json_object_signing::verify_ecdsa (EVP_PKEY* pkey, jws_t sig, binary_t 
     return ret;
 }
 
-return_t json_object_signing::verify_eddsa (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t output, bool& result)
+return_t json_object_signing::verify_eddsa (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t const& output, bool& result)
 {
     return_t ret = errorcode_t::success;
     EVP_MD_CTX* ctx = nullptr;
@@ -625,7 +625,7 @@ return_t json_object_signing::verify_eddsa (EVP_PKEY* pkey, jws_t sig, binary_t 
     return ret;
 }
 
-return_t json_object_signing::verify_rsassa_pss (EVP_PKEY* pkey, jws_t sig, binary_t input, binary_t output, bool& result)
+return_t json_object_signing::verify_rsassa_pss (EVP_PKEY* pkey, jws_t sig, binary_t const& input, binary_t const& output, bool& result)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();

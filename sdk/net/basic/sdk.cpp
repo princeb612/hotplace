@@ -83,7 +83,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = address_type;
 
-        char string_port[1 << 7];
+        char string_port[1 << 3];
         snprintf (string_port, RTL_NUMBER_OF (string_port), "%d", port);
 
         if (address_t::addr_host == address_type_adjusted) {

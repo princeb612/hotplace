@@ -137,9 +137,9 @@ return_t W2A (std::string& target, const wchar_t* source, uint32 codepage = 0);
  *  gettoken (data, token, 1, value);  // "item1"
  *  _test_case.assert (value == "item1", __FUNCTION__, "gettoken");
  */
-bool gettoken (std::string source, std::string token, size_t index, std::string& value);
+bool gettoken (std::string const& source, std::string const& token, size_t index, std::string& value);
 #if defined _WIN32 || defined _WIN64
-bool gettoken (std::wstring source, std::wstring token, size_t index, std::wstring& value);
+bool gettoken (std::wstring const& source, std::wstring const& token, size_t index, std::wstring& value);
 #endif
 
 /**
@@ -156,9 +156,9 @@ bool gettoken (std::wstring source, std::wstring token, size_t index, std::wstri
  *      }
  *  }
  */
-std::string tokenize (std::string source, std::string tokens, size_t& pos);
+std::string tokenize (std::string const& source, std::string const& tokens, size_t& pos);
 #if defined _WIN32 || defined _WIN64
-std::wstring tokenize (std::wstring source, std::wstring tokens, size_t& pos);
+std::wstring tokenize (std::wstring const& source, std::wstring const& tokens, size_t& pos);
 #endif
 
 /**
@@ -167,11 +167,10 @@ std::wstring tokenize (std::wstring source, std::wstring tokens, size_t& pos);
  *  std::string data ("hello world");
  *  replace (data, "world", "neighbor");
  */
-void replace (std::string& source, std::string a, std::string b);
+void replace (std::string& source, std::string const& a, std::string const& b);
 #if defined _WIN32 || defined _WIN64
-void replace (std::wstring& source, std::wstring a, std::wstring b);
+void replace (std::wstring& source, std::wstring const& a, std::wstring const& b);
 #endif
-
 
 /**
  * @brief getline

@@ -17,9 +17,9 @@ namespace hotplace {
 namespace io {
 
 #if defined _MBCS || defined MBCS
-void replace (std::string& source, std::string a, std::string b)
+void replace (std::string& source, std::string const& a, std::string const& b)
 #elif defined _UNICODE || defined UNICODE
-void replace (std::wstring& source, std::wstring a, std::wstring b)
+void replace (std::wstring& source, std::wstring const& a, std::wstring const& b)
 #endif
 {
     size_t i = source.find (a);
@@ -31,9 +31,9 @@ void replace (std::wstring& source, std::wstring a, std::wstring b)
 }
 
 #if defined _MBCS || defined MBCS
-std::string tokenize (std::string source, std::string tokens, size_t& pos)
+std::string tokenize (std::string const& source, std::string const& tokens, size_t& pos)
 #elif defined _UNICODE || defined UNICODE
-std::wstring tokenize (std::wstring source, std::wstring tokens, size_t& pos)
+std::wstring tokenize (std::wstring const& source, std::wstring const& tokens, size_t& pos)
 #endif
 {
 #if defined _MBCS || defined MBCS
@@ -84,9 +84,9 @@ std::wstring tokenize (std::wstring source, std::wstring tokens, size_t& pos)
 }
 
 #if defined _MBCS || defined MBCS
-bool gettoken (std::string source, std::string token, size_t index, std::string& value)
+bool gettoken (std::string const& source, std::string const& token, size_t index, std::string& value)
 #elif defined _UNICODE || defined UNICODE
-bool gettoken (std::wstring source, std::wstring token, size_t index, std::wstring& value)
+bool gettoken (std::wstring const& source, std::wstring const& token, size_t index, std::wstring& value)
 #endif
 {
     bool ret = false;

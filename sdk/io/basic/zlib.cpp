@@ -28,13 +28,15 @@ return_t zlib_deflate (zlib_windowbits_t windowbits, byte_t* stream, size_t size
 
         int ret = Z_OK;
         uint32 cooltime = 0;
-        char buffer[1 << 10];
+        binary_t buffer;
         z_stream defstream = { 0, };
         defstream.zalloc = Z_NULL;
         defstream.zfree = Z_NULL;
         defstream.opaque = Z_NULL;
         defstream.avail_in = size;
         defstream.next_in = stream;
+
+        buffer.resize (1 << 10);
 
         int wbit = MAX_WBITS;
         switch (windowbits) {
@@ -44,14 +46,14 @@ return_t zlib_deflate (zlib_windowbits_t windowbits, byte_t* stream, size_t size
 
         deflateInit2 (&defstream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, wbit, 8, Z_DEFAULT_STRATEGY);
         do {
-            defstream.avail_out = sizeof (buffer);
-            defstream.next_out = (byte_t *) buffer;
+            defstream.avail_out = buffer.size ();
+            defstream.next_out = &buffer[0];
 
             ret = deflate (&defstream, Z_FINISH);
 
             uint32 size = output->size ();
             if (size < defstream.total_out) {
-                output->write (buffer, defstream.total_out - size);
+                output->write (&buffer[0], defstream.total_out - size);
             }
             //cooltime = zlib_get_cooltime ();
             //if (cooltime) {
@@ -156,13 +158,15 @@ return_t zlib_inflate (zlib_windowbits_t windowbits, byte_t* stream, size_t size
 
         int ret = Z_OK;
         uint32 cooltime = 0;
-        char buffer[1 << 10];
+        binary_t buffer;
         z_stream infstream = { 0, };
         infstream.zalloc = Z_NULL;
         infstream.zfree = Z_NULL;
         infstream.opaque = Z_NULL;
         infstream.avail_in = size;
         infstream.next_in = stream;
+
+        buffer.resize (1 << 10);
 
         int wbit = MAX_WBITS;
         switch (windowbits) {
@@ -172,14 +176,14 @@ return_t zlib_inflate (zlib_windowbits_t windowbits, byte_t* stream, size_t size
 
         inflateInit2 (&infstream, wbit);
         do {
-            infstream.avail_out = sizeof (buffer);
-            infstream.next_out = (byte_t *) buffer;
+            infstream.avail_out = buffer.size ();
+            infstream.next_out = &buffer[0];
 
             ret = inflate (&infstream, Z_NO_FLUSH);
 
             uint32 size = output->size ();
             if (size < infstream.total_out) {
-                output->write (buffer, infstream.total_out - size);
+                output->write (&buffer[0], infstream.total_out - size);
             }
             //cooltime = zlib_get_cooltime ();
             //if (cooltime) {

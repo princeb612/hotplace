@@ -32,7 +32,7 @@ json_object_encryption::~json_object_encryption ()
     // do nothing
 }
 
-return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, binary_t& output)
+return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     jose_context_t* handle = static_cast <jose_context_t*> (context);
@@ -310,12 +310,12 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
     return ret;
 }
 
-return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t input, binary_t& output)
+return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output)
 {
     return decrypt (context, enc, alg, nullptr, input, output);
 }
 
-return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jwa_t alg, const char* kid, binary_t input, binary_t& output)
+return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jwa_t alg, const char* kid, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     jose_context_t* handle = static_cast <jose_context_t*> (context);

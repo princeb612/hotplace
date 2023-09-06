@@ -11,12 +11,13 @@
 #ifndef __HOTPLACE_SDK_IO_BASIC_JSON__
 #define __HOTPLACE_SDK_IO_BASIC_JSON__
 
+#include <hotplace/sdk/io/system/sdk.hpp>
 #include <jansson.h>
 
 namespace hotplace {
 namespace io {
 
-static inline return_t json_open_stream (json_t** object, const char* buffer)
+static inline return_t json_open_stream (json_t** object, const char* buffer, bool suppress = false)
 {
     return_t ret = errorcode_t::success;
 
@@ -32,8 +33,11 @@ static inline return_t json_open_stream (json_t** object, const char* buffer)
         root = json_loads (buffer, 0, &jerror);
         if (nullptr == root) {
             ret = errorcode_t::internal_error;
-            __leave2;
-            //__leave2_trace2(ret, format("%d %s", jerror.line, jerror.text).c_str());
+            if (false == suppress) {
+                __leave2_tracef (ret, "%d %s\n", jerror.line, jerror.text);
+            } else {
+                __leave2;
+            }
         }
 
         *object = root;
