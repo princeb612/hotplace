@@ -19,17 +19,49 @@ test_case _test_case;
 
 void test_base16 ()
 {
+    return_t ret = errorcode_t::success;
     const char* text = "0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[{]}\\|;:'\",<.>/\?";
     std::string encoded;
 
     base16_encode ((byte_t*) text, strlen (text), encoded);
     binary_t decoded;
-    base16_decode (encoded, decoded);
-    printf ("%s\n", text);
-    printf ("%s\n", encoded.c_str ());
-    buffer_stream bs;
-    dump_memory (&decoded[0], decoded.size (), &bs);
-    printf ("%s\n", bs.c_str ());
+    ret = base16_decode (encoded, decoded);
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+
+        printf ("input : %s\n", text);
+        printf ("encode: %s\n", encoded.c_str ());
+        buffer_stream bs;
+        dump_memory (&decoded[0], decoded.size (), &bs);
+        printf ("dump decoded\n%s\n", bs.c_str ());
+    }
+
+    bool test = false;
+    test = (strlen (text) == decoded.size ());
+    _test_case.assert (test, __FUNCTION__, "base16");
+}
+
+void test_base16_decode ()
+{
+    return_t ret = errorcode_t::success;
+    std::string encoded ("000102030405060708090a0b0c0d0e0f808182838485868788898a8b8c8d8e8f");
+
+    binary_t decoded;
+
+    ret = base16_decode (encoded, decoded);
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+
+        buffer_stream bs;
+        dump_memory (&decoded[0], decoded.size (), &bs);
+        printf ("%s\n", bs.c_str ());
+    }
+
+    bool test = false;
+    test = ((encoded.size () / 2) == decoded.size ());
+    _test_case.test (ret, __FUNCTION__, "base16");
 }
 
 void test_base64_routine (const char* source, size_t source_size, int encoding)
@@ -44,12 +76,16 @@ void test_base64_routine (const char* source, size_t source_size, int encoding)
     base64_decode (encoded_b64, decoded_b64, encoding);
     _test_case.assert (0 == memcmp (source, &decoded_b64[0], source_size), __FUNCTION__, "base64_decode");
 
-    dump_memory ((byte_t*) source, source_size, &bs);
-    printf ("input\n%s\n", bs.c_str ());
-    dump_memory ((byte_t*) &encoded_b64[0], encoded_b64.size (), &bs);
-    printf ("encoded\n%.*s\n", (int) bs.size (), bs.c_str ());
-    dump_memory (&decoded_b64[0], decoded_b64.size (), &bs);
-    printf ("decoded\n%.*s\n", (int) bs.size (), bs.c_str ());
+    {
+        test_case_notimecheck notimecheck (_test_case);
+
+        dump_memory ((byte_t*) source, source_size, &bs);
+        printf ("input\n%s\n", bs.c_str ());
+        dump_memory ((byte_t*) &encoded_b64[0], encoded_b64.size (), &bs);
+        printf ("encoded\n%.*s\n", (int) bs.size (), bs.c_str ());
+        dump_memory (&decoded_b64[0], decoded_b64.size (), &bs);
+        printf ("decoded\n%.*s\n", (int) bs.size (), bs.c_str ());
+    }
 }
 
 void test_base64 ()
@@ -64,6 +100,7 @@ void test_base64 ()
 int main ()
 {
     test_base16 ();
+    test_base16_decode ();
     test_base64 ();
 
     _test_case.report (5);

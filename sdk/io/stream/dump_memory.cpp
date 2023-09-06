@@ -71,7 +71,7 @@ return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_t* st
                     } else if (isprint (c)) {
                         stream_object->printf ("%c", c);    /* printable */
                     } else {
-                        stream_object->printf ("%c", ' ');  /*special characters */
+                        stream_object->printf ("%c", '.');  /*special characters */
                     }
                 }
                 dumped_hex_part = 0;

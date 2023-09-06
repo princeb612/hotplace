@@ -17,74 +17,6 @@ namespace crypto {
 #define CRYPT_CIPHER_VALUE(a, m) ((a << 16) | m)
 
 const openssl_evp_cipher_method_t evp_cipher_methods[] = {
-    /*
-       EVP_des_ede_cfb
-       EVP_des_ede3_cfb
-       EVP_des_ede3_cfb1
-       EVP_des_ede3_cfb8
-       EVP_des_ede_ofb
-       EVP_des_ede3_ofb
-       EVP_des_cbc
-       EVP_des_ede_cbc
-       EVP_des_ede3_cbc
-       EVP_des_ede
-       EVP_des_ede3
-       EVP_des_ede3_wrap
-
-       EVP_rc4
-       EVP_rc4_40
-       EVP_rc4_hmac_md5
-
-       EVP_sm4_ecb
-       EVP_sm4_cbc
-       EVP_sm4_cfb
-       EVP_sm4_ofb
-       EVP_sm4_ctr
-
-       EVP_rc2_ecb
-       EVP_rc2_cfb
-       EVP_rc2_ofb
-       EVP_rc2_cbc
-       EVP_rc2_40_cbc
-       EVP_rc2_64_cbc
-
-       EVP_cast5_ecb
-       EVP_cast5_cfb
-       EVP_cast5_ofb
-       EVP_cast5_cbc
-
-       EVP_rc5_32_12_16_ecb
-       EVP_rc5_32_12_16_cfb
-       EVP_rc5_32_12_16_ofb
-       EVP_rc5_32_12_16_cbc
-
-       EVP_aes_128_ocb
-       EVP_aes_128_xts
-       EVP_aes_128_ccm
-       EVP_aes_128_wrap_pad
-
-       EVP_aes_192_ocb
-       EVP_aes_192_ccm
-       EVP_aes_192_wrap_pad
-
-       EVP_aes_256_ocb
-       EVP_aes_256_xts
-       EVP_aes_256_ccm
-       EVP_aes_256_wrap_pad
-
-       EVP_aes_128_cbc_hmac_sha1
-       EVP_aes_256_cbc_hmac_sha1
-       EVP_aes_128_cbc_hmac_sha256
-       EVP_aes_256_cbc_hmac_sha256
-
-       EVP_aria_128_ccm
-       EVP_aria_192_ccm
-       EVP_aria_256_ccm
-
-       EVP_chacha20
-       EVP_chacha20_poly1305
-     */
-
     { crypt_algorithm_t::aes128, crypt_mode_t::cbc,  EVP_aes_128_cbc (),  "aes-128-cbc", },
     { crypt_algorithm_t::aes128, crypt_mode_t::ccm,  EVP_aes_128_ccm (),  "aes-128-ccm", },
     { crypt_algorithm_t::aes128, crypt_mode_t::cfb,  EVP_aes_128_cfb (),  "aes-128-cfb", },
@@ -150,38 +82,38 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
 
     { crypt_algorithm_t::blowfish, crypt_mode_t::cbc, EVP_bf_cbc (), "bf-cbc", },
     { crypt_algorithm_t::blowfish, crypt_mode_t::cfb, EVP_bf_cfb (), "bf-cfb", },
-  //{ crypt_algorithm_t::blowfish, crypt_mode_t::ctr, EVP_bf_ctr (), "bf-ctr", },
+    //{ crypt_algorithm_t::blowfish, crypt_mode_t::ctr, EVP_bf_ctr (), "bf-ctr", },
     { crypt_algorithm_t::blowfish, crypt_mode_t::ecb, EVP_bf_ecb (), "bf-ecb", },
     { crypt_algorithm_t::blowfish, crypt_mode_t::ofb, EVP_bf_ofb (), "bf-ofb", },
 
     { crypt_algorithm_t::camellia128, crypt_mode_t::cbc,  EVP_camellia_128_cbc (),  "camellia-128-cbc", },
-  //{ crypt_algorithm_t::camellia128, crypt_mode_t::ccm,  EVP_camellia_128_ccm (),  "camellia-128-ccm", },
+    //{ crypt_algorithm_t::camellia128, crypt_mode_t::ccm,  EVP_camellia_128_ccm (),  "camellia-128-ccm", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::cfb,  EVP_camellia_128_cfb (),  "camellia-128-cfb", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::cfb1, EVP_camellia_128_cfb1 (), "camellia-128-cfb1", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::cfb8, EVP_camellia_128_cfb8 (), "camellia-128-cfb8", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::ctr,  EVP_camellia_128_ctr (),  "camellia-128-ctr", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::ecb,  EVP_camellia_128_ecb (),  "camellia-128-ecb", },
-  //{ crypt_algorithm_t::camellia128, crypt_mode_t::gcm,  EVP_camellia_128_gcm (),  "camellia-128-gcm", },
+    //{ crypt_algorithm_t::camellia128, crypt_mode_t::gcm,  EVP_camellia_128_gcm (),  "camellia-128-gcm", },
     { crypt_algorithm_t::camellia128, crypt_mode_t::ofb,  EVP_camellia_128_ofb (),  "camellia-128-ofb", },
 
     { crypt_algorithm_t::camellia192, crypt_mode_t::cbc,  EVP_camellia_192_cbc (),  "camellia-192-cbc", },
-  //{ crypt_algorithm_t::camellia192, crypt_mode_t::ccm,  EVP_camellia_192_ccm (),  "camellia-192-ccm", },
+    //{ crypt_algorithm_t::camellia192, crypt_mode_t::ccm,  EVP_camellia_192_ccm (),  "camellia-192-ccm", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::cfb,  EVP_camellia_192_cfb (),  "camellia-192-cfb", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::cfb1, EVP_camellia_192_cfb1 (), "camellia-192-cfb1", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::cfb8, EVP_camellia_192_cfb8 (), "camellia-192-cfb8", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::ctr,  EVP_camellia_192_ctr (),  "camellia-192-ctr", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::ecb,  EVP_camellia_192_ecb (),  "camellia-192-ecb", },
-  //{ crypt_algorithm_t::camellia192, crypt_mode_t::gcm,  EVP_camellia_192_gcm (),  "camellia-192-gcm", },
+    //{ crypt_algorithm_t::camellia192, crypt_mode_t::gcm,  EVP_camellia_192_gcm (),  "camellia-192-gcm", },
     { crypt_algorithm_t::camellia192, crypt_mode_t::ofb,  EVP_camellia_192_ofb (),  "camellia-192-ofb", },
 
     { crypt_algorithm_t::camellia256, crypt_mode_t::cbc,  EVP_camellia_256_cbc (),  "camellia-256-cbc", },
-  //{ crypt_algorithm_t::camellia256, crypt_mode_t::ccm,  EVP_camellia_256_ccm (),  "camellia-256-ccm", },
+    //{ crypt_algorithm_t::camellia256, crypt_mode_t::ccm,  EVP_camellia_256_ccm (),  "camellia-256-ccm", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::cfb,  EVP_camellia_256_cfb (),  "camellia-256-cfb", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::cfb1, EVP_camellia_256_cfb1 (), "camellia-256-cfb1", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::cfb8, EVP_camellia_256_cfb8 (), "camellia-256-cfb8", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::ctr,  EVP_camellia_256_ctr (),  "camellia-256-ctr", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::ecb,  EVP_camellia_256_ecb (),  "camellia-256-ecb", },
-  //{ crypt_algorithm_t::camellia256, crypt_mode_t::gcm,  EVP_camellia_256_gcm (),  "camellia-256-gcm", },
+    //{ crypt_algorithm_t::camellia256, crypt_mode_t::gcm,  EVP_camellia_256_gcm (),  "camellia-256-gcm", },
     { crypt_algorithm_t::camellia256, crypt_mode_t::ofb,  EVP_camellia_256_ofb (),  "camellia-256-ofb", },
 
     { crypt_algorithm_t::cast, crypt_mode_t::cbc,  EVP_cast5_cbc (), "cast5-cbc", },
@@ -208,10 +140,10 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::rc5, crypt_mode_t::ofb, EVP_sm4_ofb (), "rc5-ofb", },
 
     { crypt_algorithm_t::sm4, crypt_mode_t::cbc, EVP_sm4_cbc (), "sm4-cbc", },
-  //{ crypt_algorithm_t::sm4, crypt_mode_t::ccm, EVP_sm4_ccm (), "sm4-ccm", },
+    //{ crypt_algorithm_t::sm4, crypt_mode_t::ccm, EVP_sm4_ccm (), "sm4-ccm", },
     { crypt_algorithm_t::sm4, crypt_mode_t::cfb, EVP_sm4_cfb (), "sm4-cfb", },
     { crypt_algorithm_t::sm4, crypt_mode_t::ecb, EVP_sm4_ecb (), "sm4-ecb", },
-  //{ crypt_algorithm_t::sm4, crypt_mode_t::gcm, EVP_sm4_gcm (), "sm4-gcm", },
+    //{ crypt_algorithm_t::sm4, crypt_mode_t::gcm, EVP_sm4_gcm (), "sm4-gcm", },
     { crypt_algorithm_t::sm4, crypt_mode_t::ofb, EVP_sm4_ofb (), "sm4-ofb", },
     { crypt_algorithm_t::sm4, crypt_mode_t::ctr, EVP_sm4_ctr (), "sm4-ctr", },
 #endif
@@ -220,6 +152,10 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::seed, crypt_mode_t::cfb, EVP_seed_cfb (), "seed-cfb", },
     { crypt_algorithm_t::seed, crypt_mode_t::ecb, EVP_seed_ecb (), "seed-ecb", },
     { crypt_algorithm_t::seed, crypt_mode_t::ofb, EVP_seed_ofb (), "seed-ofb", },
+
+    { crypt_algorithm_t::rc4, crypt_mode_t::stream_cipher, EVP_rc4 (), "rc4", },
+    { crypt_algorithm_t::chacha20, crypt_mode_t::stream_cipher, EVP_chacha20 (), "chacha20", },
+    { crypt_algorithm_t::chacha20, crypt_mode_t::stream_aead, EVP_chacha20_poly1305 (), "chacha20-poly1305", },
 };
 
 /* something wrong EVP_CIPHER_CTX_iv_length, EVP_CIPHER_CTX_block_size (openssl-1.1.1) */
@@ -250,6 +186,9 @@ const hint_blockcipher_t hint_blockciphers [] = {
     { crypt_algorithm_t::seed, 16, 16, 16, },
 
     { crypt_algorithm_t::sm4, 16, 16, 16, },
+
+    { crypt_algorithm_t::rc4, 0, 12, 0, },
+    { crypt_algorithm_t::chacha20, 32, 12, 0, },
 };
 
 const openssl_evp_md_method_t evp_md_methods[] = {
@@ -427,6 +366,9 @@ return_t crypto_advisor::build_if_necessary ()
                 const openssl_evp_cipher_method_t* item = evp_cipher_methods + i;
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
                 EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch (nullptr, item->_fetchname, nullptr);
+                if (nullptr == evp_cipher) {
+                    __trace (errorcode_t::debug, "%s\n", item->_fetchname);
+                }
                 _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), evp_cipher));
 #else
                 _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), item->_cipher));
@@ -438,6 +380,9 @@ return_t crypto_advisor::build_if_necessary ()
                 const openssl_evp_md_method_t* item = evp_md_methods + i;
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
                 EVP_MD* evp_md = EVP_MD_fetch (nullptr, item->_fetchname, nullptr);
+                if (nullptr == evp_md) {
+                    __trace (errorcode_t::debug, "%s\n", item->_fetchname);
+                }
                 _md_map.insert (std::make_pair (item->_algorithm, evp_md));
 #else
                 _md_map.insert (std::make_pair (item->_algorithm, item->_evp_md));

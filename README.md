@@ -92,6 +92,8 @@
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm (September 2002)
  * RFC 5649 Advanced Encryption Starndard (AES) Key Wrap with Padding Algorithm (September 2009)
  * RFC 5794 A Description of the ARIA Encryption Algorithm (March 2010)
+ * RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
+ * RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
    * sdk/crypto/basic/
    * test/crypto/
  * RFC 1951 : DEFLATE Compressed Data Format Specification version 1.3

@@ -347,6 +347,19 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
             }
 
             if (crypt_mode_t::gcm == context->mode) {
+                // 16bytes (128bits)
+                // RFC 7516
+                //      Perform authenticated encryption on the plaintext with the AES GCM
+                //      algorithm using the CEK as the encryption key, the JWE
+                //      Initialization Vector, and the Additional Authenticated Data
+                //      value, requesting a 128-bit Authentication Tag output.
+                //
+                //      B.7.  Truncate HMAC Value to Create Authentication Tag
+                //      Use the first half (128 bits) of the HMAC output M as the
+                //      Authentication Tag output T.
+                //
+                // RFC 7539 2.5.  The Poly1305 Algorithm
+                //      Poly1305 takes a 32-byte one-time key and a message and produces a 16-byte tag.
                 tag_size = 16;
             } else if (crypt_mode_t::ccm == context->mode) {
                 tag_size = 14;

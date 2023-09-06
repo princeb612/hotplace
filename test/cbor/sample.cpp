@@ -10,6 +10,7 @@
  */
 
 #include <hotplace/sdk/sdk.hpp>
+#include <math.h>
 #include <stdio.h>
 #include <iostream>
 #include <deque>
@@ -45,6 +46,19 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
 
     _test_case.test (ret, __FUNCTION__, "encoded %s expect %s", hex.c_str (), expect.c_str ());
 }
+
+// The IEEE Standard for Floating-Point Arithmetic (IEEE 754)
+// https://en.wikipedia.org/wiki/IEEE_754
+// https://en.wikipedia.org/wiki/Floating-point_arithmetic
+// https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
+// https://www.cl.cam.ac.uk/teaching/1011/FPComp/fpcomp10slides.pdf
+// https://www.youtube.com/watch?v=8afbTaA-gOQ
+//
+//                      sign    exponent    fraction
+// half precision       1           5           10
+// single precision     1           8           23
+// double precision     1          11           52
+// quadruple            1          15          112
 
 void test1 ()
 {
@@ -110,44 +124,56 @@ void test1 ()
     encode_test (vt, bin, "3903e7");
 
     /* 00000000 : 00 00 00 00 -- -- -- -- -- -- -- -- -- -- -- -- | 0x00000000 */
+    // half precision 0xf90000
     variant_set_float (vt, 0.0);
     encode_test (vt, bin, "fa00000000");
+
     variant_set_double (vt, 0.0);
     encode_test (vt, bin, "fb0000000000000000");
 
     /* 00000000 : 00 00 00 80 -- -- -- -- -- -- -- -- -- -- -- -- | 0x80000000 */
+    // half precision 0xf98000
     variant_set_float (vt, -0.0);
     encode_test (vt, bin, "fa80000000");
+
     variant_set_double (vt, -0.0);
     encode_test (vt, bin, "fb8000000000000000");
 
     /* 00000000 : 00 00 80 3F -- -- -- -- -- -- -- -- -- -- -- -- | 0x3f800000 */
+    // half precision 0xf93c00
     variant_set_float (vt, 1.0);
     encode_test (vt, bin, "fa3f800000");
+
     variant_set_double (vt, 1.0);
     encode_test (vt, bin, "fb3ff0000000000000");
 
     /* 00000000 : CD CC 8C 3F -- -- -- -- -- -- -- -- -- -- -- -- | 0x3f8ccccd */
     variant_set_float (vt, 1.1);
     encode_test (vt, bin, "fa3f8ccccd");
+
     variant_set_double (vt, 1.1);
     encode_test (vt, bin, "fb3ff199999999999a");
 
     /* 00000000 : 00 00 C0 3F -- -- -- -- -- -- -- -- -- -- -- -- | 0x3fc00000 */
+    // half precision 0xf93e00
     variant_set_float (vt, 1.5);
     encode_test (vt, bin, "fa3fc00000");
+
     variant_set_double (vt, 1.5);
     encode_test (vt, bin, "fb3ff8000000000000");
 
     /* 00000000 : 00 E0 7F 47 -- -- -- -- -- -- -- -- -- -- -- -- | 0x477fe000 */
+    // half precision 0xf97bff
     variant_set_float (vt, 65504.0);
     encode_test (vt, bin, "fa477fe000");
+
     variant_set_double (vt, 65504.0);
     encode_test (vt, bin, "fb40effc0000000000");
 
     /* 00000000 : 00 50 C3 47 -- -- -- -- -- -- -- -- -- -- -- -- | 0x47c35000 */
     variant_set_float (vt, 100000.0);
     encode_test (vt, bin, "fa47c35000");
+
     variant_set_double (vt, 100000.0);
     encode_test (vt, bin, "fb40f86a0000000000");
 
@@ -157,17 +183,23 @@ void test1 ()
     variant_set_double (vt, 1.0e+300);
     encode_test (vt, bin, "fb7e37e43c8800759c");
 
+    // half precision 0xf90001
     variant_set_float (vt, 5.960464477539063e-8);
     encode_test (vt, bin, "fa33800000");
 
+    // half precision 0xf90400
     variant_set_float (vt, 0.00006103515625);
     encode_test (vt, bin, "fa38800000");
 
+    // half precision 0xf9c400
     variant_set_float (vt, -4.0);
     encode_test (vt, bin, "fac0800000");
 
     variant_set_float (vt, -4.1);
     encode_test (vt, bin, "fac0833333");
+
+    variant_set_double (vt, -4.1);
+    encode_test (vt, bin, "fbc010666666666666");
 
     variant_set_bool (vt, false);
     encode_test (vt, bin, "f4");

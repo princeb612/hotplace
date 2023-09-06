@@ -40,7 +40,7 @@ public:
      * @param crypt_mode_t mode [in]
      * @param const unsigned char* key [in]
      * @param unsigned size_key [in]
-     * @param const unsigned char* iv [in]
+     * @param const unsigned char* iv [in] see openssl_chacha20_iv in case of crypt_algorithm_t::chacha20
      * @param unsigned size_iv [in]
      * @return error code (see error.hpp)
      * @example

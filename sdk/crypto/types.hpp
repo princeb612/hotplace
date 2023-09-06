@@ -56,7 +56,12 @@ enum crypt_algorithm_t {
     rc5                 = 15,
     seed                = 16,
     sm4                 = 17,
+
+    // stream cipher
+    rc4                 = 101,
+    chacha20            = 102,
 };
+
 
 /**
  * modes
@@ -98,6 +103,9 @@ enum crypt_mode_t {
     gcm                 = 8,
     wrap                = 9,
     ccm                 = 10,
+
+    stream_cipher       = 11,
+    stream_aead         = gcm,
 };
 
 enum hash_algorithm_t {
