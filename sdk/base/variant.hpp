@@ -149,43 +149,43 @@ typedef struct __variant_t {
 
 #define variant_init(vt) { vt.type = TYPE_NULL; memset (&vt.data, 0, sizeof (vt.data)); vt.flag = 0; }
 
-#define variant_set_bool(vt, value) { vt.type = TYPE_BOOL; vt.data.b = (value); }
-#define variant_set_int8(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = (value); }
-#define variant_set_uint8(vt, value) { vt.type = TYPE_UINT8; vt.data.ui8 = (value); }
-#define variant_set_int16(vt, value) { vt.type = TYPE_INT16; vt.data.i16 = (value); }
-#define variant_set_uint16(vt, value) { vt.type = TYPE_UINT16; vt.data.ui16 = (value); }
-#define variant_set_int32(vt, value) { vt.type = TYPE_INT32; vt.data.i32 = (value); }
-#define variant_set_uint32(vt, value) { vt.type = TYPE_UINT32; vt.data.ui32 = (value); }
-#define variant_set_int64(vt, value) { vt.type = TYPE_INT64; vt.data.i64 = (value); }
-#define variant_set_uint64(vt, value) { vt.type = TYPE_UINT64; vt.data.ui64 = (value); }
+#define variant_set_bool(vt, value) { vt.type = TYPE_BOOL; vt.data.b = (value); vt.flag = 0; }
+#define variant_set_int8(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = (value); vt.flag = 0; }
+#define variant_set_uint8(vt, value) { vt.type = TYPE_UINT8; vt.data.ui8 = (value); vt.flag = 0; }
+#define variant_set_int16(vt, value) { vt.type = TYPE_INT16; vt.data.i16 = (value); vt.flag = 0; }
+#define variant_set_uint16(vt, value) { vt.type = TYPE_UINT16; vt.data.ui16 = (value); vt.flag = 0; }
+#define variant_set_int32(vt, value) { vt.type = TYPE_INT32; vt.data.i32 = (value); vt.flag = 0; }
+#define variant_set_uint32(vt, value) { vt.type = TYPE_UINT32; vt.data.ui32 = (value); vt.flag = 0; }
+#define variant_set_int64(vt, value) { vt.type = TYPE_INT64; vt.data.i64 = (value); vt.flag = 0; }
+#define variant_set_uint64(vt, value) { vt.type = TYPE_UINT64; vt.data.ui64 = (value); vt.flag = 0; }
 #if defined __SIZEOF_INT128__
-#define variant_set_int128(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = (value); }
-#define variant_set_uint128(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = (value); }
+#define variant_set_int128(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = (value); vt.flag = 0; }
+#define variant_set_uint128(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = (value); vt.flag = 0; }
 #endif
-#define variant_set_float(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = (value); }
-#define variant_set_double(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = (value); }
+#define variant_set_float(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = (value); vt.flag = 0; }
+#define variant_set_double(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = (value); vt.flag = 0; }
 
-#define variant_set_bool_ptr(vt, value) { vt.type = TYPE_BOOL; vt.data.b = *(bool*) (value); }
-#define variant_set_int8_ptr(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = *(int8*) (value); }
-#define variant_set_uint8_ptr(vt, value) { vt.type = TYPE_UINT8; vt.data.ui8 = *(uint8*) (value); }
-#define variant_set_int16_ptr(vt, value) { vt.type = TYPE_INT16; vt.data.i16 = *(int16*) (value); }
-#define variant_set_uint16_ptr(vt, value) { vt.type = TYPE_UINT16; vt.data.ui16 = *(uint16*) (value); }
-#define variant_set_int32_ptr(vt, value) { vt.type = TYPE_INT32; vt.data.i32 = *(int32*) (value); }
-#define variant_set_uint32_ptr(vt, value) { vt.type = TYPE_UINT32; vt.data.ui32 = *(uint32*) (value); }
-#define variant_set_int64_ptr(vt, value) { vt.type = TYPE_INT64; vt.data.i64 = *(int64*) (value); }
-#define variant_set_uint64_ptr(vt, value) { vt.type = TYPE_UINT64; vt.data.ui64 = *(uint64*) (value); }
+#define variant_set_bool_ptr(vt, value) { vt.type = TYPE_BOOL; vt.data.b = *(bool*) (value); vt.flag = 0; }
+#define variant_set_int8_ptr(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = *(int8*) (value); vt.flag = 0; }
+#define variant_set_uint8_ptr(vt, value) { vt.type = TYPE_UINT8; vt.data.ui8 = *(uint8*) (value); vt.flag = 0; }
+#define variant_set_int16_ptr(vt, value) { vt.type = TYPE_INT16; vt.data.i16 = *(int16*) (value); vt.flag = 0; }
+#define variant_set_uint16_ptr(vt, value) { vt.type = TYPE_UINT16; vt.data.ui16 = *(uint16*) (value); vt.flag = 0; }
+#define variant_set_int32_ptr(vt, value) { vt.type = TYPE_INT32; vt.data.i32 = *(int32*) (value); vt.flag = 0; }
+#define variant_set_uint32_ptr(vt, value) { vt.type = TYPE_UINT32; vt.data.ui32 = *(uint32*) (value); vt.flag = 0; }
+#define variant_set_int64_ptr(vt, value) { vt.type = TYPE_INT64; vt.data.i64 = *(int64*) (value); vt.flag = 0; }
+#define variant_set_uint64_ptr(vt, value) { vt.type = TYPE_UINT64; vt.data.ui64 = *(uint64*) (value); vt.flag = 0; }
 #if defined __SIZEOF_INT128__
-#define variant_set_int128_ptr(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = *(int128*) (value); }
-#define variant_set_uint128_ptr(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = *(uint128*) (value); }
+#define variant_set_int128_ptr(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = *(int128*) (value); vt.flag = 0; }
+#define variant_set_uint128_ptr(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = *(uint128*) (value); vt.flag = 0; }
 #endif
-#define variant_set_float_ptr(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = *(float*) (value); }
-#define variant_set_double_ptr(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = *(double*) (value); }
+#define variant_set_float_ptr(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = *(float*) (value); vt.flag = 0; }
+#define variant_set_double_ptr(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = *(double*) (value); vt.flag = 0; }
 
-#define variant_set_pointer(vt, value) { vt.type = TYPE_POINTER; vt.data.p = (void*) (value); }
-#define variant_set_str(vt, value) { vt.type = TYPE_STRING; vt.data.str = (char*) (value); }
-#define variant_set_nstr(vt, value, size) { vt.type = TYPE_NSTRING; vt.data.nstr32.data = (value); vt.data.nstr32.size = (size); }
-#define variant_set_bstr(vt, value, size) { vt.type = TYPE_BINARY; vt.data.bstr32.data = (value); vt.data.bstr32.size = (size); }
-#define variant_set(vt, vttype, value) { vt.type = vttype; vt.data.p = (void*) (value); }
+#define variant_set_pointer(vt, value) { vt.type = TYPE_POINTER; vt.data.p = (void*) (value); vt.flag = 0; }
+#define variant_set_str(vt, value) { vt.type = TYPE_STRING; vt.data.str = (char*) (value); vt.flag = 0; }
+#define variant_set_nstr(vt, value, size) { vt.type = TYPE_NSTRING; vt.data.nstr32.data = (value); vt.data.nstr32.size = (size); vt.flag = 0; }
+#define variant_set_bstr(vt, value, size) { vt.type = TYPE_BINARY; vt.data.bstr32.data = (value); vt.data.bstr32.size = (size); vt.flag = 0; }
+#define variant_set(vt, vttype, value) { vt.type = vttype; vt.data.p = (void*) (value); vt.flag = 0; }
 // strdup
 #define variant_set_str_new(vt, value) { vt.type = TYPE_STRING; vt.data.str = strdup (value); vt.flag = variant_flag_t::flag_free; }
 // strndup
