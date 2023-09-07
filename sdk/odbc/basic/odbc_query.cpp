@@ -142,12 +142,22 @@ return_t odbc_query::execute_statement ()
     __try2
     {
         ret_sql = SQLExecute (_stmt_handle);
-        if (SQL_SUCCEEDED (ret_sql)) {
-            build_fieldinfo ();
-            // do nothing
-        } else {
-            ret = errorcode_t::internal_error;
-            __leave2;
+        switch (ret_sql) {
+            case SQL_SUCCESS:
+            case SQL_SUCCESS_WITH_INFO:
+                build_fieldinfo ();
+                break;
+            case SQL_NO_DATA:
+                break;
+            case SQL_STILL_EXECUTING:
+                ret = errorcode_t::busy;
+                break;
+            case SQL_ERROR:
+                ret = errorcode_t::internal_error;
+                break;
+            default:
+                ret = errorcode_t::internal_error;
+                break;
         }
     }
     __finally2
@@ -174,14 +184,6 @@ return_t odbc_query::close ()
     }
 
     clear_fieldinfo ();
-    return ret;
-}
-
-return_t odbc_query::cancel_async ()
-{
-    return_t ret = errorcode_t::success;
-
-    ret = close ();
     return ret;
 }
 

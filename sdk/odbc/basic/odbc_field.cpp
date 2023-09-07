@@ -68,8 +68,7 @@ odbc_field::odbc_field (int index, int data_type, int column_type, int column_si
             size_t size = column_size + sizeof (TCHAR);
             void* ptr = malloc (size);
             if (nullptr == ptr) {
-                //throw Exception (ERROR_OUTOFMEMORY);
-                throw;
+                throw errorcode_t::out_of_memory;
             } else {
                 memcpy_inline (ptr, column_size, column_data, column_size);
                 memset ((unsigned char*) ptr + column_size, 0, sizeof (TCHAR));
@@ -93,8 +92,7 @@ odbc_field::odbc_field (int index, int data_type, int column_type, int column_si
                 size_t size = column_size + sizeof (WCHAR); // cbSize
                 void* ptr = malloc (size);
                 if (nullptr == ptr) {
-                    //throw Exception (ERROR_OUTOFMEMORY);
-                    throw;
+                    throw errorcode_t::out_of_memory;
                 } else {
                     memcpy_inline (ptr, size, column_data, size);
                     memset ((unsigned char*) ptr + column_size, 0, sizeof (WCHAR));
@@ -109,8 +107,7 @@ odbc_field::odbc_field (int index, int data_type, int column_type, int column_si
             size_t size = column_size;
             void* ptr = malloc (size);
             if (nullptr == ptr) {
-                //throw Exception (ERROR_OUTOFMEMORY);
-                throw;
+                throw errorcode_t::out_of_memory;
             } else {
                 memcpy_inline (ptr, column_size, column_data, column_size);
                 _field_data.p = ptr;

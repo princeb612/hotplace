@@ -139,7 +139,12 @@ return_t odbc_query::execute (LPCTSTR query_string, va_list ap)
 return_t odbc_query::execute_async (LPCTSTR query_string, va_list ap)
 {
     return_t ret = errorcode_t::success;
-    TCHAR tszBuffer[(1 << 12)];
+
+#if defined _MBCS || defined MBCS
+    ansi_string str;
+#elif defined _UNICODE || defined UNICODE
+    wide_string str;
+#endif
 
     __try2
     {
@@ -152,11 +157,11 @@ return_t odbc_query::execute_async (LPCTSTR query_string, va_list ap)
             __leave2;
         }
 
-        _vsntprintf (tszBuffer, RTL_NUMBER_OF (tszBuffer), query_string, ap);
+        str.vprintf (query_string, ap);
 
         SQLSetStmtAttr (_stmt_handle, SQL_ATTR_ASYNC_ENABLE, (SQLPOINTER) SQL_ASYNC_ENABLE_ON, 0);
 
-        ret = execute_direct (tszBuffer);
+        ret = execute_direct (str.c_str ());
     }
     __finally2
     {

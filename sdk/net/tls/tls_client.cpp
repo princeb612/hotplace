@@ -17,7 +17,7 @@ namespace net {
 transport_layer_security_client::transport_layer_security_client (transport_layer_security* tls) : _tls (tls)
 {
     if (nullptr == tls) {
-        throw errorcode_t::invalid_context;
+        throw errorcode_t::insufficiency;
     }
     tls->addref ();
     _shared.make_share (this);

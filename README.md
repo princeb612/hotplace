@@ -7,9 +7,9 @@
  * platform support - mingw, linux
  * packages to install
    * gcc, g++, binutils, cmake, gdb
-   * openssl-devel jansson-devel zlib-devel (MINGW)
-   * openssl-devel jansson zlib-devel (RHEL)
-   * libssl-dev libjansson-dev zlib1g-dev (ubuntu)
+   * openssl-devel jansson-devel zlib-devel unixodbc (MINGW)
+   * openssl-devel jansson zlib-devel unixodbc-devel (RHEL)
+   * libssl-dev libjansson-dev zlib1g-dev unixodbc-dev (ubuntu)
    * valgrind (linux)
  * important
    * openssl 1.1.1 or newer

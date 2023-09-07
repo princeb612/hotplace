@@ -102,7 +102,7 @@ public:
     return_t execute_statement ();
 
     /**
-     * @brief
+     * @brief   close(sync)/cancel(async)
      * @param
      * @return
      * @sa
@@ -147,6 +147,11 @@ public:
      */
     return_t more ();
 
+    sql_query_mode_t mode ()
+    {
+        return _sql_mode;
+    }
+
     int  addref ();
     int  release ();
 
@@ -154,7 +159,7 @@ protected:
     /**
      * @brief   constructor
      */
-    odbc_query (HDBC dbc_handle, sql_query_mode_t sql_mode = sql_query_mode_t::async_query);
+    odbc_query (HDBC dbc_handle, sql_query_mode_t sql_mode = sql_query_mode_t::sync_query);
 
     /**
      * @brief
@@ -192,14 +197,6 @@ protected:
 #if defined _UNICODE || defined UNICODE
     return_t execute_direct (const wchar_t* query_string);
 #endif
-    /**
-     * @brief   cancel asynchronous query
-     * @param
-     * @return
-     * @sa
-     * @remarks
-     */
-    return_t cancel_async ();
 
     /**
      * @brief   field information
@@ -225,6 +222,31 @@ protected:
     sql_query_mode_t _sql_mode;
 
     t_shared_reference <odbc_query> _shared;
+};
+
+/**
+ * @desc    sql_query_mode_t::async_query
+ *          jobqueue-based (merlin)
+ *          leave it to developer (hotplace)
+ */
+class odbc_sinker
+{
+public:
+    odbc_sinker (odbc_query* dbquery, uint32 timeout);
+    ~odbc_sinker ();
+
+    /**
+     * @return
+     *          errorcode_t::success
+     *          errorcode_t::busy
+     *          errorcode_t::timeout
+     */
+    return_t ready ();
+
+private:
+    odbc_query* _dbquery;
+    uint32 _tmo_seconds;
+    struct timespec _timestamp;
 };
 
 }
