@@ -167,19 +167,19 @@ public:
     /**
      * @biref asymmetric encrypt
      * @param EVP_PKEY* pkey [in]
-     * @param binary_t input [in]
+     * @param binary_t const& input [in]
      * @param binary_t& output [out]
      * @param crypt_mode2_t mode [in]
      */
-    return_t encrypt (EVP_PKEY* pkey, binary_t input, binary_t& output, crypt_mode2_t mode);
+    return_t encrypt (EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_mode2_t mode);
     /**
      * @biref asymmetric decrypt
      * @param EVP_PKEY* pkey [in]
-     * @param binary_t input [in]
+     * @param binary_t const& input [in]
      * @param binary_t& output [out]
      * @param crypt_mode2_t mode [in]
      */
-    return_t decrypt (EVP_PKEY* pkey, binary_t input, binary_t& output, crypt_mode2_t mode);
+    return_t decrypt (EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_mode2_t mode);
 
     /**
      * @brief deprecated - expect block operation size

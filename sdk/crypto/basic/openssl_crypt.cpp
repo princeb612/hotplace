@@ -660,7 +660,7 @@ return_t openssl_crypt::free_data (unsigned char* data)
     return ret;
 }
 
-return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t input, binary_t& output, crypt_mode2_t mode)
+return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_mode2_t mode)
 {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
@@ -729,7 +729,7 @@ return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t input, binary_t& outpu
     return ret;
 }
 
-return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t input, binary_t& output, crypt_mode2_t mode)
+return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_mode2_t mode)
 {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;

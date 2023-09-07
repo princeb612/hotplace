@@ -67,9 +67,9 @@ set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z)
 endif ()
 if (SUPPORT_ODBC)
 # yum install unixodbc-devel
-# pacman -S mingw64/mingw-w64-x86_64-unixodbc
+# pacman -S mingw64/mingw-w64-x86_64-unixodbc-dev
 # or custom build
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES ${PROJECT_SDK_PLATFORM_DEPENDENCIES} )
+set (PROJECT_SDK_PLATFORM_DEPENDENCIES ${PROJECT_SDK_PLATFORM_DEPENDENCIES} odbc)
 endif ()
 
 # copy header files to destination

@@ -8,11 +8,12 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/odbc/basic/odbc_recordset.hpp>
-
-namespace hotplace {
-namespace odbc {
-
-
-}
-}  // namespace
+#undef  _MBCS
+#undef   MBCS
+#define _UNICODE
+#define  UNICODE
+#include "../odbc_field_charset.cpp"
+#undef  _UNICODE
+#undef   UNICODE
+#define _MBCS
+#define  MBCS

@@ -127,13 +127,13 @@ obfuscate_string& obfuscate_string::operator = (const char* source)
     return *this;
 }
 
-obfuscate_string& obfuscate_string::operator = (std::string source)
+obfuscate_string& obfuscate_string::operator = (std::string& source)
 {
     assign (source.c_str (), source.size ());
     return *this;
 }
 
-obfuscate_string& obfuscate_string::operator = (ansi_string source)
+obfuscate_string& obfuscate_string::operator = (ansi_string& source)
 {
     assign (source.c_str (), source.size ());
     return *this;
@@ -195,9 +195,9 @@ bool obfuscate_string::operator != (obfuscate_string& o)
     return false == compare (o);
 }
 
-std::string& operator << (std::string& lhs, obfuscate_string& rhs)
+std::string& operator << (std::string& lhs, obfuscate_string const& rhs)
 {
-    binary_t::iterator it;
+    binary_t::const_iterator it;
 
     for (it = rhs._contents.begin (); it != rhs._contents.end (); it++) {
         lhs += (*it - rhs._factor);
@@ -205,9 +205,9 @@ std::string& operator << (std::string& lhs, obfuscate_string& rhs)
     return lhs;
 }
 
-ansi_string& operator << (ansi_string& lhs, obfuscate_string& rhs)
+ansi_string& operator << (ansi_string& lhs, obfuscate_string const& rhs)
 {
-    binary_t::iterator it;
+    binary_t::const_iterator it;
 
     for (it = rhs._contents.begin (); it != rhs._contents.end (); it++) {
         lhs << (byte_t) (*it - rhs._factor);
@@ -215,9 +215,9 @@ ansi_string& operator << (ansi_string& lhs, obfuscate_string& rhs)
     return lhs;
 }
 
-binary_t& operator << (binary_t& lhs, obfuscate_string& rhs)
+binary_t& operator << (binary_t& lhs, obfuscate_string const& rhs)
 {
-    binary_t::iterator it;
+    binary_t::const_iterator it;
 
     for (it = rhs._contents.begin (); it != rhs._contents.end (); it++) {
         lhs.insert (lhs.end (), *it - rhs._factor);

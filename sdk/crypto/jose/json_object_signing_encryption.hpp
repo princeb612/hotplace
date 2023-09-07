@@ -229,7 +229,7 @@ public:
      * @brief encrypt
      * @param jose_context_t* context [in]
      * @param jwe_t enc [in]
-     * @param std::list <jwa_t> const& alg [in]
+     * @param std::list <jwa_t> alg [in]
      *  do not support jwa_t::jwa_dir, jwa_t::jwa_ecdh_es
      *  case "dir"
      *      read cek from HMAC key and then make it the only one cek

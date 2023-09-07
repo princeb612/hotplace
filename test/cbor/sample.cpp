@@ -62,7 +62,7 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
 
 void test1 ()
 {
-    _test_case.begin ("encode");
+    _test_case.begin ("encode uint, nint, float");
 
     binary_t bin;
     variant_t vt;
@@ -262,7 +262,7 @@ void cbor_test (cbor_object* root, const char* expected)
 
 void test2 ()
 {
-    _test_case.begin ("encode");
+    _test_case.begin ("encode array, map");
 
     {
         // []
@@ -478,6 +478,7 @@ void test_parse (const char* input, const char* diagnostic)
 
 void test3 ()
 {
+    _test_case.begin ("parse");
     // 0
     test_parse ("00", "0");
     // 1

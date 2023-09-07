@@ -43,12 +43,12 @@ return_t base16_encode (const byte_t* source, size_t size, std::string& outpart)
     return ret;
 }
 
-return_t base16_encode (binary_t source, std::string& outpart)
+return_t base16_encode (binary_t const& source, std::string& outpart)
 {
     return base16_encode (&source[0], source.size (), outpart);
 }
 
-std::string base16_encode (binary_t source)
+std::string base16_encode (binary_t const& source)
 {
     std::string outpart;
 
@@ -88,7 +88,7 @@ return_t base16_decode (const char* source, size_t size, binary_t& outpart)
     return ret;
 }
 
-return_t base16_decode (std::string source, binary_t& outpart)
+return_t base16_decode (std::string const& source, binary_t& outpart)
 {
     return base16_decode (source.c_str (), source.size (), outpart);
 }
@@ -101,7 +101,7 @@ binary_t base16_decode (const char* source)
     return outpart;
 }
 
-binary_t base16_decode (std::string source)
+binary_t base16_decode (std::string const& source)
 {
     binary_t outpart;
 

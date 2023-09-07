@@ -235,7 +235,7 @@ enum errorcode_t {
     /* 0xef010023 4009820195 */ digest,
     /* 0xef010024 4009820196 */ verify,
     /* 0xef010025 4009820197 */ busy,
-    /* 0xef010026 4009820198 */ debug,
+    /* 0xef010026 4009820198 */ query,
     /* 0xef010027 4009820199 */ fetch,
     /* 0xef010028 4009820200 */ reserved17,
     /* 0xef010029 4009820201 */ reserved18,
@@ -264,7 +264,7 @@ enum errorcode_t {
     /* 0xef010100 4009820416 */ not_supported
         = 0xef010100,
     /* 0xef010101 4009820417 */ low_security,
-
+    /* 0xef010102 4009820418 */ debug,
 };
 
 #if defined __linux__

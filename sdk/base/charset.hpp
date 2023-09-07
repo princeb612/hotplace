@@ -11,11 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_CHARSET__
 #define __HOTPLACE_SDK_BASE_CHARSET__
 
-#if defined _WIN32 || defined _WIN64 // windows
-
-#include <tchar.h>
-
-#elif defined __linux__ // linux
+#if defined __linux__ // linux
 
 #if defined _UNICODE || defined UNICODE
 #error "not supported"
@@ -26,12 +22,22 @@ typedef char TCHAR;
 typedef char* LPTSTR;
 typedef const char* LPCTSTR;
 
-#define _tcslen strlen
-#define _tcsncmp strncmp
-#define stricmp strcasecmp
-#define strnicmp strncasecmp
+#define _itot       itoa
+#define _sntprintf  snprintf
+#define _tcslen     strlen
+#define _tcsncmp    strncmp
+#define _ttoi       atoi
+#define _ttol       atol
+#define _vsntprintf vsnprintf
 
-#endif
+#define stricmp     strcasecmp
+#define strnicmp    strncasecmp
+
+#elif defined _WIN32 || defined _WIN64 // windows
+
+#include <tchar.h>
+
+#endif // endof (windows, linux)
 
 #if defined _MBCS || defined MBCS
 #elif defined _UNICODE || defined UNICODE

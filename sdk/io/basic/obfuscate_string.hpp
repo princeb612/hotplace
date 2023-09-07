@@ -84,16 +84,16 @@ public:
     obfuscate_string& operator = (const char* source);
     /**
      * @brief   assign
-     * @param   std::string source [in]
+     * @param   std::string& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator = (std::string source);
+    obfuscate_string& operator = (std::string& source);
     /**
      * @brief   assign
-     * @param   ansi_string source [in]
+     * @param   ansi_string& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator = (ansi_string source);
+    obfuscate_string& operator = (ansi_string& source);
     /**
      * @brief   append
      * @param   const char* source [in]
@@ -123,7 +123,7 @@ public:
      * @param   std::string& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator << (std::string& source);
+    obfuscate_string& operator << (std::string & source);
     /**
      * @brief   append
      * @param   ansi_string& source [in]
@@ -147,24 +147,24 @@ public:
     /**
      * @brief   append
      * @param   std::string& lhs [out]
-     * @param   obfuscate_string& rhs [in]
+     * @param   obfuscate_string const& rhs [in]
      * @return  std::string&
      */
-    friend std::string& operator << (std::string& lhs, obfuscate_string& rhs);
+    friend std::string& operator << (std::string& lhs, obfuscate_string const& rhs);
     /**
      * @brief   append
      * @param   std::string& lhs [out]
-     * @param   obfuscate_string& rhs [in]
+     * @param   obfuscate_string const& rhs [in]
      * @return  ansi_string&
      */
-    friend ansi_string& operator << (ansi_string& lhs, obfuscate_string& rhs);
+    friend ansi_string& operator << (ansi_string& lhs, obfuscate_string const& rhs);
     /**
      * @brief   append
      * @param   binary_t& lhs [out]
-     * @param   obfuscate_string& rhs [in]
+     * @param   obfuscate_string const& rhs [in]
      * @return  binary_t&
      */
-    friend binary_t& operator << (binary_t& lhs, obfuscate_string& rhs);
+    friend binary_t& operator << (binary_t& lhs, obfuscate_string const& rhs);
 
 protected:
     void startup ();

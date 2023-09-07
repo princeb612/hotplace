@@ -30,6 +30,11 @@ add_subdirectory (tcpserver2)
 add_subdirectory (tlsserver)
 add_subdirectory (httpserver)
 
+# odbc
+if (SUPPORT_ODBC)
+add_subdirectory (odbc)
+endif ()
+
 # etc
 add_subdirectory (incubator)
 add_subdirectory (varstring)
