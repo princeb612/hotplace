@@ -59,15 +59,15 @@ void test ()
 
     const char* connstrfmt = "DRIVER={%s};SERVER=%s;PORT=%d;DATABASE=%s;USER=%s;PASSWORD=%s";
 
-    odbc_diagnose::get_instance ()-> add_handler (dbdiag_handler, nullptr);
+    odbc_diagnose::get_instance ()->add_handler (dbdiag_handler, nullptr);
 
     ret = dbconn.connect (&rs, format (connstrfmt, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", "user", "password").c_str ());
-    if (ERROR_SUCCESS == ret) {
+    if (errorcode_t::success == ret) {
         ret = rs->query ("select * from city");
-        if (ERROR_SUCCESS == ret) {
+        if (errorcode_t::success == ret) {
             odbc_record record;
             while (true) {
-                while (ERROR_SUCCESS == rs->fetch (&record)) {
+                while (errorcode_t::success == rs->fetch (&record)) {
                     std::cout << "---" << std::endl;
                     int n = record.count ();
                     for (int i = 0; i < n; i++) {

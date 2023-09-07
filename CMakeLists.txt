@@ -14,7 +14,7 @@ set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set (SUPPORT_STATIC 1) # always set 1
 set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu, custom build
-set (SUPPORT_ODBC 1)   # 
+set (SUPPORT_ODBC 0)   # 
 set (SUPPORT_PCH 0)    # cmake 2.x
 
 if (UNIX)
@@ -66,6 +66,7 @@ elseif (WIN32)
 set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z)
 endif ()
 if (SUPPORT_ODBC)
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSUPPORT_FEATURE_ODBC")
 # yum install unixodbc-devel
 # pacman -S mingw64/mingw-w64-x86_64-unixodbc-dev
 # or custom build

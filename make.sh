@@ -21,7 +21,8 @@ if [ $OSTYPE = "msys" ]; then
     set SUPPORT_SHARED=1
     #set SUPPORT_ODBC=1
 else
-    #set SUPPORT_SHARED=1
+    #export SUPPORT_SHARED=1
+    #export SUPPORT_ODBC=1
     true
 fi
 export CXXFLAGS='-DDEBUG'

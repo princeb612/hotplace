@@ -35,7 +35,7 @@ namespace hotplace {
 namespace odbc {
 
 enum sql_query_mode_t {
-    sync_query  = 0,
+    sync_query = 0,
     async_query
 };
 
