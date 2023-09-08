@@ -9,11 +9,9 @@
  * 2023.08.15   Soo Han, Kin        added : stopwatch
  */
 
-#include <hotplace/sdk/io/system/datetime.hpp>
-#include <hotplace/sdk/io/string/string.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
 
 namespace hotplace {
-namespace io {
 
 #ifndef __to_int64
 #define __to_int64(a, b)  ((int64) (((int64) ((int32) (a))) * ((int32) (b))))
@@ -520,7 +518,8 @@ return_t datetime::timespec_to_asn1time (struct timespec ts, asn1time_t* at)
         systemtime_t st;
         ret = timespec_to_systemtime (1, ts, &st);
 
-        at->set (V_ASN1_GENERALIZEDTIME, format ("04d%02d%02d%02d%02d%02d.%d", st.year, st.month, st.day, st.hour, st.minute, st.second, st.milliseconds).c_str ());
+        constexpr auto constexpr_fmt = CONSTEXPR_HIDE ("04d%02d%02d%02d%02d%02d.%d");
+        at->set (V_ASN1_GENERALIZEDTIME, format (constexpr_fmt, st.year, st.month, st.day, st.hour, st.minute, st.second, st.milliseconds).c_str ());
     } else {
         ret = errorcode_t::invalid_parameter;
     }
@@ -890,6 +889,5 @@ return_t time_sum (struct timespec& ts, std::list <struct timespec>& slices)
     return ret;
 }
 
-}
 }  // namespace
 

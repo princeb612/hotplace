@@ -286,20 +286,6 @@ return_t split_get (split_context_t* handle, unsigned int index, std::string& da
 return_t split_end (split_context_t* handle);
 
 //
-// part - format
-//
-
-/**
- * @brief format
- * @example
- *  std::string text = format ("%s %d %1.1f\n", "sample", 1, 1.1f);
- */
-std::string format (const char* fmt, ...);
-#if __cplusplus > 199711L    // c++98
-std::string format (const char* fmt, va_list ap);
-#endif
-
-//
 // split_url
 //
 typedef struct _url_info_t {

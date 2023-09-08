@@ -217,13 +217,15 @@ return_t debug_trace::open (debug_trace_context_t** handle)
             symbol_search_path += ";";
         }
 
-        test = GetEnvironmentVariable ("NT_SYMBOL_PATH", buffer_data, buffer_data_size);
+        constexpr auto constexpr_symbolpath = CONSTEXPR_HIDE ("NT_SYMBOL_PATH");
+        test = GetEnvironmentVariable (constexpr_symbolpath, buffer_data, buffer_data_size);
         if (test) {
             symbol_search_path += buffer_data;
             symbol_search_path += ";";
         }
 
-        test = GetEnvironmentVariable ("_NT_ALTERNATE_SYMBOL_PATH", buffer_data, buffer_data_size);
+        constexpr auto constexpr_alt_symbolpath = CONSTEXPR_HIDE ("_NT_ALTERNATE_SYMBOL_PATH");
+        test = GetEnvironmentVariable (constexpr_alt_symbolpath, buffer_data, buffer_data_size);
         if (test) {
             symbol_search_path += buffer_data;
             symbol_search_path += ";";
@@ -380,8 +382,14 @@ return_t debug_trace::trace (debug_trace_context_t* handle, CONTEXT* rtlcontext,
             __leave2;
         }
 
-        char STRING_DEBUG[] = { 'd', 'e', 'b', 'u', 'g', 0, };
-        stream->printf ("%s\n", STRING_DEBUG);
+        constexpr auto constexpr_debug = CONSTEXPR_HIDE ("debug");
+        constexpr auto constexpr_frameinfo = CONSTEXPR_HIDE ("#%-4d %08x %08x %08x %08x %08x %08x ");
+        constexpr auto constexpr_moduleinfo = CONSTEXPR_HIDE ("%s(0x%08x)+0x%08x ");
+        constexpr auto constexpr_undeco = CONSTEXPR_HIDE ("%s!%s");
+        constexpr auto constexpr_fileline = CONSTEXPR_HIDE ("+0x%x");
+        constexpr auto constexpr_line = CONSTEXPR_HIDE (" [%s @ %lu]");
+
+        stream->printf ("%s\n", constexpr_debug);
 
         memset (symbol, 0, (sizeof (IMAGEHLP_SYMBOL)) + (1 << 10));
         symbol->SizeOfStruct = sizeof (IMAGEHLP_SYMBOL);
@@ -396,23 +404,23 @@ return_t debug_trace::trace (debug_trace_context_t* handle, CONTEXT* rtlcontext,
                 break;
             }
 
-            stream->printf ("#%-4d %08x %08x %08x %08x %08x %08x ", nFrameNum, frame.AddrFrame.Offset, frame.AddrReturn.Offset, frame.Params[0], frame.Params[1], frame.Params[2], frame.Params[3]);
+            stream->printf (constexpr_frameinfo, nFrameNum, frame.AddrFrame.Offset, frame.AddrReturn.Offset, frame.Params[0], frame.Params[1], frame.Params[2], frame.Params[3]);
             if (0 == frame.AddrPC.Offset) {
                 // do nothing
             } else {
                 BOOL bModuleInfoRet = context->mssdk.lpfnSymGetModuleInfo (process_handle, frame.AddrPC.Offset, &Module);
                 if (TRUE == bModuleInfoRet) {
                     modulelist.insert (std::make_pair (Module.BaseOfImage, Module));
-                    stream->printf ("%s(0x%08x)+0x%08x ", base_name (Module.ImageName).c_str (), Module.BaseOfImage, frame.AddrPC.Offset - Module.BaseOfImage);
+                    stream->printf (constexpr_moduleinfo, base_name (Module.ImageName).c_str (), Module.BaseOfImage, frame.AddrPC.Offset - Module.BaseOfImage);
                 }
 
                 bRet = context->mssdk.lpfnSymGetSymFromAddr (process_handle, frame.AddrPC.Offset, (arch_t*) &dwOffsetFromSymbol, symbol);
                 if (TRUE == bRet) {
                     context->mssdk.lpfnUnDecorateSymbolName ((PCTSTR) symbol->Name, (PTSTR) buffer_undecorated_name,     (1 << 10), UNDNAME_NAME_ONLY);
                     context->mssdk.lpfnUnDecorateSymbolName ((PCTSTR) symbol->Name, (PTSTR) buffer_undecorated_fullname, (1 << 10), UNDNAME_COMPLETE);
-                    stream->printf ("%s!%s", bModuleInfoRet ? Module.ModuleName : "", buffer_undecorated_name);
+                    stream->printf (constexpr_undeco, bModuleInfoRet ? Module.ModuleName : "", buffer_undecorated_name);
                     if (0 != dwOffsetFromSymbol) {
-                        stream->printf ("+0x%x", dwOffsetFromSymbol);
+                        stream->printf (constexpr_fileline, dwOffsetFromSymbol);
                     }
                 } else {
                     // bfd
@@ -420,7 +428,7 @@ return_t debug_trace::trace (debug_trace_context_t* handle, CONTEXT* rtlcontext,
 
                 bRet = context->mssdk.lpfnSymGetLineFromAddr (process_handle, frame.AddrPC.Offset, &dwOffsetFromSymbol, &Line);
                 if (TRUE == bRet) {
-                    stream->printf (" [%s @ %lu]", Line.FileName, Line.LineNumber);
+                    stream->printf (constexpr_line, Line.FileName, Line.LineNumber);
                 } else {
                     // bfd
                 }
@@ -469,13 +477,20 @@ return_t debug_trace::trace (debug_trace_context_t* handle, EXCEPTION_POINTERS* 
 
         EXCEPTION_RECORD* exception_record = exception->ExceptionRecord;
 
-        stream->printf ("exception\n");
-        stream->printf ("exception address : 0x%08x\n", exception_record->ExceptionAddress);
-        stream->printf ("  exception code  : 0x%08x\n", exception_record->ExceptionCode);
-        stream->printf ("  exception flags : 0x%08x\n", exception_record->ExceptionFlags);
-        stream->printf ("number parameters : %d\n", exception_record->NumberParameters);
+        constexpr auto constexpr_except = CONSTEXPR_HIDE ("exception\n");
+        constexpr auto constexpr_except_addr = CONSTEXPR_HIDE ("exception address : 0x%08x\n");
+        constexpr auto constexpr_except_code = CONSTEXPR_HIDE ("  exception code  : 0x%08x\n");
+        constexpr auto constexpr_except_flag = CONSTEXPR_HIDE ("  exception flags : 0x%08x\n");
+        constexpr auto constexpr_except_parm = CONSTEXPR_HIDE ("number parameters : %d\n");
+        constexpr auto constexpr_except_recd = CONSTEXPR_HIDE ("  parameter [%d]   : 0x%08x\n");
+
+        stream->printf (constexpr_except);
+        stream->printf (constexpr_except_addr, exception_record->ExceptionAddress);
+        stream->printf (constexpr_except_code, exception_record->ExceptionCode);
+        stream->printf (constexpr_except_flag, exception_record->ExceptionFlags);
+        stream->printf (constexpr_except_parm, exception_record->NumberParameters);
         for (DWORD i = 0; i < exception_record->NumberParameters; i++) {
-            stream->printf ("  parameter [%d]   : 0x%08x\n", i, exception_record->ExceptionInformation[i]);
+            stream->printf (constexpr_except_recd, i, exception_record->ExceptionInformation[i]);
         }
 
         CONTEXT* rtlcontext = exception->ContextRecord;

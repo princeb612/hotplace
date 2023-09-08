@@ -17,6 +17,7 @@
 #include <hotplace/sdk/base/system/windows/types.hpp>
 #endif
 
+#include <string>
 #include <vector>
 
 namespace hotplace {
@@ -38,6 +39,127 @@ typedef std::vector<byte_t> binary_t;
 #define __min(a, b) (((a) < (b)) ? (a) : (b))
 #define __max(a, b) (((a) > (b)) ? (a) : (b))
 #define adjust_range(var, minimum, maximum) { var = __max (var, minimum); var = __min (var, maximum); }
+
+/**
+ * @brief format
+ * @example
+ *  std::string text = format ("%s %d %1.1f\n", "sample", 1, 1.1f);
+ */
+std::string format (const char* fmt, ...);
+#if __cplusplus > 199711L    // c++98
+std::string format (const char* fmt, va_list ap);
+#endif
+
+/*
+ * @brief   hide a string at compile time
+ * @example
+ *          constexpr auto temp1 = constexpr_hide <25>("ninety nine red balloons");
+ *          constexpr auto temp2 = CONSTEXPR_HIDE ("wild wild world");
+ *          define_constexpr_hide (temp3, "still a man hears what he wants to hear and disregards the rest");
+ *          std::cout << temp1 << std::endl;
+ *          std::cout << temp2 << std::endl;
+ *          std::cout << temp3 << std::endl;
+ */
+#define define_constexpr_hide(var, x) constexpr auto var = CONSTEXPR_HIDE (x)
+#define CONSTEXPR_HIDE(x) constexpr_hide <RTL_NUMBER_OF (x) + 1>(x)
+
+#if __cplusplus >= 201402L            // c++14
+template <uint32 N>
+class constexpr_hide {
+public:
+    constexpr constexpr_hide (const char* source)
+    {
+        for (unsigned int i = 0; i < N; i++) {
+            char c = source[i];
+            _buf[i] = c;
+            if (0 == c) {
+                break;
+            }
+        }
+    }
+    const char* c_str () const
+    {
+        return (char*) _buf;
+    }
+    operator const char* () const
+    {
+        return (char*) _buf;
+    }
+private:
+    char _buf [N] = { 0, };
+};
+#else
+template <uint32 N>
+class constexpr_hide {
+public:
+    constexpr constexpr_hide (const char* source) : _ptr (source)
+    {
+        // c++11 constexpr constructor does not have empty body
+    }
+    const char* c_str () const
+    {
+        return _ptr;
+    }
+    operator const char* () const
+    {
+        return _ptr;
+    }
+private:
+    const char* _ptr;
+};
+#endif
+
+
+#if __cplusplus >= 201402L    // c++14
+/*
+ * @brief   obfuscate a string at compile time
+ * @sa      obfuscate_string
+ * @example
+ *          constexpr auto temp1 = constexpr_obf <25>("ninety nine red balloons");
+ *          constexpr auto temp2 = CONSTEXPR_OBF ("wild wild world");
+ *          define_constexpr_obf (temp3, "still a man hears what he wants to hear and disregards the rest");
+ *          std::cout << CONSTEXPR_OBF_CSTR(temp1) << std::endl;
+ *          std::cout << CONSTEXPR_OBF_CSTR(temp2) << std::endl;
+ *          std::cout << CONSTEXPR_OBF_CSTR(temp3) << std::endl;
+ */
+#define define_constexpr_obf(var, x) constexpr auto var = CONSTEXPR_OBF (x)
+#define CONSTEXPR_OBF(x) constexpr_obf <RTL_NUMBER_OF (x) + 1>(x)
+#define CONSTEXPR_OBF_STR(x) x.load_string ()
+#define CONSTEXPR_OBF_CSTR(x) x.load_string ().c_str ()
+
+template <uint32 N, uint8 F = 0x30>
+class constexpr_obf {
+public:
+    constexpr constexpr_obf (const char* source)
+    {
+        for (unsigned int i = 0; i < N; i++) {
+            char c = source[i];
+            buf[i] = c + factor;
+            if (0 == c) {
+                break;
+            }
+        }
+    }
+    std::string load_string () const
+    {
+        std::string temp;
+
+        temp.resize (N);
+        char* ptr = &temp[0];
+        for (unsigned int i = 0; i < N; i++) {
+            char c = buf[i] - factor;
+            ptr[i] = c;
+            if (0 == c) {
+                break;
+            }
+        }
+        return temp;
+    }
+private:
+    char buf [N] = { 0, };
+    uint8 factor = F;
+};
+#endif
 
 } // namespace
 

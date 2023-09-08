@@ -71,8 +71,9 @@ void test_dumpmxx_routine (const byte_t* dump_address, size_t dump_size, stream_
     ansi_string bs;
 
     ret = dump_memory (dump_address, dump_size, &bs, hex_part, indent, rebase);
+    std::cout << bs.c_str () << std::endl;
 
-    _test_case.test (ret, __FUNCTION__, "dump addr %p size %zi hex %i indent %i rebase %zi\n%s\n", dump_address, dump_size, hex_part, indent, rebase, bs.c_str ());
+    _test_case.test (ret, __FUNCTION__, "dump addr %p size %zi hex %i indent %i rebase %zi", dump_address, dump_size, hex_part, indent, rebase);
 }
 
 void test_dumpmemory ()

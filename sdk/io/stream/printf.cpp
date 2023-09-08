@@ -158,12 +158,16 @@ return_t vtprintf (stream_t* stream, variant_t vt, vtprintf_style_t style)
             __leave2;
         }
 
+        constexpr auto constexpr_false = CONSTEXPR_HIDE ("false");
+        constexpr auto constexpr_null = CONSTEXPR_HIDE ("null");
+        constexpr auto constexpr_true = CONSTEXPR_HIDE ("true");
+
         switch (vt.type) {
             case TYPE_NULL:
-                stream->printf ("null");
+                stream->printf (constexpr_null);
                 break;
             case TYPE_BOOL:
-                stream->printf ("%s", vt.data.b ? "true" : "false");
+                stream->printf ("%s", vt.data.b ? constexpr_true : constexpr_false);
                 break;
             case TYPE_INT8:
                 stream->printf ("%i", vt.data.i8);

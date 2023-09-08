@@ -8,14 +8,17 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_DATETIME__
-#define __HOTPLACE_SDK_IO_SYSTEM_DATETIME__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_DATETIME__
+#define __HOTPLACE_SDK_BASE_SYSTEM_DATETIME__
 
-#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+#include <string.h>
 #include <time.h>
+#include <list>
 
 namespace hotplace {
-namespace io {
 
 #pragma pack(push, 1)
 
@@ -275,7 +278,6 @@ static inline void msleep (uint32 msecs)
 #endif
 }
 
-}
 }  // namespace
 
 #endif

@@ -367,7 +367,7 @@ return_t crypto_advisor::build_if_necessary ()
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
                 EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch (nullptr, item->_fetchname, nullptr);
                 if (nullptr == evp_cipher) {
-                    __trace (errorcode_t::debug, "%s\n", item->_fetchname);
+                    __trace (errorcode_t::debug, "%s", item->_fetchname);
                 }
                 _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), evp_cipher));
 #else

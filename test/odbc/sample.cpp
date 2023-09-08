@@ -57,11 +57,13 @@ void test ()
     odbc_connector dbconn;
     odbc_query* rs = nullptr;
 
-    const char* connstrfmt = "DRIVER={%s};SERVER=%s;PORT=%d;DATABASE=%s;USER=%s;PASSWORD=%s";
+    constexpr auto constexpr_connstring = CONSTEXPR_HIDE ("DRIVER={%s};SERVER=%s;PORT=%d;DATABASE=%s;USER=%s;PASSWORD=%s");
+    constexpr auto constexpr_obf_user = CONSTEXPR_OBF ("user");
+    constexpr auto constexpr_obf_pass = CONSTEXPR_OBF ("password");
 
     odbc_diagnose::get_instance ()->add_handler (dbdiag_handler, nullptr);
 
-    ret = dbconn.connect (&rs, format (connstrfmt, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", "user", "password").c_str ());
+    ret = dbconn.connect (&rs, format (constexpr_connstring, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", CONSTEXPR_OBF_CSTR (constexpr_obf_user), CONSTEXPR_OBF_CSTR (constexpr_obf_pass)).c_str ());
     if (errorcode_t::success == ret) {
         ret = rs->query ("select * from city");
         if (errorcode_t::success == ret) {

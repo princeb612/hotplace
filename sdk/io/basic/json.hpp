@@ -34,7 +34,7 @@ static inline return_t json_open_stream (json_t** object, const char* buffer, bo
         if (nullptr == root) {
             ret = errorcode_t::internal_error;
             if (false == suppress) {
-                __leave2_tracef (ret, "%d %s\n", jerror.line, jerror.text);
+                __leave2_tracef (ret, "%d %s", jerror.line, jerror.text);
             } else {
                 __leave2;
             }

@@ -151,11 +151,13 @@ public:
     typedef std::pair<unittest_map_t::iterator, bool> unittest_map_pib_t;
 
     typedef std::list <struct timespec> time_slice_t;
+    typedef std::map <arch_t, std::string> testcase_per_thread_t;
     typedef std::map <arch_t, bool> time_flag_per_thread_t;
     typedef std::map <arch_t, struct timespec> timestamp_per_thread_t;
     typedef std::map <arch_t, time_slice_t> time_slice_per_thread_t;
 
     typedef std::pair <time_slice_t::iterator, bool> time_slice_pib_t;
+    typedef std::pair <testcase_per_thread_t::iterator, bool> testcase_per_thread_pib_t;
     typedef std::pair <time_flag_per_thread_t::iterator, bool> time_flag_per_thread_pib_t;
     typedef std::pair <timestamp_per_thread_t::iterator, bool> timestamp_per_thread_pib_t;
     typedef std::pair <time_slice_per_thread_t::iterator, bool> time_slice_per_thread_pib_t;
@@ -175,8 +177,7 @@ private:
     unittest_map_t _test_map;
     test_stat_t _total;
 
-    std::string _current_case_name;
-
+    testcase_per_thread_t _testcase_per_threads;
     time_flag_per_thread_t _time_flag_per_threads;
     timestamp_per_thread_t _timestamp_per_threads;
     time_slice_per_thread_t _time_slice_per_threads;

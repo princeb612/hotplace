@@ -737,8 +737,8 @@ int verify_callback (int ok, X509_STORE_CTX *ctx)
             break;
     }
     if (!ok) {
-        char msg [] = { '#', 'v', 'e', 'r', 'i', 'f', 'y', ' ', 'e', 'r', 'r', 'o', 'r', ':', 'n', 'u', 'm', '=' };
-        __trace (errorcode_t::internal_error, format ("%s%d:%s", msg, err, X509_verify_cert_error_string (err)).c_str ());
+        constexpr auto constexpr_errmsg = CONSTEXPR_HIDE ("#verify error:num=");
+        __trace (errorcode_t::internal_error, format ("%s%d:%s", constexpr_errmsg, err, X509_verify_cert_error_string (err)).c_str ());
     }
     //__trace(0, format("#verify return:%d",ok).c_str());
     //ok = 1;

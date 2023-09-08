@@ -46,13 +46,16 @@ return_t debug_trace (stream_t* stream)
             __leave2;
         }
 
+        constexpr auto constexpr_calltack = CONSTEXPR_HIDE ("#%d 0x%08x ");
+        constexpr auto constexpr_frameinfo = CONSTEXPR_HIDE ("%s!%s + 0x%x ");
+
         std::vector<void*> callstack;
         callstack.resize (256);
         int nptrs = backtrace (&callstack[0], callstack.size ());
         char** symbols = backtrace_symbols (&callstack[0], nptrs);
         if (nullptr != symbols) {
             for (int i = 0; i < nptrs; i++) {
-                stream->printf ("#%d 0x%08x ", i, callstack[i]);
+                stream->printf (constexpr_calltack, i, callstack[i]);
 
                 Dl_info info;
                 int res = dladdr (callstack[i], &info);
@@ -65,7 +68,7 @@ return_t debug_trace (stream_t* stream)
                     if (nullptr == disp) {
                         stream->printf ("%s ", symbols[i]);
                     } else {
-                        stream->printf ("%s!%s + 0x%x ", info.dli_fname, disp, (unsigned long) callstack[i] - (unsigned long) info.dli_saddr);
+                        stream->printf (constexpr_frameinfo, info.dli_fname, disp, (unsigned long) callstack[i] - (unsigned long) info.dli_saddr);
                     }
                     free (function_name);
                 }

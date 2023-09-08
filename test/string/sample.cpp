@@ -99,6 +99,61 @@ void test_hexbin ()
     _test_case.assert (true, __FUNCTION__, "base16");
 }
 
+void test_constexpr_hide ()
+{
+    _test_case.begin ("constexpr_hide");
+
+    constexpr auto temp1 = constexpr_hide <151>("You and I in a little toy shop / Buy a bag of balloons with the money we've got / Set them free at the break of dawn / 'Til one by one, they were gone");
+    constexpr auto temp2 = CONSTEXPR_HIDE ("What can I do? / Will I be getting through? / Now that I must try to leave it all behind / Did you see what you have done to me? / So hard to justify, slowly it's passing by");
+    define_constexpr_hide (temp3, "Wake up, my love, beneath the midday sun, / Alone, once more alone, / This travelin' boy was only passing through, / But he will always think of you.");
+
+    std::cout << temp1 << std::endl;
+    std::cout << temp2 << std::endl;
+    std::cout << temp3 << std::endl;
+
+    _test_case.assert (true, __FUNCTION__, "hide a string at compile time");
+}
+
+void test_constexpr_obf ()
+{
+    _test_case.begin ("constexpr_obf");
+
+#if   __cplusplus >= 202002L    // c++20
+printf ("c++20\n");
+#elif __cplusplus >= 201703L    // c++17
+printf ("c++17\n");
+#elif __cplusplus >= 201402L    // c++14
+printf ("c++14\n");
+#elif __cplusplus >= 201103L    // c++11
+printf ("c++11\n");
+#elif __cplusplus >= 199711L    // c++98
+printf ("c++98\n");
+#else                           // pre c++98
+printf ("pre c++98\n");
+#endif
+
+#if __cplusplus >= 201402L    // c++14
+    constexpr auto temp1 = constexpr_obf <25>("ninety nine red balloons");
+    constexpr auto temp2 = CONSTEXPR_OBF ("wild wild world");
+    define_constexpr_obf (temp3, "still a man hears what he wants to hear and disregards the rest");
+
+    std::cout << CONSTEXPR_OBF_CSTR (temp1) << std::endl;
+    std::cout << CONSTEXPR_OBF_CSTR (temp2) << std::endl;
+    std::cout << CONSTEXPR_OBF_CSTR (temp3) << std::endl;
+
+    _test_case.assert (true, __FUNCTION__, "obfuscate a string at compile time");
+#else
+    _test_case.assert (false, __FUNCTION__, "at least c++14 needed");
+#endif
+}
+
+#if __cplusplus >= 201402L    // c++14
+obfuscate_string operator""_obf (const char* source, size_t)
+{
+    return obfuscate_string ({ source });
+}
+#endif
+
 void test_obfuscate_string ()
 {
     _test_case.begin ("obfuscate_string");
@@ -111,7 +166,8 @@ void test_obfuscate_string ()
 
     _test_case.reset_time ();
 
-    obfuscate_string obf (helloworld);
+    obfuscate_string obf = helloworld;
+
     bin << obf;
 
     {
@@ -132,7 +188,7 @@ void test_obfuscate_string ()
 
     _test_case.assert ((0 == memcmp (helloworld, str.c_str (), str.size ())), __FUNCTION__, "std::string << obfuscate");
 
-    obfuscate_string obf2 (helloworld);
+    obfuscate_string obf2 = helloworld;
 
     _test_case.assert (obf == obf2, __FUNCTION__, "assign and operator ==");
 
@@ -295,6 +351,8 @@ int main ()
     test_getline ();
     test_gettoken ();
     test_hexbin ();
+    test_constexpr_hide ();
+    test_constexpr_obf ();
     test_obfuscate_string ();
     test_printf ();
     test_replace ();

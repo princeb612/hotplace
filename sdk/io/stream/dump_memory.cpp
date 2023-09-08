@@ -38,10 +38,13 @@ return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_t* st
         const byte_t* ascii_pointer = nullptr;
         unsigned dumped_hex_part = 0;
 
+        constexpr auto constexpr_dumpaddr = CONSTEXPR_HIDE ("%08X : ");
+        constexpr auto constexpr_dumpbyte = CONSTEXPR_HIDE ("%02X ");
+
         if (dump_memory_flag_t::header & flags) {
             stream_object->fill (11, ' ');
             for (size_t i = 0; i < hex_part; i++) {
-                stream_object->printf ("%02X ", i);
+                stream_object->printf (constexpr_dumpbyte, i);
             }
             stream_object->printf ("\n");
         }
@@ -54,12 +57,12 @@ return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_t* st
                     stream_object->fill (indent, ' ');
                 }
                 ascii_pointer = hex_pointer;
-                stream_object->printf ("%08X : ", (byte_t *) ((size_t) rebase + (size_t) hex_pointer - (size_t) dump_address));     /* address */
+                stream_object->printf (constexpr_dumpaddr, (byte_t *) ((size_t) rebase + (size_t) hex_pointer - (size_t) dump_address));     /* address */
             }
             if (position < dump_size) {
-                stream_object->printf ("%02X ", *(hex_pointer++));  /* hexdecimal */
+                stream_object->printf (constexpr_dumpbyte, *(hex_pointer++));   /* hexdecimal */
             } else {
-                stream_object->printf ("-- ");                      /* do not dump here */
+                stream_object->printf ("-- ");                                  /* do not dump here */
                 ++dumped_hex_part;
             }
             if (0 == (++position % hex_part)) { /* readable part of ASCII */

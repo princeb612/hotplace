@@ -442,17 +442,6 @@ return_t authenticode_plugin_pe::digest (file_stream* filestream, const char* al
         hash.update (hash_handle, stream_data + checksum_offset + 4, securitydir_offset - (checksum_offset + 4));       // block3
         hash.update (hash_handle, stream_data + securitydir_offset + 8, authenticode_begin - (securitydir_offset + 8)); // block5
         hash.finalize (hash_handle, output);
-
-#if 0
-        buffer_stream stream;
-        dump_memory (&output[0], output.size (), &stream);
-        __trace (0, "---\n%s\n", stream.c_str ());
-        printf ("block1 0 - %zd\n", checksum_offset);
-        printf ("block2 %zd - %d skip\n", checksum_offset, 4);
-        printf ("block3 %zd - %zd\n", checksum_offset + 4, securitydir_offset - (checksum_offset + 4));
-        printf ("block4 %zd - %d skip\n", securitydir_offset, 8);
-        printf ("block5 %zd - %zd\n", securitydir_offset + 8, authenticode_begin - (securitydir_offset + 8));
-#endif
     }
     __finally2
     {

@@ -21,6 +21,7 @@
 
 #include <hotplace/sdk/base/system/atomic.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/reference_counter.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>

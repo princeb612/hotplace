@@ -68,34 +68,24 @@ cbor_simple_t cbor_simple::is_kind_of_value (uint8 value)
 
 void cbor_simple::represent (stream_t* s)
 {
-/* "false" */
-#define DECLARE_STRING_FALSE char STRING_FALSE[] = { 'f', 'a', 'l', 's', 'e', 0, \
-};
-/* "true" */
-#define DECLARE_STRING_TRUE char STRING_TRUE[] = { 't', 'r', 'u', 'e', 0, };
-/* "null" */
-#define DECLARE_STRING_NULL char STRING_NULL[] = { 'n', 'u', 'l', 'l', 0, };
-/* "undefined" */
-#define DECLARE_STRING_UNDEFINED char STRING_UNDEFINED[] = { 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', 0, };
-
-    DECLARE_STRING_FALSE;
-    DECLARE_STRING_TRUE;
-    DECLARE_STRING_NULL;
-    DECLARE_STRING_UNDEFINED;
+    constexpr auto constexpr_false = CONSTEXPR_HIDE ("false");
+    constexpr auto constexpr_null = CONSTEXPR_HIDE ("null");
+    constexpr auto constexpr_true = CONSTEXPR_HIDE ("true");
+    constexpr auto constexpr_undefined = CONSTEXPR_HIDE ("undefined");
 
     if (s) {
         switch (_value) {
             case cbor_simple_t::cbor_simple_false:
-                s->printf (STRING_FALSE);
+                s->printf (constexpr_false);
                 break;
             case cbor_simple_t::cbor_simple_true:
-                s->printf (STRING_TRUE);
+                s->printf (constexpr_true);
                 break;
             case cbor_simple_t::cbor_simple_null:
-                s->printf (STRING_NULL);
+                s->printf (constexpr_null);
                 break;
             case cbor_simple_t::cbor_simple_undef:
-                s->printf (STRING_UNDEFINED);
+                s->printf (constexpr_undefined);
                 break;
         }
     }

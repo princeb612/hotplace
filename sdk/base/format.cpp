@@ -8,12 +8,12 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/inline.hpp>
 #include <stdarg.h>
 #include <ostream>
 
 namespace hotplace {
-namespace io {
 
 std::string format (const char* fmt, ...)
 {
@@ -75,6 +75,5 @@ std::string format (const char* fmt, va_list ap)
 }
 #endif
 
-}
 }
 

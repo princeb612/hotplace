@@ -21,7 +21,7 @@ if (UNIX)
 # -std=c++11
 # -Wl,-z,noexecstack
 # -Wl,--copy-dt-needed-entries # DSO missing from command line
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,-z,noexecstack -Wl,--copy-dt-needed-entries")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wl,-z,noexecstack -Wl,--copy-dt-needed-entries")
 endif ()
 if (NOT "$ENV{CXXFLAGS}" STREQUAL "")
     # specify additional include, lib directories

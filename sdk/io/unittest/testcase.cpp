@@ -9,9 +9,9 @@
  * 2023.08.15   Soo Han, Kim        elapsed time
  */
 
+#include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
-#include <hotplace/sdk/io/system/datetime.hpp>
 #include <hotplace/sdk/io/system/thread.hpp>
 #include <hotplace/sdk/io/unittest/testcase.hpp>
 #include <fstream>
@@ -27,29 +27,42 @@ test_case::test_case ()
 
 void test_case::begin (const char* case_name, ...)
 {
+    arch_t tid = get_thread_id ();
+    testcase_per_thread_pib_t pib;
+    ansi_string topic;
+    ansi_string stream;
+
+    _lock.enter ();
+
     if (nullptr != case_name) {
-        ansi_string stream;
 
         va_list ap;
         va_start (ap, case_name);
-        stream.vprintf (case_name, ap);
+        topic.vprintf (case_name, ap);
         va_end (ap);
 
-        _current_case_name = stream.c_str ();
-
-        /* "test case" */
-        stream.clear ();
-        char STRING_TEST_CASE[] = { '[', 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', ']', ' ', 0, };
-        stream  << _color.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::magenta)
-                << STRING_TEST_CASE
-                << _current_case_name.c_str ()
-                << _color.turnoff ();
-        std::cout << stream.c_str () << std::endl;
+        pib = _testcase_per_threads.insert (std::make_pair (tid, topic.c_str ()));
+        if (false == pib.second) {
+            pib.first->second = topic.c_str ();
+        }
     } else {
-        _current_case_name.clear ();
+        pib = _testcase_per_threads.insert (std::make_pair (tid, topic.c_str ()));
+        if (false == pib.second) {
+            pib.first->second.clear ();
+        }
     }
 
+    constexpr auto constexpr_testcase = CONSTEXPR_HIDE ("[test case] ");
+
+    stream  << _color.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::magenta)
+            << constexpr_testcase
+            << topic.c_str ()
+            << _color.turnoff ();
+    std::cout << stream.c_str () << std::endl;
+
     reset_time ();
+
+    _lock.leave ();
 }
 
 void test_case::reset_time ()
@@ -223,6 +236,9 @@ void test_case::assert (bool expect, const char* test_function, const char* mess
 void test_case::test (return_t result, const char* test_function, const char* message, ...)
 {
     struct timespec elapsed;
+    arch_t tid = get_thread_id ();
+    testcase_per_thread_pib_t pib;
+    std::string topic;
 
     __try2
     {
@@ -260,8 +276,13 @@ void test_case::test (return_t result, const char* test_function, const char* me
         }
         item._message = tltle.c_str ();
 
+        pib = _testcase_per_threads.insert (std::make_pair (tid, topic));
+        if (false == pib.second) {
+            topic = pib.first->second;
+        }
+
         test_status_t clean_status;
-        unittest_map_pib_t pib = _test_map.insert (std::make_pair (_current_case_name, clean_status));
+        unittest_map_pib_t pib = _test_map.insert (std::make_pair (topic, clean_status));
         unittest_map_t::iterator it = pib.first;
         test_status_t& status = it->second;
 
@@ -278,7 +299,7 @@ void test_case::test (return_t result, const char* test_function, const char* me
         status._test_list.push_back (item); /* append a unittest_item_t */
 
         if (true == pib.second) {
-            _test_list.push_back (_current_case_name); /* ordered test cases */
+            _test_list.push_back (topic); /* ordered test cases */
         }
 
         ansi_string stream;
@@ -302,51 +323,42 @@ void test_case::test (return_t result, const char* test_function, const char* me
     }
 }
 
-#define PRINT_STRING_SUCCESS _color.set_fgcolor (console_color_t::green) << STRING_SUCCESS << _color.set_fgcolor (fgcolor)
-#define PRINT_STRING_FAIL _color.set_fgcolor (console_color_t::red) << STRING_FAIL << _color.set_fgcolor (fgcolor)
-#define PRINT_STRING_NOT_SUPPORTED _color.set_fgcolor (console_color_t::cyan) << STRING_NOT_SUPPORTED << _color.set_fgcolor (fgcolor)
-#define PRINT_STRING_LOW_SECURITY _color.set_fgcolor (console_color_t::yellow) << STRING_LOW_SECURITY  << _color.set_fgcolor (fgcolor)
+constexpr auto constexpr_success = CONSTEXPR_HIDE ("success");
+constexpr auto constexpr_pass = CONSTEXPR_HIDE ("pass");
+constexpr auto constexpr_fail = CONSTEXPR_HIDE ("fail");
+constexpr auto constexpr_skip = CONSTEXPR_HIDE ("skip");
+constexpr auto constexpr_low = CONSTEXPR_HIDE ("low ");
+
+constexpr auto constexpr_report = CONSTEXPR_HIDE ("report");
+constexpr auto constexpr_testcase = CONSTEXPR_HIDE ("test case");
+constexpr auto constexpr_result = CONSTEXPR_HIDE ("result");
+constexpr auto constexpr_errorcode = CONSTEXPR_HIDE ("errorcode");
+constexpr auto constexpr_function = CONSTEXPR_HIDE ("test function");
+constexpr auto constexpr_time = CONSTEXPR_HIDE ("time");
+constexpr auto constexpr_message = CONSTEXPR_HIDE ("message");
+
+#define cprint(stream, concolor, color1, color2, msg) stream << concolor.set_fgcolor (color1) << msg << concolor.set_fgcolor (color2);
 
 void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stream)
 {
-    /* "success" */
-    char STRING_SUCCESS[] = { 's', 'u', 'c', 'c', 'e', 's', 's', 0, };
-    /* "pass" */
-    char STRING_PASS[] = { 'p', 'a', 's', 's', 0, };
-    /* "fail" */
-    char STRING_FAIL[] = { 'f', 'a', 'i', 'l', 0, };
-    /* "skip" */
-    char STRING_NOT_SUPPORTED[] = { 's', 'k', 'i', 'p', 0, };
-    /* "low" */
-    char STRING_LOW_SECURITY[] = { 'l', 'o', 'w', ' ', 0, };
-    /* "test case" */
-    char STRING_TEST_CASE[] = { 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', 0, };
-    /* "result" */
-    char STRING_RESULT[] = { 'r', 'e', 's', 'u', 'l', 't', 0, };
-    /* "errorcode" */
-    char STRING_ERRORCODE[] = { 'e', 'r', 'r', 'o', 'r', 'c', 'o', 'd', 'e', 0, };
-    /* "test function" */
-    char STRING_TEST_FUNCTION[] = { 't', 'e', 's', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', 0, };
-    /* "time" */
-    char STRING_TIME[] = { 't', 'i', 'm', 'e', 0, };
-    /* "message" */
-    char STRING_MESSAGE[] = { 'm', 'e', 's', 's', 'a', 'g', 'e', 0, };
-
     console_color_t fgcolor = console_color_t::white;
 
     _color.set_style (console_style_t::bold);
 
-    stream.printf ("%-5s|%-10s|%-20s|%-11s|%s\n", STRING_RESULT, STRING_ERRORCODE, STRING_TEST_FUNCTION, STRING_TIME, STRING_MESSAGE);
+    constexpr auto constexpr_header = CONSTEXPR_HIDE ("%-5s|%-10s|%-20s|%-11s|%s\n");
+    constexpr auto constexpr_line = CONSTEXPR_HIDE (" %-4s |0x%08x|%-20s|%-11s|%s\n");
+    constexpr auto constexpr_timefmt = CONSTEXPR_HIDE ("%lld.%09ld");
+    stream.printf (constexpr_header, "result", "errorcode", "test function", "time", "message");
 
     for (unittest_list_t::iterator list_iterator = array.begin (); list_iterator != array.end (); list_iterator++) {
         unittest_item_t item = *list_iterator;
 
         ansi_string error_message;
         switch (item._result) {
-            case errorcode_t::success:       error_message << STRING_PASS; break;
-            case errorcode_t::not_supported: error_message << PRINT_STRING_NOT_SUPPORTED; break;
-            case errorcode_t::low_security:  error_message << PRINT_STRING_LOW_SECURITY; break;
-            default:                         error_message << PRINT_STRING_FAIL; break;
+            case errorcode_t::success:       cprint (error_message, _color, console_color_t::white, fgcolor, constexpr_pass); break;
+            case errorcode_t::not_supported: cprint (error_message, _color, console_color_t::cyan, fgcolor, constexpr_skip); break;
+            case errorcode_t::low_security:  cprint (error_message, _color, console_color_t::yellow, fgcolor, constexpr_low); break;
+            default:                         cprint (error_message, _color, console_color_t::red, fgcolor, constexpr_fail); break;
         }
 
         std::string funcname;
@@ -356,9 +368,9 @@ void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stre
         } else {
             funcname = item._test_function;
         }
-        stream.printf (" %-4s |0x%08x|%-20s|%-11s|%s\n",
+        stream.printf (constexpr_line,
                        error_message.c_str (), item._result, funcname.c_str (),
-                       format ("%lld.%09ld", item._time.tv_sec, item._time.tv_nsec / 100).c_str (),
+                       format (constexpr_timefmt, item._time.tv_sec, item._time.tv_nsec / 100).c_str (),
                        item._message.c_str ());
     }
 }
@@ -384,9 +396,7 @@ void test_case::report (uint32 top_count)
     // file
     //
 
-    char STRING_REPORT[] = { 'r', 'e', 'p', 'o', 'r', 't', 0, };
-
-    std::ofstream file (STRING_REPORT, std::ios::trunc);
+    std::ofstream file (constexpr_report, std::ios::trunc);
     file << stream.c_str ();
     file.close ();
 }
@@ -394,32 +404,6 @@ void test_case::report (uint32 top_count)
 void test_case::report_unittest (ansi_string& stream)
 {
     console_color_t fgcolor = console_color_t::white;
-
-    /* test */
-    char STRING_REPORT[] = { 'r', 'e', 'p', 'o', 'r', 't', 0, };
-    /* "success" */
-    char STRING_SUCCESS[] = { 's', 'u', 'c', 'c', 'e', 's', 's', 0, };
-    /* "pass" */
-    char STRING_PASS[] = { 'p', 'a', 's', 's', 0, };
-    /* "fail" */
-    char STRING_FAIL[] = { 'f', 'a', 'i', 'l', 0, };
-    /* "skip" */
-    char STRING_NOT_SUPPORTED[] = { 's', 'k', 'i', 'p', 0, };
-    /* "low" */
-    char STRING_LOW_SECURITY[] = { 'l', 'o', 'w', ' ', 0, };
-    /* "test case" */
-    char STRING_TEST_CASE[] = { 't', 'e', 's', 't', ' ', 'c', 'a', 's', 'e', 0, };
-    /* "result" */
-    char STRING_RESULT[] = { 'r', 'e', 's', 'u', 'l', 't', 0, };
-    /* "errorcode" */
-    char STRING_ERRORCODE[] = { 'e', 'r', 'r', 'o', 'r', 'c', 'o', 'd', 'e', 0, };
-    /* "test function" */
-    char STRING_TEST_FUNCTION[] = { 't', 'e', 's', 't', ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', 0, };
-    /* "time" */
-    char STRING_TIME[] = { 't', 'i', 'm', 'e', 0, };
-    /* "message" */
-    char STRING_MESSAGE[] = { 'm', 'e', 's', 's', 'a', 'g', 'e', 0, };
-    char STRING_UPPERCASE_TEST_FAILED[] = { 'T', 'E', 'S', 'T', ' ', 'F', 'A', 'I', 'L', 'E', 'D', 0, };
 
     //
     // compose
@@ -430,7 +414,7 @@ void test_case::report_unittest (ansi_string& stream)
     stream << _color.turnon ().set_style (console_style_t::bold);
     stream.fill (80, '=');
     stream.endl ();
-    stream << _color.set_fgcolor (fgcolor) << STRING_REPORT;
+    stream << _color.set_fgcolor (fgcolor) << constexpr_report;
     stream.endl ();
 
     for (unittest_index_t::iterator iter = _test_list.begin (); iter != _test_list.end (); iter++) {
@@ -439,16 +423,22 @@ void test_case::report_unittest (ansi_string& stream)
         test_status_t status = map_iter->second;
 
         stream  << "@ "
-                << STRING_TEST_CASE << " \"" << testcase.c_str () << "\" "
-                << PRINT_STRING_SUCCESS << " " << status._test_stat._count_success;
+                << constexpr_testcase << " \"" << testcase.c_str () << "\" "
+                << constexpr_success << " " << status._test_stat._count_success;
         if (status._test_stat._count_fail) {
-            stream << " " << PRINT_STRING_FAIL << " " << status._test_stat._count_fail;
+            stream << " ";
+            cprint (stream, _color, console_color_t::red, fgcolor, constexpr_fail);
+            stream << " " << status._test_stat._count_fail;
         }
         if (status._test_stat._count_not_supported) {
-            stream << " " << PRINT_STRING_NOT_SUPPORTED << " " << status._test_stat._count_not_supported;
+            stream << " ";
+            cprint (stream, _color, console_color_t::cyan, fgcolor, constexpr_skip);
+            stream << " " << status._test_stat._count_not_supported;
         }
         if (status._test_stat._count_low_security) {
-            stream << " " << PRINT_STRING_LOW_SECURITY << " " << status._test_stat._count_low_security;
+            stream << " ";
+            cprint (stream, _color, console_color_t::yellow, fgcolor, constexpr_low);
+            stream << " " << status._test_stat._count_low_security;
         }
         stream.endl ();
 
@@ -461,21 +451,30 @@ void test_case::report_unittest (ansi_string& stream)
         stream.endl ();
     }
 
-    stream << "# " << PRINT_STRING_SUCCESS << " " << _total._count_success;
+    stream << "# ";
+    cprint (stream, _color, console_color_t::white, fgcolor, constexpr_pass);
+    stream << " " << _total._count_success;
     if (_total._count_fail) {
-        stream << " " << PRINT_STRING_FAIL << " " << _total._count_fail;
+        stream << " ";
+        cprint (stream, _color, console_color_t::red, fgcolor, constexpr_fail);
+        stream << " " << _total._count_fail;
     }
     if (_total._count_not_supported) {
-        stream << " " << PRINT_STRING_NOT_SUPPORTED << " " << _total._count_not_supported;
+        stream << " ";
+        cprint (stream, _color, console_color_t::cyan, fgcolor, constexpr_skip);
+        stream << " " << _total._count_not_supported;
     }
     if (_total._count_low_security) {
-        stream << " " << PRINT_STRING_LOW_SECURITY << " " << _total._count_low_security;
+        stream << " ";
+        cprint (stream, _color, console_color_t::yellow, fgcolor, constexpr_low);
+        stream << " " << _total._count_low_security;
     }
     stream.endl ();
     stream.fill (80, '=');
     stream.endl ();
     if (_total._count_fail) {
-        stream << _color.set_fgcolor (console_color_t::red) << STRING_UPPERCASE_TEST_FAILED << _color.set_fgcolor (fgcolor);
+        constexpr auto constexpr_testfail = CONSTEXPR_HIDE ("TEST FAILED");
+        cprint (stream, _color, console_color_t::red, fgcolor, constexpr_testfail);
         stream.endl ();
     }
 
@@ -527,7 +526,8 @@ void test_case::report_testtime (ansi_string& stream, uint32 top_count)
 
     // dump and cout
     if (array.size ()) {
-        stream.printf ("sort by time (top %zi)\n", array.size ());
+        constexpr auto constexpr_timesort = CONSTEXPR_HIDE ("sort by time (top %zi)\n");
+        stream.printf (constexpr_timesort, array.size ());
 
         stream.fill (80, '-');
         stream.endl ();
