@@ -131,6 +131,7 @@ void test_crypt_algorithms ()
         crypt_algorithm_t::rc2,
         crypt_algorithm_t::rc5,
         crypt_algorithm_t::seed,
+        crypt_algorithm_t::sm4,
     };
     crypt_algorithm_t cfbx_algorithm_table [] = {
         crypt_algorithm_t::aes128,
@@ -167,30 +168,30 @@ void test_crypt_algorithms ()
     openssl_crypt openssl_crypt;
     byte_t keydata[32] = { 'S', 'i', 'm', 'o', 'n', ' ', '&', ' ', 'G', 'a', 'r', 'f', 'u', 'n', 'k', 'e', 'l', };
     byte_t iv[32] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, };
-    const char* text = "still a man hears what he wants to hear and disregards the rest"; // the boxer - Simon & Garfunkel
+    constexpr char constexpr_text[] = "still a man hears what he wants to hear and disregards the rest"; // the boxer - Simon & Garfunkel
 
     __try2
     {
         std::string condition = format ("[test condition cooltime %zi unitsize %zi]", ossl_get_cooltime (), ossl_get_unitsize ());
 
         _test_case.begin ("openssl_crypt crypt_mode_t::cbc %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cbc, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cbc, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
         _test_case.begin ("openssl_crypt crypt_mode_t::cfb %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cfb, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::cfb, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
         _test_case.begin ("openssl_crypt crypt_mode_t::cfb1 %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb1, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb1, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
         _test_case.begin ("openssl_crypt crypt_mode_t::cfb8 %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb8, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb8, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
         _test_case.begin ("openssl_crypt crypt_mode_t::ofb %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ofb, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ofb, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
         _test_case.begin ("openssl_crypt crypt_mode_t::ecb %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ecb, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (algorithm_table), algorithm_table, crypt_mode_t::ecb, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
         _test_case.begin ("openssl_crypt crypt_mode_t::ctr %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::ctr, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::ctr, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
         _test_case.begin ("openssl_crypt crypt_mode_t::gcm %s", condition.c_str ());
-        test_crypt (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::gcm, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
+        test_crypt (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::gcm, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
         //_test_case.begin ("openssl_crypt crypt_mode_t::ccm %s", condition.c_str ());
-        //test_crypt (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::ccm, 16, keydata, 16, iv, (byte_t*) text, strlen (text));
+        //test_crypt (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::ccm, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
     }
     __finally2
     {

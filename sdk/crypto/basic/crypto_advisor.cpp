@@ -128,7 +128,6 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::idea, crypt_mode_t::ofb,  EVP_idea_ofb (), "idea-ofb", },
 #endif
 
-#ifndef OPENSSL_NO_SM4
     { crypt_algorithm_t::rc2, crypt_mode_t::cbc, EVP_sm4_cbc (), "rc2-cbc", },
     { crypt_algorithm_t::rc2, crypt_mode_t::cfb, EVP_sm4_cfb (), "rc2-cfb", },
     { crypt_algorithm_t::rc2, crypt_mode_t::ecb, EVP_sm4_ecb (), "rc2-ecb", },
@@ -139,6 +138,7 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::rc5, crypt_mode_t::ecb, EVP_sm4_ecb (), "rc5-ecb", },
     { crypt_algorithm_t::rc5, crypt_mode_t::ofb, EVP_sm4_ofb (), "rc5-ofb", },
 
+#ifndef OPENSSL_NO_SM4
     { crypt_algorithm_t::sm4, crypt_mode_t::cbc, EVP_sm4_cbc (), "sm4-cbc", },
     //{ crypt_algorithm_t::sm4, crypt_mode_t::ccm, EVP_sm4_ccm (), "sm4-ccm", },
     { crypt_algorithm_t::sm4, crypt_mode_t::cfb, EVP_sm4_cfb (), "sm4-cfb", },
