@@ -8,10 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/system/linux/thread.hpp>
+#include <hotplace/sdk/base/system/linux/thread.hpp>
 
 namespace hotplace {
-namespace io {
 
 thread::thread (THREAD_CALLBACK_ROUTINE callback, void* param)
     : _tid (0),
@@ -116,5 +115,4 @@ threadid_t thread::gettid ()
     return _tid;
 }
 
-}
 }  // namespace

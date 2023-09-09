@@ -15,7 +15,7 @@
 #define __HOTPLACE_SDK_IO_BASIC_OBFUSCATESTRING__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/stream/bufferio.hpp>
+#include <hotplace/sdk/base/basic/bufferio.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <string>

@@ -8,14 +8,14 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_SIGNALWAITTHREADS__
-#define __HOTPLACE_SDK_IO_SYSTEM_SIGNALWAITTHREADS__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_SIGNALWAITTHREADS__
+#define __HOTPLACE_SDK_BASE_SYSTEM_SIGNALWAITTHREADS__
 
-#include <hotplace/sdk/io/system/thread.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/thread.hpp>
 #include <map>
 
 namespace hotplace {
-namespace io {
 
 /**
  * @brief register thread-termination signal_routine and wait a signal
@@ -142,7 +142,6 @@ protected:
     SIGNALWAITTHREADS_MAP _container;
 };
 
-}
 }  // namespace
 
 #endif

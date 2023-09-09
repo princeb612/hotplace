@@ -1,6 +1,7 @@
 
 
 ## constexpr_obf
+
  * c++14 required
  * obfuscate a string at compile time
  * -std=c++11
@@ -16,6 +17,7 @@
    * strings binary | grep "wild" # not found
 
 ## C++ Standard
+
 | C++ std | GCC   | reference                                             |
 |--       |--     |--                                                     |
 | c++0x   | 4.3~  |                                                       |

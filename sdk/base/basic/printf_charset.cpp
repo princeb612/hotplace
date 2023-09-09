@@ -29,7 +29,7 @@
  *
  */
 
-#include <hotplace/sdk/io/string/string.hpp>
+#include <hotplace/sdk/base/basic/sdk.hpp>
 #include <ctype.h>  // isdigit
 #include <math.h>   // modf
 #include <stdarg.h>
@@ -37,7 +37,6 @@
 #include <stdio.h>
 
 namespace hotplace {
-namespace io {
 
 #define LONGINT   0x01                      /* long integer */
 #define LONGDBL   0x02                      /* long double; unimplemented */
@@ -946,5 +945,4 @@ int printf_runtimew (void *context, CALLBACK_PRINTFW runtime_printfw, const wcha
     return nRet;
 }
 
-}
 }  // namespace

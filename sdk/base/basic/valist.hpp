@@ -8,23 +8,22 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_STRING_VALIST__
-#define __HOTPLACE_SDK_IO_STRING_VALIST__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_VALIST__
+#define __HOTPLACE_SDK_BASE_BASIC_VALIST__
 
-#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <vector>
 
 namespace hotplace {
-namespace io {
 
-typedef struct _GCC_VA_LIST64 {
+typedef struct _valist_gcc_x64_t {
     unsigned int gp_offset;
     unsigned int fp_offset;
     void* overflow_arg_area;
     void* reg_save_area;
-} GCC_VA_LIST64[1];
+} valist_gcc_x64_t[1];
 
-typedef struct VA_LIST {
+typedef struct _valist_t {
     /**
      * @brief va_list to va_list
      *
@@ -44,11 +43,11 @@ typedef struct VA_LIST {
 
 #if defined __linux__
 #if __WORDSIZE == 64
-        GCC_VA_LIST64 gcc_va_list64;             /* gcc 64bits */
+        valist_gcc_x64_t gcc_va_list64;             /* gcc 64bits */
 #endif
 #endif
     };
-} VA_LIST;
+} valist_t;
 
 //#define GET_VA_LIST(vl) (vl).ap
 
@@ -132,7 +131,7 @@ protected:
 
     typedef std::vector<variant_t> args_t;
 
-    VA_LIST _type;
+    valist_t _type;
     void* _va_internal;
     bool _modified;
 
@@ -140,7 +139,6 @@ protected:
     args_t _args;
 };
 
-}
 }  // namespace
 
 #endif

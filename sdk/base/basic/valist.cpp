@@ -8,10 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/string/valist.hpp>
+#include <hotplace/sdk/base/basic/valist.hpp>
 
 namespace hotplace {
-namespace io {
 
 valist::valist ()
     : _va_internal (nullptr),
@@ -567,5 +566,4 @@ void valist::insert (variant_t const& v)
     _lock.leave ();
 }
 
-}
 }  // namespace

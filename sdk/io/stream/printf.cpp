@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
-#include <hotplace/sdk/io/string/valist.hpp>
 #include <hotplace/sdk/io/basic/base16.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>

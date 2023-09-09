@@ -8,14 +8,13 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_SEMAPHORE__
-#define __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_SEMAPHORE__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SEMAPHORE__
+#define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SEMAPHORE__
 
 #include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>
 
 namespace hotplace {
-namespace io {
 
 /**
  * @brief semaphore
@@ -41,7 +40,6 @@ protected:
     HANDLE _sem;
 };
 
-}
 }  // namespace
 
 #endif

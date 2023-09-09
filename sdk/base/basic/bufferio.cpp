@@ -9,11 +9,9 @@
  * 2023.08.15   Soo Han, Kim        fix : insert (lock)
  */
 
-#include <hotplace/sdk/io/stream/bufferio.hpp>
-#include <hotplace/sdk/io/stream/file_stream.hpp>
+#include <hotplace/sdk/base/basic/bufferio.hpp>
 
 namespace hotplace {
-namespace io {
 
 bufferio::bufferio ()
 {
@@ -684,5 +682,4 @@ return_t bufferio::unlock (bufferio_context_t* handle)
     return ret;
 }
 
-}
 }  // namespace

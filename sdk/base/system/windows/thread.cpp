@@ -8,10 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/system/windows/thread.hpp>
+#include <hotplace/sdk/base/system/windows/thread.hpp>
 
 namespace hotplace {
-namespace io {
 
 thread::thread (THREAD_CALLBACK_ROUTINE callback, void* param)
     : _tid (nullptr),
@@ -87,5 +86,4 @@ threadid_t thread::gettid ()
     return _tid;
 }
 
-}
 }  // namespace

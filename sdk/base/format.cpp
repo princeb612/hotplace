@@ -53,15 +53,7 @@ std::string format (const char* fmt, va_list ap)
 
     while (true) {
         va_copy (vl, ap); // c++99
-#ifdef __GNUC__
-        ret = vsnprintf (&buf[0], buf.size (), fmt, vl);
-#else
-#if defined __STDC_WANT_SECURE_LIB__
-        ret = _vsnprintf_s (&buf[0], buf.size (), _TRUNCATE, fmt, vl);
-#else
-        ret = _vsnprintf (&buf[0], buf.size (), fmt, vl);
-#endif
-#endif
+        vsnprintf_inline (&buf[0], buf.size (), fmt, vl);
         va_end (vl);
         if ((ret < 0) || (ret >= needed)) {
             needed *= 2;

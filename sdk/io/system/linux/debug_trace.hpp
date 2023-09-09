@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_LINUX_DEBUGTRACE__
 #define __HOTPLACE_SDK_IO_SYSTEM_LINUX_DEBUGTRACE__
 
-#include <hotplace/sdk/io/system/thread.hpp>
+#include <hotplace/sdk/base/system/thread.hpp>
 #include <pthread.h>
 
 namespace hotplace {

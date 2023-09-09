@@ -8,17 +8,17 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_LINUX_THREAD__
-#define __HOTPLACE_SDK_IO_SYSTEM_LINUX_THREAD__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_THREAD__
+#define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_THREAD__
 
-#include <hotplace/sdk/io/system/thread.hpp>
-#include <pthread.h>
+#include <hotplace/sdk/base/system/thread.hpp>
 
 namespace hotplace {
-namespace io {
 
-#define get_thread() pthread_self ()
-#define get_thread_id() (arch_t) pthread_self ()
+// HANDLE GetCurrentThread()
+#define get_thread() GetCurrentThread ()
+// DWORD GetCurrentThreadId ()
+#define get_thread_id() (arch_t) GetCurrentThreadId ()
 
 /**
  * @brief thread
@@ -47,21 +47,15 @@ public:
 
     virtual threadid_t gettid ();
 
-    //virtual int addref ();
-    //virtual int release ();
-
 private:
-    static void* thread_routine (void* param);
+    static DWORD thread_routine (void* param);
     void thread_routine_implementation ();
 
     threadid_t _tid;
     THREAD_CALLBACK_ROUTINE _callback;
     void* _param;
-
-    //t_shared_reference<thread> _shared;
 };
 
-}
 }  // namespace
 
 #endif

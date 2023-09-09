@@ -1,6 +1,7 @@
 # JSON Object Signing and Encryption (JOSE) implementation status
 
 ## Cryptographic Algorithms for Digital Signatures and MACs
+
 | Implemented  | "alg" Param Value | Digital Signature or MAC Algorithm | Implementation Requirements |
 |-- |--     |--                                              |--            |
 | O | HS256 | HMAC using SHA-256                             | Required     |
@@ -19,6 +20,7 @@
 | O | EdDSA | RFC 8037                                       |              |
 
 ## Cryptographic Algorithms for Key Management
+
 | Implemented  | "alg" Param Value  | Key Management Algorithm | More Header Params  | Implementation Requirements |
 |-- |--                  |--                                                         |--      |--              |
 | O | RSA1_5             | RSAES-PKCS1-v1_5                                          | (none) | Recommended-   |
@@ -40,6 +42,7 @@
 | O | PBES2-HS512|A256KW | PBES2 with HMAC SHA-512 and "A256KW" wrapping             | "p2s","p2c"       | Optional       |
 
 ## Cryptographic Algorithms for Content Encryption
+
 | Implemented  | "enc" Param Value  | Content Encryption Algorithm | Implementation Requirements |
 |-- |--             |--                         |--             |
 | O | A128CBC-HS256 | AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm, as defined in Section 5.2.3 | Required |
@@ -50,6 +53,7 @@
 | O | A256GCM       | AES GCM using 256-bit key | Recommended   |
 
 ## JWK
+
 | Implemented | kty |                |   |
 |-- |--     |--                      |-- |
 | O | oct   | JWK/PEM(openssl 1.1.1) |   |

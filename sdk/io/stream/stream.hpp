@@ -9,17 +9,12 @@
 #define __HOTPLACE_SDK_STREAM_STREAM__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/stream/bufferio.hpp>
-#include <hotplace/sdk/io/string/valist.hpp>
+#include <hotplace/sdk/base/basic/bufferio.hpp>
+#include <hotplace/sdk/base/basic/stream.hpp>
+#include <hotplace/sdk/base/basic/valist.hpp>
 
 namespace hotplace {
 namespace io {
-
-enum stream_type_t {
-    undefined   = 0,
-    memory      = 1,
-    file        = 2,
-};
 
 enum filestream_flag_t {
     flag_normal                 = 0,
@@ -45,23 +40,6 @@ enum filestream_flag_t {
 #define FILE_BEGIN 0
 #define FILE_CURRENT 1
 #define FILE_END 2
-
-class stream_t
-{
-public:
-    virtual ~stream_t ()
-    {
-    }
-
-    virtual byte_t* data () = 0;
-    virtual uint64 size () = 0;
-    virtual return_t write (void* data, size_t size) = 0;
-    virtual return_t fill (size_t l, char c) = 0;
-    virtual return_t clear () = 0;
-
-    virtual return_t printf (const char* buf, ...) = 0;
-    virtual return_t vprintf (const char* buf, va_list ap) = 0;
-};
 
 #if defined _WIN32 || defined _WIN64
 return_t A2W (stream_t* stream, const char* source, uint32 codepage = 0);
@@ -170,24 +148,6 @@ return_t vtprintf (stream_t* stream, variant_t vt, vtprintf_style_t style = vtpr
 // part - dump
 //
 
-/**
- * @brief dump memory
- * @example
- *  const char* data = "hello world\n wide world\n";
- *
- *  buffer_stream bs;
- *  dump_memory ((byte_t*) data, strlen (data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
- *  std::cout << bs.c_str () << std::endl;
- */
-
-enum dump_memory_flag_t {
-    header = (1 << 0),
-};
-return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_t* stream_object,
-                      unsigned hex_part = 16,
-                      unsigned indent = 0,
-                      size_t rebase = 0x0,
-                      int flags = 0);
 return_t dump_memory (const std::string& data, stream_t* stream_object,
                       unsigned hex_part = 16,
                       unsigned indent = 0,

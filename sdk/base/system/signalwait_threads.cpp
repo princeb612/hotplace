@@ -9,10 +9,9 @@
  */
 
 #include <hotplace/sdk/base/system/datetime.hpp>
-#include <hotplace/sdk/io/system/signalwait_threads.hpp>
+#include <hotplace/sdk/base/system/signalwait_threads.hpp>
 
 namespace hotplace {
-namespace io {
 
 signalwait_threads::signalwait_threads ()
 {
@@ -199,5 +198,4 @@ return_t signalwait_threads::join (threadid_t tid)
     return ret;
 }
 
-}
 }  // namespace

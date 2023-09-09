@@ -12,7 +12,6 @@
 #include <sys/time.h>
 
 namespace hotplace {
-namespace io {
 
 semaphore::semaphore ()
 {
@@ -49,5 +48,4 @@ uint32 semaphore::wait (unsigned msec)
     return ret_value;
 }
 
-}
 }  // namespace

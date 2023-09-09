@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_BASE_DEFINE__
-#define __HOTPLACE_SDK_BASE_DEFINE__
+#ifndef __HOTPLACE_SDK_BASE_SYNTAX__
+#define __HOTPLACE_SDK_BASE_SYNTAX__
 
 #define __try2 do
 #define __finally2 while (0);

@@ -19,6 +19,11 @@
 #include <hotplace/sdk/base/inline.hpp>
 #include <hotplace/sdk/base/variant.hpp>
 
+#include <hotplace/sdk/base/basic/bufferio.hpp>
+#include <hotplace/sdk/base/basic/sdk.hpp>
+#include <hotplace/sdk/base/basic/stream.hpp>
+#include <hotplace/sdk/base/basic/valist.hpp>
+
 #include <hotplace/sdk/base/system/atomic.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
@@ -26,6 +31,8 @@
 #include <hotplace/sdk/base/system/reference_counter.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/base/system/signalwait_threads.hpp>
+#include <hotplace/sdk/base/system/thread.hpp>
 
 #if defined _WIN32 || defined _WIN64
 #include <hotplace/sdk/base/system/windows/sdk.hpp>

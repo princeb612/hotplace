@@ -12,7 +12,6 @@
 #include <windows.h>
 
 namespace hotplace {
-namespace io {
 
 semaphore::semaphore ()
 {
@@ -56,5 +55,4 @@ uint32 semaphore::wait (unsigned msec)
     return ret;
 }
 
-}
 }  // namespace

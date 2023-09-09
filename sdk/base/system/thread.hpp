@@ -8,10 +8,14 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_THREAD__
-#define __HOTPLACE_SDK_IO_SYSTEM_THREAD__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_THREAD__
+#define __HOTPLACE_SDK_BASE_SYSTEM_THREAD__
 
-#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/callback.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+
 #if defined _WIN32 || defined _WIN64
 #include <windows.h>
 #elif defined __linux__
@@ -19,7 +23,6 @@
 #endif
 
 namespace hotplace {
-namespace io {
 
 #if defined _WIN32 || defined _WIN64
 typedef HANDLE threadid_t;
@@ -37,12 +40,11 @@ public:
 };
 
 }
-}
 
 #if defined _WIN32 || defined _WIN64
-#include <hotplace/sdk/io/system/windows/thread.hpp>
+#include <hotplace/sdk/base/system/windows/thread.hpp>
 #elif defined __linux__
-#include <hotplace/sdk/io/system/linux/thread.hpp>
+#include <hotplace/sdk/base/system/linux/thread.hpp>
 #endif
 
 #endif

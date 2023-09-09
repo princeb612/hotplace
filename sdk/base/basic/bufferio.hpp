@@ -11,17 +11,17 @@
  *                                  removed : replace1
  */
 
-#ifndef __GRAPE_SDK_IO_STREAM_BINARYSTREAM__
-#define __GRAPE_SDK_IO_STREAM_BINARYSTREAM__
+#ifndef __GRAPE_SDK_BASE_BASIC_BUFFERIO__
+#define __GRAPE_SDK_BASE_BASIC_BUFFERIO__
 
-#include <hotplace/sdk/base.hpp>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
+#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/charset.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <list>
 
 namespace hotplace {
-namespace io {
 
 /**
  * bufferio_context_t::flags
@@ -59,7 +59,6 @@ typedef struct _bufferio_context_t {
     size_t bufferio_size;               // data size
 } bufferio_context_t;
 
-class file_stream;
 class bufferio
 {
 public:
@@ -310,7 +309,6 @@ protected:
 #endif
 };
 
-}
 }  // namespace
 
 #endif

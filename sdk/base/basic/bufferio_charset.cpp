@@ -10,13 +10,12 @@
  *                                  removed : replace1
  */
 
-#include <hotplace/sdk/io/stream/bufferio.hpp>
-#include <hotplace/sdk/io/stream/stream.hpp>
-#include <hotplace/sdk/io/string/string.hpp>
+#include <hotplace/sdk/base/basic/bufferio.hpp>
+#include <hotplace/sdk/base/basic/sdk.hpp>
+#include <stdarg.h>
 #include <stdio.h>
 
 namespace hotplace {
-namespace io {
 
 #if defined _MBCS || defined MBCS
 size_t bufferio::find_first_of (bufferio_context_t* handle, const char* find, size_t offset)
@@ -479,6 +478,5 @@ return_t bufferio::vprintf (bufferio_context_t* handle, const wchar_t* fmt, va_l
 }
 #endif
 
-}
 }  // namespace
 

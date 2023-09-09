@@ -16,7 +16,6 @@
 #include <semaphore.h>
 
 namespace hotplace {
-namespace io {
 
 /**
  * @brief semaphore
@@ -42,7 +41,6 @@ protected:
     sem_t _sem;
 };
 
-}
 }  // namespace
 
 #endif

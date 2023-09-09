@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/system/thread.hpp>
 #include <hotplace/sdk/io/system/multiplexer.hpp>
-#include <hotplace/sdk/io/system/thread.hpp>
 #include <map>
 
 namespace hotplace {

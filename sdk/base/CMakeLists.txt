@@ -12,11 +12,11 @@ file (GLOB FILEGROUP_SDK_HEADER_BASE
 
 file (GLOB FILEGROUP_SDK_SOURCE_BASE
     ${PROJECT_SOURCE_DIR}/sdk/base/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/system/*.cpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_BASE_LINUX
-    ${PROJECT_SOURCE_DIR}/sdk/base/linux/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/system/linux/*.cpp
 )
 
@@ -25,6 +25,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_BASE_WIN32
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_BASE_WIN32_UNICODE
+    ${PROJECT_SOURCE_DIR}/sdk/base/basic/unicode/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/system/windows/unicode/*.cpp
 )
 

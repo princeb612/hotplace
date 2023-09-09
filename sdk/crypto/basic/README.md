@@ -10,6 +10,7 @@
 | chacha20  | chacha20,chacha20-poly1305                |
 
 ## digest tested
+
 | alg         |             |
 | --          | --          |
 | md4         | DIGEST,HMAC |
