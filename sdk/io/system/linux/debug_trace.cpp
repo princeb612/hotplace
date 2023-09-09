@@ -46,8 +46,8 @@ return_t debug_trace (stream_t* stream)
             __leave2;
         }
 
-        constexpr auto constexpr_calltack = CONSTEXPR_HIDE ("#%d 0x%08x ");
-        constexpr auto constexpr_frameinfo = CONSTEXPR_HIDE ("%s!%s + 0x%x ");
+        constexpr char constexpr_calltack[] = "#%d 0x%08x ";
+        constexpr char constexpr_frameinfo[] = "%s!%s + 0x%x ";
 
         std::vector<void*> callstack;
         callstack.resize (256);

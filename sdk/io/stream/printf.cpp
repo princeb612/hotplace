@@ -158,9 +158,9 @@ return_t vtprintf (stream_t* stream, variant_t vt, vtprintf_style_t style)
             __leave2;
         }
 
-        constexpr auto constexpr_false = CONSTEXPR_HIDE ("false");
-        constexpr auto constexpr_null = CONSTEXPR_HIDE ("null");
-        constexpr auto constexpr_true = CONSTEXPR_HIDE ("true");
+        constexpr char constexpr_false[] = "false";
+        constexpr char constexpr_null[] = "null";
+        constexpr char constexpr_true[] = "true";
 
         switch (vt.type) {
             case TYPE_NULL:

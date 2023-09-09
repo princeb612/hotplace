@@ -101,15 +101,19 @@ void test_hexbin ()
 
 void test_constexpr_hide ()
 {
-    _test_case.begin ("constexpr_hide");
+    _test_case.begin ("constexpr");
 
-    constexpr auto temp1 = constexpr_hide <151>("You and I in a little toy shop / Buy a bag of balloons with the money we've got / Set them free at the break of dawn / 'Til one by one, they were gone");
-    constexpr auto temp2 = CONSTEXPR_HIDE ("What can I do? / Will I be getting through? / Now that I must try to leave it all behind / Did you see what you have done to me? / So hard to justify, slowly it's passing by");
-    define_constexpr_hide (temp3, "Wake up, my love, beneath the midday sun, / Alone, once more alone, / This travelin' boy was only passing through, / But he will always think of you.");
+    constexpr char temp1[] = "You and I in a little toy shop / Buy a bag of balloons with the money we've got / Set them free at the break of dawn / 'Til one by one, they were gone";
+    constexpr char temp2[] = "What can I do? / Will I be getting through? / Now that I must try to leave it all behind / Did you see what you have done to me? / So hard to justify, slowly it's passing by";
+    constexpr char temp3[] = "Wake up, my love, beneath the midday sun, / Alone, once more alone, / This travelin' boy was only passing through, / But he will always think of you.";
 
     std::cout << temp1 << std::endl;
     std::cout << temp2 << std::endl;
     std::cout << temp3 << std::endl;
+
+    buffer_stream bs;
+    dump_memory (temp1, &bs);
+    std::cout << bs.c_str () << std::endl;
 
     _test_case.assert (true, __FUNCTION__, "hide a string at compile time");
 }

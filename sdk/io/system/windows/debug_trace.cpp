@@ -217,14 +217,14 @@ return_t debug_trace::open (debug_trace_context_t** handle)
             symbol_search_path += ";";
         }
 
-        constexpr auto constexpr_symbolpath = CONSTEXPR_HIDE ("NT_SYMBOL_PATH");
+        constexpr char constexpr_symbolpath[] = "NT_SYMBOL_PATH";
         test = GetEnvironmentVariable (constexpr_symbolpath, buffer_data, buffer_data_size);
         if (test) {
             symbol_search_path += buffer_data;
             symbol_search_path += ";";
         }
 
-        constexpr auto constexpr_alt_symbolpath = CONSTEXPR_HIDE ("_NT_ALTERNATE_SYMBOL_PATH");
+        constexpr char constexpr_alt_symbolpath[] = "_NT_ALTERNATE_SYMBOL_PATH";
         test = GetEnvironmentVariable (constexpr_alt_symbolpath, buffer_data, buffer_data_size);
         if (test) {
             symbol_search_path += buffer_data;
@@ -382,12 +382,12 @@ return_t debug_trace::trace (debug_trace_context_t* handle, CONTEXT* rtlcontext,
             __leave2;
         }
 
-        constexpr auto constexpr_debug = CONSTEXPR_HIDE ("debug");
-        constexpr auto constexpr_frameinfo = CONSTEXPR_HIDE ("#%-4d %08x %08x %08x %08x %08x %08x ");
-        constexpr auto constexpr_moduleinfo = CONSTEXPR_HIDE ("%s(0x%08x)+0x%08x ");
-        constexpr auto constexpr_undeco = CONSTEXPR_HIDE ("%s!%s");
-        constexpr auto constexpr_fileline = CONSTEXPR_HIDE ("+0x%x");
-        constexpr auto constexpr_line = CONSTEXPR_HIDE (" [%s @ %lu]");
+        constexpr char constexpr_debug[] =  "debug";
+        constexpr char constexpr_frameinfo[] = "#%-4d %08x %08x %08x %08x %08x %08x ";
+        constexpr char constexpr_moduleinfo[] = "%s(0x%08x)+0x%08x ";
+        constexpr char constexpr_undeco[] = "%s!%s";
+        constexpr char constexpr_fileline[] = "+0x%x";
+        constexpr char constexpr_line[] = " [%s @ %lu]";
 
         stream->printf ("%s\n", constexpr_debug);
 
@@ -477,12 +477,12 @@ return_t debug_trace::trace (debug_trace_context_t* handle, EXCEPTION_POINTERS* 
 
         EXCEPTION_RECORD* exception_record = exception->ExceptionRecord;
 
-        constexpr auto constexpr_except = CONSTEXPR_HIDE ("exception\n");
-        constexpr auto constexpr_except_addr = CONSTEXPR_HIDE ("exception address : 0x%08x\n");
-        constexpr auto constexpr_except_code = CONSTEXPR_HIDE ("  exception code  : 0x%08x\n");
-        constexpr auto constexpr_except_flag = CONSTEXPR_HIDE ("  exception flags : 0x%08x\n");
-        constexpr auto constexpr_except_parm = CONSTEXPR_HIDE ("number parameters : %d\n");
-        constexpr auto constexpr_except_recd = CONSTEXPR_HIDE ("  parameter [%d]   : 0x%08x\n");
+        constexpr char constexpr_except[] = "exception\n";
+        constexpr char constexpr_except_addr[] = "exception address : 0x%08x\n";
+        constexpr char constexpr_except_code[] = "  exception code  : 0x%08x\n";
+        constexpr char constexpr_except_flag[] = "  exception flags : 0x%08x\n";
+        constexpr char constexpr_except_parm[] = "number parameters : %d\n";
+        constexpr char constexpr_except_recd[] = "  parameter [%d]   : 0x%08x\n";
 
         stream->printf (constexpr_except);
         stream->printf (constexpr_except_addr, exception_record->ExceptionAddress);

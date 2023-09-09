@@ -57,7 +57,7 @@ void test ()
     odbc_connector dbconn;
     odbc_query* rs = nullptr;
 
-    constexpr auto constexpr_connstring = CONSTEXPR_HIDE ("DRIVER={%s};SERVER=%s;PORT=%d;DATABASE=%s;USER=%s;PASSWORD=%s");
+    constexpr char constexpr_connstring[] = "DRIVER={%s};SERVER=%s;PORT=%d;DATABASE=%s;USER=%s;PASSWORD=%s";
     constexpr auto constexpr_obf_user = CONSTEXPR_OBF ("user");
     constexpr auto constexpr_obf_pass = CONSTEXPR_OBF ("password");
 

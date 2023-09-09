@@ -38,8 +38,8 @@ return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_t* st
         const byte_t* ascii_pointer = nullptr;
         unsigned dumped_hex_part = 0;
 
-        constexpr auto constexpr_dumpaddr = CONSTEXPR_HIDE ("%08X : ");
-        constexpr auto constexpr_dumpbyte = CONSTEXPR_HIDE ("%02X ");
+        constexpr char constexpr_dumpaddr[] = "%08X : ";
+        constexpr char constexpr_dumpbyte[] = "%02X ";
 
         if (dump_memory_flag_t::header & flags) {
             stream_object->fill (11, ' ');

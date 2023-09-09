@@ -52,7 +52,7 @@ void test_case::begin (const char* case_name, ...)
         }
     }
 
-    constexpr auto constexpr_testcase = CONSTEXPR_HIDE ("[test case] ");
+    constexpr char constexpr_testcase[] = "[test case] ";
 
     stream  << _color.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::magenta)
             << constexpr_testcase
@@ -323,19 +323,19 @@ void test_case::test (return_t result, const char* test_function, const char* me
     }
 }
 
-constexpr auto constexpr_success = CONSTEXPR_HIDE ("success");
-constexpr auto constexpr_pass = CONSTEXPR_HIDE ("pass");
-constexpr auto constexpr_fail = CONSTEXPR_HIDE ("fail");
-constexpr auto constexpr_skip = CONSTEXPR_HIDE ("skip");
-constexpr auto constexpr_low = CONSTEXPR_HIDE ("low ");
+constexpr char constexpr_success[] = "success";
+constexpr char constexpr_pass[] = "pass";
+constexpr char constexpr_fail[] = "fail";
+constexpr char constexpr_skip[] = "skip";
+constexpr char constexpr_low[] = "low ";
 
-constexpr auto constexpr_report = CONSTEXPR_HIDE ("report");
-constexpr auto constexpr_testcase = CONSTEXPR_HIDE ("test case");
-constexpr auto constexpr_result = CONSTEXPR_HIDE ("result");
-constexpr auto constexpr_errorcode = CONSTEXPR_HIDE ("errorcode");
-constexpr auto constexpr_function = CONSTEXPR_HIDE ("test function");
-constexpr auto constexpr_time = CONSTEXPR_HIDE ("time");
-constexpr auto constexpr_message = CONSTEXPR_HIDE ("message");
+constexpr char constexpr_report[] = "report";
+constexpr char constexpr_testcase[] = "test case";
+constexpr char constexpr_result[] = "result";
+constexpr char constexpr_errorcode[] = "errorcode";
+constexpr char constexpr_function[] = "test function";
+constexpr char constexpr_time[] = "time";
+constexpr char constexpr_message[] = "message";
 
 #define cprint(stream, concolor, color1, color2, msg) stream << concolor.set_fgcolor (color1) << msg << concolor.set_fgcolor (color2);
 
@@ -345,9 +345,9 @@ void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stre
 
     _color.set_style (console_style_t::bold);
 
-    constexpr auto constexpr_header = CONSTEXPR_HIDE ("%-5s|%-10s|%-20s|%-11s|%s\n");
-    constexpr auto constexpr_line = CONSTEXPR_HIDE (" %-4s |0x%08x|%-20s|%-11s|%s\n");
-    constexpr auto constexpr_timefmt = CONSTEXPR_HIDE ("%lld.%09ld");
+    constexpr char constexpr_header[] = "%-5s|%-10s|%-20s|%-11s|%s\n";
+    constexpr char constexpr_line[] = " %-4s |0x%08x|%-20s|%-11s|%s\n";
+    constexpr char constexpr_timefmt[] = "%lld.%09ld";
     stream.printf (constexpr_header, "result", "errorcode", "test function", "time", "message");
 
     for (unittest_list_t::iterator list_iterator = array.begin (); list_iterator != array.end (); list_iterator++) {
@@ -473,7 +473,7 @@ void test_case::report_unittest (ansi_string& stream)
     stream.fill (80, '=');
     stream.endl ();
     if (_total._count_fail) {
-        constexpr auto constexpr_testfail = CONSTEXPR_HIDE ("TEST FAILED");
+        constexpr char constexpr_testfail[] = "TEST FAILED";
         cprint (stream, _color, console_color_t::red, fgcolor, constexpr_testfail);
         stream.endl ();
     }
@@ -526,7 +526,7 @@ void test_case::report_testtime (ansi_string& stream, uint32 top_count)
 
     // dump and cout
     if (array.size ()) {
-        constexpr auto constexpr_timesort = CONSTEXPR_HIDE ("sort by time (top %zi)\n");
+        constexpr char constexpr_timesort[] = "sort by time (top %zi)\n";
         stream.printf (constexpr_timesort, array.size ());
 
         stream.fill (80, '-');

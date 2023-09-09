@@ -68,10 +68,10 @@ cbor_simple_t cbor_simple::is_kind_of_value (uint8 value)
 
 void cbor_simple::represent (stream_t* s)
 {
-    constexpr auto constexpr_false = CONSTEXPR_HIDE ("false");
-    constexpr auto constexpr_null = CONSTEXPR_HIDE ("null");
-    constexpr auto constexpr_true = CONSTEXPR_HIDE ("true");
-    constexpr auto constexpr_undefined = CONSTEXPR_HIDE ("undefined");
+    constexpr char constexpr_false[] = "false";
+    constexpr char constexpr_null[] = "null";
+    constexpr char constexpr_true[] = "true";
+    constexpr char constexpr_undefined[] = "undefined";
 
     if (s) {
         switch (_value) {

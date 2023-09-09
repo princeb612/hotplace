@@ -518,7 +518,7 @@ return_t datetime::timespec_to_asn1time (struct timespec ts, asn1time_t* at)
         systemtime_t st;
         ret = timespec_to_systemtime (1, ts, &st);
 
-        constexpr auto constexpr_fmt = CONSTEXPR_HIDE ("04d%02d%02d%02d%02d%02d.%d");
+        constexpr char constexpr_fmt[] = "04d%02d%02d%02d%02d%02d.%d";
         at->set (V_ASN1_GENERALIZEDTIME, format (constexpr_fmt, st.year, st.month, st.day, st.hour, st.minute, st.second, st.milliseconds).c_str ());
     } else {
         ret = errorcode_t::invalid_parameter;

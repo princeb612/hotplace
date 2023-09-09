@@ -53,7 +53,7 @@ return_t debug_trace_openssl (stream_t* stream)
         int line = 0;
         int flags = 0;
 
-        constexpr auto constexpr_debugline = CONSTEXPR_HIDE ("[%s @ %d] %s\n");
+        constexpr char constexpr_debugline[] = "[%s @ %d] %s\n";
 
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
         while (0 != (l = ERR_get_error_all (&file, &line, nullptr, &data, &flags))) {
