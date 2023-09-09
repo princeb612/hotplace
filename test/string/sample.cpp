@@ -123,17 +123,17 @@ void test_constexpr_obf ()
     _test_case.begin ("constexpr_obf");
 
 #if   __cplusplus >= 202002L    // c++20
-printf ("c++20\n");
+    printf ("c++20\n");
 #elif __cplusplus >= 201703L    // c++17
-printf ("c++17\n");
+    printf ("c++17\n");
 #elif __cplusplus >= 201402L    // c++14
-printf ("c++14\n");
+    printf ("c++14\n");
 #elif __cplusplus >= 201103L    // c++11
-printf ("c++11\n");
+    printf ("c++11\n");
 #elif __cplusplus >= 199711L    // c++98
-printf ("c++98\n");
+    printf ("c++98\n");
 #else                           // pre c++98
-printf ("pre c++98\n");
+    printf ("pre c++98\n");
 #endif
 
 #if __cplusplus >= 201402L    // c++14

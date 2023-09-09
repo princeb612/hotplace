@@ -16,7 +16,6 @@
 #include <hotplace/sdk/base/error.hpp>
 
 namespace hotplace {
-namespace io {
 
 typedef return_t (*CALLBACK_HANDLER)(void* data, void* parameter);
 typedef return_t (*TYPE_CALLBACK_HANDLER)(uint32 type, void* data, void* parameter);
@@ -59,7 +58,6 @@ typedef return_t (* ENUMTYPE_CALLBACK_HANDLERW)(const wchar_t* name, intptr_t ty
 
 typedef return_t (*THREAD_CALLBACK_ROUTINE)(void*);
 
-}
 }  // namespace
 
 #endif

@@ -50,7 +50,7 @@
 | O | A256GCM       | AES GCM using 256-bit key | Recommended   |
 
 ## JWK
-| Implemented | | kty                |   |
+| Implemented | kty |                |   |
 |-- |--     |--                      |-- |
 | O | oct   | JWK/PEM(openssl 1.1.1) |   |
 | O | RSA   | JWK/PEM                |   |

@@ -14,7 +14,7 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_DEBUGTRACE__
 #define __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_DEBUGTRACE__
 
-#include <hotplace/sdk/io/system/windows/sdk.hpp>
+#include <hotplace/sdk/base/system/windows/sdk.hpp>
 
 namespace hotplace {
 namespace io {

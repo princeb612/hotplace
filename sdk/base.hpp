@@ -27,4 +27,9 @@
 #include <hotplace/sdk/base/system/semaphore.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 
+#if defined _WIN32 || defined _WIN64
+#include <hotplace/sdk/base/system/windows/sdk.hpp>
+#include <hotplace/sdk/base/system/windows/windows_version.hpp>
+#endif
+
 #endif
