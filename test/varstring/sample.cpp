@@ -19,6 +19,7 @@ test_case _test_case;
 
 void formatter (std::string input, std::string prefix)
 {
+    std::string constexpr_var;
     std::string var;
     std::string::iterator it;
 
@@ -40,6 +41,9 @@ void formatter (std::string input, std::string prefix)
         }
     }
 
+    constexpr_var = var;
+    std::transform (constexpr_var.begin (), constexpr_var.end (), constexpr_var.begin (), tolower);
+
     if (prefix.size ()) {
         std::transform (prefix.begin (), prefix.end (), prefix.begin (), toupper);
         prefix += "_";
@@ -48,8 +52,8 @@ void formatter (std::string input, std::string prefix)
     /* format */
 
     ansi_string var_ansi_string;
-
-    var_ansi_string.printf (_T ("#define DECLARE_TSTRING_%s%s TCHAR TSTRING_%s%s[] = {"), prefix.c_str (), var.c_str (), prefix.c_str (), var.c_str ());
+    constexpr TCHAR constexpr_decl_tstring[] = _T ("#define DECLARE_TSTRING_%s%s TCHAR TSTRING_%s%s[] = {");
+    var_ansi_string.printf (constexpr_decl_tstring, prefix.c_str (), var.c_str (), prefix.c_str (), var.c_str ());
     for (it = input.begin (); it != input.end (); it++) {
         if (*it == '\\') {
             var_ansi_string.printf (_T (" _T('\\\\'), "));
@@ -58,9 +62,10 @@ void formatter (std::string input, std::string prefix)
         }
     }
     var_ansi_string.printf (_T (" 0, };"));
-    ansi_string string_var;
 
-    string_var.printf (_T ("#define DECLARE_STRING_%s%s char STRING_%s%s[] = {"), prefix.c_str (), var.c_str (), prefix.c_str (), var.c_str ());
+    ansi_string string_var;
+    constexpr TCHAR constexpr_decl_string[] = _T ("#define DECLARE_STRING_%s%s char STRING_%s%s[] = {");
+    string_var.printf (constexpr_decl_string, prefix.c_str (), var.c_str (), prefix.c_str (), var.c_str ());
     for (it = input.begin (); it != input.end (); it++) {
         if (*it == '\\') {
             string_var.printf (_T (" '\\\\',"));
@@ -69,9 +74,10 @@ void formatter (std::string input, std::string prefix)
         }
     }
     string_var.printf (_T (" 0, };"));
-    ansi_string var_wide_string;
 
-    var_wide_string.printf (_T ("#define DECLARE_WSTRING_%s%s wchar_t WSTRING_%s%s[] = {"), prefix.c_str (), var.c_str (), prefix.c_str (), var.c_str ());
+    ansi_string var_wide_string;
+    constexpr TCHAR constexpr_decl_wstring[] = _T ("#define DECLARE_WSTRING_%s%s wchar_t WSTRING_%s%s[] = {");
+    var_wide_string.printf (constexpr_decl_wstring, prefix.c_str (), var.c_str (), prefix.c_str (), var.c_str ());
     for (it = input.begin (); it != input.end (); it++) {
         if (*it == '\\') {
             var_wide_string.printf (_T (" L'\\\\',"));
@@ -81,12 +87,17 @@ void formatter (std::string input, std::string prefix)
     }
     var_wide_string.printf (_T (" 0, };"));
 
+    ansi_string var_constexpr_string;
+    constexpr TCHAR constexpr_decl_constexprstring[] = _T ("constexpr char constexpr_%s%s[] = {\"%s\"};");
+    var_constexpr_string.printf (constexpr_decl_constexprstring, prefix.c_str (), constexpr_var.c_str (), input.c_str ());
+
     /* on the purpose of copy and paste */
     replace (input, "\\", "\\\\");
 
     printf ("/* _T(\"%s\") */\n%s\n", input.c_str (), var_ansi_string.c_str ());
     printf ("/* \"%s\" */\n%s\n", input.c_str (), string_var.c_str ());
     printf ("/* L\"%s\" */\n%s\n", input.c_str (), var_wide_string.c_str ());
+    printf ("/* constexpr %s */\n%s\n", input.c_str (), var_constexpr_string.c_str ());
 }
 
 int test1 (int argc, char** argv)
@@ -109,3 +120,4 @@ int main (int argc, char** argv)
     _test_case.report (5);
     return _test_case.result ();
 }
+

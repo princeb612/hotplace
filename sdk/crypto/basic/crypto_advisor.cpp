@@ -16,6 +16,53 @@ namespace crypto {
 
 #define CRYPT_CIPHER_VALUE(a, m) ((a << 16) | m)
 
+#ifndef OPENSSL_NO_IDEA
+#define EVP_CIPHER_IDEA_CBC EVP_idea_cbc ()
+#define EVP_CIPHER_IDEA_CFB EVP_idea_cfb ()
+#define EVP_CIPHER_IDEA_ECB EVP_idea_ecb ()
+#define EVP_CIPHER_IDEA_OFB EVP_idea_ofb ()
+#else
+#define EVP_CIPHER_IDEA_CBC nullptr
+#define EVP_CIPHER_IDEA_CFB nullptr
+#define EVP_CIPHER_IDEA_ECB nullptr
+#define EVP_CIPHER_IDEA_OFB nullptr
+#endif
+#ifndef OPENSSL_NO_RC2
+#define EVP_CIPHER_RC2_CBC EVP_rc2_cbc ()
+#define EVP_CIPHER_RC2_CFB EVP_rc2_cfb ()
+#define EVP_CIPHER_RC2_ECB EVP_rc2_ecb ()
+#define EVP_CIPHER_RC2_OFB EVP_rc2_ofb ()
+#else
+#define EVP_CIPHER_RC2_CBC nullptr
+#define EVP_CIPHER_RC2_CFB nullptr
+#define EVP_CIPHER_RC2_ECB nullptr
+#define EVP_CIPHER_RC2_OFB nullptr
+#endif
+#ifndef OPENSSL_NO_RC5
+#define EVP_CIPHER_RC5_CBC EVP_rc5_32_12_16_cbc ()
+#define EVP_CIPHER_RC5_CFB EVP_rc5_32_12_16_cfb ()
+#define EVP_CIPHER_RC5_ECB EVP_rc5_32_12_16_ecb ()
+#define EVP_CIPHER_RC5_OFB EVP_rc5_32_12_16_ofb ()
+#else
+#define EVP_CIPHER_RC5_CBC nullptr
+#define EVP_CIPHER_RC5_CFB nullptr
+#define EVP_CIPHER_RC5_ECB nullptr
+#define EVP_CIPHER_RC5_OFB nullptr
+#endif
+#ifndef OPENSSL_NO_SM4
+#define EVP_CIPHER_SM4_CBC EVP_sm4_cbc ()
+#define EVP_CIPHER_SM4_CFB EVP_sm4_cfb ()
+#define EVP_CIPHER_SM4_ECB EVP_sm4_ecb ()
+#define EVP_CIPHER_SM4_OFB EVP_sm4_ofb ()
+#define EVP_CIPHER_SM4_CTR EVP_sm4_ctr ()
+#else
+#define EVP_CIPHER_SM4_CBC nullptr
+#define EVP_CIPHER_SM4_CFB nullptr
+#define EVP_CIPHER_SM4_ECB nullptr
+#define EVP_CIPHER_SM4_OFB nullptr
+#define EVP_CIPHER_SM4_CTR nullptr
+#endif
+
 const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::aes128, crypt_mode_t::cbc,  EVP_aes_128_cbc (),  "aes-128-cbc", },
     { crypt_algorithm_t::aes128, crypt_mode_t::ccm,  EVP_aes_128_ccm (),  "aes-128-ccm", },
@@ -121,32 +168,27 @@ const openssl_evp_cipher_method_t evp_cipher_methods[] = {
     { crypt_algorithm_t::cast, crypt_mode_t::ecb,  EVP_cast5_ecb (), "cast5-ecb", },
     { crypt_algorithm_t::cast, crypt_mode_t::ofb,  EVP_cast5_ofb (), "cast5-ofb", },
 
-#ifndef OPENSSL_NO_IDEA
-    { crypt_algorithm_t::idea, crypt_mode_t::cbc,  EVP_idea_cbc (), "idea-cbc", },
-    { crypt_algorithm_t::idea, crypt_mode_t::cfb,  EVP_idea_cfb (), "idea-cfb", },
-    { crypt_algorithm_t::idea, crypt_mode_t::ecb,  EVP_idea_ecb (), "idea-ecb", },
-    { crypt_algorithm_t::idea, crypt_mode_t::ofb,  EVP_idea_ofb (), "idea-ofb", },
-#endif
+    { crypt_algorithm_t::idea, crypt_mode_t::cbc, EVP_CIPHER_IDEA_CBC, "idea-cbc", },
+    { crypt_algorithm_t::idea, crypt_mode_t::cfb, EVP_CIPHER_IDEA_CFB, "idea-cfb", },
+    { crypt_algorithm_t::idea, crypt_mode_t::ecb, EVP_CIPHER_IDEA_ECB, "idea-ecb", },
+    { crypt_algorithm_t::idea, crypt_mode_t::ofb, EVP_CIPHER_IDEA_OFB, "idea-ofb", },
 
-    { crypt_algorithm_t::rc2, crypt_mode_t::cbc, EVP_sm4_cbc (), "rc2-cbc", },
-    { crypt_algorithm_t::rc2, crypt_mode_t::cfb, EVP_sm4_cfb (), "rc2-cfb", },
-    { crypt_algorithm_t::rc2, crypt_mode_t::ecb, EVP_sm4_ecb (), "rc2-ecb", },
-    { crypt_algorithm_t::rc2, crypt_mode_t::ofb, EVP_sm4_ofb (), "rc2-ofb", },
+    { crypt_algorithm_t::rc2, crypt_mode_t::cbc, EVP_CIPHER_RC2_CBC, "rc2-cbc", },
+    { crypt_algorithm_t::rc2, crypt_mode_t::cfb, EVP_CIPHER_RC2_CFB, "rc2-cfb", },
+    { crypt_algorithm_t::rc2, crypt_mode_t::ecb, EVP_CIPHER_RC2_ECB, "rc2-ecb", },
+    { crypt_algorithm_t::rc2, crypt_mode_t::ofb, EVP_CIPHER_RC2_OFB, "rc2-ofb", },
 
-    { crypt_algorithm_t::rc5, crypt_mode_t::cbc, EVP_sm4_cbc (), "rc5-cbc", },
-    { crypt_algorithm_t::rc5, crypt_mode_t::cfb, EVP_sm4_cfb (), "rc5-cfb", },
-    { crypt_algorithm_t::rc5, crypt_mode_t::ecb, EVP_sm4_ecb (), "rc5-ecb", },
-    { crypt_algorithm_t::rc5, crypt_mode_t::ofb, EVP_sm4_ofb (), "rc5-ofb", },
+    { crypt_algorithm_t::rc5, crypt_mode_t::cbc, EVP_CIPHER_RC5_CBC, "rc5-cbc", },
+    { crypt_algorithm_t::rc5, crypt_mode_t::cfb, EVP_CIPHER_RC5_CFB, "rc5-cfb", },
+    { crypt_algorithm_t::rc5, crypt_mode_t::ecb, EVP_CIPHER_RC5_ECB, "rc5-ecb", },
+    { crypt_algorithm_t::rc5, crypt_mode_t::ofb, EVP_CIPHER_RC5_OFB, "rc5-ofb", },
 
-#ifndef OPENSSL_NO_SM4
-    { crypt_algorithm_t::sm4, crypt_mode_t::cbc, EVP_sm4_cbc (), "sm4-cbc", },
-    //{ crypt_algorithm_t::sm4, crypt_mode_t::ccm, EVP_sm4_ccm (), "sm4-ccm", },
-    { crypt_algorithm_t::sm4, crypt_mode_t::cfb, EVP_sm4_cfb (), "sm4-cfb", },
-    { crypt_algorithm_t::sm4, crypt_mode_t::ecb, EVP_sm4_ecb (), "sm4-ecb", },
-    //{ crypt_algorithm_t::sm4, crypt_mode_t::gcm, EVP_sm4_gcm (), "sm4-gcm", },
-    { crypt_algorithm_t::sm4, crypt_mode_t::ofb, EVP_sm4_ofb (), "sm4-ofb", },
-    { crypt_algorithm_t::sm4, crypt_mode_t::ctr, EVP_sm4_ctr (), "sm4-ctr", },
-#endif
+
+    { crypt_algorithm_t::sm4, crypt_mode_t::cbc, EVP_CIPHER_SM4_CBC, "sm4-cbc", },
+    { crypt_algorithm_t::sm4, crypt_mode_t::cfb, EVP_CIPHER_SM4_CFB, "sm4-cfb", },
+    { crypt_algorithm_t::sm4, crypt_mode_t::ecb, EVP_CIPHER_SM4_ECB, "sm4-ecb", },
+    { crypt_algorithm_t::sm4, crypt_mode_t::ofb, EVP_CIPHER_SM4_OFB, "sm4-ofb", },
+    { crypt_algorithm_t::sm4, crypt_mode_t::ctr, EVP_CIPHER_SM4_CTR, "sm4-ctr", },
 
     { crypt_algorithm_t::seed, crypt_mode_t::cbc, EVP_seed_cbc (), "seed-cbc", },
     { crypt_algorithm_t::seed, crypt_mode_t::cfb, EVP_seed_cfb (), "seed-cfb", },

@@ -84,12 +84,12 @@ enum crypt_algorithm_t {
  *    ARIA192     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM
  *    ARIA256     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM
  *    BF          : CBC, CFB,             OFB, ECB
- *    CAMELLIA128 : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR  x    x
- *    CAMELLIA192 : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR  x    x
- *    CAMELLIA256 : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR  x    x
+ *    CAMELLIA128 : CBC, CFB, CFB1, CFB8, OFB, ECB,
+ *    CAMELLIA192 : CBC, CFB, CFB1, CFB8, OFB, ECB,
+ *    CAMELLIA256 : CBC, CFB, CFB1, CFB8, OFB, ECB,
  *    DES         : CBC, CFB, CFB1, CFB8, OFB, ECB
  *    IDEA        : CBC, CFB,             OFB, ECB
- *    SM4         : CBC, CFB,             OFB, ECB
+ *    SM4         : CBC, CFB,             OFB, ECB, CTR
  */
 enum crypt_mode_t {
     crypt_mode_unknown  = 0,
