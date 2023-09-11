@@ -34,29 +34,6 @@ cbor_map::~cbor_map ()
     clear ();
 }
 
-size_t cbor_map::size ()
-{
-    return _array.size ();
-}
-
-return_t cbor_map::clear ()
-{
-    return_t ret = errorcode_t::success;
-
-#if __cplusplus >= 201103L    // c++11
-    for (auto item : _array) {
-#else
-    std::list <cbor_pair*>::iterator iter;
-    for (iter = _array.begin (); iter != _array.end (); iter++) {
-        cbor_pair* item = *iter;
-#endif
-        item->release ();
-    }
-    _array.clear ();
-
-    return ret;
-}
-
 return_t cbor_map::join (cbor_object* object, cbor_object* extra)
 {
     return_t ret = errorcode_t::success;
@@ -141,6 +118,12 @@ return_t cbor_map::join (cbor_object* object, cbor_object* extra)
     return ret;
 }
 
+cbor_map& cbor_map::add (cbor_object* object, cbor_object* extra)
+{
+    add (object, extra);
+    return *this;
+}
+
 cbor_map& cbor_map::add (cbor_pair* object)
 {
     return_t ret = errorcode_t::success;
@@ -165,6 +148,29 @@ cbor_map& cbor_map::operator << (cbor_pair* object)
 {
     add (object);
     return *this;
+}
+
+size_t cbor_map::size ()
+{
+    return _array.size ();
+}
+
+return_t cbor_map::clear ()
+{
+    return_t ret = errorcode_t::success;
+
+#if __cplusplus >= 201103L    // c++11
+    for (auto item : _array) {
+#else
+    std::list <cbor_pair*>::iterator iter;
+    for (iter = _array.begin (); iter != _array.end (); iter++) {
+        cbor_pair* item = *iter;
+#endif
+        item->release ();
+    }
+    _array.clear ();
+
+    return ret;
 }
 
 void cbor_map::represent (stream_t* s)

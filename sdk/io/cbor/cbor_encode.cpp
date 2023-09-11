@@ -548,6 +548,7 @@ return_t cbor_encode::encode (binary_t& bin, cbor_major_t major, cbor_control_t 
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
         uint32 indefinite = (cbor_flag_t::cbor_indef & object->get_flags ());
         if (cbor_control_t::cbor_control_begin == control) {
             if (indefinite) {
@@ -602,7 +603,8 @@ return_t cbor_encode::add_tag (binary_t& bin, cbor_object* object)
         }
 
         if (object->tagged ()) {
-            bin.push_back ((cbor_major_t::cbor_major_tag << 5) | object->tag_value ());
+            // a tag number (an integer in the range 0..2^(64)-1)
+            encode (bin, cbor_major_t::cbor_major_tag, (uint64) object->tag_value ());
         }
     }
     __finally2

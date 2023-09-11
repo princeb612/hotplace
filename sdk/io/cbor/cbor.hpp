@@ -58,22 +58,24 @@ public:
     cbor_object (cbor_type_t type, uint32 flags = 0);
     virtual ~cbor_object ();
 
+    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
+    cbor_object& add (cbor_object* object, cbor_object* extra = nullptr);
+
     virtual cbor_type_t type ();
     virtual size_t size ();
     virtual uint32 get_flags ();
+
+    virtual void tag (bool use, cbor_tag_t tag);
 
     virtual int addref ();
     virtual int release ();
 
 protected:
-    virtual void tag (bool use, cbor_tag_t tag);
     virtual bool tagged ();
     virtual cbor_tag_t tag_value ();
 
     virtual void reserve (size_t size); ///<< reserve a capacity while parsing
     virtual size_t capacity ();         ///<< reserved size
-
-    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
 
     virtual void accept (cbor_visitor* v);
     virtual void represent (stream_t* s);
@@ -106,6 +108,7 @@ public:
     cbor_data (int128 value);
 #endif
     cbor_data (const byte_t * bstr, size_t size);
+    cbor_data (binary_t const& bin);
     cbor_data (const char* tstr);
     cbor_data (const char* tstr, size_t length);
     cbor_data (float value);
@@ -165,15 +168,15 @@ public:
     cbor_bstrings ();
     virtual ~cbor_bstrings ();
 
-    virtual size_t size ();
-
+    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
+    cbor_bstrings& add (cbor_object* object, cbor_object* extra = nullptr);
     cbor_bstrings& add (const byte_t * bstr, size_t size);
     cbor_bstrings& operator << (binary_t bin);
 
+    virtual size_t size ();
+
 protected:
     return_t clear ();
-
-    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
 
     virtual void represent (stream_t* s);
     virtual void represent (binary_t* b);
@@ -190,15 +193,15 @@ public:
     cbor_tstrings ();
     virtual ~cbor_tstrings ();
 
-    virtual size_t size ();
-
+    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
+    cbor_tstrings& add (cbor_object* object, cbor_object* extra = nullptr);
     cbor_tstrings& add (const char* str);
     cbor_tstrings& operator << (const char* str);
 
+    virtual size_t size ();
+
 protected:
     return_t clear ();
-
-    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
 
     virtual void represent (stream_t* s);
     virtual void represent (binary_t* b);
@@ -269,15 +272,15 @@ public:
     cbor_map (cbor_pair* object, uint32 flags = 0);
     virtual ~cbor_map ();
 
-    virtual size_t size ();
-
+    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
+    cbor_map& add (cbor_object* object, cbor_object* extra = nullptr);
     cbor_map& add (cbor_pair* object);
     cbor_map& operator << (cbor_pair* object);
 
+    virtual size_t size ();
+
 protected:
     return_t clear ();
-
-    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
 
     virtual void represent (stream_t* s);
     virtual void represent (binary_t* b);
@@ -309,7 +312,7 @@ public:
     cbor_array (uint32 flags);
     virtual ~cbor_array ();
 
-    virtual size_t size ();
+    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
 
     cbor_array& add (cbor_array* object);
     cbor_array& add (cbor_data* object);
@@ -319,10 +322,11 @@ public:
     cbor_array& operator << (cbor_data* object);
     cbor_array& operator << (cbor_map* object);
 
+    virtual size_t size ();
+    cbor_object* operator [] (unsigned index);
+
 protected:
     void clear ();
-
-    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
 
     virtual void represent (stream_t* s);
     virtual void represent (binary_t* b);

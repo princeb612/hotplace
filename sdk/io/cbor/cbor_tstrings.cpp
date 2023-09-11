@@ -24,29 +24,6 @@ cbor_tstrings::~cbor_tstrings ()
     clear ();
 }
 
-size_t cbor_tstrings::size ()
-{
-    return _array.size ();
-}
-
-return_t cbor_tstrings::clear ()
-{
-    return_t ret = errorcode_t::success;
-
-#if __cplusplus >= 201103L    // c++11
-    for (auto item : _array) {
-#else
-    std::list <cbor_data*>::iterator iter;
-    for (iter = _array.begin (); iter != _array.end (); iter++) {
-        cbor_data* item = *iter;
-#endif
-        item->release ();
-    }
-    _array.clear ();
-
-    return ret;
-}
-
 return_t cbor_tstrings::join (cbor_object* object, cbor_object* extra)
 {
     return_t ret = errorcode_t::success;
@@ -76,6 +53,12 @@ return_t cbor_tstrings::join (cbor_object* object, cbor_object* extra)
     return ret;
 }
 
+cbor_tstrings& cbor_tstrings::add (cbor_object* object, cbor_object* extra)
+{
+    join (object, extra);
+    return *this;
+}
+
 cbor_tstrings& cbor_tstrings::add (const char* str)
 {
     return_t ret = errorcode_t::success;
@@ -97,6 +80,29 @@ cbor_tstrings& cbor_tstrings::add (const char* str)
 cbor_tstrings& cbor_tstrings::operator << (const char* str)
 {
     return add (str);
+}
+
+size_t cbor_tstrings::size ()
+{
+    return _array.size ();
+}
+
+return_t cbor_tstrings::clear ()
+{
+    return_t ret = errorcode_t::success;
+
+#if __cplusplus >= 201103L    // c++11
+    for (auto item : _array) {
+#else
+    std::list <cbor_data*>::iterator iter;
+    for (iter = _array.begin (); iter != _array.end (); iter++) {
+        cbor_data* item = *iter;
+#endif
+        item->release ();
+    }
+    _array.clear ();
+
+    return ret;
 }
 
 void cbor_tstrings::represent (stream_t* s)

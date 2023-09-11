@@ -32,6 +32,7 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
     base16_encode (bin, hex);
 
     if (0 == stricmp (hex.c_str (), expect.c_str ())) {
+        // match
     } else {
         ret = errorcode_t::mismatch;
     }
@@ -45,6 +46,40 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
     }
 
     _test_case.test (ret, __FUNCTION__, "encoded %s expect %s", hex.c_str (), expect.c_str ());
+}
+
+void cbor_test (cbor_object* root, const char* expected)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == root || nullptr == expected) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        cbor_publisher publisher;
+        binary_t bin;
+        buffer_stream diagnostic;
+
+        publisher.publish (root, &diagnostic);
+        publisher.publish (root, &bin);
+
+        std::string concise;
+        base16_encode (bin, concise);
+        std::string info = format ("concise: %s diagnostic: %s", concise.c_str (), diagnostic.c_str ());
+
+        if (stricmp (concise.c_str (), expected)) {
+            ret = errorcode_t::mismatch;
+        }
+
+        _test_case.test (ret, __FUNCTION__, info.c_str ());
+    }
+    __finally2
+    {
+        // do nothing
+    }
 }
 
 // The IEEE Standard for Floating-Point Arithmetic (IEEE 754)
@@ -62,7 +97,7 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
 
 void test1 ()
 {
-    _test_case.begin ("encode uint, nint, float");
+    _test_case.begin ("test1.encode uint, nint, float");
 
     binary_t bin;
     variant_t vt;
@@ -98,17 +133,37 @@ void test1 ()
     variant_set_int64 (vt, 1000000000000);
     encode_test (vt, bin, "1b000000e8d4a51000");
 
+    cbor_data* cbor_1000000000000 = new cbor_data (atoi128 ("1000000000000"));
+    cbor_test (cbor_1000000000000, "1b000000e8d4a51000");
+    cbor_1000000000000->release ();
+
     variant_set_uint128 (vt, atoi128 ("18446744073709551615"));
     encode_test (vt, bin, "1bffffffffffffffff");
+
+    cbor_data* cbor_18446744073709551615 = new cbor_data (atoi128 ("18446744073709551615"));
+    cbor_test (cbor_18446744073709551615, "1bffffffffffffffff");
+    cbor_18446744073709551615->release ();
 
     variant_set_int128 (vt, atoi128 ("18446744073709551616"));
     encode_test (vt, bin, "c249010000000000000000");
 
+    cbor_data* cbor_18446744073709551616 = new cbor_data (atoi128 ("18446744073709551616"));
+    cbor_test (cbor_18446744073709551616, "c249010000000000000000");
+    cbor_18446744073709551616->release ();
+
     variant_set_int128 (vt, atoi128 ("-18446744073709551616"));
     encode_test (vt, bin, "3bffffffffffffffff");
 
+    cbor_data* cbor_s18446744073709551616 = new cbor_data (atoi128 ("-18446744073709551616"));
+    cbor_test (cbor_s18446744073709551616, "3bffffffffffffffff");
+    cbor_s18446744073709551616->release ();
+
     variant_set_int128 (vt, atoi128 ("-18446744073709551617"));
     encode_test (vt, bin, "c349010000000000000000");
+
+    cbor_data* cbor_s18446744073709551617 = new cbor_data (atoi128 ("-18446744073709551617"));
+    cbor_test (cbor_s18446744073709551617, "c349010000000000000000");
+    cbor_s18446744073709551617->release ();
 #endif
 
     variant_set_int32 (vt, -1);
@@ -204,8 +259,59 @@ void test1 ()
     variant_set_bool (vt, false);
     encode_test (vt, bin, "f4");
 
+    cbor_simple* sample_false = new cbor_simple (cbor_simple_t::cbor_simple_false);
+    cbor_test (sample_false, "f4");
+    sample_false->release ();
+
     variant_set_bool (vt, true);
     encode_test (vt, bin, "f5");
+
+    cbor_simple* sample_true = new cbor_simple (cbor_simple_t::cbor_simple_true);
+    cbor_test (sample_true, "f5");
+    sample_true->release ();
+
+    cbor_simple* sample_null = new cbor_simple (cbor_simple_t::cbor_simple_null);
+    cbor_test (sample_null, "f6");
+    sample_null->release ();
+
+    cbor_simple* sample_undef = new cbor_simple (cbor_simple_t::cbor_simple_undef);
+    cbor_test (sample_undef, "f7");
+    sample_undef->release ();
+
+    cbor_simple* simple_16 = new cbor_simple (16);
+    cbor_test (simple_16, "f0");
+    simple_16->release ();
+
+    cbor_simple* simple_24 = new cbor_simple (24);
+    cbor_test (simple_24, "f818");
+    simple_24->release ();
+
+    cbor_simple* simple_255 = new cbor_simple (255);
+    cbor_test (simple_255, "f8ff");
+    simple_255->release ();
+
+    cbor_data* data_base16 = new cbor_data (base16_decode ("01020304"));
+    data_base16->tag (true, cbor_tag_t::cbor_tag_base16);
+    cbor_test (data_base16, "d74401020304");
+    data_base16->release ();
+
+    cbor_data* data_encoded = new cbor_data (base16_decode ("6449455446"));
+    data_encoded->tag (true, cbor_tag_t::cbor_tag_encoded);
+    cbor_test (data_encoded, "d818456449455446");
+    data_encoded->release ();
+
+    cbor_data* data_wwwexamplecom = new cbor_data ("http://www.example.com");
+    data_wwwexamplecom->tag (true, cbor_tag_t::cbor_tag_uri);
+    cbor_test (data_wwwexamplecom, "d82076687474703a2f2f7777772e6578616d706c652e636f6d");
+    data_wwwexamplecom->release ();
+
+    cbor_data* data_b = new cbor_data (base16_decode (""));
+    cbor_test (data_b, "40");
+    data_b->release ();
+
+    cbor_data* data_b01020304 = new cbor_data (base16_decode ("01020304"));
+    cbor_test (data_b01020304, "4401020304");
+    data_b01020304->release ();
 
     variant_set_str (vt, "");
     encode_test (vt, bin, "60");
@@ -226,43 +332,9 @@ void test1 ()
     encode_test (vt, bin, "63e6b0b4");
 }
 
-void cbor_test (cbor_object* root, const char* expected)
-{
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        if (nullptr == root || nullptr == expected) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        cbor_publisher publisher;
-        binary_t bin;
-        buffer_stream diagnostic;
-
-        publisher.publish (root, &diagnostic);
-        publisher.publish (root, &bin);
-
-        std::string concise;
-        base16_encode (bin, concise);
-        std::string info = format ("concise: %s diagnostic: %s", concise.c_str (), diagnostic.c_str ());
-
-        if (stricmp (concise.c_str (), expected)) {
-            ret = errorcode_t::mismatch;
-        }
-
-        _test_case.test (ret, __FUNCTION__, info.c_str ());
-    }
-    __finally2
-    {
-        // do nothing
-    }
-}
-
 void test2 ()
 {
-    _test_case.begin ("encode array, map");
+    _test_case.begin ("test2.encode array, map");
 
     {
         // []
@@ -431,7 +503,7 @@ void test2 ()
     }
 }
 
-void test_parse (const char* input, const char* diagnostic)
+void test_parse (const char* input, const char* diagnostic, const char* diagnostic2 = nullptr)
 {
     cbor_reader reader;
     cbor_reader_context_t* handle = nullptr;
@@ -456,12 +528,13 @@ void test_parse (const char* input, const char* diagnostic)
         test = (0 == stricmp (input, b16.c_str ()));
     }
 
-    ansi_string bs_diagnostic;
-    bs_diagnostic = diagnostic;
-
     bool test2 = false;
     {
         test_case_notimecheck notimecheck (_test_case);
+
+        ansi_string bs_diagnostic;
+        ansi_string bs_diagnostic2;
+        bs_diagnostic = diagnostic;
 
         bs.replace  ("_ ", "__");
         bs.replace  (" ", "");
@@ -470,7 +543,12 @@ void test_parse (const char* input, const char* diagnostic)
         bs_diagnostic.replace  (" ", "");
         bs_diagnostic.replace  ("__", "_ ");
 
-        test2 = (bs == bs_diagnostic);
+        if (diagnostic2) {
+            bs_diagnostic2 = diagnostic2;
+            test2 = ((bs == bs_diagnostic) || (bs == bs_diagnostic2));
+        } else {
+            test2 = (bs == bs_diagnostic);
+        }
     }
 
     _test_case.assert (test && test2, __FUNCTION__, "decode input %s diagnostic %s", input, diagnostic ? diagnostic : "");
@@ -478,7 +556,7 @@ void test_parse (const char* input, const char* diagnostic)
 
 void test3 ()
 {
-    _test_case.begin ("parse");
+    _test_case.begin ("test3.parse");
     // 0
     test_parse ("00", "0");
     // 1
@@ -502,13 +580,13 @@ void test3 ()
     // 18446744073709551615
     test_parse ("1bffffffffffffffff", "18446744073709551615");
     // 18446744073709551616
-    test_parse ("c249010000000000000000", "18446744073709551616");
+    test_parse ("c249010000000000000000", "18446744073709551616", "2(18446744073709551616)");
     // -18446744073709551615
     test_parse ("3bfffffffffffffffe", "-18446744073709551615");
     // -18446744073709551616
     test_parse ("3bffffffffffffffff", "-18446744073709551616");
     // -18446744073709551617
-    test_parse ("c349010000000000000000", "-18446744073709551617");
+    test_parse ("c349010000000000000000", "-18446744073709551617", "3(-18446744073709551617)");
     // -1
     test_parse ("20", "-1");
     // -10

@@ -87,6 +87,10 @@ void cbor_simple::represent (stream_t* s)
             case cbor_simple_t::cbor_simple_undef:
                 s->printf (constexpr_undefined);
                 break;
+            default:
+                // Unassigned simple values are given as "simple()" with the appropriate integer in the parentheses.
+                s->printf ("simple(%i)", _value);
+                break;
         }
     }
 }
@@ -96,10 +100,8 @@ void cbor_simple::represent (binary_t* b)
 
     if (b) {
         cbor_encode enc;
-        binary_t temp;
 
-        enc.encode (temp, _type, _value);
-        (*b).insert ((*b).end (), temp.begin (), temp.end ());
+        enc.encode (*b, cbor_major_t::cbor_major_simple, (uint8) _value);
     }
 }
 

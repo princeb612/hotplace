@@ -45,6 +45,15 @@ enum cbor_tag_t {
     cbor_tag_base64_utf8        = 34,
     cbor_tag_regex_utf8         = 35,
     cbor_tag_mime_utf8          = 36,
+
+    // RFC 8152 Table 1: COSE Message Identification
+    // RFC 9052 Table 1: COSE Message Identification
+    cose_tag_sign               = 98,   // COSE Signed Data Object
+    cose_tag_sign1              = 18,   // COSE Single Signer Data Object
+    cose_tag_encrypt            = 96,   // COSE Encrypted Data Object
+    cose_tag_encrypt0           = 16,   // OSE Single Recipient Encrypted Data Object
+    cose_tag_mac                = 97,   // COSE MACed Data Object
+    cose_tag_mac0               = 17,   // COSE Mac w/o Recipients Object
 };
 
 enum cbor_type_t {

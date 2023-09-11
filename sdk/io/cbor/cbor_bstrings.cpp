@@ -24,27 +24,10 @@ cbor_bstrings::~cbor_bstrings ()
     clear ();
 }
 
-size_t cbor_bstrings::size ()
+cbor_bstrings& cbor_bstrings::add (cbor_object* object, cbor_object* extra)
 {
-    return _array.size ();
-}
-
-return_t cbor_bstrings::clear ()
-{
-    return_t ret = errorcode_t::success;
-
-#if __cplusplus >= 201103L    // c++11
-    for (auto item : _array) {
-#else
-    std::list <cbor_data*>::iterator iter;
-    for (iter = _array.begin (); iter != _array.end (); iter++) {
-        cbor_data* item = *iter;
-#endif
-        item->release ();
-    }
-    _array.clear ();
-
-    return ret;
+    join (object, extra);
+    return *this;
 }
 
 return_t cbor_bstrings::join (cbor_object* object, cbor_object* extra)
@@ -97,6 +80,29 @@ cbor_bstrings& cbor_bstrings::add (const byte_t * bstr, size_t size)
 cbor_bstrings& cbor_bstrings::operator << (binary_t bin)
 {
     return add (&bin [0], bin.size ());
+}
+
+size_t cbor_bstrings::size ()
+{
+    return _array.size ();
+}
+
+return_t cbor_bstrings::clear ()
+{
+    return_t ret = errorcode_t::success;
+
+#if __cplusplus >= 201103L    // c++11
+    for (auto item : _array) {
+#else
+    std::list <cbor_data*>::iterator iter;
+    for (iter = _array.begin (); iter != _array.end (); iter++) {
+        cbor_data* item = *iter;
+#endif
+        item->release ();
+    }
+    _array.clear ();
+
+    return ret;
 }
 
 void cbor_bstrings::represent (stream_t* s)

@@ -29,6 +29,17 @@ cbor_object::~cbor_object ()
     // do nothing
 }
 
+return_t cbor_object::join (cbor_object* object, cbor_object* extra)
+{
+    return errorcode_t::not_available;
+}
+
+cbor_object& cbor_object::add (cbor_object* object, cbor_object* extra)
+{
+    join (object, extra);
+    return *this;
+}
+
 cbor_type_t cbor_object::type ()
 {
     return _type;
@@ -42,11 +53,6 @@ size_t cbor_object::size ()
 uint32 cbor_object::get_flags ()
 {
     return _flags;
-}
-
-return_t cbor_object::join (cbor_object* object, cbor_object* extra)
-{
-    return errorcode_t::not_available;
 }
 
 void cbor_object::tag (bool use, cbor_tag_t tag)

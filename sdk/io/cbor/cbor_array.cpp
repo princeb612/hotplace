@@ -29,25 +29,6 @@ cbor_array::~cbor_array ()
     clear ();
 }
 
-size_t cbor_array::size ()
-{
-    return _array.size ();
-}
-
-void cbor_array::clear ()
-{
-#if __cplusplus >= 201103L    // c++11
-    for (auto item : _array) {
-#else
-    std::list <cbor_object*>::iterator iter;
-    for (iter = _array.begin (); iter != _array.end (); iter++) {
-        cbor_object* item = *iter;
-#endif
-        item->release ();
-    }
-    _array.clear ();
-}
-
 return_t cbor_array::join (cbor_object* object, cbor_object* extra)
 {
     return_t ret = errorcode_t::success;
@@ -155,9 +136,44 @@ cbor_array& cbor_array::operator << (cbor_map* object)
     return *this;
 }
 
+size_t cbor_array::size ()
+{
+    return _array.size ();
+}
+
+cbor_object* cbor_array::operator [] (unsigned index)
+{
+    cbor_object* item = nullptr;
+
+    if (_array.size () > index) {
+        std::list <cbor_object*>::iterator it = _array.begin ();
+        std::advance (it, index);
+        item = *it;
+    }
+    return item;
+}
+
+void cbor_array::clear ()
+{
+#if __cplusplus >= 201103L    // c++11
+    for (auto item : _array) {
+#else
+    std::list <cbor_object*>::iterator iter;
+    for (iter = _array.begin (); iter != _array.end (); iter++) {
+        cbor_object* item = *iter;
+#endif
+        item->release ();
+    }
+    _array.clear ();
+}
+
 void cbor_array::represent (stream_t* s)
 {
     if (s) {
+        if (tagged ()) {
+            s->printf ("%I64i(", (uint64) tag_value ());
+        }
+
         s->printf ("[");
         if (cbor_flag_t::cbor_indef == (get_flags () & cbor_flag_t::cbor_indef)) {
             s->printf ("_ ");
@@ -175,6 +191,10 @@ void cbor_array::represent (stream_t* s)
         }
 
         s->printf ("]");
+
+        if (tagged ()) {
+            s->printf (")");
+        }
     }
 }
 
@@ -183,6 +203,10 @@ void cbor_array::represent (binary_t* b)
     cbor_encode enc;
 
     if (b) {
+        if (tagged ()) {
+            enc.encode (*b, cbor_major_t::cbor_major_tag, (uint64) tag_value ());
+        }
+
         enc.encode (*b, cbor_major_t::cbor_major_array, cbor_control_t::cbor_control_begin, this);
 
         // for each member

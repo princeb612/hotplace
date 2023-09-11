@@ -53,7 +53,15 @@ cbor_data::cbor_data (int128 value) : cbor_object (cbor_type_t::cbor_type_data)
 
 cbor_data::cbor_data (const byte_t * bstr, size_t size) : cbor_object (cbor_type_t::cbor_type_data)
 {
-    variant_set_bstr_new (_vt, (byte_t*) bstr, size);
+    variant_set_bstr_new (_vt, bstr, size);
+}
+
+cbor_data::cbor_data (binary_t const& data) : cbor_object (cbor_type_t::cbor_type_data)
+{
+    const byte_t * bstr = &data[0];
+    size_t size = data.size ();
+
+    variant_set_bstr_new (_vt, bstr, size);
 }
 
 cbor_data::cbor_data (const char* tstr) : cbor_object (cbor_type_t::cbor_type_data)
@@ -98,23 +106,36 @@ void cbor_data::represent (stream_t* s)
 {
     if (s) {
         if (tagged ()) {
-            // RFC 8949 Concise Binary Object Representation (CBOR)
-            // Decoders that understand these tags MUST be able to decode bignums that do have leading zeroes.
             cbor_tag_t tag = tag_value ();
             const variant_t& vt_own = data ();
-            if ((TYPE_BINARY == vt_own.type) && (vt_own.data.bstr32.size <= 16)) {
-                cbor_bignum_int128 bn;
-                int128 temp = bn.load (vt_own.data.bstr32.data, vt_own.data.bstr32.size).value ();
-                variant_t vt;
-                variant_init (vt);
-                if (cbor_tag_t::cbor_tag_positive_bignum == tag) {
-                    variant_set_int128 (vt, temp);
-                } else if (cbor_tag_t::cbor_tag_negative_bignum == tag) {
-                    variant_set_int128 (vt, -(temp + 1));
-                }
-                vtprintf (s, vt, vtprintf_style_t::vtprintf_style_cbor);
+            s->printf ("%I64i(", (uint64) tag);
 
+            switch (tag) {
+                case cbor_tag_t::cbor_tag_positive_bignum:
+                case cbor_tag_t::cbor_tag_negative_bignum:
+                    // RFC 8949 Concise Binary Object Representation (CBOR)
+                    // Decoders that understand these tags MUST be able to decode bignums that do have leading zeroes.
+                    if ((TYPE_BINARY == vt_own.type) && (vt_own.data.bstr32.size <= 16)) {
+                        cbor_bignum_int128 bn;
+                        int128 temp = bn.load (vt_own.data.bstr32.data, vt_own.data.bstr32.size).value ();
+                        variant_t vt;
+                        variant_init (vt);
+                        if (cbor_tag_t::cbor_tag_positive_bignum == tag) {
+                            variant_set_int128 (vt, temp);
+                        } else if (cbor_tag_t::cbor_tag_negative_bignum == tag) {
+                            variant_set_int128 (vt, -(temp + 1));
+                        }
+                        vtprintf (s, vt, vtprintf_style_t::vtprintf_style_cbor);
+                    } else {
+                        vtprintf (s, data (), vtprintf_style_t::vtprintf_style_cbor);
+                    }
+                    break;
+                default:
+                    vtprintf (s, data (), vtprintf_style_t::vtprintf_style_cbor);
+                    break;
             }
+
+            s->printf (")");
         } else {
             vtprintf (s, data (), vtprintf_style_t::vtprintf_style_cbor);
         }

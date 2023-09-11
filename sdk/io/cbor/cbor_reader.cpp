@@ -128,8 +128,8 @@ return_t cbor_reader::parse (cbor_reader_context_t* handle, binary_t const& expr
                 continue;
             }
 
-            if (cbor_major_t::cbor_major_tag == lead_type) {
-            } else {
+            // including cbor_major_t::cbor_major_tag
+            if (lead_value >= 24) {
                 if (24 == lead_value) {
                     value = *(byte_t*) (data + i + 1);
                     i++;
@@ -168,7 +168,7 @@ return_t cbor_reader::parse (cbor_reader_context_t* handle, binary_t const& expr
             } else if ((cbor_major_t::cbor_major_array == lead_type) || (cbor_major_t::cbor_major_map == lead_type)) {
                 push (handle, lead_type, value, flags);
             } else if (cbor_major_t::cbor_major_tag == lead_type) {
-                handle->tag_value = lead_value;
+                handle->tag_value = value;
                 handle->tag_flag = true;
                 continue;
             } else if (cbor_major_t::cbor_major_simple == lead_type) {
