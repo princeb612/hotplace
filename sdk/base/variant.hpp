@@ -81,8 +81,10 @@ enum vartype_t {
     TYPE_WSTRING    = 25,
     TYPE_BSTRING    = TYPE_WSTRING,
 
-    TYPE_FLOAT      = 26,
-    TYPE_DOUBLE     = 27,
+    TYPE_FLOAT      = 26,   /* single precision floating point */
+    TYPE_DOUBLE     = 27,   /* double precision floating point */
+    TYPE_FP16       = 28,   /* half precision floating point */
+    TYPE_FP128      = 29,   /* quadruple precision floating point */
 
     TYPE_DATETIME   = 30,
     TYPE_BINARY     = 31,
@@ -162,8 +164,14 @@ typedef struct __variant_t {
 #define variant_set_int128(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = (value); vt.flag = 0; }
 #define variant_set_uint128(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = (value); vt.flag = 0; }
 #endif
+#define variant_set_fp16(vt, value) { vt.type = TYPE_FP16; vt.data.ui16 = (value); vt.flag = 0; }
+#define variant_set_fp32(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = (value); vt.flag = 0; }
 #define variant_set_float(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = (value); vt.flag = 0; }
+#define variant_set_fp64(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = (value); vt.flag = 0; }
 #define variant_set_double(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = (value); vt.flag = 0; }
+#if defined __SIZEOF_INT128__
+#define variant_set_fp128(vt, value) { vt.type = TYPE_FP128; vt.data.ui128 = (value); vt.flag = 0; }
+#endif
 
 #define variant_set_bool_ptr(vt, value) { vt.type = TYPE_BOOL; vt.data.b = *(bool*) (value); vt.flag = 0; }
 #define variant_set_int8_ptr(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = *(int8*) (value); vt.flag = 0; }

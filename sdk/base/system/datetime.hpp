@@ -14,6 +14,7 @@
 #include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/basic/stream.hpp>
 #include <string.h>
 #include <time.h>
 #include <list>
@@ -155,6 +156,7 @@ public:
     return_t getgmtime (struct tm* tm, long* nsec = nullptr);
     return_t getlocaltime (datetime_t* dt, long* nsec = nullptr);
     return_t getgmtime (datetime_t* dt, long* nsec = nullptr);
+    return_t getgmtime (stream_t* stream);
     return_t getfiletime (filetime_t* ft);
     return_t getsystemtime (int mode, systemtime_t* ft);
     return_t getasn1time (asn1time_t* at);

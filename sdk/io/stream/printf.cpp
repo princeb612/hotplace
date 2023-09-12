@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/ieee754.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
 #include <hotplace/sdk/io/basic/base16.hpp>
@@ -201,12 +202,19 @@ return_t vtprintf (stream_t* stream, variant_t vt, vtprintf_style_t style)
                 stream->printf ("%I128u", vt.data.ui128);
                 break;
 #endif
+            case TYPE_FP16:
+                stream->printf ("%g", fp32_from_fp16 (vt.data.ui16));
+                break;
             case TYPE_FLOAT:
                 stream->printf ("%g", vt.data.f);
                 break;
             case TYPE_DOUBLE:
                 stream->printf ("%g", vt.data.d);
                 break;
+#if defined __SIZEOF_INT128__
+            case TYPE_FP128: // not implemented
+                break;
+#endif
             case TYPE_POINTER:
                 stream->printf ("%s", vt.data.p);
                 break;

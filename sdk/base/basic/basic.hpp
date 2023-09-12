@@ -31,8 +31,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_SDK__
-#define __HOTPLACE_SDK_BASE_BASIC_SDK__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_BASIC__
+#define __HOTPLACE_SDK_BASE_BASIC_BASIC__
 
 #include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/charset.hpp>

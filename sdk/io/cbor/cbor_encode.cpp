@@ -9,6 +9,8 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
+#include <hotplace/sdk/base/variant.hpp>
+#include <hotplace/sdk/base/basic/ieee754.hpp>
 #include <hotplace/sdk/io/cbor/cbor.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 
@@ -468,9 +470,24 @@ return_t cbor_encode::encode (binary_t& bin, float value)
 
     __try2
     {
-        bin.push_back ((cbor_major_t::cbor_major_float << 5) | 26);
-        uint32 be = htonl (*(uint32*) &value);
-        bin.insert (bin.end (), (byte_t*) &be, (byte_t*) &be + 4);
+        variant_t vt;
+        uint32 be = 0;
+        ieee754_format_as_small_as_possible (vt, value);
+
+        switch (vt.type) {
+            case vartype_t::TYPE_FP16:
+                bin.push_back ((cbor_major_t::cbor_major_float << 5) | 25);
+                be = htons (*(uint16*) &vt.data.ui16);
+                bin.insert (bin.end (), (byte_t*) &be, (byte_t*) &be + 2);
+                break;
+            case vartype_t::TYPE_FLOAT:
+                bin.push_back ((cbor_major_t::cbor_major_float << 5) | 26);
+                be = htonl (*(uint32*) &vt.data.f);
+                bin.insert (bin.end (), (byte_t*) &be, (byte_t*) &be + 4);
+                break;
+            default:
+                break;
+        }
     }
     __finally2
     {
@@ -485,9 +502,29 @@ return_t cbor_encode::encode (binary_t& bin, double value)
 
     __try2
     {
-        bin.push_back ((cbor_major_t::cbor_major_float << 5) | 27);
-        uint64 be = hton64 (*(uint64*) &value);
-        bin.insert (bin.end (), (byte_t*) &be, (byte_t*) &be + 8);
+        variant_t vt;
+        uint64 be = 0;
+        ieee754_format_as_small_as_possible (vt, value);
+
+        switch (vt.type) {
+            case vartype_t::TYPE_FP16:
+                bin.push_back ((cbor_major_t::cbor_major_float << 5) | 25);
+                be = htons (*(uint16*) &vt.data.ui16);
+                bin.insert (bin.end (), (byte_t*) &be, (byte_t*) &be + 2);
+                break;
+            case vartype_t::TYPE_FLOAT:
+                bin.push_back ((cbor_major_t::cbor_major_float << 5) | 26);
+                be = htonl (*(uint32*) &vt.data.f);
+                bin.insert (bin.end (), (byte_t*) &be, (byte_t*) &be + 4);
+                break;
+            case vartype_t::TYPE_DOUBLE:
+                bin.push_back ((cbor_major_t::cbor_major_float << 5) | 27);
+                be = hton64 (*(uint64*) &vt.data.d);
+                bin.insert (bin.end (), (byte_t*) &be, (byte_t*) &be + 8);
+                break;
+            default:
+                break;
+        }
     }
     __finally2
     {

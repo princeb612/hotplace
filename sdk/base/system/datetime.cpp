@@ -142,6 +142,28 @@ return_t datetime::getgmtime (datetime_t* dt, long* nsec)
     return ret;
 }
 
+return_t datetime::getgmtime (stream_t* stream)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        datetime_t dt;
+        getgmtime (&dt);
+        printf ("%04d-%02d-%02dT%02d:%02d:%02dZ", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t datetime::getfiletime (filetime_t* ft)
 {
     return_t ret = errorcode_t::success;

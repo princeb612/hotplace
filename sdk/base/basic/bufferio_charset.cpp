@@ -10,8 +10,8 @@
  *                                  removed : replace1
  */
 
+#include <hotplace/sdk/base/basic/basic.hpp>
 #include <hotplace/sdk/base/basic/bufferio.hpp>
-#include <hotplace/sdk/base/basic/sdk.hpp>
 #include <stdarg.h>
 #include <stdio.h>
 
