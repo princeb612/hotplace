@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_BASE_LINUX_TYPES__
-#define __HOTPLACE_SDK_BASE_LINUX_TYPES__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_LINUX_TYPES__
+#define __HOTPLACE_SDK_BASE_SYSTEM_LINUX_TYPES__
 
 #include <limits.h>
 #include <stdint.h>

@@ -31,8 +31,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_BASIC__
-#define __HOTPLACE_SDK_BASE_BASIC_BASIC__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_PRINTF__
+#define __HOTPLACE_SDK_BASE_BASIC_PRINTF__
 
 #include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/charset.hpp>
@@ -102,26 +102,6 @@ int vprintf_runtime (void *context, CALLBACK_PRINTFA runtime_printf, const char 
 #if defined _WIN32 || defined _WIN64
 int vprintf_runtimew (void *context, CALLBACK_PRINTFW runtime_printf, const wchar_t * fmt0, va_list ap);
 #endif
-
-/**
- * @brief dump memory
- * @example
- *  const char* data = "hello world\n wide world\n";
- *
- *  buffer_stream bs;
- *  dump_memory ((byte_t*) data, strlen (data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
- *  std::cout << bs.c_str () << std::endl;
- */
-
-enum dump_memory_flag_t {
-    header = (1 << 0),
-};
-
-return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_t* stream_object,
-                      unsigned hex_part = 16,
-                      unsigned indent = 0,
-                      size_t rebase = 0x0,
-                      int flags = 0);
 
 }
 

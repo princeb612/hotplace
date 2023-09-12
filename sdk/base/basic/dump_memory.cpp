@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/basic.hpp>
+#include <hotplace/sdk/base/basic/dump_memory.hpp>
 
 namespace hotplace {
 

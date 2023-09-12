@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_LINUX_SEMAPHORE__
-#define __HOTPLACE_SDK_IO_SYSTEM_LINUX_SEMAPHORE__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_LINUX_SEMAPHORE__
+#define __HOTPLACE_SDK_BASE_SYSTEM_LINUX_SEMAPHORE__
 
 #include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>

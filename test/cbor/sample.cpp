@@ -24,26 +24,29 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
 {
     return_t ret = errorcode_t::success;
     cbor_encode enc;
+    std::string hex;
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+        printf ("encoding\n");
+    }
 
     bin.clear ();
     enc.encode (bin, vt);
 
-    std::string hex;
-    base16_encode (bin, hex);
-
-    if (0 == stricmp (hex.c_str (), expect.c_str ())) {
-        // match
-    } else {
-        ret = errorcode_t::mismatch;
-    }
-
     if (1) {
         test_case_notimecheck notimecheck (_test_case);
 
+        base16_encode (bin, hex);
+
+        if (0 == stricmp (hex.c_str (), expect.c_str ())) {
+            // match
+        } else {
+            ret = errorcode_t::mismatch;
+        }
+
         buffer_stream bs;
 
-        //vtprintf (&bs, vt);
-        //std::cout << bs.c_str () << std::endl;
         dump_memory (bin, &bs);
         std::cout << bs.c_str () << std::endl;
     }
@@ -65,16 +68,32 @@ void cbor_test (cbor_object* root, const char* expected)
         cbor_publisher publisher;
         binary_t bin;
         buffer_stream diagnostic;
+        std::string info;
+
+        {
+            test_case_notimecheck notimecheck (_test_case);
+            printf ("encoding\n");
+        }
 
         publisher.publish (root, &diagnostic);
+
+        {
+            test_case_notimecheck notimecheck (_test_case);
+            printf ("generate diagnostic\n");
+        }
+
         publisher.publish (root, &bin);
 
-        std::string concise;
-        base16_encode (bin, concise);
-        std::string info = format ("concise: %s diagnostic: %s", concise.c_str (), diagnostic.c_str ());
+        {
+            test_case_notimecheck notimecheck (_test_case);
 
-        if (stricmp (concise.c_str (), expected)) {
-            ret = errorcode_t::mismatch;
+            std::string concise;
+            base16_encode (bin, concise);
+            info = format ("concise: %s diagnostic: %s", concise.c_str (), diagnostic.c_str ());
+
+            if (stricmp (concise.c_str (), expected)) {
+                ret = errorcode_t::mismatch;
+            }
         }
 
         _test_case.test (ret, __FUNCTION__, info.c_str ());
@@ -85,248 +104,318 @@ void cbor_test (cbor_object* root, const char* expected)
     }
 }
 
+void test_cbor_int (int8 value, const char* expect)
+{
+    binary_t bin;
+    variant_t vt;
+
+    variant_set_int8 (vt, value);
+    encode_test (vt, bin, expect);
+
+    cbor_data* cbor = new cbor_data (value);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_int (int16 value, const char* expect)
+{
+    binary_t bin;
+    variant_t vt;
+
+    variant_set_int16 (vt, value);
+    encode_test (vt, bin, expect);
+
+    cbor_data* cbor = new cbor_data (value);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_int (int32 value, const char* expect)
+{
+    binary_t bin;
+    variant_t vt;
+
+    variant_set_int32 (vt, value);
+    encode_test (vt, bin, expect);
+
+    cbor_data* cbor = new cbor_data (value);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_int (int64 value, const char* expect)
+{
+    binary_t bin;
+    variant_t vt;
+
+    variant_set_int64 (vt, value);
+    encode_test (vt, bin, expect);
+
+    cbor_data* cbor = new cbor_data (value);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_int (int128 value, const char* expect)
+{
+    binary_t bin;
+    variant_t vt;
+
+    variant_set_int128 (vt, value);
+    encode_test (vt, bin, expect);
+
+    cbor_data* cbor = new cbor_data (value);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_float (float value, const char* expect)
+{
+    binary_t bin;
+    variant_t vt;
+
+    variant_set_float (vt, value);
+    encode_test (vt, bin, expect);
+
+    cbor_data* cbor = new cbor_data (value);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_double (double value, const char* expect)
+{
+    binary_t bin;
+    variant_t vt;
+
+    variant_set_double (vt, value);
+    encode_test (vt, bin, expect);
+
+    cbor_data* cbor = new cbor_data (value);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_bool (bool value, const char* expect)
+{
+    binary_t bin;
+    variant_t vt;
+
+    variant_set_bool (vt, value);
+    encode_test (vt, bin, expect);
+}
+
+void test_cbor_simple (uint8 value, const char* expect)
+{
+    cbor_simple* cbor = new cbor_simple (value);
+
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_tstr (const char* value, const char* expect)
+{
+    binary_t bin;
+    variant_t vt;
+
+    variant_set_str (vt, value);
+    encode_test (vt, bin, expect);
+}
+
+void test_cbor_bstr (binary_t const& value, const char* expect)
+{
+    cbor_data* cbor = new cbor_data (value);
+
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_tstr_tag (const char* value, cbor_tag_t tag, const char* expect)
+{
+    cbor_data* cbor = new cbor_data (value);
+
+    cbor->tag (true, tag);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_bstr_tag (binary_t const& value, cbor_tag_t tag, const char* expect)
+{
+    cbor_data* cbor = new cbor_data (value);
+
+    cbor->tag (true, tag);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_int_tag (int8 value, cbor_tag_t tag, const char* expect)
+{
+    cbor_data* cbor = new cbor_data (value);
+
+    cbor->tag (true, tag);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_int_tag (int16 value, cbor_tag_t tag, const char* expect)
+{
+    cbor_data* cbor = new cbor_data (value);
+
+    cbor->tag (true, tag);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_int_tag (int32 value, cbor_tag_t tag, const char* expect)
+{
+    cbor_data* cbor = new cbor_data (value);
+
+    cbor->tag (true, tag);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_int_tag (int64 value, cbor_tag_t tag, const char* expect)
+{
+    cbor_data* cbor = new cbor_data (value);
+
+    cbor->tag (true, tag);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_int_tag (int128 value, cbor_tag_t tag, const char* expect)
+{
+    cbor_data* cbor = new cbor_data (value);
+
+    cbor->tag (true, tag);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_float_tag (float value, cbor_tag_t tag, const char* expect)
+{
+    cbor_data* cbor = new cbor_data (value);
+
+    cbor->tag (true, tag);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_double_tag (double value, cbor_tag_t tag, const char* expect)
+{
+    cbor_data* cbor = new cbor_data (value);
+
+    cbor->tag (true, tag);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
 void test1 ()
 {
-    _test_case.begin ("test1.encode uint, nint, float");
+    _test_case.begin ("test1.encode uint, nint, float (RFC 7049 Table 4)");
 
     binary_t bin;
     variant_t vt;
 
-    variant_set_int8 (vt, 0);
-    encode_test (vt, bin, "00");
+    test_cbor_int (0, "00");
+    test_cbor_int (1, "01");
+    test_cbor_int (10, "0a");
+    test_cbor_int (23, "17");
+    test_cbor_int (24, "1818");
+    test_cbor_int (25, "1819");
+    test_cbor_int (100, "1864");
+    test_cbor_int (1000, "1903e8");
+    test_cbor_int (1000000, "1a000f4240");
 
-    variant_set_int8 (vt, 1);
-    encode_test (vt, bin, "01");
-
-    variant_set_int8 (vt, 10);
-    encode_test (vt, bin, "0a");
-
-    variant_set_int8 (vt, 23);
-    encode_test (vt, bin, "17");
-
-    variant_set_int8 (vt, 24);
-    encode_test (vt, bin, "1818");
-
-    variant_set_int8 (vt, 25);
-    encode_test (vt, bin, "1819");
-
-    variant_set_int8 (vt, 100);
-    encode_test (vt, bin, "1864");
-
-    variant_set_int16 (vt, 1000);
-    encode_test (vt, bin, "1903e8");
-
-    variant_set_int32 (vt, 1000000);
-    encode_test (vt, bin, "1a000f4240");
 
 #if defined __SIZEOF_INT128__
-    variant_set_int64 (vt, 1000000000000);
-    encode_test (vt, bin, "1b000000e8d4a51000");
+    test_cbor_int (1000000000000, "1b000000e8d4a51000");
+    test_cbor_int (atoi128 ("18446744073709551615"), "1bffffffffffffffff");
+    test_cbor_int (atoi128 ("18446744073709551616"), "c249010000000000000000");
 
-    cbor_data* cbor_1000000000000 = new cbor_data (atoi128 ("1000000000000"));
-    cbor_test (cbor_1000000000000, "1b000000e8d4a51000");
-    cbor_1000000000000->release ();
-
-    variant_set_uint128 (vt, atoi128 ("18446744073709551615"));
-    encode_test (vt, bin, "1bffffffffffffffff");
-
-    cbor_data* cbor_18446744073709551615 = new cbor_data (atoi128 ("18446744073709551615"));
-    cbor_test (cbor_18446744073709551615, "1bffffffffffffffff");
-    cbor_18446744073709551615->release ();
-
-    variant_set_int128 (vt, atoi128 ("18446744073709551616"));
-    encode_test (vt, bin, "c249010000000000000000");
-
-    cbor_data* cbor_18446744073709551616 = new cbor_data (atoi128 ("18446744073709551616"));
-    cbor_test (cbor_18446744073709551616, "c249010000000000000000");
-    cbor_18446744073709551616->release ();
-
-    variant_set_int128 (vt, atoi128 ("-18446744073709551616"));
-    encode_test (vt, bin, "3bffffffffffffffff");
-
-    cbor_data* cbor_s18446744073709551616 = new cbor_data (atoi128 ("-18446744073709551616"));
-    cbor_test (cbor_s18446744073709551616, "3bffffffffffffffff");
-    cbor_s18446744073709551616->release ();
-
-    variant_set_int128 (vt, atoi128 ("-18446744073709551617"));
-    encode_test (vt, bin, "c349010000000000000000");
-
-    cbor_data* cbor_s18446744073709551617 = new cbor_data (atoi128 ("-18446744073709551617"));
-    cbor_test (cbor_s18446744073709551617, "c349010000000000000000");
-    cbor_s18446744073709551617->release ();
+    test_cbor_int (atoi128 ("-18446744073709551616"), "3bffffffffffffffff");
+    test_cbor_int (atoi128 ("-18446744073709551617"), "c349010000000000000000");
 #endif
 
-    variant_set_int32 (vt, -1);
-    encode_test (vt, bin, "20");
+    test_cbor_int (-1, "20");
+    test_cbor_int (-10, "29");
+    test_cbor_int (-100, "3863");
+    test_cbor_int (-1000, "3903e7");
 
-    variant_set_int32 (vt, -10);
-    encode_test (vt, bin, "29");
+    test_cbor_float (0.0, "f90000");                        // fa00000000
+    test_cbor_double (0.0, "f90000");                       // fb0000000000000000
+    test_cbor_float (-0.0, "f98000");                       // fa80000000
+    test_cbor_double (-0.0, "f98000");                      // fb8000000000000000
+    test_cbor_float (1.0, "f93c00");                        // fa3f800000
+    test_cbor_double (1.0, "f93c00");                       // fb3ff0000000000000
+    test_cbor_float (1.1, "fa3f8ccccd");                    // dont convert
+    test_cbor_double (1.1, "fb3ff199999999999a");
+    test_cbor_float (1.5, "f93e00");                        // fa3fc00000
+    test_cbor_double (1.5, "f93e00");                       // fb3ff8000000000000
+    test_cbor_float (65504.0, "f97bff");                    // fa477fe000
+    test_cbor_double (65504.0, "f97bff");                   // fb40effc0000000000
+    test_cbor_float (100000.0, "fa47c35000");               // dont convert
+    test_cbor_double (100000.0, "fa47c35000");              // fb40f86a0000000000
 
-    variant_set_int16 (vt, -100);
-    encode_test (vt, bin, "3863");
+    test_cbor_float (3.4028234663852886e+38, "fa7f7fffff"); // dont convert
+    test_cbor_double (1.0e+300, "fb7e37e43c8800759c");      // dont convert
 
-    variant_set_int16 (vt, -1000);
-    encode_test (vt, bin, "3903e7");
+    test_cbor_float (5.960464477539063e-8, "f90001");       // fa33800000
+    test_cbor_float (0.00006103515625, "f90400");           // fa38800000
+    test_cbor_float (-4.0, "f9c400");                       // fac0800000
+    test_cbor_float (-4.1, "fac0833333");                   // dont convert
+    test_cbor_double (-4.1, "fbc010666666666666");          // dont convert
 
-    /* 00000000 : 00 00 00 00 -- -- -- -- -- -- -- -- -- -- -- -- | 0x00000000 */
-    variant_set_float (vt, 0.0);
-    encode_test (vt, bin, "f90000"); // fa00000000
+#if 0
+    variant_set_fp16 (vt, 0x7c00);
+    encode_test (vt, bin, "f97c00");
 
-    variant_set_double (vt, 0.0);
-    encode_test (vt, bin, "f90000"); // fb0000000000000000
+    variant_set_fp16 (vt, 0x7e00);
+    encode_test (vt, bin, "f97e00");
 
-    /* 00000000 : 00 00 00 80 -- -- -- -- -- -- -- -- -- -- -- -- | 0x80000000 */
-    variant_set_float (vt, -0.0);
-    encode_test (vt, bin, "f98000"); // fa80000000
+    variant_set_fp16 (vt, 0xfc00);
+    encode_test (vt, bin, "f9fc00");
+#endif
 
-    variant_set_double (vt, -0.0);
-    encode_test (vt, bin, "f98000"); // fb8000000000000000
+    test_cbor_float (fp32_from_binary32 (0x7f800000), "fa7f800000");                    // positive infinity
+    test_cbor_float (fp32_from_binary32 (0x7fc00000), "fa7fc00000");                    // NaN
+    test_cbor_float (fp32_from_binary32 (0xff800000), "faff800000");                    // negative infinity
 
-    /* 00000000 : 00 00 80 3F -- -- -- -- -- -- -- -- -- -- -- -- | 0x3f800000 */
-    variant_set_float (vt, 1.0);
-    encode_test (vt, bin, "f93c00"); // fa3f800000
+    test_cbor_double (fp64_from_binary64 (0x7ff0000000000000), "fb7ff0000000000000");   // positive infinity
+    test_cbor_double (fp64_from_binary64 (0x7ff8000000000000), "fb7ff8000000000000");   // NaN
+    test_cbor_double (fp64_from_binary64 (0xfff0000000000000), "fbfff0000000000000");   // negative infinity
 
-    variant_set_double (vt, 1.0);
-    encode_test (vt, bin, "f93c00"); // fb3ff0000000000000
+    test_cbor_bool (false, "f4");
+    test_cbor_simple (cbor_simple_t::cbor_simple_false, "f4");
+    test_cbor_bool (true, "f5");
+    test_cbor_simple (cbor_simple_t::cbor_simple_true, "f5");
+    test_cbor_simple (cbor_simple_t::cbor_simple_null, "f6");
+    test_cbor_simple (cbor_simple_t::cbor_simple_undef, "f7");
+    test_cbor_simple (16, "f0");
+    test_cbor_simple (24, "f818");
+    test_cbor_simple (255, "f8ff");
 
-    /* 00000000 : CD CC 8C 3F -- -- -- -- -- -- -- -- -- -- -- -- | 0x3f8ccccd */
-    variant_set_float (vt, 1.1);
-    encode_test (vt, bin, "fa3f8ccccd");
+    test_cbor_tstr_tag ("2013-03-21T20:04:00Z", cbor_tag_t::cbor_tag_std_datetime, "c074323031332d30332d32315432303a30343a30305a");
+    test_cbor_int_tag (1363896240, cbor_tag_t::cbor_tag_epoch_datetime, "c11a514b67b0");
+    test_cbor_double_tag (1363896240.5, cbor_tag_t::cbor_tag_epoch_datetime, "c1fb41d452d9ec200000");
+    test_cbor_bstr_tag (base16_decode ("01020304"), cbor_tag_t::cbor_tag_base16, "d74401020304");
+    test_cbor_bstr_tag (base16_decode ("6449455446"), cbor_tag_t::cbor_tag_encoded, "d818456449455446");
+    test_cbor_tstr_tag ("http://www.example.com", cbor_tag_t::cbor_tag_uri, "d82076687474703a2f2f7777772e6578616d706c652e636f6d");
 
-    variant_set_double (vt, 1.1);
-    encode_test (vt, bin, "fb3ff199999999999a");
+    test_cbor_bstr (base16_decode (""), "40");
+    test_cbor_bstr (base16_decode ("01020304"), "4401020304");
 
-    /* 00000000 : 00 00 C0 3F -- -- -- -- -- -- -- -- -- -- -- -- | 0x3fc00000 */
-    variant_set_float (vt, 1.5);
-    encode_test (vt, bin, "f93e00"); // fa3fc00000
-
-    variant_set_double (vt, 1.5);
-    encode_test (vt, bin, "f93e00"); // fb3ff8000000000000
-
-    /* 00000000 : 00 E0 7F 47 -- -- -- -- -- -- -- -- -- -- -- -- | 0x477fe000 */
-    variant_set_float (vt, 65504.0);
-    encode_test (vt, bin, "f97bff"); // fa477fe000
-
-    variant_set_double (vt, 65504.0);
-    encode_test (vt, bin, "f97bff"); // fb40effc0000000000
-
-    /* 00000000 : 00 50 C3 47 -- -- -- -- -- -- -- -- -- -- -- -- | 0x47c35000 */
-    variant_set_float (vt, 100000.0);
-    encode_test (vt, bin, "fa47c35000");
-
-    variant_set_double (vt, 100000.0);
-    encode_test (vt, bin, "fa47c35000"); // fb40f86a0000000000
-
-    variant_set_float (vt, 3.4028234663852886e+38);
-    encode_test (vt, bin, "fa7f7fffff");
-
-    variant_set_double (vt, 1.0e+300);
-    encode_test (vt, bin, "fb7e37e43c8800759c");
-
-    variant_set_float (vt, 5.960464477539063e-8);
-    encode_test (vt, bin, "f90001"); // fa33800000
-
-    variant_set_float (vt, 0.00006103515625);
-    encode_test (vt, bin, "f90400"); // fa38800000
-
-    variant_set_float (vt, -4.0);
-    encode_test (vt, bin, "f9c400"); // fac0800000
-
-    variant_set_float (vt, -4.1);
-    encode_test (vt, bin, "fac0833333");
-
-    variant_set_double (vt, -4.1);
-    encode_test (vt, bin, "fbc010666666666666");
-
-    variant_set_bool (vt, false);
-    encode_test (vt, bin, "f4");
-
-    cbor_simple* sample_false = new cbor_simple (cbor_simple_t::cbor_simple_false);
-    cbor_test (sample_false, "f4");
-    sample_false->release ();
-
-    variant_set_bool (vt, true);
-    encode_test (vt, bin, "f5");
-
-    cbor_simple* sample_true = new cbor_simple (cbor_simple_t::cbor_simple_true);
-    cbor_test (sample_true, "f5");
-    sample_true->release ();
-
-    cbor_simple* sample_null = new cbor_simple (cbor_simple_t::cbor_simple_null);
-    cbor_test (sample_null, "f6");
-    sample_null->release ();
-
-    cbor_simple* sample_undef = new cbor_simple (cbor_simple_t::cbor_simple_undef);
-    cbor_test (sample_undef, "f7");
-    sample_undef->release ();
-
-    cbor_simple* simple_16 = new cbor_simple (16);
-    cbor_test (simple_16, "f0");
-    simple_16->release ();
-
-    cbor_simple* simple_24 = new cbor_simple (24);
-    cbor_test (simple_24, "f818");
-    simple_24->release ();
-
-    cbor_simple* simple_255 = new cbor_simple (255);
-    cbor_test (simple_255, "f8ff");
-    simple_255->release ();
-
-    cbor_data* data_stddatetime = new cbor_data (1363896240);
-    data_stddatetime->tag (true, cbor_tag_t::cbor_tag_epoch_datetime);
-    cbor_test (data_stddatetime, "c11a514b67b0");
-    data_stddatetime->release ();
-
-    cbor_data* data_stddatetime2 = new cbor_data (1363896240.5);
-    data_stddatetime2->tag (true, cbor_tag_t::cbor_tag_epoch_datetime);
-    cbor_test (data_stddatetime2, "c1fb41d452d9ec200000");
-    data_stddatetime2->release ();
-
-    cbor_data* data_base16 = new cbor_data (base16_decode ("01020304"));
-    data_base16->tag (true, cbor_tag_t::cbor_tag_base16);
-    cbor_test (data_base16, "d74401020304");
-    data_base16->release ();
-
-    cbor_data* data_encoded = new cbor_data (base16_decode ("6449455446"));
-    data_encoded->tag (true, cbor_tag_t::cbor_tag_encoded);
-    cbor_test (data_encoded, "d818456449455446");
-    data_encoded->release ();
-
-    cbor_data* data_wwwexamplecom = new cbor_data ("http://www.example.com");
-    data_wwwexamplecom->tag (true, cbor_tag_t::cbor_tag_uri);
-    cbor_test (data_wwwexamplecom, "d82076687474703a2f2f7777772e6578616d706c652e636f6d");
-    data_wwwexamplecom->release ();
-
-    cbor_data* data_b = new cbor_data (base16_decode (""));
-    cbor_test (data_b, "40");
-    data_b->release ();
-
-    cbor_data* data_b01020304 = new cbor_data (base16_decode ("01020304"));
-    cbor_test (data_b01020304, "4401020304");
-    data_b01020304->release ();
-
-    variant_set_str (vt, "");
-    encode_test (vt, bin, "60");
-
-    variant_set_str (vt, "a");
-    encode_test (vt, bin, "6161");
-
-    variant_set_str (vt, "IETF");
-    encode_test (vt, bin, "6449455446");
-
-    variant_set_str (vt, "\"\\");
-    encode_test (vt, bin, "62225c");
-
-    variant_set_str (vt, "\u00fc");
-    encode_test (vt, bin, "62c3bc");
-
-    variant_set_str (vt, "\u6c34");
-    encode_test (vt, bin, "63e6b0b4");
+    test_cbor_tstr ("", "60");
+    test_cbor_tstr ("a", "6161");
+    test_cbor_tstr ("IETF", "6449455446");
+    test_cbor_tstr ("\"\\", "62225c");
+    test_cbor_tstr ("\u00fc", "62c3bc");
+    test_cbor_tstr ("\u6c34", "63e6b0b4");
 }
 
 void test2 ()
 {
-    _test_case.begin ("test2.encode array, map");
+    _test_case.begin ("test2.encode array, map (RFC 7049 Table 4)");
 
     {
         // []
@@ -390,6 +479,33 @@ void test2 ()
         *sample1 << new cbor_pair ("b", new cbor_data ("c"));
         *root << new cbor_data ("a") << sample1;
         cbor_test (root, "826161a161626163");
+        root->release ();
+    }
+    {
+        // {"a": "A", "b": "B", "c": "C", "d": "D", "e": "E"}
+        cbor_map* root = new cbor_map ();
+        *root   << new cbor_pair ("a", new cbor_data ("A"))
+                << new cbor_pair ("b", new cbor_data ("B"))
+                << new cbor_pair ("c", new cbor_data ("C"))
+                << new cbor_pair ("d", new cbor_data ("D"))
+                << new cbor_pair ("e", new cbor_data ("E"));
+        cbor_test (root, "a56161614161626142616361436164614461656145");
+        root->release ();
+    }
+    {
+        // (_ h'0102', h'030405')
+        // 0x5f42010243030405ff
+        cbor_bstrings* root = new cbor_bstrings ();
+        *root << base16_decode ("0102") << base16_decode ("030405");
+        cbor_test (root, "5f42010243030405ff");
+        root->release ();
+    }
+    {
+        // (_ "strea", "ming")
+        // 0x7f657374726561646d696e67ff
+        cbor_tstrings* root = new cbor_tstrings ();
+        *root << "strea" << "ming";
+        cbor_test (root, "7f657374726561646d696e67ff");
         root->release ();
     }
     {
@@ -475,23 +591,6 @@ void test2 ()
         *root << new cbor_pair ("Fun", new cbor_data (true)) << new cbor_pair ("Amt", new cbor_data (-2));
         cbor_test (root, "bf6346756ef563416d7421ff");
         root->release ();
-    }
-    {
-        binary_t bin;
-        cbor_bstrings* root = new cbor_bstrings ();
-        *root << base16_decode ("0102" ) << base16_decode ("030405");
-        cbor_test (root, "5f42010243030405ff");
-        root->release ();
-    }
-    {
-        cbor_tstrings* root = new cbor_tstrings ();
-        *root << "strea" << "ming";
-        cbor_test (root, "7f657374726561646d696e67ff");
-        root->release ();
-    }
-    {
-        cbor_data root[3] = { -1, -2, -3 };
-        cbor_test (&root[0], "20");
     }
 }
 

@@ -1,5 +1,4 @@
 
-
 ## constexpr_obf
 
  * c++14 required

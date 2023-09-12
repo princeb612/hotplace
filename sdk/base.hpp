@@ -16,12 +16,14 @@
 #include <hotplace/sdk/base/c++14.hpp>
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/callback.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
 #include <hotplace/sdk/base/inline.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
 #include <hotplace/sdk/base/variant.hpp>
 
-#include <hotplace/sdk/base/basic/basic.hpp>
 #include <hotplace/sdk/base/basic/bufferio.hpp>
+#include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/ieee754.hpp>
+#include <hotplace/sdk/base/basic/printf.hpp>
 #include <hotplace/sdk/base/basic/stream.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
 

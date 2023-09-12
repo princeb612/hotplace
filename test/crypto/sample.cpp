@@ -20,7 +20,8 @@ test_case _test_case;
 
 void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, crypt_mode_t mode, unsigned key_size,
                          const byte_t* key_data, unsigned iv_size, const byte_t* iv_data, byte_t* data, size_t size,
-                         byte_t* aad_source                                 = nullptr, unsigned aad_size= 0)
+                         byte_t* aad_source = nullptr,
+                         unsigned aad_size = 0)
 {
     _test_case.reset_time ();
 

@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK_SDK_WTSAPI32__
-#define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK_SDK_WTSAPI32__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK_WTSAPI32__
+#define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK_WTSAPI32__
 
 #include <wtsapi32.h>
 

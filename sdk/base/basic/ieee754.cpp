@@ -26,7 +26,7 @@ uint8 ieee754_format_as_small_as_possible (variant_t& vt, float fp)
 
     variant_set_fp32 (vt, fp);
     fp32.fp = fp;
-    if (0 == (fp32.storage & 0x3ff)) {
+    if ((0 == (0x3ff & fp32.storage)) && (0x7f800000 != (0x7f800000 & fp32.storage))) {
         uint16 bin16 = fp16_ieee_from_fp32_value (fp32.storage);
         if (0x7c00 != (0x7c00 & bin16)) {
             variant_set_fp16 (vt, bin16);
@@ -43,7 +43,9 @@ uint8 ieee754_format_as_small_as_possible (variant_t& vt, double fp)
 
     variant_set_fp64 (vt, fp);
     fp64.fp = fp;
-    if (0 == (fp64.storage & 0x7fffff)) {
+    bool cond1 = (0 == (0x7fffff & fp64.storage));
+    bool cond2 = (0x7ff0000000000000 == (0x7ff0000000000000 & fp64.storage));
+    if (cond1 && !cond2) {
         fp32_t fp32;
         fp32.fp = fp;
         if (0x7f800000 != (0x7f800000 & fp32.storage)) {

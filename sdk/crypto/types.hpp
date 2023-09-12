@@ -76,7 +76,6 @@ enum crypt_algorithm_t {
  *    OFB output feedback
  *    CTR counter
  * supports
- *    SEED        : CBC, CFB,             OFB, ECB
  *    AES128      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM, KEYWRAP
  *    AES192      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM, KEYWRAP
  *    AES256      : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM, KEYWRAP
@@ -84,11 +83,15 @@ enum crypt_algorithm_t {
  *    ARIA192     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM
  *    ARIA256     : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR, GCM, CCM
  *    BF          : CBC, CFB,             OFB, ECB
- *    CAMELLIA128 : CBC, CFB, CFB1, CFB8, OFB, ECB,
- *    CAMELLIA192 : CBC, CFB, CFB1, CFB8, OFB, ECB,
- *    CAMELLIA256 : CBC, CFB, CFB1, CFB8, OFB, ECB,
- *    DES         : CBC, CFB, CFB1, CFB8, OFB, ECB
+ *    CAMELLIA128 : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR
+ *    CAMELLIA192 : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR
+ *    CAMELLIA256 : CBC, CFB, CFB1, CFB8, OFB, ECB, CTR
+ *    CAST        : CBC, CFB,             OFB, ECB
+ *    DES         : CBC, CFB,             OFB, ECB
  *    IDEA        : CBC, CFB,             OFB, ECB
+ *    RC2         : CBC, CFB,             OFB, ECB
+ *    RC5         : CBC, CFB,             OFB, ECB
+ *    SEED        : CBC, CFB,             OFB, ECB
  *    SM4         : CBC, CFB,             OFB, ECB, CTR
  */
 enum crypt_mode_t {
