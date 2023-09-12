@@ -89,6 +89,31 @@ typedef union _fp64_t {
     double fp;
 } fp64_t;
 
+static inline uint32 binary32_from_fp32 (float fp)
+{
+    fp32_t temp;
+    temp.fp = fp;
+    return temp.storage;
+}
+static inline uint64 binary64_from_fp64 (double fp)
+{
+    fp64_t temp;
+    temp.fp = fp;
+    return temp.storage;
+}
+static inline float fp32_from_binary32 (uint32 bin)
+{
+    fp32_t temp;
+    temp.storage = bin;
+    return temp.fp;
+}
+static inline double fp64_from_binary64 (uint64 bin)
+{
+    fp64_t temp;
+    temp.storage = bin;
+    return temp.fp;
+}
+
 /**
  * @brief   size as small as possible
  * @param   variant_t& vt [out]

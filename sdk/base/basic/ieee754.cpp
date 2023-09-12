@@ -95,7 +95,8 @@ uint16 fp16_ieee_from_fp32_value (uint32 x)
     magic.storage = x_exp;
 
     // If 15 < e then inf, otherwise e += 2
-    f.fp = (f.fp * 0x1.0p+112f) * 0x1.0p-110f;
+    //f.fp = (f.fp * 0x1.0p+112f) * 0x1.0p-110f;
+    f.fp = (f.fp * fp32_from_binary32 (0x77800000)) * fp32_from_binary32 (0x08800000);
 
     // If we were in the x_exp >= 0x38800000u case:
     // Replace f's exponent with that of x_exp, and discard 13 bits of
