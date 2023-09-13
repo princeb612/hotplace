@@ -26,11 +26,6 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
     cbor_encode enc;
     std::string hex;
 
-    {
-        test_case_notimecheck notimecheck (_test_case);
-        printf ("encoding\n");
-    }
-
     bin.clear ();
     enc.encode (bin, vt);
 
@@ -48,6 +43,7 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
         buffer_stream bs;
 
         dump_memory (bin, &bs);
+        std::cout << "encoded " << hex.c_str () <<std::endl;
         std::cout << bs.c_str () << std::endl;
     }
 
@@ -68,35 +64,25 @@ void cbor_test (cbor_object* root, const char* expected)
         cbor_publisher publisher;
         binary_t bin;
         buffer_stream diagnostic;
-        std::string info;
-
-        {
-            test_case_notimecheck notimecheck (_test_case);
-            printf ("encoding\n");
-        }
+        std::string concise;
 
         publisher.publish (root, &diagnostic);
-
-        {
-            test_case_notimecheck notimecheck (_test_case);
-            printf ("generate diagnostic\n");
-        }
-
         publisher.publish (root, &bin);
 
         {
             test_case_notimecheck notimecheck (_test_case);
 
-            std::string concise;
             base16_encode (bin, concise);
-            info = format ("concise: %s diagnostic: %s", concise.c_str (), diagnostic.c_str ());
+
+            std::cout << "diagnostic " << diagnostic.c_str () << std::endl;
+            std::cout << "concise    " << concise.c_str () << std::endl;
 
             if (stricmp (concise.c_str (), expected)) {
                 ret = errorcode_t::mismatch;
             }
         }
 
-        _test_case.test (ret, __FUNCTION__, info.c_str ());
+        _test_case.test (ret, __FUNCTION__, "concise: %s diagnostic: %s", concise.c_str (), diagnostic.c_str ());
     }
     __finally2
     {
@@ -165,6 +151,22 @@ void test_cbor_int (int128 value, const char* expect)
     encode_test (vt, bin, expect);
 
     cbor_data* cbor = new cbor_data (value);
+    cbor_test (cbor, expect);
+    cbor->release ();
+}
+
+void test_cbor_fp16 (uint16 value, const char* expect)
+{
+    binary_t bin;
+    variant_t vt;
+
+    variant_set_fp16 (vt, value);
+    encode_test (vt, bin, expect);
+
+    fp16_t fp16;
+    fp16.storage = value;
+
+    cbor_data* cbor = new cbor_data (fp16);
     cbor_test (cbor, expect);
     cbor->release ();
 }
@@ -366,16 +368,9 @@ void test1 ()
     test_cbor_float (-4.1, "fac0833333");                   // dont convert
     test_cbor_double (-4.1, "fbc010666666666666");          // dont convert
 
-#if 0
-    variant_set_fp16 (vt, 0x7c00);
-    encode_test (vt, bin, "f97c00");
-
-    variant_set_fp16 (vt, 0x7e00);
-    encode_test (vt, bin, "f97e00");
-
-    variant_set_fp16 (vt, 0xfc00);
-    encode_test (vt, bin, "f9fc00");
-#endif
+    test_cbor_fp16 (0x7c00, "f97c00");
+    test_cbor_fp16 (0x7e00, "f97e00");
+    test_cbor_fp16 (0xfc00, "f9fc00");
 
     test_cbor_float (fp32_from_binary32 (0x7f800000), "fa7f800000");                    // positive infinity
     test_cbor_float (fp32_from_binary32 (0x7fc00000), "fa7fc00000");                    // NaN

@@ -79,6 +79,10 @@ enum ieee754_t : uint64 // c++11
     fp64_ninf   = 0xfff0000000000000,   // 0b1111111111110000000000000000000000000000000000000000000000000000
 };
 
+typedef union _fp16_t {
+    uint16 storage;
+} fp16_t;
+
 typedef union _fp32_t {
     uint32 storage;
     float fp;

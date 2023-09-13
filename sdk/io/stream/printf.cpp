@@ -203,13 +203,46 @@ return_t vtprintf (stream_t* stream, variant_t vt, vtprintf_style_t style)
                 break;
 #endif
             case TYPE_FP16:
-                stream->printf ("%g", fp32_from_fp16 (vt.data.ui16));
+                if (0x7c00 == (0x7c00 & vt.data.ui16)) {
+                    if (0x200 & vt.data.ui16) {
+                        stream->printf ("NaN");
+                    } else {
+                        if (0x8000 & vt.data.ui16) {
+                            stream->printf ("-");
+                        }
+                        stream->printf ("Infinity");
+                    }
+                } else {
+                    stream->printf ("%g", fp32_from_fp16 (vt.data.ui16));
+                }
                 break;
             case TYPE_FLOAT:
-                stream->printf ("%g", vt.data.f);
+                if (0x7f800000 == (0x7f800000 & vt.data.ui32)) {
+                    if (0x400000 & vt.data.ui32) {
+                        stream->printf ("NaN");
+                    } else {
+                        if (0x80000000 & vt.data.ui32) {
+                            stream->printf ("-");
+                        }
+                        stream->printf ("Infinity");
+                    }
+                } else {
+                    stream->printf ("%g", vt.data.f);
+                }
                 break;
             case TYPE_DOUBLE:
-                stream->printf ("%g", vt.data.d);
+                if (0x7ff0000000000000 == (0x7ff0000000000000 & vt.data.ui64)) {
+                    if (0x8000000000000 & vt.data.ui64) {
+                        stream->printf ("NaN");
+                    } else {
+                        if (0x8000000000000000 & vt.data.ui64) {
+                            stream->printf ("-");
+                        }
+                        stream->printf ("Infinity");
+                    }
+                } else {
+                    stream->printf ("%g", vt.data.d);
+                }
                 break;
 #if defined __SIZEOF_INT128__
             case TYPE_FP128: // not implemented

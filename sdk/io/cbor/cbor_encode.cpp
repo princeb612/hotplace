@@ -64,6 +64,9 @@ return_t cbor_encode::encode (binary_t& bin, variant_t vt)
                 encode (bin, cbor_major_t::cbor_major_uint, vt.data.ui128);
                 break;
 #endif
+            case TYPE_FP16:
+                encodefp16 (bin, vt.data.ui16);
+                break;
             case TYPE_FLOAT:
                 encode (bin, vt.data.f);
                 break;
@@ -463,6 +466,26 @@ return_t cbor_encode::encode (binary_t& bin, cbor_major_t major, uint128 value)
     return ret;
 }
 #endif
+
+return_t cbor_encode::encodefp16 (binary_t& bin, uint16 value)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        variant_t vt;
+        uint32 be = 0;
+
+        bin.push_back ((cbor_major_t::cbor_major_float << 5) | 25);
+        be = htons (*(uint16*) &value);
+        bin.insert (bin.end (), (byte_t*) &be, (byte_t*) &be + 2);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
 
 return_t cbor_encode::encode (binary_t& bin, float value)
 {
