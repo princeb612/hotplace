@@ -115,8 +115,8 @@ void test_rfc7515_A1 ()
 {
     print_text ("RFC 7515 A.1");
 
-    const byte_t hs256_header[] = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}";
-    const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
+    constexpr byte_t hs256_header[] = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}";
+    constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
     crypto_key key;
@@ -169,7 +169,7 @@ void test_rfc7515_HS ()
 {
     print_text ("RFC 7515 A.1");
 
-    const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
+    constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
     crypto_key key;
@@ -211,8 +211,8 @@ void test_rfc7515_A2 ()
     print_text ("RFC 7515 A.2");
 
     /* RFC 7515 */
-    const byte_t rs256_header[] = "{\"alg\":\"RS256\"}";
-    const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
+    constexpr byte_t rs256_header[] = "{\"alg\":\"RS256\"}";
+    constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
     crypto_key key;
@@ -274,8 +274,8 @@ void test_rfc7515_A3 ()
     print_text ("RFC 7515 A.3");
 
     /* RFC 7515 */
-    const byte_t es256_header[] = "{\"alg\":\"ES256\"}";
-    const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
+    constexpr byte_t es256_header[] = "{\"alg\":\"ES256\"}";
+    constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
     crypto_key key;
@@ -327,7 +327,7 @@ void test_rfc7515_A4 ()
 {
     print_text ("RFC 7515 A.4");
 
-    const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
+    constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
     crypto_key key;
@@ -381,7 +381,7 @@ void test_rfc7515_A5 ()
 {
     print_text ("RFC 7515 A.5");
 
-    const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
+    constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
     crypto_key key;
@@ -401,13 +401,13 @@ void test_rfc7515_A5 ()
        .
      */
 
-    const char* unsecured_header = "{\"alg\":\"none\"}";
+    constexpr char unsecured_header[] = "{\"alg\":\"none\"}";
 
     ret = jws.sign (&key, unsecured_header, claim, signature);
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.5. Example Unsecured JWS (JWS compact) - Sign");
 
     // RFC sample - not support low security reason
-    const char* sample = "eyJhbGciOiJub25lIn0.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ";
+    constexpr char sample[] = "eyJhbGciOiJub25lIn0.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ";
     ret = jws.verify (&key, sample, result);
     std::cout << "compact" << std::endl << signature.c_str () << std::endl;
     _test_case.test (ret, __FUNCTION__, "RFC 7515 A.5. Example Unsecured JWS (JWS compact) - Verify");
@@ -417,7 +417,7 @@ void test_rfc7515_A6 ()
 {
     print_text ("RFC 7515 A.6");
 
-    const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
+    constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
     crypto_key key;
@@ -463,17 +463,17 @@ void test_rfc7515_bypem ()
 {
     print_text ("RFC 7515 by PEM");
 
-    const byte_t hs256_header[] = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}";
-    const byte_t rs256_header[] = "{\"alg\":\"RS256\"}";
-    const byte_t ps256_header[] = "{\"alg\":\"PS256\"}";
-    const byte_t es256_header[] = "{\"alg\":\"ES256\"}";
-    const byte_t rs384_header[] = "{\"alg\":\"RS384\"}";
-    const byte_t ps384_header[] = "{\"alg\":\"PS384\"}";
-    const byte_t es384_header[] = "{\"alg\":\"ES384\"}";
-    const byte_t rs512_header[] = "{\"alg\":\"RS512\"}";
-    const byte_t ps512_header[] = "{\"alg\":\"PS512\"}";
-    const byte_t es512_header[] = "{\"alg\":\"ES512\"}";
-    const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
+    constexpr byte_t hs256_header[] = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}";
+    constexpr byte_t rs256_header[] = "{\"alg\":\"RS256\"}";
+    constexpr byte_t ps256_header[] = "{\"alg\":\"PS256\"}";
+    constexpr byte_t es256_header[] = "{\"alg\":\"ES256\"}";
+    constexpr byte_t rs384_header[] = "{\"alg\":\"RS384\"}";
+    constexpr byte_t ps384_header[] = "{\"alg\":\"PS384\"}";
+    constexpr byte_t es384_header[] = "{\"alg\":\"ES384\"}";
+    constexpr byte_t rs512_header[] = "{\"alg\":\"RS512\"}";
+    constexpr byte_t ps512_header[] = "{\"alg\":\"PS512\"}";
+    constexpr byte_t es512_header[] = "{\"alg\":\"ES512\"}";
+    constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
     crypto_key key;
@@ -520,17 +520,17 @@ void test_rfc7515_bykeygen ()
 {
     print_text ("RFC 7515 by key generation");
 
-    const byte_t hs256_header[] = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}";
-    const byte_t rs256_header[] = "{\"alg\":\"RS256\"}";
-    const byte_t ps256_header[] = "{\"alg\":\"PS256\"}";
-    const byte_t es256_header[] = "{\"alg\":\"ES256\"}";
-    const byte_t rs384_header[] = "{\"alg\":\"RS384\"}";
-    const byte_t ps384_header[] = "{\"alg\":\"PS384\"}";
-    const byte_t es384_header[] = "{\"alg\":\"ES384\"}";
-    const byte_t rs512_header[] = "{\"alg\":\"RS512\"}";
-    const byte_t ps512_header[] = "{\"alg\":\"PS512\"}";
-    const byte_t es512_header[] = "{\"alg\":\"ES512\"}";
-    const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
+    constexpr byte_t hs256_header[] = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}";
+    constexpr byte_t rs256_header[] = "{\"alg\":\"RS256\"}";
+    constexpr byte_t ps256_header[] = "{\"alg\":\"PS256\"}";
+    constexpr byte_t es256_header[] = "{\"alg\":\"ES256\"}";
+    constexpr byte_t rs384_header[] = "{\"alg\":\"RS384\"}";
+    constexpr byte_t ps384_header[] = "{\"alg\":\"PS384\"}";
+    constexpr byte_t es384_header[] = "{\"alg\":\"ES384\"}";
+    constexpr byte_t rs512_header[] = "{\"alg\":\"RS512\"}";
+    constexpr byte_t ps512_header[] = "{\"alg\":\"PS512\"}";
+    constexpr byte_t es512_header[] = "{\"alg\":\"ES512\"}";
+    constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
     crypto_key key;
@@ -664,13 +664,13 @@ void test_rfc7516_A1_test ()
     std::string jose_header = "{\"alg\":\"RSA-OAEP\",\"enc\":\"A256GCM\"}";
     // eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ
     // A.1.2.  Content Encryption Key (CEK)
-    byte_t cek [] =
+    constexpr byte_t cek [] =
     { 177, 161, 244, 128, 84, 143, 225, 115, 63, 180, 3, 255, 107, 154,
       212, 246, 138, 7, 110, 91, 112, 46, 34, 105, 47, 130, 203, 46, 122,
       234, 64, 252 };
     // A.1.3.  Key Encryption
     // see rfc7516_A1.jwk
-    byte_t encrypted_key [] =
+    constexpr byte_t encrypted_key [] =
     { 56, 163, 154, 192, 58, 53, 222, 4, 105, 218, 136, 218, 29, 94, 203,
       22, 150, 92, 129, 94, 211, 232, 53, 89, 41, 60, 138, 56, 196, 216,
       82, 98, 168, 76, 37, 73, 70, 7, 36, 8, 191, 100, 136, 196, 244, 220,
@@ -1111,25 +1111,25 @@ void test_rfc7516_B ()
     // 256 bits key
     // first 128 bits HMAC SHA-256 key (MAC_KEY)
     // last 128 bits AES-CBC key (ENC_KEY)
-    byte_t key [] =
+    constexpr byte_t key [] =
     { 4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250, 63, 170, 106,
       206, 107, 124, 212, 45, 111, 107, 9, 219, 200, 177, 0, 240, 143, 156,
       44, 207 };
     // B.2.  Encrypt Plaintext to Create Ciphertext
-    byte_t plain [] =
+    constexpr byte_t plain [] =
     { 76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
       112, 114, 111, 115, 112, 101, 114, 46 };
-    byte_t encrypted_data [] =
+    constexpr byte_t encrypted_data [] =
     { 40, 57, 83, 181, 119, 33, 133, 148, 198, 185, 243, 24, 152, 230, 6,
       75, 129, 223, 127, 19, 210, 82, 183, 230, 168, 33, 215, 104, 143,
       112, 56, 102 };
     // B.3.  64-Bit Big-Endian Representation of AAD Length
-    byte_t aad [] =
+    constexpr byte_t aad [] =
     { 101, 121, 74, 104, 98, 71, 99, 105, 79, 105, 74, 66, 77, 84, 73, 52,
       83, 49, 99, 105, 76, 67, 74, 108, 98, 109, 77, 105, 79, 105, 74, 66,
       77, 84, 73, 52, 81, 48, 74, 68, 76, 85, 104, 84, 77, 106, 85, 50, 73,
       110, 48 };
-    byte_t concat_sample [] =
+    constexpr byte_t concat_sample [] =
     { 101, 121, 74, 104, 98, 71, 99, 105, 79, 105, 74, 66, 77, 84, 73, 52,
       83, 49, 99, 105, 76, 67, 74, 108, 98, 109, 77, 105, 79, 105, 74, 66,
       77, 84, 73, 52, 81, 48, 74, 68, 76, 85, 104, 84, 77, 106, 85, 50, 73,
@@ -1139,13 +1139,13 @@ void test_rfc7516_B ()
       104, 143, 112, 56, 102, 0, 0, 0, 0, 0, 0, 1, 152 };
     uint64 al = hton64 (RTL_NUMBER_OF (aad) * 8);
     // B.4.  Initialization Vector Value
-    byte_t iv [] =
+    constexpr byte_t iv [] =
     { 3, 22, 60, 12, 43, 67, 104, 105, 108, 108, 105, 99, 111, 116, 104,
       101 };
     // B.5.  Create Input to HMAC Computation
     // B.6.  Compute HMAC Value
     // B.7.  Truncate HMAC Value to Create Authentication Tag
-    byte_t tag [] =
+    constexpr byte_t tag [] =
     { 83, 73, 191, 98, 104, 205, 211, 128, 201, 189, 199, 133, 32, 38,
       194, 85 };
 
@@ -1191,7 +1191,7 @@ void test_rfc7516_B ()
         dump_memory (&hmac_value[0], hmac_value.size (), &bs);
         printf ("hmac_value\n%s\n", bs.c_str ());
 
-        byte_t hmac_sample [] =
+        constexpr byte_t hmac_sample [] =
         { 83, 73, 191, 98, 104, 205, 211, 128, 201, 189, 199, 133, 32, 38,
           194, 85, 9, 84, 229, 201, 219, 135, 44, 252, 145, 102, 179, 140, 105,
           86, 229, 116 };
@@ -1294,7 +1294,7 @@ void test_rfc7517_C ()
     jwk.load_file (&key, "rfc7517_C.jwk", 0);
 
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
-    const char* passphrase = "Thus from my lips, by yours, my sin is purged.";
+    constexpr char passphrase[] = "Thus from my lips, by yours, my sin is purged.";
     keygen.add_oct (&key, nullptr, jwa_t::jwa_pbes2_hs256_a128kw, (byte_t*) passphrase, strlen (passphrase), crypto_use_t::use_enc);
 
     jose.open (&context, &key);
@@ -1309,8 +1309,8 @@ void test_rfc7517_C ()
 void test_rfc7518_RSASSA_PSS ()
 {
     print_text ("RFC 7518 3.5");
-    const byte_t ps256_header[] = "{\"alg\":\"PS256\"}";
-    const char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
+    constexpr byte_t ps256_header[] = "{\"alg\":\"PS256\"}";
+    constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
     crypto_key key;
@@ -1441,9 +1441,9 @@ void test_rfc7518_C ()
 
     // apu Alice
     // apv Bob
-    const char* alg = "A128GCM";
-    const char* apu = "Alice";
-    const char* apv = "Bob";
+    constexpr char alg[] = "A128GCM";
+    constexpr char apu[] = "Alice";
+    constexpr char apv[] = "Bob";
     binary_t otherinfo;
 
     compose_otherinfo (alg, apu, apv, 16 << 3, otherinfo);

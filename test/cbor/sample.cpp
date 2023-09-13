@@ -43,7 +43,7 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
         buffer_stream bs;
 
         dump_memory (bin, &bs);
-        std::cout << "encoded " << hex.c_str () <<std::endl;
+        std::cout << "encoded " << hex.c_str () << std::endl;
         std::cout << bs.c_str () << std::endl;
     }
 

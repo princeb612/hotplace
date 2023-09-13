@@ -423,7 +423,7 @@ return_t crypto_advisor::build_if_necessary ()
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
                 EVP_MD* evp_md = EVP_MD_fetch (nullptr, item->_fetchname, nullptr);
                 if (nullptr == evp_md) {
-                    __trace (errorcode_t::debug, "%s\n", item->_fetchname);
+                    __trace (errorcode_t::debug, "%s", item->_fetchname);
                 }
                 _md_map.insert (std::make_pair (item->_algorithm, evp_md));
 #else
