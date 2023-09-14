@@ -265,18 +265,18 @@ return_t vtprintf (stream_t* stream, variant_t vt, vtprintf_style_t style)
             case TYPE_NSTRING:
                 switch (style) {
                     case vtprintf_style_t::vtprintf_style_cbor:
-                        stream->printf ("\"%.*s\"", vt.data.nstr32.size, vt.data.nstr32.data);
+                        stream->printf ("\"%.*s\"", vt.size, vt.data.str);
                         break;
                     case vtprintf_style_t::vtprintf_style_normal:
                     default:
-                        stream->printf ("%.*s", vt.data.nstr32.size, vt.data.nstr32.data);
+                        stream->printf ("%.*s", vt.size, vt.data.str);
                         break;
                 }
                 break;
             case TYPE_BINARY:
             {
                 std::string temp;
-                base16_encode (vt.data.bstr32.data, vt.data.bstr32.size, temp);
+                base16_encode (vt.data.bstr, vt.size, temp);
                 switch (style) {
                     case vtprintf_style_t::vtprintf_style_cbor:
                         stream->printf ("h'%s'", temp.c_str ());

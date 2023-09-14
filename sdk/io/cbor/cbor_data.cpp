@@ -89,6 +89,16 @@ cbor_data::cbor_data (double value) : cbor_object (cbor_type_t::cbor_type_data)
     variant_set_double (_vt, value);
 }
 
+cbor_data::cbor_data (variant_t& vt) : cbor_object (cbor_type_t::cbor_type_data)
+{
+    variant_move (&_vt, &vt);
+}
+
+cbor_data::cbor_data (const variant_t& vt) : cbor_object (cbor_type_t::cbor_type_data)
+{
+    variant_copy (&_vt, &vt);
+}
+
 cbor_data::~cbor_data ()
 {
     clear ();
@@ -120,9 +130,9 @@ void cbor_data::represent (stream_t* s)
                 case cbor_tag_t::cbor_tag_negative_bignum:
                     // RFC 8949 Concise Binary Object Representation (CBOR)
                     // Decoders that understand these tags MUST be able to decode bignums that do have leading zeroes.
-                    if ((TYPE_BINARY == vt_own.type) && (vt_own.data.bstr32.size <= 16)) {
+                    if ((TYPE_BINARY == vt_own.type) && (vt_own.size <= 16)) {
                         cbor_bignum_int128 bn;
-                        int128 temp = bn.load (vt_own.data.bstr32.data, vt_own.data.bstr32.size).value ();
+                        int128 temp = bn.load (vt_own.data.bstr, vt_own.size).value ();
                         variant_t vt;
                         variant_init (vt);
                         if (cbor_tag_t::cbor_tag_positive_bignum == tag) {

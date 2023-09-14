@@ -114,6 +114,8 @@ public:
     cbor_data (fp16_t const& value);
     cbor_data (float value);
     cbor_data (double value);
+    cbor_data (variant_t& vt);
+    cbor_data (const variant_t& vt);
     virtual ~cbor_data ();
 
     const variant_t& data ();
@@ -239,6 +241,9 @@ public:
     cbor_pair (const char* key, cbor_data* object);
     cbor_pair (const char* key, cbor_map* object);
     cbor_pair (const char* key, cbor_array* object);
+    cbor_pair (cbor_data* key, cbor_data* object);
+    cbor_pair (cbor_data* key, cbor_map* object);
+    cbor_pair (cbor_data* key, cbor_array* object);
     virtual ~cbor_pair ();
 
     cbor_object* const left ();
@@ -246,7 +251,6 @@ public:
 
 protected:
     cbor_pair (cbor_data* key, cbor_object* object);
-
     return_t clear ();
 
     virtual void represent (stream_t* s);
@@ -425,6 +429,7 @@ public:
     return_t encode (binary_t& bin, double value);
     return_t encode (binary_t& bin, byte_t* value, size_t size);
     return_t encode (binary_t& bin, char* value);
+    return_t encode (binary_t& bin, char* value, size_t size);
     return_t encode (binary_t& bin, cbor_major_t type, cbor_control_t control, cbor_object* object);
     return_t encode (binary_t& bin, cbor_simple_t type, uint8 value);
 

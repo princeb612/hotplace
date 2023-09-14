@@ -118,7 +118,7 @@ enum variant_flag_t {
 
 typedef struct __variant_t {
     vartype_t type;
-    union {
+    union _data {
         bool b;
         //BOOL B; // uint32
         char c;   char jb;
@@ -137,85 +137,140 @@ typedef struct __variant_t {
         //short s;   ushort us;
         void*  p;
         char*  str;
-        struct _nstr32 {
-            uint32 size;
-            char* data;
-        } nstr32;
-        struct _bstr32 {
-            uint32 size;
-            byte_t* data;
-        } bstr32;
+        byte_t* bstr;
     } data;
+    uint32 size;
     uint8 flag;
 } variant_t;
 
-#define variant_init(vt) { vt.type = TYPE_NULL; memset (&vt.data, 0, sizeof (vt.data)); vt.flag = 0; }
+#define variant_init(vt) { vt.type = TYPE_NULL; memset (&vt.data, 0, sizeof (vt.data)); vt.size = 0; vt.flag = 0; }
 
-#define variant_set_bool(vt, value) { vt.type = TYPE_BOOL; vt.data.b = (value); vt.flag = 0; }
-#define variant_set_int8(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = (value); vt.flag = 0; }
-#define variant_set_uint8(vt, value) { vt.type = TYPE_UINT8; vt.data.ui8 = (value); vt.flag = 0; }
-#define variant_set_int16(vt, value) { vt.type = TYPE_INT16; vt.data.i16 = (value); vt.flag = 0; }
-#define variant_set_uint16(vt, value) { vt.type = TYPE_UINT16; vt.data.ui16 = (value); vt.flag = 0; }
-#define variant_set_int32(vt, value) { vt.type = TYPE_INT32; vt.data.i32 = (value); vt.flag = 0; }
-#define variant_set_uint32(vt, value) { vt.type = TYPE_UINT32; vt.data.ui32 = (value); vt.flag = 0; }
-#define variant_set_int64(vt, value) { vt.type = TYPE_INT64; vt.data.i64 = (value); vt.flag = 0; }
-#define variant_set_uint64(vt, value) { vt.type = TYPE_UINT64; vt.data.ui64 = (value); vt.flag = 0; }
+#define variant_set_bool(vt, value) { vt.type = TYPE_BOOL; vt.data.b = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_int8(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_uint8(vt, value) { vt.type = TYPE_UINT8; vt.data.ui8 = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_int16(vt, value) { vt.type = TYPE_INT16; vt.data.i16 = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_uint16(vt, value) { vt.type = TYPE_UINT16; vt.data.ui16 = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_int32(vt, value) { vt.type = TYPE_INT32; vt.data.i32 = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_uint32(vt, value) { vt.type = TYPE_UINT32; vt.data.ui32 = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_int64(vt, value) { vt.type = TYPE_INT64; vt.data.i64 = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_uint64(vt, value) { vt.type = TYPE_UINT64; vt.data.ui64 = (value); vt.size = 0; vt.flag = 0; }
 #if defined __SIZEOF_INT128__
-#define variant_set_int128(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = (value); vt.flag = 0; }
-#define variant_set_uint128(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = (value); vt.flag = 0; }
+#define variant_set_int128(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_uint128(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = (value); vt.size = 0; vt.flag = 0; }
 #endif
-#define variant_set_fp16(vt, value) { vt.type = TYPE_FP16; vt.data.ui16 = (value); vt.flag = 0; }
-#define variant_set_fp32(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = (value); vt.flag = 0; }
-#define variant_set_float(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = (value); vt.flag = 0; }
-#define variant_set_fp64(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = (value); vt.flag = 0; }
-#define variant_set_double(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = (value); vt.flag = 0; }
+#define variant_set_fp16(vt, value) { vt.type = TYPE_FP16; vt.data.ui16 = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_fp32(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_float(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_fp64(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_double(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = (value); vt.size = 0; vt.flag = 0; }
 #if defined __SIZEOF_INT128__
-#define variant_set_fp128(vt, value) { vt.type = TYPE_FP128; vt.data.ui128 = (value); vt.flag = 0; }
+#define variant_set_fp128(vt, value) { vt.type = TYPE_FP128; vt.data.ui128 = (value); vt.size = 0; vt.flag = 0; }
 #endif
 
-#define variant_set_bool_ptr(vt, value) { vt.type = TYPE_BOOL; vt.data.b = *(bool*) (value); vt.flag = 0; }
-#define variant_set_int8_ptr(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = *(int8*) (value); vt.flag = 0; }
-#define variant_set_uint8_ptr(vt, value) { vt.type = TYPE_UINT8; vt.data.ui8 = *(uint8*) (value); vt.flag = 0; }
-#define variant_set_int16_ptr(vt, value) { vt.type = TYPE_INT16; vt.data.i16 = *(int16*) (value); vt.flag = 0; }
-#define variant_set_uint16_ptr(vt, value) { vt.type = TYPE_UINT16; vt.data.ui16 = *(uint16*) (value); vt.flag = 0; }
-#define variant_set_int32_ptr(vt, value) { vt.type = TYPE_INT32; vt.data.i32 = *(int32*) (value); vt.flag = 0; }
-#define variant_set_uint32_ptr(vt, value) { vt.type = TYPE_UINT32; vt.data.ui32 = *(uint32*) (value); vt.flag = 0; }
-#define variant_set_int64_ptr(vt, value) { vt.type = TYPE_INT64; vt.data.i64 = *(int64*) (value); vt.flag = 0; }
-#define variant_set_uint64_ptr(vt, value) { vt.type = TYPE_UINT64; vt.data.ui64 = *(uint64*) (value); vt.flag = 0; }
+#define variant_set_bool_ptr(vt, value) { vt.type = TYPE_BOOL; vt.data.b = *(bool*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_int8_ptr(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = *(int8*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_uint8_ptr(vt, value) { vt.type = TYPE_UINT8; vt.data.ui8 = *(uint8*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_int16_ptr(vt, value) { vt.type = TYPE_INT16; vt.data.i16 = *(int16*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_uint16_ptr(vt, value) { vt.type = TYPE_UINT16; vt.data.ui16 = *(uint16*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_int32_ptr(vt, value) { vt.type = TYPE_INT32; vt.data.i32 = *(int32*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_uint32_ptr(vt, value) { vt.type = TYPE_UINT32; vt.data.ui32 = *(uint32*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_int64_ptr(vt, value) { vt.type = TYPE_INT64; vt.data.i64 = *(int64*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_uint64_ptr(vt, value) { vt.type = TYPE_UINT64; vt.data.ui64 = *(uint64*) (value); vt.size = 0; vt.flag = 0; }
 #if defined __SIZEOF_INT128__
-#define variant_set_int128_ptr(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = *(int128*) (value); vt.flag = 0; }
-#define variant_set_uint128_ptr(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = *(uint128*) (value); vt.flag = 0; }
+#define variant_set_int128_ptr(vt, value) { vt.type = TYPE_INT128; vt.data.i128 = *(int128*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_uint128_ptr(vt, value) { vt.type = TYPE_UINT128; vt.data.ui128 = *(uint128*) (value); vt.size = 0; vt.flag = 0; }
 #endif
-#define variant_set_float_ptr(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = *(float*) (value); vt.flag = 0; }
-#define variant_set_double_ptr(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = *(double*) (value); vt.flag = 0; }
+#define variant_set_float_ptr(vt, value) { vt.type = TYPE_FLOAT; vt.data.f = *(float*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_double_ptr(vt, value) { vt.type = TYPE_DOUBLE; vt.data.d = *(double*) (value); vt.size = 0; vt.flag = 0; }
 
-#define variant_set_pointer(vt, value) { vt.type = TYPE_POINTER; vt.data.p = (void*) (value); vt.flag = 0; }
-#define variant_set_str(vt, value) { vt.type = TYPE_STRING; vt.data.str = (char*) (value); vt.flag = 0; }
-#define variant_set_nstr(vt, value, size) { vt.type = TYPE_NSTRING; vt.data.nstr32.data = (value); vt.data.nstr32.size = (size); vt.flag = 0; }
-#define variant_set_bstr(vt, value, size) { vt.type = TYPE_BINARY; vt.data.bstr32.data = (value); vt.data.bstr32.size = (size); vt.flag = 0; }
+#define variant_set_pointer(vt, value) { vt.type = TYPE_POINTER; vt.data.p = (void*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_str(vt, value) { vt.type = TYPE_STRING; vt.data.str = (char*) (value); vt.size = 0; vt.flag = 0; }
+#define variant_set_nstr(vt, value, n) { vt.type = TYPE_NSTRING; vt.data.str = (value); vt.size = (n); vt.flag = 0; }
+#define variant_set_bstr(vt, value, n) { vt.type = TYPE_BINARY; vt.data.bstr = (value); vt.size = (n); vt.flag = 0; }
 #define variant_set(vt, vttype, value) { vt.type = vttype; vt.data.p = (void*) (value); vt.flag = 0; }
 // strdup
-#define variant_set_str_new(vt, value) { vt.type = TYPE_STRING; vt.data.str = strdup (value); vt.flag = variant_flag_t::flag_free; }
+#define variant_set_str_new(vt, value) { vt.type = TYPE_STRING; vt.data.str = strdup (value); vt.size = 0; vt.flag = variant_flag_t::flag_free; }
 // strndup
-#define variant_set_strn_new(vt, value, size) { vt.type = TYPE_STRING; char* p = (char*) malloc (size + 1); if (p) { strncpy (p, value, size); *(p + size) = 0; }; vt.data.str = p; vt.flag = variant_flag_t::flag_free; }
+#define variant_set_strn_new(vt, value, n) { vt.type = TYPE_STRING; char* p = (char*) malloc ((n) + 1); if (p) { strncpy (p, value, (n)); *(p + (n)) = 0; }; vt.data.str = p; vt.size = 0; vt.flag = variant_flag_t::flag_free; }
 // duplicate
-#define variant_set_bstr_new(vt, value, size) { vt.type = TYPE_BINARY; void* p = malloc (size); if (p) { memcpy (p, value, size); vt.data.bstr32.data = (byte_t*) p; vt.data.bstr32.size = (size); } else { vt.data.bstr32.data = (byte_t*) nullptr; vt.data.bstr32.size = 0; }; vt.flag = variant_flag_t::flag_free; }
+#define variant_set_bstr_new(vt, value, n) { vt.type = TYPE_BINARY; void* p = nullptr; if (n) { p = malloc (n); if (p) { memcpy (p, value, (n)); }; vt.data.bstr = (byte_t*) p; vt.size = (n); } else { vt.data.bstr = (byte_t*) nullptr; vt.size = 0; }; vt.flag = variant_flag_t::flag_free; }
 // strndup
-#define variant_set_nstr_new(vt, value, size) { vt.type = TYPE_NSTRING; char* p = (char*) malloc (size + 1); if (p) { strncpy (p, value, size); *(p + size) = 0; }; vt.nstr.data = p; vt.data.nstr32.size = (size); vt.flag = variant_flag_t::flag_free; }
+#define variant_set_nstr_new(vt, value, n) { vt.type = TYPE_NSTRING; char* p = nullptr; if (n) { p = (char*) malloc ((n) + 1); if (p) { strncpy (p, value, (n)); *(p + (n)) = 0; }; }; vt.data.str = p; vt.size = (n); vt.flag = variant_flag_t::flag_free; }
+
+static inline return_t variant_copy (variant_t* lhs, const variant_t* rhs)
+{
+    return_t ret = errorcode_t::success;
+    variant_t* object = nullptr;
+
+    __try2
+    {
+        if (nullptr == lhs || nullptr == rhs) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (variant_flag_t::flag_free == rhs->flag) {
+            switch (rhs->type) {
+                case TYPE_BINARY:
+                    variant_set_bstr_new ((*lhs), rhs->data.bstr, rhs->size);
+                    break;
+                case TYPE_NSTRING:
+                    variant_set_nstr_new ((*lhs), rhs->data.str, rhs->size);
+                    break;
+                case TYPE_STRING:
+                    variant_set_str_new ((*lhs), rhs->data.str);
+                    break;
+                default:
+                    memcpy (&lhs->data, &rhs->data, RTL_FIELD_SIZE (variant_t, data));
+                    break;
+            }
+        } else {
+            memcpy (&lhs->data, &rhs->data, RTL_FIELD_SIZE (variant_t, data));
+        }
+
+        lhs->type = rhs->type;
+        lhs->size = rhs->size;
+        lhs->flag = rhs->flag;
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+static inline return_t variant_move (variant_t* lhs, variant_t* rhs)
+{
+    return_t ret = errorcode_t::success;
+    variant_t* object = nullptr;
+
+    __try2
+    {
+        if (nullptr == lhs || nullptr == rhs) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        memcpy (lhs, rhs, sizeof (variant_t)); // copy including type and flag
+        rhs->flag = 0;
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
 
 static inline void variant_free (variant_t& vt)
 {
     if (variant_flag_t::flag_free == vt.flag) {
         switch (vt.type) {
             case TYPE_STRING:
+            case TYPE_NSTRING:
             case TYPE_POINTER:
-                if (vt.data.str) {
-                    free (vt.data.str);
-                }
-                break;
             case TYPE_BINARY:
-                if (vt.data.bstr32.data) {
-                    free (vt.data.bstr32.data);
+                if (vt.data.p) {
+                    free (vt.data.p);
                 }
                 break;
             default:

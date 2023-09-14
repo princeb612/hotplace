@@ -77,8 +77,11 @@ return_t cbor_encode::encode (binary_t& bin, variant_t vt)
             case TYPE_STRING:
                 encode (bin, vt.data.str);
                 break;
+            case TYPE_NSTRING:
+                encode (bin, vt.data.str, vt.size);
+                break;
             case TYPE_BINARY:
-                encode (bin, vt.data.bstr32.data, vt.data.bstr32.size);
+                encode (bin, vt.data.bstr, vt.size);
                 break;
             default:
                 break;
@@ -562,13 +565,8 @@ return_t cbor_encode::encode (binary_t& bin, byte_t* value, size_t size)
 
     __try2
     {
-        if (nullptr == value) {
-            uint8 major = cbor_major_t::cbor_major_simple;
-            bin.push_back ((major << 5) | 22);
-        } else {
-            encode (bin, cbor_major_t::cbor_major_bstr, size);
-            bin.insert (bin.end (), value, value + size);
-        }
+        encode (bin, cbor_major_t::cbor_major_bstr, size);
+        bin.insert (bin.end (), value, value + size);
     }
     __finally2
     {
@@ -580,6 +578,18 @@ return_t cbor_encode::encode (binary_t& bin, byte_t* value, size_t size)
 return_t cbor_encode::encode (binary_t& bin, char* value)
 {
     return_t ret = errorcode_t::success;
+    size_t size = 0;
+
+    if (nullptr != value) {
+        size = strlen (value);
+    }
+    ret = encode (bin, value, size);
+    return ret;
+}
+
+return_t cbor_encode::encode (binary_t& bin, char* value, size_t size)
+{
+    return_t ret = errorcode_t::success;
 
     __try2
     {
@@ -587,8 +597,8 @@ return_t cbor_encode::encode (binary_t& bin, char* value)
             uint8 major = cbor_major_t::cbor_major_simple;
             bin.push_back ((major << 5) | 22);
         } else {
-            encode (bin, cbor_major_t::cbor_major_tstr, strlen (value));
-            bin.insert (bin.end (), value, value + strlen (value));
+            encode (bin, cbor_major_t::cbor_major_tstr, size);
+            bin.insert (bin.end (), value, value + size);
         }
     }
     __finally2

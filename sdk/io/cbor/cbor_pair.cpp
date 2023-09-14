@@ -128,6 +128,27 @@ cbor_pair::cbor_pair (const char* key, cbor_array* object) : cbor_object (cbor_t
     }
 }
 
+cbor_pair::cbor_pair (cbor_data* key, cbor_data* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (key), _rhs (object)
+{
+    if (nullptr == key || nullptr == object) {
+        throw errorcode_t::insufficiency;
+    }
+}
+
+cbor_pair::cbor_pair (cbor_data* key, cbor_map* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (key), _rhs (object)
+{
+    if (nullptr == key || nullptr == object) {
+        throw errorcode_t::insufficiency;
+    }
+}
+
+cbor_pair::cbor_pair (cbor_data* key, cbor_array* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (key), _rhs (object)
+{
+    if (nullptr == key || nullptr == object) {
+        throw errorcode_t::insufficiency;
+    }
+}
+
 cbor_pair::cbor_pair (cbor_data* key, cbor_object* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (key), _rhs (object)
 {
     if (nullptr == key || nullptr == object) {
