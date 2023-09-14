@@ -218,9 +218,9 @@ enum cose_alg_t {
 
     // RFC 8152 Table 9: Algorithm Value for AES-GCM
     // RFC 9053 Table 5: Algorithm Values for AES-GCM
-    cose_a128_gcm               = 1,
-    cose_a192_gcm               = 2,
-    cose_a256_gcm               = 3,
+    cose_aes_128_gcm            = 1,
+    cose_aes_192_gcm            = 2,
+    cose_aes_256_gcm            = 3,
 
     // RFC 8152 Table 7: HMAC Algorithm Values
     // RFC 9053 Table 3: HMAC Algorithm Values
@@ -345,9 +345,9 @@ return_t cbor_dump (cbor_object* root, const char* expect_file, const char* text
     return ret;
 }
 
-void test_rfc8152_c1_1 ()
+void test_rfc8152_c_1_1 ()
 {
-    _test_case.begin ("RFC 8152 C.1.1.  Single Signature");
+    _test_case.begin ("RFC 8152 C.1");
 
     // Signature Algorithm: ECDSA w/ SHA-256, Curve P-256
 
@@ -385,9 +385,9 @@ void test_rfc8152_c1_1 ()
     root->release ();
 }
 
-void test_rfc8152_c1_2 ()
+void test_rfc8152_c_1_2 ()
 {
-    _test_case.begin ("RFC 8152 C.1.2.  Multiple Signers");
+    _test_case.begin ("RFC 8152 C.1");
 
     // Signature Algorithm: ECDSA w/ SHA-256, Curve P-256
     // Signature Algorithm: ECDSA w/ SHA-512, Curve P-521
@@ -446,9 +446,9 @@ void test_rfc8152_c1_2 ()
     root->release ();
 }
 
-void test_rfc8152_c1_3 ()
+void test_rfc8152_c_1_3 ()
 {
-    _test_case.begin ("RFC 8152 C.1.3.  Counter Signature");
+    _test_case.begin ("RFC 8152 C.1");
 
     // Signature Algorithm: ECDSA w/ SHA-256, Curve P-256
     // The same parameters are used for both the signature and the counter signature.
@@ -506,9 +506,9 @@ void test_rfc8152_c1_3 ()
     root->release ();
 }
 
-void test_rfc8152_c1_4 ()
+void test_rfc8152_c_1_4 ()
 {
-    _test_case.begin ("RFC 8152 C.1.4.  Signature with Criticality");
+    _test_case.begin ("RFC 8152 C.1");
 
     // Signature Algorithm: ECDSA w/ SHA-256, Curve P-256
     // There is a criticality marker on the "reserved" header parameter
@@ -561,8 +561,145 @@ void test_rfc8152_c1_4 ()
     root->release ();
 }
 
-void test_rfc8152_c6_1 ()
+void test_rfc8152_c_2_1 ()
 {
+    _test_case.begin ("RFC 8152 C.2");
+    cbor_publisher publisher;
+    cbor_array* root = new cbor_array ();
+    root->tag (true, cbor_tag_t::cose_tag_sign1);
+
+    binary_t bin_protected;
+    {
+        cbor_map* header_protected = new cbor_map ();
+        *header_protected << new cbor_pair (cose_header_t::cose_header_alg, new cbor_data (cose_alg_t::cose_es256));
+        publisher.publish (header_protected, &bin_protected);
+        header_protected->release ();
+    }
+
+    *root   << new cbor_data (bin_protected)
+            << new cbor_map ()
+            << new cbor_data (convert ("This is the content."))
+            << new cbor_data (base16_decode ("8eb33e4ca31d1c465ab05aac34cc6b23d58fef5c083106c4d25a91aef0b0117e2af9a291aa32e14ab834dc56ed2a223444547e01f11d3b0916e5a4c345cacb36"));
+
+    cbor_map* header_unprotected = (cbor_map*) (*root)[1];
+    {
+        *header_unprotected << new cbor_pair (cose_header_t::cose_header_kid, new cbor_data (convert ("11")));
+    }
+
+    cbor_dump (root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
+
+    root->release ();
+}
+
+void test_rfc8152_c_3_1 ()
+{
+    _test_case.begin ("RFC 8152 C.3");
+    cbor_publisher publisher;
+    cbor_array* root = new cbor_array ();
+    root->tag (true, cbor_tag_t::cose_tag_encrypt);
+
+    binary_t bin_protected;
+    {
+        cbor_map* header_protected = new cbor_map ();
+        *header_protected << new cbor_pair (cose_header_t::cose_header_alg, new cbor_data (cose_alg_t::cose_aes_128_gcm));
+        publisher.publish (header_protected, &bin_protected);
+        header_protected->release ();
+    }
+
+    constexpr char constexpr_ciphertext[] = "7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0";
+    *root   << new cbor_data (bin_protected)                            // protected
+            << new cbor_map ()                                          // unprotected
+            << new cbor_data (base16_decode (constexpr_ciphertext))     // ciphertext
+            << new cbor_array ();                                       // recipients
+
+    cbor_map* header_unprotected = (cbor_map*) (*root)[1];
+    {
+        *header_unprotected << new cbor_pair (cose_header_t::cose_header_iv, new cbor_data (base16_decode ("c9cf4df2fe6c632bf7886413")));
+    }
+
+    cbor_array* recipients = (cbor_array*) (*root)[3];
+
+    {
+        cbor_array* recipient = new cbor_array ();
+        binary_t bin_recipient_protected;
+        {
+            cbor_map* recipient_protected = new cbor_map ();
+            *recipient_protected << new cbor_pair (cose_header_t::cose_header_alg, new cbor_data (cose_alg_t::cose_ecdh_es_hkdf_256));
+            publisher.publish (recipient_protected, &bin_recipient_protected);
+            recipient_protected->release ();
+        }
+        *recipient  << new cbor_data (bin_recipient_protected)  // protected
+                    << new cbor_map ()                          // unprotected
+                    << new cbor_data (base16_decode (""));      // ciphertext
+
+        cbor_map* recipient_unprotected = (cbor_map*) (*recipient)[1];
+        {
+            cbor_map* ephemeral = new cbor_map ();
+            *ephemeral  << new cbor_pair (1, new cbor_data (2))                                                                                             // kty
+                        << new cbor_pair (-1, new cbor_data (1))                                                                                            // crv
+                        << new cbor_pair (-2, new cbor_data (base16_decode ("98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280")))           // x
+                        << new cbor_pair (-3, new cbor_data (true));                                                                                        // y
+
+            *recipient_unprotected  << new cbor_pair (cose_alg_param_t::cose_ephemeral_key, ephemeral)                                                      // epk
+                                    << new cbor_pair (cose_header_t::cose_header_kid, new cbor_data (convert ("meriadoc.brandybuck@buckland.example")));    // kid
+        }
+
+        *recipients << recipient;
+    }
+
+    cbor_dump (root, "rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
+
+    root->release ();
+}
+
+void test_rfc8152_c_3_2 ()
+{
+    _test_case.begin ("RFC 8152 C.3");
+}
+
+void test_rfc8152_c_3_3 ()
+{
+    _test_case.begin ("RFC 8152 C.3");
+}
+
+void test_rfc8152_c_3_4 ()
+{
+    _test_case.begin ("RFC 8152 C.3");
+}
+
+void test_rfc8152_c_4_1 ()
+{
+    _test_case.begin ("RFC 8152 C.4");
+}
+
+void test_rfc8152_c_4_2 ()
+{
+    _test_case.begin ("RFC 8152 C.4");
+}
+
+void test_rfc8152_c_5_1 ()
+{
+    _test_case.begin ("RFC 8152 C.5");
+}
+
+void test_rfc8152_c_5_2 ()
+{
+    _test_case.begin ("RFC 8152 C.5");
+}
+
+void test_rfc8152_c_5_3 ()
+{
+    _test_case.begin ("RFC 8152 C.5");
+}
+
+void test_rfc8152_c_5_4 ()
+{
+    _test_case.begin ("RFC 8152 C.5");
+}
+
+void test_rfc8152_c_6_1 ()
+{
+    _test_case.begin ("RFC 8152 C.6");
     // C.6.1.  Shared Secret Direct MAC
     cbor_publisher publisher;
 
@@ -583,6 +720,16 @@ void test_rfc8152_c6_1 ()
     cbor_dump (root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
 
     root->release ();
+}
+
+void test_rfc8152_c_7_1 ()
+{
+    _test_case.begin ("RFC 8152 C.7");
+}
+
+void test_rfc8152_c_7_2 ()
+{
+    _test_case.begin ("RFC 8152 C.7");
 }
 
 return_t BIO_to_string (BIO* bio, std::string& data)
@@ -700,22 +847,37 @@ int main ()
 {
     // check format
     // install
-    //      pacman -S rubygens (MINGW)
-    //      yum install rubygens (RHEL)
+    //      pacman -S rubygems (MINGW)
+    //      yum install rubygems (RHEL)
     //      gem install cbor-diag
     // diag2cbor.rb < inputfile > outputfile
     // compare
     //      cat outputfile | xxd
     //      xxd -ps outputfile
 
-    test_rfc8152_c1_1 ();
-    test_rfc8152_c1_2 ();
-    test_rfc8152_c1_3 ();
-    test_rfc8152_c1_4 ();
-    test_rfc8152_c6_1 ();
+    // interface design
+    // what kind of member methods required ?
+    test_rfc8152_c_1_1 ();
+    test_rfc8152_c_1_2 ();
+    test_rfc8152_c_1_3 ();
+    test_rfc8152_c_1_4 ();
+    test_rfc8152_c_2_1 ();
+    test_rfc8152_c_3_1 ();
+    test_rfc8152_c_3_2 ();
+    test_rfc8152_c_3_3 ();
+    test_rfc8152_c_3_4 ();
+    test_rfc8152_c_4_1 ();
+    test_rfc8152_c_4_2 ();
+    test_rfc8152_c_5_1 ();
+    test_rfc8152_c_5_2 ();
+    test_rfc8152_c_5_3 ();
+    test_rfc8152_c_5_4 ();
+    test_rfc8152_c_6_1 ();
+    test_rfc8152_c_7_1 ();
+    test_rfc8152_c_7_2 ();
 
     // and then refactor JOSE
-    //try_refactor_jose_sign ();
+    // try_refactor_jose_sign ();
 
     _test_case.report (5);
     return _test_case.result ();

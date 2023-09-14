@@ -20,6 +20,44 @@ namespace crypto {
 
 /**
  * @brief openssl_crypt
+ * @example
+ *          constexpr byte_t data_plain[] = "still a man hears what he wants to hear and disregards the rest";
+ *          size_t size_plain = RTL_NUMBER_OF (data_plain);
+ *
+ *          openssl_crypt crypt;
+ *          crypt_context_t* handle = nullptr;
+ *          binary_t data_encrypted;
+ *          binary_t data_decrypted;
+ *
+ *          // key
+ *          binary_t key;
+ *          binary_t iv;
+ *          key.resize (32);
+ *          iv.resize (32);
+ *          for (int i = 0; i < 32; i++) {
+ *              key[i] = i;
+ *              iv[i] = i;
+ *          }
+ *
+ *          // block cipher
+ *          {
+ *              crypt.open (&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, &key[0], key.size (), &iv[0], iv.size ());
+ *              crypt.encrypt (handle, data_plain, size_plain, data_encrypted);
+ *              crypt.decrypt (handle, &data_encrypted[0], data_encrypted.size (), data_decrypted);
+ *              crypt.close (handle);
+ *          }
+ *
+ *          // AEAD
+ *          {
+ *              binary_t aad;
+ *              binary_t tag;
+ *              openssl_prng rand;
+ *              rand.random (aad, 32);
+ *              crypt.open (&handle, crypt_algorithm_t::aes256, crypt_mode_t::gcm, &key[0], key.size (), &iv[0], iv.size ());
+ *              crypt.encrypt2 (handle, data_plain, size_plain, data_encrypted, &aad, &tag);
+ *              crypt.decrypt2 (handle, &data_encrypted[0], data_encrypted.size (), data_decrypted, &aad, &tag);
+ *              crypt.close (handle);
+ *          }
  */
 class openssl_crypt : public crypt_t
 {
