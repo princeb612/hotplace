@@ -560,7 +560,7 @@ protected:
 
     return_t insert (cbor_reader_context_t* handle, cbor_object* objct);
 
-    bool is_enough (cbor_object* object);
+    bool is_capacity_full (cbor_object* object);
 
 private:
 };

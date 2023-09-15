@@ -507,27 +507,30 @@ return_t cbor_dump (cbor_object* root, const char* expect_file, const char* text
         {
             test_case_notimecheck notimecheck (_test_case);
 
+            file_stream fs;
+            ret = fs.open (expect_file);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+            fs.begin_mmap ();
+
+            byte_t* file_contents = fs.data ();
+            size_t file_size = fs.size ();
+            expect.insert (expect.end (), file_contents, file_contents + file_size);
+
+            buffer_stream bs;
+            dump_memory (expect, &bs);
+            std::cout << "test vector" << std::endl << bs.c_str () << std::endl;
+        }
+
+        {
+            test_case_notimecheck notimecheck (_test_case);
+
             std::cout << "diagnostic\n" << diagnostic.c_str () << std::endl;
 
             buffer_stream bs;
             dump_memory (bin, &bs);
             std::cout << "encoded" << std::endl << bs.c_str () << std::endl;
-
-            {
-                file_stream fs;
-                ret = fs.open (expect_file);
-                if (errorcode_t::success != ret) {
-                    __leave2;
-                }
-                fs.begin_mmap ();
-
-                byte_t* file_contents = fs.data ();
-                size_t file_size = fs.size ();
-                expect.insert (expect.end (), file_contents, file_contents + file_size);
-            }
-
-            dump_memory (expect, &bs);
-            std::cout << "test vector" << std::endl << bs.c_str () << std::endl;
 
             if (bin.size () == expect.size ()) {
                 if (0 == memcmp (&bin[0], &expect[0], bin.size ())) {
@@ -541,21 +544,22 @@ return_t cbor_dump (cbor_object* root, const char* expect_file, const char* text
             _test_case.test (ret, __FUNCTION__, "check1.cborcheck %s", text ? text : "");
         }
 
+        buffer_stream diagnostic2;
+        binary_t bin2;
+
+        cbor_reader reader;
+        cbor_reader_context_t* handle = nullptr;
+
+        reader.open (&handle);
+        reader.parse (handle, bin);
+        reader.publish (handle, &diagnostic2);
+        reader.publish (handle, &bin2);
+        reader.close (handle);
+
         {
             test_case_notimecheck notimecheck (_test_case);
+
             printf ("reparse\n");
-
-            buffer_stream diagnostic2;
-            binary_t bin2;
-
-            cbor_reader reader;
-            cbor_reader_context_t* handle = nullptr;
-
-            reader.open (&handle);
-            reader.parse (handle, bin);
-            reader.publish (handle, &diagnostic2);
-            reader.publish (handle, &bin2);
-            reader.close (handle);
 
             std::cout << "diagnostic\n" << diagnostic2.c_str () << std::endl;
 

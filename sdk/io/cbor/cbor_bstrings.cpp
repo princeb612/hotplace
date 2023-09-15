@@ -61,19 +61,7 @@ cbor_bstrings& cbor_bstrings::add (cbor_object* object, cbor_object* extra)
 
 cbor_bstrings& cbor_bstrings::add (const byte_t * bstr, size_t size)
 {
-    return_t ret = errorcode_t::success;
-    cbor_data* object = nullptr;
-
-    __try2
-    {
-        __try_new_catch (object, new cbor_data (bstr, size), ret, __leave2);
-
-        _array.push_back (object);
-    }
-    __finally2
-    {
-        // do nothing
-    }
+    join (new cbor_data (bstr, size));
     return *this;
 }
 

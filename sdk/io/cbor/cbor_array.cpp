@@ -78,19 +78,19 @@ cbor_array& cbor_array::add (cbor_map* object)
 
 cbor_array& cbor_array::operator << (cbor_array* object)
 {
-    add (object);
+    join (object);
     return *this;
 }
 
 cbor_array& cbor_array::operator << (cbor_data* object)
 {
-    add (object);
+    join (object);
     return *this;
 }
 
 cbor_array& cbor_array::operator << (cbor_map* object)
 {
-    add (object);
+    join (object);
     return *this;
 }
 

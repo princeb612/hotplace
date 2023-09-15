@@ -424,8 +424,7 @@ return_t cbor_reader::insert (cbor_reader_context_t* handle, cbor_object* object
                 }
                 break;
             default:
-                // is_enough --> codes move down
-                while (parent && is_enough (parent)) {
+                while (parent && is_capacity_full (parent)) {
                     handle->parents.pop_back ();
                     if (handle->parents.size ()) {
                         parent = handle->parents.back ();
@@ -435,9 +434,6 @@ return_t cbor_reader::insert (cbor_reader_context_t* handle, cbor_object* object
                 }
                 break;
         }
-
-        //if (parent) {
-        //}
     }
     __finally2
     {
@@ -446,7 +442,7 @@ return_t cbor_reader::insert (cbor_reader_context_t* handle, cbor_object* object
     return ret;
 }
 
-bool cbor_reader::is_enough (cbor_object* object)
+bool cbor_reader::is_capacity_full (cbor_object* object)
 {
     bool ret = false;
 
