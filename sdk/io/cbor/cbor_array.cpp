@@ -60,61 +60,19 @@ return_t cbor_array::join (cbor_object* object, cbor_object* extra)
 
 cbor_array& cbor_array::add (cbor_array* object)
 {
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        if (nullptr == object) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        _array.push_back (object);
-    }
-    __finally2
-    {
-        // do nothing
-    }
+    join (object);
     return *this;
 }
 
 cbor_array& cbor_array::add (cbor_data* object)
 {
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        if (nullptr == object) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        _array.push_back (object);
-    }
-    __finally2
-    {
-        // do nothing
-    }
+    join (object);
     return *this;
 }
 
 cbor_array& cbor_array::add (cbor_map* object)
 {
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        if (nullptr == object) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        _array.push_back (object);
-    }
-    __finally2
-    {
-        // do nothing
-    }
+    join (object);
     return *this;
 }
 

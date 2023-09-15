@@ -24,12 +24,6 @@ cbor_bstrings::~cbor_bstrings ()
     clear ();
 }
 
-cbor_bstrings& cbor_bstrings::add (cbor_object* object, cbor_object* extra)
-{
-    join (object, extra);
-    return *this;
-}
-
 return_t cbor_bstrings::join (cbor_object* object, cbor_object* extra)
 {
     return_t ret = errorcode_t::success;
@@ -57,6 +51,12 @@ return_t cbor_bstrings::join (cbor_object* object, cbor_object* extra)
         // do nothing
     }
     return ret;
+}
+
+cbor_bstrings& cbor_bstrings::add (cbor_object* object, cbor_object* extra)
+{
+    join (object, extra);
+    return *this;
 }
 
 cbor_bstrings& cbor_bstrings::add (const byte_t * bstr, size_t size)

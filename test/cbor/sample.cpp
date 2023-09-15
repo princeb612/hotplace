@@ -599,7 +599,7 @@ void test_parse (const char* input, const char* diagnostic, const char* diagnost
     reader.open (&handle);
     reader.parse (handle, input);
     reader.publish (handle, &bs);
-    reader.publish (handle, bin);
+    reader.publish (handle, &bin);
     reader.close (handle);
 
     bool test = false;

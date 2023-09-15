@@ -87,6 +87,7 @@ return_t cbor_map::join (cbor_object* object, cbor_object* extra)
             switch (rhs_type) {
                 case cbor_type_t::cbor_type_data:
                 case cbor_type_t::cbor_type_array:
+                case cbor_type_t::cbor_type_map:
                 case cbor_type_t::cbor_type_simple:
                     rhs_ret = true;
                 default:
@@ -115,12 +116,13 @@ return_t cbor_map::join (cbor_object* object, cbor_object* extra)
     {
         // do nothing
     }
+
     return ret;
 }
 
 cbor_map& cbor_map::add (cbor_object* object, cbor_object* extra)
 {
-    add (object, extra);
+    join (object, extra);
     return *this;
 }
 

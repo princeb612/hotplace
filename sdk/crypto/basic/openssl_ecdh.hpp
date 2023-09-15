@@ -42,8 +42,8 @@ EVP_PKEY* get_peer_key (EVP_PKEY* pkey);
  *          keyset.add_ec (&keys, "alice", NID_secp384r1);
  *          keyset.add_ec (&keys, "bob", NID_secp384r1);
  *
- *          EVP_PKEY* alicePrivateKey = (EVP_PKEY*) keys.get_by_name (CRYPTO_KEY_EC, "alice");
- *          EVP_PKEY* bobPrivateKey = (EVP_PKEY*) keys.get_by_name (CRYPTO_KEY_EC, "bob");
+ *          EVP_PKEY* alicePrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_key_t::ec_key, "alice");
+ *          EVP_PKEY* bobPrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_key_t::ec_key, "bob");
  *
  *          EVP_PKEY* alicePublicKey = (EVP_PKEY*) get_peer_key (alicePrivateKey);
  *          EVP_PKEY* bobPublicKey = (EVP_PKEY*) get_peer_key (bobPrivateKey);

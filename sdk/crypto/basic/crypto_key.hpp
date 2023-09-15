@@ -80,8 +80,8 @@ typedef struct _crypto_key_object_t {
  * @remarks
  *          crypto_key key;
  *          // generate a key
- *          key.generate (CRYPTO_KEY_RSA, 1024, "key1");
- *          key.generate (CRYPTO_KEY_HMAC, 32, "key1");
+ *          key.generate (crypto_key_t::rsa_key, 1024, "key1");
+ *          key.generate (crypto_key_t::hmac_key, 32, "key1");
  *          // generate a key
  *          crypto_keychain keyset;
  *          keyset.add_rsa (&key, 1024);// 1024 bits
@@ -129,25 +129,25 @@ public:
     /**
      * @brief generate
      * @param crypto_key_t type [in] CRYPTO_KEY_TYPE
-     * @param unsigned int param [in] CRYPTO_KEY_HMAC in bytes
-     *                                CRYPTO_KEY_RSA in bits
-     *                                CRYPTO_KEY_EC 256, 384, 521
-     *                                CRYPTO_KEY_OKP 25518, 448
+     * @param unsigned int param [in] crypto_key_t::hmac_key in bytes
+     *                                crypto_key_t::rsa_key in bits
+     *                                crypto_key_t::ec_key 256, 384, 521
+     *                                crypto_key_t::okp_key 25518, 448
      * @param const char* kid [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
      * @return error code (see error.hpp)
      * @remarks
-     *          key.generate (CRYPTO_KEY_HMAC, 32,    "kid", crypto_use_t::use_any); // oct
-     *          key.generate (CRYPTO_KEY_RSA,  2048,  "kid", crypto_use_t::use_any); // RSA
-     *          key.generate (CRYPTO_KEY_EC,   256,   "kid", crypto_use_t::use_any); // EC, P-256
-     *          key.generate (CRYPTO_KEY_EC,   384,   "kid", crypto_use_t::use_any); // EC, P-384
-     *          key.generate (CRYPTO_KEY_EC,   521,   "kid", crypto_use_t::use_any); // EC, P-521
-     *          key.generate (CRYPTO_KEY_OKP,  25519, "kid", crypto_use_t::use_any); // OKP, X25519 *
-     *          key.generate (CRYPTO_KEY_OKP,  448,   "kid", crypto_use_t::use_any); // OKP, X448 *
-     *          key.generate (CRYPTO_KEY_OKP,  25519, "kid", CRYPTO_USE_ENC); // OKP, X25519
-     *          key.generate (CRYPTO_KEY_OKP,  448,   "kid", CRYPTO_USE_ENC); // OKP, X448
-     *          key.generate (CRYPTO_KEY_OKP,  25519, "kid", CRYPTO_USE_SIG); // OKP, Ed25519
-     *          key.generate (CRYPTO_KEY_OKP,  448,   "kid", CRYPTO_USE_SIG); // OKP, Ed448
+     *          key.generate (crypto_key_t::hmac_key, 32,    "kid", crypto_use_t::use_any); // oct
+     *          key.generate (crypto_key_t::rsa_key,  2048,  "kid", crypto_use_t::use_any); // RSA
+     *          key.generate (crypto_key_t::ec_key,   256,   "kid", crypto_use_t::use_any); // EC, P-256
+     *          key.generate (crypto_key_t::ec_key,   384,   "kid", crypto_use_t::use_any); // EC, P-384
+     *          key.generate (crypto_key_t::ec_key,   521,   "kid", crypto_use_t::use_any); // EC, P-521
+     *          key.generate (crypto_key_t::okp_key,  25519, "kid", crypto_use_t::use_any); // OKP, X25519 *
+     *          key.generate (crypto_key_t::okp_key,  448,   "kid", crypto_use_t::use_any); // OKP, X448 *
+     *          key.generate (crypto_key_t::okp_key,  25519, "kid", crypto_use_t::use_enc); // OKP, X25519
+     *          key.generate (crypto_key_t::okp_key,  448,   "kid", crypto_use_t::use_enc); // OKP, X448
+     *          key.generate (crypto_key_t::okp_key,  25519, "kid", crypto_use_t::use_sig); // OKP, Ed25519
+     *          key.generate (crypto_key_t::okp_key,  448,   "kid", crypto_use_t::use_sig); // OKP, Ed448
      */
     return_t generate (crypto_key_t type, unsigned int param, const char* kid, crypto_use_t use = crypto_use_t::use_any);
 
@@ -280,7 +280,7 @@ public:
      * @brief public key
      * @param EVP_PKEY* pkey [in]
      * @param int flag [in] 0 public only, 1 also private
-     * @param crypto_key_t type [out] CRYPTO_KEY_HMAC, CRYPTO_KEY_RSA, CRYPTO_KEY_EC
+     * @param crypto_key_t type [out] crypto_key_t::hmac_key, crypto_key_t::rsa_key, crypto_key_t::ec_key
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      * @parambinary_t& priv [out]

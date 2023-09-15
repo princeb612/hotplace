@@ -549,7 +549,7 @@ public:
     return_t parse (cbor_reader_context_t* handle, binary_t const& bin);
 
     return_t publish (cbor_reader_context_t* handle, stream_t* stream);
-    return_t publish (cbor_reader_context_t* handle, binary_t& bin);
+    return_t publish (cbor_reader_context_t* handle, binary_t* bin);
 
 protected:
     return_t push (cbor_reader_context_t* handle, uint8 type, int128 data, uint32 flags);

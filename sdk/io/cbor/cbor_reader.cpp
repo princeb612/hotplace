@@ -115,7 +115,6 @@ return_t cbor_reader::parse (cbor_reader_context_t* handle, binary_t const& expr
 
         for (i < 0; i < size; i++) {
             cur = *(data + i);
-
             byte_t lead_type = (cur & 0xe0) >> 5;
             byte_t lead_value = (cur & 0x1f);
             int128 value = lead_value;
@@ -165,7 +164,9 @@ return_t cbor_reader::parse (cbor_reader_context_t* handle, binary_t const& expr
                 if (0 == (cbor_flag_t::cbor_indef & flags)) {
                     i += value;
                 }
-            } else if ((cbor_major_t::cbor_major_array == lead_type) || (cbor_major_t::cbor_major_map == lead_type)) {
+            } else if (cbor_major_t::cbor_major_array == lead_type) {
+                push (handle, lead_type, value, flags);
+            } else if (cbor_major_t::cbor_major_map == lead_type) {
                 push (handle, lead_type, value, flags);
             } else if (cbor_major_t::cbor_major_tag == lead_type) {
                 handle->tag_value = value;
@@ -409,6 +410,7 @@ return_t cbor_reader::insert (cbor_reader_context_t* handle, cbor_object* object
                 }
             } else {
                 ret = parent->join (object);
+
             }
         }
 
@@ -417,16 +419,25 @@ return_t cbor_reader::insert (cbor_reader_context_t* handle, cbor_object* object
             case cbor_type_t::cbor_type_map:
             case cbor_type_t::cbor_type_bstrs:
             case cbor_type_t::cbor_type_tstrs:
-                handle->parents.push_back (object);
+                if (object->capacity ()) {
+                    handle->parents.push_back (object);
+                }
                 break;
             default:
-                if (parent) {
-                    if (is_enough (parent)) {
-                        handle->parents.pop_back ();
+                // is_enough --> codes move down
+                while (parent && is_enough (parent)) {
+                    handle->parents.pop_back ();
+                    if (handle->parents.size ()) {
+                        parent = handle->parents.back ();
+                    } else {
+                        break;
                     }
                 }
                 break;
         }
+
+        //if (parent) {
+        //}
     }
     __finally2
     {
@@ -475,20 +486,20 @@ return_t cbor_reader::publish (cbor_reader_context_t* handle, stream_t* stream)
     return ret;
 }
 
-return_t cbor_reader::publish (cbor_reader_context_t* handle, binary_t& bin)
+return_t cbor_reader::publish (cbor_reader_context_t* handle, binary_t* bin)
 {
     return_t ret = errorcode_t::success;
 
     __try2
     {
-        if (nullptr == handle) {
+        if (nullptr == handle || nullptr == bin) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         cbor_publisher publisher;
 
-        publisher.publish (handle->root, &bin);
+        publisher.publish (handle->root, bin);
     }
     __finally2
     {

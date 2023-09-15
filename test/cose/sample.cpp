@@ -503,6 +503,7 @@ return_t cbor_dump (cbor_object* root, const char* expect_file, const char* text
         binary_t bin;
         publisher.publish (root, &bin);
 
+        binary_t expect;
         {
             test_case_notimecheck notimecheck (_test_case);
 
@@ -511,8 +512,6 @@ return_t cbor_dump (cbor_object* root, const char* expect_file, const char* text
             buffer_stream bs;
             dump_memory (bin, &bs);
             std::cout << "encoded" << std::endl << bs.c_str () << std::endl;
-
-            binary_t expect;
 
             {
                 file_stream fs;
@@ -539,11 +538,46 @@ return_t cbor_dump (cbor_object* root, const char* expect_file, const char* text
             } else {
                 ret = errorcode_t::mismatch;
             }
+            _test_case.test (ret, __FUNCTION__, "check1.cborcheck %s", text ? text : "");
+        }
+
+        {
+            test_case_notimecheck notimecheck (_test_case);
+            printf ("reparse\n");
+
+            buffer_stream diagnostic2;
+            binary_t bin2;
+
+            cbor_reader reader;
+            cbor_reader_context_t* handle = nullptr;
+
+            reader.open (&handle);
+            reader.parse (handle, bin);
+            reader.publish (handle, &diagnostic2);
+            reader.publish (handle, &bin2);
+            reader.close (handle);
+
+            std::cout << "diagnostic\n" << diagnostic2.c_str () << std::endl;
+
+            buffer_stream bs;
+            dump_memory (bin2, &bs);
+            std::cout << "encoded" << std::endl << bs.c_str () << std::endl;
+
+            if (bin2.size () == expect.size ()) {
+                if (0 == memcmp (&bin2[0], &expect[0], bin2.size ())) {
+                    // do nothing
+                } else {
+                    ret = errorcode_t::mismatch;
+                }
+            } else {
+                ret = errorcode_t::mismatch;
+            }
+            _test_case.test (ret, __FUNCTION__, "check2.cborparse %s", text ? text : "");
         }
     }
     __finally2
     {
-        _test_case.test (ret, __FUNCTION__, text ? text : "");
+        // do nothing
     }
     return ret;
 }

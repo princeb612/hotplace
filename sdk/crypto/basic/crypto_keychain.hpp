@@ -50,8 +50,8 @@ public:
      *    EVP_PKEY* pkey1 = nullptr, pkey2 = nullptr;
      *    keygen.add_rsa(&crypto_key, "kid.1", 2048);
      *    keygen.add_rsa(&crypto_key, "kid.2", 2048);
-     *    pkey1 = crypto_key.find_first_of(CRYPTO_KEY_RSA, kid);
-     *    pkey2 = crypto_key.get_by_name(CRYPTO_KEY_RSA, "kid.2");
+     *    pkey1 = crypto_key.find_first_of(crypto_key_t::rsa_key, kid);
+     *    pkey2 = crypto_key.get_by_name(crypto_key_t::rsa_key, "kid.2");
      */
     return_t add_rsa (crypto_key* cryptokey, const char* kid, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /**
@@ -168,8 +168,8 @@ public:
      *      keyset.add_ec (&keys, "alice", NID_secp384r1);
      *      keyset.add_ec (&keys, "bob", NID_secp384r1);
      *
-     *      EVP_PKEY* alicePrivateKey = (EVP_PKEY*) keys.get_by_name (CRYPTO_KEY_EC, "alice");
-     *      EVP_PKEY* bobPrivateKey = (EVP_PKEY*) keys.get_by_name (CRYPTO_KEY_EC, "bob");
+     *      EVP_PKEY* alicePrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_key_t::ec_key, "alice");
+     *      EVP_PKEY* bobPrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_key_t::ec_key, "bob");
      *
      *      EVP_PKEY* alicePublicKey = (EVP_PKEY*) get_peer_key (alicePrivateKey);
      *      EVP_PKEY* bobPublicKey = (EVP_PKEY*) get_peer_key (bobPrivateKey);
@@ -418,7 +418,7 @@ public:
      * @return error code (see error.hpp)
      * @example
      *          const char* passphrase = "password";
-     *          keygen.add_oct (&key, nullptr, jwa_t::jwa_pbes2_hs256_a128kw, (byte_t*) passphrase, strlen (passphrase), CRYPTO_USE_ENC);
+     *          keygen.add_oct (&key, nullptr, jwa_t::jwa_pbes2_hs256_a128kw, (byte_t*) passphrase, strlen (passphrase), crypto_use_t::use_enc);
      */
     return_t add_oct (crypto_key* cryptokey, const char* kid, const char* alg, const byte_t* k, size_t size,
                       crypto_use_t use = crypto_use_t::use_any);
