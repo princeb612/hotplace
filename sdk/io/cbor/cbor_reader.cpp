@@ -419,19 +419,12 @@ return_t cbor_reader::insert (cbor_reader_context_t* handle, cbor_object* object
             case cbor_type_t::cbor_type_map:
             case cbor_type_t::cbor_type_bstrs:
             case cbor_type_t::cbor_type_tstrs:
-                if (object->capacity ()) {
+                if (object->capacity () || (cbor_flag_t::cbor_indef & object->get_flags ())) {
                     handle->parents.push_back (object);
                 }
                 break;
             default:
-                while (parent && is_capacity_full (parent)) {
-                    handle->parents.pop_back ();
-                    if (handle->parents.size ()) {
-                        parent = handle->parents.back ();
-                    } else {
-                        break;
-                    }
-                }
+                pop (handle, parent);
                 break;
         }
     }
@@ -439,6 +432,35 @@ return_t cbor_reader::insert (cbor_reader_context_t* handle, cbor_object* object
     {
         // do nothing
     }
+    return ret;
+}
+
+return_t cbor_reader::pop (cbor_reader_context_t* handle, cbor_object* object)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == handle || nullptr == object) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        while (object && is_capacity_full (object)) {
+            handle->parents.pop_back ();
+
+            if (handle->parents.size () > 0) {
+                object = handle->parents.back ();
+            } else {
+                break;
+            }
+        }
+    }
+    __finally2
+    {
+        // do nothing
+    }
+
     return ret;
 }
 
