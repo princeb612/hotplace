@@ -12,6 +12,7 @@
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
+#include <fstream>
 
 namespace hotplace {
 namespace crypto {
@@ -25,6 +26,169 @@ crypto_key::~crypto_key ()
 {
     clear ();
     // do nothing
+}
+
+return_t crypto_key::load_pem (const char* buffer, int flags, crypto_use_t use)
+{
+    return_t ret = errorcode_t::success;
+    BIO* bio_pub = BIO_new (BIO_s_mem ());
+    BIO* bio_priv = BIO_new (BIO_s_mem ());
+
+    __try2
+    {
+        if (nullptr == buffer) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        size_t len = strlen (buffer);
+        BIO_write (bio_pub, buffer, len);
+        BIO_write (bio_priv, buffer, len);
+
+        while (1) {
+            EVP_PKEY* pkey_pub = nullptr;
+            pkey_pub = PEM_read_bio_PUBKEY (bio_pub, nullptr, nullptr, nullptr);
+            if (pkey_pub) {
+                crypto_key_object_t key;
+                key.pkey = pkey_pub;
+                key.use = use;
+                add (key);
+            } else {
+                break;
+            }
+        }
+
+        while (1) {
+            EVP_PKEY* pkey_priv = nullptr;
+            pkey_priv = PEM_read_bio_PrivateKey (bio_priv, nullptr, nullptr, nullptr);
+            if (pkey_priv) {
+                crypto_key_object_t key;
+                key.pkey = pkey_priv;
+                key.use = use;
+                add (key);
+            } else {
+                break;
+            }
+        }
+    }
+    __finally2
+    {
+        BIO_free_all (bio_pub);
+        BIO_free_all (bio_priv);
+    }
+    return ret;
+}
+
+return_t crypto_key::load_pem_file (const char* file, int flags, crypto_use_t use)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == file) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        std::string buffer;
+        std::ifstream fs (file);
+        if (fs.is_open ()) {
+            std::getline (fs, buffer, (char) fs.eof ());
+        } else {
+            ret = errorcode_t::failed;
+            __leave2;
+        }
+
+        ret = load_pem (buffer.c_str (), flags, use);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+static void pem_writer (crypto_key_object_t* key, void* param)
+{
+    __try2
+    {
+        if (nullptr == key || nullptr == param) {
+            __leave2;
+        }
+
+        BIO* out = (BIO*) param;
+        EVP_PKEY* pkey = (EVP_PKEY *) key->pkey;
+        int type = EVP_PKEY_id (pkey);
+
+        if (EVP_PKEY_HMAC == type) {
+            PEM_write_bio_PrivateKey (out, pkey, nullptr, nullptr, 0, nullptr, nullptr);
+        } else if (EVP_PKEY_RSA == type) {
+            if (RSA_get0_d (EVP_PKEY_get0_RSA (pkey))) {
+                PEM_write_bio_RSAPrivateKey (out, EVP_PKEY_get0_RSA (pkey), nullptr, nullptr, 0, nullptr, nullptr);
+            } else {
+                PEM_write_bio_RSAPublicKey (out, EVP_PKEY_get0_RSA (pkey));
+            }
+        } else if (kindof_ecc (key->pkey)) {
+            const BIGNUM* bn = EC_KEY_get0_private_key (EVP_PKEY_get0_EC_KEY (pkey));
+            if (bn) {
+                PEM_write_bio_ECPrivateKey (out, EVP_PKEY_get0_EC_KEY (pkey), nullptr, nullptr, 0, nullptr, nullptr);
+            } else {
+                PEM_write_bio_EC_PUBKEY (out, EVP_PKEY_get0_EC_KEY (pkey));     // same PEM_write_bio_PUBKEY
+            }
+        }
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    // do not return
+}
+
+return_t crypto_key::write_pem_file (const char* file, int flags)
+{
+    return_t ret = errorcode_t::success;
+    BIO* out = nullptr;
+
+    __try2
+    {
+        if (nullptr == file) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        out = BIO_new (BIO_s_mem ());
+        if (nullptr == out) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        for_each (pem_writer, out);
+
+        binary_t buf;
+        buf.resize (64);
+        FILE* fp = fopen (file, "wt");
+        if (fp) {
+            int len = 0;
+            while (1) {
+                len = BIO_read (out, &buf[0], buf.size ());
+                if (0 >= len) {
+                    break;
+                }
+                fwrite (&buf[0], 1, len, fp);
+            }
+            fclose (fp);
+        } else {
+            ret = errorcode_t::failed;
+            __leave2;
+        }
+    }
+    __finally2
+    {
+        if (out) {
+            BIO_free_all (out);
+        }
+    }
+    return ret;
 }
 
 return_t crypto_key::add (crypto_key_object_t key, bool up_ref)

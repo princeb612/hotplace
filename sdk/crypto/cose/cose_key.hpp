@@ -3,39 +3,26 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- * @desc
- *  RFC 7517 JSON Web Key (JWK)
  *
  * Revision History
  * Date         Name                Description
+ *
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_JOSE_JWK__
-#define __HOTPLACE_SDK_CRYPTO_JOSE_JWK__
+#ifndef __HOTPLACE_SDK_CRYPTO_COSE_KEY__
+#define __HOTPLACE_SDK_CRYPTO_COSE_KEY__
 
 #include <hotplace/sdk/crypto/basic/crypto_json_key.hpp>
-#include <hotplace/sdk/crypto/jose/types.hpp>
+#include <hotplace/sdk/crypto/cose/types.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-/**
- * @brief RFC 7517 JSON Web Key (JWK)
- * @remarks
- *      support JWK (kty oct, RSA, EC, OKP
- *      support PEM
- *
- *          crypto_key key;
- *          json_web_key jwk;
- *          jwk.load_file (&key, "rfc7515.jwk", 0);
- *          jwk.load_pem_file (&key, "test.pem");
- */
-class json_web_key : public crypto_json_key
+class cose_key : public crypto_json_key
 {
-    friend class json_object_signing_encryption;
 public:
-    json_web_key ();
-    virtual ~json_web_key ();
+    cose_key ();
+    virtual ~cose_key ();
 
     /**
      * @brief load JWK from a buffer

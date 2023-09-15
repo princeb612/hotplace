@@ -103,6 +103,29 @@ public:
     ~crypto_key ();
 
     /**
+     * @brief load PEM from the buffer
+     * @param const char* buffer [in]
+     * @param int flags [in]
+     * @return error code (see error.hpp)
+     */
+    return_t load_pem (const char* buffer, int flags, crypto_use_t use);
+    /**
+     * @brief load from a PEM file
+     * @param const char* file [in]
+     * @param int flags [in] reserved
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
+     * @return error code (see error.hpp)
+     */
+    return_t load_pem_file (const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
+    /**
+     * @brief write PEM to the file
+     * @param const char* file [in]
+     * @param int flag [in] reserved
+     * @return error code (see error.hpp)
+     */
+    return_t write_pem_file (const char* file, int flags = 0);
+
+    /**
      * @brief add
      * @param crypto_key_object_t key [in]
      * @param bool up_ref [inopt] false by default
