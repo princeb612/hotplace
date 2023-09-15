@@ -189,7 +189,7 @@ typedef struct __variant_t {
 #define variant_set_pointer(vt, value) { vt.type = TYPE_POINTER; vt.data.p = (void*) (value); vt.size = 0; vt.flag = 0; }
 #define variant_set_str(vt, value) { vt.type = TYPE_STRING; vt.data.str = (char*) (value); vt.size = 0; vt.flag = 0; }
 #define variant_set_nstr(vt, value, n) { vt.type = TYPE_NSTRING; vt.data.str = (value); vt.size = (n); vt.flag = 0; }
-#define variant_set_bstr(vt, value, n) { vt.type = TYPE_BINARY; vt.data.bstr = (value); vt.size = (n); vt.flag = 0; }
+#define variant_set_bstr(vt, value, n) { vt.type = TYPE_BINARY; vt.data.bstr = (byte_t*) (value); vt.size = (n); vt.flag = 0; }
 #define variant_set(vt, vttype, value) { vt.type = vttype; vt.data.p = (void*) (value); vt.flag = 0; }
 // strdup
 #define variant_set_str_new(vt, value) { vt.type = TYPE_STRING; vt.data.str = strdup (value); vt.size = 0; vt.flag = variant_flag_t::flag_free; }

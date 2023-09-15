@@ -16,13 +16,8 @@ set (SUPPORT_STATIC 1) # always set 1
 set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu, custom build
 set (SUPPORT_ODBC 0)   # 
 set (SUPPORT_PCH 0)    # cmake 2.x
+set (SET_STDCPP c++14)
 
-if (UNIX)
-# -std=c++11
-# -Wl,-z,noexecstack
-# -Wl,--copy-dt-needed-entries # DSO missing from command line
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,-z,noexecstack -Wl,--copy-dt-needed-entries")
-endif ()
 if (NOT "$ENV{CXXFLAGS}" STREQUAL "")
     # specify additional include, lib directories
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CXXFLAGS}")
@@ -37,7 +32,21 @@ if (MINGW)
     set (SUPPORT_SHARED 1)
 endif ()
 if(CMAKE_VERSION VERSION_GREATER 3.8)
-    set (SUPPORT_PCH 1)
+    if (NOT "$ENV{SUPPORT_PCH}" STREQUAL "")
+        set (SUPPORT_PCH $ENV{SUPPORT_PCH})
+    else (1)
+        set (SUPPORT_PCH 1)
+    endif ()
+endif ()
+if (NOT "$ENV{SET_STDCPP}" STREQUAL "")
+    set (SET_STDCPP $ENV{SET_STDCPP})
+endif ()
+if (UNIX)
+# -std=c++11
+# -Wl,-z,noexecstack
+# -Wl,--copy-dt-needed-entries # DSO missing from command line
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,-z,noexecstack -Wl,--copy-dt-needed-entries")
+else (1)
 endif ()
 
 # verbose

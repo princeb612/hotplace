@@ -121,5 +121,5 @@ int main ()
     //test_except ();
 
     _test_case.report (5);
-    return errorcode_t::success;
+    return errorcode_t::success; // return _test_case.result ();
 }

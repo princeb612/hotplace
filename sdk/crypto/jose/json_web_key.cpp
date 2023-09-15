@@ -57,10 +57,10 @@ return_t json_web_key::load (crypto_key* crypto_key, const char* buffer, int fla
             size_t size = json_array_size (keys_node);
             for (size_t i = 0; i < size; i++) {
                 json_t* temp = json_array_get (keys_node, i);
-                read (crypto_key, temp);
+                read_json (crypto_key, temp);
             } // json_array_size
         } else {
-            read (crypto_key, root);
+            read_json (crypto_key, root);
         }
     }
     __finally2
@@ -68,6 +68,85 @@ return_t json_web_key::load (crypto_key* crypto_key, const char* buffer, int fla
         if (root) {
             json_decref (root);
         }
+    }
+    return ret;
+}
+
+return_t json_web_key::read_json (crypto_key* crypto_key, json_t* json)
+{
+    return_t ret = errorcode_t::success;
+    json_t* temp = json;
+    crypto_keychain keyset;
+
+    __try2
+    {
+        if (nullptr == crypto_key || nullptr == temp) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        const char* kty = nullptr;
+        const char* kid = nullptr;
+        const char* use = nullptr;
+        const char* alg = nullptr;
+        json_unpack (temp, "{s:s}", "kty", &kty);
+        json_unpack (temp, "{s:s}", "kid", &kid);
+        json_unpack (temp, "{s:s}", "use", &use);
+        json_unpack (temp, "{s:s}", "alg", &alg);
+
+        crypto_use_t usage = crypto_use_t::use_any;
+        if (nullptr != use) {
+            if (0 == strcmp (use, "sig")) {
+                usage = crypto_use_t::use_sig;
+            } else if (0 == strcmp (use, "enc")) {
+                usage = crypto_use_t::use_enc;
+            }
+        }
+
+        if (nullptr != kty) {
+            if (0 == strcmp (kty, "oct")) {
+                const char* k_value = nullptr;
+                json_unpack (temp, "{s:s}", "k", &k_value);
+
+                add_oct (crypto_key, kid, alg, k_value, usage);
+            } else if (0 == strcmp (kty, "RSA")) {
+                const char* n_value = nullptr;
+                const char* e_value = nullptr;
+                const char* d_value = nullptr;
+                json_unpack (temp, "{s:s,s:s,s:s}", "n", &n_value, "e", &e_value, "d", &d_value);
+
+                const char* p_value = nullptr;
+                const char* q_value = nullptr;
+                const char* dp_value = nullptr;
+                const char* dq_value = nullptr;
+                const char* qi_value = nullptr;
+                json_unpack (temp, "{s:s,s:s,s:s,s:s,s:s}",
+                             "p", &p_value, "q", &q_value, "dp", &dp_value, "dq", &dq_value, "qi", &qi_value);
+
+                add_rsa (crypto_key, kid, alg, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, usage);
+            } else if (0 == strcmp (kty, "EC")) {
+                const char* crv_value = nullptr;
+                const char* x_value = nullptr;
+                const char* y_value = nullptr;
+                const char* d_value = nullptr;
+                json_unpack (temp, "{s:s,s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "y", &y_value, "d", &d_value);
+
+                add_ec (crypto_key, kid, alg, crv_value, x_value, y_value, d_value, usage);
+            } else if (0 == strcmp (kty, "OKP")) {
+                const char* crv_value = nullptr;
+                const char* x_value = nullptr;
+                const char* d_value = nullptr;
+                json_unpack (temp, "{s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "d", &d_value);
+
+                add_ec (crypto_key, kid, alg, crv_value, x_value, nullptr, d_value, usage);
+            } else {
+                // do nothing
+            }
+        }
+    }
+    __finally2
+    {
+        // do nothing
     }
     return ret;
 }
@@ -283,85 +362,6 @@ return_t json_web_key::write_json (crypto_key* crypto_key, const char* file, int
         if (fp) {
             fwrite (buffer.c_str (), 1, buffer.size (), fp);
             fclose (fp);
-        }
-    }
-    __finally2
-    {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t json_web_key::read (crypto_key* crypto_key, json_t* json)
-{
-    return_t ret = errorcode_t::success;
-    json_t* temp = json;
-    crypto_keychain keyset;
-
-    __try2
-    {
-        if (nullptr == crypto_key || nullptr == temp) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        const char* kty = nullptr;
-        const char* kid = nullptr;
-        const char* use = nullptr;
-        const char* alg = nullptr;
-        json_unpack (temp, "{s:s}", "kty", &kty);
-        json_unpack (temp, "{s:s}", "kid", &kid);
-        json_unpack (temp, "{s:s}", "use", &use);
-        json_unpack (temp, "{s:s}", "alg", &alg);
-
-        crypto_use_t usage = crypto_use_t::use_any;
-        if (nullptr != use) {
-            if (0 == strcmp (use, "sig")) {
-                usage = crypto_use_t::use_sig;
-            } else if (0 == strcmp (use, "enc")) {
-                usage = crypto_use_t::use_enc;
-            }
-        }
-
-        if (nullptr != kty) {
-            if (0 == strcmp (kty, "oct")) {
-                const char* k_value = nullptr;
-                json_unpack (temp, "{s:s}", "k", &k_value);
-
-                add_oct (crypto_key, kid, alg, k_value, usage);
-            } else if (0 == strcmp (kty, "RSA")) {
-                const char* n_value = nullptr;
-                const char* e_value = nullptr;
-                const char* d_value = nullptr;
-                json_unpack (temp, "{s:s,s:s,s:s}", "n", &n_value, "e", &e_value, "d", &d_value);
-
-                const char* p_value = nullptr;
-                const char* q_value = nullptr;
-                const char* dp_value = nullptr;
-                const char* dq_value = nullptr;
-                const char* qi_value = nullptr;
-                json_unpack (temp, "{s:s,s:s,s:s,s:s,s:s}",
-                             "p", &p_value, "q", &q_value, "dp", &dp_value, "dq", &dq_value, "qi", &qi_value);
-
-                add_rsa (crypto_key, kid, alg, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, usage);
-            } else if (0 == strcmp (kty, "EC")) {
-                const char* crv_value = nullptr;
-                const char* x_value = nullptr;
-                const char* y_value = nullptr;
-                const char* d_value = nullptr;
-                json_unpack (temp, "{s:s,s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "y", &y_value, "d", &d_value);
-
-                add_ec (crypto_key, kid, alg, crv_value, x_value, y_value, d_value, usage);
-            } else if (0 == strcmp (kty, "OKP")) {
-                const char* crv_value = nullptr;
-                const char* x_value = nullptr;
-                const char* d_value = nullptr;
-                json_unpack (temp, "{s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "d", &d_value);
-
-                add_ec (crypto_key, kid, alg, crv_value, x_value, nullptr, d_value, usage);
-            } else {
-                // do nothing
-            }
         }
     }
     __finally2

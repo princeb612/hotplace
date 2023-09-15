@@ -26,7 +26,7 @@ public:
     virtual ~crypto_json_key ();
 
     /**
-     * @brief load JWK from a buffer
+     * @brief load key from a buffer
      * @param crypto_key * crypto_key [in]
      * @param const char* buffer [in]
      * @param int flags [in] reserved
@@ -43,15 +43,7 @@ public:
      */
     virtual return_t write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
     /**
-     * @brief write JWK to a file
-     * @param crypto_key * crypto_key [in]
-     * @param const char* file [in]
-     * @param int flag [in] 0 public only, 1 also private
-     * @return error code (see error.hpp)
-     */
-    virtual return_t write_json (crypto_key* crypto_key, const char* file, int flags = 0);
-    /**
-     * @brief load JWK from a file
+     * @brief load key from a file
      * @param crypto_key * crypto_key [in]
      * @param const char* file [in]
      * @param int flags [in] reserved
@@ -134,12 +126,6 @@ protected:
      */
     return_t add_oct (crypto_key* crypto_key, const char* kid, const char* alg, const char* k,
                       crypto_use_t use = crypto_use_t::use_any);
-    /**
-     * @brief parse
-     * @param crypto_key* crypto_key [in]
-     * @param json_t* json [in]
-     */
-    virtual return_t read (crypto_key* crypto_key, json_t* json);
 };
 
 }

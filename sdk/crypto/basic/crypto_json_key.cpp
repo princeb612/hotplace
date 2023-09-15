@@ -44,20 +44,6 @@ return_t crypto_json_key::write (crypto_key* crypto_key, char* buf, size_t* bufl
     return ret;
 }
 
-return_t crypto_json_key::write_json (crypto_key* crypto_key, const char* file, int flags)
-{
-    return_t ret = errorcode_t::success;
-
-    return ret;
-}
-
-return_t crypto_json_key::read (crypto_key* crypto_key, json_t* json)
-{
-    return_t ret = errorcode_t::success;
-
-    return ret;
-}
-
 return_t crypto_json_key::add_rsa (crypto_key* crypto_key, const char* kid, const char* alg,
                                    const char* n_value, const char* e_value, const char* d_value,
                                    const char* p_value, const char* q_value,

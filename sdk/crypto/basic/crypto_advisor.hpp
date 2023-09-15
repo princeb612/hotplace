@@ -24,6 +24,8 @@ class crypto_advisor
 public:
     static crypto_advisor* get_instance ();
 
+    ~crypto_advisor ();
+
     /**
      * @brief find blockcipher hint
      * @param int alg [in] crypt_algorithm_t
@@ -388,6 +390,7 @@ public:
 
 protected:
     return_t build_if_necessary ();
+    return_t cleanup ();
 
 private:
     crypto_advisor ();
@@ -397,10 +400,10 @@ private:
     /* data structures for a binary search */
 
     typedef std::map <uint32, const hint_blockcipher_t*> blockcipher_map_t;             /* pair (alg, hint_blockcipher_t*) */
-    typedef std::map <uint32, const EVP_CIPHER*> cipher_map_t;                          /* pair (alg+mode, EVP_CIPHER*) */
+    typedef std::map <uint32, EVP_CIPHER*> cipher_map_t;                          /* pair (alg+mode, EVP_CIPHER*) */
     typedef std::map <uint32, const openssl_evp_cipher_method_t*> cipher_fetch_map_t;   /* pair (alg+mode, openssl_evp_cipher_method_t*) */
     typedef std::map <const EVP_CIPHER*, const openssl_evp_cipher_method_t*> evp_cipher_map_t;
-    typedef std::map <uint32, const EVP_MD*> md_map_t;                                  /* pair (alg+mode, EVP_MD*) */
+    typedef std::map <uint32, EVP_MD*> md_map_t;                                  /* pair (alg+mode, EVP_MD*) */
     typedef std::map <uint32, const openssl_evp_md_method_t*> md_fetch_map_t;
     typedef std::map <uint32, const hint_jose_encryption_t*> jose_encryption_map_t;
     typedef std::map <uint32, const hint_jose_signature_t*> jose_signature_map_t;

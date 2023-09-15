@@ -17,12 +17,23 @@ COMMENTS
 
 mkdir -p build
 cd build
+:<< SWITCHES
+    SUPPORT_SHARED  - recompile openssl, jansson with -fPIC
+    SUPPORT_ODBC    - unixODBC
+    SUPPORT_PCH     - precompiled header
+    SET_STDCPP      - c++11 (gcc 4.7~), c++14 (gcc 5.1~), linux option
+SWITCHES
+
 if [ $OSTYPE = "msys" ]; then
-    set SUPPORT_SHARED=1
-    #set SUPPORT_ODBC=1
+    export SUPPORT_SHARED=1
+    export SUPPORT_ODBC=0
+    export SUPPORT_PCH=1
+    true
 else
-    #export SUPPORT_SHARED=1
-    #export SUPPORT_ODBC=1
+    export SUPPORT_SHARED=0
+    export SUPPORT_ODBC=0
+    export SUPPORT_PCH=0
+    export SET_STDCPP=c++11
     true
 fi
 export CXXFLAGS='-DDEBUG'

@@ -387,6 +387,11 @@ crypto_advisor* crypto_advisor::get_instance ()
     return &_instance;
 }
 
+crypto_advisor::~crypto_advisor ()
+{
+    cleanup ();
+}
+
 crypto_advisor::crypto_advisor () : _flag (0)
 {
     build_if_necessary ();
@@ -462,6 +467,26 @@ return_t crypto_advisor::build_if_necessary ()
         }
         _lock.leave ();
     }
+    return ret;
+}
+
+return_t crypto_advisor::cleanup ()
+{
+    return_t ret = errorcode_t::success;
+
+#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
+    _lock.enter ();
+    cipher_map_t::iterator iter_cipher;
+    for (iter_cipher = _cipher_map.begin (); iter_cipher != _cipher_map.end (); iter_cipher++) {
+        EVP_CIPHER_free (iter_cipher->second);
+    }
+    md_map_t::iterator iter_md;
+    for (iter_md = _md_map.begin (); iter_md != _md_map.end (); iter_md++) {
+        EVP_MD_free (iter_md->second);
+    }
+    _lock.leave ();
+#endif
+
     return ret;
 }
 

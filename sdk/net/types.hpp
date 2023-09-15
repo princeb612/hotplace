@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_NET_TYPES__
 
 #if defined __linux__
+
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -25,10 +26,13 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+
 #elif defined _WIN32 || defined _WIN64
+
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <mswsock.h>
+
 #endif
 
 #include <hotplace/sdk/base.hpp>

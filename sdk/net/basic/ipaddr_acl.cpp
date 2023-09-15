@@ -8,8 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/system/types.hpp>
+#include <hotplace/sdk/net/types.hpp> // ws2tcpip.h first
 #include <hotplace/sdk/net/basic/ipaddr_acl.hpp>
+#include <hotplace/sdk/io/system/types.hpp>
 
 namespace hotplace {
 using namespace io;

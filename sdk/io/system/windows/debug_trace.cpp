@@ -12,6 +12,7 @@
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/io/system/sdk.hpp>
 #include <hotplace/sdk/io/system/windows/debug_trace.hpp>
+#include <iostream>
 
 namespace hotplace {
 namespace io {

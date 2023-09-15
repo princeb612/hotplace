@@ -18,11 +18,11 @@
 namespace hotplace {
 namespace crypto {
 
-class cose_key : public crypto_json_key
+class cbor_web_key : public crypto_json_key
 {
 public:
-    cose_key ();
-    virtual ~cose_key ();
+    cbor_web_key ();
+    virtual ~cbor_web_key ();
 
     /**
      * @brief load JWK from a buffer
@@ -41,23 +41,8 @@ public:
      * @return error code (see error.hpp)
      */
     virtual return_t write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
-    /**
-     * @brief write JWK to a file
-     * @param crypto_key * crypto_key [in]
-     * @param const char* file [in]
-     * @param int flag [in] 0 public only, 1 also private
-     * @return error code (see error.hpp)
-     */
-    virtual return_t write_json (crypto_key* crypto_key, const char* file, int flags = 0);
 
 protected:
-
-    /**
-     * @brief parse
-     * @param crypto_key* crypto_key [in]
-     * @param json_t* json [in]
-     */
-    virtual return_t read (crypto_key* crypto_key, json_t* json);
 };
 
 }

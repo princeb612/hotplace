@@ -288,10 +288,10 @@ public:
     ~cbor_object_signing_encryption ();
 
     return_t build_protected (cbor_data** object);
-    return_t build_protected (cbor_data** object, cose_list_t const& input);
+    return_t build_protected (cbor_data** object, cose_list_t& input);
     return_t build_protected (cbor_data** object, cbor_map* input);
     return_t build_unprotected (cbor_map** object);
-    return_t build_unprotected (cbor_map** object, cose_list_t const& input);
+    return_t build_unprotected (cbor_map** object, cose_list_t& input);
     return_t build_payload (cbor_data** object, const char* payload);
     return_t build_payload (cbor_data** object, const byte_t* payload, size_t size);
     return_t build_base16str (cbor_data** object, const char* str);
@@ -329,7 +329,7 @@ return_t cbor_object_signing_encryption::build_protected (cbor_data** object)
     return ret;
 }
 
-return_t cbor_object_signing_encryption::build_protected (cbor_data** object, cose_list_t const& input)
+return_t cbor_object_signing_encryption::build_protected (cbor_data** object, cose_list_t& input)
 {
     return_t ret = errorcode_t::success;
 
@@ -350,9 +350,9 @@ return_t cbor_object_signing_encryption::build_protected (cbor_data** object, co
 
             __try_new_catch (part_protected, new cbor_map (), ret, __leave2);
 
-            cose_list_t::const_iterator iter;
+            cose_list_t::iterator iter;
             for (iter = input.begin (); iter != input.end (); iter++) {
-                cose_item_t const& item = *iter;
+                cose_item_t& item = *iter;
                 *part_protected << new cbor_pair (new cbor_data (item.key), new cbor_data (item.value));
             }
 
@@ -416,7 +416,7 @@ return_t cbor_object_signing_encryption::build_unprotected (cbor_map** object)
     return ret;
 }
 
-return_t cbor_object_signing_encryption::build_unprotected (cbor_map** object, cose_list_t const& input)
+return_t cbor_object_signing_encryption::build_unprotected (cbor_map** object, cose_list_t& input)
 {
     return_t ret = errorcode_t::success;
 
@@ -431,9 +431,9 @@ return_t cbor_object_signing_encryption::build_unprotected (cbor_map** object, c
 
         __try_new_catch (part_unprotected, new cbor_map (), ret, __leave2);
 
-        cose_list_t::const_iterator iter;
+        cose_list_t::iterator iter;
         for (iter = input.begin (); iter != input.end (); iter++) {
-            cose_item_t const& item = *iter;
+            cose_item_t& item = *iter;
             *part_unprotected << new cbor_pair (new cbor_data (item.key), new cbor_data (item.value));
         }
 

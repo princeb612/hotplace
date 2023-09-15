@@ -54,6 +54,15 @@ public:
      * @return error code (see error.hpp)
      */
     virtual return_t write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
+
+protected:
+    /**
+     * @brief read
+     * @param crypto_key * crypto_key [in]
+     * @param json_t* json [in]
+     * @return error code (see error.hpp)
+     */
+    return_t read_json (crypto_key* crypto_key, json_t* json);
     /**
      * @brief write JWK to a file
      * @param crypto_key * crypto_key [in]
@@ -61,16 +70,7 @@ public:
      * @param int flag [in] 0 public only, 1 also private
      * @return error code (see error.hpp)
      */
-    virtual return_t write_json (crypto_key* crypto_key, const char* file, int flags = 0);
-
-protected:
-
-    /**
-     * @brief parse
-     * @param crypto_key* crypto_key [in]
-     * @param json_t* json [in]
-     */
-    virtual return_t read (crypto_key* crypto_key, json_t* json);
+    return_t write_json (crypto_key* crypto_key, const char* file, int flags = 0);
 };
 
 }
