@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_LINUX_CRITICALSECTION__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
+#include <pthread.h>
 
 namespace hotplace {
 

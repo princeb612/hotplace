@@ -9,6 +9,7 @@
 #define __HOTPLACE_SDK_BASE_BASIC_STREAM__
 
 #include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/error.hpp>
 
 namespace hotplace {
 

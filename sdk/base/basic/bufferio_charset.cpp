@@ -14,6 +14,7 @@
 #include <hotplace/sdk/base/basic/printf.hpp>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 namespace hotplace {
 

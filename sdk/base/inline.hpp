@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_INLINE__
 #define __HOTPLACE_SDK_BASE_INLINE__
 
+#include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
 #include <string.h>
 #include <algorithm>

@@ -9,7 +9,10 @@
  * 2023.08.15   Soo Han, Kim        fix : insert (lock)
  */
 
+#include <hotplace/sdk/base/inline.hpp>
 #include <hotplace/sdk/base/basic/bufferio.hpp>
+#include <stdlib.h>
+#include <string.h>
 
 namespace hotplace {
 

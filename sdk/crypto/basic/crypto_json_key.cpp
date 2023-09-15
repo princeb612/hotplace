@@ -51,7 +51,7 @@ return_t crypto_json_key::write_json (crypto_key* crypto_key, const char* file, 
     return ret;
 }
 
-return_t crypto_json_key::read (crypto_key* crypto_key, void* json)
+return_t crypto_json_key::read (crypto_key* crypto_key, json_t* json)
 {
     return_t ret = errorcode_t::success;
 

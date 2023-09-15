@@ -55,9 +55,9 @@ protected:
     /**
      * @brief parse
      * @param crypto_key* crypto_key [in]
-     * @param void* json [in]
+     * @param json_t* json [in]
      */
-    virtual return_t read (crypto_key* crypto_key, void* json);
+    virtual return_t read (crypto_key* crypto_key, json_t* json);
 };
 
 }

@@ -292,10 +292,10 @@ return_t json_web_key::write_json (crypto_key* crypto_key, const char* file, int
     return ret;
 }
 
-return_t json_web_key::read (crypto_key* crypto_key, void* json)
+return_t json_web_key::read (crypto_key* crypto_key, json_t* json)
 {
     return_t ret = errorcode_t::success;
-    json_t* temp = (json_t*) json;
+    json_t* temp = json;
     crypto_keychain keyset;
 
     __try2
