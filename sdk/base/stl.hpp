@@ -17,6 +17,19 @@
 
 namespace hotplace {
 
+/**
+ * @brief   format
+ * @example
+ *  std::string text = format ("%s %d %1.1f\n", "sample", 1, 1.1f);
+ */
+std::string format (const char* fmt, ...);
+#if __cplusplus > 199711L    // c++98
+std::string format (const char* fmt, va_list ap);
+#endif
+
+/**
+ * @brief   util
+ */
 template <typename K, typename V>
 class maphint
 {

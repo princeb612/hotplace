@@ -17,8 +17,8 @@
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/callback.hpp>
 #include <hotplace/sdk/base/inline.hpp>
+#include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/variant.hpp>
 
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/base64.hpp>
@@ -28,6 +28,7 @@
 #include <hotplace/sdk/base/basic/printf.hpp>
 #include <hotplace/sdk/base/basic/stream.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 
 #include <hotplace/sdk/base/system/atomic.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>

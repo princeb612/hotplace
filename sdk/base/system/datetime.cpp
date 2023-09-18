@@ -10,6 +10,7 @@
  * 2023.08.15   Soo Han, Kin        added : stopwatch
  */
 
+#include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 
 namespace hotplace {

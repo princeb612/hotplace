@@ -41,16 +41,6 @@ typedef std::vector<byte_t> binary_t;
 #define __max(a, b) (((a) > (b)) ? (a) : (b))
 #define adjust_range(var, minimum, maximum) { var = __max (var, minimum); var = __min (var, maximum); }
 
-/**
- * @brief format
- * @example
- *  std::string text = format ("%s %d %1.1f\n", "sample", 1, 1.1f);
- */
-std::string format (const char* fmt, ...);
-#if __cplusplus > 199711L    // c++98
-std::string format (const char* fmt, va_list ap);
-#endif
-
 } // namespace
 
 #endif

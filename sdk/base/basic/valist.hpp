@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_VALIST__
 #define __HOTPLACE_SDK_BASE_BASIC_VALIST__
 
-#include <hotplace/sdk/base/variant.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <stdarg.h>
 #include <vector>

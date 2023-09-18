@@ -14,8 +14,8 @@
 #include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/callback.hpp>
-#include <hotplace/sdk/base/variant.hpp>
 #include <hotplace/sdk/base/basic/stream.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <string>
 
 namespace hotplace {

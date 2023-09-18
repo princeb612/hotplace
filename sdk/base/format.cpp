@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/inline.hpp>
+#include <hotplace/sdk/base/stl.hpp>
 #include <stdarg.h>
 #include <ostream>
 

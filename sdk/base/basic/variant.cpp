@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/variant.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <stdarg.h>
 #include <ostream>
 

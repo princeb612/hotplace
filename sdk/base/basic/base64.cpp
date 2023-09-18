@@ -13,7 +13,6 @@
 #include <hotplace/sdk/base/basic/base64.hpp>
 
 namespace hotplace {
-namespace io {
 
 static const byte_t MIME_BASE64_ENCODE[] =
 {
@@ -376,5 +375,4 @@ std::string base64_decode_careful (const char* source, size_t source_size, int e
     return decoded;
 }
 
-}
 }  // namespace

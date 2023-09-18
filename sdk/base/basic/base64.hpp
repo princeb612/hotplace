@@ -19,7 +19,6 @@
 #include <hotplace/sdk/base.hpp>
 
 namespace hotplace {
-namespace io {
 
 enum base64_encoding_t {
     base64_encoding     = 0,    /* + / */
@@ -81,7 +80,6 @@ binary_t base64_decode (std::string const& source, int encoding = base64_encodin
 std::string base64_decode_careful (std::string const& source, int encoding = base64_encoding_t::base64_encoding);
 std::string base64_decode_careful (const char* source, size_t source_size, int encoding = base64_encoding_t::base64_encoding);
 
-}
 }  // namespace
 
 #endif

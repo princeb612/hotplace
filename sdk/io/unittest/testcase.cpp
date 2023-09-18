@@ -9,6 +9,7 @@
  * 2023.08.15   Soo Han, Kim        elapsed time
  */
 
+#include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/ieee754.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>

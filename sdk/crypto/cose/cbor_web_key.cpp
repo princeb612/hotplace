@@ -9,9 +9,9 @@
  */
 
 #include <hotplace/sdk/base/stl.hpp>
-#include <hotplace/sdk/base/variant.hpp>
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/base64.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_json_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>

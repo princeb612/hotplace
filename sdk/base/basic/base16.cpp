@@ -12,7 +12,6 @@
 #include <hotplace/sdk/base/basic/base16.hpp>
 
 namespace hotplace {
-namespace io {
 
 return_t base16_encode (const byte_t* source, size_t size, std::string& outpart)
 {
@@ -205,5 +204,4 @@ binary_t base16_decode (std::string const& source)
     return outpart;
 }
 
-}
 }

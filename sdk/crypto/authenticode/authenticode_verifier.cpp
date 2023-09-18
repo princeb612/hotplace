@@ -9,6 +9,7 @@
  * 2023.08.27   Soo Han, Kim        get_crl - temporary disabled, under construction
  */
 
+#include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_verifier.hpp>

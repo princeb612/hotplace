@@ -17,7 +17,6 @@
 #include <hotplace/sdk/base/basic/stream.hpp>
 
 namespace hotplace {
-namespace io {
 
 /**
  * @brief   encode
@@ -59,7 +58,6 @@ binary_t base16_decode (const char* source);
 binary_t base16_decode (const char* source, size_t size);
 binary_t base16_decode (std::string const& source);
 
-}
 }  // namespace
 
 #endif
