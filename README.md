@@ -135,10 +135,10 @@ https://github.com/princeb612/hotplace
 
 ## personal projects
 
-| code name | period                | platform      | disclosure | comments            |
-| --        | --                    | --            | --         | --                  |
-| merlin(1) | 2007.04.08~           | windows       | private    | no comments         |
-| merlin(2) | 2010.03.24~2017.03.31 | windows/linux | private    | no comments         |
-| grape     | 2017.05.31~2019.10.24 | linux         | private    | no comments         |
-| unicorn   | 2019.11.21~2023.07.04 | mingw/linux   | private    | no comments         |
-| hotplace  | 2023.08.12~           | mingw/linux   | public     | RFC-related         |
+| code name | period                | platform      | comments                  |
+| --        | --                    | --            | --                        |
+| merlin(1) | 2007.04.08~           | windows       | SVN, MSVC 6.0             |
+| merlin(2) | 2010.03.24~2017.03.31 | windows/linux | SVN, MSVC 6.0, gcc        |
+| grape     | 2017.05.31~2019.10.24 | linux         | SVN, gcc                  |
+| unicorn   | 2019.11.21~2023.07.04 | mingw/linux   | SVN, gcc                  |
+| hotplace  | 2023.08.12~           | mingw/linux   | SVN/Git, gcc, RFC-related |

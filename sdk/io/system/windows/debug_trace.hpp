@@ -6,9 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
- * 2010.12.21   Soo Han, Kim        backtrace x86 implemented (merlin)
- * 2014.11.06   Soo Han, Kim        backtrace x64 implemented (merlin)
- * 2023.08.30   Soo Han, Kim        trying bfd
+ * 2010.12.21   Soo Han, Kim        backtrace x86 implemented (codename.merlin)
+ * 2014.11.06   Soo Han, Kim        backtrace x64 implemented (codename.merlin)
  */
 
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_DEBUGTRACE__

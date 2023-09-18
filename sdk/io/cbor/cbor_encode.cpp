@@ -11,7 +11,7 @@
 
 #include <hotplace/sdk/base/variant.hpp>
 #include <hotplace/sdk/base/basic/ieee754.hpp>
-#include <hotplace/sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 
 namespace hotplace {
@@ -498,7 +498,7 @@ return_t cbor_encode::encode (binary_t& bin, float value)
     {
         variant_t vt;
         uint32 be = 0;
-        ieee754_format_as_small_as_possible (vt, value);
+        ieee754_as_small_as_possible (vt, value);
 
         switch (vt.type) {
             case vartype_t::TYPE_FP16:
@@ -530,7 +530,7 @@ return_t cbor_encode::encode (binary_t& bin, double value)
     {
         variant_t vt;
         uint64 be = 0;
-        ieee754_format_as_small_as_possible (vt, value);
+        ieee754_as_small_as_possible (vt, value);
 
         switch (vt.type) {
             case vartype_t::TYPE_FP16:

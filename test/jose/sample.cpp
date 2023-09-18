@@ -27,7 +27,8 @@ void print_text (const char* text, ...)
     ansi_string string;
     string.vprintf (text, ap);
     va_end (ap);
-    std::cout << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::green) << string.c_str () << col.turnoff () << std::endl;
+    std::cout << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::green) << string.c_str () << std::endl;
+    std::cout << col.turnoff ();
 }
 
 void test0 ()

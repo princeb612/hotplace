@@ -7,12 +7,42 @@
  * Revision History
  * Date         Name                Description
  *
+ * @example
+ *      cbor_array* root = new cbor_array ();
+ *      *root << new cbor_data (1) << new cbor_data (2);
+ *
+ *      cbor_publisher publisher;
+ *      buffer_stream diagnostic;
+ *      binary_t bin;
+ *      // cbor_object* to diagnostic
+ *      publisher.publish (root, &diagnostic);
+ *      // cbor_object* to cbor
+ *      publisher.publish (root, &bin);
+ *
+ *      // cbor_reader_context_t*
+ *      cbor_reader reader;
+ *      cbor_reader_context_t* handle = nullptr;
+ *      reader.open (&handle);
+ *      reader.parse (handle, bin);
+ *      // cbor_reader_context_t* to diagnostic
+ *      reader.publish (handle, &diagnostic2);
+ *      // cbor_reader_context_t* to cbor
+ *      reader.publish (handle, &bin2);
+ *      // cbor_reader_context_t* to cbor_object*
+ *      cbor_object* newone = nullptr;
+ *      reader.publish (handle, &newone);
+ *      newone->release (); // free
+ *      reader.close (handle);
+ *
+ *      root->release (); // free
  */
 
-#ifndef __HOTPLACE_SDK_IO_CBOR_TYPES__
-#define __HOTPLACE_SDK_IO_CBOR_TYPES__
+#ifndef __HOTPLACE_SDK_IO_CBOR__
+#define __HOTPLACE_SDK_IO_CBOR__
 
 #include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/io/stream/stream.hpp>
+#include <deque>
 
 namespace hotplace {
 namespace io {
@@ -97,6 +127,15 @@ enum cbor_control_t {
 enum cbor_flag_t {
     cbor_indef = 1,   // indefinite-length
 };
+
+class cbor_object;
+class cbor_data;
+class cbor_bstrings;
+class cbor_tstrings;
+class cbor_pair;
+class cbor_map;
+class cbor_array;
+class cbor_visitor;
 
 }
 }  // namespace

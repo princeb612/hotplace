@@ -45,7 +45,7 @@ buffer_stream::~buffer_stream ()
     _bio.close (_handle);
 }
 
-char* buffer_stream::c_str ()
+const char* buffer_stream::c_str ()
 {
     char* data = nullptr;
     size_t size = 0;

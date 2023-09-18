@@ -9,7 +9,9 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
+#include <hotplace/sdk/io/cbor/cbor_map.hpp>
 
 namespace hotplace {
 namespace io {
@@ -31,7 +33,7 @@ cbor_map::cbor_map (cbor_pair* object, uint32 flags) : cbor_object (cbor_type_t:
 
 cbor_map::~cbor_map ()
 {
-    clear ();
+    // do nothing
 }
 
 return_t cbor_map::join (cbor_object* object, cbor_object* extra)
@@ -143,22 +145,45 @@ size_t cbor_map::size ()
     return _array.size ();
 }
 
-return_t cbor_map::clear ()
+cbor_pair const* cbor_map::operator [] (size_t index)
+{
+    cbor_pair* item = nullptr;
+
+    if (_array.size () > index) {
+        std::list <cbor_pair*>::iterator it = _array.begin ();
+        std::advance (it, index);
+        item = *it;
+    }
+    return item;
+}
+
+std::list <cbor_pair*> const& cbor_map::accessor ()
+{
+    return _array;
+}
+
+int cbor_map::addref ()
+{
+    std::list <cbor_pair*>::iterator iter;
+
+    for (iter = _array.begin (); iter != _array.end (); iter++) {
+        cbor_pair* item = *iter;
+        item->addref ();
+    }
+    return _shared.addref ();
+}
+
+int cbor_map::release ()
 {
     return_t ret = errorcode_t::success;
 
-#if __cplusplus >= 201103L    // c++11
-    for (auto item : _array) {
-#else
     std::list <cbor_pair*>::iterator iter;
+
     for (iter = _array.begin (); iter != _array.end (); iter++) {
         cbor_pair* item = *iter;
-#endif
         item->release ();
     }
-    _array.clear ();
-
-    return ret;
+    return _shared.delref ();
 }
 
 void cbor_map::represent (stream_t* s)

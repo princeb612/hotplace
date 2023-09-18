@@ -121,13 +121,12 @@ return_t file_stream::open (const wchar_t* file_name, uint32 flag)
             }
             if (0 != retry) {
                 _file_handle = CreateFileW (file_name, access, share, nullptr, create, FILE_ATTRIBUTE_NORMAL, nullptr);
-                if (INVALID_HANDLE_VALUE == _file_handle) {
-                    ret = GetLastError ();
-                }
             }
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
+        }
+
+        if (INVALID_HANDLE_VALUE == _file_handle) {
+            ret = GetLastError ();
+            __leave2;
         }
 
         if (filestream_flag_t::flag_create_always & flag) {

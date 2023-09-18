@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/base/basic/base64.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
@@ -16,7 +17,6 @@
 #include <hotplace/sdk/crypto/jose/json_object_signing.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
 #include <hotplace/sdk/crypto/jose/json_web_key.hpp>
-#include <hotplace/sdk/io/basic/base64.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
 
@@ -860,7 +860,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
 
             json_web_key jwk;
             crypto_key key;
-            jwk.add_ec (&key, nullptr, nullptr, crv_value, x_value, y_value, nullptr);
+            jwk.add_ec_b64u (&key, nullptr, nullptr, crv_value, x_value, y_value, nullptr);
             recipient.epk = key.select (crypto_use_t::use_enc, true); // EVP_PKEY_up_ref
             if (apu_value) {
                 base64_decode (apu_value, strlen (apu_value), recipient.datamap[crypt_item_t::item_apu], base64_encoding_t::base64url_encoding);

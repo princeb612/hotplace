@@ -7,10 +7,10 @@
  * Revision History
  * Date         Name                Description
  * 2005.07.07   Soo Han, Kim        implemented using windows sdk
- * 2012.03.08   Soo Han, Kim        refactor (merlin)
- * 2017.07.06   Soo Han, Kim        implemented using openssl (grape)
- * 2023.02.06   Soo Han, Kim        refactor plugin_pe, plugin_msi, plugin_cabinet (unicorn)
- * 2023.08.27   Soo Han, Kim        refactor (hotplace)
+ * 2012.03.08   Soo Han, Kim        refactor (codename.merlin)
+ * 2017.07.06   Soo Han, Kim        implemented using openssl (codename.grape)
+ * 2023.02.06   Soo Han, Kim        refactor plugin_pe, plugin_msi, plugin_cabinet (codename.unicorn)
+ * 2023.08.27   Soo Han, Kim        refactor (codename.hotplace)
  */
 
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN_PE__

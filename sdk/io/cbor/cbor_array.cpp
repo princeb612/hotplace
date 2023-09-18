@@ -9,7 +9,10 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/io/cbor/cbor_array.hpp>
+#include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
+#include <hotplace/sdk/io/cbor/cbor_map.hpp>
 
 namespace hotplace {
 namespace io {
@@ -26,7 +29,7 @@ cbor_array::cbor_array (uint32 flags) : cbor_object (cbor_type_t::cbor_type_arra
 
 cbor_array::~cbor_array ()
 {
-    clear ();
+    // do nothing
 }
 
 return_t cbor_array::join (cbor_object* object, cbor_object* extra)
@@ -99,7 +102,7 @@ size_t cbor_array::size ()
     return _array.size ();
 }
 
-cbor_object* cbor_array::operator [] (unsigned index)
+cbor_object const* cbor_array::operator [] (size_t index)
 {
     cbor_object* item = nullptr;
 
@@ -111,18 +114,31 @@ cbor_object* cbor_array::operator [] (unsigned index)
     return item;
 }
 
-void cbor_array::clear ()
+std::list <cbor_object*> const& cbor_array::accessor ()
 {
-#if __cplusplus >= 201103L    // c++11
-    for (auto item : _array) {
-#else
+    return _array;
+}
+
+int cbor_array::addref ()
+{
     std::list <cbor_object*>::iterator iter;
+
     for (iter = _array.begin (); iter != _array.end (); iter++) {
         cbor_object* item = *iter;
-#endif
+        item->addref ();
+    }
+    return _shared.addref ();
+}
+
+int cbor_array::release ()
+{
+    std::list <cbor_object*>::iterator iter;
+
+    for (iter = _array.begin (); iter != _array.end (); iter++) {
+        cbor_object* item = *iter;
         item->release ();
     }
-    _array.clear ();
+    return _shared.delref ();
 }
 
 void cbor_array::represent (stream_t* s)

@@ -94,13 +94,17 @@ protected:
      * @param crypto_use_t use [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_rsa (crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d,
-                      const char* p = nullptr,
-                      const char* q = nullptr,
-                      const char* dp = nullptr,
-                      const char* dq = nullptr,
-                      const char* qi = nullptr,
-                      crypto_use_t use = crypto_use_t::use_any);
+    return_t add_rsa_b64u (crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d,
+                           const char* p = nullptr,
+                           const char* q = nullptr,
+                           const char* dp = nullptr,
+                           const char* dq = nullptr,
+                           const char* qi = nullptr,
+                           crypto_use_t use = crypto_use_t::use_any);
+    return_t add_rsa (crypto_key* crypto_key, const char* kid, const char* alg,
+                      const byte_t* n, size_t size_n, const byte_t* e, size_t size_e, const byte_t* d, size_t size_d, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_rsa (crypto_key* crypto_key, const char* kid, const char* alg,
+                      binary_t const& n, binary_t const& e, binary_t const& d, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief add
      * @param crypto_key* crypto_key
@@ -108,13 +112,19 @@ protected:
      * @param const char* alg [inopt]
      * @param const char* curve [in]
      * @param const char* x [in] public key
-     * @param const char* y [in] public key
-     * @param const char* d [inopt] private key
+     * @param const char* y [in] public key, EC2 (not null), OKP (null)
+     * @param const char* d [inopt] private key, private (not null), public (null)
      * @param crypto_use_t use [inopt]
      * @return error code (see error.hpp)
      */
+    return_t add_ec_b64u (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
+                          const char* x, const char* y, const char* d, crypto_use_t use = crypto_use_t::use_any);
     return_t add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                     const char* x, const char* y, const char* d, crypto_use_t use = crypto_use_t::use_any);
+                     const byte_t* x, size_t size_x, const byte_t* y, size_t size_y, const byte_t* d, size_t size_d, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
+                     binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_ec (crypto_key* crypto_key, const char* kid, const char* alg, uint32 nid,
+                     binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief add
      * @param crypto_key* crypto_key
@@ -124,7 +134,11 @@ protected:
      * @param crypto_use_t use [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_oct (crypto_key* crypto_key, const char* kid, const char* alg, const char* k,
+    return_t add_oct_b64u (crypto_key* crypto_key, const char* kid, const char* alg, const char* k,
+                           crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct (crypto_key* crypto_key, const char* kid, const char* alg, const byte_t* k, size_t size_k,
+                      crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct (crypto_key* crypto_key, const char* kid, const char* alg, binary_t const& k,
                       crypto_use_t use = crypto_use_t::use_any);
 };
 

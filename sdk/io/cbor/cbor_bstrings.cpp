@@ -9,7 +9,8 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
 
 namespace hotplace {
 namespace io {
@@ -21,7 +22,7 @@ cbor_bstrings::cbor_bstrings () : cbor_object (cbor_type_t::cbor_type_bstrs, cbo
 
 cbor_bstrings::~cbor_bstrings ()
 {
-    clear ();
+    // do nothing
 }
 
 return_t cbor_bstrings::join (cbor_object* object, cbor_object* extra)
@@ -76,22 +77,27 @@ size_t cbor_bstrings::size ()
     return _array.size ();
 }
 
-return_t cbor_bstrings::clear ()
+int cbor_bstrings::addref ()
 {
-    return_t ret = errorcode_t::success;
-
-#if __cplusplus >= 201103L    // c++11
-    for (auto item : _array) {
-#else
     std::list <cbor_data*>::iterator iter;
+
     for (iter = _array.begin (); iter != _array.end (); iter++) {
         cbor_data* item = *iter;
-#endif
+        item->addref ();
+    }
+    return _shared.addref ();
+}
+
+int cbor_bstrings::release ()
+{
+    std::list <cbor_data*>::iterator iter;
+
+    for (iter = _array.begin (); iter != _array.end (); iter++) {
+        cbor_data* item = *iter;
         item->release ();
     }
-    _array.clear ();
 
-    return ret;
+    return _shared.delref ();
 }
 
 void cbor_bstrings::represent (stream_t* s)

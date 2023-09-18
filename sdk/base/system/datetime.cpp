@@ -6,6 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2002.10.23   Soo Han, Kin        codename.hush2002
  * 2023.08.15   Soo Han, Kin        added : stopwatch
  */
 

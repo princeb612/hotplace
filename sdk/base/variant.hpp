@@ -147,6 +147,8 @@ typedef struct __variant_t {
 } variant_t;
 
 #define variant_init(vt) { vt.type = TYPE_NULL; memset (&vt.data, 0, sizeof (vt.data)); vt.size = 0; vt.flag = 0; }
+#define variant_set_flag (vt, flag) { vt.flag |= flag }
+#define variant_unset_flag (vt, flag) { vt.flag &= ~flag }
 
 #define variant_set_bool(vt, value) { vt.type = TYPE_BOOL; vt.data.b = (value); vt.size = 0; vt.flag = 0; }
 #define variant_set_int8(vt, value) { vt.type = TYPE_INT8; vt.data.i8 = (value); vt.size = 0; vt.flag = 0; }
@@ -200,87 +202,72 @@ typedef struct __variant_t {
 // strndup
 #define variant_set_nstr_new(vt, value, n) { vt.type = TYPE_NSTRING; char* p = nullptr; if (n) { p = (char*) malloc ((n) + 1); if (p) { strncpy (p, value, (n)); *(p + (n)) = 0; }; }; vt.data.str = p; vt.size = (n); vt.flag = variant_flag_t::flag_free; }
 
-static inline return_t variant_copy (variant_t* lhs, const variant_t* rhs)
+return_t variant_copy (variant_t* target, const variant_t* source);
+return_t variant_move (variant_t* target, variant_t* source);
+void variant_free (variant_t& vt);
+return_t variant_binary (variant_t const& vt, binary_t& target);
+return_t variant_string (variant_t const& vt, std::string& target);
+
+template <typename T>
+T t_variant_to_int (variant_t const& vt)
 {
-    return_t ret = errorcode_t::success;
-    variant_t* object = nullptr;
+    T i = 0;
 
-    __try2
-    {
-        if (nullptr == lhs || nullptr == rhs) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (variant_flag_t::flag_free == rhs->flag) {
-            switch (rhs->type) {
-                case TYPE_BINARY:
-                    variant_set_bstr_new ((*lhs), rhs->data.bstr, rhs->size);
-                    break;
-                case TYPE_NSTRING:
-                    variant_set_nstr_new ((*lhs), rhs->data.str, rhs->size);
-                    break;
-                case TYPE_STRING:
-                    variant_set_str_new ((*lhs), rhs->data.str);
-                    break;
-                default:
-                    memcpy (&lhs->data, &rhs->data, RTL_FIELD_SIZE (variant_t, data));
-                    break;
+    switch (vt.type) {
+        case TYPE_BOOL:
+            i = vt.data.b ? 1 : 0;
+            break;
+        case TYPE_INT8:
+            i = vt.data.i8;
+            break;
+        case TYPE_UINT8:
+            i = vt.data.ui8;
+            break;
+        case TYPE_INT16:
+            i = vt.data.i16;
+            break;
+        case TYPE_UINT16:
+            i = vt.data.ui16;
+            break;
+        case TYPE_INT32:
+            i = vt.data.i32;
+            break;
+        case TYPE_UINT32:
+            i = vt.data.ui32;
+            break;
+        case TYPE_INT64:
+            i = (T) vt.data.i64;
+            break;
+        case TYPE_UINT64:
+            i = (T) vt.data.ui64;
+            break;
+#if defined __SIZEOF_INT128__
+        case TYPE_INT128:
+            i = (T) vt.data.i128;
+            break;
+        case TYPE_UINT128:
+            i = (T) vt.data.ui128;
+            break;
+#endif
+        case TYPE_FLOAT:
+            i = (T) vt.data.f;
+            break;
+        case TYPE_DOUBLE:
+            i = (T) vt.data.d;
+            break;
+        case TYPE_STRING:
+        case TYPE_NSTRING:
+            if (vt.size) {
+                i = atoi (std::string (vt.data.str, vt.size).c_str ());
+            } else {
+                i = atoi (vt.data.str);
             }
-        } else {
-            memcpy (&lhs->data, &rhs->data, RTL_FIELD_SIZE (variant_t, data));
-        }
-
-        lhs->type = rhs->type;
-        lhs->size = rhs->size;
-        lhs->flag = rhs->flag;
+            break;
+        default:
+            // errorcode_t::unexpected;
+            break;
     }
-    __finally2
-    {
-        // do nothing
-    }
-    return ret;
-}
-
-static inline return_t variant_move (variant_t* lhs, variant_t* rhs)
-{
-    return_t ret = errorcode_t::success;
-    variant_t* object = nullptr;
-
-    __try2
-    {
-        if (nullptr == lhs || nullptr == rhs) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        memcpy (lhs, rhs, sizeof (variant_t)); // copy including type and flag
-        rhs->flag = 0;
-    }
-    __finally2
-    {
-        // do nothing
-    }
-    return ret;
-}
-
-static inline void variant_free (variant_t& vt)
-{
-    if (variant_flag_t::flag_free == vt.flag) {
-        switch (vt.type) {
-            case TYPE_STRING:
-            case TYPE_NSTRING:
-            case TYPE_POINTER:
-            case TYPE_BINARY:
-                if (vt.data.p) {
-                    free (vt.data.p);
-                }
-                break;
-            default:
-                break;
-        }
-    }
-    variant_init (vt);
+    return i;
 }
 
 } // namespace

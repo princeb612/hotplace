@@ -9,7 +9,11 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/io/cbor/cbor_array.hpp>
+#include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
+#include <hotplace/sdk/io/cbor/cbor_map.hpp>
+#include <hotplace/sdk/io/cbor/cbor_object.hpp>
 
 namespace hotplace {
 namespace io {
@@ -158,22 +162,29 @@ cbor_pair::cbor_pair (cbor_data* key, cbor_object* object) : cbor_object (cbor_t
 
 cbor_pair::~cbor_pair ()
 {
-    clear ();
+    // do nothing
 }
 
-return_t cbor_pair::clear ()
+int cbor_pair::addref ()
 {
-    return_t ret = errorcode_t::success;
+    if (_lhs) {
+        _lhs->addref ();
+    }
+    if (_rhs) {
+        _rhs->addref ();
+    }
+    return _shared.addref ();
+}
 
+int cbor_pair::release ()
+{
     if (_lhs) {
         _lhs->release ();
-        _lhs = nullptr;
     }
     if (_rhs) {
         _rhs->release ();
-        _rhs = nullptr;
     }
-    return ret;
+    return _shared.delref ();
 }
 
 cbor_object* const cbor_pair::left ()

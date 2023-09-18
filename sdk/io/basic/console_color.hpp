@@ -50,17 +50,19 @@ enum console_color_t {
  *
  * ANSI escape codes are used in UNIX-like terminals to provide syntax highlighting
  * @see     https://en.wikipedia.org/wiki/ANSI_escape_code
- * @examples
+ * @example
  *      console_color col;
  *      col.set_style (console_style_t::normal);
  *      col.set_fgcolor (console_color_t::yellow);
  *      col.set_bgcolor (console_color_t::black);
- *      std::cout << col.turnon () << "color" << col.turnoff () << "default" << std::endl;
+ *      std::cout << col.turnon () << "color";
+ *      std::cout << col.turnoff () << "default" << std::endl;
  *      std::cout << col.turnon ()
  *                      .set_style (console_style_t::bold)
  *                      .set_fgcolor (console_color_t::yellow)
  *                      .set_bgcolor (console_color_t::black)
- *                << "color" << col.turnoff () << "default" << std::endl;
+ *                << "color";
+ *      std::cout << col.turnoff () << "default" << std::endl;
  */
 
 class console_color
@@ -119,17 +121,6 @@ public:
         _bg = console_color_t::black;
         return *this;
     }
-    console_color& operator << (console_style_t style)
-    {
-        _style = style;
-        return *this;
-    }
-    console_color& operator << (console_color_t color)
-    {
-        _fg = color;
-        return *this;
-    }
-
     friend std::ostream& operator << (std::ostream& os, console_color& color)
     {
         if (color.get_status ()) {

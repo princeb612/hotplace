@@ -17,6 +17,7 @@
 #include <hotplace/sdk/base/system/windows/types.hpp>
 #endif
 
+#include <map>
 #include <string>
 #include <vector>
 

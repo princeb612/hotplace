@@ -8,11 +8,11 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/base64.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/jose/json_web_key.hpp>
-#include <hotplace/sdk/io/basic/base64.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <fstream>
 
@@ -108,7 +108,7 @@ return_t json_web_key::read_json (crypto_key* crypto_key, json_t* json)
                 const char* k_value = nullptr;
                 json_unpack (temp, "{s:s}", "k", &k_value);
 
-                add_oct (crypto_key, kid, alg, k_value, usage);
+                add_oct_b64u (crypto_key, kid, alg, k_value, usage);
             } else if (0 == strcmp (kty, "RSA")) {
                 const char* n_value = nullptr;
                 const char* e_value = nullptr;
@@ -123,7 +123,7 @@ return_t json_web_key::read_json (crypto_key* crypto_key, json_t* json)
                 json_unpack (temp, "{s:s,s:s,s:s,s:s,s:s}",
                              "p", &p_value, "q", &q_value, "dp", &dp_value, "dq", &dq_value, "qi", &qi_value);
 
-                add_rsa (crypto_key, kid, alg, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, usage);
+                add_rsa_b64u (crypto_key, kid, alg, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, usage);
             } else if (0 == strcmp (kty, "EC")) {
                 const char* crv_value = nullptr;
                 const char* x_value = nullptr;
@@ -131,14 +131,14 @@ return_t json_web_key::read_json (crypto_key* crypto_key, json_t* json)
                 const char* d_value = nullptr;
                 json_unpack (temp, "{s:s,s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "y", &y_value, "d", &d_value);
 
-                add_ec (crypto_key, kid, alg, crv_value, x_value, y_value, d_value, usage);
+                add_ec_b64u (crypto_key, kid, alg, crv_value, x_value, y_value, d_value, usage);
             } else if (0 == strcmp (kty, "OKP")) {
                 const char* crv_value = nullptr;
                 const char* x_value = nullptr;
                 const char* d_value = nullptr;
                 json_unpack (temp, "{s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "d", &d_value);
 
-                add_ec (crypto_key, kid, alg, crv_value, x_value, nullptr, d_value, usage);
+                add_ec_b64u (crypto_key, kid, alg, crv_value, x_value, nullptr, d_value, usage);
             } else {
                 // do nothing
             }

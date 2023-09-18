@@ -25,7 +25,7 @@ cd build
 SWITCHES
 
 if [ $OSTYPE = "msys" ]; then
-    export SUPPORT_SHARED=1
+    export SUPPORT_SHARED=0
     export SUPPORT_ODBC=0
     export SUPPORT_PCH=1
     true

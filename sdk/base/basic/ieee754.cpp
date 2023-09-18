@@ -6,6 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2023.09.12   Soo Han, Kim        CBOR (codename.hotplace)
  */
 
 #include <hotplace/sdk/base/basic/ieee754.hpp>
@@ -13,13 +14,27 @@
 namespace hotplace {
 
 /**
- *                               sign    exponent    fraction
- *          half precision       1           5           10
- *          single precision     1           8           23
- *          double precision     1          11           52
- *          quadruple            1          15          112
+ * @brief   IEEE754
+ * @desc
+ *                           sign    exponent    fraction
+ *      half precision       1           5           10
+ *      single precision     1           8           23
+ *      double precision     1          11           52
+ *      quadruple            1          15          112
+ *
+ *      Single Precision
+ *          Positive Infinity: 7F800000
+ *          Negative Infinity: FF800000
+ *          Signaling NaN: 7F8000001~ 7FBFFFFF or FF800001 ~ FFBFFFFF
+ *          Quiet NaN: 7FC00000 ~ 7FFFFFFF or FFC00000 ~ FFFFFFFF
+ *
+ *      Double Precision
+ *          Positive Infinity: 7FF0000000000000
+ *          Negative Infinity: FFF0000000000000
+ *          Signaling NaN: 7FF0000000000001 ~ 7FF7FFFFFFFFFFFF or FFF0000000000001 ~ FFF7FFFFFFFFFFFF
+ *          Quiet NaN: 7FF8000000000000 ~ 7FFFFFFFFFFFFFFF or FFF8000000000000 ~ FFFFFFFFFFFFFFFF
  */
-uint8 ieee754_format_as_small_as_possible (variant_t& vt, float fp)
+uint8 ieee754_as_small_as_possible (variant_t& vt, float fp)
 {
     uint8 ret = 4;
     fp32_t fp32;
@@ -36,7 +51,7 @@ uint8 ieee754_format_as_small_as_possible (variant_t& vt, float fp)
     return ret;
 }
 
-uint8 ieee754_format_as_small_as_possible (variant_t& vt, double fp)
+uint8 ieee754_as_small_as_possible (variant_t& vt, double fp)
 {
     uint8 ret = 8;
     fp64_t fp64;
@@ -51,7 +66,7 @@ uint8 ieee754_format_as_small_as_possible (variant_t& vt, double fp)
         if (0x7f800000 != (0x7f800000 & fp32.storage)) {
             //variant_set_float (fp32.fp);
             //ret = 4;
-            ret = ieee754_format_as_small_as_possible (vt, fp32.fp);
+            ret = ieee754_as_small_as_possible (vt, fp32.fp);
         }
     }
     return ret;

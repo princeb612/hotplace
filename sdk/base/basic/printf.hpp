@@ -3,15 +3,9 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *      printf mbs/wcs
- *
  *
  * Revision History
  * Date         Name                Description
- * 2013.05.08   Soo Han, Kim        printf %I64i, %I64u (code.merlin)
- * 2018.06.15   Soo Han, Kim        printf %zi, %zu, %zd (code.grape)
- * 2020.02.06   Soo Han, Kim        printf %I128i, %I128u (code.unicorn)
- * 2021.06.29   Soo Han, Kim        printf unicode (code.unicorn)
  *
  * printf license
  *  Copyright (c) 1990 Regents of the University of California.

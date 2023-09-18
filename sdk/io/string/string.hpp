@@ -3,8 +3,6 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *      printf mbs/wcs
- *
  *
  * Revision History
  * Date         Name                Description

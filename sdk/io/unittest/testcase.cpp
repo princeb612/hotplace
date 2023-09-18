@@ -56,8 +56,8 @@ void test_case::begin (const char* case_name, ...)
 
     stream  << _color.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::magenta)
             << constexpr_testcase
-            << topic.c_str ()
-            << _color.turnoff ();
+            << topic.c_str ();
+    stream << _color.turnoff ();
     std::cout << stream.c_str () << std::endl;
 
     reset_time ();
@@ -310,8 +310,8 @@ void test_case::test (return_t result, const char* test_function, const char* me
                 << format ("[%08x]", result).c_str ()
                 << _color.set_fgcolor (console_color_t::yellow)
                 << format ("[%s] ", test_function ? test_function : "").c_str ()
-                << tltle.c_str ()
-                << _color.turnoff ();
+                << tltle.c_str ();
+        stream << _color.turnoff ();
 
         std::cout << stream.c_str ()  << std::endl;
     }
@@ -337,7 +337,7 @@ constexpr char constexpr_function[] = "test function";
 constexpr char constexpr_time[] = "time";
 constexpr char constexpr_message[] = "message";
 
-#define cprint(stream, concolor, color1, color2, msg) stream << concolor.set_fgcolor (color1) << msg << concolor.set_fgcolor (color2);
+#define cprint(stream, concolor, color1, color2, msg) stream << concolor.set_fgcolor (color1) << msg; stream << concolor.set_fgcolor (color2);
 
 void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stream)
 {

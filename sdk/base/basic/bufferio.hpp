@@ -6,9 +6,6 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.15   Soo Han, Kim        fix : insert (lock)
-                                    fix : find_not_first_of, replace
- *                                  removed : replace1
  */
 
 #ifndef __GRAPE_SDK_BASE_BASIC_BUFFERIO__

@@ -217,9 +217,8 @@ void test_crypt ()
         ossl_set_unitsize (_test_condition[i].unitsize);
 
         std::cout   << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::white)
-                    << "cooltime " << ossl_get_cooltime () << " unitsize " << ossl_get_unitsize ()
-                    << col.turnoff ()
-                    << std::endl;
+                    << "cooltime " << ossl_get_cooltime () << " unitsize " << ossl_get_unitsize () << std::endl;
+        std::cout << col.turnoff ();
         test_crypt_algorithms ();
     }
 }

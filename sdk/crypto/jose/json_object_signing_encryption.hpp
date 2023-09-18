@@ -138,26 +138,26 @@
  *
  * Revision History
  * Date         Name                Description
- * 2017.10.30   Soo Han, Kim        RFC 7515 A.1 (grape)
+ * 2017.10.30   Soo Han, Kim        RFC 7515 A.1 (codename.grape)
  *                                  JWS HS256,HS384,HS512,RS256,RS384,RS512
- * 2017.11.30   Soo Han, Kim        RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation (grape)
- * 2017.12.06   Soo Han, Kim        RFC 7516 decryption (grape)
+ * 2017.11.30   Soo Han, Kim        RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation (codename.grape)
+ * 2017.12.06   Soo Han, Kim        RFC 7516 decryption (codename.grape)
  *                                  JWE RSA-OAEP,RSA-OAEP-256,RSA1_5,A128KW,A192KW,A256KW
  *                                  JWA A128GCM,A192GCM,A256GCM,A128CBC-HS256,A192CBC-HS384,A256CBC-HS512
- * 2018.11.15   Soo Han, Kim        RFC 7515 A.3. A.4. (grape)
+ * 2018.11.15   Soo Han, Kim        RFC 7515 A.3. A.4. (codename.grape)
  *                                  JWS ES256,ES384,ES512
- * 2018.11.20   Soo Han, Kim        RFC7517 Example C (grape)
+ * 2018.11.20   Soo Han, Kim        RFC7517 Example C (codename.grape)
  *                                  JWE PBES2-HS256+A128KW
- * 2018.11.21   Soo Han, Kim        RFC 7517 Appendix C.  Example Encrypted RSA Private Key (grape)
- * 2018.12.07   Soo Han, Kim        RFC 7516 A.4.   (grape)
+ * 2018.11.21   Soo Han, Kim        RFC 7517 Appendix C.  Example Encrypted RSA Private Key (codename.grape)
+ * 2018.12.07   Soo Han, Kim        RFC 7516 A.4.   (codename.grape)
  *                                  PBES2-HS384+A192KW, PBES2-HS512+A256KW
- * 2019.01.01   Soo Han, Kim        RFC 7518 RSASSA-PSS using SHA-256 and MGF1 with SHA-256 (JWS PS256,PS384,PS512) (grape)
- * 2019.01.01   Soo Han, Kim        JWE (grape)
+ * 2019.01.01   Soo Han, Kim        RFC 7518 RSASSA-PSS using SHA-256 and MGF1 with SHA-256 (JWS PS256,PS384,PS512) (codename.grape)
+ * 2019.01.01   Soo Han, Kim        JWE (codename.grape)
  *                                  ECDH-ES,ECDH-ES+A128KW,ECDH-ES+A192KW,ECDH-ES+A256KW
- * 2021.01.23   Soo Han, Kim        RFC 8037 (unicorn)
+ * 2021.01.23   Soo Han, Kim        RFC 8037 (codename.unicorn)
  *                                  JWS EdDSA
  *                                  JWK OKP
- * 2022.05.18   Soo Han, Kim        apply openssl 3 (unicorn)
+ * 2022.05.18   Soo Han, Kim        apply openssl 3 (codename.unicorn)
  *
  */
 

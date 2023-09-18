@@ -9,7 +9,8 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
 
 namespace hotplace {
 namespace io {
@@ -101,15 +102,7 @@ cbor_data::cbor_data (const variant_t& vt) : cbor_object (cbor_type_t::cbor_type
 
 cbor_data::~cbor_data ()
 {
-    clear ();
-}
-
-return_t cbor_data::clear ()
-{
-    return_t ret = errorcode_t::success;
-
     variant_free (_vt);
-    return ret;
 }
 
 const variant_t& cbor_data::data ()

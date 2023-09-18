@@ -35,7 +35,8 @@ void test_consolecolor ()
                 col.set_fgcolor (fgcolor);
 
                 if (fgcolor != bgcolor) {
-                    std::cout << col.turnon () << "test" << col.turnoff ();
+                    std::cout << col.turnon () << "test";
+                    std::cout << col.turnoff ();
                     if (15 == (loop % 16)) {
                         std::cout << std::endl;
                     }
@@ -51,13 +52,14 @@ void test_consolecolor ()
     col.set_fgcolor (console_color_t::yellow);
     col.set_bgcolor (console_color_t::black);
 
-    std::cout << col.turnon () << "color" << col.turnoff () << "default" << std::endl;
+    std::cout << col.turnon () << "color";
+    std::cout << col.turnoff () << "default" << std::endl;
     _test_case.assert (true, __FUNCTION__, "console color.2");
 
     std::cout   << col.turnon ()
                 << col.set_style (console_style_t::bold).set_fgcolor (console_color_t::yellow).set_bgcolor (console_color_t::black)
-                << "color"
-                << col.turnoff () << "default" << std::endl;
+                << "color";
+    std::cout << col.turnoff () << "default" << std::endl;
 
     _test_case.assert (true, __FUNCTION__, "console color.3");
 }

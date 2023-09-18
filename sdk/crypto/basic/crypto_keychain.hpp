@@ -77,54 +77,54 @@ public:
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param binary_t n [in]
-     * @param binary_t e [in]
-     * @param binary_t d [inopt]
+     * @param binary_t const& n [in]
+     * @param binary_t const& e [in]
+     * @param binary_t const& d [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, binary_t n, binary_t e, binary_t d,
+    return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& n, binary_t const& e, binary_t const& d,
                       crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [inopt]
-     * @param binary_t n [in]
-     * @param binary_t e [in]
-     * @param binary_t d [inopt]
+     * @param binary_t const& n [in]
+     * @param binary_t const& e [in]
+     * @param binary_t const& d [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t n, binary_t e, binary_t d,
+    return_t add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& n, binary_t const& e, binary_t const& d,
                       crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param binary_t n [in]
-     * @param binary_t e [in]
-     * @param binary_t d [inopt]
+     * @param binary_t const& n [in]
+     * @param binary_t const& e [in]
+     * @param binary_t const& d [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, binary_t n, binary_t e, binary_t d,
-                      binary_t p, binary_t q, binary_t dp, binary_t dq, binary_t qi, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& n, binary_t const& e, binary_t const& d,
+                      binary_t const& p, binary_t const& q, binary_t const& dp, binary_t const& dq, binary_t const& qi, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
-     * @param binary_t n [in]
-     * @param binary_t e [in]
-     * @param binary_t d [inopt]
-     * @param binary_t p [inopt]
-     * @param binary_t q [inopt]
-     * @param binary_t dp [inopt]
-     * @param binary_t dq [inopt]
-     * @param binary_t qi [inopt]
+     * @param binary_t const& n [in]
+     * @param binary_t const& e [in]
+     * @param binary_t const& d [inopt]
+     * @param binary_t const& p [inopt]
+     * @param binary_t const& q [inopt]
+     * @param binary_t const& dp [inopt]
+     * @param binary_t const& dq [inopt]
+     * @param binary_t const& qi [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t n, binary_t e, binary_t d,
-                      binary_t p, binary_t q, binary_t dp, binary_t dq, binary_t qi, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& n, binary_t const& e, binary_t const& d,
+                      binary_t const& p, binary_t const& q, binary_t const& dp, binary_t const& dq, binary_t const& qi, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -213,12 +213,12 @@ public:
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @param binary_t x [in]
-     * @param binary_t y [in]
-     * @param binary_t d [inopt] private key
+     * @param binary_t const& x [in]
+     * @param binary_t const& y [in]
+     * @param binary_t const& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec (crypto_key* cryptokey, int nid, binary_t x, binary_t y, binary_t d, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_ec (crypto_key* cryptokey, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -231,12 +231,12 @@ public:
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @param binary_t x [in]
-     * @param binary_t y [in]
-     * @param binary_t d [inopt] private key
+     * @param binary_t const& x [in]
+     * @param binary_t const& y [in]
+     * @param binary_t const& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec (crypto_key* cryptokey, const char* kid, int nid, binary_t x, binary_t y, binary_t d,
+    return_t add_ec (crypto_key* cryptokey, const char* kid, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
                      crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
@@ -251,12 +251,12 @@ public:
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @param binary_t x [in]
-     * @param binary_t y [in]
-     * @param binary_t d [inopt] private key
+     * @param binary_t const& x [in]
+     * @param binary_t const& y [in]
+     * @param binary_t const& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t x, binary_t y, binary_t d,
+    return_t add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
                      crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
@@ -267,12 +267,12 @@ public:
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
-     * @param binary_t x [in]
-     * @param binary_t y [in]
-     * @param binary_t d [inopt] private key
+     * @param binary_t const& x [in]
+     * @param binary_t const& y [in]
+     * @param binary_t const& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec_nid_EC (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t x, binary_t y, binary_t d,
+    return_t add_ec_nid_EC (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
                             crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate Ed25519, Ed448
@@ -284,9 +284,9 @@ public:
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @param binary_t x [in]
-     * @param binary_t y [in]
-     * @param binary_t d [inopt] private key
+     * @param binary_t const& x [in]
+     * @param binary_t const& y [in]
+     * @param binary_t const& d [inopt] private key
      * @return error code (see error.hpp)
      * @remarks
      *      1 EdDSA provides high performance on a variety of platforms;
@@ -303,7 +303,7 @@ public:
      *      Ed25519 and Ed448 use small private keys (32 or 57 bytes respectively), small public keys (32 or 57 bytes)
      *      and small signatures (64 or 114 bytes) with high security level at the same time (128-bit or 224-bit respectively).
      */
-    return_t add_ec_nid_OKP (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t x, binary_t d,
+    return_t add_ec_nid_OKP (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& d,
                              crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
@@ -318,46 +318,46 @@ public:
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @param binary_t x [in]
-     * @param binary_t y [in]
-     * @param binary_t d [inopt] private key
+     * @param binary_t const& x [in]
+     * @param binary_t const& y [in]
+     * @param binary_t const& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec (crypto_key* cryptokey, const char* kid, jwa_t alg, int nid, binary_t x, binary_t y, binary_t d,
+    return_t add_ec (crypto_key* cryptokey, const char* kid, jwa_t alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
                      crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
-     * @param binary_t k [in]
+     * @param binary_t const& k [in]
      * @return error code (see error.hpp)
      */
-    return_t add_oct (crypto_key* cryptokey, binary_t k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct (crypto_key* cryptokey, binary_t const& k, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
-     * @param binary_t k [in]
+     * @param binary_t const& k [in]
      * @return error code (see error.hpp)
      */
-    return_t add_oct (crypto_key* cryptokey, const char* kid, binary_t k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct (crypto_key* cryptokey, const char* kid, binary_t const& k, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param binary_t k [in]
+     * @param binary_t const& k [in]
      * @return error code (see error.hpp)
      */
-    return_t add_oct (crypto_key* cryptokey, const char* kid, const char* alg, binary_t k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct (crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& k, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
-     * @param binary_t k [in]
+     * @param binary_t const& k [in]
      * @return error code (see error.hpp)
      */
-    return_t add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& k, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]

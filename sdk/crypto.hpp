@@ -30,6 +30,7 @@
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/basic/time_otp.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/cose/cbor_web_key.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
 #include <hotplace/sdk/crypto/jose/json_web_key.hpp>
 #include <hotplace/sdk/crypto/jose/json_web_signature.hpp>

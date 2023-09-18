@@ -3,8 +3,6 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *      printf mbs/wcs
- *
  *
  * Revision History
  * Date         Name                Description
@@ -128,8 +126,8 @@ static inline double fp64_from_binary64 (uint64 bin)
  * @param   variant_t& vt [out]
  * @param   float fp [in]
  */
-uint8 ieee754_format_as_small_as_possible (variant_t& vt, float fp);
-uint8 ieee754_format_as_small_as_possible (variant_t& vt, double fp);
+uint8 ieee754_as_small_as_possible (variant_t& vt, float fp);
+uint8 ieee754_as_small_as_possible (variant_t& vt, double fp);
 
 uint16 fp16_from_fp32 (float single);
 /**

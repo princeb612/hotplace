@@ -14,6 +14,7 @@
 
 #include <hotplace/sdk/crypto/basic/crypto_json_key.hpp>
 #include <hotplace/sdk/crypto/cose/types.hpp>
+#include <hotplace/sdk/io/cbor/cbor_object.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -25,22 +26,41 @@ public:
     virtual ~cbor_web_key ();
 
     /**
-     * @brief load JWK from a buffer
-     * @param crypto_key * crypto_key [in]
-     * @param const char* buffer [in]
-     * @param int flags [in] reserved
-     * @return error code (see error.hpp)
+     * @brief   load key from a buffer
+     * @param   crypto_key * crypto_key [in] base16 encoded
+     * @param   const char* buffer [in]
+     * @param   int flags [in] reserved
+     * @return  error code (see error.hpp)
      */
     virtual return_t load (crypto_key* crypto_key, const char* buffer, int flags = 0);
     /**
-     * @brief write
-     * @param crypto_key* crypto_key [in]
-     * @param char* buf [out] null-terminated
-     * @param size_t* buflen [inout]
-     * @param int flag [in] 0 public only, 1 also private
-     * @return error code (see error.hpp)
+     * @brief   load key from a buffer
+     * @param   crypto_key * crypto_key [in]
+     * @param   byte_t* const& buffer [in]
+     * @param   size_t size [in]
+     * @param   int flags [in] reserved
+     * @return  error code (see error.hpp)
+     */
+    return_t load (crypto_key* crypto_key, const byte_t* buffer, size_t size, int flags = 0);
+    /**
+     * @brief   load key from a buffer
+     * @param   crypto_key * crypto_key [in]
+     * @param   binary_t* const& buffer [in]
+     * @param   int flags [in] reserved
+     * @return  error code (see error.hpp)
+     */
+    return_t load (crypto_key* crypto_key, binary_t const& buffer, int flags = 0);
+    return_t load (crypto_key* crypto_key, cbor_object* root, int flags = 0);
+    /**
+     * @brief   write
+     * @param   crypto_key* crypto_key [in]
+     * @param   char* buf [out] null-terminated
+     * @param   size_t* buflen [inout]
+     * @param   int flag [in] 0 public only, 1 also private
+     * @return  error code (see error.hpp)
      */
     virtual return_t write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
+    virtual return_t write (crypto_key* crypto_key, binary_t cbor, int flags = 0);
 
 protected:
 };

@@ -6,7 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
- * 2002.10.24   Soo Han, Kim        hush project
+ * 2002.10.24   Soo Han, Kim        codename.hush2002
  * 2007.07.01   Soo Han, Kim        asynchronous query
  * 2009.11.06   Soo Han, Kim        unicode
  * 2023.09.07   Soo Han, Kim        refactor

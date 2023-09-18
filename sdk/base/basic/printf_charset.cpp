@@ -6,10 +6,13 @@
  *
  * Revision History
  * Date         Name                Description
- * 2013.05.08   Soo Han, Kim        printf %I64i, %I64u (code.merlin)
- * 2018.06.15   Soo Han, Kim        printf %zi, %zu, %zd (code.grape)
- * 2020.02.06   Soo Han, Kim        printf %I128i, %I128u (code.unicorn)
- * 2021.06.29   Soo Han, Kim        printf unicode (code.unicorn)
+ * 1997.        Soo Han, Kim        porting (codename.hush1997)
+ * 2004.        Soo Han, Kim        printf long double (codename.hush2002)
+ * 2009.04.29   Soo Han, Kim        porting (codename.merlin)
+ * 2013.05.08   Soo Han, Kim        printf %I64i, %I64u (codename.merlin)
+ * 2018.06.15   Soo Han, Kim        printf %zi, %zu, %zd (codename.grape)
+ * 2020.02.06   Soo Han, Kim        printf %I128i, %I128u (codename.unicorn)
+ * 2021.06.29   Soo Han, Kim        printf unicode (codename.unicorn)
  *
  * printf license
  *  Copyright (c) 1990 Regents of the University of California.

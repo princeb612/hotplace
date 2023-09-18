@@ -6,7 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
- * 2009.12.11   Soo Han, Kim        implemented hmac (merlin)
+ * 2009.12.11   Soo Han, Kim        implemented hmac (codename.merlin)
  */
 
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_HASH__

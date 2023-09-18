@@ -207,14 +207,12 @@ void openssl_thread_setup ()
 {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
     /* openssl-0.9.8 thread-safe */
+    openssl_threadsafe_lock.enter ();
     if (0 == openssl_threadsafe_refcount) {
-        openssl_threadsafe_lock.enter ();
-        if (0 == openssl_threadsafe_refcount) {
-            openssl_thread_setup_implementation ();
-        }
-        openssl_threadsafe_refcount++;
-        openssl_threadsafe_lock.leave ();
+        openssl_thread_setup_implementation ();
     }
+    openssl_threadsafe_refcount++;
+    openssl_threadsafe_lock.leave ();
 #endif
 }
 
@@ -222,16 +220,14 @@ void openssl_thread_cleanup ()
 {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
     /* openssl-0.9.8 thread-safe */
+    openssl_threadsafe_lock.enter ();
     if (openssl_threadsafe_refcount > 0) {
-        openssl_threadsafe_lock.enter ();
-        if (openssl_threadsafe_refcount > 0) {
-            openssl_threadsafe_refcount--;
-            if (0 == openssl_threadsafe_refcount) {
-                openssl_thread_cleanup_implementation ();
-            }
+        openssl_threadsafe_refcount--;
+        if (0 == openssl_threadsafe_refcount) {
+            openssl_thread_cleanup_implementation ();
         }
-        openssl_threadsafe_lock.leave ();
     }
+    openssl_threadsafe_lock.leave ();
 #endif
 }
 

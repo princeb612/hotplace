@@ -6,7 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.13   Soo Han, Kim        reboot
+ * 2023.08.13   Soo Han, Kim        reboot (codename.hotplace)
  */
 
 #ifndef __HOTPLACE_SDK_BASE_ERROR__

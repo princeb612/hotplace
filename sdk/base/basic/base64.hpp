@@ -13,8 +13,8 @@
  *           Appendix C.  Notes on Implementing base64url Encoding without Padding
  */
 
-#ifndef __HOTPLACE_SDK_IO_BASIC_BASE64__
-#define __HOTPLACE_SDK_IO_BASIC_BASE64__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_BASE64__
+#define __HOTPLACE_SDK_BASE_BASIC_BASE64__
 
 #include <hotplace/sdk/base.hpp>
 

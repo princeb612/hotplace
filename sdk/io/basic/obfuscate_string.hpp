@@ -6,8 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
- * 2014.09.03   Soo Han, Kim        implemented (merlin)
- * 2015.04.22   Soo Han, Kim        random factor (merlin)
+ * 2014.09.03   Soo Han, Kim        implemented (codename.merlin)
+ * 2015.04.22   Soo Han, Kim        random factor (codename.merlin)
  * 2023.08.28   Soo Han, Kim        refactor
  */
 

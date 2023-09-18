@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2006.02.17   Soo Han, Kim        codename.hush
+ * 2009.07.22   Soo Han, Kim        codename.merlin
  */
 
 #include <hotplace/sdk/base/syntax.hpp>

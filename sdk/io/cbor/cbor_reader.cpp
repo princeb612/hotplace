@@ -9,12 +9,30 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/io/basic/base16.hpp>
-#include <hotplace/sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/base/basic/base16.hpp>
+#include <hotplace/sdk/io/cbor/cbor_array.hpp>
+#include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_map.hpp>
+#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
+#include <hotplace/sdk/io/cbor/cbor_reader.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 
 namespace hotplace {
 namespace io {
+
+typedef std::deque<cbor_object*> cbor_item_dequeue_t;
+typedef struct _cbor_reader_context_t {
+    int indef;
+    cbor_object* root;
+    uint32 tag_value;
+    bool tag_flag;
+    cbor_item_dequeue_t parents;
+    cbor_item_dequeue_t items;
+
+    _cbor_reader_context_t () : indef (0), root (nullptr), tag_value (0), tag_flag (false)
+    {
+    }
+} cbor_reader_context_t;
 
 cbor_reader::cbor_reader ()
 {
@@ -90,20 +108,18 @@ return_t cbor_reader::parse (cbor_reader_context_t* handle, const char* expr)
     return ret;
 }
 
-return_t cbor_reader::parse (cbor_reader_context_t* handle, binary_t const& expression)
+return_t cbor_reader::parse (cbor_reader_context_t* handle, const byte_t* data, size_t size)
 {
     return_t ret = errorcode_t::success;
 
     __try2
     {
-        if (nullptr == handle) {
+        if (nullptr == handle || nullptr == data) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         size_t i = 0;
-        size_t size = expression.size ();
-        const byte_t* data = &expression[0];
         uint32 flags = 0;
         byte_t cur = 0;
         uint32 tag = 0;
@@ -173,19 +189,6 @@ return_t cbor_reader::parse (cbor_reader_context_t* handle, binary_t const& expr
                 handle->tag_flag = true;
                 continue;
             } else if (cbor_major_t::cbor_major_simple == lead_type) {
-                // to do
-                //
-                // Single Precision
-                // Positive Infinity: 7F800000
-                // Negative Infinity: FF800000
-                // Signaling NaN: 7F8000001~ 7FBFFFFF or FF800001 ~ FFBFFFFF
-                // Quiet NaN: 7FC00000 ~ 7FFFFFFF or FFC00000 ~ FFFFFFFF
-                //
-                // Double Precision
-                // Positive Infinity: 7FF0000000000000
-                // Negative Infinity: FFF0000000000000
-                // Signaling NaN: 7FF0000000000001 ~ 7FF7FFFFFFFFFFFF or FFF0000000000001 ~ FFF7FFFFFFFFFFFF
-                // Quiet NaN: 7FF8000000000000 ~ 7FFFFFFFFFFFFFFF or FFF8000000000000 ~ FFFFFFFFFFFFFFFF
                 cbor_simple_t simple_type = cbor_simple::is_kind_of (cur);
                 switch (simple_type) {
                     case cbor_simple_t::cbor_simple_single_fp:
@@ -203,6 +206,26 @@ return_t cbor_reader::parse (cbor_reader_context_t* handle, binary_t const& expr
             handle->tag_value = 0;
             handle->tag_flag = false;
         }
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_reader::parse (cbor_reader_context_t* handle, binary_t const& expression)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = parse (handle, &expression[0], expression.size ());
     }
     __finally2
     {
@@ -518,6 +541,29 @@ return_t cbor_reader::publish (cbor_reader_context_t* handle, binary_t* bin)
         cbor_publisher publisher;
 
         publisher.publish (handle->root, bin);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_reader::publish (cbor_reader_context_t* handle, cbor_object** root)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == handle || nullptr == root) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (handle->root) {
+            handle->root->addref ();
+        }
+        *root = handle->root;
     }
     __finally2
     {

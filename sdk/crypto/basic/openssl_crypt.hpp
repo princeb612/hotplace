@@ -6,7 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
- * 2009.06.18   Soo Han, Kim        implemented (merlin)
+ * 2009.06.18   Soo Han, Kim        implemented (codename.merlin)
  */
 
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPT__

@@ -31,5 +31,9 @@
 *.out
 *.app
 
+# local
+.svn
 build
 include
+lib
+thirdparty
