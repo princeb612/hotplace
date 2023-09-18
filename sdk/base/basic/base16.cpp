@@ -19,20 +19,18 @@ return_t base16_encode (const byte_t* source, size_t size, char* buf, size_t* bu
 
     __try2
     {
-        if (nullptr == source || nullptr == buf || nullptr == buflen) {
+        if (nullptr == source || nullptr == buflen) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
+        size_t size_buf = *buflen;
         size_t size_necessary = (size << 1) + 1;
-
-        if (*buflen < size_necessary) {
-            ret = errorcode_t::insufficient_buffer;
-        }
 
         *buflen = size_necessary;
 
-        if (errorcode_t::success != ret) {
+        if (size_buf < size_necessary) {
+            ret = errorcode_t::insufficient_buffer;
             __leave2;
         }
 
@@ -45,8 +43,9 @@ return_t base16_encode (const byte_t* source, size_t size, char* buf, size_t* bu
         char* target = buf;
         size_t cur = 0;
         for (; cur < size; p++, target += 2, cur++) {
-            snprintf (target, 2, "%02x", *p);
+            snprintf (target, 3, "%02x", *p);
         }
+        *target = 0;
     }
     __finally2
     {

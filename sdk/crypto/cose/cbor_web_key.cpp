@@ -70,6 +70,7 @@ typedef struct _cose_object_key {
 
     _cose_object_key () : type (0), curve (0)
     {
+        // do nothing
     }
 } cose_key_object;
 
@@ -258,27 +259,42 @@ typedef struct _cose_mapper_t {
 
     _cose_mapper_t () : root (nullptr)
     {
+        // do nothing
     }
 } cose_mapper_t;
 
 void cwk_writer (crypto_key_object_t* key, void* param)
 {
     return_t ret = errorcode_t::success;
-    cose_mapper_t* mapper = (cose_mapper_t*) param;
-    cbor_array* root = mapper->root;
 
-    std::string kid = key->kid;
-    //int use = key->use;
-    //std::string alg = key->alg;
+    __try2
+    {
+        if (nullptr == param) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-    crypto_key_t kty;
-    binary_t pub1;
-    binary_t pub2;
-    binary_t priv;
+        cose_mapper_t* mapper = (cose_mapper_t*) param;
+        cbor_array* root = mapper->root;
+        if (nullptr == root) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
 
-    ret = crypto_key::get_key (key->pkey, 1, kty, pub1, pub2, priv);
-    if (errorcode_t::success == ret) {
-        cbor_map* keynode = new cbor_map ();
+        std::string kid = key->kid;
+
+        crypto_key_t kty;
+        binary_t pub1;
+        binary_t pub2;
+        binary_t priv;
+
+        ret = crypto_key::get_key (key->pkey, 1, kty, pub1, pub2, priv);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        cbor_map* keynode = nullptr;
+        __try_new_catch (keynode, new cbor_map (), ret, __leave2);
 
         std::map <int, int> ktyinfo;
         ktyinfo.insert (std::make_pair (crypto_key_t::ec_key, 4));
@@ -329,7 +345,12 @@ void cwk_writer (crypto_key_object_t* key, void* param)
                 *keynode << new cbor_pair (-3, new cbor_data (priv));   // d
             }
         }
+
         *root << keynode;
+    }
+    __finally2
+    {
+        // do nothing
     }
 }
 
