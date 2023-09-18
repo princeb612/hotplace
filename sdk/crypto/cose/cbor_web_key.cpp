@@ -194,7 +194,8 @@ return_t cbor_web_key::load (crypto_key* crypto_key, cbor_object* root, int flag
                     maphint <int, binary_t> hint_key (keyobj.attrib);
                     if (1 == keyobj.type || 2 == keyobj.type) { // okp, ec2
                         uint32 nid = 0;
-                        hint_nid.find (keyobj.type, &nid);
+                        hint_nid.find (keyobj.curve, &nid);
+printf ("kty %d nid %d\n", keyobj.type, nid);
                         binary_t x;
                         binary_t y;
                         binary_t d;

@@ -2240,19 +2240,15 @@ void try_refactor_jose_sign ()
     printf ("contents %s\njws      %s\n", contents, jws.c_str ());
 }
 
-void test_cbor_web_key ()
+void test_cbor_key (const char* file, const char* text)
 {
-    // rfc8152_c_7_1.cbor - fail
-    // [../openssl-3.1.1/crypto/ec/ec_lib.c @ 876] error:0800006B:elliptic curve routines::point is not on curve
-    // rfc8152_c_7_2.cbor - works good
-
     _test_case.begin ("CBOR encoded keys");
     return_t ret = errorcode_t::success;
     crypto_key key;
     cbor_web_key cwk;
 
     binary_t cbor;
-    const char* cbor_file = "rfc8152_c_7_2.cbor";
+    const char* cbor_file = "rfc8152_c_7_1.cbor";
     file_stream fs;
 
     ret = fs.open (cbor_file);
@@ -2263,9 +2259,16 @@ void test_cbor_web_key ()
         size_t file_size = fs.size ();
         cbor.insert (cbor.end (), file_contents, file_contents + file_size);
 
-        cwk.load (&key, cbor);
+        ret = cwk.load (&key, cbor);
         key.for_each (dump_crypto_key, nullptr);
     }
+    _test_case.test (ret, __FUNCTION__, text ? text : "");
+}
+
+void test_cbor_web_key ()
+{
+    test_cbor_key ("rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
+    test_cbor_key ("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
 }
 
 int main ()
