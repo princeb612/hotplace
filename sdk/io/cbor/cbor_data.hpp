@@ -50,6 +50,7 @@ public:
     cbor_data (binary_t const& bin);
     cbor_data (const char* tstr);
     cbor_data (const char* tstr, size_t length);
+    cbor_data (std::string const& bin);
     cbor_data (fp16_t const& value);
     cbor_data (float value);
     cbor_data (double value);

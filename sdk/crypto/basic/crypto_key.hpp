@@ -377,7 +377,7 @@ private:
 /**
  * @param crypto_key_object_t key [in]
  */
-crypto_key_t typeof_crypto_key (crypto_key_object_t key);
+crypto_key_t typeof_crypto_key (crypto_key_object_t const& key);
 /**
  * @brief compare
  * @param EVP_PKEY* pkey [in]

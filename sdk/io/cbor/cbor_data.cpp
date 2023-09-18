@@ -75,6 +75,11 @@ cbor_data::cbor_data (const char* tstr, size_t length) : cbor_object (cbor_type_
     variant_set_strn_new (_vt, tstr, length);
 }
 
+cbor_data::cbor_data (std::string const& data) : cbor_object (cbor_type_t::cbor_type_data)
+{
+    variant_set_str_new (_vt, data.c_str ());
+}
+
 cbor_data::cbor_data (fp16_t const& value) : cbor_object (cbor_type_t::cbor_type_data)
 {
     variant_set_fp16 (_vt, value.storage);

@@ -2242,16 +2242,15 @@ void try_refactor_jose_sign ()
 
 void test_cbor_key (const char* file, const char* text)
 {
-    _test_case.begin ("CBOR encoded keys");
+    _test_case.begin ("CBOR encoded keys - order not guaranteed");
     return_t ret = errorcode_t::success;
     crypto_key key;
     cbor_web_key cwk;
 
     binary_t cbor;
-    const char* cbor_file = "rfc8152_c_7_1.cbor";
     file_stream fs;
 
-    ret = fs.open (cbor_file);
+    ret = fs.open (file);
     if (errorcode_t::success == ret) {
         fs.begin_mmap ();
 
@@ -2261,6 +2260,20 @@ void test_cbor_key (const char* file, const char* text)
 
         ret = cwk.load (&key, cbor);
         key.for_each (dump_crypto_key, nullptr);
+        _test_case.test (ret, __FUNCTION__, text ? text : "");
+
+        if (1) {
+            test_case_notimecheck notimecheck (_test_case);
+
+            binary_t cbor_written;
+            ret = cwk.write (&key, cbor_written);
+
+            buffer_stream bs;
+            dump_memory (cbor, &bs, 32);
+            std::cout << "from file" << std::endl << bs.c_str () << std::endl;
+            dump_memory (cbor_written, &bs, 32);
+            std::cout << "from cwk" << std::endl << bs.c_str () << std::endl;
+        }
     }
     _test_case.test (ret, __FUNCTION__, text ? text : "");
 }
@@ -2275,6 +2288,9 @@ int main ()
 {
     set_trace_option (trace_option_t::trace_bt | trace_option_t::trace_except);
 
+    openssl_startup ();
+    openssl_thread_setup ();
+
     // check format
     // install
     //      pacman -S rubygems (MINGW)
@@ -2288,6 +2304,12 @@ int main ()
     // interface design
     // what kind of member methods required ?
     // need more simple ones
+    // and then refactor JOSE
+
+    // part 1 .. following cases
+    // cbor_array* to CBOR and diagnostic
+    // Test Vector comparison
+    // cbor_array* from CBOR
     test_rfc8152_c_1_1 ();
     test_rfc8152_c_1_2 ();
     test_rfc8152_c_1_3 ();
@@ -2306,15 +2328,18 @@ int main ()
     test_rfc8152_c_6_1 ();
     test_rfc8152_c_7_1 ();
     test_rfc8152_c_7_2 ();
+    // part 2 .. parse
     test_rfc_examples ();
 
-    //openssl_startup ();
-    //openssl_thread_setup ();
-    // and then refactor JOSE
+    // part 3 .. load keys from cbor and write to CBOR
+    // step.1 parse CBOR and load EVP_PKEY
+    // step.2 write EVP_PKEY to CBOR
+
     test_cbor_web_key ();
     //try_refactor_jose_sign ();
-    //openssl_thread_cleanup ();
-    //openssl_cleanup ();
+
+    openssl_thread_cleanup ();
+    openssl_cleanup ();
 
     _test_case.report (5);
     return _test_case.result ();

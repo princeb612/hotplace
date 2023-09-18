@@ -21,6 +21,7 @@
 #include <hotplace/sdk/io/cbor/cbor_array.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
 #include <hotplace/sdk/io/cbor/cbor_map.hpp>
+#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
 #include <hotplace/sdk/io/cbor/cbor_reader.hpp>
 #include <hotplace/sdk/io/stream/buffer_stream.hpp>
 
@@ -89,7 +90,7 @@ return_t cbor_web_key::load (crypto_key* crypto_key, const byte_t* buffer, size_
 
         reader.open (&handle);
         reader.parse (handle, buffer, size);
-        reader.publish (handle, &root);
+        ret = reader.publish (handle, &root);
         reader.close (handle);
 
         ret = load (crypto_key, root);
@@ -169,11 +170,11 @@ return_t cbor_web_key::load (crypto_key* crypto_key, cbor_object* root, int flag
                         if ((lhs->type () == rhs->type ()) && (cbor_type_t::cbor_type_data == lhs->type ())) {
                             int label = t_variant_to_int<int> (lhs->data ());
                             const variant_t& vt_rhs = rhs->data ();
-                            if (2 == label) {
+                            if (2 == label) {           // kid
                                 variant_string (rhs->data (), keyobj.kid);
-                            } else if (1 == label) {
+                            } else if (1 == label) {    // kty
                                 keyobj.type = t_variant_to_int<int> (vt_rhs);
-                            } else if (-1 == label) {
+                            } else if (-1 == label) {   // ec2 curve, symmetric k
                                 if (TYPE_BINARY == vt_rhs.type) {
                                     // symm
                                     binary_t bin;
@@ -183,19 +184,18 @@ return_t cbor_web_key::load (crypto_key* crypto_key, cbor_object* root, int flag
                                     // curve if okp, ec2
                                     keyobj.curve = t_variant_to_int<int> (vt_rhs);
                                 }
-                            } else if (label < -1) {
+                            } else if (label < -1) { // ec2 (-2 x, -3 y, -4 d), rsa (-1 n, -2 e, -3 d, ..., -12 ti)
                                 binary_t bin;
                                 variant_binary (rhs->data (), bin);
                                 keyobj.attrib.insert (std::make_pair (label, bin));
                             }
                         }
                     }
-                    maphint <int, uint32> hint_nid (cose_kty_nid);
                     maphint <int, binary_t> hint_key (keyobj.attrib);
                     if (1 == keyobj.type || 2 == keyobj.type) { // okp, ec2
                         uint32 nid = 0;
+                        maphint <int, uint32> hint_nid (cose_kty_nid);
                         hint_nid.find (keyobj.curve, &nid);
-printf ("kty %d nid %d\n", keyobj.type, nid);
                         binary_t x;
                         binary_t y;
                         binary_t d;
@@ -238,11 +238,13 @@ return_t cbor_web_key::write (crypto_key* crypto_key, char* buf, size_t* buflen,
             __leave2;
         }
 
-        size_t size_request = *buflen;
-        std::string buffer;
+        binary_t cbor;
+        ret = write (crypto_key, cbor, flags);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
-        // crypto_key->for_each ();
-
+        ret = base16_encode (cbor, buf, buflen);
     }
     __finally2
     {
@@ -251,10 +253,116 @@ return_t cbor_web_key::write (crypto_key* crypto_key, char* buf, size_t* buflen,
     return ret;
 }
 
-return_t cbor_web_key::write (crypto_key* crypto_key, binary_t cbor, int flags)
+typedef struct _cose_mapper_t {
+    cbor_array* root;
+
+    _cose_mapper_t () : root (nullptr)
+    {
+    }
+} cose_mapper_t;
+
+void cwk_writer (crypto_key_object_t* key, void* param)
+{
+    return_t ret = errorcode_t::success;
+    cose_mapper_t* mapper = (cose_mapper_t*) param;
+    cbor_array* root = mapper->root;
+
+    std::string kid = key->kid;
+    //int use = key->use;
+    //std::string alg = key->alg;
+
+    crypto_key_t kty;
+    binary_t pub1;
+    binary_t pub2;
+    binary_t priv;
+
+    ret = crypto_key::get_key (key->pkey, 1, kty, pub1, pub2, priv);
+    if (errorcode_t::success == ret) {
+        cbor_map* keynode = new cbor_map ();
+
+        std::map <int, int> ktyinfo;
+        ktyinfo.insert (std::make_pair (crypto_key_t::ec_key, 4));
+        ktyinfo.insert (std::make_pair (crypto_key_t::hmac_key, 4));
+        ktyinfo.insert (std::make_pair (crypto_key_t::okp_key, 4));
+        ktyinfo.insert (std::make_pair (crypto_key_t::rsa_key, 4));
+        maphint <int, int> keyhint (ktyinfo);
+
+        std::map <int, int> cose_kty_nid;
+        cose_kty_nid.insert (std::make_pair (1, NID_X9_62_prime256v1));
+        cose_kty_nid.insert (std::make_pair (2, NID_secp384r1));
+        cose_kty_nid.insert (std::make_pair (3, NID_secp521r1));
+        cose_kty_nid.insert (std::make_pair (4, NID_X25519));
+        cose_kty_nid.insert (std::make_pair (5, NID_X448));
+        cose_kty_nid.insert (std::make_pair (6, NID_ED25519));
+        cose_kty_nid.insert (std::make_pair (7, NID_ED448));
+
+        int cose_kty = 0;
+        keyhint.find (kty, &cose_kty);
+        *keynode << new cbor_pair (1, new cbor_data (cose_kty)); // kty
+        if (kid.size ()) {
+            *keynode << new cbor_pair (2, new cbor_data (kid));
+        }
+
+        if (crypto_key_t::ec_key == kty || crypto_key_t::okp_key == kty) {
+            uint32 nid = 0;
+            int cose_curve = 0;
+
+            nidof_evp_pkey (key->pkey, nid);
+            maphint <int, int> hint_nid (cose_kty_nid);
+            hint_nid.find (nid, &cose_curve);
+
+            *keynode    << new cbor_pair (-1, new cbor_data (cose_curve))   // curve
+                        << new cbor_pair (-2, new cbor_data (pub1));        // x
+
+            if (crypto_key_t::ec_key == kty) {
+                *keynode << new cbor_pair (-3, new cbor_data (pub2)); // y
+            }
+            if (priv.size ()) {
+                *keynode << new cbor_pair (-4, new cbor_data (priv)); // d
+            }
+        } else if (crypto_key_t::hmac_key == kty) {
+            *keynode << new cbor_pair (-1, new cbor_data (priv));       // k
+        } else if (crypto_key_t::rsa_key == kty) {
+            *keynode    << new cbor_pair (-1, new cbor_data (pub1))     // n
+                        << new cbor_pair (-2, new cbor_data (pub2));    // e
+            if (priv.size ()) {
+                *keynode << new cbor_pair (-3, new cbor_data (priv));   // d
+            }
+        }
+        *root << keynode;
+    }
+}
+
+return_t cbor_web_key::write (crypto_key* crypto_key, binary_t& cbor, int flags)
 {
     return_t ret = errorcode_t::success;
 
+    __try2
+    {
+        if (nullptr == crypto_key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        cbor_array* root = new cbor_array ();
+        cose_mapper_t mapper;
+        mapper.root = root;
+
+        crypto_key->for_each (cwk_writer, &mapper);
+
+        cbor_publisher publisher;
+        publisher.publish (root, &cbor);
+
+        buffer_stream diagnostic;
+        publisher.publish (root, &diagnostic);
+        std::cout << diagnostic.c_str () << std::endl;
+
+        root->release ();
+    }
+    __finally2
+    {
+        // do nothing
+    }
     return ret;
 }
 

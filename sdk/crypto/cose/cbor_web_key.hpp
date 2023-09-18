@@ -60,7 +60,7 @@ public:
      * @return  error code (see error.hpp)
      */
     virtual return_t write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
-    virtual return_t write (crypto_key* crypto_key, binary_t cbor, int flags = 0);
+    virtual return_t write (crypto_key* crypto_key, binary_t& cbor, int flags = 0);
 
 protected:
 };

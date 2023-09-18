@@ -239,9 +239,6 @@ uint32 ossl_get_unitsize ();
  */
 return_t is_private_key (EVP_PKEY * pkey, bool& result);
 
-//
-//
-
 /**
  * @brief kindof
  * @param crypto_key_t type [in]

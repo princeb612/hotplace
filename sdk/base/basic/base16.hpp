@@ -34,8 +34,10 @@ namespace hotplace {
  *          printf ("%s\n", bs.c_str ());
  */
 
+return_t base16_encode (const byte_t* source, size_t size, char* buf, size_t* buflen);
 return_t base16_encode (const byte_t* source, size_t size, std::string& outpart);
 return_t base16_encode (const byte_t* source, size_t size, stream_t* stream);
+return_t base16_encode (binary_t const& source, char* buf, size_t* buflen);
 return_t base16_encode (binary_t const& source, std::string& outpart);
 return_t base16_encode (binary_t const& source, stream_t* stream);
 std::string base16_encode (binary_t const& source);

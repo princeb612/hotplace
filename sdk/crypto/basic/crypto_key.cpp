@@ -1336,7 +1336,7 @@ void crypto_key::for_each (void (*fp_dump)(crypto_key_object_t*, void*), void* p
     }
 }
 
-crypto_key_t typeof_crypto_key (crypto_key_object_t key)
+crypto_key_t typeof_crypto_key (crypto_key_object_t const& key)
 {
     return typeof_crypto_key (key.pkey);
 }
