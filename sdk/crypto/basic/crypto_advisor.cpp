@@ -418,7 +418,7 @@ return_t crypto_advisor::build_if_necessary ()
                 }
                 _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), evp_cipher));
 #else
-                _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), item->_cipher));
+                _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), (EVP_CIPHER*) item->_cipher));
 #endif
                 _cipher_fetch_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), item));
                 _evp_cipher_map.insert (std::make_pair (item->_cipher, item));
@@ -432,7 +432,7 @@ return_t crypto_advisor::build_if_necessary ()
                 }
                 _md_map.insert (std::make_pair (item->_algorithm, evp_md));
 #else
-                _md_map.insert (std::make_pair (item->_algorithm, item->_evp_md));
+                _md_map.insert (std::make_pair (item->_algorithm, (EVP_MD*) item->_evp_md));
 #endif
                 _md_fetch_map.insert (std::make_pair (item->_algorithm, item));
             }

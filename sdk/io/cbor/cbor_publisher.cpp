@@ -31,6 +31,8 @@ return_t cbor_publisher::publish (cbor_object* object, binary_t* b)
             __leave2;
         }
 
+        b->clear ();
+
         cbor_concise_visitor concise (b);
         object->accept (&concise);
     }
@@ -52,6 +54,8 @@ return_t cbor_publisher::publish (cbor_object* object, stream_t* s)
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        s->clear ();
 
         cbor_diagnostic_visitor diagnostic (s);
         object->accept (&diagnostic);

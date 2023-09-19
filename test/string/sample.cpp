@@ -137,7 +137,7 @@ void test_constexpr_obf ()
 #endif
 
 #if __cplusplus >= 201402L    // c++14
-    constexpr auto temp1 = constexpr_obf <25>("ninety nine red balloons");
+    constexpr auto temp1 = constexpr_obf <24>("ninety nine red balloons");
     constexpr auto temp2 = CONSTEXPR_OBF ("wild wild world");
     define_constexpr_obf (temp3, "still a man hears what he wants to hear and disregards the rest");
 

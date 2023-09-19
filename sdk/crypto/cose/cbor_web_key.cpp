@@ -145,14 +145,14 @@ return_t cbor_web_key::load (crypto_key* crypto_key, cbor_object* root, int flag
         // 1035: NID_X448
         // 1087: NID_ED25519
         // 1088: NID_ED448
-        std::map <int, uint32> cose_kty_nid;
-        cose_kty_nid.insert (std::make_pair (1, NID_X9_62_prime256v1));
-        cose_kty_nid.insert (std::make_pair (2, NID_secp384r1));
-        cose_kty_nid.insert (std::make_pair (3, NID_secp521r1));
-        cose_kty_nid.insert (std::make_pair (4, NID_X25519));
-        cose_kty_nid.insert (std::make_pair (5, NID_X448));
-        cose_kty_nid.insert (std::make_pair (6, NID_ED25519));
-        cose_kty_nid.insert (std::make_pair (7, NID_ED448));
+        std::map <int, uint32> cose_nid_curve;
+        cose_nid_curve.insert (std::make_pair (1, NID_X9_62_prime256v1));
+        cose_nid_curve.insert (std::make_pair (2, NID_secp384r1));
+        cose_nid_curve.insert (std::make_pair (3, NID_secp521r1));
+        cose_nid_curve.insert (std::make_pair (4, NID_X25519));
+        cose_nid_curve.insert (std::make_pair (5, NID_X448));
+        cose_nid_curve.insert (std::make_pair (6, NID_ED25519));
+        cose_nid_curve.insert (std::make_pair (7, NID_ED448));
 
         if (cbor_type_t::cbor_type_array == root->type ()) {
             const std::list <cbor_object*>& keys = ((cbor_array*) root)->accessor ();
@@ -195,7 +195,7 @@ return_t cbor_web_key::load (crypto_key* crypto_key, cbor_object* root, int flag
                     maphint <int, binary_t> hint_key (keyobj.attrib);
                     if (1 == keyobj.type || 2 == keyobj.type) { // okp, ec2
                         uint32 nid = 0;
-                        maphint <int, uint32> hint_nid (cose_kty_nid);
+                        maphint <int, uint32> hint_nid (cose_nid_curve);
                         hint_nid.find (keyobj.curve, &nid);
                         binary_t x;
                         binary_t y;
@@ -297,26 +297,26 @@ void cwk_writer (crypto_key_object_t* key, void* param)
         __try_new_catch (keynode, new cbor_map (), ret, __leave2);
 
         std::map <int, int> ktyinfo;
-        ktyinfo.insert (std::make_pair (crypto_key_t::ec_key, 4));
+        ktyinfo.insert (std::make_pair (crypto_key_t::ec_key, 2));
         ktyinfo.insert (std::make_pair (crypto_key_t::hmac_key, 4));
-        ktyinfo.insert (std::make_pair (crypto_key_t::okp_key, 4));
-        ktyinfo.insert (std::make_pair (crypto_key_t::rsa_key, 4));
+        ktyinfo.insert (std::make_pair (crypto_key_t::okp_key, 1));
+        ktyinfo.insert (std::make_pair (crypto_key_t::rsa_key, 3));
         maphint <int, int> keyhint (ktyinfo);
 
-        std::map <int, int> cose_kty_nid;
-        cose_kty_nid.insert (std::make_pair (1, NID_X9_62_prime256v1));
-        cose_kty_nid.insert (std::make_pair (2, NID_secp384r1));
-        cose_kty_nid.insert (std::make_pair (3, NID_secp521r1));
-        cose_kty_nid.insert (std::make_pair (4, NID_X25519));
-        cose_kty_nid.insert (std::make_pair (5, NID_X448));
-        cose_kty_nid.insert (std::make_pair (6, NID_ED25519));
-        cose_kty_nid.insert (std::make_pair (7, NID_ED448));
+        std::map <int, int> cose_nid_curve;
+        cose_nid_curve.insert (std::make_pair (NID_X9_62_prime256v1, 1));
+        cose_nid_curve.insert (std::make_pair (NID_secp384r1, 2));
+        cose_nid_curve.insert (std::make_pair (NID_secp521r1, 3));
+        cose_nid_curve.insert (std::make_pair (NID_X25519, 4));
+        cose_nid_curve.insert (std::make_pair (NID_X448, 5));
+        cose_nid_curve.insert (std::make_pair (NID_ED25519, 6));
+        cose_nid_curve.insert (std::make_pair (NID_ED448, 7));
 
         int cose_kty = 0;
         keyhint.find (kty, &cose_kty);
         *keynode << new cbor_pair (1, new cbor_data (cose_kty)); // kty
         if (kid.size ()) {
-            *keynode << new cbor_pair (2, new cbor_data (kid));
+            *keynode << new cbor_pair (2, new cbor_data (convert (kid)));
         }
 
         if (crypto_key_t::ec_key == kty || crypto_key_t::okp_key == kty) {
@@ -324,11 +324,16 @@ void cwk_writer (crypto_key_object_t* key, void* param)
             int cose_curve = 0;
 
             nidof_evp_pkey (key->pkey, nid);
-            maphint <int, int> hint_nid (cose_kty_nid);
+            maphint <int, int> hint_nid (cose_nid_curve);
             hint_nid.find (nid, &cose_curve);
 
             *keynode    << new cbor_pair (-1, new cbor_data (cose_curve))   // curve
                         << new cbor_pair (-2, new cbor_data (pub1));        // x
+
+            // NID_secp521r1 521 = (65*8) + 1 => 66bytes => 132 base16 encoding bytes
+            // 0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
+            // wo trailing 00
+            //   72992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
 
             if (crypto_key_t::ec_key == kty) {
                 *keynode << new cbor_pair (-3, new cbor_data (pub2)); // y
@@ -374,9 +379,11 @@ return_t cbor_web_key::write (crypto_key* crypto_key, binary_t& cbor, int flags)
         cbor_publisher publisher;
         publisher.publish (root, &cbor);
 
+#if 0
         buffer_stream diagnostic;
         publisher.publish (root, &diagnostic);
         std::cout << diagnostic.c_str () << std::endl;
+#endif
 
         root->release ();
     }

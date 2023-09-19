@@ -25,6 +25,7 @@ namespace io {
 
 /**
  * @brief   obfuscate
+ * @see     constexpr_obf
  * @example
  *      obfuscate_string obf;
  *      {
@@ -35,6 +36,13 @@ namespace io {
  *          std::string passwd;
  *          passwd << obf; // passwd readable, obf still obfuscated
  *      }
+ *
+ *      // see also
+ *      #if __cplusplus >= 201402L    // c++14
+ *      constexpr auto obf = constexpr_obf <8, 0x38>("password"); // compile time
+ *      std::string passwd = obf.load_string ();
+ *      #endif
+ *
  */
 class obfuscate_string
 {

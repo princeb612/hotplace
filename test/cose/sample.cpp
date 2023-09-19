@@ -2260,19 +2260,35 @@ void test_cbor_key (const char* file, const char* text)
 
         ret = cwk.load (&key, cbor);
         key.for_each (dump_crypto_key, nullptr);
-        _test_case.test (ret, __FUNCTION__, text ? text : "");
+        _test_case.test (ret, __FUNCTION__, "step.load %s", text ? text : "");
+
+        binary_t cbor_written;
+        ret = cwk.write (&key, cbor_written);
+        _test_case.test (ret, __FUNCTION__, "step.write %s", text ? text : "");
 
         if (1) {
             test_case_notimecheck notimecheck (_test_case);
-
-            binary_t cbor_written;
-            ret = cwk.write (&key, cbor_written);
 
             buffer_stream bs;
             dump_memory (cbor, &bs, 32);
             std::cout << "from file" << std::endl << bs.c_str () << std::endl;
             dump_memory (cbor_written, &bs, 32);
             std::cout << "from cwk" << std::endl << bs.c_str () << std::endl;
+
+            buffer_stream diagnostic;
+            cbor_reader reader;
+            cbor_reader_context_t* handle = nullptr;
+
+            reader.open (&handle);
+            reader.parse (handle, cbor);
+            reader.publish (handle, &diagnostic);
+            std::cout << "from file" << std::endl << diagnostic.c_str () << std::endl;
+
+            reader.parse (handle, cbor_written);
+            reader.publish (handle, &diagnostic);
+            std::cout << "from cwk" << std::endl << diagnostic.c_str () << std::endl;
+
+            reader.close (handle);
         }
     }
     _test_case.test (ret, __FUNCTION__, text ? text : "");

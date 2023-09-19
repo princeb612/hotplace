@@ -31,6 +31,7 @@ typedef struct _cbor_reader_context_t {
 
     _cbor_reader_context_t () : indef (0), root (nullptr), tag_value (0), tag_flag (false)
     {
+        // do nothing
     }
 } cbor_reader_context_t;
 
