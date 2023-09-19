@@ -19,6 +19,7 @@
 #include <hotplace/sdk/base/inline.hpp>
 #include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/stream.hpp>
 
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/base64.hpp>
@@ -26,7 +27,6 @@
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/ieee754.hpp>
 #include <hotplace/sdk/base/basic/printf.hpp>
-#include <hotplace/sdk/base/basic/stream.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
 

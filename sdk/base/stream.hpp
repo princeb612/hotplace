@@ -8,11 +8,12 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_STREAM__
-#define __HOTPLACE_SDK_BASE_BASIC_STREAM__
+#ifndef __HOTPLACE_SDK_BASE_STREAM__
+#define __HOTPLACE_SDK_BASE_STREAM__
 
 #include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
 
 namespace hotplace {
 

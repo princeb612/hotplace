@@ -24,6 +24,7 @@
 #include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
 #include <hotplace/sdk/io/cbor/cbor_reader.hpp>
 #include <hotplace/sdk/io/stream/buffer_stream.hpp>
+#include <hotplace/sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
 using namespace io;
@@ -60,6 +61,11 @@ return_t cbor_web_key::load (crypto_key* crypto_key, const char* buffer, int fla
         // do nothing
     }
     return ret;
+}
+
+return_t cbor_web_key::load (crypto_key* crypto_key, std::string const& buf, int flags)
+{
+    return load (crypto_key, buf.c_str (), flags);
 }
 
 typedef struct _cose_object_key {
@@ -359,9 +365,30 @@ void cwk_writer (crypto_key_object_t* key, void* param)
     }
 }
 
+return_t cbor_web_key::write (crypto_key* crypto_key, std::string& buf, int flags)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        binary_t cbor;
+        ret = write (crypto_key, cbor, flags);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        base16_encode (cbor, buf);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t cbor_web_key::write (crypto_key* crypto_key, binary_t& cbor, int flags)
 {
     return_t ret = errorcode_t::success;
+    cbor_object* root = nullptr;
 
     __try2
     {
@@ -370,22 +397,131 @@ return_t cbor_web_key::write (crypto_key* crypto_key, binary_t& cbor, int flags)
             __leave2;
         }
 
-        cbor_array* root = new cbor_array ();
+        ret = write (crypto_key, &root, flags);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        cbor_publisher publisher;
+        ret = publisher.publish (root, &cbor);
+    }
+    __finally2
+    {
+        if (root) {
+            root->release ();
+        }
+    }
+    return ret;
+}
+
+return_t cbor_web_key::write (crypto_key* crypto_key, cbor_object** root, int flags)
+{
+    return_t ret = errorcode_t::success;
+    cbor_array* cbor_root = nullptr;
+
+    __try2
+    {
+        if (nullptr == crypto_key || nullptr == root) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        __try_new_catch (cbor_root, new cbor_array (), ret, __leave2);
+
         cose_mapper_t mapper;
-        mapper.root = root;
+        mapper.root = cbor_root;
 
         crypto_key->for_each (cwk_writer, &mapper);
 
+        *root = cbor_root;
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_web_key::diagnose (crypto_key* crypto_key, stream_t* stream, int flags)
+{
+    return_t ret = errorcode_t::success;
+    cbor_object* root = nullptr;
+
+    __try2
+    {
+        if (nullptr == crypto_key || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        stream->clear ();
+
+        ret = write (crypto_key, &root, flags);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
         cbor_publisher publisher;
-        publisher.publish (root, &cbor);
 
-#if 0
-        buffer_stream diagnostic;
-        publisher.publish (root, &diagnostic);
-        std::cout << diagnostic.c_str () << std::endl;
-#endif
+        publisher.publish (root, stream);
+    }
+    __finally2
+    {
+        if (root) {
+            root->release ();
+        }
+    }
+    return ret;
+}
 
-        root->release ();
+return_t cbor_web_key::load_file (crypto_key* crypto_key, const char* file, int flags)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == crypto_key || nullptr == file) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        file_stream fs;
+        ret = fs.open (file);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        fs.begin_mmap ();
+        ret = load (crypto_key, (byte_t*) fs.data (), fs.size (), flags);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_web_key::write_file (crypto_key* crypto_key, const char* file, int flags)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == crypto_key || nullptr == file) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        file_stream fs;
+        ret = fs.open (file, filestream_flag_t::open_write);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        fs.truncate (0);
+
+        binary_t cbor;
+        write (crypto_key, cbor, flags);
+        fs.write (&cbor[0], cbor.size ());
     }
     __finally2
     {

@@ -31,7 +31,7 @@
 #include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/callback.hpp>
-#include <hotplace/sdk/base/basic/stream.hpp>
+#include <hotplace/sdk/base/stream.hpp>
 #include <string>
 
 namespace hotplace {

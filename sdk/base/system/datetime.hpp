@@ -13,8 +13,8 @@
 
 #include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/stream.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/basic/stream.hpp>
 #include <string.h>
 #include <time.h>
 #include <list>

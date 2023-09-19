@@ -105,7 +105,9 @@ public:
      * @sa
      */
     return_t open (const char* filename, uint32 mode = filestream_flag_t::open_existing);
+#if defined _WIN32 || defined _WIN64
     return_t open (const wchar_t* filename, uint32 mode = filestream_flag_t::open_existing);
+#endif
     /**
      * @brief
      * @return error code (see error.hpp)

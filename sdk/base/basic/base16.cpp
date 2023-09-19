@@ -9,7 +9,9 @@
  * 2023.08.13   Soo Han, Kim        reboot : bin2hex, hex2bin
  */
 
+#include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/basic/base16.hpp>
+#include <string.h>
 
 namespace hotplace {
 

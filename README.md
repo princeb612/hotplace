@@ -2,6 +2,7 @@
 # hotplace
 
 https://github.com/princeb612/hotplace
+https://www.facebook.com/princeb612
 
 ## build
 
@@ -83,9 +84,7 @@ https://github.com/princeb612/hotplace
    * sdk/crypto/jose/
    * test/jose/
 
-## preparing
-
-## appliying
+## applied
 
  * RFC 2144 The CAST-128 Encryption Algorithm (May 1997)
  * RFC 2612 The CAST-256 Encryption Algorithm (June 1999)

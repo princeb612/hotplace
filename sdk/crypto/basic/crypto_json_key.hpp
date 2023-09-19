@@ -49,9 +49,18 @@ public:
      * @param int flags [in] reserved
      * @return error code (see error.hpp)
      */
-    return_t load_file (crypto_key* crypto_key, const char* file, int flags = 0);
+    virtual return_t load_file (crypto_key* crypto_key, const char* file, int flags = 0);
     /**
-     * @brief load PEM from the buffer
+     * @brief write to file
+     * @param crypto_key * cryptokey [in]
+     * @param const char* file [in]
+     * @param int flag [in] reserved
+     * @return error code (see error.hpp)
+     */
+    virtual return_t write_file (crypto_key* cryptokey, const char* file, int flags = 0);
+
+    /**
+     * @brief load PEM from a buffer
      * @param crypto_key * cryptokey [in]
      * @param const char* buffer [in]
      * @param int flags [in]
@@ -68,7 +77,7 @@ public:
      */
     return_t load_pem_file (crypto_key* crypto_key, const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief write PEM to the file
+     * @brief write PEM to a file
      * @param crypto_key * cryptokey [in]
      * @param const char* file [in]
      * @param int flag [in] reserved

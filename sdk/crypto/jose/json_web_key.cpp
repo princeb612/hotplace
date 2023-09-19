@@ -340,7 +340,36 @@ return_t json_web_key::write (crypto_key* crypto_key, char* buf, size_t* buflen,
     return ret;
 }
 
-return_t json_web_key::write_json (crypto_key* crypto_key, const char* file, int flags)
+return_t json_web_key::load_file (crypto_key* crypto_key, const char* file, int flags)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == crypto_key || nullptr == file) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        std::string buffer;
+        std::ifstream fs (file);
+        if (fs.is_open ()) {
+            std::getline (fs, buffer, (char) fs.eof ());
+
+            ret = load (crypto_key, buffer.c_str (), flags);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+        }
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t json_web_key::write_file (crypto_key* crypto_key, const char* file, int flags)
 {
     return_t ret = errorcode_t::success;
 

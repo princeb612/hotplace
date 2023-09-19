@@ -2200,46 +2200,6 @@ void test_rfc_examples ()
     test_cbor_file ("rfc9338_a_6_1.cbor", "RFC 9338 A.6.1.  Countersignature on MAC0 Content"); // typo ? not 159 bytes, but 139 bytes
 }
 
-void try_refactor_jose_sign ()
-{
-    _test_case.begin ("crypto_key");
-    crypto_key key;
-
-    key.generate (crypto_key_t::hmac_key, 256, "sample");
-    key.generate (crypto_key_t::rsa_key, 2048, "sample");
-    key.generate (crypto_key_t::ec_key, 256, "sample");
-
-    key.generate (crypto_key_t::hmac_key, 256, "HS256");
-    key.generate (crypto_key_t::rsa_key, 2048, "RS256");
-    key.generate (crypto_key_t::rsa_key, 2048, "RS384");
-    key.generate (crypto_key_t::rsa_key, 2048, "RS512");
-    key.generate (crypto_key_t::ec_key, 256, "ES256");
-    key.generate (crypto_key_t::ec_key, 384, "ES384");
-    key.generate (crypto_key_t::ec_key, 521, "ES512");
-
-    // dump
-    key.for_each (dump_crypto_key, nullptr);
-    json_web_key jwk;
-    size_t size = 0;
-    std::vector<char> bin;
-    jwk.write (&key, &bin[0], &size);
-    bin.resize (size);
-    jwk.write (&key, &bin[0], &size);
-    printf ("%.*s\n", size, &bin[0]);
-
-    // JWS
-    constexpr char contents[] = "This is the content.";
-    std::string jws;
-
-    jose_context_t* handle = nullptr;
-    json_object_signing_encryption jose;
-    jose.open (&handle, &key);
-    jose.sign (handle, jws_t::jws_es256, contents, jws);
-    jose.close (handle);
-
-    printf ("contents %s\njws      %s\n", contents, jws.c_str ());
-}
-
 void test_cbor_key (const char* file, const char* text)
 {
     _test_case.begin ("CBOR encoded keys - order not guaranteed");
@@ -2300,6 +2260,59 @@ void test_cbor_web_key ()
     test_cbor_key ("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
 }
 
+
+void try_refactor_jose_sign ()
+{
+    _test_case.begin ("crypto_key");
+    crypto_key key;
+
+
+    // to CBOR key
+    cbor_object* root = nullptr;
+    cbor_web_key cwk;
+    cwk.write (&key, &root);
+    cbor_publisher publisher;
+    binary_t cbor;
+    publisher.publish (root, &cbor); // write member
+    buffer_stream diagnostic;
+    publisher.publish (root, &diagnostic); // diagnose member
+    root->release ();
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+
+        buffer_stream bs;
+        dump_memory (cbor, &bs, 32);
+        std::cout << bs.c_str () << std::endl;
+
+        std::cout << diagnostic.c_str () << std::endl;
+    }
+
+#if 0
+    // dump
+    //key.for_each (dump_crypto_key, nullptr);
+    json_web_key jwk;
+    size_t size = 0;
+    std::vector<char> bin;
+    jwk.write (&key, &bin[0], &size);
+    bin.resize (size);
+    jwk.write (&key, &bin[0], &size);
+    printf ("%.*s\n", size, &bin[0]);
+
+    // JWS
+    constexpr char contents[] = "This is the content.";
+    std::string jws;
+
+    jose_context_t* handle = nullptr;
+    json_object_signing_encryption jose;
+    jose.open (&handle, &key);
+    jose.sign (handle, jws_t::jws_es256, contents, jws);
+    jose.close (handle);
+
+    printf ("contents %s\njws      %s\n", contents, jws.c_str ());
+#endif
+}
+
 int main ()
 {
     set_trace_option (trace_option_t::trace_bt | trace_option_t::trace_except);
@@ -2352,7 +2365,7 @@ int main ()
     // step.2 write EVP_PKEY to CBOR
 
     test_cbor_web_key ();
-    //try_refactor_jose_sign ();
+    try_refactor_jose_sign ();
 
     openssl_thread_cleanup ();
     openssl_cleanup ();
