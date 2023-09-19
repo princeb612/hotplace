@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOJSONKEY__
-#define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOJSONKEY__
+#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEYEXT__
+#define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEYEXT__
 
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
@@ -19,11 +19,11 @@
 namespace hotplace {
 namespace crypto {
 
-class crypto_json_key
+class crypto_keyext
 {
 public:
-    crypto_json_key ();
-    virtual ~crypto_json_key ();
+    crypto_keyext ();
+    virtual ~crypto_keyext ();
 
     /**
      * @brief load key from a buffer

@@ -10,8 +10,8 @@
 
 #include <hotplace/sdk/base/basic/base64.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_json_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keyext.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <fstream>
@@ -20,35 +20,35 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-crypto_json_key::crypto_json_key ()
+crypto_keyext::crypto_keyext ()
 {
     // do nothing
 }
 
-crypto_json_key::~crypto_json_key ()
+crypto_keyext::~crypto_keyext ()
 {
     // do nothing
 }
 
-return_t crypto_json_key::load (crypto_key* crypto_key, const char* buffer, int flags)
+return_t crypto_keyext::load (crypto_key* crypto_key, const char* buffer, int flags)
 {
     return_t ret = errorcode_t::success;
 
     return ret;
 }
 
-return_t crypto_json_key::write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags)
+return_t crypto_keyext::write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags)
 {
     return_t ret = errorcode_t::success;
 
     return ret;
 }
 
-return_t crypto_json_key::add_rsa_b64u (crypto_key* crypto_key, const char* kid, const char* alg,
-                                        const char* n_value, const char* e_value, const char* d_value,
-                                        const char* p_value, const char* q_value,
-                                        const char* dp_value, const char* dq_value, const char* qi_value,
-                                        crypto_use_t use)
+return_t crypto_keyext::add_rsa_b64u (crypto_key* crypto_key, const char* kid, const char* alg,
+                                      const char* n_value, const char* e_value, const char* d_value,
+                                      const char* p_value, const char* q_value,
+                                      const char* dp_value, const char* dq_value, const char* qi_value,
+                                      crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -114,7 +114,7 @@ return_t crypto_json_key::add_rsa_b64u (crypto_key* crypto_key, const char* kid,
     return ret;
 }
 
-return_t crypto_json_key::add_rsa (crypto_key* crypto_key, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e, const byte_t* d, size_t size_d, crypto_use_t use)
+return_t crypto_keyext::add_rsa (crypto_key* crypto_key, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e, const byte_t* d, size_t size_d, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -144,8 +144,8 @@ return_t crypto_json_key::add_rsa (crypto_key* crypto_key, const char* kid, cons
     return ret;
 }
 
-return_t crypto_json_key::add_rsa (crypto_key* crypto_key, const char* kid, const char* alg,
-                                   binary_t const& n, binary_t const& e, binary_t const& d, crypto_use_t use)
+return_t crypto_keyext::add_rsa (crypto_key* crypto_key, const char* kid, const char* alg,
+                                 binary_t const& n, binary_t const& e, binary_t const& d, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
     crypto_keychain keyset;
@@ -154,8 +154,8 @@ return_t crypto_json_key::add_rsa (crypto_key* crypto_key, const char* kid, cons
     return ret;
 }
 
-return_t crypto_json_key::add_ec_b64u (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                                       const char* x_value, const char* y_value, const char* d_value, crypto_use_t use)
+return_t crypto_keyext::add_ec_b64u (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
+                                     const char* x_value, const char* y_value, const char* d_value, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -203,8 +203,8 @@ return_t crypto_json_key::add_ec_b64u (crypto_key* crypto_key, const char* kid, 
     return ret;
 }
 
-return_t crypto_json_key::add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                                  const byte_t* x, size_t size_x, const byte_t* y, size_t size_y, const byte_t* d, size_t size_d, crypto_use_t use)
+return_t crypto_keyext::add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
+                                const byte_t* x, size_t size_x, const byte_t* y, size_t size_y, const byte_t* d, size_t size_d, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -236,8 +236,8 @@ return_t crypto_json_key::add_ec (crypto_key* crypto_key, const char* kid, const
     return ret;
 }
 
-return_t crypto_json_key::add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                                  binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
+return_t crypto_keyext::add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
+                                binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -265,8 +265,8 @@ return_t crypto_json_key::add_ec (crypto_key* crypto_key, const char* kid, const
     return ret;
 }
 
-return_t crypto_json_key::add_ec (crypto_key* crypto_key, const char* kid, const char* alg, uint32 nid,
-                                  binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
+return_t crypto_keyext::add_ec (crypto_key* crypto_key, const char* kid, const char* alg, uint32 nid,
+                                binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -287,7 +287,7 @@ return_t crypto_json_key::add_ec (crypto_key* crypto_key, const char* kid, const
     return ret;
 }
 
-return_t crypto_json_key::add_oct_b64u (crypto_key* crypto_key, const char* kid, const char* alg, const char* k_value, crypto_use_t use)
+return_t crypto_keyext::add_oct_b64u (crypto_key* crypto_key, const char* kid, const char* alg, const char* k_value, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -313,8 +313,8 @@ return_t crypto_json_key::add_oct_b64u (crypto_key* crypto_key, const char* kid,
     return ret;
 }
 
-return_t crypto_json_key::add_oct (crypto_key* crypto_key, const char* kid, const char* alg, const byte_t* k, size_t size_k,
-                                   crypto_use_t use)
+return_t crypto_keyext::add_oct (crypto_key* crypto_key, const char* kid, const char* alg, const byte_t* k, size_t size_k,
+                                 crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -338,8 +338,8 @@ return_t crypto_json_key::add_oct (crypto_key* crypto_key, const char* kid, cons
     return ret;
 }
 
-return_t crypto_json_key::add_oct (crypto_key* crypto_key, const char* kid, const char* alg, binary_t const& k,
-                                   crypto_use_t use)
+return_t crypto_keyext::add_oct (crypto_key* crypto_key, const char* kid, const char* alg, binary_t const& k,
+                                 crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
     crypto_keychain keyset;
@@ -348,12 +348,12 @@ return_t crypto_json_key::add_oct (crypto_key* crypto_key, const char* kid, cons
     return ret;
 }
 
-return_t crypto_json_key::load_file (crypto_key* crypto_key, const char* file, int flags)
+return_t crypto_keyext::load_file (crypto_key* crypto_key, const char* file, int flags)
 {
     return errorcode_t::not_overrided;
 }
 
-return_t crypto_json_key::load_pem (crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use)
+return_t crypto_keyext::load_pem (crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -373,7 +373,7 @@ return_t crypto_json_key::load_pem (crypto_key* cryptokey, const char* buffer, i
     return ret;
 }
 
-return_t crypto_json_key::load_pem_file (crypto_key* cryptokey, const char* file, int flags, crypto_use_t use)
+return_t crypto_keyext::load_pem_file (crypto_key* cryptokey, const char* file, int flags, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
 
@@ -393,7 +393,7 @@ return_t crypto_json_key::load_pem_file (crypto_key* cryptokey, const char* file
     return ret;
 }
 
-return_t crypto_json_key::write_pem_file (crypto_key* cryptokey, const char* file, int flags)
+return_t crypto_keyext::write_pem_file (crypto_key* cryptokey, const char* file, int flags)
 {
     return_t ret = errorcode_t::success;
 
@@ -413,7 +413,7 @@ return_t crypto_json_key::write_pem_file (crypto_key* cryptokey, const char* fil
     return ret;
 }
 
-return_t crypto_json_key::write_file (crypto_key* cryptokey, const char* file, int flags)
+return_t crypto_keyext::write_file (crypto_key* cryptokey, const char* file, int flags)
 {
     return errorcode_t::not_overrided;
 }

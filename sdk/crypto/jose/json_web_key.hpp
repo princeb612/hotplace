@@ -13,7 +13,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_JOSE_JWK__
 #define __HOTPLACE_SDK_CRYPTO_JOSE_JWK__
 
-#include <hotplace/sdk/crypto/basic/crypto_json_key.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keyext.hpp>
 #include <hotplace/sdk/crypto/jose/types.hpp>
 
 namespace hotplace {
@@ -30,7 +30,7 @@ namespace crypto {
  *          jwk.load_file (&key, "rfc7515.jwk", 0);
  *          jwk.load_pem_file (&key, "test.pem");
  */
-class json_web_key : public crypto_json_key
+class json_web_key : public crypto_keyext
 {
     friend class json_object_signing_encryption;
 public:

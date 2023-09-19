@@ -20,7 +20,7 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-json_web_key::json_web_key () : crypto_json_key ()
+json_web_key::json_web_key () : crypto_keyext ()
 {
     // do nothing
 }

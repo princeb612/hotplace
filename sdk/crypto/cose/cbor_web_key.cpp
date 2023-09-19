@@ -13,8 +13,8 @@
 #include <hotplace/sdk/base/basic/base64.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_json_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keyext.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_web_key.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
@@ -30,7 +30,7 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-cbor_web_key::cbor_web_key () : crypto_json_key ()
+cbor_web_key::cbor_web_key () : crypto_keyext ()
 {
     // do nothing
 }
