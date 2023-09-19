@@ -165,9 +165,31 @@ void test_bufferio ()
     _test_case.test (ret, __FUNCTION__, "close");
 }
 
+void test_bufferio2 ()
+{
+    _test_case.begin ("cases null-padded");
+    // avoid c_str () return nullptr
+    // std::cout << nullptr
+    // printf ("%s", nullptr);
+    bufferio bio;
+    bufferio_context_t* handle = nullptr;
+    byte_t* data = nullptr;
+    size_t size_data = 0;
+
+    bio.open (&handle, 8, 1);
+    bio.get (handle, &data, &size_data);
+    _test_case.assert (nullptr != data, __FUNCTION__, "c_str () after constructor");
+    bio.printf (handle, "hello world");
+    bio.clear (handle);
+    bio.get (handle, &data, &size_data);
+    _test_case.assert (nullptr != data, __FUNCTION__, "c_str () after clear");
+    bio.close (handle);
+}
+
 int main ()
 {
     test_bufferio ();
+    test_bufferio2 ();
 
     _test_case.report (5);
     return _test_case.result ();

@@ -326,8 +326,14 @@ return_t bufferio::get (bufferio_context_t* handle, byte_t** contents, size_t* c
         {
             handle->bufferio_lock.enter ();
 
-            data_size = handle->bufferio_size;
+            // case1. c_str () after constructor
+            // case2. c_str () after clear
+            if (0 == handle->bufferio_queue.size () && handle->pad_size) {
+                bufferio_t* bufferio_item = nullptr;
+                extend (handle, handle->block_size, &bufferio_item);
+            }
 
+            data_size = handle->bufferio_size;
             size_t bufferin_queue_size = handle->bufferio_queue.size ();
             if (0 == bufferin_queue_size) {
                 ret = errorcode_t::no_data;
@@ -341,7 +347,7 @@ return_t bufferio::get (bufferio_context_t* handle, byte_t** contents, size_t* c
             } else {
                 pad_size = handle->pad_size;
 
-                ret = extend (handle, data_size + pad_size, &bufferio_newly_allocated, bufferio_flag_t::manual);
+                ret = extend (handle, data_size, &bufferio_newly_allocated, bufferio_flag_t::manual);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }

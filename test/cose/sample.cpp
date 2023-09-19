@@ -168,9 +168,9 @@ enum cose_alg_t {
 
     // RFC 8152 Table 5: ECDSA Algorithm Values
     // RFC 9053 Table 1: ECDSA Algorithm Values
-    cose_es256                  = -7,
-    cose_es384                  = -35,
-    cose_es512                  = -36,
+    cose_es256                  = -7,   // ECDSA w/ SHA-256
+    cose_es384                  = -35,  // ECDSA w/ SHA-384
+    cose_es512                  = -36,  // ECDSA w/ SHA-512
 
     // RFC 8152 Table 6: EdDSA Algorithm Values
     // RFC 9053 Table 2: EdDSA Algorithm Value

@@ -1,8 +1,8 @@
 
 # hotplace
 
-https://github.com/princeb612/hotplace
-https://www.facebook.com/princeb612
+ * https://github.com/princeb612/hotplace
+ * https://www.facebook.com/princeb612
 
 ## build
 
@@ -89,9 +89,11 @@ https://www.facebook.com/princeb612
  * RFC 2144 The CAST-128 Encryption Algorithm (May 1997)
  * RFC 2612 The CAST-256 Encryption Algorithm (June 1999)
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm (September 2002)
+ * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
  * RFC 5649 Advanced Encryption Starndard (AES) Key Wrap with Padding Algorithm (September 2009)
  * RFC 5794 A Description of the ARIA Encryption Algorithm (March 2010)
  * RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
+ * RFC 8017 PKCS #1: RSA Cryptography Specifications Version 2.2
  * RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
    * sdk/crypto/basic/
    * test/crypto/
@@ -101,11 +103,6 @@ https://www.facebook.com/princeb612
  * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
    * test/httpserver/
- * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
-   * sdk/crypto/basic/
-   * test/crypto/
- * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
-   * test/crypto/
  * RFC 7638 3.1.  Example JWK Thumbprint Computation
    * test/jose/
  * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
