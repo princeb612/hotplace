@@ -25,7 +25,6 @@ crypto_key::crypto_key ()
 crypto_key::~crypto_key ()
 {
     clear ();
-    // do nothing
 }
 
 return_t crypto_key::load_pem (const char* buffer, int flags, crypto_use_t use)
@@ -141,7 +140,6 @@ static void pem_writer (crypto_key_object_t* key, void* param)
     {
         // do nothing
     }
-    // do not return
 }
 
 return_t crypto_key::write_pem_file (const char* file, int flags)
@@ -350,6 +348,7 @@ static bool find_discriminant (crypto_key_object_t item, const char* kid, jwa_t 
     }
     __finally2
     {
+        // do nothing
     }
     return ret;
 }
@@ -393,6 +392,7 @@ static bool find_discriminant (crypto_key_object_t item, const char* kid, jws_t 
     }
     __finally2
     {
+        // do nothing
     }
     return ret;
 }
@@ -456,8 +456,6 @@ EVP_PKEY* crypto_key::any (bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
 
-    //crypto_advisor* advisor = crypto_advisor::get_instance ();
-
     __try2
     {
         _lock.enter ();
@@ -484,8 +482,6 @@ EVP_PKEY* crypto_key::any (bool up_ref)
 EVP_PKEY* crypto_key::select (crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
-
-    //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {
@@ -517,8 +513,6 @@ EVP_PKEY* crypto_key::select (crypto_use_t use, bool up_ref)
 EVP_PKEY* crypto_key::select (crypto_key_t kty, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
-
-    //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {
@@ -630,8 +624,6 @@ EVP_PKEY* crypto_key::select (std::string& kid, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
 
-    //crypto_advisor* advisor = crypto_advisor::get_instance ();
-
     __try2
     {
         kid.clear ();
@@ -665,8 +657,6 @@ EVP_PKEY* crypto_key::select (std::string& kid, crypto_use_t use, bool up_ref)
 EVP_PKEY* crypto_key::select (std::string& kid, crypto_key_t kty, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
-
-    //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {
@@ -787,8 +777,6 @@ EVP_PKEY* crypto_key::find (const char* kid, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
 
-    //crypto_advisor* advisor = crypto_advisor::get_instance ();
-
     __try2
     {
         _lock.enter ();
@@ -831,8 +819,6 @@ EVP_PKEY* crypto_key::find (const char* kid, crypto_use_t use, bool up_ref)
 EVP_PKEY* crypto_key::find (const char* kid, crypto_key_t kt, crypto_use_t use, bool up_ref)
 {
     EVP_PKEY* ret_value = nullptr;
-
-    //crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {

@@ -516,12 +516,6 @@ return_t json_object_signing::verify_ecdsa (EVP_PKEY* pkey, jws_t sig, binary_t 
         }
 
         ret = errorcode_t::verify;
-#if 0
-        crypto_key crypto_key;
-        binary_t pub1, pub2, priv;
-        crypto_key.add (pkey, nullptr, true);
-        crypto_key.get_key (pkey, pub1, pub2, priv);
-#endif
 
         hash_algorithm_t hash_algorithm = advisor->get_algorithm (sig);
         hash.open (&hash_handle, hash_algorithm);
@@ -539,9 +533,9 @@ return_t json_object_signing::verify_ecdsa (EVP_PKEY* pkey, jws_t sig, binary_t 
 
         int alg = advisor->get_algorithm (sig);
         switch (alg) {
-            case hash_algorithm_t::sha2_256: unitsize = 32; break;
-            case hash_algorithm_t::sha2_384: unitsize = 48; break;
-            case hash_algorithm_t::sha2_512: unitsize = 66; break;
+            case hash_algorithm_t::sha2_256: unitsize = 32; break;  // (256 >> 3) = 32
+            case hash_algorithm_t::sha2_384: unitsize = 48; break;  // (384 >> 3) = 48
+            case hash_algorithm_t::sha2_512: unitsize = 66; break;  // (521 = (65 << 3) + 1), 66
         }
 
         if (output.size () < (unitsize * 2)) {

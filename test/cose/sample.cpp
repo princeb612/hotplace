@@ -2265,21 +2265,19 @@ void try_refactor_jose_sign ()
 {
     _test_case.begin ("crypto_key");
 
+    // load keys from CBOR
     cbor_web_key cwk;
     crypto_key pubkey;
     cwk.load_file (&pubkey, "rfc8152_c_7_1.cbor");
     crypto_key privkey;
     cwk.load_file (&privkey, "rfc8152_c_7_2.cbor");
 
-    // dump
-    //key.for_each (dump_crypto_key, nullptr);
+    // dump keys JWK formatted
     json_web_key jwk;
     size_t size = 0;
-    std::vector<char> bin;
-    jwk.write (&privkey, &bin[0], &size);
-    bin.resize (size);
-    jwk.write (&privkey, &bin[0], &size);
-    printf ("%.*s\n", size, &bin[0]);
+    buffer_stream json;
+    jwk.write (&privkey, &json);
+    printf ("JWK from CBOR key\n%s\n", json.c_str ());
 
     // JWS
     constexpr char contents[] = "This is the content.";
@@ -2289,7 +2287,7 @@ void try_refactor_jose_sign ()
     json_object_signing_encryption jose;
 
     jose.open (&handle, &privkey);
-    jose.sign (handle, jws_t::jws_es256, contents, jws);
+    jose.sign (handle, jws_t::jws_es512, contents, jws, jose_serialization_t::jose_json);
     jose.close (handle);
 
     bool result = false;
@@ -2297,7 +2295,9 @@ void try_refactor_jose_sign ()
     jose.verify (handle, jws, result);
     jose.close (handle);
 
-    printf ("contents %s\njws      %s\n", contents, jws.c_str ());
+    std::cout << "contents" << std::endl << contents << std::endl;
+    std::cout << "jws" << std::endl << jws.c_str () << std::endl;
+
     _test_case.assert (result, __FUNCTION__, "signing");
 }
 

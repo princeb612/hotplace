@@ -57,10 +57,10 @@ return_t json_web_key::load (crypto_key* crypto_key, const char* buffer, int fla
             size_t size = json_array_size (keys_node);
             for (size_t i = 0; i < size; i++) {
                 json_t* temp = json_array_get (keys_node, i);
-                read_json (crypto_key, temp);
+                read_json_keynode (crypto_key, temp);
             } // json_array_size
         } else {
-            read_json (crypto_key, root);
+            read_json_keynode (crypto_key, root);
         }
     }
     __finally2
@@ -72,7 +72,7 @@ return_t json_web_key::load (crypto_key* crypto_key, const char* buffer, int fla
     return ret;
 }
 
-return_t json_web_key::read_json (crypto_key* crypto_key, json_t* json)
+return_t json_web_key::read_json_keynode (crypto_key* crypto_key, json_t* json)
 {
     return_t ret = errorcode_t::success;
     json_t* temp = json;
@@ -169,6 +169,14 @@ typedef struct _json_mapper_t {
     json_mapper_items_t items;
 } json_mapper_t;
 
+typedef struct _jwk_serialize_string_context_t {
+    std::string* buffer;
+} jwk_serialize_string_context_t;
+
+typedef struct _jwk_serialize_stream_context_t {
+    stream_t* buffer;
+} jwk_serialize_stream_context_t;
+
 static void jwk_serialize_item (int flag, json_mapper_item_t item, json_t* json_item)
 {
     crypto_advisor* advisor = crypto_advisor::get_instance ();
@@ -224,13 +232,16 @@ static void jwk_serialize_item (int flag, json_mapper_item_t item, json_t* json_
     }
 }
 
-static return_t jwk_serialize (json_mapper_t mapper, std::string& buffer)
+static return_t jwk_serialize (json_mapper_t mapper, CALLBACK_HANDLER callback, void* param)
 {
     return_t ret = errorcode_t::success;
 
     __try2
     {
-        buffer.clear ();
+        if (nullptr == callback || nullptr == param) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
         size_t size = mapper.items.size ();
         if (0 == size) {
@@ -261,7 +272,7 @@ static return_t jwk_serialize (json_mapper_t mapper, std::string& buffer)
             }
             char* contents = json_dumps (json_root, JOSE_JSON_FORMAT);
             if (contents) {
-                buffer = contents;
+                callback (contents, param);
                 free (contents);
             }
             json_decref (json_root);
@@ -299,6 +310,46 @@ static void json_writer (crypto_key_object_t* key, void* param)
     // do not return
 }
 
+static return_t jwk_serialize_string_callback (void* data, void* parameter)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == data || nullptr == parameter) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        jwk_serialize_string_context_t* context = (jwk_serialize_string_context_t*) parameter;
+        *(context->buffer) = (char*) data;
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+static return_t jwk_serialize_stream_callback (void* data, void* parameter)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == data || nullptr == parameter) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        jwk_serialize_stream_context_t* context = (jwk_serialize_stream_context_t*) parameter;
+        context->buffer->printf ("%s", (char*) data);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t json_web_key::write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags)
 {
     return_t ret = errorcode_t::success;
@@ -311,13 +362,15 @@ return_t json_web_key::write (crypto_key* crypto_key, char* buf, size_t* buflen,
         }
 
         size_t size_request = *buflen;
-        std::string buffer;
         json_mapper_t mapper;
 
         mapper.flag = flags;
         crypto_key->for_each (json_writer, &mapper);
 
-        jwk_serialize (mapper, buffer);
+        std::string buffer;
+        jwk_serialize_string_context_t context;
+        context.buffer = &buffer;
+        jwk_serialize (mapper, jwk_serialize_string_callback, &context);
 
         *buflen = buffer.size () + 1;
         if (buffer.size () + 1 > size_request) {
@@ -332,6 +385,64 @@ return_t json_web_key::write (crypto_key* crypto_key, char* buf, size_t* buflen,
                 __leave2;
             }
         }
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t json_web_key::write (crypto_key* crypto_key, std::string& buf, int flags)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == crypto_key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        buf.clear ();
+
+        json_mapper_t mapper;
+
+        mapper.flag = flags;
+        crypto_key->for_each (json_writer, &mapper);
+
+        jwk_serialize_string_context_t context;
+        context.buffer = &buf;
+        jwk_serialize (mapper, jwk_serialize_string_callback, &context);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t json_web_key::write (crypto_key* crypto_key, stream_t* buf, int flags)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == crypto_key || nullptr == buf) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        buf->clear ();
+
+        json_mapper_t mapper;
+
+        mapper.flag = flags;
+        crypto_key->for_each (json_writer, &mapper);
+
+        jwk_serialize_stream_context_t context;
+        context.buffer = buf;
+        jwk_serialize (mapper, jwk_serialize_stream_callback, &context);
     }
     __finally2
     {
@@ -380,17 +491,12 @@ return_t json_web_key::write_file (crypto_key* crypto_key, const char* file, int
             __leave2;
         }
 
-        std::string buffer;
-        json_mapper_t mapper;
-        mapper.flag = flags;
-        crypto_key->for_each (json_writer, &mapper);
+        file_stream fs;
+        ret = fs.open (file, filestream_flag_t::open_write);
+        if (errorcode_t::success == ret) {
+            fs.truncate (0);
 
-        jwk_serialize (mapper, buffer);
-
-        FILE* fp = fopen (file, "wt");
-        if (fp) {
-            fwrite (buffer.c_str (), 1, buffer.size (), fp);
-            fclose (fp);
+            ret = write (crypto_key, &fs, flags);
         }
     }
     __finally2
