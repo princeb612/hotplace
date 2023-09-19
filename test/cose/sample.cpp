@@ -2264,39 +2264,21 @@ void test_cbor_web_key ()
 void try_refactor_jose_sign ()
 {
     _test_case.begin ("crypto_key");
-    crypto_key key;
 
-
-    // to CBOR key
-    cbor_object* root = nullptr;
     cbor_web_key cwk;
-    cwk.write (&key, &root);
-    cbor_publisher publisher;
-    binary_t cbor;
-    publisher.publish (root, &cbor); // write member
-    buffer_stream diagnostic;
-    publisher.publish (root, &diagnostic); // diagnose member
-    root->release ();
+    crypto_key pubkey;
+    cwk.load_file (&pubkey, "rfc8152_c_7_1.cbor");
+    crypto_key privkey;
+    cwk.load_file (&privkey, "rfc8152_c_7_2.cbor");
 
-    {
-        test_case_notimecheck notimecheck (_test_case);
-
-        buffer_stream bs;
-        dump_memory (cbor, &bs, 32);
-        std::cout << bs.c_str () << std::endl;
-
-        std::cout << diagnostic.c_str () << std::endl;
-    }
-
-#if 0
     // dump
     //key.for_each (dump_crypto_key, nullptr);
     json_web_key jwk;
     size_t size = 0;
     std::vector<char> bin;
-    jwk.write (&key, &bin[0], &size);
+    jwk.write (&privkey, &bin[0], &size);
     bin.resize (size);
-    jwk.write (&key, &bin[0], &size);
+    jwk.write (&privkey, &bin[0], &size);
     printf ("%.*s\n", size, &bin[0]);
 
     // JWS
@@ -2305,12 +2287,18 @@ void try_refactor_jose_sign ()
 
     jose_context_t* handle = nullptr;
     json_object_signing_encryption jose;
-    jose.open (&handle, &key);
+
+    jose.open (&handle, &privkey);
     jose.sign (handle, jws_t::jws_es256, contents, jws);
     jose.close (handle);
 
+    bool result = false;
+    jose.open (&handle, &pubkey);
+    jose.verify (handle, jws, result);
+    jose.close (handle);
+
     printf ("contents %s\njws      %s\n", contents, jws.c_str ());
-#endif
+    _test_case.assert (result, __FUNCTION__, "signing");
 }
 
 int main ()
