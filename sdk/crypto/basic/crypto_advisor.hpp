@@ -28,7 +28,7 @@ public:
 
     /**
      * @brief find blockcipher hint
-     * @param int alg [in] crypt_algorithm_t
+     * @param crypt_algorithm_t alg [in]
      * @return hint_blockcipher_t*
      * @remarks EVP_CIPHER_CTX_block_size works wrong ?
      * @example

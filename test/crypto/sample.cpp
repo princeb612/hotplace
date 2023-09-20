@@ -608,6 +608,79 @@ void test_digest ()
     test_hash_algorithms ();
 }
 
+return_t compare (binary_t const& lhs, binary_t const& rhs)
+{
+    return_t ret = errorcode_t::success;
+
+    if (lhs.size () == rhs.size ()) {
+        if (0 == memcmp (&lhs[0], &rhs[0], lhs.size ())) {
+            // do nothing
+        } else {
+            ret = errorcode_t::mismatch;
+        }
+    } else {
+        ret = errorcode_t::mismatch;
+    }
+    return ret;
+}
+
+void test_aes128cbc_mac (binary_t const& key, binary_t const& message, binary_t const& expect)
+{
+    openssl_hash hash;
+    hash_context_t* handle = nullptr;
+    binary_t result;
+
+    hash.open (&handle, crypt_algorithm_t::aes128, crypt_mode_t::cbc, &key[0], key.size ());
+    hash.init (handle);
+    hash.update (handle, &message[0], message.size ());
+    hash.finalize (handle, result);
+    hash.close (handle);
+    buffer_stream bs;
+    dump_memory (result, &bs);
+    std::cout << "result" << std::endl << bs.c_str () << std::endl;
+    _test_case.test (compare (expect, result), __FUNCTION__, "cmac test");
+}
+
+void test_rfc4493_testcase ()
+{
+    openssl_hash hash;
+
+    constexpr char constexpr_key [] = "2b7e151628aed2a6abf7158809cf4f3c";
+
+    struct test_vector {
+        const char* message;
+        const char* result;
+    } tests [] = {
+        {
+            "",
+            "bb1d6929e95937287fa37d129b756746"
+        },
+        {
+            "6bc1bee22e409f96e93d7e117393172a",
+            "070a16b46b4d4144f79bdd9dd04a287c"
+        },
+        {
+            "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411",
+            "dfa66747de9ae63030ca32611497c827"
+        },
+        {
+            "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710",
+            "51f0bebf7e3b9d92fc49741779363cfe"
+        },
+    };
+
+    binary_t k = base16_decode (constexpr_key);
+
+    for (int i = 0; i < RTL_NUMBER_OF (tests); i++) {
+        test_aes128cbc_mac (k, base16_decode (tests[i].message), base16_decode (tests[i].result));
+    }
+}
+
+void test_cmac ()
+{
+    test_rfc4493_testcase ();
+}
+
 void test_random ()
 {
     _test_case.begin ("random");
@@ -898,6 +971,7 @@ int main ()
         test_crypt ();
 
         test_digest ();
+        test_cmac ();
 
         test_random ();
 

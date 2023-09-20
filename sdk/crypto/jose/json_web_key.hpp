@@ -65,14 +65,14 @@ public:
      * @brief   write
      * @param   crypto_key* crypto_key [in]
      * @param   std::string& buf [out]
-     * @param   int flags [inopt]
+     * @param   int flags [inopt] 0 public only, 1 also private
      */
     return_t write (crypto_key* crypto_key, std::string& buf, int flags = 0);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
      * @param   stream_t* buf [out]
-     * @param   int flags [inopt]
+     * @param   int flags [inopt] 0 public only, 1 also private
      */
     return_t write (crypto_key* crypto_key, stream_t* buf, int flags = 0);
     /**

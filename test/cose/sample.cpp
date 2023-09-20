@@ -240,10 +240,10 @@ enum cose_alg_t {
 
     // RFC 8152 Table 7: HMAC Algorithm Values
     // RFC 9053 Table 3: HMAC Algorithm Values
-    cose_hmac_256_64            = 4,
-    cose_hmac_256_256           = 5,
-    cose_hmac_384_256           = 6,
-    cose_hmac_512_512           = 7,
+    cose_hmac_256_64            = 4,    // HMAC w/ SHA-256 truncated to 64 bits, When truncating, the leftmost tag length bits are kept and transmitted.
+    cose_hmac_256_256           = 5,    // HMAC w/ SHA-256
+    cose_hmac_384_256           = 6,    // HMAC w/ SHA-384
+    cose_hmac_512_512           = 7,    // HMAC w/ SHA-512
 
     // RFC 8152 Table 10: Algorithm Values for AES-CCM
     // RFC 9053 Table 6: Algorithm Values for AES-CCM
@@ -258,10 +258,10 @@ enum cose_alg_t {
 
     // RFC 8152 Table 8: AES-MAC Algorithm Values
     // RFC 9053 Table 4: AES-MAC Algorithm Values
-    cose_aes_cbc_mac_128_64     = 14,
-    cose_aes_cbc_mac_256_64     = 15,
-    cose_aes_cbc_mac_128_128    = 25,
-    cose_aes_cbc_mac_256_128    = 26,
+    cose_aes_cbc_mac_128_64     = 14,   // AES-MAC 128-bit key, 64-bit tag
+    cose_aes_cbc_mac_256_64     = 15,   // AES-MAC 256-bit key, 64-bit tag
+    cose_aes_cbc_mac_128_128    = 25,   // AES-MAC 128-bit key, 128-bit tag
+    cose_aes_cbc_mac_256_128    = 26,   // AES-MAC 256-bit key, 128-bit tag
 
     // RFC 8152 Table 11: Algorithm Value for AES-GCM
     // RFC 9053 Table 7: Algorithm Value for ChaCha20/Poly1305
@@ -2276,7 +2276,7 @@ void try_refactor_jose_sign ()
     json_web_key jwk;
     size_t size = 0;
     buffer_stream json;
-    jwk.write (&privkey, &json);
+    jwk.write (&privkey, &json, 1);
     printf ("JWK from CBOR key\n%s\n", json.c_str ());
 
     // JWS

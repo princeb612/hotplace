@@ -18,6 +18,7 @@
 #include <openssl/asn1.h>
 #include <openssl/asn1t.h>
 #include <openssl/conf.h>
+#include <openssl/cmac.h>
 #include <openssl/crypto.h>
 #include <openssl/ec.h>
 #include <openssl/engine.h>

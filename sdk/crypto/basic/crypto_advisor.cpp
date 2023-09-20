@@ -417,11 +417,12 @@ return_t crypto_advisor::build_if_necessary ()
                     __trace (errorcode_t::debug, "%s", item->_fetchname);
                 }
                 _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), evp_cipher));
+                _evp_cipher_map.insert (std::make_pair (evp_cipher, item));
 #else
                 _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), (EVP_CIPHER*) item->_cipher));
+                _evp_cipher_map.insert (std::make_pair (item->_cipher, item));
 #endif
                 _cipher_fetch_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), item));
-                _evp_cipher_map.insert (std::make_pair (item->_cipher, item));
             }
             for (i = 0; i < RTL_NUMBER_OF (evp_md_methods); i++) {
                 const openssl_evp_md_method_t* item = evp_md_methods + i;

@@ -31,7 +31,7 @@ public:
     virtual ~openssl_hash ();
 
     /**
-     * @brief open
+     * @brief open (hash, HMAC)
      * @param hash_context_t** handle [out]
      * @param hash_algorithm_t alg [in]
      * @param const unsigned char* key [inopt]
@@ -39,6 +39,17 @@ public:
      * @return error code (see error.hpp)
      */
     virtual return_t open (hash_context_t** handle, hash_algorithm_t alg,
+                           const unsigned char* key = nullptr,
+                           unsigned keysize = 0);
+    /**
+     * @brief open (CMAC)
+     * @param hash_context_t** handle [out]
+     * @param crypt_algorithm_t alg [in]
+     * @param const unsigned char* key [inopt]
+     * @param unsigned keysize [inopt]
+     * @return error code (see error.hpp)
+     */
+    virtual return_t open (hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode,
                            const unsigned char* key = nullptr,
                            unsigned keysize = 0);
     /**
