@@ -60,7 +60,7 @@ openssl_hash::~openssl_hash ()
     // do nothing
 }
 
-return_t openssl_hash::open (hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key_data, unsigned key_size)
+return_t openssl_hash::open (hash_context_t** handle, crypt_algorithm_t algorithm, const unsigned char* key_data, unsigned key_size)
 {
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = nullptr;
@@ -75,7 +75,7 @@ return_t openssl_hash::open (hash_context_t** handle, crypt_algorithm_t algorith
             __leave2;
         }
 
-        const EVP_CIPHER* method = (const EVP_CIPHER*) advisor->find_evp_cipher (algorithm, mode);
+        const EVP_CIPHER* method = (const EVP_CIPHER*) advisor->find_evp_cipher (algorithm, crypt_mode_t::cbc);
         if (nullptr == method) {
             ret = errorcode_t::not_supported;
             __leave2;

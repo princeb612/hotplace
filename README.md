@@ -28,9 +28,9 @@
      * install perl
        * $ sudo yum install perl
      * download openssl
-       * $ wget https://www.openssl.org/source/openssl-1.1.1v.tar.gz
+       * $ wget https://www.openssl.org/source/openssl-1.1.1w.tar.gz
      * extract and unzip
-       * $ tar xvfz openssl-1.1.1v.tar.gz
+       * $ tar xvfz openssl-1.1.1w.tar.gz
      * cd
        * $ cd openssl-1.1.1v
      * prefix variable
@@ -90,6 +90,7 @@
  * RFC 2612 The CAST-256 Encryption Algorithm (June 1999)
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm (September 2002)
  * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
+ * RFC 4493 The AES-CMAC Algorithm
  * RFC 5649 Advanced Encryption Starndard (AES) Key Wrap with Padding Algorithm (September 2009)
  * RFC 5794 A Description of the ARIA Encryption Algorithm (March 2010)
  * RFC 7539 ChaCha20 and Poly1305 for IETF Protocols

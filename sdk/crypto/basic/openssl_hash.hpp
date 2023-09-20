@@ -49,7 +49,7 @@ public:
      * @param unsigned keysize [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t open (hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode,
+    virtual return_t open (hash_context_t** handle, crypt_algorithm_t alg,
                            const unsigned char* key = nullptr,
                            unsigned keysize = 0);
     /**

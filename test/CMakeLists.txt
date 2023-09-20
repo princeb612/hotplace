@@ -20,6 +20,7 @@ add_subdirectory (cbor)
 
 # crypto
 add_subdirectory (crypto)
+add_subdirectory (hash)
 add_subdirectory (jose)
 add_subdirectory (cose)
 add_subdirectory (authenticode)

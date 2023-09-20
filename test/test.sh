@@ -10,7 +10,7 @@ cwd=$(pwd)
 valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 
 if [ $# -eq 0 ]; then
-    array=(base unittest encode string bufferio stream datetime thread mlfq cbor crypto jose cose authenticode ipaddr incubator)
+    array=(base unittest encode string bufferio stream datetime thread mlfq cbor crypto hash jose cose authenticode ipaddr incubator)
     # following test file is user interaction required
     # tcpserver1 tcpserver2 tlsserver httpserver
 else
