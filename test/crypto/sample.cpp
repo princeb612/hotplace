@@ -605,9 +605,9 @@ void test_kdf_scrypt_rfc7914 ()
     }
 }
 
-#if OPENSSL_VERSION_NUMBER >= 0x30200000L
 void test_kdf_argon_rfc9106 ()
 {
+#if OPENSSL_VERSION_NUMBER >= 0x30200000L
     struct {
         argon2_t mode;
         const char* password;
@@ -615,6 +615,7 @@ void test_kdf_argon_rfc9106 ()
         const char* secret;
         const char* ad;
         const char* expect;
+        const char* message;
     } vector [] = {
         {
             // 5.1.  Argon2d Test Vectors
@@ -623,7 +624,8 @@ void test_kdf_argon_rfc9106 ()
             "02020202020202020202020202020202",
             "0303030303030303",
             "040404040404040404040404",
-            "512b391b6f1162975371d30919734294f868e3be3984f3c1a13a4db9fabe4acb"
+            "512b391b6f1162975371d30919734294f868e3be3984f3c1a13a4db9fabe4acb",
+            "RFC 9106 5.1.  Argon2d Test Vectors"
         },
         {
             // 5.2.  Argon2i Test Vectors
@@ -632,7 +634,8 @@ void test_kdf_argon_rfc9106 ()
             "02020202020202020202020202020202",
             "0303030303030303",
             "040404040404040404040404",
-            "c814d9d1dc7f37aa13f0d77f2494bda1c8de6b016dd388d29952a4c4672b6ce8"
+            "c814d9d1dc7f37aa13f0d77f2494bda1c8de6b016dd388d29952a4c4672b6ce8",
+            "RFC 9106 5.2.  Argon2i Test Vectors"
         },
         {
             // 5.3.  Argon2id Test Vectors
@@ -642,6 +645,7 @@ void test_kdf_argon_rfc9106 ()
             "0303030303030303",
             "040404040404040404040404",
             "0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659",
+            "RFC 9106 5.3.  Argon2id Test Vectors"
         },
     };
 
@@ -659,8 +663,10 @@ void test_kdf_argon_rfc9106 ()
 
         _test_case.test (ret, __FUNCTION__, "argon2id");
     }
-}
+#else
+    _test_case.test (errorcode_t::not_supported, __FUNCTION__, "argon2d,argon2i,argon2id require at least openssl 3.2");
 #endif
+}
 
 int main ()
 {
@@ -684,9 +690,7 @@ int main ()
         test_kdf_hkdf ();
         test_kdf_pbkdf2_rfc7914 ();
         test_kdf_scrypt_rfc7914 ();
-#if OPENSSL_VERSION_NUMBER >= 0x30200000L
         test_kdf_argon_rfc9106 ();
-#endif
     }
     __finally2
     {
