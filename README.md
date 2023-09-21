@@ -20,6 +20,8 @@
      * sha3
    * openssl 3.0, 3.1
      * failed to load PEM file containing private key
+   * openssl 3.2
+     * argon2d, argon2i, argon2id
    * custom build required in RHEL (RHEL, centos, rocky) and older version
      * -fPIC required
      * algoritm test, random SEGV, ctr_update SEGV (older linux), ...
@@ -95,6 +97,7 @@
  * RFC 7914 The scrypt Password-Based Key Derivation Function
  * RFC 8017 PKCS #1: RSA Cryptography Specifications Version 2.2
  * RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
+ * RFC 9106 Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications
    * sdk/crypto/basic/
    * test/crypto/
  * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005

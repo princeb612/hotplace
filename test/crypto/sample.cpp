@@ -101,6 +101,7 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
     }
     __finally2
     {
+        crypto_advisor* advisor = crypto_advisor::get_instance ();
         const char* alg = advisor->nameof_cipher (algorithm, mode);
         _test_case.test (ret, __FUNCTION__, "encrypt+decrypt algmrithm %d mode %d (%s)", algorithm, mode, alg ? alg : "unknown");
     }
@@ -334,147 +335,6 @@ void test_random ()
     _test_case.test (ret, __FUNCTION__, "random loop %i times", times);
 }
 
-void test_keywrap_routine (crypt_algorithm_t alg, byte_t* key, size_t key_size, byte_t* kek, size_t kek_size,
-                           byte_t* expect, size_t expect_size,
-                           const char* msg)
-{
-
-    _test_case.reset_time ();
-    openssl_crypt crypt;
-    crypt_context_t* handle = nullptr;
-    byte_t iv [8];
-    int i = 0;
-
-    for (i = 0; i < 8; i++) {
-        iv [i] = 0xa6;
-    }
-    binary_t out_kw, out_kuw;
-    buffer_stream bs;
-    bool compare = false;
-
-    crypt.open (&handle, alg, crypt_mode_t::wrap, key, key_size, iv, RTL_NUMBER_OF (iv));
-    crypt.encrypt (handle, kek, kek_size, out_kw);
-
-    {
-        test_case_notimecheck notimecheck (_test_case);
-
-        dump_memory (&out_kw[0], out_kw.size (), &bs);
-        printf ("%.*s\n", (int) bs.size (), bs.c_str ());
-    }
-
-    if ((out_kw.size () == expect_size) && (0 == memcmp (&out_kw[0], expect, out_kw.size ()))) {
-        compare = true;
-    }
-
-    crypt.decrypt (handle, &out_kw[0], out_kw.size (), out_kuw);
-
-    {
-        test_case_notimecheck notimecheck (_test_case);
-
-        dump_memory (&out_kuw[0], out_kuw.size (), &bs);
-        printf ("%.*s\n", (int) bs.size (), bs.c_str ());
-    }
-
-    crypt.close (handle);
-    _test_case.test (compare ? errorcode_t::success : errorcode_t::mismatch, __FUNCTION__, msg ? msg : "");
-}
-
-void test_keywrap_rfc3394 ()
-{
-    _test_case.begin ("keywrap");
-
-    // RFC 3394 4.1 Wrap 128 bits of Key Data with a 128-bit KEK
-    // KEK 000102030405060708090A0B0C0D0E0F
-    // Key Data 00112233445566778899AABBCCDDEEFF
-    // Ciphertext:  1FA68B0A8112B447 AEF34BD8FB5A7B82 9D3E862371D2CFE5
-    std::string string_kek1 = "000102030405060708090A0B0C0D0E0F";
-    std::string string_key1 = "00112233445566778899AABBCCDDEEFF";
-    std::string string_kw1 = "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5";
-    binary_t kek1, key1, kw1;
-
-    base16_decode (string_kek1, kek1);
-    base16_decode (string_key1, key1);
-    base16_decode (string_kw1, kw1);
-
-    test_keywrap_routine (crypt_algorithm_t::aes128, &kek1[0], kek1.size (), &key1[0], key1.size (), &kw1[0], kw1.size (),
-                          "RFC 3394 4.1 Wrap 128 bits of Key Data with a 128-bit KEK");
-
-    // RFC 3394 4.2 Wrap 128 bits of Key Data with a 192-bit KEK
-    // KEK 000102030405060708090A0B0C0D0E0F1011121314151617
-    // Key Data 00112233445566778899AABBCCDDEEFF
-    // Ciphertext: 96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D
-    std::string string_kek2 = "000102030405060708090A0B0C0D0E0F1011121314151617";
-    std::string string_key2 = "00112233445566778899AABBCCDDEEFF";
-    std::string string_kw2 = "96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D";
-    binary_t kek2, key2, kw2;
-    base16_decode (string_kek2, kek2);
-    base16_decode (string_key2, key2);
-    base16_decode (string_kw2, kw2);
-
-    test_keywrap_routine (crypt_algorithm_t::aes192, &kek2[0], kek2.size (), &key2[0], key2.size (), &kw2[0], kw2.size (),
-                          "RFC 3394 4.2 Wrap 128 bits of Key Data with a 192-bit KEK");
-
-    // RFC 3394 4.3 Wrap 128 bits of Key Data with a 256-bit KEK
-    // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
-    // Key Data 00112233445566778899AABBCCDDEEFF
-    // Ciphertext: 64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7
-    std::string string_kek3 = "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F";
-    std::string string_key3 = "00112233445566778899AABBCCDDEEFF";
-    std::string string_kw3 = "64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7";
-    binary_t kek3, key3, kw3;
-    base16_decode (string_kek3, kek3);
-    base16_decode (string_key3, key3);
-    base16_decode (string_kw3, kw3);
-
-    test_keywrap_routine (crypt_algorithm_t::aes256, &kek3[0], kek3.size (), &key3[0], key3.size (), &kw3[0], kw3.size (),
-                          "RFC 3394 4.3 Wrap 128 bits of Key Data with a 256-bit KEK");
-
-    // RFC 3394 4.4 Wrap 192 bits of Key Data with a 192-bit KEK
-    // KEK 000102030405060708090A0B0C0D0E0F1011121314151617
-    // Key Data 00112233445566778899AABBCCDDEEFF0001020304050607
-    // Ciphertext: 031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2
-    std::string string_kek4 = "000102030405060708090A0B0C0D0E0F1011121314151617";
-    std::string string_key4 = "00112233445566778899AABBCCDDEEFF0001020304050607";
-    std::string string_kw4 = "031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2";
-    binary_t kek4, key4, kw4;
-    base16_decode (string_kek4, kek4);
-    base16_decode (string_key4, key4);
-    base16_decode (string_kw4, kw4);
-
-    test_keywrap_routine (crypt_algorithm_t::aes192, &kek4[0], kek4.size (), &key4[0], key4.size (), &kw4[0], kw4.size (),
-                          "RFC 3394 4.4 Wrap 192 bits of Key Data with a 192-bit KEK");
-
-    // RFC 3394 4.5 Wrap 192 bits of Key Data with a 256-bit KEK
-    // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
-    // Key Data 00112233445566778899AABBCCDDEEFF0001020304050607
-    // Ciphertext: A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1
-    std::string string_kek5 = "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F";
-    std::string string_key5 = "00112233445566778899AABBCCDDEEFF0001020304050607";
-    std::string string_kw5 = "A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1";
-    binary_t kek5, key5, kw5;
-    base16_decode (string_kek5, kek5);
-    base16_decode (string_key5, key5);
-    base16_decode (string_kw5, kw5);
-
-    test_keywrap_routine (crypt_algorithm_t::aes256, &kek5[0], kek5.size (), &key5[0], key5.size (), &kw5[0], kw5.size (),
-                          "RFC 3394 4.5 Wrap 192 bits of Key Data with a 256-bit KEK");
-
-    // RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK
-    // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
-    // Key Data 00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F
-    // Ciphertext: 28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21
-    std::string string_kek6 = "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F";
-    std::string string_key6 = "00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F";
-    std::string string_kw6 = "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21";
-    binary_t kek6, key6, kw6;
-    base16_decode (string_kek6, kek6);
-    base16_decode (string_key6, key6);
-    base16_decode (string_kw6, kw6);
-
-    test_keywrap_routine (crypt_algorithm_t::aes256, &kek6[0], kek6.size (), &key6[0], key6.size (), &kw6[0], kw6.size (),
-                          "RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK");
-}
-
 return_t compare_binary (binary_t const& lhs, binary_t const& rhs)
 {
     return_t ret = errorcode_t::success;
@@ -489,6 +349,147 @@ return_t compare_binary (binary_t const& lhs, binary_t const& rhs)
         ret = errorcode_t::mismatch;
     }
     return ret;
+}
+
+void test_keywrap_routine (crypt_algorithm_t alg, binary_t const& kek, binary_t const& key,
+                           binary_t const& expect, const char* msg)
+{
+    return_t ret = errorcode_t::success;
+
+    _test_case.reset_time ();
+
+    openssl_crypt crypt;
+    crypt_context_t* handle = nullptr;
+    byte_t iv [8];
+    int i = 0;
+
+    for (i = 0; i < 8; i++) {
+        iv [i] = 0xa6;
+    }
+    binary_t out_kw, out_kuw;
+    buffer_stream bs;
+
+    ret = crypt.open (&handle, alg, crypt_mode_t::wrap, &kek[0], kek.size (), iv, RTL_NUMBER_OF (iv));
+    if (errorcode_t::success == ret) {
+        crypt.encrypt (handle, &key[0], key.size (), out_kw);
+
+        {
+            test_case_notimecheck notimecheck (_test_case);
+
+            crypto_advisor* advisor = crypto_advisor::get_instance ();
+            const char* nameof_alg = advisor->nameof_cipher (alg, crypt_mode_t::wrap);
+            printf ("alg %s\n", nameof_alg);
+
+            dump_memory (kek, &bs);
+            printf ("kek\n%.*s\n", (int) bs.size (), bs.c_str ());
+            dump_memory (key, &bs);
+            printf ("key\n%.*s\n", (int) bs.size (), bs.c_str ());
+            dump_memory (out_kw, &bs);
+            printf ("keywrap\n%.*s\n", (int) bs.size (), bs.c_str ());
+
+            ret = compare_binary (out_kw, expect);
+        }
+
+        crypt.decrypt (handle, &out_kw[0], out_kw.size (), out_kuw);
+
+        {
+            test_case_notimecheck notimecheck (_test_case);
+
+            dump_memory (&out_kuw[0], out_kuw.size (), &bs);
+            printf ("key\n%.*s\n", (int) bs.size (), bs.c_str ());
+        }
+
+        crypt.close (handle);
+    }
+    _test_case.test (ret, __FUNCTION__, msg ? msg : "");
+}
+
+void test_keywrap_rfc3394 ()
+{
+    _test_case.begin ("keywrap");
+
+    struct {
+        crypt_algorithm_t alg;
+        const char* kek;
+        const char* key;
+        const char* expect;
+        const char* message;
+    } vector [] = {
+        {
+            // RFC 3394 4.1 Wrap 128 bits of Key Data with a 128-bit KEK
+            // KEK 000102030405060708090A0B0C0D0E0F
+            // Key Data 00112233445566778899AABBCCDDEEFF
+            // Ciphertext:  1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5
+            crypt_algorithm_t::aes128,
+            "000102030405060708090A0B0C0D0E0F",
+            "00112233445566778899AABBCCDDEEFF",
+            "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5",
+            "RFC 3394 4.1 Wrap 128 bits of Key Data with a 128-bit KEK"
+        },
+        {
+            // RFC 3394 4.2 Wrap 128 bits of Key Data with a 192-bit KEK
+            // KEK 000102030405060708090A0B0C0D0E0F1011121314151617
+            // Key Data 00112233445566778899AABBCCDDEEFF
+            // Ciphertext: 96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D
+            crypt_algorithm_t::aes192,
+            "000102030405060708090A0B0C0D0E0F1011121314151617",
+            "00112233445566778899AABBCCDDEEFF",
+            "96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D",
+            "RFC 3394 4.2 Wrap 128 bits of Key Data with a 192-bit KEK"
+        },
+        {
+            // RFC 3394 4.3 Wrap 128 bits of Key Data with a 256-bit KEK
+            // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
+            // Key Data 00112233445566778899AABBCCDDEEFF
+            // Ciphertext: 64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7
+            crypt_algorithm_t::aes256,
+            "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
+            "00112233445566778899AABBCCDDEEFF",
+            "64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7",
+            "RFC 3394 4.3 Wrap 128 bits of Key Data with a 256-bit KEK"
+        },
+        {
+            // RFC 3394 4.4 Wrap 192 bits of Key Data with a 192-bit KEK
+            // KEK 000102030405060708090A0B0C0D0E0F1011121314151617
+            // Key Data 00112233445566778899AABBCCDDEEFF0001020304050607
+            // Ciphertext: 031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2
+            crypt_algorithm_t::aes192,
+            "000102030405060708090A0B0C0D0E0F1011121314151617",
+            "00112233445566778899AABBCCDDEEFF0001020304050607",
+            "031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2",
+            "RFC 3394 4.4 Wrap 192 bits of Key Data with a 192-bit KEK"
+        },
+        {
+            // RFC 3394 4.5 Wrap 192 bits of Key Data with a 256-bit KEK
+            // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
+            // Key Data 00112233445566778899AABBCCDDEEFF0001020304050607
+            // Ciphertext: A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1
+            crypt_algorithm_t::aes256,
+            "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
+            "00112233445566778899AABBCCDDEEFF0001020304050607",
+            "A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1",
+            "RFC 3394 4.5 Wrap 192 bits of Key Data with a 256-bit KEK"
+        },
+        {
+            // RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK
+            // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
+            // Key Data 00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F
+            // Ciphertext: 28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21
+            crypt_algorithm_t::aes256,
+            "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
+            "00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F",
+            "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21",
+            "RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK"
+        }
+    };
+
+    for (int i = 0; i < RTL_NUMBER_OF (vector); i++) {
+        test_keywrap_routine (vector[i].alg,
+                              base16_decode (vector[i].kek),
+                              base16_decode (vector[i].key),
+                              base16_decode (vector[i].expect),
+                              vector[i].message);
+    }
 }
 
 void test_kdf_hkdf ()
@@ -604,6 +605,63 @@ void test_kdf_scrypt_rfc7914 ()
     }
 }
 
+#if OPENSSL_VERSION_NUMBER >= 0x30200000L
+void test_kdf_argon_rfc9106 ()
+{
+    struct {
+        argon2_t mode;
+        const char* password;
+        const char* salt;
+        const char* secret;
+        const char* ad;
+        const char* expect;
+    } vector [] = {
+        {
+            // 5.1.  Argon2d Test Vectors
+            argon2_t::argon2d,
+            "0101010101010101010101010101010101010101010101010101010101010101",
+            "02020202020202020202020202020202",
+            "0303030303030303",
+            "040404040404040404040404",
+            "512b391b6f1162975371d30919734294f868e3be3984f3c1a13a4db9fabe4acb"
+        },
+        {
+            // 5.2.  Argon2i Test Vectors
+            argon2_t::argon2i,
+            "0101010101010101010101010101010101010101010101010101010101010101",
+            "02020202020202020202020202020202",
+            "0303030303030303",
+            "040404040404040404040404",
+            "c814d9d1dc7f37aa13f0d77f2494bda1c8de6b016dd388d29952a4c4672b6ce8"
+        },
+        {
+            // 5.3.  Argon2id Test Vectors
+            argon2_t::argon2id,
+            "0101010101010101010101010101010101010101010101010101010101010101",
+            "02020202020202020202020202020202",
+            "0303030303030303",
+            "040404040404040404040404",
+            "0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659",
+        },
+    };
+
+    for (int i = 0; i < RTL_NUMBER_OF (vector); i++) {
+        binary_t derived;
+
+        kdf_argon2 (derived, vector[i].mode, 32, base16_decode (vector[i].password), base16_decode (vector[i].salt), base16_decode (vector[i].ad), base16_decode (vector[i].secret));
+
+        buffer_stream bs;
+        dump_memory (derived, &bs);
+        std::cout << bs.c_str () << std::endl;
+
+        return_t ret = errorcode_t::success;
+        ret = compare_binary (derived, base16_decode (vector[i].expect));
+
+        _test_case.test (ret, __FUNCTION__, "argon2id");
+    }
+}
+#endif
+
 int main ()
 {
     set_trace_option (trace_option_t::trace_bt);
@@ -626,6 +684,9 @@ int main ()
         test_kdf_hkdf ();
         test_kdf_pbkdf2_rfc7914 ();
         test_kdf_scrypt_rfc7914 ();
+#if OPENSSL_VERSION_NUMBER >= 0x30200000L
+        test_kdf_argon_rfc9106 ();
+#endif
     }
     __finally2
     {
