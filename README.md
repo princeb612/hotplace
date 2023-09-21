@@ -89,15 +89,18 @@
  * RFC 2144 The CAST-128 Encryption Algorithm (May 1997)
  * RFC 2612 The CAST-256 Encryption Algorithm (June 1999)
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm (September 2002)
- * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
- * RFC 4493 The AES-CMAC Algorithm
  * RFC 5649 Advanced Encryption Starndard (AES) Key Wrap with Padding Algorithm (September 2009)
  * RFC 5794 A Description of the ARIA Encryption Algorithm (March 2010)
  * RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
+ * RFC 7914 The scrypt Password-Based Key Derivation Function
  * RFC 8017 PKCS #1: RSA Cryptography Specifications Version 2.2
  * RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
    * sdk/crypto/basic/
    * test/crypto/
+ * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
+ * RFC 4493 The AES-CMAC Algorithm
+   * sdk/crypto/basic/
+   * test/hash/
  * RFC 1951 : DEFLATE Compressed Data Format Specification version 1.3
  * RFC 1952 : GZIP file format specification version 4.3
  * RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0

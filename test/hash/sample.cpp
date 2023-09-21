@@ -130,8 +130,8 @@ return_t test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm, bin
     return ret;
 }
 
-void test_hash (hash_t* hash_object, unsigned count_algorithms, hash_algorithm_t* algorithms,
-                const byte_t* key_data, unsigned key_size, byte_t* data, size_t size)
+void test_hash_loop (hash_t* hash_object, unsigned count_algorithms, hash_algorithm_t* algorithms,
+                     const byte_t* key_data, unsigned key_size, byte_t* data, size_t size)
 {
     for (unsigned index_algorithms = 0; index_algorithms < count_algorithms; index_algorithms++) {
         test_hash_routine (hash_object, algorithms [index_algorithms], key_data, key_size, data, size);
@@ -284,10 +284,10 @@ void test_hash_algorithms ()
     const char* text = "still a man hears what he wants to hear and disregards the rest"; // the boxer - Simon & Garfunkel
 
     _test_case.begin ("openssl_hash hash");
-    test_hash (&openssl_hash, RTL_NUMBER_OF (hash_table), hash_table, nullptr, 0, (byte_t*) text, strlen (text));
+    test_hash_loop (&openssl_hash, RTL_NUMBER_OF (hash_table), hash_table, nullptr, 0, (byte_t*) text, strlen (text));
 
     _test_case.begin ("openssl_hash hmac");
-    test_hash (&openssl_hash, RTL_NUMBER_OF (hmac_table), hmac_table, (byte_t*) keydata, 32, (byte_t*) text, strlen (text));
+    test_hash_loop (&openssl_hash, RTL_NUMBER_OF (hmac_table), hmac_table, (byte_t*) keydata, 32, (byte_t*) text, strlen (text));
 }
 
 return_t compare_binary (binary_t const& lhs, binary_t const& rhs)
@@ -306,7 +306,7 @@ return_t compare_binary (binary_t const& lhs, binary_t const& rhs)
     return ret;
 }
 
-void test_aes128cbc_mac (binary_t const& key, binary_t const& message, binary_t const& expect)
+void test_aes128cbc_mac_routine (binary_t const& key, binary_t const& message, binary_t const& expect)
 {
     return_t ret = errorcode_t::success;
 
@@ -361,7 +361,7 @@ void test_cmac_rfc4493 ()
     binary_t k = base16_decode (constexpr_key);
 
     for (int i = 0; i < RTL_NUMBER_OF (tests); i++) {
-        test_aes128cbc_mac (k, base16_decode (tests[i].message), base16_decode (tests[i].result));
+        test_aes128cbc_mac_routine (k, base16_decode (tests[i].message), base16_decode (tests[i].result));
     }
 }
 

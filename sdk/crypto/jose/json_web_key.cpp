@@ -14,6 +14,7 @@
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/jose/json_web_key.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
+#include <hotplace/sdk/io/stream/file_stream.hpp>
 #include <fstream>
 
 namespace hotplace {

@@ -27,6 +27,7 @@
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/basic/time_otp.hpp>
