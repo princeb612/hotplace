@@ -58,7 +58,9 @@ return_t kdf_hkdf (binary_t& derived, size_t dlen, binary_t const& key, binary_t
     }
     __finally2
     {
-        // do nothing
+        if (ctx) {
+            EVP_PKEY_CTX_free (ctx);
+        }
     }
     return ret;
 }
