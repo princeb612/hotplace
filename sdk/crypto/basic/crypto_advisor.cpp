@@ -464,6 +464,32 @@ return_t crypto_advisor::build_if_necessary ()
                 _curve_bynid_map.insert (std::make_pair (item->nid, item));
             }
 
+            _kty2cose_map.insert (std::make_pair (crypto_key_t::ec_key, cose_key_t::cose_key_ec2));
+            _kty2cose_map.insert (std::make_pair (crypto_key_t::hmac_key, cose_key_t::cose_key_symm));
+            _kty2cose_map.insert (std::make_pair (crypto_key_t::okp_key, cose_key_t::cose_key_okp));
+            _kty2cose_map.insert (std::make_pair (crypto_key_t::rsa_key, cose_key_t::cose_key_rsa));
+
+            _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_ec2, crypto_key_t::ec_key));
+            _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_symm, crypto_key_t::hmac_key));
+            _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_okp, crypto_key_t::okp_key));
+            _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_rsa, crypto_key_t::rsa_key));
+
+            _nid2curve_map.insert (std::make_pair (NID_X9_62_prime256v1, cose_ec_curve_t::cose_ec_p256));
+            _nid2curve_map.insert (std::make_pair (NID_secp384r1, cose_ec_curve_t::cose_ec_p384));
+            _nid2curve_map.insert (std::make_pair (NID_secp521r1, cose_ec_curve_t::cose_ec_p521));
+            _nid2curve_map.insert (std::make_pair (NID_X25519, cose_ec_curve_t::cose_ec_x25519));
+            _nid2curve_map.insert (std::make_pair (NID_X448, cose_ec_curve_t::cose_ec_x448));
+            _nid2curve_map.insert (std::make_pair (NID_ED25519, cose_ec_curve_t::cose_ec_ed25519));
+            _nid2curve_map.insert (std::make_pair (NID_ED448, cose_ec_curve_t::cose_ec_ed448));
+
+            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p256, NID_X9_62_prime256v1));
+            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p384, NID_secp384r1));
+            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p521, NID_secp521r1));
+            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_x25519, NID_X25519));
+            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_x448, NID_X448));
+            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_ed25519, NID_ED25519));
+            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_ed448, NID_ED448));
+
             _flag = 1;
         }
         _lock.leave ();
@@ -1138,6 +1164,50 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, jws_t sig)
         _lock.leave ();
     }
     return test;
+}
+
+cose_key_t crypto_advisor::ktyof (crypto_key_t kty)
+{
+    cose_key_t cose_kty = cose_key_t::cose_key_reserved;
+
+    _lock.enter ();
+    maphint <crypto_key_t, cose_key_t> hint (_kty2cose_map);
+    hint.find (kty, &cose_kty);
+    _lock.leave ();
+    return cose_kty;
+}
+
+crypto_key_t crypto_advisor::ktyof (cose_key_t kty)
+{
+    crypto_key_t crypto_kty = crypto_key_t::none_key;
+
+    _lock.enter ();
+    maphint <cose_key_t, crypto_key_t> hint (_cose2kty_map);
+    hint.find (kty, &crypto_kty);
+    _lock.leave ();
+    return crypto_kty;
+}
+
+cose_ec_curve_t crypto_advisor::curveof (uint32 nid)
+{
+    cose_ec_curve_t curve = cose_ec_curve_t::cose_ec_unknown;
+
+    _lock.enter ();
+    maphint <uint32, cose_ec_curve_t> hint (_nid2curve_map);
+    hint.find (nid, &curve);
+    _lock.leave ();
+    return curve;
+}
+
+uint32 crypto_advisor::curveof (cose_ec_curve_t curve)
+{
+    uint32 nid = 0;
+
+    _lock.enter ();
+    maphint <cose_ec_curve_t, uint32> hint (_curve2nid_map);
+    hint.find (curve, &nid);
+    _lock.leave ();
+    return nid;
 }
 
 }

@@ -272,6 +272,7 @@ typedef struct _cose_mapper_t {
 void cwk_writer (crypto_key_object_t* key, void* param)
 {
     return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {
@@ -302,24 +303,7 @@ void cwk_writer (crypto_key_object_t* key, void* param)
         cbor_map* keynode = nullptr;
         __try_new_catch (keynode, new cbor_map (), ret, __leave2);
 
-        std::map <int, int> ktyinfo;
-        ktyinfo.insert (std::make_pair (crypto_key_t::ec_key, 2));
-        ktyinfo.insert (std::make_pair (crypto_key_t::hmac_key, 4));
-        ktyinfo.insert (std::make_pair (crypto_key_t::okp_key, 1));
-        ktyinfo.insert (std::make_pair (crypto_key_t::rsa_key, 3));
-        maphint <int, int> keyhint (ktyinfo);
-
-        std::map <int, int> cose_nid_curve;
-        cose_nid_curve.insert (std::make_pair (NID_X9_62_prime256v1, 1));
-        cose_nid_curve.insert (std::make_pair (NID_secp384r1, 2));
-        cose_nid_curve.insert (std::make_pair (NID_secp521r1, 3));
-        cose_nid_curve.insert (std::make_pair (NID_X25519, 4));
-        cose_nid_curve.insert (std::make_pair (NID_X448, 5));
-        cose_nid_curve.insert (std::make_pair (NID_ED25519, 6));
-        cose_nid_curve.insert (std::make_pair (NID_ED448, 7));
-
-        int cose_kty = 0;
-        keyhint.find (kty, &cose_kty);
+        cose_key_t cose_kty = advisor->ktyof (kty);
         *keynode << new cbor_pair (1, new cbor_data (cose_kty)); // kty
         if (kid.size ()) {
             *keynode << new cbor_pair (2, new cbor_data (convert (kid)));
@@ -327,11 +311,10 @@ void cwk_writer (crypto_key_object_t* key, void* param)
 
         if (crypto_key_t::ec_key == kty || crypto_key_t::okp_key == kty) {
             uint32 nid = 0;
-            int cose_curve = 0;
+            cose_ec_curve_t cose_curve = cose_ec_curve_t::cose_ec_unknown;
 
             nidof_evp_pkey (key->pkey, nid);
-            maphint <int, int> hint_nid (cose_nid_curve);
-            hint_nid.find (nid, &cose_curve);
+            cose_curve = advisor->curveof (nid);
 
             *keynode    << new cbor_pair (-1, new cbor_data (cose_curve))   // curve
                         << new cbor_pair (-2, new cbor_data (pub1));        // x

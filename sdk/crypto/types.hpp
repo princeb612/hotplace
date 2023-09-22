@@ -335,6 +335,260 @@ enum jws_t {
     jws_eddsa   = CRYPT_SIG_VALUE (jws_type_t::jws_type_eddsa, 13),             // 0005000d
 };
 
+enum cose_header_t {
+    // RFC 8152 Table 2: Common Header Parameters
+    // RFC 8152 Table 3: Common Header Parameters
+    cose_header_alg             = 1,    // int / tstr
+    cose_header_crit            = 2,    // [+ label]
+    cose_header_content_type    = 3,    // tstr / uint
+    cose_header_kid             = 4,    // bstr
+    cose_header_iv              = 5,    // bstr
+    cose_header_partial_iv      = 6,    // bstr
+
+    cose_header_counter_sig     = 7,    // COSE_Signature / [+ COSE_Signature]
+
+    // RFC 8152 Table 27: Header Parameter for CounterSignature0
+    cose_header_counter_sig0    = 9,
+
+    // RFC 9338 Table 1: Common Header Parameters
+    // RFC 9338 Table 2: New Common Header Parameters
+    cose_header_counter_sig_v2  = 11,
+    cose_header_counter_sig0_v2 = 12,
+
+    // RFC 9360 Table 1: X.509 COSE Header Parameters
+    cose_header_x5bag           = 32,
+    cose_header_x5chain         = 33,
+    cose_header_x5t             = 34,
+    cose_header_x5u             = 35,
+};
+enum cose_key_lable_t {
+    // RFC 8152 Table 3: Key Map Labels
+    // RFC 8152 Table 4: Key Map Labels
+    cose_lable_kty      = 1,
+    cose_lable_kid      = 2,
+    cose_lable_alg      = 3,
+    cose_lable_keyops   = 4,
+    cose_lable_base_iv  = 5,
+
+    // RFC 8152 Table 23: EC Key Parameters
+    // RFC 9053 Table 19: EC Key Parameters
+    // cose_key_t::cose_key_ec2
+    cose_ec_crv = -1,
+    cose_ec_x   = -2,
+    cose_ec_y   = -3,
+    cose_ec_d   = -4,
+
+    // RFC 8152 Table 24: Octet Key Pair Parameters
+    // RFC 9053 Table 20: Octet Key Pair Parameters
+    // cose_key_t::cose_key_okp
+    cose_okp_crv    = -1,
+    cose_okp_x      = -2,
+    cose_okp_d      = -4,
+
+    // RFC 8152 Table 25: Symmetric Key Parameters
+    // RFC 9053 Table 21: Symmetric Key Parameters
+    cose_symm_k     = -1,
+
+    // RSA 8230 Table 4: RSA Key Parameters
+    cose_rsa_n      = -1,
+    cose_rsa_e      = -2,
+    cose_rsa_d      = -3,
+    cose_rsa_p      = -4,
+    cose_rsa_q      = -5,
+    cose_rsa_dp     = -6,
+    cose_rsa_dq     = -7,
+    cose_rsa_qi     = -8,
+    cose_rsa_other  = -9,
+    cose_rsa_ri     = -10,
+    cose_rsa_di     = -11,
+    cose_rsa_ti     = -12,
+};
+enum cose_alg_param_t {
+    // RFC 8152 Table 19: ECDH Algorithm Parameters
+    // RFC 9053 Table 15: ECDH Algorithm Parameters
+    cose_ephemeral_key  = -1,
+    cose_static_key     = -2,
+    cose_static_key_id  = -3,
+
+    // RFC 8152 Table 13: HKDF Algorithm Parameters
+    // RFC 9053 Table 9: HKDF Algorithm Parameters
+    cose_salt           = -20,
+
+    // RFC 8152 Table 14: Context Algorithm Parameters
+    // RFC 9053 Table 10: Context Algorithm Parameters
+    cose_partyu_id      = -21,
+    cose_partyu_nonce   = -22,
+    cose_partyu_other   = -23,
+    cose_partyv_id      = -24,
+    cose_partyv_nonce   = -25,
+    cose_partyv_other   = -26,
+
+    // RFC 9360 Table 2: Static ECDH Algorithm Values
+    cose_x5t_sender     = -27,
+    cose_x5u_sender     = -28,
+    cose_x5chain_sender = -29,
+};
+
+enum cose_key_t {
+    // RFC 8152 Table 21: Key Type Values
+    // RFC 9053 Table 17: Key Type Values
+    // RFC 9053 Table 22: Key Type Capabilities
+    cose_key_reserved   = 0,
+    cose_key_okp        = 1,
+    cose_key_ec2        = 2,
+    cose_key_symm       = 4,
+
+    // RFC 8230 Table 3: Key Type Values
+    // RFC 9053 Table 22: Key Type Capabilities
+    cose_key_rsa        = 3,
+
+    // RFC 9053 Table 22: Key Type Capabilities
+    cose_key_hss_lms    = 5,
+    cose_walnutdsa      = 6,
+};
+enum cose_keyop_t {
+    // RFC 8152 Table 4: Key Operation Values
+    // RFC 8152 Table 5: Key Operation Values
+    cose_keyop_sign         = 1,
+    cose_keyop_verify       = 2,
+    cose_keyop_encrypt      = 3,
+    cose_keyop_decrypt      = 4,
+    cose_keyop_wrap         = 5,
+    cose_keyop_unwrap       = 6,
+    cose_keyop_derive_key   = 7,
+    cose_keyop_derive_bits  = 8,
+    cose_keyop_mac_create   = 9,
+    cose_keyop_mac_verify   = 10,
+};
+enum cose_ec_curve_t {
+    cose_ec_unknown = 0,
+    // RFC 8152 Table 22: Elliptic Curves
+    // RFC 9053 Table 18: Elliptic Curves
+    cose_ec_p256    = 1,
+    cose_ec_p384    = 2,
+    cose_ec_p521    = 3,
+    cose_ec_x25519  = 4,
+    cose_ec_x448    = 5,
+    cose_ec_ed25519 = 6,
+    cose_ec_ed448   = 7,
+};
+enum cose_alg_t {
+
+    // RFC 8152 Table 17: AES Key Wrap Algorithm Values
+    // RFC 9053 Table 13: AES Key Wrap Algorithm Values
+    cose_a128kw                 = -3,
+    cose_a192kw                 = -4,
+    cose_a256kw                 = -5,
+
+    // RFC 8152 Table 15: Direct Key
+    // RFC 9053 Table 11: Direct Key
+    cose_direct                 = -6,
+
+    // RFC 8152 Table 5: ECDSA Algorithm Values
+    // RFC 9053 Table 1: ECDSA Algorithm Values
+    cose_es256                  = -7,   // ECDSA w/ SHA-256
+    cose_es384                  = -35,  // ECDSA w/ SHA-384
+    cose_es512                  = -36,  // ECDSA w/ SHA-512
+
+    // RFC 8152 Table 6: EdDSA Algorithm Values
+    // RFC 9053 Table 2: EdDSA Algorithm Value
+    cose_eddsa                  = -8,
+
+    // RFC 8152 Table 16: Direct Key with KDF
+    // RFC 9053 Table 12: Direct Key with KDF
+    cose_direct_hkdf_sha_256    = -10,
+    cose_direct_hkdf_sha_512    = -11,
+    cose_direct_hkdf_aes_128    = -12,
+    cose_direct_hkdf_aes_256    = -13,
+
+    // RFC 9054 Table 1: SHA-1 Hash Algorithm
+    cose_sha1                   = -14,
+
+    // RFC 9054 Table 2: SHA-2 Hash Algorithms
+    cose_sha256_64              = -15,
+    cose_sha256                 = -16,
+    cose_sha512_256             = -17,
+    cose_sha384                 = -43,
+    cose_sha512                 = -44,
+
+    // RFC 9054 Table 3: SHAKE Hash Functions
+    cose_shake128               = -18,
+    cose_shake256               = -45,
+
+    // RFC 8152 Table 18: ECDH Algorithm Values
+    // RFC 9053 Table 14: ECDH Algorithm Values
+    cose_ecdh_es_hkdf_256       = -25,
+    cose_ecdh_es_hkdf_512       = -26,
+    cose_ecdh_ss_hkdf_256       = -27,
+    cose_ecdh_ss_hkdf_512       = -28,
+
+    // RFC 8152 Table 20: ECDH Algorithm Values with Key Wrap
+    // RFC 9053 Table 16: ECDH Algorithm Values with Key Wrap
+    cose_ecdh_es_a128kw         = -29,
+    cose_ecdh_es_a192kw         = -30,
+    cose_ecdh_es_a256kw         = -31,
+    cose_ecdh_ss_a128kw         = -32,
+    cose_ecdh_ss_a192kw         = -33,
+    cose_ecdh_ss_a256kw         = -34,
+
+    // RFC 8230 Table 1: RSASSA-PSS Algorithm Values
+    cose_ps256                  = -37,
+    cose_ps384                  = -38,
+    cose_ps512                  = -39,
+
+    // RFC 8230 Table 2: RSAES-OAEP Algorithm Values
+    cose_rsaes_oaep_sha1        = -40,
+    cose_rsaes_oaep_sha256      = -41,
+    cose_rsaes_oaep_sha512      = -42,
+
+    // RFC 8812 Table 2: ECDSA Algorithm Values
+    cose_es256k                 = -47,
+
+    // RFC 8812 Table 1: RSASSA-PKCS1-v1_5 Algorithm Values
+    cose_rs256                  = -257,
+    cose_rs384                  = -258,
+    cose_rs512                  = -259,
+    cose_rs1                    = -65535,
+
+    // RFC 8152 Table 9: Algorithm Value for AES-GCM
+    // RFC 9053 Table 5: Algorithm Values for AES-GCM
+    cose_aes_128_gcm            = 1,
+    cose_aes_192_gcm            = 2,
+    cose_aes_256_gcm            = 3,
+
+    // RFC 8152 Table 7: HMAC Algorithm Values
+    // RFC 9053 Table 3: HMAC Algorithm Values
+    cose_hmac_256_64            = 4,    // HMAC w/ SHA-256 truncated to 64 bits, When truncating, the leftmost tag length bits are kept and transmitted.
+    cose_hmac_256_256           = 5,    // HMAC w/ SHA-256
+    cose_hmac_384_256           = 6,    // HMAC w/ SHA-384
+    cose_hmac_512_512           = 7,    // HMAC w/ SHA-512
+
+    // RFC 8152 Table 10: Algorithm Values for AES-CCM
+    // RFC 9053 Table 6: Algorithm Values for AES-CCM
+    cose_aes_ccm_16_64_128      = 10,
+    cose_aes_ccm_16_64_256      = 11,
+    cose_aes_ccm_64_64_128      = 12,
+    cose_aes_ccm_64_64_256      = 13,
+    cose_aes_ccm_16_128_128     = 30,
+    cose_aes_ccm_16_128_256     = 31,
+    cose_aes_ccm_64_128_128     = 32,
+    cose_aes_ccm_64_128_256     = 33,
+
+    // RFC 8152 Table 8: AES-MAC Algorithm Values
+    // RFC 9053 Table 4: AES-MAC Algorithm Values
+    cose_aes_cbc_mac_128_64     = 14,   // AES-MAC 128-bit key, 64-bit tag
+    cose_aes_cbc_mac_256_64     = 15,   // AES-MAC 256-bit key, 64-bit tag
+    cose_aes_cbc_mac_128_128    = 25,   // AES-MAC 128-bit key, 128-bit tag
+    cose_aes_cbc_mac_256_128    = 26,   // AES-MAC 256-bit key, 128-bit tag
+
+    // RFC 8152 Table 11: Algorithm Value for AES-GCM
+    // RFC 9053 Table 7: Algorithm Value for ChaCha20/Poly1305
+    cose_chacha20_poly1305      = 24,
+
+    // RFC 9053 Table 23: New entry in the COSE Algorithms registry
+    cose_iv_generation          = 34,
+};
+
 typedef struct _hint_blockcipher_t {
     crypt_algorithm_t _alg;
     uint16 _keysize;    // size of key

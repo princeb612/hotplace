@@ -294,13 +294,7 @@ return_t compare_binary (binary_t const& lhs, binary_t const& rhs)
 {
     return_t ret = errorcode_t::success;
 
-    if (lhs.size () == rhs.size ()) {
-        if (0 == memcmp (&lhs[0], &rhs[0], lhs.size ())) {
-            // do nothing
-        } else {
-            ret = errorcode_t::mismatch;
-        }
-    } else {
+    if (lhs != rhs) {
         ret = errorcode_t::mismatch;
     }
     return ret;

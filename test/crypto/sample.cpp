@@ -339,13 +339,7 @@ return_t compare_binary (binary_t const& lhs, binary_t const& rhs)
 {
     return_t ret = errorcode_t::success;
 
-    if (lhs.size () == rhs.size ()) {
-        if (0 == memcmp (&lhs[0], &rhs[0], lhs.size ())) {
-            // do nothing
-        } else {
-            ret = errorcode_t::mismatch;
-        }
-    } else {
+    if (lhs != rhs) {
         ret = errorcode_t::mismatch;
     }
     return ret;
@@ -664,7 +658,7 @@ void test_kdf_argon_rfc9106 ()
         _test_case.test (ret, __FUNCTION__, "argon2id");
     }
 #else
-    _test_case.test (errorcode_t::not_supported, __FUNCTION__, "argon2d,argon2i,argon2id require at least openssl 3.2");
+    _test_case.test (errorcode_t::not_supported, __FUNCTION__, "argon2d,argon2i,argon2id at least openssl 3.2 required");
 #endif
 }
 

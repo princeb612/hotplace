@@ -15,8 +15,6 @@
 
 COMMENTS
 
-mkdir -p build
-cd build
 :<< SWITCHES
     SUPPORT_SHARED  - recompile openssl, jansson with -fPIC
     SUPPORT_ODBC    - unixODBC
@@ -37,5 +35,17 @@ else
     true
 fi
 export CXXFLAGS='-DDEBUG'
+
+project_dir=$(pwd)
+
+mkdir -p build
+cd build
 cmake -G 'Unix Makefiles' ..
 time make
+
+# redist binaries to run wo mingw environment
+:<< REDIST
+cd $project_dir
+source redist.msys
+redist
+REDIST

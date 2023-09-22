@@ -388,6 +388,11 @@ public:
      */
     bool is_kindof (EVP_PKEY* pkey, const char* alg);
 
+    cose_key_t ktyof (crypto_key_t kty);
+    crypto_key_t ktyof (cose_key_t kty);
+    cose_ec_curve_t curveof (uint32 nid);
+    uint32 curveof (cose_ec_curve_t curve);
+
 protected:
     return_t build_if_necessary ();
     return_t cleanup ();
@@ -412,6 +417,10 @@ private:
     typedef std::map <std::string, const hint_jose_signature_t*> jose_signature_byname_map_t;
     typedef std::map <std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
     typedef std::map <uint32, const hint_curve_t*> jose_curve_bynid_map_t;
+    typedef std::map <crypto_key_t, cose_key_t> kty2cose_map_t;
+    typedef std::map <cose_key_t, crypto_key_t> cose2kty_map_t;
+    typedef std::map <uint32, cose_ec_curve_t> nid2curve_map_t;
+    typedef std::map <cose_ec_curve_t, uint32> curve2nid_map_t;
 
     critical_section _lock;
     int _flag;
@@ -434,6 +443,11 @@ private:
 
     jose_nid_bycurve_map_t _nid_bycurve_map;
     jose_curve_bynid_map_t _curve_bynid_map;
+
+    kty2cose_map_t _kty2cose_map;
+    cose2kty_map_t _cose2kty_map;
+    nid2curve_map_t _nid2curve_map;
+    curve2nid_map_t _curve2nid_map;
 };
 
 /**
