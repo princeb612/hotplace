@@ -160,6 +160,8 @@ enum crypt_sig_type_t {
     crypt_sig_eddsa         = 5,
 };
 enum crypt_sig_t {
+    sig_unknown     = 0,
+
     sig_hs256       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_hmac, hash_algorithm_t::sha2_256),
     sig_hs384       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_hmac, hash_algorithm_t::sha2_384),
     sig_hs512       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_hmac, hash_algorithm_t::sha2_512),
@@ -232,19 +234,38 @@ enum crypt_access_t {
 };
 
 enum crypto_key_t {
-    none_key    = 0,
-    hmac_key    = 1,    // EVP_PKEY_HMAC    NID_hmac
-    rsa_key     = 2,    // EVP_PKEY_RSA     NID_rsaEncryption
-    ec_key      = 3,    // EVP_PKEY_EC      NID_X9_62_id_ecPublicKey
-    okp_key     = 4,    // EVP_PKEY_ED25519 NID_ED25519, EVP_PKEY_ED448   NID_ED448
-    bad_key     = 0xffff,
+    kty_unknown = 0,
+    kty_hmac    = 1,    // EVP_PKEY_HMAC    NID_hmac
+    kty_rsa     = 2,    // EVP_PKEY_RSA     NID_rsaEncryption
+    kty_ec      = 3,    // EVP_PKEY_EC      NID_X9_62_id_ecPublicKey
+    kty_okp     = 4,    // EVP_PKEY_ED25519 NID_ED25519, EVP_PKEY_ED448   NID_ED448
+    kty_bad     = 0xffff,
 };
 
+/**
+ * @desc    JOSE "use", COSE key operation
+ *          JOSE use - enc, sig
+ *          COSE keyop - sign, verify, ...
+ */
 enum crypto_use_t {
-    use_unknown = 0,
-    use_enc     = 1,
-    use_sig     = 2,
-    use_any     = (use_enc | use_sig),
+    use_unknown     = 0,
+
+    // JOSE
+    use_enc         = 1 << 0,
+    use_sig         = 1 << 1,
+
+    // COSE
+    use_sign        = 1 << 2,
+    use_verify      = 1 << 3,
+    use_encrypt     = 1 << 4,
+    use_decrypt     = 1 << 5,
+    use_wrap        = 1 << 6,
+    use_unwrap      = 1 << 7,
+    use_derive_key  = 1 << 8,
+    use_derive_bits = 1 << 9,
+    use_mac_create  = 1 << 10,
+    use_mac_verify  = 1 << 11,
+    use_any         = (0xffff),
 };
 
 enum jwa_type_t {
@@ -601,8 +622,8 @@ typedef struct _hint_jose_encryption_t {
     const char* alg_name;
 
     int type;                       // jwa_t, jwe_t
-    crypto_key_t kty;               // crypto_key_t::rsa_key, crypto_key_t::ec_key, crypto_key_t::hmac_key
-    crypto_key_t alt;               // for example crypto_key_t::okp_key, if kt is crypto_key_t::ec_key
+    crypto_key_t kty;               // crypto_key_t::kty_rsa, crypto_key_t::kty_ec, crypto_key_t::kty_hmac
+    crypto_key_t alt;               // for example crypto_key_t::kty_okp, if kt is crypto_key_t::kty_ec
     int mode;                       // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
 
     crypt_algorithm_t crypt_alg;    // algorithm for keywrap or GCM
@@ -618,14 +639,15 @@ typedef struct _hint_curves_t {
     const char* name;
 } hint_curve_t;
 
-typedef struct _hint_jose_signature_t {
+typedef struct _hint_signature_t {
     const char* alg_name;
-    jws_t sig; // jws_t
+    crypt_sig_t type;
+    jws_t sig;
     crypto_key_t kty;
     hash_algorithm_t alg;
     uint32 count;
     uint32 nid[5];
-} hint_jose_signature_t;
+} hint_signature_t;
 
 typedef struct _hint_kty_name_t {
     crypto_key_t kty;

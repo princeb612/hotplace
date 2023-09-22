@@ -271,7 +271,7 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::lis
     for (std::list <jws_t>::const_iterator method_iter = methods.begin (); method_iter != methods.end (); method_iter++) {
         jws_t sig = *method_iter;
 
-        const hint_jose_signature_t* hint = advisor->hintof_jose_signature (sig);
+        const hint_signature_t* hint = advisor->hintof_jose_signature (sig);
 
         if (hint) {
             json_t* json = json_object ();

@@ -263,55 +263,55 @@ const openssl_evp_md_method_t evp_md_methods[] = {
 const hint_jose_encryption_t hint_jose_algorithms [] =
 {
     { "RSA1_5",
-      jwa_t::jwa_rsa_1_5, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_enc_t::rsa_1_5, },
+      jwa_t::jwa_rsa_1_5, crypto_key_t::kty_rsa, crypto_key_t::kty_unknown, crypt_enc_t::rsa_1_5, },
     { "RSA-OAEP",
-      jwa_t::jwa_rsa_oaep, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_enc_t::rsa_oaep, },
+      jwa_t::jwa_rsa_oaep, crypto_key_t::kty_rsa, crypto_key_t::kty_unknown, crypt_enc_t::rsa_oaep, },
     { "RSA-OAEP-256",
-      jwa_t::jwa_rsa_oaep_256, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_enc_t::rsa_oaep256, },
+      jwa_t::jwa_rsa_oaep_256, crypto_key_t::kty_rsa, crypto_key_t::kty_unknown, crypt_enc_t::rsa_oaep256, },
     { "A128KW",
-      jwa_t::jwa_a128kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a128kw, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::wrap, 16,
       hash_algorithm_t::sha2_256, },
     { "A192KW",
-      jwa_t::jwa_a192kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a192kw, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::wrap, 24,
       hash_algorithm_t::sha2_384, },
     { "A256KW",
-      jwa_t::jwa_a256kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a256kw, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::wrap, 32,
       hash_algorithm_t::sha2_512, },
     { "dir",
-      jwa_t::jwa_dir, crypto_key_t::hmac_key, crypto_key_t::none_key, 0, },
+      jwa_t::jwa_dir, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0, },
     { "ECDH-ES",
-      jwa_t::jwa_ecdh_es, crypto_key_t::ec_key, crypto_key_t::okp_key, },
+      jwa_t::jwa_ecdh_es, crypto_key_t::kty_ec, crypto_key_t::kty_okp, },
     { "ECDH-ES+A128KW",
-      jwa_t::jwa_ecdh_es_a128kw, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
+      jwa_t::jwa_ecdh_es_a128kw, crypto_key_t::kty_ec, crypto_key_t::kty_okp, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::wrap, 16, },
     { "ECDH-ES+A192KW",
-      jwa_t::jwa_ecdh_es_a192kw, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
+      jwa_t::jwa_ecdh_es_a192kw, crypto_key_t::kty_ec, crypto_key_t::kty_okp, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::wrap, 24, },
     { "ECDH-ES+A256KW",
-      jwa_t::jwa_ecdh_es_a256kw, crypto_key_t::ec_key, crypto_key_t::okp_key, 0,
+      jwa_t::jwa_ecdh_es_a256kw, crypto_key_t::kty_ec, crypto_key_t::kty_okp, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::wrap, 32, },
     { "A128GCMKW",
-      jwa_t::jwa_a128gcmkw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a128gcmkw, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::gcm, 16, },
     { "A192GCMKW",
-      jwa_t::jwa_a192gcmkw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a192gcmkw, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::gcm, 24, },
     { "A256GCMKW",
-      jwa_t::jwa_a256gcmkw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_a256gcmkw, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::gcm, 32, },
     { "PBES2-HS256+A128KW",
-      jwa_t::jwa_pbes2_hs256_a128kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_pbes2_hs256_a128kw, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::wrap, 16,
       hash_algorithm_t::sha2_256, },
     { "PBES2-HS384+A192KW",
-      jwa_t::jwa_pbes2_hs384_a192kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_pbes2_hs384_a192kw, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::wrap, 24,
       hash_algorithm_t::sha2_384, },
     { "PBES2-HS512+A256KW",
-      jwa_t::jwa_pbes2_hs512_a256kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwa_t::jwa_pbes2_hs512_a256kw, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::wrap, 32,
       hash_algorithm_t::sha2_512, },
 };
@@ -319,64 +319,64 @@ const hint_jose_encryption_t hint_jose_algorithms [] =
 const hint_jose_encryption_t hint_jose_encryptions [] =
 {
     { "A128CBC-HS256",
-      jwe_t::jwe_a128cbc_hs256, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a128cbc_hs256, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::cbc, 16,
       hash_algorithm_t::sha2_256, },
     { "A192CBC-HS384",
-      jwe_t::jwe_a192cbc_hs384, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a192cbc_hs384, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::cbc, 24,
       hash_algorithm_t::sha2_384, },
     { "A256CBC-HS512",
-      jwe_t::jwe_a256cbc_hs512, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a256cbc_hs512, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::cbc, 32,
       hash_algorithm_t::sha2_512, },
     { "A128GCM",
-      jwe_t::jwe_a128gcm, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a128gcm, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::gcm, 16, },
     { "A192GCM",
-      jwe_t::jwe_a192gcm, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a192gcm, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes192, crypt_mode_t::gcm, 24, },
     { "A256GCM",
-      jwe_t::jwe_a256gcm, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
+      jwe_t::jwe_a256gcm, crypto_key_t::kty_hmac, crypto_key_t::kty_unknown, 0,
       crypt_algorithm_t::aes256, crypt_mode_t::gcm, 32, },
 };
 
-const hint_jose_signature_t hint_jose_signatures [] = {
-    { "HS256", jws_t::jws_hs256, crypto_key_t::hmac_key, hash_algorithm_t::sha2_256, 1, NID_hmac, },
-    { "HS384", jws_t::jws_hs384, crypto_key_t::hmac_key, hash_algorithm_t::sha2_384, 1, NID_hmac, },
-    { "HS512", jws_t::jws_hs512, crypto_key_t::hmac_key, hash_algorithm_t::sha2_512, 1, NID_hmac, },
-    { "RS256", jws_t::jws_rs256, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
-    { "RS384", jws_t::jws_rs384, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
-    { "RS512", jws_t::jws_rs512, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
-    { "ES256", jws_t::jws_es256, crypto_key_t::ec_key,   hash_algorithm_t::sha2_256, 1, NID_X9_62_prime256v1, },
-    { "ES384", jws_t::jws_es384, crypto_key_t::ec_key,   hash_algorithm_t::sha2_384, 1, NID_secp384r1, },
-    { "ES512", jws_t::jws_es512, crypto_key_t::ec_key,   hash_algorithm_t::sha2_512, 1, NID_secp521r1, },
-    { "PS256", jws_t::jws_ps256, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
-    { "PS384", jws_t::jws_ps384, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
-    { "PS512", jws_t::jws_ps512, crypto_key_t::rsa_key,  hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
-    { "EdDSA", jws_t::jws_eddsa, crypto_key_t::okp_key,  hash_algorithm_t::hash_alg_unknown, 2, NID_ED25519, NID_ED448, },
+const hint_signature_t hint_signatures [] = {
+    { "HS256", crypt_sig_t::sig_hs256, jws_t::jws_hs256, crypto_key_t::kty_hmac, hash_algorithm_t::sha2_256, 1, NID_hmac, },
+    { "HS384", crypt_sig_t::sig_hs384, jws_t::jws_hs384, crypto_key_t::kty_hmac, hash_algorithm_t::sha2_384, 1, NID_hmac, },
+    { "HS512", crypt_sig_t::sig_hs512, jws_t::jws_hs512, crypto_key_t::kty_hmac, hash_algorithm_t::sha2_512, 1, NID_hmac, },
+    { "RS256", crypt_sig_t::sig_rs256, jws_t::jws_rs256, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
+    { "RS384", crypt_sig_t::sig_rs384, jws_t::jws_rs384, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
+    { "RS512", crypt_sig_t::sig_rs512, jws_t::jws_rs512, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
+    { "ES256", crypt_sig_t::sig_es256, jws_t::jws_es256, crypto_key_t::kty_ec,   hash_algorithm_t::sha2_256, 1, NID_X9_62_prime256v1, },
+    { "ES384", crypt_sig_t::sig_es384, jws_t::jws_es384, crypto_key_t::kty_ec,   hash_algorithm_t::sha2_384, 1, NID_secp384r1, },
+    { "ES512", crypt_sig_t::sig_es512, jws_t::jws_es512, crypto_key_t::kty_ec,   hash_algorithm_t::sha2_512, 1, NID_secp521r1, },
+    { "PS256", crypt_sig_t::sig_ps256, jws_t::jws_ps256, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
+    { "PS384", crypt_sig_t::sig_ps384, jws_t::jws_ps384, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
+    { "PS512", crypt_sig_t::sig_ps512, jws_t::jws_ps512, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
+    { "EdDSA", crypt_sig_t::sig_eddsa, jws_t::jws_eddsa, crypto_key_t::kty_okp,  hash_algorithm_t::hash_alg_unknown, 2, NID_ED25519, NID_ED448, },
 };
 
 const hint_curve_t hint_curves [] = {
-    { NID_X9_62_prime256v1, crypto_key_t::ec_key,  crypto_use_t::use_any, "P-256", },
-    { NID_secp384r1,        crypto_key_t::ec_key,  crypto_use_t::use_any, "P-384", },
-    { NID_secp521r1,        crypto_key_t::ec_key,  crypto_use_t::use_any, "P-521", },
-    { NID_ED25519,          crypto_key_t::okp_key, crypto_use_t::use_sig, "Ed25519", },
-    { NID_ED448,            crypto_key_t::okp_key, crypto_use_t::use_sig, "Ed448", },
-    { NID_X25519,           crypto_key_t::okp_key, crypto_use_t::use_enc, "X25519", },
-    { NID_X448,             crypto_key_t::okp_key, crypto_use_t::use_enc, "X448", },
+    { NID_X9_62_prime256v1, crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-256", },
+    { NID_secp384r1,        crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-384", },
+    { NID_secp521r1,        crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-521", },
+    { NID_ED25519,          crypto_key_t::kty_okp, crypto_use_t::use_sig, "Ed25519", },
+    { NID_ED448,            crypto_key_t::kty_okp, crypto_use_t::use_sig, "Ed448", },
+    { NID_X25519,           crypto_key_t::kty_okp, crypto_use_t::use_enc, "X25519", },
+    { NID_X448,             crypto_key_t::kty_okp, crypto_use_t::use_enc, "X448", },
 };
 
 const hint_kty_name_t hint_kty_names [] = {
-    { crypto_key_t::hmac_key, "oct", },
-    { crypto_key_t::rsa_key,  "RSA", },
-    { crypto_key_t::ec_key,   "EC", },
-    { crypto_key_t::okp_key,  "OKP", },
+    { crypto_key_t::kty_hmac, "oct", },
+    { crypto_key_t::kty_rsa,  "RSA", },
+    { crypto_key_t::kty_ec,   "EC", },
+    { crypto_key_t::kty_okp,  "OKP", },
 };
 
 const size_t sizeof_hint_jose_algorithms = RTL_NUMBER_OF (hint_jose_algorithms);
 const size_t sizeof_hint_jose_encryptions = RTL_NUMBER_OF (hint_jose_encryptions);
-const size_t sizeof_hint_jose_signatures = RTL_NUMBER_OF (hint_jose_signatures);
+const size_t sizeof_hint_signatures = RTL_NUMBER_OF (hint_signatures);
 const size_t sizeof_hint_curves = RTL_NUMBER_OF (hint_curves);
 const size_t sizeof_hint_kty_names = RTL_NUMBER_OF (hint_kty_names);
 
@@ -403,96 +403,93 @@ return_t crypto_advisor::build_if_necessary ()
     uint32 i = 0;
 
     if (0 == _flag) {
-        _lock.enter ();
-        if (0 == _flag) {
-            for (i = 0; i < RTL_NUMBER_OF (hint_blockciphers); i++) {
-                const hint_blockcipher_t* item = hint_blockciphers + i;
-                _blockcipher_map.insert (std::make_pair (item->_alg, item));
-            }
-            for (i = 0; i < RTL_NUMBER_OF (evp_cipher_methods); i++) {
-                const openssl_evp_cipher_method_t* item = evp_cipher_methods + i;
-#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-                EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch (nullptr, item->_fetchname, nullptr);
-                if (nullptr == evp_cipher) {
-                    __trace (errorcode_t::debug, "%s", item->_fetchname);
-                }
-                _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), evp_cipher));
-                _evp_cipher_map.insert (std::make_pair (evp_cipher, item));
-#else
-                _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), (EVP_CIPHER*) item->_cipher));
-                _evp_cipher_map.insert (std::make_pair (item->_cipher, item));
-#endif
-                _cipher_fetch_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), item));
-            }
-            for (i = 0; i < RTL_NUMBER_OF (evp_md_methods); i++) {
-                const openssl_evp_md_method_t* item = evp_md_methods + i;
-#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-                EVP_MD* evp_md = EVP_MD_fetch (nullptr, item->_fetchname, nullptr);
-                if (nullptr == evp_md) {
-                    __trace (errorcode_t::debug, "%s", item->_fetchname);
-                }
-                _md_map.insert (std::make_pair (item->_algorithm, evp_md));
-#else
-                _md_map.insert (std::make_pair (item->_algorithm, (EVP_MD*) item->_evp_md));
-#endif
-                _md_fetch_map.insert (std::make_pair (item->_algorithm, item));
-            }
-            for (i = 0; i < sizeof_hint_jose_algorithms; i++) {
-                const hint_jose_encryption_t* item = hint_jose_algorithms + i;
-                _alg_map.insert (std::make_pair (item->type, item));
-                _alg_byname_map.insert (std::make_pair (item->alg_name, item));
-            }
-            for (i = 0; i < sizeof_hint_jose_encryptions; i++) {
-                const hint_jose_encryption_t* item = hint_jose_encryptions + i;
-                _enc_map.insert (std::make_pair (item->type, item));
-                _enc_byname_map.insert (std::make_pair (item->alg_name, item));
-            }
-            for (i = 0; i < sizeof_hint_jose_signatures; i++) {
-                const hint_jose_signature_t* item = hint_jose_signatures + i;
-                _sig_map.insert (std::make_pair (item->sig, item));
-                _sig_byname_map.insert (std::make_pair (item->alg_name, item));
-            }
-            for (i = 0; i < sizeof_hint_jose_signatures; i++) {
-                const hint_jose_signature_t* item = hint_jose_signatures + i;
-                for (uint midx = 0; midx < item->count; midx++) {
-                    _sig_bynid_map.insert (std::make_pair (item->nid[midx], item));
-                }
-            }
-            for (i = 0; i < sizeof_hint_curves; i++) {
-                const hint_curve_t* item = hint_curves + i;
-                _nid_bycurve_map.insert (std::make_pair (item->name, item));
-                _curve_bynid_map.insert (std::make_pair (item->nid, item));
-            }
-
-            _kty2cose_map.insert (std::make_pair (crypto_key_t::ec_key, cose_key_t::cose_key_ec2));
-            _kty2cose_map.insert (std::make_pair (crypto_key_t::hmac_key, cose_key_t::cose_key_symm));
-            _kty2cose_map.insert (std::make_pair (crypto_key_t::okp_key, cose_key_t::cose_key_okp));
-            _kty2cose_map.insert (std::make_pair (crypto_key_t::rsa_key, cose_key_t::cose_key_rsa));
-
-            _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_ec2, crypto_key_t::ec_key));
-            _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_symm, crypto_key_t::hmac_key));
-            _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_okp, crypto_key_t::okp_key));
-            _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_rsa, crypto_key_t::rsa_key));
-
-            _nid2curve_map.insert (std::make_pair (NID_X9_62_prime256v1, cose_ec_curve_t::cose_ec_p256));
-            _nid2curve_map.insert (std::make_pair (NID_secp384r1, cose_ec_curve_t::cose_ec_p384));
-            _nid2curve_map.insert (std::make_pair (NID_secp521r1, cose_ec_curve_t::cose_ec_p521));
-            _nid2curve_map.insert (std::make_pair (NID_X25519, cose_ec_curve_t::cose_ec_x25519));
-            _nid2curve_map.insert (std::make_pair (NID_X448, cose_ec_curve_t::cose_ec_x448));
-            _nid2curve_map.insert (std::make_pair (NID_ED25519, cose_ec_curve_t::cose_ec_ed25519));
-            _nid2curve_map.insert (std::make_pair (NID_ED448, cose_ec_curve_t::cose_ec_ed448));
-
-            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p256, NID_X9_62_prime256v1));
-            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p384, NID_secp384r1));
-            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p521, NID_secp521r1));
-            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_x25519, NID_X25519));
-            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_x448, NID_X448));
-            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_ed25519, NID_ED25519));
-            _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_ed448, NID_ED448));
-
-            _flag = 1;
+        for (i = 0; i < RTL_NUMBER_OF (hint_blockciphers); i++) {
+            const hint_blockcipher_t* item = hint_blockciphers + i;
+            _blockcipher_map.insert (std::make_pair (item->_alg, item));
         }
-        _lock.leave ();
+        for (i = 0; i < RTL_NUMBER_OF (evp_cipher_methods); i++) {
+            const openssl_evp_cipher_method_t* item = evp_cipher_methods + i;
+#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
+            EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch (nullptr, item->_fetchname, nullptr);
+            if (nullptr == evp_cipher) {
+                __trace (errorcode_t::debug, "%s", item->_fetchname);
+            }
+            _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), evp_cipher));
+            _evp_cipher_map.insert (std::make_pair (evp_cipher, item));
+#else
+            _cipher_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), (EVP_CIPHER*) item->_cipher));
+            _evp_cipher_map.insert (std::make_pair (item->_cipher, item));
+#endif
+            _cipher_fetch_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), item));
+        }
+        for (i = 0; i < RTL_NUMBER_OF (evp_md_methods); i++) {
+            const openssl_evp_md_method_t* item = evp_md_methods + i;
+#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
+            EVP_MD* evp_md = EVP_MD_fetch (nullptr, item->_fetchname, nullptr);
+            if (nullptr == evp_md) {
+                __trace (errorcode_t::debug, "%s", item->_fetchname);
+            }
+            _md_map.insert (std::make_pair (item->_algorithm, evp_md));
+#else
+            _md_map.insert (std::make_pair (item->_algorithm, (EVP_MD*) item->_evp_md));
+#endif
+            _md_fetch_map.insert (std::make_pair (item->_algorithm, item));
+        }
+        for (i = 0; i < sizeof_hint_jose_algorithms; i++) {
+            const hint_jose_encryption_t* item = hint_jose_algorithms + i;
+            _alg_map.insert (std::make_pair (item->type, item));
+            _alg_byname_map.insert (std::make_pair (item->alg_name, item));
+        }
+        for (i = 0; i < sizeof_hint_jose_encryptions; i++) {
+            const hint_jose_encryption_t* item = hint_jose_encryptions + i;
+            _enc_map.insert (std::make_pair (item->type, item));
+            _enc_byname_map.insert (std::make_pair (item->alg_name, item));
+        }
+        for (i = 0; i < sizeof_hint_signatures; i++) {
+            const hint_signature_t* item = hint_signatures + i;
+            _crypt_sig_map.insert (std::make_pair (item->type, item));
+            _jose_sig_map.insert (std::make_pair (item->sig, item));
+            _sig_byname_map.insert (std::make_pair (item->alg_name, item));
+        }
+        for (i = 0; i < sizeof_hint_signatures; i++) {
+            const hint_signature_t* item = hint_signatures + i;
+            for (uint midx = 0; midx < item->count; midx++) {
+                _sig_bynid_map.insert (std::make_pair (item->nid[midx], item));
+            }
+        }
+        for (i = 0; i < sizeof_hint_curves; i++) {
+            const hint_curve_t* item = hint_curves + i;
+            _nid_bycurve_map.insert (std::make_pair (item->name, item));
+            _curve_bynid_map.insert (std::make_pair (item->nid, item));
+        }
+
+        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_ec, cose_key_t::cose_key_ec2));
+        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_hmac, cose_key_t::cose_key_symm));
+        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_okp, cose_key_t::cose_key_okp));
+        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_rsa, cose_key_t::cose_key_rsa));
+
+        _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_ec2, crypto_key_t::kty_ec));
+        _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_symm, crypto_key_t::kty_hmac));
+        _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_okp, crypto_key_t::kty_okp));
+        _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_rsa, crypto_key_t::kty_rsa));
+
+        _nid2curve_map.insert (std::make_pair (NID_X9_62_prime256v1, cose_ec_curve_t::cose_ec_p256));
+        _nid2curve_map.insert (std::make_pair (NID_secp384r1, cose_ec_curve_t::cose_ec_p384));
+        _nid2curve_map.insert (std::make_pair (NID_secp521r1, cose_ec_curve_t::cose_ec_p521));
+        _nid2curve_map.insert (std::make_pair (NID_X25519, cose_ec_curve_t::cose_ec_x25519));
+        _nid2curve_map.insert (std::make_pair (NID_X448, cose_ec_curve_t::cose_ec_x448));
+        _nid2curve_map.insert (std::make_pair (NID_ED25519, cose_ec_curve_t::cose_ec_ed25519));
+        _nid2curve_map.insert (std::make_pair (NID_ED448, cose_ec_curve_t::cose_ec_ed448));
+
+        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p256, NID_X9_62_prime256v1));
+        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p384, NID_secp384r1));
+        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p521, NID_secp521r1));
+        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_x25519, NID_X25519));
+        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_x448, NID_X448));
+        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_ed25519, NID_ED25519));
+        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_ed448, NID_ED448));
+
+        _flag = 1;
     }
     return ret;
 }
@@ -502,7 +499,6 @@ return_t crypto_advisor::cleanup ()
     return_t ret = errorcode_t::success;
 
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-    _lock.enter ();
     cipher_map_t::iterator iter_cipher;
     for (iter_cipher = _cipher_map.begin (); iter_cipher != _cipher_map.end (); iter_cipher++) {
         EVP_CIPHER_free (iter_cipher->second);
@@ -511,7 +507,6 @@ return_t crypto_advisor::cleanup ()
     for (iter_md = _md_map.begin (); iter_md != _md_map.end (); iter_md++) {
         EVP_MD_free (iter_md->second);
     }
-    _lock.leave ();
 #endif
 
     return ret;
@@ -520,16 +515,9 @@ return_t crypto_advisor::cleanup ()
 const hint_blockcipher_t* crypto_advisor::hintof_blockcipher (crypt_algorithm_t alg)
 {
     const hint_blockcipher_t* item = nullptr;
+    maphint <uint32, const hint_blockcipher_t*> hint (_blockcipher_map);
 
-    _lock.enter ();
-    blockcipher_map_t::iterator iter = _blockcipher_map.find (alg);
-
-    if (_blockcipher_map.end () != iter) {
-        item = iter->second;
-    }
-
-    _lock.leave ();
-
+    hint.find (alg, &item);
     return item;
 }
 
@@ -540,8 +528,6 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher (const EVP_CIPHER* cip
 
     __try2
     {
-        _lock.enter ();
-
         crypt_algorithm_t alg = crypt_algorithm_t::crypt_alg_unknown;
         crypt_mode_t mode = crypt_mode_t::crypt_mode_unknown;
         ret = find_evp_cipher (cipher, alg, mode);
@@ -553,7 +539,7 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher (const EVP_CIPHER* cip
     }
     __finally2
     {
-        _lock.leave ();
+        // do nothing
     }
     return blockcipher;
 }
@@ -561,17 +547,10 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher (const EVP_CIPHER* cip
 const EVP_CIPHER* crypto_advisor::find_evp_cipher (crypt_algorithm_t algorithm, crypt_mode_t mode)
 {
     EVP_CIPHER* ret_value = nullptr;
-
     uint32 key = CRYPT_CIPHER_VALUE (algorithm, mode);
+    maphint <uint32, EVP_CIPHER*> hint (_cipher_map);
 
-    _lock.enter ();
-    cipher_map_t::iterator iter = _cipher_map.find (key);
-
-    if (_cipher_map.end () != iter) {
-        ret_value = (EVP_CIPHER*) iter->second;
-    }
-    _lock.leave ();
-
+    hint.find (key, &ret_value);
     return ret_value;
 }
 
@@ -586,22 +565,13 @@ return_t crypto_advisor::find_evp_cipher (const EVP_CIPHER* cipher, crypt_algori
             __leave2;
         }
 
-        __try2
-        {
-            _lock.enter ();
-            evp_cipher_map_t::iterator iter = _evp_cipher_map.find (cipher);
+        const openssl_evp_cipher_method_t* method = nullptr;
+        maphint <const EVP_CIPHER*, const openssl_evp_cipher_method_t*> hint (_evp_cipher_map);
 
-            if (_evp_cipher_map.end () == iter) {
-                ret = errorcode_t::not_found;
-                __leave2;
-            }
-
-            algorithm = iter->second->_algorithm;
-            mode = iter->second->_mode;
-        }
-        __finally2
-        {
-            _lock.leave ();
+        ret = hint.find (cipher, &method);
+        if (errorcode_t::success == ret) {
+            algorithm = method->_algorithm;
+            mode = method->_mode;
         }
     }
     __finally2
@@ -618,74 +588,14 @@ const char* crypto_advisor::nameof_cipher (crypt_algorithm_t algorithm, crypt_mo
 
     __try2
     {
-        _lock.enter ();
+        uint32 key = CRYPT_CIPHER_VALUE (algorithm, mode);
+        const openssl_evp_cipher_method_t* item = nullptr;
+        maphint <uint32, const openssl_evp_cipher_method_t*> hint (_cipher_fetch_map);
 
-        cipher_fetch_map_t::iterator iter = _cipher_fetch_map.find (CRYPT_CIPHER_VALUE (algorithm, mode));
-        if (_cipher_fetch_map.end () == iter) {
-            ret = errorcode_t::not_found;
-            __leave2;
+        ret = hint.find (key, &item);
+        if (errorcode_t::success == ret) {
+            ret_value = item->_fetchname;
         }
-
-        const openssl_evp_cipher_method_t* item = iter->second;
-
-        ret_value = item->_fetchname;
-    }
-    __finally2
-    {
-        _lock.leave ();
-    }
-    return ret_value;
-}
-
-const EVP_MD* crypto_advisor::find_evp_md (hash_algorithm_t algorithm)
-{
-    const EVP_MD* ret_value = nullptr;
-
-    _lock.enter ();
-    md_map_t::iterator iter = _md_map.find (algorithm);
-
-    if (_md_map.end () != iter) {
-        ret_value = iter->second;
-    }
-    _lock.leave ();
-
-    return ret_value;
-}
-
-const EVP_MD* crypto_advisor::find_evp_md (jws_t sig)
-{
-    const EVP_MD* ret_value = nullptr;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-
-    __try2
-    {
-        _lock.enter ();
-
-        const hint_jose_signature_t* hint = advisor->hintof_jose_signature (sig);
-        if (nullptr == hint) {
-            __leave2;
-        }
-        ret_value = find_evp_md (hint->alg);
-    }
-    __finally2
-    {
-        _lock.leave ();
-    }
-    return ret_value;
-}
-
-hash_algorithm_t crypto_advisor::get_algorithm (jws_t sig)
-{
-    hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-
-    __try2
-    {
-        const hint_jose_signature_t* hint = advisor->hintof_jose_signature (sig);
-        if (nullptr == hint) {
-            __leave2;
-        }
-        ret_value = hint->alg;
     }
     __finally2
     {
@@ -694,30 +604,64 @@ hash_algorithm_t crypto_advisor::get_algorithm (jws_t sig)
     return ret_value;
 }
 
+const EVP_MD* crypto_advisor::find_evp_md (hash_algorithm_t algorithm)
+{
+    EVP_MD* ret_value = nullptr;
+    maphint <uint32, EVP_MD*> hint (_md_map);
+
+    hint.find (algorithm, &ret_value);
+    return ret_value;
+}
+
+const EVP_MD* crypto_advisor::find_evp_md (crypt_sig_t sig)
+{
+    const EVP_MD* ret_value = nullptr;
+    const hint_signature_t* item = nullptr;
+    maphint <uint32, const hint_signature_t*> hint (_crypt_sig_map);
+
+    hint.find (sig, &item);
+    if (item) {
+        ret_value = find_evp_md (item->alg);
+    }
+    return ret_value;
+}
+
+const EVP_MD* crypto_advisor::find_evp_md (jws_t sig)
+{
+    const EVP_MD* ret_value = nullptr;
+    const hint_signature_t* item = nullptr;
+    maphint <uint32, const hint_signature_t*> hint (_jose_sig_map);
+
+    hint.find (sig, &item);
+    if (item) {
+        ret_value = find_evp_md (item->alg);
+    }
+    return ret_value;
+}
+
+hash_algorithm_t crypto_advisor::get_algorithm (jws_t sig)
+{
+    hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
+    const hint_signature_t* item = nullptr;
+    maphint <uint32, const hint_signature_t*> hint (_jose_sig_map);
+
+    hint.find (sig, &item);
+    if (item) {
+        ret_value = item->alg;
+    }
+    return ret_value;
+}
+
 const char* crypto_advisor::nameof_md (hash_algorithm_t algorithm)
 {
     const char* ret_value = nullptr;
-    return_t ret = errorcode_t::success;
+    const openssl_evp_md_method_t* item = nullptr;
+    maphint <uint32, const openssl_evp_md_method_t*> hint (_md_fetch_map);
 
-    __try2
-    {
-        _lock.enter ();
-        md_fetch_map_t::iterator iter = _md_fetch_map.find (algorithm);
-
-        if (_md_fetch_map.end () == iter) {
-            ret = errorcode_t::not_found;
-            __leave2;
-        }
-
-
-        const openssl_evp_md_method_t* item = iter->second;
+    hint.find (algorithm, &item);
+    if (item) {
         ret_value = item->_fetchname;
     }
-    __finally2
-    {
-        _lock.leave ();
-    }
-
     return ret_value;
 }
 
@@ -746,13 +690,13 @@ return_t crypto_advisor::jose_for_each_encryption (std::function <void (const hi
     return ret;
 }
 
-return_t crypto_advisor::jose_for_each_signature (std::function <void (const hint_jose_signature_t*, void*)> f, void* user)
+return_t crypto_advisor::jose_for_each_signature (std::function <void (const hint_signature_t*, void*)> f, void* user)
 {
     return_t ret = errorcode_t::success;
 
-    std::for_each (hint_jose_signatures,
-                   hint_jose_signatures + RTL_NUMBER_OF (hint_jose_signatures),
-                   [&] (const hint_jose_signature_t& item) {
+    std::for_each (hint_signatures,
+                   hint_signatures + RTL_NUMBER_OF (hint_signatures),
+                   [&] (const hint_signature_t& item) {
                 return f (&item, user);
             } );
     return ret;
@@ -762,60 +706,45 @@ return_t crypto_advisor::jose_for_each_signature (std::function <void (const hin
 const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm (jwa_t alg)
 {
     const hint_jose_encryption_t* item = nullptr;
+    maphint <uint32, const hint_jose_encryption_t*> hint (_alg_map);
 
-    _lock.enter ();
-    jose_encryption_map_t::iterator iter = _alg_map.find (alg);
-
-    if (_alg_map.end () != iter) {
-        item = iter->second;
-    }
-    _lock.leave ();
-
+    hint.find (alg, &item);
     return item;
 }
 
 const hint_jose_encryption_t* crypto_advisor::hintof_jose_encryption (jwe_t enc)
 {
     const hint_jose_encryption_t* item = nullptr;
+    maphint <uint32, const hint_jose_encryption_t*> hint (_enc_map);
 
-    _lock.enter ();
-    jose_encryption_map_t::iterator iter = _enc_map.find (enc);
-
-    if (_enc_map.end () != iter) {
-        item = iter->second;
-    }
-    _lock.leave ();
-
+    hint.find (enc, &item);
     return item;
 }
 
-const hint_jose_signature_t* crypto_advisor::hintof_jose_signature (jws_t sig)
+const hint_signature_t* crypto_advisor::hintof_signature (crypt_sig_t sig)
 {
-    const hint_jose_signature_t* item = nullptr;
+    const hint_signature_t* item = nullptr;
+    maphint <uint32, const hint_signature_t*> hint (_crypt_sig_map);
 
-    _lock.enter ();
-    jose_signature_map_t::iterator iter = _sig_map.find (sig);
+    hint.find (sig, &item);
+    return item;
+}
 
-    if (_sig_map.end () != iter) {
-        item = iter->second;
-    }
-    _lock.leave ();
+const hint_signature_t* crypto_advisor::hintof_jose_signature (jws_t sig)
+{
+    const hint_signature_t* item = nullptr;
+    maphint <uint32, const hint_signature_t*> hint (_jose_sig_map);
 
+    hint.find (sig, &item);
     return item;
 }
 
 const hint_curve_t* crypto_advisor::hintof_curve_nid (uint32 nid)
 {
     const hint_curve_t* item = nullptr;
+    maphint <uint32, const hint_curve_t*> hint (_curve_bynid_map);
 
-    _lock.enter ();
-    jose_curve_bynid_map_t::iterator iter = _curve_bynid_map.find (nid);
-
-    if (_curve_bynid_map.end () != iter) {
-        item = iter->second;
-    }
-    _lock.leave ();
-
+    hint.find (nid, &item);
     return item;
 }
 
@@ -824,12 +753,8 @@ const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm (const char*
     const hint_jose_encryption_t* item = nullptr;
 
     if (alg) {
-        _lock.enter ();
-        jose_encryption_byname_map_t::iterator iter = _alg_byname_map.find (alg);
-        if (_alg_byname_map.end () != iter) {
-            item = iter->second;
-        }
-        _lock.leave ();
+        maphint <std::string, const hint_jose_encryption_t*> hint (_alg_byname_map);
+        hint.find (alg, &item);
     }
 
     return item;
@@ -840,30 +765,21 @@ const hint_jose_encryption_t* crypto_advisor::hintof_jose_encryption (const char
     const hint_jose_encryption_t* item = nullptr;
 
     if (enc) {
-        _lock.enter ();
-        jose_encryption_byname_map_t::iterator iter = _enc_byname_map.find (enc);
-        if (_enc_byname_map.end () != iter) {
-            item = iter->second;
-        }
-        _lock.leave ();
+        maphint <std::string, const hint_jose_encryption_t*> hint (_enc_byname_map);
+        hint.find (enc, &item);
     }
 
     return item;
 }
 
-const hint_jose_signature_t* crypto_advisor::hintof_jose_signature (const char* sig)
+const hint_signature_t* crypto_advisor::hintof_jose_signature (const char* sig)
 {
-    const hint_jose_signature_t* item = nullptr;
+    const hint_signature_t* item = nullptr;
 
     if (sig) {
-        _lock.enter ();
-        jose_signature_byname_map_t::iterator iter = _sig_byname_map.find (sig);
-        if (_sig_byname_map.end () != iter) {
-            item = iter->second;
-        }
-        _lock.leave ();
+        maphint <std::string, const hint_signature_t*> hint (_sig_byname_map);
+        hint.find (sig, &item);
     }
-
     return item;
 }
 
@@ -872,12 +788,8 @@ const hint_curve_t* crypto_advisor::hintof_curve (const char* curve)
     const hint_curve_t* item = nullptr;
 
     if (curve) {
-        _lock.enter ();
-        jose_nid_bycurve_map_t::iterator iter = _nid_bycurve_map.find (curve);
-        if (_nid_bycurve_map.end () != iter) {
-            item = iter->second;
-        }
-        _lock.leave ();
+        maphint <std::string, const hint_curve_t*> hint (_nid_bycurve_map);
+        hint.find (curve, &item);
     }
 
     return item;
@@ -911,7 +823,7 @@ const char* crypto_advisor::nameof_jose_signature (jws_t sig)
 {
     const char* name = nullptr;
 
-    const hint_jose_signature_t* item = hintof_jose_signature (sig);
+    const hint_signature_t* item = hintof_jose_signature (sig);
 
     if (item) {
         name = item->alg_name;
@@ -954,7 +866,7 @@ return_t crypto_advisor::typeof_jose_signature (const char* sig, jws_t& type)
     return_t ret = errorcode_t::success;
 
     type = jws_t::jws_unknown;
-    const hint_jose_signature_t* item = hintof_jose_signature (sig);
+    const hint_signature_t* item = hintof_jose_signature (sig);
 
     if (item) {
         type = (jws_t) item->sig;
@@ -1062,14 +974,12 @@ return_t crypto_advisor::nameof_ec_curve (EVP_PKEY* pkey, std::string& name)
     if (kindof_ecc (pkey)) {
         nidof_evp_pkey (pkey, nid);
 
-        _lock.enter ();
         jose_curve_bynid_map_t::iterator iter = _curve_bynid_map.find (nid);
         if (_curve_bynid_map.end () != iter) {
             name = iter->second->name;
         } else {
             ret = errorcode_t::not_found;
         }
-        _lock.leave ();
     }
     return ret;
 }
@@ -1087,7 +997,7 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, const char* alg)
                 __leave2;
             }
         }
-        const hint_jose_signature_t* hint_sig = hintof_jose_signature (alg);
+        const hint_signature_t* hint_sig = hintof_jose_signature (alg);
         if (hint_sig) {
             test = is_kindof (pkey, hint_sig->sig);
             if (test) {
@@ -1114,8 +1024,48 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, jwa_t alg)
         }
         crypto_key_t kty = typeof_crypto_key (pkey);
         bool cmp1 = (hint_enc->kty == kty);
-        bool cmp2 = (hint_enc->alt == crypto_key_t::none_key) ? true : (hint_enc->alt == kty);
+        bool cmp2 = (hint_enc->alt == crypto_key_t::kty_unknown) ? true : (hint_enc->alt == kty);
         test = (cmp1 || cmp2);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return test;
+}
+
+bool crypto_advisor::is_kindof (EVP_PKEY* pkey, crypt_sig_t sig)
+{
+    bool test = false;
+
+    __try2
+    {
+        if (nullptr == pkey) {
+            __leave2;
+        }
+
+        //uint32 type = EVP_PKEY_id (pkey);
+        crypto_key_t kty = typeof_crypto_key (pkey);
+        uint32 nid = 0;
+        nidof_evp_pkey (pkey, nid);
+
+        const hint_signature_t* hint = hintof_signature (sig);
+        bool cond1 = (hint->type == sig);
+        if (false == cond1) {
+            __leave2;
+        }
+        bool cond2 = (hint->kty == kty);
+        if (false == cond2) {
+            __leave2;
+        }
+        bool cond3 = false;
+        for (uint32 i = 0; i < hint->count; i++) {
+            if (hint->nid[i] == nid) {
+                cond3 = true;
+                break;
+            }
+        }
+        test = (cond1 && cond2 && cond3);
     }
     __finally2
     {
@@ -1130,8 +1080,6 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, jws_t sig)
 
     __try2
     {
-        _lock.enter ();
-
         if (nullptr == pkey) {
             __leave2;
         }
@@ -1141,7 +1089,7 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, jws_t sig)
         uint32 nid = 0;
         nidof_evp_pkey (pkey, nid);
 
-        const hint_jose_signature_t* hint = hintof_jose_signature (sig);
+        const hint_signature_t* hint = hintof_jose_signature (sig);
         bool cond1 = (hint->sig == sig);
         if (false == cond1) {
             __leave2;
@@ -1161,7 +1109,7 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, jws_t sig)
     }
     __finally2
     {
-        _lock.leave ();
+        // do nothing
     }
     return test;
 }
@@ -1169,44 +1117,53 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, jws_t sig)
 cose_key_t crypto_advisor::ktyof (crypto_key_t kty)
 {
     cose_key_t cose_kty = cose_key_t::cose_key_reserved;
-
-    _lock.enter ();
     maphint <crypto_key_t, cose_key_t> hint (_kty2cose_map);
+
     hint.find (kty, &cose_kty);
-    _lock.leave ();
     return cose_kty;
 }
 
 crypto_key_t crypto_advisor::ktyof (cose_key_t kty)
 {
-    crypto_key_t crypto_kty = crypto_key_t::none_key;
-
-    _lock.enter ();
+    crypto_key_t crypto_kty = crypto_key_t::kty_unknown;
     maphint <cose_key_t, crypto_key_t> hint (_cose2kty_map);
+
     hint.find (kty, &crypto_kty);
-    _lock.leave ();
     return crypto_kty;
+}
+
+jws_t crypto_advisor::sigof (crypt_sig_t sig)
+{
+    jws_t type = jws_t::jws_unknown;
+    maphint <crypt_sig_t, jws_t> hint (_sig2jws_map);
+
+    hint.find (sig, &type);
+    return type;
+}
+crypt_sig_t crypto_advisor::sigof (jws_t sig)
+{
+    crypt_sig_t type = crypt_sig_t::sig_unknown;
+    maphint <jws_t, crypt_sig_t> hint (_jws2sig_map);
+
+    hint.find (sig, &type);
+    return type;
 }
 
 cose_ec_curve_t crypto_advisor::curveof (uint32 nid)
 {
     cose_ec_curve_t curve = cose_ec_curve_t::cose_ec_unknown;
-
-    _lock.enter ();
     maphint <uint32, cose_ec_curve_t> hint (_nid2curve_map);
+
     hint.find (nid, &curve);
-    _lock.leave ();
     return curve;
 }
 
 uint32 crypto_advisor::curveof (cose_ec_curve_t curve)
 {
     uint32 nid = 0;
-
-    _lock.enter ();
     maphint <cose_ec_curve_t, uint32> hint (_curve2nid_map);
+
     hint.find (curve, &nid);
-    _lock.leave ();
     return nid;
 }
 

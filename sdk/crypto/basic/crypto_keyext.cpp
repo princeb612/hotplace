@@ -350,7 +350,7 @@ return_t crypto_keyext::add_oct (crypto_key* crypto_key, const char* kid, const 
 
 return_t crypto_keyext::load_file (crypto_key* crypto_key, const char* file, int flags)
 {
-    return errorcode_t::not_overrided;
+    return errorcode_t::success;
 }
 
 return_t crypto_keyext::load_pem (crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use)
@@ -415,7 +415,7 @@ return_t crypto_keyext::write_pem_file (crypto_key* cryptokey, const char* file,
 
 return_t crypto_keyext::write_file (crypto_key* cryptokey, const char* file, int flags)
 {
-    return errorcode_t::not_overrided;
+    return errorcode_t::success;
 }
 
 }

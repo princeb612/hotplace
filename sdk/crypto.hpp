@@ -30,6 +30,7 @@
 #include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
 #include <hotplace/sdk/crypto/basic/time_otp.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_web_key.hpp>

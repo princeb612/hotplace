@@ -2045,7 +2045,22 @@ void try_refactor_jose_sign ()
     std::cout << "contents" << std::endl << contents << std::endl;
     std::cout << "jws" << std::endl << jws.c_str () << std::endl;
 
-    _test_case.assert (result, __FUNCTION__, "signing");
+    // refactoring
+    return_t ret = errorcode_t::success;
+    openssl_sign sign;
+    binary_t signature;
+    buffer_stream bs;
+    crypt_sig_t sig = crypt_sig_t::sig_es512;
+    EVP_PKEY* pkey = privkey.select (sig);
+    sign.sign (pkey, convert (contents), signature, sig);
+    dump_memory (signature, &bs);
+    std::cout << "signature" << std::endl << bs.c_str () << std::endl;
+    ret = sign.verify (pkey, convert (contents), signature, sig);
+    _test_case.test (ret, __FUNCTION__, "signing");
+
+    // cose formatting
+    // ...
+    // interface design
 }
 
 int main ()

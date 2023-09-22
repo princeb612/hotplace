@@ -309,7 +309,7 @@ void cwk_writer (crypto_key_object_t* key, void* param)
             *keynode << new cbor_pair (2, new cbor_data (convert (kid)));
         }
 
-        if (crypto_key_t::ec_key == kty || crypto_key_t::okp_key == kty) {
+        if (crypto_key_t::kty_ec == kty || crypto_key_t::kty_okp == kty) {
             uint32 nid = 0;
             cose_ec_curve_t cose_curve = cose_ec_curve_t::cose_ec_unknown;
 
@@ -324,15 +324,15 @@ void cwk_writer (crypto_key_object_t* key, void* param)
             // wo trailing 00
             //   72992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
 
-            if (crypto_key_t::ec_key == kty) {
+            if (crypto_key_t::kty_ec == kty) {
                 *keynode << new cbor_pair (-3, new cbor_data (pub2)); // y
             }
             if (priv.size ()) {
                 *keynode << new cbor_pair (-4, new cbor_data (priv)); // d
             }
-        } else if (crypto_key_t::hmac_key == kty) {
+        } else if (crypto_key_t::kty_hmac == kty) {
             *keynode << new cbor_pair (-1, new cbor_data (priv));       // k
-        } else if (crypto_key_t::rsa_key == kty) {
+        } else if (crypto_key_t::kty_rsa == kty) {
             *keynode    << new cbor_pair (-1, new cbor_data (pub1))     // n
                         << new cbor_pair (-2, new cbor_data (pub2));    // e
             if (priv.size ()) {

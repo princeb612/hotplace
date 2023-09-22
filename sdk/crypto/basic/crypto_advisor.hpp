@@ -81,6 +81,7 @@ public:
      *          const EVP_MD* sha3_512 = (const EVP_MD*) find_evp_md (hash_algorithm_t::sha3_512); // EVP_sha3_512 ()
      */
     const EVP_MD* find_evp_md (hash_algorithm_t algorithm);
+    const EVP_MD* find_evp_md (crypt_sig_t sig);
     const EVP_MD* find_evp_md (jws_t sig);
     hash_algorithm_t get_algorithm (jws_t sig);
     /**
@@ -103,8 +104,8 @@ public:
      *
      *          std::function <void (const hint_jose_encryption_t*, void*)> lambda1 =
      *                  [] (const hint_jose_encryption_t* item, void* user) -> void { printf ("    %s\n", item->alg_name); };
-     *          std::function <void (const hint_jose_signature_t*, void*)> lambda2 =
-     *                  [] (const hint_jose_signature_t* item, void* user) -> void { printf ("    %s\n", item->alg_name); };
+     *          std::function <void (const hint_signature_t*, void*)> lambda2 =
+     *                  [] (const hint_signature_t* item, void* user) -> void { printf ("    %s\n", item->alg_name); };
      *
      *          advisor->jose_for_each_algorithm (lambda1, nullptr );
      *          advisor->jose_for_each_encryption (lambda1, nullptr );
@@ -113,7 +114,7 @@ public:
      */
     return_t jose_for_each_algorithm (std::function <void (const hint_jose_encryption_t*, void*)> f, void* user);
     return_t jose_for_each_encryption (std::function <void (const hint_jose_encryption_t*, void*)> f, void* user);
-    return_t jose_for_each_signature (std::function <void (const hint_jose_signature_t*, void*)> f, void* user);
+    return_t jose_for_each_signature (std::function <void (const hint_signature_t*, void*)> f, void* user);
 #endif
 
     /**
@@ -139,10 +140,17 @@ public:
     /**
      * @brief hint
      * @param jws_t sig [in]
-     *          jws_t::jws_hs256 series, jws_t::jws_rs256 series, jws_t::jws_es256 series, jws_t::jws_ps256 series, jws_t::jws_eddsa
-     * @return const hint_jose_signature_t*
+     *          crypt_sig_t::hs256 series, crypt_sig_t::rs256 series, crypt_sig_t::es256 series, crypt_sig_t::ps256 series, crypt_sig_t::eddsa
+     * @return const hint_signature_t*
      */
-    const hint_jose_signature_t* hintof_jose_signature (jws_t sig);
+    const hint_signature_t* hintof_signature (crypt_sig_t sig);
+    /**
+     * @brief hint
+     * @param jws_t sig [in]
+     *          jws_t::jws_hs256 series, jws_t::jws_rs256 series, jws_t::jws_es256 series, jws_t::jws_ps256 series, jws_t::jws_eddsa
+     * @return const hint_signature_t*
+     */
+    const hint_signature_t* hintof_jose_signature (jws_t sig);
     /**
      * @brief hint
      * @param uint32 nid [in]
@@ -174,9 +182,9 @@ public:
      * @brief hint
      * @param const char* sig [in]
      *          "HS256" series, "RS256" series, "ES256" series, "PS256" series, "EdDSA"
-     * @return const hint_jose_signature_t*
+     * @return const hint_signature_t*
      */
-    const hint_jose_signature_t* hintof_jose_signature (const char* sig);
+    const hint_signature_t* hintof_jose_signature (const char* sig);
     /**
      * @brief hint
      * @param const char* curve [in]
@@ -330,8 +338,8 @@ public:
      * @return error code (see error.hpp)
      * @remarks
      *          --------------------------------+----------------
-     *          P-256, P-384, P521              | crypto_key_t::ec_key
-     *          Ed25519, Ed448, X25519, X448    | crypto_key_t::okp_key
+     *          P-256, P-384, P521              | crypto_key_t::kty_ec
+     *          Ed25519, Ed448, X25519, X448    | crypto_key_t::kty_okp
      *          --------------------------------+----------------
      */
     return_t ktyof_ec_curve (const char* curve, uint32& kty);
@@ -349,7 +357,7 @@ public:
     /**
      * @brief kty
      * @param EVP_PKEY* pkey [in]
-     * @param crypto_key_t& kty [out] crypto_key_t::hmac_key, crypto_key_t::rsa_key, crypto_key_t::ec_key, crypto_key_t::okp_key
+     * @param crypto_key_t& kty [out] crypto_key_t::kty_hmac, crypto_key_t::kty_rsa, crypto_key_t::kty_ec, crypto_key_t::kty_okp
      * @return error code (see error.hpp)
      */
     return_t ktyof_ec_curve (EVP_PKEY* pkey, crypto_key_t& kty);
@@ -376,6 +384,13 @@ public:
     /**
      * @brief kind of
      * @param EVP_PKEY* pkey [in]
+     * @param crypt_sig_t sig [in]
+     * @return true if match, false if not
+     */
+    bool is_kindof (EVP_PKEY* pkey, crypt_sig_t sig);
+    /**
+     * @brief kind of
+     * @param EVP_PKEY* pkey [in]
      * @param jws_t sig [in]
      * @return true if match, false if not
      */
@@ -390,6 +405,8 @@ public:
 
     cose_key_t ktyof (crypto_key_t kty);
     crypto_key_t ktyof (cose_key_t kty);
+    jws_t sigof (crypt_sig_t sig);
+    crypt_sig_t sigof (jws_t sig);
     cose_ec_curve_t curveof (uint32 nid);
     uint32 curveof (cose_ec_curve_t curve);
 
@@ -411,18 +428,19 @@ private:
     typedef std::map <uint32, EVP_MD*> md_map_t;                                        /* pair (alg+mode, EVP_MD*) */
     typedef std::map <uint32, const openssl_evp_md_method_t*> md_fetch_map_t;
     typedef std::map <uint32, const hint_jose_encryption_t*> jose_encryption_map_t;
-    typedef std::map <uint32, const hint_jose_signature_t*> jose_signature_map_t;
-    typedef std::multimap <uint32, const hint_jose_signature_t*> jose_signature_bynid_map_t;
+    typedef std::map <uint32, const hint_signature_t*> signature_map_t;
+    typedef std::multimap <uint32, const hint_signature_t*> jose_signature_bynid_map_t;
     typedef std::map <std::string, const hint_jose_encryption_t*> jose_encryption_byname_map_t;
-    typedef std::map <std::string, const hint_jose_signature_t*> jose_signature_byname_map_t;
+    typedef std::map <std::string, const hint_signature_t*> signature_byname_map_t;
     typedef std::map <std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
     typedef std::map <uint32, const hint_curve_t*> jose_curve_bynid_map_t;
     typedef std::map <crypto_key_t, cose_key_t> kty2cose_map_t;
     typedef std::map <cose_key_t, crypto_key_t> cose2kty_map_t;
+    typedef std::map <crypt_sig_t, jws_t> sig2jws_map_t;
+    typedef std::map <jws_t, crypt_sig_t> jws2sig_map_t;
     typedef std::map <uint32, cose_ec_curve_t> nid2curve_map_t;
     typedef std::map <cose_ec_curve_t, uint32> curve2nid_map_t;
 
-    critical_section _lock;
     int _flag;
 
     blockcipher_map_t _blockcipher_map;
@@ -434,18 +452,21 @@ private:
 
     jose_encryption_map_t _alg_map;
     jose_encryption_map_t _enc_map;
-    jose_signature_map_t _sig_map;
+    signature_map_t _crypt_sig_map;
+    signature_map_t _jose_sig_map;
     jose_signature_bynid_map_t _sig_bynid_map;
 
     jose_encryption_byname_map_t _alg_byname_map;
     jose_encryption_byname_map_t _enc_byname_map;
-    jose_signature_byname_map_t _sig_byname_map;
+    signature_byname_map_t _sig_byname_map;
 
     jose_nid_bycurve_map_t _nid_bycurve_map;
     jose_curve_bynid_map_t _curve_bynid_map;
 
     kty2cose_map_t _kty2cose_map;
     cose2kty_map_t _cose2kty_map;
+    sig2jws_map_t _sig2jws_map;
+    jws2sig_map_t _jws2sig_map;
     nid2curve_map_t _nid2curve_map;
     curve2nid_map_t _curve2nid_map;
 };

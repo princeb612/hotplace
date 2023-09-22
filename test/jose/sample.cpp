@@ -64,8 +64,8 @@ void test0 ()
         [] (const hint_jose_encryption_t* item, void* user) -> void {
             printf ("    %s\n", item->alg_name);
         };
-    std::function <void (const hint_jose_signature_t*, void*)> lambda2 =
-        [] (const hint_jose_signature_t* item, void* user) -> void {
+    std::function <void (const hint_signature_t*, void*)> lambda2 =
+        [] (const hint_signature_t* item, void* user) -> void {
             printf ("    %s\n", item->alg_name);
         };
 
@@ -536,17 +536,17 @@ void test_rfc7515_bykeygen ()
     return_t ret = errorcode_t::success;
     crypto_key key;
 
-    key.generate (crypto_key_t::hmac_key, 256, "sample");
-    key.generate (crypto_key_t::rsa_key, 2048, "sample");
-    key.generate (crypto_key_t::ec_key, 256, "sample");
+    key.generate (crypto_key_t::kty_hmac, 256, "sample");
+    key.generate (crypto_key_t::kty_rsa, 2048, "sample");
+    key.generate (crypto_key_t::kty_ec, 256, "sample");
 
-    key.generate (crypto_key_t::hmac_key, 256, "HS256");
-    key.generate (crypto_key_t::rsa_key, 2048, "RS256");
-    key.generate (crypto_key_t::rsa_key, 2048, "RS384");
-    key.generate (crypto_key_t::rsa_key, 2048, "RS512");
-    key.generate (crypto_key_t::ec_key, 256, "ES256");
-    key.generate (crypto_key_t::ec_key, 384, "ES384");
-    key.generate (crypto_key_t::ec_key, 521, "ES512");
+    key.generate (crypto_key_t::kty_hmac, 256, "HS256");
+    key.generate (crypto_key_t::kty_rsa, 2048, "RS256");
+    key.generate (crypto_key_t::kty_rsa, 2048, "RS384");
+    key.generate (crypto_key_t::kty_rsa, 2048, "RS512");
+    key.generate (crypto_key_t::kty_ec, 256, "ES256");
+    key.generate (crypto_key_t::kty_ec, 384, "ES384");
+    key.generate (crypto_key_t::kty_ec, 521, "ES512");
 
     json_web_signature jws;
     std::string signature;
@@ -1355,8 +1355,8 @@ int test_ecdh ()
     keyset.add_ec (&keys, "alice", NID_secp384r1);
     keyset.add_ec (&keys, "bob", NID_secp384r1);
 
-    EVP_PKEY* alicePrivateKey = (EVP_PKEY*) keys.find ("alice", crypto_key_t::ec_key);
-    EVP_PKEY* bobPrivateKey = (EVP_PKEY*) keys.find ("bob", crypto_key_t::ec_key);
+    EVP_PKEY* alicePrivateKey = (EVP_PKEY*) keys.find ("alice", crypto_key_t::kty_ec);
+    EVP_PKEY* bobPrivateKey = (EVP_PKEY*) keys.find ("bob", crypto_key_t::kty_ec);
 
     EVP_PKEY* alicePublicKey = (EVP_PKEY*) get_peer_key (alicePrivateKey);
     EVP_PKEY* bobPublicKey = (EVP_PKEY*) get_peer_key (bobPrivateKey);
@@ -1994,10 +1994,10 @@ void test_okp ()
     binary_t source;
     std::string signature;
 
-    key.generate (crypto_key_t::okp_key, 25519, "test1", crypto_use_t::use_enc);
-    key.generate (crypto_key_t::okp_key, 25519, "test2", crypto_use_t::use_sig);
-    key.generate (crypto_key_t::okp_key, 448, "test3", crypto_use_t::use_enc);
-    key.generate (crypto_key_t::okp_key, 448, "test4", crypto_use_t::use_sig);
+    key.generate (crypto_key_t::kty_okp, 25519, "test1", crypto_use_t::use_enc);
+    key.generate (crypto_key_t::kty_okp, 25519, "test2", crypto_use_t::use_sig);
+    key.generate (crypto_key_t::kty_okp, 448, "test3", crypto_use_t::use_enc);
+    key.generate (crypto_key_t::kty_okp, 448, "test4", crypto_use_t::use_sig);
 
     jose.open (&handle, &key);
 
@@ -2066,13 +2066,13 @@ void key_dump (crypto_key* key, jwa_t alg, crypto_use_t use)
         key->get_key (pkey, pub1, pub2, priv);
 
         switch (alg_info->kty) {
-            case crypto_key_t::hmac_key:
+            case crypto_key_t::kty_hmac:
 
                 hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
                 print_text ("> k %s", hex.c_str ());
 
                 break;
-            case crypto_key_t::rsa_key:
+            case crypto_key_t::kty_rsa:
 
                 hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> n %s", hex.c_str ());
@@ -2082,7 +2082,7 @@ void key_dump (crypto_key* key, jwa_t alg, crypto_use_t use)
                 print_text ("> d %s", hex.c_str ());
 
                 break;
-            case crypto_key_t::ec_key:
+            case crypto_key_t::kty_ec:
 
                 hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> x %s", hex.c_str ());
@@ -2092,7 +2092,7 @@ void key_dump (crypto_key* key, jwa_t alg, crypto_use_t use)
                 print_text ("> d %s", hex.c_str ());
 
                 break;
-            case crypto_key_t::okp_key:
+            case crypto_key_t::kty_okp:
 
                 hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> x %s", hex.c_str ());
@@ -2116,7 +2116,7 @@ void key_dump (crypto_key* key, jws_t sig, crypto_use_t use)
     std::string kid;
     std::string hex;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
-    const hint_jose_signature_t* alg_info = advisor->hintof_jose_signature (sig);
+    const hint_signature_t* alg_info = advisor->hintof_jose_signature (sig);
 
     print_text ("try kt %d alg %s", alg_info->kty, alg_info->alg_name);
     pkey = key->select (kid, sig, use);
@@ -2125,13 +2125,13 @@ void key_dump (crypto_key* key, jws_t sig, crypto_use_t use)
         key->get_key (pkey, pub1, pub2, priv);
 
         switch (alg_info->kty) {
-            case crypto_key_t::hmac_key:
+            case crypto_key_t::kty_hmac:
 
                 hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
                 print_text ("> k %s", hex.c_str ());
 
                 break;
-            case crypto_key_t::rsa_key:
+            case crypto_key_t::kty_rsa:
 
                 hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> n %s", hex.c_str ());
@@ -2141,7 +2141,7 @@ void key_dump (crypto_key* key, jws_t sig, crypto_use_t use)
                 print_text ("> d %s", hex.c_str ());
 
                 break;
-            case crypto_key_t::ec_key:
+            case crypto_key_t::kty_ec:
 
                 hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> x %s", hex.c_str ());
@@ -2151,7 +2151,7 @@ void key_dump (crypto_key* key, jws_t sig, crypto_use_t use)
                 print_text ("> d %s", hex.c_str ());
 
                 break;
-            case crypto_key_t::okp_key:
+            case crypto_key_t::kty_okp:
 
                 hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
                 print_text ("> x %s", hex.c_str ());
