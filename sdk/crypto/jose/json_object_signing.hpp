@@ -72,7 +72,15 @@ protected:
      * @param binary_t const& input [in]
      * @param binary_t& output [out]
      */
-    return_t sign_general (EVP_PKEY* pkey, jws_t method, binary_t const& input, binary_t& output);
+    return_t sign_hmac (EVP_PKEY* pkey, jws_t method, binary_t const& input, binary_t& output);
+    /**
+     * @brief sign
+     * @param EVP_PKEY* pkey [in]
+     * @param jws_t method [in]
+     * @param binary_t const& input [in]
+     * @param binary_t& output [out]
+     */
+    return_t sign_rsassa_pkcs15 (EVP_PKEY* pkey, jws_t method, binary_t const& input, binary_t& output);
     /**
      * @brief sign (X9_62_prime256v1, secp384r1, secp521r1)
      * @param EVP_PKEY* pkey [in]

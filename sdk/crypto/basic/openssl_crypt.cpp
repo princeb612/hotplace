@@ -660,10 +660,11 @@ return_t openssl_crypt::free_data (unsigned char* data)
     return ret;
 }
 
-return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_mode2_t mode)
+return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode)
 {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {
@@ -687,16 +688,38 @@ return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t const& input, binary_t
 
         int id = EVP_PKEY_id (pkey);
         if (EVP_PKEY_RSA == id) {
-            const EVP_MD* md = EVP_sha1 ();
-            if (crypt_mode2_t::rsa_oaep256 == mode) {
-                md = EVP_sha256 ();
-            }
+            // OAEP
+            hash_algorithm_t alg = hash_algorithm_t::sha1;
+            const EVP_MD* md = nullptr;
+
+            // padding
             switch (mode) {
-                case crypt_mode2_t::rsa_1_5:
+                case crypt_enc_t::rsa_1_5:
                     EVP_PKEY_CTX_set_rsa_padding (pkey_context, RSA_PKCS1_PADDING);
                     break;
-                case crypt_mode2_t::rsa_oaep:
-                case crypt_mode2_t::rsa_oaep256:
+                case crypt_enc_t::rsa_oaep:
+                case crypt_enc_t::rsa_oaep256:
+                case crypt_enc_t::rsa_oaep384:
+                case crypt_enc_t::rsa_oaep512:
+
+                    switch (mode) {
+                        case crypt_enc_t::rsa_oaep:
+                            alg = hash_algorithm_t::sha1;
+                            break;
+                        case crypt_enc_t::rsa_oaep256:
+                            alg = hash_algorithm_t::sha2_256;
+                            break;
+                        case crypt_enc_t::rsa_oaep384:
+                            alg = hash_algorithm_t::sha2_384;
+                            break;
+                        case crypt_enc_t::rsa_oaep512:
+                            alg = hash_algorithm_t::sha2_512;
+                            break;
+                        default:
+                            break;
+                    }
+                    md = advisor->find_evp_md (alg);
+
                     EVP_PKEY_CTX_set_rsa_padding (pkey_context, RSA_PKCS1_OAEP_PADDING);
                     EVP_PKEY_CTX_set_rsa_oaep_md (pkey_context, md);
                     EVP_PKEY_CTX_set_rsa_mgf1_md (pkey_context, md);
@@ -729,10 +752,11 @@ return_t openssl_crypt::encrypt (EVP_PKEY* pkey, binary_t const& input, binary_t
     return ret;
 }
 
-return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_mode2_t mode)
+return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode)
 {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {
@@ -762,16 +786,38 @@ return_t openssl_crypt::decrypt (EVP_PKEY* pkey, binary_t const& input, binary_t
         EVP_PKEY_decrypt_init (pkey_context);
 
         if (EVP_PKEY_RSA == EVP_PKEY_id (pkey)) {
-            const EVP_MD* md = EVP_sha1 ();
-            if (crypt_mode2_t::rsa_oaep256 == mode) {
-                md = EVP_sha256 ();
-            }
+            // OAEP
+            hash_algorithm_t alg = hash_algorithm_t::sha1;
+            const EVP_MD* md = nullptr;
+
+            // padding
             switch (mode) {
-                case crypt_mode2_t::rsa_1_5:
+                case crypt_enc_t::rsa_1_5:
                     EVP_PKEY_CTX_set_rsa_padding (pkey_context, RSA_PKCS1_PADDING);
                     break;
-                case crypt_mode2_t::rsa_oaep:
-                case crypt_mode2_t::rsa_oaep256:
+                case crypt_enc_t::rsa_oaep:
+                case crypt_enc_t::rsa_oaep256:
+                case crypt_enc_t::rsa_oaep384:
+                case crypt_enc_t::rsa_oaep512:
+
+                    switch (mode) {
+                        case crypt_enc_t::rsa_oaep:
+                            alg = hash_algorithm_t::sha1;
+                            break;
+                        case crypt_enc_t::rsa_oaep256:
+                            alg = hash_algorithm_t::sha2_256;
+                            break;
+                        case crypt_enc_t::rsa_oaep384:
+                            alg = hash_algorithm_t::sha2_384;
+                            break;
+                        case crypt_enc_t::rsa_oaep512:
+                            alg = hash_algorithm_t::sha2_512;
+                            break;
+                        default:
+                            break;
+                    }
+                    md = advisor->find_evp_md (alg);
+
                     EVP_PKEY_CTX_set_rsa_padding (pkey_context, RSA_PKCS1_OAEP_PADDING);
                     EVP_PKEY_CTX_set_rsa_oaep_md (pkey_context, md);
                     EVP_PKEY_CTX_set_rsa_mgf1_md (pkey_context, md);

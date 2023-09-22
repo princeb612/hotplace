@@ -263,11 +263,11 @@ const openssl_evp_md_method_t evp_md_methods[] = {
 const hint_jose_encryption_t hint_jose_algorithms [] =
 {
     { "RSA1_5",
-      jwa_t::jwa_rsa_1_5, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_1_5, },
+      jwa_t::jwa_rsa_1_5, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_enc_t::rsa_1_5, },
     { "RSA-OAEP",
-      jwa_t::jwa_rsa_oaep, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_oaep, },
+      jwa_t::jwa_rsa_oaep, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_enc_t::rsa_oaep, },
     { "RSA-OAEP-256",
-      jwa_t::jwa_rsa_oaep_256, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_mode2_t::rsa_oaep256, },
+      jwa_t::jwa_rsa_oaep_256, crypto_key_t::rsa_key, crypto_key_t::none_key, crypt_enc_t::rsa_oaep256, },
     { "A128KW",
       jwa_t::jwa_a128kw, crypto_key_t::hmac_key, crypto_key_t::none_key, 0,
       crypt_algorithm_t::aes128, crypt_mode_t::wrap, 16,

@@ -140,10 +140,52 @@ enum hash_algorithm_t {
     whirlpool           = 17,
 };
 
-enum crypt_mode2_t {
+enum crypt_enc_t {
     rsa_1_5     = 1,
     rsa_oaep    = 2,
     rsa_oaep256 = 3,
+    rsa_oaep384 = 4,
+    rsa_oaep512 = 5,
+};
+
+#define CRYPT_SIG_VALUE(t, c) ((t << 16) | c)
+#define CRYPT_SIG_TYPE(v) (v >> 16)
+#define CRYPT_SIG_CODE(v) (v & 0xffff)
+enum crypt_sig_type_t {
+    crypt_sig_dgst          = 0,
+    crypt_sig_hmac          = 1,
+    crypt_sig_rsassa_pkcs15 = 2,
+    crypt_sig_ecdsa         = 3,
+    crypt_sig_rsassa_pss    = 4,
+    crypt_sig_eddsa         = 5,
+};
+enum crypt_sig_t {
+    sig_hs256       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_hmac, hash_algorithm_t::sha2_256),
+    sig_hs384       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_hmac, hash_algorithm_t::sha2_384),
+    sig_hs512       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_hmac, hash_algorithm_t::sha2_512),
+
+    sig_rs256       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha2_256),
+    sig_rs384       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha2_384),
+    sig_rs512       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha2_512),
+    sig_rs1         = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha1),
+
+    sig_es256       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_ecdsa, hash_algorithm_t::sha2_256),  // ECDSA w/ SHA-256
+    sig_es384       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_ecdsa, hash_algorithm_t::sha2_384),  // ECDSA w/ SHA-384
+    sig_es512       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_ecdsa, hash_algorithm_t::sha2_512),  // ECDSA w/ SHA-512
+    sig_es256k      = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_ecdsa, hash_algorithm_t::sha2_256),  // ECDSA using secp256k1 curve and SHA-256
+
+    sig_ps256       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_rsassa_pss, hash_algorithm_t::sha2_256),
+    sig_ps384       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_rsassa_pss, hash_algorithm_t::sha2_384),
+    sig_ps512       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_rsassa_pss, hash_algorithm_t::sha2_512),
+
+    sig_eddsa       = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_eddsa, 0),
+
+    sig_sha1        = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::sha1),
+    sig_sha256      = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::sha2_256),
+    sig_sha384      = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::sha2_384),
+    sig_sha512      = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::sha2_512),
+    sig_shake128    = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::shake128),
+    sig_shake256    = CRYPT_SIG_VALUE (crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::shake256),
 };
 
 enum crypt_item_t {
@@ -270,9 +312,6 @@ enum jws_type_t {
     jws_type_rsassa_pss     = 4,    // PS256, PS384, PS512
     jws_type_eddsa          = 5,    // EdDSA
 };
-#define CRYPT_SIG_VALUE(t, c) ((t << 16) | c)
-#define CRYPT_SIG_TYPE(v) (v >> 16)
-#define CRYPT_SIG_CODE(v) (v & 0xffff)
 
 /**
  * @brief Cryptographic Algorithms for Digital Signatures and MACs
@@ -310,7 +349,7 @@ typedef struct _hint_jose_encryption_t {
     int type;                       // jwa_t, jwe_t
     crypto_key_t kty;               // crypto_key_t::rsa_key, crypto_key_t::ec_key, crypto_key_t::hmac_key
     crypto_key_t alt;               // for example crypto_key_t::okp_key, if kt is crypto_key_t::ec_key
-    int mode;                       // crypt_mode2_t::rsa_1_5, crypt_mode2_t::rsa_oaep, crypt_mode2_t::rsa_oaep256
+    int mode;                       // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
 
     crypt_algorithm_t crypt_alg;    // algorithm for keywrap or GCM
     crypt_mode_t crypt_mode;        // crypt_mode_t::wrap, crypt_mode_t::gcm

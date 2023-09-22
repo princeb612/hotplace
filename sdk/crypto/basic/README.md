@@ -1,38 +1,55 @@
 
-## block/stream cipher tested
+## block cipher tested
 
-| alg       | mode                                      |
-| --        | --                                        |
-| AES       | CBC,CFB,CFB1,CFB8,CTR,ECB,GCM,OFB,KEYWRAP |
-| ARIA      | CBC,CFB,CFB1,CFB8,CTR,ECB,GCM,OFB         |
-| BF        | CBC,CFB,              ECB,    OFB         |
-| CAMELLIA  | CBC,CFB,CFB1,CFB8,CTR,ECB,    OFB         |
-| CAST      | CBC,CFB,              ECB,    OFB         |
-| DES       | CBC,CFB,              ECB,    OFB         |
-| IDEA      | CBC,CFB,              ECB,    OFB         |
-| RC2       | CBC,CFB,              ECB,    OFB         |
-| RC5       | CBC,CFB,              ECB,    OFB         |
-| SEED      | CBC,CFB,              ECB,    OFB         |
-| SM4       | CBC,CFB,              ECB,    OFB         |
-| chacha20  | chacha20,chacha20-poly1305                |
+| alg       | CBC | CFB | CFB1 | CFB8 | CTR | ECB | GCM | OFB | KEYWRAP |
+| --        | --  | --  | --   | --   | --  | --  | --  | --  | --      |
+| AES       |  O  |  O  |  O   |  O   |  O  |  O  |  O  |  O  |    O    |
+| ARIA      |  O  |  O  |  O   |  O   |  O  |  O  |  O  |  O  |         |
+| BF        |  O  |  O  |      |      |     |  O  |     |  O  |         |
+| CAMELLIA  |  O  |  O  |  O   |  O   |  O  |  O  |     |  O  |         |
+| CAST      |  O  |  O  |      |      |     |  O  |     |  O  |         |
+| DES       |  O  |  O  |      |      |     |  O  |     |  O  |         |
+| IDEA      |  O  |  O  |      |      |     |  O  |     |  O  |         |
+| RC2       |  O  |  O  |      |      |     |  O  |     |  O  |         |
+| RC5       |  O  |  O  |      |      |     |  O  |     |  O  |         |
+| SEED      |  O  |  O  |      |      |     |  O  |     |  O  |         |
+| SM4       |  O  |  O  |      |      |     |  O  |     |  O  |         |
+
+## stream cipher tested
+
+  * chacha20
+    * chacha20,chacha20-poly1305
 
 ## digest tested
 
-| alg         |             |
-| --          | --          |
-| md4         | DIGEST,HMAC |
-| md5         | DIGEST,HMAC |
-| sha1        | DIGEST,HMAC |
-| sha224      | DIGEST,HMAC |
-| sha384      | DIGEST,HMAC |
-| sha512      | DIGEST,HMAC |
-| sha3 224    | DIGEST,HMAC |
-| sha3 256    | DIGEST,HMAC |
-| sha3 384    | DIGEST,HMAC |
-| sha3 512    | DIGEST,HMAC |
-| shake128    | DIGEST      |
-| shake256    | DIGEST      |
-| blake2b 512 | DIGEST,HMAC |
-| blake2s 256 | DIGEST,HMAC |
-| ripemd160   | DIGEST,HMAC |
-| whirlpool   | DIGEST,HMAC |
+### CMAC
+
+  * AES-CBC-MAC
+
+### HMAC
+
+| alg         | DIGEST | HMAC |
+| --          | --     | --   |
+| md4         |    O   |  O   |
+| md5         |    O   |  O   |
+| sha1        |    O   |  O   |
+| sha224      |    O   |  O   |
+| sha384      |    O   |  O   |
+| sha512      |    O   |  O   |
+| sha3 224    |    O   |  O   |
+| sha3 256    |    O   |  O   |
+| sha3 384    |    O   |  O   |
+| sha3 512    |    O   |  O   |
+| shake128    |    O   |      |
+| shake256    |    O   |      |
+| blake2b 512 |    O   |  O   |
+| blake2s 256 |    O   |  O   |
+| ripemd160   |    O   |  O   |
+| whirlpool   |    O   |  O   |
+
+## KDF
+
+  * HKDF
+  * PBKDF2
+  * scrypt
+  * argon2d,argon2i,argon2id

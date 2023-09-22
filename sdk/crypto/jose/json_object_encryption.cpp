@@ -12,6 +12,7 @@
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_encryption.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
@@ -67,7 +68,7 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
         // alg part - encrypted_key from cek
         {
             const char* alg_name = alg_info->alg_name;
-            crypt_mode2_t crypt_mode = (crypt_mode2_t) alg_info->mode;
+            crypt_enc_t crypt_mode = (crypt_enc_t) alg_info->mode;
             crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t) alg_info->crypt_alg;
             crypt_mode_t alg_crypt_mode = (crypt_mode_t) alg_info->crypt_mode;
             int alg_keysize = alg_info->keysize;
@@ -211,7 +212,6 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
                 binary_t p2s = item.recipients[alg].datamap[crypt_item_t::item_p2s];
                 uint32 p2c = item.recipients[alg].p2c;
 
-                const EVP_MD* alg_evp_md = (const EVP_MD*) advisor->find_evp_md (alg_hash_alg);
                 binary_t salt;
 
                 /* salt
@@ -226,9 +226,11 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
                  */
                 //oct.resize(0);
                 binary_t pbkdf2_derived_key;
-                pbkdf2_derived_key.resize (alg_keysize);
-                PKCS5_PBKDF2_HMAC ((char *) &oct[0], oct.size (), &salt[0], salt.size (), p2c, alg_evp_md,
-                                   pbkdf2_derived_key.size (), &pbkdf2_derived_key[0]);
+                // pbkdf2_derived_key.resize (alg_keysize);
+                // const EVP_MD* alg_evp_md = (const EVP_MD*) advisor->find_evp_md (alg_hash_alg);
+                // PKCS5_PBKDF2_HMAC ((char *) &oct[0], oct.size (), &salt[0], salt.size (), p2c, alg_evp_md,
+                //                    pbkdf2_derived_key.size (), &pbkdf2_derived_key[0]);
+                kdf_pbkdf2 (pbkdf2_derived_key, alg_keysize, convert (oct), salt, p2c, alg_hash_alg);
 
                 crypt_context_t* crypt_handle = nullptr;
                 crypt.open (&crypt_handle, (crypt_algorithm_t) alg_crypt_alg, alg_crypt_mode,
@@ -352,7 +354,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
         // alg part - encrypted_key from cek
         {
             const char* alg_name = alg_info->alg_name;
-            crypt_mode2_t crypt_mode = (crypt_mode2_t) alg_info->mode;
+            crypt_enc_t crypt_mode = (crypt_enc_t) alg_info->mode;
             crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t) alg_info->crypt_alg;
             crypt_mode_t alg_crypt_mode = (crypt_mode_t) alg_info->crypt_mode;
             int alg_keysize = alg_info->keysize;
@@ -484,7 +486,6 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
                 binary_t p2s = item.recipients[alg].datamap[crypt_item_t::item_p2s];
                 uint32 p2c = item.recipients[alg].p2c;
 
-                const EVP_MD* alg_evp_md = (const EVP_MD*) advisor->find_evp_md (alg_hash_alg);
                 binary_t salt;
                 /* salt
                  * salt = UTF8(alg) + 0 + BASE64URL_DECODE(p2s)
@@ -497,9 +498,11 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
                  * derived_key = PKCS5_PBKDF2_HMAC(passphrase, salt, iteration_count = p2c, hash)
                  */
                 binary_t pbkdf2_derived_key;
-                pbkdf2_derived_key.resize (alg_keysize);
-                PKCS5_PBKDF2_HMAC ((char *) &oct[0], oct.size (), &salt[0], salt.size (), p2c, alg_evp_md,
-                                   pbkdf2_derived_key.size (), &pbkdf2_derived_key[0]);
+                // pbkdf2_derived_key.resize (alg_keysize);
+                // const EVP_MD* alg_evp_md = (const EVP_MD*) advisor->find_evp_md (alg_hash_alg);
+                // PKCS5_PBKDF2_HMAC ((char *) &oct[0], oct.size (), &salt[0], salt.size (), p2c, alg_evp_md,
+                //                    pbkdf2_derived_key.size (), &pbkdf2_derived_key[0]);
+                kdf_pbkdf2 (pbkdf2_derived_key, alg_keysize, convert (oct), salt, p2c, alg_hash_alg);
 
                 crypt_context_t* crypt_handle = nullptr;
                 crypt.open (&crypt_handle, alg_crypt_alg, alg_crypt_mode,

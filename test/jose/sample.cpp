@@ -793,7 +793,7 @@ void test_rfc7516_A1_test ()
     encrypted_key_data.insert (encrypted_key_data.end (), encrypted_key, encrypted_key + RTL_NUMBER_OF (encrypted_key));
     pkey = key.select (kid, crypto_use_t::use_enc);
     json_object_signing_encryption jose;
-    crypt.decrypt (pkey, encrypted_key_data, decrypted_key_data, crypt_mode2_t::rsa_oaep);
+    crypt.decrypt (pkey, encrypted_key_data, decrypted_key_data, crypt_enc_t::rsa_oaep);
     dump_memory (&decrypted_key_data[0], decrypted_key_data.size (), &bs);
     printf ("decrypted_key\n%s\n", bs.c_str ());
 
