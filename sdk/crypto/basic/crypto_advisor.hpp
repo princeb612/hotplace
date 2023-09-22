@@ -83,6 +83,7 @@ public:
     const EVP_MD* find_evp_md (hash_algorithm_t algorithm);
     const EVP_MD* find_evp_md (crypt_sig_t sig);
     const EVP_MD* find_evp_md (jws_t sig);
+    hash_algorithm_t get_algorithm (crypt_sig_t sig);
     hash_algorithm_t get_algorithm (jws_t sig);
     /**
      * @brief find md string
@@ -139,7 +140,7 @@ public:
     const hint_jose_encryption_t* hintof_jose_encryption (jwe_t enc);
     /**
      * @brief hint
-     * @param jws_t sig [in]
+     * @param crypt_sig_t sig [in]
      *          crypt_sig_t::hs256 series, crypt_sig_t::rs256 series, crypt_sig_t::es256 series, crypt_sig_t::ps256 series, crypt_sig_t::eddsa
      * @return const hint_signature_t*
      */

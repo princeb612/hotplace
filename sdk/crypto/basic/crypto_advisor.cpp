@@ -639,6 +639,19 @@ const EVP_MD* crypto_advisor::find_evp_md (jws_t sig)
     return ret_value;
 }
 
+hash_algorithm_t crypto_advisor::get_algorithm (crypt_sig_t sig)
+{
+    hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
+    const hint_signature_t* item = nullptr;
+    maphint <uint32, const hint_signature_t*> hint (_crypt_sig_map);
+
+    hint.find (sig, &item);
+    if (item) {
+        ret_value = item->alg;
+    }
+    return ret_value;
+}
+
 hash_algorithm_t crypto_advisor::get_algorithm (jws_t sig)
 {
     hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
@@ -1140,6 +1153,7 @@ jws_t crypto_advisor::sigof (crypt_sig_t sig)
     hint.find (sig, &type);
     return type;
 }
+
 crypt_sig_t crypto_advisor::sigof (jws_t sig)
 {
     crypt_sig_t type = crypt_sig_t::sig_unknown;

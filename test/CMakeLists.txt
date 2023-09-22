@@ -38,7 +38,6 @@ add_subdirectory (odbc)
 endif ()
 
 # etc
-add_subdirectory (incubator)
 add_subdirectory (varstring)
 
 # platform

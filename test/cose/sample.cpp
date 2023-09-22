@@ -38,9 +38,9 @@ public:
     return_t build_protected (cbor_data** object, cbor_map* input);
     return_t build_unprotected (cbor_map** object);
     return_t build_unprotected (cbor_map** object, cose_list_t& input);
-    return_t build_payload (cbor_data** object, const char* payload);
-    return_t build_payload (cbor_data** object, const byte_t* payload, size_t size);
-    return_t build_base16str (cbor_data** object, const char* str);
+    return_t build_data (cbor_data** object, const char* payload);
+    return_t build_data (cbor_data** object, const byte_t* payload, size_t size);
+    return_t build_data_b16 (cbor_data** object, const char* str);
 };
 
 cbor_object_signing_encryption::cbor_object_signing_encryption ()
@@ -192,7 +192,7 @@ return_t cbor_object_signing_encryption::build_unprotected (cbor_map** object, c
     return ret;
 }
 
-return_t cbor_object_signing_encryption::build_payload (cbor_data** object, const char* payload)
+return_t cbor_object_signing_encryption::build_data (cbor_data** object, const char* payload)
 {
     return_t ret = errorcode_t::success;
 
@@ -210,7 +210,7 @@ return_t cbor_object_signing_encryption::build_payload (cbor_data** object, cons
     return ret;
 }
 
-return_t cbor_object_signing_encryption::build_payload (cbor_data** object, const byte_t* payload, size_t size)
+return_t cbor_object_signing_encryption::build_data (cbor_data** object, const byte_t* payload, size_t size)
 {
     return_t ret = errorcode_t::success;
 
@@ -228,7 +228,7 @@ return_t cbor_object_signing_encryption::build_payload (cbor_data** object, cons
     return ret;
 }
 
-return_t cbor_object_signing_encryption::build_base16str (cbor_data** object, const char* str)
+return_t cbor_object_signing_encryption::build_data_b16 (cbor_data** object, const char* str)
 {
     return_t ret = errorcode_t::success;
 
@@ -474,7 +474,7 @@ void test_rfc8152_c_1_1 ()
     cose.build_protected (&cbor_data_protected);
 
     cbor_data* cbor_data_payload = nullptr;
-    cose.build_payload (&cbor_data_payload, "This is the content.");
+    cose.build_data (&cbor_data_payload, "This is the content.");
 
     cbor_array* root = new cbor_array ();
     root->tag (true, cbor_tag_t::cose_tag_sign);
@@ -510,7 +510,7 @@ void test_rfc8152_c_1_1 ()
         cbor_data* cbor_data_signature_signature = nullptr;
         {
             constexpr char constexpr_sig[] = "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a";
-            cose.build_base16str (&cbor_data_signature_signature, constexpr_sig);
+            cose.build_data_b16 (&cbor_data_signature_signature, constexpr_sig);
         }
 
         *signature  << cbor_data_signature_protected
@@ -539,7 +539,7 @@ void test_rfc8152_c_1_2 ()
     cose.build_protected (&cbor_data_protected);
 
     cbor_data* cbor_data_payload = nullptr;
-    cose.build_payload (&cbor_data_payload, "This is the content.");
+    cose.build_data (&cbor_data_payload, "This is the content.");
 
     cbor_array* root = new cbor_array ();
     root->tag (true, cbor_tag_t::cose_tag_sign);
@@ -576,7 +576,7 @@ void test_rfc8152_c_1_2 ()
         cbor_data* cbor_data_signature_signature = nullptr;
         {
             constexpr char constexpr_sig[] = "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a";
-            cose.build_base16str (&cbor_data_signature_signature, constexpr_sig);
+            cose.build_data_b16 (&cbor_data_signature_signature, constexpr_sig);
         }
 
         *signature  << cbor_data_signature_protected
@@ -611,7 +611,7 @@ void test_rfc8152_c_1_2 ()
         cbor_data* cbor_data_signature_signature = nullptr;
         {
             constexpr char constexpr_sig[] = "00a2d28a7c2bdb1587877420f65adf7d0b9a06635dd1de64bb62974c863f0b160dd2163734034e6ac003b01e8705524c5c4ca479a952f0247ee8cb0b4fb7397ba08d009e0c8bf482270cc5771aa143966e5a469a09f613488030c5b07ec6d722e3835adb5b2d8c44e95ffb13877dd2582866883535de3bb03d01753f83ab87bb4f7a0297";
-            cose.build_base16str (&cbor_data_signature_signature, constexpr_sig);
+            cose.build_data_b16 (&cbor_data_signature_signature, constexpr_sig);
         }
 
         *signature  << cbor_data_signature_protected
@@ -641,7 +641,7 @@ void test_rfc8152_c_1_3 ()
     cose.build_protected (&cbor_data_protected);
 
     cbor_data* cbor_data_payload = nullptr;
-    cose.build_payload (&cbor_data_payload, "This is the content.");
+    cose.build_data (&cbor_data_payload, "This is the content.");
 
     cbor_array* root = new cbor_array ();
     root->tag (true, cbor_tag_t::cose_tag_sign);
@@ -678,7 +678,7 @@ void test_rfc8152_c_1_3 ()
         cbor_data* cbor_data_countersignature_signature = nullptr;
         {
             constexpr char constexpr_sig[] = "5ac05e289d5d0e1b0a7f048a5d2b643813ded50bc9e49220f4f7278f85f19d4a77d655c9d3b51e805a74b099e1e085aacd97fc29d72f887e8802bb6650cceb2c";
-            cose.build_base16str (&cbor_data_countersignature_signature, constexpr_sig);
+            cose.build_data_b16 (&cbor_data_countersignature_signature, constexpr_sig);
         }
 
         *countersign    << cbor_data_countersignature_protected
@@ -713,7 +713,7 @@ void test_rfc8152_c_1_3 ()
         cbor_data* cbor_data_signature_signature = nullptr;
         {
             constexpr char constexpr_sig[] = "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a";
-            cose.build_base16str (&cbor_data_signature_signature, constexpr_sig);
+            cose.build_data_b16 (&cbor_data_signature_signature, constexpr_sig);
         }
 
         *signature  << cbor_data_signature_protected
@@ -758,7 +758,7 @@ void test_rfc8152_c_1_4 ()
     }
 
     cbor_data* cbor_data_payload = nullptr;
-    cose.build_payload (&cbor_data_payload, "This is the content.");
+    cose.build_data (&cbor_data_payload, "This is the content.");
 
     *root   << cbor_data_protected  // protected
             << new cbor_map ()      // unprotected
@@ -792,7 +792,7 @@ void test_rfc8152_c_1_4 ()
         cbor_data* cbor_data_signature_signature = nullptr;
         {
             constexpr char constexpr_sig[] = "3fc54702aa56e1b2cb20284294c9106a63f91bac658d69351210a031d8fc7c5ff3e4be39445b1a3e83e1510d1aca2f2e8a7c081c7645042b18aba9d1fad1bd9c";
-            cose.build_base16str (&cbor_data_signature_signature, constexpr_sig);
+            cose.build_data_b16 (&cbor_data_signature_signature, constexpr_sig);
         }
 
         *signature  << cbor_data_signature_protected
@@ -838,10 +838,10 @@ void test_rfc8152_c_2_1 ()
     }
 
     cbor_data* cbor_data_payload = nullptr;
-    cose.build_payload (&cbor_data_payload, "This is the content.");
+    cose.build_data (&cbor_data_payload, "This is the content.");
 
     cbor_data* cbor_data_signature = nullptr;
-    cose.build_base16str (&cbor_data_signature, "8eb33e4ca31d1c465ab05aac34cc6b23d58fef5c083106c4d25a91aef0b0117e2af9a291aa32e14ab834dc56ed2a223444547e01f11d3b0916e5a4c345cacb36");
+    cose.build_data_b16 (&cbor_data_signature, "8eb33e4ca31d1c465ab05aac34cc6b23d58fef5c083106c4d25a91aef0b0117e2af9a291aa32e14ab834dc56ed2a223444547e01f11d3b0916e5a4c345cacb36");
 
     *root   << cbor_data_protected
             << cbor_data_unprotected
@@ -874,7 +874,7 @@ void test_rfc8152_c_3_1 ()
     }
 
     cbor_data* cbor_data_ciphertext = nullptr;
-    cose.build_base16str (&cbor_data_ciphertext, "7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0");
+    cose.build_data_b16 (&cbor_data_ciphertext, "7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0");
 
     *root   << cbor_data_protected  // protected
             << new cbor_map ()      // unprotected
@@ -918,7 +918,7 @@ void test_rfc8152_c_3_1 ()
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        cose.build_base16str (&cbor_data_recipient_ciphertext, "");
+        cose.build_data_b16 (&cbor_data_recipient_ciphertext, "");
 
         *recipient  << cbor_data_recipient_protected    // protected
                     << cbor_data_recipient_unprotected  // unprotected
@@ -964,7 +964,7 @@ void test_rfc8152_c_3_2 ()
     }
 
     cbor_data* cbor_data_ciphertext = nullptr;
-    cose.build_base16str (&cbor_data_ciphertext, "753548a19b1307084ca7b2056924ed95f2e3b17006dfe931b687b847");
+    cose.build_data_b16 (&cbor_data_ciphertext, "753548a19b1307084ca7b2056924ed95f2e3b17006dfe931b687b847");
 
     *root   << cbor_data_protected      // protected
             << cbor_data_unprotected    // unprotected
@@ -1032,7 +1032,7 @@ void test_rfc8152_c_3_3 ()
 
     constexpr char constexpr_ciphertext[] = "7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0";
     cbor_data* cbor_data_ciphertext = nullptr;
-    cose.build_base16str (&cbor_data_ciphertext, constexpr_ciphertext);
+    cose.build_data_b16 (&cbor_data_ciphertext, constexpr_ciphertext);
 
     *root   << cbor_data_protected      // protected
             << new cbor_map ()          // unprotected
@@ -1067,7 +1067,7 @@ void test_rfc8152_c_3_3 ()
 
         constexpr char constexpr_signature[] = "00929663c8789bb28177ae28467e66377da12302d7f9594d2999afa5dfa531294f8896f2b6cdf1740014f4c7f1a358e3a6cf57f4ed6fb02fcf8f7aa989f5dfd07f0700a3a7d8f3c604ba70fa9411bd10c2591b483e1d2c31de003183e434d8fba18f17a4c7e3dfa003ac1cf3d30d44d2533c4989d3ac38c38b71481cc3430c9d65e7ddff";
         cbor_data* cbor_data_countersignature_signature = nullptr;
-        cose.build_base16str (&cbor_data_countersignature_signature, constexpr_signature);
+        cose.build_data_b16 (&cbor_data_countersignature_signature, constexpr_signature);
 
         *countersign    << cbor_data_countersignature_protected     // protected
                         << cbor_data_countersignature_unprotected   // unprotected
@@ -1089,7 +1089,7 @@ void test_rfc8152_c_3_3 ()
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        cose.build_base16str (&cbor_data_recipient_ciphertext, "");
+        cose.build_data_b16 (&cbor_data_recipient_ciphertext, "");
 
         *recipient  << cbor_data_recipient_protected    // protected
                     << new cbor_map ()                  // unprotected
@@ -1154,7 +1154,7 @@ void test_rfc8152_c_3_4 ()
 
     constexpr char constexpr_ciphertext[] = "64f84d913ba60a76070a9a48f26e97e863e28529d8f5335e5f0165eee976b4a5f6c6f09d";
     cbor_data* cbor_data_ciphertext = nullptr;
-    cose.build_base16str (&cbor_data_ciphertext, constexpr_ciphertext);
+    cose.build_data_b16 (&cbor_data_ciphertext, constexpr_ciphertext);
 
     *root   << cbor_data_protected      // protected
             << cbor_data_unprotected    // unprotected
@@ -1196,7 +1196,7 @@ void test_rfc8152_c_3_4 ()
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        cose.build_base16str (&cbor_data_recipient_ciphertext, "41e0d76f579dbd0d936a662d54d8582037de2e366fde1c62");
+        cose.build_data_b16 (&cbor_data_recipient_ciphertext, "41e0d76f579dbd0d936a662d54d8582037de2e366fde1c62");
 
         *recipient  << cbor_data_recipient_protected    // protected
                     << cbor_data_recipient_unprotected  // unprotected
@@ -1245,7 +1245,7 @@ void test_rfc8152_c_4_1 ()
 
     constexpr char constexpr_ciphertext[] = "5974e1b99a3a4cc09a659aa2e9e7fff161d38ce71cb45ce460ffb569";
     cbor_data* cbor_data_ciphertext = nullptr;
-    cose.build_base16str (&cbor_data_ciphertext, constexpr_ciphertext);
+    cose.build_data_b16 (&cbor_data_ciphertext, constexpr_ciphertext);
 
     *root   << cbor_data_protected      // protected
             << cbor_data_unprotected    // unprotected
@@ -1291,7 +1291,7 @@ void test_rfc8152_c_4_2 ()
 
     constexpr char constexpr_ciphertext[] = "252a8911d465c125b6764739700f0141ed09192de139e053bd09abca";
     cbor_data* cbor_data_ciphertext = nullptr;
-    cose.build_base16str (&cbor_data_ciphertext, constexpr_ciphertext);
+    cose.build_data_b16 (&cbor_data_ciphertext, constexpr_ciphertext);
 
     *root   << cbor_data_protected      // protected
             << cbor_data_unprotected    // unprotected
@@ -1329,10 +1329,10 @@ void test_rfc8152_c_5_1 ()
     }
 
     cbor_data* cbor_data_payload = nullptr;
-    cose.build_payload (&cbor_data_payload, "This is the content.");
+    cose.build_data (&cbor_data_payload, "This is the content.");
 
     cbor_data* cbor_data_tag = nullptr;
-    cose.build_base16str (&cbor_data_tag, "9e1226ba1f81b848");
+    cose.build_data_b16 (&cbor_data_tag, "9e1226ba1f81b848");
 
     *root   << cbor_data_protected      // protected
             << cbor_data_unprotected    // unprotected
@@ -1364,7 +1364,7 @@ void test_rfc8152_c_5_1 ()
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        cose.build_base16str (&cbor_data_recipient_ciphertext, "");
+        cose.build_data_b16 (&cbor_data_recipient_ciphertext, "");
 
         *recipient  << cbor_data_recipient_protected    // protected
                     << cbor_data_recipient_unprotected  // unprotected
@@ -1405,10 +1405,10 @@ void test_rfc8152_c_5_2 ()
     }
 
     cbor_data* cbor_data_payload = nullptr;
-    cose.build_payload (&cbor_data_payload, "This is the content.");
+    cose.build_data (&cbor_data_payload, "This is the content.");
 
     cbor_data* cbor_data_tag = nullptr;
-    cose.build_base16str (&cbor_data_tag, "81a03448acd3d305376eaa11fb3fe416a955be2cbe7ec96f012c994bc3f16a41");
+    cose.build_data_b16 (&cbor_data_tag, "81a03448acd3d305376eaa11fb3fe416a955be2cbe7ec96f012c994bc3f16a41");
 
     *root   << cbor_data_protected      // protected
             << cbor_data_unprotected    // unprotected
@@ -1451,7 +1451,7 @@ void test_rfc8152_c_5_2 ()
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        cose.build_base16str (&cbor_data_recipient_ciphertext, "");
+        cose.build_data_b16 (&cbor_data_recipient_ciphertext, "");
 
         *recipient  << cbor_data_recipient_protected    // protected
                     << cbor_data_recipient_unprotected  // unprotected
@@ -1492,10 +1492,10 @@ void test_rfc8152_c_5_3 ()
     }
 
     cbor_data* cbor_data_payload = nullptr;
-    cose.build_payload (&cbor_data_payload, "This is the content.");
+    cose.build_data (&cbor_data_payload, "This is the content.");
 
     cbor_data* cbor_data_tag = nullptr;
-    cose.build_base16str (&cbor_data_tag, "36f5afaf0bab5d43");
+    cose.build_data_b16 (&cbor_data_tag, "36f5afaf0bab5d43");
 
     *root   << cbor_data_protected      // protected
             << cbor_data_unprotected    // unprotected
@@ -1527,7 +1527,7 @@ void test_rfc8152_c_5_3 ()
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        cose.build_base16str (&cbor_data_recipient_ciphertext, "711ab0dc2fc4585dce27effa6781c8093eba906f227b6eb0");
+        cose.build_data_b16 (&cbor_data_recipient_ciphertext, "711ab0dc2fc4585dce27effa6781c8093eba906f227b6eb0");
 
         *recipient  << cbor_data_recipient_protected    // protected
                     << cbor_data_recipient_unprotected  // unprotected
@@ -1568,10 +1568,10 @@ void test_rfc8152_c_5_4 ()
     }
 
     cbor_data* cbor_data_payload = nullptr;
-    cose.build_payload (&cbor_data_payload, "This is the content.");
+    cose.build_data (&cbor_data_payload, "This is the content.");
 
     cbor_data* cbor_data_tag = nullptr;
-    cose.build_base16str (&cbor_data_tag, "bf48235e809b5c42e995f2b7d5fa13620e7ed834e337f6aa43df161e49e9323e");
+    cose.build_data_b16 (&cbor_data_tag, "bf48235e809b5c42e995f2b7d5fa13620e7ed834e337f6aa43df161e49e9323e");
 
     *root   << cbor_data_protected      // protected
             << cbor_data_unprotected    // unprotected
@@ -1610,7 +1610,7 @@ void test_rfc8152_c_5_4 ()
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        cose.build_base16str (&cbor_data_recipient_ciphertext, "339bc4f79984cdc6b3e6ce5f315a4c7d2b0ac466fcea69e8c07dfbca5bb1f661bc5f8e0df9e3eff5");
+        cose.build_data_b16 (&cbor_data_recipient_ciphertext, "339bc4f79984cdc6b3e6ce5f315a4c7d2b0ac466fcea69e8c07dfbca5bb1f661bc5f8e0df9e3eff5");
 
         *recipient  << cbor_data_recipient_protected    // protected
                     << cbor_data_recipient_unprotected  // unprotected
@@ -1641,7 +1641,7 @@ void test_rfc8152_c_5_4 ()
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        cose.build_base16str (&cbor_data_recipient_ciphertext, "0b2c7cfce04e98276342d6476a7723c090dfdd15f9a518e7736549e998370695e6d6a83b4ae507bb");
+        cose.build_data_b16 (&cbor_data_recipient_ciphertext, "0b2c7cfce04e98276342d6476a7723c090dfdd15f9a518e7736549e998370695e6d6a83b4ae507bb");
 
         *recipient  << cbor_data_recipient_protected    // protected
                     << cbor_data_recipient_unprotected  // unprotected
@@ -1677,10 +1677,10 @@ void test_rfc8152_c_6_1 ()
     }
 
     cbor_data* cbor_data_payload = nullptr;
-    cose.build_payload (&cbor_data_payload, "This is the content.");
+    cose.build_data (&cbor_data_payload, "This is the content.");
 
     cbor_data* cbor_data_tag = nullptr;
-    cose.build_base16str (&cbor_data_tag, "726043745027214f");
+    cose.build_data_b16 (&cbor_data_tag, "726043745027214f");
 
     *root   << cbor_data_protected  // protected
             << new cbor_map ()      // unprotected
@@ -2007,7 +2007,6 @@ void test_cbor_web_key ()
     test_cbor_key ("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
 }
 
-
 void try_refactor_jose_sign ()
 {
     _test_case.begin ("crypto_key");
@@ -2026,40 +2025,128 @@ void try_refactor_jose_sign ()
     jwk.write (&privkey, &json, 1);
     printf ("JWK from CBOR key\n%s\n", json.c_str ());
 
-    // JWS
+    // JWS using CBOR key
     constexpr char contents[] = "This is the content.";
     std::string jws;
+    {
+        jose_context_t* handle = nullptr;
+        json_object_signing_encryption jose;
 
-    jose_context_t* handle = nullptr;
-    json_object_signing_encryption jose;
+        jose.open (&handle, &privkey);
+        jose.sign (handle, jws_t::jws_es512, contents, jws, jose_serialization_t::jose_json);
+        jose.close (handle);
 
-    jose.open (&handle, &privkey);
-    jose.sign (handle, jws_t::jws_es512, contents, jws, jose_serialization_t::jose_json);
-    jose.close (handle);
-
-    bool result = false;
-    jose.open (&handle, &pubkey);
-    jose.verify (handle, jws, result);
-    jose.close (handle);
+        bool result = false;
+        jose.open (&handle, &pubkey);
+        jose.verify (handle, jws, result);
+        jose.close (handle);
+    }
 
     std::cout << "contents" << std::endl << contents << std::endl;
-    std::cout << "jws" << std::endl << jws.c_str () << std::endl;
+    std::cout << "jws using CBOR key" << std::endl << jws.c_str () << std::endl;
 
     // refactoring
-    return_t ret = errorcode_t::success;
-    openssl_sign sign;
-    binary_t signature;
+    binary_t bin_signature;
     buffer_stream bs;
-    crypt_sig_t sig = crypt_sig_t::sig_es512;
-    EVP_PKEY* pkey = privkey.select (sig);
-    sign.sign (pkey, convert (contents), signature, sig);
-    dump_memory (signature, &bs);
-    std::cout << "signature" << std::endl << bs.c_str () << std::endl;
-    ret = sign.verify (pkey, convert (contents), signature, sig);
-    _test_case.test (ret, __FUNCTION__, "signing");
+    std::string kid;
+    cbor_array* root = nullptr;
+    {
+        return_t ret = errorcode_t::success;
+        openssl_sign sign;
+        crypt_sig_t sig = crypt_sig_t::sig_es512;
+        EVP_PKEY* pkey = privkey.select (kid, sig);
+        sign.sign (pkey, convert (contents), bin_signature, sig);
+        dump_memory (bin_signature, &bs);
+        std::cout << "kid " << kid.c_str () << std::endl;
+        std::cout << "signature" << std::endl << bs.c_str () << std::endl;
+        ret = sign.verify (pkey, convert (contents), bin_signature, sig);
+        _test_case.test (ret, __FUNCTION__, "signing");
 
-    // cose formatting
+        // cose formatting (test_rfc8152_c_1_1)
+        cbor_object_signing_encryption cose;
+
+        cbor_data* cbor_data_protected = nullptr;
+        cose.build_protected (&cbor_data_protected);
+
+        cbor_data* cbor_data_payload = nullptr;
+        cose.build_data (&cbor_data_payload, contents);
+
+        root = new cbor_array ();
+        root->tag (true, cbor_tag_t::cose_tag_sign);
+        *root   << cbor_data_protected  // protected, bstr
+                << new cbor_map ()      // unprotected, map
+                << cbor_data_payload    // payload, bstr/nil(detached)
+                << new cbor_array ();   // signatures
+
+        cbor_array* signatures = (cbor_array*) (*root)[3];
+
+        cbor_array* signature = new cbor_array ();
+        {
+            cbor_data* cbor_data_signature_protected = nullptr;
+            {
+                cose_item_t item;
+                cose_list_t list_protected;
+                variant_set_int16 (item.key, cose_header_t::cose_header_alg);
+                variant_set_int16 (item.value, cose_alg_t::cose_es512);
+                list_protected.push_back (item);
+                cose.build_protected (&cbor_data_signature_protected, list_protected);
+            }
+
+            cbor_map* cbor_data_signature_unprotected = nullptr;
+            {
+                cose_item_t item;
+                cose_list_t list_unprotected;
+                variant_set_int16 (item.key, cose_header_t::cose_header_kid);
+                variant_set_bstr_new (item.value, kid.c_str (), kid.size ());
+                list_unprotected.push_back (item);
+                cose.build_unprotected (&cbor_data_signature_unprotected, list_unprotected);
+            }
+
+            cbor_data* cbor_data_signature_signature = nullptr;
+            {
+                cose.build_data (&cbor_data_signature_signature, &bin_signature[0], bin_signature.size ());
+            }
+
+            *signature  << cbor_data_signature_protected
+                        << cbor_data_signature_unprotected
+                        << cbor_data_signature_signature;
+        }
+        *signatures << signature;
+    }
+
+    buffer_stream diagnostic;
+    binary_t bin;
+
+    {
+        cbor_publisher publisher;
+        publisher.publish (root, &diagnostic);
+
+        publisher.publish (root, &bin);
+
+        std::cout << "diagnostic" << std::endl << diagnostic.c_str () << std::endl;
+        dump_memory (bin, &bs);
+        std::cout << "CBOR" << std::endl << bs.c_str () << std::endl;
+    }
+
+    root->release ();
+
+    // reversing
+    {
+        cbor_reader reader;
+        cbor_reader_context_t* handle = nullptr;
+        cbor_object* newone = nullptr;
+
+        reader.open (&handle);
+        reader.parse (handle, bin);
+        reader.publish (handle, &diagnostic);
+        reader.publish (handle, &newone);
+        reader.close (handle);
+        newone->release ();
+        std::cout << "diagnostic reversing" << std::endl << diagnostic.c_str () << std::endl;
+    }
+    // and then verify
     // ...
+
     // interface design
 }
 

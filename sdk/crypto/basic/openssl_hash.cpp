@@ -380,6 +380,7 @@ return_t openssl_hash::finalize (hash_context_t* handle, binary_t& output)
 #endif
             } else {
                 if (EVP_MD_FLAG_XOF & EVP_MD_meth_get_flags (context->_evp_md)) {
+                    // sha3 shake
                     size_digest <<= 1;
                     output.resize (size_digest);
                     EVP_DigestFinalXOF (context->_md_context, &output[0], size_digest);
@@ -458,7 +459,14 @@ return_t openssl_hash::hash (hash_context_t* handle, const byte_t* source_data, 
             } else {
                 EVP_DigestInit_ex (context->_md_context, context->_evp_md, nullptr);
                 EVP_DigestUpdate (context->_md_context, source_data, source_size);
-                EVP_DigestFinal_ex (context->_md_context, &output[0], &size_digest);
+                if (EVP_MD_FLAG_XOF & EVP_MD_meth_get_flags (context->_evp_md)) {
+                    // sha3 shake
+                    size_digest <<= 1;
+                    output.resize (size_digest);
+                    EVP_DigestFinalXOF (context->_md_context, &output[0], size_digest);
+                } else {
+                    EVP_DigestFinal_ex (context->_md_context, &output[0], &size_digest);
+                }
             }
         }
     }
