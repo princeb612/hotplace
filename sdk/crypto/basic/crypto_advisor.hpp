@@ -407,6 +407,7 @@ public:
     cose_kty_t ktyof (crypto_key_t kty);
     crypto_key_t ktyof (cose_kty_t kty);
     jws_t sigof (crypt_sig_t sig);
+    cose_alg_t cose_sigof (crypt_sig_t sig);
     crypt_sig_t sigof (jws_t sig);
     cose_ec_curve_t curveof (uint32 nid);
     uint32 curveof (cose_ec_curve_t curve);
@@ -438,6 +439,8 @@ private:
     typedef std::map <crypto_key_t, cose_kty_t> kty2cose_map_t;
     typedef std::map <cose_kty_t, crypto_key_t> cose2kty_map_t;
     typedef std::map <crypt_sig_t, jws_t> sig2jws_map_t;
+    typedef std::map <crypt_sig_t, cose_alg_t> sig2cose_map_t;
+    typedef std::map <cose_alg_t, crypt_sig_t> cose2sig_map_t;
     typedef std::map <jws_t, crypt_sig_t> jws2sig_map_t;
     typedef std::map <uint32, cose_ec_curve_t> nid2curve_map_t;
     typedef std::map <cose_ec_curve_t, uint32> curve2nid_map_t;
@@ -468,6 +471,8 @@ private:
     cose2kty_map_t _cose2kty_map;
     sig2jws_map_t _sig2jws_map;
     jws2sig_map_t _jws2sig_map;
+    sig2cose_map_t _sig2cose_map;
+    cose2sig_map_t _cose2sig_map;
     nid2curve_map_t _nid2curve_map;
     curve2nid_map_t _curve2nid_map;
 };

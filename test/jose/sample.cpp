@@ -66,7 +66,7 @@ void test0 ()
         };
     std::function <void (const hint_signature_t*, void*)> lambda2 =
         [] (const hint_signature_t* item, void* user) -> void {
-            printf ("    %s\n", item->alg_name);
+            printf ("    %s\n", item->jws_name);
         };
 
     printf ("JWA\n");
@@ -2118,7 +2118,7 @@ void key_dump (crypto_key* key, jws_t sig, crypto_use_t use)
     crypto_advisor* advisor = crypto_advisor::get_instance ();
     const hint_signature_t* alg_info = advisor->hintof_jose_signature (sig);
 
-    print_text ("try kt %d alg %s", alg_info->kty, alg_info->alg_name);
+    print_text ("try kt %d alg %s", alg_info->kty, alg_info->jws_name);
     pkey = key->select (kid, sig, use);
     if (pkey) {
         print_text ("> kid %s", kid.c_str ());

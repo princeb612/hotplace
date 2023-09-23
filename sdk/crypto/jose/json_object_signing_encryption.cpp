@@ -276,7 +276,7 @@ return_t json_object_signing_encryption::sign (jose_context_t* context, std::lis
         if (hint) {
             json_t* json = json_object ();
             if (json) {
-                json_object_set_new (json, "alg", json_string (hint->alg_name));
+                json_object_set_new (json, "alg", json_string (hint->jws_name));
 
                 char* contents = json_dumps (json, JOSE_JSON_FORMAT);
                 if (contents) {

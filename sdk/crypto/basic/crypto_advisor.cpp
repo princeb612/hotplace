@@ -342,29 +342,42 @@ const hint_jose_encryption_t hint_jose_encryptions [] =
 };
 
 const hint_signature_t hint_signatures [] = {
-    { "HS256", crypt_sig_t::sig_hs256, jws_t::jws_hs256, crypto_key_t::kty_hmac, hash_algorithm_t::sha2_256, 1, NID_hmac, },
-    { "HS384", crypt_sig_t::sig_hs384, jws_t::jws_hs384, crypto_key_t::kty_hmac, hash_algorithm_t::sha2_384, 1, NID_hmac, },
-    { "HS512", crypt_sig_t::sig_hs512, jws_t::jws_hs512, crypto_key_t::kty_hmac, hash_algorithm_t::sha2_512, 1, NID_hmac, },
-    { "RS256", crypt_sig_t::sig_rs256, jws_t::jws_rs256, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
-    { "RS384", crypt_sig_t::sig_rs384, jws_t::jws_rs384, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
-    { "RS512", crypt_sig_t::sig_rs512, jws_t::jws_rs512, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
-    { "ES256", crypt_sig_t::sig_es256, jws_t::jws_es256, crypto_key_t::kty_ec,   hash_algorithm_t::sha2_256, 1, NID_X9_62_prime256v1, },
-    { "ES384", crypt_sig_t::sig_es384, jws_t::jws_es384, crypto_key_t::kty_ec,   hash_algorithm_t::sha2_384, 1, NID_secp384r1, },
-    { "ES512", crypt_sig_t::sig_es512, jws_t::jws_es512, crypto_key_t::kty_ec,   hash_algorithm_t::sha2_512, 1, NID_secp521r1, },
-    { "PS256", crypt_sig_t::sig_ps256, jws_t::jws_ps256, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
-    { "PS384", crypt_sig_t::sig_ps384, jws_t::jws_ps384, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
-    { "PS512", crypt_sig_t::sig_ps512, jws_t::jws_ps512, crypto_key_t::kty_rsa,  hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
-    { "EdDSA", crypt_sig_t::sig_eddsa, jws_t::jws_eddsa, crypto_key_t::kty_okp,  hash_algorithm_t::hash_alg_unknown, 2, NID_ED25519, NID_ED448, },
+    { crypt_sig_t::sig_hs256, jws_t::jws_hs256, crypto_key_t::kty_hmac, "HS256",
+      hash_algorithm_t::sha2_256, 1, NID_hmac, },
+    { crypt_sig_t::sig_hs384, jws_t::jws_hs384, crypto_key_t::kty_hmac, "HS384",
+      hash_algorithm_t::sha2_384, 1, NID_hmac, },
+    { crypt_sig_t::sig_hs512, jws_t::jws_hs512, crypto_key_t::kty_hmac, "HS512",
+      hash_algorithm_t::sha2_512, 1, NID_hmac, },
+    { crypt_sig_t::sig_rs256, jws_t::jws_rs256, crypto_key_t::kty_rsa, "RS256",
+      hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
+    { crypt_sig_t::sig_rs384, jws_t::jws_rs384, crypto_key_t::kty_rsa, "RS384",
+      hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
+    { crypt_sig_t::sig_rs512, jws_t::jws_rs512, crypto_key_t::kty_rsa, "RS512",
+      hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
+    { crypt_sig_t::sig_es256, jws_t::jws_es256, crypto_key_t::kty_ec, "ES256",
+      hash_algorithm_t::sha2_256, 1, NID_X9_62_prime256v1, },
+    { crypt_sig_t::sig_es384, jws_t::jws_es384, crypto_key_t::kty_ec, "ES384",
+      hash_algorithm_t::sha2_384, 1, NID_secp384r1, },
+    { crypt_sig_t::sig_es512, jws_t::jws_es512, crypto_key_t::kty_ec, "ES512",
+      hash_algorithm_t::sha2_512, 1, NID_secp521r1, },
+    { crypt_sig_t::sig_ps256, jws_t::jws_ps256, crypto_key_t::kty_rsa, "PS256",
+      hash_algorithm_t::sha2_256, 1, NID_rsaEncryption, },
+    { crypt_sig_t::sig_ps384, jws_t::jws_ps384, crypto_key_t::kty_rsa, "PS384",
+      hash_algorithm_t::sha2_384, 1, NID_rsaEncryption, },
+    { crypt_sig_t::sig_ps512, jws_t::jws_ps512, crypto_key_t::kty_rsa, "PS512",
+      hash_algorithm_t::sha2_512, 1, NID_rsaEncryption, },
+    { crypt_sig_t::sig_eddsa, jws_t::jws_eddsa, crypto_key_t::kty_okp, "EdDSA",
+      hash_algorithm_t::hash_alg_unknown, 2, NID_ED25519, NID_ED448, },
 };
 
 const hint_curve_t hint_curves [] = {
-    { NID_X9_62_prime256v1, crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-256", },
-    { NID_secp384r1,        crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-384", },
-    { NID_secp521r1,        crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-521", },
-    { NID_ED25519,          crypto_key_t::kty_okp, crypto_use_t::use_sig, "Ed25519", },
-    { NID_ED448,            crypto_key_t::kty_okp, crypto_use_t::use_sig, "Ed448", },
-    { NID_X25519,           crypto_key_t::kty_okp, crypto_use_t::use_enc, "X25519", },
-    { NID_X448,             crypto_key_t::kty_okp, crypto_use_t::use_enc, "X448", },
+    { NID_X9_62_prime256v1, cose_ec_curve_t::cose_ec_p256,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-256", },
+    { NID_secp384r1,        cose_ec_curve_t::cose_ec_p384,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-384", },
+    { NID_secp521r1,        cose_ec_curve_t::cose_ec_p521,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-521", },
+    { NID_ED25519,          cose_ec_curve_t::cose_ec_ed25519, crypto_key_t::kty_okp, crypto_use_t::use_sig, "Ed25519", },
+    { NID_ED448,            cose_ec_curve_t::cose_ec_ed448,   crypto_key_t::kty_okp, crypto_use_t::use_sig, "Ed448", },
+    { NID_X25519,           cose_ec_curve_t::cose_ec_x25519,  crypto_key_t::kty_okp, crypto_use_t::use_enc, "X25519", },
+    { NID_X448,             cose_ec_curve_t::cose_ec_x448,    crypto_key_t::kty_okp, crypto_use_t::use_enc, "X448", },
 };
 
 const hint_kty_name_t hint_kty_names [] = {
@@ -438,18 +451,27 @@ return_t crypto_advisor::build_if_necessary ()
         for (i = 0; i < sizeof_hint_jose_algorithms; i++) {
             const hint_jose_encryption_t* item = hint_jose_algorithms + i;
             _alg_map.insert (std::make_pair (item->type, item));
-            _alg_byname_map.insert (std::make_pair (item->alg_name, item));
+            if (item->alg_name) {
+                _alg_byname_map.insert (std::make_pair (item->alg_name, item));
+            }
         }
         for (i = 0; i < sizeof_hint_jose_encryptions; i++) {
             const hint_jose_encryption_t* item = hint_jose_encryptions + i;
             _enc_map.insert (std::make_pair (item->type, item));
-            _enc_byname_map.insert (std::make_pair (item->alg_name, item));
+            if (item->alg_name) {
+                _enc_byname_map.insert (std::make_pair (item->alg_name, item));
+            }
         }
         for (i = 0; i < sizeof_hint_signatures; i++) {
             const hint_signature_t* item = hint_signatures + i;
-            _crypt_sig_map.insert (std::make_pair (item->type, item));
-            _jose_sig_map.insert (std::make_pair (item->sig, item));
-            _sig_byname_map.insert (std::make_pair (item->alg_name, item));
+            _crypt_sig_map.insert (std::make_pair (item->sig_type, item));
+            _jose_sig_map.insert (std::make_pair (item->jws_type, item));
+            if (item->jws_name) {
+                _sig_byname_map.insert (std::make_pair (item->jws_name, item));
+            }
+            if (jws_t::jws_unknown != item->jws_type) {
+                _sig2jws_map.insert (std::make_pair (item->sig_type, item->jws_type));
+            }
         }
         for (i = 0; i < sizeof_hint_signatures; i++) {
             const hint_signature_t* item = hint_signatures + i;
@@ -473,21 +495,36 @@ return_t crypto_advisor::build_if_necessary ()
         _cose2kty_map.insert (std::make_pair (cose_kty_t::cose_kty_okp, crypto_key_t::kty_okp));
         _cose2kty_map.insert (std::make_pair (cose_kty_t::cose_kty_rsa, crypto_key_t::kty_rsa));
 
-        _nid2curve_map.insert (std::make_pair (NID_X9_62_prime256v1, cose_ec_curve_t::cose_ec_p256));
-        _nid2curve_map.insert (std::make_pair (NID_secp384r1, cose_ec_curve_t::cose_ec_p384));
-        _nid2curve_map.insert (std::make_pair (NID_secp521r1, cose_ec_curve_t::cose_ec_p521));
-        _nid2curve_map.insert (std::make_pair (NID_X25519, cose_ec_curve_t::cose_ec_x25519));
-        _nid2curve_map.insert (std::make_pair (NID_X448, cose_ec_curve_t::cose_ec_x448));
-        _nid2curve_map.insert (std::make_pair (NID_ED25519, cose_ec_curve_t::cose_ec_ed25519));
-        _nid2curve_map.insert (std::make_pair (NID_ED448, cose_ec_curve_t::cose_ec_ed448));
+        struct {
+            crypt_sig_t sig;
+            jws_t jws;
+            cose_alg_t cose;
+        } sig2cose [] = {
+            { crypt_sig_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hmac_256_256 },
+            { crypt_sig_t::sig_hs384, jws_t::jws_hs384, cose_alg_t::cose_hmac_384_256 },
+            { crypt_sig_t::sig_hs512, jws_t::jws_hs512, cose_alg_t::cose_hmac_512_512 },
+            { crypt_sig_t::sig_rs256, jws_t::jws_rs256, cose_alg_t::cose_rs256 },
+            { crypt_sig_t::sig_rs384, jws_t::jws_rs384, cose_alg_t::cose_rs384 },
+            { crypt_sig_t::sig_rs512, jws_t::jws_rs512, cose_alg_t::cose_rs512 },
+            { crypt_sig_t::sig_es256, jws_t::jws_es256, cose_alg_t::cose_es256 },
+            { crypt_sig_t::sig_es384, jws_t::jws_es384, cose_alg_t::cose_es384 },
+            { crypt_sig_t::sig_es512, jws_t::jws_es512, cose_alg_t::cose_es512 },
+            { crypt_sig_t::sig_ps256, jws_t::jws_ps256, cose_alg_t::cose_ps256 },
+            { crypt_sig_t::sig_ps384, jws_t::jws_ps384, cose_alg_t::cose_ps384 },
+            { crypt_sig_t::sig_ps512, jws_t::jws_ps512, cose_alg_t::cose_ps512 },
+            { crypt_sig_t::sig_eddsa, jws_t::jws_eddsa, cose_alg_t::cose_eddsa },
+        };
+        for (i = 0; i < RTL_NUMBER_OF (sig2cose); i++) {
+            _sig2jws_map.insert (std::make_pair (sig2cose[i].sig, sig2cose[i].jws));
+            _jws2sig_map.insert (std::make_pair (sig2cose[i].jws, sig2cose[i].sig));
+            _sig2cose_map.insert (std::make_pair (sig2cose[i].sig, sig2cose[i].cose));
+            _cose2sig_map.insert (std::make_pair (sig2cose[i].cose, sig2cose[i].sig));
+        }
 
-        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p256, NID_X9_62_prime256v1));
-        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p384, NID_secp384r1));
-        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_p521, NID_secp521r1));
-        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_x25519, NID_X25519));
-        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_x448, NID_X448));
-        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_ed25519, NID_ED25519));
-        _curve2nid_map.insert (std::make_pair (cose_ec_curve_t::cose_ec_ed448, NID_ED448));
+        for (i = 0; i < RTL_NUMBER_OF (hint_curves); i++) {
+            _nid2curve_map.insert (std::make_pair (hint_curves[i].nid, hint_curves[i].cose_crv));
+            _curve2nid_map.insert (std::make_pair (hint_curves[i].cose_crv, hint_curves[i].nid));
+        }
 
         _flag = 1;
     }
@@ -839,7 +876,7 @@ const char* crypto_advisor::nameof_jose_signature (jws_t sig)
     const hint_signature_t* item = hintof_jose_signature (sig);
 
     if (item) {
-        name = item->alg_name;
+        name = item->jws_name;
     }
     return name;
 }
@@ -882,7 +919,7 @@ return_t crypto_advisor::typeof_jose_signature (const char* sig, jws_t& type)
     const hint_signature_t* item = hintof_jose_signature (sig);
 
     if (item) {
-        type = (jws_t) item->sig;
+        type = (jws_t) item->jws_type;
     } else {
         ret = errorcode_t::not_found;
     }
@@ -987,11 +1024,11 @@ return_t crypto_advisor::nameof_ec_curve (EVP_PKEY* pkey, std::string& name)
     if (kindof_ecc (pkey)) {
         nidof_evp_pkey (pkey, nid);
 
-        jose_curve_bynid_map_t::iterator iter = _curve_bynid_map.find (nid);
-        if (_curve_bynid_map.end () != iter) {
-            name = iter->second->name;
-        } else {
-            ret = errorcode_t::not_found;
+        const hint_curve_t* item = nullptr;
+        maphint <uint32, const hint_curve_t*> hint (_curve_bynid_map);
+        ret = hint.find (nid, &item);
+        if (errorcode_t::success == ret) {
+            name = item->name;
         }
     }
     return ret;
@@ -1012,7 +1049,7 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, const char* alg)
         }
         const hint_signature_t* hint_sig = hintof_jose_signature (alg);
         if (hint_sig) {
-            test = is_kindof (pkey, hint_sig->sig);
+            test = is_kindof (pkey, hint_sig->jws_type);
             if (test) {
                 __leave2;
             }
@@ -1063,7 +1100,7 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, crypt_sig_t sig)
         nidof_evp_pkey (pkey, nid);
 
         const hint_signature_t* hint = hintof_signature (sig);
-        bool cond1 = (hint->type == sig);
+        bool cond1 = (hint->sig_type == sig);
         if (false == cond1) {
             __leave2;
         }
@@ -1103,7 +1140,7 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, jws_t sig)
         nidof_evp_pkey (pkey, nid);
 
         const hint_signature_t* hint = hintof_jose_signature (sig);
-        bool cond1 = (hint->sig == sig);
+        bool cond1 = (hint->jws_type == sig);
         if (false == cond1) {
             __leave2;
         }
@@ -1149,6 +1186,15 @@ jws_t crypto_advisor::sigof (crypt_sig_t sig)
 {
     jws_t type = jws_t::jws_unknown;
     maphint <crypt_sig_t, jws_t> hint (_sig2jws_map);
+
+    hint.find (sig, &type);
+    return type;
+}
+
+cose_alg_t crypto_advisor::cose_sigof (crypt_sig_t sig)
+{
+    cose_alg_t type = cose_alg_t::cose_unknown;
+    maphint <crypt_sig_t, cose_alg_t> hint (_sig2cose_map);
 
     hint.find (sig, &type);
     return type;

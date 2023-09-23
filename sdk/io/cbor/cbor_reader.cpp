@@ -563,6 +563,8 @@ return_t cbor_reader::publish (cbor_reader_context_t* handle, cbor_object** root
 
         if (handle->root) {
             handle->root->addref ();
+        } else {
+            throw errorcode_t::internal_error;
         }
         *root = handle->root;
     }

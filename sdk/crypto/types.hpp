@@ -635,16 +635,17 @@ typedef struct _hint_jose_encryption_t {
 
 typedef struct _hint_curves_t {
     uint32 nid;
-    uint32 kty; // crypto_key_t
+    cose_ec_curve_t cose_crv;
+    crypto_key_t kty;
     crypto_use_t use;
     const char* name;
 } hint_curve_t;
 
 typedef struct _hint_signature_t {
-    const char* alg_name;
-    crypt_sig_t type;
-    jws_t sig;
+    crypt_sig_t sig_type;
+    jws_t jws_type;
     crypto_key_t kty;
+    const char* jws_name;
     hash_algorithm_t alg;
     uint32 count;
     uint32 nid[5];

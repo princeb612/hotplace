@@ -1772,6 +1772,78 @@ void test_cbor_web_key ()
     test_cbor_key ("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
 }
 
+void try_refactor_jose_sign (crypto_key* pubkey, crypto_key* privkey, crypt_sig_t sig_type)
+{
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
+
+    jws_t jws_type = advisor->sigof (sig_type);
+    const char* jws_name = advisor->nameof_jose_signature (jws_type);
+
+    // JWS using CBOR key
+    constexpr char contents[] = "This is the content.";
+    std::string jws;
+    {
+        jose_context_t* handle = nullptr;
+        json_object_signing_encryption jose;
+
+        jose.open (&handle, privkey);
+        jose.sign (handle, jws_type, contents, jws, jose_serialization_t::jose_json);
+        jose.close (handle);
+
+        bool result = false;
+        jose.open (&handle, pubkey);
+        jose.verify (handle, jws, result);
+        jose.close (handle);
+    }
+
+    std::cout << "contents" << std::endl << contents << std::endl;
+    std::cout << "jws using CBOR key" << std::endl << jws.c_str () << std::endl;
+
+    // refactoring
+    binary_t signature;
+    buffer_stream bs;
+    std::string kid;
+    {
+        bool result = false;
+        cbor_object_signing_encryption cose;
+        cbor_object_signing sign;
+        cose_context_t* handle = nullptr;
+        cose.open (&handle);
+        ret = cose.sign (handle, privkey, sig_type, convert (contents), signature);
+
+        // reversing
+        {
+            test_case_notimecheck notimecheck (_test_case);
+
+            dump_memory (signature, &bs);
+            std::cout << "COSE signature" << std::endl << bs.c_str () << std::endl;
+
+            buffer_stream diagnostic;
+            cbor_reader reader;
+            cbor_reader_context_t* reader_handle = nullptr;
+            cbor_object* newone = nullptr;
+
+            reader.open (&reader_handle);
+            ret = reader.parse (reader_handle, signature);
+            if (errorcode_t::success == ret) {
+                reader.publish (reader_handle, &diagnostic);
+                reader.publish (reader_handle, &newone);
+                reader.close (reader_handle);
+                newone->release ();
+
+                std::cout << "diagnostic reversing" << std::endl << diagnostic.c_str () << std::endl;
+            }
+        }
+        // and then verify
+        // todo
+        //ret = cose.verify (handle, pubkey, sig_type, convert (contents), signature, result);
+        cose.close (handle);
+
+        _test_case.test (ret, __FUNCTION__, "JWS %s + COSE signing", jws_name);
+    }
+}
+
 void try_refactor_jose_sign ()
 {
     _test_case.begin ("crypto_key");
@@ -1790,67 +1862,11 @@ void try_refactor_jose_sign ()
     jwk.write (&privkey, &json, 1);
     printf ("JWK from CBOR key\n%s\n", json.c_str ());
 
-    // JWS using CBOR key
-    constexpr char contents[] = "This is the content.";
-    std::string jws;
-    {
-        jose_context_t* handle = nullptr;
-        json_object_signing_encryption jose;
-
-        jose.open (&handle, &privkey);
-        jose.sign (handle, jws_t::jws_es512, contents, jws, jose_serialization_t::jose_json);
-        jose.close (handle);
-
-        bool result = false;
-        jose.open (&handle, &pubkey);
-        jose.verify (handle, jws, result);
-        jose.close (handle);
-    }
-
-    std::cout << "contents" << std::endl << contents << std::endl;
-    std::cout << "jws using CBOR key" << std::endl << jws.c_str () << std::endl;
-
-    // refactoring
-    binary_t signature;
-    buffer_stream bs;
-    std::string kid;
-    {
-        return_t ret = errorcode_t::success;
-        crypt_sig_t sig = crypt_sig_t::sig_es512;
-        bool result = false;
-        cbor_object_signing_encryption cose;
-        cbor_object_signing sign;
-        cose_context_t* handle = nullptr;
-        cose.open (&handle);
-        cose.sign (handle, &privkey, sig, convert (contents), signature);
-
-        // reversing
-        {
-            test_case_notimecheck notimecheck (_test_case);
-
-            dump_memory (signature, &bs);
-            std::cout << "COSE signature" << std::endl << bs.c_str () << std::endl;
-
-            buffer_stream diagnostic;
-            cbor_reader reader;
-            cbor_reader_context_t* handle = nullptr;
-            cbor_object* newone = nullptr;
-
-            reader.open (&handle);
-            reader.parse (handle, signature);
-            reader.publish (handle, &diagnostic);
-            reader.publish (handle, &newone);
-            reader.close (handle);
-            newone->release ();
-            std::cout << "diagnostic reversing" << std::endl << diagnostic.c_str () << std::endl;
-        }
-        // and then verify
-        // todo
-        //ret = cose.verify (handle, &pubkey, sig, convert (contents), signature, result);
-        cose.close (handle);
-
-        _test_case.test (ret, __FUNCTION__, "COSE signing");
-    }
+    // no RSA type exist
+    try_refactor_jose_sign (&pubkey, &privkey, crypt_sig_t::sig_es512);
+    try_refactor_jose_sign (&pubkey, &privkey, crypt_sig_t::sig_es256);
+    try_refactor_jose_sign (&pubkey, &privkey, crypt_sig_t::sig_hs512);
+    try_refactor_jose_sign (&pubkey, &privkey, crypt_sig_t::sig_hs256);
 
     // interface design go on
 }

@@ -458,7 +458,7 @@ static bool find_discriminant (crypto_key_object_t item, const char* kid, const 
             }
             const hint_signature_t* sig_info = advisor->hintof_jose_signature (alg);
             if (sig_info) {
-                ret = find_discriminant (item, kid, sig_info->sig, kt, alt, use, flags);
+                ret = find_discriminant (item, kid, sig_info->jws_type, kt, alt, use, flags);
                 if (ret) {
                     __leave2;
                 }
@@ -1055,7 +1055,7 @@ EVP_PKEY* crypto_key::find (const char* kid, crypt_sig_t alg, crypto_use_t use, 
             __leave2;
         }
 
-        const char* alg_str = alg_info->alg_name;
+        const char* alg_str = alg_info->jws_name;
         if (nullptr == alg_str) {
             __leave2;
         }
@@ -1111,7 +1111,7 @@ EVP_PKEY* crypto_key::find (const char* kid, jws_t alg, crypto_use_t use, bool u
             __leave2;
         }
 
-        const char* alg_str = alg_info->alg_name;
+        const char* alg_str = alg_info->jws_name;
         if (nullptr == alg_str) {
             __leave2;
         }
