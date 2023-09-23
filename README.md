@@ -62,7 +62,11 @@
  * make sure root directory hotplace (not hotplace-master nor etc ...)
    * $ hotplace ./make.sh
  * os support
-   * linux x86-64 minimum version FC4 (libc 2.3.5, ft. gcc 4.8 toolchain, since unicorn project)
+   * tested
+     * RHEL 7 and newer, (including CentOS, Rockey Linux)
+     * ubuntu 20.04 and newer
+     * mingw
+   * ~~linux x86-64 minimum version FC4 (libc 2.3.5, ft. gcc 4.8 toolchain, since unicorn project)~~
 
 ## implemented
 

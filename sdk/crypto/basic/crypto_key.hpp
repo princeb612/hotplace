@@ -254,7 +254,7 @@ public:
     EVP_PKEY* select (std::string& kid, jws_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief find
-     * @param const char* kid [out]
+     * @param const char* kid [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */

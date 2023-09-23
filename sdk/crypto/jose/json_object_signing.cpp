@@ -200,7 +200,7 @@ return_t json_object_signing::sign_hmac (EVP_PKEY* pkey, jws_t sig, binary_t con
     hash_algorithm_t alg = advisor->get_algorithm (sig);
     openssl_sign sign;
 
-    ret = sign.sign_hmac (pkey, input, output, alg);
+    ret = sign.sign_hmac (pkey, alg, input, output);
     return ret;
 }
 
@@ -211,7 +211,7 @@ return_t json_object_signing::sign_rsassa_pkcs15 (EVP_PKEY* pkey, jws_t sig, bin
     hash_algorithm_t alg = advisor->get_algorithm (sig);
     openssl_sign sign;
 
-    ret = sign.sign_rsassa_pkcs15 (pkey, input, output, alg);
+    ret = sign.sign_rsassa_pkcs15 (pkey, alg, input, output);
     return ret;
 }
 
@@ -222,7 +222,7 @@ return_t json_object_signing::sign_ecdsa (EVP_PKEY* pkey, jws_t sig, binary_t co
     hash_algorithm_t alg = advisor->get_algorithm (sig);
     openssl_sign sign;
 
-    ret = sign.sign_ecdsa (pkey, input, output, alg);
+    ret = sign.sign_ecdsa (pkey, alg, input, output);
     return ret;
 }
 
@@ -233,7 +233,7 @@ return_t json_object_signing::sign_eddsa (EVP_PKEY* pkey, jws_t sig, binary_t co
     hash_algorithm_t alg = advisor->get_algorithm (sig);
     openssl_sign sign;
 
-    ret = sign.sign_eddsa (pkey, input, output, alg);
+    ret = sign.sign_eddsa (pkey, alg, input, output);
     return ret;
 }
 
@@ -244,7 +244,7 @@ return_t json_object_signing::sign_rsassa_pss (EVP_PKEY* pkey, jws_t sig, binary
     hash_algorithm_t alg = advisor->get_algorithm (sig);
     openssl_sign sign;
 
-    ret = sign.sign_rsassa_pss (pkey, input, output, alg);
+    ret = sign.sign_rsassa_pss (pkey, alg, input, output);
     return ret;
 }
 
@@ -257,7 +257,7 @@ return_t json_object_signing::verify_hmac (EVP_PKEY* pkey, jws_t sig, binary_t c
     result = false;
 
     openssl_sign sign;
-    ret = sign.verify_hmac (pkey, input, output, alg);
+    ret = sign.verify_hmac (pkey, alg, input, output);
     if (errorcode_t::success == ret) {
         result = true;
     }
@@ -273,7 +273,7 @@ return_t json_object_signing::verify_rsassa_pkcs1_v1_5 (EVP_PKEY* pkey, jws_t si
     result = false;
 
     openssl_sign sign;
-    ret = sign.verify_digest (pkey, input, output, alg);
+    ret = sign.verify_digest (pkey, alg, input, output);
     if (errorcode_t::success == ret) {
         result = true;
     }
@@ -289,7 +289,7 @@ return_t json_object_signing::verify_ecdsa (EVP_PKEY* pkey, jws_t sig, binary_t 
     result = false;
 
     openssl_sign sign;
-    ret = sign.verify_ecdsa (pkey, input, output, alg);
+    ret = sign.verify_ecdsa (pkey, alg, input, output);
     if (errorcode_t::success == ret) {
         result = true;
     }
@@ -305,7 +305,7 @@ return_t json_object_signing::verify_eddsa (EVP_PKEY* pkey, jws_t sig, binary_t 
     result = false;
 
     openssl_sign sign;
-    ret = sign.verify_eddsa (pkey, input, output, alg);
+    ret = sign.verify_eddsa (pkey, alg, input, output);
     if (errorcode_t::success == ret) {
         result = true;
     }
@@ -321,7 +321,7 @@ return_t json_object_signing::verify_rsassa_pss (EVP_PKEY* pkey, jws_t sig, bina
     result = false;
 
     openssl_sign sign;
-    ret = sign.verify_rsassa_pss (pkey, input, output, alg);
+    ret = sign.verify_rsassa_pss (pkey, alg, input, output);
     if (errorcode_t::success == ret) {
         result = true;
     }

@@ -1811,108 +1811,48 @@ void try_refactor_jose_sign ()
     std::cout << "jws using CBOR key" << std::endl << jws.c_str () << std::endl;
 
     // refactoring
-    binary_t bin_signature;
+    binary_t signature;
     buffer_stream bs;
     std::string kid;
-    cbor_array* root = nullptr;
     {
         return_t ret = errorcode_t::success;
-        openssl_sign sign;
         crypt_sig_t sig = crypt_sig_t::sig_es512;
-        EVP_PKEY* pkey = privkey.select (kid, sig);
-        sign.sign (pkey, convert (contents), bin_signature, sig);
-        dump_memory (bin_signature, &bs);
-        std::cout << "kid " << kid.c_str () << std::endl;
-        std::cout << "signature" << std::endl << bs.c_str () << std::endl;
-        ret = sign.verify (pkey, convert (contents), bin_signature, sig);
-        _test_case.test (ret, __FUNCTION__, "signing");
+        bool result = false;
+        cbor_object_signing_encryption cose;
+        cbor_object_signing sign;
+        cose_context_t* handle = nullptr;
+        cose.open (&handle);
+        cose.sign (handle, &privkey, sig, convert (contents), signature);
 
-        // cose formatting (test_rfc8152_c_1_1)
-        cose_composer cose;
-
-        cbor_data* cbor_data_protected = nullptr;
-        cose.build_protected (&cbor_data_protected);
-
-        cbor_data* cbor_data_payload = nullptr;
-        cose.build_data (&cbor_data_payload, contents);
-
-        root = new cbor_array ();
-        root->tag (true, cbor_tag_t::cose_tag_sign);
-        *root   << cbor_data_protected  // protected, bstr
-                << new cbor_map ()      // unprotected, map
-                << cbor_data_payload    // payload, bstr/nil(detached)
-                << new cbor_array ();   // signatures
-
-        cbor_array* signatures = (cbor_array*) (*root)[3];
-
-        cbor_array* signature = new cbor_array ();
+        // reversing
         {
-            cbor_data* cbor_data_signature_protected = nullptr;
-            {
-                cose_item_t item;
-                cose_list_t list_protected;
-                variant_set_int16 (item.key, cose_header_t::cose_header_alg);
-                variant_set_int16 (item.value, cose_alg_t::cose_es512);
-                list_protected.push_back (item);
-                cose.build_protected (&cbor_data_signature_protected, list_protected);
-            }
+            test_case_notimecheck notimecheck (_test_case);
 
-            cbor_map* cbor_data_signature_unprotected = nullptr;
-            {
-                cose_item_t item;
-                cose_list_t list_unprotected;
-                variant_set_int16 (item.key, cose_header_t::cose_header_kid);
-                variant_set_bstr_new (item.value, kid.c_str (), kid.size ());
-                list_unprotected.push_back (item);
-                cose.build_unprotected (&cbor_data_signature_unprotected, list_unprotected);
-            }
+            dump_memory (signature, &bs);
+            std::cout << "COSE signature" << std::endl << bs.c_str () << std::endl;
 
-            cbor_data* cbor_data_signature_signature = nullptr;
-            {
-                cose.build_data (&cbor_data_signature_signature, &bin_signature[0], bin_signature.size ());
-            }
+            buffer_stream diagnostic;
+            cbor_reader reader;
+            cbor_reader_context_t* handle = nullptr;
+            cbor_object* newone = nullptr;
 
-            *signature  << cbor_data_signature_protected
-                        << cbor_data_signature_unprotected
-                        << cbor_data_signature_signature;
+            reader.open (&handle);
+            reader.parse (handle, signature);
+            reader.publish (handle, &diagnostic);
+            reader.publish (handle, &newone);
+            reader.close (handle);
+            newone->release ();
+            std::cout << "diagnostic reversing" << std::endl << diagnostic.c_str () << std::endl;
         }
-        *signatures << signature;
+        // and then verify
+        // todo
+        //ret = cose.verify (handle, &pubkey, sig, convert (contents), signature, result);
+        cose.close (handle);
+
+        _test_case.test (ret, __FUNCTION__, "COSE signing");
     }
 
-    buffer_stream diagnostic;
-    binary_t bin;
-
-    {
-        cbor_publisher publisher;
-        publisher.publish (root, &diagnostic);
-
-        publisher.publish (root, &bin);
-
-        std::cout << "diagnostic" << std::endl << diagnostic.c_str () << std::endl;
-        dump_memory (bin, &bs);
-        std::cout << "CBOR" << std::endl << bs.c_str () << std::endl;
-    }
-
-    root->release ();
-
-    // reversing
-    {
-        cbor_reader reader;
-        cbor_reader_context_t* handle = nullptr;
-        cbor_object* newone = nullptr;
-
-        reader.open (&handle);
-        reader.parse (handle, bin);
-        reader.publish (handle, &diagnostic);
-        reader.publish (handle, &newone);
-        reader.close (handle);
-        newone->release ();
-        std::cout << "diagnostic reversing" << std::endl << diagnostic.c_str () << std::endl;
-    }
-    // and then verify
-    // ...
-
-    // interface design
+    // interface design go on
 }
 
 int main ()

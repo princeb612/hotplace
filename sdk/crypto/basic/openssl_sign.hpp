@@ -36,128 +36,128 @@ public:
     /**
      * @biref   sign
      * @param   EVP_PKEY* pkey [in]
+     * @param   crypt_sig_t mode [in]
      * @param   binary_t const& input [in]
      * @param   binary_t& signature [out]
-     * @param   crypt_sig_t mode [in]
      */
-    return_t sign (EVP_PKEY* pkey, binary_t const& input, binary_t& signature, crypt_sig_t mode);
+    return_t sign (EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& input, binary_t& signature);
     /**
      * @biref   verify
      * @param   EVP_PKEY* pkey [in]
+     * @param   crypt_sig_t mode [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   crypt_sig_t mode [in]
      */
-    return_t verify (EVP_PKEY* pkey, binary_t const& input, binary_t const& signature, crypt_sig_t mode);
+    return_t verify (EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& input, binary_t const& signature);
 
     /*
      * @brief   sign
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    HS256, HS384, HS512
      */
-    return_t sign_digest (EVP_PKEY* pkey, binary_t const& input, binary_t& signature, hash_algorithm_t hashalg);
+    return_t sign_digest (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t& signature);
     /*
      * @brief   sign
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    HS256, HS384, HS512
      */
-    return_t sign_hmac (EVP_PKEY* pkey, binary_t const& input, binary_t& signature, hash_algorithm_t hashalg);
+    return_t sign_hmac (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t& signature);
     /*
      * @brief   sign
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    RS256, RS384, RS512
      */
-    return_t sign_rsassa_pkcs15 (EVP_PKEY* pkey, binary_t const& input, binary_t& signature, hash_algorithm_t hashalg);
+    return_t sign_rsassa_pkcs15 (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t& signature);
     /*
      * @brief   sign
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    ES256, ES384, ES512, ES256K
      */
-    return_t sign_ecdsa (EVP_PKEY* pkey, binary_t const& input, binary_t& signature, hash_algorithm_t hashalg);
+    return_t sign_ecdsa (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t& signature);
     /*
      * @brief   sign
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    PS256, PS384, PS512
      */
-    return_t sign_rsassa_pss (EVP_PKEY* pkey, binary_t const& input, binary_t& signature, hash_algorithm_t hashalg);
+    return_t sign_rsassa_pss (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t& signature);
     /*
      * @brief   sign
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    EdDSA
      */
-    return_t sign_eddsa (EVP_PKEY* pkey, binary_t const& input, binary_t& signature, hash_algorithm_t hashalg);
+    return_t sign_eddsa (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t& signature);
     /*
      * @brief   verify
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    HS256, HS384, HS512
      */
-    return_t verify_digest (EVP_PKEY* pkey, binary_t const& input, binary_t const& signature, hash_algorithm_t hashalg);
+    return_t verify_digest (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t const& signature);
     /*
      * @brief   verify
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    HS256, HS384, HS512
      */
-    return_t verify_hmac (EVP_PKEY* pkey, binary_t const& input, binary_t const& signature, hash_algorithm_t hashalg);
+    return_t verify_hmac (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t const& signature);
     /*
      * @brief   verify
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    RS256, RS384, RS512
      */
-    return_t verify_rsassa_pkcs15 (EVP_PKEY* pkey, binary_t const& input, binary_t const& signature, hash_algorithm_t hashalg);
+    return_t verify_rsassa_pkcs15 (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t const& signature);
     /*
      * @brief   verify
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    ES256, ES384, ES512, ES256K
      */
-    return_t verify_ecdsa (EVP_PKEY* pkey, binary_t const& input, binary_t const& signature, hash_algorithm_t hashalg);
+    return_t verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t const& signature);
     /*
      * @brief   verify
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    PS256, PS384, PS512
      */
-    return_t verify_rsassa_pss (EVP_PKEY* pkey, binary_t const& input, binary_t const& signature, hash_algorithm_t hashalg);
+    return_t verify_rsassa_pss (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t const& signature);
     /*
      * @brief   verify
      * @param   EVP_PKEY* pkey [in]
+     * @param   hash_algorithm_t hashalg [in]
      * @param   binary_t const& input [in]
      * @param   binary_t const& signature [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @desc    EdDSA
      */
-    return_t verify_eddsa (EVP_PKEY* pkey, binary_t const& input, binary_t const& signature, hash_algorithm_t hashalg);
+    return_t verify_eddsa (EVP_PKEY* pkey, hash_algorithm_t hashalg, binary_t const& input, binary_t const& signature);
 };
 
 }

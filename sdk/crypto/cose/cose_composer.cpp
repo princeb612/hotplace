@@ -201,6 +201,11 @@ return_t cose_composer::build_data (cbor_data** object, const byte_t* payload, s
     return ret;
 }
 
+return_t cose_composer::build_data (cbor_data** object, binary_t const& payload)
+{
+    return build_data (object, &payload[0], payload.size ());
+}
+
 return_t cose_composer::build_data_b16 (cbor_data** object, const char* str)
 {
     return_t ret = errorcode_t::success;

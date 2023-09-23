@@ -20,6 +20,7 @@
 #include <hotplace/sdk/io/cbor/cbor_reader.hpp>
 
 namespace hotplace {
+using namespace io;
 namespace crypto {
 
 /**
@@ -44,6 +45,7 @@ public:
     return_t build_unprotected (cbor_map** object, cose_list_t& input);
     return_t build_data (cbor_data** object, const char* payload);
     return_t build_data (cbor_data** object, const byte_t* payload, size_t size);
+    return_t build_data (cbor_data** object, binary_t const& payload);
     return_t build_data_b16 (cbor_data** object, const char* str);
 };
 
