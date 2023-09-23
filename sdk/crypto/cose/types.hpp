@@ -17,6 +17,12 @@
 namespace hotplace {
 namespace crypto {
 
+typedef std::map <crypt_item_t, variant_t> cose_object_map_t;
+typedef struct _cose_context_t {
+    cbor_tag_t tag;
+    cose_object_map_t object_map;
+} cose_context_t;
+
 }
 }  // namespace
 

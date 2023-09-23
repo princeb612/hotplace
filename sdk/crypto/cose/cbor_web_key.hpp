@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_COSE_KEY__
-#define __HOTPLACE_SDK_CRYPTO_COSE_KEY__
+#ifndef __HOTPLACE_SDK_CRYPTO_COSE_CBORWEBKEY__
+#define __HOTPLACE_SDK_CRYPTO_COSE_CBORWEBKEY__
 
 #include <hotplace/sdk/crypto/basic/crypto_keyext.hpp>
 #include <hotplace/sdk/crypto/cose/types.hpp>

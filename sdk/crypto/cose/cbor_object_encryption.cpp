@@ -9,15 +9,10 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_COSE_CBORSIGNING__
-#define __HOTPLACE_SDK_CRYPTO_COSE_CBORSIGNING__
-
-#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/crypto/cose/cbor_object_encryption.hpp>
 
 namespace hotplace {
 namespace crypto {
 
 }
 }  // namespace
-
-#endif

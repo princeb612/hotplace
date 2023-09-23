@@ -463,15 +463,15 @@ return_t crypto_advisor::build_if_necessary ()
             _curve_bynid_map.insert (std::make_pair (item->nid, item));
         }
 
-        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_ec, cose_key_t::cose_key_ec2));
-        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_hmac, cose_key_t::cose_key_symm));
-        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_okp, cose_key_t::cose_key_okp));
-        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_rsa, cose_key_t::cose_key_rsa));
+        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_ec, cose_kty_t::cose_kty_ec2));
+        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_hmac, cose_kty_t::cose_kty_symm));
+        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_okp, cose_kty_t::cose_kty_okp));
+        _kty2cose_map.insert (std::make_pair (crypto_key_t::kty_rsa, cose_kty_t::cose_kty_rsa));
 
-        _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_ec2, crypto_key_t::kty_ec));
-        _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_symm, crypto_key_t::kty_hmac));
-        _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_okp, crypto_key_t::kty_okp));
-        _cose2kty_map.insert (std::make_pair (cose_key_t::cose_key_rsa, crypto_key_t::kty_rsa));
+        _cose2kty_map.insert (std::make_pair (cose_kty_t::cose_kty_ec2, crypto_key_t::kty_ec));
+        _cose2kty_map.insert (std::make_pair (cose_kty_t::cose_kty_symm, crypto_key_t::kty_hmac));
+        _cose2kty_map.insert (std::make_pair (cose_kty_t::cose_kty_okp, crypto_key_t::kty_okp));
+        _cose2kty_map.insert (std::make_pair (cose_kty_t::cose_kty_rsa, crypto_key_t::kty_rsa));
 
         _nid2curve_map.insert (std::make_pair (NID_X9_62_prime256v1, cose_ec_curve_t::cose_ec_p256));
         _nid2curve_map.insert (std::make_pair (NID_secp384r1, cose_ec_curve_t::cose_ec_p384));
@@ -1127,19 +1127,19 @@ bool crypto_advisor::is_kindof (EVP_PKEY* pkey, jws_t sig)
     return test;
 }
 
-cose_key_t crypto_advisor::ktyof (crypto_key_t kty)
+cose_kty_t crypto_advisor::ktyof (crypto_key_t kty)
 {
-    cose_key_t cose_kty = cose_key_t::cose_key_reserved;
-    maphint <crypto_key_t, cose_key_t> hint (_kty2cose_map);
+    cose_kty_t cose_kty = cose_kty_t::cose_kty_unknown;
+    maphint <crypto_key_t, cose_kty_t> hint (_kty2cose_map);
 
     hint.find (kty, &cose_kty);
     return cose_kty;
 }
 
-crypto_key_t crypto_advisor::ktyof (cose_key_t kty)
+crypto_key_t crypto_advisor::ktyof (cose_kty_t kty)
 {
     crypto_key_t crypto_kty = crypto_key_t::kty_unknown;
-    maphint <cose_key_t, crypto_key_t> hint (_cose2kty_map);
+    maphint <cose_kty_t, crypto_key_t> hint (_cose2kty_map);
 
     hint.find (kty, &crypto_kty);
     return crypto_kty;

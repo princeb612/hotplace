@@ -393,7 +393,7 @@ enum cose_key_lable_t {
 
     // RFC 8152 Table 23: EC Key Parameters
     // RFC 9053 Table 19: EC Key Parameters
-    // cose_key_t::cose_key_ec2
+    // cose_kty_t::cose_kty_ec2
     cose_ec_crv = -1,
     cose_ec_x   = -2,
     cose_ec_y   = -3,
@@ -401,7 +401,7 @@ enum cose_key_lable_t {
 
     // RFC 8152 Table 24: Octet Key Pair Parameters
     // RFC 9053 Table 20: Octet Key Pair Parameters
-    // cose_key_t::cose_key_okp
+    // cose_kty_t::cose_kty_okp
     cose_okp_crv    = -1,
     cose_okp_x      = -2,
     cose_okp_d      = -4,
@@ -450,22 +450,22 @@ enum cose_alg_param_t {
     cose_x5chain_sender = -29,
 };
 
-enum cose_key_t {
+enum cose_kty_t {
     // RFC 8152 Table 21: Key Type Values
     // RFC 9053 Table 17: Key Type Values
     // RFC 9053 Table 22: Key Type Capabilities
-    cose_key_reserved   = 0,
-    cose_key_okp        = 1,
-    cose_key_ec2        = 2,
-    cose_key_symm       = 4,
+    cose_kty_unknown    = 0,
+    cose_kty_okp        = 1,
+    cose_kty_ec2        = 2,
+    cose_kty_symm       = 4,
 
     // RFC 8230 Table 3: Key Type Values
     // RFC 9053 Table 22: Key Type Capabilities
-    cose_key_rsa        = 3,
+    cose_kty_rsa        = 3,
 
     // RFC 9053 Table 22: Key Type Capabilities
-    cose_key_hss_lms    = 5,
-    cose_walnutdsa      = 6,
+    cose_kty_hss_lms    = 5,
+    cose_kty_walnutdsa  = 6,
 };
 enum cose_keyop_t {
     // RFC 8152 Table 4: Key Operation Values
@@ -494,6 +494,7 @@ enum cose_ec_curve_t {
     cose_ec_ed448   = 7,
 };
 enum cose_alg_t {
+    cose_unknown                = 0,
 
     // RFC 8152 Table 17: AES Key Wrap Algorithm Values
     // RFC 9053 Table 13: AES Key Wrap Algorithm Values

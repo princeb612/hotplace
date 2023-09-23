@@ -13,6 +13,8 @@
 #define __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTSIGNINGENCRYPTION__
 
 #include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
+#include <hotplace/sdk/io/cbor/cbor_reader.hpp>
 
 namespace hotplace {
 namespace crypto {

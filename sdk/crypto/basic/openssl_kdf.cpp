@@ -37,7 +37,7 @@ return_t kdf_hkdf (binary_t& derived, size_t dlen, binary_t const& key, binary_t
             __leave2;
         }
 
-        ctx = EVP_PKEY_CTX_new_id (EVP_PKEY_HKDF, NULL);
+        ctx = EVP_PKEY_CTX_new_id (EVP_PKEY_HKDF, nullptr);
         if (nullptr == ctx) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -97,7 +97,7 @@ return_t kdf_scrypt (binary_t& derived, size_t dlen, std::string const& password
 
     __try2
     {
-        ctx = EVP_PKEY_CTX_new_id (EVP_PKEY_SCRYPT, NULL);
+        ctx = EVP_PKEY_CTX_new_id (EVP_PKEY_SCRYPT, nullptr);
         if (nullptr == ctx) {
             ret = errorcode_t::internal_error;
             __leave2;

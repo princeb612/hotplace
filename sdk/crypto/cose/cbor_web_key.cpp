@@ -134,6 +134,7 @@ return_t cbor_web_key::load (crypto_key* crypto_key, binary_t const& buffer, int
 return_t cbor_web_key::load (crypto_key* crypto_key, cbor_object* root, int flags)
 {
     return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {
@@ -141,24 +142,6 @@ return_t cbor_web_key::load (crypto_key* crypto_key, cbor_object* root, int flag
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        // cose_key_object::type 1 okp, 2 ec2, 3 rsa, 4 symm, 5 hss lms, 6 walnut
-        // cose_key_object::curve 1 p256, 2 p384, 3 p521, 4 x25519, 5 x448, 6 Ed25519, 7 Ed448
-        // 415 : NID_X9_62_prime256v1 (prime256v1)
-        // 715 : NID_secp384r1 (secp384r1)
-        // 716 : NID_secp521r1 (secp521r1)
-        // 1034: NID_X25519
-        // 1035: NID_X448
-        // 1087: NID_ED25519
-        // 1088: NID_ED448
-        std::map <int, uint32> cose_nid_curve;
-        cose_nid_curve.insert (std::make_pair (1, NID_X9_62_prime256v1));
-        cose_nid_curve.insert (std::make_pair (2, NID_secp384r1));
-        cose_nid_curve.insert (std::make_pair (3, NID_secp521r1));
-        cose_nid_curve.insert (std::make_pair (4, NID_X25519));
-        cose_nid_curve.insert (std::make_pair (5, NID_X448));
-        cose_nid_curve.insert (std::make_pair (6, NID_ED25519));
-        cose_nid_curve.insert (std::make_pair (7, NID_ED448));
 
         if (cbor_type_t::cbor_type_array == root->type ()) {
             const std::list <cbor_object*>& keys = ((cbor_array*) root)->accessor ();
@@ -177,11 +160,11 @@ return_t cbor_web_key::load (crypto_key* crypto_key, cbor_object* root, int flag
                         if ((lhs->type () == rhs->type ()) && (cbor_type_t::cbor_type_data == lhs->type ())) {
                             int label = t_variant_to_int<int> (lhs->data ());
                             const variant_t& vt_rhs = rhs->data ();
-                            if (2 == label) {           // kid
+                            if (cose_key_lable_t::cose_lable_kid == label) {        // 2
                                 variant_string (rhs->data (), keyobj.kid);
-                            } else if (1 == label) {    // kty
+                            } else if (cose_key_lable_t::cose_lable_kty == label) { // 1
                                 keyobj.type = t_variant_to_int<int> (vt_rhs);
-                            } else if (-1 == label) {   // ec2 curve, symmetric k
+                            } else if (-1 == label) {                               // ec2 curve, symmetric k
                                 if (TYPE_BINARY == vt_rhs.type) {
                                     // symm
                                     binary_t bin;
@@ -199,28 +182,26 @@ return_t cbor_web_key::load (crypto_key* crypto_key, cbor_object* root, int flag
                         }
                     }
                     maphint <int, binary_t> hint_key (keyobj.attrib);
-                    if (1 == keyobj.type || 2 == keyobj.type) { // okp, ec2
-                        uint32 nid = 0;
-                        maphint <int, uint32> hint_nid (cose_nid_curve);
-                        hint_nid.find (keyobj.curve, &nid);
+                    if (cose_kty_t::cose_kty_okp == keyobj.type || cose_kty_t::cose_kty_ec2 == keyobj.type) { // 1, 2
+                        uint32 nid = advisor->curveof ((cose_ec_curve_t) keyobj.curve);
                         binary_t x;
                         binary_t y;
                         binary_t d;
-                        hint_key.find (-2, &x);
-                        hint_key.find (-3, &y);
-                        hint_key.find (-4, &d);
+                        hint_key.find (cose_key_lable_t::cose_ec_x, &x);    // -2
+                        hint_key.find (cose_key_lable_t::cose_ec_y, &y);    // -3
+                        hint_key.find (cose_key_lable_t::cose_ec_d, &d);    // -4
                         add_ec (crypto_key, keyobj.kid.c_str (), nullptr, nid, x, y, d);
-                    } else if (3 == keyobj.type) { // rsa
+                    } else if (cose_kty_t::cose_kty_rsa == keyobj.type) {   // 3
                         binary_t n;
                         binary_t e;
                         binary_t d;
-                        hint_key.find (-1, &n);
-                        hint_key.find (-2, &e);
-                        hint_key.find (-3, &d);
+                        hint_key.find (cose_key_lable_t::cose_rsa_n, &n);   // -1
+                        hint_key.find (cose_key_lable_t::cose_rsa_e, &e);   // -2
+                        hint_key.find (cose_key_lable_t::cose_rsa_d, &d);   // -3
                         add_rsa (crypto_key, keyobj.kid.c_str (), nullptr, n, e, d);
-                    } else if (4 == keyobj.type) { // symm
+                    } else if (cose_kty_t::cose_kty_symm == keyobj.type) {  // 4
                         binary_t k;
-                        hint_key.find (-1, &k);
+                        hint_key.find (cose_key_lable_t::cose_symm_k, &k);  // -1
                         add_oct (crypto_key, keyobj.kid.c_str (), nullptr, k);
                     }
                 }
@@ -303,10 +284,10 @@ void cwk_writer (crypto_key_object_t* key, void* param)
         cbor_map* keynode = nullptr;
         __try_new_catch (keynode, new cbor_map (), ret, __leave2);
 
-        cose_key_t cose_kty = advisor->ktyof (kty);
-        *keynode << new cbor_pair (1, new cbor_data (cose_kty)); // kty
+        cose_kty_t cose_kty = advisor->ktyof (kty);
+        *keynode << new cbor_pair (cose_key_lable_t::cose_lable_kty, new cbor_data (cose_kty));             // 1
         if (kid.size ()) {
-            *keynode << new cbor_pair (2, new cbor_data (convert (kid)));
+            *keynode << new cbor_pair (cose_key_lable_t::cose_lable_kid, new cbor_data (convert (kid)));    // 2
         }
 
         if (crypto_key_t::kty_ec == kty || crypto_key_t::kty_okp == kty) {
@@ -316,8 +297,8 @@ void cwk_writer (crypto_key_object_t* key, void* param)
             nidof_evp_pkey (key->pkey, nid);
             cose_curve = advisor->curveof (nid);
 
-            *keynode    << new cbor_pair (-1, new cbor_data (cose_curve))   // curve
-                        << new cbor_pair (-2, new cbor_data (pub1));        // x
+            *keynode    << new cbor_pair (cose_key_lable_t::cose_ec_crv, new cbor_data (cose_curve))    // -1
+                        << new cbor_pair (cose_key_lable_t::cose_ec_x, new cbor_data (pub1));           // -2
 
             // NID_secp521r1 521 = (65*8) + 1 => 66bytes => 132 base16 encoding bytes
             // 0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
@@ -325,18 +306,18 @@ void cwk_writer (crypto_key_object_t* key, void* param)
             //   72992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
 
             if (crypto_key_t::kty_ec == kty) {
-                *keynode << new cbor_pair (-3, new cbor_data (pub2)); // y
+                *keynode << new cbor_pair (cose_key_lable_t::cose_ec_y, new cbor_data (pub2)); // -3
             }
             if (priv.size ()) {
-                *keynode << new cbor_pair (-4, new cbor_data (priv)); // d
+                *keynode << new cbor_pair (cose_key_lable_t::cose_ec_d, new cbor_data (priv)); // -4
             }
         } else if (crypto_key_t::kty_hmac == kty) {
-            *keynode << new cbor_pair (-1, new cbor_data (priv));       // k
+            *keynode << new cbor_pair (cose_key_lable_t::cose_symm_k, new cbor_data (priv));        // -1
         } else if (crypto_key_t::kty_rsa == kty) {
-            *keynode    << new cbor_pair (-1, new cbor_data (pub1))     // n
-                        << new cbor_pair (-2, new cbor_data (pub2));    // e
+            *keynode    << new cbor_pair (cose_key_lable_t::cose_rsa_n, new cbor_data (pub1))       // -1
+                        << new cbor_pair (cose_key_lable_t::cose_rsa_e, new cbor_data (pub2));      // -2
             if (priv.size ()) {
-                *keynode << new cbor_pair (-3, new cbor_data (priv));   // d
+                *keynode << new cbor_pair (cose_key_lable_t::cose_rsa_d, new cbor_data (priv));     // -3
             }
         }
 

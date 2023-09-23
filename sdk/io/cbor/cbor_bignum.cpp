@@ -9,6 +9,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
+#include <hotplace/sdk/io/types.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 
@@ -22,10 +23,7 @@ cbor_bignum_int128::cbor_bignum_int128 ()
 
 cbor_bignum_int128& cbor_bignum_int128::load (byte_t* data, uint32 len)
 {
-    memset (&_bn[0], 0, _bn.size ());
-    if (data && (len <= 16)) {
-        memcpy (&_bn[0] + (16 - len), data, len);
-    }
+    binary_load (_bn, sizeof (uint128), data, len);
     return *this;
 }
 

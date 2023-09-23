@@ -404,8 +404,8 @@ public:
      */
     bool is_kindof (EVP_PKEY* pkey, const char* alg);
 
-    cose_key_t ktyof (crypto_key_t kty);
-    crypto_key_t ktyof (cose_key_t kty);
+    cose_kty_t ktyof (crypto_key_t kty);
+    crypto_key_t ktyof (cose_kty_t kty);
     jws_t sigof (crypt_sig_t sig);
     crypt_sig_t sigof (jws_t sig);
     cose_ec_curve_t curveof (uint32 nid);
@@ -435,8 +435,8 @@ private:
     typedef std::map <std::string, const hint_signature_t*> signature_byname_map_t;
     typedef std::map <std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
     typedef std::map <uint32, const hint_curve_t*> jose_curve_bynid_map_t;
-    typedef std::map <crypto_key_t, cose_key_t> kty2cose_map_t;
-    typedef std::map <cose_key_t, crypto_key_t> cose2kty_map_t;
+    typedef std::map <crypto_key_t, cose_kty_t> kty2cose_map_t;
+    typedef std::map <cose_kty_t, crypto_key_t> cose2kty_map_t;
     typedef std::map <crypt_sig_t, jws_t> sig2jws_map_t;
     typedef std::map <jws_t, crypt_sig_t> jws2sig_map_t;
     typedef std::map <uint32, cose_ec_curve_t> nid2curve_map_t;
