@@ -1191,10 +1191,10 @@ jws_t crypto_advisor::sigof (crypt_sig_t sig)
     return type;
 }
 
-cose_alg_t crypto_advisor::cose_sigof (crypt_sig_t sig)
+crypt_sig_t crypto_advisor::cose_sigof (cose_alg_t sig)
 {
-    cose_alg_t type = cose_alg_t::cose_unknown;
-    maphint <crypt_sig_t, cose_alg_t> hint (_sig2cose_map);
+    crypt_sig_t type = crypt_sig_t::sig_unknown;
+    maphint <cose_alg_t, crypt_sig_t> hint (_cose2sig_map);
 
     hint.find (sig, &type);
     return type;

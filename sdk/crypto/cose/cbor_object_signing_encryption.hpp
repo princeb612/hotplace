@@ -36,23 +36,12 @@ public:
      * @brief sign
      * @param cose_context_t* handle [inout]
      * @param crypto_key* key [in]
-     * @param crypt_sig_t method [in]
+     * @param cose_alg_t method [in]
      * @param binary_t const& input [in]
      * @param binary_t& output [out]
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign (cose_context_t* handle, crypto_key* key, crypt_sig_t method, binary_t const& input, binary_t& output);
-    /**
-     * @brief sign and return signature and kid
-     * @param cose_context_t* handle [inout]
-     * @param crypto_key* key [in]
-     * @param crypt_sig_t method [in]
-     * @param binary_t const& input [in]
-     * @param binary_t& output [out]
-     * @param std::string& kid [out]
-     * @remarks see json_object_signing_encryption::sign
-     */
-    return_t sign (cose_context_t* handle, crypto_key* key, crypt_sig_t method, binary_t const& input, binary_t& output, std::string& kid);
+    return_t sign (cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
     /**
      * @brief verify
      * @param cose_context_t* handle [inout]

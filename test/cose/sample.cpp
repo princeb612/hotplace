@@ -1772,13 +1772,13 @@ void test_cbor_web_key ()
     test_cbor_key ("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
 }
 
-void try_refactor_jose_sign (crypto_key* pubkey, crypto_key* privkey, crypt_sig_t sig_type)
+void try_refactor_jose_sign (crypto_key* pubkey, crypto_key* privkey, cose_alg_t sig_type)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
-    jws_t jws_type = advisor->sigof (sig_type);
-    const char* jws_name = advisor->nameof_jose_signature (jws_type);
+    crypt_sig_t sig = advisor->cose_sigof (sig_type);
+    jws_t jws_type = advisor->sigof (sig);
 
     // JWS using CBOR key
     constexpr char contents[] = "This is the content.";
@@ -1813,7 +1813,7 @@ void try_refactor_jose_sign (crypto_key* pubkey, crypto_key* privkey, crypt_sig_
         ret = cose.sign (handle, privkey, sig_type, convert (contents), signature);
 
         // reversing
-        {
+        if (errorcode_t::success == ret) {
             test_case_notimecheck notimecheck (_test_case);
 
             dump_memory (signature, &bs);
@@ -1829,18 +1829,18 @@ void try_refactor_jose_sign (crypto_key* pubkey, crypto_key* privkey, crypt_sig_
             if (errorcode_t::success == ret) {
                 reader.publish (reader_handle, &diagnostic);
                 reader.publish (reader_handle, &newone);
-                reader.close (reader_handle);
                 newone->release ();
 
                 std::cout << "diagnostic reversing" << std::endl << diagnostic.c_str () << std::endl;
             }
+            reader.close (reader_handle);
         }
         // and then verify
         // todo
         //ret = cose.verify (handle, pubkey, sig_type, convert (contents), signature, result);
         cose.close (handle);
 
-        _test_case.test (ret, __FUNCTION__, "JWS %s + COSE signing", jws_name);
+        _test_case.test (ret, __FUNCTION__, "JWS + COSE sign (%i)", sig_type);
     }
 }
 
@@ -1863,10 +1863,12 @@ void try_refactor_jose_sign ()
     printf ("JWK from CBOR key\n%s\n", json.c_str ());
 
     // no RSA type exist
-    try_refactor_jose_sign (&pubkey, &privkey, crypt_sig_t::sig_es512);
-    try_refactor_jose_sign (&pubkey, &privkey, crypt_sig_t::sig_es256);
-    try_refactor_jose_sign (&pubkey, &privkey, crypt_sig_t::sig_hs512);
-    try_refactor_jose_sign (&pubkey, &privkey, crypt_sig_t::sig_hs256);
+    try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_es512);
+    try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_es256);
+    try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_hmac_512_512);
+    try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_hmac_384_256);
+    try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_hmac_256_256);
+    //try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_hmac_256_64);
 
     // interface design go on
 }

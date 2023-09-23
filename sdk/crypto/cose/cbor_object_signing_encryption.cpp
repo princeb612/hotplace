@@ -114,18 +114,28 @@ return_t cbor_object_signing_encryption::reset (cose_context_t* handle)
     return ret;
 }
 
-return_t cbor_object_signing_encryption::sign (cose_context_t* handle, crypto_key* key, crypt_sig_t method, binary_t const& input, binary_t& output)
+return_t cbor_object_signing_encryption::sign (cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
     cbor_object_signing sign;
 
-    cose_alg_t cose_alg = advisor->cose_sigof (method);
+    crypt_sig_t sig = advisor->cose_sigof (method);
     binary_t bin_signature;
 
-    ret = sign.sign (handle, key, method, input, bin_signature);
-    if (errorcode_t::success == ret) {
-        switch (cose_alg) {
+    __try2
+    {
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = sign.sign (handle, key, sig, input, bin_signature);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        switch (method) {
             case cose_alg_t::cose_hmac_256_64:
                 bin_signature.resize (64 >> 3);
                 break;
@@ -137,6 +147,7 @@ return_t cbor_object_signing_encryption::sign (cose_context_t* handle, crypto_ke
             default:
                 break;
         }
+
         std::string kid (handle->kid);
         cose_composer composer;
 
@@ -163,18 +174,20 @@ return_t cbor_object_signing_encryption::sign (cose_context_t* handle, crypto_ke
                 cose_item_t item;
                 cose_list_t list_protected;
                 variant_set_int16 (item.key, cose_header_t::cose_header_alg);
-                variant_set_int16 (item.value, cose_alg);
+                variant_set_int16 (item.value, method);
                 list_protected.push_back (item);
                 composer.build_protected (&cbor_data_signature_protected, list_protected);
             }
 
             cbor_map* cbor_data_signature_unprotected = nullptr;
             {
-                cose_item_t item;
                 cose_list_t list_unprotected;
-                variant_set_int16 (item.key, cose_header_t::cose_header_kid);
-                variant_set_bstr_new (item.value, kid.c_str (), kid.size ());
-                list_unprotected.push_back (item);
+                if (kid.size ()) {
+                    cose_item_t item;
+                    variant_set_int16 (item.key, cose_header_t::cose_header_kid);
+                    variant_set_bstr_new (item.value, kid.c_str (), kid.size ());
+                    list_unprotected.push_back (item);
+                }
                 composer.build_unprotected (&cbor_data_signature_unprotected, list_unprotected);
             }
 
@@ -194,16 +207,10 @@ return_t cbor_object_signing_encryption::sign (cose_context_t* handle, crypto_ke
 
         root->release ();
     }
-
-    return ret;
-}
-
-return_t cbor_object_signing_encryption::sign (cose_context_t* handle, crypto_key* key, crypt_sig_t method, binary_t const& input, binary_t& output, std::string& kid)
-{
-    return_t ret = errorcode_t::success;
-    cbor_object_signing sign;
-
-    ret = sign.sign (handle, key, method, input, output, kid);
+    __finally2
+    {
+        // do nothing
+    }
     return ret;
 }
 
@@ -212,7 +219,15 @@ return_t cbor_object_signing_encryption::verify (cose_context_t* handle, crypto_
     return_t ret = errorcode_t::success;
     cbor_object_signing sign;
 
-    ret = sign.verify (handle, key, method, input, output, result);
+    __try2
+    {
+        
+        ret = sign.verify (handle, key, method, input, output, result);
+    }
+    __finally2
+    {
+        // do nothing
+    }
     return ret;
 }
 
