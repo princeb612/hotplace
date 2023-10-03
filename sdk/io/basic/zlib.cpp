@@ -46,7 +46,7 @@ return_t zlib_deflate (zlib_windowbits_t windowbits, byte_t const* input, size_t
         defstream.zfree = Z_NULL;
         defstream.opaque = Z_NULL;
         defstream.avail_in = size;
-        defstream.next_in = (byte*) input;
+        defstream.next_in = (byte_t*) input;
 
         buffer.resize (1 << 10);
 
@@ -103,7 +103,7 @@ return_t zlib_inflate (zlib_windowbits_t windowbits, byte_t const* input, size_t
         infstream.zfree = Z_NULL;
         infstream.opaque = Z_NULL;
         infstream.avail_in = size;
-        infstream.next_in = (byte*) input;
+        infstream.next_in = (byte_t*) input;
 
         buffer.resize (1 << 10);
 
@@ -170,7 +170,7 @@ return_t zlib_deflate (zlib_windowbits_t windowbits, byte_t const* input, size_t
         defstream.zfree = Z_NULL;
         defstream.opaque = Z_NULL;
         defstream.avail_in = size;
-        defstream.next_in = (byte*) input;
+        defstream.next_in = (byte_t*) input;
 
         buffer.resize (1 << 10);
 
@@ -227,7 +227,7 @@ return_t zlib_inflate (zlib_windowbits_t windowbits, byte_t const* input, size_t
         infstream.zfree = Z_NULL;
         infstream.opaque = Z_NULL;
         infstream.avail_in = size;
-        infstream.next_in = (byte*) input;
+        infstream.next_in = (byte_t*) input;
 
         buffer.resize (1 << 10);
 

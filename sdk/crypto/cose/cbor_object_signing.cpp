@@ -9,6 +9,7 @@
  *
  */
 
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_object_signing.hpp>
 #include <hotplace/sdk/io/cbor/concise_binary_object_representation.hpp>
