@@ -12,9 +12,11 @@
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
+#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <fstream>
 
 namespace hotplace {
+using namespace io;
 namespace crypto {
 
 crypto_key::crypto_key ()
@@ -140,6 +142,47 @@ static void pem_writer (crypto_key_object_t* key, void* param)
     {
         // do nothing
     }
+}
+return_t crypto_key::write_pem (stream_t* stream, int flags)
+{
+    return_t ret = errorcode_t::success;
+    BIO* out = nullptr;
+
+    __try2
+    {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        stream->clear ();
+
+        out = BIO_new (BIO_s_mem ());
+        if (nullptr == out) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        for_each (pem_writer, out);
+
+        binary_t buf;
+        buf.resize (64);
+        int len = 0;
+        while (1) {
+            len = BIO_read (out, &buf[0], buf.size ());
+            if (0 >= len) {
+                break;
+            }
+            stream->write (&buf[0], len);
+        }
+    }
+    __finally2
+    {
+        if (out) {
+            BIO_free_all (out);
+        }
+    }
+    return ret;
 }
 
 return_t crypto_key::write_pem_file (const char* file, int flags)
@@ -1228,22 +1271,22 @@ return_t crypto_key::get_private_key (EVP_PKEY* pkey, binary_t& priv)
     return ret;
 }
 
-return_t crypto_key::get_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv)
+return_t crypto_key::get_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero)
 {
     crypto_key_t type = crypto_key_t::kty_unknown;
 
-    return get_key (pkey, 1, type, pub1, pub2, priv);
+    return get_key (pkey, 1, type, pub1, pub2, priv, plzero);
 }
 
-return_t crypto_key::get_key (EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv)
+return_t crypto_key::get_key (EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero)
 {
     crypto_key_t type = crypto_key_t::kty_unknown;
 
-    return get_key (pkey, flag, type, pub1, pub2, priv);
+    return get_key (pkey, flag, type, pub1, pub2, priv, plzero);
 }
 
 return_t crypto_key::get_key (EVP_PKEY* pkey, int flag, crypto_key_t& type,
-                              binary_t& pub1, binary_t& pub2, binary_t& priv)
+                              binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero)
 {
     return_t ret = errorcode_t::success;
 
@@ -1259,7 +1302,7 @@ return_t crypto_key::get_key (EVP_PKEY* pkey, int flag, crypto_key_t& type,
     if (flag) {
         flag_request |= crypt_access_t::private_key;
     }
-    ret = extract (pkey, flag_request, type, datamap);
+    ret = extract (pkey, flag_request, type, datamap, plzero);
     if (errorcode_t::success == ret) {
         if (crypto_key_t::kty_hmac == type) {
             iter = datamap.find (crypt_item_t::item_hmac_k);
@@ -1306,7 +1349,7 @@ return_t crypto_key::get_key (EVP_PKEY* pkey, int flag, crypto_key_t& type,
     return ret;
 }
 
-return_t crypto_key::extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, crypt_datamap_t& datamap)
+return_t crypto_key::extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, crypt_datamap_t& datamap, bool plzero)
 {
     return_t ret = errorcode_t::success;
     int ret_openssl = 1;
@@ -1371,6 +1414,24 @@ return_t crypto_key::extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, cryp
             EC_KEY* ec = nullptr;
             __try2
             {
+                // preserve leading zero octets
+                uint32 curve_size = 0;
+                if (plzero) {
+                    uint32 nid = 0;
+                    nidof_evp_pkey (pkey, nid);
+                    switch (nid) {
+                        case NID_X9_62_prime256v1:
+                            curve_size = 32;
+                            break;
+                        case NID_secp384r1:
+                            curve_size = 48;
+                            break;
+                        case NID_secp521r1:
+                            curve_size = 66;
+                            break;
+                    }
+                }
+
                 if (crypt_access_t::public_key & flag) {
 
                     x = BN_new ();
@@ -1395,6 +1456,15 @@ return_t crypto_key::extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, cryp
                         BN_bn2bin (x, &bin_x[0]);
                         BN_bn2bin (y, &bin_y[0]);
 
+                        if (curve_size) {
+                            if (curve_size > len_x) {
+                                bin_x.insert (bin_x.begin (), curve_size - len_x, 0);
+                            }
+                            if (curve_size > len_y) {
+                                bin_y.insert (bin_y.begin (), curve_size - len_y, 0);
+                            }
+                        }
+
                         datamap.insert (std::make_pair (crypt_item_t::item_ec_x, bin_x));
                         datamap.insert (std::make_pair (crypt_item_t::item_ec_y, bin_y));
                     }
@@ -1403,9 +1473,18 @@ return_t crypto_key::extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, cryp
                     const BIGNUM* d = EC_KEY_get0_private_key (EVP_PKEY_get0_EC_KEY ((EVP_PKEY*) pkey));
                     if (d) {
                         int len_d = BN_num_bytes (d);
+
                         binary_t bin_d;
+
                         bin_d.resize (len_d);
+
                         BN_bn2bin (d, &bin_d[0]);
+
+                        if (curve_size) {
+                            if (curve_size > len_d) {
+                                bin_d.insert (bin_d.begin (), curve_size - len_d, 0);
+                            }
+                        }
 
                         datamap.insert (std::make_pair (crypt_item_t::item_ec_d, bin_d));
                     }
@@ -1424,21 +1503,55 @@ return_t crypto_key::extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, cryp
                 }
             }
         } else if (crypto_key_t::kty_okp == type) {
-            binary_t buf;
-            size_t bufsize = 256;
-            buf.resize (bufsize);
+            // preserve leading zero octets
+            uint32 curve_size = 0;
+            if (plzero) {
+                uint32 nid = 0;
+                nidof_evp_pkey (pkey, nid);
+                switch (nid) {
+                    case NID_ED25519:
+                    case NID_X25519:
+                        curve_size = 32;
+                        break;
+                    case EVP_PKEY_ED448:
+                    case EVP_PKEY_X448:
+                        curve_size = 57;
+                        break;
+                }
+            }
+
             if (crypt_access_t::public_key & flag) {
-                ret_openssl = EVP_PKEY_get_raw_public_key ((EVP_PKEY*) pkey, &buf[0], &bufsize);
-                buf.resize (bufsize);
+                binary_t bin_x;
+                size_t len_x = curve_size ? curve_size : 256;
+                bin_x.resize (len_x);
+                ret_openssl = EVP_PKEY_get_raw_public_key ((EVP_PKEY*) pkey, &bin_x[0], &len_x);
+                bin_x.resize (len_x);
+
+                if (curve_size) {
+                    if (curve_size > len_x) {
+                        bin_x.insert (bin_x.begin (), curve_size - len_x, 0);
+                    }
+                }
+
                 if (1 == ret_openssl) {
-                    datamap.insert (std::make_pair (crypt_item_t::item_ec_x, buf));
+                    datamap.insert (std::make_pair (crypt_item_t::item_ec_x, bin_x));
                 }
             }
             if (crypt_access_t::private_key & flag) {
-                ret_openssl = EVP_PKEY_get_raw_private_key ((EVP_PKEY*) pkey, &buf[0], &bufsize);
-                buf.resize (bufsize);
+                binary_t bin_d;
+                size_t len_y = curve_size ? curve_size : 256;
+                bin_d.resize (len_y);
+                ret_openssl = EVP_PKEY_get_raw_private_key ((EVP_PKEY*) pkey, &bin_d[0], &len_y);
+                bin_d.resize (len_y);
+
+                if (curve_size) {
+                    if (curve_size > len_y) {
+                        bin_d.insert (bin_d.begin (), curve_size - len_y, 0);
+                    }
+                }
+
                 if (1 == ret_openssl) {
-                    datamap.insert (std::make_pair (crypt_item_t::item_ec_d, buf));
+                    datamap.insert (std::make_pair (crypt_item_t::item_ec_d, bin_d));
                 }
             }
         }

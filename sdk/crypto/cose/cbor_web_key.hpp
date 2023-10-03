@@ -12,14 +12,14 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_CBORWEBKEY__
 #define __HOTPLACE_SDK_CRYPTO_COSE_CBORWEBKEY__
 
-#include <hotplace/sdk/crypto/basic/crypto_keyext.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/cose/types.hpp>
 #include <hotplace/sdk/io/cbor/cbor_object.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-class cbor_web_key : public crypto_keyext
+class cbor_web_key : public crypto_keychain
 {
 public:
     cbor_web_key ();

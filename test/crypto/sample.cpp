@@ -201,8 +201,8 @@ void test_crypt_algorithms (uint32 cooltime, uint32 unitsize)
         test_crypto_loop (&openssl_crypt, RTL_NUMBER_OF (ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::ctr, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
         _test_case.begin ("openssl_crypt crypt_mode_t::gcm %s", condition.c_str ());
         test_crypto_loop (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::gcm, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
-        //_test_case.begin ("openssl_crypt crypt_mode_t::ccm %s", condition.c_str ());
-        //test_crypto_loop (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::ccm, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
+        _test_case.begin ("openssl_crypt crypt_mode_t::ccm %s", condition.c_str ());
+        test_crypto_loop (&openssl_crypt, RTL_NUMBER_OF (gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::ccm, 16, keydata, 16, iv, (byte_t*) constexpr_text, strlen (constexpr_text));
     }
     __finally2
     {

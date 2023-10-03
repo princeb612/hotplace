@@ -199,6 +199,14 @@ public:
     return_t close (jose_context_t* context);
 
     /**
+     * @brief option
+     * @param jose_context_t* context [in]
+     * @param uint32 flags [in] see jose_flag_t
+     * @return error code (see error.hpp)
+     */
+    return_t setoption (jose_context_t* context, uint32 flags);
+
+    /**
      * @brief encrypt
      * @param jose_context_t* context [in]
      * @param jwe_t enc [in]
@@ -435,26 +443,28 @@ protected:
     return_t prepare_encryption (jose_context_t* context, jwe_t enc, std::list<jwa_t> const& algs);
     /**
      * @brief header
+     * @param binary_t& header [out]
      * @param jwe_t enc [in]
      * @param jwa_t alg [in]
      * @param jose_compose_t flag [in]
      * @param std::string const& kid [in]
-     * @param binary_t& header [out]
+     * @param uint32 flags [inopt] see setoption
      * @remarks
-     *      compose_encryption_header (jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_unknown, jose_compose_t::jose_enc_alg, "", header);
+     *      compose_encryption_header (header, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_unknown, jose_compose_t::jose_enc_alg, "");
      */
-    return_t compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string const& kid, binary_t& header);
+    return_t compose_encryption_header (binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, std::string const& kid, uint32 flags = 0);
     /**
      * @brief header
+     * @param binary_t& header [out]
      * @param jwe_t enc [in]
      * @param jwa_t alg [in]
      * @param jose_compose_t flag [in]
      * @param std::string const& kid [in]
      * @param crypt_datamap_t& datamap [in]
      * @param crypt_variantmap_t& variantmap [in]
-     * @param binary_t& header [out]
+     * @param uint32 flags [inopt] see setoption
      */
-    return_t compose_encryption_header (jwe_t enc, jwa_t alg, jose_compose_t flag, std::string const& kid, crypt_datamap_t& datamap, crypt_variantmap_t& variantmap, binary_t& header);
+    return_t compose_encryption_header (binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, std::string const& kid, crypt_datamap_t& datamap, crypt_variantmap_t& variantmap, uint32 flags = 0);
     /**
      * @biref recipient
      * @param jwa_t alg [in]

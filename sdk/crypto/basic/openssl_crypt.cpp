@@ -170,6 +170,7 @@ return_t openssl_crypt::open (crypt_context_t** handle, crypt_algorithm_t algori
         temp_iv.resize (internal_size_iv);
         memcpy (&temp_iv[0], iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
 
+        context->datamap.insert (std::make_pair (crypt_item_t::item_cek, temp_key));
         context->datamap.insert (std::make_pair (crypt_item_t::item_iv, temp_iv));
 
         /* key, iv */
@@ -363,7 +364,15 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
                 tag_size = 16;
             } else if (crypt_mode_t::ccm == context->mode) {
                 tag_size = 14;
+
+                EVP_CIPHER_CTX_ctrl (context->encrypt_context, EVP_CTRL_CCM_SET_L, 8, nullptr);
+                // EVP_CTRL_CCM_SET_IVLEN for Nonce (15-L)
+                EVP_CIPHER_CTX_ctrl (context->encrypt_context, EVP_CTRL_CCM_SET_IVLEN, 7, nullptr);
                 EVP_CIPHER_CTX_ctrl (context->encrypt_context, EVP_CTRL_AEAD_SET_TAG, tag_size, nullptr);
+
+                binary_t& key = context->datamap[crypt_item_t::item_cek];
+                EVP_CipherInit_ex (context->encrypt_context, nullptr, nullptr, &key[0], nullptr, 1);
+
                 ret_cipher = EVP_CipherUpdate (context->encrypt_context, nullptr, &size_update, nullptr, size_plain);
                 if (1 > ret_cipher) {
                     ret = errorcode_t::internal_error;
@@ -379,8 +388,11 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
         }
 
         uint32 cooltime = ossl_get_cooltime ();
-        if (crypt_mode_t::wrap == context->mode) {
-            cooltime = 0;
+        switch (context->mode) {
+            case crypt_mode_t::ccm:
+            case crypt_mode_t::wrap:
+                cooltime = 0;
+                break;
         }
 
         if (cooltime) {
@@ -561,14 +573,23 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
             }
 
             if (crypt_mode_t::ccm == context->mode) {
+                EVP_CIPHER_CTX_ctrl (context->decrypt_context, EVP_CTRL_CCM_SET_L, 8, nullptr);
+                // EVP_CTRL_CCM_SET_IVLEN for Nonce (15-L)
+                EVP_CIPHER_CTX_ctrl (context->decrypt_context, EVP_CTRL_CCM_SET_IVLEN, 7, nullptr);
+                EVP_CIPHER_CTX_ctrl (context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag->size (), &(*tag)[0]);
+
+                binary_t& key = context->datamap[crypt_item_t::item_cek];
+                EVP_CipherInit_ex (context->decrypt_context, nullptr, nullptr, &key[0], nullptr, 0);
+
                 ret_cipher = EVP_CipherUpdate (context->decrypt_context, nullptr, &size_update, nullptr, size_encrypted);
+            } else if (crypt_mode_t::gcm == context->mode) {
+                ret_cipher = EVP_CIPHER_CTX_ctrl (context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag->size (), &(*tag)[0]);
+                if (1 != ret_cipher) {
+                    ret = errorcode_t::internal_error;
+                    __leave2_trace_openssl (ret);
+                }
             }
 
-            ret_cipher = EVP_CIPHER_CTX_ctrl (context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag->size (), &(*tag)[0]);
-            if (1 != ret_cipher) {
-                ret = errorcode_t::internal_error;
-                __leave2_trace_openssl (ret);
-            }
             ret_cipher = EVP_CipherUpdate (context->decrypt_context, nullptr, &size_update, &(*aad)[0], aad->size ());
             if (1 != ret_cipher) {
                 ret = errorcode_t::internal_error;
@@ -577,8 +598,11 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
         }
 
         uint32 cooltime = ossl_get_cooltime ();
-        if (crypt_mode_t::wrap == context->mode) {
-            cooltime = 0;
+        switch (context->mode) {
+            case crypt_mode_t::ccm:
+            case crypt_mode_t::wrap:
+                cooltime = 0;
+                break;
         }
 
         if (cooltime) {

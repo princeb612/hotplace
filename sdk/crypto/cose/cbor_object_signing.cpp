@@ -27,18 +27,10 @@ cbor_object_signing::~cbor_object_signing ()
     // do nothing
 }
 
-return_t cbor_object_signing::sign (cose_context_t* handle, crypto_key* key, crypt_sig_t method, binary_t const& input, binary_t& output)
+return_t cbor_object_signing::sign (cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output, std::string& kid)
 {
     return_t ret = errorcode_t::success;
-    std::string kid;
-
-    ret = sign (handle, key, method, input, output, kid);
-    return ret;
-}
-
-return_t cbor_object_signing::sign (cose_context_t* handle, crypto_key* key, crypt_sig_t method, binary_t const& input, binary_t& output, std::string& kid)
-{
-    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
     cbor_object_signing_encryption cose;
     openssl_sign sign;
 
@@ -51,16 +43,21 @@ return_t cbor_object_signing::sign (cose_context_t* handle, crypto_key* key, cry
 
         cose.reset (handle);
 
-        EVP_PKEY* pkey = key->select (kid, method);
+        crypt_sig_t sig = advisor->cose_sigof (method);
+        EVP_PKEY* pkey = key->select (kid, sig);
 
-        ret = sign.sign (pkey, method, input, output);
+        ret = sign.sign (pkey, sig, input, output);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        handle->kid = kid;
-        handle->sig = method;
-        handle->tag = cbor_tag_t::cose_tag_sign;
+        switch (method) {
+            case cose_alg_t::cose_hs256_64:
+                output.resize (64 >> 3);
+                break;
+            default:
+                break;
+        }
     }
     __finally2
     {
@@ -69,17 +66,10 @@ return_t cbor_object_signing::sign (cose_context_t* handle, crypto_key* key, cry
     return ret;
 }
 
-return_t cbor_object_signing::verify (cose_context_t* handle, crypto_key* key, crypt_sig_t method, binary_t const& input, binary_t const& output, bool& result)
+return_t cbor_object_signing::verify (cose_context_t* handle, crypto_key* key, const char* kid, cose_alg_t method, binary_t const& input, binary_t const& output, bool& result)
 {
     return_t ret = errorcode_t::success;
-
-    ret = verify (handle, key, nullptr, method, input, output, result);
-    return ret;
-}
-
-return_t cbor_object_signing::verify (cose_context_t* handle, crypto_key* key, const char* kid, crypt_sig_t method, binary_t const& input, binary_t const& output, bool& result)
-{
-    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
     openssl_sign sign;
 
     __try2
@@ -91,15 +81,27 @@ return_t cbor_object_signing::verify (cose_context_t* handle, crypto_key* key, c
             __leave2;
         }
 
+        crypt_sig_t sig = advisor->cose_sigof (method);
+
         EVP_PKEY* pkey = nullptr;
         if (nullptr == kid) {
-            pkey = key->select (method);
+            pkey = key->select (sig);
         } else {
-            pkey = key->find (kid, method);
+            pkey = key->find (kid, sig);
         }
-        ret = sign.verify (pkey, method, input, output);
-        if (errorcode_t::success == ret) {
-            result = true;
+
+        if (cose_alg_t::cose_hs256_64 == method) {
+            binary_t signature;
+            ret = sign.sign (pkey, sig, input, signature);
+            signature.resize (64 >> 3);
+            if (signature == output) {
+                result = true;
+            }
+        } else {
+            ret = sign.verify (pkey, sig, input, output);
+            if (errorcode_t::success == ret) {
+                result = true;
+            }
         }
     }
     __finally2

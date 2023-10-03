@@ -18,18 +18,21 @@
 namespace hotplace {
 namespace crypto {
 
-typedef std::map <crypt_item_t, variant_t> cose_object_map_t;
-typedef std::list <cose_object_map_t> cose_object_map_list_t;
-typedef struct _cose_context_t {
-    std::string kid;
-    uint32 sig; // crypt_sig_t
-    uint32 tag; // cbor_tag_t
-    cose_object_map_t object_map;
-    cose_object_map_list_t array;
+typedef struct _cose_item_t {
+    variant_t key;
+    variant_t value;
+} cose_item_t;
+typedef std::list <cose_item_t> cose_list_t;
 
-    _cose_context_t () : sig (0), tag (0)
-    {
-    }
+typedef std::map <uint32, variant_t> cose_object_map_t;
+typedef struct _cose_conents_t {
+    cose_object_map_t protected_map;
+    cose_object_map_t unprotected_map;
+    binary_t data;
+} cose_conents_t;
+typedef std::list <cose_conents_t> cose_conents_list_t;
+
+typedef struct _cose_context_t {
 } cose_context_t;
 
 }

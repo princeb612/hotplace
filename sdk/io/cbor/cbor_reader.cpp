@@ -207,6 +207,11 @@ return_t cbor_reader::parse (cbor_reader_context_t* handle, const byte_t* data, 
             handle->tag_value = 0;
             handle->tag_flag = false;
         }
+#if 0
+        if (i != size) {
+            ret = errorcode_t::bad_data;
+        }
+#endif
     }
     __finally2
     {
@@ -563,8 +568,6 @@ return_t cbor_reader::publish (cbor_reader_context_t* handle, cbor_object** root
 
         if (handle->root) {
             handle->root->addref ();
-        } else {
-            throw errorcode_t::internal_error;
         }
         *root = handle->root;
     }

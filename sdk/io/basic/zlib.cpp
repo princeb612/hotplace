@@ -15,16 +15,28 @@
 namespace hotplace {
 namespace io {
 
-return_t zlib_deflate (zlib_windowbits_t windowbits, byte_t* stream, size_t size, stream_t* output)
+return_t zlib_deflate (zlib_windowbits_t windowbits, binary_t const& input, binary_t& output)
+{
+    return zlib_deflate (windowbits, &input[0], input.size (), output);
+}
+
+return_t zlib_inflate (zlib_windowbits_t windowbits, binary_t const& input, binary_t& output)
+{
+    return zlib_inflate (windowbits, &input[0], input.size (), output);
+}
+
+return_t zlib_deflate (zlib_windowbits_t windowbits, byte_t const* input, size_t size, binary_t& output)
 {
     return_t dwRet = errorcode_t::success;
 
     __try2
     {
-        if (nullptr == stream || nullptr == output) {
+        if (nullptr == input) {
             dwRet = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        output.resize (0);
 
         int ret = Z_OK;
         uint32 cooltime = 0;
@@ -34,7 +46,131 @@ return_t zlib_deflate (zlib_windowbits_t windowbits, byte_t* stream, size_t size
         defstream.zfree = Z_NULL;
         defstream.opaque = Z_NULL;
         defstream.avail_in = size;
-        defstream.next_in = stream;
+        defstream.next_in = (byte*) input;
+
+        buffer.resize (1 << 10);
+
+        int wbit = MAX_WBITS;
+        switch (windowbits) {
+            case zlib_windowbits_t::windowbits_deflate: wbit = -MAX_WBITS; break;
+            case zlib_windowbits_t::windowbits_zlib: wbit = MAX_WBITS + 16; break;
+        }
+
+        deflateInit2 (&defstream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, wbit, 8, Z_DEFAULT_STRATEGY);
+        do {
+            defstream.avail_out = buffer.size ();
+            defstream.next_out = &buffer[0];
+
+            ret = deflate (&defstream, Z_FINISH);
+
+            uint32 size = output.size ();
+            if (size < defstream.total_out) {
+                output.insert (output.end (), &buffer[0], &buffer[0] + defstream.total_out - size);
+            }
+            //cooltime = zlib_get_cooltime ();
+            //if (cooltime) {
+            //    msleep (cooltime);
+            //}
+        } while (Z_OK == ret);
+        deflateEnd (&defstream);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+
+    return dwRet;
+}
+
+return_t zlib_inflate (zlib_windowbits_t windowbits, byte_t const* input, size_t size, binary_t& output)
+{
+    return_t dwRet = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == input) {
+            dwRet = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        output.resize (0);
+
+        int ret = Z_OK;
+        uint32 cooltime = 0;
+        binary_t buffer;
+        z_stream infstream = { 0, };
+        infstream.zalloc = Z_NULL;
+        infstream.zfree = Z_NULL;
+        infstream.opaque = Z_NULL;
+        infstream.avail_in = size;
+        infstream.next_in = (byte*) input;
+
+        buffer.resize (1 << 10);
+
+        int wbit = MAX_WBITS;
+        switch (windowbits) {
+            case zlib_windowbits_t::windowbits_deflate: wbit = -MAX_WBITS; break;
+            case zlib_windowbits_t::windowbits_zlib: wbit = MAX_WBITS + 16; break;
+        }
+
+        inflateInit2 (&infstream, wbit);
+        do {
+            infstream.avail_out = buffer.size ();
+            infstream.next_out = &buffer[0];
+
+            ret = inflate (&infstream, Z_NO_FLUSH);
+
+            uint32 size = output.size ();
+            if (size < infstream.total_out) {
+                output.insert (output.end (), &buffer[0], &buffer[0] + infstream.total_out - size);
+            }
+            //cooltime = zlib_get_cooltime ();
+            //if (cooltime) {
+            //    msleep (cooltime);
+            //}
+        } while (Z_OK == ret);
+        inflateEnd (&infstream);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+
+    return dwRet;
+}
+
+return_t zlib_deflate (zlib_windowbits_t windowbits, binary_t const& input, stream_t* output)
+{
+    return zlib_deflate (windowbits, &input[0], input.size (), output);
+}
+
+return_t zlib_inflate (zlib_windowbits_t windowbits, binary_t const& input, stream_t* output)
+{
+    return zlib_inflate (windowbits, &input[0], input.size (), output);
+}
+
+return_t zlib_deflate (zlib_windowbits_t windowbits, byte_t const* input, size_t size, stream_t* output)
+{
+    return_t dwRet = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == input || nullptr == output) {
+            dwRet = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        output->clear ();
+
+        int ret = Z_OK;
+        uint32 cooltime = 0;
+        binary_t buffer;
+        z_stream defstream = { 0, };
+        defstream.zalloc = Z_NULL;
+        defstream.zfree = Z_NULL;
+        defstream.opaque = Z_NULL;
+        defstream.avail_in = size;
+        defstream.next_in = (byte*) input;
 
         buffer.resize (1 << 10);
 
@@ -70,6 +206,63 @@ return_t zlib_deflate (zlib_windowbits_t windowbits, byte_t* stream, size_t size
     return dwRet;
 }
 
+return_t zlib_inflate (zlib_windowbits_t windowbits, byte_t const* input, size_t size, stream_t* output)
+{
+    return_t dwRet = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == input || nullptr == output) {
+            dwRet = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        output->clear ();
+
+        int ret = Z_OK;
+        uint32 cooltime = 0;
+        binary_t buffer;
+        z_stream infstream = { 0, };
+        infstream.zalloc = Z_NULL;
+        infstream.zfree = Z_NULL;
+        infstream.opaque = Z_NULL;
+        infstream.avail_in = size;
+        infstream.next_in = (byte*) input;
+
+        buffer.resize (1 << 10);
+
+        int wbit = MAX_WBITS;
+        switch (windowbits) {
+            case zlib_windowbits_t::windowbits_deflate: wbit = -MAX_WBITS; break;
+            case zlib_windowbits_t::windowbits_zlib: wbit = MAX_WBITS + 16; break;
+        }
+
+        inflateInit2 (&infstream, wbit);
+        do {
+            infstream.avail_out = buffer.size ();
+            infstream.next_out = &buffer[0];
+
+            ret = inflate (&infstream, Z_NO_FLUSH);
+
+            uint32 size = output->size ();
+            if (size < infstream.total_out) {
+                output->write (&buffer[0], infstream.total_out - size);
+            }
+            //cooltime = zlib_get_cooltime ();
+            //if (cooltime) {
+            //    msleep (cooltime);
+            //}
+        } while (Z_OK == ret);
+        inflateEnd (&infstream);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+
+    return dwRet;
+}
+
 return_t zlib_deflate (zlib_windowbits_t windowbits, stream_t* input, stream_t* output)
 {
     return_t ret = errorcode_t::success;
@@ -82,6 +275,27 @@ return_t zlib_deflate (zlib_windowbits_t windowbits, stream_t* input, stream_t* 
         }
 
         ret = zlib_deflate (windowbits, input->data (), input->size (), output);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+
+    return ret;
+}
+
+return_t zlib_inflate (zlib_windowbits_t windowbits, stream_t* input, stream_t* output)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == input || nullptr == output) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = zlib_inflate (windowbits, input->data (), input->size (), output);
     }
     __finally2
     {
@@ -144,84 +358,6 @@ int zlib_def (FILE *source, FILE *dest, int level)
     (void) deflateEnd (&strm);
     return Z_OK;
 }
-
-return_t zlib_inflate (zlib_windowbits_t windowbits, byte_t* stream, size_t size, stream_t* output)
-{
-    return_t dwRet = errorcode_t::success;
-
-    __try2
-    {
-        if (nullptr == stream || nullptr == output) {
-            dwRet = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        int ret = Z_OK;
-        uint32 cooltime = 0;
-        binary_t buffer;
-        z_stream infstream = { 0, };
-        infstream.zalloc = Z_NULL;
-        infstream.zfree = Z_NULL;
-        infstream.opaque = Z_NULL;
-        infstream.avail_in = size;
-        infstream.next_in = stream;
-
-        buffer.resize (1 << 10);
-
-        int wbit = MAX_WBITS;
-        switch (windowbits) {
-            case zlib_windowbits_t::windowbits_deflate: wbit = -MAX_WBITS; break;
-            case zlib_windowbits_t::windowbits_zlib: wbit = MAX_WBITS + 16; break;
-        }
-
-        inflateInit2 (&infstream, wbit);
-        do {
-            infstream.avail_out = buffer.size ();
-            infstream.next_out = &buffer[0];
-
-            ret = inflate (&infstream, Z_NO_FLUSH);
-
-            uint32 size = output->size ();
-            if (size < infstream.total_out) {
-                output->write (&buffer[0], infstream.total_out - size);
-            }
-            //cooltime = zlib_get_cooltime ();
-            //if (cooltime) {
-            //    msleep (cooltime);
-            //}
-        } while (Z_OK == ret);
-        inflateEnd (&infstream);
-    }
-    __finally2
-    {
-        // do nothing
-    }
-
-    return dwRet;
-}
-
-return_t zlib_inflate (zlib_windowbits_t windowbits, stream_t* input, stream_t* output)
-{
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        if (nullptr == input || nullptr == output) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        ret = zlib_inflate (windowbits, input->data (), input->size (), output);
-    }
-    __finally2
-    {
-        // do nothing
-    }
-
-    return ret;
-}
-
-#define CHUNK 16384
 
 int zlib_inf (FILE *source, FILE *dest)
 {

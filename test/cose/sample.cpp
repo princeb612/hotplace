@@ -18,16 +18,6 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 
-return_t compare (binary_t const& lhs, binary_t const& rhs)
-{
-    return_t ret = errorcode_t::success;
-
-    if (lhs != rhs) {
-        ret = errorcode_t::mismatch;
-    }
-    return ret;
-}
-
 return_t dump_test_data (const char* text, buffer_stream& diagnostic)
 {
     return_t ret = errorcode_t::success;
@@ -45,7 +35,6 @@ return_t dump_test_data (const char* text, buffer_stream& diagnostic)
 return_t dump_test_data (const char* text, binary_t const& cbor)
 {
     return_t ret = errorcode_t::success;
-
     buffer_stream bs;
 
     dump_memory (cbor, &bs, 32);
@@ -60,7 +49,7 @@ return_t dump_test_data (const char* text, binary_t const& cbor)
     return ret;
 }
 
-return_t test_generated_cbor (cbor_object* root, const char* expect_file, const char* text)
+return_t test_cose_example (cbor_object* root, const char* expect_file, const char* text)
 {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
@@ -99,19 +88,11 @@ return_t test_generated_cbor (cbor_object* root, const char* expect_file, const 
             expect.insert (expect.end (), file_contents, file_contents + file_size);
 
             dump_test_data ("test vector", expect);
-        }
-
-        // std::cout
-        // compare
-        {
-            test_case_notimecheck notimecheck (_test_case);
-
             dump_test_data ("diagnostic #1", diagnostic);
             dump_test_data ("cbor #1", bin);
-
-            test = compare (bin, expect);
         }
-        _test_case.test (test, __FUNCTION__, "check1.cborcheck %s", text ? text : "");
+
+        _test_case.assert ((bin == expect), __FUNCTION__, "check1.cborcheck %s", text ? text : "");
 
         // parse
         buffer_stream bs_diagnostic_lv1;
@@ -131,35 +112,63 @@ return_t test_generated_cbor (cbor_object* root, const char* expect_file, const 
         reader.publish (handle, &newone);
         reader.close (handle);
 
-        {
-            test_case_notimecheck notimecheck (_test_case);
+        if (newone) {
+            {
+                test_case_notimecheck notimecheck (_test_case);
 
-            dump_test_data ("diagnostic #2", bs_diagnostic_lv1);
-            dump_test_data ("cbor #2", bin_cbor_lv1);
+                dump_test_data ("diagnostic #2", bs_diagnostic_lv1);
+                dump_test_data ("cbor #2", bin_cbor_lv1);
+            }
+            _test_case.assert ((bin_cbor_lv1 == expect), __FUNCTION__, "check2.cborparse %s", text ? text : "");
 
-            test = compare (bin_cbor_lv1, expect);
+            // parsed cbor_object* to diagnostic
+            buffer_stream bs_diagnostic_lv2;
+            publisher.publish (newone, &bs_diagnostic_lv2);
+
+            // parsed cbor_object* to cbor
+            binary_t bin_cbor_lv2;
+            publisher.publish (newone, &bin_cbor_lv2);
+
+            {
+                test_case_notimecheck notimecheck (_test_case);
+
+                dump_test_data ("diagnostic #3", bs_diagnostic_lv2);
+                dump_test_data ("cbor #3", bin_cbor_lv2);
+            }
+            _test_case.assert ((bin_cbor_lv2 == expect), __FUNCTION__, "check3.cborparse %s", text ? text : "");
+
+            newone->release (); // release parsed object
         }
-        _test_case.test (test, __FUNCTION__, "check2.cborparse %s", text ? text : "");
 
-        // parsed cbor_object* to diagnostic
-        buffer_stream bs_diagnostic_lv2;
-        publisher.publish (newone, &bs_diagnostic_lv2);
+        cbor_object_signing_encryption cose;
+        cbor_web_key cwk;
+        //cbor_publisher publisher;
+        binary_t signature;
+        bool result = false;
+        cose_context_t* cose_handle = nullptr;
 
-        // parsed cbor_object* to cbor
-        binary_t bin_cbor_lv2;
-        publisher.publish (newone, &bin_cbor_lv2);
+        crypto_key keys;
+        cwk.load_file (&keys, "rfc8152_c_7_2.cbor");
 
-        {
-            test_case_notimecheck notimecheck (_test_case);
+        if (root->tagged ()) {
+            switch (root->tag_value ()) {
+                case cbor_tag_t::cose_tag_sign:
+                case cbor_tag_t::cose_tag_sign1:
+                    cose.open (&cose_handle);
+                    ret = cose.verify (cose_handle, &keys, bin, result);
+                    cose.close (cose_handle);
 
-            dump_test_data ("diagnostic #3", bs_diagnostic_lv2);
-            dump_test_data ("cbor #3", bin_cbor_lv2);
-
-            test = compare (bin_cbor_lv2, expect);
+                    _test_case.test (ret, __FUNCTION__, "check4.verify %s", text ? text : "");
+                    break;
+                case cbor_tag_t::cose_tag_encrypt:
+                case cbor_tag_t::cose_tag_encrypt0:
+                    break;
+                case cbor_tag_t::cose_tag_mac:
+                case cbor_tag_t::cose_tag_mac0:
+                default:
+                    break;
+            }
         }
-        _test_case.test (test, __FUNCTION__, "check3.cborparse %s", text ? text : "");
-
-        newone->release (); // release parsed object
     }
     __finally2
     {
@@ -209,20 +218,15 @@ void test_cbor_file (const char* expect_file, const char* text)
         //root->release ();
         reader.close (handle);
 
-        buffer_stream bs_dump;
-        dump_memory (bin_cbor, &bs_dump, 32);
+        dump_test_data ("diagnostic", bs_diagnostic);
+        dump_test_data ("cbor", bin_cbor);
 
-        std::cout   << "diagnostic " << std::endl
-                    << bs_diagnostic.c_str () << std::endl
-                    << bs_dump.c_str () << std::endl;
-
-        ret = compare (bin_cbor, expect);
+        _test_case.assert ((bin_cbor == expect), __FUNCTION__, text ? text : "");
     }
     __finally2
     {
         // do nothing
     }
-    _test_case.test (ret, __FUNCTION__, text ? text : "");
 }
 
 void test_rfc8152_c_1_1 ()
@@ -257,7 +261,7 @@ void test_rfc8152_c_1_1 ()
             cose_item_t item;
             cose_list_t list_protected;
             variant_set_int16 (item.key, cose_header_t::cose_header_alg);
-            variant_set_int16 (item.value, cose_alg_t::cose_es256);
+            variant_set_int16 (item.value, cose_alg_t::cose_es256); // -7
             list_protected.push_back (item);
             cose.build_protected (&cbor_data_signature_protected, list_protected);
         }
@@ -284,7 +288,7 @@ void test_rfc8152_c_1_1 ()
     }
     *signatures << signature;
 
-    test_generated_cbor (root, "rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
+    test_cose_example (root, "rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
 
     root->release ();
 }
@@ -323,7 +327,7 @@ void test_rfc8152_c_1_2 ()
             cose_item_t item;
             cose_list_t list_protected;
             variant_set_int16 (item.key, cose_header_t::cose_header_alg);
-            variant_set_int16 (item.value, cose_alg_t::cose_es256);
+            variant_set_int16 (item.value, cose_alg_t::cose_es256); // -7
             list_protected.push_back (item);
             cose.build_protected (&cbor_data_signature_protected, list_protected);
         }
@@ -358,7 +362,7 @@ void test_rfc8152_c_1_2 ()
             cose_item_t item;
             cose_list_t list_protected;
             variant_set_int16 (item.key, cose_header_t::cose_header_alg);
-            variant_set_int16 (item.value, cose_alg_t::cose_es512);
+            variant_set_int16 (item.value, cose_alg_t::cose_es512); // -36
             list_protected.push_back (item);
             cose.build_protected (&cbor_data_signature_protected, list_protected);
         }
@@ -386,7 +390,7 @@ void test_rfc8152_c_1_2 ()
         *signatures << signature;
     }
 
-    test_generated_cbor (root, "rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
+    test_cose_example (root, "rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
 
     root->release ();
 }
@@ -460,7 +464,7 @@ void test_rfc8152_c_1_3 ()
             cose_item_t item;
             cose_list_t list_protected;
             variant_set_int16 (item.key, cose_header_t::cose_header_alg);
-            variant_set_int16 (item.value, cose_alg_t::cose_es256);
+            variant_set_int16 (item.value, cose_alg_t::cose_es256); // -7
             list_protected.push_back (item);
             cose.build_protected (&cbor_data_signature_protected, list_protected);
         }
@@ -488,7 +492,7 @@ void test_rfc8152_c_1_3 ()
         *signatures << signature;
     }
 
-    test_generated_cbor (root, "rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
+    test_cose_example (root, "rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
 
     root->release ();
 }
@@ -539,7 +543,7 @@ void test_rfc8152_c_1_4 ()
             cose_item_t item;
             cose_list_t list_protected;
             variant_set_int16 (item.key, cose_header_t::cose_header_alg);
-            variant_set_int16 (item.value, cose_alg_t::cose_es256);
+            variant_set_int16 (item.value, cose_alg_t::cose_es256); // -7
             list_protected.push_back (item);
             cose.build_protected (&cbor_data_signature_protected, list_protected);
         }
@@ -567,7 +571,7 @@ void test_rfc8152_c_1_4 ()
         *signatures << signature;
     }
 
-    test_generated_cbor (root, "rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
+    test_cose_example (root, "rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
 
     root->release ();
 }
@@ -613,7 +617,7 @@ void test_rfc8152_c_2_1 ()
             << cbor_data_payload
             << cbor_data_signature;
 
-    test_generated_cbor (root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
+    test_cose_example (root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
 
     root->release ();
 }
@@ -691,7 +695,7 @@ void test_rfc8152_c_3_1 ()
     }
     *recipients << recipient;
 
-    test_generated_cbor (root, "rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
+    test_cose_example (root, "rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
 
     root->release ();
 }
@@ -770,7 +774,7 @@ void test_rfc8152_c_3_2 ()
         *recipients << recipient;
     }
 
-    test_generated_cbor (root, "rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
+    test_cose_example (root, "rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
 
     root->release ();
 }
@@ -879,7 +883,7 @@ void test_rfc8152_c_3_3 ()
         *recipients << recipient;
     }
 
-    test_generated_cbor (root, "rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
+    test_cose_example (root, "rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
 
     root->release ();
 }
@@ -970,7 +974,7 @@ void test_rfc8152_c_3_4 ()
         *recipients << recipient;
     }
 
-    test_generated_cbor (root, "rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
+    test_cose_example (root, "rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
 
     root->release ();
 }
@@ -1016,7 +1020,7 @@ void test_rfc8152_c_4_1 ()
             << cbor_data_unprotected    // unprotected
             << cbor_data_ciphertext;    // ciphertext
 
-    test_generated_cbor (root, "rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
+    test_cose_example (root, "rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
 
     root->release ();
 }
@@ -1062,7 +1066,7 @@ void test_rfc8152_c_4_2 ()
             << cbor_data_unprotected    // unprotected
             << cbor_data_ciphertext;    // ciphertext
 
-    test_generated_cbor (root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
+    test_cose_example (root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
 
     root->release ();
 }
@@ -1138,7 +1142,7 @@ void test_rfc8152_c_5_1 ()
         *recipients << recipient;
     }
 
-    test_generated_cbor (root, "rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
+    test_cose_example (root, "rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
 
     root->release ();
 }
@@ -1159,7 +1163,7 @@ void test_rfc8152_c_5_2 ()
         cose_item_t item;
         cose_list_t list_protected;
         variant_set_int16 (item.key, cose_header_t::cose_header_alg);
-        variant_set_int16 (item.value, cose_alg_t::cose_hmac_256_256);
+        variant_set_int16 (item.value, cose_alg_t::cose_hs256);
         list_protected.push_back (item);
         cose.build_protected (&cbor_data_protected, list_protected);
     }
@@ -1225,7 +1229,7 @@ void test_rfc8152_c_5_2 ()
         *recipients << recipient;
     }
 
-    test_generated_cbor (root, "rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
+    test_cose_example (root, "rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
 
     root->release ();
 }
@@ -1301,7 +1305,7 @@ void test_rfc8152_c_5_3 ()
         *recipients << recipient;
     }
 
-    test_generated_cbor (root, "rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
+    test_cose_example (root, "rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
 
     root->release ();
 }
@@ -1322,7 +1326,7 @@ void test_rfc8152_c_5_4 ()
         cose_item_t item;
         cose_list_t list_protected;
         variant_set_int16 (item.key, cose_header_t::cose_header_alg);
-        variant_set_int16 (item.value, cose_alg_t::cose_hmac_256_256);
+        variant_set_int16 (item.value, cose_alg_t::cose_hs256);
         list_protected.push_back (item);
         cose.build_protected (&cbor_data_protected, list_protected);
     }
@@ -1415,7 +1419,7 @@ void test_rfc8152_c_5_4 ()
         *recipients << recipient;
     }
 
-    test_generated_cbor (root, "rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
+    test_cose_example (root, "rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
 
     root->release ();
 }
@@ -1452,7 +1456,7 @@ void test_rfc8152_c_6_1 ()
             << cbor_data_payload    // payload
             << cbor_data_tag;       // tag
 
-    test_generated_cbor (root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
+    test_cose_example (root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
 
     root->release ();
 }
@@ -1524,7 +1528,7 @@ void dump_crypto_key (crypto_key_object_t* key, void*)
     std::string temp;
 
     nidof_evp_pkey (key->pkey, nid);
-    printf ("nid %i kid %s alg %s use %i\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
+    printf ("nid %i kid %s alg %s use %08x\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
     EVP_PKEY_public_to_string (key->pkey, temp, 0);
     printf ("%s\n", temp.c_str ());
 }
@@ -1583,7 +1587,7 @@ void test_rfc8152_c_7_1 ()
         *root << key;
     }
 
-    test_generated_cbor (root, "rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
+    test_cose_example (root, "rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
 
     root->release ();
 }
@@ -1676,7 +1680,7 @@ void test_rfc8152_c_7_2 ()
         *root << key;
     }
 
-    test_generated_cbor (root, "rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
+    test_cose_example (root, "rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
 
     root->release ();
 }
@@ -1772,78 +1776,6 @@ void test_cbor_web_key ()
     test_cbor_key ("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
 }
 
-void try_refactor_jose_sign (crypto_key* pubkey, crypto_key* privkey, cose_alg_t sig_type)
-{
-    return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-
-    crypt_sig_t sig = advisor->cose_sigof (sig_type);
-    jws_t jws_type = advisor->sigof (sig);
-
-    // JWS using CBOR key
-    constexpr char contents[] = "This is the content.";
-    std::string jws;
-    {
-        jose_context_t* handle = nullptr;
-        json_object_signing_encryption jose;
-
-        jose.open (&handle, privkey);
-        jose.sign (handle, jws_type, contents, jws, jose_serialization_t::jose_json);
-        jose.close (handle);
-
-        bool result = false;
-        jose.open (&handle, pubkey);
-        jose.verify (handle, jws, result);
-        jose.close (handle);
-    }
-
-    std::cout << "contents" << std::endl << contents << std::endl;
-    std::cout << "jws using CBOR key" << std::endl << jws.c_str () << std::endl;
-
-    // refactoring
-    binary_t signature;
-    buffer_stream bs;
-    std::string kid;
-    {
-        bool result = false;
-        cbor_object_signing_encryption cose;
-        cbor_object_signing sign;
-        cose_context_t* handle = nullptr;
-        cose.open (&handle);
-        ret = cose.sign (handle, privkey, sig_type, convert (contents), signature);
-
-        // reversing
-        if (errorcode_t::success == ret) {
-            test_case_notimecheck notimecheck (_test_case);
-
-            dump_memory (signature, &bs);
-            std::cout << "COSE signature" << std::endl << bs.c_str () << std::endl;
-
-            buffer_stream diagnostic;
-            cbor_reader reader;
-            cbor_reader_context_t* reader_handle = nullptr;
-            cbor_object* newone = nullptr;
-
-            reader.open (&reader_handle);
-            ret = reader.parse (reader_handle, signature);
-            if (errorcode_t::success == ret) {
-                reader.publish (reader_handle, &diagnostic);
-                reader.publish (reader_handle, &newone);
-                newone->release ();
-
-                std::cout << "diagnostic reversing" << std::endl << diagnostic.c_str () << std::endl;
-            }
-            reader.close (reader_handle);
-        }
-        // and then verify
-        // todo
-        //ret = cose.verify (handle, pubkey, sig_type, convert (contents), signature, result);
-        cose.close (handle);
-
-        _test_case.test (ret, __FUNCTION__, "JWS + COSE sign (%i)", sig_type);
-    }
-}
-
 void try_refactor_jose_sign ()
 {
     _test_case.begin ("crypto_key");
@@ -1861,16 +1793,87 @@ void try_refactor_jose_sign ()
     buffer_stream json;
     jwk.write (&privkey, &json, 1);
     printf ("JWK from CBOR key\n%s\n", json.c_str ());
+    buffer_stream pem;
+    jwk.write_pem (&pubkey, &pem);
+    printf ("PEM (public)\n%s\n", pem.c_str ());
+    jwk.write_pem (&privkey, &pem);
+    printf ("PEM (private)\n%s\n", pem.c_str ());
 
-    // no RSA type exist
-    try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_es512);
-    try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_es256);
-    try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_hmac_512_512);
-    try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_hmac_384_256);
-    try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_hmac_256_256);
-    //try_refactor_jose_sign (&pubkey, &privkey, cose_alg_t::cose_hmac_256_64);
+    EVP_PKEY* pkey = nullptr;
+    std::string kid;
+    pkey = privkey.select (kid, crypt_sig_t::sig_es512);
+    _test_case.assert (kid == "bilbo.baggins@hobbiton.example", __FUNCTION__, "select key from CWK where type is es512");
+    pkey = privkey.select (kid, crypt_sig_t::sig_es256);
+    _test_case.assert (kid == "11", __FUNCTION__, "select key from CWK where type is es256"); // alphabetic order...
 
-    // interface design go on
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
+
+    struct {
+        const char* message;
+        const char* cbor;
+        const char* diagnostic;
+    } vector [] = {
+        {
+            "sign-pass-01.json",
+            "D8628441A0A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840E2AEAFD40D69D19DFE6E52077C5D7FF4E408282CBEFB5D06CBF414AF2E19D982AC45AC98B8544C908B4507DE1E90B717C3D34816FE926A2B98F53AFD2FA0F30A",
+            "98([h'a0',{},h'546869732069732074686520636f6e74656e742e',[[h'a10126',{4:h'3131'},h'e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a']]])",
+        },
+    };
+
+    {
+        constexpr char in_source[] = "This is the content.";
+        bool result = false;
+        binary_t cbor;
+        buffer_stream bs;
+        cbor_object_signing_encryption cose;
+        cose_context_t* cose_handle = nullptr;
+        cose.open (&cose_handle);
+        cose.sign (cose_handle, &privkey, cose_alg_t::cose_es256, convert (in_source), cbor);
+        ret = cose.verify (cose_handle, &pubkey, cbor, result);
+        cose.close (cose_handle);
+
+        dump_memory (cbor, &bs);
+        std::cout << "sign" << std::endl << bs.c_str () << std::endl;
+
+        buffer_stream diagnostic;
+        cbor_reader reader;
+        cbor_reader_context_t* reader_handle = nullptr;
+        reader.open (&reader_handle);
+        reader.parse (reader_handle, cbor);
+        reader.publish (reader_handle, &diagnostic);
+        reader.close (reader_handle);
+
+        std::cout   << "reversed.diagnostic" << std::endl
+                    << diagnostic.c_str () << std::endl;
+
+        _test_case.test (ret, __FUNCTION__, "cose_sign");
+    }
+
+    for (int i = 0; i < RTL_NUMBER_OF (vector); i++) {
+        binary_t bin_cbor = base16_decode (vector[i].cbor);
+
+        buffer_stream diagnostic;
+        cbor_reader reader;
+        cbor_reader_context_t* reader_handle = nullptr;
+        reader.open (&reader_handle);
+        reader.parse (reader_handle, bin_cbor);
+        reader.publish (reader_handle, &diagnostic);
+        reader.close (reader_handle);
+
+        std::cout   << "reversed.diagnostic" << std::endl
+                    << diagnostic.c_str () << std::endl
+                    << "vector.diagnostic" << std::endl
+                    << vector[i].diagnostic << std::endl;
+
+        bool result = false;
+        cbor_object_signing_encryption cose;
+        cose_context_t* cose_handle = nullptr;
+        cose.open (&cose_handle);
+        ret = cose.verify (cose_handle, &privkey, bin_cbor, result);
+        _test_case.test (ret, __FUNCTION__, vector[i].message);
+        cose.close (cose_handle);
+    }
 }
 
 int main ()
@@ -1899,11 +1902,14 @@ int main ()
     // cbor_array* to CBOR and diagnostic
     // Test Vector comparison
     // cbor_array* from CBOR
+
+    // TODO - ECDSA fail
     test_rfc8152_c_1_1 ();
     test_rfc8152_c_1_2 ();
     test_rfc8152_c_1_3 ();
     test_rfc8152_c_1_4 ();
     test_rfc8152_c_2_1 ();
+
     test_rfc8152_c_3_1 ();
     test_rfc8152_c_3_2 ();
     test_rfc8152_c_3_3 ();

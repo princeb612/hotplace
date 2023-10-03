@@ -21,7 +21,7 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-json_web_key::json_web_key () : crypto_keyext ()
+json_web_key::json_web_key () : crypto_keychain ()
 {
     // do nothing
 }

@@ -14,7 +14,7 @@
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_keyext.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_web_key.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
@@ -30,7 +30,7 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-cbor_web_key::cbor_web_key () : crypto_keyext ()
+cbor_web_key::cbor_web_key () : crypto_keychain ()
 {
     // do nothing
 }
@@ -276,7 +276,11 @@ void cwk_writer (crypto_key_object_t* key, void* param)
         binary_t pub2;
         binary_t priv;
 
-        ret = crypto_key::get_key (key->pkey, 1, kty, pub1, pub2, priv);
+        // RFC 8152
+        // 13.1.1.  Double Coordinate Curves
+        // 13.2.  Octet Key Pair
+        // Leading zero octets MUST be preserved.
+        ret = crypto_key::get_key (key->pkey, 1, kty, pub1, pub2, priv, true);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -299,11 +303,6 @@ void cwk_writer (crypto_key_object_t* key, void* param)
 
             *keynode    << new cbor_pair (cose_key_lable_t::cose_ec_crv, new cbor_data (cose_curve))    // -1
                         << new cbor_pair (cose_key_lable_t::cose_ec_x, new cbor_data (pub1));           // -2
-
-            // NID_secp521r1 521 = (65*8) + 1 => 66bytes => 132 base16 encoding bytes
-            // 0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
-            // wo trailing 00
-            //   72992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
 
             if (crypto_key_t::kty_ec == kty) {
                 *keynode << new cbor_pair (cose_key_lable_t::cose_ec_y, new cbor_data (pub2)); // -3

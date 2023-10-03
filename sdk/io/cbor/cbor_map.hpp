@@ -53,7 +53,7 @@ public:
     cbor_pair (cbor_data* key, cbor_array* object);
     virtual ~cbor_pair ();
 
-    cbor_object* const left ();
+    cbor_data* const left ();
     cbor_object* const right ();
 
     virtual int addref ();

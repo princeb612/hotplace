@@ -13,8 +13,10 @@
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
+#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 
 namespace hotplace {
+using namespace io;
 namespace crypto {
 
 openssl_sign::openssl_sign ()
@@ -245,6 +247,8 @@ return_t openssl_sign::sign_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, binary
             __leave2;
         }
 
+        EC_KEY* ec_key = (EC_KEY*) EVP_PKEY_get0_EC_KEY ((EVP_PKEY*) pkey);
+
         hash.open (&hash_handle, mode);
         hash.hash (hash_handle, &input[0], input.size (), hash_value);
         hash.close (hash_handle);
@@ -259,6 +263,8 @@ return_t openssl_sign::sign_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, binary
         //EC_KEY_free (ec);
 
         switch (mode) {
+            case hash_algorithm_t::sha1:     unitsize = 20; break;
+            case hash_algorithm_t::sha2_224: unitsize = 28; break;
             case hash_algorithm_t::sha2_256: unitsize = 32; break;
             case hash_algorithm_t::sha2_384: unitsize = 48; break;
             case hash_algorithm_t::sha2_512: unitsize = 66; break;
@@ -270,27 +276,29 @@ return_t openssl_sign::sign_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, binary
          * Computes the ECDSA signature of the given hash value using
          * the supplied private key and returns the created signature.
          */
-        ecdsa_sig = ECDSA_do_sign (&hash_value[0], hash_value.size (), (EC_KEY*) EVP_PKEY_get0_EC_KEY ((EVP_PKEY*) pkey)); // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+        // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+        ecdsa_sig = ECDSA_do_sign (&hash_value[0], hash_value.size (), ec_key);
         if (nullptr == ecdsa_sig) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl (ret);
         }
 
-        const BIGNUM *pr = nullptr;
-        const BIGNUM *ps = nullptr;
+        const BIGNUM *bn_r = nullptr;
+        const BIGNUM *bn_s = nullptr;
 
-        ECDSA_SIG_get0 (ecdsa_sig, &pr, &ps);
+        ECDSA_SIG_get0 (ecdsa_sig, &bn_r, &bn_s);
 
-        int rlen = BN_num_bytes (pr);
-        int slen = BN_num_bytes (ps);
+        int rlen = BN_num_bytes (bn_r);
+        int slen = BN_num_bytes (bn_s);
+
         /*
          * if unitsize is 4 and r is 12, s is 34
          *  r(4 bytes)  + s(4 bytes)
          *  00 00 00 12 | 00 00 00 34 -> valid
          *  12 00 00 00 | 34 00 00 00 -> invalid
          */
-        BN_bn2bin (pr, &signature[unitsize - rlen]);
-        BN_bn2bin (ps, &signature[unitsize + (unitsize - slen)]);
+        BN_bn2bin (bn_r, &signature[unitsize - rlen]);
+        BN_bn2bin (bn_s, &signature[unitsize + (unitsize - slen)]);
     }
     __finally2
     {
@@ -508,6 +516,8 @@ return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
             __leave2;
         }
 
+        EC_KEY* ec_key = (EC_KEY*) EVP_PKEY_get0_EC_KEY ((EVP_PKEY*) pkey);
+
         ret = errorcode_t::verify;
 
         hash.open (&hash_handle, mode);
@@ -524,6 +534,8 @@ return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
         //EC_KEY_free (ec);
 
         switch (mode) {
+            case hash_algorithm_t::sha1:     unitsize = 20; break;
+            case hash_algorithm_t::sha2_224: unitsize = 28; break;
             case hash_algorithm_t::sha2_256: unitsize = 32; break;  // (256 >> 3) = 32
             case hash_algorithm_t::sha2_384: unitsize = 48; break;  // (384 >> 3) = 48
             case hash_algorithm_t::sha2_512: unitsize = 66; break;  // (521 = (65 << 3) + 1), 66
@@ -540,6 +552,7 @@ return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
             __leave2;
         }
 
+        /* RFC 7515 A.3.1.  Encoding */
         BIGNUM* bn_r = nullptr;
         BIGNUM* bn_s = nullptr;
         bn_r = BN_bin2bn (&signature[0], unitsize, nullptr);
@@ -550,7 +563,7 @@ return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
         /* Verifies that the supplied signature is a valid ECDSA
          * signature of the supplied hash value using the supplied public key.
          */
-        ret_openssl = ECDSA_do_verify (&hash_value[0], hash_value.size (), ecdsa_sig, (EC_KEY*) EVP_PKEY_get0_EC_KEY ((EVP_PKEY*) pkey)); // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+        ret_openssl = ECDSA_do_verify (&hash_value[0], hash_value.size (), ecdsa_sig, ec_key); // openssl 3.0 EVP_PKEY_get0 family return const key pointer
         if (1 != ret_openssl) {
             ret = errorcode_t::verify;
             __leave2_trace_openssl (ret);

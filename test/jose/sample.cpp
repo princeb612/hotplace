@@ -912,7 +912,7 @@ void test_rfc7516_A1 ()
     std::cout << "RFC 7516 A.1. flattened JSON serialization" << std::endl << json_flat.c_str () << std::endl;
     std::cout << "RFC 7516 A.1. JSON serialization" << std::endl << json_serial.c_str () << std::endl;
 
-    ret = test_jose_file (&key, "rfc7516_A1.json", result);
+    ret = test_jose_file (&key, "rfc7516_A1.jws", result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (file)");
 }
 
@@ -1013,7 +1013,7 @@ void test_rfc7516_A2 ()
     std::cout << "RFC 7516 A.2. flattened JSON serialization" << std::endl << json_flat.c_str () << std::endl;
     std::cout << "RFC 7516 A.2. JSON serialization" << std::endl << json_serial.c_str () << std::endl;
 
-    ret = test_jose_file (&key, "rfc7516_A2.json", result);
+    ret = test_jose_file (&key, "rfc7516_A2.jws", result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (file)");
 }
 
@@ -1054,7 +1054,7 @@ void test_rfc7516_A3 ()
     std::cout << "RFC 7516 A.3. flattened JSON serialization" << std::endl << json_flat.c_str () << std::endl;
     std::cout << "RFC 7516 A.3. JSON serialization" << std::endl << json_serial.c_str () << std::endl;
 
-    ret = test_jose_file (&key, "rfc7516_A3.json", result);
+    ret = test_jose_file (&key, "rfc7516_A3.jws", result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (file)");
 }
 
@@ -1089,7 +1089,7 @@ void test_rfc7516_A4 ()
 
     printf ("%s\n", json_serial.c_str ());
 
-    ret = test_jose_file (&key, "rfc7516_A4.json", result);
+    ret = test_jose_file (&key, "rfc7516_A4.jws", result);
     _test_case.test (ret, __FUNCTION__, "RFC 7516 A.4. JWE Using General JWE JSON Serialization (file)");
 }
 
@@ -1578,39 +1578,48 @@ void test_rfc7520 ()
     jwk.load_file (&key, "rfc7520_priv.jwk", 0);
 
     // 4.1 "RS256"
-    test_rfc7520_signature (&key, "rfc7520_figure14.json", "RFC 7520 4.1.  RSA v1.5 Signature (figure 14)");
-    test_rfc7520_signature (&key, "rfc7520_figure15.json", "RFC 7520 4.1.  RSA v1.5 Signature (figure 15)");
+    test_rfc7520_signature (&key, "rfc7520_figure13.jws", "RFC 7520 4.1.  RSA v1.5 Signature (figure 13)");
+    test_rfc7520_signature (&key, "rfc7520_figure14.jws", "RFC 7520 4.1.  RSA v1.5 Signature (figure 14)");
+    test_rfc7520_signature (&key, "rfc7520_figure15.jws", "RFC 7520 4.1.  RSA v1.5 Signature (figure 15)");
 
     // 4.2 "PS256"
-    test_rfc7520_signature (&key, "rfc7520_figure21.json", "RFC 7520 4.2.  RSA-PSS Signature (figure 21)");
-    test_rfc7520_signature (&key, "rfc7520_figure22.json", "RFC 7520 4.2.  RSA-PSS Signature (figure 22)");
+    test_rfc7520_signature (&key, "rfc7520_figure20.jws", "RFC 7520 4.2.  RSA-PSS Signature (figure 20)");
+    test_rfc7520_signature (&key, "rfc7520_figure21.jws", "RFC 7520 4.2.  RSA-PSS Signature (figure 21)");
+    test_rfc7520_signature (&key, "rfc7520_figure22.jws", "RFC 7520 4.2.  RSA-PSS Signature (figure 22)");
 
     // 4.3 "ES256"
-    test_rfc7520_signature (&key, "rfc7520_figure28.json", "RFC 7520 4.3.  ECDSA Signature (figure 28)");
-    test_rfc7520_signature (&key, "rfc7520_figure29.json", "RFC 7520 4.3.  ECDSA Signature (figure 29)");
+    test_rfc7520_signature (&key, "rfc7520_figure27.jws", "RFC 7520 4.3.  ECDSA Signature (figure 27)");
+    test_rfc7520_signature (&key, "rfc7520_figure28.jws", "RFC 7520 4.3.  ECDSA Signature (figure 28)");
+    test_rfc7520_signature (&key, "rfc7520_figure29.jws", "RFC 7520 4.3.  ECDSA Signature (figure 29)");
 
     // 4.4 "HS256"
-    test_rfc7520_signature (&key, "rfc7520_figure35.json", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 35)");
-    test_rfc7520_signature (&key, "rfc7520_figure36.json", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 36)");
+    test_rfc7520_signature (&key, "rfc7520_figure34.jws", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 34)");
+    test_rfc7520_signature (&key, "rfc7520_figure35.jws", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 35)");
+    test_rfc7520_signature (&key, "rfc7520_figure36.jws", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 36)");
 
     // 4.5.  Signature with Detached Content
     // 4.6.  Protecting Specific Header Fields
-    test_rfc7520_signature (&key, "rfc7520_figure49.json", "RFC 7520 4.6.  Protecting Specific Header Fields (figure 49)");
+    test_rfc7520_signature (&key, "rfc7520_figure49.jws", "RFC 7520 4.6.  Protecting Specific Header Fields (figure 49)");
+    test_rfc7520_signature (&key, "rfc7520_figure50.jws", "RFC 7520 4.6.  Protecting Specific Header Fields (figure 50)");
 
     // 4.7.  Protecting Content Only
-    test_rfc7520_signature (&key, "rfc7520_figure54.json", "RFC 7520 4.7.  Protecting Content Only (figure 54)");
+    test_rfc7520_signature (&key, "rfc7520_figure54.jws", "RFC 7520 4.7.  Protecting Content Only (figure 54)");
+    test_rfc7520_signature (&key, "rfc7520_figure55.jws", "RFC 7520 4.7.  Protecting Content Only (figure 55)");
 
     // 4.8.  Multiple Signatures
-    test_rfc7520_signature (&key, "rfc7520_figure71.json", "RFC 7520 4.8.  Multiple Signatures (figure 71)");
+    test_rfc7520_signature (&key, "rfc7520_figure61.jws", "RFC 7520 4.8.  Multiple Signatures #1 (figure 61)");
+    test_rfc7520_signature (&key, "rfc7520_figure65.jws", "RFC 7520 4.8.  Multiple Signatures #2 (figure 65)");
+    test_rfc7520_signature (&key, "rfc7520_figure70.jws", "RFC 7520 4.8.  Multiple Signatures #3 (figure 70)");
+    test_rfc7520_signature (&key, "rfc7520_figure71.jws", "RFC 7520 4.8.  Multiple Signatures (figure 71)");
 
     // 5.1 "RSA1_5" "A128CBC-HS256"
     test_rfc7520_jwe (&key, "rfc7520_figure81.jwe", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 81)");
-    test_rfc7520_jwe (&key, "rfc7520_figure82.json", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 82)");
-    test_rfc7520_jwe (&key, "rfc7520_figure83.json", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 83)");
+    test_rfc7520_jwe (&key, "rfc7520_figure82.jwe", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 82)");
+    test_rfc7520_jwe (&key, "rfc7520_figure83.jwe", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 83)");
     // 5.2 "RSA-OAEP" "A256GCM"
     test_rfc7520_jwe (&key, "rfc7520_figure92.jwe", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 92)");
-    test_rfc7520_jwe (&key, "rfc7520_figure93.json", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 93)");
-    test_rfc7520_jwe (&key, "rfc7520_figure94.json", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 94)");
+    test_rfc7520_jwe (&key, "rfc7520_figure93.jwe", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 93)");
+    test_rfc7520_jwe (&key, "rfc7520_figure94.jwe", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 94)");
     // 5.3 "PBES2-HS512+A256KW" "A128CBC-HS256"
     crypto_key crypto_key2;
     crypto_keychain keygen;
@@ -1619,29 +1628,57 @@ void test_rfc7520 ()
     const char* figure96 = "entrap_o\xe2\x80\x93" "peter_long\xe2\x80\x93" "credit_tun";
     keygen.add_oct (&crypto_key2, nullptr, jwa_t::jwa_pbes2_hs512_a256kw, (byte_t*) figure96, strlen (figure96), crypto_use_t::use_enc);
     test_rfc7520_jwe (&crypto_key2, "rfc7520_figure105.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 105)");
-    test_rfc7520_jwe (&crypto_key2, "rfc7520_figure106.json", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 106)");
-    test_rfc7520_jwe (&crypto_key2, "rfc7520_figure107.json", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 107)");
+    test_rfc7520_jwe (&crypto_key2, "rfc7520_figure106.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 106)");
+    test_rfc7520_jwe (&crypto_key2, "rfc7520_figure107.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 107)");
     // 5.4 "ECDH-ES+A128KW" "A256GCM"
     test_rfc7520_jwe (&key, "rfc7520_figure117.jwe", "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 117)");
-    test_rfc7520_jwe (&key, "rfc7520_figure118.json", "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 118)");
-    test_rfc7520_jwe (&key, "rfc7520_figure119.json", "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 119)");
+    test_rfc7520_jwe (&key, "rfc7520_figure118.jwe", "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 118)");
+    test_rfc7520_jwe (&key, "rfc7520_figure119.jwe", "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 119)");
     // 5.5 "ECDH-ES" "A128CBC-HS256"
     test_rfc7520_jwe (&key, "rfc7520_figure128.jwe", "RFC 7520 5.5.  Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2 (figure 128)");
-    test_rfc7520_jwe (&key, "rfc7520_figure129.json", "RFC 7520 5.5.  Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2 (figure 129)");
+    test_rfc7520_jwe (&key, "rfc7520_figure129.jwe", "RFC 7520 5.5.  Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2 (figure 129)");
     // 5.6 "dir" "A256GCM"
     test_rfc7520_jwe (&key, "rfc7520_figure136.jwe", "RFC 7520 5.6.  Direct Encryption Using AES-GCM (figure 136)");
-    test_rfc7520_jwe (&key, "rfc7520_figure137.json", "RFC 7520 5.6.  Direct Encryption Using AES-GCM (figure 137)");
+    test_rfc7520_jwe (&key, "rfc7520_figure137.jwe", "RFC 7520 5.6.  Direct Encryption Using AES-GCM (figure 137)");
     // 5.7 "A256GCMKW" "A128CBC-HS256"
     test_rfc7520_jwe (&key, "rfc7520_figure148.jwe", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 148)");
-    test_rfc7520_jwe (&key, "rfc7520_figure149.json", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 149)");
-    test_rfc7520_jwe (&key, "rfc7520_figure150.json", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 150)");
+    test_rfc7520_jwe (&key, "rfc7520_figure149.jwe", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 149)");
+    test_rfc7520_jwe (&key, "rfc7520_figure150.jwe", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 150)");
     // 5.8 "A128KW" "A256GCM"
     test_rfc7520_jwe (&key, "rfc7520_figure159.jwe", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 159)");
-    test_rfc7520_jwe (&key, "rfc7520_figure160.json", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 160)");
-    test_rfc7520_jwe (&key, "rfc7520_figure161.json", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 161)");
+    test_rfc7520_jwe (&key, "rfc7520_figure160.jwe", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 160)");
+    test_rfc7520_jwe (&key, "rfc7520_figure161.jwe", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 161)");
 
-    //test_rfc7520_jwe (&key, "rfc7520_figure193.json", "RFC 7520 5.11.  Flattened JWE JSON Serialization (figure 193)");
-    test_rfc7520_jwe (&key, "rfc7520_figure221.json", "RFC 7520 5.13.  General JWE JSON Serialization (figure 221)");
+    // 5.9 Compressed Content
+    test_rfc7520_jwe (&key, "rfc7520_figure170.jwe", "RFC 7520 5.9.  Compressed Content (figure 170)");
+    test_rfc7520_jwe (&key, "rfc7520_figure171.jwe", "RFC 7520 5.9.  Compressed Content (figure 171)");
+    test_rfc7520_jwe (&key, "rfc7520_figure172.jwe", "RFC 7520 5.9.  Compressed Content (figure 172)");
+
+    /*
+    todo 5.10~5.12
+    // 5.10.  Including Additional Authenticated Data
+    test_rfc7520_jwe (&key, "rfc7520_figure182.jwe", "RFC 7520 5.10.  Including Additional Authenticated Data (figure 182)");
+
+    // 5.11.  Protecting Specific Header Fields
+    test_rfc7520_jwe (&key, "rfc7520_figure192.jwe", "RFC 7520 5.11.  Protecting Specific Header Fields (figure 192)");
+    test_rfc7520_jwe (&key, "rfc7520_figure193.jwe", "RFC 7520 5.11.  Protecting Specific Header Fields (figure 193)");
+
+    // 5.12.  Protecting Content Only
+    test_rfc7520_jwe (&key, "rfc7520_figure200.jwe", "RFC 7520 5.12.  Protecting Content Only (figure 200)");
+    test_rfc7520_jwe (&key, "rfc7520_figure201.jwe", "RFC 7520 5.12.  Protecting Content Only (figure 201)");
+    */
+
+    // 5.13.  Encrypting to Multiple Recipients
+    test_rfc7520_jwe (&key, "rfc7520_figure221.jwe", "RFC 7520 5.13.  General JWE JSON Serialization (figure 221)");
+
+    /*
+    todo 6
+    // 6.  Nesting Signatures and Encryption
+    test_rfc7520_signature (&key, "rfc7520_figure228.jws", "RFC 7520 6.3.  Signing Output (figure 228)");
+    test_rfc7520_jwe (&key, "rfc7520_figure226.jwe", "RFC 7520 6.7.  Encrypting the Content (figure 236)");
+    test_rfc7520_jwe (&key, "rfc7520_figure227.jwe", "RFC 7520 6.7.  Encrypting the Content (figure 237)");
+    test_rfc7520_jwe (&key, "rfc7520_figure228.jwe", "RFC 7520 6.7.  Encrypting the Content (figure 238)");
+    */
 }
 
 void test_jwe_flattened ()
@@ -2062,42 +2099,42 @@ void key_dump (crypto_key* key, jwa_t alg, crypto_use_t use)
     print_text ("try kt %d alg %s", alg_info->kty, alg_info->alg_name);
     pkey = key->select (kid, alg, use);
     if (pkey) {
-        print_text ("> kid %s", kid.c_str ());
+        printf ("> kid %s", kid.c_str ());
         key->get_key (pkey, pub1, pub2, priv);
 
         switch (alg_info->kty) {
             case crypto_key_t::kty_hmac:
 
                 hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                print_text ("> k %s", hex.c_str ());
+                printf ("> k %s", hex.c_str ());
 
                 break;
             case crypto_key_t::kty_rsa:
 
                 hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
-                print_text ("> n %s", hex.c_str ());
+                printf ("> n %s", hex.c_str ());
                 hex = base64_encode (pub2, base64_encoding_t::base64url_encoding);
-                print_text ("> e %s", hex.c_str ());
+                printf ("> e %s", hex.c_str ());
                 hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                print_text ("> d %s", hex.c_str ());
+                printf ("> d %s", hex.c_str ());
 
                 break;
             case crypto_key_t::kty_ec:
 
                 hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
-                print_text ("> x %s", hex.c_str ());
+                printf ("> x %s", hex.c_str ());
                 hex = base64_encode (pub2, base64_encoding_t::base64url_encoding);
-                print_text ("> y %s", hex.c_str ());
+                printf ("> y %s", hex.c_str ());
                 hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                print_text ("> d %s", hex.c_str ());
+                printf ("> d %s", hex.c_str ());
 
                 break;
             case crypto_key_t::kty_okp:
 
                 hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
-                print_text ("> x %s", hex.c_str ());
+                printf ("> x %s", hex.c_str ());
                 hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                print_text ("> d %s", hex.c_str ());
+                printf ("> d %s", hex.c_str ());
 
                 break;
             default:

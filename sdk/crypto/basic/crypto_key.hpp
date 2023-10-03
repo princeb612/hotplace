@@ -117,10 +117,18 @@ public:
      * @return error code (see error.hpp)
      */
     return_t load_pem_file (const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
+
+    /**
+     * @brief write PEM to the file
+     * @param stream_t* stream [out]
+     * @param int flag [in]
+     * @return error code (see error.hpp)
+     */
+    return_t write_pem (stream_t* stream, int flags = 0);
     /**
      * @brief write PEM to the file
      * @param const char* file [in]
-     * @param int flag [in] reserved
+     * @param int flag [in]
      * @return error code (see error.hpp)
      */
     return_t write_pem_file (const char* file, int flags = 0);
@@ -311,8 +319,9 @@ public:
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      * @parambinary_t& priv [out]
+     * @param bool plzero [inopt] preserve leading zero (default false)
      */
-    static return_t get_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv);
+    static return_t get_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero = false);
     /**
      * @brief public key
      * @param EVP_PKEY* pkey [in]
@@ -320,8 +329,9 @@ public:
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      * @parambinary_t& priv [out]
+     * @param bool plzero [inopt] preserve leading zero (default false)
      */
-    static return_t get_key (EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv);
+    static return_t get_key (EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero = false);
     /**
      * @brief public key
      * @param EVP_PKEY* pkey [in]
@@ -330,9 +340,10 @@ public:
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      * @parambinary_t& priv [out]
+     * @param bool plzero [inopt] preserve leading zero (default false)
      */
     static return_t get_key (EVP_PKEY* pkey, int flag, crypto_key_t& type,
-                             binary_t& pub1, binary_t& pub2, binary_t& priv);
+                             binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero = false);
 
 
     /**
@@ -374,8 +385,9 @@ protected:
      * @param CRYPTO_KEY_FLAG flag [in] CRYPTO_KEY_PUBLIC, CRYPTO_KEY_PRIVATE
      * @param crypto_key_t type [out]
      * @param crypt_datamap_t& datamap [out]
+     * @param bool plzero [inopt] preserve leading zero (default false)
      */
-    static return_t extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, crypt_datamap_t& datamap);
+    static return_t extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, crypt_datamap_t& datamap, bool plzero = false);
 
 private:
     /**

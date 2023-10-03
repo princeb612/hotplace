@@ -7,7 +7,7 @@
 set (module jose)
 file (GLOB SOURCE_FILES *.cpp)
 
-file (GLOB DATA_FILES *.json *.jwk *.jwe *.pem)
+file (GLOB DATA_FILES *.json *.jwe *.jwk *.jws *.pem)
 file (COPY ${DATA_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/build/test/${module}/)
 
 

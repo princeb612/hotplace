@@ -222,6 +222,7 @@ enum crypt_item_t {
     /* string */
     item_header         = 128,  // p - header (protected_header.decoded)
     item_kid            = 129,  // kid
+    item_zip            = 130,  // zip "DEF"
 
     /* variant */
     item_epk            = 256,  // ephemeral public key
@@ -580,10 +581,10 @@ enum cose_alg_t {
 
     // RFC 8152 Table 7: HMAC Algorithm Values
     // RFC 9053 Table 3: HMAC Algorithm Values
-    cose_hmac_256_64            = 4,    // HMAC w/ SHA-256 truncated to 64 bits, When truncating, the leftmost tag length bits are kept and transmitted.
-    cose_hmac_256_256           = 5,    // HMAC w/ SHA-256
-    cose_hmac_384_256           = 6,    // HMAC w/ SHA-384
-    cose_hmac_512_512           = 7,    // HMAC w/ SHA-512
+    cose_hs256_64               = 4,    // HMAC w/ SHA-256 truncated to 64 bits, When truncating, the leftmost tag length bits are kept and transmitted.
+    cose_hs256                  = 5,    // HMAC w/ SHA-256
+    cose_hs384                  = 6,    // HMAC w/ SHA-384
+    cose_hs512                  = 7,    // HMAC w/ SHA-512
 
     // RFC 8152 Table 10: Algorithm Values for AES-CCM
     // RFC 9053 Table 6: Algorithm Values for AES-CCM

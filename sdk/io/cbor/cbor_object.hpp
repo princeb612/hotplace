@@ -73,14 +73,13 @@ public:
     uint32 get_flags ();
 
     void tag (bool use, cbor_tag_t tag);
+    bool tagged ();
+    cbor_tag_t tag_value ();
 
     virtual int addref ();
     virtual int release ();
 
 protected:
-    bool tagged ();
-    cbor_tag_t tag_value ();
-
     void reserve (size_t size); ///<< reserve a capacity while parsing
     size_t capacity ();         ///<< reserved size
 

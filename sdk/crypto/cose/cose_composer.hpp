@@ -24,14 +24,8 @@ using namespace io;
 namespace crypto {
 
 /**
- * @brief   interface prototyping
+ * @brief   composer
  */
-typedef struct _cose_item_t {
-    variant_t key;
-    variant_t value;
-} cose_item_t;
-typedef std::list <cose_item_t> cose_list_t;
-
 class cose_composer
 {
 public:

@@ -463,6 +463,60 @@ uint32 test_totp_rfc6238 (hash_algorithm_t algorithm)
     return ret;
 }
 
+void test_hash_hmac_sign ()
+{
+    crypto_key key;
+    crypto_keychain keychain;
+    constexpr char key_source[] = "000102030405060708090a0b0c0d0e0f";
+    constexpr char in_source[] = "I crossed the valleys the dust of midlands / To search for the third key to open the gates";
+    binary_t bin_key = base16_decode (key_source);
+    binary_t bin_in = convert (in_source);
+
+    keychain.add_oct (&key, base16_decode (key_source));
+    binary_t result;
+    buffer_stream bs;
+
+    openssl_hash hash;
+    openssl_sign sign;
+
+    // source
+    dump_memory (bin_in, &bs);
+    std::cout << "source" << std::endl << bs.c_str () << std::endl;
+
+    // openssl_hash hash
+    hash_context_t* hash_context = nullptr;
+    hash.open (&hash_context, hash_algorithm_t::sha2_256);
+    hash.hash (hash_context, &bin_in[0], bin_in.size (), result);
+    hash.close (hash_context);
+
+    dump_memory (result, &bs);
+    std::cout << "hash" << std::endl << bs.c_str () << std::endl;
+
+    // EVP_Digest (hash)
+    unsigned int size = 0;
+    result.resize (0);
+    EVP_Digest (&bin_in[0], bin_in.size (), &result[0], &size, EVP_sha256 (), nullptr);
+    result.resize (size);
+    EVP_Digest (&bin_in[0], bin_in.size (), &result[0], &size, EVP_sha256 (), nullptr);
+    dump_memory (result, &bs);
+    std::cout << "Digest" << std::endl << bs.c_str () << std::endl;
+
+    // openssl_hash hmac
+    hash_context_t* hmac_context = nullptr;
+    hash.open (&hmac_context, hash_algorithm_t::sha2_256, &bin_key[0], bin_key.size ());
+    hash.hash (hmac_context, &bin_in[0], bin_in.size (), result);
+    hash.close (hmac_context);
+
+    dump_memory (result, &bs);
+    std::cout << "HMAC" << std::endl << bs.c_str () << std::endl;
+
+    // openssl_sign
+    sign.sign_digest (key.any (), hash_algorithm_t::sha2_256, bin_key, result);
+
+    dump_memory (result, &bs);
+    std::cout << "Sign" << std::endl << bs.c_str () << std::endl;
+}
+
 int main ()
 {
     set_trace_option (trace_option_t::trace_bt);
@@ -482,6 +536,8 @@ int main ()
         test_totp_rfc6238 (hash_algorithm_t::sha1);
         test_totp_rfc6238 (hash_algorithm_t::sha2_256);
         test_totp_rfc6238 (hash_algorithm_t::sha2_512);
+
+        test_hash_hmac_sign ();
     }
     __finally2
     {

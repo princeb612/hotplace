@@ -495,14 +495,15 @@ return_t crypto_advisor::build_if_necessary ()
         _cose2kty_map.insert (std::make_pair (cose_kty_t::cose_kty_okp, crypto_key_t::kty_okp));
         _cose2kty_map.insert (std::make_pair (cose_kty_t::cose_kty_rsa, crypto_key_t::kty_rsa));
 
-        struct {
+        struct _sig2cose {
             crypt_sig_t sig;
             jws_t jws;
             cose_alg_t cose;
-        } sig2cose [] = {
-            { crypt_sig_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hmac_256_256 },
-            { crypt_sig_t::sig_hs384, jws_t::jws_hs384, cose_alg_t::cose_hmac_384_256 },
-            { crypt_sig_t::sig_hs512, jws_t::jws_hs512, cose_alg_t::cose_hmac_512_512 },
+        };
+        struct _sig2cose sig2cose [] = {
+            { crypt_sig_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256 },
+            { crypt_sig_t::sig_hs384, jws_t::jws_hs384, cose_alg_t::cose_hs384 },
+            { crypt_sig_t::sig_hs512, jws_t::jws_hs512, cose_alg_t::cose_hs512 },
             { crypt_sig_t::sig_rs256, jws_t::jws_rs256, cose_alg_t::cose_rs256 },
             { crypt_sig_t::sig_rs384, jws_t::jws_rs384, cose_alg_t::cose_rs384 },
             { crypt_sig_t::sig_rs512, jws_t::jws_rs512, cose_alg_t::cose_rs512 },
@@ -514,11 +515,19 @@ return_t crypto_advisor::build_if_necessary ()
             { crypt_sig_t::sig_ps512, jws_t::jws_ps512, cose_alg_t::cose_ps512 },
             { crypt_sig_t::sig_eddsa, jws_t::jws_eddsa, cose_alg_t::cose_eddsa },
         };
+        struct _sig2cose cose2sig [] = {
+            { crypt_sig_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256_64 },
+        };
         for (i = 0; i < RTL_NUMBER_OF (sig2cose); i++) {
             _sig2jws_map.insert (std::make_pair (sig2cose[i].sig, sig2cose[i].jws));
             _jws2sig_map.insert (std::make_pair (sig2cose[i].jws, sig2cose[i].sig));
-            _sig2cose_map.insert (std::make_pair (sig2cose[i].sig, sig2cose[i].cose));
+            if (cose_alg_t::cose_unknown != sig2cose[i].cose) {
+                _sig2cose_map.insert (std::make_pair (sig2cose[i].sig, sig2cose[i].cose));
+            }
             _cose2sig_map.insert (std::make_pair (sig2cose[i].cose, sig2cose[i].sig));
+        }
+        for (i = 0; i < RTL_NUMBER_OF (cose2sig); i++) {
+            _cose2sig_map.insert (std::make_pair (cose2sig[i].cose, cose2sig[i].sig));
         }
 
         for (i = 0; i < RTL_NUMBER_OF (hint_curves); i++) {

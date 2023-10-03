@@ -44,6 +44,10 @@ enum jose_part_t {
     jose_alg_part   = 2,
 };
 
+enum jose_flag_t {
+    jose_deflate = (1 << 0), // JWE only, (NOT JWS)
+};
+
 typedef struct _jose_recipient_t {
     const hint_jose_encryption_t* alg_info;
     EVP_PKEY* pkey;
@@ -120,12 +124,13 @@ typedef std::list<jose_sign_t> jose_signs_t;
 typedef struct _jose_context_t {
     crypto_key* key;
 
+    uint32 flags;
     binary_t protected_header;          // compact, flat
 
     jose_encryptions_map_t encryptions; // JSON Object Encryption
     jose_signs_t signs;                 // JSON Object Signing
 
-    _jose_context_t () : key (nullptr)
+    _jose_context_t () : key (nullptr), flags (0)
     {
         // do nothing
     }

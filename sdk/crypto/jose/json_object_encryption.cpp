@@ -341,6 +341,11 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
         const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);      // key management
         const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption (enc);     // content encryption
 
+        if (nullptr == alg_info) {
+            ret = errorcode_t::request;
+            __leave2;
+        }
+
         jose_encryption_t& item = iter->second;
         binary_t cek;                                                                           // local, enc, from encrypted_key
         binary_t iv = item.datamap[crypt_item_t::item_iv];                                      // in, enc
