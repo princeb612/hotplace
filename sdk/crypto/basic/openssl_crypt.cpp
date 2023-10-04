@@ -648,7 +648,7 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
         ret_cipher = EVP_CipherFinal (context->decrypt_context, out_decrypted + size_update, &size_final);
         if (1 != ret_cipher) {
             ret = errorcode_t::internal_error;
-            __leave2;
+            __leave2_trace_openssl (ret);
         }
 
         *size_decrypted = size_update + size_final;

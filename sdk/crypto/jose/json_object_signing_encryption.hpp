@@ -433,6 +433,11 @@ public:
 
 protected:
     /**
+     * @brief clear/reset
+     * @param jose_context_t* context [in]
+     */
+    return_t clear_context (jose_context_t* context);
+    /**
      * @brief encryption
      * @param jwe_t enc [in]
      * @param std::list<jwa_t> const& algs [in]
@@ -483,15 +488,10 @@ protected:
     /**
      * @brief parse
      * @param jose_context_t* context [in]
-     * @param const char* input [in]
+     * @param const char* input [in] compact, flattened, serialization
      */
     return_t prepare_decryption (jose_context_t* context, const char* input);
 
-    /**
-     * @brief clear/reset
-     * @param jose_context_t* context [in]
-     */
-    return_t clear_context (jose_context_t* context);
     /**
      * @brief decrypt
      * @param jose_context_t* context [in]
@@ -500,24 +500,25 @@ protected:
      * @param const char* iv [in]
      * @param const char* ciphertext [in]
      * @param const char* tag [in]
-     * @param void* json [in]
+     * @param void* json_root [in]
      * @param jwe_t& type [out]
      * @param jose_encryption_t& item [out]
      */
-    return_t prepare_decryption_item (jose_context_t* context,
-                                      const char* protected_header, const char* encrypted_key, const char* iv, const char* ciphertext, const char* tag,
-                                      void* json, jwe_t& type, jose_encryption_t& item);
+    return_t prepare_decryption (jose_context_t* context,
+                                 const char* protected_header, const char* encrypted_key, const char* iv, const char* ciphertext, const char* tag,
+                                 void* json_root, jwe_t& type, jose_encryption_t& item);
     /**
      * @brief decrypt
      * @param jose_context_t* context [in]
      * @param const char* protected_header [in]
      * @param const char* encrypted_key [in]
-     * @param void* json [in]
+     * @param void* json_root [in]
+     * @param void* json_recipient_header [in]
      * @param jwa_t& type [out]
      * @param jose_recipient_t& recipient [out]
      */
     return_t prepare_decryption_recipient (jose_context_t* context,
-                                           const char* protected_header, const char* encrypted_key, void* json, jwa_t& type, jose_recipient_t& recipient);
+                                           const char* protected_header, const char* encrypted_key, void* json_root, void* json_recipient_header, jwa_t& type, jose_recipient_t& recipient);
 
     /**
      * @brief write

@@ -33,17 +33,16 @@ json_object_encryption::~json_object_encryption ()
     // do nothing
 }
 
-return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output)
+return_t json_object_encryption::encrypt (jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
-    jose_context_t* handle = static_cast <jose_context_t*> (context);
     openssl_crypt crypt;
     openssl_hash hash;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {
-        if (nullptr == context) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -312,22 +311,21 @@ return_t json_object_encryption::encrypt (jose_context_t* context, jwe_t enc, jw
     return ret;
 }
 
-return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output)
+return_t json_object_encryption::decrypt (jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output)
 {
-    return decrypt (context, enc, alg, nullptr, input, output);
+    return decrypt (handle, enc, alg, nullptr, input, output);
 }
 
-return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jwa_t alg, const char* kid, binary_t const& input, binary_t& output)
+return_t json_object_encryption::decrypt (jose_context_t* handle, jwe_t enc, jwa_t alg, const char* kid, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
-    jose_context_t* handle = static_cast <jose_context_t*> (context);
     openssl_crypt crypt;
     openssl_hash hash;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
     {
-        if (nullptr == context) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -341,7 +339,7 @@ return_t json_object_encryption::decrypt (jose_context_t* context, jwe_t enc, jw
         const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);      // key management
         const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption (enc);     // content encryption
 
-        if (nullptr == alg_info) {
+        if (nullptr == alg_info || nullptr == enc_info) {
             ret = errorcode_t::request;
             __leave2;
         }
