@@ -219,6 +219,8 @@ enum crypt_item_t {
 
     item_hmac_k         = 76,
 
+    item_ec_pub         = 77,
+
     /* string */
     item_header         = 128,  // p - header (protected_header.decoded)
     item_kid            = 129,  // kid

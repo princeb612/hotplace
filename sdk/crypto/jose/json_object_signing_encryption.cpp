@@ -913,7 +913,12 @@ return_t json_object_signing_encryption::prepare_decryption (jose_context_t* han
             const char* aad = nullptr;
             json_unpack (json_root, "{s:s}", "aad", &aad);
             if (aad) {
-                item.datamap[crypt_item_t::item_aad] = convert (aad);
+                // Concatenation of the JWE Protected Header ".", and the base64url [RFC4648] encoding of AAD as authenticated data
+                binary_t bin_aad;
+                bin_aad.insert (bin_aad.end (), protected_header, protected_header + strlen (protected_header));
+                bin_aad.insert (bin_aad.end (), '.');
+                bin_aad.insert (bin_aad.end (), aad, aad + strlen (aad));
+                item.datamap[crypt_item_t::item_aad] = bin_aad;
             }
 
             // RFC 7520 5.12.  Protecting Content Only
@@ -998,6 +1003,7 @@ return_t json_object_signing_encryption::prepare_decryption_recipient (jose_cont
             pool.push_back (json_protected);
         }
         if (json_root) {
+            // RFC 7520 5.12.  Protecting Content Only
             // only the general JWE JSON Serialization and flattened JWE JSON Serialization are possible.
             json_t* unprotected_header = nullptr;
             json_unpack (json_root, "{s:o}", "unprotected", &unprotected_header);
