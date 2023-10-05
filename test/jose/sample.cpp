@@ -84,22 +84,15 @@ void test0 ()
     json_web_key jwk;
     json_web_signature jws;
 
-    binary_t pub1;
-    binary_t pub2;
-    binary_t priv;
     crypto_key crypto_key_es521;
     jwk.load_file (&crypto_key_es521, "rfc7516_A4.jwk");
 
     EVP_PKEY* pkey = crypto_key_es521.any ();
-    crypto_key_es521.get_key (pkey, pub1, pub2, priv);
-
-    std::string encoded;
-    encoded = base64_encode (&pub1[0], pub1.size (), base64_encoding_t::base64url_encoding);
-    std::cout << "x " << encoded.c_str () << std::endl;
-    encoded = base64_encode (&pub2[0], pub2.size (), base64_encoding_t::base64url_encoding);
-    std::cout << "y " << encoded.c_str () << std::endl;
-    encoded = base64_encode (&priv[0], priv.size (), base64_encoding_t::base64url_encoding);
-    std::cout << "d " << encoded.c_str () << std::endl;
+    if (pkey) {
+        buffer_stream bs;
+        dump_key (pkey, &bs);
+        printf ("%s\n", bs.c_str ());
+    }
 
     _test_case.assert (true, __FUNCTION__, "baseic informations");
 }
@@ -129,7 +122,7 @@ void test_rfc7515_A1 ()
     bool result = false;
 
     jwk.load_file (&key, "rfc7515.jwk");
-    //key.for_each (dump_crypto_key, nullptr);
+    key.for_each (dump_crypto_key, nullptr);
 
     json_web_signature jws;
     std::string signature;
@@ -182,7 +175,7 @@ void test_rfc7515_HS ()
     bool result = false;
 
     jwk.load_file (&key, "rfc7515.jwk");
-    //key.for_each (dump_crypto_key, nullptr);
+    key.for_each (dump_crypto_key, nullptr);
 
     json_object_signing_encryption jose;
     std::string jws_result;
@@ -223,6 +216,7 @@ void test_rfc7515_A2 ()
     crypto_key key;
     json_web_key jwk;
     jwk.load_file (&key, "rfc7515.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     json_web_signature jws;
     std::string signature;
@@ -286,6 +280,7 @@ void test_rfc7515_A3 ()
     crypto_key key;
     json_web_key jwk;
     jwk.load_file (&key, "rfc7515.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     json_web_signature jws;
     std::string signature;
@@ -338,6 +333,7 @@ void test_rfc7515_A4 ()
     crypto_key key;
     json_web_key jwk;
     jwk.load_file (&key, "rfc7515.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     json_web_signature jws;
     std::string signature;
@@ -392,6 +388,7 @@ void test_rfc7515_A5 ()
     crypto_key key;
     json_web_key jwk;
     jwk.load_file (&key, "rfc7515.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     json_web_signature jws;
     std::string signature;
@@ -428,6 +425,7 @@ void test_rfc7515_A6 ()
     crypto_key key;
     json_web_key jwk;
     jwk.load_file (&key, "rfc7515.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     json_web_signature jws;
     std::string signature;
@@ -452,6 +450,7 @@ void test_rfc7515_A7 ()
     crypto_key key;
     json_web_key jwk;
     jwk.load_file (&key, "rfc7515.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     json_web_signature jws;
     std::string signature;
@@ -769,6 +768,7 @@ void test_rfc7516_A1_test ()
     binary_t data;
 
     jwk.load_file (&key, "rfc7516_A1.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     dump_memory ((byte_t*) input.c_str (), input.size (), &bs);
     printf ("input\n%s\n", bs.c_str ());
@@ -886,6 +886,7 @@ void test_rfc7516_A1 ()
     crypto_key key;
 
     jwk.load_file (&key, "rfc7516_A1.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     std::string jose_header = "{\"alg\":\"RSA-OAEP\",\"enc\":\"A256GCM\"}";
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
@@ -934,6 +935,7 @@ void test_rsa_oaep ()
     bool result = false;
 
     jwk.load_file (&key, "rfc7516_A1.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
 
@@ -961,6 +963,7 @@ void test_rsa_oaep_256 ()
     bool result = false;
 
     jwk.load_file (&key, "rfc7516_A1.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     std::string jose_header = "{\"alg\":\"RSA-OAEP-256\",\"enc\":\"A256GCM\"}";
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
@@ -987,6 +990,7 @@ void test_rfc7516_A2 ()
     crypto_key key;
 
     jwk.load_file (&key, "rfc7516_A2.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     //std::string jose_header = "{\"alg\":\"RSA1_5\",\"enc\":\"A128CBC-HS256\"}";
     std::string input = "Live long and prosper.";
@@ -1031,6 +1035,7 @@ void test_rfc7516_A3 ()
     crypto_key key;
 
     jwk.load_file (&key, "rfc7516_A3.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     //std::string jose_header = "{\"alg\":\"A128KW\",\"enc\":\"A128CBC-HS256\"}";
     std::string input = "Live long and prosper.";
@@ -1074,6 +1079,7 @@ void test_rfc7516_A4 ()
     crypto_key key;
 
     jwk.load_file (&key, "rfc7516_A4.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     std::string input = "Live long and prosper.";
     std::string json_serial;
@@ -1234,6 +1240,7 @@ void test_jwk ()
     size_t buflen = 0;
 
     jwk.load_file (&key, "rfc7520_priv.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     jwk.write (&key, nullptr, &buflen, 0);
     buffer.resize (buflen);
@@ -1297,6 +1304,7 @@ void test_rfc7517_C ()
     bool result = false;
 
     jwk.load_file (&key, "rfc7517_C.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
     constexpr char passphrase[] = "Thus from my lips, by yours, my sin is purged.";
@@ -1321,6 +1329,7 @@ void test_rfc7518_RSASSA_PSS ()
     crypto_key key;
     json_web_key jwk;
     jwk.load_file (&key, "rfc7515.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     json_web_signature jws;
     std::string signature;
@@ -1420,6 +1429,9 @@ void test_rfc7518_C ()
 
     jwk.load_file (&key_alice, "rfc7518_C_alice.jwk");
     jwk.load_file (&key_bob, "rfc7518_C_bob.jwk");
+
+    key_alice.for_each (dump_crypto_key, nullptr);
+    key_bob.for_each (dump_crypto_key, nullptr);
 
     EVP_PKEY* pkey_alice = key_alice.select (crypto_use_t::use_enc);
     EVP_PKEY* pkey_bob = key_bob.select (crypto_use_t::use_enc);
@@ -1712,6 +1724,9 @@ void test_jwe_flattened ()
         jwk.load_file (&crypto_pubkey, "rfc7520_pub.jwk");
         jwk.load_file (&crypto_privkey, "rfc7520_priv.jwk");
 
+        crypto_pubkey.for_each (dump_crypto_key, nullptr);
+        crypto_privkey.for_each (dump_crypto_key, nullptr);
+
         jose.open (&handle_encrypt, &crypto_pubkey);
         jose.open (&handle_decrypt, &crypto_privkey);
 
@@ -1784,6 +1799,9 @@ void test_jwe_json (jwe_t enc)
     {
         jwk.load_file (&crypto_pubkey, "rfc7520_pub.jwk");
         jwk.load_file (&crypto_privkey, "rfc7520_priv.jwk");
+
+        crypto_pubkey.for_each (dump_crypto_key, nullptr);
+        crypto_privkey.for_each (dump_crypto_key, nullptr);
 
         jose.open (&handle_encrypt, &crypto_pubkey);
         jose.open (&handle_decrypt, &crypto_privkey);
@@ -1875,6 +1893,7 @@ void test_jwk_thumbprint ()
     buffer_stream bs;
 
     jwk.load_file (&key, "rfc7638_3.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     std::cout
         << "key item : "
@@ -2003,6 +2022,7 @@ void test_rfc8037 ()
 
     crypto_key jwk_x25519;
     jwk.load_file (&jwk_x25519, "rfc8037_A_X25519.jwk");
+    jwk_x25519.for_each (dump_crypto_key, nullptr);
     jose.open (&handle, &jwk_x25519);
     ret = jose.encrypt (handle, jwe_t::jwe_a128gcm, jwa_t::jwa_ecdh_es_a128kw, convert (claim), encrypted, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
@@ -2013,6 +2033,7 @@ void test_rfc8037 ()
 
     crypto_key jwk_x448;
     jwk.load_file (&jwk_x448, "rfc8037_A_X448.jwk");
+    jwk_x448.for_each (dump_crypto_key, nullptr);
     jose.open (&handle, &jwk_x448);
     ret = jose.encrypt (handle, jwe_t::jwe_a256gcm, jwa_t::jwa_ecdh_es_a256kw, convert (claim), encrypted, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
@@ -2148,8 +2169,9 @@ void key_match_test ()
 
     __try2
     {
-        crypto_key crypto_key;
-        jwk.load_file (&crypto_key, "keys.jwk");
+        crypto_key key;
+        jwk.load_file (&key, "keys.jwk");
+        key.for_each (dump_crypto_key, nullptr);
 
         jwa_t algs [] = {
             jwa_t::jwa_rsa_1_5, jwa_t::jwa_rsa_oaep, jwa_t::jwa_rsa_oaep_256,
@@ -2160,7 +2182,7 @@ void key_match_test ()
             jwa_t::jwa_pbes2_hs256_a128kw, jwa_t::jwa_pbes2_hs384_a192kw, jwa_t::jwa_pbes2_hs512_a256kw
         };
         for (unsigned int i = 0; i < RTL_NUMBER_OF (algs); i++) {
-            key_dump (&crypto_key, algs[i], crypto_use_t::use_enc);
+            key_dump (&key, algs[i], crypto_use_t::use_enc);
         }
     }
     __finally2
@@ -2169,8 +2191,9 @@ void key_match_test ()
 
     __try2
     {
-        crypto_key crypto_key;
-        jwk.load_file (&crypto_key, "rfc7515.jwk");
+        crypto_key key;
+        jwk.load_file (&key, "rfc7515.jwk");
+        key.for_each (dump_crypto_key, nullptr);
 
         jws_t algs [] = {
             jws_t::jws_hs256, jws_t::jws_hs384, jws_t::jws_hs512,
@@ -2179,7 +2202,7 @@ void key_match_test ()
             jws_t::jws_ps256, jws_t::jws_ps384, jws_t::jws_ps512,
         };
         for (unsigned int i = 0; i < RTL_NUMBER_OF (algs); i++) {
-            key_dump (&crypto_key, algs[i], crypto_use_t::use_sig);
+            key_dump (&key, algs[i], crypto_use_t::use_sig);
         }
     }
     __finally2

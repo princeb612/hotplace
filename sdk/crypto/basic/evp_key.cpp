@@ -11,6 +11,9 @@
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
+#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
 
 namespace hotplace {
@@ -180,9 +183,10 @@ static void pkey_param_printf (const char* msg, binary_t const& key, stream_t* s
         }
 
         if (msg) {
-            printf ("%s\n", msg);
+            stream->printf ("%s\n", msg);
         }
 
+        /* openssl evp_pkey_print style */
         size_t size = key.size ();
         for (size_t i = 0; i < size; i++) {
             size_t module = i % hex_part;
@@ -198,6 +202,31 @@ static void pkey_param_printf (const char* msg, binary_t const& key, stream_t* s
             }
         }
         stream->printf ("\n");
+
+        /* JWK-style base64url encoding */
+        std::string b64url_encoded = base64_encode (key, base64_encoding_t::base64url_encoding);
+        stream->fill (indent, ' ');
+        stream->printf ("\e[35m");
+        stream->printf ("%s", b64url_encoded.c_str ());
+        stream->printf ("\e[0m");
+        stream->printf ("\n");
+
+        /* COSE-style */
+        cbor_data* root = new cbor_data (key);
+        if (root) {
+            cbor_publisher publisher;
+            buffer_stream diagnostic;
+
+            publisher.publish (root, &diagnostic);
+
+            stream->fill (indent, ' ');
+            stream->printf ("\e[33m");
+            stream->printf ("%s", diagnostic.c_str ());
+            stream->printf ("\e[0m");
+            stream->printf ("\n");
+
+            root->release ();
+        }
     }
     __finally2
     {

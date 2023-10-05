@@ -49,6 +49,18 @@ return_t dump_test_data (const char* text, binary_t const& cbor)
     return ret;
 }
 
+void dump_crypto_key (crypto_key_object_t* key, void*)
+{
+    uint32 nid = 0;
+
+    nidof_evp_pkey (key->pkey, nid);
+    printf ("nid %i kid %s alg %s use %08x\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
+
+    buffer_stream bs;
+    dump_key (key->pkey, &bs);
+    printf ("%s\n", bs.c_str ());
+}
+
 return_t test_cose_example (cbor_object* root, const char* expect_file, const char* text)
 {
     return_t ret = errorcode_t::success;
@@ -149,6 +161,7 @@ return_t test_cose_example (cbor_object* root, const char* expect_file, const ch
 
         crypto_key keys;
         cwk.load_file (&keys, "rfc8152_c_7_2.cbor");
+        keys.for_each (dump_crypto_key, nullptr);
 
         if (root->tagged ()) {
             switch (root->tag_value ()) {
@@ -1461,18 +1474,6 @@ void test_rfc8152_c_6_1 ()
     root->release ();
 }
 
-void dump_crypto_key (crypto_key_object_t* key, void*)
-{
-    uint32 nid = 0;
-
-    nidof_evp_pkey (key->pkey, nid);
-    printf ("nid %i kid %s alg %s use %08x\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
-
-    buffer_stream bs;
-    dump_key (key->pkey, &bs);
-    printf ("%s\n", bs.c_str ());
-}
-
 void test_rfc8152_c_7_1 ()
 {
     _test_case.begin ("RFC 8152 C.7");
@@ -1724,8 +1725,10 @@ void try_refactor_jose_sign ()
     cbor_web_key cwk;
     crypto_key pubkey;
     cwk.load_file (&pubkey, "rfc8152_c_7_1.cbor");
+    pubkey.for_each (dump_crypto_key, nullptr);
     crypto_key privkey;
     cwk.load_file (&privkey, "rfc8152_c_7_2.cbor");
+    privkey.for_each (dump_crypto_key, nullptr);
 
     // dump keys JWK formatted
     json_web_key jwk;
