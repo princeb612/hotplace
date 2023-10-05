@@ -308,13 +308,13 @@ public:
      */
     static return_t get_public_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2);
     /**
-     * @brief public key
+     * @brief private key
      * @param EVP_PKEY* pkey [in]
      * @parambinary_t& priv [out]
      */
     static return_t get_private_key (EVP_PKEY* pkey, binary_t& priv);
     /**
-     * @brief public key
+     * @brief key
      * @param EVP_PKEY* pkey [in]
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
@@ -323,7 +323,7 @@ public:
      */
     static return_t get_key (EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero = false);
     /**
-     * @brief public key
+     * @brief key
      * @param EVP_PKEY* pkey [in]
      * @param int flag [in] 0 public only, 1 also private
      * @parambinary_t& pub1 [out]
@@ -333,7 +333,7 @@ public:
      */
     static return_t get_key (EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero = false);
     /**
-     * @brief public key
+     * @brief key
      * @param EVP_PKEY* pkey [in]
      * @param int flag [in] 0 public only, 1 also private
      * @param crypto_key_t type [out] crypto_key_t::kty_hmac, crypto_key_t::kty_rsa, crypto_key_t::kty_ec
@@ -420,6 +420,16 @@ crypto_key_t typeof_crypto_key (crypto_key_object_t const& key);
  */
 bool is_kindof (EVP_PKEY* pkey, crypto_key_t type);
 
+/**
+ * @brief   dump
+ * @param   EVP_PKEY* pkey [in]
+ * @param   stream_t* stream [out]
+ * @param   uint8 hex_part [inopt] default 15
+ * @param   uint8 indent [inopt] default 4
+ */
+return_t dump_key (EVP_PKEY* pkey, stream_t* stream,
+                   uint8 hex_part = 15,
+                   uint8 indent = 4);
 }
 }  // namespace
 

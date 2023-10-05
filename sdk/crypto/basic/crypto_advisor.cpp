@@ -371,9 +371,9 @@ const hint_signature_t hint_signatures [] = {
 };
 
 const hint_curve_t hint_curves [] = {
-    { NID_X9_62_prime256v1, cose_ec_curve_t::cose_ec_p256,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-256", },
-    { NID_secp384r1,        cose_ec_curve_t::cose_ec_p384,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-384", },
-    { NID_secp521r1,        cose_ec_curve_t::cose_ec_p521,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-521", },
+    { NID_X9_62_prime256v1, cose_ec_curve_t::cose_ec_p256,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-256", "prime256v1", "secp256r1", },
+    { NID_secp384r1,        cose_ec_curve_t::cose_ec_p384,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-384", "ansip384r1", "secp384r1", },
+    { NID_secp521r1,        cose_ec_curve_t::cose_ec_p521,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-521", "ansip521r1", "secp521r1", },
     { NID_ED25519,          cose_ec_curve_t::cose_ec_ed25519, crypto_key_t::kty_okp, crypto_use_t::use_sig, "Ed25519", },
     { NID_ED448,            cose_ec_curve_t::cose_ec_ed448,   crypto_key_t::kty_okp, crypto_use_t::use_sig, "Ed448", },
     { NID_X25519,           cose_ec_curve_t::cose_ec_x25519,  crypto_key_t::kty_okp, crypto_use_t::use_enc, "X25519", },

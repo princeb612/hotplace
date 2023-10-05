@@ -639,7 +639,9 @@ typedef struct _hint_curves_t {
     cose_ec_curve_t cose_crv;
     crypto_key_t kty;
     crypto_use_t use;
-    const char* name;
+    const char* name;           // NIST CURVE
+    const char* nameof_x9_62;   // X9.62, X9.63
+    const char* nameof_sec;     // Standards for Efficient Cryptography (SEC)
 } hint_curve_t;
 
 typedef struct _hint_signature_t {

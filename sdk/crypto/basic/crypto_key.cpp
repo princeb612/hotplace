@@ -1539,14 +1539,14 @@ return_t crypto_key::extract (EVP_PKEY* pkey, int flag, crypto_key_t& type, cryp
             }
             if (crypt_access_t::private_key & flag) {
                 binary_t bin_d;
-                size_t len_y = curve_size ? curve_size : 256;
-                bin_d.resize (len_y);
-                ret_openssl = EVP_PKEY_get_raw_private_key ((EVP_PKEY*) pkey, &bin_d[0], &len_y);
-                bin_d.resize (len_y);
+                size_t len_d = curve_size ? curve_size : 256;
+                bin_d.resize (len_d);
+                ret_openssl = EVP_PKEY_get_raw_private_key ((EVP_PKEY*) pkey, &bin_d[0], &len_d);
+                bin_d.resize (len_d);
 
                 if (curve_size) {
-                    if (curve_size > len_y) {
-                        bin_d.insert (bin_d.begin (), curve_size - len_y, 0);
+                    if (curve_size > len_d) {
+                        bin_d.insert (bin_d.begin (), curve_size - len_d, 0);
                     }
                 }
 

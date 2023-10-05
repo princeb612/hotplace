@@ -13,6 +13,7 @@
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 
 namespace hotplace {
 using namespace io;

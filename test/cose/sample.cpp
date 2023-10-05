@@ -1461,76 +1461,16 @@ void test_rfc8152_c_6_1 ()
     root->release ();
 }
 
-return_t BIO_to_string (BIO* bio, std::string& data)
-{
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        data.clear ();
-
-        if (nullptr == bio) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        std::vector<char> buf;
-        char temp[16];
-        int l = 0;
-        while (1) {
-            l = BIO_read (bio, temp, sizeof (temp));
-            if (0 >= l) {
-                break;
-            }
-            buf.insert (buf.end (), temp, temp + l);
-        }
-        data.append (&buf[0], buf.size ());
-    }
-    __finally2
-    {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t EVP_PKEY_public_to_string (EVP_PKEY* pkey, std::string& data, int indent)
-{
-    return_t ret = errorcode_t::success;
-    BIO* bio = nullptr;
-
-    __try2
-    {
-        data.clear ();
-
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        bio = BIO_new (BIO_s_mem ());
-        EVP_PKEY_print_public (bio, pkey, indent, nullptr);
-
-        BIO_to_string (bio, data);
-    }
-    __finally2
-    {
-        if (nullptr != bio) {
-            BIO_free (bio);
-        }
-    }
-
-    return ret;
-}
-
 void dump_crypto_key (crypto_key_object_t* key, void*)
 {
     uint32 nid = 0;
-    std::string temp;
 
     nidof_evp_pkey (key->pkey, nid);
     printf ("nid %i kid %s alg %s use %08x\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
-    EVP_PKEY_public_to_string (key->pkey, temp, 0);
-    printf ("%s\n", temp.c_str ());
+
+    buffer_stream bs;
+    dump_key (key->pkey, &bs);
+    printf ("%s\n", bs.c_str ());
 }
 
 void test_rfc8152_c_7_1 ()

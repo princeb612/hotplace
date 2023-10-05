@@ -110,6 +110,10 @@ void dump_crypto_key (crypto_key_object_t* key, void*)
 
     nidof_evp_pkey (key->pkey, nid);
     printf ("nid %i kid %s alg %s use %i\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
+
+    buffer_stream bs;
+    dump_key (key->pkey, &bs);
+    printf ("%s\n", bs.c_str ());
 }
 
 void test_rfc7515_A1 ()
@@ -1572,6 +1576,7 @@ void test_rfc7520 ()
     crypto_key key;
 
     jwk.load_file (&key, "rfc7520_priv.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     // 4.1 "RS256"
     test_rfc7520_signature (&key, "rfc7520_figure13.jws", "RFC 7520 4.1.  RSA v1.5 Signature (figure 13)");
@@ -1673,6 +1678,7 @@ void test_rfc7520_6_nesting_sig_and_enc ()
     crypto_key key;
 
     jwk.load_file (&key, "rfc7520_6.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     // 6.  Nesting Signatures and Encryption
     test_rfc7520_signature (&key, "rfc7520_figure228.jws", "RFC 7520 6.  Nesting Signatures and Encryption (figure 228)");
@@ -1955,6 +1961,7 @@ void test_rfc8037 ()
     crypto_key key;
 
     jwk.load_file (&key, "rfc8037_A_ed25519.jwk");
+    key.for_each (dump_crypto_key, nullptr);
 
     binary_t pub1;
     binary_t pub2;
@@ -2035,6 +2042,7 @@ void test_okp ()
     key.generate (crypto_key_t::kty_okp, 25519, "test2", crypto_use_t::use_sig);
     key.generate (crypto_key_t::kty_okp, 448, "test3", crypto_use_t::use_enc);
     key.generate (crypto_key_t::kty_okp, 448, "test4", crypto_use_t::use_sig);
+    key.for_each (dump_crypto_key, nullptr);
 
     jose.open (&handle, &key);
 
@@ -2043,8 +2051,8 @@ void test_okp ()
         jwe_t::jwe_a192cbc_hs384,
         jwe_t::jwe_a256cbc_hs512,
         jwe_t::jwe_a128gcm,
-        //jwe_t::jwe_a192gcm, // fail ?
-        //jwe_t::jwe_a256gcm, // fail ?
+        jwe_t::jwe_a192gcm,
+        jwe_t::jwe_a256gcm,
     };
     jwa_t algs [] = {
         jwa_t::jwa_ecdh_es,
@@ -2062,7 +2070,7 @@ void test_okp ()
             const char* nameof_alg = advisor->nameof_jose_algorithm (algs [j]);
             claim = format ("JWE with OKP enc %s alg %s", nameof_enc, nameof_alg);
 
-            ret = jose.encrypt (handle, encs [i], algs [i], convert (claim), encrypted, jose_serialization_t::jose_flatjson);
+            ret = jose.encrypt (handle, encs [i], algs [j], convert (claim), encrypted, jose_serialization_t::jose_flatjson);
             if (errorcode_t::success == ret) {
                 printf ("%s\n", encrypted.c_str ());
                 ret = jose.decrypt (handle, encrypted, source, result);
@@ -2099,47 +2107,12 @@ void key_dump (crypto_key* key, jwa_t alg, crypto_use_t use)
     print_text ("try kt %d alg %s", alg_info->kty, alg_info->alg_name);
     pkey = key->select (kid, alg, use);
     if (pkey) {
-        printf ("> kid %s", kid.c_str ());
+        printf ("> kid %s\n", kid.c_str ());
         key->get_key (pkey, pub1, pub2, priv);
 
-        switch (alg_info->kty) {
-            case crypto_key_t::kty_hmac:
-
-                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                printf ("> k %s", hex.c_str ());
-
-                break;
-            case crypto_key_t::kty_rsa:
-
-                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
-                printf ("> n %s", hex.c_str ());
-                hex = base64_encode (pub2, base64_encoding_t::base64url_encoding);
-                printf ("> e %s", hex.c_str ());
-                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                printf ("> d %s", hex.c_str ());
-
-                break;
-            case crypto_key_t::kty_ec:
-
-                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
-                printf ("> x %s", hex.c_str ());
-                hex = base64_encode (pub2, base64_encoding_t::base64url_encoding);
-                printf ("> y %s", hex.c_str ());
-                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                printf ("> d %s", hex.c_str ());
-
-                break;
-            case crypto_key_t::kty_okp:
-
-                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
-                printf ("> x %s", hex.c_str ());
-                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                printf ("> d %s", hex.c_str ());
-
-                break;
-            default:
-                break;
-        }
+        buffer_stream bs;
+        dump_key (pkey, &bs);
+        printf ("%s\n", bs.c_str ());
     }
 }
 
@@ -2158,47 +2131,12 @@ void key_dump (crypto_key* key, jws_t sig, crypto_use_t use)
     print_text ("try kt %d alg %s", alg_info->kty, alg_info->jws_name);
     pkey = key->select (kid, sig, use);
     if (pkey) {
-        printf ("> kid %s", kid.c_str ());
+        printf ("> kid %s\n", kid.c_str ());
         key->get_key (pkey, pub1, pub2, priv);
 
-        switch (alg_info->kty) {
-            case crypto_key_t::kty_hmac:
-
-                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                printf ("> k %s", hex.c_str ());
-
-                break;
-            case crypto_key_t::kty_rsa:
-
-                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
-                printf ("> n %s", hex.c_str ());
-                hex = base64_encode (pub2, base64_encoding_t::base64url_encoding);
-                printf ("> e %s", hex.c_str ());
-                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                printf ("> d %s", hex.c_str ());
-
-                break;
-            case crypto_key_t::kty_ec:
-
-                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
-                printf ("> x %s", hex.c_str ());
-                hex = base64_encode (pub2, base64_encoding_t::base64url_encoding);
-                printf ("> y %s", hex.c_str ());
-                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                printf ("> d %s", hex.c_str ());
-
-                break;
-            case crypto_key_t::kty_okp:
-
-                hex = base64_encode (pub1, base64_encoding_t::base64url_encoding);
-                printf ("> x %s", hex.c_str ());
-                hex = base64_encode (priv, base64_encoding_t::base64url_encoding);
-                printf ("> d %s", hex.c_str ());
-
-                break;
-            default:
-                break;
-        }
+        buffer_stream bs;
+        dump_key (pkey, &bs);
+        printf ("%s\n", bs.c_str ());
     }
 }
 
@@ -2251,6 +2189,8 @@ void key_match_test ()
 
 int main ()
 {
+    set_trace_option (trace_option_t::trace_bt);
+
     openssl_startup ();
     openssl_thread_setup ();
 
