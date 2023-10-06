@@ -11,6 +11,7 @@
 
 #include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_verifier.hpp>
 #include <hotplace/sdk/crypto/authenticode/sdk.hpp>

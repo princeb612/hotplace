@@ -32,15 +32,23 @@
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
 
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+
 #include <hotplace/sdk/base/system/atomic.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
+#if defined __linux__
+#include <hotplace/sdk/base/system/linux/debug_trace.hpp>
+#elif defined _WIN32 || defined _WIN64
+#include <hotplace/sdk/base/system/windows/debug_trace.hpp>
+#endif
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/reference_counter.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/base/system/signalwait_threads.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 
 #if defined _WIN32 || defined _WIN64
 #include <hotplace/sdk/base/system/windows/sdk.hpp>

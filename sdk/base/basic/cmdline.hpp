@@ -211,6 +211,7 @@ cmdline_t<T>& cmdline_t<T>::operator << (cmdarg_t<T> cmd)
 
     const char* token = cmd.token ();
     cmdline_args_map_pib_t pib = _args.insert (std::make_pair (token, cmd));
+
     if (pib.second) {
         _list.push_back (token);
     }
@@ -223,6 +224,7 @@ return_t cmdline_t<T>::parse (int argc, char** argv)
 {
     return_t ret = errorcode_t::success;
     int index = 0;
+
     typename cmdline_args_map_t::iterator iter;
 
     _mandatory.clear ();

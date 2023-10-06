@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
@@ -16,7 +17,6 @@
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_encryption.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 
 namespace hotplace {

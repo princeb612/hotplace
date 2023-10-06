@@ -12,6 +12,7 @@
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/base64.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
@@ -23,7 +24,6 @@
 #include <hotplace/sdk/io/cbor/cbor_map.hpp>
 #include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
 #include <hotplace/sdk/io/cbor/cbor_reader.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {

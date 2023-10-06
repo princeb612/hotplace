@@ -8,15 +8,14 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <fstream>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 crypto_key::crypto_key ()

@@ -12,12 +12,11 @@
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKPROTOCOL__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <hotplace/sdk/net/types.hpp>
 #include <map>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 enum protocol_state_t {

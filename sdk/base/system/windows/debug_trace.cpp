@@ -8,14 +8,12 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/stream/stream.hpp>
-#include <hotplace/sdk/io/stream/string.hpp>
-#include <hotplace/sdk/io/system/sdk.hpp>
-#include <hotplace/sdk/io/system/windows/debug_trace.hpp>
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/base/system/windows/debug_trace.hpp>
 #include <iostream>
 
 namespace hotplace {
-namespace io {
 
 return_t trace (return_t errorcode)
 {
@@ -25,10 +23,11 @@ return_t trace (return_t errorcode)
         uint32 option = get_trace_option ();
         if (trace_option_t::trace_bt & option) {
             debug_trace_context_t* handle = nullptr;
-            debug_trace dbg;
-            CONTEXT rtlcontext;
-            ansi_string stream;
+            buffer_stream stream;
 
+            // PDB
+            CONTEXT rtlcontext;
+            debug_trace dbg;
             dbg.open (&handle);
             dbg.capture (&rtlcontext);
             ret = dbg.trace (handle, &rtlcontext, &stream);
@@ -526,7 +525,7 @@ LONG __stdcall exception_handler (struct _EXCEPTION_POINTERS * exception_ptr)
         // write minidump
 
         /* exception record call stack */
-        ansi_string stream;
+        buffer_stream stream;
         debug_trace trace;
         HANDLE thread_handle = nullptr;
         BOOL bRet = TRUE;
@@ -537,7 +536,7 @@ LONG __stdcall exception_handler (struct _EXCEPTION_POINTERS * exception_ptr)
             trace.trace (handle, exception_ptr, &stream);
             trace.close (handle);
 
-            std::cout << stream.c_str () << std::endl;
+            printf ("%.*s\n", stream.size (), stream.data ());
 
             CloseHandle (thread_handle);
         }
@@ -563,5 +562,4 @@ void reset_trace_exception ()
     SetUnhandledExceptionFilter (old_exception_handler);
 }
 
-}
 }  // namespace

@@ -8,17 +8,15 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/stream/stream.hpp>
-#include <hotplace/sdk/io/stream/string.hpp>
-#include <hotplace/sdk/io/system/sdk.hpp>
-#include <hotplace/sdk/io/system/linux/debug_trace.hpp>
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/base/system/linux/debug_trace.hpp>
 #include <cxxabi.h>
 #include <dlfcn.h>      // dladdr
 #include <execinfo.h>   // backtrace
 #include <iostream>
 
 namespace hotplace {
-namespace io {
 
 return_t trace (return_t errorcode)
 {
@@ -27,7 +25,7 @@ return_t trace (return_t errorcode)
     if (errorcode_t::success != errorcode) {
         uint32 option = get_trace_option ();
         if (trace_option_t::trace_bt & option) {
-            ansi_string stream;
+            buffer_stream stream;
             debug_trace (&stream);
             std::cout << stream.c_str () << std::endl;
         }
@@ -92,5 +90,4 @@ void reset_trace_exception ()
 {
 }
 
-}
 } // namespace

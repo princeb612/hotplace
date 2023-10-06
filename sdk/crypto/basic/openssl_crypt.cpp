@@ -8,12 +8,13 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 
 namespace hotplace {
 using namespace io;
@@ -345,7 +346,7 @@ return_t openssl_crypt::encrypt2 (crypt_context_t* handle, const unsigned char* 
         if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode)) {
             if ((nullptr == aad) || (nullptr == tag)) {
                 ret = errorcode_t::invalid_parameter;
-                __leave2;
+                __leave2_trace (ret);
             }
 
             if (crypt_mode_t::gcm == context->mode) {

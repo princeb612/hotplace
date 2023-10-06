@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>

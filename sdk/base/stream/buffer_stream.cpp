@@ -8,11 +8,10 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <ctype.h>
 
 namespace hotplace {
-namespace io {
 
 buffer_stream::buffer_stream (size_t allocsize, uint32 flags)
     : _handle (nullptr)
@@ -153,5 +152,4 @@ bool buffer_stream::operator > (buffer_stream obj)
     return 0 > strcmp ((*this).c_str (), obj.c_str ());
 }
 
-}
 }  // namespace

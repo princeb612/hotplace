@@ -8,10 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/system/sdk.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 
 namespace hotplace {
-namespace io {
 
 static uint32 _trace_option = 0;
 
@@ -38,5 +37,4 @@ uint32 get_trace_option ()
     return _trace_option;
 }
 
-}
 }  // namespace

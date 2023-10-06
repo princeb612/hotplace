@@ -8,12 +8,12 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 
 namespace hotplace {
 using namespace io;
@@ -299,20 +299,6 @@ return_t openssl_sign::sign_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, binary
          */
         BN_bn2bin (bn_r, &signature[unitsize - rlen]);
         BN_bn2bin (bn_s, &signature[unitsize + (unitsize - slen)]);
-
-{
-    buffer_stream bs;
-    dump_key (pkey, &bs);
-    printf ("key\n%s\n", bs.c_str ());
-    dump_memory (input, &bs);
-    printf ("input\n%s\n", bs.c_str ());
-    dump_memory (hash_value, &bs);
-    printf ("hash\n%s\n", bs.c_str ());
-    dump_memory (&signature[0], unitsize, &bs);
-    printf ("R\n%s\n", bs.c_str ());
-    dump_memory (&signature[unitsize], unitsize, &bs);
-    printf ("S\n%s\n", bs.c_str ());
-}
     }
     __finally2
     {
@@ -554,22 +540,6 @@ return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
             case hash_algorithm_t::sha2_384: unitsize = 48; break;  // (384 >> 3) = 48
             case hash_algorithm_t::sha2_512: unitsize = 66; break;  // (521 = (65 << 3) + 1), 66
         }
-
-{
-    buffer_stream bs;
-    dump_key (pkey, &bs);
-    printf ("key\n%s\n", bs.c_str ());
-    dump_memory (input, &bs);
-    printf ("input\n%s\n", bs.c_str ());
-    std::string b64 = base64_encode (input);
-    printf ("b64\n%s\n", b64.c_str ());
-    dump_memory (hash_value, &bs);
-    printf ("hash\n%s\n", bs.c_str ());
-    dump_memory (&signature[0], unitsize, &bs);
-    printf ("R\n%s\n", bs.c_str ());
-    dump_memory (&signature[unitsize], unitsize, &bs);
-    printf ("S\n%s\n", bs.c_str ());
-}
 
         if (signature.size () < (unitsize * 2)) {
             ret = errorcode_t::invalid_parameter;

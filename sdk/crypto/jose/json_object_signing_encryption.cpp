@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/base/basic/base64.hpp>
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
@@ -20,7 +21,6 @@
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <hotplace/sdk/io/basic/zlib.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <iostream>
 
 namespace hotplace {

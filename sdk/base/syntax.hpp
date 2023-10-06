@@ -34,9 +34,9 @@
  *      ret = do_something ();
  *      __leave2_if_fail (ret);
  */
-#define __trace(x, ...) { __footprintf (__VA_ARGS__); hotplace::io::trace (x); }
-#define __leave2_trace(x) { __footprints (x); hotplace::io::trace (x); break; }
-#define __leave2_tracef(x, ...) { __footprintf (__VA_ARGS__); hotplace::io::trace (x); break; }
+#define __trace(x, ...) { __footprintf (__VA_ARGS__); hotplace::trace (x); }
+#define __leave2_trace(x) { __footprints (x); hotplace::trace (x); break; }
+#define __leave2_tracef(x, ...) { __footprintf (__VA_ARGS__); hotplace::trace (x); break; }
 #define __leave2_if_fail(x) if (errorcode_t::success != x) { __footprints (x); break; }
 
 #ifdef __cplusplus

@@ -9,6 +9,7 @@
  *
  */
 
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_object_signing.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_object_signing_encryption.hpp>
@@ -18,7 +19,6 @@
 #include <hotplace/sdk/io/cbor/cbor_map.hpp>
 #include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
 #include <hotplace/sdk/io/cbor/cbor_reader.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <set>
 
 namespace hotplace {

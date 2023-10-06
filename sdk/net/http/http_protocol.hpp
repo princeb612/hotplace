@@ -12,11 +12,10 @@
 #define __HOTPLACE_SDK_NET_SERVER_HTTP_PROTOCOL__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <hotplace/sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 /**

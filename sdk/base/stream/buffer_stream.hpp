@@ -8,17 +8,16 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_STREAM_BUFFERSTREAM__
-#define __HOTPLACE_SDK_IO_STREAM_BUFFERSTREAM__
+#ifndef __HOTPLACE_SDK_BASE_STREAM_BUFFERSTREAM__
+#define __HOTPLACE_SDK_BASE_STREAM_BUFFERSTREAM__
 
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/base/basic/bufferio.hpp>
-#include <hotplace/sdk/io/stream/stream.hpp>
+#include <hotplace/sdk/base/stream.hpp>
 #include <stdarg.h>
 #include <iostream>
 
 namespace hotplace {
-namespace io {
 
 class buffer_stream : public stream_t
 {
@@ -54,7 +53,6 @@ protected:
     bufferio_context_t* _handle;
 };
 
-}
 }  // namespace
 
 #endif

@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_IO_BASIC_JSON__
 #define __HOTPLACE_SDK_IO_BASIC_JSON__
 
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/system/sdk.hpp>
 #include <jansson.h>
 

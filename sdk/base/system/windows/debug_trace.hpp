@@ -10,13 +10,12 @@
  * 2014.11.06   Soo Han, Kim        backtrace x64 implemented (codename.merlin)
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_DEBUGTRACE__
-#define __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_DEBUGTRACE__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_DEBUGTRACE__
+#define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_DEBUGTRACE__
 
 #include <hotplace/sdk/base/system/windows/sdk.hpp>
 
 namespace hotplace {
-namespace io {
 
 struct _debug_trace_context_t {};
 typedef struct _debug_trace_context_t debug_trace_context_t;
@@ -39,7 +38,6 @@ protected:
 
 LONG __stdcall exception_handler (struct _EXCEPTION_POINTERS * exception_ptr);
 
-}
 }  // namespace
 
 #endif

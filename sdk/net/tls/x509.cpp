@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 #include <hotplace/sdk/net/tls/x509.hpp>
 

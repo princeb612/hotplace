@@ -63,6 +63,7 @@ void test_cmdline (cmdline_t<OPTION>& cmdline, bool expect, int argc, char** arg
 {
     return_t ret = errorcode_t::success;
     OPTION& opt = cmdline.value ();
+
     opt.reset ();
 
     std::string args;
@@ -109,7 +110,7 @@ void test2 ()
 
     int argc = 0;
     argc = 0;
-    char* argv[5] = { NULL, };
+    char* argv[5] = { nullptr, };
 
     _test_case.begin ("case - invalid parameter");
 

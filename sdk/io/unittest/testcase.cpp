@@ -358,8 +358,7 @@ void test_case::dump_list_into_stream (unittest_list_t& array, ansi_string& stre
 
         ansi_string error_message;
         t_stream_binder <ansi_string, console_color> console_colored_stream (error_message);
-        switch (item._result)
-        {
+        switch (item._result) {
             case errorcode_t::success:       cprint (console_colored_stream, _concolor, console_color_t::white, fgcolor, constexpr_pass); break;
             case errorcode_t::not_supported: cprint (console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_skip); break;
             case errorcode_t::low_security:  cprint (console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_low); break;

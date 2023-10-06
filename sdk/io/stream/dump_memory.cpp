@@ -8,7 +8,8 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 namespace io {
