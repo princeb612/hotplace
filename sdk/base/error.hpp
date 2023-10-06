@@ -238,7 +238,7 @@ enum errorcode_t {
     /* 0xef010026 4009820198 */ query,
     /* 0xef010027 4009820199 */ fetch,
     /* 0xef010028 4009820200 */ insufficiency,
-    /* 0xef010029 4009820201 */ not_overrided,
+    /* 0xef010029 4009820201 */ reserved,
     /* 0xef01002a 4009820202 */ reserved19,
     /* 0xef01002b 4009820203 */ reserved20,
     /* 0xef01002c 4009820204 */ reserved21,

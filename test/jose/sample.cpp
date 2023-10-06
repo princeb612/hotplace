@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *          -dump : dump all keys
  *
  * Revision History
  * Date         Name                Description
@@ -17,6 +18,11 @@ using namespace hotplace::io;
 using namespace hotplace::crypto;
 
 test_case _test_case;
+typedef struct _OPTION {
+    bool dump_keys;
+    _OPTION () : dump_keys (false) {}
+} OPTION;
+t_shared_instance <cmdline_t<OPTION>> _cmdline;
 
 void print_text (const char* text, ...)
 {
@@ -99,14 +105,17 @@ void test0 ()
 
 void dump_crypto_key (crypto_key_object_t* key, void*)
 {
-    uint32 nid = 0;
+    OPTION& option = _cmdline->value ();
+    if (option.dump_keys) {
+        uint32 nid = 0;
 
-    nidof_evp_pkey (key->pkey, nid);
-    printf ("nid %i kid %s alg %s use %i\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
+        nidof_evp_pkey (key->pkey, nid);
+        printf ("nid %i kid %s alg %s use %i\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
 
-    buffer_stream bs;
-    dump_key (key->pkey, &bs);
-    printf ("%s\n", bs.c_str ());
+        buffer_stream bs;
+        dump_key (key->pkey, &bs);
+        printf ("%s\n", bs.c_str ());
+    }
 }
 
 void test_rfc7515_A1 ()
@@ -2210,9 +2219,18 @@ void key_match_test ()
     }
 }
 
-int main ()
+int main (int argc, char** argv)
 {
     set_trace_option (trace_option_t::trace_bt);
+
+    _cmdline.make_share (new cmdline_t <OPTION>);
+    *_cmdline << cmdarg_t<OPTION> ("-dump", "dump keys", [&](OPTION& o, char* param) -> void {
+        o.dump_keys = true;
+    }).optional ();
+    (*_cmdline).parse (argc, argv);
+
+    OPTION& option = _cmdline->value ();
+    std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
 
     openssl_startup ();
     openssl_thread_setup ();

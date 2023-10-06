@@ -10,7 +10,7 @@ cwd=$(pwd)
 valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 
 if [ $# -eq 0 ]; then
-    array=(base unittest encode string bufferio stream datetime thread mlfq cbor crypto hash jose cose authenticode ipaddr)
+    array=(base cmdline unittest encode string bufferio stream datetime thread mlfq cbor crypto hash jose cose authenticode ipaddr)
     if [ $OSTYPE = "msys" ]; then
         array+=(windows)
     else

@@ -6,6 +6,7 @@
 
 # base
 add_subdirectory (base)
+add_subdirectory (cmdline)
 
 # io
 add_subdirectory (unittest)
