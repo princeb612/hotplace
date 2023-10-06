@@ -10,10 +10,12 @@
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
-#include <openssl/core_names.h>
 #include <openssl/crypto.h>
 #include <openssl/kdf.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/core_names.h>
 #include <openssl/params.h>
+#endif
 #if OPENSSL_VERSION_NUMBER >= 0x30200000L
 #include <openssl/thread.h>
 #endif
