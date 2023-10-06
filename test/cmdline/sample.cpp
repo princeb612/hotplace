@@ -25,6 +25,12 @@ typedef struct _OPTION {
     _OPTION () : keygen (false)
     {
     };
+    void reset ()
+    {
+        keygen = false;
+        infile.clear ();
+        outfile.clear ();
+    }
 } OPTION;
 
 void test1 (int argc, char** argv)
@@ -56,6 +62,8 @@ void test1 (int argc, char** argv)
 void test_cmdline (cmdline_t<OPTION>& cmdline, bool expect, int argc, char** argv)
 {
     return_t ret = errorcode_t::success;
+    OPTION& opt = cmdline.value ();
+    opt.reset ();
 
     std::string args;
     for (int i = 0; i < argc; i++) {
@@ -71,7 +79,7 @@ void test_cmdline (cmdline_t<OPTION>& cmdline, bool expect, int argc, char** arg
         cmdline.help ();
     }
 
-    OPTION opt = cmdline.value ();
+    //OPTION opt = cmdline.value ();
     std::cout << "infile "  << opt.infile.c_str () << std::endl;
     std::cout << "outfile " << opt.outfile.c_str () << std::endl;
     std::cout << "keygen "  << opt.keygen << std::endl;
