@@ -117,14 +117,14 @@ void test_crypto_loop (crypt_t* crypt_object, unsigned count_algorithms, crypt_a
 
 void test_crypt_algorithms (uint32 cooltime, uint32 unitsize)
 {
-    console_color col;
+    console_color concolor;
 
     ossl_set_cooltime (cooltime);
     ossl_set_unitsize (unitsize);
 
-    std::cout   << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::white)
+    std::cout   << concolor.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::white)
                 << "cooltime " << ossl_get_cooltime () << " unitsize " << ossl_get_unitsize () << std::endl;
-    std::cout << col.turnoff ();
+    std::cout << concolor.turnoff ();
 
     crypt_algorithm_t algorithm_table [] = {
         crypt_algorithm_t::aes128,

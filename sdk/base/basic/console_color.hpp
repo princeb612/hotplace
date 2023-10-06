@@ -9,16 +9,14 @@
  * 2023.08.12   Soo Han, Kim        reboot, cprintf deprecated
  */
 
-#ifndef __HOTPLACE_SDK_IO_STREAM_CONSOLECOLOR__
-#define __HOTPLACE_SDK_IO_STREAM_CONSOLECOLOR__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_CONSOLECOLOR__
+#define __HOTPLACE_SDK_BASE_BASIC_CONSOLECOLOR__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/stream/string.hpp>
 #include <stdarg.h>
 #include <ostream>
 
 namespace hotplace {
-namespace io {
 
 enum console_style_t {
     normal      = 0,
@@ -36,14 +34,14 @@ enum console_style_t {
 #define CONSOLE_COLOR_B 4
 
 enum console_color_t {
-    black   = 0,
-    red     = (CONSOLE_COLOR_R),
-    green   = (CONSOLE_COLOR_G),
-    blue    = (CONSOLE_COLOR_B),
-    yellow  = (CONSOLE_COLOR_R + CONSOLE_COLOR_G),
-    magenta = (CONSOLE_COLOR_R + CONSOLE_COLOR_B),
-    cyan    = (CONSOLE_COLOR_G + CONSOLE_COLOR_B),
-    white   = (CONSOLE_COLOR_R + CONSOLE_COLOR_G + CONSOLE_COLOR_B),
+    black   = 0,                                                        // 0
+    red     = (CONSOLE_COLOR_R),                                        // 1
+    green   = (CONSOLE_COLOR_G),                                        // 2
+    blue    = (CONSOLE_COLOR_B),                                        // 4
+    yellow  = (CONSOLE_COLOR_R + CONSOLE_COLOR_G),                      // 3
+    magenta = (CONSOLE_COLOR_R + CONSOLE_COLOR_B),                      // 5
+    cyan    = (CONSOLE_COLOR_G + CONSOLE_COLOR_B),                      // 6
+    white   = (CONSOLE_COLOR_R + CONSOLE_COLOR_G + CONSOLE_COLOR_B),    // 7
 };
 
 /**
@@ -51,18 +49,18 @@ enum console_color_t {
  * ANSI escape codes are used in UNIX-like terminals to provide syntax highlighting
  * @see     https://en.wikipedia.org/wiki/ANSI_escape_code
  * @example
- *      console_color col;
- *      col.set_style (console_style_t::normal);
- *      col.set_fgcolor (console_color_t::yellow);
- *      col.set_bgcolor (console_color_t::black);
- *      std::cout << col.turnon () << "color";
- *      std::cout << col.turnoff () << "default" << std::endl;
- *      std::cout << col.turnon ()
+ *      console_color concolor;
+ *      concolor.set_style (console_style_t::normal);
+ *      concolor.set_fgcolor (console_color_t::yellow);
+ *      concolor.set_bgcolor (console_color_t::black);
+ *      std::cout << concolor.turnon () << "color";
+ *      std::cout << concolor.turnoff () << "default" << std::endl;
+ *      std::cout << concolor.turnon ()
  *                      .set_style (console_style_t::bold)
  *                      .set_fgcolor (console_color_t::yellow)
  *                      .set_bgcolor (console_color_t::black)
  *                << "color";
- *      std::cout << col.turnoff () << "default" << std::endl;
+ *      std::cout << concolor.turnoff () << "default" << std::endl;
  */
 
 class console_color
@@ -131,14 +129,31 @@ public:
         return os;
     }
 
-    friend ansi_string& operator << (ansi_string& os, console_color& color)
+    /**
+     * @brief   binder method
+     * @sa      t_stream_binder
+     */
+    return_t printf (stream_t* stream)
     {
-        if (color.get_status ()) {
-            os << "\e[" << color.get_style () << ";" << color.get_fgcolor () << ";" << color.get_bgcolor () << "m";
-        } else {
-            os << "\e[0m";
+        return_t ret = errorcode_t::success;
+
+        __try2
+        {
+            if (nullptr == stream) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
+            if (get_status ()) {
+                stream->printf ("\e[%d;%d;%dm", get_style (), get_fgcolor (), get_bgcolor ());
+            } else {
+                stream->printf ("\e[0m");
+            }
         }
-        return os;
+        __finally2
+        {
+            // do nothing
+        }
+        return ret;
     }
 
 private:
@@ -148,7 +163,6 @@ private:
     console_color_t _bg;
 };
 
-}
 }
 
 #endif

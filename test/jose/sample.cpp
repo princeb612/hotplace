@@ -20,21 +20,27 @@ using namespace hotplace::crypto;
 test_case _test_case;
 typedef struct _OPTION {
     bool dump_keys;
-    _OPTION () : dump_keys (false) {}
+
+    _OPTION () : dump_keys (false)
+    {
+        // do nothing
+    }
 } OPTION;
-t_shared_instance <cmdline_t<OPTION>> _cmdline;
+t_shared_instance <cmdline_t<OPTION> > _cmdline;
 
 void print_text (const char* text, ...)
 {
-    console_color col;
+    console_color concolor;
     va_list ap;
 
     va_start (ap, text);
     ansi_string string;
     string.vprintf (text, ap);
     va_end (ap);
-    std::cout << col.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::green) << string.c_str () << std::endl;
-    std::cout << col.turnoff ();
+    std::cout   << concolor.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::green)
+                << string.c_str ()
+                << std::endl;
+    std::cout << concolor.turnoff ();
 }
 
 void test0 ()
@@ -105,7 +111,8 @@ void test0 ()
 
 void dump_crypto_key (crypto_key_object_t* key, void*)
 {
-    OPTION& option = _cmdline->value ();
+    OPTION option = _cmdline->value (); // (*_cmdline).value () is ok
+
     if (option.dump_keys) {
         uint32 nid = 0;
 

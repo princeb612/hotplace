@@ -14,7 +14,6 @@
 #include <hotplace/sdk/base.hpp>
 
 #include <hotplace/sdk/io/types.hpp>
-#include <hotplace/sdk/io/basic/console_color.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <hotplace/sdk/io/basic/keyvalue.hpp>
 #include <hotplace/sdk/io/basic/mlfq.hpp>

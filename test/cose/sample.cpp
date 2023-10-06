@@ -194,10 +194,10 @@ void test_cbor_file (const char* expect_file, const char* text)
 {
     _test_case.begin ("parse and generate diagnostic from RFC examples");
 
-    console_color color;
+    console_color concolor;
 
-    std::cout << color.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::cyan) << expect_file << std::endl;
-    std::cout << color.turnoff ();
+    std::cout << concolor.turnon ().set_style (console_style_t::bold).set_fgcolor (console_color_t::cyan) << expect_file << std::endl;
+    std::cout << concolor.turnoff ();
 
     return_t ret = errorcode_t::success;
 

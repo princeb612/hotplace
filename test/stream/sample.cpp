@@ -20,7 +20,7 @@ test_case _test_case;
 void test_consolecolor ()
 {
     _test_case.begin ("console_color");
-    console_color col;
+    console_color concolor;
 
     _test_case.reset_time ();
     console_style_t styles [] = { console_style_t::normal, console_style_t::bold, console_style_t::dim, console_style_t::italic, console_style_t::underline, console_style_t::invert, };
@@ -28,15 +28,15 @@ void test_consolecolor ()
     console_color_t bgcolors [] = { console_color_t::black, console_color_t::white, };
     uint32 loop = 0;
     for (auto bgcolor : bgcolors) {
-        col.set_bgcolor (bgcolor);
+        concolor.set_bgcolor (bgcolor);
         for (auto style : styles) {
-            col.set_style (style);
+            concolor.set_style (style);
             for (auto fgcolor : fgcolors) {
-                col.set_fgcolor (fgcolor);
+                concolor.set_fgcolor (fgcolor);
 
                 if (fgcolor != bgcolor) {
-                    std::cout << col.turnon () << "test";
-                    std::cout << col.turnoff ();
+                    std::cout << concolor.turnon () << "test";
+                    std::cout << concolor.turnoff ();
                     if (15 == (loop % 16)) {
                         std::cout << std::endl;
                     }
@@ -48,18 +48,18 @@ void test_consolecolor ()
     std::cout << std::endl;
     _test_case.assert (true, __FUNCTION__, "console color.1 loop %i times", loop);
 
-    col.set_style (console_style_t::normal);
-    col.set_fgcolor (console_color_t::yellow);
-    col.set_bgcolor (console_color_t::black);
+    concolor.set_style (console_style_t::normal);
+    concolor.set_fgcolor (console_color_t::yellow);
+    concolor.set_bgcolor (console_color_t::black);
 
-    std::cout << col.turnon () << "color";
-    std::cout << col.turnoff () << "default" << std::endl;
+    std::cout << concolor.turnon () << "color";
+    std::cout << concolor.turnoff () << "default" << std::endl;
     _test_case.assert (true, __FUNCTION__, "console color.2");
 
-    std::cout   << col.turnon ()
-                << col.set_style (console_style_t::bold).set_fgcolor (console_color_t::yellow).set_bgcolor (console_color_t::black)
+    std::cout   << concolor.turnon ()
+                << concolor.set_style (console_style_t::bold).set_fgcolor (console_color_t::yellow).set_bgcolor (console_color_t::black)
                 << "color";
-    std::cout << col.turnoff () << "default" << std::endl;
+    std::cout << concolor.turnoff () << "default" << std::endl;
 
     _test_case.assert (true, __FUNCTION__, "console color.3");
 }

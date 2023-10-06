@@ -20,7 +20,6 @@ namespace hotplace {
 
 /**
  * @brief   vartype_t
- * @remarks variant 에 대한 type 정의
  */
 enum vartype_t {
     TYPE_NULL       = 0,

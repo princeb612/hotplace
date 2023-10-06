@@ -13,7 +13,7 @@
 #define __HOTPLACE_SDK_IO_UNITEST_TESTCASE__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/basic/console_color.hpp>
+#include <hotplace/sdk/base/basic/console_color.hpp>
 #include <list>
 #include <map>
 #include <string>
@@ -172,7 +172,7 @@ protected:
 
 private:
     critical_section _lock;
-    console_color _color;
+    console_color _concolor;
     unittest_index_t _test_list;
     unittest_map_t _test_map;
     test_stat_t _total;

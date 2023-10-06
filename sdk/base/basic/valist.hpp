@@ -51,8 +51,6 @@ typedef struct _valist_t {
     };
 } valist_t;
 
-//#define GET_VA_LIST(vl) (vl).ap
-
 /**
  * @brief create va_list dynamically
  *        original idea from http://stackoverflow.com/questions/11695237/creating-va-list-dynamically-in-gcc-can-it-be-done
@@ -61,10 +59,26 @@ typedef struct _valist_t {
  * @example
  *          valist va;
  *          va << 42 << "hello\n";
- *          vprintf("format string %d %s", va.data()));
+ *          vprintf("format string %d %s", va.get ()));
  *          va.clear();
  *          va << 43 << "welcome\n";
- *          vprintf("format string %d %s", va.data()));
+ *          vprintf("format string %d %s", va.get ()));
+ * @sa
+ *          function  sprintf
+ *          prototype return_t sprintf (stream_t* stream, const char* fmt, valist va);
+ *          snippet
+ *              valist va;
+ *              buffer_stream bs;
+ *              va << 1 << 3.141592 << "hello"; // make_valist (va, 1, 3.141592, "hello");
+ *              sprintf (&bs, "value1={2} value2={1} value3={3}", va);
+ *
+ *          function  vprintf
+ *          prototype template<class ... Args> return_t vprintf (stream_t* stream, const char* fmt, Args... args) // c++14
+ *          snippet
+ *              valist va;
+ *              buffer_stream bs;
+ *              vprintf (&bs, "param1 {1} param2 {2} param3 {3}\n", 1, 3.141592, "hello");
+ *
  */
 class valist
 {
