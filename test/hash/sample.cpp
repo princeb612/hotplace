@@ -468,6 +468,7 @@ void test_hash_hmac_sign ()
     crypto_key key;
     crypto_keychain keychain;
     constexpr char key_source[] = "000102030405060708090a0b0c0d0e0f";
+    // Rhapsody - Emerald Sword
     constexpr char in_source[] = "I crossed the valleys the dust of midlands / To search for the third key to open the gates";
     binary_t bin_key = base16_decode (key_source);
     binary_t bin_in = convert (in_source);

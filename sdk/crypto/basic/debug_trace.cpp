@@ -63,6 +63,8 @@ return_t debug_trace_openssl (stream_t* stream)
             ERR_error_string_n (l, buf, sizeof (buf));
             stream->printf (constexpr_debugline, file, line, buf);
         }
+
+        ERR_clear_error ();
     }
     __finally2
     {

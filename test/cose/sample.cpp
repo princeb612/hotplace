@@ -17,6 +17,15 @@ using namespace hotplace::io;
 using namespace hotplace::crypto;
 
 test_case _test_case;
+typedef struct _OPTION {
+    bool dump_keys;
+
+    _OPTION () : dump_keys (false)
+    {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance <cmdline_t<OPTION> > _cmdline;
 
 return_t dump_test_data (const char* text, buffer_stream& diagnostic)
 {
@@ -51,14 +60,18 @@ return_t dump_test_data (const char* text, binary_t const& cbor)
 
 void dump_crypto_key (crypto_key_object_t* key, void*)
 {
-    uint32 nid = 0;
+    OPTION option = _cmdline->value (); // (*_cmdline).value () is ok
 
-    nidof_evp_pkey (key->pkey, nid);
-    printf ("nid %i kid %s alg %s use %08x\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
+    if (option.dump_keys) {
+        uint32 nid = 0;
 
-    buffer_stream bs;
-    dump_key (key->pkey, &bs);
-    printf ("%s\n", bs.c_str ());
+        nidof_evp_pkey (key->pkey, nid);
+        printf ("nid %i kid %s alg %s use %08x\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
+
+        buffer_stream bs;
+        dump_key (key->pkey, &bs);
+        printf ("%s\n", bs.c_str ());
+    }
 }
 
 return_t test_cose_example (cbor_object* root, const char* expect_file, const char* text)
@@ -1819,9 +1832,18 @@ void try_refactor_jose_sign ()
     }
 }
 
-int main ()
+int main (int argc, char** argv)
 {
     set_trace_option (trace_option_t::trace_bt | trace_option_t::trace_except);
+
+    _cmdline.make_share (new cmdline_t <OPTION>);
+    *_cmdline << cmdarg_t<OPTION> ("-dump", "dump keys", [&](OPTION& o, char* param) -> void {
+        o.dump_keys = true;
+    }).optional ();
+    (*_cmdline).parse (argc, argv);
+
+    OPTION& option = _cmdline->value ();
+    std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
 
     openssl_startup ();
     openssl_thread_setup ();

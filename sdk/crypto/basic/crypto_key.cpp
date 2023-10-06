@@ -118,31 +118,14 @@ static void pem_writer (crypto_key_object_t* key, void* param)
         }
 
         BIO* out = (BIO*) param;
-        EVP_PKEY* pkey = (EVP_PKEY *) key->pkey;
-        int type = EVP_PKEY_id (pkey);
-
-        if (EVP_PKEY_HMAC == type) {
-            PEM_write_bio_PrivateKey (out, pkey, nullptr, nullptr, 0, nullptr, nullptr);
-        } else if (EVP_PKEY_RSA == type) {
-            if (RSA_get0_d (EVP_PKEY_get0_RSA (pkey))) {
-                PEM_write_bio_RSAPrivateKey (out, EVP_PKEY_get0_RSA (pkey), nullptr, nullptr, 0, nullptr, nullptr);
-            } else {
-                PEM_write_bio_RSAPublicKey (out, EVP_PKEY_get0_RSA (pkey));
-            }
-        } else if (kindof_ecc (key->pkey)) {
-            const BIGNUM* bn = EC_KEY_get0_private_key (EVP_PKEY_get0_EC_KEY (pkey));
-            if (bn) {
-                PEM_write_bio_ECPrivateKey (out, EVP_PKEY_get0_EC_KEY (pkey), nullptr, nullptr, 0, nullptr, nullptr);
-            } else {
-                PEM_write_bio_EC_PUBKEY (out, EVP_PKEY_get0_EC_KEY (pkey));     // same PEM_write_bio_PUBKEY
-            }
-        }
+        write_pem (key->pkey, out);
     }
     __finally2
     {
         // do nothing
     }
 }
+
 return_t crypto_key::write_pem (stream_t* stream, int flags)
 {
     return_t ret = errorcode_t::success;

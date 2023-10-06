@@ -448,6 +448,9 @@ return_t crypto_advisor::build_if_necessary ()
 #endif
             _md_fetch_map.insert (std::make_pair (item->_algorithm, item));
         }
+
+        ERR_clear_error (); // errors while EVP_CIPHER_fetch, EVP_MD_fetch
+
         for (i = 0; i < sizeof_hint_jose_algorithms; i++) {
             const hint_jose_encryption_t* item = hint_jose_algorithms + i;
             _alg_map.insert (std::make_pair (item->type, item));

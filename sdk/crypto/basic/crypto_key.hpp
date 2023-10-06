@@ -430,6 +430,19 @@ bool is_kindof (EVP_PKEY* pkey, crypto_key_t type);
 return_t dump_key (EVP_PKEY* pkey, stream_t* stream,
                    uint8 hex_part = 15,
                    uint8 indent = 4);
+/**
+ * @brief   pem
+ * @param   EVP_PKEY* pkey [in]
+ * @param   stream_t* stream [out]
+ */
+return_t write_pem (EVP_PKEY* pkey, stream_t* stream);
+/**
+ * @brief   pem
+ * @param   EVP_PKEY* pkey [in]
+ * @param   BIO* bio [out]
+ */
+return_t write_pem (EVP_PKEY* pkey, BIO* bio);
+
 }
 }  // namespace
 

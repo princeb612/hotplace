@@ -515,6 +515,12 @@ return_t dump_key (EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 inden
                 break;
         }
 
+        /* PEM */
+        buffer_stream pem_encoded;
+        write_pem (pkey, &pem_encoded);
+        stream->printf ("%.*s", pem_encoded.size (), pem_encoded.data ());
+        stream->printf ("\n");
+
         //dump_key_openssl (pkey, stream, 0);
     }
     __finally2
