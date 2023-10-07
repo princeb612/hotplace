@@ -268,6 +268,8 @@ return_t openssl_sign::sign_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, binary
             case hash_algorithm_t::sha2_256: unitsize = 32; break;
             case hash_algorithm_t::sha2_384: unitsize = 48; break;
             case hash_algorithm_t::sha2_512: unitsize = 66; break;
+            case hash_algorithm_t::sha2_512_224: unitsize = 28; break;
+            case hash_algorithm_t::sha2_512_256: unitsize = 32; break;
         }
 
         signature.resize (unitsize * 2);
@@ -539,18 +541,20 @@ return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
             case hash_algorithm_t::sha2_256: unitsize = 32; break;  // (256 >> 3) = 32
             case hash_algorithm_t::sha2_384: unitsize = 48; break;  // (384 >> 3) = 48
             case hash_algorithm_t::sha2_512: unitsize = 66; break;  // (521 = (65 << 3) + 1), 66
+            case hash_algorithm_t::sha2_512_224: unitsize = 28; break;
+            case hash_algorithm_t::sha2_512_256: unitsize = 32; break;
         }
-
-        /* support truncated hash
-         * NIST CAVP (cryptographic-algorithm-validation-program) test vector - PASSED
-         */
-        size_t signature_size = signature.size ();
 
         ecdsa_sig = ECDSA_SIG_new ();
         if (nullptr == ecdsa_sig) {
             ret = errorcode_t::out_of_memory;
             __leave2;
         }
+
+        /* support truncated hash
+         * NIST CAVP (cryptographic-algorithm-validation-program) test vector - PASSED
+         */
+        size_t signature_size = signature.size ();
 
         /* RFC 7515 A.3.1.  Encoding */
         BIGNUM* bn_r = nullptr;
@@ -563,7 +567,7 @@ return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
         /* Verifies that the supplied signature is a valid ECDSA
          * signature of the supplied hash value using the supplied public key.
          */
-        ret_openssl = ECDSA_do_verify (&hash_value[0], hash_value.size (), ecdsa_sig, ec_key); // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+        ret_openssl = ECDSA_do_verify (&hash_value[0], hash_value.size (), ecdsa_sig, ec_key);
         if (1 != ret_openssl) {
             ret = errorcode_t::verify;
             __leave2_trace_openssl (ret);

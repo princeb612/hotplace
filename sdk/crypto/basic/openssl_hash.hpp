@@ -30,6 +30,17 @@ public:
      */
     virtual ~openssl_hash ();
 
+    return_t open_byname (hash_context_t** handle, const char* algorithm,
+                          const unsigned char* key = nullptr,
+                          unsigned keysize = 0);
+    /**
+     * @brief expect hash size
+     * @param hash_algorithm_t algorithm [in]
+     * @param size_t& digest_size [out]
+     * @return error code (see error.hpp)
+     */
+    return_t get_digest_size (hash_algorithm_t algorithm, size_t& digest_size);
+
     /**
      * @brief open (hash, HMAC)
      * @param hash_context_t** handle [out]

@@ -60,6 +60,69 @@ openssl_hash::~openssl_hash ()
     // do nothing
 }
 
+return_t openssl_hash::open_byname (hash_context_t** handle, const char* algorithm, const unsigned char* key, unsigned keysize)
+{
+    return_t ret = errorcode_t::success;
+    hash_algorithm_t alg;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
+
+    __try2
+    {
+        if (nullptr == algorithm) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = advisor->find_evp_md (algorithm, alg);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = open (handle, alg, key, keysize);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t openssl_hash::get_digest_size (hash_algorithm_t algorithm, size_t& digest_size)
+{
+    return_t ret = errorcode_t::success;
+
+    digest_size = 0;
+
+    switch (algorithm) {
+        case hash_algorithm_t::md4:
+            digest_size = (128 >> 3);
+            break;
+        case hash_algorithm_t::md5:
+            digest_size = (128 >> 3);
+            break;
+        case hash_algorithm_t::sha1:
+            digest_size = (160 >> 3);
+            break;
+        case hash_algorithm_t::ripemd160:
+            digest_size = 20; // RIPEMD160_DIGEST_LENGTH
+            break;
+        case hash_algorithm_t::sha2_256:
+            digest_size = (256 >> 3);
+            break;
+        case hash_algorithm_t::sha2_384:
+            digest_size = (384 >> 3);
+            break;
+        case hash_algorithm_t::sha2_512:
+            digest_size = (512 >> 3);
+            break;
+        default:
+            ret = errorcode_t::invalid_parameter;
+            break;
+    }
+
+    return ret;
+}
+
 return_t openssl_hash::open (hash_context_t** handle, crypt_algorithm_t algorithm, const unsigned char* key_data, unsigned key_size)
 {
     return_t ret = errorcode_t::success;

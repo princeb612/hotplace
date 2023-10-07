@@ -244,6 +244,8 @@ const openssl_evp_md_method_t evp_md_methods[] = {
     { hash_algorithm_t::sha2_256, EVP_sha256 (), "sha256", },
     { hash_algorithm_t::sha2_384, EVP_sha384 (), "sha384", },
     { hash_algorithm_t::sha2_512, EVP_sha512 (), "sha512", },
+    { hash_algorithm_t::sha2_512_224, EVP_sha512_224 (), "sha2-512/224", },
+    { hash_algorithm_t::sha2_512_256, EVP_sha512_256 (), "sha2-512/256", },
 
     { hash_algorithm_t::sha3_224, EVP_sha3_224 (), "sha3-224", },
     { hash_algorithm_t::sha3_256, EVP_sha3_256 (), "sha3-256", },
@@ -448,6 +450,7 @@ return_t crypto_advisor::build_if_necessary ()
             _evp_cipher_map.insert (std::make_pair (item->_cipher, item));
 #endif
             _cipher_fetch_map.insert (std::make_pair (CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode), item));
+            _cipher_byname_map.insert (std::make_pair (item->_fetchname, item));
         }
         for (i = 0; i < RTL_NUMBER_OF (evp_md_methods); i++) {
             const openssl_evp_md_method_t* item = evp_md_methods + i;
@@ -461,6 +464,7 @@ return_t crypto_advisor::build_if_necessary ()
             _md_map.insert (std::make_pair (item->_algorithm, (EVP_MD*) item->_evp_md));
 #endif
             _md_fetch_map.insert (std::make_pair (item->_algorithm, item));
+            _md_byname_map.insert (std::make_pair (item->_fetchname, item));
         }
 
         ERR_clear_error (); // errors while EVP_CIPHER_fetch, EVP_MD_fetch
@@ -620,6 +624,49 @@ const EVP_CIPHER* crypto_advisor::find_evp_cipher (crypt_algorithm_t algorithm, 
     return ret_value;
 }
 
+const EVP_CIPHER* crypto_advisor::find_evp_cipher (const char* name)
+{
+    const EVP_CIPHER* ret_value = nullptr;
+
+    if (name) {
+        maphint <std::string, const openssl_evp_cipher_method_t*> hint (_cipher_byname_map);
+        const openssl_evp_cipher_method_t* item = nullptr;
+        hint.find (name, &item);
+        if (item) {
+            ret_value = _cipher_map[CRYPT_CIPHER_VALUE (item->_algorithm, item->_mode)];
+        }
+    }
+    return ret_value;
+}
+
+return_t crypto_advisor::find_evp_cipher (const char* name, crypt_algorithm_t& algorithm, crypt_mode_t& mode)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == name) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        maphint <std::string, const openssl_evp_cipher_method_t*> hint (_cipher_byname_map);
+        const openssl_evp_cipher_method_t* item = nullptr;
+        ret = hint.find (name, &item);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        algorithm = item->_algorithm;
+        mode = item->_mode;
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t crypto_advisor::find_evp_cipher (const EVP_CIPHER* cipher, crypt_algorithm_t& algorithm, crypt_mode_t& mode)
 {
     return_t ret = errorcode_t::success;
@@ -703,6 +750,48 @@ const EVP_MD* crypto_advisor::find_evp_md (jws_t sig)
         ret_value = find_evp_md (item->alg);
     }
     return ret_value;
+}
+
+const EVP_MD* crypto_advisor::find_evp_md (const char* name)
+{
+    const EVP_MD* ret_value = nullptr;
+
+    if (name) {
+        maphint <std::string, const openssl_evp_md_method_t*> hint (_md_byname_map);
+        const openssl_evp_md_method_t* item = nullptr;
+        hint.find (name, &item);
+        if (item) {
+            ret_value = _md_map[item->_algorithm];
+        }
+    }
+    return ret_value;
+}
+
+return_t crypto_advisor::find_evp_md (const char* name, hash_algorithm_t& algorithm)
+{
+    return_t ret = errorcode_t::success;
+
+    __try2
+    {
+        if (nullptr == name) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        maphint <std::string, const openssl_evp_md_method_t*> hint (_md_byname_map);
+        const openssl_evp_md_method_t* item = nullptr;
+        ret = hint.find (name, &item);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        algorithm = item->_algorithm;
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
 }
 
 hash_algorithm_t crypto_advisor::get_algorithm (crypt_sig_t sig)

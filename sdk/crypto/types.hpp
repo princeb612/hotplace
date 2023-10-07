@@ -138,6 +138,9 @@ enum hash_algorithm_t {
     ripemd160           = 16,
 
     whirlpool           = 17,
+
+    sha2_512_224        = 18,
+    sha2_512_256        = 19,
 };
 
 enum crypt_enc_t {

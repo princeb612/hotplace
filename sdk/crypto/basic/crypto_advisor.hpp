@@ -54,6 +54,8 @@ public:
      *          for example, seed deprecated since openssl 3.0
      */
     const EVP_CIPHER* find_evp_cipher (crypt_algorithm_t algorithm, crypt_mode_t mode);
+    const EVP_CIPHER* find_evp_cipher (const char* name);
+    return_t find_evp_cipher (const char* name, crypt_algorithm_t& algorithm, crypt_mode_t& mode);
     /**
      * @brief find alg and mode
      * @param const EVP_CIPHER* cipher [in]
@@ -83,6 +85,8 @@ public:
     const EVP_MD* find_evp_md (hash_algorithm_t algorithm);
     const EVP_MD* find_evp_md (crypt_sig_t sig);
     const EVP_MD* find_evp_md (jws_t sig);
+    const EVP_MD* find_evp_md (const char* name);
+    return_t find_evp_md (const char* name, hash_algorithm_t& algorithm);
     hash_algorithm_t get_algorithm (crypt_sig_t sig);
     hash_algorithm_t get_algorithm (jws_t sig);
     /**
@@ -445,6 +449,9 @@ private:
     typedef std::map <uint32, cose_ec_curve_t> nid2curve_map_t;
     typedef std::map <cose_ec_curve_t, uint32> curve2nid_map_t;
 
+    typedef std::map <std::string, const openssl_evp_cipher_method_t*> cipher_byname_map_t;     /* "aes-256-cbc" to openssl_evp_cipher_method_t* */
+    typedef std::map <std::string, const openssl_evp_md_method_t*> md_byname_map_t;             /* "sha256" to openssl_evp_md_method_t* */
+
     int _flag;
 
     blockcipher_map_t _blockcipher_map;
@@ -475,6 +482,9 @@ private:
     cose2sig_map_t _cose2sig_map;
     nid2curve_map_t _nid2curve_map;
     curve2nid_map_t _curve2nid_map;
+
+    cipher_byname_map_t _cipher_byname_map;
+    md_byname_map_t _md_byname_map;
 };
 
 /**
