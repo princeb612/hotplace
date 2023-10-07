@@ -74,7 +74,6 @@ static void pkey_param_printf (crypt_item_t type, binary_t const& key, stream_t*
         /* COSE-style */
         cbor_data* root = new cbor_data (key);
 
-
         /* openssl evp_pkey_print style */
         binary_t param = key;
         switch (type) {
@@ -178,9 +177,6 @@ static void dump_key_openssl (EVP_PKEY * pkey, stream_t * stream, uint8 indent)
  *          const RSA* rsa = EVP_PKEY_get0_RSA (pkey);
  *          ret = RSA_solve (rsa);
  *          if (errorcode_t::success == ret) {
- *              const RSA* rsa = EVP_PKEY_get0_RSA (pkey);
- *              RSA_solve ((RSA*) rsa);
- *
  *              const BIGNUM* bn_p = RSA_get0_p (rsa);
  *              const BIGNUM* bn_q = RSA_get0_q (rsa);
  *              const BIGNUM* bn_dp = RSA_get0_dmp1 (rsa);
@@ -472,8 +468,14 @@ return_t dump_key (EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 inden
                     nidof_evp_pkey (pkey, nid);
                     const hint_curve_t* hint_curve = advisor->hintof_curve_nid (nid);
                     if (hint_curve) {
-                        constexpr char constexpr_ec_crv [] = "%s (aka %s, %s)";
-                        stream->printf (constexpr_ec_crv, hint_curve->name, hint_curve->nameof_x9_62, hint_curve->nameof_sec);
+                        constexpr char constexpr_ec_crv [] = "%s aka ";
+                        stream->printf (constexpr_ec_crv, hint_curve->name);
+                        if (hint_curve->aka1) {
+                            stream->printf ("%s ", hint_curve->aka1);
+                        }
+                        if (hint_curve->aka2) {
+                            stream->printf ("%s ", hint_curve->aka2);
+                        }
                         stream->printf ("\n");
                     }
                 }

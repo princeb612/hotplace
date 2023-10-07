@@ -120,6 +120,20 @@ return_t cbor_object_signing_encryption::reset (cose_context_t* handle)
     return ret;
 }
 
+return_t cbor_object_signing_encryption::encrypt (cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output)
+{
+    return_t ret = errorcode_t::success;
+
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::decrypt (cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output)
+{
+    return_t ret = errorcode_t::success;
+
+    return ret;
+}
+
 return_t cbor_object_signing_encryption::sign (cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output)
 {
     return_t ret = errorcode_t::success;
@@ -415,8 +429,6 @@ return_t cbor_object_signing_encryption::verify (cose_context_t* handle, crypto_
         reader.parse (reader_context, input);
         reader.publish (reader_context, &root);
         reader.close (reader_context);
-
-        //if (root->tagged () && cbor_type_t::cbor_type_array == root->type ()) {
 
         if ((root->tagged ()) && (cbor_type_t::cbor_type_array == root->type ())) {
             // do nothing

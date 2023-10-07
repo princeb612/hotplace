@@ -17,6 +17,14 @@
 namespace hotplace {
 namespace crypto {
 
+class cbor_object_encryption
+{
+public:
+    cbor_object_encryption ();
+    ~cbor_object_encryption ();
+
+};
+
 }
 }  // namespace
 

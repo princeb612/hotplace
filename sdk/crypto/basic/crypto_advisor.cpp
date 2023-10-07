@@ -371,6 +371,10 @@ const hint_signature_t hint_signatures [] = {
       hash_algorithm_t::hash_alg_unknown, 2, NID_ED25519, NID_ED448, },
 };
 
+/*
+ * Standard curve database - NIST, ANSI X9.62 & X9.63, SECG
+ * https://neuromancer.sk/std/
+ */
 const hint_curve_t hint_curves [] = {
     { NID_X9_62_prime256v1, cose_ec_curve_t::cose_ec_p256,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-256", "prime256v1", "secp256r1", },
     { NID_secp384r1,        cose_ec_curve_t::cose_ec_p384,    crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-384", "ansip384r1", "secp384r1", },
@@ -379,6 +383,8 @@ const hint_curve_t hint_curves [] = {
     { NID_ED448,            cose_ec_curve_t::cose_ec_ed448,   crypto_key_t::kty_okp, crypto_use_t::use_sig, "Ed448", },
     { NID_X25519,           cose_ec_curve_t::cose_ec_x25519,  crypto_key_t::kty_okp, crypto_use_t::use_enc, "X25519", },
     { NID_X448,             cose_ec_curve_t::cose_ec_x448,    crypto_key_t::kty_okp, crypto_use_t::use_enc, "X448", },
+    { NID_secp224r1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-224", "ansip224r1", "secp224r1", },
+    { NID_sect233k1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-233", "ansit233k1", "sect233k1", },
 };
 
 const hint_kty_name_t hint_kty_names [] = {

@@ -710,6 +710,23 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
     return ret;
 }
 
+return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d, crypto_use_t use)
+{
+    return_t ret = errorcode_t::success;
+
+    switch (nid) {
+        case NID_X9_62_prime256v1:
+        case NID_secp384r1:
+        case NID_secp521r1:
+            ret = add_ec_nid_EC (cryptokey, kid, alg, nid, x, ybit, d, use);
+            break;
+        default:
+            ret = errorcode_t::request;
+            break;
+    }
+    return ret;
+}
+
 return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
 {
     return_t ret = errorcode_t::success;
@@ -809,6 +826,126 @@ return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid,
         }
         if (bn_y) {
             BN_clear_free (bn_y);
+        }
+        if (bn_d) {
+            BN_clear_free (bn_d);
+        }
+        if (pub) {
+            EC_POINT_free (pub);
+        }
+        if (point) {
+            EC_POINT_free (point);
+        }
+        if (cfg) {
+            BN_CTX_free (cfg);
+        }
+
+        if (errorcode_t::success != ret) {
+            if (pkey) {
+                EVP_PKEY_free (pkey);
+            }
+        }
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d, crypto_use_t use)
+{
+    return_t ret = errorcode_t::success;
+    EVP_PKEY* pkey = nullptr;
+    EC_KEY* ec = nullptr;
+    BIGNUM* bn_x = nullptr;
+    BIGNUM* bn_d = nullptr;
+    EC_POINT* pub = nullptr;
+    EC_POINT* point = nullptr;
+    BN_CTX* cfg = nullptr;
+    int ret_openssl = 1;
+
+    __try2
+    {
+        if (nullptr == cryptokey) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        bn_x = BN_bin2bn (&x[0], x.size (), nullptr);
+        if (d.size () > 0) {
+            bn_d = BN_bin2bn (&d[0], d.size (), nullptr);
+        }
+
+        if (nullptr == bn_x) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        ec = EC_KEY_new_by_curve_name (nid);
+        if (nullptr == ec) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl (ret);
+        }
+
+        const EC_GROUP* group = EC_KEY_get0_group (ec);
+        point = EC_POINT_new (group);
+        if (nullptr == point) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl (ret);
+        }
+
+        if (nullptr != bn_d) {
+            ret_openssl = EC_KEY_set_private_key (ec, bn_d);
+            if (ret_openssl != 1) {
+                ret = errorcode_t::internal_error;
+                __leave2_trace_openssl (ret);
+            }
+
+            ret_openssl = EC_POINT_mul (group, point, bn_d, nullptr, nullptr, nullptr);
+            if (ret_openssl != 1) {
+                ret = errorcode_t::internal_error;
+                __leave2_trace_openssl (ret);
+            }
+        } else {
+            // RFC8152 13.1.1.  Double Coordinate Curves
+            // Compute the sign bit as laid out in the Elliptic-Curve-Point-to-Octet-String Conversion function of [SEC1]
+            // If the sign bit is zero, then encode y as a CBOR false value; otherwise, encode y as a CBOR true value.
+            ret_openssl = EC_POINT_set_compressed_coordinates_GFp (group, point, bn_x, ybit, nullptr);
+            if (ret_openssl != 1) {
+                ret = errorcode_t::internal_error;
+                __leave2_trace_openssl (ret);
+            }
+        }
+
+        ret_openssl = EC_KEY_set_public_key (ec, point);
+        if (ret_openssl != 1) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl (ret);
+        }
+
+        pkey = EVP_PKEY_new ();
+        EVP_PKEY_set1_EC_KEY (pkey, ec); // EC_KEY_up_ref
+        if (ret_openssl != 1) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl (ret);
+        }
+
+        crypto_key_object_t key (pkey, use, kid, alg);
+        switch (nid) {
+            case NID_X9_62_prime256v1:
+                break;
+            case NID_secp384r1:
+                break;
+            case NID_secp521r1:
+                break;
+        }
+
+        cryptokey->add (key);
+    }
+    __finally2
+    {
+        if (ec) {
+            EC_KEY_free (ec);
+        }
+        if (bn_x) {
+            BN_clear_free (bn_x);
         }
         if (bn_d) {
             BN_clear_free (bn_d);

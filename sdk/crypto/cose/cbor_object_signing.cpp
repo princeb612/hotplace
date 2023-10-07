@@ -91,6 +91,15 @@ return_t cbor_object_signing::verify (cose_context_t* handle, crypto_key* key, c
             pkey = key->find (kid, sig);
         }
 
+{
+    buffer_stream bs;
+    dump_key (pkey, &bs);
+    printf ("method %i sig %i (%08x)\n", method, sig, sig);
+    printf ("%s\n", bs.c_str ());
+    std::string b64_sig = base64_encode (output);
+    printf ("%s\n", b64_sig.c_str ());
+}
+
         if (cose_alg_t::cose_hs256_64 == method) {
             binary_t signature;
             ret = sign.sign (pkey, sig, input, signature);

@@ -4,6 +4,9 @@
 # Date         Name                Description
 #
 
+# no release
+add_subdirectory (incubator)
+
 # base
 add_subdirectory (base)
 add_subdirectory (cmdline)

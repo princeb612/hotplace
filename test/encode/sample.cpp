@@ -96,6 +96,22 @@ void test_base16_decode ()
     _test_case.test (ret, __FUNCTION__, "base16");
 }
 
+void test_base16_oddsize ()
+{
+    const char * test = "0cef3f4babe6f9875e5db28c27d6a197d607c3641a90f10c2cc2cb302ba658aa151dc76c507488b99f4b3c8bb404fb5c852f959273f412cbdd5e713c5e3f0e67f94";
+    binary_t bin_test = base16_decode (test);
+
+    {
+        test_case_notimecheck notimecheck (_test_case);
+
+        buffer_stream bs;
+        dump_memory (bin_test, &bs);
+        printf ("%s\n", bs.c_str ());
+    }
+
+    _test_case.assert (66 == bin_test.size (), __FUNCTION__, "odd size");
+}
+
 void test_base64_routine (const char* source, size_t source_size, int encoding)
 {
     return_t ret = errorcode_t::success;
@@ -135,6 +151,7 @@ int main ()
     test_base16 ();
     test_base16_func ();
     test_base16_decode ();
+    test_base16_oddsize ();
 
     _test_case.begin ("base64 encoding");
     test_base64 ();

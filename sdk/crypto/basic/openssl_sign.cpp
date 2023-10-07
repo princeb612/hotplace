@@ -541,10 +541,10 @@ return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
             case hash_algorithm_t::sha2_512: unitsize = 66; break;  // (521 = (65 << 3) + 1), 66
         }
 
-        if (signature.size () < (unitsize * 2)) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+        /* support truncated hash
+         * NIST CAVP (cryptographic-algorithm-validation-program) test vector - PASSED
+         */
+        size_t signature_size = signature.size ();
 
         ecdsa_sig = ECDSA_SIG_new ();
         if (nullptr == ecdsa_sig) {
@@ -555,8 +555,8 @@ return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
         /* RFC 7515 A.3.1.  Encoding */
         BIGNUM* bn_r = nullptr;
         BIGNUM* bn_s = nullptr;
-        bn_r = BN_bin2bn (&signature[0], unitsize, nullptr);
-        bn_s = BN_bin2bn (&signature[unitsize], unitsize, nullptr);
+        bn_r = BN_bin2bn (&signature[0], signature_size / 2, nullptr);
+        bn_s = BN_bin2bn (&signature[signature_size / 2], signature_size / 2, nullptr);
 
         ECDSA_SIG_set0 (ecdsa_sig, bn_r, bn_s);
 

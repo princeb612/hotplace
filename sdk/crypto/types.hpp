@@ -148,6 +148,38 @@ enum crypt_enc_t {
     rsa_oaep512 = 5,
 };
 
+enum ec_curve_t {
+    ec_nistp192         = 409,  // P-192, NID_X9_62_prime192v1
+    ec_nistp224         = 713,  // P-224, NID_secp224r1
+    ec_nistp256         = 415,  // P-256, NID_X9_62_prime256v1
+    ec_nistp384         = 715,  // P-384, NID_secp384r1
+    ec_nistp521         = 716,  // P-521, NID_secp521r1
+    ec_nistk163         = 721,  // K-163, NID_sect163k1
+    ec_nistk233         = 726,  // K-233, NID_sect233k1
+    ec_nistk283         = 729,  // K-283, NID_sect283k1
+    ec_nistk409         = 731,  // K-409, NID_sect409k1
+    ec_nistk571         = 733,  // K-571, NID_sect571k1
+    ec_nistb163         = 723,  // B-163, NID_sect163r2
+    ec_nistb233         = 727,  // B-233, NID_sect233r1
+    ec_nistb283         = 730,  // B-283, NID_sect283r1
+    ec_nistb409         = 732,  // B-409, NID_sect409r1
+    ec_nistb571         = 734,  // B-571, NID_sect571r1
+    ec_secp160r1        = 709,  // secp160r1, NID_secp160r1
+    ec_x25519           = 1034, // X25519, NID_X25519
+    ec_x448             = 1035, // X448, NID_X448
+    ec_ed25519          = 1087, // Ed25519, NID_Ed25519
+    ec_ed448            = 1088, // Ed448, NID_Ed448
+
+    ec_brainpoolP256r1  = 927,  // brainpoolP256r1, NID_brainpoolP256r1
+    ec_brainpoolP256t1  = 928,  // brainpoolP256t1, NID_brainpoolP256t1
+    ec_brainpoolP320r1  = 929,  // brainpoolP320r1, NID_brainpoolP320r1
+    ec_brainpoolP320t1  = 930,  // brainpoolP320t1, NID_brainpoolP320t1
+    ec_brainpoolP384r1  = 931,  // brainpoolP384r1, NID_brainpoolP384r1
+    ec_brainpoolP384t1  = 932,  // brainpoolP384t1, NID_brainpoolP384t1
+    ec_brainpoolP512r1  = 933,  // brainpoolP512r1, NID_brainpoolP512r1
+    ec_brainpoolP512t1  = 934,  // brainpoolP512t1, NID_brainpoolP512t1
+};
+
 #define CRYPT_SIG_VALUE(t, c) ((t << 16) | c)
 #define CRYPT_SIG_TYPE(v) (v >> 16)
 #define CRYPT_SIG_CODE(v) (v & 0xffff)
@@ -641,9 +673,9 @@ typedef struct _hint_curves_t {
     cose_ec_curve_t cose_crv;
     crypto_key_t kty;
     crypto_use_t use;
-    const char* name;           // NIST CURVE
-    const char* nameof_x9_62;   // X9.62, X9.63
-    const char* nameof_sec;     // Standards for Efficient Cryptography (SEC)
+    const char* name;   // NIST CURVE
+    const char* aka1;   // X9.62, X9.63
+    const char* aka2;   // Standards for Efficient Cryptography (SEC)
 } hint_curve_t;
 
 typedef struct _hint_signature_t {

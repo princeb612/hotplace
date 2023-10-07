@@ -371,11 +371,43 @@ public:
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
      * @param binary_t const& x [in]
+     * @param uint8 ybit [in]
+     * @param binary_t const& d [inopt] private key
+     * @return error code (see error.hpp)
+     */
+    return_t add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d,
+                     crypto_use_t use = crypto_use_t::use_any);
+    /**
+     * @brief generate ec key
+     * @param crypto_key* cryptokey [in]
+     * @param const char* kid [inopt]
+     * @param const char* alg [inopt]
+     * @param int nid [in]
+     *    415 : NID_X9_62_prime256v1 (prime256v1)
+     *    715 : NID_secp384r1 (secp384r1)
+     *    716 : NID_secp521r1 (secp521r1)
+     * @param binary_t const& x [in]
      * @param binary_t const& y [in]
      * @param binary_t const& d [inopt] private key
      * @return error code (see error.hpp)
      */
     return_t add_ec_nid_EC (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
+                            crypto_use_t use = crypto_use_t::use_any);
+    /**
+     * @brief generate ec key
+     * @param crypto_key* cryptokey [in]
+     * @param const char* kid [inopt]
+     * @param const char* alg [inopt]
+     * @param int nid [in]
+     *    415 : NID_X9_62_prime256v1 (prime256v1)
+     *    715 : NID_secp384r1 (secp384r1)
+     *    716 : NID_secp521r1 (secp521r1)
+     * @param binary_t const& x [in]
+     * @param uint8 ybit [in]
+     * @param binary_t const& d [inopt] private key
+     * @return error code (see error.hpp)
+     */
+    return_t add_ec_nid_EC (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d,
                             crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate Ed25519, Ed448

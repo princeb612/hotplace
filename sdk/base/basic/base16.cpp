@@ -162,16 +162,17 @@ return_t base16_decode (const char* source, size_t size, binary_t& outpart)
 
         outpart.clear ();
 
-        if (size % 2) {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        }
 
         size_t cur = 0;
         if ((size > 2) && (0 == strnicmp (source, "0x", 2))) {
             cur = 2;
         }
 
+        if (size % 2) { /* support NIST CAVP test vector */
+            byte_t i = 0;
+            i += conv (source[cur++]);
+            outpart.push_back (i);
+        }
         for (; cur < size; cur += 2) {
             byte_t i = 0;
             i = conv (source[cur]) << 4;
@@ -199,16 +200,16 @@ return_t base16_decode (const char* source, size_t size, stream_t* stream)
 
         stream->clear ();
 
-        if (size % 2) {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        }
-
         size_t cur = 0;
         if ((size > 2) && (0 == strnicmp (source, "0x", 2))) {
             cur = 2;
         }
 
+        if (size % 2) { /* support NIST CAVP test vector */
+            byte_t i = 0;
+            i += conv (source[cur++]);
+            stream->write (&i, 1);
+        }
         for (; cur < size; cur += 2) {
             byte_t i = 0;
             i = conv (source[cur]) << 4;

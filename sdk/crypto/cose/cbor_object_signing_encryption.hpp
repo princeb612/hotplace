@@ -33,6 +33,23 @@ public:
     return_t reset (cose_context_t* handle);
 
     /**
+     * @brief encrypt
+     * @param cose_context_t* handle [in]
+     * @param crypto_key* key [in]
+     * @param cose_alg_t method [in]
+     * @param binary_t const& input [in]
+     * @param binary_t& output [out]
+     */
+    return_t encrypt (cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
+    /**
+     * @brief decrypt
+     * @param cose_context_t* handle [in]
+     * @param crypto_key* key [in]
+     * @param binary_t const& input [in]
+     * @param binary_t& output [out]
+     */
+    return_t decrypt (cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
+    /**
      * @brief sign
      * @param cose_context_t* handle [inout]
      * @param crypto_key* key [in]

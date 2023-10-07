@@ -571,7 +571,7 @@ return_t openssl_crypt::decrypt2 (crypt_context_t* handle, const unsigned char* 
         if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode)) {
             if ((nullptr == aad) || (nullptr == tag)) {
                 ret = errorcode_t::invalid_parameter;
-                __leave2;
+                __leave2_trace (ret);
             }
 
             if (crypt_mode_t::ccm == context->mode) {

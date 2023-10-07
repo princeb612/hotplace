@@ -169,25 +169,34 @@ return_t test_cose_example (cbor_object* root, const char* expect_file, const ch
         cbor_web_key cwk;
         //cbor_publisher publisher;
         binary_t signature;
+        binary_t decrypted;
         bool result = false;
         cose_context_t* cose_handle = nullptr;
 
-        crypto_key keys;
-        cwk.load_file (&keys, "rfc8152_c_7_2.cbor");
-        keys.for_each (dump_crypto_key, nullptr);
+        crypto_key privkeys;
+        crypto_key pubkeys;
+        cwk.load_file (&privkeys, "rfc8152_c_7_2.cbor");
+        cwk.load_file (&pubkeys, "rfc8152_c_7_1.cbor");
+        //privkeys.for_each (dump_crypto_key, nullptr);
+        //pubkeys.for_each (dump_crypto_key, nullptr);
 
         if (root->tagged ()) {
             switch (root->tag_value ()) {
                 case cbor_tag_t::cose_tag_sign:
                 case cbor_tag_t::cose_tag_sign1:
                     cose.open (&cose_handle);
-                    ret = cose.verify (cose_handle, &keys, bin, result);
+                    ret = cose.verify (cose_handle, &pubkeys, bin, result);
                     cose.close (cose_handle);
 
                     _test_case.test (ret, __FUNCTION__, "check4.verify %s", text ? text : "");
                     break;
                 case cbor_tag_t::cose_tag_encrypt:
                 case cbor_tag_t::cose_tag_encrypt0:
+                    cose.open (&cose_handle);
+                    ret = cose.decrypt (cose_handle, &privkeys, bin, decrypted);
+                    cose.close (cose_handle);
+
+                    _test_case.test (ret, __FUNCTION__, "check4.decrypt %s", text ? text : "");
                     break;
                 case cbor_tag_t::cose_tag_mac:
                 case cbor_tag_t::cose_tag_mac0:
