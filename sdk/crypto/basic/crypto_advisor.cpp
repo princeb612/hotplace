@@ -384,7 +384,14 @@ const hint_curve_t hint_curves [] = {
     { NID_X25519,           cose_ec_curve_t::cose_ec_x25519,  crypto_key_t::kty_okp, crypto_use_t::use_enc, "X25519", },
     { NID_X448,             cose_ec_curve_t::cose_ec_x448,    crypto_key_t::kty_okp, crypto_use_t::use_enc, "X448", },
     { NID_secp224r1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-224", "ansip224r1", "secp224r1", },
-    { NID_sect233k1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-233", "ansit233k1", "sect233k1", },
+    { NID_sect233k1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "K-233", "ansit233k1", "sect233k1", },
+    { NID_sect283k1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "K-283", "ansit283k1", "sect283k1", },
+    { NID_sect409k1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "K-409", "ansit409k1", "sect409k1", },
+    { NID_sect571k1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "K-571", "ansit571k1", "sect571k1", },
+    { NID_sect233r1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "B-233", "ansit233r1", "sect233r1", },
+    { NID_sect283r1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "B-283", "ansit283r1", "sect283r1", },
+    { NID_sect409r1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "B-409", "ansit409r1", "sect409r1", },
+    { NID_sect571r1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "B-571", "ansit571r1", "sect571r1", },
 };
 
 const hint_kty_name_t hint_kty_names [] = {
@@ -542,7 +549,10 @@ return_t crypto_advisor::build_if_necessary ()
 
         for (i = 0; i < RTL_NUMBER_OF (hint_curves); i++) {
             _nid2curve_map.insert (std::make_pair (hint_curves[i].nid, hint_curves[i].cose_crv));
-            _curve2nid_map.insert (std::make_pair (hint_curves[i].cose_crv, hint_curves[i].nid));
+            if (hint_curves[i].cose_crv) {
+                // cose_ec_curve_t::cose_ec_unknown != crv
+                _curve2nid_map.insert (std::make_pair (hint_curves[i].cose_crv, hint_curves[i].nid));
+            }
         }
 
         _flag = 1;
