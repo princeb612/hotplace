@@ -515,6 +515,66 @@ void test_kdf_hkdf ()
     }
 }
 
+void test_kdf_pbkdf2_rfc6070 ()
+{
+    _test_case.begin ("kdf");
+
+    return_t ret = errorcode_t::success;
+
+    // RFC 6070 PKCS #5: Password-Based Key Derivation Function 2 (PBKDF2) Test Vectors
+    // 2.  PBKDF2 HMAC-SHA1 Test Vectors
+    struct {
+        const char* password;
+        size_t size_password;
+        const char* salt;
+        size_t size_salt;
+        int c;
+        int dlen;
+        const char* expect;
+    } vector[] = {
+        {
+            "password", 8, "salt", 4, 1, 20,
+            "0c60c80f961f0e71f3a9b524af6012062fe037a6"
+        },
+        {
+            "password", 8, "salt", 4, 2, 20,
+            "ea6c014dc72d6f8ccd1ed92ace1d41f0d8de8957"
+        },
+        {
+            "password", 8, "salt", 4, 4096, 20,
+            "4b007901b765489abead49d926f721d065a429c1"
+        },
+        {
+            "password", 8, "salt", 4, 16777216, 20,
+            "eefe3d61cd4da4e4e9945b3d6ba2158c2634e984"
+        },
+        {
+            "passwordPASSWORDpassword", 24, "saltSALTsaltSALTsaltSALTsaltSALTsalt", 36, 4096, 25,
+            "3d2eec4fe41c849b80c8d83662c0e44a8b291a964cf2f07038"
+        },
+        {
+            "pass\0word", 9, "sa\0lt", 5, 4096, 16,
+            "56fa6aa75548099dcc37d7f03425e0c3"
+        },
+    };
+
+    binary_t result;
+
+    for (int i = 0; i < RTL_NUMBER_OF (vector); i++) {
+        binary_t password;
+        password.insert (password.end (), vector[i].password, vector[i].password + vector[i].size_password);
+        binary_t salt;
+        salt.insert (salt.end (), vector[i].salt, vector[i].salt + vector[i].size_salt);
+        kdf_pbkdf2 (result, vector[i].dlen, password, salt, vector[i].c, hash_algorithm_t::sha1);
+        basic_stream bs;
+        dump_memory (result, &bs);
+        std::cout << bs.c_str () << std::endl;
+
+        ret = compare_binary (base16_decode (vector[i].expect), result);
+        _test_case.test (ret, __FUNCTION__, "RFC6070.pbkdf2 c = %i", vector[i].c);
+    }
+}
+
 void test_kdf_pbkdf2_rfc7914 ()
 {
     // RFC 7914 11.  Test Vectors for PBKDF2 with HMAC-SHA-256
@@ -548,7 +608,7 @@ void test_kdf_pbkdf2_rfc7914 ()
         std::cout << bs.c_str () << std::endl;
 
         ret = compare_binary (base16_decode (vector[i].expect), result);
-        _test_case.test (ret, __FUNCTION__, "pbkdf2");
+        _test_case.test (ret, __FUNCTION__, "RFC7914.pbkdf2 c = %i", vector[i].c);
     }
 }
 
@@ -682,6 +742,7 @@ int main ()
         test_chacha20poly1305_rfc8439_2_8 ();
 
         test_kdf_hkdf ();
+        test_kdf_pbkdf2_rfc6070 ();
         test_kdf_pbkdf2_rfc7914 ();
         test_kdf_scrypt_rfc7914 ();
         test_kdf_argon_rfc9106 ();

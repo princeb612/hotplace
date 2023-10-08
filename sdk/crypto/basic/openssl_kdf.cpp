@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 6070 PKCS #5: Password-Based Key Derivation Function 2 (PBKDF2)
  *  RFC 7914 The scrypt Password-Based Key Derivation Function
  *  RFC 9106 Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications
  *  - openssl-3.2 required
@@ -86,6 +87,30 @@ return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, std::string const& password
 
         derived.resize (dlen);
         PKCS5_PBKDF2_HMAC (password.c_str (), password.size (), &salt[0], salt.size (), iter, md, dlen, &derived[0]);
+    }
+    __finally2
+    {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, int iter, hash_algorithm_t alg)
+{
+    return_t ret = errorcode_t::success;
+    const EVP_MD* md = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance ();
+
+    __try2
+    {
+        md = advisor->find_evp_md (alg);
+        if (nullptr == md) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        derived.resize (dlen);
+        PKCS5_PBKDF2_HMAC ((char*) &password[0], password.size (), &salt[0], salt.size (), iter, md, dlen, &derived[0]);
     }
     __finally2
     {
