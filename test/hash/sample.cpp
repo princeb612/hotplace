@@ -537,18 +537,29 @@ void test_ecdsa (crypto_key* key, uint32 nid, hash_algorithm_t alg, binary_t con
     const hint_curve_t* hint = advisor->hintof_curve_nid (nid);
     const char* hashalg = advisor->nameof_md (alg);
 
-    ret = sign.verify_ecdsa (pkey, alg, input, signature);
-    OPTION option = _cmdline->value (); // (*_cmdline).value () is ok
+    /* check EC_GROUP_new_by_curve_name:unknown group */
+    EC_KEY* ec = EC_KEY_new_by_curve_name (nid);
+    if (ec) {
+        EC_KEY_free (ec);
+    } else {
+        ret = errorcode_t::not_supported;
+        ERR_clear_error ();
+    }
 
-    if (option.dump_keys) {
-        test_case_notimecheck notimecheck (_test_case);
-        basic_stream bs;
-        dump_key (pkey, &bs);
-        printf ("%s\n", bs.c_str ());
-        dump_memory (input, &bs);
-        printf ("input\n%s\n", bs.c_str ());
-        dump_memory (signature, &bs);
-        printf ("sig\n%s\n", bs.c_str ());
+    if (errorcode_t::success == ret) {
+        ret = sign.verify_ecdsa (pkey, alg, input, signature);
+        OPTION option = _cmdline->value (); // (*_cmdline).value () is ok
+
+        if (option.dump_keys) {
+            test_case_notimecheck notimecheck (_test_case);
+            basic_stream bs;
+            dump_key (pkey, &bs);
+            printf ("%s\n", bs.c_str ());
+            dump_memory (input, &bs);
+            printf ("input\n%s\n", bs.c_str ());
+            dump_memory (signature, &bs);
+            printf ("sig\n%s\n", bs.c_str ());
+        }
     }
 
     _test_case.test (ret, __FUNCTION__, "ECDSA %s %s", hint ? hint->name : "", hashalg);

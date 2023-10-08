@@ -385,8 +385,10 @@ const hint_curve_t hint_curves [] = {
     { NID_ED448,            cose_ec_curve_t::cose_ec_ed448,   crypto_key_t::kty_okp, crypto_use_t::use_sig, "Ed448", },
     { NID_X25519,           cose_ec_curve_t::cose_ec_x25519,  crypto_key_t::kty_okp, crypto_use_t::use_enc, "X25519", },
     { NID_X448,             cose_ec_curve_t::cose_ec_x448,    crypto_key_t::kty_okp, crypto_use_t::use_enc, "X448", },
-    { NID_X9_62_prime192v1, cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-192", "prime192v1", "secp192r1", },
     { NID_secp224r1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-224", "ansip224r1", "secp224r1", "wap-wsg-idm-ecid-wtls12", },
+
+    // openssl-3.0
+    { NID_X9_62_prime192v1, cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "P-192", "prime192v1", "secp192r1", },
     { NID_sect163k1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "K-163", nullptr,      "sect163k1", },
     { NID_sect233k1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "K-233", "ansit233k1", "sect233k1", "wap-wsg-idm-ecid-wtls10", },
     { NID_sect283k1,        cose_ec_curve_t::cose_ec_unknown, crypto_key_t::kty_ec,  crypto_use_t::use_any, "K-283", "ansit283k1", "sect283k1", },
