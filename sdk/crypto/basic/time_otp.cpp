@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 6238 TOTP: Time-Based One-Time Password Algorithm
  *
  * Revision History
  * Date         Name                Description

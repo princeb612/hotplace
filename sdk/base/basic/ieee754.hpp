@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  The IEEE Standard for Floating-Point Arithmetic (IEEE 754)
  *
  * Revision History
  * Date         Name                Description

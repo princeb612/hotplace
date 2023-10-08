@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 7515 JSON Web Signature (JWS)
  *
  * Revision History
  * Date         Name                Description

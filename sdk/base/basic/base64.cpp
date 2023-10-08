@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 4648 The Base16, Base32, and Base64 Data Encodings
  *
  * Revision History
  * Date         Name                Description

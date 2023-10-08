@@ -3,14 +3,13 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 4648 The Base16, Base32, and Base64 Data Encodings
+ *  RFC 7515 JSON Web Signature (JWS)
+ *           Appendix C.  Notes on Implementing base64url Encoding without Padding
  *
  * Revision History
  * Date         Name                Description
  *
- * @remakrs
- *  RFC 4648 The Base16, Base32, and Base64 Data Encodings
- *  RFC 7515 JSON Web Signature (JWS)
- *           Appendix C.  Notes on Implementing base64url Encoding without Padding
  */
 
 #ifndef __HOTPLACE_SDK_BASE_BASIC_BASE64__

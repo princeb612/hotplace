@@ -9,6 +9,8 @@
  */
 
 #include <hotplace/sdk/odbc/basic/odbc_connector.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_query.hpp>
 
 namespace hotplace {
 namespace odbc {

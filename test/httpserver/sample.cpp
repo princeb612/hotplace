@@ -140,6 +140,7 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
                 }
 
                 bool resp_wo_encoding = false;
+                // same way "Content-Encoding: compress" possible
                 if (0 == stricmp (encoding.c_str (), "deflate")) {
                     basic_stream encoded;
                     zlib_deflate (zlib_windowbits_t::windowbits_deflate, (byte_t*) response.content (), response.content_size (), &encoded);

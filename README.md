@@ -46,8 +46,8 @@
  * NIST CAVP (Cryptographic Algorithm Validation Program) ECDSA https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
    * sdk/crypto/basic/
    * test/hash/
- * RFC 1951 : DEFLATE Compressed Data Format Specification version 1.3
- * RFC 1952 : GZIP file format specification version 4.3
+ * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
+ * RFC 1952 GZIP file format specification version 4.3
  * RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0
  * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1

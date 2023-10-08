@@ -29,7 +29,7 @@ odbc_sinker::~odbc_sinker ()
     _dbquery->release ();
 }
 
-return_t odbc_sinker::is_ready ()
+return_t odbc_sinker::ready ()
 {
     return_t ret = errorcode_t::busy;
 
@@ -44,7 +44,7 @@ return_t odbc_sinker::is_ready ()
             time_monotonic (now);
             time_diff (diff, _timestamp, now);
 
-            if (diff.tv_sec > tmo_seconds) {
+            if (diff.tv_sec > _tmo_seconds) {
                 ret = errorcode_t::timeout;
 
                 _dbquery->close (); // cancel
@@ -54,7 +54,7 @@ return_t odbc_sinker::is_ready ()
         ret = errorcode_t::success;
     }
 
-    return ready;
+    return ret;
 }
 
 }

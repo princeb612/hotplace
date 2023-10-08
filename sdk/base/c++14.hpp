@@ -39,7 +39,9 @@ class constexpr_obf {
 public:
     constexpr constexpr_obf (const char* source)
     {
-        // (c++14) body at constructor
+        // for more information about constexpr, see ISO/IEC 14882  Programming languages — C++
+        // (c++11) ‘constexpr’ constructor does not have empty body
+        // (c++14) possible to implement body at constructor
         for (unsigned int i = 0; i < N; i++) {
             char c = source[i];
             buf[i] = c + factor;

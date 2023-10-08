@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
+ *  RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
  *
  * Revision History
  * Date         Name                Description

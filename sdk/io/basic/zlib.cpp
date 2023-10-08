@@ -3,6 +3,16 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
+ *  RFC 1952 GZIP file format specification version 4.3
+ *  RFC 7520 Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)
+ *      5.9.  Compressed Content
+ *          JOSE "zip":"DEF"
+ *  RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
+ *      3.5 Content Codings
+ *          Content-Encoding: gzip
+ *          Content-Encoding: compress
+ *          Content-Encoding: deflate
  *
  * Revision History
  * Date         Name                Description

@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 7049 Concise Binary Object Representation (CBOR)
+ *  RFC 8949 Concise Binary Object Representation (CBOR)
  *
  * Revision History
  * Date         Name                Description

@@ -57,13 +57,19 @@ void test ()
     odbc_connector dbconn;
     odbc_query* rs = nullptr;
 
-    constexpr char constexpr_connstring[] = "DRIVER={%s};SERVER=%s;PORT=%d;DATABASE=%s;USER=%s;PASSWORD=%s";
-    constexpr auto constexpr_obf_user = CONSTEXPR_OBF ("user");
-    constexpr auto constexpr_obf_pass = CONSTEXPR_OBF ("password");
-
     odbc_diagnose::get_instance ()->add_handler (dbdiag_handler, nullptr);
 
+    constexpr char constexpr_connstring[] = "DRIVER={%s};SERVER=%s;PORT=%d;DATABASE=%s;USER=%s;PASSWORD=%s";
+#if __cplusplus >= 201402L    // c++14
+    constexpr auto constexpr_obf_user = CONSTEXPR_OBF ("user");
+    constexpr auto constexpr_obf_pass = CONSTEXPR_OBF ("password");
     ret = dbconn.connect (&rs, format (constexpr_connstring, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", CONSTEXPR_OBF_CSTR (constexpr_obf_user), CONSTEXPR_OBF_CSTR (constexpr_obf_pass)).c_str ());
+#else
+    constexpr char constexpr_obf_user[] = "user";
+    constexpr char constexpr_obf_pass[] = "password";
+    ret = dbconn.connect (&rs, format (constexpr_connstring, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", constexpr_obf_user, constexpr_obf_pass).c_str ());
+#endif
+
     if (errorcode_t::success == ret) {
         ret = rs->query ("select * from city");
         if (errorcode_t::success == ret) {

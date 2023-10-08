@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 2104 HMAC: Keyed-Hashing for Message Authentication
+ *  RFC 4493 The AES-CMAC Algorithm
  *
  * Revision History
  * Date         Name                Description

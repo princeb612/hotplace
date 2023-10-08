@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
  *
  * Revision History
  * Date         Name                Description

@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *          obfuscate string at runtime
+ *          use constexpr_obf to obfuscate a string at compile time (c++14 required)
  *
  * Revision History
  * Date         Name                Description
