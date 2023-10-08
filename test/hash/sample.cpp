@@ -60,7 +60,7 @@ void test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm,
                     if (errorcode_t::success == ret) {
                         test_case_notimecheck notimecheck (_test_case);
 
-                        buffer_stream dump;
+                        basic_stream dump;
                         dump_memory (&hashed[0], hashed.size (), &dump, 16, 0);
                         bs.printf ("%s\n",  dump.c_str ());
                     }
@@ -112,7 +112,7 @@ return_t test_hash_routine (hash_t* hash_object, hash_algorithm_t algorithm, bin
                     if (errorcode_t::success == ret) {
                         test_case_notimecheck notimecheck (_test_case);
 
-                        buffer_stream dump;
+                        basic_stream dump;
                         dump_memory (&hashed[0], hashed.size (), &dump, 16, 0);
                         bs.printf ("%s\n",  dump.c_str ());
 
@@ -323,7 +323,7 @@ void test_aes128cbc_mac_routine (binary_t const& key, binary_t const& message, b
         hash.update (handle, &message[0], message.size ());
         hash.finalize (handle, result);
         hash.close (handle);
-        buffer_stream bs;
+        basic_stream bs;
         dump_memory (result, &bs);
         std::cout << "result" << std::endl << bs.c_str () << std::endl;
         ret = compare_binary (expect, result);
@@ -484,7 +484,7 @@ void test_hash_hmac_sign ()
 
     keychain.add_oct (&key, base16_decode (key_source));
     binary_t result;
-    buffer_stream bs;
+    basic_stream bs;
 
     openssl_hash hash;
     openssl_sign sign;
@@ -542,7 +542,7 @@ void test_ecdsa (crypto_key* key, uint32 nid, hash_algorithm_t alg, binary_t con
 
     if (option.dump_keys) {
         test_case_notimecheck notimecheck (_test_case);
-        buffer_stream bs;
+        basic_stream bs;
         dump_key (pkey, &bs);
         printf ("%s\n", bs.c_str ());
         dump_memory (input, &bs);
@@ -551,15 +551,14 @@ void test_ecdsa (crypto_key* key, uint32 nid, hash_algorithm_t alg, binary_t con
         printf ("sig\n%s\n", bs.c_str ());
     }
 
-    _test_case.test (ret, __FUNCTION__, "ECDSA %s %s", hint->name, hashalg);
+    _test_case.test (ret, __FUNCTION__, "ECDSA %s %s", hint ? hint->name : "", hashalg);
 }
 
 void test_nist_cavp_ecdsa ()
 {
-    _test_case.begin ("NIST ECDSA test vector");
+    _test_case.begin ("NIST CAVP ECDSA");
 
     // https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
-    // FIPS 186-4 https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/dss/186-4ecdsatestvectors.zip
 
     struct {
         int nid;
@@ -572,6 +571,7 @@ void test_nist_cavp_ecdsa ()
         const char* r;
         const char* s;
     } vector [] = {
+        // FIPS 186-4 https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/dss/186-4ecdsatestvectors.zip
         {
             NID_secp224r1,
             hash_algorithm_t::sha2_224,
@@ -3659,6 +3659,175 @@ void test_nist_cavp_ecdsa ()
             "1744badc4b7cc2284b34b65247467094f79c11cd8efb666289087f9cdc15d607f4a16fe8b2b16cc52c1902c6315cadcf4938999bc3c5908c713ab7d5d29ff43bfe7",
             "0fadf082860592535c792f1c34056b557dec17f4082b1e20ffbf8566b7d81aa8eb6e009fc7a0fb3bd5f990bc5d66f40e2b573f2be9ca0bd5da3c0e9ecf5ffd0cff0",
             "140d950b3c824c5f01a36f05f5c305c58c788a90dcf927e88334c6a53ccb381201082f2daa32235cb5ca9a259eb1890d9f38f31ebf0d2bb2196870624961f2c220a",
+        },
+        // FIPS 186-2 https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/dss/186-2ecdsatestvectors.zip
+        {
+            // [P-192]
+            NID_X9_62_prime192v1,
+            hash_algorithm_t::sha1,
+            "66e98a165854cd07989b1ee0ec3f8dbe0ee3c2fb0051ef53a0be03457c4f21bce7dc50ef4df37486c3207dfee26bde4ed62340cbb2da784906b1b783b4d601bdff4ae1a7e5e85a85afa3208dc60f0990c823bedddb3db663426665152ed7b093d6bda506c93a694b83ac71553f31f5cc0d6ba2fa248090e8796573c4915d1586",
+            "0017899949d02b55f9556846411cc9de512c6f16ecdeb1c4",
+            "14f69738599689f5706ab71343becc886ef1569a2d1137fe",
+            "0cf5a433909e33217fb4df6b9593f71d43fb1c2a5653b763",
+            "0098e9c07e8e6adb97b77d85b0c10a265e11737a89a3e37b",
+            "af1f749e3df6220ff04efd178618a977e0838b1b9dc126e3",
+            "8990a04c6cc0ff26264ecf8f7831381a9dbc6e53cc8cc860",
+        },
+        {
+            // [P-256]
+            NID_X9_62_prime256v1,
+            hash_algorithm_t::sha1,
+            "5ff1fa17c2a67ce599a34688f6fb2d4a8af17532d15fa1868a598a8e6a0daf9b11edcc483d11ae003ed645c0aaccfb1e51cf448b737376d531a6dcf0429005f5e7be626b218011c6218ff32d00f30480b024ec9a3370d1d30a9c70c9f1ce6c61c9abe508d6bc4d3f2a167756613af1778f3a94e7771d5989fe856fa4df8f8ae5",
+            "002a10b1b5b9fa0b78d38ed29cd9cec18520e0fe93023e3550bb7163ab4905c6",
+            "e9cd2e8f15bd90cb0707e05ed3b601aace7ef57142a64661ea1dd7199ebba9ac",
+            "c96b0115bed1c134b68f89584b040a194bfad94a404fdb37adad107d5a0b4c5e",
+            "00c2815763d7fcb2480b39d154abc03f616f0404e11272d624e825432687092a",
+            "15bf46937c7a1e2fa7adc65c89fe03ae602dd7dfa6722cdafa92d624b32b156e",
+            "59c591792ee94f0b202e7a590e70d01dd8a9774884e2b5ba9945437cfed01686",
+        },
+        {
+            // [P-384]
+            NID_secp384r1,
+            hash_algorithm_t::sha1,
+            "4c06491c039e8a819bbcbd80152d0cedfe1a8cd6448ab81e48281f68344759368f233f520f695c6eaefa9e07ffec518fc3d24ecab83e7079b1844836ebc0129f9f1ae7b6d448348877556a0dada1f750682a76cf39092225654091e63ab29fcba373a80ffb42fa181f54895ac754e57916a76aad6ff4b66b8be46142c826e803",
+            "0082757d5b9db084bd2e0921a6ce621076f3f43a523565a76710c9a1dcc7c5f4b1a4237f24c53614153ed97b423a2777",
+            "3271938d4cd144006b45c73f2a8930dff8238e7220496000be3694aa5418063271c2e12912b6c1cbc03c4175373c3a3e",
+            "d34f5257d230a464958d1fff570a2f55fe6401c83a613a53389a82957eaa639e3898cfe9823d57b38baee30f5c94f7e1",
+            "003d87d4516517e73854719d4ba3ecc1c6f90e1438b540c628f22d177b7bff158f6dc5b11d20ac390a57516f061c25b4",
+            "a8929784c43fa3d11e3169616131a961c880ba7442cadcab6df98744db7d1ec0150a5e345cc1499db71ed7175db2954d",
+            "56ddef0b15a8804b08909e6696581b7d5a3aba1c7d280c7486bc264a246354470d803eac034bbe0dc9e78a742c83160f",
+        },
+        {
+            // [P-521]
+            NID_secp521r1,
+            hash_algorithm_t::sha1,
+            "cc92ca36a76760752b5a45ca5d7235947122a6002f1d4e7d9c6be570d7bd2c2941fe2e16e02ac637066361d22d420568266b93e773644921f1a78a7dbaf5e2ed49ee4520dfdf97f826db723e140d2395134cf5ac5ff0b3b8afe4682217fd697c2d8a95ba6b2ddc9fd4e9fe75da7b950180ee56b6bc6a94291f4d05c5b77cc9c0",
+            "03d72bcc700695d400c813dfda1e3b3bf2cbc15f28d272dcb3bd7f935fdabac9c277dc47a3245737b40ded8d0d2464caa6afa8b971693cb258a8f58e63fab2c4856",
+            "0f1dc7ccb09d61e6af379b89aca905b49779fbe43a94c8ef384ccbf660f4805c965a3a24ed5a962c24809415cdecfdfe50fd18f1266073154b62f355fe4c98af6e5",
+            "1740eb95b8e31a0434c988f2edd550b8dc6c45c6f504309255370cce57e821fcb4f60bad17a8fb9a3f4dc67ed4860ae6dd3ed4b1f51b98451b7e7095cc87d4d6279",
+            "1fc81abec3fab91a439df81eb49a7179230866c2e0e505d696ca37972e4af043f6ce6edea69c5711d14c43905b3dcc9ed48d225d50d8b136b6f0787215b3500be53",
+            "0d314dde74cce6024518980ad85cc7d5a294e148fa26f0648486a6d2882ca7a92a1c934c4b01ee1f6cc1dcc5920d49719a1823cfa32a69cda710b0e95623bbb0451",
+            "14b0b93bda137a5293900eb6cb6b151e3301b8e2944eaee5ce0f8df87c9841b61372a2d70e775c6758d29a7d24f62c69dc884b54ce67a8edb51a072e4797a9b036d",
+        },
+        {
+            // [K-163]
+            NID_sect163k1,
+            hash_algorithm_t::sha1,
+            "a2c1a03fdd00521bb08fc88d20344321977aaf637ef9d5470dd7d2c8628fc8d0d1f1d3587c6b3fd02386f8c13db341b14748a9475cc63baf065df64054b27d5c2cdf0f98e3bbb81d0b5dc94f8cdb87acf75720f6163de394c8c6af360bc1acb85b923a493b7b27cc111a257e36337bd94eb0fab9d5e633befb1ae7f1b244bfaa",
+            "00000011f2626d90d26cb4c0379043b26e64107fc",
+            "0389fa5ad7f8304325a8c060ef7dcb83042c045bc",
+            "0eefa094a5054da196943cc80509dcb9f59e5bc2e",
+            "0000000c3a4ff97286126dab1e5089395fcc47ebb",
+            "0dbe6c3a1dc851e7f2338b5c26c62b4b37bf8035c",
+            "1c76458135b1ff9fbd23009b8414a47996126b56a",
+        },
+        {
+            // [K-233]
+            NID_sect233k1,
+            hash_algorithm_t::sha1,
+            "f764f42d70cf6ecea626c3069ab027074bca9e9ce141c7b32b00f8184beb9083b00a89d545ea4d9fe840cbe41ed0c920058d7c888a025694dbf01fbb2039477d66fc7ba7db0276d341591a2e9d3ebf7e2f41cb63a7a382dc9603200e23392541ff83f12c9bdf907298b7d76c7fc3b029b22cb2b3a2edf594437f2499bdb5d3d6",
+            "00000004faae1140e1f4279e18921c9410379fce71692e5678341909cac",
+            "0c6364b5933becd8678daa79dc8d792732e2fa7fa74f3b7217871fbe5c7",
+            "079764bdd8602e45c4e26689d0c398c4894667cd67f18634d8dcc9320e8",
+            "00000000e6acf6a5eefdab8b6ad75e200b0a055bffd9293f73ca13d6d41",
+            "07b9d201e5cf2b38066baca3bbba55cb1642db58edfcabeefdb36605f0d",
+            "00d966cf5ed16091136031ff0cb5b8304f51a46aacd0ca70edfb8dd9e94",
+        },
+        {
+            // [K-283]
+            NID_sect283k1,
+            hash_algorithm_t::sha1,
+            "f06b642fdb211dada72eeaaea56cc793c7d750d3b24f79e5159a7f6139a91f62da1c052e3608871963f793a6e530e6f080397f484b9b542006e54328adf34bb64d70fc6b179a2c14b345ecced723bb6e1742f91fffd69e4d5f392bc2e630e10ff270312ea76175653f21dd6da0ccacd434fba4a0f58abe35c79f1f790be74835",
+            "05ba871219bd8035ffe4fcafd381f380273469700db81b4b3ab35e9e8828b227b97587f",
+            "2ac04f2a3fc49912b166775e6b237151164e9381125765c512c4c231221aa22131ab7ec",
+            "65c18362bb46d48683d14feb3d00788ec13e2f4cbc21e094a76c1183f0db00e5292b938",
+            "0f291f9fd39310ecbd8e6067e82f4d18c3b35a081d9ce2fb9d9f5847f80afd5074f76eb",
+            "0c1f8d86ef4957828ab0af89a182c5495d64fb4b91646b7824c419b7c92e687d76b88f3",
+            "0667913e0cb09fe6565ac5a27e685c17699cdaf443de3fbb653774fe263b2edba0daca3",
+        },
+        {
+            // [K-409]
+            NID_sect409k1,
+            hash_algorithm_t::sha1,
+            "b6ab513b9d084580ae7751950102647d235197bf0bcfbeaf4f083dee98551e3454bc604daa129162b3629f7ae793eb40d5449f0718fb420b867f89faaa8270b375838a4d30f3955bb597526edf2d94dc3f5296c010a391426d238e19c2dd794e81ca784216f47bf21cdc137ad11987d8c74325f3dd0fd6dc6ebbf553c8ad618d",
+            "00031b72b3879862dbfb6d0b574267a560ed5de2b882063e967c18a62bb4ee342ab54150632a9a8462836024ce65d4c79972a3b",
+            "02e80261636dd3858f31281bd40d51914648b1b95b6ab621784ec11b276778590dd88f256643df3f204ba82dbc38c197a92b60a",
+            "0ca477303a591658281fb9f48663b530565fa8ea0587fd0361d6c830130a9ae149855930a358627c2cd8b6682e16a72701d46a7",
+            "00038421e9318c4cc05519a6eb81d87a1d16331f8e7cdac4f0c47c390a381e4bb193c43ea7eb5e47d4756d41e1eef586acf6741",
+            "07acaa9a13d6a0c7df8e60d5d324465854d6f78a3e81e94ee744c7ae45cce9468c85b16e2eafb184901d98bef18d52e8d9333f1",
+            "03b247f581f590470a906642875b7499b3af14a9614f4e6aa00cd5ea3f5dac4f7f5f1333227b6cb0dea7362c795695321f80021",
+        },
+        {
+            // [K-571]
+            NID_sect571k1,
+            hash_algorithm_t::sha1,
+            "c8ca3fa3a0e069226cdd8f9a87437cb9b651c1deae79572ad61487da4f5507d4327b667f184ba9d8e0be37c3acf7f29e2d77a71c2194a8511927b7098086265ed9b23d8a48d1dcf954de61a3eb9fcc98a6d722dc4fbe0f76a1aecec44e1f4e1147d58d69375848ac50a5d7e24b2353ceaad8f9c641ddd3c2f40f95b2c208c515",
+            "1a6fca9b71913ace15de792be9129dd4a25db43fbf2ee5f0197e248a5eb312baf72a78459c4b355cb6f1f244f051a1726e2cee4cbcb167e09694a04745baaec610f3acb087dafa9",
+            "3b81ac991f619b214c6ce1e4fb4809d18dbc12f8b30f86e3492c454bc5c22067792682ccdd8d53f8fd86132535d731e64cc2a85513a8612f75211a60a1c475ba1245ed943e4fec5",
+            "688b0b258c41ff174adb65c8cfd630c88c57717303705d34fd0710140b25c4ad2040e4066a5bd2164f2fb98b0962d6a8871902d8d6eef02460da57dcd92b30e24e8d759b11ad639",
+            "17cd7b62dde55ca12e74b81a852b4f8f400fca8df8a3c03027a247dba330b08ea751d3fa704c1a6521d8494a8fc8c670fdc35208d61722bb1d4d7efe7a42c32b0afb713369fbfa0",
+            "0312aa593afe987554eff956647f6c8c4a233a9c772d3824b2bfb12fe9f5efd4763c28475cd764f67e0947d43945d78384ffbf7d9f9c47b9677b59dc2dfd65877abff95e116f190",
+            "066ba80d613e9807ec17b46e9625357eb5a32b3af21962d4ed12a523af8c84b6c5e357bee206ce734f5e1966ae5c047e98d56d435c0e6a3e9b761cef9dc577e145e7247e239091d",
+        },
+        {
+            // [B-163]
+            NID_sect163r2,
+            hash_algorithm_t::sha1,
+            "c2d1afa40b3318016de5b64291fe1b45325e73157f870a5dc0af0e233d1395b25b8de1d80969e3525a75ff8573570f6fa823aadce22da6dd441cdb760e402a97c126bf4d8469923ac6ca34432583c8888ed94f99a6f12ae769e4d978111509df3ac3ce6c43da2da0f70fdde36d2b4e792ca7ebb3937a9d62792f9091103a3974",
+            "000000187c0c588fbdcf94a53b4516d62d898d020",
+            "1e16c18b800d4d55cea0e7722467311d898e4654e",
+            "69ec2e95a75a59f01414ced5ceb72b8f347a96209",
+            "0000002e9c9c0846b936a6c112c0131cfe9e997b7",
+            "26606f4abd3b58b9f68d64a55bf68a22cf73d026d",
+            "020da664d9119813607afbb17f4c3cb555e1bc0d0",
+        },
+        {
+            // [B-233]
+            NID_sect233r1,
+            hash_algorithm_t::sha1,
+            "c2d1afa40b3318016de5b64291fe1b45325e73157f870a5dc0af0e233d1395b25b8de1d80969e3525a75ff8573570f6fa823aadce22da6dd441cdb760e402a97c126bf4d8469923ac6ca34432583c8888ed94f99a6f12ae769e4d978111509df3ac3ce6c43da2da0f70fdde36d2b4e792ca7ebb3937a9d62792f9091103a3974",
+            "00000d467bb2060ecb10529684947e1e95a740348ab21c38afaf6e464a2",
+            "0b8932ee99adf72b620e1a6779c9dc5f9ad38bd3f6475cae84e209c704e",
+            "104051ced1259d5085f2e1c8f5ca5394e094c33e757a63ce43d1c06d3ec",
+            "000005f77b867f215519eafb9807e239068db9cb19253ed669163cb7cec",
+            "05f25af72c98e8e9b4a2c730fec922c294f4daa7819a4efe35a8056ea84",
+            "00dbdb0013d948ae684b58696a260a225ba091cbda3704986944113700d",
+        },
+        {
+            // [B-283]
+            NID_sect283r1,
+            hash_algorithm_t::sha1,
+            "9bfc4dac8c2232387216a532ce62d98c1aafa35c65dc388e3d4d37d6d186eae957f8c9edac1a3f2e3abcb1121f99bd4f8c2bbf5b6ac39a2544d8b502619f43ea30ddc8e4eafad8bf7256220380e0ae27fee46304b224cc8a1e2b1cb2a4de6fb3ee5452798de78653e08b01ec385f367c3982963f8428572793ed74cee369f5ae",
+            "031ca77b89df0c2f90ae6d38c935a75ebd74d64f826cfe6d23d135e28bb66a0baeafba9",
+            "3230e12939f6d020dbfe077267a40e8e3c4219c5d3b1f0425899766a5970c9095068385",
+            "1c557b884ef7003fd84692b6b69cda85ff9b586d5fd6ae23ac9421bb3b1b570265ca77a",
+            "0c20977aed96ec8ec3abce9ed21ffd7f6469ef0696150418844edd960b9d7d90391ee7f",
+            "307407b6a2dcc40012adc4e7b72b4c12002bf5c94b4402c785365810648b8b35a7dab10",
+            "1c449491cc8d5610634b7b36cf28ec30f08a3dba228020a08b64652dab5b1b886bb5fcd",
+        },
+        {
+            // [B-409]
+            NID_sect409r1,
+            hash_algorithm_t::sha1,
+            "8416d3b182c31743f433b1fd72f20875ccdf941c408da8c0f0ea8f55931edbf46ab6fa2475020a59e8bbeebad9e9a2273b04cb7b0f5a930ed9b0b37f512cd1b05c730d113a0ed722011203334a001f6e2aea041864d7ab14dc6942a94fbd7f854293350138af25a6287f16f02efd285381d7657ca5cd99d9e25b635bf4998d7b",
+            "083d2070093f0cf1eecec5bee3deb4403b2e47149be0955088f95a750d77fd2e593d37bafe537ea79a7ad33f80bc3daf3b458d1",
+            "12a05f6e3184e972400f26ffaad2bee813f4f0e9a7e76bc2165a107c9770c67fa142fe506b939c79406aa99de291b657f39e8a9",
+            "0e26d28e6a056e94ed6c01260695fafe44d44cdf34fb40958dca180d15f3e67b6da1d4b2b0ec9faa0dc3c6d608f27b25c2b087a",
+            "0eb71c20ffcf0445bc220da612064ea36f0b8f1a6e9532f6739d3888f906785ebd04987671df192e77fd070b090fba2e8a67b8d",
+            "04f4d74927e6a860654f13de1da11201a54cf2c52cd2a25bfb71a6af3f1bd1c2b2cdb7320098d5cc72e3963f703c29ccfeb1b82",
+            "020710e88c77936389bd07742e416cab0948a17314a49e1a9ec59d01fb4e0829a275968c97b5a69256b4e9d2b40808d024426cf",
+        },
+        {
+            // [B-571]
+            NID_sect571r1,
+            hash_algorithm_t::sha1,
+            "702b22b5c2ba25dff74b28f59124e7194008abc0b3b8bf58aeb9242f5d588590e8ec6d2f475bb8c658df48012e0af998ac08d6ba53258db2598e20c5fb5cde5914ce925dedd6fae457d87a13f7ae123ee2ef8e4e6a71fc66370c63c699a1b2ef1c5bf7075d35d1801dbd28f594171b5407443a429da5f6bb6fba55f9de30eb98",
+            "1601d2608ccbac59e9f16eb123f988ceb1eee239ca03880d1dc25446d84ae67ffc4e0a7eaf26c33bf3d6d2b27913e5e337f58e48b5ef2aba6bb5beb421d25589ece18a6412c0d50",
+            "5acc728798ffb2dea9f3b345c7e4d86b9d05300d2c59d2d15ef99ad0bc987328974c4e17800742d98c78b2b701093baede68633934baaa87eb2b0a0e0108b0f483ed187a0c725d3",
+            "062e927ac17bfd242dcac4afab0d20c65badef46468f20211adf54ec4d2145a851d1121d4cbf013109e06c5af215cdb3d38a85ff92f6d546b4aa817a4e580349aeac0ca74412588",
+            "1510cc95330968b97382d63c46071c75ab92e9175862e5272222735a12e906625bb59b1843908d0e94052e2d90f82291fbbb5f853a40d8a4354f37015e5dc8118266747c19bfa95",
+            "3f400dd5cc387f1d8c568d5bc6d3eb07e792823061d3844e804440c3d7889a778021941000d6a4755e489ddcbb0345b798c4abebb7bb5fe578e4a44093d2b170037d2e78c7a1865",
+            "09866d24d6f00c94f67de16ecfaa5aa8b87db4588ff3203f8dbc5ee79018a541255760cdbacdde6daf6ada8f22a5d1362c0814df46d76648b7a0ff1372acd899f385ed512d63a25",
         },
     };
 

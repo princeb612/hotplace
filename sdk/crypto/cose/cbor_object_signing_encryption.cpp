@@ -9,7 +9,7 @@
  *
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_object_signing.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_object_signing_encryption.hpp>

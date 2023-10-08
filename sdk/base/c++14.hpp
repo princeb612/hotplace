@@ -22,6 +22,7 @@ namespace hotplace {
  * @example
  *          constexpr auto temp1 = constexpr_obf <24>("ninety nine red balloons");
  *          constexpr auto temp2 = CONSTEXPR_OBF ("wild wild world");
+ *          constexpr auto temp3 = CONSTEXPR_OBF_F (0x31, "wild wild world");
  *          define_constexpr_obf (temp3, "still a man hears what he wants to hear and disregards the rest");
  *          std::cout << CONSTEXPR_OBF_CSTR(temp1) << std::endl;
  *          std::cout << CONSTEXPR_OBF_CSTR(temp2) << std::endl;
@@ -29,6 +30,7 @@ namespace hotplace {
  */
 #define define_constexpr_obf(var, x) constexpr auto var = CONSTEXPR_OBF (x)
 #define CONSTEXPR_OBF(x) constexpr_obf <RTL_NUMBER_OF (x)>(x)
+#define CONSTEXPR_OBF_F(f, x) constexpr_obf < RTL_NUMBER_OF (x), f) > (x)
 #define CONSTEXPR_OBF_STR(x) x.load_string ()
 #define CONSTEXPR_OBF_CSTR(x) x.load_string ().c_str ()
 
@@ -37,6 +39,7 @@ class constexpr_obf {
 public:
     constexpr constexpr_obf (const char* source)
     {
+        // (c++14) body at constructor
         for (unsigned int i = 0; i < N; i++) {
             char c = source[i];
             buf[i] = c + factor;

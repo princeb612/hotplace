@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/base/system/linux/debug_trace.hpp>
 #include <cxxabi.h>
@@ -25,7 +25,7 @@ return_t trace (return_t errorcode)
     if (errorcode_t::success != errorcode) {
         uint32 option = get_trace_option ();
         if (trace_option_t::trace_bt & option) {
-            buffer_stream stream;
+            basic_stream stream;
             debug_trace (&stream);
             std::cout << stream.c_str () << std::endl;
         }

@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKPROTOCOL__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/net/types.hpp>
 #include <map>
 
@@ -104,7 +104,7 @@ public:
      * @param   size_t*         request_size    [IN]
      * @param   protocol_state_t* state           [OUT]
      */
-    virtual return_t read_stream (buffer_stream* stream, size_t* request_size, protocol_state_t* state)
+    virtual return_t read_stream (basic_stream* stream, size_t* request_size, protocol_state_t* state)
     {
         *state = protocol_state_t::protocol_state_complete;
         return errorcode_t::success;

@@ -101,7 +101,7 @@ void test0 ()
 
     EVP_PKEY* pkey = crypto_key_es521.any ();
     if (pkey) {
-        buffer_stream bs;
+        basic_stream bs;
         dump_key (pkey, &bs);
         printf ("%s\n", bs.c_str ());
     }
@@ -119,7 +119,7 @@ void dump_crypto_key (crypto_key_object_t* key, void*)
         nidof_evp_pkey (key->pkey, nid);
         printf ("nid %i kid %s alg %s use %i\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
 
-        buffer_stream bs;
+        basic_stream bs;
         dump_key (key->pkey, &bs);
         printf ("%s\n", bs.c_str ());
     }
@@ -769,7 +769,7 @@ void test_rfc7516_A1_test ()
     binary_t tag_gen;
     binary_t encrypted_key_data;
     binary_t decrypted_key_data;
-    buffer_stream bs;
+    basic_stream bs;
     crypto_key key;
     json_web_key jwk;
     EVP_PKEY* pkey;
@@ -1129,7 +1129,7 @@ void test_rfc7516_B ()
     openssl_hash hash;
     crypt_context_t* crypt_handle;
     hash_context_t* hash_handle;
-    buffer_stream bs;
+    basic_stream bs;
     binary_t enc_value;
     binary_t test;
     binary_t hmac_value;
@@ -1439,7 +1439,7 @@ void test_rfc7518_C ()
     print_text ("RFC 7518 Appendix C.  Example ECDH-ES Key Agreement Computation");
 
     json_web_key jwk;
-    buffer_stream bs;
+    basic_stream bs;
     crypto_key key_alice;
     crypto_key key_bob;
 
@@ -1569,7 +1569,7 @@ return_t test_rfc7520_jwe (crypto_key *key, const char* filename, const char* te
     json_object_signing_encryption jose;
     jose_context_t* handle = nullptr;
     file_stream fs;
-    buffer_stream bs;
+    basic_stream bs;
     return_t ret = errorcode_t::success;
     bool result = false;
     binary_t output;
@@ -1732,7 +1732,7 @@ void test_jwe_flattened ()
     std::string encrypted;
     binary_t output;
     bool result = false;
-    buffer_stream bs;
+    basic_stream bs;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
     __try2
@@ -1906,7 +1906,7 @@ void test_jwk_thumbprint ()
     std::string thumbprint;
     json_t* json_root = nullptr;
     binary_t hash_value;
-    buffer_stream bs;
+    basic_stream bs;
 
     jwk.load_file (&key, "rfc7638_3.jwk");
     key.for_each (dump_crypto_key, nullptr);
@@ -2069,7 +2069,7 @@ void test_okp ()
     bool result = true;
     jose_context_t* handle = nullptr;
 
-    buffer_stream bs;
+    basic_stream bs;
     std::string claim;
     std::string encrypted;
     binary_t source;
@@ -2147,7 +2147,7 @@ void key_dump (crypto_key* key, jwa_t alg, crypto_use_t use)
         printf ("> kid %s\n", kid.c_str ());
         key->get_key (pkey, pub1, pub2, priv);
 
-        buffer_stream bs;
+        basic_stream bs;
         dump_key (pkey, &bs);
         printf ("%s\n", bs.c_str ());
     }
@@ -2171,7 +2171,7 @@ void key_dump (crypto_key* key, jws_t sig, crypto_use_t use)
         printf ("> kid %s\n", kid.c_str ());
         key->get_key (pkey, pub1, pub2, priv);
 
-        buffer_stream bs;
+        basic_stream bs;
         dump_key (pkey, &bs);
         printf ("%s\n", bs.c_str ());
     }

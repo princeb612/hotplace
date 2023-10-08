@@ -27,7 +27,7 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance <cmdline_t<OPTION> > _cmdline;
 
-return_t dump_test_data (const char* text, buffer_stream& diagnostic)
+return_t dump_test_data (const char* text, basic_stream& diagnostic)
 {
     return_t ret = errorcode_t::success;
 
@@ -44,7 +44,7 @@ return_t dump_test_data (const char* text, buffer_stream& diagnostic)
 return_t dump_test_data (const char* text, binary_t const& cbor)
 {
     return_t ret = errorcode_t::success;
-    buffer_stream bs;
+    basic_stream bs;
 
     dump_memory (cbor, &bs, 32);
 
@@ -68,7 +68,7 @@ void dump_crypto_key (crypto_key_object_t* key, void*)
         nidof_evp_pkey (key->pkey, nid);
         printf ("nid %i kid %s alg %s use %08x\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
 
-        buffer_stream bs;
+        basic_stream bs;
         dump_key (key->pkey, &bs);
         printf ("%s\n", bs.c_str ());
     }
@@ -89,7 +89,7 @@ return_t test_cose_example (cbor_object* root, const char* expect_file, const ch
         cbor_publisher publisher;
 
         // cbor_object* to diagnostic
-        buffer_stream diagnostic;
+        basic_stream diagnostic;
         publisher.publish (root, &diagnostic);
 
         // cbor_object* to cbor
@@ -120,7 +120,7 @@ return_t test_cose_example (cbor_object* root, const char* expect_file, const ch
         _test_case.assert ((bin == expect), __FUNCTION__, "check1.cborcheck %s", text ? text : "");
 
         // parse
-        buffer_stream bs_diagnostic_lv1;
+        basic_stream bs_diagnostic_lv1;
         binary_t bin_cbor_lv1;
 
         cbor_reader reader;
@@ -147,7 +147,7 @@ return_t test_cose_example (cbor_object* root, const char* expect_file, const ch
             _test_case.assert ((bin_cbor_lv1 == expect), __FUNCTION__, "check2.cborparse %s", text ? text : "");
 
             // parsed cbor_object* to diagnostic
-            buffer_stream bs_diagnostic_lv2;
+            basic_stream bs_diagnostic_lv2;
             publisher.publish (newone, &bs_diagnostic_lv2);
 
             // parsed cbor_object* to cbor
@@ -238,7 +238,7 @@ void test_cbor_file (const char* expect_file, const char* text)
             __leave2;
         }
 
-        buffer_stream bs_diagnostic;
+        basic_stream bs_diagnostic;
         binary_t bin_cbor;
 
         cbor_reader reader;
@@ -1708,13 +1708,13 @@ void test_cbor_key (const char* file, const char* text)
         if (1) {
             test_case_notimecheck notimecheck (_test_case);
 
-            buffer_stream bs;
+            basic_stream bs;
             dump_memory (cbor, &bs, 32);
             std::cout << "from file" << std::endl << bs.c_str () << std::endl;
             dump_memory (cbor_written, &bs, 32);
             std::cout << "from cwk" << std::endl << bs.c_str () << std::endl;
 
-            buffer_stream diagnostic;
+            basic_stream diagnostic;
             cbor_reader reader;
             cbor_reader_context_t* handle = nullptr;
 
@@ -1755,10 +1755,10 @@ void try_refactor_jose_sign ()
     // dump keys JWK formatted
     json_web_key jwk;
     size_t size = 0;
-    buffer_stream json;
+    basic_stream json;
     jwk.write (&privkey, &json, 1);
     printf ("JWK from CBOR key\n%s\n", json.c_str ());
-    buffer_stream pem;
+    basic_stream pem;
     jwk.write_pem (&pubkey, &pem);
     printf ("PEM (public)\n%s\n", pem.c_str ());
     jwk.write_pem (&privkey, &pem);
@@ -1790,7 +1790,7 @@ void try_refactor_jose_sign ()
         constexpr char in_source[] = "This is the content.";
         bool result = false;
         binary_t cbor;
-        buffer_stream bs;
+        basic_stream bs;
         cbor_object_signing_encryption cose;
         cose_context_t* cose_handle = nullptr;
         cose.open (&cose_handle);
@@ -1801,7 +1801,7 @@ void try_refactor_jose_sign ()
         dump_memory (cbor, &bs);
         std::cout << "sign" << std::endl << bs.c_str () << std::endl;
 
-        buffer_stream diagnostic;
+        basic_stream diagnostic;
         cbor_reader reader;
         cbor_reader_context_t* reader_handle = nullptr;
         reader.open (&reader_handle);
@@ -1818,7 +1818,7 @@ void try_refactor_jose_sign ()
     for (int i = 0; i < RTL_NUMBER_OF (vector); i++) {
         binary_t bin_cbor = base16_decode (vector[i].cbor);
 
-        buffer_stream diagnostic;
+        basic_stream diagnostic;
         cbor_reader reader;
         cbor_reader_context_t* reader_handle = nullptr;
         reader.open (&reader_handle);

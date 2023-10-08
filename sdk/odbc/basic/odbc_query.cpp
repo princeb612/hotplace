@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_query.hpp>
 
 namespace hotplace {
@@ -278,7 +278,7 @@ return_t odbc_query::fetch (odbc_record* odbc_record_ptr)
     odbc_field*  odbc_field_ptr = nullptr;
     SQLRETURN ret_sql = SQL_SUCCESS;
 
-    buffer_stream bio;
+    basic_stream bio;
 
     __try2
     {

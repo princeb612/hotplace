@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
 
 namespace hotplace {
@@ -59,7 +59,7 @@ return_t dump_memory (bufferio_context_t* handle, stream_t* stream_object, unsig
 return_t dump_memory (variant_t vt, stream_t* stream_object, unsigned hex_part,
                       unsigned indent, size_t rebase, int flags)
 {
-    buffer_stream bs;
+    basic_stream bs;
 
     vtprintf (&bs, vt);
     return dump_memory ((byte_t*) bs.c_str (), bs.size (), stream_object, hex_part, indent, rebase, flags);

@@ -192,7 +192,7 @@ void test_i128 ()
 
 void test_sprintf_routine (const valist& va, const char* fmt, const char* expect)
 {
-    buffer_stream bs;
+    basic_stream bs;
 
     sprintf (&bs, fmt, va);
     printf ("formatter %s\n", fmt);
@@ -206,7 +206,7 @@ void test_sprintf ()
 {
     _test_case.begin ("sprintf");
 
-    buffer_stream bs;
+    basic_stream bs;
     valist va;
     va << 3.141592 << "phi" << 123;
 
@@ -272,7 +272,7 @@ void test_stream ()
 {
     _test_case.begin ("stream");
 
-    buffer_stream bs;
+    basic_stream bs;
     valist va;
 
     va << 1 << "test string";                   // argc 2
@@ -324,7 +324,7 @@ void test_vtprintf ()
 {
     _test_case.begin ("tokenize");
 
-    buffer_stream bs;
+    basic_stream bs;
     variant_t v;
 
     variant_set_int32 (v, 10);

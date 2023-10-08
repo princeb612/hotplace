@@ -30,7 +30,7 @@ namespace io {
  *          // variant_set_int8, variant_set_int16, variant_set_int32, variant_set_int64, variant_set_int128
  *          // variant_set_float, variant_set_double, variant_set_bool, variant_set_str
  *          cbor.encode (bin, vt);
- *          buffer_stream out;
+ *          basic_stream out;
  *          std::string hex = bin2hex (bin);
  *
  *          // variant_set_xxx examples

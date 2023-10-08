@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/base/system/windows/debug_trace.hpp>
 #include <iostream>
@@ -23,7 +23,7 @@ return_t trace (return_t errorcode)
         uint32 option = get_trace_option ();
         if (trace_option_t::trace_bt & option) {
             debug_trace_context_t* handle = nullptr;
-            buffer_stream stream;
+            basic_stream stream;
 
             // PDB
             CONTEXT rtlcontext;
@@ -525,7 +525,7 @@ LONG __stdcall exception_handler (struct _EXCEPTION_POINTERS * exception_ptr)
         // write minidump
 
         /* exception record call stack */
-        buffer_stream stream;
+        basic_stream stream;
         debug_trace trace;
         HANDLE thread_handle = nullptr;
         BOOL bRet = TRUE;

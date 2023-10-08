@@ -31,7 +31,7 @@ typedef uint32 ipaddr_t;
  * @brief cidr mask
  * @example
  *          ipaddr_acl acl;
- *          buffer_stream stream;
+ *          basic_stream stream;
  *          const char* address = "3ffe:ffff:0:f101::1";
  *          int family = 0;
  *          ipaddr_t ipv6 = acl.convert_addr (address, family);

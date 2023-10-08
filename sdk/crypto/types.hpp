@@ -151,6 +151,7 @@ enum crypt_enc_t {
     rsa_oaep512 = 5,
 };
 
+// Elliptic Curve (use openssl nid definition for convenience)
 enum ec_curve_t {
     ec_nistp192         = 409,  // P-192, NID_X9_62_prime192v1
     ec_nistp224         = 713,  // P-224, NID_secp224r1
@@ -679,6 +680,7 @@ typedef struct _hint_curves_t {
     const char* name;   // NIST CURVE
     const char* aka1;   // X9.62, X9.63
     const char* aka2;   // Standards for Efficient Cryptography (SEC)
+    const char* aka3;
 } hint_curve_t;
 
 typedef struct _hint_signature_t {

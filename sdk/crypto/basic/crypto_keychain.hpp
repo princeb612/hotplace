@@ -246,7 +246,7 @@ public:
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
-     * @param int nid [in]
+     * @param int nid [in] see ec_curve_t
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)

@@ -92,7 +92,7 @@ void test_hexbin ()
 
     binary_t bin;
     base16_decode (hex, bin);
-    buffer_stream bs;
+    basic_stream bs;
     dump_memory (&bin[0], bin.size (), &bs);
     printf ("%s\n", bs.c_str ());
 
@@ -111,7 +111,7 @@ void test_constexpr_hide ()
     std::cout << temp2 << std::endl;
     std::cout << temp3 << std::endl;
 
-    buffer_stream bs;
+    basic_stream bs;
     dump_memory (temp1, &bs);
     std::cout << bs.c_str () << std::endl;
 
@@ -163,7 +163,7 @@ void test_obfuscate_string ()
     _test_case.begin ("obfuscate_string");
 
     bool test = false;
-    buffer_stream bs;
+    basic_stream bs;
     binary_t bin;
     std::string str;
     char helloworld [] = { 'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', 0 };
@@ -265,7 +265,7 @@ void test_scan ()
     }
     _test_case.assert (true, __FUNCTION__, "scan");
 
-    buffer_stream bs;
+    basic_stream bs;
     dump_memory ((byte_t*) data, strlen (data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
     std::cout << bs.c_str () << std::endl;
 }
@@ -290,7 +290,7 @@ void test_scan2 ()
     }
     _test_case.assert (true, __FUNCTION__, "scan");
 
-    buffer_stream bs;
+    basic_stream bs;
     dump_memory ((byte_t*) data, strlen (data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
     std::cout << bs.c_str () << std::endl;
 }

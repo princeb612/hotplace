@@ -32,7 +32,7 @@
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 
 #include <hotplace/sdk/base/system/atomic.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>

@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
 
@@ -103,7 +103,7 @@ return_t ansi_string::printf (const wchar_t* buf, ...)
 {
     return_t ret = errorcode_t::success;
     va_list ap;
-    buffer_stream bs;
+    basic_stream bs;
 
     va_start (ap, buf);
     bs.vprintf (buf, ap);
@@ -115,7 +115,7 @@ return_t ansi_string::printf (const wchar_t* buf, ...)
 return_t ansi_string::vprintf (const wchar_t* buf, va_list ap)
 {
     return_t ret = errorcode_t::success;
-    buffer_stream bs;
+    basic_stream bs;
 
     bs.vprintf (buf, ap);
     ret = W2A (this, (wchar_t*) bs.data ());

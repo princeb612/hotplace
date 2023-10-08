@@ -32,7 +32,7 @@ void test_base16 ()
 
         printf ("input : %s\n", text);
         printf ("encode: %s\n", encoded.c_str ());
-        buffer_stream bs;
+        basic_stream bs;
         dump_memory (&decoded[0], decoded.size (), &bs);
         printf ("dump decoded\n%s\n", bs.c_str ());
     }
@@ -46,7 +46,7 @@ void test_base16_func ()
 {
     return_t ret = errorcode_t::success;
     constexpr byte_t text [] = "still a man hears what he wants to hear and disregards the rest";
-    buffer_stream bs;
+    basic_stream bs;
 
     /* return_t base16_encode (const byte_t* source, size_t size, char* buf, size_t* buflen) */
     size_t size = 0;
@@ -67,7 +67,7 @@ void test_base16_func ()
     _test_case.test (ret, __FUNCTION__, "case2");
 
     /* return_t base16_encode (const byte_t* source, size_t size, stream_t* stream) */
-    buffer_stream streambuf;
+    basic_stream streambuf;
     ret = base16_encode (text, RTL_NUMBER_OF (text), &streambuf);
     dump_memory (streambuf.data (), streambuf.size (), &bs);
     std::cout << bs.c_str () << std::endl;
@@ -86,7 +86,7 @@ void test_base16_decode ()
     {
         test_case_notimecheck notimecheck (_test_case);
 
-        buffer_stream bs;
+        basic_stream bs;
         dump_memory (&decoded[0], decoded.size (), &bs);
         printf ("%s\n", bs.c_str ());
     }
@@ -104,7 +104,7 @@ void test_base16_oddsize ()
     {
         test_case_notimecheck notimecheck (_test_case);
 
-        buffer_stream bs;
+        basic_stream bs;
         dump_memory (bin_test, &bs);
         printf ("%s\n", bs.c_str ());
     }
@@ -115,7 +115,7 @@ void test_base16_oddsize ()
 void test_base64_routine (const char* source, size_t source_size, int encoding)
 {
     return_t ret = errorcode_t::success;
-    buffer_stream bs;
+    basic_stream bs;
     std::string encoded_b64;
     binary_t decoded_b64;
 

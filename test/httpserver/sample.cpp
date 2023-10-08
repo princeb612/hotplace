@@ -100,7 +100,7 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
     /* route */
     t_shared_instance <http_handler_http_handlers> router = _http_handlers;
 
-    buffer_stream bs;
+    basic_stream bs;
     std::string message;
 
     switch (type) {
@@ -141,13 +141,13 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
 
                 bool resp_wo_encoding = false;
                 if (0 == stricmp (encoding.c_str (), "deflate")) {
-                    buffer_stream encoded;
+                    basic_stream encoded;
                     zlib_deflate (zlib_windowbits_t::windowbits_deflate, (byte_t*) response.content (), response.content_size (), &encoded);
 
                     bs.printf ("HTTP/1.1 200 OK\nConnection: Keep-Alive\nContent-Type: %s\nContent-Encoding: deflate\nContent-Length: %d\n\n%.*s",
                                response.content_type (), encoded.size (), encoded.size (), encoded.data ());
                 } else if (0 == stricmp (encoding.c_str (), "gzip")) {
-                    buffer_stream encoded;
+                    basic_stream encoded;
                     zlib_deflate (zlib_windowbits_t::windowbits_zlib, (byte_t*) response.content (), response.content_size (), &encoded);
 
                     bs.printf ("HTTP/1.1 200 OK\nConnection: Keep-Alive\nContent-Type: %s\nContent-Encoding: gzip\nContent-Length: %d\n\n%.*s",

@@ -59,7 +59,7 @@ return_t W2A (stream_t* stream, const wchar_t* source, uint32 codepage = 0);
  *          format specifier replacement (do not supports %c %s %d, but {1} {2} {3} ... available)
  *          standard vprintf(fmt, ap) supports ordered format specifier {1} {2} {3} ...
  * @example
- *          buffer_stream bs;
+ *          basic_stream bs;
  *          valist va;
  *          va << 1 << "test string"; // argc 2
  *          sprintf (&bs, "value1={1} value2={2}", va); // value1=1 value2=test string
@@ -128,7 +128,7 @@ return_t vprintf (stream_t* stream, const char* fmt, Args... args)
 /**
  * @brief printf variant_t
  * @example
- *  buffer_stream bs;
+ *  basic_stream bs;
  *  variant_t v;
  *
  *  variant_set_int32 (v, 10);

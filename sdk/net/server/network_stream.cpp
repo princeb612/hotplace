@@ -139,7 +139,7 @@ return_t network_stream::write_with_protocol (network_protocol_group* protocol_g
     network_stream_data* buffer_object = nullptr;
     network_protocol* protocol = nullptr;
 
-    buffer_stream bufstream;
+    basic_stream bufstream;
 
     protocol_state_t state = protocol_state_t::protocol_state_invalid;
     size_t content_pos = 0;

@@ -71,7 +71,7 @@ return_t http_protocol::is_kind_of (void* stream, size_t stream_size)
     return ret;
 }
 
-return_t http_protocol::read_stream (buffer_stream* stream, size_t* request_size, protocol_state_t* state)
+return_t http_protocol::read_stream (basic_stream* stream, size_t* request_size, protocol_state_t* state)
 {
     const char* stream_data = (const char *) stream->data ();
     uint32 stream_size = stream->size ();

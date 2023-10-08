@@ -40,7 +40,7 @@ void encode_test (variant_t vt, binary_t& bin, std::string expect)
             ret = errorcode_t::mismatch;
         }
 
-        buffer_stream bs;
+        basic_stream bs;
 
         dump_memory (bin, &bs);
         std::cout << "encoded " << hex.c_str () << std::endl;
@@ -63,7 +63,7 @@ void cbor_test (cbor_object* root, const char* expected)
 
         cbor_publisher publisher;
         binary_t bin;
-        buffer_stream diagnostic;
+        basic_stream diagnostic;
         std::string concise;
 
         publisher.publish (root, &diagnostic);

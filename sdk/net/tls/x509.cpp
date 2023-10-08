@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
@@ -92,7 +92,7 @@ return_t x509_open (SSL_CTX** context, const char* cert_file, const char* key_fi
             __leave2;
         }
 
-        buffer_stream bs;
+        basic_stream bs;
         if (password) {
             bs.printf (password);
         }

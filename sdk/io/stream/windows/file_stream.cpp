@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
 #include <stdio.h>
@@ -380,7 +380,7 @@ return_t file_stream::write (void* data, size_t size_data)
 return_t file_stream::fill (size_t l, char c)
 {
     return_t ret = errorcode_t::success;
-    buffer_stream stream;
+    basic_stream stream;
 
     stream.fill (l, c);
     ret = write (stream.data (), stream.size ());

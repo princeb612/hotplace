@@ -105,7 +105,7 @@ public:
      *          cbor_publisher publisher;
      *          binary_t cbor;
      *          publisher.publish (root, &cbor); // same write
-     *          buffer_stream diagnostic;
+     *          basic_stream diagnostic;
      *          publisher.publish (root, &diagnostic); // same diagnose
      *          root->release ();
      */

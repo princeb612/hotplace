@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
@@ -112,7 +112,7 @@ static void pkey_param_printf (crypt_item_t type, binary_t const& key, stream_t*
         /* COSE-style */
         if (root) {
             cbor_publisher publisher;
-            buffer_stream diagnostic;
+            basic_stream diagnostic;
 
             publisher.publish (root, &diagnostic);
 
@@ -476,6 +476,9 @@ return_t dump_key (EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 inden
                         if (hint_curve->aka2) {
                             stream->printf ("%s ", hint_curve->aka2);
                         }
+                        if (hint_curve->aka3) {
+                            stream->printf ("%s ", hint_curve->aka3);
+                        }
                         stream->printf ("\n");
                     }
                 }
@@ -518,7 +521,7 @@ return_t dump_key (EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 inden
         }
 
         /* PEM */
-        buffer_stream pem_encoded;
+        basic_stream pem_encoded;
         write_pem (pkey, &pem_encoded);
         stream->printf ("%.*s", pem_encoded.size (), pem_encoded.data ());
         stream->printf ("\n");

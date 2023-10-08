@@ -68,7 +68,7 @@ typedef struct _valist_t {
  *          prototype return_t sprintf (stream_t* stream, const char* fmt, valist va);
  *          snippet
  *              valist va;
- *              buffer_stream bs;
+ *              basic_stream bs;
  *              va << 1 << 3.141592 << "hello"; // make_valist (va, 1, 3.141592, "hello");
  *              sprintf (&bs, "value1={2} value2={1} value3={3}", va);
  *
@@ -76,7 +76,7 @@ typedef struct _valist_t {
  *          prototype template<class ... Args> return_t vprintf (stream_t* stream, const char* fmt, Args... args) // c++14
  *          snippet
  *              valist va;
- *              buffer_stream bs;
+ *              basic_stream bs;
  *              vprintf (&bs, "param1 {1} param2 {2} param3 {3}\n", 1, 3.141592, "hello");
  *
  */

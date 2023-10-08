@@ -66,7 +66,7 @@ public:
     uint32 flag ();
 
 protected:
-    return_t run (T& source, char* param);
+    return_t bind (T& source, char* param);
 
 private:
     std::string _token;
@@ -120,7 +120,7 @@ uint32 cmdarg_t<T>::flag ()
 }
 
 template <typename T>
-return_t cmdarg_t<T>::run (T& source, char* param)
+return_t cmdarg_t<T>::bind (T& source, char* param)
 {
     return_t ret = errorcode_t::success;
 
@@ -241,12 +241,12 @@ return_t cmdline_t<T>::parse (int argc, char** argv)
         const char* token = argv[index];
         typename cmdline_args_map_t::iterator iter = _args.find (token);
         if (_args.end () != iter) {
-            if (cmdline_flag_t::cmdline_preced & iter->second.flag ()) {
+            if (cmdline_flag_t::cmdline_preced & iter->second.flag ()) { // preced token expect next argument
                 if (index + 1 < argc) {
                     char* next_token = argv[index + 1];
-                    typename cmdline_args_map_t::iterator check_iter = _args.find (next_token);
+                    typename cmdline_args_map_t::iterator check_iter = _args.find (next_token); // make sure next argument is not token
                     if (check_iter == _args.end ()) {
-                        iter->second.run (_source, next_token);
+                        iter->second.bind (_source, next_token);
                         _mandatory.erase (token);
                     }
                 } else {
@@ -254,7 +254,7 @@ return_t cmdline_t<T>::parse (int argc, char** argv)
                     break;
                 }
             } else {
-                iter->second.run (_source, (char*) "");
+                iter->second.bind (_source, (char*) "");
                 _mandatory.erase (token);
             }
         }
@@ -291,7 +291,7 @@ void cmdline_t<T>::help ()
             maxlen = len;
         }
     }
-    std::string fmt = format ("\e[33m%%-%zis\e[0m %%c %%s\n", maxlen);
+    std::string fmt = format ("\e[%%im%%-%zis\e[0m %%c %%s\n", maxlen);
     for (list_iter = _list.begin (); list_iter != _list.end (); list_iter++) {
         std::string& key = *list_iter;
 
@@ -303,16 +303,18 @@ void cmdline_t<T>::help ()
         cmdarg_t<T>& item = map_iter->second;
         uint32 flag = item.flag ();
         char f = ' ';
+        int color = 33;
         if (0 == (cmdline_flag_t::cmdline_optional & flag)) {
             set_iter = _mandatory.find (key);
             if (_mandatory.end () == set_iter) {
                 f = 'v';
             } else {
                 f = '*';
+                color = 31;
             }
         }
 
-        printf (fmt.c_str (), item.token (), f, item.desc ());
+        printf (fmt.c_str (), color, item.token (), f, item.desc ());
     }
 }
 

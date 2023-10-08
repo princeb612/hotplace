@@ -33,6 +33,14 @@ namespace hotplace {
  *          Negative Infinity: FFF0000000000000
  *          Signaling NaN: 7FF0000000000001 ~ 7FF7FFFFFFFFFFFF or FFF0000000000001 ~ FFF7FFFFFFFFFFFF
  *          Quiet NaN: 7FF8000000000000 ~ 7FFFFFFFFFFFFFFF or FFF8000000000000 ~ FFFFFFFFFFFFFFFF
+ *
+ *      ieee754_as_small_as_possible
+ *          return size of floating point (2 half, 4 single, 8 double)
+ *      fp16_from_fp32, fp32_from_fp16
+ *          convert single precision floating point to half one and vice versa
+ *      fp16_ieee_from_fp32_value
+ *          do not call directly
+ *          see ieee754_as_small_as_possible
  */
 uint8 ieee754_as_small_as_possible (variant_t& vt, float fp)
 {

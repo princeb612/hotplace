@@ -28,7 +28,7 @@ namespace io {
  *
  *      cbor_publisher publisher;
  *      binary_t bin;
- *      buffer_stream diagnostic;
+ *      basic_stream diagnostic;
  *
  *      publisher.publish (root, &diagnostic); // [1,2,3]
  *      publisher.publish (root, &bin);

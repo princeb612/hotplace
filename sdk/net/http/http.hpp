@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_NET_SERVER_HTTP__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/net/server/network_protocol.hpp>
 #include <map>
 

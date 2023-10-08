@@ -45,8 +45,7 @@ enum console_color_t {
 };
 
 /**
- *
- * ANSI escape codes are used in UNIX-like terminals to provide syntax highlighting
+ * @brief   ANSI escape codes are used in UNIX-like terminals to provide syntax highlighting
  * @see     https://en.wikipedia.org/wiki/ANSI_escape_code
  * @example
  *      console_color concolor;

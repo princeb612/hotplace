@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_NET_SERVER_HTTP_PROTOCOL__
 
 #include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
@@ -44,7 +44,7 @@ public:
      * @return error code (see error.hpp)
      * @remarks
      */
-    virtual return_t read_stream (buffer_stream* stream, size_t* request_size, protocol_state_t* state);
+    virtual return_t read_stream (basic_stream* stream, size_t* request_size, protocol_state_t* state);
     /**
      * @brief   id
      * @remarks default port number

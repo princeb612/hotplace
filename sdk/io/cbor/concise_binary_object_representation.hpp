@@ -12,7 +12,7 @@
  *      *root << new cbor_data (1) << new cbor_data (2);
  *
  *      cbor_publisher publisher;
- *      buffer_stream diagnostic;
+ *      basic_stream diagnostic;
  *      binary_t bin;
  *      // cbor_object* to diagnostic
  *      publisher.publish (root, &diagnostic);

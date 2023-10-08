@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
@@ -551,12 +551,10 @@ return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
             __leave2;
         }
 
-        /* support truncated hash
-         * NIST CAVP (cryptographic-algorithm-validation-program) test vector - PASSED
-         */
         size_t signature_size = signature.size ();
 
         /* RFC 7515 A.3.1.  Encoding */
+        /* NIST CAVP (cryptographic-algorithm-validation-program) test vector - PASSED */
         BIGNUM* bn_r = nullptr;
         BIGNUM* bn_s = nullptr;
         bn_r = BN_bin2bn (&signature[0], signature_size / 2, nullptr);

@@ -24,7 +24,7 @@ void dump (bufferio_context_t* handle)
     bufferio bio;
     byte_t* data = nullptr;
     size_t size_data = 0;
-    buffer_stream bs;
+    basic_stream bs;
 
     bio.get (handle, &data, &size_data);
     dump_memory (data, size_data, &bs);

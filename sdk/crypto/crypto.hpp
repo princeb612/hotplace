@@ -46,7 +46,7 @@ public:
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* data_plain [in]
      * @param size_t size_plain [in]
-     * @param unsigned char** data_encrypted [out]
+     * @param unsigned char** data_encrypted [out] call free_data to free
      * @param size_t* size_encrypted [out]
      * @return error code (see error.hpp)
      * @example
@@ -54,6 +54,15 @@ public:
      *        crypt.free_data(data_encrypted);
      */
     virtual return_t encrypt (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted, size_t* size_encrypted) = 0;
+    /**
+     * @brief encrypt
+     * @param crypt_context_t* handle [in]
+     * @param const unsigned char* data_plain [in]
+     * @param size_t size_plain [in]
+     * @param binary_t& out [out]
+     * @return error code (see error.hpp)
+     * @example
+     */
     virtual return_t encrypt (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out) = 0;
 
     /**
@@ -83,6 +92,14 @@ public:
      *        crypt.free_data(data_decrypted);
      */
     virtual return_t decrypt (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** data_plain, size_t* size_plain) = 0;
+    /**
+     * @brief decrypt
+     * @param crypt_context_t* handle [in]
+     * @param const unsigned char* data_encrypted [in]
+     * @param size_t size_encrypted [in]
+     * @param binary_t& out [out]
+     * @return error code (see error.hpp)
+     */
     virtual return_t decrypt (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out) = 0;
 
     /**

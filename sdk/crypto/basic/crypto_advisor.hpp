@@ -158,7 +158,7 @@ public:
     const hint_signature_t* hintof_jose_signature (jws_t sig);
     /**
      * @brief hint
-     * @param uint32 nid [in]
+     * @param uint32 nid [in] see ec_curve_t
      *          NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1, NID_ED25519, NID_ED448, NID_X25519, NID_X448
      * @return const hint_curve_t*
      * @sa hintof_curve

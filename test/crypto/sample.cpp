@@ -33,7 +33,7 @@ void test_crypt_routine (crypt_t* crypt_object, crypt_algorithm_t algorithm, cry
     binary_t encrypted;
     binary_t decrypted;
 
-    buffer_stream bs;
+    basic_stream bs;
 
     binary_t aad;
     binary_t tag;
@@ -219,7 +219,7 @@ void test_chacha20_rfc8439_2_4 ()
     binary_t key;
     binary_t nonce;
     binary_t block;
-    buffer_stream bs;
+    basic_stream bs;
     uint32 i = 0;
 
     key.resize (32);
@@ -268,7 +268,7 @@ void test_chacha20poly1305_rfc8439_2_8 ()
     binary_t nonce;
     binary_t block;
     binary_t aad;
-    buffer_stream bs;
+    basic_stream bs;
     uint32 i = 0;
 
     // Key:
@@ -361,7 +361,7 @@ void test_keywrap_routine (crypt_algorithm_t alg, binary_t const& kek, binary_t 
         iv [i] = 0xa6;
     }
     binary_t out_kw, out_kuw;
-    buffer_stream bs;
+    basic_stream bs;
 
     ret = crypt.open (&handle, alg, crypt_mode_t::wrap, &kek[0], kek.size (), iv, RTL_NUMBER_OF (iv));
     if (errorcode_t::success == ret) {
@@ -506,7 +506,7 @@ void test_kdf_hkdf ()
 
     for (int i = 0; i < RTL_NUMBER_OF (vector); i++) {
         kdf_hkdf (result, vector[i].dlen, convert (vector[i].password), convert (vector[i].salt), convert (vector[i].info), hash_algorithm_t::sha2_256);
-        buffer_stream bs;
+        basic_stream bs;
         dump_memory (result, &bs);
         std::cout << bs.c_str () << std::endl;
 
@@ -543,7 +543,7 @@ void test_kdf_pbkdf2_rfc7914 ()
 
     for (int i = 0; i < RTL_NUMBER_OF (vector); i++) {
         kdf_pbkdf2 (result, vector[i].dlen, vector[i].password, convert (vector[i].salt), vector[i].c, hash_algorithm_t::sha2_256);
-        buffer_stream bs;
+        basic_stream bs;
         dump_memory (result, &bs);
         std::cout << bs.c_str () << std::endl;
 
@@ -590,7 +590,7 @@ void test_kdf_scrypt_rfc7914 ()
 
     for (int i = 0; i < RTL_NUMBER_OF (vector); i++) {
         kdf_scrypt (result, vector[i].dlen, vector[i].password, convert (vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
-        buffer_stream bs;
+        basic_stream bs;
         dump_memory (result, &bs);
         std::cout << bs.c_str () << std::endl;
 
@@ -648,7 +648,7 @@ void test_kdf_argon_rfc9106 ()
 
         kdf_argon2 (derived, vector[i].mode, 32, base16_decode (vector[i].password), base16_decode (vector[i].salt), base16_decode (vector[i].ad), base16_decode (vector[i].secret));
 
-        buffer_stream bs;
+        basic_stream bs;
         dump_memory (derived, &bs);
         std::cout << bs.c_str () << std::endl;
 

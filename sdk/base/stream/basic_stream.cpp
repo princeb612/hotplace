@@ -8,18 +8,18 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/buffer_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <ctype.h>
 
 namespace hotplace {
 
-buffer_stream::buffer_stream (size_t allocsize, uint32 flags)
+basic_stream::basic_stream (size_t allocsize, uint32 flags)
     : _handle (nullptr)
 {
     _bio.open (&_handle, allocsize, 1, flags);
 }
 
-buffer_stream::buffer_stream (const char* data)
+basic_stream::basic_stream (const char* data)
     :
     _handle (nullptr)
 {
@@ -27,7 +27,7 @@ buffer_stream::buffer_stream (const char* data)
     _bio.write (_handle, data, strlen (data));
 }
 
-buffer_stream::buffer_stream (const buffer_stream& stream)
+basic_stream::basic_stream (const basic_stream& stream)
     :
     _handle (nullptr)
 {
@@ -39,12 +39,12 @@ buffer_stream::buffer_stream (const buffer_stream& stream)
     write ((void *) data, size);
 }
 
-buffer_stream::~buffer_stream ()
+basic_stream::~basic_stream ()
 {
     _bio.close (_handle);
 }
 
-const char* buffer_stream::c_str ()
+const char* basic_stream::c_str ()
 {
     char* data = nullptr;
     size_t size = 0;
@@ -53,7 +53,7 @@ const char* buffer_stream::c_str ()
     return data;
 }
 
-byte_t* buffer_stream::data ()
+byte_t* basic_stream::data ()
 {
     byte_t* data = nullptr;
     size_t size = 0;
@@ -62,7 +62,7 @@ byte_t* buffer_stream::data ()
     return data;
 }
 
-uint64 buffer_stream::size ()
+uint64 basic_stream::size ()
 {
     byte_t* data = nullptr;
     size_t size = 0;
@@ -71,12 +71,12 @@ uint64 buffer_stream::size ()
     return size;
 }
 
-return_t buffer_stream::write (void* data, size_t size)
+return_t basic_stream::write (void* data, size_t size)
 {
     return _bio.write (_handle, data, size);
 }
 
-return_t buffer_stream::fill (size_t l, char c)
+return_t basic_stream::fill (size_t l, char c)
 {
     return_t ret = errorcode_t::success;
 
@@ -86,12 +86,12 @@ return_t buffer_stream::fill (size_t l, char c)
     return ret;
 }
 
-return_t buffer_stream::clear ()
+return_t basic_stream::clear ()
 {
     return _bio.clear (_handle);
 }
 
-return_t buffer_stream::printf (const char* buf, ...)
+return_t basic_stream::printf (const char* buf, ...)
 {
     return_t ret = 0;
     va_list ap;
@@ -102,13 +102,13 @@ return_t buffer_stream::printf (const char* buf, ...)
     return ret;
 }
 
-return_t buffer_stream::vprintf (const char* buf, va_list ap)
+return_t basic_stream::vprintf (const char* buf, va_list ap)
 {
     return _bio.vprintf (_handle, buf, ap);
 }
 
 #if defined _WIN32 || defined _WIN64
-return_t buffer_stream::printf (const wchar_t* buf, ...)
+return_t basic_stream::printf (const wchar_t* buf, ...)
 {
     return_t ret = 0;
     va_list ap;
@@ -119,35 +119,35 @@ return_t buffer_stream::printf (const wchar_t* buf, ...)
     return ret;
 }
 
-return_t buffer_stream::vprintf (const wchar_t* buf, va_list ap)
+return_t basic_stream::vprintf (const wchar_t* buf, va_list ap)
 {
     return _bio.vprintf (_handle, buf, ap);
 }
 #endif
 
-buffer_stream& buffer_stream::operator = (buffer_stream obj)
+basic_stream& basic_stream::operator = (basic_stream obj)
 {
     clear ();
     write (obj.data (), obj.size ());
     return *this;
 }
 
-int buffer_stream::compare (buffer_stream obj)
+int basic_stream::compare (basic_stream obj)
 {
     return strcmp ((*this).c_str (), obj.c_str ());
 }
 
-int buffer_stream::compare (buffer_stream lhs, buffer_stream rhs)
+int basic_stream::compare (basic_stream& lhs, basic_stream& rhs)
 {
     return strcmp (lhs.c_str (), rhs.c_str ());
 }
 
-bool buffer_stream::operator < (buffer_stream obj)
+bool basic_stream::operator < (basic_stream obj)
 {
     return 0 < strcmp ((*this).c_str (), obj.c_str ());
 }
 
-bool buffer_stream::operator > (buffer_stream obj)
+bool basic_stream::operator > (basic_stream obj)
 {
     return 0 > strcmp ((*this).c_str (), obj.c_str ());
 }

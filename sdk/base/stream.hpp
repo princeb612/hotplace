@@ -46,9 +46,9 @@ public:
  * @desc    work around pure virtual operator overloading
  *
  *          // concept sketch - binder must provide printf (STREAM_T*) method
- *          buffer_stream bs;
+ *          basic_stream bs;
  *          console_color concolor;
- *          t_stream_binder <buffer_stream, console_color> console_colored_stream (bs);
+ *          t_stream_binder <basic_stream, console_color> console_colored_stream (bs);
  *          console_colored_stream << concolor.turnon ().set_fgcolor (console_color_t::yellow)
  *                                 << "hello"
  *                                 << concolor.turnoff ();
@@ -97,6 +97,7 @@ public:
     }
     t_stream_binder<STREAM_T, BINDER>& operator += (BINDER& rvalue)
     {
+        // binder MUST provide printf (STREAM_T*) method
         rvalue.printf (&_stream);
         return *this;
     }

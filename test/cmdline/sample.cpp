@@ -86,7 +86,7 @@ void test_cmdline (cmdline_t<OPTION>& cmdline, bool expect, int argc, char** arg
     std::cout << "keygen "  << opt.keygen << std::endl;
 
     bool test = (errorcode_t::success == ret);
-    _test_case.assert (expect ? test : !test, __FUNCTION__, "cmdline %s", args.c_str ());
+    _test_case.assert (expect ? test : !test, __FUNCTION__, "cmdline %s (%s)", args.c_str (), expect ? "positive test" : "negative test");
 }
 
 void test2 ()

@@ -33,7 +33,7 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
     byte_t* buf = (byte_t*) data_array[1];
     size_t bufsize = (size_t) data_array[2];
 
-    buffer_stream bs;
+    basic_stream bs;
     std::string message;
 
     switch (type) {
