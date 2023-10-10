@@ -22,11 +22,11 @@ namespace io {
 //
 
 #if defined _WIN32 || defined _WIN64
-std::wstring A2W (const char* source, uint32 codepage = 0);
-return_t A2W (std::wstring& target, const char* source, uint32 codepage = 0);
+std::wstring A2W(const char* source, uint32 codepage = 0);
+return_t A2W(std::wstring& target, const char* source, uint32 codepage = 0);
 
-std::string W2A (const wchar_t* source, uint32 codepage = 0);
-return_t W2A (std::string& target, const wchar_t* source, uint32 codepage = 0);
+std::string W2A(const wchar_t* source, uint32 codepage = 0);
+return_t W2A(std::string& target, const wchar_t* source, uint32 codepage = 0);
 #endif
 
 //
@@ -48,9 +48,9 @@ return_t W2A (std::string& target, const wchar_t* source, uint32 codepage = 0);
  *  gettoken (data, token, 1, value);  // "item1"
  *  _test_case.assert (value == "item1", __FUNCTION__, "gettoken");
  */
-bool gettoken (std::string const& source, std::string const& token, size_t index, std::string& value);
+bool gettoken(std::string const& source, std::string const& token, size_t index, std::string& value);
 #if defined _WIN32 || defined _WIN64
-bool gettoken (std::wstring const& source, std::wstring const& token, size_t index, std::wstring& value);
+bool gettoken(std::wstring const& source, std::wstring const& token, size_t index, std::wstring& value);
 #endif
 
 /**
@@ -67,9 +67,9 @@ bool gettoken (std::wstring const& source, std::wstring const& token, size_t ind
  *      }
  *  }
  */
-std::string tokenize (std::string const& source, std::string const& tokens, size_t& pos);
+std::string tokenize(std::string const& source, std::string const& tokens, size_t& pos);
 #if defined _WIN32 || defined _WIN64
-std::wstring tokenize (std::wstring const& source, std::wstring const& tokens, size_t& pos);
+std::wstring tokenize(std::wstring const& source, std::wstring const& tokens, size_t& pos);
 #endif
 
 /**
@@ -78,9 +78,9 @@ std::wstring tokenize (std::wstring const& source, std::wstring const& tokens, s
  *  std::string data ("hello world");
  *  replace (data, "world", "neighbor");
  */
-void replace (std::string& source, std::string const& a, std::string const& b);
+void replace(std::string& source, std::string const& a, std::string const& b);
 #if defined _WIN32 || defined _WIN64
-void replace (std::wstring& source, std::wstring const& a, std::wstring const& b);
+void replace(std::wstring& source, std::wstring const& a, std::wstring const& b);
 #endif
 
 /**
@@ -107,9 +107,9 @@ void replace (std::wstring& source, std::wstring const& a, std::wstring const& b
  *      pos = brk;
  *  }
  */
-return_t getline (const char* stream, size_t sizestream, size_t startpos, size_t *brk);
+return_t getline(const char* stream, size_t sizestream, size_t startpos, size_t* brk);
 #if defined _WIN32 || defined _WIN64
-return_t getline (const wchar_t* stream, size_t sizestream, size_t startpos, size_t *brk);
+return_t getline(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk);
 #endif
 
 /**
@@ -132,9 +132,9 @@ return_t getline (const wchar_t* stream, size_t sizestream, size_t startpos, siz
  *      pos = brk;
  *  }
  */
-return_t scan (const char* stream, size_t sizestream, size_t startpos, size_t *brk, int (*func)(int));
+return_t scan(const char* stream, size_t sizestream, size_t startpos, size_t* brk, int (*func)(int));
 #if defined _WIN32 || defined _WIN64
-return_t scan (const wchar_t* stream, size_t sizestream, size_t startpos, size_t *brk, int (*func)(int));
+return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk, int (*func)(int));
 #endif
 
 /**
@@ -158,9 +158,9 @@ return_t scan (const wchar_t* stream, size_t sizestream, size_t startpos, size_t
  *      pos = brk + strlen (match);
  *  }
  */
-return_t scan (const char* stream, size_t sizestream, size_t startpos, size_t *brk, const char* match);
+return_t scan(const char* stream, size_t sizestream, size_t startpos, size_t* brk, const char* match);
 #if defined _WIN32 || defined _WIN64
-return_t scan (const wchar_t* stream, size_t sizestream, size_t startpos, size_t *brk, const wchar_t* token);
+return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk, const wchar_t* token);
 #endif
 
 //
@@ -190,11 +190,11 @@ typedef struct _split_context_t {
     std::string source;
     split_map_list info;
 } split_context_t;
-return_t split_begin (split_context_t** handle, const char* str, const char* delim);
-return_t split_count (split_context_t* handle, size_t& result);
-return_t split_get (split_context_t* handle, unsigned int index, binary_t& data);
-return_t split_get (split_context_t* handle, unsigned int index, std::string& data);
-return_t split_end (split_context_t* handle);
+return_t split_begin(split_context_t** handle, const char* str, const char* delim);
+return_t split_count(split_context_t* handle, size_t& result);
+return_t split_get(split_context_t* handle, unsigned int index, binary_t& data);
+return_t split_get(split_context_t* handle, unsigned int index, std::string& data);
+return_t split_end(split_context_t* handle);
 
 //
 // split_url
@@ -207,9 +207,7 @@ typedef struct _url_info_t {
     std::string uripath;
     std::string urifile;
 
-    _url_info_t () : port (0)
-    {
-    }
+    _url_info_t() : port(0) {}
 } url_info_t;
 
 /**
@@ -235,9 +233,9 @@ typedef struct _url_info_t {
  *        /download/file.txt                -> NA   / NA       / download / file.txt
  *        /download/                        -> NA   / NA       / download / N/A
  */
-return_t split_url (const char* url, url_info_t* info);
+return_t split_url(const char* url, url_info_t* info);
 
-}
-}
+}  // namespace io
+}  // namespace hotplace
 
 #endif

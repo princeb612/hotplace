@@ -22,30 +22,27 @@ namespace hotplace {
  * @example
  *  std::string text = format ("%s %d %1.1f\n", "sample", 1, 1.1f);
  */
-std::string format (const char* fmt, ...);
-#if __cplusplus > 199711L    // c++98
-std::string format (const char* fmt, va_list ap);
+std::string format(const char* fmt, ...);
+#if __cplusplus > 199711L  // c++98
+std::string format(const char* fmt, va_list ap);
 #endif
 
 /**
  * @brief   util
  */
 template <typename K, typename V>
-class maphint
-{
-public:
-    maphint (std::map <K, V>& source) : _source (source)
-    {
+class maphint {
+   public:
+    maphint(std::map<K, V>& source) : _source(source) {
         // do nothing
     }
 
-    return_t find (K const& key, V* value)
-    {
+    return_t find(K const& key, V* value) {
         return_t ret = errorcode_t::success;
 
         if (value) {
-            typename std::map <K, V>::iterator iter = _source.find (key);
-            if (_source.end () == iter) {
+            typename std::map<K, V>::iterator iter = _source.find(key);
+            if (_source.end() == iter) {
                 ret = errorcode_t::not_found;
             } else {
                 *value = iter->second;
@@ -55,10 +52,11 @@ public:
         }
         return ret;
     }
-private:
-    std::map <K, V>& _source;
+
+   private:
+    std::map<K, V>& _source;
 };
 
-}
+}  // namespace hotplace
 
 #endif

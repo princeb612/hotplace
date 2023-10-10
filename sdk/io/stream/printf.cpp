@@ -8,13 +8,13 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/ieee754.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
-#include <hotplace/sdk/io/string/string.hpp>
+#include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
+#include <hotplace/sdk/io/string/string.hpp>
 #include <map>
 
 namespace hotplace {
@@ -25,42 +25,32 @@ typedef struct _variant_conversion_t {
     const char* formatter;
 } variant_conversion_t;
 
-#if __cplusplus >= 201103L    // c++11
-#define VARIANT_CONVERSION_ITEM(t, f) { .type = t, .formatter = f, \
-}
+#if __cplusplus >= 201103L  // c++11
+#define VARIANT_CONVERSION_ITEM(t, f) \
+    { .type = t, .formatter = f, }
 #else
-#define VARIANT_CONVERSION_ITEM(t, f) { t, f, }
+#define VARIANT_CONVERSION_ITEM(t, f) \
+    { t, f, }
 #endif
 
-static variant_conversion_t type_formatter[] =
-{
-    VARIANT_CONVERSION_ITEM (TYPE_CHAR,   "%c"),
-    VARIANT_CONVERSION_ITEM (TYPE_BYTE,   "%c"),
-    VARIANT_CONVERSION_ITEM (TYPE_SHORT,  "%i"),
-    VARIANT_CONVERSION_ITEM (TYPE_USHORT, "%i"),
-    VARIANT_CONVERSION_ITEM (TYPE_INT32,  "%i"),
-    VARIANT_CONVERSION_ITEM (TYPE_UINT32, "%i"),
-    VARIANT_CONVERSION_ITEM (TYPE_INT64,  "%li"),
-    VARIANT_CONVERSION_ITEM (TYPE_UINT64, "%li"),
-    VARIANT_CONVERSION_ITEM (TYPE_POINTER, "%p"),
-    VARIANT_CONVERSION_ITEM (TYPE_STRING, "%s"),
-    VARIANT_CONVERSION_ITEM (TYPE_FLOAT,  "%f"),
-    VARIANT_CONVERSION_ITEM (TYPE_DOUBLE, "%lf"),
+static variant_conversion_t type_formatter[] = {
+    VARIANT_CONVERSION_ITEM(TYPE_CHAR, "%c"),   VARIANT_CONVERSION_ITEM(TYPE_BYTE, "%c"),    VARIANT_CONVERSION_ITEM(TYPE_SHORT, "%i"),
+    VARIANT_CONVERSION_ITEM(TYPE_USHORT, "%i"), VARIANT_CONVERSION_ITEM(TYPE_INT32, "%i"),   VARIANT_CONVERSION_ITEM(TYPE_UINT32, "%i"),
+    VARIANT_CONVERSION_ITEM(TYPE_INT64, "%li"), VARIANT_CONVERSION_ITEM(TYPE_UINT64, "%li"), VARIANT_CONVERSION_ITEM(TYPE_POINTER, "%p"),
+    VARIANT_CONVERSION_ITEM(TYPE_STRING, "%s"), VARIANT_CONVERSION_ITEM(TYPE_FLOAT, "%f"),   VARIANT_CONVERSION_ITEM(TYPE_DOUBLE, "%lf"),
 };
-size_t size_type_formatter = sizeof (type_formatter) / sizeof (type_formatter[0]);
+size_t size_type_formatter = sizeof(type_formatter) / sizeof(type_formatter[0]);
 
-return_t sprintf (stream_t* stream, const char* fmt, valist va)
-{
+return_t sprintf(stream_t* stream, const char* fmt, valist va) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        stream->clear ();
+        stream->clear();
 
         if (nullptr == fmt) {
             ret = errorcode_t::invalid_parameter;
@@ -71,7 +61,7 @@ return_t sprintf (stream_t* stream, const char* fmt, valist va)
         size_t i = 0;
 
         ansi_string formatter;
-        formatter.write ((void *) fmt, strlen (fmt));
+        formatter.write((void*)fmt, strlen(fmt));
 
 #if 0
 
@@ -95,20 +85,20 @@ return_t sprintf (stream_t* stream, const char* fmt, valist va)
 
         // Step1. check order using map ...
         typedef std::map<size_t, size_t> va_map_t;
-        typedef std::list <int> va_array_t;
+        typedef std::list<int> va_array_t;
         va_map_t va_map; /* pair(position, {id}) */
         va_array_t va_array;
-        for (i = 0; i != va.size (); i++) {
+        for (i = 0; i != va.size(); i++) {
             size_t id = i + 1;
-            std::string find = format ("{%d}", id);
+            std::string find = format("{%d}", id);
             size_t pos = 0;
             while (true) {
-                pos = formatter.find_first_of (find.c_str (), pos);
-                if ((size_t) -1 == pos) {
+                pos = formatter.find_first_of(find.c_str(), pos);
+                if ((size_t)-1 == pos) {
                     break;
                 }
-                va_map.insert (std::make_pair (pos, i));
-                pos += find.size ();
+                va_map.insert(std::make_pair(pos, i));
+                pos += find.size();
             }
         }
 
@@ -116,45 +106,42 @@ return_t sprintf (stream_t* stream, const char* fmt, valist va)
         valist va_new;
         va_map_t::iterator iter;
         i = 0;
-        for (va_map_t::iterator iter = va_map.begin (); iter != va_map.end (); iter++) {
+        for (va_map_t::iterator iter = va_map.begin(); iter != va_map.end(); iter++) {
             size_t idx = iter->second;
-            va.at (idx, v);
+            va.at(idx, v);
             va_new << v;
-            va_array.push_back (idx);
+            va_array.push_back(idx);
         }
 
         // Step3. replace format specifier
         typedef std::map<size_t, std::string> formatter_map_t;
         formatter_map_t formats;
-        for (i = 0; i < RTL_NUMBER_OF (type_formatter); i++) {
+        for (i = 0; i < RTL_NUMBER_OF(type_formatter); i++) {
             variant_conversion_t* item = type_formatter + i;
-            formats.insert (std::make_pair (item->type, item->formatter));
+            formats.insert(std::make_pair(item->type, item->formatter));
         }
         va_array_t::iterator array_it;
-        for (i = 0, array_it = va_array.begin (); array_it != va_array.end (); i++, array_it++) {
+        for (i = 0, array_it = va_array.begin(); array_it != va_array.end(); i++, array_it++) {
             size_t idx = *array_it;
-            va_new.at (i, v);
-            formatter_map_t::iterator fmt_it = formats.find (v.type);
-            if (formats.end () != fmt_it) {
-                formatter.replace (format ("{%d}", idx + 1).c_str (), fmt_it->second.c_str (), bufferio_flag_t::run_once);
+            va_new.at(i, v);
+            formatter_map_t::iterator fmt_it = formats.find(v.type);
+            if (formats.end() != fmt_it) {
+                formatter.replace(format("{%d}", idx + 1).c_str(), fmt_it->second.c_str(), bufferio_flag_t::run_once);
             }
         }
 
-        stream->vprintf ((char *) formatter.data (), va_new.get ());
+        stream->vprintf((char*)formatter.data(), va_new.get());
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t vtprintf (stream_t* stream, variant_t const& vt, vtprintf_style_t style)
-{
+return_t vtprintf(stream_t* stream, variant_t const& vt, vtprintf_style_t style) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -166,139 +153,136 @@ return_t vtprintf (stream_t* stream, variant_t const& vt, vtprintf_style_t style
 
         switch (vt.type) {
             case TYPE_NULL:
-                stream->printf (constexpr_null);
+                stream->printf(constexpr_null);
                 break;
             case TYPE_BOOL:
-                stream->printf ("%s", vt.data.b ? constexpr_true : constexpr_false);
+                stream->printf("%s", vt.data.b ? constexpr_true : constexpr_false);
                 break;
             case TYPE_INT8:
-                stream->printf ("%i", vt.data.i8);
+                stream->printf("%i", vt.data.i8);
                 break;
             case TYPE_UINT8:
-                stream->printf ("%u", vt.data.ui8);
+                stream->printf("%u", vt.data.ui8);
                 break;
             case TYPE_INT16:
-                stream->printf ("%i", vt.data.i16);
+                stream->printf("%i", vt.data.i16);
                 break;
             case TYPE_UINT16:
-                stream->printf ("%u", vt.data.ui16);
+                stream->printf("%u", vt.data.ui16);
                 break;
             case TYPE_INT32:
-                stream->printf ("%i", vt.data.i32);
+                stream->printf("%i", vt.data.i32);
                 break;
             case TYPE_UINT32:
-                stream->printf ("%u", vt.data.ui32);
+                stream->printf("%u", vt.data.ui32);
                 break;
             case TYPE_INT64:
-                stream->printf ("%I64i", vt.data.i64);
+                stream->printf("%I64i", vt.data.i64);
                 break;
             case TYPE_UINT64:
-                stream->printf ("%I64u", vt.data.ui64);
+                stream->printf("%I64u", vt.data.ui64);
                 break;
 #if defined __SIZEOF_INT128__
             case TYPE_INT128:
-                stream->printf ("%I128i", vt.data.i128);
+                stream->printf("%I128i", vt.data.i128);
                 break;
             case TYPE_UINT128:
-                stream->printf ("%I128u", vt.data.ui128);
+                stream->printf("%I128u", vt.data.ui128);
                 break;
 #endif
             case TYPE_FP16:
                 if (0x7c00 == (0x7c00 & vt.data.ui16)) {
                     if (0x200 & vt.data.ui16) {
-                        stream->printf ("NaN");
+                        stream->printf("NaN");
                     } else {
                         if (0x8000 & vt.data.ui16) {
-                            stream->printf ("-");
+                            stream->printf("-");
                         }
-                        stream->printf ("Infinity");
+                        stream->printf("Infinity");
                     }
                 } else {
-                    stream->printf ("%g", fp32_from_fp16 (vt.data.ui16));
+                    stream->printf("%g", fp32_from_fp16(vt.data.ui16));
                 }
                 break;
             case TYPE_FLOAT:
                 if (0x7f800000 == (0x7f800000 & vt.data.ui32)) {
                     if (0x400000 & vt.data.ui32) {
-                        stream->printf ("NaN");
+                        stream->printf("NaN");
                     } else {
                         if (0x80000000 & vt.data.ui32) {
-                            stream->printf ("-");
+                            stream->printf("-");
                         }
-                        stream->printf ("Infinity");
+                        stream->printf("Infinity");
                     }
                 } else {
-                    stream->printf ("%g", vt.data.f);
+                    stream->printf("%g", vt.data.f);
                 }
                 break;
             case TYPE_DOUBLE:
                 if (0x7ff0000000000000 == (0x7ff0000000000000 & vt.data.ui64)) {
                     if (0x8000000000000 & vt.data.ui64) {
-                        stream->printf ("NaN");
+                        stream->printf("NaN");
                     } else {
                         if (0x8000000000000000 & vt.data.ui64) {
-                            stream->printf ("-");
+                            stream->printf("-");
                         }
-                        stream->printf ("Infinity");
+                        stream->printf("Infinity");
                     }
                 } else {
-                    stream->printf ("%g", vt.data.d);
+                    stream->printf("%g", vt.data.d);
                 }
                 break;
 #if defined __SIZEOF_INT128__
-            case TYPE_FP128: // not implemented
+            case TYPE_FP128:  // not implemented
                 break;
 #endif
             case TYPE_POINTER:
-                stream->printf ("%s", vt.data.p);
+                stream->printf("%s", vt.data.p);
                 break;
             case TYPE_STRING:
                 switch (style) {
                     case vtprintf_style_t::vtprintf_style_cbor:
-                        stream->printf ("\"%s\"", vt.data.str);
+                        stream->printf("\"%s\"", vt.data.str);
                         break;
                     case vtprintf_style_t::vtprintf_style_normal:
                     default:
-                        stream->printf ("%s", vt.data.str);
+                        stream->printf("%s", vt.data.str);
                         break;
                 }
                 break;
             case TYPE_NSTRING:
                 switch (style) {
                     case vtprintf_style_t::vtprintf_style_cbor:
-                        stream->printf ("\"%.*s\"", vt.size, vt.data.str);
+                        stream->printf("\"%.*s\"", vt.size, vt.data.str);
                         break;
                     case vtprintf_style_t::vtprintf_style_normal:
                     default:
-                        stream->printf ("%.*s", vt.size, vt.data.str);
+                        stream->printf("%.*s", vt.size, vt.data.str);
                         break;
                 }
                 break;
-            case TYPE_BINARY:
-            {
+            case TYPE_BINARY: {
                 std::string temp;
-                base16_encode (vt.data.bstr, vt.size, temp);
+                base16_encode(vt.data.bstr, vt.size, temp);
                 switch (style) {
                     case vtprintf_style_t::vtprintf_style_cbor:
-                        stream->printf ("h'%s'", temp.c_str ());
+                        stream->printf("h'%s'", temp.c_str());
                         break;
                     case vtprintf_style_t::vtprintf_style_normal:
                     default:
-                        stream->printf ("%s", temp.c_str ());
+                        stream->printf("%s", temp.c_str());
                         break;
                 }
-            }
-            break;
+            } break;
             default:
                 break;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace

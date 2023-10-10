@@ -11,20 +11,19 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOADVISOR__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOADVISOR__
 
-#include <hotplace/sdk/crypto/basic/types.hpp>
 #include <algorithm>
 #include <functional>
+#include <hotplace/sdk/crypto/basic/types.hpp>
 #include <map>
 
 namespace hotplace {
 namespace crypto {
 
-class crypto_advisor
-{
-public:
-    static crypto_advisor* get_instance ();
+class crypto_advisor {
+   public:
+    static crypto_advisor* get_instance();
 
-    ~crypto_advisor ();
+    ~crypto_advisor();
 
     /**
      * @brief find blockcipher hint
@@ -36,12 +35,12 @@ public:
      *      const hint_blockcipher_t* blockcipher = advisor->hintof_blockcipher (crypt_algorithm_t::aes256);
      *      size_t blocksize = blockcipher->_blocksize;
      */
-    const hint_blockcipher_t* hintof_blockcipher (crypt_algorithm_t alg);
+    const hint_blockcipher_t* hintof_blockcipher(crypt_algorithm_t alg);
     /**
      * @brief find blockcipher hint
      * @param const EVP_CIPHER* cipher [in]
      */
-    const hint_blockcipher_t* find_evp_cipher (const EVP_CIPHER* cipher);
+    const hint_blockcipher_t* find_evp_cipher(const EVP_CIPHER* cipher);
     /**
      * @brief find cipher method
      * @param crypt_algorithm_t algorithm [in] crypt_algorithm_t
@@ -53,16 +52,16 @@ public:
      *          can be nullptr
      *          for example, seed deprecated since openssl 3.0
      */
-    const EVP_CIPHER* find_evp_cipher (crypt_algorithm_t algorithm, crypt_mode_t mode);
-    const EVP_CIPHER* find_evp_cipher (const char* name);
-    return_t find_evp_cipher (const char* name, crypt_algorithm_t& algorithm, crypt_mode_t& mode);
+    const EVP_CIPHER* find_evp_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
+    const EVP_CIPHER* find_evp_cipher(const char* name);
+    return_t find_evp_cipher(const char* name, crypt_algorithm_t& algorithm, crypt_mode_t& mode);
     /**
      * @brief find alg and mode
      * @param const EVP_CIPHER* cipher [in]
      * @param int& algorithm [out]
      * @param int& mode [out]
      */
-    return_t find_evp_cipher (const EVP_CIPHER* cipher, crypt_algorithm_t& algorithm, crypt_mode_t& mode);
+    return_t find_evp_cipher(const EVP_CIPHER* cipher, crypt_algorithm_t& algorithm, crypt_mode_t& mode);
     /**
      * @brief find cipher string
      * @param crypt_algorithm_t algorithm [in] crypt_algorithm_t
@@ -74,7 +73,7 @@ public:
      *          EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch ("aes-128-cbc", nullptr);
      *          // return EVP_aes_128_cbc ()
      */
-    const char* nameof_cipher (crypt_algorithm_t algorithm, crypt_mode_t mode);
+    const char* nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
     /**
      * @brief find md method
      * @param hash_algorithm_t algorithm [in] hash_algorithm_t
@@ -82,13 +81,13 @@ public:
      * @remarks
      *          const EVP_MD* sha3_512 = (const EVP_MD*) find_evp_md (hash_algorithm_t::sha3_512); // EVP_sha3_512 ()
      */
-    const EVP_MD* find_evp_md (hash_algorithm_t algorithm);
-    const EVP_MD* find_evp_md (crypt_sig_t sig);
-    const EVP_MD* find_evp_md (jws_t sig);
-    const EVP_MD* find_evp_md (const char* name);
-    return_t find_evp_md (const char* name, hash_algorithm_t& algorithm);
-    hash_algorithm_t get_algorithm (crypt_sig_t sig);
-    hash_algorithm_t get_algorithm (jws_t sig);
+    const EVP_MD* find_evp_md(hash_algorithm_t algorithm);
+    const EVP_MD* find_evp_md(crypt_sig_t sig);
+    const EVP_MD* find_evp_md(jws_t sig);
+    const EVP_MD* find_evp_md(const char* name);
+    return_t find_evp_md(const char* name, hash_algorithm_t& algorithm);
+    hash_algorithm_t get_algorithm(crypt_sig_t sig);
+    hash_algorithm_t get_algorithm(jws_t sig);
     /**
      * @brief find md string
      * @param hash_algorithm_t algorithm [in] hash_algorithm_t
@@ -99,9 +98,9 @@ public:
      *          EVP_MD* evp_md = EVP_MD_fetch (nullptr, "sha3-256", nullptr);
      *          // return EVP_sha3_256 ()
      */
-    const char* nameof_md (hash_algorithm_t algorithm);
+    const char* nameof_md(hash_algorithm_t algorithm);
 
-#if __cplusplus >= 201103L     // c++11
+#if __cplusplus >= 201103L  // c++11
     /**
      * @brief   iteration helper methods  - algoritm encrypton signature
      * @example
@@ -117,9 +116,9 @@ public:
      *
      *          advisor->jose_for_each_signature (lambda2, nullptr );
      */
-    return_t jose_for_each_algorithm (std::function <void (const hint_jose_encryption_t*, void*)> f, void* user);
-    return_t jose_for_each_encryption (std::function <void (const hint_jose_encryption_t*, void*)> f, void* user);
-    return_t jose_for_each_signature (std::function <void (const hint_signature_t*, void*)> f, void* user);
+    return_t jose_for_each_algorithm(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
+    return_t jose_for_each_encryption(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
+    return_t jose_for_each_signature(std::function<void(const hint_signature_t*, void*)> f, void* user);
 #endif
 
     /**
@@ -132,7 +131,7 @@ public:
      * @example
      *          const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);
      */
-    const hint_jose_encryption_t* hintof_jose_algorithm (jwa_t alg);
+    const hint_jose_encryption_t* hintof_jose_algorithm(jwa_t alg);
     /**
      * @brief hint
      * @param jwe_t enc [in]
@@ -141,21 +140,21 @@ public:
      * @example
      *          const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption (enc);
      */
-    const hint_jose_encryption_t* hintof_jose_encryption (jwe_t enc);
+    const hint_jose_encryption_t* hintof_jose_encryption(jwe_t enc);
     /**
      * @brief hint
      * @param crypt_sig_t sig [in]
      *          crypt_sig_t::hs256 series, crypt_sig_t::rs256 series, crypt_sig_t::es256 series, crypt_sig_t::ps256 series, crypt_sig_t::eddsa
      * @return const hint_signature_t*
      */
-    const hint_signature_t* hintof_signature (crypt_sig_t sig);
+    const hint_signature_t* hintof_signature(crypt_sig_t sig);
     /**
      * @brief hint
      * @param jws_t sig [in]
      *          jws_t::jws_hs256 series, jws_t::jws_rs256 series, jws_t::jws_es256 series, jws_t::jws_ps256 series, jws_t::jws_eddsa
      * @return const hint_signature_t*
      */
-    const hint_signature_t* hintof_jose_signature (jws_t sig);
+    const hint_signature_t* hintof_jose_signature(jws_t sig);
     /**
      * @brief hint
      * @param uint32 nid [in] see ec_curve_t
@@ -163,7 +162,7 @@ public:
      * @return const hint_curve_t*
      * @sa hintof_curve
      */
-    const hint_curve_t* hintof_curve_nid (uint32 nid);
+    const hint_curve_t* hintof_curve_nid(uint32 nid);
 
     /**
      * @brief hint
@@ -175,21 +174,21 @@ public:
      *          "PBES2-HS256+A128KW" series
      * @return const hint_jose_encryption_t*
      */
-    const hint_jose_encryption_t* hintof_jose_algorithm (const char* alg);
+    const hint_jose_encryption_t* hintof_jose_algorithm(const char* alg);
     /**
      * @brief hint
      * @param const char* enc [in]
      *          "A128CBC-HS256" series, "A128GCM" series
      * @return const hint_jose_encryption_t*
      */
-    const hint_jose_encryption_t* hintof_jose_encryption (const char* enc);
+    const hint_jose_encryption_t* hintof_jose_encryption(const char* enc);
     /**
      * @brief hint
      * @param const char* sig [in]
      *          "HS256" series, "RS256" series, "ES256" series, "PS256" series, "EdDSA"
      * @return const hint_signature_t*
      */
-    const hint_signature_t* hintof_jose_signature (const char* sig);
+    const hint_signature_t* hintof_jose_signature(const char* sig);
     /**
      * @brief hint
      * @param const char* curve [in]
@@ -197,7 +196,7 @@ public:
      * @return const hint_curve_t*
      * @sa hintof_curve_nid
      */
-    const hint_curve_t* hintof_curve (const char* curve);
+    const hint_curve_t* hintof_curve(const char* curve);
 
     /**
      * @brief JWA
@@ -221,7 +220,7 @@ public:
      *          PBES2-HS384+A192KW
      *          PBES2-HS512+A256KW
      */
-    const char* nameof_jose_algorithm (jwa_t alg);
+    const char* nameof_jose_algorithm(jwa_t alg);
     /**
      * @brief JWE
      * @param jwe_t enc [in]
@@ -233,7 +232,7 @@ public:
      *          A192GCM
      *          A256GCM
      */
-    const char* nameof_jose_encryption (jwe_t enc);
+    const char* nameof_jose_encryption(jwe_t enc);
     /**
      * @brief JWS
      * @param jws_t enc [in]
@@ -252,7 +251,7 @@ public:
      *          PS512
      *          EdDSA
      */
-    const char* nameof_jose_signature (jws_t sig);
+    const char* nameof_jose_signature(jws_t sig);
 
     /**
      * @brief type
@@ -279,7 +278,7 @@ public:
      *          "PBES2-HS512+A256KW"| jwa_t::jwa_pbes2_hs512_a256kw
      *          --------------------+-----------------------------
      */
-    return_t typeof_jose_algorithm (const char* alg, jwa_t& type);
+    return_t typeof_jose_algorithm(const char* alg, jwa_t& type);
     /**
      * @brief type
      * @param const char* enc [in]
@@ -294,7 +293,7 @@ public:
      *          "A256GCM"           | jwe_t::jwe_a256gcm
      *          --------------------+------------------------
      */
-    return_t typeof_jose_encryption (const char* enc, jwe_t& type);
+    return_t typeof_jose_encryption(const char* enc, jwe_t& type);
     /**
      * @brief type
      * @param const char* sig [in]
@@ -316,7 +315,7 @@ public:
      *          "EdDSA"             | jws_t::jws_eddsa
      *          --------------------+-----------
      */
-    return_t typeof_jose_signature (const char* sig, jws_t& type);
+    return_t typeof_jose_signature(const char* sig, jws_t& type);
 
     /**
      * @brief nid
@@ -334,7 +333,7 @@ public:
      *      if following method needed, use nidof_evp_pkey
      *      >> return_t nidof_ec_curve (EVP_PKEY* pkey, uint32& nid);
      */
-    return_t nidof_ec_curve (const char* curve, uint32& nid);
+    return_t nidof_ec_curve(const char* curve, uint32& nid);
 
     /**
      * @brief kty
@@ -347,7 +346,7 @@ public:
      *          Ed25519, Ed448, X25519, X448    | crypto_key_t::kty_okp
      *          --------------------------------+----------------
      */
-    return_t ktyof_ec_curve (const char* curve, uint32& kty);
+    return_t ktyof_ec_curve(const char* curve, uint32& kty);
     /**
      * @brief kty
      * @param EVP_PKEY* pkey [in]
@@ -358,14 +357,14 @@ public:
      *          OKP
      * @return error code (see error.hpp)
      */
-    return_t ktyof_ec_curve (EVP_PKEY* pkey, std::string& kty);
+    return_t ktyof_ec_curve(EVP_PKEY* pkey, std::string& kty);
     /**
      * @brief kty
      * @param EVP_PKEY* pkey [in]
      * @param crypto_key_t& kty [out] crypto_key_t::kty_hmac, crypto_key_t::kty_rsa, crypto_key_t::kty_ec, crypto_key_t::kty_okp
      * @return error code (see error.hpp)
      */
-    return_t ktyof_ec_curve (EVP_PKEY* pkey, crypto_key_t& kty);
+    return_t ktyof_ec_curve(EVP_PKEY* pkey, crypto_key_t& kty);
     /**
      * @brief "alg" from key
      * @param EVP_PKEY* pkey [in]
@@ -377,7 +376,7 @@ public:
      *              advisor->nameof_ec_curve (pkey, curve_name);
      *          }
      */
-    return_t nameof_ec_curve (EVP_PKEY* pkey, std::string& curve_name);
+    return_t nameof_ec_curve(EVP_PKEY* pkey, std::string& curve_name);
 
     /**
      * @brief kind of
@@ -385,72 +384,72 @@ public:
      * @param jwa_t alg [in]
      * @return true if match, false if not
      */
-    bool is_kindof (EVP_PKEY* pkey, jwa_t alg);
+    bool is_kindof(EVP_PKEY* pkey, jwa_t alg);
     /**
      * @brief kind of
      * @param EVP_PKEY* pkey [in]
      * @param crypt_sig_t sig [in]
      * @return true if match, false if not
      */
-    bool is_kindof (EVP_PKEY* pkey, crypt_sig_t sig);
+    bool is_kindof(EVP_PKEY* pkey, crypt_sig_t sig);
     /**
      * @brief kind of
      * @param EVP_PKEY* pkey [in]
      * @param jws_t sig [in]
      * @return true if match, false if not
      */
-    bool is_kindof (EVP_PKEY* pkey, jws_t sig);
+    bool is_kindof(EVP_PKEY* pkey, jws_t sig);
     /**
      * @brief kind of
      * @param EVP_PKEY* pkey [in]
      * @param const char* alg [in] signature algorithms
      * @return true if match, false if not
      */
-    bool is_kindof (EVP_PKEY* pkey, const char* alg);
+    bool is_kindof(EVP_PKEY* pkey, const char* alg);
 
-    cose_kty_t ktyof (crypto_key_t kty);
-    crypto_key_t ktyof (cose_kty_t kty);
-    jws_t sigof (crypt_sig_t sig);
-    crypt_sig_t cose_sigof (cose_alg_t sig);
-    crypt_sig_t sigof (jws_t sig);
-    cose_ec_curve_t curveof (uint32 nid);
-    uint32 curveof (cose_ec_curve_t curve);
+    cose_kty_t ktyof(crypto_key_t kty);
+    crypto_key_t ktyof(cose_kty_t kty);
+    jws_t sigof(crypt_sig_t sig);
+    crypt_sig_t cose_sigof(cose_alg_t sig);
+    crypt_sig_t sigof(jws_t sig);
+    cose_ec_curve_t curveof(uint32 nid);
+    uint32 curveof(cose_ec_curve_t curve);
 
-protected:
-    return_t build_if_necessary ();
-    return_t cleanup ();
+   protected:
+    return_t build_if_necessary();
+    return_t cleanup();
 
-private:
-    crypto_advisor ();
+   private:
+    crypto_advisor();
 
     static crypto_advisor _instance;
 
     /* data structures for a binary search */
 
-    typedef std::map <uint32, const hint_blockcipher_t*> blockcipher_map_t;             /* pair (alg, hint_blockcipher_t*) */
-    typedef std::map <uint32, EVP_CIPHER*> cipher_map_t;                                /* pair (alg+mode, EVP_CIPHER*) */
-    typedef std::map <uint32, const openssl_evp_cipher_method_t*> cipher_fetch_map_t;   /* pair (alg+mode, openssl_evp_cipher_method_t*) */
-    typedef std::map <const EVP_CIPHER*, const openssl_evp_cipher_method_t*> evp_cipher_map_t;
-    typedef std::map <uint32, EVP_MD*> md_map_t;                                        /* pair (alg+mode, EVP_MD*) */
-    typedef std::map <uint32, const openssl_evp_md_method_t*> md_fetch_map_t;
-    typedef std::map <uint32, const hint_jose_encryption_t*> jose_encryption_map_t;
-    typedef std::map <uint32, const hint_signature_t*> signature_map_t;
-    typedef std::multimap <uint32, const hint_signature_t*> jose_signature_bynid_map_t;
-    typedef std::map <std::string, const hint_jose_encryption_t*> jose_encryption_byname_map_t;
-    typedef std::map <std::string, const hint_signature_t*> signature_byname_map_t;
-    typedef std::map <std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
-    typedef std::map <uint32, const hint_curve_t*> jose_curve_bynid_map_t;
-    typedef std::map <crypto_key_t, cose_kty_t> kty2cose_map_t;
-    typedef std::map <cose_kty_t, crypto_key_t> cose2kty_map_t;
-    typedef std::map <crypt_sig_t, jws_t> sig2jws_map_t;
-    typedef std::map <crypt_sig_t, cose_alg_t> sig2cose_map_t;
-    typedef std::map <cose_alg_t, crypt_sig_t> cose2sig_map_t;
-    typedef std::map <jws_t, crypt_sig_t> jws2sig_map_t;
-    typedef std::map <uint32, cose_ec_curve_t> nid2curve_map_t;
-    typedef std::map <cose_ec_curve_t, uint32> curve2nid_map_t;
+    typedef std::map<uint32, const hint_blockcipher_t*> blockcipher_map_t;           /* pair (alg, hint_blockcipher_t*) */
+    typedef std::map<uint32, EVP_CIPHER*> cipher_map_t;                              /* pair (alg+mode, EVP_CIPHER*) */
+    typedef std::map<uint32, const openssl_evp_cipher_method_t*> cipher_fetch_map_t; /* pair (alg+mode, openssl_evp_cipher_method_t*) */
+    typedef std::map<const EVP_CIPHER*, const openssl_evp_cipher_method_t*> evp_cipher_map_t;
+    typedef std::map<uint32, EVP_MD*> md_map_t; /* pair (alg+mode, EVP_MD*) */
+    typedef std::map<uint32, const openssl_evp_md_method_t*> md_fetch_map_t;
+    typedef std::map<uint32, const hint_jose_encryption_t*> jose_encryption_map_t;
+    typedef std::map<uint32, const hint_signature_t*> signature_map_t;
+    typedef std::multimap<uint32, const hint_signature_t*> jose_signature_bynid_map_t;
+    typedef std::map<std::string, const hint_jose_encryption_t*> jose_encryption_byname_map_t;
+    typedef std::map<std::string, const hint_signature_t*> signature_byname_map_t;
+    typedef std::map<std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
+    typedef std::map<uint32, const hint_curve_t*> jose_curve_bynid_map_t;
+    typedef std::map<crypto_key_t, cose_kty_t> kty2cose_map_t;
+    typedef std::map<cose_kty_t, crypto_key_t> cose2kty_map_t;
+    typedef std::map<crypt_sig_t, jws_t> sig2jws_map_t;
+    typedef std::map<crypt_sig_t, cose_alg_t> sig2cose_map_t;
+    typedef std::map<cose_alg_t, crypt_sig_t> cose2sig_map_t;
+    typedef std::map<jws_t, crypt_sig_t> jws2sig_map_t;
+    typedef std::map<uint32, cose_ec_curve_t> nid2curve_map_t;
+    typedef std::map<cose_ec_curve_t, uint32> curve2nid_map_t;
 
-    typedef std::map <std::string, const openssl_evp_cipher_method_t*> cipher_byname_map_t;     /* "aes-256-cbc" to openssl_evp_cipher_method_t* */
-    typedef std::map <std::string, const openssl_evp_md_method_t*> md_byname_map_t;             /* "sha256" to openssl_evp_md_method_t* */
+    typedef std::map<std::string, const openssl_evp_cipher_method_t*> cipher_byname_map_t; /* "aes-256-cbc" to openssl_evp_cipher_method_t* */
+    typedef std::map<std::string, const openssl_evp_md_method_t*> md_byname_map_t;         /* "sha256" to openssl_evp_md_method_t* */
 
     int _flag;
 
@@ -519,19 +518,19 @@ private:
  *    #define NID_secp384r1              715
  *    #define NID_secp521r1              716
  */
-return_t nidof_evp_pkey (EVP_PKEY* key, uint32& nid);
+return_t nidof_evp_pkey(EVP_PKEY* key, uint32& nid);
 /**
  * @brief kindof
  * @param EVP_PKEY* pkey [in]
  */
-bool kindof_ecc (EVP_PKEY* pkey);
+bool kindof_ecc(EVP_PKEY* pkey);
 
 /**
  * @param EVP_PKEY* key [in]
  */
-crypto_key_t typeof_crypto_key (EVP_PKEY* key);
+crypto_key_t typeof_crypto_key(EVP_PKEY* key);
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

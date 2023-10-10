@@ -13,8 +13,8 @@
 
 #include <hotplace/sdk/base/callback.hpp>
 #include <hotplace/sdk/base/charset.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
 #include <hotplace/sdk/base/inline.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
 
 #if defined __MINGW32__
 
@@ -75,61 +75,145 @@
 #endif
 
 /* TEXT("advapi32.dll") */
-#define DECLARE_DLLNAME_ADVAPI32    TCHAR DLLNAME_ADVAPI32[] = { _T ('a'), _T ('d'), _T ('v'), _T ('a'), _T ('p'), _T ('i'), _T ('3'), _T ('2'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_ADVAPI32                                                                                       \
+    TCHAR DLLNAME_ADVAPI32[] = {                                                                                       \
+        _T('a'), _T('d'), _T('v'), _T('a'), _T('p'), _T('i'), _T('3'), _T('2'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("crypt32.dll") */
-#define DECLARE_DLLNAME_CRYPT32     TCHAR DLLNAME_CRYPT32[] = { _T ('c'), _T ('r'), _T ('y'), _T ('p'), _T ('t'), _T ('3'), _T ('2'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_CRYPT32                                                                               \
+    TCHAR DLLNAME_CRYPT32[] = {                                                                               \
+        _T('c'), _T('r'), _T('y'), _T('p'), _T('t'), _T('3'), _T('2'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("dbghelp.dll") */
-#define DECLARE_DLLNAME_DBGHLP      TCHAR DLLNAME_DBGHLP[] = { _T ('d'), _T ('b'), _T ('g'), _T ('h'), _T ('e'), _T ('l'), _T ('p'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_DBGHLP                                                                                \
+    TCHAR DLLNAME_DBGHLP[] = {                                                                                \
+        _T('d'), _T('b'), _T('g'), _T('h'), _T('e'), _T('l'), _T('p'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("imagehlp.dll") */
-#define DECLARE_DLLNAME_IMAGEHLP    TCHAR DLLNAME_IMAGEHLP[] = { _T ('i'), _T ('m'), _T ('a'), _T ('g'), _T ('e'), _T ('h'), _T ('l'), _T ('p'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_IMAGEHLP                                                                                       \
+    TCHAR DLLNAME_IMAGEHLP[] = {                                                                                       \
+        _T('i'), _T('m'), _T('a'), _T('g'), _T('e'), _T('h'), _T('l'), _T('p'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("iphlpapi.dll") */
-#define DECLARE_DLLNAME_IPHLPAPI    TCHAR DLLNAME_IPHLPAPI[] = { _T ('i'), _T ('p'), _T ('h'), _T ('l'), _T ('p'), _T ('a'), _T ('p'), _T ('i'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_IPHLPAPI                                                                                       \
+    TCHAR DLLNAME_IPHLPAPI[] = {                                                                                       \
+        _T('i'), _T('p'), _T('h'), _T('l'), _T('p'), _T('a'), _T('p'), _T('i'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("kernel32.dll") */
-#define DECLARE_DLLNAME_KERNEL32    TCHAR DLLNAME_KERNEL32[] = { _T ('k'), _T ('e'), _T ('r'), _T ('n'), _T ('e'), _T ('l'), _T ('3'), _T ('2'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_KERNEL32                                                                                       \
+    TCHAR DLLNAME_KERNEL32[] = {                                                                                       \
+        _T('k'), _T('e'), _T('r'), _T('n'), _T('e'), _T('l'), _T('3'), _T('2'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("MpClient.dll") */
-#define DECLARE_DLLNAME_MPCLIENT    TCHAR DLLNAME_MPCLIENT[] = { _T ('M'), _T ('p'), _T ('C'), _T ('l'), _T ('i'), _T ('e'), _T ('n'), _T ('t'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_MPCLIENT                                                                                       \
+    TCHAR DLLNAME_MPCLIENT[] = {                                                                                       \
+        _T('M'), _T('p'), _T('C'), _T('l'), _T('i'), _T('e'), _T('n'), _T('t'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("msi.dll") */
-#define DECLARE_DLLNAME_MSI         TCHAR DLLNAME_MSI[] = { _T ('m'), _T ('s'), _T ('i'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_MSI                                               \
+    TCHAR DLLNAME_MSI[] = {                                               \
+        _T('m'), _T('s'), _T('i'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("mswsock.dll") */
-#define DECLARE_DLLNAME_MSWSOCK     TCHAR DLLNAME_MSWSOCK[] = { _T ('m'), _T ('s'), _T ('w'), _T ('s'), _T ('o'), _T ('c'), _T ('k'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_MSWSOCK                                                                               \
+    TCHAR DLLNAME_MSWSOCK[] = {                                                                               \
+        _T('m'), _T('s'), _T('w'), _T('s'), _T('o'), _T('c'), _T('k'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("netapi32.dll") */
-#define DECLARE_DLLNAME_NETAPI32    TCHAR DLLNAME_NETAPI32[] = { _T ('n'), _T ('e'), _T ('t'), _T ('a'), _T ('p'), _T ('i'), _T ('3'), _T ('2'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_NETAPI32                                                                                       \
+    TCHAR DLLNAME_NETAPI32[] = {                                                                                       \
+        _T('n'), _T('e'), _T('t'), _T('a'), _T('p'), _T('i'), _T('3'), _T('2'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("ntdll.dll") */
-#define DECLARE_DLLNAME_NTDLL       TCHAR DLLNAME_NTDLL[] = { _T ('n'), _T ('t'), _T ('d'), _T ('l'), _T ('l'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_NTDLL                                                               \
+    TCHAR DLLNAME_NTDLL[] = {                                                               \
+        _T('n'), _T('t'), _T('d'), _T('l'), _T('l'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("occache.dll") */
-#define DECLARE_DLLNAME_OCCACHE     TCHAR DLLNAME_OCCACHE[] = { _T ('o'), _T ('c'), _T ('c'), _T ('a'), _T ('c'), _T ('h'), _T ('e'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_OCCACHE                                                                               \
+    TCHAR DLLNAME_OCCACHE[] = {                                                                               \
+        _T('o'), _T('c'), _T('c'), _T('a'), _T('c'), _T('h'), _T('e'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("powrprof.dll") */
-#define DECLARE_DLLNAME_POWERPROF   TCHAR DLLNAME_POWERPROF[] = { _T ('p'), _T ('o'), _T ('w'), _T ('r'), _T ('p'), _T ('r'), _T ('o'), _T ('f'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_POWERPROF                                                                                      \
+    TCHAR DLLNAME_POWERPROF[] = {                                                                                      \
+        _T('p'), _T('o'), _T('w'), _T('r'), _T('p'), _T('r'), _T('o'), _T('f'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("psapi.dll") */
-#define DECLARE_DLLNAME_PSAPI       TCHAR DLLNAME_PSAPI[] = { _T ('p'), _T ('s'), _T ('a'), _T ('p'), _T ('i'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_PSAPI                                                               \
+    TCHAR DLLNAME_PSAPI[] = {                                                               \
+        _T('p'), _T('s'), _T('a'), _T('p'), _T('i'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("secur32.dll") */
-#define DECLARE_DLLNAME_SECUR32     TCHAR DLLNAME_SECUR32[] = { _T ('s'), _T ('e'), _T ('c'), _T ('u'), _T ('r'), _T ('3'), _T ('2'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_SECUR32                                                                               \
+    TCHAR DLLNAME_SECUR32[] = {                                                                               \
+        _T('s'), _T('e'), _T('c'), _T('u'), _T('r'), _T('3'), _T('2'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("setupapi.dll") */
-#define DECLARE_DLLNAME_SETUPAPI    TCHAR DLLNAME_SETUPAPI[] = { _T ('s'), _T ('e'), _T ('t'), _T ('u'), _T ('p'), _T ('a'), _T ('p'), _T ('i'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_SETUPAPI                                                                                       \
+    TCHAR DLLNAME_SETUPAPI[] = {                                                                                       \
+        _T('s'), _T('e'), _T('t'), _T('u'), _T('p'), _T('a'), _T('p'), _T('i'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("shell32.dll") */
-#define DECLARE_DLLNAME_SHELL32     TCHAR DLLNAME_SHELL32[] = { _T ('s'), _T ('h'), _T ('e'), _T ('l'), _T ('l'), _T ('3'), _T ('2'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_SHELL32                                                                               \
+    TCHAR DLLNAME_SHELL32[] = {                                                                               \
+        _T('s'), _T('h'), _T('e'), _T('l'), _T('l'), _T('3'), _T('2'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("shlwapi.dll") */
-#define DECLARE_DLLNAME_SHLWAPI     TCHAR DLLNAME_SHLWAPI[] = { _T ('s'), _T ('h'), _T ('l'), _T ('w'), _T ('a'), _T ('p'), _T ('i'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_SHLWAPI                                                                               \
+    TCHAR DLLNAME_SHLWAPI[] = {                                                                               \
+        _T('s'), _T('h'), _T('l'), _T('w'), _T('a'), _T('p'), _T('i'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("svrapi.dll") */
-#define DECLARE_DLLNAME_SVRAPI      TCHAR DLLNAME_SVRAPI[] = { _T ('s'), _T ('v'), _T ('r'), _T ('a'), _T ('p'), _T ('i'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_SVRAPI                                                                       \
+    TCHAR DLLNAME_SVRAPI[] = {                                                                       \
+        _T('s'), _T('v'), _T('r'), _T('a'), _T('p'), _T('i'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("user32.dll") */
-#define DECLARE_DLLNAME_USER32      TCHAR DLLNAME_USER32[] = { _T ('u'), _T ('s'), _T ('e'), _T ('r'), _T ('3'), _T ('2'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_USER32                                                                       \
+    TCHAR DLLNAME_USER32[] = {                                                                       \
+        _T('u'), _T('s'), _T('e'), _T('r'), _T('3'), _T('2'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("userenv.dll") */
-#define DECLARE_DLLNAME_USERENV     TCHAR DLLNAME_USERENV[] = { _T ('u'), _T ('s'), _T ('e'), _T ('r'), _T ('e'), _T ('n'), _T ('v'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_USERENV                                                                               \
+    TCHAR DLLNAME_USERENV[] = {                                                                               \
+        _T('u'), _T('s'), _T('e'), _T('r'), _T('e'), _T('n'), _T('v'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("wininet.dll") */
-#define DECLARE_DLLNAME_WININET     TCHAR DLLNAME_WININET[] = { _T ('w'), _T ('i'), _T ('n'), _T ('i'), _T ('n'), _T ('e'), _T ('t'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_WININET                                                                               \
+    TCHAR DLLNAME_WININET[] = {                                                                               \
+        _T('w'), _T('i'), _T('n'), _T('i'), _T('n'), _T('e'), _T('t'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("winio.dll") */
-#define DECLARE_DLLNAME_WINIO       TCHAR DLLNAME_WINIO[] = { _T ('w'), _T ('i'), _T ('n'), _T ('i'), _T ('o'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_WINIO                                                               \
+    TCHAR DLLNAME_WINIO[] = {                                                               \
+        _T('w'), _T('i'), _T('n'), _T('i'), _T('o'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("wintrust.dll") */
-#define DECLARE_DLLNAME_WINTRUST    TCHAR DLLNAME_WINTRUST[] = { _T ('w'), _T ('i'), _T ('n'), _T ('t'), _T ('r'), _T ('u'), _T ('s'), _T ('t'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_WINTRUST                                                                                       \
+    TCHAR DLLNAME_WINTRUST[] = {                                                                                       \
+        _T('w'), _T('i'), _T('n'), _T('t'), _T('r'), _T('u'), _T('s'), _T('t'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("wldap32.dll") */
-#define DECLARE_DLLNAME_WLDAP32     TCHAR DLLNAME_WLDAP32[] = { _T ('w'), _T ('l'), _T ('d'), _T ('a'), _T ('p'), _T ('3'), _T ('2'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_WLDAP32                                                                               \
+    TCHAR DLLNAME_WLDAP32[] = {                                                                               \
+        _T('w'), _T('l'), _T('d'), _T('a'), _T('p'), _T('3'), _T('2'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("ws2_32.dll") */
-#define DECLARE_DLLNAME_WS2_32      TCHAR DLLNAME_WS2_32[] = { _T ('w'), _T ('s'), _T ('2'), _T ('_'), _T ('3'), _T ('2'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_WS2_32                                                                       \
+    TCHAR DLLNAME_WS2_32[] = {                                                                       \
+        _T('w'), _T('s'), _T('2'), _T('_'), _T('3'), _T('2'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("wtsapi32.dll") */
-#define DECLARE_DLLNAME_WTSAPI32    TCHAR DLLNAME_WTSAPI32[] = { _T ('w'), _T ('t'), _T ('s'), _T ('a'), _T ('p'), _T ('i'), _T ('3'), _T ('2'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_WTSAPI32                                                                                       \
+    TCHAR DLLNAME_WTSAPI32[] = {                                                                                       \
+        _T('w'), _T('t'), _T('s'), _T('a'), _T('p'), _T('i'), _T('3'), _T('2'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 /* TEXT("wscapi.dll") */
-#define DECLARE_DLLNAME_WSCAPI      TCHAR DLLNAME_WSCAPI[] = { _T ('w'), _T ('s'), _T ('c'), _T ('a'), _T ('p'), _T ('i'), _T ('.'), _T ('d'), _T ('l'), _T ('l'), 0, };
+#define DECLARE_DLLNAME_WSCAPI                                                                       \
+    TCHAR DLLNAME_WSCAPI[] = {                                                                       \
+        _T('w'), _T('s'), _T('c'), _T('a'), _T('p'), _T('i'), _T('.'), _T('d'), _T('l'), _T('l'), 0, \
+    };
 
 // advapi32.dll
 #include <hotplace/sdk/base/system/windows/sdk/advapi32.hpp>
@@ -210,14 +294,14 @@
 #include <hotplace/sdk/base/system/windows/sdk/wscapi.hpp>
 
 #define GETPROCADDRESS(function_type, function_pointer, module_handle, api_name, err_code, leave) \
-    { \
-        function_pointer = (function_type) ::GetProcAddress (module_handle, api_name); \
-        if (nullptr == function_pointer) { \
-            err_code = GetLastError (); leave; \
-        } \
+    {                                                                                             \
+        function_pointer = (function_type)::GetProcAddress(module_handle, api_name);              \
+        if (nullptr == function_pointer) {                                                        \
+            err_code = GetLastError();                                                            \
+            leave;                                                                                \
+        }                                                                                         \
     }
-#define GETPROCADDRESSONLY(function_type, function_pointer, module_handle, api_name) \
-    function_pointer = (function_type) ::GetProcAddress (module_handle, api_name)
+#define GETPROCADDRESSONLY(function_type, function_pointer, module_handle, api_name) function_pointer = (function_type)::GetProcAddress(module_handle, api_name)
 
 namespace hotplace {
 
@@ -253,8 +337,8 @@ namespace hotplace {
  *  SE_IMPERSONATE_NAME                     TEXT("SeImpersonatePrivilege")
  *  SE_CREATE_GLOBAL_NAME                   TEXT("SeCreateGlobalPrivilege")
  */
-return_t adjust_privileges (HANDLE token_handle, LPCSTR privilege, DWORD attrib, DWORD* old_attrib);
-return_t adjust_privileges (HANDLE token_handle, LPCWSTR privilege, DWORD attrib, DWORD* old_attrib);
+return_t adjust_privileges(HANDLE token_handle, LPCSTR privilege, DWORD attrib, DWORD* old_attrib);
+return_t adjust_privileges(HANDLE token_handle, LPCWSTR privilege, DWORD attrib, DWORD* old_attrib);
 
 /**
  * @param   uint32 init [inopt]
@@ -265,8 +349,8 @@ return_t adjust_privileges (HANDLE token_handle, LPCWSTR privilege, DWORD attrib
  *              COINIT_SPEED_OVER_MEMORY = 0x8
  *          } COINIT;
  */
-return_t com_runtime_startup (uint32 init = COINIT_MULTITHREADED);
-return_t com_runtime_cleanup ();
+return_t com_runtime_startup(uint32 init = COINIT_MULTITHREADED);
+return_t com_runtime_cleanup();
 
 enum enum_modules_t {
     enum_psapi = 1,
@@ -297,7 +381,7 @@ enum enum_modules_t {
  *     return errorcode_t::success;
  * }
  */
-return_t enum_modules (HANDLE process_handle, TYPE_CALLBACK_HANDLEREXV callback_handler, LPVOID param);
+return_t enum_modules(HANDLE process_handle, TYPE_CALLBACK_HANDLEREXV callback_handler, LPVOID param);
 
 enum loadlibrary_path_t {
     system_path = 1,
@@ -305,41 +389,32 @@ enum loadlibrary_path_t {
     custom_path,
 };
 
-return_t get_module_handle (HMODULE* module_handle, const char* dll_name,
-                            int32 path_type = loadlibrary_path_t::system_path,
-                            const char* dll_path = nullptr);
-return_t get_module_handle (HMODULE* module_handle, const wchar_t* dll_name,
-                            int32 path_type = loadlibrary_path_t::system_path,
-                            const wchar_t* dll_path = nullptr);
+return_t get_module_handle(HMODULE* module_handle, const char* dll_name, int32 path_type = loadlibrary_path_t::system_path, const char* dll_path = nullptr);
+return_t get_module_handle(HMODULE* module_handle, const wchar_t* dll_name, int32 path_type = loadlibrary_path_t::system_path,
+                           const wchar_t* dll_path = nullptr);
 
-return_t get_module_path (HMODULE module_handle, std::string& modulepath);
-return_t get_module_path (HMODULE module_handle, std::wstring& modulepath);
+return_t get_module_path(HMODULE module_handle, std::string& modulepath);
+return_t get_module_path(HMODULE module_handle, std::wstring& modulepath);
 
-return_t get_system_wow64_directory (char* buffer, UINT size, UINT* nCopied = nullptr);
-return_t get_system_wow64_directory (wchar_t* buffer, UINT size, UINT* nCopied = nullptr);
+return_t get_system_wow64_directory(char* buffer, UINT size, UINT* nCopied = nullptr);
+return_t get_system_wow64_directory(wchar_t* buffer, UINT size, UINT* nCopied = nullptr);
 
-return_t is_windows64 (BOOL * ret);
-return_t is_process_wow64 (HANDLE process_handle, BOOL* pResult);
+return_t is_windows64(BOOL* ret);
+return_t is_process_wow64(HANDLE process_handle, BOOL* pResult);
 
-return_t load_library (HMODULE* module_handle, const char* dll_name,
-                       int32 path_type = loadlibrary_path_t::system_path,
-                       const char* dll_path = nullptr);
-return_t load_library (HMODULE* module_handle, const wchar_t* dll_name,
-                       int32 path_type = loadlibrary_path_t::system_path,
-                       const wchar_t* dll_path = nullptr);
+return_t load_library(HMODULE* module_handle, const char* dll_name, int32 path_type = loadlibrary_path_t::system_path, const char* dll_path = nullptr);
+return_t load_library(HMODULE* module_handle, const wchar_t* dll_name, int32 path_type = loadlibrary_path_t::system_path, const wchar_t* dll_path = nullptr);
 
-return_t load_library_ex (HMODULE* module_handle, const char* dll_name, uint32 flags,
-                          int32 path_type = loadlibrary_path_t::system_path,
-                          const char* dll_path = nullptr);
-return_t load_library_ex (HMODULE* module_handle, const wchar_t* dll_name, uint32 flags,
-                          int32 path_type = loadlibrary_path_t::system_path,
-                          const wchar_t* dll_path = nullptr);
+return_t load_library_ex(HMODULE* module_handle, const char* dll_name, uint32 flags, int32 path_type = loadlibrary_path_t::system_path,
+                         const char* dll_path = nullptr);
+return_t load_library_ex(HMODULE* module_handle, const wchar_t* dll_name, uint32 flags, int32 path_type = loadlibrary_path_t::system_path,
+                         const wchar_t* dll_path = nullptr);
 
-return_t open_process_token (PHANDLE process_token, HANDLE process_handle, DWORD access);
+return_t open_process_token(PHANDLE process_token, HANDLE process_handle, DWORD access);
 
-return_t read_version (const char* version_string, WORD* ver, WORD level, INT* count = nullptr);
-return_t read_version (const wchar_t* version_string, WORD* ver, WORD level, INT* count = nullptr);
+return_t read_version(const char* version_string, WORD* ver, WORD level, INT* count = nullptr);
+return_t read_version(const wchar_t* version_string, WORD* ver, WORD level, INT* count = nullptr);
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

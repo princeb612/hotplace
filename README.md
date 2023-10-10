@@ -1,9 +1,7 @@
 
 # hotplace
 
- * https://github.com/princeb612/hotplace
- * https://www.facebook.com/princeb612
-
+ * study of personal interests
 
 ## implemented
 
@@ -140,14 +138,8 @@
      * RHEL 7 and newer, (including CentOS, Rockey Linux)
      * ubuntu 20.04 and newer
      * mingw
-   * ~~linux x86-64 minimum version FC4 (libc 2.3.5, ft. gcc 4.8 toolchain, since unicorn project)~~
 
-## personal projects
+# link
 
-| code name | period                | platform      | comments                  |
-| --        | --                    | --            | --                        |
-| merlin(1) | 2007.04.08~           | windows       | SVN, MSVC 6.0             |
-| merlin(2) | 2010.03.24~2017.03.31 | windows/linux | SVN, MSVC 6.0, gcc        |
-| grape     | 2017.05.31~2019.10.24 | linux         | SVN, gcc                  |
-| unicorn   | 2019.11.21~2023.07.04 | mingw/linux   | SVN, gcc                  |
-| hotplace  | 2023.08.12~           | mingw/linux   | SVN/Git, gcc, RFC-related |
+ * https://github.com/princeb612/hotplace
+ * https://www.facebook.com/princeb612

@@ -32,102 +32,95 @@
  *
  */
 
-#include <hotplace/sdk/base/basic/printf.hpp>
 #include <ctype.h>  // isdigit
 #include <math.h>   // modf
 #include <stdarg.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+
+#include <hotplace/sdk/base/basic/printf.hpp>
 
 namespace hotplace {
 
-#define LONGINT   0x01                      /* long integer */
-#define LONGDBL   0x02                      /* long double; unimplemented */
-#define SHORTINT  0x04                      /* short integer */
-#define ALT       0x08                      /* alternate form */
-#define LADJUST   0x10                      /* left adjustment */
-#define ZEROPAD   0x20                      /* zero (as opposed to blank) pad */
-#define HEXPREFIX 0x40                      /* add 0x or 0X prefix */
+#define LONGINT 0x01 /* long integer */
+#define LONGDBL 0x02 /* long double; unimplemented */
+#define SHORTINT 0x04 /* short integer */
+#define ALT 0x08 /* alternate form */
+#define LADJUST 0x10 /* left adjustment */
+#define ZEROPAD 0x20 /* zero (as opposed to blank) pad */
+#define HEXPREFIX 0x40 /* add 0x or 0X prefix */
 
-#define BUF       (MAXEXP + MAXFRACT + 1)   /* + decimal point */
-#define DEFPREC   6
+#define BUF (MAXEXP + MAXFRACT + 1) /* + decimal point */
+#define DEFPREC 6
 /* 11-bit exponent (VAX G floating point) is 308 decimal digits */
-#define MAXEXP    308
+#define MAXEXP 308
 /* 128 bit fraction takes up 39 decimal digits; max reasonable precision */
-#define MAXFRACT  39
+#define MAXFRACT 39
 
-#if __cplusplus >= 201703L // c++17
+#if __cplusplus >= 201703L  // c++17
 #define __register
 #else
 #define __register register
 #endif
 
-static inline int tochar (int c)
-{
-    return c + _T ('0');
-}
+static inline int tochar(int c) { return c + _T('0'); }
 
-static inline int todigit (int c)
-{
-    return c - _T ('0');
-}
+static inline int todigit(int c) { return c - _T('0'); }
 
-static TCHAR* exponent (__register TCHAR *p, __register int exp, int fmtch)
-{
+static TCHAR *exponent(__register TCHAR *p, __register int exp, int fmtch) {
     __register TCHAR *t;
     TCHAR expbuf[MAXEXP];
 
     *p++ = fmtch;
     if (exp < 0) {
         exp = -exp;
-        *p++ = _T ('-');
+        *p++ = _T('-');
     } else {
-        *p++ = _T ('+');
+        *p++ = _T('+');
     }
 
     t = expbuf + MAXEXP;
     if (exp > 9) {
         do {
-            *--t = tochar (exp % 10);
+            *--t = tochar(exp % 10);
         } while ((exp /= 10) > 9);
 
-        *--t = tochar (exp);
+        *--t = tochar(exp);
 
         for (; t < expbuf + MAXEXP; *p++ = *t++) {
             ;
         }
     } else {
-        *p++ = _T ('0');
-        *p++ = tochar (exp);
+        *p++ = _T('0');
+        *p++ = tochar(exp);
     }
 
     return p;
 }
 
-static TCHAR * round (double fract, int *exp, __register TCHAR * start, __register TCHAR * end, TCHAR ch, int *signp)
-{
+static TCHAR *round(double fract, int *exp, __register TCHAR *start, __register TCHAR *end, TCHAR ch, int *signp) {
     double tmp;
 
     if (fract) {
-        (void) modf (fract * 10, &tmp);
+        (void)modf(fract * 10, &tmp);
     } else {
-        tmp = todigit (ch);
+        tmp = todigit(ch);
     }
     if (tmp > 4) {
         for (;; --end) {
-            if (*end == _T ('.')) {
+            if (*end == _T('.')) {
                 --end;
             }
-            if (++*end <= _T ('9')) {
+            if (++*end <= _T('9')) {
                 break;
             }
-            *end = _T ('0');
+            *end = _T('0');
             if (end == start) {
-                if (exp) {      /* e/E; increment exponent */
-                    *end = _T ('1');
+                if (exp) { /* e/E; increment exponent */
+                    *end = _T('1');
                     ++*exp;
-                } else {        /* f; add extra digit */
-                    *--end = _T ('1');
+                } else { /* f; add extra digit */
+                    *--end = _T('1');
                     --start;
                 }
                 break;
@@ -135,12 +128,12 @@ static TCHAR * round (double fract, int *exp, __register TCHAR * start, __regist
         }
     }
     /* ``"%.3f", (double)-0.0004'' gives you a negative 0. */
-    else if (*signp == _T ('-')) {
+    else if (*signp == _T('-')) {
         for (;; --end) {
-            if (*end == _T ('.')) {
+            if (*end == _T('.')) {
                 --end;
             }
-            if (*end != _T ('0')) {
+            if (*end != _T('0')) {
                 break;
             }
             if (end == start) {
@@ -151,8 +144,7 @@ static TCHAR * round (double fract, int *exp, __register TCHAR * start, __regist
     return start;
 }
 
-static int __cvt_double (double number, __register int prec, int flags, int *signp, int fmtch, TCHAR * startp, TCHAR * endp)
-{
+static int __cvt_double(double number, __register int prec, int flags, int *signp, int fmtch, TCHAR *startp, TCHAR *endp) {
     __register TCHAR *p, *t;
     __register double fract;
     int dotrim = 0, expcnt, gformat = 0;
@@ -161,12 +153,12 @@ static int __cvt_double (double number, __register int prec, int flags, int *sig
     expcnt = 0;
     if (number < 0) {
         number = -number;
-        *signp = _T ('-');
+        *signp = _T('-');
     } else {
         *signp = 0;
     }
 
-    fract = modf (number, &integer);
+    fract = modf(number, &integer);
 
     /* get an extra slot for rounding. */
     t = ++startp;
@@ -176,50 +168,51 @@ static int __cvt_double (double number, __register int prec, int flags, int *sig
      * .01 is added for stdmodf(356.0 / 10, &integer) returning .59999999...
      */
     for (p = endp - 1; p >= startp && integer; ++expcnt) {
-        tmp = modf (integer / 10, &integer);
-        *p-- = (TCHAR) tochar ((int) ((tmp + .01) * 10));
+        tmp = modf(integer / 10, &integer);
+        *p-- = (TCHAR)tochar((int)((tmp + .01) * 10));
     }
     switch (fmtch) {
-        case _T ('f'):
-        case _T ('F'):
+        case _T('f'):
+        case _T('F'):
             /* reverse integer into beginning of buffer */
             if (expcnt) {
                 for (; ++p < endp; *t++ = *p) {
                     ;
                 }
             } else {
-                *t++ = _T ('0');
+                *t++ = _T('0');
             }
             /*
              * if precision required or alternate flag Set, add in a
              * decimal point.
              */
             if (prec || flags & ALT) {
-                *t++ = _T ('.');
+                *t++ = _T('.');
             }
             /* if requires more precision and some fraction left */
             if (fract) {
                 if (prec) {
                     do {
-                        fract = modf (fract * 10, &tmp);
-                        *t++ = tochar ((int) tmp);
+                        fract = modf(fract * 10, &tmp);
+                        *t++ = tochar((int)tmp);
                     } while (--prec && fract);
                 }
                 if (fract) {
-                    startp = round (fract, (int *) nullptr, startp, t - 1, (TCHAR) 0, signp);
+                    startp = round(fract, (int *)nullptr, startp, t - 1, (TCHAR)0, signp);
                 }
             }
-            for (; prec--; *t++ = _T ('0')) {
+            for (; prec--; *t++ = _T('0')) {
                 ;
             }
             break;
 
-        case _T ('e'):
-        case _T ('E'):
-eformat:    if (expcnt) {
+        case _T('e'):
+        case _T('E'):
+        eformat:
+            if (expcnt) {
                 *t++ = *++p;
                 if (prec || flags & ALT) {
-                    *t++ = _T ('.');
+                    *t++ = _T('.');
                 }
                 /* if requires more precision and some integer left */
                 for (; prec && ++p < endp; --prec) {
@@ -232,7 +225,7 @@ eformat:    if (expcnt) {
                  */
                 if (!prec && ++p < endp) {
                     fract = 0;
-                    startp = round ((double) 0, &expcnt, startp, t - 1, *p, signp);
+                    startp = round((double)0, &expcnt, startp, t - 1, *p, signp);
                 }
                 /* adjust expcnt for digit in front of decimal */
                 --expcnt;
@@ -241,53 +234,53 @@ eformat:    if (expcnt) {
             else if (fract) {
                 /* adjust expcnt for digit in front of decimal */
                 for (expcnt = -1;; --expcnt) {
-                    fract = modf (fract * 10, &tmp);
+                    fract = modf(fract * 10, &tmp);
                     if (tmp) {
                         break;
                     }
                 }
-                *t++ = tochar ((int) tmp);
+                *t++ = tochar((int)tmp);
                 if (prec || flags & ALT) {
-                    *t++ = _T ('.');
+                    *t++ = _T('.');
                 }
             } else {
-                *t++ = _T ('0');
+                *t++ = _T('0');
                 if (prec || flags & ALT) {
-                    *t++ = _T ('.');
+                    *t++ = _T('.');
                 }
             }
             /* if requires more precision and some fraction left */
             if (fract) {
                 if (prec) {
                     do {
-                        fract = modf (fract * 10, &tmp);
-                        *t++ = tochar ((int) tmp);
+                        fract = modf(fract * 10, &tmp);
+                        *t++ = tochar((int)tmp);
                     } while (--prec && fract);
                 }
                 if (fract) {
-                    startp = round (fract, &expcnt, startp, t - 1, (TCHAR) 0, signp);
+                    startp = round(fract, &expcnt, startp, t - 1, (TCHAR)0, signp);
                 }
             }
             /* if requires more precision */
-            for (; prec--; *t++ = _T ('0')) {
+            for (; prec--; *t++ = _T('0')) {
                 ;
             }
 
             /* unless alternate flag, trim any g/G format trailing 0's */
             if (gformat && !(flags & ALT)) {
-                while (t > startp && *--t == _T ('0')) {
+                while (t > startp && *--t == _T('0')) {
                     ;
                 }
-                if (*t == _T ('.')) {
+                if (*t == _T('.')) {
                     --t;
                 }
                 ++t;
             }
-            t = exponent (t, expcnt, fmtch);
+            t = exponent(t, expcnt, fmtch);
             break;
 
-        case _T ('g'):
-        case _T ('G'):
+        case _T('g'):
+        case _T('G'):
             /* a precision of 0 is treated as a precision of 1. */
             if (!prec) {
                 ++prec;
@@ -320,7 +313,7 @@ eformat:    if (expcnt) {
                     ;
                 }
             } else {
-                *t++ = _T ('0');
+                *t++ = _T('0');
             }
             /*
              * if precision required or alternate flag Set, add in a
@@ -328,7 +321,7 @@ eformat:    if (expcnt) {
              */
             if (prec || flags & ALT) {
                 dotrim = 1;
-                *t++ = _T ('.');
+                *t++ = _T('.');
             } else {
                 dotrim = 0;
             }
@@ -337,62 +330,72 @@ eformat:    if (expcnt) {
                 if (prec) {
                     /* If no integer part, don't count initial * zeros as significant digits. */
                     do {
-                        fract = modf (fract * 10, &tmp);
-                        *t++ = tochar ((int) tmp);
+                        fract = modf(fract * 10, &tmp);
+                        *t++ = tochar((int)tmp);
                     } while (!tmp && !expcnt);
 
                     while (--prec && fract) {
-                        fract = modf (fract * 10, &tmp);
-                        *t++ = tochar ((int) tmp);
+                        fract = modf(fract * 10, &tmp);
+                        *t++ = tochar((int)tmp);
                     }
                 }
                 if (fract) {
-                    startp = round (fract, (int *) nullptr, startp, t - 1, (TCHAR) 0, signp);
+                    startp = round(fract, (int *)nullptr, startp, t - 1, (TCHAR)0, signp);
                 }
             }
             /* alternate format, adds 0's for precision, else trim 0's */
             if (flags & ALT) {
-                for (; prec--; *t++ = _T ('0')) {
+                for (; prec--; *t++ = _T('0')) {
                     ;
                 }
             } else if (dotrim) {
-                while (t > startp && *--t == _T ('0')) {
+                while (t > startp && *--t == _T('0')) {
                     ;
                 }
-                if (*t != _T ('.')) {
+                if (*t != _T('.')) {
                     ++t;
                 }
             }
     }
-    return (int) (t - startp);
+    return (int)(t - startp);
 }
 
-#define PRINT(buf, len) runtime_printf (context, (TCHAR *) buf, len)
-#define PAD_SP(howmany) { int n = howmany; while (n-- > 0) { PRINT (_T (" "), 1); \
-                          } \
-}
-#define PAD_0(howmany)  { int n = howmany; while (n-- > 0) { PRINT (_T ("0"), 1); } }
+#define PRINT(buf, len) runtime_printf(context, (TCHAR *)buf, len)
+#define PAD_SP(howmany)         \
+    {                           \
+        int n = howmany;        \
+        while (n-- > 0) {       \
+            PRINT(_T (" "), 1); \
+        }                       \
+    }
+#define PAD_0(howmany)          \
+    {                           \
+        int n = howmany;        \
+        while (n-- > 0) {       \
+            PRINT(_T ("0"), 1); \
+        }                       \
+    }
 
 /* int vprintf_runtime (void *context, CALLBACK_PRINTF runtime_printf, const TCHAR * fmt0, va_list ap) */
 #if defined _MBCS || defined MBCS
-int vprintf_runtime (void *context, CALLBACK_PRINTFA runtime_printf, const char* fmt0, va_list ap)
+int vprintf_runtime(void *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, va_list ap)
 #elif defined _UNICODE || defined UNICODE
-int vprintf_runtimew (void *context, CALLBACK_PRINTFW runtime_printf, const wchar_t* fmt0, va_list ap)
+int vprintf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar_t *fmt0, va_list ap)
 #endif
 {
-    __register const TCHAR *fmt = nullptr;  /* format string */
-    __register int ch = 0;                  /* character from fmt */
-    __register int n = 0;                   /* handy integer (short term usage) */
-    __register TCHAR *cp = nullptr;         /* handy TCHAR pointer (short term usage) */
-    const TCHAR *fmark = nullptr;           /* for remembering a place in fmt */
-    __register int flags = 0;               /* flags as above */
-    int ret = 0;                            /* return value accumulator */
-    int width = 0;                          /* width from format (%8d), or 0 */
-    int prec = 0;                           /* precision from format (%.3d), or -1 */
-    TCHAR sign = 0;                         /* sign prefix (' ', '+', '-', or \0) */
-    int softsign = 0;                       /* temporary negative sign for floats */
-    double _double = 0;                     /* double precision arguments %[eEfgG] */
-    int fpprec = 0;                         /* `extra' floating precision in [eEfgG] */
+    __register const TCHAR *fmt = nullptr; /* format string */
+    __register int ch = 0;                 /* character from fmt */
+    __register int n = 0;                  /* handy integer (short term usage) */
+    __register TCHAR *cp = nullptr;        /* handy TCHAR pointer (short term usage) */
+    const TCHAR *fmark = nullptr;          /* for remembering a place in fmt */
+    __register int flags = 0;              /* flags as above */
+    int ret = 0;                           /* return value accumulator */
+    int width = 0;                         /* width from format (%8d), or 0 */
+    int prec = 0;                          /* precision from format (%.3d), or -1 */
+    TCHAR sign = 0;                        /* sign prefix (' ', '+', '-', or \0) */
+    int softsign = 0;                      /* temporary negative sign for floats */
+    double _double = 0;                    /* double precision arguments %[eEfgG] */
+    int fpprec = 0;                        /* `extra' floating precision in [eEfgG] */
 
 #if defined __SIZEOF_INT128__
     // IPv6 128bits processing (supports %I128x)
@@ -403,21 +406,21 @@ int vprintf_runtimew (void *context, CALLBACK_PRINTFW runtime_printf, const wcha
 #endif
 
     // 32 bits
-    //unsigned long _ulong;     /* integer arguments %[diouxX] */
-    enum {
-        OCT,
-        DEC,
-        HEX
-    } base;                     /* base for [diouxX] conversion */
-    int dprec;                  /* a copy of prec if [diouxX], 0 otherwise */
-    int dpad;                   /* extra 0 padding needed for integers */
-    int fieldsz;                /* field size expanded by sign, dpad etc */
+    // unsigned long _ulong;     /* integer arguments %[diouxX] */
+    enum { OCT, DEC, HEX } base; /* base for [diouxX] conversion */
+    int dprec;                   /* a copy of prec if [diouxX], 0 otherwise */
+    int dpad;                    /* extra 0 padding needed for integers */
+    int fieldsz;                 /* field size expanded by sign, dpad etc */
     /* The initialization of 'size' is to suppress a warning that
        'size' might be used unitialized.  It seems gcc can't
        quite grok this spaghetti code ... */
-    size_t size = 0;            /* size of converted field or string */
-    TCHAR buf[BUF] = { 0, };    /* space for %c, %[diouxX], %[eEfgG] */
-    TCHAR ox[2] = { 0, };       /* space for 0x hex-prefix */
+    size_t size = 0; /* size of converted field or string */
+    TCHAR buf[BUF] = {
+        0,
+    }; /* space for %c, %[diouxX], %[eEfgG] */
+    TCHAR ox[2] = {
+        0,
+    }; /* space for 0x hex-prefix */
 
     if (!runtime_printf) {
         goto error;
@@ -433,16 +436,16 @@ int vprintf_runtimew (void *context, CALLBACK_PRINTFW runtime_printf, const wcha
      */
 
     // 64 bits patched - hush
-#define SARG() \
-    (flags & LONGDBL ? va_arg (ap, int64) : \
-     flags & LONGINT ? (int64) va_arg (ap, long) : \
-     flags & SHORTINT ? (int64) (short) va_arg (ap, int) : \
-     (int64) va_arg (ap, int))
-#define UARG() \
-    (flags & LONGDBL ? va_arg (ap, uint64) : \
-     flags & LONGINT ? (uint64) va_arg (ap, unsigned long) : \
-     flags & SHORTINT ? (uint64) (unsigned short) va_arg (ap, int) : \
-     (uint64) va_arg (ap, unsigned int))
+#define SARG()                                          \
+    (flags & LONGDBL    ? va_arg(ap, int64)             \
+     : flags & LONGINT  ? (int64)va_arg(ap, long)       \
+     : flags & SHORTINT ? (int64)(short)va_arg(ap, int) \
+                        : (int64)va_arg(ap, int))
+#define UARG()                                                    \
+    (flags & LONGDBL    ? va_arg(ap, uint64)                      \
+     : flags & LONGINT  ? (uint64)va_arg(ap, unsigned long)       \
+     : flags & SHORTINT ? (uint64)(unsigned short)va_arg(ap, int) \
+                        : (uint64)va_arg(ap, unsigned int))
 
     fmt = fmt0;
     ret = 0;
@@ -450,18 +453,18 @@ int vprintf_runtimew (void *context, CALLBACK_PRINTFW runtime_printf, const wcha
     /*
      * Scan the format for conversions (`%' character).
      */
-    for (;; ) {
-        for (fmark = fmt; (ch = *fmt) != _T ('\0') && ch != _T ('%'); fmt++) {
+    for (;;) {
+        for (fmark = fmt; (ch = *fmt) != _T('\0') && ch != _T('%'); fmt++) {
             /* void */;
         }
-        if ((n = (int) (fmt - fmark)) != 0) {
-            PRINT (fmark, n);
+        if ((n = (int)(fmt - fmark)) != 0) {
+            PRINT(fmark, n);
             ret += n;
         }
-        if (ch == _T ('\0')) {
+        if (ch == _T('\0')) {
             goto done;
         }
-        fmt++;      /* skip over '%' */
+        fmt++; /* skip over '%' */
 
         flags = 0;
         dprec = 0;
@@ -470,64 +473,64 @@ int vprintf_runtimew (void *context, CALLBACK_PRINTFW runtime_printf, const wcha
 
         width = 0;
         prec = -1;
-        sign = _T ('\0');
+        sign = _T('\0');
 
-rflag:
+    rflag:
         ch = *fmt++;
-reswitch:
+    reswitch:
         switch (ch) {
-            case _T (' '):
+            case _T(' '):
                 /*
                  * ``If the space and + flags both appear, the space
                  * flag will be ignored.''
                  *  -- ANSI X3J11
                  */
                 if (!sign) {
-                    sign = _T (' ');
+                    sign = _T(' ');
                 }
                 goto rflag;
 
-            case _T ('#'):
+            case _T('#'):
                 flags |= ALT;
                 goto rflag;
 
-            case _T ('*'):
+            case _T('*'):
                 /*
                  * ``A negative field width argument is taken as a
                  * - flag followed by a positive field width.''
                  *  -- ANSI X3J11
                  * They don't exclude field widths read from args.
                  */
-                if ((width = va_arg (ap, int)) >= 0) {
+                if ((width = va_arg(ap, int)) >= 0) {
                     goto rflag;
                 }
                 width = -width;
-            /* FALLTHROUGH */
+                /* FALLTHROUGH */
 
-            case _T ('-'):
+            case _T('-'):
                 flags |= LADJUST;
                 flags &= ~ZEROPAD; /* '-' disables '0' */
                 goto rflag;
 
-            case _T ('+'):
-                sign = _T ('+');
+            case _T('+'):
+                sign = _T('+');
                 goto rflag;
 
-            case _T ('.'):
-                if ((ch = *fmt++) == _T ('*')) {
-                    n = va_arg (ap, int);
+            case _T('.'):
+                if ((ch = *fmt++) == _T('*')) {
+                    n = va_arg(ap, int);
                     prec = n < 0 ? -1 : n;
                     goto rflag;
                 }
                 n = 0;
-                while (isdigit (ch)) {
-                    n = 10 * n + todigit (ch);
+                while (isdigit(ch)) {
+                    n = 10 * n + todigit(ch);
                     ch = *fmt++;
                 }
                 prec = n < 0 ? -1 : n;
                 goto reswitch;
 
-            case _T ('0'):
+            case _T('0'):
                 /*
                  * ``Note that 0 is taken as a flag, not as the
                  * beginning of a field width.''
@@ -538,67 +541,67 @@ reswitch:
                 }
                 goto rflag;
 
-            case _T ('1'):
-            case _T ('2'):
-            case _T ('3'):
-            case _T ('4'):
-            case _T ('5'):
-            case _T ('6'):
-            case _T ('7'):
-            case _T ('8'):
-            case _T ('9'):
+            case _T('1'):
+            case _T('2'):
+            case _T('3'):
+            case _T('4'):
+            case _T('5'):
+            case _T('6'):
+            case _T('7'):
+            case _T('8'):
+            case _T('9'):
                 n = 0;
                 do {
-                    n = 10 * n + todigit (ch);
+                    n = 10 * n + todigit(ch);
                     ch = *fmt++;
-                } while (isdigit (ch));
+                } while (isdigit(ch));
                 width = n;
                 goto reswitch;
 
-            case _T ('L'):
+            case _T('L'):
                 flags |= LONGDBL;
                 goto rflag;
 
-            case _T ('h'):
+            case _T('h'):
                 flags |= SHORTINT;
                 goto rflag;
 
-            case _T ('l'):
+            case _T('l'):
                 flags |= LONGINT;
                 goto rflag;
 
-            case _T ('c'):
-                *(cp = buf) = va_arg (ap, int);
+            case _T('c'):
+                *(cp = buf) = va_arg(ap, int);
                 size = 1;
-                sign = _T ('\0');
+                sign = _T('\0');
                 break;
 
-            case _T ('D'):
+            case _T('D'):
                 flags |= LONGINT;
             /*FALLTHROUGH*/
-            case _T ('d'):
-            case _T ('i'):
-                _ulong = SARG ();
-                if ((long) _ulong < 0) {
-                    _ulong = -(long) _ulong;
-                    sign = _T ('-');
+            case _T('d'):
+            case _T('i'):
+                _ulong = SARG();
+                if ((long)_ulong < 0) {
+                    _ulong = -(long)_ulong;
+                    sign = _T('-');
                 }
                 base = DEC;
                 goto number;
 
-            case _T ('e'):
-            case _T ('E'):
-            case _T ('f'):
-            case _T ('F'):
-            case _T ('g'):
-            case _T ('G'):
-                _double = va_arg (ap, double);
+            case _T('e'):
+            case _T('E'):
+            case _T('f'):
+            case _T('F'):
+            case _T('g'):
+            case _T('G'):
+                _double = va_arg(ap, double);
                 /*
                  * don't do unrealistic precision; just pad it with
                  * zeroes later, so buffer size stays rational.
                  */
                 if (prec > MAXFRACT) {
-                    if ((ch != _T ('g') && ch != _T ('G')) || (flags & ALT)) {
+                    if ((ch != _T('g') && ch != _T('G')) || (flags & ALT)) {
                         fpprec = prec - MAXFRACT;
                     }
                     prec = MAXFRACT;
@@ -612,35 +615,35 @@ reswitch:
                    softsign avoids negative 0 if _double < 0 but
                    no significant digits will be shown. */
                 cp = buf;
-                *cp = _T ('\0');
-                size = __cvt_double (_double, prec, flags, &softsign, ch, cp, buf + sizeof (buf));
+                *cp = _T('\0');
+                size = __cvt_double(_double, prec, flags, &softsign, ch, cp, buf + sizeof(buf));
                 if (softsign) {
-                    sign = _T ('-');
+                    sign = _T('-');
                 }
-                if (*cp == _T ('\0')) {
+                if (*cp == _T('\0')) {
                     cp++;
                 }
                 break;
 
-            case _T ('n'):
+            case _T('n'):
                 if (flags & LONGINT) {
-                    *va_arg (ap, long *) = ret;
+                    *va_arg(ap, long *) = ret;
                 } else if (flags & SHORTINT) {
-                    *va_arg (ap, short *) = ret;
+                    *va_arg(ap, short *) = ret;
                 } else {
-                    *va_arg (ap, int *) = ret;
+                    *va_arg(ap, int *) = ret;
                 }
                 continue; /* no output */
 
-            case _T ('O'):
+            case _T('O'):
                 flags |= LONGINT;
             /*FALLTHROUGH*/
-            case _T ('o'):
-                _ulong = UARG ();
+            case _T('o'):
+                _ulong = UARG();
                 base = OCT;
                 goto nosign;
 
-            case _T ('p'):
+            case _T('p'):
                 /*
                  * ``The argument shall be a pointer to void.  The
                  * value of the pointer is converted to a sequence
@@ -649,14 +652,13 @@ reswitch:
                  *  -- ANSI X3J11
                  */
                 /* NOSTRICT */
-                _ulong = (uint64)
-                         va_arg (ap, void *);
+                _ulong = (uint64)va_arg(ap, void *);
                 base = HEX;
                 flags |= HEXPREFIX;
-                ch = _T ('x');
+                ch = _T('x');
                 goto nosign;
 
-            case _T ('I'):
+            case _T('I'):
                 /*
                  * __int64 출력을 위한 %I64i, %I64d 지원
                  *
@@ -666,10 +668,10 @@ reswitch:
 
                 base = DEC;
 
-                if (_T ('6') == *fmt && _T ('4') == *(fmt + 1)) {
+                if (_T('6') == *fmt && _T('4') == *(fmt + 1)) {
                     fmt += 2;
 
-                    _ulong = (uint64) va_arg (ap, int64);
+                    _ulong = (uint64)va_arg(ap, int64);
 
                     if ('i' == *fmt) {
                         fmt++;
@@ -686,16 +688,16 @@ reswitch:
                     }
                 }
 #if defined __SIZEOF_INT128__
-                else if (_T ('1') == *fmt && _T ('2') == *(fmt + 1) && _T ('8') == *(fmt + 2)) {
+                else if (_T('1') == *fmt && _T('2') == *(fmt + 1) && _T('8') == *(fmt + 2)) {
                     fmt += 3;
 
-                    _ulong = (uint128) va_arg (ap, int128);
+                    _ulong = (uint128)va_arg(ap, int128);
 
                     if ('i' == *fmt) {
                         fmt++;
-                        if ((int128) _ulong < 0) {
-                            _ulong = -(int128) _ulong;
-                            sign = _T ('-');
+                        if ((int128)_ulong < 0) {
+                            _ulong = -(int128)_ulong;
+                            sign = _T('-');
                         }
                         base = DEC;
                         goto number;
@@ -712,28 +714,28 @@ reswitch:
                 }
 #endif
                 else {
-                    _ulong = SARG ();
+                    _ulong = SARG();
 
                     goto number;
                 }
 
-            case _T ('z'):
+            case _T('z'):
                 base = DEC;
                 fmt++;
-                _ulong = (size_t) va_arg (ap, size_t);
-                if (_T ('i') == *fmt) {
+                _ulong = (size_t)va_arg(ap, size_t);
+                if (_T('i') == *fmt) {
                     fmt++;
                     goto number;
-                } else if (_T ('u') == *fmt) {
+                } else if (_T('u') == *fmt) {
                     fmt++;
                     goto nosign;
                 } else {
                     goto number;
                 }
 
-            case _T ('s'):
-                if ((cp = va_arg (ap, TCHAR *)) == nullptr) {
-                    cp = (TCHAR *) _T ("(null)");
+            case _T('s'):
+                if ((cp = va_arg(ap, TCHAR *)) == nullptr) {
+                    cp = (TCHAR *)_T ("(null)");
                 }
                 if (prec >= 0) {
                     /*
@@ -742,36 +744,36 @@ reswitch:
                      * strlen() will go further.
                      */
 #if defined _MBCS || defined MBCS
-                    TCHAR *p = (TCHAR *) memchr (cp, 0, prec);
+                    TCHAR *p = (TCHAR *)memchr(cp, 0, prec);
 #elif defined _UNICODE || defined UNICODE
-                    TCHAR *p = (TCHAR *) wmemchr (cp, 0, prec);
+                    TCHAR *p = (TCHAR *)wmemchr(cp, 0, prec);
 #endif
 
                     if (p != nullptr) {
-                        size = (int) (p - cp);
-                        if ((int) size > prec) {
+                        size = (int)(p - cp);
+                        if ((int)size > prec) {
                             size = prec;
                         }
                     } else {
                         size = prec;
                     }
                 } else {
-                    size = _tcslen (cp);
+                    size = _tcslen(cp);
                 }
-                sign = _T ('\0');
+                sign = _T('\0');
                 break;
 
-            case _T ('U'):
+            case _T('U'):
                 flags |= LONGINT;
             /*FALLTHROUGH*/
-            case _T ('u'):
-                _ulong = UARG ();
+            case _T('u'):
+                _ulong = UARG();
                 base = DEC;
                 goto nosign;
 
-            case _T ('X'):
-            case _T ('x'):
-                _ulong = UARG ();
+            case _T('X'):
+            case _T('x'):
+                _ulong = UARG();
                 base = HEX;
                 /* leading 0x/X only if non-zero */
                 if (flags & ALT && _ulong != 0) {
@@ -779,13 +781,15 @@ reswitch:
                 }
 
                 /* unsigned conversions */
-nosign:         sign = _T ('\0');
+            nosign:
+                sign = _T('\0');
                 /*
                  * ``... diouXx conversions ... if a precision is
                  * specified, the 0 flag will be ignored.''
                  *  -- ANSI X3J11
                  */
-number:         if ((dprec = prec) >= 0) {
+            number:
+                if ((dprec = prec) >= 0) {
                     flags &= ~ZEROPAD;
                 }
 
@@ -805,30 +809,30 @@ number:         if ((dprec = prec) >= 0) {
                     switch (base) {
                         case OCT:
                             do {
-                                *--cp = tochar ((int) (_ulong & 7));
+                                *--cp = tochar((int)(_ulong & 7));
                                 _ulong >>= 3;
                             } while (_ulong);
                             /* handle octal leading 0 */
-                            if (flags & ALT && *cp != _T ('0')) {
-                                *--cp = _T ('0');
+                            if (flags & ALT && *cp != _T('0')) {
+                                *--cp = _T('0');
                             }
                             break;
 
                         case DEC:
                             /* many numbers are 1 digit */
                             while (_ulong >= 10) {
-                                *--cp = tochar ((int) (_ulong % 10));
+                                *--cp = tochar((int)(_ulong % 10));
                                 _ulong /= 10;
                             }
-                            *--cp = tochar ((int) (_ulong));
+                            *--cp = tochar((int)(_ulong));
                             break;
 
                         case HEX:
-                            if (ch == _T ('X')) {
-                                xdigs = (TCHAR *) _T ("0123456789ABCDEF");
+                            if (ch == _T('X')) {
+                                xdigs = (TCHAR *)_T ("0123456789ABCDEF");
                             } else {
                                 /* ch == 'x' || ch == 'p' */
-                                xdigs = (TCHAR *) _T ("0123456789abcdef");
+                                xdigs = (TCHAR *)_T ("0123456789abcdef");
                             }
                             do {
                                 *--cp = xdigs[_ulong & 15];
@@ -837,21 +841,22 @@ number:         if ((dprec = prec) >= 0) {
                             break;
 
                         default:
-                            cp = (TCHAR *) _T ("bad base") /*"bug in vform: bad base" */;
+                            cp = (TCHAR *)_T ("bad base") /*"bug in vform: bad base" */;
                             goto skipsize;
                     }
                 }
-                size = (int) (buf + BUF - cp);
-skipsize:       break;
-            default:    /* "%?" prints ?, unless ? is NUL */
-                if (ch == _T ('\0')) {
+                size = (int)(buf + BUF - cp);
+            skipsize:
+                break;
+            default: /* "%?" prints ?, unless ? is NUL */
+                if (ch == _T('\0')) {
                     goto done;
                 }
                 /* pretend it was %c with argument ch */
                 cp = buf;
                 *cp = ch;
                 size = 1;
-                sign = _T ('\0');
+                sign = _T('\0');
                 break;
         }
 
@@ -873,9 +878,9 @@ skipsize:       break;
          * compute actual size, so we know how much to pad.
          */
 
-        fieldsz = (int) size + fpprec;
+        fieldsz = (int)size + fpprec;
 
-        dpad = dprec - (int) size;
+        dpad = dprec - (int)size;
         if (dpad < 0) {
             dpad = 0;
         }
@@ -889,63 +894,65 @@ skipsize:       break;
 
         /* right-adjusting blank padding */
         if ((flags & (LADJUST | ZEROPAD)) == 0) {
-            PAD_SP (width - fieldsz);
+            PAD_SP(width - fieldsz);
         }
 
         /* prefix */
         if (sign) {
-            PRINT (&sign, 1);
+            PRINT(&sign, 1);
         } else if (flags & HEXPREFIX) {
-            ox[0] = _T ('0');
+            ox[0] = _T('0');
             ox[1] = ch;
-            PRINT (ox, 2);
+            PRINT(ox, 2);
         }
 
         /* right-adjusting zero padding */
         if ((flags & (LADJUST | ZEROPAD)) == ZEROPAD) {
-            PAD_0 (width - fieldsz);
+            PAD_0(width - fieldsz);
         }
 
         /* leading zeroes from decimal precision */
-        PAD_0 (dpad);
+        PAD_0(dpad);
 
         /* the string or number proper */
-        PRINT (cp, (int ) size);
+        PRINT(cp, (int)size);
 
         /* trailing f.p. zeroes */
-        PAD_0 (fpprec);
+        PAD_0(fpprec);
 
         /* left-adjusting padding (always blank) */
         if (flags & LADJUST) {
-            PAD_SP (width - fieldsz);
+            PAD_SP(width - fieldsz);
         }
 
         /* finally, adjust ret */
         ret += width > fieldsz ? width : fieldsz;
     }
-done: return ret;
-error: return EOF;
+done:
+    return ret;
+error:
+    return EOF;
     /* NOTREACHED */
 }
 
 /* int printf_runtime (void *context, CALLBACK_PRINTF runtime_printf, const TCHAR * fmt0, ...) */
 #if defined _MBCS || defined MBCS
-int printf_runtime (void *context, CALLBACK_PRINTFA runtime_printf, const char * fmt0, ...)
+int printf_runtime(void *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, ...)
 #elif defined _UNICODE || defined UNICODE
-int printf_runtimew (void *context, CALLBACK_PRINTFW runtime_printfw, const wchar_t * fmt0, ...)
+int printf_runtimew(void *context, CALLBACK_PRINTFW runtime_printfw, const wchar_t *fmt0, ...)
 #endif
 {
     int nRet = EOF;
     va_list ap;
 
-    va_start (ap, fmt0);
+    va_start(ap, fmt0);
 #if defined _MBCS || defined MBCS
-    nRet = vprintf_runtime (context, runtime_printf, fmt0, ap);
+    nRet = vprintf_runtime(context, runtime_printf, fmt0, ap);
 #elif defined _UNICODE || defined UNICODE
-    nRet = vprintf_runtimew (context, runtime_printfw, fmt0, ap);
+    nRet = vprintf_runtimew(context, runtime_printfw, fmt0, ap);
 #endif
-    va_end (ap);
+    va_end(ap);
     return nRet;
 }
 
-}  // namespace
+}  // namespace hotplace

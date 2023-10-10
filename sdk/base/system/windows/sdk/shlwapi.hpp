@@ -14,15 +14,18 @@
 //#include <shlwapi.h>
 
 /* "SHLoadIndirectString" */
-#define DECLARE_NAMEOF_API_SHLOADINDIRECTSTRING CHAR NAMEOF_API_SHLOADINDIRECTSTRING[] = { 'S', 'H', 'L', 'o', 'a', 'd', 'I', 'n', 'd', 'i', 'r', 'e', 'c', 't', 'S', 't', 'r', 'i', 'n', 'g', 0, };
+#define DECLARE_NAMEOF_API_SHLOADINDIRECTSTRING                                                                \
+    CHAR NAMEOF_API_SHLOADINDIRECTSTRING[] = {                                                                 \
+        'S', 'H', 'L', 'o', 'a', 'd', 'I', 'n', 'd', 'i', 'r', 'e', 'c', 't', 'S', 't', 'r', 'i', 'n', 'g', 0, \
+    };
 
-typedef HRESULT (__stdcall* SHLOADINDIRECTSTRING)(LPCWSTR pszSource, LPWSTR pszOutBuf, UINT cchOutBuf, void **ppvReserved);
+typedef HRESULT(__stdcall* SHLOADINDIRECTSTRING)(LPCWSTR pszSource, LPWSTR pszOutBuf, UINT cchOutBuf, void** ppvReserved);
 
 #if _MSC_FULL_VER >= 140050727
-#include <shlwapi.h>
+#include <PortableDevice.h>
 #include <PortableDeviceApi.h>
 #include <PortableDeviceTypes.h>
-#include <PortableDevice.h>
+#include <shlwapi.h>
 #else
 
 /* file scope definition */
@@ -40,25 +43,25 @@ typedef HRESULT (__stdcall* SHLOADINDIRECTSTRING)(LPCWSTR pszSource, LPWSTR pszO
 /* REFPROPVARIANT (Microsoft SDKs/Windows/v6.0A/Include/PropIdl.h) */
 #ifdef MIDL_PASS
 // This is the LPPROPVARIANT definition for marshaling.
-typedef struct tag_inner_PROPVARIANT *LPPROPVARIANT;
+typedef struct tag_inner_PROPVARIANT* LPPROPVARIANT;
 
-typedef const PROPVARIANT *REFPROPVARIANT;
+typedef const PROPVARIANT* REFPROPVARIANT;
 
 #else
 
 // This is the standard C layout of the PROPVARIANT.
-typedef struct tagPROPVARIANT * LPPROPVARIANT;
+typedef struct tagPROPVARIANT* LPPROPVARIANT;
 
 #ifndef _REFPROPVARIANT_DEFINED
 #define _REFPROPVARIANT_DEFINED
 #ifdef __cplusplus
-#define REFPROPVARIANT const PROPVARIANT &
+#define REFPROPVARIANT const PROPVARIANT&
 #else
-#define REFPROPVARIANT const PROPVARIANT * __MIDL_CONST
+#define REFPROPVARIANT const PROPVARIANT* __MIDL_CONST
 #endif
 #endif
 
-#endif     // MIDL_PASS
+#endif  // MIDL_PASS
 
 /* PROPERTYKEY (Microsoft SDKs/Windows/v6.0A/Include/WTypes.h) */
 #ifndef PROPERTYKEY_DEFINED
@@ -66,7 +69,7 @@ typedef struct tagPROPVARIANT * LPPROPVARIANT;
 typedef struct _tagpropertykey {
     GUID fmtid;
     DWORD pid;
-}   PROPERTYKEY;
+} PROPERTYKEY;
 #endif
 
 /* SHCOLSTATEF (Microsoft SDKs/Windows/v6.0A/Include/shtypes.h) */
@@ -89,8 +92,8 @@ typedef DWORD SHCOLSTATEF;
  */
 #ifdef _MSC_VER
 #include <hotplace/sdk/base/system/windows/sdk/v6.0A/PortableDevice.h>
-#include <hotplace/sdk/base/system/windows/sdk/v6.0A/PortableDeviceTypes.h>
 #include <hotplace/sdk/base/system/windows/sdk/v6.0A/PortableDeviceApi.h>
+#include <hotplace/sdk/base/system/windows/sdk/v6.0A/PortableDeviceTypes.h>
 #endif
 
 /**
@@ -103,7 +106,7 @@ typedef DWORD SHCOLSTATEF;
 #endif
 
 #ifndef IFACEMETHODIMP_
-#define IFACEMETHODIMP_(type)   __override STDMETHODIMP_ (type)
+#define IFACEMETHODIMP_(type) __override STDMETHODIMP_(type)
 #endif
 
 /**
@@ -118,7 +121,7 @@ typedef DWORD SHCOLSTATEF;
  * 2) OFFSETOFCLASS, QITAB, QITABENT
  * 3) QISearch GetProcAddress 방식으로 사용
  */
-#define STATIC_CAST(typ)   static_cast<typ>
+#define STATIC_CAST(typ) static_cast<typ>
 
 #ifndef OFFSETOFCLASS
 //***   OFFSETOFCLASS -- (stolen from ATL)
@@ -126,40 +129,42 @@ typedef DWORD SHCOLSTATEF;
 // (it doesn't constant-fold the ,-op in SAFE_CAST so we end up generating
 // code for the table!)
 
-#define OFFSETOFCLASS(base, derived) \
-    ((DWORD) (DWORD_PTR) (STATIC_CAST (base*)((derived*) 8)) - 8)
+#define OFFSETOFCLASS(base, derived) ((DWORD)(DWORD_PTR)(STATIC_CAST(base*)((derived*)8)) - 8)
 #endif
 
 typedef struct {
-    const IID * piid;
+    const IID* piid;
     int dwOffset;
 } QITAB, *LPQITAB;
-typedef const QITAB *LPCQITAB;
+typedef const QITAB* LPCQITAB;
 
 #ifdef __cplusplus
 
 #define QITABENTMULTI(Cthis, Ifoo, Iimpl) \
-    { &__uuidof (Ifoo), OFFSETOFCLASS (Iimpl, Cthis) }
+    { &__uuidof(Ifoo), OFFSETOFCLASS(Iimpl, Cthis) }
 
 #else
 
 #define QITABENTMULTI(Cthis, Ifoo, Iimpl) \
-    { (IID*) &IID_ ## Ifoo, OFFSETOFCLASS (Iimpl, Cthis) }
+    { (IID*)&IID_##Ifoo, OFFSETOFCLASS(Iimpl, Cthis) }
 
-#endif      // __cplusplus
+#endif  // __cplusplus
 
 #define QITABENTMULTI2(Cthis, Ifoo, Iimpl) \
-    { (IID*) &Ifoo, OFFSETOFCLASS (Iimpl, Cthis) }
+    { (IID*)&Ifoo, OFFSETOFCLASS(Iimpl, Cthis) }
 
-#define QITABENT(Cthis, Ifoo) QITABENTMULTI (Cthis, Ifoo, Ifoo)
+#define QITABENT(Cthis, Ifoo) QITABENTMULTI(Cthis, Ifoo, Ifoo)
 
 /* shlwapi.dll QISearch */
 
 #endif
 
 /* "QISearch" */
-#define DECLARE_NAMEOF_API_QISEARCH CHAR NAMEOF_API_QISEARCH[] = { 'Q', 'I', 'S', 'e', 'a', 'r', 'c', 'h', 0, };
+#define DECLARE_NAMEOF_API_QISEARCH                \
+    CHAR NAMEOF_API_QISEARCH[] = {                 \
+        'Q', 'I', 'S', 'e', 'a', 'r', 'c', 'h', 0, \
+    };
 
-typedef HRESULT (__stdcall* QISEARCH)(__inout void* that, ___in LPCQITAB pqit, ___in REFIID riid, __deref_out void **ppv);
+typedef HRESULT(__stdcall* QISEARCH)(__inout void* that, ___in LPCQITAB pqit, ___in REFIID riid, __deref_out void** ppv);
 
 #endif

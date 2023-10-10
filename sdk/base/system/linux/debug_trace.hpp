@@ -11,13 +11,14 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_LINUX_DEBUGTRACE__
 #define __HOTPLACE_SDK_BASE_SYSTEM_LINUX_DEBUGTRACE__
 
-#include <hotplace/sdk/base/system/thread.hpp>
 #include <pthread.h>
+
+#include <hotplace/sdk/base/system/thread.hpp>
 
 namespace hotplace {
 
-return_t debug_trace (stream_t* stream);
+return_t debug_trace(stream_t* stream);
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

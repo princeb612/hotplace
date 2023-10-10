@@ -14,10 +14,10 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORARRAY__
 #define __HOTPLACE_SDK_IO_CBOR_CBORARRAY__
 
+#include <deque>
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/io/cbor/cbor_object.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
-#include <deque>
 
 namespace hotplace {
 namespace io {
@@ -36,14 +36,14 @@ namespace io {
  *          // ...
  *          array->release ();
  */
-class cbor_array : public cbor_object
-{
+class cbor_array : public cbor_object {
     friend class cbor_concise_visitor;
     friend class cbor_diagnostic_visitor;
-public:
-    cbor_array ();
-    cbor_array (uint32 flags);
-    virtual ~cbor_array ();
+
+   public:
+    cbor_array();
+    cbor_array(uint32 flags);
+    virtual ~cbor_array();
 
     /*
      * @brief   add
@@ -51,33 +51,32 @@ public:
      * @param   cbor_object* extra [inopt] ignored
      * @return  error code (see error.hpp)
      */
-    virtual return_t join (cbor_object* object, cbor_object* extra = nullptr);
+    virtual return_t join(cbor_object* object, cbor_object* extra = nullptr);
 
-    cbor_array& add (cbor_array* object);
-    cbor_array& add (cbor_data* object);
-    cbor_array& add (cbor_map* object);
+    cbor_array& add(cbor_array* object);
+    cbor_array& add(cbor_data* object);
+    cbor_array& add(cbor_map* object);
 
-    cbor_array& operator << (cbor_array* object);
-    cbor_array& operator << (cbor_data* object);
-    cbor_array& operator << (cbor_map* object);
+    cbor_array& operator<<(cbor_array* object);
+    cbor_array& operator<<(cbor_data* object);
+    cbor_array& operator<<(cbor_map* object);
 
-    virtual size_t size ();
-    cbor_object* operator [] (size_t index);
-    std::list <cbor_object*>& accessor ();
+    virtual size_t size();
+    cbor_object* operator[](size_t index);
+    std::list<cbor_object*>& accessor();
 
-    virtual int addref ();
-    virtual int release ();
+    virtual int addref();
+    virtual int release();
 
-protected:
+   protected:
+    virtual void represent(stream_t* s);
+    virtual void represent(binary_t* b);
 
-    virtual void represent (stream_t* s);
-    virtual void represent (binary_t* b);
-
-private:
-    std::list <cbor_object*> _array;
+   private:
+    std::list<cbor_object*> _array;
 };
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
 
 #endif

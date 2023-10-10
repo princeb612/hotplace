@@ -19,14 +19,26 @@
 // __sync_sub_and_fetch
 #else
 // 4.0 or 3.x
-int __sync_fetch_and_add (int* ptr, int add);
-int __sync_sub_and_fetch (int* ptr, int sub);
+int __sync_fetch_and_add(int* ptr, int add);
+int __sync_sub_and_fetch(int* ptr, int sub);
 #endif
-#define atomic_increment(x) do { __sync_fetch_and_add (x, 1); } while (0);
-#define atomic_decrement(x) do { __sync_sub_and_fetch (x, 1); } while (0);
+#define atomic_increment(x)         \
+    do {                            \
+        __sync_fetch_and_add(x, 1); \
+    } while (0);
+#define atomic_decrement(x)         \
+    do {                            \
+        __sync_sub_and_fetch(x, 1); \
+    } while (0);
 #elif defined _MSC_VER
-#define atomic_increment(x) do { InterlockedIncrement (x); } while (0);
-#define atomic_decrement(x) do { InterlockedDecrement (x); } while (0);
+#define atomic_increment(x)      \
+    do {                         \
+        InterlockedIncrement(x); \
+    } while (0);
+#define atomic_decrement(x)      \
+    do {                         \
+        InterlockedDecrement(x); \
+    } while (0);
 #endif
 
 #endif

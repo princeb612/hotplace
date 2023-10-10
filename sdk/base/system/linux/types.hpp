@@ -54,10 +54,10 @@ typedef union _LARGE_INTEGER {
         uint32 HighPart;
     } u;
     uint64 QuadPart;
-} LARGE_INTEGER, * PLARGE_INTEGER;
+} LARGE_INTEGER, *PLARGE_INTEGER;
 
 #define INVALID_SOCKET -1
 
-} // namespace
+}  // namespace hotplace
 
 #endif

@@ -19,35 +19,33 @@ namespace crypto {
 /**
  * @brief random number generator
  */
-class openssl_prng
-{
-public:
-    openssl_prng ();
-    ~openssl_prng ();
+class openssl_prng {
+   public:
+    openssl_prng();
+    ~openssl_prng();
 
     /**
      * @brief rand32
      * @return random-generated int32 value
      */
-    int32 rand32 ();
+    int32 rand32();
     /**
      * @brief rand64
      * @return random-generated int32 value
      */
-    int64 rand64 ();
+    int64 rand64();
     /**
      * @brief fill buffer with random-generated n-bytes data
      * @param unsigned char* buf [out] not nullptr
      * @param size_t size [in] size > 0
      * @return error code (see error.hpp)
      */
-    return_t random (unsigned char* buf, size_t size);
-    return_t random (binary_t& buffer, size_t size);
-    return_t random (uint32& i, uint32 mask = (uint32) ~1);
+    return_t random(unsigned char* buf, size_t size);
+    return_t random(binary_t& buffer, size_t size);
+    return_t random(uint32& i, uint32 mask = (uint32)~1);
 };
 
-
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

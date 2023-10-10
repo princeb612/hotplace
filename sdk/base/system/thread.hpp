@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_THREAD__
 #define __HOTPLACE_SDK_BASE_SYSTEM_THREAD__
 
-#include <hotplace/sdk/base/types.hpp>
-#include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/callback.hpp>
+#include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/types.hpp>
 
 #if defined _WIN32 || defined _WIN64
 #include <windows.h>
@@ -30,16 +30,15 @@ typedef HANDLE threadid_t;
 typedef pthread_t threadid_t;
 #endif
 
-class thread_t
-{
-public:
-    virtual return_t start () = 0;
-    virtual return_t join (threadid_t tid) = 0;
-    virtual return_t wait (unsigned msec) = 0;
-    virtual threadid_t gettid () = 0;
+class thread_t {
+   public:
+    virtual return_t start() = 0;
+    virtual return_t join(threadid_t tid) = 0;
+    virtual return_t wait(unsigned msec) = 0;
+    virtual threadid_t gettid() = 0;
 };
 
-}
+}  // namespace hotplace
 
 #if defined _WIN32 || defined _WIN64
 #include <hotplace/sdk/base/system/windows/thread.hpp>

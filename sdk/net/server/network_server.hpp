@@ -11,23 +11,22 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKSERVER__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSERVER__
 
-#include <hotplace/sdk/net/types.hpp>
 #include <hotplace/sdk/net/basic/sdk.hpp>
 #include <hotplace/sdk/net/basic/server_socket.hpp>
 #include <hotplace/sdk/net/server/network_protocol.hpp>
+#include <hotplace/sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {
 
 enum netserver_callback_type_t {
-    netserver_callback_type_socket      = 0,
-    netserver_callback_type_dataptr     = 1,
-    netserver_callback_type_datasize    = 2,
-    netserver_callback_type_session     = 3,
+    netserver_callback_type_socket = 0,
+    netserver_callback_type_dataptr = 1,
+    netserver_callback_type_datasize = 2,
+    netserver_callback_type_session = 3,
 };
 
-typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(
-    socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
+typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
 
 /**
  * @brief network_server
@@ -81,11 +80,10 @@ typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(
  *  }
  *
  */
-class network_server
-{
-public:
-    network_server ();
-    ~network_server ();
+class network_server {
+   public:
+    network_server();
+    ~network_server();
 
     /**
      * @brief   open
@@ -134,8 +132,8 @@ public:
      *          It'll be automatically created 1 tls_accept_thread, if server_socketis an instance of transport_layer_security_server class.
      *          see tls_accept_loop_run/tls_accept_loop_break
      */
-    return_t open (void** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent, TYPE_CALLBACK_HANDLEREXV lpfnEventHandler,
-                   void* lpParameter, server_socket* svr_socket);
+    return_t open(void** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent, TYPE_CALLBACK_HANDLEREXV lpfnEventHandler,
+                  void* lpParameter, server_socket* svr_socket);
 
     /**
      * @brief   access control or handle tcp before tls upgrade
@@ -169,7 +167,7 @@ public:
      *      // ...
      *    }
      */
-    return_t set_accept_control_handler (void* handle, ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler);
+    return_t set_accept_control_handler(void* handle, ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler);
 
     /**
      * @brief   add protocol interpreter
@@ -179,7 +177,7 @@ public:
      * @remarks
      *          increase protocol reference counter
      */
-    return_t add_protocol (void* handle, network_protocol* protocol);
+    return_t add_protocol(void* handle, network_protocol* protocol);
     /**
      * @brief   remove protocol interpreter (by protocol_id)
      * @param   void*               handle      [IN]
@@ -188,7 +186,7 @@ public:
      * @remarks
      *          decrease protocol reference counter
      */
-    return_t remove_protocol (void* handle, network_protocol* protocol);
+    return_t remove_protocol(void* handle, network_protocol* protocol);
     /**
      * @brief   clear protocol
      * @param   void*   handle  [IN]
@@ -196,15 +194,15 @@ public:
      * @remarks
      *          implicitly close method call clear_protocols
      */
-    return_t clear_protocols (void* handle);
+    return_t clear_protocols(void* handle);
     /**
      * @brief   create/stop tls_accept thread
      * @param   void*   handle          [IN]
      * @param   uint32  concurrent_loop [IN] thread count
      * @return  error code (see error.hpp)
      */
-    return_t tls_accept_loop_run (void* handle, uint32 concurrent_loop);
-    return_t tls_accept_loop_break (void* handle, uint32 concurrent_loop);
+    return_t tls_accept_loop_run(void* handle, uint32 concurrent_loop);
+    return_t tls_accept_loop_break(void* handle, uint32 concurrent_loop);
     /**
      * @brief   create/stop event thread
      * @param   void*   handle          [IN]
@@ -212,16 +210,16 @@ public:
      * @return  error code (see error.hpp)
      * @remarks
      */
-    return_t event_loop_run (void* handle, uint32 concurrent_loop);
-    return_t event_loop_break (void* handle, uint32 concurrent_loop);
+    return_t event_loop_run(void* handle, uint32 concurrent_loop);
+    return_t event_loop_break(void* handle, uint32 concurrent_loop);
     /**
      * @brief   create/stop consumer thread
      * @param   void*   handle          [IN]
      * @param   uint32  concurrent_loop [IN] thread count
      * @return  error code (see error.hpp)
      */
-    return_t consumer_loop_run (void* handle, uint32 concurrent_loop);
-    return_t consumer_loop_break (void* handle, uint32 concurrent_loop);
+    return_t consumer_loop_run(void* handle, uint32 concurrent_loop);
+    return_t consumer_loop_break(void* handle, uint32 concurrent_loop);
 
     /**
      * @brief   close
@@ -235,10 +233,9 @@ public:
      *  4) release all protocols (clear_protocols)
      *  5) close epoll multiplexer
      */
-    return_t close (void* handle);
+    return_t close(void* handle);
 
-protected:
-
+   protected:
     // session
 
     /**
@@ -250,14 +247,14 @@ protected:
      * @return  error code (see error.hpp)
      * @remarks
      */
-    return_t session_accepted (void* handle, tls_context_t* tls_handle, handle_t client_socket, sockaddr_storage_t* client_addr);
+    return_t session_accepted(void* handle, tls_context_t* tls_handle, handle_t client_socket, sockaddr_storage_t* client_addr);
     /**
      * @brief   connection-close detected
      * @param   void*               handle          [IN]
      * @param   handle_t            client_socket   [IN]
      * @return  error code (see error.hpp)
      */
-    return_t session_closed (void* handle, handle_t client_socket);
+    return_t session_closed(void* handle, handle_t client_socket);
 
     /**
      * @brief accepted, before tlsaccept
@@ -265,7 +262,7 @@ protected:
      * @param socket_t client_socket [in]
      * @param sockaddr_storage_t* client_addr [in]
      */
-    return_t try_connect (void* handle, socket_t client_socket, sockaddr_storage_t* client_addr);
+    return_t try_connect(void* handle, socket_t client_socket, sockaddr_storage_t* client_addr);
 
     // ssl/Tls
 
@@ -273,7 +270,7 @@ protected:
      * @brief   stop tls_accept
      * @return  error code (see error.hpp)
      */
-    return_t cleanup_tls_accept (void* handle);
+    return_t cleanup_tls_accept(void* handle);
 
     // thread ... see signal_wait_threads, signalwait_thread_routine
 
@@ -281,26 +278,26 @@ protected:
      * @brief   tcp accept
      * @return  error code (see error.hpp)
      */
-    static return_t accept_thread (void* user_context);
+    static return_t accept_thread(void* user_context);
     /**
      * @brief   Tls accept
      * @return  error code (see error.hpp)
      */
-    static return_t tls_accept_thread (void* user_context);
+    static return_t tls_accept_thread(void* user_context);
     /**
      * @brief   read packet and compose a request
      * @return  error code (see error.hpp)
      */
-    static return_t network_thread (void* user_context);
+    static return_t network_thread(void* user_context);
     /**
      * @brief   if a request is composed, dispatch a request into callback
      * @return  error code (see error.hpp)
      */
-    static return_t consumer_thread (void* user_context);
+    static return_t consumer_thread(void* user_context);
 
-    return_t accept_routine (void* handle);
-    return_t tls_accept_routine (void* handle);
-    return_t tls_accept_ready (void* handle, bool* ready);
+    return_t accept_routine(void* handle);
+    return_t tls_accept_routine(void* handle);
+    return_t tls_accept_ready(void* handle, bool* ready);
     /**
      * @brief   network processor
      * @param   uint32              type                [IN] see mux_event_type
@@ -312,9 +309,8 @@ protected:
      * @remarks
      *          see callback parameter of multiplexer_xxx::event_loop_run
      */
-    static return_t network_routine (uint32 type, uint32 data_count, void* data_array[],
-                                     CALLBACK_CONTROL* callback_control, void* user_context);
-    return_t consumer_routine (void* handle);
+    static return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
+    return_t consumer_routine(void* handle);
 
     // signal ... see signal_wait_threads, signalwait_thread_routine
 
@@ -322,20 +318,20 @@ protected:
      * @brief   stop 1 tls_accept_thread
      * @return  error code (see error.hpp)
      */
-    static return_t tls_accept_signal (void* user_context);
+    static return_t tls_accept_signal(void* user_context);
     /**
      * @brief   stop 1 network_thread
      * @return  error code (see error.hpp)
      */
-    static return_t network_signal (void* user_context);
+    static return_t network_signal(void* user_context);
     /**
      * @brief   stop 1 consumer_thread
      * @return  error code (see error.hpp)
      */
-    static return_t consumer_signal (void* user_context);
+    static return_t consumer_signal(void* user_context);
 };
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace
 
 #endif

@@ -13,8 +13,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/sdk.hpp>
 #include <stdio.h>
+
+#include <hotplace/sdk/sdk.hpp>
 #include <iostream>
 
 using namespace hotplace;
@@ -23,51 +24,45 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 
-return_t test1 (int argc, char** argv)
-{
+return_t test1(int argc, char** argv) {
     return_t ret = errorcode_t::success;
     authenticode_verifier verifier;
     authenticode_context_t* handle = nullptr;
     uint32 result = 0;
 
-    __try2
-    {
-        _test_case.begin ("authenticode verification test - file");
-        verifier.open (&handle);
+    __try2 {
+        _test_case.begin("authenticode verification test - file");
+        verifier.open(&handle);
         int option = 0;
-        verifier.set (handle, authenticode_ctrl_t::set_crl, &option, sizeof (option));
-        verifier.add_trusted_rootcert (handle, "trust.crt", nullptr);
-        ret = verifier.verify (handle, argv[1], authenticode_flag_t::flag_separated, result);
-        printf ("file verification : %08x\n", ret);
+        verifier.set(handle, authenticode_ctrl_t::set_crl, &option, sizeof(option));
+        verifier.add_trusted_rootcert(handle, "trust.crt", nullptr);
+        ret = verifier.verify(handle, argv[1], authenticode_flag_t::flag_separated, result);
+        printf("file verification : %08x\n", ret);
     }
-    __finally2
-    {
-        verifier.close (handle);
-        _test_case.test (ret, __FUNCTION__, "trust file");
+    __finally2 {
+        verifier.close(handle);
+        _test_case.test(ret, __FUNCTION__, "trust file");
     }
     return ret;
 }
 
-int main (int argc, char** argv)
-{
-    openssl_startup ();
+int main(int argc, char** argv) {
+    openssl_startup();
 
-    __try2
-    {
+    __try2 {
         if (argc < 2) {
-            printf ("[help] %s file\n", argv[0]);
+            printf("[help] %s file\n", argv[0]);
             __leave2;
         }
 
-        test1 (argc, argv);
+        test1(argc, argv);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
-    openssl_cleanup ();
+    openssl_cleanup();
 
-    _test_case.report (5);
-    return _test_case.result ();
+    _test_case.report(5);
+    return _test_case.result();
 }

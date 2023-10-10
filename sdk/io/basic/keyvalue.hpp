@@ -29,11 +29,10 @@ enum key_value_mode_t { move = 0, update, keep };
  * @brief key-value configuation
  * @remarks
  */
-class key_value
-{
-public:
-    key_value ();
-    ~key_value ();
+class key_value {
+   public:
+    key_value();
+    ~key_value();
 
     /**
      * @brief   add, update
@@ -46,7 +45,7 @@ public:
      *          set (key1, value2); // return errorcode_t::already_exist
      *          set (key1, value2, key_value::mode_update); // update, return errorcode_t::success
      */
-    return_t set (const char* name, const char* value, int mode = key_value_mode_t::update);
+    return_t set(const char* name, const char* value, int mode = key_value_mode_t::update);
     /**
      * @brief   update
      * @param   const char* name [in]
@@ -55,18 +54,18 @@ public:
      * @remarks
      *          set(name, value, key_value_mode_t::update);
      */
-    return_t update (const char* name, const char* value);
+    return_t update(const char* name, const char* value);
     /**
      * @brief   remove
      * @param   const char*     name    [IN]
      * @return  error code (see error.hpp)
      */
-    return_t remove (const char* name);
+    return_t remove(const char* name);
     /**
      * @brief   clear
      * @return  error code (see error.hpp)
      */
-    return_t clear ();
+    return_t clear();
     /**
      * @brief   exist
      * @remarks
@@ -74,7 +73,7 @@ public:
      *          result = exist ("key"); // true
      *          result = exist ("value"); // false
      */
-    bool exist (const char* name);
+    bool exist(const char* name);
     /**
      * @brief   return value by key
      * @param   const char* name
@@ -83,7 +82,7 @@ public:
      *          const char* value = kv ["key"]; // "value"
      *          const char* value = kv ["value"]; // nullptr
      */
-    const char* operator [] (const char* name);
+    const char* operator[](const char* name);
     /**
      * @brief   query
      * @param   const char*     name    [IN]
@@ -94,7 +93,7 @@ public:
      *          kv.query ("key", value); // "value"
      *          kv.query ("value", value); // ""
      */
-    return_t query (const char* name, std::string& value);
+    return_t query(const char* name, std::string& value);
 
     /**
      * @brief   copy
@@ -109,10 +108,10 @@ public:
      *          result of kv1.copy (kv2, key_value_mode_t::update) is kv1 [ ("key1", "value1"), ("key2", "item2"), ("key3", "item3") ]
      *          result of kv1.copy (kv2, key_value_mode_t::keep)   is kv1 [ ("key1", "value1"), ("key2", "value2"), ("key3", "item3") ]
      */
-    return_t copy (key_value& rhs, int mode = key_value_mode_t::update);
+    return_t copy(key_value& rhs, int mode = key_value_mode_t::update);
 
-    return_t copyfrom (std::map<std::string, std::string>& source, int mode);
-    return_t copyto (std::map<std::string, std::string>& target);
+    return_t copyfrom(std::map<std::string, std::string>& source, int mode);
+    return_t copyto(std::map<std::string, std::string>& target);
 
     /**
      * @brief   operator =
@@ -120,25 +119,25 @@ public:
      * @return  key_value&
      * @remarks copy with key_value_mode_t::update
      */
-    key_value& operator = (key_value& rhs);
+    key_value& operator=(key_value& rhs);
     /**
      * @brief   operator <<
      * @param   key_value& rhs [in]
      * @return  key_value&
      * @remarks copy with key_value_mode_t::update
      */
-    key_value& operator << (key_value& rhs);
+    key_value& operator<<(key_value& rhs);
 
     /* key, value */
     typedef std::map<std::string, std::string> keyvalue_map_t;
     typedef std::pair<keyvalue_map_t::iterator, bool> keyvalue_map_pib_t;
 
-protected:
+   protected:
     critical_section _lock;
     keyvalue_map_t _keyvalues;
 };
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
 
 #endif

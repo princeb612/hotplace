@@ -17,11 +17,10 @@
 namespace hotplace {
 namespace crypto {
 
-class hmac_otp
-{
-public:
-    hmac_otp ();
-    ~hmac_otp ();
+class hmac_otp {
+   public:
+    hmac_otp();
+    ~hmac_otp();
     /**
      * @brief open
      * @param otp_context_t** handle [in]
@@ -37,13 +36,13 @@ public:
      *        printf ("%06u", code);
      *        otp.close(handle);
      */
-    uint32 open (otp_context_t** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size);
+    uint32 open(otp_context_t** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size);
     /**
      * @brief close
      * @param otp_context_t* handle [in]
      * @return error code (see error.hpp)
      */
-    uint32 close (otp_context_t* handle);
+    uint32 close(otp_context_t* handle);
     /**
      * @brief set count
      * @param otp_context_t* handle [in]
@@ -54,7 +53,7 @@ public:
      *        otp.get(handle, code); // otp.get(handle, 100, code) - same expression
      *        otp.get(handle, code); // otp.get(handle, 101, code) - same expression
      */
-    uint32 set (otp_context_t* handle, uint32 count);
+    uint32 set(otp_context_t* handle, uint32 count);
     /**
      * @brief get code
      * @param otp_context_t* handle [in]
@@ -63,7 +62,7 @@ public:
      * @remarks
      *        internal counter is increased automatically
      */
-    uint32 get (otp_context_t* handle, uint32& code);
+    uint32 get(otp_context_t* handle, uint32& code);
     /**
      * @brief set count and get code
      * @param otp_context_t* handle [in]
@@ -73,7 +72,7 @@ public:
      * @example
      *        otp.get(handle, 100, code);
      */
-    uint32 get (otp_context_t* handle, uint32 counter, uint32& code);
+    uint32 get(otp_context_t* handle, uint32 counter, uint32& code);
     /**
      * @brief set count and get code
      * @param otp_context_t* handle [in]
@@ -81,7 +80,7 @@ public:
      * @param uint32& code [out]
      * @return error code (see error.hpp)
      */
-    uint32 get (otp_context_t* handle, binary_t counter, uint32& code);
+    uint32 get(otp_context_t* handle, binary_t counter, uint32& code);
     /**
      * @brief verify
      * @param otp_context_t* handle [in]
@@ -89,10 +88,10 @@ public:
      * @param uint32 code [in]
      * @return error code (see error.hpp)
      */
-    uint32 verify (otp_context_t* handle, uint32 counter, uint32 code);
+    uint32 verify(otp_context_t* handle, uint32 counter, uint32 code);
 };
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

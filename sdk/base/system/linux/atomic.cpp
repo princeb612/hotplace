@@ -19,32 +19,30 @@
 /* #define PTHREAD_MUTEX_INITIALIZER {0, 0, 0, PTHREAD_MUTEX_TIMED_NP, __LOCK_INITIALIZER} */
 static pthread_mutex_t sync_lock = PTHREAD_MUTEX_INITIALIZER;
 
-int __sync_fetch_and_add (int* ptr, int add)
-{
+int __sync_fetch_and_add(int* ptr, int add) {
     int i = 0;
     int ret;
 
-    i = pthread_mutex_lock (&sync_lock);
+    i = pthread_mutex_lock(&sync_lock);
 
     ret = *ptr;
     *ptr += add;
 
-    i = pthread_mutex_unlock (&sync_lock);
+    i = pthread_mutex_unlock(&sync_lock);
 
     return ret;
 }
 
-int __sync_sub_and_fetch (int* ptr, int sub)
-{
+int __sync_sub_and_fetch(int* ptr, int sub) {
     int i = 0;
     int ret;
 
-    i = pthread_mutex_lock (&sync_lock);
+    i = pthread_mutex_lock(&sync_lock);
 
     ret = *ptr;
     *ptr -= sub;
 
-    i = pthread_mutex_unlock (&sync_lock);
+    i = pthread_mutex_unlock(&sync_lock);
 
     return ret;
 }

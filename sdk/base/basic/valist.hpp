@@ -11,9 +11,10 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_VALIST__
 #define __HOTPLACE_SDK_BASE_BASIC_VALIST__
 
+#include <stdarg.h>
+
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
-#include <stdarg.h>
 #include <vector>
 
 namespace hotplace {
@@ -40,12 +41,12 @@ typedef struct _valist_t {
      *    e.g. union { va_list ap; void* ptr; } u; u.ptr = ptr; va_list ap; va_copy(ap, u.ap);
      */
     union {
-        va_list ap;             /* va_list type */
-        void* va_ptr;           /* linux, windows */
+        va_list ap;   /* va_list type */
+        void* va_ptr; /* linux, windows */
 
 #if defined __linux__
 #if __WORDSIZE == 64
-        valist_gcc_x64_t gcc_va_list64;             /* gcc 64bits */
+        valist_gcc_x64_t gcc_va_list64; /* gcc 64bits */
 #endif
 #endif
     };
@@ -80,70 +81,69 @@ typedef struct _valist_t {
  *              vprintf (&bs, "param1 {1} param2 {2} param3 {3}\n", 1, 3.141592, "hello");
  *
  */
-class valist
-{
-public:
-    valist ();
-    valist (const valist& object);
-    ~valist ();
+class valist {
+   public:
+    valist();
+    valist(const valist& object);
+    ~valist();
 
     /**
      * @brief assign
      * @param const valist& object [in]
      * @return *this
      */
-    valist& assign (const valist& object);
-    valist& assign (std::vector<variant_t> const& args);
+    valist& assign(const valist& object);
+    valist& assign(std::vector<variant_t> const& args);
 
-    valist& operator << (bool value);
-    valist& operator << (char value);
-    valist& operator << (unsigned char value);
-    valist& operator << (short value);
-    valist& operator << (unsigned short value);
-    valist& operator << (int value);
-    valist& operator << (unsigned int value);
-    valist& operator << (long value);
-    valist& operator << (unsigned long value);
-    valist& operator << (long long value);
-    valist& operator << (unsigned long long value);
-    valist& operator << (float value);
-    valist& operator << (double value);
-    valist& operator << (void* value);
-    valist& operator << (const char* value);
-    valist& operator << (variant_t const& v);
-    valist& operator << (const valist& object);
+    valist& operator<<(bool value);
+    valist& operator<<(char value);
+    valist& operator<<(unsigned char value);
+    valist& operator<<(short value);
+    valist& operator<<(unsigned short value);
+    valist& operator<<(int value);
+    valist& operator<<(unsigned int value);
+    valist& operator<<(long value);
+    valist& operator<<(unsigned long value);
+    valist& operator<<(long long value);
+    valist& operator<<(unsigned long long value);
+    valist& operator<<(float value);
+    valist& operator<<(double value);
+    valist& operator<<(void* value);
+    valist& operator<<(const char* value);
+    valist& operator<<(variant_t const& v);
+    valist& operator<<(const valist& object);
     /**
      * @brief clear
      */
-    void clear ();
+    void clear();
 
     /**
      * @brief size
      */
-    size_t size ();
+    size_t size();
     /**
      * @brief at
      * @param size_t index [in]
      * @param variant_t& v [out]
      * @return error code (see error.hpp)
      */
-    return_t at (size_t index, variant_t& v);
+    return_t at(size_t index, variant_t& v);
 
     /**
      * @brief return va_list
      */
-    va_list& get ();
+    va_list& get();
 
-protected:
+   protected:
     /**
      * @brief build va_list
      */
-    void build ();
+    void build();
     /**
      * @brief insert
      * @param variant_t& v [in]
      */
-    void insert (variant_t const& v);
+    void insert(variant_t const& v);
 
     typedef std::vector<variant_t> args_t;
 
@@ -155,6 +155,6 @@ protected:
     args_t _args;
 };
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

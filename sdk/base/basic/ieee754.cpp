@@ -42,29 +42,27 @@ namespace hotplace {
  *          do not call directly
  *          see ieee754_as_small_as_possible
  */
-uint8 ieee754_as_small_as_possible (variant_t& vt, float fp)
-{
+uint8 ieee754_as_small_as_possible(variant_t& vt, float fp) {
     uint8 ret = 4;
     fp32_t fp32;
 
-    variant_set_fp32 (vt, fp);
+    variant_set_fp32(vt, fp);
     fp32.fp = fp;
     if ((0 == (0x3ff & fp32.storage)) && (0x7f800000 != (0x7f800000 & fp32.storage))) {
-        uint16 bin16 = fp16_ieee_from_fp32_value (fp32.storage);
+        uint16 bin16 = fp16_ieee_from_fp32_value(fp32.storage);
         if (0x7c00 != (0x7c00 & bin16)) {
-            variant_set_fp16 (vt, bin16);
+            variant_set_fp16(vt, bin16);
             ret = 2;
         }
     }
     return ret;
 }
 
-uint8 ieee754_as_small_as_possible (variant_t& vt, double fp)
-{
+uint8 ieee754_as_small_as_possible(variant_t& vt, double fp) {
     uint8 ret = 8;
     fp64_t fp64;
 
-    variant_set_fp64 (vt, fp);
+    variant_set_fp64(vt, fp);
     fp64.fp = fp;
     bool cond1 = (0 == (0x7fffff & fp64.storage));
     bool cond2 = (0x7ff0000000000000 == (0x7ff0000000000000 & fp64.storage));
@@ -72,27 +70,25 @@ uint8 ieee754_as_small_as_possible (variant_t& vt, double fp)
         fp32_t fp32;
         fp32.fp = fp;
         if (0x7f800000 != (0x7f800000 & fp32.storage)) {
-            //variant_set_float (fp32.fp);
-            //ret = 4;
-            ret = ieee754_as_small_as_possible (vt, fp32.fp);
+            // variant_set_float (fp32.fp);
+            // ret = 4;
+            ret = ieee754_as_small_as_possible(vt, fp32.fp);
         }
     }
     return ret;
 }
 
-uint16 fp16_from_fp32 (float single)
-{
+uint16 fp16_from_fp32(float single) {
     fp32_t fp32;
 
     fp32.fp = single;
-    return fp16_ieee_from_fp32_value (fp32.storage);
+    return fp16_ieee_from_fp32_value(fp32.storage);
 }
 
 /**
  * @from    Fast Half Float Conversions (http://www.fox-toolkit.org/ftp/fasthalffloatconversion.pdf)
  */
-float fp32_from_fp16 (uint16 h)
-{
+float fp32_from_fp16(uint16 h) {
     uint32 bin32 = ((h & 0x8000) << 16) | (((h & 0x7c00) + 0x1C000) << 13) | ((h & 0x03FF) << 13);
     fp32_t fp32;
 
@@ -105,14 +101,13 @@ float fp32_from_fp16 (uint16 h)
  * @desc    I'd probably try to figure it out on my own... but this is math.
  * @from    https://www.corsix.org/content/converting-fp32-to-fp16
  */
-uint16 fp16_ieee_from_fp32_value (uint32 x)
-{
+uint16 fp16_ieee_from_fp32_value(uint32 x) {
     uint32 x_sgn = x & 0x80000000u;
     uint32 x_exp = x & 0x7f800000u;
 
-    x_exp = (x_exp < 0x38800000u) ? 0x38800000u : x_exp;    // max(e, -14)
-    x_exp += 15u << 23;                                     // e += 15
-    x &= 0x7fffffffu;                                       // Discard sign
+    x_exp = (x_exp < 0x38800000u) ? 0x38800000u : x_exp;  // max(e, -14)
+    x_exp += 15u << 23;                                   // e += 15
+    x &= 0x7fffffffu;                                     // Discard sign
 
     fp32_t f;
     fp32_t magic;
@@ -120,8 +115,8 @@ uint16 fp16_ieee_from_fp32_value (uint32 x)
     magic.storage = x_exp;
 
     // If 15 < e then inf, otherwise e += 2
-    //f.fp = (f.fp * 0x1.0p+112f) * 0x1.0p-110f;
-    f.fp = (f.fp * fp32_from_binary32 (0x77800000)) * fp32_from_binary32 (0x08800000);
+    // f.fp = (f.fp * 0x1.0p+112f) * 0x1.0p-110f;
+    f.fp = (f.fp * fp32_from_binary32(0x77800000)) * fp32_from_binary32(0x08800000);
 
     // If we were in the x_exp >= 0x38800000u case:
     // Replace f's exponent with that of x_exp, and discard 13 bits of
@@ -137,10 +132,10 @@ uint16 fp16_ieee_from_fp32_value (uint32 x)
     // whatever is left in the low bits.
     f.fp += magic.fp;
 
-    uint32 h_exp = (f.storage >> 13) & 0x7c00u;     // low 5 bits of exponent
-    uint32 h_sig = f.storage & 0x0fffu;             // low 12 bits (10 are mantissa)
-    h_sig = (x > 0x7f800000u) ? 0x0200u : h_sig;    // any NaN -> qNaN
+    uint32 h_exp = (f.storage >> 13) & 0x7c00u;   // low 5 bits of exponent
+    uint32 h_sig = f.storage & 0x0fffu;           // low 12 bits (10 are mantissa)
+    h_sig = (x > 0x7f800000u) ? 0x0200u : h_sig;  // any NaN -> qNaN
     return (x_sgn >> 16) + h_exp + h_sig;
 }
 
-}  // namespace
+}  // namespace hotplace

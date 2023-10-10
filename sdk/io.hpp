@@ -12,8 +12,6 @@
 #define __HOTPLACE_SDK_IO__
 
 #include <hotplace/sdk/base.hpp>
-
-#include <hotplace/sdk/io/types.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <hotplace/sdk/io/basic/keyvalue.hpp>
 #include <hotplace/sdk/io/basic/mlfq.hpp>
@@ -34,6 +32,7 @@
 #include <hotplace/sdk/io/system/multiplexer.hpp>
 #include <hotplace/sdk/io/system/sdk.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
+#include <hotplace/sdk/io/types.hpp>
 #if defined __linux__
 #elif defined _WIN32 || defined _WIN64
 #include <hotplace/sdk/io/system/windows/windows_registry.hpp>

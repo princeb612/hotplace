@@ -11,36 +11,36 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_LINUX_SEMAPHORE__
 #define __HOTPLACE_SDK_BASE_SYSTEM_LINUX_SEMAPHORE__
 
+#include <semaphore.h>
+
 #include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>
-#include <semaphore.h>
 
 namespace hotplace {
 
 /**
  * @brief semaphore
  */
-class semaphore : public semaphore_t
-{
-public:
-    semaphore ();
-    ~semaphore ();
+class semaphore : public semaphore_t {
+   public:
+    semaphore();
+    ~semaphore();
 
     /**
      * @brief signal
      */
-    virtual uint32 signal ();
+    virtual uint32 signal();
     /**
      * @brief wait
      *
      * @param unsigned msec [in]
      */
-    virtual uint32 wait (unsigned msec);
+    virtual uint32 wait(unsigned msec);
 
-protected:
+   protected:
     sem_t _sem;
 };
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

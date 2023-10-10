@@ -46,14 +46,13 @@ namespace io {
  *      #endif
  *
  */
-class obfuscate_string
-{
-public:
-    obfuscate_string ();
-    obfuscate_string (const char* source);
-    obfuscate_string (std::string& source);
-    obfuscate_string (ansi_string& source);
-    ~obfuscate_string ();
+class obfuscate_string {
+   public:
+    obfuscate_string();
+    obfuscate_string(const char* source);
+    obfuscate_string(std::string& source);
+    obfuscate_string(ansi_string& source);
+    ~obfuscate_string();
 
     /**
      * @brief   assign
@@ -61,98 +60,98 @@ public:
      * @param   size_t size [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& assign (const char* source, size_t size);
+    obfuscate_string& assign(const char* source, size_t size);
     /**
      * @brief   append
      * @param   const char* source [in]
      * @param   size_t size [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& append (const char* source, size_t size);
+    obfuscate_string& append(const char* source, size_t size);
     /**
      * @brief   size
      * @return  size_t
      */
-    size_t size ();
+    size_t size();
     /**
      * @brief   is empty
      * @return  bool
      */
-    bool empty ();
+    bool empty();
     /**
      * @brief   compare
      * @param   obfuscate_string& o [in]
      * @return  bool
      */
-    bool compare (obfuscate_string& o);
+    bool compare(obfuscate_string& o);
 
     /**
      * @brief   assign
      * @param   const char* [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator = (const char* source);
+    obfuscate_string& operator=(const char* source);
     /**
      * @brief   assign
      * @param   std::string& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator = (std::string& source);
+    obfuscate_string& operator=(std::string& source);
     /**
      * @brief   assign
      * @param   ansi_string& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator = (ansi_string& source);
+    obfuscate_string& operator=(ansi_string& source);
     /**
      * @brief   append
      * @param   const char* source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator += (const char* source);
+    obfuscate_string& operator+=(const char* source);
     /**
      * @brief   append
      * @param   std::string& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator += (std::string& source);
+    obfuscate_string& operator+=(std::string& source);
     /**
      * @brief   append
      * @param   ansi_string& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator += (ansi_string& source);
+    obfuscate_string& operator+=(ansi_string& source);
     /**
      * @brief   append
      * @param   const char* source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator << (const char* source);
+    obfuscate_string& operator<<(const char* source);
     /**
      * @brief   append
      * @param   std::string& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator << (std::string & source);
+    obfuscate_string& operator<<(std::string& source);
     /**
      * @brief   append
      * @param   ansi_string& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator << (ansi_string& source);
+    obfuscate_string& operator<<(ansi_string& source);
 
     /**
      * @brief   compare equal
      * @param   obfuscate_string& o [in]
      * @return  bool
      */
-    bool operator == (obfuscate_string& o);
+    bool operator==(obfuscate_string& o);
     /**
      * @brief   compre not equal
      * @param   obfuscate_string& o [in]
      * @return  bool
      */
-    bool operator != (obfuscate_string& o);
+    bool operator!=(obfuscate_string& o);
 
     /**
      * @brief   append
@@ -160,33 +159,33 @@ public:
      * @param   obfuscate_string const& rhs [in]
      * @return  std::string&
      */
-    friend std::string& operator << (std::string& lhs, obfuscate_string const& rhs);
+    friend std::string& operator<<(std::string& lhs, obfuscate_string const& rhs);
     /**
      * @brief   append
      * @param   std::string& lhs [out]
      * @param   obfuscate_string const& rhs [in]
      * @return  ansi_string&
      */
-    friend ansi_string& operator << (ansi_string& lhs, obfuscate_string const& rhs);
+    friend ansi_string& operator<<(ansi_string& lhs, obfuscate_string const& rhs);
     /**
      * @brief   append
      * @param   binary_t& lhs [out]
      * @param   obfuscate_string const& rhs [in]
      * @return  binary_t&
      */
-    friend binary_t& operator << (binary_t& lhs, obfuscate_string const& rhs);
+    friend binary_t& operator<<(binary_t& lhs, obfuscate_string const& rhs);
 
-protected:
-    void startup ();
-    void cleanup ();
+   protected:
+    void startup();
+    void cleanup();
 
-private:
+   private:
     uint32 _flags;
     byte_t _factor;
     binary_t _contents;
 };
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
 
 #endif

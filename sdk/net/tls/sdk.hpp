@@ -24,9 +24,9 @@ namespace net {
  * @param   uint32      dwSeconds   [in]
  * @param   uint32      nbio        [in]
  */
-return_t tls_connect (socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio);
+return_t tls_connect(socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio);
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace
 
 #endif

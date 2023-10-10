@@ -11,8 +11,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/sdk.hpp>
 #include <stdio.h>
+
+#include <hotplace/sdk/sdk.hpp>
 #include <iostream>
 
 using namespace hotplace;
@@ -25,13 +26,12 @@ test_case _test_case;
 #define FILENAME_RUN _T (".run")
 #define PORT 9000
 
-return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context)
-{
+return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
-    net_session_socket_t* session_socket = (net_session_socket_t*) data_array[0];
-    network_session* session = (network_session*) data_array[3];
-    byte_t* buf = (byte_t*) data_array[1];
-    size_t bufsize = (size_t) data_array[2];
+    net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
+    network_session* session = (network_session*)data_array[3];
+    byte_t* buf = (byte_t*)data_array[1];
+    size_t bufsize = (size_t)data_array[2];
 
     basic_stream bs;
     std::string message;
@@ -41,10 +41,10 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
             std::cout << "connect " << session_socket->client_socket << std::endl;
             break;
         case mux_read:
-            printf ("read %i (%zi) %.*s\n", session_socket->client_socket, bufsize, (unsigned) bufsize, buf);
-            //dump_memory (buf, bufsize, &bs, 16, 4);
-            //std::cout << bs.c_str () << std::endl;
-            session->send ((char*) buf, bufsize);
+            printf("read %i (%zi) %.*s\n", session_socket->client_socket, bufsize, (unsigned)bufsize, buf);
+            // dump_memory (buf, bufsize, &bs, 16, 4);
+            // std::cout << bs.c_str () << std::endl;
+            session->send((char*)buf, bufsize);
             break;
         case mux_disconnect:
             std::cout << "disconnect " << session_socket->client_socket << std::endl;
@@ -53,115 +53,108 @@ return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CA
     return ret;
 }
 
-return_t echo_server (void*)
-{
+return_t echo_server(void*) {
     return_t ret = errorcode_t::success;
     network_server netserver;
     void* handle_ipv4 = nullptr;
     void* handle_ipv6 = nullptr;
 
-    FILE* fp = fopen (FILENAME_RUN, "w");
+    FILE* fp = fopen(FILENAME_RUN, "w");
 
-    fclose (fp);
+    fclose(fp);
 
     SSL_CTX* x509 = nullptr;
-    //http_protocol* http_prot = nullptr;
+    // http_protocol* http_prot = nullptr;
     transport_layer_security* tls = nullptr;
     transport_layer_security_server* tls_server = nullptr;
 
-    __try2
-    {
+    __try2 {
         // part of ssl certificate
-        ret = x509_open (&x509, "server.crt", "server.key");
-        _test_case.test (ret, __FUNCTION__, "x509");
+        ret = x509_open(&x509, "server.crt", "server.key");
+        _test_case.test(ret, __FUNCTION__, "x509");
 
-        SSL_CTX_set_cipher_list (x509, "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256");
-        //SSL_CTX_set_cipher_list (x509, "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES128-SHA256:AES256-GCM-SHA384:AES256-SHA256:!aNULL:!eNULL:!LOW:!EXP:!RC4");
-        SSL_CTX_set_verify (x509, 0, nullptr);
+        SSL_CTX_set_cipher_list(x509,
+                                "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256");
+        // SSL_CTX_set_cipher_list (x509,
+        // "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES128-SHA256:AES256-GCM-SHA384:AES256-SHA256:!aNULL:!eNULL:!LOW:!EXP:!RC4");
+        SSL_CTX_set_verify(x509, 0, nullptr);
 
-        __try_new_catch (tls, new transport_layer_security (x509), ret, __leave2);
+        __try_new_catch(tls, new transport_layer_security(x509), ret, __leave2);
         //__try_new_catch (http_prot, new http_protocol, ret, __leave2);
-        __try_new_catch (tls_server, new transport_layer_security_server (tls), ret, __leave2);
+        __try_new_catch(tls_server, new transport_layer_security_server(tls), ret, __leave2);
 
         // start server
-        netserver.open (&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
-        netserver.open (&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
-        //netserver.add_protocol(handle_ipv4, http_prot);
+        netserver.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
+        netserver.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
+        // netserver.add_protocol(handle_ipv4, http_prot);
 
-        netserver.consumer_loop_run (handle_ipv4, 2);
-        netserver.consumer_loop_run (handle_ipv6, 2);
-        netserver.event_loop_run (handle_ipv4, 2);
-        netserver.event_loop_run (handle_ipv6, 2);
+        netserver.consumer_loop_run(handle_ipv4, 2);
+        netserver.consumer_loop_run(handle_ipv6, 2);
+        netserver.event_loop_run(handle_ipv4, 2);
+        netserver.event_loop_run(handle_ipv6, 2);
 
         while (true) {
-            msleep (1000);
+            msleep(1000);
 
 #if defined __linux__
-            int chk = access (FILENAME_RUN, F_OK);
+            int chk = access(FILENAME_RUN, F_OK);
             if (errorcode_t::success != chk) {
                 break;
             }
 #elif defined _WIN32 || defined _WIN64
-            uint32 dwAttrib = GetFileAttributes (FILENAME_RUN);
+            uint32 dwAttrib = GetFileAttributes(FILENAME_RUN);
             if (INVALID_FILE_ATTRIBUTES == dwAttrib) {
                 break;
             }
 #endif
         }
 
-        netserver.event_loop_break (handle_ipv4, 2);
-        netserver.event_loop_break (handle_ipv6, 2);
-        netserver.consumer_loop_break (handle_ipv4, 2);
-        netserver.consumer_loop_break (handle_ipv6, 2);
+        netserver.event_loop_break(handle_ipv4, 2);
+        netserver.event_loop_break(handle_ipv6, 2);
+        netserver.consumer_loop_break(handle_ipv4, 2);
+        netserver.consumer_loop_break(handle_ipv6, 2);
     }
-    __finally2
-    {
-        netserver.close (handle_ipv4);
-        netserver.close (handle_ipv6);
+    __finally2 {
+        netserver.close(handle_ipv4);
+        netserver.close(handle_ipv6);
 
-        //http_prot->release ();
-        tls_server->release ();
-        tls->release ();
-        SSL_CTX_free (x509);
+        // http_prot->release ();
+        tls_server->release();
+        tls->release();
+        SSL_CTX_free(x509);
     }
 
     return ret;
 }
 
-void test_tlsserver ()
-{
-    thread thread1 (echo_server, nullptr);
+void test_tlsserver() {
+    thread thread1(echo_server, nullptr);
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
-        _test_case.begin ("tls server");
+    __try2 {
+        _test_case.begin("tls server");
 
-        thread1.start ();
+        thread1.start();
     }
-    __finally2
-    {
-        thread1.wait (-1);
-    }
+    __finally2 { thread1.wait(-1); }
 }
 
-int main ()
-{
+int main() {
 #if defined _WIN32 || defined _WIN64
-    winsock_startup ();
+    winsock_startup();
 #endif
-    openssl_startup ();
-    openssl_thread_setup ();
+    openssl_startup();
+    openssl_thread_setup();
 
-    test_tlsserver ();
+    test_tlsserver();
 
-    openssl_thread_end ();
-    openssl_cleanup ();
+    openssl_thread_end();
+    openssl_cleanup();
 
 #if defined _WIN32 || defined _WIN64
-    winsock_cleanup ();
+    winsock_cleanup();
 #endif
 
-    _test_case.report ();
-    return _test_case.result ();
+    _test_case.report();
+    return _test_case.result();
 }

@@ -24,11 +24,10 @@ enum server_socket_query_t {
  * @brief   server_socket
  * @sa      class transport_layer_security_server : public server_socket
  */
-class server_socket
-{
-public:
-    server_socket ();
-    virtual ~server_socket ();
+class server_socket {
+   public:
+    server_socket();
+    virtual ~server_socket();
 
     /**
      * @brief   listen
@@ -37,7 +36,7 @@ public:
      * @param   uint16          port            [IN]
      * @return  error code (see error.hpp)
      */
-    virtual return_t listen (socket_t* sock, unsigned int family, uint16 port);
+    virtual return_t listen(socket_t* sock, unsigned int family, uint16 port);
     /**
      * @brief   close
      * @param   socket_t        sock            [IN]
@@ -50,7 +49,7 @@ public:
      *          // socket closed
      *          tls_svr_sock.close (client_socket, tls_context);
      */
-    virtual return_t close (socket_t sock, tls_context_t* tls_handle);
+    virtual return_t close(socket_t sock, tls_context_t* tls_handle);
 
     /**
      * @brief   accept
@@ -60,7 +59,7 @@ public:
      * @param   socklen_t*      addrlen         [IN]
      * @return  error code (see error.hpp)
      */
-    virtual return_t accept (socket_t sock, socket_t* clisock, struct sockaddr* addr, socklen_t* addrlen);
+    virtual return_t accept(socket_t sock, socket_t* clisock, struct sockaddr* addr, socklen_t* addrlen);
     /**
      * @brief   Tls accept
      * @param   socket_t        clisock         [IN] client socket
@@ -69,8 +68,8 @@ public:
      * @remarks
      *          do nothing, return errorcode_t::success
      */
-    virtual return_t tls_accept (socket_t clisock, tls_context_t** tls_handle);
-    virtual return_t tls_stop_accept ();
+    virtual return_t tls_accept(socket_t clisock, tls_context_t** tls_handle);
+    virtual return_t tls_stop_accept();
     /**
      * @brief   read
      * @param   socket_t        sock            [IN]
@@ -83,7 +82,7 @@ public:
      * @remarks
      *          ERROR_CONNECTION_CLOSED
      */
-    virtual return_t read (socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
+    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]
@@ -93,7 +92,7 @@ public:
      * @param   size_t*         cbsent          [OUT]
      * @return  error code (see error.hpp)
      */
-    virtual return_t send (socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
+    virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
     /**
      * @brief   query socket layer spec
      * @param   int             specid          [IN] see SERVER_SOCKET_QUERY
@@ -102,12 +101,12 @@ public:
      * @remarks
      *          server_socket.query (server_socket_query_t::query_support_tls, &value);
      */
-    virtual return_t query (int specid, arch_t* data_ptr);
+    virtual return_t query(int specid, arch_t* data_ptr);
 
-protected:
+   protected:
 };
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace
 
 #endif

@@ -54,12 +54,12 @@ typedef uint32 ipaddr_t;
  *          // => 3ffeffff0000f1010000000000000000 ~ 3ffeffff0000f101ffffffffffffffff
  *          //    ...
  */
-template<typename T> T t_cidr_subnet_mask (uint cidr)
-{
+template <typename T>
+T t_cidr_subnet_mask(uint cidr) {
     T ret = 0;
     uint i = 0;
 
-    uint adj = ((sizeof (T) << 3));
+    uint adj = ((sizeof(T) << 3));
 
     if (cidr <= adj) {
         T one = 1;
@@ -72,12 +72,12 @@ template<typename T> T t_cidr_subnet_mask (uint cidr)
 }
 
 enum ipaddr_acl_t {
-    blacklist   = (1 << 0),     // prohibit only deny list
-    whitelist   = (1 << 1),     // accept only allow list
+    blacklist = (1 << 0),  // prohibit only deny list
+    whitelist = (1 << 1),  // accept only allow list
 
     single_addr = 0,
-    cidr_addr   = 1,
-    range_addr  = 2,
+    cidr_addr = 1,
+    range_addr = 2,
 };
 
 /**
@@ -106,18 +106,17 @@ enum ipaddr_acl_t {
  *          ac.determine("10.21.13.25", check); // true
  *          ac.determine("10.20.2.11",  check); // true
  */
-class ipaddr_acl
-{
-public:
-    ipaddr_acl ();
-    ipaddr_acl (ipaddr_acl& obj);
-    ~ipaddr_acl ();
+class ipaddr_acl {
+   public:
+    ipaddr_acl();
+    ipaddr_acl(ipaddr_acl& obj);
+    ~ipaddr_acl();
 
     /**
      * @brief white list, black list
      * @remarks basically runs ipaddr_acl_t::blacklist mode
      */
-    return_t setmode (int mode);
+    return_t setmode(int mode);
 
     /**
      * @brief single address or cidr
@@ -126,58 +125,58 @@ public:
      *                                                   1.2.3.4/0 possible
      * @param   bool                    allow       [IN]
      */
-    return_t add_rule (const char* addr, bool allow);
+    return_t add_rule(const char* addr, bool allow);
     /**
      * @brief single address
      * @param   const sockaddr_storage_t* sockaddr  [IN]
      * @param   bool                    allow       [IN]
      */
-    return_t add_rule (const sockaddr_storage_t* sockaddr, bool allow);
+    return_t add_rule(const sockaddr_storage_t* sockaddr, bool allow);
     /**
      * @brief cidr
      */
-    return_t add_rule (const char* addr, int mask, bool allow);
-    return_t add_rule (const sockaddr_storage_t* sockaddr, int mask, bool allow);
+    return_t add_rule(const char* addr, int mask, bool allow);
+    return_t add_rule(const sockaddr_storage_t* sockaddr, int mask, bool allow);
 
     /**
      * @brief range
      */
-    return_t add_rule (const char* addr_from, const char* addr_to, bool allow);
-    return_t add_rule (const sockaddr_storage_t* sockaddr_from, const sockaddr_storage_t* sockaddr_to, bool allow);
+    return_t add_rule(const char* addr_from, const char* addr_to, bool allow);
+    return_t add_rule(const sockaddr_storage_t* sockaddr_from, const sockaddr_storage_t* sockaddr_to, bool allow);
     /**
      * @brief clear
      */
-    return_t clear ();
+    return_t clear();
 
     /**
      * @brief determine
      */
-    return_t determine (const char* addr, bool& accept);
-    return_t determine (const sockaddr_storage_t* sockaddr, bool& accept);
+    return_t determine(const char* addr, bool& accept);
+    return_t determine(const sockaddr_storage_t* sockaddr, bool& accept);
 
     /**
      * @brief return host byte ordered
      */
-    ipaddr_t convert_addr (const char* addr, int& family);
-    ipaddr_t convert_sockaddr (const sockaddr_storage_t* addr, int& family);
+    ipaddr_t convert_addr(const char* addr, int& family);
+    ipaddr_t convert_sockaddr(const sockaddr_storage_t* addr, int& family);
 
-protected:
+   protected:
     int _mode;
 
     typedef struct _IPADDRESS_RULE_ITEM {
-        int mode;   // 0 single 1 cidr 2 range
+        int mode;  // 0 single 1 cidr 2 range
         ipaddr_t addr;
-        bool allow; // allow/deny
+        bool allow;  // allow/deny
     } ipaddress_rule_item_t;
     typedef std::map<ipaddr_t, ipaddress_rule_item_t> ipaddress_rule_map_t;
     typedef std::pair<ipaddress_rule_map_t::iterator, bool> ipaddress_rule_map_pib_t;
 
     critical_section _lock;
-    ipaddress_rule_map_t _single_type_rule;     // 0 single
-    ipaddress_rule_map_t _range_type_rule;      // 1 cidr, 2 range
+    ipaddress_rule_map_t _single_type_rule;  // 0 single
+    ipaddress_rule_map_t _range_type_rule;   // 1 cidr, 2 range
 };
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace
 
 #endif

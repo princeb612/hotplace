@@ -17,11 +17,10 @@
 namespace hotplace {
 namespace crypto {
 
-class time_otp
-{
-public:
-    time_otp ();
-    ~time_otp ();
+class time_otp {
+   public:
+    time_otp();
+    ~time_otp();
     /**
      * @brief open
      * @param otp_context_t** handle [out]
@@ -35,14 +34,13 @@ public:
      *        otp.open(&handle, 8, 30, HASH_ALGORITHM_SHA_512, key, keysize);
      *        otp.close(handle);
      */
-    uint32 open (otp_context_t** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm,
-                 const byte_t* key_data, size_t key_size);
+    uint32 open(otp_context_t** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size);
     /**
      * @brief close
      * @param otp_context_t* handle [in]
      * @return error code (see error.hpp)
      */
-    uint32 close (otp_context_t* handle);
+    uint32 close(otp_context_t* handle);
     /**
      * @brief close
      * @param otp_context_t* handle [in]
@@ -52,7 +50,7 @@ public:
      * @example
      *        otp.get(handle, time, code);
      */
-    uint32 get (otp_context_t* handle, time64_t time, uint32& code);
+    uint32 get(otp_context_t* handle, time64_t time, uint32& code);
     /**
      * @brief close
      * @param otp_context_t* handle [in]
@@ -60,10 +58,10 @@ public:
      * @param uint32 code [in]
      * @return error code (see error.hpp)
      */
-    uint32 verify (otp_context_t* handle, time64_t time, uint32 code);
+    uint32 verify(otp_context_t* handle, time64_t time, uint32 code);
 };
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

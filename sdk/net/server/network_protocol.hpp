@@ -50,7 +50,7 @@ typedef struct _net_session_wsabuf_pair_t {
 
 typedef struct _net_session_socket_t {
     handle_t client_socket;
-    sockaddr_storage_t client_addr; // both ipv4 and ipv6
+    sockaddr_storage_t client_addr;  // both ipv4 and ipv6
 
 } net_session_socket_t;
 
@@ -76,16 +76,10 @@ class network_session;
 class network_session_manager;
 class network_stream;
 
-class network_protocol
-{
-public:
-    network_protocol ()
-    {
-        _shared.make_share (this);
-    }
-    virtual ~network_protocol ()
-    {
-    }
+class network_protocol {
+   public:
+    network_protocol() { _shared.make_share(this); }
+    virtual ~network_protocol() {}
 
     /**
      * @brief check protocol
@@ -94,18 +88,14 @@ public:
      * @return  errorcode_t::success
      *          errorcode_t::not_supported (if error, do not return errorcode_t::success)
      */
-    virtual return_t is_kind_of (void* stream, size_t stream_size)
-    {
-        return errorcode_t::success;
-    }
+    virtual return_t is_kind_of(void* stream, size_t stream_size) { return errorcode_t::success; }
     /**
      * @brief read stream
      * @param   IBufferStream*  stream          [IN]
      * @param   size_t*         request_size    [IN]
      * @param   protocol_state_t* state           [OUT]
      */
-    virtual return_t read_stream (basic_stream* stream, size_t* request_size, protocol_state_t* state)
-    {
+    virtual return_t read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state) {
         *state = protocol_state_t::protocol_state_complete;
         return errorcode_t::success;
     }
@@ -113,50 +103,40 @@ public:
      * @brief   id
      * @remarks default port number
      */
-    virtual uint32 protocol_id ()
-    {
-        return 0;
-    }
+    virtual uint32 protocol_id() { return 0; }
 
-    int addref ()
-    {
-        return _shared.addref ();
-    }
-    int release ()
-    {
-        return _shared.delref ();
-    }
+    int addref() { return _shared.addref(); }
+    int release() { return _shared.delref(); }
 
-protected:
-    t_shared_reference <network_protocol> _shared;
+   protected:
+    t_shared_reference<network_protocol> _shared;
 };
 
-class network_protocol_group
-{
-public:
-    network_protocol_group ();
-    virtual ~network_protocol_group ();
+class network_protocol_group {
+   public:
+    network_protocol_group();
+    virtual ~network_protocol_group();
 
     /**
      * @brief add protocol
      * @param   network_protocol*    protocol        [IN] add protocol and increase reference counter
      * @return error code (see error.hpp)
      */
-    virtual return_t add (network_protocol* protocol);
+    virtual return_t add(network_protocol* protocol);
     /**
      * @brief operator <<
      * @param   network_protocol*    protocol        [IN]
      * @remarks
      *          add method replacement wo checking return code
      */
-    virtual network_protocol_group& operator << (network_protocol* protocol);
+    virtual network_protocol_group& operator<<(network_protocol* protocol);
     /**
      * @brief find
      * @param   uint32                   protocol_id     [IN]
      * @param   network_protocol**   ptr_protocol    [OUT] referenced, call release
      * @return error code (see error.hpp)
      */
-    virtual return_t find (uint32 protocol_id, network_protocol** ptr_protocol);
+    virtual return_t find(uint32 protocol_id, network_protocol** ptr_protocol);
     /**
      * @brief operator[protocol_id]
      * @example
@@ -167,22 +147,22 @@ public:
      *              prtotocol->release (); // decrease reference counter
      *          }
      */
-    virtual network_protocol* operator[] (uint32 protocol_id);
+    virtual network_protocol* operator[](uint32 protocol_id);
     /**
      * @brief remove protocol
      * @param   network_protocol*    protocol        [IN] remove protocol and decrease reference counter
      * @return error code (see error.hpp)
      */
-    virtual return_t remove (network_protocol* protocol);
+    virtual return_t remove(network_protocol* protocol);
     /**
      * @brief remove all protocol
      * @return error code (see error.hpp)
      */
-    virtual return_t clear ();
+    virtual return_t clear();
     /**
      * @brief is protocol absent
      */
-    virtual bool empty ();
+    virtual bool empty();
 
     /**
      * @brief find appropriate protocol
@@ -193,19 +173,19 @@ public:
      * @remarks
      *          if input stream is too short, return errorcode_t::more_data
      */
-    virtual return_t is_kind_of (void* stream, size_t stream_size, network_protocol** ptr_protocol);
+    virtual return_t is_kind_of(void* stream, size_t stream_size, network_protocol** ptr_protocol);
 
     /**
      * @brief increase reference counter
      */
-    int addref ();
+    int addref();
     /**
      * @brief decrease reference counter. if reference counter 0, delete object.
      */
-    int release ();
+    int release();
 
-protected:
-    t_shared_reference < network_protocol_group> _shared;
+   protected:
+    t_shared_reference<network_protocol_group> _shared;
 
     typedef std::map<uint32, network_protocol*> protocol_map_t;
     typedef std::pair<protocol_map_t::iterator, bool> protocol_map_pib_t;
@@ -214,7 +194,7 @@ protected:
     protocol_map_t _protocols;
 };
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace
 
 #endif

@@ -18,40 +18,32 @@
 namespace hotplace {
 namespace io {
 
-cbor_map::cbor_map () : cbor_object (cbor_type_t::cbor_type_map)
-{
+cbor_map::cbor_map() : cbor_object(cbor_type_t::cbor_type_map) {
     // do nothing
 }
 
-cbor_map::cbor_map (uint32 flags) : cbor_object (cbor_type_t::cbor_type_map, flags)
-{
+cbor_map::cbor_map(uint32 flags) : cbor_object(cbor_type_t::cbor_type_map, flags) {
     // do nothing
 }
 
-cbor_map::cbor_map (cbor_pair* object, uint32 flags) : cbor_object (cbor_type_t::cbor_type_map, flags)
-{
-    *this << object;
-}
+cbor_map::cbor_map(cbor_pair* object, uint32 flags) : cbor_object(cbor_type_t::cbor_type_map, flags) { *this << object; }
 
-cbor_map::~cbor_map ()
-{
+cbor_map::~cbor_map() {
     // do nothing
 }
 
-return_t cbor_map::join (cbor_object* object, cbor_object* extra)
-{
+return_t cbor_map::join(cbor_object* object, cbor_object* extra) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == object) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        if (cbor_type_t::cbor_type_pair == object->type ()) {
-            cbor_pair* inst = (cbor_pair*) object;
-            _array.push_back (inst);
+        if (cbor_type_t::cbor_type_pair == object->type()) {
+            cbor_pair* inst = (cbor_pair*)object;
+            _array.push_back(inst);
         } else {
             // lhs cbor_data (int series, char* only)
             // rhs cbor_data, cbor_arry_t
@@ -64,12 +56,12 @@ return_t cbor_map::join (cbor_object* object, cbor_object* extra)
             bool lhs_ret = false;
             bool rhs_ret = false;
 
-            cbor_type_t lhs_type = object->type ();
-            cbor_type_t rhs_type = extra->type ();
+            cbor_type_t lhs_type = object->type();
+            cbor_type_t rhs_type = extra->type();
 
             if (cbor_type_t::cbor_type_data == lhs_type) {
-                cbor_data* inst = (cbor_data*) object;
-                vartype_t lhs_vtype = inst->data ().type;
+                cbor_data* inst = (cbor_data*)object;
+                vartype_t lhs_vtype = inst->data().type;
                 switch (lhs_vtype) {
                     case TYPE_INT8:
                     case TYPE_UINT8:
@@ -108,130 +100,115 @@ return_t cbor_map::join (cbor_object* object, cbor_object* extra)
                 __leave2;
             }
 
-            cbor_data* inst = (cbor_data*) object;
+            cbor_data* inst = (cbor_data*)object;
             cbor_pair* pair = nullptr;
-            __try_new_catch (pair, new cbor_pair (inst, extra), ret, __leave2);
+            __try_new_catch(pair, new cbor_pair(inst, extra), ret, __leave2);
             if (pair) {
-                _array.push_back (pair);
+                _array.push_back(pair);
             }
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-cbor_map& cbor_map::add (cbor_object* object, cbor_object* extra)
-{
-    join (object, extra);
+cbor_map& cbor_map::add(cbor_object* object, cbor_object* extra) {
+    join(object, extra);
     return *this;
 }
 
-cbor_map& cbor_map::add (cbor_pair* object)
-{
-    join (object);
+cbor_map& cbor_map::add(cbor_pair* object) {
+    join(object);
     return *this;
 }
 
-cbor_map& cbor_map::operator << (cbor_pair* object)
-{
-    join (object);
+cbor_map& cbor_map::operator<<(cbor_pair* object) {
+    join(object);
     return *this;
 }
 
-size_t cbor_map::size ()
-{
-    return _array.size ();
-}
+size_t cbor_map::size() { return _array.size(); }
 
-cbor_pair* cbor_map::operator [] (size_t index)
-{
+cbor_pair* cbor_map::operator[](size_t index) {
     cbor_pair* item = nullptr;
 
-    if (_array.size () > index) {
-        std::list <cbor_pair*>::iterator it = _array.begin ();
-        std::advance (it, index);
+    if (_array.size() > index) {
+        std::list<cbor_pair*>::iterator it = _array.begin();
+        std::advance(it, index);
         item = *it;
     }
     return item;
 }
 
-std::list <cbor_pair*>& cbor_map::accessor ()
-{
-    return _array;
-}
+std::list<cbor_pair*>& cbor_map::accessor() { return _array; }
 
-int cbor_map::addref ()
-{
-    std::list <cbor_pair*>::iterator iter;
+int cbor_map::addref() {
+    std::list<cbor_pair*>::iterator iter;
 
-    for (iter = _array.begin (); iter != _array.end (); iter++) {
+    for (iter = _array.begin(); iter != _array.end(); iter++) {
         cbor_pair* item = *iter;
-        item->addref ();
+        item->addref();
     }
-    return _shared.addref ();
+    return _shared.addref();
 }
 
-int cbor_map::release ()
-{
+int cbor_map::release() {
     return_t ret = errorcode_t::success;
 
-    std::list <cbor_pair*>::iterator iter;
+    std::list<cbor_pair*>::iterator iter;
 
-    for (iter = _array.begin (); iter != _array.end (); iter++) {
+    for (iter = _array.begin(); iter != _array.end(); iter++) {
         cbor_pair* item = *iter;
-        item->release ();
+        item->release();
     }
-    return _shared.delref ();
+    return _shared.delref();
 }
 
-void cbor_map::represent (stream_t* s)
-{
+void cbor_map::represent(stream_t* s) {
     if (s) {
-        s->printf ("{");
-        if (cbor_flag_t::cbor_indef == (get_flags () & cbor_flag_t::cbor_indef)) {
-            s->printf ("_ ");
+        s->printf("{");
+        if (cbor_flag_t::cbor_indef == (get_flags() & cbor_flag_t::cbor_indef)) {
+            s->printf("_ ");
         }
 
         size_t i = 0;
-        size_t size = _array.size ();
-        std::list <cbor_pair*>::iterator iter;
-        for (i = 0, iter = _array.begin (); iter != _array.end (); i++, iter++) {
+        size_t size = _array.size();
+        std::list<cbor_pair*>::iterator iter;
+        for (i = 0, iter = _array.begin(); iter != _array.end(); i++, iter++) {
             cbor_pair* item = *iter;
-            item->represent (s);
+            item->represent(s);
             if (i + 1 != size) {
-                s->printf (",");
+                s->printf(",");
             }
         }
 
-        s->printf ("}");
+        s->printf("}");
     }
 }
 
-void cbor_map::represent (binary_t* b)
-{
+void cbor_map::represent(binary_t* b) {
     cbor_encode enc;
 
     if (b) {
-        enc.encode (*b, cbor_major_t::cbor_major_map, cbor_control_t::cbor_control_begin, this);
+        enc.encode(*b, cbor_major_t::cbor_major_map, cbor_control_t::cbor_control_begin, this);
 
         // for each member
-#if __cplusplus >= 201103L    // c++11
+#if __cplusplus >= 201103L  // c++11
         for (auto item : _array) {
 #else
-        std::list <cbor_pair*>::iterator iter;
-        for (iter = _array.begin (); iter != _array.end (); iter++) {
+        std::list<cbor_pair*>::iterator iter;
+        for (iter = _array.begin(); iter != _array.end(); iter++) {
             cbor_pair* item = *iter;
 #endif
-            item->represent (b);
+            item->represent(b);
         }
 
-        enc.encode (*b, cbor_major_t::cbor_major_map, cbor_control_t::cbor_control_end, this);
+        enc.encode(*b, cbor_major_t::cbor_major_map, cbor_control_t::cbor_control_end, this);
     }
 }
 
-}
-}
+}  // namespace io
+}  // namespace hotplace

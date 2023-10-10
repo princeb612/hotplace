@@ -22,21 +22,21 @@
 namespace hotplace {
 namespace io {
 
-class winpe_checksum
-{
-public:
-    winpe_checksum ();
-    ~winpe_checksum ();
+class winpe_checksum {
+   public:
+    winpe_checksum();
+    ~winpe_checksum();
 
-    return_t init ();
-    return_t update (byte_t* data, size_t size);
-    return_t finalize (uint32& checksum);
-protected:
+    return_t init();
+    return_t update(byte_t* data, size_t size);
+    return_t finalize(uint32& checksum);
+
+   protected:
     uint32 _checksum;
     uint32 _size;
 };
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
 
 #endif

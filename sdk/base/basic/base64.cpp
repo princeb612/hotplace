@@ -15,68 +15,50 @@
 
 namespace hotplace {
 
-static const byte_t MIME_BASE64_ENCODE[] =
-{
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-    'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-    'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-    'w', 'x', 'y', 'z', '0', '1', '2', '3',
-    '4', '5', '6', '7', '8', '9', '+', '/'
+static const byte_t MIME_BASE64_ENCODE[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+                                            'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+                                            's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
+
+static const byte_t MIME_BASE64URL_ENCODE[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+                                               'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+                                               's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'};
+
+static const int MIME_BASE64_DECODE[256] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 00-0F */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 10-1F */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, /* 20-2F */
+    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, /* 30-3F */
+    -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, /* 40-4F */
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, /* 50-5F */
+    -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, /* 60-6F */
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1, /* 70-7F */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 80-8F */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 90-9F */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* A0-AF */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* B0-BF */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* C0-CF */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* D0-DF */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* E0-EF */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1  /* F0-FF */
 };
 
-static const byte_t MIME_BASE64URL_ENCODE[] =
-{
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-    'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-    'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-    'w', 'x', 'y', 'z', '0', '1', '2', '3',
-    '4', '5', '6', '7', '8', '9', '-', '_'
-};
-
-static const int MIME_BASE64_DECODE[256] =
-{
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* 00-0F */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* 10-1F */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62,  -1,  -1,  -1, 63,  /* 20-2F */
-    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1,  -1,  -1,  -1, -1,  /* 30-3F */
-    -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13, 14,  /* 40-4F */
-    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1,  -1,  -1,  -1, -1,  /* 50-5F */
-    -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,  37,  38,  39, 40,  /* 60-6F */
-    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1,  -1,  -1,  -1, -1,  /* 70-7F */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* 80-8F */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* 90-9F */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* A0-AF */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* B0-BF */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* C0-CF */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* D0-DF */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* E0-EF */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1   /* F0-FF */
-};
-
-static const int MIME_BASE64URL_DECODE[256] =
-{
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* 00-0F */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* 10-1F */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  62,  -1, -1,  /* 20-2F */
-    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1,  -1,  -1,  -1, -1,  /* 30-3F */
-    -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13, 14,  /* 40-4F */
-    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1,  -1,  -1,  -1, 63,  /* 50-5F */
-    -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,  37,  38,  39, 40,  /* 60-6F */
-    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1,  -1,  -1,  -1, -1,  /* 70-7F */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* 80-8F */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* 90-9F */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* A0-AF */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* B0-BF */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* C0-CF */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* D0-DF */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1,  /* E0-EF */
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1,  -1,  -1, -1   /* F0-FF */
+static const int MIME_BASE64URL_DECODE[256] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 00-0F */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 10-1F */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, /* 20-2F */
+    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, /* 30-3F */
+    -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, /* 40-4F */
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, 63, /* 50-5F */
+    -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, /* 60-6F */
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1, /* 70-7F */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 80-8F */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 90-9F */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* A0-AF */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* B0-BF */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* C0-CF */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* D0-DF */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* E0-EF */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1  /* F0-FF */
 };
 
 typedef union {
@@ -89,14 +71,12 @@ typedef union {
     uint32 i32;
 } base64_conv_t;
 
-return_t base64_encode (const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, int encoding)
-{
+return_t base64_encode(const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, int encoding) {
     return_t ret = errorcode_t::success;
     size_t i = 0, j = 0;
     base64_conv_t temp;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == source || nullptr == buffer_size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -169,22 +149,19 @@ return_t base64_encode (const byte_t* source, size_t source_size, byte_t* buffer
 
         *buffer_size = size_need;
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t base64_decode (const byte_t *source, size_t source_size, byte_t *buffer, size_t * buffer_size, int encoding)
-{
+return_t base64_decode(const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, int encoding) {
     return_t ret = errorcode_t::success;
     size_t i, j = 0;
     base64_conv_t temp;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == source || nullptr == buffer_size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -254,126 +231,103 @@ return_t base64_decode (const byte_t *source, size_t source_size, byte_t *buffer
 
         *buffer_size = (source_size * 3 / 4);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t base64_encode (const byte_t* source, size_t source_size, binary_t& encoded, int encoding)
-{
+return_t base64_encode(const byte_t* source, size_t source_size, binary_t& encoded, int encoding) {
     return_t ret = errorcode_t::success;
 
     size_t size = 0;
 
-    base64_encode (source, source_size, &encoded[0], &size, encoding);
-    encoded.resize (size);
-    ret = base64_encode (source, source_size, &encoded[0], &size, encoding);
-    encoded.resize (size);
+    base64_encode(source, source_size, &encoded[0], &size, encoding);
+    encoded.resize(size);
+    ret = base64_encode(source, source_size, &encoded[0], &size, encoding);
+    encoded.resize(size);
 
     return ret;
 }
 
-return_t base64_encode (const byte_t* source, size_t source_size, std::string& encoded, int encoding)
-{
+return_t base64_encode(const byte_t* source, size_t source_size, std::string& encoded, int encoding) {
     return_t ret = errorcode_t::success;
 
     size_t size = 0;
 
-    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
-    encoded.resize (size);
-    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
-    encoded.resize (size);
+    base64_encode(source, source_size, (byte_t*)&encoded[0], &size, encoding);
+    encoded.resize(size);
+    base64_encode(source, source_size, (byte_t*)&encoded[0], &size, encoding);
+    encoded.resize(size);
 
     return ret;
 }
 
-std::string base64_encode (const byte_t* source, size_t source_size, int encoding)
-{
+std::string base64_encode(const byte_t* source, size_t source_size, int encoding) {
     std::string encoded;
 
     size_t size = 0;
 
-    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
-    encoded.resize (size);
-    base64_encode (source, source_size, (byte_t*) &encoded[0], &size, encoding);
-    encoded.resize (size);
+    base64_encode(source, source_size, (byte_t*)&encoded[0], &size, encoding);
+    encoded.resize(size);
+    base64_encode(source, source_size, (byte_t*)&encoded[0], &size, encoding);
+    encoded.resize(size);
     return encoded;
 }
 
-std::string base64_encode (binary_t const& source, int encoding)
-{
-    return base64_encode (&source [0], source.size (), encoding);
-}
+std::string base64_encode(binary_t const& source, int encoding) { return base64_encode(&source[0], source.size(), encoding); }
 
-std::string base64_encode (std::string const& source, int encoding)
-{
-    return base64_encode ((byte_t*) source.c_str (), source.size (), encoding);
-}
+std::string base64_encode(std::string const& source, int encoding) { return base64_encode((byte_t*)source.c_str(), source.size(), encoding); }
 
-return_t base64_decode (const char* source, size_t source_size, binary_t& decoded, int encoding)
-{
+return_t base64_decode(const char* source, size_t source_size, binary_t& decoded, int encoding) {
     return_t ret = errorcode_t::success;
 
     size_t size = 0;
 
-    base64_decode ((byte_t*) source, source_size, &decoded[0], &size, encoding);
-    decoded.resize (size);
-    base64_decode ((byte_t*) source, source_size, &decoded[0], &size, encoding);
-    decoded.resize (size);
+    base64_decode((byte_t*)source, source_size, &decoded[0], &size, encoding);
+    decoded.resize(size);
+    base64_decode((byte_t*)source, source_size, &decoded[0], &size, encoding);
+    decoded.resize(size);
 
     return ret;
 }
 
-return_t base64_decode (std::string const& source, binary_t& decoded, int encoding)
-{
+return_t base64_decode(std::string const& source, binary_t& decoded, int encoding) {
     return_t ret = errorcode_t::success;
 
     size_t size = 0;
 
-    base64_decode ((byte_t*) source.c_str (), source.size (), &decoded[0], &size, encoding);
-    decoded.resize (size);
-    base64_decode ((byte_t*) source.c_str (), source.size (), &decoded[0], &size, encoding);
-    decoded.resize (size);
+    base64_decode((byte_t*)source.c_str(), source.size(), &decoded[0], &size, encoding);
+    decoded.resize(size);
+    base64_decode((byte_t*)source.c_str(), source.size(), &decoded[0], &size, encoding);
+    decoded.resize(size);
 
     return ret;
 }
 
-binary_t base64_decode (const char* source, size_t source_size, int encoding)
-{
+binary_t base64_decode(const char* source, size_t source_size, int encoding) {
     binary_t decoded;
 
-    base64_decode (source, source_size, decoded, encoding);
+    base64_decode(source, source_size, decoded, encoding);
     return decoded;
 }
 
-binary_t base64_decode (binary_t const& source, int encoding)
-{
-    return base64_decode ((char*) &source[0], source.size (), encoding);
-}
+binary_t base64_decode(binary_t const& source, int encoding) { return base64_decode((char*)&source[0], source.size(), encoding); }
 
-binary_t base64_decode (std::string const& source, int encoding)
-{
-    return base64_decode (source.c_str (), source.size (), encoding);
-}
+binary_t base64_decode(std::string const& source, int encoding) { return base64_decode(source.c_str(), source.size(), encoding); }
 
-std::string base64_decode_careful (std::string const& source, int encoding)
-{
-    return base64_decode_careful (source.c_str (), source.size (), encoding);
-}
+std::string base64_decode_careful(std::string const& source, int encoding) { return base64_decode_careful(source.c_str(), source.size(), encoding); }
 
-std::string base64_decode_careful (const char* source, size_t source_size, int encoding)
-{
+std::string base64_decode_careful(const char* source, size_t source_size, int encoding) {
     std::string decoded;
     size_t size = 0;
 
-    base64_decode ((byte_t*) source, source_size, (byte_t*) &decoded[0], &size, encoding);
-    decoded.resize (size);
-    base64_decode ((byte_t*) source, source_size, (byte_t*) &decoded[0], &size, encoding);
-    decoded.resize (size);
+    base64_decode((byte_t*)source, source_size, (byte_t*)&decoded[0], &size, encoding);
+    decoded.resize(size);
+    base64_decode((byte_t*)source, source_size, (byte_t*)&decoded[0], &size, encoding);
+    decoded.resize(size);
     return decoded;
 }
 
-}  // namespace
+}  // namespace hotplace

@@ -15,60 +15,41 @@
 
 namespace hotplace {
 
-class critical_section : public critical_section_t
-{
-public:
+class critical_section : public critical_section_t {
+   public:
     /**
      * @brief constructor
      */
-    critical_section ()
-    {
-        startup ();
-    }
+    critical_section() { startup(); }
 
     /**
      * @brief destructor
      */
-    virtual ~critical_section ()
-    {
-        cleanup ();
-    }
+    virtual ~critical_section() { cleanup(); }
 
     /**
      * @brief enter critical section
      */
-    virtual void enter ()
-    {
-        ::EnterCriticalSection (&m_cs);
-    }
+    virtual void enter() { ::EnterCriticalSection(&m_cs); }
 
     /**
      * @brief leave critical section
      */
-    virtual void leave ()
-    {
-        ::LeaveCriticalSection (&m_cs);
-    }
+    virtual void leave() { ::LeaveCriticalSection(&m_cs); }
 
-private:
+   private:
     /**
      * @brief startup
      */
-    void startup ()
-    {
-        ::InitializeCriticalSectionAndSpinCount (&m_cs, 2048);
-    }
+    void startup() { ::InitializeCriticalSectionAndSpinCount(&m_cs, 2048); }
     /**
      * @brief cleanup
      */
-    void cleanup ()
-    {
-        ::DeleteCriticalSection (&m_cs);
-    }
+    void cleanup() { ::DeleteCriticalSection(&m_cs); }
 
     CRITICAL_SECTION m_cs;
 };
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

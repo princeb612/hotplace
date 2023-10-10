@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_JOSE_TYPES__
 #define __HOTPLACE_SDK_CRYPTO_JOSE_TYPES__
 
-#include <hotplace/sdk/crypto/types.hpp>
-#include <hotplace/sdk/crypto/basic/types.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/types.hpp>
 #include <list>
 #include <map>
 
@@ -21,31 +21,31 @@ namespace hotplace {
 namespace crypto {
 
 enum jose_serialization_t {
-    jose_compact    = 0,
-    jose_json       = 1,
-    jose_flatjson   = 2,
+    jose_compact = 0,
+    jose_json = 1,
+    jose_flatjson = 2,
 };
 #define JOSE_JSON_FORMAT jose_serialization_t::jose_flatjson
 
 enum jose_compose_t {
-    jose_enc_only   = 1,
-    jose_alg_only   = 2,
-    jose_enc_alg    = 3,
+    jose_enc_only = 1,
+    jose_alg_only = 2,
+    jose_enc_alg = 3,
 };
 
 enum jose_type_t {
-    jose_alg_signature              = 1,
-    jose_alg_key_management         = 2,
-    jose_alg_contente_encryption    = 3,
+    jose_alg_signature = 1,
+    jose_alg_key_management = 2,
+    jose_alg_contente_encryption = 3,
 };
 
 enum jose_part_t {
-    jose_enc_part   = 1,
-    jose_alg_part   = 2,
+    jose_enc_part = 1,
+    jose_alg_part = 2,
 };
 
 enum jose_flag_t {
-    jose_deflate = (1 << 0), // JWE only, (NOT JWS)
+    jose_deflate = (1 << 0),  // JWE only, (NOT JWS)
 };
 
 typedef struct _jose_recipient_t {
@@ -56,7 +56,7 @@ typedef struct _jose_recipient_t {
     std::string kid;
 
     crypt_datamap_t datamap;
-    crypt_variantmap_t variantmap; // p2c, epk
+    crypt_variantmap_t variantmap;  // p2c, epk
     EVP_PKEY* epk;
     uint32 p2c;
 
@@ -64,8 +64,7 @@ typedef struct _jose_recipient_t {
     /* P2S, P2C case of PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW */
     /* EPK, APU, APV case of ECDH-ES, ECDH-ES+A128KW, ECDH-ES+A192KW, ECDH-ES+A256KW */
 
-    _jose_recipient_t () : alg_info (nullptr), pkey (nullptr), epk (nullptr), p2c (0)
-    {
+    _jose_recipient_t() : alg_info(nullptr), pkey(nullptr), epk(nullptr), p2c(0) {
         // do nothing
     }
 } jose_recipient_t;
@@ -101,13 +100,12 @@ typedef struct _jose_encryption_t {
     std::string kid;
     crypt_datamap_t datamap;
 
-    jose_recipients_t recipients; // per "alg"
+    jose_recipients_t recipients;  // per "alg"
 
-    _jose_encryption_t () : enc_info (nullptr)
-    {
+    _jose_encryption_t() : enc_info(nullptr) {
         // do nothing
     }
-}  jose_encryption_t;
+} jose_encryption_t;
 typedef std::map<jwe_t, jose_encryption_t> jose_encryptions_map_t;
 typedef std::pair<jose_encryptions_map_t::iterator, bool> jose_encryptions_map_pib_t;
 
@@ -125,18 +123,17 @@ typedef struct _jose_context_t {
     crypto_key* key;
 
     uint32 flags;
-    binary_t protected_header;          // compact, flat
+    binary_t protected_header;  // compact, flat
 
-    jose_encryptions_map_t encryptions; // JSON Object Encryption
-    jose_signs_t signs;                 // JSON Object Signing
+    jose_encryptions_map_t encryptions;  // JSON Object Encryption
+    jose_signs_t signs;                  // JSON Object Signing
 
-    _jose_context_t () : key (nullptr), flags (0)
-    {
+    _jose_context_t() : key(nullptr), flags(0) {
         // do nothing
     }
 } jose_context_t;
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

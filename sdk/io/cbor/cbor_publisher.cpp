@@ -17,58 +17,51 @@
 namespace hotplace {
 namespace io {
 
-cbor_publisher::cbor_publisher ()
-{
+cbor_publisher::cbor_publisher() {
     // do nothing
 }
 
-return_t cbor_publisher::publish (cbor_object* object, binary_t* b)
-{
+return_t cbor_publisher::publish(cbor_object* object, binary_t* b) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == object || nullptr == b) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        b->clear ();
+        b->clear();
 
-        cbor_concise_visitor concise (b);
-        object->accept (&concise);
+        cbor_concise_visitor concise(b);
+        object->accept(&concise);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t cbor_publisher::publish (cbor_object* object, stream_t* s)
-{
+return_t cbor_publisher::publish(cbor_object* object, stream_t* s) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == object || nullptr == s) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        s->clear ();
+        s->clear();
 
-        cbor_diagnostic_visitor diagnostic (s);
-        object->accept (&diagnostic);
+        cbor_diagnostic_visitor diagnostic(s);
+        object->accept(&diagnostic);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-}
-}
+}  // namespace io
+}  // namespace hotplace

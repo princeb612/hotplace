@@ -20,11 +20,10 @@ namespace net {
  * @brief   client socket
  * @sa      class transport_layer_security_client : public client_socket
  */
-class client_socket
-{
-public:
-    client_socket ();
-    virtual ~client_socket ();
+class client_socket {
+   public:
+    client_socket();
+    virtual ~client_socket();
 
     /**
      * @brief   connect
@@ -35,14 +34,14 @@ public:
      * @param   uint32          timeout         [IN]
      * @return error code (see error.hpp)
      */
-    virtual return_t connect (socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
+    virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
     /**
      * @brief   close
      * @param   socket_t        sock            [IN] see connect
      * @param   tls_context_t*  tls_handle      [IN] ignore
      * @return error code (see error.hpp)
      */
-    virtual return_t close (socket_t sock, tls_context_t* tls_handle);
+    virtual return_t close(socket_t sock, tls_context_t* tls_handle);
 
     /**
      * @brief   read
@@ -53,7 +52,7 @@ public:
      * @param   size_t*         cbread          [OUT]
      * @return error code (see error.hpp)
      */
-    virtual return_t read (socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
+    virtual return_t read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]
@@ -63,10 +62,10 @@ public:
      * @param   size_t*         size_sent       [OUT]
      * @return error code (see error.hpp)
      */
-    virtual return_t send (socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent);
+    virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent);
 };
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace
 
 #endif

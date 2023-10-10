@@ -15,8 +15,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPT__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPT__
 
-#include <hotplace/sdk/crypto/crypto.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/crypto.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -62,17 +62,16 @@ namespace crypto {
  *              crypt.close (handle);
  *          }
  */
-class openssl_crypt : public crypt_t
-{
-public:
+class openssl_crypt : public crypt_t {
+   public:
     /**
      * @brief constructor
      */
-    openssl_crypt ();
+    openssl_crypt();
     /**
      * @brief destructor
      */
-    virtual ~openssl_crypt ();
+    virtual ~openssl_crypt();
 
     /**
      * @brief create a context handle (symmetric)
@@ -90,14 +89,14 @@ public:
      *        crypt.open(&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, key, size_key, iv, size_iv);
      *        crypt.close(handle);
      */
-    virtual return_t open (crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, unsigned size_key,
-                           const unsigned char* iv, unsigned size_iv);
+    virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, unsigned size_key,
+                          const unsigned char* iv, unsigned size_iv);
     /**
      * @brief destroy a context handle
      * @param crypt_context_t* handle [in]
      * @return error code (see error.hpp)
      */
-    virtual return_t close (crypt_context_t* handle);
+    virtual return_t close(crypt_context_t* handle);
 
     /**
      * @brief symmetric encrypt
@@ -111,7 +110,8 @@ public:
      *        crypt.encrypt(handle, data_plain, size_plain, &data_encrypted, &size_encrypted);
      *        crypt.free_data(data_encrypted);
      */
-    virtual return_t encrypt (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted, size_t* size_encrypted);
+    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted,
+                             size_t* size_encrypted);
     /**
      * @brief symmetric encrypt
      * @param crypt_context_t* handle [in]
@@ -122,7 +122,7 @@ public:
      * @example
      *        crypt.encrypt(handle, data_plain, size_plain, data_encrypted);
      */
-    virtual return_t encrypt (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted);
+    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted);
 
     /**
      * @brief encrypt (GCM)
@@ -133,9 +133,8 @@ public:
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [outopt]
      */
-    virtual return_t encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted,
-                               binary_t* aad = nullptr,
-                               binary_t* tag = nullptr);
+    virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted, binary_t* aad = nullptr,
+                              binary_t* tag = nullptr);
     /**
      * @brief encrypte
      * @param crypt_context_t* handle [in]
@@ -146,9 +145,8 @@ public:
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [inopt]
      */
-    return_t encrypt2 (crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char* out_encrypted, size_t* size_encrypted,
-                       binary_t* aad = nullptr,
-                       binary_t* tag = nullptr);
+    return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char* out_encrypted, size_t* size_encrypted,
+                      binary_t* aad = nullptr, binary_t* tag = nullptr);
     /**
      * @brief symmetric decrypt
      * @param crypt_context_t* handle [in]
@@ -161,7 +159,8 @@ public:
      *        crypt.decrypt(handle, data_encrypted, size_encrypted, &data_decrypted, &size_decrypted);
      *        crypt.free_data(data_decrypted);
      */
-    virtual return_t decrypt (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** data_plain, size_t* size_plain);
+    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** data_plain,
+                             size_t* size_plain);
     /**
      * @brief symmetric decrypt
      * @param crypt_context_t* handle [in]
@@ -172,7 +171,7 @@ public:
      * @example
      *        crypt.decrypt(handle, data_encrypted, size_encrypted, data_decrypted);
      */
-    virtual return_t decrypt (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted);
+    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted);
 
     /**
      * @brief decrypt (GCM)
@@ -183,9 +182,8 @@ public:
      * @param binary_t* aad [inpot]
      * @param binary_t* tag [inopt]
      */
-    virtual return_t decrypt2 (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
-                               binary_t* aad = nullptr,
-                               binary_t* tag = nullptr);
+    virtual return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
+                              binary_t* aad = nullptr, binary_t* tag = nullptr);
     /**
      * @brief decrypt
      * @param crypt_context_t* handle [in]
@@ -196,14 +194,13 @@ public:
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [inopt]
      */
-    return_t decrypt2 (crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, byte_t* out_decrypted, size_t* size_decrypted,
-                       binary_t* aad = nullptr,
-                       binary_t* tag = nullptr);
+    return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, byte_t* out_decrypted, size_t* size_decrypted,
+                      binary_t* aad = nullptr, binary_t* tag = nullptr);
     /**
      * @brief free memory
      * @remarks see encrypt, decrypt
      */
-    virtual return_t free_data (unsigned char* data);
+    virtual return_t free_data(unsigned char* data);
 
     /**
      * @biref asymmetric encrypt
@@ -212,7 +209,7 @@ public:
      * @param binary_t& output [out]
      * @param crypt_enc_t mode [in]
      */
-    return_t encrypt (EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
+    return_t encrypt(EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
     /**
      * @biref asymmetric decrypt
      * @param EVP_PKEY* pkey [in]
@@ -220,7 +217,7 @@ public:
      * @param binary_t& output [out]
      * @param crypt_enc_t mode [in]
      */
-    return_t decrypt (EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
+    return_t decrypt(EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
 
     /**
      * @brief deprecated - expect block operation size
@@ -229,12 +226,12 @@ public:
      * @param size_t* size_expect [out]
      * @return error code (see error.hpp)
      */
-    //virtual return_t expect(crypt_context_t* handle, size_t size_data, size_t* size_expect);
+    // virtual return_t expect(crypt_context_t* handle, size_t size_data, size_t* size_expect);
     /**
      * @brief crypt_poweredby_t
      * @return see crypt_poweredby_t
      */
-    virtual crypt_poweredby_t get_type ();
+    virtual crypt_poweredby_t get_type();
 
     /**
      * @brief query
@@ -242,10 +239,10 @@ public:
      * @param size_t cmd [in] 1 key size, 2 iv size
      * @param size_t& value [out]
      */
-    virtual return_t query (crypt_context_t* handle, size_t cmd, size_t& value);
+    virtual return_t query(crypt_context_t* handle, size_t cmd, size_t& value);
 };
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

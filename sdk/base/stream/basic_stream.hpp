@@ -11,10 +11,11 @@
 #ifndef __HOTPLACE_SDK_BASE_STREAM_BASICSTREAM__
 #define __HOTPLACE_SDK_BASE_STREAM_BASICSTREAM__
 
+#include <stdarg.h>
+
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/base/basic/bufferio.hpp>
 #include <hotplace/sdk/base/stream.hpp>
-#include <stdarg.h>
 #include <iostream>
 
 namespace hotplace {
@@ -22,107 +23,106 @@ namespace hotplace {
 /**
  * @brief   basic_stream null-padded
  */
-class basic_stream : public stream_t
-{
-public:
+class basic_stream : public stream_t {
+   public:
     /**
      * @brief   constructor
      * @param   size_t allocsize [inopt] default 4K
      * @param   uint32 flags [inopt] default 0
      */
-    basic_stream (size_t allocsize = (1 << 12), uint32 flags = 0);
+    basic_stream(size_t allocsize = (1 << 12), uint32 flags = 0);
     /**
      * @brief   constructor
      * @param   const char* data [in]
      */
-    basic_stream (const char* data);
+    basic_stream(const char* data);
     /**
      * @brief   constructor
      * @param   const basic_stream& stream [in]
      */
-    basic_stream (const basic_stream& stream);
+    basic_stream(const basic_stream& stream);
     /**
      * @brief   destructor
      */
-    virtual ~basic_stream ();
+    virtual ~basic_stream();
 
     /**
      * @brief   c-style string
      */
-    const char* c_str ();
+    const char* c_str();
     /**
      * @brief   data
      */
-    byte_t* data ();
+    byte_t* data();
     /**
      * @brief   size
      */
-    uint64 size ();
+    uint64 size();
     /**
      * @brief   write
      * @param   void* data [in]
      * @param   size_t size [in]
      */
-    return_t write (void* data, size_t size);
+    return_t write(void* data, size_t size);
     /**
      * @brief   fill
      * @param   size_t l [in]
      * @param   char c [in]
      */
-    return_t fill (size_t l, char c);
+    return_t fill(size_t l, char c);
     /**
      * @brief   clear
      */
-    return_t clear ();
+    return_t clear();
 
     /**
      * @brief   printf
      * @param   const char* buf [in]
      */
-    return_t printf (const char* buf, ...);
+    return_t printf(const char* buf, ...);
     /**
      * @brief   vprintf
      * @param   const char* buf [in]
      */
-    return_t vprintf (const char* buf, va_list ap);
+    return_t vprintf(const char* buf, va_list ap);
 #if defined _WIN32 || defined _WIN64
-    return_t printf (const wchar_t* buf, ...);
-    return_t vprintf (const wchar_t* buf, va_list ap);
+    return_t printf(const wchar_t* buf, ...);
+    return_t vprintf(const wchar_t* buf, va_list ap);
 #endif
 
     /**
      * @brief   operator =
      * @param   basic_stream obj [in]
      */
-    basic_stream& operator = (basic_stream obj);
+    basic_stream& operator=(basic_stream obj);
 
     /**
      * @brief   compare
      * @param   basic_stream obj [in]
      */
-    int compare (basic_stream obj);
+    int compare(basic_stream obj);
     /**
      * @brief   compare
      * @param   basic_stream lhs [in]
      * @param   basic_stream rhs [in]
      */
-    static int compare (basic_stream& lhs, basic_stream& rhs);
+    static int compare(basic_stream& lhs, basic_stream& rhs);
     /**
      * @brief   operator <
      * @param   basic_stream obj [in]
      */
-    bool operator < (basic_stream& obj);
+    bool operator<(basic_stream& obj);
     /**
      * @brief   operator <
      * @param   basic_stream obj [in]
      */
-    bool operator > (basic_stream& obj);
+    bool operator>(basic_stream& obj);
 
-protected:
+   protected:
     bufferio _bio;
     bufferio_context_t* _handle;
 };
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

@@ -17,8 +17,8 @@
 
 #include <openssl/asn1.h>
 #include <openssl/asn1t.h>
-#include <openssl/conf.h>
 #include <openssl/cmac.h>
+#include <openssl/conf.h>
 #include <openssl/crypto.h>
 #include <openssl/ec.h>
 #include <openssl/engine.h>
@@ -46,7 +46,7 @@ namespace crypto {
 typedef struct _openssl_evp_cipher_method_t {
     crypt_algorithm_t _algorithm;
     crypt_mode_t _mode;
-    const EVP_CIPHER* _cipher; //const EVP_CIPHER* _cipher;
+    const EVP_CIPHER* _cipher;  // const EVP_CIPHER* _cipher;
     const char* _fetchname;
 } openssl_evp_cipher_method_t;
 
@@ -56,7 +56,7 @@ typedef struct _openssl_evp_md_method_t {
     const char* _fetchname;
 } openssl_evp_md_method_t;
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

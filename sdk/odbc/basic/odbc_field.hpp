@@ -15,8 +15,8 @@
 #ifndef __HOTPLACE_SDK_ODBC_FIELD__
 #define __HOTPLACE_SDK_ODBC_FIELD__
 
-#include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/odbc/types.hpp>
 
@@ -24,9 +24,8 @@ namespace hotplace {
 using namespace io;
 namespace odbc {
 
-class odbc_field
-{
-public:
+class odbc_field {
+   public:
     /**
      * @brief
      * @param   int         index           [IN]
@@ -39,7 +38,7 @@ public:
      * @sa
      * @remarks
      */
-    odbc_field (int index, int data_type, int column_type, int column_size, unsigned char* column_data, odbc_field* field_info_ptr = nullptr);
+    odbc_field(int index, int data_type, int column_type, int column_size, unsigned char* column_data, odbc_field* field_info_ptr = nullptr);
     /**
      * @brief
      * @param
@@ -47,7 +46,7 @@ public:
      * @sa
      * @remarks
      */
-    ~odbc_field ();
+    ~odbc_field();
 
     /**
      * @brief
@@ -56,8 +55,8 @@ public:
      * @sa
      * @remarks
      */
-    int as_integer (void);
-    double as_double (void);
+    int as_integer(void);
+    double as_double(void);
 
     /**
      * @brief
@@ -66,9 +65,9 @@ public:
      * @sa
      * @remarks
      */
-    const char* as_string (ansi_string& str, UINT nCodePage = 0);
+    const char* as_string(ansi_string& str, UINT nCodePage = 0);
 #if defined _UNICODE || defined UNICODE
-    const wchar_t* as_string (wide_string& str, UINT nCodePage = CP_ACP);
+    const wchar_t* as_string(wide_string& str, UINT nCodePage = CP_ACP);
 #endif
 
     /**
@@ -78,10 +77,7 @@ public:
      * @sa
      * @remarks
      */
-    int get_type (void)
-    {
-        return _column_type;
-    }
+    int get_type(void) { return _column_type; }
     /**
      * @brief
      * @param
@@ -89,39 +85,37 @@ public:
      * @sa
      * @remarks
      */
-    const char* get_field_name (ansi_string& str);
+    const char* get_field_name(ansi_string& str);
 #if defined _UNICODE || defined UNICODE
-    const wchar_t* get_field_name (wide_string& str);
+    const wchar_t* get_field_name(wide_string& str);
 #endif
 
-    int addref ();
-    int release ();
+    int addref();
+    int release();
 
-protected:
-
-private:
-
+   protected:
+   private:
     int _index;
     int _data_type;
     int _column_type;
     int _column_size;
-    datetime _datetime;            ///< SQL_TIMESTAMP
+    datetime _datetime;  ///< SQL_TIMESTAMP
     odbc_field* _field_info;
 
-    typedef union _field_data_t     // according to _data_type
+    typedef union _field_data_t  // according to _data_type
     {
-        int i;                      // SQL_BIT, SQL_TINYINT, SQL_INTEGER, SQL_SMALLINT
-        float f;                    // SQL_FLOAT
-        double d;                   // SQL_DOUBLE
-        void* p;                    // ...
+        int i;     // SQL_BIT, SQL_TINYINT, SQL_INTEGER, SQL_SMALLINT
+        float f;   // SQL_FLOAT
+        double d;  // SQL_DOUBLE
+        void* p;   // ...
     } field_data_t;
 
     field_data_t _field_data;
 
-    t_shared_reference <odbc_field> _shared;
+    t_shared_reference<odbc_field> _shared;
 };
 
-}
-}  // namespace
+}  // namespace odbc
+}  // namespace hotplace
 
 #endif

@@ -8,8 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/sdk.hpp>
 #include <stdio.h>
+
+#include <hotplace/sdk/sdk.hpp>
 #include <iostream>
 
 using namespace hotplace;
@@ -22,49 +23,37 @@ typedef struct _OPTION {
     std::string outfile;
     bool keygen;
 
-    _OPTION () : keygen (false)
-    {
-    };
-    void reset ()
-    {
+    _OPTION() : keygen(false){};
+    void reset() {
         keygen = false;
-        infile.clear ();
-        outfile.clear ();
+        infile.clear();
+        outfile.clear();
     }
 } OPTION;
 
-void test1 (int argc, char** argv)
-{
+void test1(int argc, char** argv) {
     return_t ret = errorcode_t::success;
     cmdline_t<OPTION> cmdline;
 
-    cmdline
-        << cmdarg_t<OPTION> ("-in", "input", [&](OPTION& o, char* param) -> void {
-        o.infile = param;
-    }).preced ()
-        << cmdarg_t<OPTION> ("-out", "output", [&](OPTION& o, char* param) -> void {
-        o.outfile = param;
-    }).preced ()
-        << cmdarg_t<OPTION> ("-keygen", "keygen", [&](OPTION& o, char* param) -> void {
-        o.keygen = true;
-    }).optional ();
-    ret = cmdline.parse (argc, argv);
+    cmdline << cmdarg_t<OPTION>("-in", "input", [&](OPTION& o, char* param) -> void { o.infile = param; }).preced()
+            << cmdarg_t<OPTION>("-out", "output", [&](OPTION& o, char* param) -> void { o.outfile = param; }).preced()
+            << cmdarg_t<OPTION>("-keygen", "keygen", [&](OPTION& o, char* param) -> void { o.keygen = true; }).optional();
+    ret = cmdline.parse(argc, argv);
     if (errorcode_t::success != ret) {
-        cmdline.help ();
+        cmdline.help();
     }
 
-    OPTION opt = cmdline.value ();
-    std::cout << "infile "  << opt.infile.c_str () << std::endl;
-    std::cout << "outfile " << opt.outfile.c_str () << std::endl;
-    std::cout << "keygen "  << opt.keygen << std::endl;
+    OPTION opt = cmdline.value();
+    std::cout << "infile " << opt.infile.c_str() << std::endl;
+    std::cout << "outfile " << opt.outfile.c_str() << std::endl;
+    std::cout << "keygen " << opt.keygen << std::endl;
 }
 
-void test_cmdline (cmdline_t<OPTION>& cmdline, bool expect, int argc, char** argv)
-{
+void test_cmdline(cmdline_t<OPTION>& cmdline, bool expect, int argc, char** argv) {
     return_t ret = errorcode_t::success;
-    OPTION& opt = cmdline.value ();
+    OPTION& opt = cmdline.value();
 
-    opt.reset ();
+    opt.reset();
 
     std::string args;
     for (int i = 0; i < argc; i++) {
@@ -73,112 +62,105 @@ void test_cmdline (cmdline_t<OPTION>& cmdline, bool expect, int argc, char** arg
             args += " ";
         }
     }
-    printf ("condition argc %i argv '%s'\n", argc, args.c_str ());
+    printf("condition argc %i argv '%s'\n", argc, args.c_str());
 
-    ret = cmdline.parse (argc, argv);
+    ret = cmdline.parse(argc, argv);
     if (errorcode_t::success != ret) {
-        cmdline.help ();
+        cmdline.help();
     }
 
-    //OPTION opt = cmdline.value ();
-    std::cout << "infile "  << opt.infile.c_str () << std::endl;
-    std::cout << "outfile " << opt.outfile.c_str () << std::endl;
-    std::cout << "keygen "  << opt.keygen << std::endl;
+    // OPTION opt = cmdline.value ();
+    std::cout << "infile " << opt.infile.c_str() << std::endl;
+    std::cout << "outfile " << opt.outfile.c_str() << std::endl;
+    std::cout << "keygen " << opt.keygen << std::endl;
 
     bool test = (errorcode_t::success == ret);
-    _test_case.assert (expect ? test : !test, __FUNCTION__, "cmdline %s (%s)", args.c_str (), expect ? "positive test" : "negative test");
+    _test_case.assert(expect ? test : !test, __FUNCTION__, "cmdline %s (%s)", args.c_str(), expect ? "positive test" : "negative test");
 }
 
-void test2 ()
-{
-    _test_case.begin ("commandline");
+void test2() {
+    _test_case.begin("commandline");
 
     OPTION option;
 
     cmdline_t<OPTION> cmdline;
 
-    cmdline
-        << cmdarg_t<OPTION> ("-in", "input", [&](OPTION& o, char* param) -> void {
-        o.infile = param;
-    }).preced ()
-        << cmdarg_t<OPTION> ("-out", "output", [&](OPTION& o, char* param) -> void {
-        o.outfile = param;
-    }).preced ()
-        << cmdarg_t<OPTION> ("-keygen", "keygen", [&](OPTION& o, char* param) -> void {
-        o.keygen = true;
-    }).optional ();
+    cmdline << cmdarg_t<OPTION>("-in", "input", [&](OPTION& o, char* param) -> void { o.infile = param; }).preced()
+            << cmdarg_t<OPTION>("-out", "output", [&](OPTION& o, char* param) -> void { o.outfile = param; }).preced()
+            << cmdarg_t<OPTION>("-keygen", "keygen", [&](OPTION& o, char* param) -> void { o.keygen = true; }).optional();
 
     int argc = 0;
     argc = 0;
-    char* argv[5] = { nullptr, };
+    char* argv[5] = {
+        nullptr,
+    };
 
-    _test_case.begin ("case - invalid parameter");
+    _test_case.begin("case - invalid parameter");
 
     argc = 2;
-    argv[0] = (char*) "-in";
-    argv[1] = (char*) "test.in";
-    test_cmdline (cmdline, false, argc, argv); // wo -out
+    argv[0] = (char*)"-in";
+    argv[1] = (char*)"test.in";
+    test_cmdline(cmdline, false, argc, argv);  // wo -out
 
     argc = 3;
-    argv[0] = (char*) "-keygen";
-    argv[1] = (char*) "-in";
-    argv[2] = (char*) "test.in";
-    test_cmdline (cmdline, false, argc, argv); // wo -out
+    argv[0] = (char*)"-keygen";
+    argv[1] = (char*)"-in";
+    argv[2] = (char*)"test.in";
+    test_cmdline(cmdline, false, argc, argv);  // wo -out
 
     argc = 3;
-    argv[0] = (char*) "-keygen";
-    argv[1] = (char*) "test.in";
-    argv[2] = (char*) "-in";
-    test_cmdline (cmdline, false, argc, argv); // wo -in and -out
+    argv[0] = (char*)"-keygen";
+    argv[1] = (char*)"test.in";
+    argv[2] = (char*)"-in";
+    test_cmdline(cmdline, false, argc, argv);  // wo -in and -out
 
     argc = 4;
-    argv[0] = (char*) "-keygen";
-    argv[1] = (char*) "test.in";
-    argv[2] = (char*) "-in";
-    argv[3] = (char*) "test.out";
-    test_cmdline (cmdline, false, argc, argv); // wo -out
+    argv[0] = (char*)"-keygen";
+    argv[1] = (char*)"test.in";
+    argv[2] = (char*)"-in";
+    argv[3] = (char*)"test.out";
+    test_cmdline(cmdline, false, argc, argv);  // wo -out
 
     argc = 4;
-    argv[0] = (char*) "-in-";
-    argv[1] = (char*) "test.in";
-    argv[2] = (char*) "-out";
-    argv[3] = (char*) "test.out";
-    test_cmdline (cmdline, false, argc, argv); // wo -in
+    argv[0] = (char*)"-in-";
+    argv[1] = (char*)"test.in";
+    argv[2] = (char*)"-out";
+    argv[3] = (char*)"test.out";
+    test_cmdline(cmdline, false, argc, argv);  // wo -in
 
     // wo -in (expect value not token)
     argc = 5;
-    argv[0] = (char*) "-in";
-    argv[1] = (char*) "-keygen";
-    argv[2] = (char*) "test.in";
-    argv[3] = (char*) "-out";
-    argv[4] = (char*) "test.out";
-    test_cmdline (cmdline, false, argc, argv);
+    argv[0] = (char*)"-in";
+    argv[1] = (char*)"-keygen";
+    argv[2] = (char*)"test.in";
+    argv[3] = (char*)"-out";
+    argv[4] = (char*)"test.out";
+    test_cmdline(cmdline, false, argc, argv);
 
-    _test_case.begin ("case - valid parameter");
+    _test_case.begin("case - valid parameter");
 
     argc = 4;
-    argv[0] = (char*) "-in";
-    argv[1] = (char*) "test.in";
-    argv[2] = (char*) "-out";
-    argv[3] = (char*) "test.out";
-    test_cmdline (cmdline, true, argc, argv); // -token.preced value
+    argv[0] = (char*)"-in";
+    argv[1] = (char*)"test.in";
+    argv[2] = (char*)"-out";
+    argv[3] = (char*)"test.out";
+    test_cmdline(cmdline, true, argc, argv);  // -token.preced value
 
     argc = 5;
-    argv[0] = (char*) "-keygen";
-    argv[1] = (char*) "-in";
-    argv[2] = (char*) "test.in";
-    argv[3] = (char*) "-out";
-    argv[4] = (char*) "test.out";
-    test_cmdline (cmdline, true, argc, argv); // -token.preced value -token.optional
+    argv[0] = (char*)"-keygen";
+    argv[1] = (char*)"-in";
+    argv[2] = (char*)"test.in";
+    argv[3] = (char*)"-out";
+    argv[4] = (char*)"test.out";
+    test_cmdline(cmdline, true, argc, argv);  // -token.preced value -token.optional
 }
 
-int main (int argc, char** argv)
-{
+int main(int argc, char** argv) {
     return_t ret = errorcode_t::success;
 
-    test1 (argc, argv);
-    test2 ();
+    test1(argc, argv);
+    test2();
 
-    _test_case.report (5);
-    return _test_case.result ();
+    _test_case.report(5);
+    return _test_case.result();
 }

@@ -16,251 +16,203 @@
 namespace hotplace {
 
 #ifndef __to_int64
-#define __to_int64(a, b)  ((int64) (((int64) ((int32) (a))) * ((int32) (b))))
+#define __to_int64(a, b) ((int64)(((int64)((int32)(a))) * ((int32)(b))))
 #endif
 #ifndef __to_uint64
-#define __to_uint64(a, b) ((uint64) (((uint) ((uint32) (a))) * ((uint) (b))))
+#define __to_uint64(a, b) ((uint64)(((uint)((uint32)(a))) * ((uint)(b))))
 #endif
 
-datetime::datetime ()
-{
-    update ();
-}
+datetime::datetime() { update(); }
 
-datetime::datetime (time_t t, long* nsec)
-{
+datetime::datetime(time_t t, long* nsec) {
     _timespec.tv_sec = t;
     _timespec.tv_nsec = (nsec) ? *nsec : 0;
 }
 
-datetime::datetime (struct timespec ts)
-{
-    memcpy (&_timespec, &ts, sizeof (struct timespec));
-}
+datetime::datetime(struct timespec ts) { memcpy(&_timespec, &ts, sizeof(struct timespec)); }
 
-datetime::datetime (datetime_t& dt, long* nsec)
-{
-    datetime_to_timespec (dt, _timespec);
+datetime::datetime(datetime_t& dt, long* nsec) {
+    datetime_to_timespec(dt, _timespec);
     _timespec.tv_nsec = (nsec) ? *nsec : 0;
 }
 
-datetime::datetime (filetime_t& ft)
-{
-    filetime_to_timespec (ft, _timespec);
-}
+datetime::datetime(filetime_t& ft) { filetime_to_timespec(ft, _timespec); }
 
-datetime::datetime (systemtime_t& st)
-{
-    systemtime_to_timespec (st, _timespec);
-}
+datetime::datetime(systemtime_t& st) { systemtime_to_timespec(st, _timespec); }
 
-datetime::datetime (asn1time_t& at)
-{
-    asn1time_to_timespec (at, _timespec);
-}
+datetime::datetime(asn1time_t& at) { asn1time_to_timespec(at, _timespec); }
 
-datetime::datetime (datetime& dt)
-{
-    memcpy (&_timespec, &dt._timespec, sizeof (struct timespec));
-}
+datetime::datetime(datetime& dt) { memcpy(&_timespec, &dt._timespec, sizeof(struct timespec)); }
 
-datetime::~datetime ()
-{
+datetime::~datetime() {
     // do nothing
 }
 
-void datetime::update ()
-{
-    clock_gettime (CLOCK_REALTIME, &_timespec);
-}
+void datetime::update() { clock_gettime(CLOCK_REALTIME, &_timespec); }
 
-bool datetime::update_if_elapsed (unsigned long msecs)
-{
+bool datetime::update_if_elapsed(unsigned long msecs) {
     bool ret = false;
 
     datetime now;
-    datetime temp (_timespec);
-    timespan_t ts = { 0, };
+    datetime temp(_timespec);
+    timespan_t ts = {
+        0,
+    };
 
     ts.milliseconds = msecs;
     temp += ts;
 
     if (now >= temp) {
-        memcpy (&_timespec, &now._timespec, sizeof (struct timespec));
+        memcpy(&_timespec, &now._timespec, sizeof(struct timespec));
         ret = true;
     }
 
     return ret;
 }
 
-return_t datetime::gettimespec (struct timespec* ts)
-{
+return_t datetime::gettimespec(struct timespec* ts) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == ts) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        memcpy (ts, &_timespec, sizeof (struct timespec));
+        memcpy(ts, &_timespec, sizeof(struct timespec));
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t datetime::getlocaltime (struct tm* tm, long* nsec)
-{
+return_t datetime::getlocaltime(struct tm* tm, long* nsec) {
     return_t ret = errorcode_t::success;
 
-    ret = timespec_to_tm (1, _timespec, tm, nsec);
+    ret = timespec_to_tm(1, _timespec, tm, nsec);
     return ret;
 }
 
-return_t datetime::getgmtime (struct tm* tm, long* nsec)
-{
+return_t datetime::getgmtime(struct tm* tm, long* nsec) {
     return_t ret = errorcode_t::success;
 
-    ret = timespec_to_tm (0, _timespec, tm, nsec);
+    ret = timespec_to_tm(0, _timespec, tm, nsec);
     return ret;
 }
 
-return_t datetime::getlocaltime (datetime_t* dt, long* nsec)
-{
+return_t datetime::getlocaltime(datetime_t* dt, long* nsec) {
     return_t ret = errorcode_t::success;
 
-    ret = timespec_to_datetime (1, _timespec, dt, nsec);
+    ret = timespec_to_datetime(1, _timespec, dt, nsec);
     return ret;
 }
 
-return_t datetime::getgmtime (datetime_t* dt, long* nsec)
-{
+return_t datetime::getgmtime(datetime_t* dt, long* nsec) {
     return_t ret = errorcode_t::success;
 
-    ret = timespec_to_datetime (0, _timespec, dt, nsec);
+    ret = timespec_to_datetime(0, _timespec, dt, nsec);
     return ret;
 }
 
-return_t datetime::getgmtime (stream_t* stream)
-{
+return_t datetime::getgmtime(stream_t* stream) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         datetime_t dt;
-        getgmtime (&dt);
-        printf ("%04d-%02d-%02dT%02d:%02d:%02dZ", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+        getgmtime(&dt);
+        printf("%04d-%02d-%02dT%02d:%02d:%02dZ", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t datetime::getfiletime (filetime_t* ft)
-{
+return_t datetime::getfiletime(filetime_t* ft) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == ft) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        int64 ll = __to_int64 (_timespec.tv_sec, 10000000) + 116444736000000000LL;
-        ft->low = (uint32) ll;
-        ft->high = ((uint64) 11 >> 32);
+        int64 ll = __to_int64(_timespec.tv_sec, 10000000) + 116444736000000000LL;
+        ft->low = (uint32)ll;
+        ft->high = ((uint64)11 >> 32);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t datetime::getsystemtime (int mode, systemtime_t* ft)
-{
+return_t datetime::getsystemtime(int mode, systemtime_t* ft) {
     return_t ret = errorcode_t::success;
 
-    ret = timespec_to_systemtime (mode, _timespec, ft);
+    ret = timespec_to_systemtime(mode, _timespec, ft);
     return ret;
 }
 
-return_t datetime::getasn1time (asn1time_t* at)
-{
+return_t datetime::getasn1time(asn1time_t* at) {
     return_t ret = errorcode_t::success;
 
-    ret = timespec_to_asn1time (_timespec, at);
+    ret = timespec_to_asn1time(_timespec, at);
     return ret;
 }
 
-datetime& datetime::operator = (time_t timestamp)
-{
+datetime& datetime::operator=(time_t timestamp) {
     _timespec.tv_sec = timestamp;
     _timespec.tv_nsec = 0;
     return *this;
 }
 
-datetime& datetime::operator = (struct timespec& ts)
-{
-    memcpy (&_timespec, &ts, sizeof (struct timespec));
+datetime& datetime::operator=(struct timespec& ts) {
+    memcpy(&_timespec, &ts, sizeof(struct timespec));
     return *this;
 }
 
-datetime& datetime::operator = (filetime_t& ft)
-{
-    filetime_to_timespec (ft, _timespec);
+datetime& datetime::operator=(filetime_t& ft) {
+    filetime_to_timespec(ft, _timespec);
     return *this;
 }
 
-datetime & datetime::operator = (systemtime_t & st)
-{
-    systemtime_to_timespec (st, _timespec);
+datetime& datetime::operator=(systemtime_t& st) {
+    systemtime_to_timespec(st, _timespec);
     return *this;
 }
 
-datetime & datetime::operator = (asn1time_t & at)
-{
-    asn1time_to_timespec (at, _timespec);
+datetime& datetime::operator=(asn1time_t& at) {
+    asn1time_to_timespec(at, _timespec);
     return *this;
 }
 
-datetime & datetime::operator >> (struct timespec& ts)
-{
-    memcpy (&ts, &_timespec, sizeof (struct timespec));
+datetime& datetime::operator>>(struct timespec& ts) {
+    memcpy(&ts, &_timespec, sizeof(struct timespec));
     return *this;
 }
 
-datetime & datetime::operator >> (filetime_t & ft)
-{
-    getfiletime (&ft);
+datetime& datetime::operator>>(filetime_t& ft) {
+    getfiletime(&ft);
     return *this;
 }
 
-datetime & datetime::operator >> (systemtime_t & st)
-{
-    getsystemtime (1, &st);
+datetime& datetime::operator>>(systemtime_t& st) {
+    getsystemtime(1, &st);
     return *this;
 }
 
-datetime & datetime::operator >> (asn1time_t & at)
-{
-    getasn1time (&at);
+datetime& datetime::operator>>(asn1time_t& at) {
+    getasn1time(&at);
     return *this;
 }
 
-bool datetime::operator == (datetime rh)
-{
+bool datetime::operator==(datetime rh) {
     bool ret = false;
 
     if ((_timespec.tv_sec == rh._timespec.tv_sec) && (_timespec.tv_nsec == rh._timespec.tv_nsec)) {
@@ -269,8 +221,7 @@ bool datetime::operator == (datetime rh)
     return ret;
 }
 
-bool datetime::operator != (datetime rh)
-{
+bool datetime::operator!=(datetime rh) {
     bool ret = false;
 
     if ((_timespec.tv_sec != rh._timespec.tv_sec) || (_timespec.tv_nsec != rh._timespec.tv_nsec)) {
@@ -279,8 +230,7 @@ bool datetime::operator != (datetime rh)
     return ret;
 }
 
-bool datetime::operator >= (datetime rhs)
-{
+bool datetime::operator>=(datetime rhs) {
     bool ret = false;
 
     if (_timespec.tv_sec > rhs._timespec.tv_sec) {
@@ -292,8 +242,7 @@ bool datetime::operator >= (datetime rhs)
     return ret;
 }
 
-bool datetime::operator > (datetime rhs)
-{
+bool datetime::operator>(datetime rhs) {
     bool ret = false;
 
     if (_timespec.tv_sec > rhs._timespec.tv_sec) {
@@ -305,8 +254,7 @@ bool datetime::operator > (datetime rhs)
     return ret;
 }
 
-bool datetime::operator <= (datetime rhs)
-{
+bool datetime::operator<=(datetime rhs) {
     bool ret = false;
 
     if (_timespec.tv_sec < rhs._timespec.tv_sec) {
@@ -318,8 +266,7 @@ bool datetime::operator <= (datetime rhs)
     return ret;
 }
 
-bool datetime::operator < (datetime rhs)
-{
+bool datetime::operator<(datetime rhs) {
     bool ret = false;
 
     if (_timespec.tv_sec < rhs._timespec.tv_sec) {
@@ -336,8 +283,7 @@ bool datetime::operator < (datetime rhs)
 #define EXP7 10000000
 #define EXP9 1000000000
 
-datetime& datetime::operator += (timespan_t ts)
-{
+datetime& datetime::operator+=(timespan_t ts) {
     _timespec.tv_sec += ts.days * 60 * 60 * 24;
     _timespec.tv_sec += ts.seconds;
     long nsec = (_timespec.tv_nsec) + (ts.milliseconds * EXP6);
@@ -349,8 +295,7 @@ datetime& datetime::operator += (timespan_t ts)
     return *this;
 }
 
-datetime& datetime::operator -= (timespan_t ts)
-{
+datetime& datetime::operator-=(timespan_t ts) {
     _timespec.tv_sec -= ts.days * 60 * 60 * 24;
     _timespec.tv_sec -= ts.seconds;
     long nsec = (_timespec.tv_nsec) - (ts.milliseconds * EXP6);
@@ -366,17 +311,14 @@ datetime& datetime::operator -= (timespan_t ts)
 
 #if defined __linux__
 #elif defined _WIN32 || defined _WIN64
-#define gmtime_r(a, b) gmtime_s (b, a)
-#define localtime_r(a, b) localtime_s (b, a)
+#define gmtime_r(a, b) gmtime_s(b, a)
+#define localtime_r(a, b) localtime_s(b, a)
 #endif
 
-return_t datetime::timespec_to_tm (int mode, struct timespec ts, struct tm* tm_ptr, long* nsec)
-{
+return_t datetime::timespec_to_tm(int mode, struct timespec ts, struct tm* tm_ptr, long* nsec) {
     return_t ret = errorcode_t::success;
 
-
-    __try2
-    {
+    __try2 {
         if (nullptr == tm_ptr) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -384,33 +326,30 @@ return_t datetime::timespec_to_tm (int mode, struct timespec ts, struct tm* tm_p
 
         struct tm tm;
         if (0 == mode) {
-            gmtime_r (&ts.tv_sec, &tm);
+            gmtime_r(&ts.tv_sec, &tm);
         } else if (1 == mode) {
-            localtime_r (&ts.tv_sec, &tm);
+            localtime_r(&ts.tv_sec, &tm);
         } else {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        memcpy (tm_ptr, &tm, sizeof (struct tm));
+        memcpy(tm_ptr, &tm, sizeof(struct tm));
 
         if (nullptr != nsec) {
             *nsec = ts.tv_nsec;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t datetime::timespec_to_datetime (int mode, struct timespec ts, datetime_t* dt, long* nsec)
-{
+return_t datetime::timespec_to_datetime(int mode, struct timespec ts, datetime_t* dt, long* nsec) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == dt) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -418,9 +357,9 @@ return_t datetime::timespec_to_datetime (int mode, struct timespec ts, datetime_
 
         struct tm tm;
         if (0 == mode) {
-            gmtime_r (&ts.tv_sec, &tm);
+            gmtime_r(&ts.tv_sec, &tm);
         } else if (1 == mode) {
-            localtime_r (&ts.tv_sec, &tm);
+            localtime_r(&ts.tv_sec, &tm);
         } else {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -438,19 +377,16 @@ return_t datetime::timespec_to_datetime (int mode, struct timespec ts, datetime_
             *nsec = ts.tv_nsec;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t datetime::timespec_to_systemtime (int mode, struct timespec ts, systemtime_t* st)
-{
+return_t datetime::timespec_to_systemtime(int mode, struct timespec ts, systemtime_t* st) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == st) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -458,9 +394,9 @@ return_t datetime::timespec_to_systemtime (int mode, struct timespec ts, systemt
 
         struct tm tm;
         if (0 == mode) {
-            gmtime_r (&ts.tv_sec, &tm);
+            gmtime_r(&ts.tv_sec, &tm);
         } else if (1 == mode) {
-            localtime_r (&ts.tv_sec, &tm);
+            localtime_r(&ts.tv_sec, &tm);
         } else {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -474,20 +410,18 @@ return_t datetime::timespec_to_systemtime (int mode, struct timespec ts, systemt
         st->second = tm.tm_sec;
         st->milliseconds = ts.tv_nsec / EXP6;
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t datetime::datetime_to_timespec (datetime_t dt, struct timespec& ts)
-{
+return_t datetime::datetime_to_timespec(datetime_t dt, struct timespec& ts) {
     return_t ret = errorcode_t::success;
 
     struct tm tm;
 
-    memset (&tm, 0, sizeof (struct tm));
+    memset(&tm, 0, sizeof(struct tm));
 
     tm.tm_year = dt.year - 1900;
     tm.tm_mon = dt.month - 1;
@@ -496,16 +430,15 @@ return_t datetime::datetime_to_timespec (datetime_t dt, struct timespec& ts)
     tm.tm_min = dt.minute;
     tm.tm_sec = dt.second;
 
-    ts.tv_sec = mktime (&tm);
+    ts.tv_sec = mktime(&tm);
     ts.tv_nsec = 0;
 
     return ret;
 }
 
-return_t datetime::filetime_to_timespec (filetime_t ft, struct timespec& ts)
-{
+return_t datetime::filetime_to_timespec(filetime_t ft, struct timespec& ts) {
     return_t ret = errorcode_t::success;
-    int64 i64 = *(int64 *) &ft;
+    int64 i64 = *(int64*)&ft;
 
     i64 -= 116444736000000000LL;
     ts.tv_sec = i64 / 10000000;
@@ -513,13 +446,12 @@ return_t datetime::filetime_to_timespec (filetime_t ft, struct timespec& ts)
     return ret;
 }
 
-return_t datetime::systemtime_to_timespec (systemtime_t st, struct timespec& ts)
-{
+return_t datetime::systemtime_to_timespec(systemtime_t st, struct timespec& ts) {
     return_t ret = errorcode_t::success;
 
     struct tm tm;
 
-    memset (&tm, 0, sizeof (struct tm));
+    memset(&tm, 0, sizeof(struct tm));
 
     tm.tm_year = st.year - 1900;
     tm.tm_mon = st.month - 1;
@@ -528,49 +460,43 @@ return_t datetime::systemtime_to_timespec (systemtime_t st, struct timespec& ts)
     tm.tm_min = st.minute;
     tm.tm_sec = st.second;
 
-    ts.tv_sec = mktime (&tm);
+    ts.tv_sec = mktime(&tm);
     ts.tv_nsec = st.milliseconds * EXP6;
 
     return ret;
 }
 
-return_t datetime::timespec_to_asn1time (struct timespec ts, asn1time_t* at)
-{
+return_t datetime::timespec_to_asn1time(struct timespec ts, asn1time_t* at) {
     return_t ret = errorcode_t::success;
 
     if (at) {
         systemtime_t st;
-        ret = timespec_to_systemtime (1, ts, &st);
+        ret = timespec_to_systemtime(1, ts, &st);
 
         constexpr char constexpr_fmt[] = "04d%02d%02d%02d%02d%02d.%d";
-        at->set (V_ASN1_GENERALIZEDTIME, format (constexpr_fmt, st.year, st.month, st.day, st.hour, st.minute, st.second, st.milliseconds).c_str ());
+        at->set(V_ASN1_GENERALIZEDTIME, format(constexpr_fmt, st.year, st.month, st.day, st.hour, st.minute, st.second, st.milliseconds).c_str());
     } else {
         ret = errorcode_t::invalid_parameter;
     }
     return ret;
 }
 
-static int is_utc (const int year)
-{
+static int is_utc(const int year) {
     if (50 <= year && year <= 149) {
         return 1;
     }
     return 0;
 }
 
-static int leap_year (const int year)
-{
+static int leap_year(const int year) {
     if (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0)) {
         return 1;
     }
     return 0;
 }
 
-static void determine_days (struct tm *tm)
-{
-    static const int ydays[12] = {
-        0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
-    };
+static void determine_days(struct tm* tm) {
+    static const int ydays[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
     int y = tm->tm_year + 1900;
     int m = tm->tm_mon;
     int d = tm->tm_mday;
@@ -579,7 +505,7 @@ static void determine_days (struct tm *tm)
     tm->tm_yday = ydays[m] + d - 1;
     if (m >= 2) {
         /* March and onwards can be one day further into the year */
-        tm->tm_yday += leap_year (y);
+        tm->tm_yday += leap_year(y);
         m += 2;
     } else {
         /* Treat January and February as part of the previous year */
@@ -592,19 +518,17 @@ static void determine_days (struct tm *tm)
     tm->tm_wday = (d + (13 * m) / 5 + y + y / 4 + c / 4 + 5 * c + 6) % 7;
 }
 
-return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
-{
+return_t datetime::asn1time_to_timespec(asn1time_t at, struct timespec& ts) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
-        static const int min[9] = { 0, 0, 1, 1, 0, 0, 0, 0, 0 };
-        static const int max[9] = { 99, 99, 12, 31, 23, 59, 59, 12, 59 };
-        static const int mdays[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-        char *a;
+    __try2 {
+        static const int min[9] = {0, 0, 1, 1, 0, 0, 0, 0, 0};
+        static const int max[9] = {99, 99, 12, 31, 23, 59, 59, 12, 59};
+        static const int mdays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+        char* a;
         int n = 0, i = 0, i2 = 0, l = 0, o = 0, min_l = 11, strict = 0, end = 6, btz = 5, md = 0;
         struct tm tmp;
-#if defined (CHARSET_EBCDIC)
+#if defined(CHARSET_EBCDIC)
         const char upper_z = 0x5A, num_zero = 0x30, period = 0x2E, minus = 0x2D, plus = 0x2B;
 #else
         const char upper_z = 'Z', num_zero = '0', period = '.', minus = '-', plus = '+';
@@ -641,9 +565,9 @@ return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
         }
 
         l = at.length;
-        a = (char *) at.data;
+        a = (char*)at.data;
         o = 0;
-        memset (&tmp, 0, sizeof (tmp));
+        memset(&tmp, 0, sizeof(tmp));
 
         /*
          * GENERALIZEDTIME is similar to UTCTIME except the year is represented
@@ -660,7 +584,7 @@ return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
                 i++;
                 break;
             }
-            if (!isdigit (a[o])) {
+            if (!isdigit(a[o])) {
                 ret = errorcode_t::bad_data;
                 break;
             }
@@ -671,7 +595,7 @@ return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
                 break;
             }
 
-            if (!isdigit (a[o])) {
+            if (!isdigit(a[o])) {
                 ret = errorcode_t::bad_data;
                 break;
             }
@@ -707,7 +631,7 @@ return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
                     /* check if tm_mday is valid in tm_mon */
                     if (tmp.tm_mon == 1) {
                         /* it's February */
-                        md = mdays[1] + leap_year (tmp.tm_year + 1900);
+                        md = mdays[1] + leap_year(tmp.tm_year + 1900);
                     } else {
                         md = mdays[tmp.tm_mon];
                     }
@@ -716,7 +640,7 @@ return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
                         break;
                     }
                     tmp.tm_mday = n;
-                    determine_days (&tmp);
+                    determine_days(&tmp);
                     break;
                 case 4:
                     tmp.tm_hour = n;
@@ -748,7 +672,7 @@ return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
                 __leave2;
             }
             i = o;
-            while ((o < l) && isdigit (a[o])) {
+            while ((o < l) && isdigit(a[o])) {
                 f *= 10;
                 f += (a[o] - num_zero);
                 o++;
@@ -788,13 +712,13 @@ return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
                 __leave2;
             }
             for (i = end; i < end + 2; i++) {
-                if (!isdigit (a[o])) {
+                if (!isdigit(a[o])) {
                     ret = errorcode_t::bad_data;
                     break;
                 }
                 n = a[o] - num_zero;
                 o++;
-                if (!isdigit (a[o])) {
+                if (!isdigit(a[o])) {
                     ret = errorcode_t::bad_data;
                     break;
                 }
@@ -819,7 +743,7 @@ return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
         if (o == l) {
             /* success, check if tm should be filled */
         } else {
-            //ret = errorcode_t::bad_data;
+            // ret = errorcode_t::bad_data;
         }
 
         if (errorcode_t::success != ret) {
@@ -828,36 +752,30 @@ return_t datetime::asn1time_to_timespec (asn1time_t at, struct timespec& ts)
 
         if (utc) {
 #if defined __linux__
-            ts.tv_sec = timegm (&tmp);
+            ts.tv_sec = timegm(&tmp);
 #elif defined _WIN32 || defined _WIN64
-            ts.tv_sec = _mkgmtime (&tmp);
+            ts.tv_sec = _mkgmtime(&tmp);
 #endif
         } else {
-            ts.tv_sec = mktime (&tmp);
+            ts.tv_sec = mktime(&tmp);
         }
         ts.tv_sec += (offset * offsign);
         ts.tv_nsec = f;
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-void time_monotonic (struct timespec& ts)
-{
-    clock_gettime (CLOCK_MONOTONIC, &ts);
-}
+void time_monotonic(struct timespec& ts) { clock_gettime(CLOCK_MONOTONIC, &ts); }
 
-return_t time_diff (struct timespec& ts, struct timespec begin, struct timespec end)
-{
+return_t time_diff(struct timespec& ts, struct timespec begin, struct timespec end) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
-        memset (&ts, 0, sizeof (ts));
+    __try2 {
+        memset(&ts, 0, sizeof(ts));
 
         if (begin.tv_sec > end.tv_sec) {
             ret = errorcode_t::request;
@@ -877,31 +795,29 @@ return_t time_diff (struct timespec& ts, struct timespec begin, struct timespec 
             //  time_t tv_sec       valid values are >= 0
             //  tv_nsec	nanoseconds [0, 999999999]
 
-            int64 tv_nsec = (int64) EXP9;
+            int64 tv_nsec = (int64)EXP9;
             tv_nsec += end.tv_nsec;
             tv_nsec -= begin.tv_nsec;
             ts.tv_nsec = tv_nsec;
             ts.tv_sec = end.tv_sec - begin.tv_sec - 1;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t time_sum (struct timespec& ts, std::list <struct timespec>& slices)
-{
+return_t time_sum(struct timespec& ts, std::list<struct timespec>& slices) {
     return_t ret = errorcode_t::success;
-    std::list <struct timespec>::iterator it;
+    std::list<struct timespec>::iterator it;
     size_t sec = 0;
     uint64 nsec = 0;
 
-    memset (&ts, 0, sizeof (ts));
+    memset(&ts, 0, sizeof(ts));
 
-    for (it = slices.begin (); it != slices.end (); it++) {
+    for (it = slices.begin(); it != slices.end(); it++) {
         struct timespec& item = *it;
         sec += item.tv_sec;
         nsec += item.tv_nsec;
@@ -913,5 +829,4 @@ return_t time_sum (struct timespec& ts, std::list <struct timespec>& slices)
     return ret;
 }
 
-}  // namespace
-
+}  // namespace hotplace

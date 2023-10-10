@@ -19,21 +19,20 @@ namespace io {
 /**
  * host order to network order (64bits)
  */
-uint64 hton64 (uint64 value);
-uint64 ntoh64 (uint64 value);
+uint64 hton64(uint64 value);
+uint64 ntoh64(uint64 value);
 
 #if defined __SIZEOF_INT128__
 
 /**
  * atoi (int128)
  */
-template <typename TYPE> TYPE t_atoi (std::string const & in)
-{
+template <typename TYPE>
+TYPE t_atoi(std::string const& in) {
     return_t ret = errorcode_t::success;
     TYPE res = 0;
 
-    __try2
-    {
+    __try2 {
         size_t i = 0;
         int sign = 0;
 
@@ -46,9 +45,9 @@ template <typename TYPE> TYPE t_atoi (std::string const & in)
             ++i;
         }
 
-        for (; i < in.size (); ++i) {
+        for (; i < in.size(); ++i) {
             const char c = in[i];
-            if (not std::isdigit (c)) {
+            if (not std::isdigit(c)) {
                 ret = errorcode_t::bad_data;
                 break;
             }
@@ -65,15 +64,14 @@ template <typename TYPE> TYPE t_atoi (std::string const & in)
             res = -res;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return res;
 }
 
-int128 atoi128 (std::string const & in);
-uint128 atou128 (std::string const & in);
+int128 atoi128(std::string const& in);
+uint128 atou128(std::string const& in);
 
 typedef union _ipaddr_byteorder {
     uint128 t128;
@@ -82,20 +80,19 @@ typedef union _ipaddr_byteorder {
 /**
  * host order to network order (128bits)
  */
-uint128 hton128 (uint128 value);
-uint128 ntoh128 (uint128 value);
+uint128 hton128(uint128 value);
+uint128 ntoh128(uint128 value);
 
 #endif
 
 template <typename T, typename function_hton>
-void t_to_binary (T i, binary_t& bin)
-{
-    i = function_hton (i);
-    byte_t* b = (byte_t*) &i;
-    bin.insert (bin.end (), b, b + sizeof (i));
+void t_to_binary(T i, binary_t& bin) {
+    i = function_hton(i);
+    byte_t* b = (byte_t*)&i;
+    bin.insert(bin.end(), b, b + sizeof(i));
 }
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
 
 #endif

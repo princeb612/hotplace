@@ -19,11 +19,10 @@
 namespace hotplace {
 namespace net {
 
-class http_header
-{
-public:
-    http_header ();
-    virtual ~http_header ();
+class http_header {
+   public:
+    http_header();
+    virtual ~http_header();
 
     /**
      * @brief add a header
@@ -33,7 +32,7 @@ public:
      * @remarks
      *          header.add ("WWW-Authenticate", "Basic realm=\"protected\"");
      */
-    return_t add (const char* header, const char* value);
+    return_t add(const char* header, const char* value);
 
     /**
      * @brief add a header
@@ -41,9 +40,9 @@ public:
      * @param   std::string     value       [IN]
      * @return error code (see error.hpp)
      */
-    return_t add (std::string header, std::string value);
+    return_t add(std::string header, std::string value);
 
-    return_t clear ();
+    return_t clear();
 
     /**
      * @brief read a header
@@ -51,7 +50,7 @@ public:
      * @remarks
      *          header.get ("Content-Length", conent_length);
      */
-    const char* get (const char* header, std::string& content);
+    const char* get(const char* header, std::string& content);
     /**
      * @brief read a header token
      * @param   const char*     header      [IN]
@@ -62,15 +61,15 @@ public:
      *          if (auth_type == "Basic") ...
      *          else if (auth_type == "Digest") ...
      */
-    const char* get_token (const char* header, unsigned index, std::string& token);
+    const char* get_token(const char* header, unsigned index, std::string& token);
 
     /**
      * @brief read all headers
      * @return error code (see error.hpp)
      */
-    return_t get_headers (std::string& contents);
+    return_t get_headers(std::string& contents);
 
-protected:
+   protected:
     typedef std::map<std::string, std::string> http_header_map_t;
     typedef std::pair<http_header_map_t::iterator, bool> http_header_map_pib_t;
     http_header_map_t _headers;
@@ -78,27 +77,26 @@ protected:
 };
 
 class http_request;
-class http_uri
-{
-public:
-    http_uri ();
-    ~http_uri ();
+class http_uri {
+   public:
+    http_uri();
+    ~http_uri();
 
     /**
      * @brief open
      * @param std::string url [in]
      */
-    return_t open (std::string url);
-    return_t open (const char* url);
+    return_t open(std::string url);
+    return_t open(const char* url);
     /**
      * @brief close
      */
-    void close ();
+    void close();
 
     /**
      * @brief url
      */
-    const char* get_url ();
+    const char* get_url();
     /**
      * @brief query
      * @param   unsigned        index       [IN] 0 <= index < size_parameter ()
@@ -110,35 +108,34 @@ public:
      *          url.query (0, key, value) return spec and full
      *          url.query (1, key, value) return period and week
      */
-    return_t query (unsigned index, std::string& key, std::string& value);
+    return_t query(unsigned index, std::string& key, std::string& value);
     /**
      * @brief read a param
      * @return error code (see error.hpp)
      */
-    return_t query (std::string key, std::string& value);
+    return_t query(std::string key, std::string& value);
     /**
      * @brief count of query
      * @remarks
      */
-    size_t countof_query ();
+    size_t countof_query();
 
-    void addref ();
-    void release ();
+    void addref();
+    void release();
 
-protected:
+   protected:
     std::string _url;
 
     typedef std::map<std::string, std::string> PARAMETERS;
     PARAMETERS _query;
 
-    t_shared_reference <http_uri> _shared;
+    t_shared_reference<http_uri> _shared;
 };
 
-class http_request
-{
-public:
-    http_request ();
-    virtual ~http_request ();
+class http_request {
+   public:
+    http_request();
+    virtual ~http_request();
 
     /**
      * @brief open
@@ -146,36 +143,35 @@ public:
      * @param   size_t          size_request    [IN]
      * @return error code (see error.hpp)
      */
-    return_t open (const char* request, size_t size_request);
+    return_t open(const char* request, size_t size_request);
     /**
      * @brief close
      * @return error code (see error.hpp)
      */
-    return_t close ();
+    return_t close();
 
     /**
      * @brief return the http_header object
      */
-    http_header* get_header ();
+    http_header* get_header();
     /**
      * @brief return the http_uri object
      */
-    http_uri* get_uri ();
+    http_uri* get_uri();
     /**
      * @brief url
      */
-    const char* get_url ();
+    const char* get_url();
     /**
      * @brief return the method (GET, POST, ...)
      */
-    const char* get_method ();
+    const char* get_method();
     /**
      * @brief return the request
      */
-    const char* get_request ();
+    const char* get_request();
 
-protected:
-
+   protected:
     std::string _method;
     std::string _request;
 
@@ -183,32 +179,28 @@ protected:
     http_uri __uri;
 };
 
-class http_response
-{
-public:
-    http_response ();
-    ~http_response ();
+class http_response {
+   public:
+    http_response();
+    ~http_response();
 
-    return_t compose (const char* content_type, const char* content, int status_code);
-    const char* content_type ();
-    const char* content ();
-    size_t content_size ();
-    int status_code ();
+    return_t compose(const char* content_type, const char* content, int status_code);
+    const char* content_type();
+    const char* content();
+    size_t content_size();
+    int status_code();
 
-protected:
+   protected:
     std::string _content_type;
     std::string _content;
     int _statuscode;
 };
 
-class http_authenticate_provider
-{
-public:
-    http_authenticate_provider ()
-    {
-    }
+class http_authenticate_provider {
+   public:
+    http_authenticate_provider() {}
 
-    virtual return_t authenticate (network_session * session, http_request* request, http_response) = 0;
+    virtual return_t authenticate(network_session* session, http_request* request, http_response) = 0;
 };
 
 /**
@@ -217,13 +209,12 @@ public:
  *
  *          Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
  */
-class http_basic_authenticate_provider : public http_authenticate_provider
-{
-public:
-    http_basic_authenticate_provider ();
-    virtual ~http_basic_authenticate_provider ();
+class http_basic_authenticate_provider : public http_authenticate_provider {
+   public:
+    http_basic_authenticate_provider();
+    virtual ~http_basic_authenticate_provider();
 
-    virtual return_t authenticate (network_session * session, http_request* request, http_response);
+    virtual return_t authenticate(network_session* session, http_request* request, http_response);
 };
 
 /**
@@ -250,84 +241,78 @@ public:
  *     nc=00000001
  *     cnonce=3ceef920aacfb49e
  */
-class http_digest_access_authenticate_provider : public http_authenticate_provider
-{
-public:
-    http_digest_access_authenticate_provider ();
-    virtual ~http_digest_access_authenticate_provider ();
+class http_digest_access_authenticate_provider : public http_authenticate_provider {
+   public:
+    http_digest_access_authenticate_provider();
+    virtual ~http_digest_access_authenticate_provider();
 
-    virtual return_t authenticate (network_session * session, http_request* request, http_response);
+    virtual return_t authenticate(network_session* session, http_request* request, http_response);
 };
 
-class http_bearer_authenticate_provider : public http_authenticate_provider
-{
-public:
-    http_bearer_authenticate_provider ();
-    virtual ~http_bearer_authenticate_provider ();
+class http_bearer_authenticate_provider : public http_authenticate_provider {
+   public:
+    http_bearer_authenticate_provider();
+    virtual ~http_bearer_authenticate_provider();
 
-    virtual return_t authenticate (network_session * session, http_request* request, http_response);
+    virtual return_t authenticate(network_session* session, http_request* request, http_response);
 };
 
-class http_authenticate_store
-{
-public:
-    http_authenticate_store ();
-    ~http_authenticate_store ();
+class http_authenticate_store {
+   public:
+    http_authenticate_store();
+    ~http_authenticate_store();
 
-    http_authenticate_store& operator << (http_authenticate_provider* provider);
+    http_authenticate_store& operator<<(http_authenticate_provider* provider);
 
-protected:
+   protected:
     critical_section _lock;
-    std::list <http_authenticate_provider*> _list;
+    std::list<http_authenticate_provider*> _list;
 };
 
-class http_authenticate_resolver
-{
-public:
-    http_authenticate_resolver ();
-    virtual ~http_authenticate_resolver ();
+class http_authenticate_resolver {
+   public:
+    http_authenticate_resolver();
+    virtual ~http_authenticate_resolver();
 
-    virtual return_t resolve (http_authenticate_store* store, network_session* session, http_request* request);
+    virtual return_t resolve(http_authenticate_store* store, network_session* session, http_request* request);
 };
 
-class http_handler
-{
-public:
-    http_handler (const char* uri, http_authenticate_store* auth = nullptr);
-    virtual return_t service_handler (network_session* session, http_request* request, http_response* response, uint16& status_code);
-    virtual return_t auth_handler (network_session* session, http_request* request, http_response* response, uint16& status_code);
+class http_handler {
+   public:
+    http_handler(const char* uri, http_authenticate_store* auth = nullptr);
+    virtual return_t service_handler(network_session* session, http_request* request, http_response* response, uint16& status_code);
+    virtual return_t auth_handler(network_session* session, http_request* request, http_response* response, uint16& status_code);
 
-    virtual int addref ();
-    virtual int release ();
+    virtual int addref();
+    virtual int release();
 
-private:
+   private:
     http_authenticate_store* auth_store;
-    t_shared_reference <http_handler> _instance;
+    t_shared_reference<http_handler> _instance;
 };
 
-class http_handler_dispatcher
-{
-public:
-    http_handler_dispatcher ();
+class http_handler_dispatcher {
+   public:
+    http_handler_dispatcher();
 
-    http_handler_dispatcher& add (http_handler* handler);
-private:
-    typedef std::map <std::string, http_handler*> handler_map_t;
+    http_handler_dispatcher& add(http_handler* handler);
+
+   private:
+    typedef std::map<std::string, http_handler*> handler_map_t;
     handler_map_t _handler_map;
 };
 
-class http_server
-{
-public:
-    http_server ();
-    ~http_server ();
+class http_server {
+   public:
+    http_server();
+    ~http_server();
 
-protected:
-    static return_t network_routine (uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
-    static return_t accept_control_handler (socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
+   protected:
+    static return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
+    static return_t accept_control_handler(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
 };
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace
 
 #endif

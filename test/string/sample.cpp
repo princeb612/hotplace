@@ -8,8 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/sdk.hpp>
 #include <stdio.h>
+
+#include <hotplace/sdk/sdk.hpp>
 #include <iostream>
 
 using namespace hotplace;
@@ -17,263 +18,253 @@ using namespace hotplace::io;
 
 test_case _test_case;
 
-void test_format ()
-{
-    _test_case.begin ("format");
-    _test_case.reset_time ();
-    std::string text = format ("%s %d %1.1f\n", "sample", 1, 1.1f);
-    std::cout << text.c_str () << std::endl;
-    _test_case.assert (true, __FUNCTION__, "format");
+void test_format() {
+    _test_case.begin("format");
+    _test_case.reset_time();
+    std::string text = format("%s %d %1.1f\n", "sample", 1, 1.1f);
+    std::cout << text.c_str() << std::endl;
+    _test_case.assert(true, __FUNCTION__, "format");
 }
 
-void test_getline ()
-{
-    _test_case.begin ("getline");
+void test_getline() {
+    _test_case.begin("getline");
 
     return_t ret = errorcode_t::success;
     const char* stream_data = " line1 \nline2 \n  line3\nline4";
-    size_t stream_size = strlen (stream_data);
+    size_t stream_size = strlen(stream_data);
     size_t pos = 0;
     size_t brk = 0;
 
-    _test_case.reset_time ();
+    _test_case.reset_time();
 
     for (;;) {
-        ret = getline (stream_data, stream_size, pos, &brk);
+        ret = getline(stream_data, stream_size, pos, &brk);
         if (errorcode_t::success != ret) {
             break;
         }
 
         // line contains CR and NL
-        //printf ("%.*s\n", brk - pos, stream_data + pos);
-        std::string line (stream_data + pos, brk - pos);
-        ltrim (rtrim (line));
-        printf ("%s\n", line.c_str ());
+        // printf ("%.*s\n", brk - pos, stream_data + pos);
+        std::string line(stream_data + pos, brk - pos);
+        ltrim(rtrim(line));
+        printf("%s\n", line.c_str());
 
         pos = brk;
     }
 
-    _test_case.assert (true, __FUNCTION__, "getline");
+    _test_case.assert(true, __FUNCTION__, "getline");
 }
 
-void test_gettoken ()
-{
-    _test_case.begin ("gettoken");
+void test_gettoken() {
+    _test_case.begin("gettoken");
 
     std::string token = "=|", value;
     std::string data = "key=item1|value1|link1";
 
-    _test_case.reset_time ();
+    _test_case.reset_time();
 
-    gettoken (data, token, 0, value);  // "key"
-    _test_case.assert (value == "key", __FUNCTION__, "gettoken");
+    gettoken(data, token, 0, value);  // "key"
+    _test_case.assert(value == "key", __FUNCTION__, "gettoken");
 
-    gettoken (data, token, 1, value);  // "item1"
-    _test_case.assert (value == "item1", __FUNCTION__, "gettoken");
+    gettoken(data, token, 1, value);  // "item1"
+    _test_case.assert(value == "item1", __FUNCTION__, "gettoken");
 
-    gettoken (data, token, 2, value);  // "value1"
-    _test_case.assert (value == "value1", __FUNCTION__, "gettoken");
+    gettoken(data, token, 2, value);  // "value1"
+    _test_case.assert(value == "value1", __FUNCTION__, "gettoken");
 
-    gettoken (data, token, 3, value);  // "link1"
-    _test_case.assert (value == "link1", __FUNCTION__, "gettoken");
+    gettoken(data, token, 3, value);  // "link1"
+    _test_case.assert(value == "link1", __FUNCTION__, "gettoken");
 }
 
-void test_hexbin ()
-{
-    _test_case.begin ("base16");
-    _test_case.reset_time ();
+void test_hexbin() {
+    _test_case.begin("base16");
+    _test_case.reset_time();
 
     const char* message = "sample";
-    const byte_t* inpart = (const byte_t*) message;
+    const byte_t* inpart = (const byte_t*)message;
 
     std::string hex;
-    base16_encode (inpart, 5, hex);
-    std::cout << hex.c_str () << std::endl;
+    base16_encode(inpart, 5, hex);
+    std::cout << hex.c_str() << std::endl;
 
     binary_t bin;
-    base16_decode (hex, bin);
+    base16_decode(hex, bin);
     basic_stream bs;
-    dump_memory (&bin[0], bin.size (), &bs);
-    printf ("%s\n", bs.c_str ());
+    dump_memory(&bin[0], bin.size(), &bs);
+    printf("%s\n", bs.c_str());
 
-    _test_case.assert (true, __FUNCTION__, "base16");
+    _test_case.assert(true, __FUNCTION__, "base16");
 }
 
-void test_constexpr_hide ()
-{
-    _test_case.begin ("constexpr");
+void test_constexpr_hide() {
+    _test_case.begin("constexpr");
 
-    constexpr char temp1[] = "You and I in a little toy shop / Buy a bag of balloons with the money we've got / Set them free at the break of dawn / 'Til one by one, they were gone";
-    constexpr char temp2[] = "What can I do? / Will I be getting through? / Now that I must try to leave it all behind / Did you see what you have done to me? / So hard to justify, slowly it's passing by";
-    constexpr char temp3[] = "Wake up, my love, beneath the midday sun, / Alone, once more alone, / This travelin' boy was only passing through, / But he will always think of you.";
+    constexpr char temp1[] =
+        "You and I in a little toy shop / Buy a bag of balloons with the money we've got / Set them free at the break of dawn / 'Til one by one, they were "
+        "gone";
+    constexpr char temp2[] =
+        "What can I do? / Will I be getting through? / Now that I must try to leave it all behind / Did you see what you have done to me? / So hard to "
+        "justify, slowly it's passing by";
+    constexpr char temp3[] =
+        "Wake up, my love, beneath the midday sun, / Alone, once more alone, / This travelin' boy was only passing through, / But he will always think of you.";
 
     std::cout << temp1 << std::endl;
     std::cout << temp2 << std::endl;
     std::cout << temp3 << std::endl;
 
     basic_stream bs;
-    dump_memory (temp1, &bs);
-    std::cout << bs.c_str () << std::endl;
+    dump_memory(temp1, &bs);
+    std::cout << bs.c_str() << std::endl;
 
-    _test_case.assert (true, __FUNCTION__, "hide a string at compile time");
+    _test_case.assert(true, __FUNCTION__, "hide a string at compile time");
 }
 
-void test_constexpr_obf ()
-{
-    _test_case.begin ("constexpr_obf");
+void test_constexpr_obf() {
+    _test_case.begin("constexpr_obf");
 
-#if   __cplusplus >= 202002L    // c++20
-    printf ("c++20\n");
-#elif __cplusplus >= 201703L    // c++17
-    printf ("c++17\n");
-#elif __cplusplus >= 201402L    // c++14
-    printf ("c++14\n");
-#elif __cplusplus >= 201103L    // c++11
-    printf ("c++11\n");
-#elif __cplusplus >= 199711L    // c++98
-    printf ("c++98\n");
-#else                           // pre c++98
-    printf ("pre c++98\n");
+#if __cplusplus >= 202002L  // c++20
+    printf("c++20\n");
+#elif __cplusplus >= 201703L  // c++17
+    printf("c++17\n");
+#elif __cplusplus >= 201402L  // c++14
+    printf("c++14\n");
+#elif __cplusplus >= 201103L  // c++11
+    printf("c++11\n");
+#elif __cplusplus >= 199711L  // c++98
+    printf("c++98\n");
+#else  // pre c++98
+    printf("pre c++98\n");
 #endif
 
-#if __cplusplus >= 201402L    // c++14
-    constexpr auto temp1 = constexpr_obf <24>("ninety nine red balloons");
-    constexpr auto temp2 = CONSTEXPR_OBF ("wild wild world");
-    define_constexpr_obf (temp3, "still a man hears what he wants to hear and disregards the rest");
+#if __cplusplus >= 201402L  // c++14
+    constexpr auto temp1 = constexpr_obf<24>("ninety nine red balloons");
+    constexpr auto temp2 = CONSTEXPR_OBF("wild wild world");
+    define_constexpr_obf(temp3, "still a man hears what he wants to hear and disregards the rest");
 
-    std::cout << CONSTEXPR_OBF_CSTR (temp1) << std::endl;
-    std::cout << CONSTEXPR_OBF_CSTR (temp2) << std::endl;
-    std::cout << CONSTEXPR_OBF_CSTR (temp3) << std::endl;
+    std::cout << CONSTEXPR_OBF_CSTR(temp1) << std::endl;
+    std::cout << CONSTEXPR_OBF_CSTR(temp2) << std::endl;
+    std::cout << CONSTEXPR_OBF_CSTR(temp3) << std::endl;
 
-    _test_case.assert (true, __FUNCTION__, "obfuscate a string at compile time");
+    _test_case.assert(true, __FUNCTION__, "obfuscate a string at compile time");
 #else
-    _test_case.assert (false, __FUNCTION__, "at least c++14 needed");
+    _test_case.assert(false, __FUNCTION__, "at least c++14 needed");
 #endif
 }
 
-#if __cplusplus >= 201402L    // c++14
-obfuscate_string operator""_obf (const char* source, size_t)
-{
-    return obfuscate_string ({ source });
-}
+#if __cplusplus >= 201402L  // c++14
+obfuscate_string operator""_obf(const char* source, size_t) { return obfuscate_string({source}); }
 #endif
 
-void test_obfuscate_string ()
-{
-    _test_case.begin ("obfuscate_string");
+void test_obfuscate_string() {
+    _test_case.begin("obfuscate_string");
 
     bool test = false;
     basic_stream bs;
     binary_t bin;
     std::string str;
-    char helloworld [] = { 'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', 0 };
+    char helloworld[] = {'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', 0};
 
-    _test_case.reset_time ();
+    _test_case.reset_time();
 
     obfuscate_string obf = helloworld;
 
     bin << obf;
 
     {
-        test_case_notimecheck notimecheck (_test_case);
-        dump_memory (bin, &bs);
-        std::cout << bs.c_str () << std::endl;
+        test_case_notimecheck notimecheck(_test_case);
+        dump_memory(bin, &bs);
+        std::cout << bs.c_str() << std::endl;
     }
 
-    _test_case.assert ((0 == memcmp (helloworld, &bin[0], bin.size ())), __FUNCTION__, "binary_t << obfuscate");
+    _test_case.assert((0 == memcmp(helloworld, &bin[0], bin.size())), __FUNCTION__, "binary_t << obfuscate");
 
     str << obf;
 
     {
-        test_case_notimecheck notimecheck (_test_case);
-        dump_memory (str, &bs);
-        std::cout << bs.c_str () << std::endl;
+        test_case_notimecheck notimecheck(_test_case);
+        dump_memory(str, &bs);
+        std::cout << bs.c_str() << std::endl;
     }
 
-    _test_case.assert ((0 == memcmp (helloworld, str.c_str (), str.size ())), __FUNCTION__, "std::string << obfuscate");
+    _test_case.assert((0 == memcmp(helloworld, str.c_str(), str.size())), __FUNCTION__, "std::string << obfuscate");
 
     obfuscate_string obf2 = helloworld;
 
-    _test_case.assert (obf == obf2, __FUNCTION__, "assign and operator ==");
+    _test_case.assert(obf == obf2, __FUNCTION__, "assign and operator ==");
 
     obf << helloworld;
     obf2 << helloworld;
 
     {
-        test_case_notimecheck notimecheck (_test_case);
+        test_case_notimecheck notimecheck(_test_case);
 
-        bin.clear ();
+        bin.clear();
         bin << obf;
-        dump_memory (bin, &bs);
-        std::cout << bs.c_str () << std::endl;
+        dump_memory(bin, &bs);
+        std::cout << bs.c_str() << std::endl;
     }
-    _test_case.assert (obf == obf2, __FUNCTION__, "append and operator ==");
+    _test_case.assert(obf == obf2, __FUNCTION__, "append and operator ==");
 }
 
 typedef struct {
     std::string str;
 } myprintf_context_t;
 
-int callback_printf (void* context, const char* buf, int len)
-{
-    myprintf_context_t* handle = (myprintf_context_t*) context;
+int callback_printf(void* context, const char* buf, int len) {
+    myprintf_context_t* handle = (myprintf_context_t*)context;
 
-    handle->str.append (buf, len);
+    handle->str.append(buf, len);
     return 0;
 }
 
-void test_printf ()
-{
-    _test_case.begin ("printf");
-    _test_case.reset_time ();
+void test_printf() {
+    _test_case.begin("printf");
+    _test_case.reset_time();
 
     myprintf_context_t context;
-    printf_runtime (&context, &callback_printf, "%s %i %1.1f", "sample", 1, 1.1);
-    std::cout << context.str.c_str () << std::endl;
+    printf_runtime(&context, &callback_printf, "%s %i %1.1f", "sample", 1, 1.1);
+    std::cout << context.str.c_str() << std::endl;
 
-    _test_case.assert (true, __FUNCTION__, "printf");
+    _test_case.assert(true, __FUNCTION__, "printf");
 }
 
-void test_replace ()
-{
-    _test_case.begin ("replace");
-    _test_case.reset_time ();
+void test_replace() {
+    _test_case.begin("replace");
+    _test_case.reset_time();
 
-    std::string data ("hello world");
-    replace (data, "world", "neighbor");
-    std::cout << data.c_str () << std::endl;
+    std::string data("hello world");
+    replace(data, "world", "neighbor");
+    std::cout << data.c_str() << std::endl;
 
-    _test_case.assert (true, __FUNCTION__, "replace");
+    _test_case.assert(true, __FUNCTION__, "replace");
 }
 
-void test_scan ()
-{
-    _test_case.begin ("scan");
-    _test_case.reset_time ();
+void test_scan() {
+    _test_case.begin("scan");
+    _test_case.reset_time();
 
     return_t ret = errorcode_t::success;
     const char* data = "hello world\n ";
     size_t pos = 0;
     size_t brk = 0;
     while (true) {
-        ret = scan (data, strlen (data), pos, &brk, isspace);
+        ret = scan(data, strlen(data), pos, &brk, isspace);
         if (errorcode_t::success != ret) {
             break;
         }
-        printf ("position isspace %zi\n", brk);
+        printf("position isspace %zi\n", brk);
         pos = brk;
     }
-    _test_case.assert (true, __FUNCTION__, "scan");
+    _test_case.assert(true, __FUNCTION__, "scan");
 
     basic_stream bs;
-    dump_memory ((byte_t*) data, strlen (data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
-    std::cout << bs.c_str () << std::endl;
+    dump_memory((byte_t*)data, strlen(data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
+    std::cout << bs.c_str() << std::endl;
 }
 
-void test_scan2 ()
-{
-    _test_case.begin ("scan");
-    _test_case.reset_time ();
+void test_scan2() {
+    _test_case.begin("scan");
+    _test_case.reset_time();
 
     return_t ret = errorcode_t::success;
     const char* data = "hello world\n wide world\n";
@@ -281,91 +272,87 @@ void test_scan2 ()
     size_t pos = 0;
     size_t brk = 0;
     while (true) {
-        ret = scan (data, strlen (data), pos, &brk, match);
+        ret = scan(data, strlen(data), pos, &brk, match);
         if (errorcode_t::success != ret) {
             break;
         }
-        printf ("position %zi\n", brk);
-        pos = brk + strlen (match);
+        printf("position %zi\n", brk);
+        pos = brk + strlen(match);
     }
-    _test_case.assert (true, __FUNCTION__, "scan");
+    _test_case.assert(true, __FUNCTION__, "scan");
 
     basic_stream bs;
-    dump_memory ((byte_t*) data, strlen (data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
-    std::cout << bs.c_str () << std::endl;
+    dump_memory((byte_t*)data, strlen(data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
+    std::cout << bs.c_str() << std::endl;
 }
 
-void test_split ()
-{
-    _test_case.begin ("split");
-    _test_case.reset_time ();
+void test_split() {
+    _test_case.begin("split");
+    _test_case.reset_time();
 
     split_context_t* handle = nullptr;
     size_t count = 0;
-    split_begin (&handle, "test1.hello2.bye3..", ".");
-    split_count (handle, count);
+    split_begin(&handle, "test1.hello2.bye3..", ".");
+    split_count(handle, count);
     binary_t data;
     for (size_t i = 0; i < count; i++) {
-        split_get (handle, i, data);
-        printf ("[%zi] (%zi) %.*s\n", i, data.size (), (unsigned) data.size (), &data [0]);
+        split_get(handle, i, data);
+        printf("[%zi] (%zi) %.*s\n", i, data.size(), (unsigned)data.size(), &data[0]);
     }
-    split_end (handle);
+    split_end(handle);
 
-    _test_case.assert (true, __FUNCTION__, "split");
+    _test_case.assert(true, __FUNCTION__, "split");
 }
 
-void test_string ()
-{
-    _test_case.begin ("ansi_string");
-    _test_case.reset_time ();
+void test_string() {
+    _test_case.begin("ansi_string");
+    _test_case.reset_time();
 
     ansi_string astr;
     astr << "sample "
 #if defined _WIN32 || defined _WIN64
-        << L"unicode "
+         << L"unicode "
 #endif
-        << (uint16) 1 << " " << 1.1f;
-    std::cout << astr.c_str () << std::endl;
+         << (uint16)1 << " " << 1.1f;
+    std::cout << astr.c_str() << std::endl;
 
-    _test_case.assert (true, __FUNCTION__, "ansi_string");
+    _test_case.assert(true, __FUNCTION__, "ansi_string");
 }
 
-void test_tokenize ()
-{
-    _test_case.begin ("tokenize");
-    _test_case.reset_time ();
+void test_tokenize() {
+    _test_case.begin("tokenize");
+    _test_case.reset_time();
 
     std::string data = "key=item1|value1|link1";
     size_t pos = 0;
     std::string token;
     for (;;) {
-        token = tokenize (data, std::string ("=|"), pos);
-        printf ("%s\n", token.c_str ());
-        if ((size_t) -1 == pos) {
+        token = tokenize(data, std::string("=|"), pos);
+        printf("%s\n", token.c_str());
+        if ((size_t)-1 == pos) {
             break;
         }
     }
 
-    _test_case.assert (true, __FUNCTION__, "tokenize");
+    _test_case.assert(true, __FUNCTION__, "tokenize");
 }
 
-int main ()
-{
-    test_format ();
-    test_getline ();
-    test_gettoken ();
-    test_hexbin ();
-    test_constexpr_hide ();
-    test_constexpr_obf ();
-    test_obfuscate_string ();
-    test_printf ();
-    test_replace ();
-    test_scan ();
-    test_scan2 ();
-    test_split ();
-    test_string ();
-    test_tokenize ();
+int main() {
+    test_format();
+    test_getline();
+    test_gettoken();
+    test_hexbin();
+    test_constexpr_hide();
+    test_constexpr_obf();
+    test_obfuscate_string();
+    test_printf();
+    test_replace();
+    test_scan();
+    test_scan2();
+    test_split();
+    test_string();
+    test_tokenize();
 
-    _test_case.report (5);
-    return _test_case.result ();
+    _test_case.report(5);
+    return _test_case.result();
 }

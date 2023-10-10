@@ -17,11 +17,10 @@
 namespace hotplace {
 namespace crypto {
 
-class json_object_signing
-{
-public:
-    json_object_signing ();
-    ~json_object_signing ();
+class json_object_signing {
+   public:
+    json_object_signing();
+    ~json_object_signing();
 
     /**
      * @brief sign
@@ -45,7 +44,8 @@ public:
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign (jose_context_t* context, jws_t method, std::string const& input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
+    return_t sign(jose_context_t* context, jws_t method, std::string const& input, std::string& output,
+                  jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param jose_context_t* context [in]
@@ -72,7 +72,8 @@ public:
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign (jose_context_t* context, std::list <jws_t> const& methods, std::string const& input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
+    return_t sign(jose_context_t* context, std::list<jws_t> const& methods, std::string const& input, std::string& output,
+                  jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param jose_context_t* context [in]
@@ -95,7 +96,8 @@ public:
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign (jose_context_t* context, std::string const& protected_header, std::string const& input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
+    return_t sign(jose_context_t* context, std::string const& protected_header, std::string const& input, std::string& output,
+                  jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param jose_context_t* context [in]
@@ -105,7 +107,8 @@ public:
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
      */
-    return_t sign (jose_context_t* context, std::list<std::string> const& headers, std::string const& input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
+    return_t sign(jose_context_t* context, std::list<std::string> const& headers, std::string const& input, std::string& output,
+                  jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief verify
      * @param jose_context_t* context [in]
@@ -113,9 +116,9 @@ public:
      * @param bool& result [out]
      * @return error code (see error.hpp)
      */
-    return_t verify (jose_context_t* context, std::string const& input, bool& result);
+    return_t verify(jose_context_t* context, std::string const& input, bool& result);
 
-protected:
+   protected:
     /**
      * @brief sign
      * @param crypto_key* key [in]
@@ -124,7 +127,7 @@ protected:
      * @param binary_t& output [out]
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign (crypto_key* key, jws_t method, binary_t const& input, binary_t& output);
+    return_t sign(crypto_key* key, jws_t method, binary_t const& input, binary_t& output);
     /**
      * @brief sign and return signature and kid
      * @param crypto_key* key [in]
@@ -134,7 +137,7 @@ protected:
      * @param std::string& kid [out]
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign (crypto_key* key, jws_t method, binary_t const& input, binary_t& output, std::string& kid);
+    return_t sign(crypto_key* key, jws_t method, binary_t const& input, binary_t& output, std::string& kid);
     /**
      * @brief verify
      * @param crypto_key* key [in]
@@ -144,7 +147,7 @@ protected:
      * @param bool& result [out]
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t verify (crypto_key* key, jws_t method, binary_t const& input, binary_t const& output, bool& result);
+    return_t verify(crypto_key* key, jws_t method, binary_t const& input, binary_t const& output, bool& result);
     /**
      * @brief verify with kid
      * @param crypto_key* key [in]
@@ -155,27 +158,27 @@ protected:
      * @param bool& result [out]
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t verify (crypto_key* key, const char* kid, jws_t method, binary_t const& input, binary_t const& output, bool& result);
+    return_t verify(crypto_key* key, const char* kid, jws_t method, binary_t const& input, binary_t const& output, bool& result);
 
     /**
      * @brief constraints
      * @param jws_t sig [in]
      * @param EVP_PKEY* pkey [in]
      */
-    return_t check_constraints (jws_t sig, EVP_PKEY* pkey);
+    return_t check_constraints(jws_t sig, EVP_PKEY* pkey);
     /**
      * @brief parse
      * @param jose_context_t* context [in]
      * @param const char* signature [in]
      */
-    return_t read_signature (jose_context_t* context, const char* signature);
+    return_t read_signature(jose_context_t* context, const char* signature);
     /**
      * @brief write
      * @param jose_context_t* context [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t type [inopt]
      */
-    return_t write_signature (jose_context_t* context, std::string& signature, jose_serialization_t type = jose_serialization_t::jose_compact);
+    return_t write_signature(jose_context_t* context, std::string& signature, jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief parse
      * @param jose_context_t* context [in]
@@ -183,10 +186,10 @@ protected:
      * @param jws_t& method [out]
      * @param std::string& keyid [out]
      */
-    return_t parse_signature_header (jose_context_t* context, const char* protected_header, jws_t& method, std::string& keyid);
+    return_t parse_signature_header(jose_context_t* context, const char* protected_header, jws_t& method, std::string& keyid);
 };
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

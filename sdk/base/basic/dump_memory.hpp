@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_DUMPMEMORY__
 #define __HOTPLACE_SDK_BASE_BASIC_DUMPMEMORY__
 
-#include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/stream.hpp>
+#include <hotplace/sdk/base/types.hpp>
 #include <string>
 
 namespace hotplace {
@@ -43,12 +43,9 @@ enum dump_memory_flag_t {
  * @param   size_t rebase [inopt]
  * @param   int flags [inopt]
  */
-return_t dump_memory (const byte_t* dump_address, size_t dump_size, stream_t* stream_object,
-                      unsigned hex_part = 16,
-                      unsigned indent = 0,
-                      size_t rebase = 0x0,
-                      int flags = 0);
+return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0,
+                     int flags = 0);
 
-}
+}  // namespace hotplace
 
 #endif

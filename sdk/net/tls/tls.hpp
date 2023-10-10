@@ -12,8 +12,8 @@
 #define __HOTPLACE_SDK_NET_TLS_TLS__
 
 #include <hotplace/sdk/crypto/basic/types.hpp>
-#include <hotplace/sdk/net/types.hpp>
 #include <hotplace/sdk/net/tls/x509.hpp>
+#include <hotplace/sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -59,11 +59,10 @@ namespace net {
  *      close (sock);
  *      x509->release ();
  */
-class transport_layer_security
-{
-public:
-    transport_layer_security (SSL_CTX* x509);
-    ~transport_layer_security ();
+class transport_layer_security {
+   public:
+    transport_layer_security(SSL_CTX* x509);
+    ~transport_layer_security();
 
     /**
      * @brief   open
@@ -74,14 +73,14 @@ public:
      * @param   uint32          to_seconds  [IN] seconds
      * @remarks socket 생성 및 연결을 포함한 구현을 하는 경우
      */
-    return_t connect (tls_context_t** handle, int type, const char* addr, uint16 port, uint32 to_seconds);
+    return_t connect(tls_context_t** handle, int type, const char* addr, uint16 port, uint32 to_seconds);
     /**
      * @brief   open
      * @param   tls_context_t** handle      [OUT]
      * @param   socket_t        sock        [IN]
      * @remarks 연결된 socket 으로 핸들만 구성하는 경우
      */
-    return_t connect (tls_context_t** handle, socket_t sock, uint32 to_seconds = NET_DEFAULT_TIMEOUT);
+    return_t connect(tls_context_t** handle, socket_t sock, uint32 to_seconds = NET_DEFAULT_TIMEOUT);
     /**
      * @brief   socket layer handshake
      * @param   tls_context_t** handle      [OUT]
@@ -91,13 +90,13 @@ public:
      *          client_socket = accept (...);                    // client socket
      *          ret = ssl->accept (&sslhandle, client_socket); // handshake
      */
-    return_t accept (tls_context_t** handle, socket_t Sock);
+    return_t accept(tls_context_t** handle, socket_t Sock);
     /**
      * @brief   close
      * @param   tls_context_t*  handle      [IN]
      * @remarks connect, accept 등으로 생성된 핸들을 해제한다.
      */
-    return_t close (tls_context_t* handle);
+    return_t close(tls_context_t* handle);
 
     /**
      * @brief   read (network_Server_v2 specification)
@@ -107,7 +106,7 @@ public:
      * @param   size_t          buffer_size [IN]
      * @param   size_t*         size_read   [OUT]
      */
-    return_t read (tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* size_read);
+    return_t read(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* size_read);
 
     /**
      * @brief   send
@@ -117,21 +116,21 @@ public:
      * @param   size_t*         size_sent   [OUT]
      * @remarks send 를 SSL_write 로 대체
      */
-    return_t send (tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent);
+    return_t send(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent);
 
-    socket_t get_socket (tls_context_t* handle);
+    socket_t get_socket(tls_context_t* handle);
 
-    int addref ();
-    int release ();
+    int addref();
+    int release();
 
-    SSL_CTX* get ();
+    SSL_CTX* get();
 
-protected:
+   protected:
     SSL_CTX* _x509;
-    t_shared_reference <transport_layer_security> _shared;
+    t_shared_reference<transport_layer_security> _shared;
 };
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace
 
 #endif

@@ -14,9 +14,10 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_JOSE_JWK__
 #define __HOTPLACE_SDK_CRYPTO_JOSE_JWK__
 
+#include <jansson.h>
+
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/jose/types.hpp>
-#include <jansson.h>
 
 namespace hotplace {
 namespace crypto {
@@ -32,12 +33,12 @@ namespace crypto {
  *          jwk.load_file (&key, "rfc7515.jwk", 0);
  *          jwk.load_pem_file (&key, "test.pem");
  */
-class json_web_key : public crypto_keychain
-{
+class json_web_key : public crypto_keychain {
     friend class json_object_signing_encryption;
-public:
-    json_web_key ();
-    virtual ~json_web_key ();
+
+   public:
+    json_web_key();
+    virtual ~json_web_key();
 
     /**
      * @brief load JWK from a buffer
@@ -46,7 +47,7 @@ public:
      * @param int flags [inopt] reserved
      * @return error code (see error.hpp)
      */
-    virtual return_t load (crypto_key* crypto_key, const char* buffer, int flags = 0);
+    virtual return_t load(crypto_key* crypto_key, const char* buffer, int flags = 0);
     /**
      * @brief write
      * @param crypto_key* crypto_key [in]
@@ -62,21 +63,21 @@ public:
      *          bin.resize (size);
      *          jwk.write (&privkey, &bin[0], &size);
      */
-    virtual return_t write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
+    virtual return_t write(crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
      * @param   std::string& buf [out]
      * @param   int flags [inopt] 0 public only, 1 also private
      */
-    return_t write (crypto_key* crypto_key, std::string& buf, int flags = 0);
+    return_t write(crypto_key* crypto_key, std::string& buf, int flags = 0);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
      * @param   stream_t* buf [out]
      * @param   int flags [inopt] 0 public only, 1 also private
      */
-    return_t write (crypto_key* crypto_key, stream_t* buf, int flags = 0);
+    return_t write(crypto_key* crypto_key, stream_t* buf, int flags = 0);
     /**
      * @brief load key from a file
      * @param crypto_key * crypto_key [in]
@@ -84,7 +85,7 @@ public:
      * @param int flags [inopt] reserved
      * @return error code (see error.hpp)
      */
-    virtual return_t load_file (crypto_key* crypto_key, const char* file, int flags = 0);
+    virtual return_t load_file(crypto_key* crypto_key, const char* file, int flags = 0);
     /**
      * @brief write JWK to a file
      * @param crypto_key * crypto_key [in]
@@ -92,13 +93,13 @@ public:
      * @param int flag [inopt] 0 public only, 1 also private
      * @return error code (see error.hpp)
      */
-    virtual return_t write_file (crypto_key* crypto_key, const char* file, int flags = 0);
+    virtual return_t write_file(crypto_key* crypto_key, const char* file, int flags = 0);
 
-protected:
-    return_t read_json_keynode (crypto_key* crypto_key, json_t* json);
+   protected:
+    return_t read_json_keynode(crypto_key* crypto_key, json_t* json);
 };
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

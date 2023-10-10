@@ -21,202 +21,190 @@ namespace hotplace {
 namespace io {
 
 #if defined __SIZEOF_INT128__
-cbor_pair::cbor_pair (int128 value, cbor_data* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (nullptr), _rhs (object)
+cbor_pair::cbor_pair(int128 value, cbor_data* object)
+    : cbor_object(cbor_type_t::cbor_type_pair),
+      _lhs(nullptr),
+      _rhs(object)
 #else
-cbor_pair::cbor_pair (int64 value, cbor_data * object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (nullptr), _rhs (object)
+cbor_pair::cbor_pair(int64 value, cbor_data* object)
+    : cbor_object(cbor_type_t::cbor_type_pair),
+      _lhs(nullptr),
+      _rhs(object)
 #endif
 {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == object) {
             throw errorcode_t::insufficiency;
         }
-        __try_new_catch (_lhs, new cbor_data (value), ret, __leave2);
+        __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 }
 
 #if defined __SIZEOF_INT128__
-cbor_pair::cbor_pair (int128 value, cbor_map* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (nullptr), _rhs (object)
+cbor_pair::cbor_pair(int128 value, cbor_map* object)
+    : cbor_object(cbor_type_t::cbor_type_pair),
+      _lhs(nullptr),
+      _rhs(object)
 #else
-cbor_pair::cbor_pair (int64 value, cbor_map * object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (nullptr), _rhs (object)
+cbor_pair::cbor_pair(int64 value, cbor_map* object)
+    : cbor_object(cbor_type_t::cbor_type_pair),
+      _lhs(nullptr),
+      _rhs(object)
 #endif
 {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == object) {
             throw errorcode_t::insufficiency;
         }
-        __try_new_catch (_lhs, new cbor_data (value), ret, __leave2);
+        __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 }
 
 #if defined __SIZEOF_INT128__
-cbor_pair::cbor_pair (int128 value, cbor_array* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (nullptr), _rhs (object)
+cbor_pair::cbor_pair(int128 value, cbor_array* object)
+    : cbor_object(cbor_type_t::cbor_type_pair),
+      _lhs(nullptr),
+      _rhs(object)
 #else
-cbor_pair::cbor_pair (int64 value, cbor_array * object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (nullptr), _rhs (object)
+cbor_pair::cbor_pair(int64 value, cbor_array* object)
+    : cbor_object(cbor_type_t::cbor_type_pair),
+      _lhs(nullptr),
+      _rhs(object)
 #endif
 {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == object) {
             throw errorcode_t::insufficiency;
         }
-        __try_new_catch (_lhs, new cbor_data (value), ret, __leave2);
+        __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 }
 
-cbor_pair::cbor_pair (const char* key, cbor_data* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (nullptr), _rhs (object)
-{
+cbor_pair::cbor_pair(const char* key, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == object) {
             throw errorcode_t::insufficiency;
         }
-        __try_new_catch (_lhs, new cbor_data (key), ret, __leave2);
+        __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 }
 
-cbor_pair::cbor_pair (const char* key, cbor_map* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (nullptr), _rhs (object)
-{
+cbor_pair::cbor_pair(const char* key, cbor_map* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == object) {
             throw errorcode_t::insufficiency;
         }
-        __try_new_catch (_lhs, new cbor_data (key), ret, __leave2);
+        __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 }
 
-cbor_pair::cbor_pair (const char* key, cbor_array* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (nullptr), _rhs (object)
-{
+cbor_pair::cbor_pair(const char* key, cbor_array* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == object) {
             throw errorcode_t::insufficiency;
         }
-        __try_new_catch (_lhs, new cbor_data (key), ret, __leave2);
+        __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 }
 
-cbor_pair::cbor_pair (cbor_data* key, cbor_data* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (key), _rhs (object)
-{
+cbor_pair::cbor_pair(cbor_data* key, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
         throw errorcode_t::insufficiency;
     }
 }
 
-cbor_pair::cbor_pair (cbor_data* key, cbor_map* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (key), _rhs (object)
-{
+cbor_pair::cbor_pair(cbor_data* key, cbor_map* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
         throw errorcode_t::insufficiency;
     }
 }
 
-cbor_pair::cbor_pair (cbor_data* key, cbor_array* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (key), _rhs (object)
-{
+cbor_pair::cbor_pair(cbor_data* key, cbor_array* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
         throw errorcode_t::insufficiency;
     }
 }
 
-cbor_pair::cbor_pair (cbor_data* key, cbor_object* object) : cbor_object (cbor_type_t::cbor_type_pair), _lhs (key), _rhs (object)
-{
+cbor_pair::cbor_pair(cbor_data* key, cbor_object* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
         throw errorcode_t::insufficiency;
     }
 }
 
-cbor_pair::~cbor_pair ()
-{
+cbor_pair::~cbor_pair() {
     // do nothing
 }
 
-int cbor_pair::addref ()
-{
+int cbor_pair::addref() {
     if (_lhs) {
-        _lhs->addref ();
+        _lhs->addref();
     }
     if (_rhs) {
-        _rhs->addref ();
+        _rhs->addref();
     }
-    return _shared.addref ();
+    return _shared.addref();
 }
 
-int cbor_pair::release ()
-{
+int cbor_pair::release() {
     if (_lhs) {
-        _lhs->release ();
+        _lhs->release();
     }
     if (_rhs) {
-        _rhs->release ();
+        _rhs->release();
     }
-    return _shared.delref ();
+    return _shared.delref();
 }
 
-cbor_data const* cbor_pair::left ()
-{
-    return _lhs;
-}
+cbor_data const* cbor_pair::left() { return _lhs; }
 
-cbor_object const* cbor_pair::right ()
-{
-    return _rhs;
-}
+cbor_object const* cbor_pair::right() { return _rhs; }
 
-void cbor_pair::represent (stream_t* s)
-{
+void cbor_pair::represent(stream_t* s) {
     if (s) {
-        _lhs->represent (s);
-        s->printf (":");
-        _rhs->represent (s);
+        _lhs->represent(s);
+        s->printf(":");
+        _rhs->represent(s);
     }
 }
 
-void cbor_pair::represent (binary_t* b)
-{
+void cbor_pair::represent(binary_t* b) {
     cbor_encode enc;
 
     if (b) {
-        _lhs->represent (b);
-        _rhs->represent (b);
+        _lhs->represent(b);
+        _rhs->represent(b);
     }
 }
 
-}
-}
+}  // namespace io
+}  // namespace hotplace

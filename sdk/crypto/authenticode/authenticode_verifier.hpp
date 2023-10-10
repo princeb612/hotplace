@@ -29,7 +29,7 @@
 //#include <hotplace/sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
-//using namespace io;
+// using namespace io;
 namespace crypto {
 
 class authenticode_plugin;
@@ -37,13 +37,13 @@ struct _authenticode_context_t;
 typedef struct _authenticode_context_t authenticode_context_t;
 
 enum authenticode_ctrl_t {
-    set_proxy           = 1,            // "http://127.0.0.1:3128/"
-    set_proxy_user      = 2,            // "user:password"
-    set_gen_der         = 3,            // generate DER (for test) int
-    set_crl             = 4,            // crl download (for test) int
-    set_digicert_path   = 5,            // path
+    set_proxy = 1,          // "http://127.0.0.1:3128/"
+    set_proxy_user = 2,     // "user:password"
+    set_gen_der = 3,        // generate DER (for test) int
+    set_crl = 4,            // crl download (for test) int
+    set_digicert_path = 5,  // path
     reset_digicert_path = 6,
-    set_crl_path        = 7,            // crl download path
+    set_crl_path = 7,  // crl download path
 };
 enum authenticode_flag_t {
     flag_separated = 1,
@@ -62,11 +62,10 @@ enum authenticode_flag_t {
  *        openssl_thread_cleanup();
  *        openssl_cleanup(); // end of application
  */
-class authenticode_verifier
-{
-public:
-    authenticode_verifier ();
-    ~authenticode_verifier ();
+class authenticode_verifier {
+   public:
+    authenticode_verifier();
+    ~authenticode_verifier();
 
     /**
      * @brief open
@@ -80,7 +79,7 @@ public:
      *      openssl_thread_cleanup();
      *      openssl_cleanup();
      */
-    return_t open (authenticode_context_t** handle);
+    return_t open(authenticode_context_t** handle);
     /**
      * @brief set
      * @param authenticode_context_t* handle [in]
@@ -88,7 +87,7 @@ public:
      * @param void* data [in]
      * @param size_t size [in]
      */
-    return_t set (authenticode_context_t* handle, int option, void* data, size_t size);
+    return_t set(authenticode_context_t* handle, int option, void* data, size_t size);
     /**
      * @brief verify
      * @param authenticode_context_t* handle [in]
@@ -97,13 +96,13 @@ public:
      * @param uint32& result [out] reserved
      * @return error code (see error.hpp)
      */
-    return_t verify (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result, uint32* engine_id = nullptr);
+    return_t verify(authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result, uint32* engine_id = nullptr);
     /**
      * @brief close
      * @param authenticode_context_t* handle [in]
      * @return error code (see error.hpp)
      */
-    return_t close (authenticode_context_t* handle);
+    return_t close(authenticode_context_t* handle);
     /**
      * @brief add a trusted signer
      * @param authenticode_context_t* handle [in]
@@ -112,20 +111,20 @@ public:
      * @remarks
      *        if signer not added, verify fails X509_V_ERR_CERT_UNTRUSTED (27)
      */
-    return_t add_trusted_signer (authenticode_context_t* handle, const char* signer);
+    return_t add_trusted_signer(authenticode_context_t* handle, const char* signer);
     /**
      * @brief remove a trusted signer
      * @param authenticode_context_t* handle [in]
      * @parm const char* signer [in]
      * @return error code (see error.hpp)
      */
-    return_t remove_trusted_signer (authenticode_context_t* handle, const char* signer);
+    return_t remove_trusted_signer(authenticode_context_t* handle, const char* signer);
     /**
      * @brief remove all trusted signer
      * @param authenticode_context_t* handle [in]
      * @return error code (see error.hpp)
      */
-    return_t remove_all_trusted_signer (authenticode_context_t* handle);
+    return_t remove_all_trusted_signer(authenticode_context_t* handle);
     /**
      * @brief add trusted root certificate
      * @param authenticode_context_t* handle [in]
@@ -133,7 +132,7 @@ public:
      * @param const char* path [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_trusted_rootcert (authenticode_context_t* handle, const char* file, const char* path);
+    return_t add_trusted_rootcert(authenticode_context_t* handle, const char* file, const char* path);
     /**
      * @brief add engine
      * @param authenticode_context_t* handle [in]
@@ -146,9 +145,9 @@ public:
      *          engine->release ();
      *      }
      */
-    return_t add_engine (authenticode_context_t* handle, authenticode_plugin* engine);
+    return_t add_engine(authenticode_context_t* handle, authenticode_plugin* engine);
 
-protected:
+   protected:
     /**
      * @brief verify pkcs7 der
      * @param authenticode_context_t* handle [in]
@@ -157,9 +156,9 @@ protected:
      * @param uint32& result [out]
      * @return error code (see error.hpp)
      */
-    return_t verify_pkcs7 (authenticode_context_t* handle, void* pkcs7, uint32 flags, uint32& result);
+    return_t verify_pkcs7(authenticode_context_t* handle, void* pkcs7, uint32 flags, uint32& result);
 
-    return_t verify_separated (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result);
+    return_t verify_separated(authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result);
     /**
      * @brief hash
      * @param const char* filename [in]
@@ -167,21 +166,21 @@ protected:
      * @param std::string& hash [out]
      * @return error code (see error.hpp)
      */
-    return_t hash (const char* filename, hash_algorithm_t algorithm, std::string& hash);
+    return_t hash(const char* filename, hash_algorithm_t algorithm, std::string& hash);
 
     /**
      * @brief load engines
      * @param authenticode_context_t* handle [in]
      */
-    return_t load_engines (authenticode_context_t* handle);
+    return_t load_engines(authenticode_context_t* handle);
     /**
      * @brief free engines
      * @param authenticode_context_t* handle [in]
      */
-    return_t free_engines (authenticode_context_t* handle);
+    return_t free_engines(authenticode_context_t* handle);
 };
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

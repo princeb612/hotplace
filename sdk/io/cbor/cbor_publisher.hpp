@@ -14,10 +14,10 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORPUBLISHER__
 #define __HOTPLACE_SDK_IO_CBOR_CBORPUBLISHER__
 
+#include <deque>
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/io/cbor/cbor_object.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
-#include <deque>
 
 namespace hotplace {
 namespace io {
@@ -38,22 +38,21 @@ namespace io {
  *      std::string concise;
  *      base16_encode (bin, concise);   // base16 "83010203"
  */
-class cbor_publisher
-{
-public:
-    cbor_publisher ();
+class cbor_publisher {
+   public:
+    cbor_publisher();
 
     /*
      * concise
      */
-    return_t publish (cbor_object* object, binary_t* b);
+    return_t publish(cbor_object* object, binary_t* b);
     /*
      * diagnostic
      */
-    return_t publish (cbor_object* object, stream_t* s);
+    return_t publish(cbor_object* object, stream_t* s);
 };
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
 
 #endif

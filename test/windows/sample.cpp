@@ -18,8 +18,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/sdk.hpp>
 #include <stdio.h>
+
+#include <hotplace/sdk/sdk.hpp>
 #include <iostream>
 
 using namespace hotplace;
@@ -27,63 +28,55 @@ using namespace hotplace::io;
 
 test_case _test_case;
 
-return_t enum_modules_handler (uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* parameter)
-{
+return_t enum_modules_handler(uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* parameter) {
     switch (type) {
-        case enum_modules_t::enum_toolhelp:
-        {
-            MODULEENTRY32* entry = (MODULEENTRY32*) data[0];
-            printf (_T ("module [%s]\n"), entry->szExePath);
-        }
-        break;
-        case enum_modules_t::enum_psapi:
-        {
-            HMODULE module_handle = (HMODULE) data[0];
-            MODULEINFO* module_info = (MODULEINFO*) data[1];
+        case enum_modules_t::enum_toolhelp: {
+            MODULEENTRY32* entry = (MODULEENTRY32*)data[0];
+            printf(_T ("module [%s]\n"), entry->szExePath);
+        } break;
+        case enum_modules_t::enum_psapi: {
+            HMODULE module_handle = (HMODULE)data[0];
+            MODULEINFO* module_info = (MODULEINFO*)data[1];
             // ...
-        }
-        break;
+        } break;
     }
     return errorcode_t::success;
 }
 
-void test_enum_modules ()
-{
-    _test_case.begin ("enum_modules");
+void test_enum_modules() {
+    _test_case.begin("enum_modules");
     return_t ret = errorcode_t::success;
 
-    ret = enum_modules (GetCurrentProcess (), enum_modules_handler, nullptr);
-    _test_case.test (ret, __FUNCTION__, "enum_modules");
+    ret = enum_modules(GetCurrentProcess(), enum_modules_handler, nullptr);
+    _test_case.test(ret, __FUNCTION__, "enum_modules");
 }
 
-void test_trace ()
-{
-    _test_case.begin ("debug_trace");
+void test_trace() {
+    _test_case.begin("debug_trace");
     return_t ret = errorcode_t::success;
     debug_trace_context_t* handle = nullptr;
     debug_trace dbg;
     CONTEXT rtlcontext;
     ansi_string stream;
 
-    dbg.open (&handle);
-    dbg.capture (&rtlcontext);
-    ret = dbg.trace (handle, &rtlcontext, &stream);
-    dbg.close (handle);
+    dbg.open(&handle);
+    dbg.capture(&rtlcontext);
+    ret = dbg.trace(handle, &rtlcontext, &stream);
+    dbg.close(handle);
 
     {
-        test_case_notimecheck notimecheck (_test_case);
+        test_case_notimecheck notimecheck(_test_case);
 
-        std::cout << stream.c_str () << std::endl;
+        std::cout << stream.c_str() << std::endl;
     }
 
-    _test_case.test (ret, __FUNCTION__, "debug_trace");
+    _test_case.test(ret, __FUNCTION__, "debug_trace");
 }
 
-int main (int argc, char** argv)
-{
-    test_enum_modules ();
-    test_trace ();
+int main(int argc, char** argv) {
+    test_enum_modules();
+    test_trace();
 
-    _test_case.report (5);
-    return _test_case.result ();
+    _test_case.report(5);
+    return _test_case.result();
 }

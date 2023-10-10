@@ -57,36 +57,31 @@ namespace hotplace {
  *          inst->release ();                              // --refcounter
  *      }
  */
-template<typename OBJECT_T> class t_shared_reference
-{
-public:
-    t_shared_reference () : _counter (0), _object (nullptr)
-    {
+template <typename OBJECT_T>
+class t_shared_reference {
+   public:
+    t_shared_reference() : _counter(0), _object(nullptr) {
         // do nothing
     }
-    ~t_shared_reference ()
-    {
+    ~t_shared_reference() {
         // do nothing
     }
 
-    void make_share (OBJECT_T* object)
-    {
+    void make_share(OBJECT_T* object) {
         if (nullptr == _object) {
             _object = object;
-            addref ();
+            addref();
         }
     }
 
-    int addref ()
-    {
+    int addref() {
         if (_object) {
-            atomic_increment (&_counter);
+            atomic_increment(&_counter);
         }
         return _counter;
     }
-    int delref ()
-    {
-        atomic_decrement (&_counter);
+    int delref() {
+        atomic_decrement(&_counter);
         int ret = _counter;
         if (0 == _counter) {
             delete _object;
@@ -95,12 +90,9 @@ public:
         }
         return ret;
     }
-    int getref ()
-    {
-        return _counter;
-    }
+    int getref() { return _counter; }
 
-private:
+   private:
     int _counter;
     OBJECT_T* _object;
 };
@@ -127,36 +119,21 @@ private:
  *      }
  */
 
-template<typename OBJECT_T> class t_shared_instance
-{
-public:
-    t_shared_instance () : _object (nullptr)
-    {
-        _counter = new int (1);
-    }
-    t_shared_instance (OBJECT_T* object) : _object (object)
-    {
-        _counter = new int (1);
-    }
-    t_shared_instance (const t_shared_instance& inst)
-        : _counter (inst._counter), _object (inst._object)
-    {
-        atomic_increment (_counter);
-    }
-    ~t_shared_instance ()
-    {
-        delref ();
-    }
+template <typename OBJECT_T>
+class t_shared_instance {
+   public:
+    t_shared_instance() : _object(nullptr) { _counter = new int(1); }
+    t_shared_instance(OBJECT_T* object) : _object(object) { _counter = new int(1); }
+    t_shared_instance(const t_shared_instance& inst) : _counter(inst._counter), _object(inst._object) { atomic_increment(_counter); }
+    ~t_shared_instance() { delref(); }
 
-    int addref ()
-    {
-        atomic_increment (_counter);
+    int addref() {
+        atomic_increment(_counter);
         int ret = *_counter;
         return ret;
     }
-    int delref ()
-    {
-        atomic_decrement (_counter);
+    int delref() {
+        atomic_decrement(_counter);
         int ret = *_counter;
         if (0 == ret) {
             delete _object;
@@ -165,24 +142,16 @@ public:
         }
         return ret;
     }
-    int getref ()
-    {
+    int getref() {
         int ret = *_counter;
 
         return ret;
     }
 
-    OBJECT_T* operator -> ()
-    {
-        return _object;
-    }
-    OBJECT_T& operator * ()
-    {
-        return *_object;
-    }
+    OBJECT_T* operator->() { return _object; }
+    OBJECT_T& operator*() { return *_object; }
 
-    t_shared_instance& make_share (OBJECT_T* object)
-    {
+    t_shared_instance& make_share(OBJECT_T* object) {
         if (nullptr == _object) {
             _object = object;
         } else {
@@ -191,11 +160,11 @@ public:
         return *this;
     }
 
-private:
+   private:
     int* _counter;
     OBJECT_T* _object;
 };
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

@@ -25,33 +25,18 @@ typedef return_t (*SIGNALWAITTHREADS_CALLBACK_ROUTINE)(void*);
 
 class signalwait_threads;
 class thread_info {
-public:
-    thread_info ()
-    {
-    }
+   public:
+    thread_info() {}
 
-    void set_thread (thread* obj)
-    {
-        _thread = obj;
-    }
-    void set_container (signalwait_threads* container)
-    {
-        _container = container;
-    }
+    void set_thread(thread* obj) { _thread = obj; }
+    void set_container(signalwait_threads* container) { _container = container; }
 
-    thread* get_thread ()
-    {
-        return _thread;
-    }
-    signalwait_threads* get_container ()
-    {
-        return _container;
-    }
+    thread* get_thread() { return _thread; }
+    signalwait_threads* get_container() { return _container; }
 
-protected:
+   protected:
     thread* _thread;
     signalwait_threads* _container;
-
 };
 
 /**
@@ -69,11 +54,10 @@ protected:
  *  // stop all threads
  *  threads.signal_and_wait_all ();
  */
-class signalwait_threads
-{
-public:
-    signalwait_threads ();
-    ~signalwait_threads ();
+class signalwait_threads {
+   public:
+    signalwait_threads();
+    ~signalwait_threads();
 
     /**
      * @brief call before create method.
@@ -84,64 +68,63 @@ public:
      * @return error code (see error.hpp)
      * @remarks if a threads running, it fails.
      */
-    return_t set (size_t max_concurrent, SIGNALWAITTHREADS_CALLBACK_ROUTINE thread_routine,
-                  SIGNALWAITTHREADS_CALLBACK_ROUTINE signal_callback, void* thread_param);
+    return_t set(size_t max_concurrent, SIGNALWAITTHREADS_CALLBACK_ROUTINE thread_routine, SIGNALWAITTHREADS_CALLBACK_ROUTINE signal_callback,
+                 void* thread_param);
     /**
      * @brief create a thread
      * @return error code (see error.hpp)
      * @remarks
      *          if a maximum number of threads running, it returns errorcode_t::max_reached.
      */
-    return_t create ();
+    return_t create();
     /**
      * @brief call (*signal_callback)(thread_param)
      */
-    void signal ();
+    void signal();
     /**
      * @brief stop all
      * @param   int     reserved    [INOPT] 0
      */
-    void signal_and_wait_all (int reserved = 0);
+    void signal_and_wait_all(int reserved = 0);
     /**
      * @brief limit
      */
-    size_t capacity ();
+    size_t capacity();
     /**
      * @brief number of threads running
      */
-    size_t running ();
+    size_t running();
     /**
      * @brief dummy signal handler
      * @return error code (see error.hpp)
      * @remarks
      *          do nothing
      */
-    static return_t dummy_signal (void* param);
+    static return_t dummy_signal(void* param);
 
-protected:
-
+   protected:
     /**
      * @brief thread routine
      */
-    static return_t thread_routine (void* thread_param);
-    return_t thread_routine_implementation (void* param);
+    static return_t thread_routine(void* thread_param);
+    return_t thread_routine_implementation(void* param);
     /**
      * @brief join
      * @param threadid_t tid
      * @return error code (see error.hpp)
      */
-    return_t join (threadid_t tid);
+    return_t join(threadid_t tid);
 
-    size_t _capacity;                                               ///<< max number of concurrent thread
-    SIGNALWAITTHREADS_CALLBACK_ROUTINE _thread_callback_routine;    ///<< thread
-    SIGNALWAITTHREADS_CALLBACK_ROUTINE _signal_callback_routine;    ///<< signal handler
-    void* _thread_callback_param;                                   ///<< parameter
+    size_t _capacity;                                             ///<< max number of concurrent thread
+    SIGNALWAITTHREADS_CALLBACK_ROUTINE _thread_callback_routine;  ///<< thread
+    SIGNALWAITTHREADS_CALLBACK_ROUTINE _signal_callback_routine;  ///<< signal handler
+    void* _thread_callback_param;                                 ///<< parameter
 
     typedef std::map<threadid_t, thread_info*> SIGNALWAITTHREADS_MAP;
     critical_section _lock;
     SIGNALWAITTHREADS_MAP _container;
 };
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

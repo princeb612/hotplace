@@ -17,9 +17,9 @@
 namespace hotplace {
 namespace io {
 
-void binary_load (binary_t& bn, uint32 bnlen, byte_t* data, uint32 len);
+void binary_load(binary_t& bn, uint32 bnlen, byte_t* data, uint32 len);
 
 }
-} // namespace
+}  // namespace hotplace
 
 #endif

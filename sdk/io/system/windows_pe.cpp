@@ -13,18 +13,15 @@
 namespace hotplace {
 namespace io {
 
-winpe_checksum::winpe_checksum () : _checksum (0), _size (0)
-{
+winpe_checksum::winpe_checksum() : _checksum(0), _size(0) {
     // do nothing
 }
 
-winpe_checksum::~winpe_checksum ()
-{
+winpe_checksum::~winpe_checksum() {
     // do nothing
 }
 
-return_t winpe_checksum::init ()
-{
+return_t winpe_checksum::init() {
     return_t ret = errorcode_t::success;
 
     _checksum = 0;
@@ -33,12 +30,10 @@ return_t winpe_checksum::init ()
     return ret;
 }
 
-return_t winpe_checksum::update (byte_t* data, size_t bytelen)
-{
+return_t winpe_checksum::update(byte_t* data, size_t bytelen) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == data) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -48,29 +43,27 @@ return_t winpe_checksum::update (byte_t* data, size_t bytelen)
         _size += bytelen;
 
         for (size_t i = 0; i < wordlen; i++) {
-            uint16 part = *((uint16 *) data + i);
+            uint16 part = *((uint16*)data + i);
             _checksum += part;
             _checksum = (_checksum >> 16) + (_checksum & 0xffff);
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t winpe_checksum::finalize (uint32& checksum)
-{
+return_t winpe_checksum::finalize(uint32& checksum) {
     return_t ret = errorcode_t::success;
 
     checksum = 0;
-    checksum = (uint16) (((_checksum >> 16) + _checksum) & 0xffff);
+    checksum = (uint16)(((_checksum >> 16) + _checksum) & 0xffff);
     checksum += _size;
 
     return ret;
 }
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace

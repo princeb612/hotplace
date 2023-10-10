@@ -13,17 +13,14 @@
 
 namespace hotplace {
 
-class critical_section_t
-{
-public:
-    virtual ~critical_section_t ()
-    {
-    }
-    virtual void enter () = 0;
-    virtual void leave () = 0;
+class critical_section_t {
+   public:
+    virtual ~critical_section_t() {}
+    virtual void enter() = 0;
+    virtual void leave() = 0;
 };
 
-} // namespace
+}  // namespace hotplace
 
 #if defined _WIN32 || defined _WIN64
 #include <hotplace/sdk/base/system/windows/critical_section.hpp>
@@ -33,23 +30,18 @@ public:
 
 namespace hotplace {
 
-class enter_critical_section
-{
-public:
-    enter_critical_section (critical_section& cs)
-    {
-        cs.enter ();
+class enter_critical_section {
+   public:
+    enter_critical_section(critical_section& cs) {
+        cs.enter();
         _cs = &cs;
     }
-    ~enter_critical_section ()
-    {
-        _cs->leave ();
-    }
+    ~enter_critical_section() { _cs->leave(); }
 
-private:
+   private:
     critical_section* _cs;
 };
 
-} // namespace
+}  // namespace hotplace
 
 #endif

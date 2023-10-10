@@ -12,12 +12,13 @@
 #ifndef __HOTPLACE_SDK_IO_UNITEST_TESTCASE__
 #define __HOTPLACE_SDK_IO_UNITEST_TESTCASE__
 
+#include <time.h>
+
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/base/basic/console_color.hpp>
 #include <list>
 #include <map>
 #include <string>
-#include <time.h>
 
 namespace hotplace {
 namespace io {
@@ -61,29 +62,28 @@ namespace io {
  *      _test_case.begin (...); // reset, same in start method
  *      _test_case.assert (..); // check time, same in assert method
  */
-class test_case
-{
-public:
-    test_case ();
+class test_case {
+   public:
+    test_case();
     /**
      * @brief   test group
      * @param   const char* case_name [in]
      * @desc    reset stopwatch
      */
-    void begin (const char* case_name, ...);
+    void begin(const char* case_name, ...);
     /**
      * @brief   reset timer
      * @desc    to capture first unittest-time in thread, call reset_time at each thread startup code
      */
-    void reset_time ();
+    void reset_time();
     /**
      * @brief   pause timer
      */
-    void pause_time ();
+    void pause_time();
     /**
      * @brief   resume timer
      */
-    void resume_time ();
+    void resume_time();
     /**
      * @brief   test
      * @param   bool expect [in]
@@ -91,7 +91,7 @@ public:
      * @param   const char* message [inopt]
      * @desc    check result and time
      */
-    void assert (bool expect, const char* test_function, const char* message, ...);
+    void assert(bool expect, const char* test_function, const char* message, ...);
     /**
      * @brief   test
      * @param   return_t result [in]
@@ -99,19 +99,19 @@ public:
      * @param   const char* message [inopt]
      * @desc    check result and time
      */
-    void test (return_t result, const char* test_function, const char* message, ...);
+    void test(return_t result, const char* test_function, const char* message, ...);
     /**
      * @brief   report
      * @param   uint32 top_count [inopt] oder by test-time, and list top
      */
-    void report (uint32 top_count = -1);
+    void report(uint32 top_count = -1);
     /**
      * @brief   result indicator
      * @return
      *          errorcode_t::internal_error
      *          errorcode_t::success
      */
-    return_t result ();
+    return_t result();
 
     typedef struct _unittest_item_t {
         uint32 _result;
@@ -119,9 +119,7 @@ public:
         std::string _message;
         struct timespec _time;
 
-        _unittest_item_t ()
-            : _result (0)
-        {
+        _unittest_item_t() : _result(0) {
             // do nothing
         }
     } unittest_item_t;
@@ -131,8 +129,7 @@ public:
         uint32 _count_fail;
         uint32 _count_not_supported;
         uint32 _count_low_security;
-        _test_stat_t () : _count_success (0), _count_fail (0), _count_not_supported (0), _count_low_security (0)
-        {
+        _test_stat_t() : _count_success(0), _count_fail(0), _count_not_supported(0), _count_low_security(0) {
             // do nothing
         }
     } test_stat_t;
@@ -140,37 +137,36 @@ public:
         unittest_list_t _test_list;
         test_stat_t _test_stat;
 
-        _test_status_t ()
-        {
+        _test_status_t() {
             // do nothing
         }
     } test_status_t;
 
-    typedef std::list<std::string> unittest_index_t;                /* ordered test cases */
-    typedef std::map<std::string, test_status_t> unittest_map_t;    /* pair (test case, test_status_t) */
+    typedef std::list<std::string> unittest_index_t;             /* ordered test cases */
+    typedef std::map<std::string, test_status_t> unittest_map_t; /* pair (test case, test_status_t) */
     typedef std::pair<unittest_map_t::iterator, bool> unittest_map_pib_t;
 
-    typedef std::list <struct timespec> time_slice_t;
-    typedef std::map <arch_t, std::string> testcase_per_thread_t;
-    typedef std::map <arch_t, bool> time_flag_per_thread_t;
-    typedef std::map <arch_t, struct timespec> timestamp_per_thread_t;
-    typedef std::map <arch_t, time_slice_t> time_slice_per_thread_t;
+    typedef std::list<struct timespec> time_slice_t;
+    typedef std::map<arch_t, std::string> testcase_per_thread_t;
+    typedef std::map<arch_t, bool> time_flag_per_thread_t;
+    typedef std::map<arch_t, struct timespec> timestamp_per_thread_t;
+    typedef std::map<arch_t, time_slice_t> time_slice_per_thread_t;
 
-    typedef std::pair <time_slice_t::iterator, bool> time_slice_pib_t;
-    typedef std::pair <testcase_per_thread_t::iterator, bool> testcase_per_thread_pib_t;
-    typedef std::pair <time_flag_per_thread_t::iterator, bool> time_flag_per_thread_pib_t;
-    typedef std::pair <timestamp_per_thread_t::iterator, bool> timestamp_per_thread_pib_t;
-    typedef std::pair <time_slice_per_thread_t::iterator, bool> time_slice_per_thread_pib_t;
+    typedef std::pair<time_slice_t::iterator, bool> time_slice_pib_t;
+    typedef std::pair<testcase_per_thread_t::iterator, bool> testcase_per_thread_pib_t;
+    typedef std::pair<time_flag_per_thread_t::iterator, bool> time_flag_per_thread_pib_t;
+    typedef std::pair<timestamp_per_thread_t::iterator, bool> timestamp_per_thread_pib_t;
+    typedef std::pair<time_slice_per_thread_t::iterator, bool> time_slice_per_thread_pib_t;
 
-protected:
-    void report_unittest (ansi_string& stream);
-    void report_testtime (ansi_string& stream, uint32 top_count = -1);
+   protected:
+    void report_unittest(ansi_string& stream);
+    void report_testtime(ansi_string& stream, uint32 top_count = -1);
 
-    void dump_list_into_stream (unittest_list_t& array, ansi_string& stream);
+    void dump_list_into_stream(unittest_list_t& array, ansi_string& stream);
 
-    void check_time (struct timespec& time);
+    void check_time(struct timespec& time);
 
-private:
+   private:
     critical_section _lock;
     console_color _concolor;
     unittest_index_t _test_list;
@@ -195,22 +191,17 @@ private:
  *          // do not count time this code block
  *      }
  */
-class test_case_notimecheck
-{
-public:
-    test_case_notimecheck (test_case& tc)
-    {
-        tc.pause_time ();
+class test_case_notimecheck {
+   public:
+    test_case_notimecheck(test_case& tc) {
+        tc.pause_time();
         _tc = &tc;
     }
-    ~test_case_notimecheck ()
-    {
-        _tc->resume_time ();
-    }
+    ~test_case_notimecheck() { _tc->resume_time(); }
     test_case* _tc;
 };
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
 
 #endif

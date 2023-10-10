@@ -20,8 +20,7 @@ static uint32 ossl_cooltime = 0;
 static uint32 ossl_cooltime_max = 1000;
 static uint32 ossl_cooltime_unitsize = 4096;
 
-return_t ossl_set_cooltime (uint32 ms)
-{
+return_t ossl_set_cooltime(uint32 ms) {
     return_t ret = errorcode_t::success;
 
     if (ms < ossl_cooltime_max) {
@@ -32,8 +31,7 @@ return_t ossl_set_cooltime (uint32 ms)
     return ret;
 }
 
-return_t ossl_set_cooltime_max (uint32 ms)
-{
+return_t ossl_set_cooltime_max(uint32 ms) {
     return_t ret = errorcode_t::success;
 
     if (0 == ms) {
@@ -46,13 +44,9 @@ return_t ossl_set_cooltime_max (uint32 ms)
     return ret;
 }
 
-uint32 ossl_get_cooltime ()
-{
-    return ossl_cooltime;
-}
+uint32 ossl_get_cooltime() { return ossl_cooltime; }
 
-return_t ossl_set_unitsize (uint32 size)
-{
+return_t ossl_set_unitsize(uint32 size) {
     return_t ret = errorcode_t::success;
 
     if (0 == size) {
@@ -63,14 +57,13 @@ return_t ossl_set_unitsize (uint32 size)
     return ret;
 }
 
-uint32 ossl_get_unitsize ()
-{
+uint32 ossl_get_unitsize() {
     if (ossl_cooltime_unitsize) {
         return ossl_cooltime_unitsize;
     } else {
-        return 1; // safe coding
+        return 1;  // safe coding
     }
 }
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace

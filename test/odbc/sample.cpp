@@ -8,8 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/sdk.hpp>
 #include <stdio.h>
+
+#include <hotplace/sdk/sdk.hpp>
 #include <iostream>
 
 using namespace hotplace;
@@ -42,64 +43,64 @@ test_case _test_case;
 // Microsoft Access Driver (*.mdb)
 // Microsoft Excel Driver (*.xls)
 
-return_t dbdiag_handler (DWORD native_error, const char* state, const char* message, bool* control, void* context)
-{
+return_t dbdiag_handler(DWORD native_error, const char* state, const char* message, bool* control, void* context) {
     return_t ret = errorcode_t::success;
 
-    printf ("[native_error %i][sqlstate %s]%s\n", native_error, state, message);
+    printf("[native_error %i][sqlstate %s]%s\n", native_error, state, message);
 
     return ret;
 }
 
-void test ()
-{
+void test() {
     return_t ret = errorcode_t::success;
     odbc_connector dbconn;
     odbc_query* rs = nullptr;
 
-    odbc_diagnose::get_instance ()->add_handler (dbdiag_handler, nullptr);
+    odbc_diagnose::get_instance()->add_handler(dbdiag_handler, nullptr);
 
     constexpr char constexpr_connstring[] = "DRIVER={%s};SERVER=%s;PORT=%d;DATABASE=%s;USER=%s;PASSWORD=%s";
-#if __cplusplus >= 201402L    // c++14
-    constexpr auto constexpr_obf_user = CONSTEXPR_OBF ("user");
-    constexpr auto constexpr_obf_pass = CONSTEXPR_OBF ("password");
-    ret = dbconn.connect (&rs, format (constexpr_connstring, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", CONSTEXPR_OBF_CSTR (constexpr_obf_user), CONSTEXPR_OBF_CSTR (constexpr_obf_pass)).c_str ());
+#if __cplusplus >= 201402L  // c++14
+    constexpr auto constexpr_obf_user = CONSTEXPR_OBF("user");
+    constexpr auto constexpr_obf_pass = CONSTEXPR_OBF("password");
+    ret = dbconn.connect(&rs, format(constexpr_connstring, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", CONSTEXPR_OBF_CSTR(constexpr_obf_user),
+                                     CONSTEXPR_OBF_CSTR(constexpr_obf_pass))
+                                  .c_str());
 #else
     constexpr char constexpr_obf_user[] = "user";
     constexpr char constexpr_obf_pass[] = "password";
-    ret = dbconn.connect (&rs, format (constexpr_connstring, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", constexpr_obf_user, constexpr_obf_pass).c_str ());
+    ret = dbconn.connect(
+        &rs, format(constexpr_connstring, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", constexpr_obf_user, constexpr_obf_pass).c_str());
 #endif
 
     if (errorcode_t::success == ret) {
-        ret = rs->query ("select * from city");
+        ret = rs->query("select * from city");
         if (errorcode_t::success == ret) {
             odbc_record record;
             while (true) {
-                while (errorcode_t::success == rs->fetch (&record)) {
+                while (errorcode_t::success == rs->fetch(&record)) {
                     std::cout << "---" << std::endl;
-                    int n = record.count ();
+                    int n = record.count();
                     for (int i = 0; i < n; i++) {
-                        odbc_field* field = record.get_field (i);
+                        odbc_field* field = record.get_field(i);
                         ansi_string f, d;
-                        field->get_field_name (f);
-                        field->as_string (d);
-                        std::cout << f.c_str () << " : " << d.c_str () << std::endl;
+                        field->get_field_name(f);
+                        field->as_string(d);
+                        std::cout << f.c_str() << " : " << d.c_str() << std::endl;
                     }
                 }
-                bool more = rs->more ();
+                bool more = rs->more();
                 if (false == more) {
                     break;
                 }
             }
         }
-        rs->release ();
+        rs->release();
     }
 }
 
-int main ()
-{
-    test ();
+int main() {
+    test();
 
-    _test_case.report (5);
-    return _test_case.result ();
+    _test_case.report(5);
+    return _test_case.result();
 }

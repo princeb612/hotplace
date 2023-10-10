@@ -13,33 +13,31 @@
 namespace hotplace {
 namespace io {
 
-std::wstring A2W (const char* source, uint32 codepage)
-{
+std::wstring A2W(const char* source, uint32 codepage) {
     std::wstring value;
-    std::vector <wchar_t> buffer;
+    std::vector<wchar_t> buffer;
 
     if (source) {
-        int sizeNeed = MultiByteToWideChar (codepage, 0, source, -1, nullptr, 0);
+        int sizeNeed = MultiByteToWideChar(codepage, 0, source, -1, nullptr, 0);
         if (sizeNeed > 0) {
-            buffer.resize (sizeNeed); // including null pad
-            MultiByteToWideChar (codepage, 0, source, -1, &buffer[0], sizeNeed);
+            buffer.resize(sizeNeed);  // including null pad
+            MultiByteToWideChar(codepage, 0, source, -1, &buffer[0], sizeNeed);
             value = &buffer[0];
         }
     }
     return value;
 }
 
-return_t A2W (std::wstring& target, const char* source, uint32 codepage)
-{
+return_t A2W(std::wstring& target, const char* source, uint32 codepage) {
     return_t ret = errorcode_t::success;
-    std::vector <wchar_t> buffer;
+    std::vector<wchar_t> buffer;
 
-    target.clear ();
+    target.clear();
     if (source) {
-        int sizeNeed = MultiByteToWideChar (codepage, 0, source, -1, nullptr, 0);
+        int sizeNeed = MultiByteToWideChar(codepage, 0, source, -1, nullptr, 0);
         if (sizeNeed > 0) {
-            buffer.resize (sizeNeed); // including null pad
-            MultiByteToWideChar (codepage, 0, source, -1, &buffer[0], sizeNeed);
+            buffer.resize(sizeNeed);  // including null pad
+            MultiByteToWideChar(codepage, 0, source, -1, &buffer[0], sizeNeed);
             target = &buffer[0];
         }
     } else {
@@ -48,5 +46,5 @@ return_t A2W (std::wstring& target, const char* source, uint32 codepage)
     return ret;
 }
 
-}
-}
+}  // namespace io
+}  // namespace hotplace

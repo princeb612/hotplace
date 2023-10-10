@@ -20,24 +20,24 @@ namespace hotplace {
 struct _debug_trace_context_t {};
 typedef struct _debug_trace_context_t debug_trace_context_t;
 
-class debug_trace
-{
-public:
-    debug_trace ();
-    ~debug_trace ();
+class debug_trace {
+   public:
+    debug_trace();
+    ~debug_trace();
 
-    return_t open (debug_trace_context_t** handle);
-    return_t close (debug_trace_context_t* handle);
+    return_t open(debug_trace_context_t** handle);
+    return_t close(debug_trace_context_t* handle);
 
-    return_t capture (CONTEXT* rtlcontext);
-    return_t trace (debug_trace_context_t* handle, CONTEXT* rtlcontext, stream_t* stream);
+    return_t capture(CONTEXT* rtlcontext);
+    return_t trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, stream_t* stream);
 
-    return_t trace (debug_trace_context_t* handle, EXCEPTION_POINTERS* exception, stream_t* stream);
-protected:
+    return_t trace(debug_trace_context_t* handle, EXCEPTION_POINTERS* exception, stream_t* stream);
+
+   protected:
 };
 
-LONG __stdcall exception_handler (struct _EXCEPTION_POINTERS * exception_ptr);
+LONG __stdcall exception_handler(struct _EXCEPTION_POINTERS* exception_ptr);
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

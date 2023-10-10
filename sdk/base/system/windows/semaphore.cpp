@@ -8,39 +8,34 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/system/windows/semaphore.hpp>
 #include <windows.h>
+
+#include <hotplace/sdk/base/system/windows/semaphore.hpp>
 
 namespace hotplace {
 
-semaphore::semaphore ()
-{
-    _sem = ::CreateSemaphore (nullptr, 0, 0x7ffffff, nullptr);
-}
+semaphore::semaphore() { _sem = ::CreateSemaphore(nullptr, 0, 0x7ffffff, nullptr); }
 
-semaphore::~semaphore ()
-{
+semaphore::~semaphore() {
     if (_sem) {
-        ::CloseHandle (_sem);
+        ::CloseHandle(_sem);
         _sem = nullptr;
     }
 }
 
-uint32 semaphore::signal ()
-{
+uint32 semaphore::signal() {
     uint32 ret = errorcode_t::success;
-    BOOL bRet = ::ReleaseSemaphore (_sem, 1, nullptr);
+    BOOL bRet = ::ReleaseSemaphore(_sem, 1, nullptr);
 
     if (FALSE == bRet) {
-        ret = ::GetLastError ();
+        ret = ::GetLastError();
     }
     return ret;
 }
 
-uint32 semaphore::wait (unsigned msec)
-{
+uint32 semaphore::wait(unsigned msec) {
     uint32 ret = 0;
-    DWORD wait = ::WaitForSingleObject (_sem, msec);
+    DWORD wait = ::WaitForSingleObject(_sem, msec);
 
     switch (wait) {
         case WAIT_OBJECT_0:
@@ -55,4 +50,4 @@ uint32 semaphore::wait (unsigned msec)
     return ret;
 }
 
-}  // namespace
+}  // namespace hotplace

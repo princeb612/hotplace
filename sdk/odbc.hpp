@@ -14,13 +14,12 @@
 #if defined SUPPORT_FEATURE_ODBC
 
 #include <hotplace/sdk/base.hpp>
-
-#include <hotplace/sdk/odbc/types.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_connector.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_field.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_query.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_record.hpp>
+#include <hotplace/sdk/odbc/types.hpp>
 
 #endif
 

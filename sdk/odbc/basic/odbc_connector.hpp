@@ -22,9 +22,8 @@ namespace hotplace {
 namespace odbc {
 
 class odbc_query;
-class odbc_connector
-{
-public:
+class odbc_connector {
+   public:
     /**
      * @brief       constructor
      * @param
@@ -33,7 +32,7 @@ public:
      * @sa
      * @remarks
      */
-    odbc_connector ();
+    odbc_connector();
     /**
      * @brief       destructor
      * @param
@@ -41,16 +40,16 @@ public:
      * @remarks
      * @sa
      */
-    ~odbc_connector ();
+    ~odbc_connector();
     /**
      * @brief       Connect to database
      * @param       odbc_query**    dbquery             [out]
      * @param       LPCTSTR             connection_string   [in]
      * @param       uint32              tmo_seconds         [inopt]
      */
-    return_t connect (odbc_query** dbquery, const char* connection_string, uint32 tmo_seconds = -1);
+    return_t connect(odbc_query** dbquery, const char* connection_string, uint32 tmo_seconds = -1);
 #if defined _UNICODE || defined UNICODE
-    return_t connect (odbc_query** dbquery, const wchar_t* connection_string, uint32 tmo_seconds = -1);
+    return_t connect(odbc_query** dbquery, const wchar_t* connection_string, uint32 tmo_seconds = -1);
 #endif
     /**
      * @brief       disconnect
@@ -59,7 +58,7 @@ public:
      * @remarks
      * @sa
      */
-    static return_t disconnect (HDBC dbc_handle);
+    static return_t disconnect(HDBC dbc_handle);
     /**
      * @brief       connection status
      * @param       HDBC        dbc_handle          [in] HDBC handle
@@ -67,7 +66,7 @@ public:
      * @remarks
      * @sa
      */
-    static bool is_connected (HDBC dbc_handle);
+    static bool is_connected(HDBC dbc_handle);
     /**
      * @brief       close recordset
      * @param       CDatabaseRecordSet* dbquery     [in] recordset
@@ -75,7 +74,7 @@ public:
      * @remarks
      * @sa
      */
-    return_t close (odbc_query* dbquery);
+    return_t close(odbc_query* dbquery);
 
     /**
      * @brief       connection pool
@@ -84,21 +83,21 @@ public:
      * @sa
      * @remarks
      */
-    bool is_connection_pooled (void);
+    bool is_connection_pooled(void);
 
-    int addref ();
-    int release ();
+    int addref();
+    int release();
 
-protected:
-    return_t odbc_startup ();
-    return_t odbc_cleanup ();
+   protected:
+    return_t odbc_startup();
+    return_t odbc_cleanup();
 
-private:
+   private:
     HENV _env_handle;
-    t_shared_reference <odbc_connector> _shared;
+    t_shared_reference<odbc_connector> _shared;
 };
 
-}
-}  // namespace
+}  // namespace odbc
+}  // namespace hotplace
 
 #endif

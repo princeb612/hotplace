@@ -18,11 +18,10 @@
 namespace hotplace {
 namespace net {
 
-class transport_layer_security_server : public server_socket
-{
-public:
-    transport_layer_security_server (transport_layer_security* tls);
-    virtual ~transport_layer_security_server ();
+class transport_layer_security_server : public server_socket {
+   public:
+    transport_layer_security_server(transport_layer_security* tls);
+    virtual ~transport_layer_security_server();
 
     /**
      * @brief   close
@@ -36,7 +35,7 @@ public:
      *          // socket closed
      *          tls_svr_sock.close(client_socket, tls_context);
      */
-    virtual return_t close (socket_t sock, tls_context_t* tls_handle);
+    virtual return_t close(socket_t sock, tls_context_t* tls_handle);
 
     /**
      * @brief   Tls accept
@@ -44,8 +43,8 @@ public:
      * @param   tls_context_t** tls_handle      [OUT] Tls context
      * @return  error code (see error.hpp)
      */
-    virtual return_t tls_accept (socket_t clisock, tls_context_t** tls_handle);
-    virtual return_t tls_stop_accept ();
+    virtual return_t tls_accept(socket_t clisock, tls_context_t** tls_handle);
+    virtual return_t tls_stop_accept();
     /**
      * @brief   read
      * @param   socket_t        sock        [IN]
@@ -59,7 +58,7 @@ public:
      * @param   size_t*         cbread      [OUT]
      * @return  error code (see error.hpp)
      */
-    virtual return_t read (socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
+    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]
@@ -69,7 +68,7 @@ public:
      * @param   size_t*         cbsent          [OUT]
      * @return  error code (see error.hpp)
      */
-    virtual return_t send (socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
+    virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
     /**
      * @brief   query socket layer spec
      * @param   int         specid          [IN] see SERVER_SOCKET_QUERY
@@ -78,17 +77,17 @@ public:
      * @remarks
      *          server_socket.query(server_socket_query_t::query_support_tls, &value);
      */
-    virtual return_t query (int specid, arch_t* data_ptr);
+    virtual return_t query(int specid, arch_t* data_ptr);
 
-    int addref ();
-    int release ();
+    int addref();
+    int release();
 
-protected:
+   protected:
     transport_layer_security* _tls;
-    t_shared_reference <transport_layer_security_server> _shared;
+    t_shared_reference<transport_layer_security_server> _shared;
 };
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace
 
 #endif

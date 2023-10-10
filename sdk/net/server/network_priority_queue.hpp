@@ -34,18 +34,17 @@ class network_session;
  *                  session->release (); // decrease
  *              }
  */
-class network_priority_queue
-{
-public:
-    network_priority_queue ();
-    ~network_priority_queue ();
+class network_priority_queue {
+   public:
+    network_priority_queue();
+    ~network_priority_queue();
 
     /**
      * @brief push
      * @param   int               priority    [IN]
      * @param   network_session*   token       [IN] referenced
      */
-    return_t push (int priority, network_session* token);
+    return_t push(int priority, network_session* token);
     /**
      * @brief pop
      * @param   int*              priority    [OUT]
@@ -58,7 +57,7 @@ public:
      *              session_object->release ();
      *          }
      */
-    return_t pop (int* priority, network_session** ptr_token);
+    return_t pop(int* priority, network_session** ptr_token);
     /**
      * @brief pop
      * @remarks
@@ -68,15 +67,15 @@ public:
      *              int pri = session_object->get_priority ();
      *          }
      */
-    network_session* pop ();
+    network_session* pop();
 
-    size_t size ();
+    size_t size();
 
-protected:
-    t_mlfq <network_session> _mfq;
+   protected:
+    t_mlfq<network_session> _mfq;
 };
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace
 
 #endif

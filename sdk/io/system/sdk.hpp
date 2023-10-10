@@ -15,9 +15,7 @@
 #include <hotplace/sdk/io/stream/stream.hpp>
 
 namespace hotplace {
-namespace io {
-
-}
-}  // namespace
+namespace io {}
+}  // namespace hotplace
 
 #endif

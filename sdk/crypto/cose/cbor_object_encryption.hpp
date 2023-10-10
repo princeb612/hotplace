@@ -17,11 +17,10 @@
 namespace hotplace {
 namespace crypto {
 
-class cbor_object_encryption
-{
-public:
-    cbor_object_encryption ();
-    ~cbor_object_encryption ();
+class cbor_object_encryption {
+   public:
+    cbor_object_encryption();
+    ~cbor_object_encryption();
 
     /**
      * @brief encrypt
@@ -30,8 +29,9 @@ public:
      * @param cose_alg_t method [in]
      * @param binary_t const& input [in]
      * @param binary_t& output [out]
+     * @return  error code (see error.hpp)
      */
-    return_t encrypt (cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
+    return_t encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
     /**
      * @brief encrypt
      * @param cose_context_t* handle [in]
@@ -39,20 +39,23 @@ public:
      * @param std::list<cose_alg_t> methods [in]
      * @param binary_t const& input [in]
      * @param binary_t& output [out]
+     * @return  error code (see error.hpp)
      */
-    return_t encrypt (cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output);
+    return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output);
     /**
      * @brief decrypt
      * @param cose_context_t* handle [in]
      * @param crypto_key* key [in]
      * @param binary_t const& input [in]
      * @param bool& result [out]
+     * @return  error code (see error.hpp)
      */
-    return_t decrypt (cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
+    return_t decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
 
+   protected:
 };
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

@@ -11,12 +11,13 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_DATETIME__
 #define __HOTPLACE_SDK_BASE_SYSTEM_DATETIME__
 
-#include <hotplace/sdk/base/types.hpp>
+#include <string.h>
+#include <time.h>
+
 #include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/stream.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
-#include <string.h>
-#include <time.h>
+#include <hotplace/sdk/base/types.hpp>
 #include <list>
 
 namespace hotplace {
@@ -47,7 +48,7 @@ typedef struct _datetime_t {
     uint16 minute;
     uint16 second;
     uint32 milliseconds;
-}   datetime_t;
+} datetime_t;
 
 typedef struct _timespan_t {
     int32 days;
@@ -58,15 +59,15 @@ typedef struct _timespan_t {
 #pragma pack(pop)
 
 /* asn1time_t - openssl ASN1_TIME compatible */
-#define V_ASN1_UTCTIME          23  /* "YYMMDDhhmm[ss]Z" (UTC) or "YYMMDDhhmm[ss](+|-)hhmm" (difference) */
-#define V_ASN1_GENERALIZEDTIME  24  /* "YYYYMMDDHHMM[SS[.fff]]Z" (UTC) or "YYYYMMDDHHMM[SS[.fff]]" (local) or "YYYYMMDDHHMM[SS[.fff]]+-HHMM" (difference) */
+#define V_ASN1_UTCTIME 23 /* "YYMMDDhhmm[ss]Z" (UTC) or "YYMMDDhhmm[ss](+|-)hhmm" (difference) */
+#define V_ASN1_GENERALIZEDTIME 24 /* "YYYYMMDDHHMM[SS[.fff]]Z" (UTC) or "YYYYMMDDHHMM[SS[.fff]]" (local) or "YYYYMMDDHHMM[SS[.fff]]+-HHMM" (difference) */
 /* RFC 5280 time format */
 #define V_ASN1_STRING_FLAG_X509_TIME 0x100
 
 typedef struct _asn1time_t {
     int length;
     int type;
-    unsigned char *data;
+    unsigned char* data;
     /* The value of the following field depends on the type being
      * held.  It is mostly being used for BIT_STRING so if the
      * input data has a non-zero 'unused bits' value, it will be
@@ -74,37 +75,34 @@ typedef struct _asn1time_t {
     long flags;
     binary_t internal;
 
-    _asn1time_t () : length (0), type (0), data (nullptr), flags (0)
-    {
+    _asn1time_t() : length(0), type(0), data(nullptr), flags(0) {
         // do nothing
     }
-    _asn1time_t (int typ, const char* dat)
-    {
+    _asn1time_t(int typ, const char* dat) {
         type = typ;
         if (dat) {
-            length = strlen (dat);
-            internal.resize (length + 1);
-            memcpy (&internal[0], dat, length + 1);
-            data = &internal [0];
+            length = strlen(dat);
+            internal.resize(length + 1);
+            memcpy(&internal[0], dat, length + 1);
+            data = &internal[0];
         } else {
             length = 0;
             data = nullptr;
-            internal.clear ();
+            internal.clear();
         }
         flags = 0;
     }
-    void set (int typ, const char* dat)
-    {
+    void set(int typ, const char* dat) {
         type = typ;
         if (dat) {
-            length = strlen (dat);
-            internal.resize (length + 1);
-            memcpy (&internal[0], dat, length + 1);
-            data = &internal [0];
+            length = strlen(dat);
+            internal.resize(length + 1);
+            memcpy(&internal[0], dat, length + 1);
+            data = &internal[0];
         } else {
             length = 0;
             data = nullptr;
-            internal.clear ();
+            internal.clear();
         }
         flags = 0;
     }
@@ -120,70 +118,69 @@ enum DAYOFWEEK {
     SAT = 6,
 };
 
-class datetime
-{
-public:
+class datetime {
+   public:
     /**
      * @brief constructor
      */
-    datetime ();
-    datetime (time_t t, long* nsec = nullptr);
-    datetime (struct timespec ts);
-    datetime (datetime_t& dt, long* nsec = nullptr);
-    datetime (filetime_t& ft);
-    datetime (systemtime_t& st);
-    datetime (asn1time_t& at);
-    datetime (datetime& rhs);
+    datetime();
+    datetime(time_t t, long* nsec = nullptr);
+    datetime(struct timespec ts);
+    datetime(datetime_t& dt, long* nsec = nullptr);
+    datetime(filetime_t& ft);
+    datetime(systemtime_t& st);
+    datetime(asn1time_t& at);
+    datetime(datetime& rhs);
 
     /**
      * @brief destructor
      */
-    ~datetime ();
+    ~datetime();
 
     /**
      * @brief update
      */
-    void update ();
+    void update();
     /**
      * @brief update
      * @param unsigned long msecs [in]
      * @return if a given milliseconds elapsed return true, else false
      */
-    bool update_if_elapsed (unsigned long msecs);
+    bool update_if_elapsed(unsigned long msecs);
 
-    return_t gettimespec (struct timespec* ts);
-    return_t getlocaltime (struct tm* tm, long* nsec = nullptr);
-    return_t getgmtime (struct tm* tm, long* nsec = nullptr);
-    return_t getlocaltime (datetime_t* dt, long* nsec = nullptr);
-    return_t getgmtime (datetime_t* dt, long* nsec = nullptr);
-    return_t getgmtime (stream_t* stream);
-    return_t getfiletime (filetime_t* ft);
-    return_t getsystemtime (int mode, systemtime_t* ft);
-    return_t getasn1time (asn1time_t* at);
+    return_t gettimespec(struct timespec* ts);
+    return_t getlocaltime(struct tm* tm, long* nsec = nullptr);
+    return_t getgmtime(struct tm* tm, long* nsec = nullptr);
+    return_t getlocaltime(datetime_t* dt, long* nsec = nullptr);
+    return_t getgmtime(datetime_t* dt, long* nsec = nullptr);
+    return_t getgmtime(stream_t* stream);
+    return_t getfiletime(filetime_t* ft);
+    return_t getsystemtime(int mode, systemtime_t* ft);
+    return_t getasn1time(asn1time_t* at);
 
-    datetime& operator = (time_t timestamp);
-    datetime& operator = (struct timespec& ts);
-    datetime& operator = (filetime_t& ft);
-    datetime& operator = (systemtime_t& st);
-    datetime& operator = (asn1time_t& at);
-    datetime& operator >> (struct timespec& ts);
-    datetime& operator >> (filetime_t& ft);
-    datetime& operator >> (systemtime_t& st); // localtime
-    datetime& operator >> (asn1time_t& at);
+    datetime& operator=(time_t timestamp);
+    datetime& operator=(struct timespec& ts);
+    datetime& operator=(filetime_t& ft);
+    datetime& operator=(systemtime_t& st);
+    datetime& operator=(asn1time_t& at);
+    datetime& operator>>(struct timespec& ts);
+    datetime& operator>>(filetime_t& ft);
+    datetime& operator>>(systemtime_t& st);  // localtime
+    datetime& operator>>(asn1time_t& at);
 
     /**
      * @brief compare
      * @return true if equal
      */
-    bool operator == (datetime rhs);
-    bool operator != (datetime rhs);
-    bool operator >= (datetime rhs);
-    bool operator >  (datetime rhs);
-    bool operator <= (datetime rhs);
-    bool operator <  (datetime rhs);
+    bool operator==(datetime rhs);
+    bool operator!=(datetime rhs);
+    bool operator>=(datetime rhs);
+    bool operator>(datetime rhs);
+    bool operator<=(datetime rhs);
+    bool operator<(datetime rhs);
 
-    datetime& operator += (timespan_t ts);
-    datetime& operator -= (timespan_t ts);
+    datetime& operator+=(timespan_t ts);
+    datetime& operator-=(timespan_t ts);
 
     /**
      * @brief timespec to tm
@@ -193,7 +190,7 @@ public:
      * @param long* nsec [outopt]
      * @return error code (see error.hpp)
      */
-    static return_t timespec_to_tm (int mode, struct timespec ts, struct tm* target, long* nsec = nullptr);
+    static return_t timespec_to_tm(int mode, struct timespec ts, struct tm* target, long* nsec = nullptr);
     /**
      * @brief timespec to datetime
      * @param int mode [in] 0 gmtime 1 localtime
@@ -202,7 +199,7 @@ public:
      * @param long* nsec [outopt]
      * @return error code (see error.hpp)
      */
-    static return_t timespec_to_datetime (int mode, struct timespec ts, datetime_t* dt, long* nsec = nullptr);
+    static return_t timespec_to_datetime(int mode, struct timespec ts, datetime_t* dt, long* nsec = nullptr);
     /**
      * @brief timespec to systemtime
      * @param int mode [in] 0 gmtime 1 localtime
@@ -210,76 +207,74 @@ public:
      * @param systemtime_t* st [out]
      * @return error code (see error.hpp)
      */
-    static return_t timespec_to_systemtime (int mode, struct timespec ts, systemtime_t* st);
+    static return_t timespec_to_systemtime(int mode, struct timespec ts, systemtime_t* st);
     /**
      * @brief datetime to timespec
      * @param datetime_t ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t datetime_to_timespec (datetime_t ft, struct timespec& ts);
+    static return_t datetime_to_timespec(datetime_t ft, struct timespec& ts);
     /**
      * @brief filetime to timespec
      * @param filetime_t ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t filetime_to_timespec (filetime_t ft, struct timespec& ts);
+    static return_t filetime_to_timespec(filetime_t ft, struct timespec& ts);
     /**
      * @brief systemtime to timespec
      * @param systemtime_t ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t systemtime_to_timespec (systemtime_t ft, struct timespec& ts);
+    static return_t systemtime_to_timespec(systemtime_t ft, struct timespec& ts);
     /**
      * @brief timespec to asn1time
      * @param struct timespec ts [in]
      * @param asn1time_t* at [out]
      * @return error code (see error.hpp)
      */
-    static return_t timespec_to_asn1time (struct timespec ts, asn1time_t* at);
+    static return_t timespec_to_asn1time(struct timespec ts, asn1time_t* at);
     /**
      * @brief asn1time to timespec
      * @param asn1time_t at [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t asn1time_to_timespec (asn1time_t at, struct timespec& ts);
+    static return_t asn1time_to_timespec(asn1time_t at, struct timespec& ts);
 
-protected:
-
-private:
+   protected:
+   private:
     struct timespec _timespec; /* time_t tv_sec(UTC seconds) + long tv_nsec(nanoseconds) */
 };
 
-void time_monotonic (struct timespec& timespec);
+void time_monotonic(struct timespec& timespec);
 /**
  * @brief   calculate difference
  * @param   struct timespec& timespec [out]
  * @param   struct timespec begin [in]
  * @param   struct timespec end [in]
  */
-return_t time_diff (struct timespec& timespec, struct timespec begin, struct timespec end);
+return_t time_diff(struct timespec& timespec, struct timespec begin, struct timespec end);
 /**
  * @brief   sum
  * @param   struct timespec& timespec [out]
  * @param   std::list <struct timespec>& slices [in]
  */
-return_t time_sum (struct timespec& timespec, std::list <struct timespec>& slices);
+return_t time_sum(struct timespec& timespec, std::list<struct timespec>& slices);
 
-static inline void msleep (uint32 msecs)
-{
+static inline void msleep(uint32 msecs) {
 #if defined _WIN32 || defined _WIN64
-    Sleep (msecs);
+    Sleep(msecs);
 #elif defined __linux__
     struct timespec ts;
     ts.tv_sec = (msecs / 1000);
     ts.tv_nsec = (msecs % 1000) * 1000000;
-    nanosleep (&ts, nullptr);
+    nanosleep(&ts, nullptr);
 #endif
 }
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

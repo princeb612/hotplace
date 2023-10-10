@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_BASE_CALLBACK__
 #define __HOTPLACE_SDK_BASE_CALLBACK__
 
-#include <hotplace/sdk/base/types.hpp>
 #include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/types.hpp>
 
 namespace hotplace {
 
@@ -37,8 +37,8 @@ typedef return_t (*TYPE_CALLBACK_HANDLEREXV)(uint32 type, uint32 count, void* da
 #elif defined _UNICODE || defined UNICODE
 #define ENUM_CALLBACK_HANDLER ENUM_CALLBACK_HANDLERW
 #endif
-typedef return_t (* ENUM_CALLBACK_HANDLERA)(const char* name, void* parameter, void* context);
-typedef return_t (* ENUM_CALLBACK_HANDLERW)(const wchar_t* name, void* parameter, void* context);
+typedef return_t (*ENUM_CALLBACK_HANDLERA)(const char* name, void* parameter, void* context);
+typedef return_t (*ENUM_CALLBACK_HANDLERW)(const wchar_t* name, void* parameter, void* context);
 
 /**
  * @brief   enumerate by type
@@ -52,11 +52,11 @@ typedef return_t (* ENUM_CALLBACK_HANDLERW)(const wchar_t* name, void* parameter
 #elif defined _UNICODE || defined UNICODE
 #define ENUMTYPE_CALLBACK_HANDLER ENUMTYPE_CALLBACK_HANDLERW
 #endif
-typedef return_t (* ENUMTYPE_CALLBACK_HANDLERA)(const char* name, intptr_t type, void* parameter, void* context);
-typedef return_t (* ENUMTYPE_CALLBACK_HANDLERW)(const wchar_t* name, intptr_t type, void* parameter, void* context);
+typedef return_t (*ENUMTYPE_CALLBACK_HANDLERA)(const char* name, intptr_t type, void* parameter, void* context);
+typedef return_t (*ENUMTYPE_CALLBACK_HANDLERW)(const wchar_t* name, intptr_t type, void* parameter, void* context);
 
 typedef return_t (*THREAD_CALLBACK_ROUTINE)(void*);
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

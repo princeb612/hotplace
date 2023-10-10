@@ -17,209 +17,176 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_keychain::crypto_keychain ()
-{
+crypto_keychain::crypto_keychain() {
     // do nothing
 }
 
-crypto_keychain::~crypto_keychain ()
-{
+crypto_keychain::~crypto_keychain() {
     // do nothing
 }
 
-return_t crypto_keychain::load (crypto_key* crypto_key, const char* buffer, int flags)
-{
+return_t crypto_keychain::load(crypto_key* crypto_key, const char* buffer, int flags) {
     return_t ret = errorcode_t::success;
 
     return ret;
 }
 
-return_t crypto_keychain::write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags)
-{
+return_t crypto_keychain::write(crypto_key* crypto_key, char* buf, size_t* buflen, int flags) {
     return_t ret = errorcode_t::success;
 
     return ret;
 }
 
-return_t crypto_keychain::load_file (crypto_key* crypto_key, const char* file, int flags)
-{
-    return errorcode_t::success;
-}
+return_t crypto_keychain::load_file(crypto_key* crypto_key, const char* file, int flags) { return errorcode_t::success; }
 
-return_t crypto_keychain::load_pem (crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use)
-{
+return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = cryptokey->load_pem (buffer, flags, use);
+        ret = cryptokey->load_pem(buffer, flags, use);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::load_pem_file (crypto_key* cryptokey, const char* file, int flags, crypto_use_t use)
-{
+return_t crypto_keychain::load_pem_file(crypto_key* cryptokey, const char* file, int flags, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = cryptokey->load_pem_file (file, flags, use);
+        ret = cryptokey->load_pem_file(file, flags, use);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::write_file (crypto_key* cryptokey, const char* file, int flags)
-{
-    return errorcode_t::success;
-}
+return_t crypto_keychain::write_file(crypto_key* cryptokey, const char* file, int flags) { return errorcode_t::success; }
 
-return_t crypto_keychain::write_pem (crypto_key* cryptokey, stream_t* stream, int flags)
-{
+return_t crypto_keychain::write_pem(crypto_key* cryptokey, stream_t* stream, int flags) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = cryptokey->write_pem (stream, flags);
+        ret = cryptokey->write_pem(stream, flags);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::write_pem_file (crypto_key* cryptokey, const char* file, int flags)
-{
+return_t crypto_keychain::write_pem_file(crypto_key* cryptokey, const char* file, int flags) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = cryptokey->write_pem_file (file, flags);
+        ret = cryptokey->write_pem_file(file, flags);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, size_t bits, crypto_use_t use)
-{
-    return add_rsa (cryptokey, nullptr, nullptr, bits, use);
-}
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, size_t bits, crypto_use_t use) { return add_rsa(cryptokey, nullptr, nullptr, bits, use); }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, size_t bits, crypto_use_t use)
-{
-    return add_rsa (cryptokey, kid, nullptr, bits, use);
-}
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, size_t bits, crypto_use_t use) { return add_rsa(cryptokey, kid, nullptr, bits, use); }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, size_t bits, crypto_use_t use)
-{
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, size_t bits, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     EVP_PKEY_CTX* pkey_context = nullptr;
     int ret_openssl = 1;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        pkey_context = EVP_PKEY_CTX_new_id (EVP_PKEY_RSA, nullptr);
+        pkey_context = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr);
         if (nullptr == pkey_context) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_PKEY_keygen_init (pkey_context);
+        ret_openssl = EVP_PKEY_keygen_init(pkey_context);
         if (ret_openssl <= 0) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
         /* EVP_PKEY_CTX_set_rsa_keygen_bits(pkey_context, bits) */
-        ret_openssl = EVP_PKEY_CTX_ctrl (pkey_context, EVP_PKEY_RSA, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, bits, nullptr);
+        ret_openssl = EVP_PKEY_CTX_ctrl(pkey_context, EVP_PKEY_RSA, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, bits, nullptr);
         if (ret_openssl <= 0) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_PKEY_keygen (pkey_context, &pkey);
+        ret_openssl = EVP_PKEY_keygen(pkey_context, &pkey);
         if (ret_openssl <= 0) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key (pkey, use, kid, alg);
+        crypto_key_object_t key(pkey, use, kid, alg);
 
-        ret = cryptokey->add (key);
+        ret = cryptokey->add(key);
     }
-    __finally2
-    {
+    __finally2 {
         if (nullptr != pkey_context) {
-            EVP_PKEY_CTX_free (pkey_context); // EVP_PKEY_free here !
+            EVP_PKEY_CTX_free(pkey_context);  // EVP_PKEY_free here !
         }
     }
     return ret;
 }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, size_t bits, crypto_use_t use)
-{
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, size_t bits, crypto_use_t use) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
 
-    return add_rsa (cryptokey, kid, hint ? hint->alg_name : nullptr, bits, use);
+    return add_rsa(cryptokey, kid, hint ? hint->alg_name : nullptr, bits, use);
 }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& n, binary_t const& e, binary_t const& d, crypto_use_t use)
-{
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& n, binary_t const& e, binary_t const& d,
+                                  crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     RSA* rsa = nullptr;
     int ret_openssl = 1;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (0 == n.size () || 0 == e.size ()) {
+        if (0 == n.size() || 0 == e.size()) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        rsa = RSA_new ();
+        rsa = RSA_new();
         if (nullptr == rsa) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -229,22 +196,22 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
         BIGNUM* bn_e = nullptr;
         BIGNUM* bn_d = nullptr;
 
-        bn_n = BN_bin2bn (&n[0], n.size (), nullptr);
-        bn_e = BN_bin2bn (&e[0], e.size (), nullptr);
-        if (0 != d.size ()) {
-            bn_d = BN_bin2bn (&d[0], d.size (), nullptr);
+        bn_n = BN_bin2bn(&n[0], n.size(), nullptr);
+        bn_e = BN_bin2bn(&e[0], e.size(), nullptr);
+        if (0 != d.size()) {
+            bn_d = BN_bin2bn(&d[0], d.size(), nullptr);
         }
 
-        RSA_set0_key (rsa, bn_n, bn_e, bn_d);
+        RSA_set0_key(rsa, bn_n, bn_e, bn_d);
 
-        pkey = EVP_PKEY_new ();
-        ret_openssl = EVP_PKEY_assign_RSA (pkey, rsa);
+        pkey = EVP_PKEY_new();
+        ret_openssl = EVP_PKEY_assign_RSA(pkey, rsa);
         if (ret_openssl <= 0) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        //RSA_solve (rsa);
+        // RSA_solve (rsa);
 
         crypto_key_object_t key;
         key.pkey = pkey;
@@ -256,47 +223,44 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
             key.alg = alg;
         }
 
-        cryptokey->add (key);
+        cryptokey->add(key);
     }
-    __finally2
-    {
+    __finally2 {
         if (errorcode_t::success != ret) {
             if (nullptr != pkey) {
-                EVP_PKEY_free (pkey);
+                EVP_PKEY_free(pkey);
             }
         }
     }
     return ret;
 }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& n, binary_t const& e, binary_t const& d, crypto_use_t use)
-{
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& n, binary_t const& e, binary_t const& d,
+                                  crypto_use_t use) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
 
-    return add_rsa (cryptokey, kid, hint ? hint->alg_name : nullptr, n, e, d, use);
+    return add_rsa(cryptokey, kid, hint ? hint->alg_name : nullptr, n, e, d, use);
 }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& n, binary_t const& e, binary_t const& d,
-                                   binary_t const& p, binary_t const& q, binary_t const& dp, binary_t const& dq, binary_t const& qi, crypto_use_t use)
-{
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& n, binary_t const& e, binary_t const& d,
+                                  binary_t const& p, binary_t const& q, binary_t const& dp, binary_t const& dq, binary_t const& qi, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     RSA* rsa = nullptr;
     int ret_openssl = 1;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (0 == n.size () || 0 == e.size ()) {
+        if (0 == n.size() || 0 == e.size()) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        rsa = RSA_new ();
+        rsa = RSA_new();
         if (nullptr == rsa) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -311,80 +275,74 @@ return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, const
         BIGNUM* bn_dmq1 = nullptr;
         BIGNUM* bn_iqmp = nullptr;
 
-        bn_n = BN_bin2bn (&n[0], n.size (), nullptr);
-        bn_e = BN_bin2bn (&e[0], e.size (), nullptr);
-        if (0 != d.size ()) {
-            bn_d = BN_bin2bn (&d[0], d.size (), nullptr);
+        bn_n = BN_bin2bn(&n[0], n.size(), nullptr);
+        bn_e = BN_bin2bn(&e[0], e.size(), nullptr);
+        if (0 != d.size()) {
+            bn_d = BN_bin2bn(&d[0], d.size(), nullptr);
         }
 
-        if (0 != p.size ()) {
-            bn_p = BN_bin2bn (&p[0], p.size (), nullptr);
+        if (0 != p.size()) {
+            bn_p = BN_bin2bn(&p[0], p.size(), nullptr);
         }
-        if (0 != q.size ()) {
-            bn_q = BN_bin2bn (&q[0], q.size (), nullptr);
+        if (0 != q.size()) {
+            bn_q = BN_bin2bn(&q[0], q.size(), nullptr);
         }
-        if (0 != dp.size ()) {
-            bn_dmp1 = BN_bin2bn (&dp[0], dp.size (), nullptr);
+        if (0 != dp.size()) {
+            bn_dmp1 = BN_bin2bn(&dp[0], dp.size(), nullptr);
         }
-        if (0 != dq.size ()) {
-            bn_dmq1 = BN_bin2bn (&dq[0], dq.size (), nullptr);
+        if (0 != dq.size()) {
+            bn_dmq1 = BN_bin2bn(&dq[0], dq.size(), nullptr);
         }
-        if (0 != qi.size ()) {
-            bn_iqmp = BN_bin2bn (&qi[0], qi.size (), nullptr);
+        if (0 != qi.size()) {
+            bn_iqmp = BN_bin2bn(&qi[0], qi.size(), nullptr);
         }
 
-        RSA_set0_key (rsa, bn_n, bn_e, bn_d);
-        RSA_set0_factors (rsa, bn_p, bn_q);
-        RSA_set0_crt_params (rsa, bn_dmp1, bn_dmq1, bn_iqmp);
+        RSA_set0_key(rsa, bn_n, bn_e, bn_d);
+        RSA_set0_factors(rsa, bn_p, bn_q);
+        RSA_set0_crt_params(rsa, bn_dmp1, bn_dmq1, bn_iqmp);
 
-        pkey = EVP_PKEY_new ();
-        ret_openssl = EVP_PKEY_assign_RSA (pkey, rsa);
+        pkey = EVP_PKEY_new();
+        ret_openssl = EVP_PKEY_assign_RSA(pkey, rsa);
         if (ret_openssl <= 0) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
         /* verify */
-        ret_openssl = RSA_check_key (rsa);
+        ret_openssl = RSA_check_key(rsa);
         if (ret_openssl <= 0) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key (pkey, use, kid, alg);
+        crypto_key_object_t key(pkey, use, kid, alg);
 
-        cryptokey->add (key);
+        cryptokey->add(key);
     }
-    __finally2
-    {
+    __finally2 {
         if (errorcode_t::success != ret) {
             if (nullptr != pkey) {
-                EVP_PKEY_free (pkey);
+                EVP_PKEY_free(pkey);
             }
         }
     }
     return ret;
 }
 
-return_t crypto_keychain::add_rsa (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& n, binary_t const& e, binary_t const& d,
-                                   binary_t const& p, binary_t const& q, binary_t const& dp, binary_t const& dq, binary_t const& qi, crypto_use_t use)
-{
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& n, binary_t const& e, binary_t const& d, binary_t const& p,
+                                  binary_t const& q, binary_t const& dp, binary_t const& dq, binary_t const& qi, crypto_use_t use) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
 
-    return add_rsa (cryptokey, kid, hint ? hint->alg_name : nullptr, n, e, d, p, q, dp, dq, qi, use);
+    return add_rsa(cryptokey, kid, hint ? hint->alg_name : nullptr, n, e, d, p, q, dp, dq, qi, use);
 }
 
-return_t crypto_keychain::add_rsa_b64u (crypto_key* crypto_key, const char* kid, const char* alg,
-                                        const char* n_value, const char* e_value, const char* d_value,
-                                        const char* p_value, const char* q_value,
-                                        const char* dp_value, const char* dq_value, const char* qi_value,
-                                        crypto_use_t use)
-{
+return_t crypto_keychain::add_rsa_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* n_value, const char* e_value, const char* d_value,
+                                       const char* p_value, const char* q_value, const char* dp_value, const char* dq_value, const char* qi_value,
+                                       crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == crypto_key || nullptr == n_value || nullptr == e_value) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -394,10 +352,10 @@ return_t crypto_keychain::add_rsa_b64u (crypto_key* crypto_key, const char* kid,
         binary_t e_decoded;
         binary_t d_decoded;
 
-        n_decoded = base64_decode (n_value, strlen (n_value), base64_encoding_t::base64url_encoding);
-        e_decoded = base64_decode (e_value, strlen (e_value), base64_encoding_t::base64url_encoding);
+        n_decoded = base64_decode(n_value, strlen(n_value), base64_encoding_t::base64url_encoding);
+        e_decoded = base64_decode(e_value, strlen(e_value), base64_encoding_t::base64url_encoding);
         if (nullptr != d_value) {
-            d_decoded = base64_decode (d_value, strlen (d_value), base64_encoding_t::base64url_encoding);
+            d_decoded = base64_decode(d_value, strlen(d_value), base64_encoding_t::base64url_encoding);
         }
 
         binary_t p_decoded;
@@ -407,19 +365,19 @@ return_t crypto_keychain::add_rsa_b64u (crypto_key* crypto_key, const char* kid,
         binary_t qi_decoded;
 
         if (p_value && q_value && dp_value && dq_value && qi_value) {
-            p_decoded = base64_decode (p_value, strlen (p_value), base64_encoding_t::base64url_encoding);
-            q_decoded = base64_decode (q_value, strlen (q_value), base64_encoding_t::base64url_encoding);
-            dp_decoded = base64_decode (dp_value, strlen (dp_value), base64_encoding_t::base64url_encoding);
-            dq_decoded = base64_decode (dq_value, strlen (dq_value), base64_encoding_t::base64url_encoding);
-            qi_decoded = base64_decode (qi_value, strlen (qi_value), base64_encoding_t::base64url_encoding);
+            p_decoded = base64_decode(p_value, strlen(p_value), base64_encoding_t::base64url_encoding);
+            q_decoded = base64_decode(q_value, strlen(q_value), base64_encoding_t::base64url_encoding);
+            dp_decoded = base64_decode(dp_value, strlen(dp_value), base64_encoding_t::base64url_encoding);
+            dq_decoded = base64_decode(dq_value, strlen(dq_value), base64_encoding_t::base64url_encoding);
+            qi_decoded = base64_decode(qi_value, strlen(qi_value), base64_encoding_t::base64url_encoding);
         }
 
         binary_t bin_n;
         binary_t bin_e;
         binary_t bin_d;
-        bin_n.insert (bin_n.end (), n_decoded.begin (), n_decoded.end ());
-        bin_e.insert (bin_e.end (), e_decoded.begin (), e_decoded.end ());
-        bin_d.insert (bin_d.end (), d_decoded.begin (), d_decoded.end ());
+        bin_n.insert(bin_n.end(), n_decoded.begin(), n_decoded.end());
+        bin_e.insert(bin_e.end(), e_decoded.begin(), e_decoded.end());
+        bin_d.insert(bin_d.end(), d_decoded.begin(), d_decoded.end());
 
         if (p_value && q_value && dp_value && dq_value && qi_value) {
             binary_t bin_p;
@@ -427,33 +385,28 @@ return_t crypto_keychain::add_rsa_b64u (crypto_key* crypto_key, const char* kid,
             binary_t bin_dp;
             binary_t bin_dq;
             binary_t bin_qi;
-            bin_p.insert (bin_p.end (), p_decoded.begin (), p_decoded.end ());
-            bin_q.insert (bin_q.end (), q_decoded.begin (), q_decoded.end ());
-            bin_dp.insert (bin_dp.end (), dp_decoded.begin (), dp_decoded.end ());
-            bin_dq.insert (bin_dq.end (), dq_decoded.begin (), dq_decoded.end ());
-            bin_qi.insert (bin_qi.end (), qi_decoded.begin (), qi_decoded.end ());
-            add_rsa (crypto_key, kid, alg, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, use);
+            bin_p.insert(bin_p.end(), p_decoded.begin(), p_decoded.end());
+            bin_q.insert(bin_q.end(), q_decoded.begin(), q_decoded.end());
+            bin_dp.insert(bin_dp.end(), dp_decoded.begin(), dp_decoded.end());
+            bin_dq.insert(bin_dq.end(), dq_decoded.begin(), dq_decoded.end());
+            bin_qi.insert(bin_qi.end(), qi_decoded.begin(), qi_decoded.end());
+            add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, use);
         } else {
-            add_rsa (crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
+            add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::add_rsa_b64 (crypto_key* crypto_key, const char* kid, const char* alg,
-                                       const char* n_value, const char* e_value, const char* d_value,
-                                       const char* p_value, const char* q_value,
-                                       const char* dp_value, const char* dq_value, const char* qi_value,
-                                       crypto_use_t use)
-{
+return_t crypto_keychain::add_rsa_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* n_value, const char* e_value, const char* d_value,
+                                      const char* p_value, const char* q_value, const char* dp_value, const char* dq_value, const char* qi_value,
+                                      crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == crypto_key || nullptr == n_value || nullptr == e_value) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -463,10 +416,10 @@ return_t crypto_keychain::add_rsa_b64 (crypto_key* crypto_key, const char* kid, 
         binary_t e_decoded;
         binary_t d_decoded;
 
-        n_decoded = base64_decode (n_value, strlen (n_value), base64_encoding_t::base64_encoding);
-        e_decoded = base64_decode (e_value, strlen (e_value), base64_encoding_t::base64_encoding);
+        n_decoded = base64_decode(n_value, strlen(n_value), base64_encoding_t::base64_encoding);
+        e_decoded = base64_decode(e_value, strlen(e_value), base64_encoding_t::base64_encoding);
         if (nullptr != d_value) {
-            d_decoded = base64_decode (d_value, strlen (d_value), base64_encoding_t::base64_encoding);
+            d_decoded = base64_decode(d_value, strlen(d_value), base64_encoding_t::base64_encoding);
         }
 
         binary_t p_decoded;
@@ -476,19 +429,19 @@ return_t crypto_keychain::add_rsa_b64 (crypto_key* crypto_key, const char* kid, 
         binary_t qi_decoded;
 
         if (p_value && q_value && dp_value && dq_value && qi_value) {
-            p_decoded = base64_decode (p_value, strlen (p_value), base64_encoding_t::base64_encoding);
-            q_decoded = base64_decode (q_value, strlen (q_value), base64_encoding_t::base64_encoding);
-            dp_decoded = base64_decode (dp_value, strlen (dp_value), base64_encoding_t::base64_encoding);
-            dq_decoded = base64_decode (dq_value, strlen (dq_value), base64_encoding_t::base64_encoding);
-            qi_decoded = base64_decode (qi_value, strlen (qi_value), base64_encoding_t::base64_encoding);
+            p_decoded = base64_decode(p_value, strlen(p_value), base64_encoding_t::base64_encoding);
+            q_decoded = base64_decode(q_value, strlen(q_value), base64_encoding_t::base64_encoding);
+            dp_decoded = base64_decode(dp_value, strlen(dp_value), base64_encoding_t::base64_encoding);
+            dq_decoded = base64_decode(dq_value, strlen(dq_value), base64_encoding_t::base64_encoding);
+            qi_decoded = base64_decode(qi_value, strlen(qi_value), base64_encoding_t::base64_encoding);
         }
 
         binary_t bin_n;
         binary_t bin_e;
         binary_t bin_d;
-        bin_n.insert (bin_n.end (), n_decoded.begin (), n_decoded.end ());
-        bin_e.insert (bin_e.end (), e_decoded.begin (), e_decoded.end ());
-        bin_d.insert (bin_d.end (), d_decoded.begin (), d_decoded.end ());
+        bin_n.insert(bin_n.end(), n_decoded.begin(), n_decoded.end());
+        bin_e.insert(bin_e.end(), e_decoded.begin(), e_decoded.end());
+        bin_d.insert(bin_d.end(), d_decoded.begin(), d_decoded.end());
 
         if (p_value && q_value && dp_value && dq_value && qi_value) {
             binary_t bin_p;
@@ -496,35 +449,31 @@ return_t crypto_keychain::add_rsa_b64 (crypto_key* crypto_key, const char* kid, 
             binary_t bin_dp;
             binary_t bin_dq;
             binary_t bin_qi;
-            bin_p.insert (bin_p.end (), p_decoded.begin (), p_decoded.end ());
-            bin_q.insert (bin_q.end (), q_decoded.begin (), q_decoded.end ());
-            bin_dp.insert (bin_dp.end (), dp_decoded.begin (), dp_decoded.end ());
-            bin_dq.insert (bin_dq.end (), dq_decoded.begin (), dq_decoded.end ());
-            bin_qi.insert (bin_qi.end (), qi_decoded.begin (), qi_decoded.end ());
-            add_rsa (crypto_key, kid, alg, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, use);
+            bin_p.insert(bin_p.end(), p_decoded.begin(), p_decoded.end());
+            bin_q.insert(bin_q.end(), q_decoded.begin(), q_decoded.end());
+            bin_dp.insert(bin_dp.end(), dp_decoded.begin(), dp_decoded.end());
+            bin_dq.insert(bin_dq.end(), dq_decoded.begin(), dq_decoded.end());
+            bin_qi.insert(bin_qi.end(), qi_decoded.begin(), qi_decoded.end());
+            add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, use);
         } else {
-            add_rsa (crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
+            add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::add_rsa_b16 (crypto_key* crypto_key, const char* kid, const char* alg,
-                                       const char* n, const char* e, const char* d)
-{
-    return add_rsa (crypto_key, kid, alg, base16_decode (n), base16_decode (e), base16_decode (d));
+return_t crypto_keychain::add_rsa_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d) {
+    return add_rsa(crypto_key, kid, alg, base16_decode(n), base16_decode(e), base16_decode(d));
 }
 
-return_t crypto_keychain::add_rsa (crypto_key* crypto_key, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e, const byte_t* d, size_t size_d, crypto_use_t use)
-{
+return_t crypto_keychain::add_rsa(crypto_key* crypto_key, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e,
+                                  const byte_t* d, size_t size_d, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == crypto_key || nullptr == n || nullptr == e) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -534,33 +483,25 @@ return_t crypto_keychain::add_rsa (crypto_key* crypto_key, const char* kid, cons
         binary_t bin_e;
         binary_t bin_d;
 
-        bin_n.insert (bin_n.end (), n, n + size_n);
-        bin_e.insert (bin_e.end (), e, e + size_e);
+        bin_n.insert(bin_n.end(), n, n + size_n);
+        bin_e.insert(bin_e.end(), e, e + size_e);
         if (d) {
-            bin_d.insert (bin_d.end (), d, d + size_d);
+            bin_d.insert(bin_d.end(), d, d + size_d);
         }
 
-        ret = add_rsa (crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
+        ret = add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::add_ec (crypto_key* cryptokey, int nid, crypto_use_t use)
-{
-    return add_ec (cryptokey, nullptr, nullptr, nid, use);
-}
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, int nid, crypto_use_t use) { return add_ec(cryptokey, nullptr, nullptr, nid, use); }
 
-return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, int nid, crypto_use_t use)
-{
-    return add_ec (cryptokey, kid, nullptr, nid, use);
-}
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, int nid, crypto_use_t use) { return add_ec(cryptokey, kid, nullptr, nid, use); }
 
-return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, crypto_use_t use)
-{
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     EVP_PKEY_CTX* ctx = nullptr;
@@ -568,8 +509,7 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
     EVP_PKEY* params = nullptr;
     EVP_PKEY_CTX* keyctx = nullptr;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -607,34 +547,34 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
                 break;
         }
 
-        ctx = EVP_PKEY_CTX_new_id (type, nullptr);
+        ctx = EVP_PKEY_CTX_new_id(type, nullptr);
         if (EVP_PKEY_EC == type) {
-            ret_openssl = EVP_PKEY_paramgen_init (ctx);
+            ret_openssl = EVP_PKEY_paramgen_init(ctx);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
-            ret_openssl = EVP_PKEY_CTX_set_ec_paramgen_curve_nid (ctx, nid);
+            ret_openssl = EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, nid);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
-            ret_openssl = EVP_PKEY_paramgen (ctx, &params);
+            ret_openssl = EVP_PKEY_paramgen(ctx, &params);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
-            keyctx = EVP_PKEY_CTX_new (params, nullptr);
+            keyctx = EVP_PKEY_CTX_new(params, nullptr);
             if (nullptr == keyctx) {
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
-            ret_openssl = EVP_PKEY_keygen_init (keyctx);
+            ret_openssl = EVP_PKEY_keygen_init(keyctx);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
-            ret_openssl = EVP_PKEY_keygen (keyctx, &pkey);
+            ret_openssl = EVP_PKEY_keygen(keyctx, &pkey);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2;
@@ -644,14 +584,14 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
                 __leave2;
             }
             // set ASN.1 OPENSSL_EC_NAMED_CURVE flag for PEM export (PEM_write_bio_PUBKEY, PEM_write_bio_PrivateKey)
-            EC_KEY_set_asn1_flag ((EC_KEY*) EVP_PKEY_get0_EC_KEY (pkey), OPENSSL_EC_NAMED_CURVE); // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+            EC_KEY_set_asn1_flag((EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey), OPENSSL_EC_NAMED_CURVE);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
         } else {
-            ret_openssl = EVP_PKEY_keygen_init (ctx);
+            ret_openssl = EVP_PKEY_keygen_init(ctx);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
-            ret_openssl = EVP_PKEY_keygen (ctx, &pkey);
+            ret_openssl = EVP_PKEY_keygen(ctx, &pkey);
             if (ret_openssl < 0) {
                 ret = errorcode_t::internal_error;
                 __leave2;
@@ -659,38 +599,35 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
         }
 
         if (pkey) {
-            crypto_key_object_t key (pkey, use, kid, alg);
-            ret = cryptokey->add (key);
+            crypto_key_object_t key(pkey, use, kid, alg);
+            ret = cryptokey->add(key);
         }
     }
-    __finally2
-    {
+    __finally2 {
         if (keyctx) {
-            EVP_PKEY_CTX_free (keyctx);
+            EVP_PKEY_CTX_free(keyctx);
         }
         if (params) {
-            EVP_PKEY_free (params);
+            EVP_PKEY_free(params);
         }
 
         if (ctx) {
-            EVP_PKEY_CTX_free (ctx);
+            EVP_PKEY_CTX_free(ctx);
         }
     }
     return ret;
 }
 
-return_t crypto_keychain::add_ec (crypto_key* cryptokey, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
-{
-    return add_ec (cryptokey, nullptr, nullptr, nid, x, y, d, use);
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use) {
+    return add_ec(cryptokey, nullptr, nullptr, nid, x, y, d, use);
 }
 
-return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
-{
-    return add_ec (cryptokey, kid, nullptr, nid, x, y, d, use);
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use) {
+    return add_ec(cryptokey, kid, nullptr, nid, x, y, d, use);
 }
 
-return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
-{
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
+                                 crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
     switch (nid) {
@@ -698,27 +635,27 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
         case NID_X448:
         case NID_ED25519:
         case NID_ED448:
-            ret = add_ec_nid_OKP (cryptokey, kid, alg, nid, x, d, use);
+            ret = add_ec_nid_OKP(cryptokey, kid, alg, nid, x, d, use);
             break;
         case NID_X9_62_prime256v1:
         case NID_secp384r1:
         case NID_secp521r1:
         default:
-            ret = add_ec_nid_EC (cryptokey, kid, alg, nid, x, y, d, use);
+            ret = add_ec_nid_EC(cryptokey, kid, alg, nid, x, y, d, use);
             break;
     }
     return ret;
 }
 
-return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d, crypto_use_t use)
-{
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d,
+                                 crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
     switch (nid) {
         case NID_X9_62_prime256v1:
         case NID_secp384r1:
         case NID_secp521r1:
-            ret = add_ec_nid_EC (cryptokey, kid, alg, nid, x, ybit, d, use);
+            ret = add_ec_nid_EC(cryptokey, kid, alg, nid, x, ybit, d, use);
             break;
         default:
             ret = errorcode_t::request;
@@ -727,8 +664,8 @@ return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, const 
     return ret;
 }
 
-return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
-{
+return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y,
+                                        binary_t const& d, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     EC_KEY* ec = nullptr;
@@ -740,17 +677,16 @@ return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid,
     BN_CTX* cfg = nullptr;
     int ret_openssl = 1;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        bn_x = BN_bin2bn (&x[0], x.size (), nullptr);
-        bn_y = BN_bin2bn (&y[0], y.size (), nullptr);
-        if (d.size () > 0) {
-            bn_d = BN_bin2bn (&d[0], d.size (), nullptr);
+        bn_x = BN_bin2bn(&x[0], x.size(), nullptr);
+        bn_y = BN_bin2bn(&y[0], y.size(), nullptr);
+        if (d.size() > 0) {
+            bn_d = BN_bin2bn(&d[0], d.size(), nullptr);
         }
 
         if (nullptr == bn_x && nullptr == bn_y) {
@@ -758,53 +694,53 @@ return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid,
             __leave2;
         }
 
-        ec = EC_KEY_new_by_curve_name (nid);
+        ec = EC_KEY_new_by_curve_name(nid);
         if (nullptr == ec) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        const EC_GROUP* group = EC_KEY_get0_group (ec);
-        point = EC_POINT_new (group);
+        const EC_GROUP* group = EC_KEY_get0_group(ec);
+        point = EC_POINT_new(group);
         if (nullptr == point) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
         if (nullptr != bn_d) {
-            ret_openssl = EC_KEY_set_private_key (ec, bn_d);
+            ret_openssl = EC_KEY_set_private_key(ec, bn_d);
             if (ret_openssl != 1) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace_openssl (ret);
+                __leave2_trace_openssl(ret);
             }
 
-            ret_openssl = EC_POINT_mul (group, point, bn_d, nullptr, nullptr, nullptr);
+            ret_openssl = EC_POINT_mul(group, point, bn_d, nullptr, nullptr, nullptr);
             if (ret_openssl != 1) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace_openssl (ret);
+                __leave2_trace_openssl(ret);
             }
         } else {
-            ret_openssl = EC_POINT_set_affine_coordinates_GFp (group, point, bn_x, bn_y, nullptr);
+            ret_openssl = EC_POINT_set_affine_coordinates_GFp(group, point, bn_x, bn_y, nullptr);
             if (ret_openssl != 1) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace_openssl (ret);
+                __leave2_trace_openssl(ret);
             }
         }
 
-        ret_openssl = EC_KEY_set_public_key (ec, point);
+        ret_openssl = EC_KEY_set_public_key(ec, point);
         if (ret_openssl != 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        pkey = EVP_PKEY_new ();
-        EVP_PKEY_set1_EC_KEY (pkey, ec); // EC_KEY_up_ref
+        pkey = EVP_PKEY_new();
+        EVP_PKEY_set1_EC_KEY(pkey, ec);  // EC_KEY_up_ref
         if (ret_openssl != 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key (pkey, use, kid, alg);
+        crypto_key_object_t key(pkey, use, kid, alg);
         switch (nid) {
             case NID_X9_62_prime256v1:
                 break;
@@ -814,43 +750,42 @@ return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid,
                 break;
         }
 
-        cryptokey->add (key);
+        cryptokey->add(key);
     }
-    __finally2
-    {
+    __finally2 {
         if (ec) {
-            EC_KEY_free (ec);
+            EC_KEY_free(ec);
         }
         if (bn_x) {
-            BN_clear_free (bn_x);
+            BN_clear_free(bn_x);
         }
         if (bn_y) {
-            BN_clear_free (bn_y);
+            BN_clear_free(bn_y);
         }
         if (bn_d) {
-            BN_clear_free (bn_d);
+            BN_clear_free(bn_d);
         }
         if (pub) {
-            EC_POINT_free (pub);
+            EC_POINT_free(pub);
         }
         if (point) {
-            EC_POINT_free (point);
+            EC_POINT_free(point);
         }
         if (cfg) {
-            BN_CTX_free (cfg);
+            BN_CTX_free(cfg);
         }
 
         if (errorcode_t::success != ret) {
             if (pkey) {
-                EVP_PKEY_free (pkey);
+                EVP_PKEY_free(pkey);
             }
         }
     }
     return ret;
 }
 
-return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d, crypto_use_t use)
-{
+return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d,
+                                        crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     EC_KEY* ec = nullptr;
@@ -861,16 +796,15 @@ return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid,
     BN_CTX* cfg = nullptr;
     int ret_openssl = 1;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        bn_x = BN_bin2bn (&x[0], x.size (), nullptr);
-        if (d.size () > 0) {
-            bn_d = BN_bin2bn (&d[0], d.size (), nullptr);
+        bn_x = BN_bin2bn(&x[0], x.size(), nullptr);
+        if (d.size() > 0) {
+            bn_d = BN_bin2bn(&d[0], d.size(), nullptr);
         }
 
         if (nullptr == bn_x) {
@@ -878,56 +812,56 @@ return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid,
             __leave2;
         }
 
-        ec = EC_KEY_new_by_curve_name (nid);
+        ec = EC_KEY_new_by_curve_name(nid);
         if (nullptr == ec) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        const EC_GROUP* group = EC_KEY_get0_group (ec);
-        point = EC_POINT_new (group);
+        const EC_GROUP* group = EC_KEY_get0_group(ec);
+        point = EC_POINT_new(group);
         if (nullptr == point) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
         if (nullptr != bn_d) {
-            ret_openssl = EC_KEY_set_private_key (ec, bn_d);
+            ret_openssl = EC_KEY_set_private_key(ec, bn_d);
             if (ret_openssl != 1) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace_openssl (ret);
+                __leave2_trace_openssl(ret);
             }
 
-            ret_openssl = EC_POINT_mul (group, point, bn_d, nullptr, nullptr, nullptr);
+            ret_openssl = EC_POINT_mul(group, point, bn_d, nullptr, nullptr, nullptr);
             if (ret_openssl != 1) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace_openssl (ret);
+                __leave2_trace_openssl(ret);
             }
         } else {
             // RFC8152 13.1.1.  Double Coordinate Curves
             // Compute the sign bit as laid out in the Elliptic-Curve-Point-to-Octet-String Conversion function of [SEC1]
             // If the sign bit is zero, then encode y as a CBOR false value; otherwise, encode y as a CBOR true value.
-            ret_openssl = EC_POINT_set_compressed_coordinates_GFp (group, point, bn_x, ybit, nullptr);
+            ret_openssl = EC_POINT_set_compressed_coordinates_GFp(group, point, bn_x, ybit, nullptr);
             if (ret_openssl != 1) {
                 ret = errorcode_t::internal_error;
-                __leave2_trace_openssl (ret);
+                __leave2_trace_openssl(ret);
             }
         }
 
-        ret_openssl = EC_KEY_set_public_key (ec, point);
+        ret_openssl = EC_KEY_set_public_key(ec, point);
         if (ret_openssl != 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        pkey = EVP_PKEY_new ();
-        EVP_PKEY_set1_EC_KEY (pkey, ec); // EC_KEY_up_ref
+        pkey = EVP_PKEY_new();
+        EVP_PKEY_set1_EC_KEY(pkey, ec);  // EC_KEY_up_ref
         if (ret_openssl != 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key (pkey, use, kid, alg);
+        crypto_key_object_t key(pkey, use, kid, alg);
         switch (nid) {
             case NID_X9_62_prime256v1:
                 break;
@@ -937,89 +871,84 @@ return_t crypto_keychain::add_ec_nid_EC (crypto_key* cryptokey, const char* kid,
                 break;
         }
 
-        cryptokey->add (key);
+        cryptokey->add(key);
     }
-    __finally2
-    {
+    __finally2 {
         if (ec) {
-            EC_KEY_free (ec);
+            EC_KEY_free(ec);
         }
         if (bn_x) {
-            BN_clear_free (bn_x);
+            BN_clear_free(bn_x);
         }
         if (bn_d) {
-            BN_clear_free (bn_d);
+            BN_clear_free(bn_d);
         }
         if (pub) {
-            EC_POINT_free (pub);
+            EC_POINT_free(pub);
         }
         if (point) {
-            EC_POINT_free (point);
+            EC_POINT_free(point);
         }
         if (cfg) {
-            BN_CTX_free (cfg);
+            BN_CTX_free(cfg);
         }
 
         if (errorcode_t::success != ret) {
             if (pkey) {
-                EVP_PKEY_free (pkey);
+                EVP_PKEY_free(pkey);
             }
         }
     }
     return ret;
 }
 
-return_t crypto_keychain::add_ec_nid_OKP (crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& d, crypto_use_t use)
-{
+return_t crypto_keychain::add_ec_nid_OKP(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& d,
+                                         crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (d.size ()) {
-            pkey = EVP_PKEY_new_raw_private_key (nid, nullptr, &d[0], d.size ());
-        } else if (x.size ()) {
-            pkey = EVP_PKEY_new_raw_public_key (nid, nullptr, &x[0], x.size ());
+        if (d.size()) {
+            pkey = EVP_PKEY_new_raw_private_key(nid, nullptr, &d[0], d.size());
+        } else if (x.size()) {
+            pkey = EVP_PKEY_new_raw_public_key(nid, nullptr, &x[0], x.size());
         }
         if (nullptr == pkey) {
             ret = errorcode_t::request;
             __leave2;
         }
 
-        crypto_key_object_t key (pkey, use, kid, alg);
-        cryptokey->add (key);
+        crypto_key_object_t key(pkey, use, kid, alg);
+        cryptokey->add(key);
     }
-    __finally2
-    {
+    __finally2 {
         if (errorcode_t::success != ret) {
             if (pkey) {
-                EVP_PKEY_free (pkey);
+                EVP_PKEY_free(pkey);
             }
         }
     }
     return ret;
 }
 
-return_t crypto_keychain::add_ec (crypto_key* cryptokey, const char* kid, jwa_t alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
-{
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, jwa_t alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
+                                 crypto_use_t use) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
 
-    return add_ec (cryptokey, kid, hint ? hint->alg_name : nullptr, nid, x, y, d, use);
+    return add_ec(cryptokey, kid, hint ? hint->alg_name : nullptr, nid, x, y, d, use);
 }
 
-return_t crypto_keychain::add_ec_b64u (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                                       const char* x_value, const char* y_value, const char* d_value, crypto_use_t use)
-{
+return_t crypto_keychain::add_ec_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x_value, const char* y_value,
+                                      const char* d_value, crypto_use_t use) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    __try2
-    {
+    __try2 {
         if (nullptr == crypto_key || nullptr == curve || nullptr == x_value) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -1029,45 +958,42 @@ return_t crypto_keychain::add_ec_b64u (crypto_key* crypto_key, const char* kid, 
         binary_t y_decoded;
         binary_t d_decoded;
         uint32 nid = 0;
-        ret = advisor->nidof_ec_curve (curve, nid);
+        ret = advisor->nidof_ec_curve(curve, nid);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        x_decoded = base64_decode (x_value, strlen (x_value), base64_encoding_t::base64url_encoding);
+        x_decoded = base64_decode(x_value, strlen(x_value), base64_encoding_t::base64url_encoding);
         if (y_value) {
             /* kty EC */
-            y_decoded = base64_decode (y_value, strlen (y_value), base64_encoding_t::base64url_encoding);
+            y_decoded = base64_decode(y_value, strlen(y_value), base64_encoding_t::base64url_encoding);
         }
         if (d_value) {
             /* private key */
-            d_decoded = base64_decode (d_value, strlen (d_value), base64_encoding_t::base64url_encoding);
+            d_decoded = base64_decode(d_value, strlen(d_value), base64_encoding_t::base64url_encoding);
         }
 
         binary_t bin_x;
         binary_t bin_y;
         binary_t bin_d;
-        bin_x.insert (bin_x.end (), x_decoded.begin (), x_decoded.end ());
-        bin_y.insert (bin_y.end (), y_decoded.begin (), y_decoded.end ());
-        bin_d.insert (bin_d.end (), d_decoded.begin (), d_decoded.end ());
+        bin_x.insert(bin_x.end(), x_decoded.begin(), x_decoded.end());
+        bin_y.insert(bin_y.end(), y_decoded.begin(), y_decoded.end());
+        bin_d.insert(bin_d.end(), d_decoded.begin(), d_decoded.end());
 
-        ret = add_ec (crypto_key, kid, alg, nid, bin_x, bin_y, bin_d, use);
+        ret = add_ec(crypto_key, kid, alg, nid, bin_x, bin_y, bin_d, use);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b64 (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                                      const char* x_value, const char* y_value, const char* d_value, crypto_use_t use)
-{
+return_t crypto_keychain::add_ec_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x_value, const char* y_value,
+                                     const char* d_value, crypto_use_t use) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    __try2
-    {
+    __try2 {
         if (nullptr == crypto_key || nullptr == curve || nullptr == x_value) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -1077,50 +1003,46 @@ return_t crypto_keychain::add_ec_b64 (crypto_key* crypto_key, const char* kid, c
         binary_t y_decoded;
         binary_t d_decoded;
         uint32 nid = 0;
-        ret = advisor->nidof_ec_curve (curve, nid);
+        ret = advisor->nidof_ec_curve(curve, nid);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        x_decoded = base64_decode (x_value, strlen (x_value), base64_encoding_t::base64_encoding);
+        x_decoded = base64_decode(x_value, strlen(x_value), base64_encoding_t::base64_encoding);
         if (y_value) {
             /* kty EC */
-            y_decoded = base64_decode (y_value, strlen (y_value), base64_encoding_t::base64_encoding);
+            y_decoded = base64_decode(y_value, strlen(y_value), base64_encoding_t::base64_encoding);
         }
         if (d_value) {
             /* private key */
-            d_decoded = base64_decode (d_value, strlen (d_value), base64_encoding_t::base64_encoding);
+            d_decoded = base64_decode(d_value, strlen(d_value), base64_encoding_t::base64_encoding);
         }
 
         binary_t bin_x;
         binary_t bin_y;
         binary_t bin_d;
-        bin_x.insert (bin_x.end (), x_decoded.begin (), x_decoded.end ());
-        bin_y.insert (bin_y.end (), y_decoded.begin (), y_decoded.end ());
-        bin_d.insert (bin_d.end (), d_decoded.begin (), d_decoded.end ());
+        bin_x.insert(bin_x.end(), x_decoded.begin(), x_decoded.end());
+        bin_y.insert(bin_y.end(), y_decoded.begin(), y_decoded.end());
+        bin_d.insert(bin_d.end(), d_decoded.begin(), d_decoded.end());
 
-        ret = add_ec (crypto_key, kid, alg, nid, bin_x, bin_y, bin_d, use);
+        ret = add_ec(crypto_key, kid, alg, nid, bin_x, bin_y, bin_d, use);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b16 (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                                      const char* x, const char* y, const char* d, crypto_use_t use)
-{
-    return add_ec (crypto_key, kid, alg, curve, base16_decode (x), base16_decode (y), base16_decode (d), use);
+return_t crypto_keychain::add_ec_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, const char* y, const char* d,
+                                     crypto_use_t use) {
+    return add_ec(crypto_key, kid, alg, curve, base16_decode(x), base16_decode(y), base16_decode(d), use);
 }
 
-return_t crypto_keychain::add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                                  const byte_t* x, size_t size_x, const byte_t* y, size_t size_y, const byte_t* d, size_t size_d, crypto_use_t use)
-{
+return_t crypto_keychain::add_ec(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const byte_t* x, size_t size_x, const byte_t* y,
+                                 size_t size_y, const byte_t* d, size_t size_d, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == crypto_key || nullptr == curve || nullptr == x) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -1130,237 +1052,206 @@ return_t crypto_keychain::add_ec (crypto_key* crypto_key, const char* kid, const
         binary_t bin_y;
         binary_t bin_d;
 
-        bin_x.insert (bin_x.end (), x, x + size_x);
+        bin_x.insert(bin_x.end(), x, x + size_x);
         if (y) {
-            bin_y.insert (bin_y.end (), y, y + size_y);
+            bin_y.insert(bin_y.end(), y, y + size_y);
         }
         if (d) {
-            bin_d.insert (bin_d.end (), d, d + size_d);
+            bin_d.insert(bin_d.end(), d, d + size_d);
         }
 
-        ret = add_ec (crypto_key, kid, alg, curve, bin_x, bin_y, bin_d, use);
+        ret = add_ec(crypto_key, kid, alg, curve, bin_x, bin_y, bin_d, use);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::add_ec (crypto_key* crypto_key, const char* kid, const char* alg, const char* curve,
-                                  binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use)
-{
+return_t crypto_keychain::add_ec(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, binary_t const& x, binary_t const& y,
+                                 binary_t const& d, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == crypto_key || nullptr == curve) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        crypto_advisor* advisor = crypto_advisor::get_instance ();
+        crypto_advisor* advisor = crypto_advisor::get_instance();
         uint32 nid = 0;
-        ret = advisor->nidof_ec_curve (curve, nid);
+        ret = advisor->nidof_ec_curve(curve, nid);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        add_ec (crypto_key, kid, alg, nid, x, y, d, use);
+        add_ec(crypto_key, kid, alg, nid, x, y, d, use);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, size_t size, crypto_use_t use)
-{
-    return add_oct (cryptokey, nullptr, nullptr, nullptr, size, use);
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, crypto_use_t use) { return add_oct(cryptokey, nullptr, nullptr, nullptr, size, use); }
+
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, size_t size, crypto_use_t use) {
+    return add_oct(cryptokey, kid, nullptr, nullptr, size, use);
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, size_t size, crypto_use_t use)
-{
-    return add_oct (cryptokey, kid, nullptr, nullptr, size, use);
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, const char* alg, size_t size, crypto_use_t use) {
+    return add_oct(cryptokey, kid, alg, nullptr, size, use);
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, const char* alg, size_t size, crypto_use_t use)
-{
-    return add_oct (cryptokey, kid, alg, nullptr, size, use);
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, jwa_t alg, size_t size, crypto_use_t use) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
+
+    return add_oct(cryptokey, kid, hint ? hint->alg_name : nullptr, size, use);
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, size_t size, crypto_use_t use)
-{
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, binary_t const& k, crypto_use_t use) { return add_oct(cryptokey, nullptr, nullptr, k, use); }
 
-    return add_oct (cryptokey, kid, hint ? hint->alg_name : nullptr, size, use);
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, binary_t const& k, crypto_use_t use) {
+    return add_oct(cryptokey, kid, nullptr, k, use);
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, binary_t const& k, crypto_use_t use)
-{
-    return add_oct (cryptokey, nullptr, nullptr, k, use);
-}
-
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, binary_t const& k, crypto_use_t use)
-{
-    return add_oct (cryptokey, kid, nullptr, k, use);
-}
-
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& k, crypto_use_t use)
-{
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& k, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        pkey = EVP_PKEY_new_mac_key (EVP_PKEY_HMAC, nullptr, &k[0], k.size ());
+        pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, &k[0], k.size());
         if (nullptr == pkey) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key (pkey, use, kid, alg);
+        crypto_key_object_t key(pkey, use, kid, alg);
 
-        ret = cryptokey->add (key);
+        ret = cryptokey->add(key);
     }
-    __finally2
-    {
+    __finally2 {
         if (errorcode_t::success != ret) {
             if (nullptr != pkey) {
-                EVP_PKEY_free (pkey);
+                EVP_PKEY_free(pkey);
             }
         }
     }
     return ret;
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& k, crypto_use_t use)
-{
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& k, crypto_use_t use) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
 
-    return add_oct (cryptokey, kid, hint ? hint->alg_name : nullptr, k, use);
+    return add_oct(cryptokey, kid, hint ? hint->alg_name : nullptr, k, use);
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const byte_t* k, size_t size, crypto_use_t use)
-{
-    return add_oct (cryptokey, nullptr, nullptr, k, size, use);
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, crypto_use_t use) {
+    return add_oct(cryptokey, nullptr, nullptr, k, size, use);
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, const byte_t* k, size_t size, crypto_use_t use)
-{
-    return add_oct (cryptokey, kid, nullptr, k, size, use);
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, const byte_t* k, size_t size, crypto_use_t use) {
+    return add_oct(cryptokey, kid, nullptr, k, size, use);
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, const char* alg, const byte_t* k, size_t size, crypto_use_t use)
-{
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, const char* alg, const byte_t* k, size_t size, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         if (k) {
-            pkey = EVP_PKEY_new_mac_key (EVP_PKEY_HMAC, nullptr, k, size);
+            pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, k, size);
         } else {
             openssl_prng r;
             binary_t temp;
-            r.random (temp, size);
-            pkey = EVP_PKEY_new_mac_key (EVP_PKEY_HMAC, nullptr, &temp[0], size);
+            r.random(temp, size);
+            pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, &temp[0], size);
         }
         if (nullptr == pkey) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key (pkey, use, kid, alg);
+        crypto_key_object_t key(pkey, use, kid, alg);
 
-        ret = cryptokey->add (key);
+        ret = cryptokey->add(key);
     }
-    __finally2
-    {
+    __finally2 {
         if (errorcode_t::success != ret) {
             if (nullptr != pkey) {
-                EVP_PKEY_free (pkey);
+                EVP_PKEY_free(pkey);
             }
         }
     }
     return ret;
 }
 
-return_t crypto_keychain::add_oct (crypto_key* cryptokey, const char* kid, jwa_t alg, const byte_t* k, size_t size, crypto_use_t use)
-{
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm (alg);
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, jwa_t alg, const byte_t* k, size_t size, crypto_use_t use) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
 
-    return add_oct (cryptokey, kid, hint ? hint->alg_name : nullptr, k, size, use);
+    return add_oct(cryptokey, kid, hint ? hint->alg_name : nullptr, k, size, use);
 }
 
-return_t crypto_keychain::add_oct_b64u (crypto_key* crypto_key, const char* kid, const char* alg, const char* k_value, crypto_use_t use)
-{
+return_t crypto_keychain::add_oct_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* k_value, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == crypto_key || nullptr == k_value) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        binary_t k_decoded = base64_decode (k_value, strlen (k_value), base64_encoding_t::base64url_encoding);
+        binary_t k_decoded = base64_decode(k_value, strlen(k_value), base64_encoding_t::base64url_encoding);
 
         binary_t bin_k;
-        bin_k.insert (bin_k.end (), k_decoded.begin (), k_decoded.end ());
+        bin_k.insert(bin_k.end(), k_decoded.begin(), k_decoded.end());
 
-        add_oct (crypto_key, kid, alg, bin_k, use);
+        add_oct(crypto_key, kid, alg, bin_k, use);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::add_oct_b64 (crypto_key* crypto_key, const char* kid, const char* alg, const char* k, crypto_use_t use)
-{
+return_t crypto_keychain::add_oct_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* k, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == crypto_key || nullptr == k) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        binary_t k_decoded = base64_decode (k, strlen (k), base64_encoding_t::base64_encoding);
+        binary_t k_decoded = base64_decode(k, strlen(k), base64_encoding_t::base64_encoding);
 
         binary_t bin_k;
-        bin_k.insert (bin_k.end (), k_decoded.begin (), k_decoded.end ());
+        bin_k.insert(bin_k.end(), k_decoded.begin(), k_decoded.end());
 
-        add_oct (crypto_key, kid, alg, bin_k, use);
+        add_oct(crypto_key, kid, alg, bin_k, use);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t crypto_keychain::add_oct_b16 (crypto_key* crypto_key, const char* kid, const char* alg, const char* k, crypto_use_t use)
-{
-    return add_oct (crypto_key, kid, alg, base16_decode (k), use);
+return_t crypto_keychain::add_oct_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* k, crypto_use_t use) {
+    return add_oct(crypto_key, kid, alg, base16_decode(k), use);
 }
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace

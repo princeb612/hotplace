@@ -13,8 +13,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CHACHA20__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_CHACHA20__
 
-#include <hotplace/sdk/crypto/types.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/types.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -71,10 +71,10 @@ namespace crypto {
  *              crypt.close (handle);
  *          }
  */
-return_t openssl_chacha20_iv (binary_t & iv, uint32 counter, binary_t const & nonce);
-return_t openssl_chacha20_iv (binary_t & iv, uint32 counter, const byte_t* nonce, size_t nonce_size);
+return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, binary_t const& nonce);
+return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, size_t nonce_size);
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

@@ -30,31 +30,30 @@ typedef struct _cose_parts_t {
     crypt_cosemap_t protected_map;
     crypt_cosemap_t unprotected_map;
 
-    void clear ()
-    {
+    void clear() {
         tag = 0;
-        bin_protected.clear ();
-        bin_data.clear ();
+        bin_protected.clear();
+        bin_data.clear();
 
         crypt_variantlist_t::iterator list_iter;
-        for (list_iter = protected_list.begin (); list_iter != protected_list.end (); list_iter++) {
-            variant_free (list_iter->key);
-            variant_free (list_iter->value);
+        for (list_iter = protected_list.begin(); list_iter != protected_list.end(); list_iter++) {
+            variant_free(list_iter->key);
+            variant_free(list_iter->value);
         }
-        for (list_iter = unprotected_list.begin (); list_iter != unprotected_list.end (); list_iter++) {
-            variant_free (list_iter->key);
-            variant_free (list_iter->value);
+        for (list_iter = unprotected_list.begin(); list_iter != unprotected_list.end(); list_iter++) {
+            variant_free(list_iter->key);
+            variant_free(list_iter->value);
         }
 
         crypt_cosemap_t::iterator map_iter;
-        for (map_iter = protected_map.begin (); map_iter != protected_map.end (); map_iter++) {
-            variant_free (map_iter->second);
+        for (map_iter = protected_map.begin(); map_iter != protected_map.end(); map_iter++) {
+            variant_free(map_iter->second);
         }
-        protected_map.clear ();
-        for (map_iter = unprotected_map.begin (); map_iter != unprotected_map.end (); map_iter++) {
-            variant_free (map_iter->second);
+        protected_map.clear();
+        for (map_iter = unprotected_map.begin(); map_iter != unprotected_map.end(); map_iter++) {
+            variant_free(map_iter->second);
         }
-        unprotected_map.clear ();
+        unprotected_map.clear();
     }
 } cose_parts_t;
 
@@ -62,10 +61,10 @@ typedef struct _cose_context_t {
     uint8 tag;
     cose_parts_t body;
     binary_t payload;
-    std::list <cose_parts_t> subitems;
+    std::list<cose_parts_t> subitems;
 } cose_context_t;
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

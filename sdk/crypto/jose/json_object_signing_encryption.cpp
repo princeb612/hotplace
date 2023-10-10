@@ -33,38 +33,33 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-json_object_signing_encryption::json_object_signing_encryption ()
-{
+json_object_signing_encryption::json_object_signing_encryption() {
     // do nothing
 }
 
-json_object_signing_encryption::~json_object_signing_encryption ()
-{
+json_object_signing_encryption::~json_object_signing_encryption() {
     // do nothing
 }
 
-return_t json_object_signing_encryption::open (jose_context_t** handle, crypto_key* crypto_key)
-{
+return_t json_object_signing_encryption::open(jose_context_t** handle, crypto_key* crypto_key) {
     return_t ret = errorcode_t::success;
     jose_context_t* context = nullptr;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle || nullptr == crypto_key) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        __try_new_catch (context, new jose_context_t, ret, __leave2);
+        __try_new_catch(context, new jose_context_t, ret, __leave2);
 
         context->key = crypto_key;
 
-        crypto_key->addref ();
+        crypto_key->addref();
 
         *handle = context;
     }
-    __finally2
-    {
+    __finally2 {
         if (errorcode_t::success != ret) {
             if (context) {
                 delete context;
@@ -74,37 +69,32 @@ return_t json_object_signing_encryption::open (jose_context_t** handle, crypto_k
     return ret;
 }
 
-return_t json_object_signing_encryption::close (jose_context_t* handle)
-{
+return_t json_object_signing_encryption::close(jose_context_t* handle) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        clear_context (handle);
+        clear_context(handle);
 
         if (handle->key) {
-            handle->key->release ();
+            handle->key->release();
         }
         delete handle;
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t json_object_signing_encryption::setoption (jose_context_t* handle, uint32 flags)
-{
+return_t json_object_signing_encryption::setoption(jose_context_t* handle, uint32 flags) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -112,100 +102,93 @@ return_t json_object_signing_encryption::setoption (jose_context_t* handle, uint
 
         handle->flags = flags;
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t json_object_signing_encryption::encrypt (jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, std::string& output, jose_serialization_t type)
-{
+return_t json_object_signing_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, std::string& output,
+                                                 jose_serialization_t type) {
     json_object_encryption jwe;
 
-    return jwe.encrypt (handle, enc, alg, input, output, type);
+    return jwe.encrypt(handle, enc, alg, input, output, type);
 }
 
-return_t json_object_signing_encryption::encrypt (jose_context_t* handle, jwe_t enc, std::list <jwa_t> algs, binary_t const& input, std::string& output, jose_serialization_t type)
-{
+return_t json_object_signing_encryption::encrypt(jose_context_t* handle, jwe_t enc, std::list<jwa_t> algs, binary_t const& input, std::string& output,
+                                                 jose_serialization_t type) {
     json_object_encryption jwe;
 
-    return jwe.encrypt (handle, enc, algs, input, output, type);
+    return jwe.encrypt(handle, enc, algs, input, output, type);
 }
 
-return_t json_object_signing_encryption::decrypt (jose_context_t* handle, std::string const& input, binary_t& output, bool& result)
-{
+return_t json_object_signing_encryption::decrypt(jose_context_t* handle, std::string const& input, binary_t& output, bool& result) {
     json_object_encryption jwe;
 
-    return jwe.decrypt (handle, input, output, result);
+    return jwe.decrypt(handle, input, output, result);
 }
 
-return_t json_object_signing_encryption::sign (jose_context_t* context, jws_t method, std::string const& input, std::string& output, jose_serialization_t type)
-{
+return_t json_object_signing_encryption::sign(jose_context_t* context, jws_t method, std::string const& input, std::string& output, jose_serialization_t type) {
     json_object_signing jws;
 
-    return jws.sign (context, method, input, output, type);
+    return jws.sign(context, method, input, output, type);
 }
 
-return_t json_object_signing_encryption::sign (jose_context_t* context, std::list <jws_t> const& methods, std::string const& input, std::string& output, jose_serialization_t type)
-{
+return_t json_object_signing_encryption::sign(jose_context_t* context, std::list<jws_t> const& methods, std::string const& input, std::string& output,
+                                              jose_serialization_t type) {
     json_object_signing jws;
 
-    return jws.sign (context, methods, input, output, type);
+    return jws.sign(context, methods, input, output, type);
 }
 
-return_t json_object_signing_encryption::sign (jose_context_t* context, std::string const& protected_header, std::string const& input, std::string& output, jose_serialization_t type)
-{
+return_t json_object_signing_encryption::sign(jose_context_t* context, std::string const& protected_header, std::string const& input, std::string& output,
+                                              jose_serialization_t type) {
     json_object_signing jws;
 
-    return jws.sign (context, protected_header, input, output, type);
+    return jws.sign(context, protected_header, input, output, type);
 }
 
-return_t json_object_signing_encryption::sign (jose_context_t* context, std::list<std::string> const& headers, std::string const& input, std::string& output, jose_serialization_t type)
-{
+return_t json_object_signing_encryption::sign(jose_context_t* context, std::list<std::string> const& headers, std::string const& input, std::string& output,
+                                              jose_serialization_t type) {
     json_object_signing jws;
 
-    return jws.sign (context, headers, input, output, type);
+    return jws.sign(context, headers, input, output, type);
 }
 
-return_t json_object_signing_encryption::verify (jose_context_t* context, std::string const& input, bool& result)
-{
+return_t json_object_signing_encryption::verify(jose_context_t* context, std::string const& input, bool& result) {
     json_object_signing jws;
 
-    return jws.verify (context, input, result);
+    return jws.verify(context, input, result);
 }
 
-return_t json_object_signing_encryption::clear_context (jose_context_t* handle)
-{
+return_t json_object_signing_encryption::clear_context(jose_context_t* handle) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        for (jose_encryptions_map_t::iterator iter = handle->encryptions.begin (); iter != handle->encryptions.end (); iter++) {
+        for (jose_encryptions_map_t::iterator iter = handle->encryptions.begin(); iter != handle->encryptions.end(); iter++) {
             jose_encryption_t& item = iter->second;
 
-            for (jose_recipients_t::iterator rit = item.recipients.begin (); rit != item.recipients.end (); rit++) {
+            for (jose_recipients_t::iterator rit = item.recipients.begin(); rit != item.recipients.end(); rit++) {
                 jose_recipient_t& recipient = rit->second;
 
-                EVP_PKEY_free (recipient.epk);
+                EVP_PKEY_free(recipient.epk);
             }
         }
 
-        handle->protected_header.clear ();
-        handle->encryptions.clear ();
-        handle->signs.clear ();
+        handle->protected_header.clear();
+        handle->encryptions.clear();
+        handle->signs.clear();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace

@@ -14,68 +14,58 @@
 namespace hotplace {
 namespace net {
 
-server_socket::server_socket ()
-{
+server_socket::server_socket() {
     // do nothing
 }
 
-server_socket::~server_socket ()
-{
+server_socket::~server_socket() {
     // do nothing
 }
 
-return_t server_socket::listen (socket_t* sock, unsigned int family, uint16 port)
-{
+return_t server_socket::listen(socket_t* sock, unsigned int family, uint16 port) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == sock) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = create_listener (1, &family, sock, IPPROTO_TCP, port);
+        ret = create_listener(1, &family, sock, IPPROTO_TCP, port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t server_socket::close (socket_t sock, tls_context_t* tls_handle)
-{
+return_t server_socket::close(socket_t sock, tls_context_t* tls_handle) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (INVALID_SOCKET == sock) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 #if defined __linux__
-        ::close (sock);
+        ::close(sock);
 #elif defined _WIN32 || defined _WIN64
-        closesocket (sock);
+        closesocket(sock);
 #endif
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t server_socket::accept (socket_t sock, socket_t* clisock, struct sockaddr* addr, socklen_t* addrlen)
-{
+return_t server_socket::accept(socket_t sock, socket_t* clisock, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if ((nullptr == clisock) || (nullptr == addr) || (nullptr == addrlen)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -83,57 +73,52 @@ return_t server_socket::accept (socket_t sock, socket_t* clisock, struct sockadd
 
         socket_t client_socket = INVALID_SOCKET;
 
-        client_socket = ::accept (sock, addr, addrlen);
+        client_socket = ::accept(sock, addr, addrlen);
         if (INVALID_SOCKET == client_socket) {
 #if defined __linux__
-            ret = get_errno (client_socket);
+            ret = get_errno(client_socket);
 #elif defined _WIN32 || defined _WIN64
-            ret = GetLastError ();
+            ret = GetLastError();
 #endif
             __leave2;
         }
 
         *clisock = client_socket;
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t server_socket::tls_accept (socket_t clisock, tls_context_t** tls_handle)
-{
+return_t server_socket::tls_accept(socket_t clisock, tls_context_t** tls_handle) {
     return_t ret = errorcode_t::success;
 
     // do nothing
     return ret;
 }
 
-return_t server_socket::tls_stop_accept ()
-{
+return_t server_socket::tls_stop_accept() {
     return_t ret = errorcode_t::success;
 
     // do nothing
     return ret;
 }
 
-return_t server_socket::read (socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread)
-{
+return_t server_socket::read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
 #if defined _WIN32 || defined _WIN64
-        int ret_routine = ::recv (sock, ptr_data, (int) size_data, 0);
+        int ret_routine = ::recv(sock, ptr_data, (int)size_data, 0);
 #elif defined __linux__
-        int ret_routine = ::recv (sock, ptr_data, size_data, 0);
+        int ret_routine = ::recv(sock, ptr_data, size_data, 0);
 #endif
         if (-1 == ret_routine) {
 #if defined __linux__
-            ret = get_errno (ret_routine);
+            ret = get_errno(ret_routine);
 #elif defined _WIN32 || defined _WIN64
-            ret = GetLastError ();
+            ret = GetLastError();
 #endif
         } else if (0 == ret_routine) {
             ret = errorcode_t::closed;
@@ -142,29 +127,26 @@ return_t server_socket::read (socket_t sock, tls_context_t* tls_handle, int mode
             *cbread = ret_routine;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t server_socket::send (socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent)
-{
+return_t server_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
 #if defined _WIN32 || defined _WIN64
-        int ret_routine = ::send (sock, ptr_data, (int) size_data, 0);
+        int ret_routine = ::send(sock, ptr_data, (int)size_data, 0);
 #elif defined __linux__
-        int ret_routine = ::send (sock, ptr_data, size_data, 0);
+        int ret_routine = ::send(sock, ptr_data, size_data, 0);
 #endif
         if (-1 == ret_routine) {
 #if defined __linux__
-            ret = get_errno (ret_routine);
+            ret = get_errno(ret_routine);
 #elif defined _WIN32 || defined _WIN64
-            ret = GetLastError ();
+            ret = GetLastError();
 #endif
         } else if (0 == ret_routine) {
             // closed
@@ -173,20 +155,17 @@ return_t server_socket::send (socket_t sock, tls_context_t* tls_handle, const ch
             *cbsent = ret_routine;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t server_socket::query (int specid, arch_t* data_ptr)
-{
+return_t server_socket::query(int specid, arch_t* data_ptr) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == data_ptr) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -201,12 +180,11 @@ return_t server_socket::query (int specid, arch_t* data_ptr)
                 break;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace

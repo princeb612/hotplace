@@ -8,9 +8,10 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/system/multiplexer.hpp>
 #include <sys/epoll.h>
 #include <unistd.h>
+
+#include <hotplace/sdk/io/system/multiplexer.hpp>
 
 namespace hotplace {
 namespace io {
@@ -25,18 +26,15 @@ typedef struct _multiplexer_epoll_context_t : public multiplexer_context_t {
     multiplexer_controller_context_t* handle_controller;
 } multiplexer_epoll_context_t;
 
-multiplexer_epoll::multiplexer_epoll ()
-{
+multiplexer_epoll::multiplexer_epoll() {
     // do nothing
 }
 
-multiplexer_epoll::~multiplexer_epoll ()
-{
+multiplexer_epoll::~multiplexer_epoll() {
     // do nothing
 }
 
-return_t multiplexer_epoll::open (multiplexer_context_t** handle, size_t concurrent)
-{
+return_t multiplexer_epoll::open(multiplexer_context_t** handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
     multiplexer_epoll_context_t* context = nullptr;
     handle_t epollfd = -1;
@@ -44,22 +42,21 @@ return_t multiplexer_epoll::open (multiplexer_context_t** handle, size_t concurr
     multiplexer_controller_context_t* handle_controller = nullptr;
     multiplexer_controller controller;
 
-    __try2
-    {
-        __try_new_catch (context, new multiplexer_epoll_context_t, ret, __leave2);
+    __try2 {
+        __try_new_catch(context, new multiplexer_epoll_context_t, ret, __leave2);
 
-        ret = controller.open (&handle_controller);
+        ret = controller.open(&handle_controller);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        events = (struct epoll_event*) malloc (sizeof (struct epoll_event) * concurrent);
+        events = (struct epoll_event*)malloc(sizeof(struct epoll_event) * concurrent);
         if (nullptr == events) {
             ret = errorcode_t::out_of_memory;
             __leave2;
         }
 
-        epollfd = epoll_create (concurrent);
+        epollfd = epoll_create(concurrent);
         if (epollfd < 0) {
             ret = errno;
             __leave2;
@@ -73,14 +70,13 @@ return_t multiplexer_epoll::open (multiplexer_context_t** handle, size_t concurr
 
         *handle = context;
     }
-    __finally2
-    {
+    __finally2 {
         if (errorcode_t::success != ret) {
             if (nullptr != events) {
-                free (events);
+                free(events);
             }
             if (-1 != epollfd) {
-                ::close (epollfd);
+                ::close(epollfd);
             }
             if (nullptr != context) {
                 delete context;
@@ -91,14 +87,12 @@ return_t multiplexer_epoll::open (multiplexer_context_t** handle, size_t concurr
     return ret;
 }
 
-return_t multiplexer_epoll::close (multiplexer_context_t* handle)
-{
+return_t multiplexer_epoll::close(multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
-    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t*)handle;
     multiplexer_controller controller;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -108,31 +102,28 @@ return_t multiplexer_epoll::close (multiplexer_context_t* handle)
             __leave2;
         }
 
-        event_loop_break (handle);
+        event_loop_break(handle);
 
-        ::close (context->epoll_fd);
-        free (context->events);
+        ::close(context->epoll_fd);
+        free(context->events);
 
-        controller.close (context->handle_controller);
+        controller.close(context->handle_controller);
 
         context->signature = 0;
         delete context;
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t multiplexer_epoll::bind (multiplexer_context_t* handle, handle_t eventsource, void* data)
-{
+return_t multiplexer_epoll::bind(multiplexer_context_t* handle, handle_t eventsource, void* data) {
     return_t ret = errorcode_t::success;
-    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t*)handle;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -143,30 +134,27 @@ return_t multiplexer_epoll::bind (multiplexer_context_t* handle, handle_t events
         }
 
         struct epoll_event ev;
-        memset (&ev, 0, sizeof (ev));
+        memset(&ev, 0, sizeof(ev));
         ev.events = EPOLLIN | EPOLLHUP;
         ev.data.fd = eventsource;
-        int ret_epoll_ctl = epoll_ctl (context->epoll_fd, EPOLL_CTL_ADD, eventsource, &ev);
+        int ret_epoll_ctl = epoll_ctl(context->epoll_fd, EPOLL_CTL_ADD, eventsource, &ev);
         if (ret_epoll_ctl < 0) {
             ret = errno;
             __leave2;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t multiplexer_epoll::unbind (multiplexer_context_t* handle, handle_t eventsource, void* data)
-{
+return_t multiplexer_epoll::unbind(multiplexer_context_t* handle, handle_t eventsource, void* data) {
     return_t ret = errorcode_t::success;
-    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t*)handle;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -179,30 +167,26 @@ return_t multiplexer_epoll::unbind (multiplexer_context_t* handle, handle_t even
         struct epoll_event ev;
         ev.events = EPOLLIN;
         ev.data.fd = eventsource;
-        int ret_epoll_ctl = epoll_ctl (context->epoll_fd, EPOLL_CTL_DEL, eventsource, &ev);
+        int ret_epoll_ctl = epoll_ctl(context->epoll_fd, EPOLL_CTL_DEL, eventsource, &ev);
         if (ret_epoll_ctl < 0) {
             ret = errno;
             __leave2;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t multiplexer_epoll::event_loop_run (multiplexer_context_t* handle, handle_t listenfd, TYPE_CALLBACK_HANDLEREXV event_callback_routine,
-                                            void* parameter)
-{
+return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle_t listenfd, TYPE_CALLBACK_HANDLEREXV event_callback_routine, void* parameter) {
     return_t ret = errorcode_t::success;
-    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t*)handle;
     arch_t token_handle = 0;
     multiplexer_controller controller;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -212,18 +196,18 @@ return_t multiplexer_epoll::event_loop_run (multiplexer_context_t* handle, handl
             __leave2;
         }
 
-        ret = controller.event_loop_new (context->handle_controller, &token_handle);
+        ret = controller.event_loop_new(context->handle_controller, &token_handle);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         while (true) {
-            bool ret_event_loop_test_broken = controller.event_loop_test_broken (context->handle_controller, token_handle);
+            bool ret_event_loop_test_broken = controller.event_loop_test_broken(context->handle_controller, token_handle);
             if (true == ret_event_loop_test_broken) {
                 break;
             }
 
-            int ret_epoll_wait = epoll_wait (context->epoll_fd, context->events, context->concurrent, 100); // 100ms
+            int ret_epoll_wait = epoll_wait(context->epoll_fd, context->events, context->concurrent, 100);  // 100ms
             if (0 == ret_epoll_wait) {
                 continue;
             }
@@ -237,38 +221,37 @@ return_t multiplexer_epoll::event_loop_run (multiplexer_context_t* handle, handl
 
             for (int i = 0; i < ret_epoll_wait; i++) {
                 CALLBACK_CONTROL callback_control = CONTINUE_CONTROL;
-                void* data_vector[4] = { nullptr, };
+                void* data_vector[4] = {
+                    nullptr,
+                };
                 data_vector[0] = handle;
-                data_vector[1] = (void *) (arch_t) context->events[i].data.fd;
+                data_vector[1] = (void*)(arch_t)context->events[i].data.fd;
 
                 if (context->events[i].data.fd == listenfd) {
-                    event_callback_routine (multiplexer_event_type_t::mux_connect, 2, data_vector, &callback_control, parameter);
+                    event_callback_routine(multiplexer_event_type_t::mux_connect, 2, data_vector, &callback_control, parameter);
                 } else if (context->events[i].events & EPOLLIN) {
-                    event_callback_routine (multiplexer_event_type_t::mux_read, 2, data_vector, &callback_control, parameter);
+                    event_callback_routine(multiplexer_event_type_t::mux_read, 2, data_vector, &callback_control, parameter);
                 } else if ((context->events[i].events & EPOLLHUP) || (context->events[i].events & EPOLLERR)) {
-                    event_callback_routine (multiplexer_event_type_t::mux_disconnect, 2, data_vector, &callback_control, parameter);
+                    event_callback_routine(multiplexer_event_type_t::mux_disconnect, 2, data_vector, &callback_control, parameter);
                 }
             }
         }
 
-        controller.event_loop_close (context->handle_controller, token_handle);
+        controller.event_loop_close(context->handle_controller, token_handle);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t multiplexer_epoll::event_loop_break (multiplexer_context_t* handle, arch_t* token_handle)
-{
+return_t multiplexer_epoll::event_loop_break(multiplexer_context_t* handle, arch_t* token_handle) {
     return_t ret = errorcode_t::success;
-    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t*)handle;
     multiplexer_controller controller;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle || nullptr == token_handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -279,24 +262,21 @@ return_t multiplexer_epoll::event_loop_break (multiplexer_context_t* handle, arc
         }
 
         /* signal */
-        ret = controller.event_loop_break (context->handle_controller, token_handle);
+        ret = controller.event_loop_break(context->handle_controller, token_handle);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t multiplexer_epoll::event_loop_break_concurrent (multiplexer_context_t* handle, size_t concurrent)
-{
+return_t multiplexer_epoll::event_loop_break_concurrent(multiplexer_context_t* handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
-    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t *) handle;
+    multiplexer_epoll_context_t* context = (multiplexer_epoll_context_t*)handle;
     multiplexer_controller controller;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle || 0 == concurrent) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -307,32 +287,24 @@ return_t multiplexer_epoll::event_loop_break_concurrent (multiplexer_context_t* 
         }
 
         /* signal */
-        ret = controller.event_loop_break_concurrent (context->handle_controller, concurrent);
+        ret = controller.event_loop_break_concurrent(context->handle_controller, concurrent);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
 
     return ret;
 }
 
-return_t multiplexer_epoll::post (multiplexer_context_t* handle, uint32 size_vecotor, void* data_vector[])
-{
+return_t multiplexer_epoll::post(multiplexer_context_t* handle, uint32 size_vecotor, void* data_vector[]) {
     return_t ret = errorcode_t::success;
 
     return ret;
 }
 
-return_t multiplexer_epoll::setoption (multiplexer_context_t* handle, arch_t optionvalue, size_t size_optionvalue)
-{
-    return errorcode_t::not_supported;
-}
+return_t multiplexer_epoll::setoption(multiplexer_context_t* handle, arch_t optionvalue, size_t size_optionvalue) { return errorcode_t::not_supported; }
 
-multiplexer_type_t multiplexer_epoll::type ()
-{
-    return mux_type_epoll;
-}
+multiplexer_type_t multiplexer_epoll::type() { return mux_type_epoll; }
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace

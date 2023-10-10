@@ -14,10 +14,10 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORENCODE__
 #define __HOTPLACE_SDK_IO_CBOR_CBORENCODE__
 
+#include <deque>
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/io/cbor/cbor_object.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
-#include <deque>
 
 namespace hotplace {
 namespace io {
@@ -83,40 +83,39 @@ namespace io {
  *          variant_set_str (vt, "\u00fc");
  *          variant_set_str (vt, "\u6c34");
  */
-class cbor_encode
-{
-public:
-    cbor_encode ();
+class cbor_encode {
+   public:
+    cbor_encode();
 
-    return_t encode (binary_t& bin, variant_t vt);
-    return_t encode (binary_t& bin, bool value);
-    return_t encode (binary_t& bin, int8 value);
-    return_t encode (binary_t& bin, cbor_major_t major, uint8 value);
-    return_t encode (binary_t& bin, int16 value);
-    return_t encode (binary_t& bin, cbor_major_t major, uint16 value);
-    return_t encode (binary_t& bin, int32 value);
-    return_t encode (binary_t& bin, cbor_major_t major, uint32 value);
-    return_t encode (binary_t& bin, int64 value);
-    return_t encode (binary_t& bin, cbor_major_t major, uint64 value);
+    return_t encode(binary_t& bin, variant_t vt);
+    return_t encode(binary_t& bin, bool value);
+    return_t encode(binary_t& bin, int8 value);
+    return_t encode(binary_t& bin, cbor_major_t major, uint8 value);
+    return_t encode(binary_t& bin, int16 value);
+    return_t encode(binary_t& bin, cbor_major_t major, uint16 value);
+    return_t encode(binary_t& bin, int32 value);
+    return_t encode(binary_t& bin, cbor_major_t major, uint32 value);
+    return_t encode(binary_t& bin, int64 value);
+    return_t encode(binary_t& bin, cbor_major_t major, uint64 value);
 #if defined __SIZEOF_INT128__
-    return_t encode (binary_t& bin, int128 value);
-    return_t encode (binary_t& bin, cbor_major_t major, uint128 value);
+    return_t encode(binary_t& bin, int128 value);
+    return_t encode(binary_t& bin, cbor_major_t major, uint128 value);
 #endif
-    return_t encode (binary_t& bin, uint8 major);
-    return_t encodefp16 (binary_t& bin, uint16 value);
-    return_t encode (binary_t& bin, float value);
-    return_t encode (binary_t& bin, double value);
-    return_t encode (binary_t& bin, byte_t const* value, size_t size);
-    return_t encode (binary_t& bin, binary_t const& value);
-    return_t encode (binary_t& bin, char* value);
-    return_t encode (binary_t& bin, char* value, size_t size);
-    return_t encode (binary_t& bin, cbor_major_t type, cbor_control_t control, cbor_object* object);
-    return_t encode (binary_t& bin, cbor_simple_t type, uint8 value);
+    return_t encode(binary_t& bin, uint8 major);
+    return_t encodefp16(binary_t& bin, uint16 value);
+    return_t encode(binary_t& bin, float value);
+    return_t encode(binary_t& bin, double value);
+    return_t encode(binary_t& bin, byte_t const* value, size_t size);
+    return_t encode(binary_t& bin, binary_t const& value);
+    return_t encode(binary_t& bin, char* value);
+    return_t encode(binary_t& bin, char* value, size_t size);
+    return_t encode(binary_t& bin, cbor_major_t type, cbor_control_t control, cbor_object* object);
+    return_t encode(binary_t& bin, cbor_simple_t type, uint8 value);
 
-    return_t add_tag (binary_t& bin, cbor_object* object);
+    return_t add_tag(binary_t& bin, cbor_object* object);
 };
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
 
 #endif

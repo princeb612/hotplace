@@ -18,22 +18,21 @@ namespace hotplace {
 /**
  * @brief semaphore
  */
-class semaphore_t
-{
-public:
+class semaphore_t {
+   public:
     /**
      * @brief signal
      */
-    virtual uint32 signal () = 0;
+    virtual uint32 signal() = 0;
     /**
      * @brief wait
      *
      * @param unsigned msec [in]
      */
-    virtual uint32 wait (unsigned msec) = 0;
+    virtual uint32 wait(unsigned msec) = 0;
 };
 
-}  // namespace
+}  // namespace hotplace
 
 #if defined _WIN32 || defined _WIN64
 #include <hotplace/sdk/base/system/windows/semaphore.hpp>

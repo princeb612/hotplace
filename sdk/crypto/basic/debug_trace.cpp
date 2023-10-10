@@ -19,27 +19,24 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-return_t trace_openssl (return_t errorcode)
-{
+return_t trace_openssl(return_t errorcode) {
     return_t ret = errorcode_t::success;
 
     if (errorcode_t::success != errorcode) {
-        uint32 option = get_trace_option ();
+        uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
             ansi_string stream;
-            debug_trace_openssl (&stream);
-            std::cout << stream.c_str ();
+            debug_trace_openssl(&stream);
+            std::cout << stream.c_str();
         }
     }
     return ret;
 }
 
-return_t debug_trace_openssl (stream_t* stream)
-{
+return_t debug_trace_openssl(stream_t *stream) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -57,22 +54,21 @@ return_t debug_trace_openssl (stream_t* stream)
         constexpr char constexpr_debugline[] = "[%s @ %d] %s\n";
 
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-        while (0 != (l = ERR_get_error_all (&file, &line, nullptr, &data, &flags))) {
+        while (0 != (l = ERR_get_error_all(&file, &line, nullptr, &data, &flags))) {
 #else
-        while (0 != (l = ERR_get_error_line_data (&file, &line, &data, &flags))) {
+        while (0 != (l = ERR_get_error_line_data(&file, &line, &data, &flags))) {
 #endif
-            ERR_error_string_n (l, buf, sizeof (buf));
-            stream->printf (constexpr_debugline, file, line, buf);
+            ERR_error_string_n(l, buf, sizeof(buf));
+            stream->printf(constexpr_debugline, file, line, buf);
         }
 
-        ERR_clear_error ();
+        ERR_clear_error();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace

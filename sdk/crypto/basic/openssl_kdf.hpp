@@ -29,7 +29,7 @@ namespace crypto {
  * @param   binary_t const& info [in]
  * @param   hash_algorithm_t alg [in]
  */
-return_t kdf_hkdf (binary_t& derived, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info, hash_algorithm_t alg);
+return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info, hash_algorithm_t alg);
 /**
  * @brief   PBKDF2
  * @param   binary_t& derived [out]
@@ -39,9 +39,10 @@ return_t kdf_hkdf (binary_t& derived, size_t dlen, binary_t const& key, binary_t
  * @param   int iter [in]
  * @param   hash_algorithm_t alg [in]
  */
-return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, std::string const& password, binary_t const& salt, int iter, hash_algorithm_t alg);
-return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, int iter, hash_algorithm_t alg);
-return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt, int iter, hash_algorithm_t alg);
+return_t kdf_pbkdf2(binary_t& derived, size_t dlen, std::string const& password, binary_t const& salt, int iter, hash_algorithm_t alg);
+return_t kdf_pbkdf2(binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, int iter, hash_algorithm_t alg);
+return_t kdf_pbkdf2(binary_t& derived, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt, int iter,
+                    hash_algorithm_t alg);
 /**
  * @brief   scrypt
  * @param   binary_t& derived [out]
@@ -52,7 +53,7 @@ return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, const char* password, size_
  * @param   int r [in]
  * @param   int p [in]
  */
-return_t kdf_scrypt (binary_t& derived, size_t dlen, std::string const& password, binary_t const& salt, int n, int r, int p);
+return_t kdf_scrypt(binary_t& derived, size_t dlen, std::string const& password, binary_t const& salt, int n, int r, int p);
 
 // bcrypt - blowfish based... (openssl 3.x deprecates bf)
 
@@ -66,28 +67,20 @@ return_t kdf_scrypt (binary_t& derived, size_t dlen, std::string const& password
 enum argon2_t {
     argon2d = 1,
     argon2i = 2,
-    argon2id= 3,
+    argon2id = 3,
 };
-return_t kdf_argon2 (binary_t& derived, argon2_t mode, size_t dlen, binary_t const& password, binary_t const& salt, binary_t const& ad,  binary_t const& secret,
-                     uint32 iteration_cost = 3,
-                     uint32 parallel_cost = 4,
-                     uint32 memory_cost = 32);
-return_t kdf_argon2d (binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt,  binary_t const& ad, binary_t const& secret,
-                      uint32 iteration_cost = 3,
-                      uint32 parallel_cost = 4,
-                      uint32 memory_cost = 32);
-return_t kdf_argon2i (binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt,  binary_t const& ad, binary_t const& secret,
-                      uint32 iteration_cost = 3,
-                      uint32 parallel_cost = 4,
-                      uint32 memory_cost = 32);
-return_t kdf_argon2id (binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt,  binary_t const& ad, binary_t const& secret,
-                       uint32 iteration_cost = 3,
-                       uint32 parallel_cost = 4,
-                       uint32 memory_cost = 32);
+return_t kdf_argon2(binary_t& derived, argon2_t mode, size_t dlen, binary_t const& password, binary_t const& salt, binary_t const& ad, binary_t const& secret,
+                    uint32 iteration_cost = 3, uint32 parallel_cost = 4, uint32 memory_cost = 32);
+return_t kdf_argon2d(binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, binary_t const& ad, binary_t const& secret,
+                     uint32 iteration_cost = 3, uint32 parallel_cost = 4, uint32 memory_cost = 32);
+return_t kdf_argon2i(binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, binary_t const& ad, binary_t const& secret,
+                     uint32 iteration_cost = 3, uint32 parallel_cost = 4, uint32 memory_cost = 32);
+return_t kdf_argon2id(binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, binary_t const& ad, binary_t const& secret,
+                      uint32 iteration_cost = 3, uint32 parallel_cost = 4, uint32 memory_cost = 32);
 
 #endif
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

@@ -19,27 +19,26 @@ namespace hotplace {
 /**
  * @brief semaphore
  */
-class semaphore : public semaphore_t
-{
-public:
-    semaphore ();
-    ~semaphore ();
+class semaphore : public semaphore_t {
+   public:
+    semaphore();
+    ~semaphore();
 
     /**
      * @brief signal
      */
-    virtual uint32 signal ();
+    virtual uint32 signal();
     /**
      * @brief wait
      *
      * @param unsigned msec [in]
      */
-    virtual uint32 wait (unsigned msec);
+    virtual uint32 wait(unsigned msec);
 
-protected:
+   protected:
     HANDLE _sem;
 };
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

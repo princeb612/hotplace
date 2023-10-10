@@ -25,17 +25,16 @@ class odbc_field;
 /**
  * @brief   record (tuple)
  */
-class odbc_record
-{
-public:
+class odbc_record {
+   public:
     /**
      * @brief   constructor
      */
-    odbc_record ();
+    odbc_record();
     /**
      * @brief   destructor
      */
-    ~odbc_record ();
+    ~odbc_record();
 
     /**
      * @brief   operator <<
@@ -44,7 +43,7 @@ public:
      * @sa
      * @remarks
      */
-    odbc_record& operator << (odbc_field* pField);
+    odbc_record& operator<<(odbc_field* pField);
     /**
      * @brief   추가된 모든 필드를 삭제한다.
      * @param
@@ -52,7 +51,7 @@ public:
      * @sa
      * @remarks
      */
-    return_t clear ();
+    return_t clear();
 
     /**
      * @brief   인덱스로 필드를 구한다.
@@ -61,7 +60,7 @@ public:
      * @sa
      * @remarks
      */
-    odbc_field* get_field (int nIndex);
+    odbc_field* get_field(int nIndex);
     /**
      * @brief   필드 이름으로 필드를 구한다
      * @param   LPTSTR      tszName [in] 필드 이름
@@ -69,9 +68,9 @@ public:
      * @sa
      * @remarks
      */
-    odbc_field* get_field (LPSTR tszName);
+    odbc_field* get_field(LPSTR tszName);
 #if defined _UNICODE || defined UNICODE
-    odbc_field* get_field (LPWSTR tszName);
+    odbc_field* get_field(LPWSTR tszName);
 #endif
 
     /**
@@ -81,19 +80,18 @@ public:
      * @sa
      * @remarks
      */
-    int count (void);
+    int count(void);
 
-    int addref ();
-    int release ();
+    int addref();
+    int release();
 
-protected:
-
-    typedef std::vector<odbc_field* > odbc_field_vector_t;
-    odbc_field_vector_t _odbc_columns;       ///< row
-    t_shared_reference <odbc_record> _shared;
+   protected:
+    typedef std::vector<odbc_field*> odbc_field_vector_t;
+    odbc_field_vector_t _odbc_columns;  ///< row
+    t_shared_reference<odbc_record> _shared;
 };
 
-}
-}  // namespace
+}  // namespace odbc
+}  // namespace hotplace
 
 #endif

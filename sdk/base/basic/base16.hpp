@@ -47,7 +47,7 @@ namespace hotplace {
  *          base16_decode (&source[0], source.size, buf, &size);
  *          free (buf);
  */
-return_t base16_encode (const byte_t* source, size_t size, char* buf, size_t* buflen);
+return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen);
 /*
  * @brief   encode
  * @param   const byte_t* source [in]
@@ -58,7 +58,7 @@ return_t base16_encode (const byte_t* source, size_t size, char* buf, size_t* bu
  *          std::string encoded;
  *          base16_decode (&source[0], source.size, encoded);
  */
-return_t base16_encode (const byte_t* source, size_t size, std::string& outpart);
+return_t base16_encode(const byte_t* source, size_t size, std::string& outpart);
 /*
  * @brief   encode
  * @param   const byte_t* source [in]
@@ -69,7 +69,7 @@ return_t base16_encode (const byte_t* source, size_t size, std::string& outpart)
  *          basic_stream encoded;
  *          base16_decode (&source[0], source.size, &encoded);
  */
-return_t base16_encode (const byte_t* source, size_t size, stream_t* stream);
+return_t base16_encode(const byte_t* source, size_t size, stream_t* stream);
 /*
  * @brief   encode
  * @param   binary_t const& source [in]
@@ -83,7 +83,7 @@ return_t base16_encode (const byte_t* source, size_t size, stream_t* stream);
  *          base16_decode (source, buf, &size);
  *          free (buf);
  */
-return_t base16_encode (binary_t const& source, char* buf, size_t* buflen);
+return_t base16_encode(binary_t const& source, char* buf, size_t* buflen);
 /*
  * @brief   encode
  * @param   binary_t const& source [in]
@@ -93,7 +93,7 @@ return_t base16_encode (binary_t const& source, char* buf, size_t* buflen);
  *          std::string encoded;
  *          base16_decode (source, encoded);
  */
-return_t base16_encode (binary_t const& source, std::string& outpart);
+return_t base16_encode(binary_t const& source, std::string& outpart);
 /*
  * @brief   encode
  * @param   binary_t const& source [in]
@@ -103,7 +103,7 @@ return_t base16_encode (binary_t const& source, std::string& outpart);
  *          basic_stream encoded;
  *          base16_decode (source, &encoded);
  */
-return_t base16_encode (binary_t const& source, stream_t* stream);
+return_t base16_encode(binary_t const& source, stream_t* stream);
 /*
  * @brief   encode
  * @param   binary_t const& source [in]
@@ -111,7 +111,7 @@ return_t base16_encode (binary_t const& source, stream_t* stream);
  *          binary_t source = convert ("wild wild world");
  *          std::string encoded = base16_decode (source);;
  */
-std::string base16_encode (binary_t const& source);
+std::string base16_encode(binary_t const& source);
 
 /**
  * @brief   decode
@@ -119,46 +119,46 @@ std::string base16_encode (binary_t const& source);
  * @param   size_t size [in]
  * @param   binary_t& outpart [out]
  */
-return_t base16_decode (const char* source, size_t size, binary_t& outpart);
+return_t base16_decode(const char* source, size_t size, binary_t& outpart);
 /**
  * @brief   decode
  * @param   const char* source [in]
  * @param   size_t size [in]
  * @param   stream_t* stream [out]
  */
-return_t base16_decode (const char* source, size_t size, stream_t* stream);
+return_t base16_decode(const char* source, size_t size, stream_t* stream);
 /**
  * @brief   decode
  * @param   std::string const& source [in]
  * @param   binary_t& outpart [out]
  */
-return_t base16_decode (std::string const& source, binary_t& outpart);
+return_t base16_decode(std::string const& source, binary_t& outpart);
 /**
  * @brief   decode
  * @param   std::string const& source [in]
  * @param   stream_t* stream [out]
  */
-return_t base16_decode (std::string const& source, stream_t* stream);
+return_t base16_decode(std::string const& source, stream_t* stream);
 /**
  * @brief   decode
  * @param   const char* source [in]
  * @return  binary_t
  */
-binary_t base16_decode (const char* source);
+binary_t base16_decode(const char* source);
 /**
  * @brief   decode
  * @param   const char* source [in]
  * @param   size_t size [in]
  * @return  binary_t
  */
-binary_t base16_decode (const char* source, size_t size);
+binary_t base16_decode(const char* source, size_t size);
 /**
  * @brief   decode
  * @param   std::string const& source [in]
  * @return  binary_t
  */
-binary_t base16_decode (std::string const& source);
+binary_t base16_decode(std::string const& source);
 
-}  // namespace
+}  // namespace hotplace
 
 #endif

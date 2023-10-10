@@ -13,6 +13,7 @@
 
 // #warning Please include winsock2.h before windows.h
 #include <winsock2.h>
+// winsock2.h before windows.h
 #include <windows.h>
 
 namespace hotplace {
@@ -46,10 +47,10 @@ typedef uint32 arch_t;
 #endif
 typedef uint64 time64_t;
 
-//typedef __int16 wchar;
+// typedef __int16 wchar;
 
 typedef HANDLE handle_t;
 
-} // namespace
+}  // namespace hotplace
 
 #endif

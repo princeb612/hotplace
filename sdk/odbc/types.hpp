@@ -17,6 +17,7 @@
 #include <sql.h>
 #include <sqlext.h>
 #include <sqlucode.h>
+
 #include <string>
 
 #if !defined SQL_TCHAR
@@ -34,12 +35,9 @@
 namespace hotplace {
 namespace odbc {
 
-enum sql_query_mode_t {
-    sync_query = 0,
-    async_query
-};
+enum sql_query_mode_t { sync_query = 0, async_query };
 
 }
-}  // namespace
+}  // namespace hotplace
 
 #endif

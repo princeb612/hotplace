@@ -12,12 +12,17 @@
 #define __HOTPLACE_SDK_BASE_SYNTAX__
 
 #define __try2 do
-#define __finally2 while (0);
+#define __finally2 \
+    while (0)      \
+        ;
 #define __leave2 break
 
 #if defined DEBUG
-#define __footprints(x) ::printf ("[\e[31m%08x\e[0m][%s @ %d]\n", x, __FILE__, __LINE__)
-#define __footprintf(...) ::printf ("[\e[35m debug  \e[0m][%s @ %d] ", __FILE__, __LINE__); ::printf (__VA_ARGS__); printf ("\n");
+#define __footprints(x) ::printf("[\e[31m%08x\e[0m][%s @ %d]\n", x, __FILE__, __LINE__)
+#define __footprintf(...)                                            \
+    ::printf("[\e[35m debug  \e[0m][%s @ %d] ", __FILE__, __LINE__); \
+    ::printf(__VA_ARGS__);                                           \
+    printf("\n");
 #else
 #define __footprints(x)
 #define __footprintf(...)
@@ -34,10 +39,28 @@
  *      ret = do_something ();
  *      __leave2_if_fail (ret);
  */
-#define __trace(x, ...) { __footprintf (__VA_ARGS__); hotplace::trace (x); }
-#define __leave2_trace(x) { __footprints (x); hotplace::trace (x); break; }
-#define __leave2_tracef(x, ...) { __footprintf (__VA_ARGS__); hotplace::trace (x); break; }
-#define __leave2_if_fail(x) if (errorcode_t::success != x) { __footprints (x); break; }
+#define __trace(x, ...)            \
+    {                              \
+        __footprintf(__VA_ARGS__); \
+        hotplace::trace(x);        \
+    }
+#define __leave2_trace(x)   \
+    {                       \
+        __footprints(x);    \
+        hotplace::trace(x); \
+        break;              \
+    }
+#define __leave2_tracef(x, ...)    \
+    {                              \
+        __footprintf(__VA_ARGS__); \
+        hotplace::trace(x);        \
+        break;                     \
+    }
+#define __leave2_if_fail(x)          \
+    if (errorcode_t::success != x) { \
+        __footprints(x);             \
+        break;                       \
+    }
 
 #ifdef __cplusplus
 #define __trynew try
@@ -48,14 +71,21 @@
 #endif
 
 #define __try_new_catch(ptr, statement, return_variable, leave_statement) \
-    __try_new_catch2 (ptr, statement, return_variable, errorcode_t::out_of_memory, leave_statement)
+    __try_new_catch2(ptr, statement, return_variable, errorcode_t::out_of_memory, leave_statement)
 #define __try_new_catch2(ptr, statement, return_variable, errorcode, leave_statement) \
-    __trynew { ptr = statement; } __catchnew (nullptr == ptr) { return_variable = errorcode; leave_statement; }
+    __trynew { ptr = statement; }                                                     \
+    __catchnew(nullptr == ptr) {                                                      \
+        return_variable = errorcode;                                                  \
+        leave_statement;                                                              \
+    }
 #define __try_new_catch_leave(ptr, statement, leave_statement) \
-    __trynew { ptr = statement; } __catchnew (nullptr == ptr) { leave_statement; }
+    __trynew { ptr = statement; }                              \
+    __catchnew(nullptr == ptr) { leave_statement; }
 #define __try_new_catch_error(ptr, statement, return_variable) \
-    __trynew { ptr = statement; } __catchnew (nullptr == ptr) { return_variable = errorcode_t::out_of_memory; }
+    __trynew { ptr = statement; }                              \
+    __catchnew(nullptr == ptr) { return_variable = errorcode_t::out_of_memory; }
 #define __try_new_catch_only(ptr, statement) \
-    __trynew { ptr = statement; } __catchnew (nullptr == ptr) { }
+    __trynew { ptr = statement; }            \
+    __catchnew(nullptr == ptr) {}
 
 #endif

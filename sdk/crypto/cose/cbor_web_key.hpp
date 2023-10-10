@@ -19,11 +19,10 @@
 namespace hotplace {
 namespace crypto {
 
-class cbor_web_key : public crypto_keychain
-{
-public:
-    cbor_web_key ();
-    virtual ~cbor_web_key ();
+class cbor_web_key : public crypto_keychain {
+   public:
+    cbor_web_key();
+    virtual ~cbor_web_key();
 
     /**
      * @brief   load key from a buffer
@@ -32,7 +31,7 @@ public:
      * @param   int flags [inopt] reserved
      * @return  error code (see error.hpp)
      */
-    virtual return_t load (crypto_key* crypto_key, const char* buffer, int flags = 0);
+    virtual return_t load(crypto_key* crypto_key, const char* buffer, int flags = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
@@ -40,7 +39,7 @@ public:
      * @param   int flags [inopt] reserved
      * @return  error code (see error.hpp)
      */
-    return_t load (crypto_key* crypto_key, std::string const& buf, int flags = 0);
+    return_t load(crypto_key* crypto_key, std::string const& buf, int flags = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
@@ -49,7 +48,7 @@ public:
      * @param   int flags [inopt] reserved
      * @return  error code (see error.hpp)
      */
-    return_t load (crypto_key* crypto_key, const byte_t* buffer, size_t size, int flags = 0);
+    return_t load(crypto_key* crypto_key, const byte_t* buffer, size_t size, int flags = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
@@ -57,7 +56,7 @@ public:
      * @param   int flags [in] reserved
      * @return  error code (see error.hpp)
      */
-    return_t load (crypto_key* crypto_key, binary_t const& buffer, int flags = 0);
+    return_t load(crypto_key* crypto_key, binary_t const& buffer, int flags = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
@@ -65,7 +64,7 @@ public:
      * @param   int flags [inopt] reserved
      * @return  error code (see error.hpp)
      */
-    return_t load (crypto_key* crypto_key, cbor_object* root, int flags = 0);
+    return_t load(crypto_key* crypto_key, cbor_object* root, int flags = 0);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
@@ -74,7 +73,7 @@ public:
      * @param   int flag [inopt] 0 public only, 1 also private
      * @return  error code (see error.hpp)
      */
-    virtual return_t write (crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
+    virtual return_t write(crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
@@ -82,7 +81,7 @@ public:
      * @param   int flag [inopt] 0 public only, 1 also private
      * @return  error code (see error.hpp)
      */
-    return_t write (crypto_key* crypto_key, std::string& buf, int flags = 0);
+    return_t write(crypto_key* crypto_key, std::string& buf, int flags = 0);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
@@ -90,7 +89,7 @@ public:
      * @param   int flag [inopt] 0 public only, 1 also private
      * @return  error code (see error.hpp)
      */
-    return_t write (crypto_key* crypto_key, binary_t& cbor, int flags = 0);
+    return_t write(crypto_key* crypto_key, binary_t& cbor, int flags = 0);
     /**
      * @brief   key member function to write
      * @param   crypto_key* crypto_key [in]
@@ -109,14 +108,14 @@ public:
      *          publisher.publish (root, &diagnostic); // same diagnose
      *          root->release ();
      */
-    return_t write (crypto_key* crypto_key, cbor_object** root, int flags = 0);
+    return_t write(crypto_key* crypto_key, cbor_object** root, int flags = 0);
     /**
      * @brief   diagnostic
      * @param   crypto_key* crypto_key [in]
      * @param   stream_t* stream [out]
      * @param   int flags [inopt]
      */
-    return_t diagnose (crypto_key* crypto_key, stream_t* stream, int flags = 0);
+    return_t diagnose(crypto_key* crypto_key, stream_t* stream, int flags = 0);
 
     /**
      * @brief load key from a file
@@ -125,7 +124,7 @@ public:
      * @param int flags [in] reserved
      * @return error code (see error.hpp)
      */
-    virtual return_t load_file (crypto_key* crypto_key, const char* file, int flags = 0);
+    virtual return_t load_file(crypto_key* crypto_key, const char* file, int flags = 0);
     /**
      * @brief write to file
      * @param crypto_key * cryptokey [in]
@@ -133,12 +132,12 @@ public:
      * @param int flag [in] reserved
      * @return error code (see error.hpp)
      */
-    virtual return_t write_file (crypto_key* cryptokey, const char* file, int flags = 0);
+    virtual return_t write_file(crypto_key* cryptokey, const char* file, int flags = 0);
 
-protected:
+   protected:
 };
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace
 
 #endif

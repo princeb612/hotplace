@@ -19,45 +19,41 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-openssl_sign::openssl_sign ()
-{
+openssl_sign::openssl_sign() {
     // do nothing
 }
 
-openssl_sign::~openssl_sign ()
-{
+openssl_sign::~openssl_sign() {
     // do nothing
 }
 
-return_t openssl_sign::sign (EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& input, binary_t& signature)
-{
+return_t openssl_sign::sign(EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        int type = EVP_PKEY_id (pkey);
+        int type = EVP_PKEY_id(pkey);
         switch (type) {
             case EVP_PKEY_HMAC:
-                switch (CRYPT_SIG_TYPE (mode)) {
+                switch (CRYPT_SIG_TYPE(mode)) {
                     case crypt_sig_type_t::crypt_sig_dgst:
-                        ret = sign_digest (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                        ret = sign_digest(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                         break;
                     case crypt_sig_type_t::crypt_sig_hmac:
-                        ret = sign_hmac (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                        ret = sign_hmac(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                         break;
                 }
                 break;
             case EVP_PKEY_RSA:
-                switch (CRYPT_SIG_TYPE (mode)) {
+                switch (CRYPT_SIG_TYPE(mode)) {
                     case crypt_sig_type_t::crypt_sig_rsassa_pkcs15:
-                        ret = sign_rsassa_pkcs15 (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                        ret = sign_rsassa_pkcs15(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                         break;
                     case crypt_sig_type_t::crypt_sig_rsassa_pss:
-                        ret = sign_rsassa_pss (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                        ret = sign_rsassa_pss(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                         break;
                     default:
                         ret = errorcode_t::request;
@@ -65,52 +61,48 @@ return_t openssl_sign::sign (EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& i
                 }
                 break;
             case EVP_PKEY_EC:
-                ret = sign_ecdsa (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                ret = sign_ecdsa(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                 break;
             case EVP_PKEY_ED25519:
             case EVP_PKEY_ED448:
-                ret = sign_eddsa (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                ret = sign_eddsa(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                 break;
             default:
                 ret = errorcode_t::not_supported;
                 break;
         }
     }
-    __finally2
-    {
-    }
+    __finally2 {}
     return ret;
 }
 
-return_t openssl_sign::verify (EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& input, binary_t const& signature)
-{
+return_t openssl_sign::verify(EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& input, binary_t const& signature) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        int type = EVP_PKEY_id (pkey);
+        int type = EVP_PKEY_id(pkey);
         switch (type) {
             case EVP_PKEY_HMAC:
-                switch (CRYPT_SIG_TYPE (mode)) {
+                switch (CRYPT_SIG_TYPE(mode)) {
                     case crypt_sig_type_t::crypt_sig_dgst:
-                        ret = verify_digest (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                        ret = verify_digest(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                         break;
                     case crypt_sig_type_t::crypt_sig_hmac:
-                        ret = verify_hmac (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                        ret = verify_hmac(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                         break;
                 }
                 break;
             case EVP_PKEY_RSA:
-                switch (CRYPT_SIG_TYPE (mode)) {
+                switch (CRYPT_SIG_TYPE(mode)) {
                     case crypt_sig_type_t::crypt_sig_rsassa_pkcs15:
-                        ret = verify_rsassa_pkcs15 (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                        ret = verify_rsassa_pkcs15(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                         break;
                     case crypt_sig_type_t::crypt_sig_rsassa_pss:
-                        ret = verify_rsassa_pss (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                        ret = verify_rsassa_pss(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                         break;
                     default:
                         ret = errorcode_t::request;
@@ -118,180 +110,182 @@ return_t openssl_sign::verify (EVP_PKEY* pkey, crypt_sig_t mode, binary_t const&
                 }
                 break;
             case EVP_PKEY_EC:
-                ret = verify_ecdsa (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                ret = verify_ecdsa(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                 break;
             case EVP_PKEY_ED25519:
             case EVP_PKEY_ED448:
-                ret = verify_eddsa (pkey, (hash_algorithm_t) CRYPT_SIG_CODE (mode), input, signature);
+                ret = verify_eddsa(pkey, (hash_algorithm_t)CRYPT_SIG_CODE(mode), input, signature);
                 break;
             default:
                 ret = errorcode_t::not_supported;
                 break;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t openssl_sign::sign_digest (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature)
-{
+return_t openssl_sign::sign_digest(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
     EVP_MD_CTX* md_context = nullptr;
     int ret_openssl = 1;
     size_t size = 0;
 
-    __try2
-    {
-        signature.resize (0);
+    __try2 {
+        signature.resize(0);
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        EVP_MD* evp_md = (EVP_MD*) advisor->find_evp_md (mode);
+        EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(mode);
 
-        md_context = EVP_MD_CTX_create ();
+        md_context = EVP_MD_CTX_create();
         if (nullptr == md_context) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestInit_ex (md_context, evp_md, nullptr);
+        ret_openssl = EVP_DigestInit_ex(md_context, evp_md, nullptr);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
-        ret_openssl = EVP_DigestSignInit (md_context, nullptr, evp_md, nullptr, (EVP_PKEY *) pkey);
+        ret_openssl = EVP_DigestSignInit(md_context, nullptr, evp_md, nullptr, (EVP_PKEY*)pkey);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
-        ret_openssl = EVP_DigestSignUpdate (md_context, &input[0], input.size ());
+        ret_openssl = EVP_DigestSignUpdate(md_context, &input[0], input.size());
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
-        ret_openssl = EVP_DigestSignFinal (md_context, nullptr, &size);
+        ret_openssl = EVP_DigestSignFinal(md_context, nullptr, &size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        signature.resize (size);
-        EVP_DigestSignFinal (md_context, &signature[0], &size);
+        signature.resize(size);
+        EVP_DigestSignFinal(md_context, &signature[0], &size);
     }
-    __finally2
-    {
+    __finally2 {
         if (nullptr != md_context) {
-            EVP_MD_CTX_destroy (md_context);
+            EVP_MD_CTX_destroy(md_context);
         }
     }
     return ret;
 }
 
-return_t openssl_sign::sign_hmac (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature)
-{
+return_t openssl_sign::sign_hmac(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = sign_digest (pkey, mode, input, signature);
+        ret = sign_digest(pkey, mode, input, signature);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t openssl_sign::sign_rsassa_pkcs15 (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature)
-{
+return_t openssl_sign::sign_rsassa_pkcs15(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = sign_digest (pkey, mode, input, signature);
+        ret = sign_digest(pkey, mode, input, signature);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t openssl_sign::sign_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature)
-{
+return_t openssl_sign::sign_ecdsa(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;
     hash_context_t* hash_handle = nullptr;
     binary_t hash_value;
     ECDSA_SIG* ecdsa_sig = nullptr;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        EC_KEY* ec_key = (EC_KEY*) EVP_PKEY_get0_EC_KEY ((EVP_PKEY*) pkey);
+        EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey);
 
-        hash.open (&hash_handle, mode);
-        hash.hash (hash_handle, &input[0], input.size (), hash_value);
-        hash.close (hash_handle);
+        hash.open(&hash_handle, mode);
+        hash.hash(hash_handle, &input[0], input.size(), hash_value);
+        hash.close(hash_handle);
 
         int unitsize = 0;
-        //EC_KEY* ec = EVP_PKEY_get1_EC_KEY ((EVP_PKEY*)pkey);
-        //const EC_GROUP* group = EC_KEY_get0_group (ec);
-        //int nid = EC_GROUP_get_curve_name (group);
-        //NID_X9_62_prime256v1
-        //NID_secp384r1
-        //NID_secp521r1
-        //EC_KEY_free (ec);
+        // EC_KEY* ec = EVP_PKEY_get1_EC_KEY ((EVP_PKEY*)pkey);
+        // const EC_GROUP* group = EC_KEY_get0_group (ec);
+        // int nid = EC_GROUP_get_curve_name (group);
+        // NID_X9_62_prime256v1
+        // NID_secp384r1
+        // NID_secp521r1
+        // EC_KEY_free (ec);
 
         switch (mode) {
-            case hash_algorithm_t::sha1:     unitsize = 20; break;
-            case hash_algorithm_t::sha2_224: unitsize = 28; break;
-            case hash_algorithm_t::sha2_256: unitsize = 32; break;
-            case hash_algorithm_t::sha2_384: unitsize = 48; break;
-            case hash_algorithm_t::sha2_512: unitsize = 66; break;
-            case hash_algorithm_t::sha2_512_224: unitsize = 28; break;
-            case hash_algorithm_t::sha2_512_256: unitsize = 32; break;
+            case hash_algorithm_t::sha1:
+                unitsize = 20;
+                break;
+            case hash_algorithm_t::sha2_224:
+                unitsize = 28;
+                break;
+            case hash_algorithm_t::sha2_256:
+                unitsize = 32;
+                break;
+            case hash_algorithm_t::sha2_384:
+                unitsize = 48;
+                break;
+            case hash_algorithm_t::sha2_512:
+                unitsize = 66;
+                break;
+            case hash_algorithm_t::sha2_512_224:
+                unitsize = 28;
+                break;
+            case hash_algorithm_t::sha2_512_256:
+                unitsize = 32;
+                break;
         }
 
-        signature.resize (unitsize * 2);
+        signature.resize(unitsize * 2);
 
         /*
          * Computes the ECDSA signature of the given hash value using
          * the supplied private key and returns the created signature.
          */
         // openssl 3.0 EVP_PKEY_get0 family return const key pointer
-        ecdsa_sig = ECDSA_do_sign (&hash_value[0], hash_value.size (), ec_key);
+        ecdsa_sig = ECDSA_do_sign(&hash_value[0], hash_value.size(), ec_key);
         if (nullptr == ecdsa_sig) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        const BIGNUM *bn_r = nullptr;
-        const BIGNUM *bn_s = nullptr;
+        const BIGNUM* bn_r = nullptr;
+        const BIGNUM* bn_s = nullptr;
 
-        ECDSA_SIG_get0 (ecdsa_sig, &bn_r, &bn_s);
+        ECDSA_SIG_get0(ecdsa_sig, &bn_r, &bn_s);
 
-        int rlen = BN_num_bytes (bn_r);
-        int slen = BN_num_bytes (bn_s);
+        int rlen = BN_num_bytes(bn_r);
+        int slen = BN_num_bytes(bn_s);
 
         /*
          * if unitsize is 4 and r is 12, s is 34
@@ -299,116 +293,107 @@ return_t openssl_sign::sign_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, binary
          *  00 00 00 12 | 00 00 00 34 -> valid
          *  12 00 00 00 | 34 00 00 00 -> invalid
          */
-        BN_bn2bin (bn_r, &signature[unitsize - rlen]);
-        BN_bn2bin (bn_s, &signature[unitsize + (unitsize - slen)]);
+        BN_bn2bin(bn_r, &signature[unitsize - rlen]);
+        BN_bn2bin(bn_s, &signature[unitsize + (unitsize - slen)]);
     }
-    __finally2
-    {
+    __finally2 {
         if (nullptr != ecdsa_sig) {
-            ECDSA_SIG_free (ecdsa_sig);
+            ECDSA_SIG_free(ecdsa_sig);
         }
     }
     return ret;
 }
 
-return_t openssl_sign::sign_rsassa_pss (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature)
-{
+return_t openssl_sign::sign_rsassa_pss(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
 
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;
     hash_context_t* hash_handle = nullptr;
     binary_t hash_value;
     int ret_openssl = 0;
 
-    __try2
-    {
-        signature.resize (0);
+    __try2 {
+        signature.resize(0);
 
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        hash.open (&hash_handle, mode);
-        hash.hash (hash_handle, &input[0], input.size (), hash_value);
-        hash.close (hash_handle);
+        hash.open(&hash_handle, mode);
+        hash.hash(hash_handle, &input[0], input.size(), hash_value);
+        hash.close(hash_handle);
 
-        EVP_MD* evp_md = (EVP_MD*) advisor->find_evp_md (mode);
+        EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(mode);
 
         binary_t buf;
-        EVP_PKEY* key = (EVP_PKEY *) pkey;
-        RSA* rsa = (RSA*) EVP_PKEY_get0_RSA (key); // openssl 3.0 EVP_PKEY_get0 family return const key pointer
-        int bufsize = RSA_size (rsa);
-        buf.resize (bufsize);
+        EVP_PKEY* key = (EVP_PKEY*)pkey;
+        RSA* rsa = (RSA*)EVP_PKEY_get0_RSA(key);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+        int bufsize = RSA_size(rsa);
+        buf.resize(bufsize);
 
-        ret_openssl = RSA_padding_add_PKCS1_PSS (rsa, &buf[0], &hash_value[0], evp_md, -1);
+        ret_openssl = RSA_padding_add_PKCS1_PSS(rsa, &buf[0], &hash_value[0], evp_md, -1);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        signature.resize (bufsize);
-        ret_openssl = RSA_private_encrypt (bufsize, &buf[0], &signature[0], rsa, RSA_NO_PADDING);
+        signature.resize(bufsize);
+        ret_openssl = RSA_private_encrypt(bufsize, &buf[0], &signature[0], rsa, RSA_NO_PADDING);
         if (ret_openssl != bufsize) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t openssl_sign::sign_eddsa (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature)
-{
+return_t openssl_sign::sign_eddsa(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
     EVP_MD_CTX* ctx = nullptr;
     int ret_test = 0;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ctx = EVP_MD_CTX_new ();
-        ret_test = EVP_DigestSignInit (ctx, nullptr, nullptr, nullptr, (EVP_PKEY*) pkey);
+        ctx = EVP_MD_CTX_new();
+        ret_test = EVP_DigestSignInit(ctx, nullptr, nullptr, nullptr, (EVP_PKEY*)pkey);
         if (1 != ret_test) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
         size_t size = 256;
-        signature.resize (size);
-        ret_test = EVP_DigestSign (ctx, &signature[0], &size, (byte_t*) &input[0], input.size ());
+        signature.resize(size);
+        ret_test = EVP_DigestSign(ctx, &signature[0], &size, (byte_t*)&input[0], input.size());
         if (1 != ret_test) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
-        signature.resize (size);
+        signature.resize(size);
     }
-    __finally2
-    {
+    __finally2 {
         if (ctx) {
-            EVP_MD_CTX_destroy (ctx);
+            EVP_MD_CTX_destroy(ctx);
         }
     }
     return ret;
 }
 
-return_t openssl_sign::verify_digest (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature)
-{
+return_t openssl_sign::verify_digest(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
     EVP_MD_CTX* md_context = nullptr;
     int ret_openssl = 1;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -416,183 +401,185 @@ return_t openssl_sign::verify_digest (EVP_PKEY* pkey, hash_algorithm_t mode, bin
 
         ret = errorcode_t::verify;
 
-        EVP_MD* evp_md = (EVP_MD*) advisor->find_evp_md (mode);
+        EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(mode);
 
-        md_context = EVP_MD_CTX_create ();
+        md_context = EVP_MD_CTX_create();
         if (nullptr == md_context) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestInit_ex (md_context, evp_md, nullptr);
+        ret_openssl = EVP_DigestInit_ex(md_context, evp_md, nullptr);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestVerifyInit (md_context, nullptr, evp_md, nullptr, (EVP_PKEY *) pkey);
+        ret_openssl = EVP_DigestVerifyInit(md_context, nullptr, evp_md, nullptr, (EVP_PKEY*)pkey);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestVerifyUpdate (md_context, &input[0], input.size ());
+        ret_openssl = EVP_DigestVerifyUpdate(md_context, &input[0], input.size());
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestVerifyFinal (md_context, &signature[0], signature.size ());
+        ret_openssl = EVP_DigestVerifyFinal(md_context, &signature[0], signature.size());
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
         ret = errorcode_t::success;
     }
-    __finally2
-    {
+    __finally2 {
         if (nullptr != md_context) {
-            EVP_MD_CTX_destroy (md_context);
+            EVP_MD_CTX_destroy(md_context);
         }
     }
     return ret;
 }
 
-return_t openssl_sign::verify_hmac (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature)
-{
+return_t openssl_sign::verify_hmac(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
         binary_t result;
-        ret = sign_digest (pkey, mode, input, result);
+        ret = sign_digest(pkey, mode, input, result);
         if (result != signature) {
             ret = errorcode_t::verify;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t openssl_sign::verify_rsassa_pkcs15 (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature)
-{
+return_t openssl_sign::verify_rsassa_pkcs15(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = verify_digest (pkey, mode, input, signature);
+        ret = verify_digest(pkey, mode, input, signature);
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t openssl_sign::verify_ecdsa (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature)
-{
+return_t openssl_sign::verify_ecdsa(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;
     hash_context_t* hash_handle = nullptr;
     binary_t hash_value;
     ECDSA_SIG* ecdsa_sig = nullptr;
     int ret_openssl = 1;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        EC_KEY* ec_key = (EC_KEY*) EVP_PKEY_get0_EC_KEY ((EVP_PKEY*) pkey);
+        EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey);
 
         ret = errorcode_t::verify;
 
-        hash.open (&hash_handle, mode);
-        hash.hash (hash_handle, &input[0], input.size (), hash_value);
-        hash.close (hash_handle);
+        hash.open(&hash_handle, mode);
+        hash.hash(hash_handle, &input[0], input.size(), hash_value);
+        hash.close(hash_handle);
 
         uint32 unitsize = 0;
-        //EC_KEY* ec = EVP_PKEY_get1_EC_KEY ((EVP_PKEY*)pkey);
-        //const EC_GROUP* group = EC_KEY_get0_group (ec);
-        //int nid = EC_GROUP_get_curve_name (group);
-        //NID_X9_62_prime256v1
-        //NID_secp384r1
-        //NID_secp521r1
-        //EC_KEY_free (ec);
+        // EC_KEY* ec = EVP_PKEY_get1_EC_KEY ((EVP_PKEY*)pkey);
+        // const EC_GROUP* group = EC_KEY_get0_group (ec);
+        // int nid = EC_GROUP_get_curve_name (group);
+        // NID_X9_62_prime256v1
+        // NID_secp384r1
+        // NID_secp521r1
+        // EC_KEY_free (ec);
 
         switch (mode) {
-            case hash_algorithm_t::sha1:     unitsize = 20; break;
-            case hash_algorithm_t::sha2_224: unitsize = 28; break;
-            case hash_algorithm_t::sha2_256: unitsize = 32; break;  // (256 >> 3) = 32
-            case hash_algorithm_t::sha2_384: unitsize = 48; break;  // (384 >> 3) = 48
-            case hash_algorithm_t::sha2_512: unitsize = 66; break;  // (521 = (65 << 3) + 1), 66
-            case hash_algorithm_t::sha2_512_224: unitsize = 28; break;
-            case hash_algorithm_t::sha2_512_256: unitsize = 32; break;
+            case hash_algorithm_t::sha1:
+                unitsize = 20;
+                break;
+            case hash_algorithm_t::sha2_224:
+                unitsize = 28;
+                break;
+            case hash_algorithm_t::sha2_256:
+                unitsize = 32;
+                break;  // (256 >> 3) = 32
+            case hash_algorithm_t::sha2_384:
+                unitsize = 48;
+                break;  // (384 >> 3) = 48
+            case hash_algorithm_t::sha2_512:
+                unitsize = 66;
+                break;  // (521 = (65 << 3) + 1), 66
+            case hash_algorithm_t::sha2_512_224:
+                unitsize = 28;
+                break;
+            case hash_algorithm_t::sha2_512_256:
+                unitsize = 32;
+                break;
         }
 
-        ecdsa_sig = ECDSA_SIG_new ();
+        ecdsa_sig = ECDSA_SIG_new();
         if (nullptr == ecdsa_sig) {
             ret = errorcode_t::out_of_memory;
             __leave2;
         }
 
-        size_t signature_size = signature.size ();
+        size_t signature_size = signature.size();
 
         /* RFC 7515 A.3.1.  Encoding */
         /* NIST CAVP (cryptographic-algorithm-validation-program) test vector - PASSED */
         BIGNUM* bn_r = nullptr;
         BIGNUM* bn_s = nullptr;
-        bn_r = BN_bin2bn (&signature[0], signature_size / 2, nullptr);
-        bn_s = BN_bin2bn (&signature[signature_size / 2], signature_size / 2, nullptr);
+        bn_r = BN_bin2bn(&signature[0], signature_size / 2, nullptr);
+        bn_s = BN_bin2bn(&signature[signature_size / 2], signature_size / 2, nullptr);
 
-        ECDSA_SIG_set0 (ecdsa_sig, bn_r, bn_s);
+        ECDSA_SIG_set0(ecdsa_sig, bn_r, bn_s);
 
         /* Verifies that the supplied signature is a valid ECDSA
          * signature of the supplied hash value using the supplied public key.
          */
-        ret_openssl = ECDSA_do_verify (&hash_value[0], hash_value.size (), ecdsa_sig, ec_key);
+        ret_openssl = ECDSA_do_verify(&hash_value[0], hash_value.size(), ecdsa_sig, ec_key);
         if (1 != ret_openssl) {
             ret = errorcode_t::verify;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
         ret = errorcode_t::success;
     }
-    __finally2
-    {
+    __finally2 {
         if (nullptr != ecdsa_sig) {
-            ECDSA_SIG_free (ecdsa_sig);
+            ECDSA_SIG_free(ecdsa_sig);
         }
     }
     return ret;
 }
 
-return_t openssl_sign::verify_rsassa_pss (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature)
-{
+return_t openssl_sign::verify_rsassa_pss(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;
     hash_context_t* hash_handle = nullptr;
     binary_t hash_value;
     int ret_openssl = 0;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -600,20 +587,20 @@ return_t openssl_sign::verify_rsassa_pss (EVP_PKEY* pkey, hash_algorithm_t mode,
 
         ret = errorcode_t::verify;
 
-        hash.open (&hash_handle, mode);
-        hash.hash (hash_handle, &input[0], input.size (), hash_value);
-        hash.close (hash_handle);
+        hash.open(&hash_handle, mode);
+        hash.hash(hash_handle, &input[0], input.size(), hash_value);
+        hash.close(hash_handle);
 
-        EVP_MD* evp_md = (EVP_MD*) advisor->find_evp_md (mode);
+        EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(mode);
 
         binary_t buf;
-        EVP_PKEY* key = (EVP_PKEY *) pkey;
-        RSA* rsa = (RSA*) EVP_PKEY_get0_RSA (key); // openssl 3.0 EVP_PKEY_get0 family return const key pointer
-        int bufsize = RSA_size (rsa);
-        buf.resize (bufsize);
+        EVP_PKEY* key = (EVP_PKEY*)pkey;
+        RSA* rsa = (RSA*)EVP_PKEY_get0_RSA(key);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+        int bufsize = RSA_size(rsa);
+        buf.resize(bufsize);
 
-        RSA_public_decrypt (bufsize, &signature[0], &buf[0], rsa, RSA_NO_PADDING);
-        ret_openssl = RSA_verify_PKCS1_PSS (rsa, &hash_value[0], evp_md, &buf[0], -1);
+        RSA_public_decrypt(bufsize, &signature[0], &buf[0], rsa, RSA_NO_PADDING);
+        ret_openssl = RSA_verify_PKCS1_PSS(rsa, &hash_value[0], evp_md, &buf[0], -1);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -621,21 +608,18 @@ return_t openssl_sign::verify_rsassa_pss (EVP_PKEY* pkey, hash_algorithm_t mode,
 
         ret = errorcode_t::success;
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t openssl_sign::verify_eddsa (EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature)
-{
+return_t openssl_sign::verify_eddsa(EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
     return_t ret = errorcode_t::success;
     EVP_MD_CTX* ctx = nullptr;
     int ret_test = 0;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -643,29 +627,28 @@ return_t openssl_sign::verify_eddsa (EVP_PKEY* pkey, hash_algorithm_t mode, bina
 
         ret = errorcode_t::verify;
 
-        ctx = EVP_MD_CTX_new ();
-        ret_test = EVP_DigestVerifyInit (ctx, nullptr, nullptr, nullptr, (EVP_PKEY*) pkey);
+        ctx = EVP_MD_CTX_new();
+        ret_test = EVP_DigestVerifyInit(ctx, nullptr, nullptr, nullptr, (EVP_PKEY*)pkey);
         if (1 != ret_test) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
-        ret_test = EVP_DigestVerify (ctx, &signature[0], signature.size (), &input[0], input.size ());
+        ret_test = EVP_DigestVerify(ctx, &signature[0], signature.size(), &input[0], input.size());
         if (1 != ret_test) {
             ret = errorcode_t::internal_error;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
 
         ret = errorcode_t::success;
     }
-    __finally2
-    {
+    __finally2 {
         if (ctx) {
-            EVP_MD_CTX_destroy (ctx);
+            EVP_MD_CTX_destroy(ctx);
         }
     }
     return ret;
 }
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace

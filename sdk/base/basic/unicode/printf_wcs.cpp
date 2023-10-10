@@ -8,12 +8,12 @@
  * Date         Name                Description
  */
 
-#undef  _MBCS
-#undef   MBCS
+#undef _MBCS
+#undef MBCS
 #define _UNICODE
-#define  UNICODE
+#define UNICODE
 #include "../printf_charset.cpp"
-#undef  _UNICODE
-#undef   UNICODE
+#undef _UNICODE
+#undef UNICODE
 #define _MBCS
-#define  MBCS
+#define MBCS

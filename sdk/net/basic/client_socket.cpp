@@ -14,70 +14,59 @@
 namespace hotplace {
 namespace net {
 
-client_socket::client_socket ()
-{
+client_socket::client_socket() {
     // do nothing
 }
 
-client_socket::~client_socket ()
-{
+client_socket::~client_socket() {
     // do nothing
 }
 
-return_t client_socket::connect (socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout)
-{
+return_t client_socket::connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
-        ret = connect_socket (sock, SOCK_STREAM, address, port, timeout);
-    }
-    __finally2
-    {
+    __try2 { ret = connect_socket(sock, SOCK_STREAM, address, port, timeout); }
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t client_socket::close (socket_t sock, tls_context_t* tls_handle)
-{
+return_t client_socket::close(socket_t sock, tls_context_t* tls_handle) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (INVALID_SOCKET == sock) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 #if defined __linux__
-        ::close (sock);
+        ::close(sock);
 #elif defined _WIN32 || defined _WIN64
-        closesocket (sock);
+        closesocket(sock);
 #endif
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t client_socket::read (socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read)
-{
+return_t client_socket::read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read) {
     return_t ret = errorcode_t::success;
 
-    ret = wait_socket (sock, 1000, SOCK_WAIT_READABLE);
+    ret = wait_socket(sock, 1000, SOCK_WAIT_READABLE);
     if (errorcode_t::success == ret) {
 #if defined _WIN32 || defined _WIN64
-        int ret_recv = recv (sock, ptr_data, (int) size_data, 0);
+        int ret_recv = recv(sock, ptr_data, (int)size_data, 0);
 #elif defined __linux__
-        int ret_recv = recv (sock, ptr_data, size_data, 0);
+        int ret_recv = recv(sock, ptr_data, size_data, 0);
 #endif
         if (-1 == ret_recv) {
 #if defined __linux__
-            ret = get_errno (ret_recv);
+            ret = get_errno(ret_recv);
 #elif defined _WIN32 || defined _WIN64
-            ret = GetLastError ();
+            ret = GetLastError();
 #endif
         } else if (0 == ret_recv) {
             ret = errorcode_t::closed;
@@ -89,20 +78,18 @@ return_t client_socket::read (socket_t sock, tls_context_t* tls_handle, char* pt
     return ret;
 }
 
-return_t client_socket::send (socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent)
-{
+return_t client_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
 #if defined __linux__
-        int ret_send = ::send (sock, ptr_data, size_data, 0);
+        int ret_send = ::send(sock, ptr_data, size_data, 0);
         if (-1 == ret_send) {
-            ret = get_errno (ret_send);
+            ret = get_errno(ret_send);
 #elif defined _WIN32 || defined _WIN64
-        int ret_send = ::send (sock, ptr_data, (int) size_data, 0);
+        int ret_send = ::send(sock, ptr_data, (int)size_data, 0);
         if (-1 == ret_send) {
-            ret = GetLastError ();
+            ret = GetLastError();
 #endif
         } else if (0 == ret_send) {
             // closed
@@ -111,12 +98,11 @@ return_t client_socket::send (socket_t sock, tls_context_t* tls_handle, const ch
             *size_sent = ret_send;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace

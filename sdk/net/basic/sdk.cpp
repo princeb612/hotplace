@@ -14,23 +14,21 @@ namespace hotplace {
 namespace net {
 
 enum address_t {
-    addr_host   = 0,    // aa.bb.cc
-    addr_ipv4   = 1,    // 127.0.0.1
-    addr_ipv6   = 2,    // fe80::f086:5f15:2045:5008%10
+    addr_host = 0,  // aa.bb.cc
+    addr_ipv4 = 1,  // 127.0.0.1
+    addr_ipv6 = 2,  // fe80::f086:5f15:2045:5008%10
 };
 
-return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_created, int address_type, const char* address, uint16 port)
-{
+return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_created, int address_type, const char* address, uint16 port) {
     return_t ret = errorcode_t::success;
     socket_t s = INVALID_SOCKET;
     address_t address_type_adjusted = address_t::addr_ipv4;
     int ret_function = 0;
     char* address_pointer = nullptr;
-    addrinfo *addrinf = nullptr;
-    addrinfo *addrinf_traverse = nullptr;
+    addrinfo* addrinf = nullptr;
+    addrinfo* addrinf_traverse = nullptr;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == socket_created || nullptr == sockaddr_created || nullptr == address) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -38,7 +36,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
 
         *socket_created = INVALID_SOCKET;
 
-        //if (port <= 0 || port > 65535)
+        // if (port <= 0 || port > 65535)
         //{
         //  ret = errorcode_t::invalid_parameter;
         //  __leave2_trace(ret);
@@ -48,7 +46,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
          * IPv4 32bit   127.0.0.1
          * IPv6 128bit  ::1
          */
-        if (nullptr != strstr (address, ":")) {
+        if (nullptr != strstr(address, ":")) {
             address_type_adjusted = address_t::addr_ipv6;
         } else {
             int ret_isdigit = 0;
@@ -60,7 +58,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
                     break;
                 }
 
-                ret_isdigit = isdigit (tchTemp);
+                ret_isdigit = isdigit(tchTemp);
                 if (0 == ret_isdigit && '.' != tchTemp) {
                     address_type_adjusted = address_t::addr_host;
                     break;
@@ -79,12 +77,12 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
         struct addrinfo hints;
 
         address_pointer = const_cast<char*>(address);
-        memset (&hints, 0, sizeof (hints));
+        memset(&hints, 0, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = address_type;
 
         char string_port[1 << 3];
-        snprintf (string_port, RTL_NUMBER_OF (string_port), "%d", port);
+        snprintf(string_port, RTL_NUMBER_OF(string_port), "%d", port);
 
         if (address_t::addr_host == address_type_adjusted) {
             hints.ai_flags = AI_PASSIVE;
@@ -92,12 +90,12 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
             hints.ai_flags = AI_NUMERICHOST;
         }
 
-        ret_function = getaddrinfo (address_pointer, string_port, &hints, &addrinf);
+        ret_function = getaddrinfo(address_pointer, string_port, &hints, &addrinf);
         if (0 != ret_function) {
 #if defined __linux__
-            ret = get_eai_error (ret_function);
+            ret = get_eai_error(ret_function);
 #elif defined _WIN32 || defined _WIN64
-            ret = GetLastError ();
+            ret = GetLastError();
 #endif
             __leave2;
         }
@@ -105,7 +103,7 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
         addrinf_traverse = addrinf;
         do {
             if (AF_INET == addrinf_traverse->ai_family || AF_INET6 == addrinf_traverse->ai_family) {
-                s = socket (addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol);
+                s = socket(addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol);
                 if (INVALID_SOCKET != s) {
                     break;
                 }
@@ -115,20 +113,20 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
 
         if (INVALID_SOCKET == s) {
 #if defined __linux__
-            ret = get_errno (s);
+            ret = get_errno(s);
 #elif defined _WIN32 || defined _WIN64
-            ret = GetLastError ();
+            ret = GetLastError();
 #endif
             __leave2;
         }
 
 #ifdef __STDC_WANT_SECURE_LIB__
-        memcpy_s (sockaddr_created, sizeof (sockaddr_storage_t), addrinf_traverse->ai_addr, addrinf_traverse->ai_addrlen);
+        memcpy_s(sockaddr_created, sizeof(sockaddr_storage_t), addrinf_traverse->ai_addr, addrinf_traverse->ai_addrlen);
 #else
-        memcpy (sockaddr_created, addrinf_traverse->ai_addr, addrinf_traverse->ai_addrlen);
+        memcpy(sockaddr_created, addrinf_traverse->ai_addr, addrinf_traverse->ai_addrlen);
 #endif
 
-#if 0               // ip address
+#if 0  // ip address
         char pAddress[BUFSIZE256];
         uint32 sizeAddress = BUFSIZE256;
         *(pAddress + 0) = 0;
@@ -141,19 +139,18 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
 
         *socket_created = s;
     }
-    __finally2
-    {
-        if ( nullptr != addrinf) {
-            freeaddrinfo (addrinf);
+    __finally2 {
+        if (nullptr != addrinf) {
+            freeaddrinfo(addrinf);
             addrinf_traverse = nullptr;
         }
 
         if (errorcode_t::success != ret) {
             if (INVALID_SOCKET != s) {
 #if defined __linux__
-                close (s);
+                close(s);
 #elif defined _WIN32 || defined _WIN64
-                closesocket (s);
+                closesocket(s);
 #endif
             }
 
@@ -164,20 +161,18 @@ return_t create_socket (socket_t* socket_created, sockaddr_storage_t* sockaddr_c
     return ret;
 }
 
-return_t create_listener (unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket,
-                          int protocol_type, uint32 port, bool support_win32_acceptex)
-{
+return_t create_listener(unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type, uint32 port,
+                         bool support_win32_acceptex) {
     return_t ret = errorcode_t::success;
     int socket_type = 0;
     int ipprotocol = 0;
     int ret_function = 0;
     uint16 index = 0;
     struct addrinfo hints;
-    struct addrinfo *addrinf = nullptr;
-    struct addrinfo *addrinf_traverse = nullptr;
+    struct addrinfo* addrinf = nullptr;
+    struct addrinfo* addrinf_traverse = nullptr;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == vector_family) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -199,20 +194,20 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
             ipprotocol = IPPROTO_UDP;
         }
 
-        memset (&hints, 0, sizeof (hints));
+        memset(&hints, 0, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = socket_type;
         hints.ai_protocol = ipprotocol;
         hints.ai_flags = AI_PASSIVE;
 
         char port_value[10];
-        snprintf (port_value, 10, ("%d"), port);
-        ret_function = getaddrinfo (nullptr, port_value, &hints, &addrinf);
+        snprintf(port_value, 10, ("%d"), port);
+        ret_function = getaddrinfo(nullptr, port_value, &hints, &addrinf);
         if (0 != ret_function) {
 #if defined __linux__
-            ret = get_eai_error (ret_function);
+            ret = get_eai_error(ret_function);
 #elif defined _WIN32 || defined _WIN64
-            ret = GetLastError ();
+            ret = GetLastError();
 #endif
             __leave2;
         }
@@ -221,39 +216,38 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
 
         while (nullptr != addrinf_traverse) {
             for (index = 0; index < size_vector; index++) {
-                if ((int) vector_family[index] == addrinf_traverse->ai_family) {
+                if ((int)vector_family[index] == addrinf_traverse->ai_family) {
                     socket_t sock = INVALID_SOCKET;
-                    __try2
-                    {
+                    __try2 {
 #if defined __linux__
-                        sock = socket (addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol);
+                        sock = socket(addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol);
 #elif defined _WIN32 || defined _WIN64
-                        sock = WSASocket (addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol,
-                                          nullptr, 0, WSA_FLAG_OVERLAPPED);
+                        sock = WSASocket(addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol, nullptr, 0,
+                                         WSA_FLAG_OVERLAPPED);
 #endif
                         if (INVALID_SOCKET == sock) {
 #if defined __linux__
-                            ret = get_errno (sock);
+                            ret = get_errno(sock);
 #elif defined _WIN32 || defined _WIN64
-                            ret = GetLastError ();
+                            ret = GetLastError();
 #endif
                             __leave2;
                         }
 #if defined __linux__
                         if (PF_INET6 == addrinf_traverse->ai_family) {
                             int only_ipv6 = 1;
-                            setsockopt (sock, IPPROTO_IPV6, IPV6_V6ONLY, &only_ipv6, sizeof (only_ipv6));
+                            setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &only_ipv6, sizeof(only_ipv6));
                         }
 #endif
                         int reuse = 1;
-                        setsockopt (sock, SOL_SOCKET, SO_REUSEADDR, (char *) &reuse, sizeof (reuse));
+                        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse, sizeof(reuse));
 
-                        ret_function = bind (sock, addrinf_traverse->ai_addr, (int) addrinf_traverse->ai_addrlen);
+                        ret_function = bind(sock, addrinf_traverse->ai_addr, (int)addrinf_traverse->ai_addrlen);
                         if (0 != ret_function) {
 #if defined __linux__
-                            ret = get_errno (ret_function);
+                            ret = get_errno(ret_function);
 #elif defined _WIN32 || defined _WIN64
-                            ret = GetLastError ();
+                            ret = GetLastError();
 #endif
                             __leave2;
                         }
@@ -262,16 +256,16 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
 #if defined _WIN32 || defined _WIN64
                             if (true == support_win32_acceptex) {
                                 BOOL on = TRUE;
-                                setsockopt (sock, SOL_SOCKET, SO_CONDITIONAL_ACCEPT, reinterpret_cast<char *>(&on), sizeof (on));
+                                setsockopt(sock, SOL_SOCKET, SO_CONDITIONAL_ACCEPT, reinterpret_cast<char*>(&on), sizeof(on));
                             }
 #endif
 
-                            ret_function = listen (sock, SOMAXCONN);
+                            ret_function = listen(sock, SOMAXCONN);
                             if (-1 == ret_function) {
 #if defined __linux__
-                                ret = get_errno (ret_function);
+                                ret = get_errno(ret_function);
 #elif defined _WIN32 || defined _WIN64
-                                ret = GetLastError ();
+                                ret = GetLastError();
 #endif
                                 __leave2;
                             }
@@ -279,13 +273,12 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
 
                         *(vector_socket + index) = sock;
                     }
-                    __finally2
-                    {
+                    __finally2 {
                         if (errorcode_t::success != ret) {
 #if defined _WIN32 || defined _WIN64
-                            closesocket (sock);
+                            closesocket(sock);
 #else
-                            close (sock);
+                            close(sock);
 #endif
                         }
                     }
@@ -295,19 +288,18 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
             addrinf_traverse = addrinf_traverse->ai_next;
         }
     }
-    __finally2
-    {
+    __finally2 {
         if (nullptr != addrinf) {
-            freeaddrinfo (addrinf);
+            freeaddrinfo(addrinf);
         }
         if (errorcode_t::success != ret) {
             if (nullptr != vector_socket) {
                 for (index = 0; index < size_vector; index++) {
                     if (INVALID_SOCKET != vector_socket[index]) {
 #if defined __linux__
-                        close (vector_socket[index]);
+                        close(vector_socket[index]);
 #elif defined _WIN32 || defined _WIN64
-                        closesocket (vector_socket[index]);
+                        closesocket(vector_socket[index]);
 #endif
                         vector_socket[index] = INVALID_SOCKET;
                     }
@@ -321,17 +313,15 @@ return_t create_listener (unsigned int size_vector, unsigned int* vector_family,
     return ret;
 }
 
-return_t connect_socket (socket_t* socket, int nType, const char* tszAddress, uint16 wPort, uint32 dwTimeout)
-{
+return_t connect_socket(socket_t* socket, int nType, const char* tszAddress, uint16 wPort, uint32 dwTimeout) {
     socket_t sock = INVALID_SOCKET;
     sockaddr_storage_t Addr;
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
-        ret = create_socket (&sock, &Addr, SOCK_STREAM, tszAddress, wPort);
+    __try2 {
+        ret = create_socket(&sock, &Addr, SOCK_STREAM, tszAddress, wPort);
         if (errorcode_t::success == ret) {
-            ret = connect_socket_addr (sock, &Addr, sizeof (Addr), dwTimeout);
+            ret = connect_socket_addr(sock, &Addr, sizeof(Addr), dwTimeout);
         }
         if (errorcode_t::success != ret) {
             __leave2;
@@ -339,13 +329,12 @@ return_t connect_socket (socket_t* socket, int nType, const char* tszAddress, ui
 
         *socket = sock;
     }
-    __finally2
-    {
-        if ( errorcode_t::success != ret) {
+    __finally2 {
+        if (errorcode_t::success != ret) {
 #if defined __linux__
-            close (sock);
+            close(sock);
 #elif defined _WIN32 || defined _WIN64
-            closesocket (sock);
+            closesocket(sock);
 #endif
             sock = INVALID_SOCKET;
         }
@@ -354,13 +343,11 @@ return_t connect_socket (socket_t* socket, int nType, const char* tszAddress, ui
     return ret;
 }
 
-return_t connect_socket_addr (socket_t sock, sockaddr_storage_t* pSockAddr, size_t sizeSockAddr, uint32 dwTimeout)
-{
+return_t connect_socket_addr(socket_t sock, sockaddr_storage_t* pSockAddr, size_t sizeSockAddr, uint32 dwTimeout) {
     return_t ret = errorcode_t::success;
     int ret_routine = 0;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == pSockAddr) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -370,23 +357,22 @@ return_t connect_socket_addr (socket_t sock, sockaddr_storage_t* pSockAddr, size
             dwTimeout = NET_DEFAULT_TIMEOUT;
         }
 
-        set_sock_nbio (sock, 1);
+        set_sock_nbio(sock, 1);
 
-        ret_routine = connect (sock, reinterpret_cast<sockaddr*>(pSockAddr), (int) sizeSockAddr);
+        ret_routine = connect(sock, reinterpret_cast<sockaddr*>(pSockAddr), (int)sizeSockAddr);
         if (-1 == ret_routine) {
-
 #if defined __linux__
             if (EINPROGRESS == errno)
 #elif defined _WIN32 || defined _WIN64
-            DWORD dwWsaGle = GetLastError ();
+            DWORD dwWsaGle = GetLastError();
             if (WSAEWOULDBLOCK == dwWsaGle)
 #endif
             {
                 fd_set fds;
-                struct timeval tv = { (int32) dwTimeout, 0 };                       // linux { time_t, suseconds_t }, windows { long, long }
-                FD_ZERO (&fds);
-                FD_SET (sock, &fds);                                                /* VC 6.0 - C4127 */
-                ret_routine = select ((int) sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, -1 if an error occurred */
+                struct timeval tv = {(int32)dwTimeout, 0};  // linux { time_t, suseconds_t }, windows { long, long }
+                FD_ZERO(&fds);
+                FD_SET(sock, &fds);                                               /* VC 6.0 - C4127 */
+                ret_routine = select((int)sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, -1 if an error occurred */
                 if (0 == ret_routine) {
                     ret = errorcode_t::timeout;
                 }
@@ -397,24 +383,22 @@ return_t connect_socket_addr (socket_t sock, sockaddr_storage_t* pSockAddr, size
 #endif
                 {
 #if defined __linux__
-                    ret = get_errno (ret_routine);
+                    ret = get_errno(ret_routine);
 #elif defined _WIN32 || defined _WIN64
-                    ret = GetLastError ();
+                    ret = GetLastError();
 #endif
                 }
             }
-
         }
 
-        set_sock_nbio (sock, 0);
+        set_sock_nbio(sock, 0);
 
 #if 0
         INT optval = 0;
         setsockopt (s, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char *>(&optval), sizeof (optval));
 #endif
     }
-    __finally2
-    {
+    __finally2 {
         if (errorcode_t::success != ret) {
             // do nothing
         }
@@ -423,20 +407,19 @@ return_t connect_socket_addr (socket_t sock, sockaddr_storage_t* pSockAddr, size
     return ret;
 }
 
-return_t close_socket (socket_t sock, bool bOnOff, uint16 wLinger)
-{
+return_t close_socket(socket_t sock, bool bOnOff, uint16 wLinger) {
     return_t ret = errorcode_t::success;
 
     if (INVALID_SOCKET != sock) {
         linger_t linger;
         linger.l_onoff = (true == bOnOff) ? 1 : 0;
         linger.l_linger = wLinger;
-        setsockopt (sock, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&linger), sizeof (linger));
+        setsockopt(sock, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&linger), sizeof(linger));
 
 #if defined __linux__
-        int nRet = close (sock);
+        int nRet = close(sock);
 #elif defined _WIN32 || defined _WIN64
-        int nRet = closesocket (sock);
+        int nRet = closesocket(sock);
 #endif
         if (0 != wLinger) {
             while (nRet < 0) {
@@ -448,18 +431,18 @@ return_t close_socket (socket_t sock, bool bOnOff, uint16 wLinger)
                     fd_set fds;
                     timeval tv;
 
-                    FD_ZERO (&fds);
-                    FD_SET (sock, &fds); /* VC 6.0 - C4127 */
+                    FD_ZERO(&fds);
+                    FD_SET(sock, &fds); /* VC 6.0 - C4127 */
 
                     tv.tv_sec = 0;
                     tv.tv_usec = 100;
 
-                    nRet = select ((int) sock + 1, &fds, nullptr, nullptr, &tv);
+                    nRet = select((int)sock + 1, &fds, nullptr, nullptr, &tv);
                     if (nRet > 0) {
 #if defined __linux__
-                        nRet = close (sock);
+                        nRet = close(sock);
 #elif defined _WIN32 || defined _WIN64
-                        nRet = closesocket (sock);
+                        nRet = closesocket(sock);
 #endif
                     }
                 } else {
@@ -472,12 +455,10 @@ return_t close_socket (socket_t sock, bool bOnOff, uint16 wLinger)
     return ret;
 }
 
-return_t close_listener (unsigned int nSockets, socket_t* Sockets)
-{
+return_t close_listener(unsigned int nSockets, socket_t* Sockets) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == Sockets) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -486,16 +467,15 @@ return_t close_listener (unsigned int nSockets, socket_t* Sockets)
         for (uint16 i = 0; i < nSockets; i++) {
             if (INVALID_SOCKET != Sockets[i]) {
 #if defined __linux__
-                close (Sockets[i]);
+                close(Sockets[i]);
 #elif defined _WIN32 || defined _WIN64
-                closesocket (Sockets[i]);
+                closesocket(Sockets[i]);
 #endif
                 Sockets[i] = INVALID_SOCKET;
             }
         }
     }
-    __finally2
-    {
+    __finally2 {
         if (errorcode_t::success != ret) {
             // do nothing
         }
@@ -504,24 +484,23 @@ return_t close_listener (unsigned int nSockets, socket_t* Sockets)
     return ret;
 }
 
-return_t wait_socket (socket_t sock, uint32 dwMilliSeconds, uint32 dwFlag)
-{
+return_t wait_socket(socket_t sock, uint32 dwMilliSeconds, uint32 dwFlag) {
     return_t ret = errorcode_t::success;
     fd_set readset, writeset;
 
-    FD_ZERO (&readset);
-    FD_ZERO (&writeset);
+    FD_ZERO(&readset);
+    FD_ZERO(&writeset);
 
-    fd_set *preadset = nullptr;
-    fd_set *pwriteset = nullptr;
+    fd_set* preadset = nullptr;
+    fd_set* pwriteset = nullptr;
 
     if (SOCK_WAIT_READABLE & dwFlag) {
-        FD_SET (sock, &readset);
+        FD_SET(sock, &readset);
         preadset = &readset;
     }
 
     if (SOCK_WAIT_WRITABLE & dwFlag) {
-        FD_SET (sock, &writeset);
+        FD_SET(sock, &writeset);
         pwriteset = &writeset;
     }
 
@@ -530,49 +509,48 @@ return_t wait_socket (socket_t sock, uint32 dwMilliSeconds, uint32 dwFlag)
     tv.tv_sec = dwMilliSeconds / 1000;
     tv.tv_usec = (dwMilliSeconds % 1000) * 1000;
 
-    int ret_select = select ((int) sock + 1, preadset, pwriteset, nullptr, &tv);
+    int ret_select = select((int)sock + 1, preadset, pwriteset, nullptr, &tv);
 
     if (0 == ret_select) {
         ret = errorcode_t::timeout;
     } else if (0 > ret_select) {
 #if defined __linux__
-        ret = get_errno (ret_select);
+        ret = get_errno(ret_select);
 #elif defined _WIN32 || defined _WIN64
-        ret = GetLastError ();
+        ret = GetLastError();
 #endif
     }
 
     return ret;
 }
 
-return_t set_sock_nbio (socket_t sock, uint32 nbio_mode)
-{
+return_t set_sock_nbio(socket_t sock, uint32 nbio_mode) {
     return_t ret = errorcode_t::success;
     int ret_fcntl = 0;
 
 #if defined __linux__
-    int flags = fcntl (sock, F_GETFL, 0);
+    int flags = fcntl(sock, F_GETFL, 0);
     if (nbio_mode > 0) {
         if (0 == (O_NONBLOCK & flags)) {
-            ret_fcntl = fcntl (sock, F_SETFL, flags | O_NONBLOCK);
+            ret_fcntl = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
         }
     } else {
         if (0 != (O_NONBLOCK & flags)) {
-            ret_fcntl = fcntl (sock, F_SETFL, flags & ~O_NONBLOCK);
+            ret_fcntl = fcntl(sock, F_SETFL, flags & ~O_NONBLOCK);
         }
     }
 #elif defined _WIN32 || defined _WIN64
-    ret_fcntl = ioctlsocket (sock, FIONBIO, &nbio_mode);
+    ret_fcntl = ioctlsocket(sock, FIONBIO, &nbio_mode);
 #endif
     if (-1 == ret_fcntl) {
 #if defined __linux__
-        ret = get_errno (ret_fcntl);
+        ret = get_errno(ret_fcntl);
 #elif defined _WIN32 || defined _WIN64
-        ret = GetLastError ();
+        ret = GetLastError();
 #endif
     }
     return ret;
 }
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace

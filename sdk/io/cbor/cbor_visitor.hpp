@@ -14,34 +14,32 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORVISITOR__
 #define __HOTPLACE_SDK_IO_CBOR_CBORVISITOR__
 
+#include <deque>
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/io/cbor/cbor_object.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
-#include <deque>
 
 namespace hotplace {
 namespace io {
 
-class cbor_visitor
-{
-public:
-    virtual return_t visit (cbor_object* object) = 0;
+class cbor_visitor {
+   public:
+    virtual return_t visit(cbor_object* object) = 0;
 };
 
 /*
  * @brief concise
  * @sa cbor_publisher
  */
-class cbor_concise_visitor : public cbor_visitor
-{
-public:
-    cbor_concise_visitor (binary_t* concise);
-    virtual ~cbor_concise_visitor ();
-    virtual return_t visit (cbor_object* object);
+class cbor_concise_visitor : public cbor_visitor {
+   public:
+    cbor_concise_visitor(binary_t* concise);
+    virtual ~cbor_concise_visitor();
+    virtual return_t visit(cbor_object* object);
 
-    binary_t* get_binary ();
+    binary_t* get_binary();
 
-private:
+   private:
     binary_t* _concise;
 };
 
@@ -49,20 +47,19 @@ private:
  * @brief diagnostic
  * @sa cbor_publisher
  */
-class cbor_diagnostic_visitor : public cbor_visitor
-{
-public:
-    cbor_diagnostic_visitor (stream_t* stream);
-    virtual ~cbor_diagnostic_visitor ();
-    virtual return_t visit (cbor_object* object);
+class cbor_diagnostic_visitor : public cbor_visitor {
+   public:
+    cbor_diagnostic_visitor(stream_t* stream);
+    virtual ~cbor_diagnostic_visitor();
+    virtual return_t visit(cbor_object* object);
 
-    stream_t* get_stream ();
+    stream_t* get_stream();
 
-private:
+   private:
     stream_t* _diagnostic;
 };
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
 
 #endif

@@ -12,8 +12,9 @@
 #ifndef __HOTPLACE_SDK_BASE_ERROR__
 #define __HOTPLACE_SDK_BASE_ERROR__
 
-#include <hotplace/sdk/base/types.hpp>
 #include <stdlib.h>
+
+#include <hotplace/sdk/base/types.hpp>
 #if defined __linux__
 #include <errno.h>
 #include <netdb.h>
@@ -25,13 +26,11 @@ namespace hotplace {
 
 typedef uint32 return_t;
 enum errorcode_t {
-    success
-        = 0,
+    success = 0,
 
 #if defined __linux__
 
-    /* 0x00000000 0000000000 */ error_errno_base
-        = 0x00000000,
+    /* 0x00000000 0000000000 */ error_errno_base = 0x00000000,
 
     // asm-generic/errno-base.h
     /* 0x00000001 0000000001 EPERM          */ eperm,           /* Operation not permitted */
@@ -68,7 +67,7 @@ enum errorcode_t {
     /* 0x00000020 0000000032 EPIPE          */ epipe,           /* Broken pipe */
     /* 0x00000021 0000000033 EDOM           */ edom,            /* Math argument out of domain of func */
     /* 0x00000022 0000000034 ERANGE         */ erange,          /* Math result not representable */
-    // asm-generic/errno.h
+                                                                // asm-generic/errno.h
     /* 0x00000023 0000000035 EDEADLK        */ edeadlk,         /* Resource deadlock would occur */
     /* 0x00000024 0000000036 ENAMETOOLONG   */ enametoolong,    /* File name too long */
     /* 0x00000025 0000000037 ENOLCK         */ enolck,          /* No record locks available */
@@ -169,33 +168,31 @@ enum errorcode_t {
     /* 0x00000084 0000000132 ERFKILL        */ erfkill,         /* Operation not possible due to RF-kill */
     /* 0x00000085 0000000133 EHWPOISON      */ ehwpoison,       /* Memory page has hardware error */
 
-    /* 0x00001000 0000004096 */ error_eai_base
-        = 0x00001000,
+    /* 0x00001000 0000004096 */ error_eai_base = 0x00001000,
 
     // netdb.h
-    /* 0x00001001 0000004097 EAI_BADFLAGS    - 1   */ eai_badflags,     /* Invalid value for `ai_flags' field.  */
-    /* 0x00001002 0000004098 EAI_NONAME      - 2   */ eai_noname,       /* NAME or SERVICE is unknown.  */
-    /* 0x00001003 0000004099 EAI_AGAIN       - 3   */ eai_again,        /* Temporary failure in name resolution.  */
-    /* 0x00001004 0000004100 EAI_FAIL        - 4   */ eai_fail,         /* Non-recoverable failure in name res.  */
-    /* 0x00001006 0000004102 EAI_FAMILY      - 6   */ eai_family,       /* `ai_family' not supported.  */
-    /* 0x00001007 0000004103 EAI_SOCKTYPE    - 7   */ eai_socktype,     /* `ai_socktype' not supported.  */
-    /* 0x00001008 0000004104 EAI_SERVICE     - 8   */ eai_service,      /* SERVICE not supported for `ai_socktype'.  */
-    /* 0x0000100a 0000004106 EAI_MEMORY      - 10  */ eai_memory,       /* Memory allocation failure.  */
-    /* 0x0000100b 0000004107 EAI_SYSTEM      - 11  */ eai_system,       /* System error returned in `errno'.  */
-    /* 0x0000100c 0000004108 EAI_OVERFLOW    - 12  */ eai_overflow,     /* Argument buffer overflow.  */
-    /* 0x00001005 0000004101 EAI_NODATA      - 5   */ eai_nodata,       /* No address associated with NAME.  */
-    /* 0x00001009 0000004105 EAI_ADDRFAMILY  - 9   */ eai_addrfamily,   /* Address family for NAME not supported.  */
-    /* 0x000013e8 0000005096 EAI_INPROGRESS  - 100 */ eai_inprogress,   /* Processing request in progress.  */
-    /* 0x000013e9 0000005097 EAI_CANCELED    - 101 */ eai_canceled,     /* Request canceled.  */
-    /* 0x000013ea 0000005098 EAI_NOTCANCELED - 102 */ eai_notcanceled,  /* Request not canceled.  */
-    /* 0x000013eb 0000005099 EAI_ALLDONE     - 103 */ eai_alldone,      /* All requests done.  */
-    /* 0x000013ec 0000005100 EAI_INTR        - 104 */ eai_intr,         /* Interrupted by a signal.  */
-    /* 0x000013ed 0000005101 EAI_IDN_ENCODE  - 105 */ eai_idn_encode,   /* IDN encoding failed.  */
+    /* 0x00001001 0000004097 EAI_BADFLAGS    - 1   */ eai_badflags,    /* Invalid value for `ai_flags' field.  */
+    /* 0x00001002 0000004098 EAI_NONAME      - 2   */ eai_noname,      /* NAME or SERVICE is unknown.  */
+    /* 0x00001003 0000004099 EAI_AGAIN       - 3   */ eai_again,       /* Temporary failure in name resolution.  */
+    /* 0x00001004 0000004100 EAI_FAIL        - 4   */ eai_fail,        /* Non-recoverable failure in name res.  */
+    /* 0x00001006 0000004102 EAI_FAMILY      - 6   */ eai_family,      /* `ai_family' not supported.  */
+    /* 0x00001007 0000004103 EAI_SOCKTYPE    - 7   */ eai_socktype,    /* `ai_socktype' not supported.  */
+    /* 0x00001008 0000004104 EAI_SERVICE     - 8   */ eai_service,     /* SERVICE not supported for `ai_socktype'.  */
+    /* 0x0000100a 0000004106 EAI_MEMORY      - 10  */ eai_memory,      /* Memory allocation failure.  */
+    /* 0x0000100b 0000004107 EAI_SYSTEM      - 11  */ eai_system,      /* System error returned in `errno'.  */
+    /* 0x0000100c 0000004108 EAI_OVERFLOW    - 12  */ eai_overflow,    /* Argument buffer overflow.  */
+    /* 0x00001005 0000004101 EAI_NODATA      - 5   */ eai_nodata,      /* No address associated with NAME.  */
+    /* 0x00001009 0000004105 EAI_ADDRFAMILY  - 9   */ eai_addrfamily,  /* Address family for NAME not supported.  */
+    /* 0x000013e8 0000005096 EAI_INPROGRESS  - 100 */ eai_inprogress,  /* Processing request in progress.  */
+    /* 0x000013e9 0000005097 EAI_CANCELED    - 101 */ eai_canceled,    /* Request canceled.  */
+    /* 0x000013ea 0000005098 EAI_NOTCANCELED - 102 */ eai_notcanceled, /* Request not canceled.  */
+    /* 0x000013eb 0000005099 EAI_ALLDONE     - 103 */ eai_alldone,     /* All requests done.  */
+    /* 0x000013ec 0000005100 EAI_INTR        - 104 */ eai_intr,        /* Interrupted by a signal.  */
+    /* 0x000013ed 0000005101 EAI_IDN_ENCODE  - 105 */ eai_idn_encode,  /* IDN encoding failed.  */
 
 #endif
 
-    /* 0xef010000 4009820160 */ internal_error
-        = ERROR_CODE_BEGIN + 0,
+    /* 0xef010000 4009820160 */ internal_error = ERROR_CODE_BEGIN + 0,
 
     /* 0xef010001 4009820161 */ out_of_memory,
     /* 0xef010002 4009820162 */ insufficient_buffer,
@@ -243,8 +240,7 @@ enum errorcode_t {
     /* 0xef01002b 4009820203 */ reserved20,
     /* 0xef01002c 4009820204 */ reserved21,
 
-    /* 0xef010080 4009820288 */ internal_error_0
-        = 0xef010080,
+    /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,
     /* 0xef010082 4009820290 */ internal_error_2,
     /* 0xef010083 4009820291 */ internal_error_3,
@@ -261,15 +257,13 @@ enum errorcode_t {
     /* 0xef01008e 4009820302 */ internal_error_14,
     /* 0xef01008f 4009820303 */ internal_error_15,
 
-    /* 0xef010100 4009820416 */ not_supported
-        = 0xef010100,
+    /* 0xef010100 4009820416 */ not_supported = 0xef010100,
     /* 0xef010101 4009820417 */ low_security,
     /* 0xef010102 4009820418 */ debug,
 };
 
 #if defined __linux__
-static inline return_t get_errno (int code)
-{
+static inline return_t get_errno(int code) {
     return_t ret = errorcode_t::success;
 
     // errno.h 1~133
@@ -279,8 +273,7 @@ static inline return_t get_errno (int code)
     return ret;
 }
 
-static inline return_t get_eai_error (int code)
-{
+static inline return_t get_eai_error(int code) {
     return_t ret = errorcode_t::success;
 
     // netdb.h -1~-105 to errorcode_t
@@ -288,13 +281,13 @@ static inline return_t get_eai_error (int code)
         if (EAI_SYSTEM == code) {
             ret = errno;
         } else {
-            ret = errorcode_t::error_eai_base + abs (code);
+            ret = errorcode_t::error_eai_base + abs(code);
         }
     }
     return ret;
 }
 #endif
 
-} // namespace
+}  // namespace hotplace
 
 #endif

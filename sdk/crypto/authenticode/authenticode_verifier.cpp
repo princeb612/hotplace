@@ -29,16 +29,16 @@ namespace crypto {
 
 #define AUTHENTICODE_CONTEXT_SIGNATURE 0x20170710
 
-typedef std::set<std::string> authenticode_signer_set_t;                /* signer */
+typedef std::set<std::string> authenticode_signer_set_t; /* signer */
 typedef std::map<std::string, std::string> authenticode_trusted_cert_map_t;
 typedef std::map<std::string, void*> authenticode_crl_map_t;            /* pair(crl distribution point, X509_CRL pointer) */
 typedef std::map<int, authenticode_plugin*> authenticode_engines_map_t; /* pair of authenticode_engine_id_t and authenticode_plugin* */
 typedef struct _authenticode_context_t {
-    uint32 signature;                                                   //<<< AUTHENTICODE_CONTEXT_SIGNATURE
-    critical_section lock;                                              //<< lock
+    uint32 signature;       //<<< AUTHENTICODE_CONTEXT_SIGNATURE
+    critical_section lock;  //<< lock
     authenticode_engines_map_t engines;
-    uint32 flags;                                                       //<<< AUTHENTICODE_FLAG
-    authenticode_signer_set_t signer;                                   //<<< signer
+    uint32 flags;                      //<<< AUTHENTICODE_FLAG
+    authenticode_signer_set_t signer;  //<<< signer
     authenticode_trusted_cert_map_t trusted_cert;
 
     int load_root_cert;
@@ -54,9 +54,7 @@ typedef struct _authenticode_context_t {
     std::string crl_path;
     bool gender;
 
-    _authenticode_context_t () : load_root_cert (0), crl_download (1), crl_download_timeout (3), crl_download_retry (1), gender (false)
-    {
-    }
+    _authenticode_context_t() : load_root_cert(0), crl_download(1), crl_download_timeout(3), crl_download_retry(1), gender(false) {}
 } authenticode_context_t;
 
 typedef std::map<arch_t, authenticode_context_t*> authenticode_contexts_map_t;
@@ -75,31 +73,27 @@ authenticode_contexts_map_t _contexts;
  *        insert into context-level crl map (context->crl_map)
  *        insert into file-level crl map (crl_map parameter)
  */
-static return_t get_crl (authenticode_context_t* context, X509* cert, authenticode_crl_map_t& crl_map);
+static return_t get_crl(authenticode_context_t* context, X509* cert, authenticode_crl_map_t& crl_map);
 /*
  * clear_crl
  * @param authenticode_context_t* context [in]
  */
-static return_t clear_crl (authenticode_context_t* context);
+static return_t clear_crl(authenticode_context_t* context);
 
-authenticode_verifier::authenticode_verifier ()
-{
-    openssl_startup ();
-    openssl_thread_setup ();
+authenticode_verifier::authenticode_verifier() {
+    openssl_startup();
+    openssl_thread_setup();
 }
 
-authenticode_verifier::~authenticode_verifier ()
-{
-    openssl_thread_cleanup ();
-    openssl_cleanup ();
+authenticode_verifier::~authenticode_verifier() {
+    openssl_thread_cleanup();
+    openssl_cleanup();
 }
 
-return_t authenticode_verifier::add_engine (authenticode_context_t* handle, authenticode_plugin* engine)
-{
+return_t authenticode_verifier::add_engine(authenticode_context_t* handle, authenticode_plugin* engine) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -113,28 +107,25 @@ return_t authenticode_verifier::add_engine (authenticode_context_t* handle, auth
             __leave2;
         }
 
-        handle->lock.enter ();
-        std::pair <authenticode_engines_map_t::iterator, bool> result;
-        result = handle->engines.insert (std::make_pair (engine->id (), engine));
+        handle->lock.enter();
+        std::pair<authenticode_engines_map_t::iterator, bool> result;
+        result = handle->engines.insert(std::make_pair(engine->id(), engine));
         if (false == result.second) {
             ret = errorcode_t::already_exist;
-            engine->release ();
+            engine->release();
         }
-        handle->lock.leave ();
+        handle->lock.leave();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t authenticode_verifier::load_engines (authenticode_context_t* handle)
-{
+return_t authenticode_verifier::load_engines(authenticode_context_t* handle) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -144,25 +135,22 @@ return_t authenticode_verifier::load_engines (authenticode_context_t* handle)
             __leave2;
         }
 
-        handle->lock.enter ();
-        handle->engines.insert (std::make_pair (authenticode_engine_id_pe, new authenticode_plugin_pe ()));
-        //handle->engines.insert (std::make_pair (authenticode_engine_id_msi, new authenticode_plugin_msi ()));
-        //handle->engines.insert (std::make_pair (authenticode_engine_id_cab, new authenticode_plugin_cabinet ()));
-        handle->lock.leave ();
+        handle->lock.enter();
+        handle->engines.insert(std::make_pair(authenticode_engine_id_pe, new authenticode_plugin_pe()));
+        // handle->engines.insert (std::make_pair (authenticode_engine_id_msi, new authenticode_plugin_msi ()));
+        // handle->engines.insert (std::make_pair (authenticode_engine_id_cab, new authenticode_plugin_cabinet ()));
+        handle->lock.leave();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t authenticode_verifier::free_engines (authenticode_context_t* handle)
-{
+return_t authenticode_verifier::free_engines(authenticode_context_t* handle) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -172,39 +160,35 @@ return_t authenticode_verifier::free_engines (authenticode_context_t* handle)
             __leave2;
         }
 
-        handle->lock.enter ();
-        for (authenticode_engines_map_t::iterator iter = handle->engines.begin (); iter != handle->engines.end (); iter++) {
+        handle->lock.enter();
+        for (authenticode_engines_map_t::iterator iter = handle->engines.begin(); iter != handle->engines.end(); iter++) {
             authenticode_plugin* engine = iter->second;
 
-            engine->release (); // free
+            engine->release();  // free
         }
-        handle->engines.clear ();
-        handle->lock.leave ();
+        handle->engines.clear();
+        handle->lock.leave();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t authenticode_verifier::open (authenticode_context_t** handle)
-{
+return_t authenticode_verifier::open(authenticode_context_t** handle) {
     return_t ret = errorcode_t::success;
     authenticode_context_t* context = nullptr;
 
-    __try2
-    {
-        __try_new_catch (context, new authenticode_context_t, ret, __leave2);
+    __try2 {
+        __try_new_catch(context, new authenticode_context_t, ret, __leave2);
 
         context->signature = AUTHENTICODE_CONTEXT_SIGNATURE;
 
-        load_engines (context);
+        load_engines(context);
 
         *handle = context;
     }
-    __finally2
-    {
+    __finally2 {
         if (errorcode_t::success != ret) {
             if (nullptr != context) {
                 delete context;
@@ -214,12 +198,10 @@ return_t authenticode_verifier::open (authenticode_context_t** handle)
     return ret;
 }
 
-return_t authenticode_verifier::set (authenticode_context_t* handle, int option, void* data, size_t size)
-{
+return_t authenticode_verifier::set(authenticode_context_t* handle, int option, void* data, size_t size) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -229,70 +211,67 @@ return_t authenticode_verifier::set (authenticode_context_t* handle, int option,
             __leave2;
         }
 
-        handle->lock.enter ();
+        handle->lock.enter();
         switch (option) {
             case authenticode_ctrl_t::set_proxy:
                 if (nullptr == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
-                    handle->proxy_url = std::string ((char *) data, size);
+                    handle->proxy_url = std::string((char*)data, size);
                 }
                 break;
             case authenticode_ctrl_t::set_proxy_user:
                 if (nullptr == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
-                    handle->proxy_user = std::string ((char *) data, size);
+                    handle->proxy_user = std::string((char*)data, size);
                 }
                 break;
             case authenticode_ctrl_t::set_gen_der:
-                if ((nullptr != data) && (sizeof (bool) == size)) {
-                    handle->gender = *(bool *) data;
+                if ((nullptr != data) && (sizeof(bool) == size)) {
+                    handle->gender = *(bool*)data;
                 } else {
                     ret = errorcode_t::invalid_parameter;
                 }
                 break;
             case authenticode_ctrl_t::set_crl:
-                if ((nullptr != data) && (sizeof (int) == size)) {
-                    handle->crl_download = *(int *) data;
+                if ((nullptr != data) && (sizeof(int) == size)) {
+                    handle->crl_download = *(int*)data;
                 } else {
                     ret = errorcode_t::invalid_parameter;
                 }
                 break;
             case authenticode_ctrl_t::reset_digicert_path:
-                handle->digicert_path.clear ();
+                handle->digicert_path.clear();
                 break;
             case authenticode_ctrl_t::set_digicert_path:
                 if (nullptr == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
-                    handle->digicert_path.push_back (std::string ((char *) data, size));
+                    handle->digicert_path.push_back(std::string((char*)data, size));
                 }
                 break;
             case authenticode_ctrl_t::set_crl_path:
                 if (nullptr == data) {
                     ret = errorcode_t::invalid_parameter;
                 } else {
-                    handle->crl_path = std::string ((char *) data, size);
+                    handle->crl_path = std::string((char*)data, size);
                 }
         }
-        handle->lock.leave ();
+        handle->lock.leave();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t authenticode_verifier::verify (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result, uint32* engine_id)
-{
+return_t authenticode_verifier::verify(authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result, uint32* engine_id) {
     return_t ret = errorcode_t::success;
     file_stream filestream;
     authenticode_plugin* engine_matched = nullptr;
 
-    __try2
-    {
+    __try2 {
         result = 0;
         if (nullptr == handle || nullptr == file_name) {
             ret = errorcode_t::invalid_parameter;
@@ -303,7 +282,7 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
             __leave2;
         }
 
-        ret = filestream.open (file_name, filestream_flag_t::open_existing);
+        ret = filestream.open(file_name, filestream_flag_t::open_existing);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -311,27 +290,27 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
         //__trace (0, "-- verify %s", file_name);
 
         binary_t binary;
-        handle->lock.enter ();
-        for (authenticode_engines_map_t::iterator iter = handle->engines.begin (); iter != handle->engines.end (); iter++) {
+        handle->lock.enter();
+        for (authenticode_engines_map_t::iterator iter = handle->engines.begin(); iter != handle->engines.end(); iter++) {
             authenticode_plugin* engine = iter->second;
 
-            if ((true == engine->is_kind_of (&filestream)) && (false == engine->separated ())) {
-                engine->addref ();
+            if ((true == engine->is_kind_of(&filestream)) && (false == engine->separated())) {
+                engine->addref();
                 engine_matched = engine;
                 break;
             }
         }
-        handle->lock.leave ();
+        handle->lock.leave();
 
         if (nullptr == engine_matched) {
             ret = errorcode_t::bad_format;
         } else {
-            ret = engine_matched->extract (&filestream, binary);
+            ret = engine_matched->extract(&filestream, binary);
         }
 
         if (errorcode_t::success != ret) {
             if (authenticode_flag_t::flag_separated & flags) {
-                ret = verify_separated (handle, file_name, authenticode_flag_t::flag_separated, result);
+                ret = verify_separated(handle, file_name, authenticode_flag_t::flag_separated, result);
             }
             __leave2;
         }
@@ -342,22 +321,21 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
          */
         if (handle->gender) {
             file_stream bin;
-            bin.open (format ("%s.der", file_name).c_str (), filestream_flag_t::open_create_always);
-            bin.write (&binary[0], binary.size ());
-            bin.close ();
+            bin.open(format("%s.der", file_name).c_str(), filestream_flag_t::open_create_always);
+            bin.write(&binary[0], binary.size());
+            bin.close();
         }
 
         PKCS7* pkcs7 = nullptr;
         BIO* in = nullptr;
-        __try2
-        {
-            in = BIO_new (BIO_s_mem ());
-            BIO_write (in, &binary[0], binary.size ());
+        __try2 {
+            in = BIO_new(BIO_s_mem());
+            BIO_write(in, &binary[0], binary.size());
             /*
              * openssl asn1parse -inform der -i -in bCerficiate.saved
              * openssl pkcs7 -inform DER -print_certs -text -in bCerficiate.saved
              */
-            pkcs7 = d2i_PKCS7_bio (in, nullptr);
+            pkcs7 = d2i_PKCS7_bio(in, nullptr);
             if (nullptr == pkcs7) {
                 ret = errorcode_t::bad_format;
                 __leave2;
@@ -366,56 +344,52 @@ return_t authenticode_verifier::verify (authenticode_context_t* handle, const ch
             std::string md;
             binary_t pkcs7_digest;
             binary_t md_digest;
-            ret = pkcs7_digest_info (pkcs7, md, pkcs7_digest);
+            ret = pkcs7_digest_info(pkcs7, md, pkcs7_digest);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
-            //std::string hex_pkcs7_digest = bin2hex (&pkcs7_digest[0], pkcs7_digest.size (), 0);
-            //printf ("%s [%s]\ndigest  [%s]\n", file_name, md.c_str (), hex_pkcs7_digest.c_str ());
+            // std::string hex_pkcs7_digest = bin2hex (&pkcs7_digest[0], pkcs7_digest.size (), 0);
+            // printf ("%s [%s]\ndigest  [%s]\n", file_name, md.c_str (), hex_pkcs7_digest.c_str ());
 
-            engine_matched->digest (&filestream, md.c_str (), md_digest);
-            //std::string hex_md_digest = bin2hex (&md_digest[0], md_digest.size (), 0);
-            //printf ("compute [%s]\n", hex_md_digest.c_str ());
-            if (authenticode_engine_id_msi != engine_matched->id ()) {
-                bool compare = std::equal (pkcs7_digest.begin (), pkcs7_digest.end (), md_digest.begin ());
+            engine_matched->digest(&filestream, md.c_str(), md_digest);
+            // std::string hex_md_digest = bin2hex (&md_digest[0], md_digest.size (), 0);
+            // printf ("compute [%s]\n", hex_md_digest.c_str ());
+            if (authenticode_engine_id_msi != engine_matched->id()) {
+                bool compare = std::equal(pkcs7_digest.begin(), pkcs7_digest.end(), md_digest.begin());
                 if (false == compare) {
                     ret = errorcode_t::digest;
                     __leave2;
                 }
             }
 
-            ret = verify_pkcs7 (handle, pkcs7, flags, result);
+            ret = verify_pkcs7(handle, pkcs7, flags, result);
         }
-        __finally2
-        {
+        __finally2 {
             if (nullptr != in) {
-                BIO_free (in);
+                BIO_free(in);
             }
             if (nullptr != pkcs7) {
-                PKCS7_free (pkcs7);
+                PKCS7_free(pkcs7);
             }
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
         if (engine_matched) {
             if (nullptr != engine_id) {
-                *engine_id = engine_matched->id ();
+                *engine_id = engine_matched->id();
             }
-            engine_matched->release ();
+            engine_matched->release();
         }
     }
     return ret;
 }
 
-return_t authenticode_verifier::verify_separated (authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result)
-{
+return_t authenticode_verifier::verify_separated(authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result) {
     return_t ret = errorcode_t::verify;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -429,41 +403,41 @@ return_t authenticode_verifier::verify_separated (authenticode_context_t* handle
 
         if (authenticode_flag_t::flag_separated & flags) {
             authenticode_engine_list_t engines;
-            handle->lock.enter ();
-            for (authenticode_engines_map_t::iterator engine_iter1 = handle->engines.begin (); engine_iter1 != handle->engines.end (); engine_iter1++) {
+            handle->lock.enter();
+            for (authenticode_engines_map_t::iterator engine_iter1 = handle->engines.begin(); engine_iter1 != handle->engines.end(); engine_iter1++) {
                 authenticode_plugin* engine = engine_iter1->second;
 
-                if (true == engine->separated ()) {
-                    engine->addref ();
-                    engines.push_back (engine);
+                if (true == engine->separated()) {
+                    engine->addref();
+                    engines.push_back(engine);
                     break;
                 }
             }
-            handle->lock.leave ();
+            handle->lock.leave();
 
-            for (authenticode_engine_list_t::iterator engine_iter2 = engines.begin (); engine_iter2 != engines.end (); engine_iter2++) {
+            for (authenticode_engine_list_t::iterator engine_iter2 = engines.begin(); engine_iter2 != engines.end(); engine_iter2++) {
                 authenticode_plugin* engine = *engine_iter2;
-                std::list <std::string> filelist;
+                std::list<std::string> filelist;
 
                 /* search a case-sensitive filename
                  * MpSetup.ini
                  *   MpSetup.ini.ahc
                  *   mpsetup.ini.ahc
                  */
-                handle->lock.enter ();
-                engine->find_if_separated (file_name, handle->digicert_path, filelist);
-                handle->lock.leave ();
+                handle->lock.enter();
+                engine->find_if_separated(file_name, handle->digicert_path, filelist);
+                handle->lock.leave();
 
                 /* found - filename.ahc */
                 return_t ret_file = errorcode_t::success;
 
-                for (std::list<std::string>::iterator file_iter = filelist.begin (); file_iter != filelist.end (); file_iter++) {
+                for (std::list<std::string>::iterator file_iter = filelist.begin(); file_iter != filelist.end(); file_iter++) {
                     std::string file = *file_iter;
                     uint32 sep_result = authenticode_verify_t::verify_unknown;
 
-                    ret_file = verify (handle, file.c_str (), 0, sep_result);
+                    ret_file = verify(handle, file.c_str(), 0, sep_result);
                     if (errorcode_t::success == ret_file) {
-                        ret_file = engine->verify_if_separated (file_name, file, &sep_result);
+                        ret_file = engine->verify_if_separated(file_name, file, &sep_result);
                         if (authenticode_verify_t::verify_ok == sep_result) {
                             ret = errorcode_t::success;
                             result = authenticode_verify_t::verify_ok;
@@ -472,23 +446,20 @@ return_t authenticode_verifier::verify_separated (authenticode_context_t* handle
                     }
                 }
 
-                engine->release ();
+                engine->release();
             }
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t authenticode_verifier::close (authenticode_context_t* handle)
-{
+return_t authenticode_verifier::close(authenticode_context_t* handle) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -498,25 +469,22 @@ return_t authenticode_verifier::close (authenticode_context_t* handle)
             __leave2;
         }
 
-        clear_crl (handle);
+        clear_crl(handle);
 
-        free_engines (handle);
+        free_engines(handle);
 
         delete handle;
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t authenticode_verifier::add_trusted_signer (authenticode_context_t* handle, const char* signer)
-{
+return_t authenticode_verifier::add_trusted_signer(authenticode_context_t* handle, const char* signer) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle || nullptr == signer) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -526,23 +494,20 @@ return_t authenticode_verifier::add_trusted_signer (authenticode_context_t* hand
             __leave2;
         }
 
-        handle->lock.enter ();
-        handle->signer.insert (std::string (signer));
-        handle->lock.leave ();
+        handle->lock.enter();
+        handle->signer.insert(std::string(signer));
+        handle->lock.leave();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t authenticode_verifier::remove_trusted_signer (authenticode_context_t* handle, const char* signer)
-{
+return_t authenticode_verifier::remove_trusted_signer(authenticode_context_t* handle, const char* signer) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle || nullptr == signer) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -552,28 +517,25 @@ return_t authenticode_verifier::remove_trusted_signer (authenticode_context_t* h
             __leave2;
         }
 
-        handle->lock.enter ();
-        authenticode_signer_set_t::iterator iter = handle->signer.find (std::string (signer));
-        if (handle->signer.end () == iter) {
+        handle->lock.enter();
+        authenticode_signer_set_t::iterator iter = handle->signer.find(std::string(signer));
+        if (handle->signer.end() == iter) {
             ret = errorcode_t::not_found;
         } else {
-            handle->signer.erase (iter);
+            handle->signer.erase(iter);
         }
-        handle->lock.leave ();
+        handle->lock.leave();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t authenticode_verifier::remove_all_trusted_signer (authenticode_context_t* handle)
-{
+return_t authenticode_verifier::remove_all_trusted_signer(authenticode_context_t* handle) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -583,23 +545,20 @@ return_t authenticode_verifier::remove_all_trusted_signer (authenticode_context_
             __leave2;
         }
 
-        handle->lock.enter ();
-        handle->signer.clear ();
-        handle->lock.leave ();
+        handle->lock.enter();
+        handle->signer.clear();
+        handle->lock.leave();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t authenticode_verifier::add_trusted_rootcert (authenticode_context_t* handle, const char* file, const char* path)
-{
+return_t authenticode_verifier::add_trusted_rootcert(authenticode_context_t* handle, const char* file, const char* path) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -613,19 +572,17 @@ return_t authenticode_verifier::add_trusted_rootcert (authenticode_context_t* ha
             __leave2;
         }
 
-        handle->lock.enter ();
-        handle->trusted_cert.insert (std::make_pair (file ? file : "", path ? path : ""));
-        handle->lock.leave ();
+        handle->lock.enter();
+        handle->trusted_cert.insert(std::make_pair(file ? file : "", path ? path : ""));
+        handle->lock.leave();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-static unsigned int asn1_simple_hdr_len (const unsigned char *p, unsigned int len)
-{
+static unsigned int asn1_simple_hdr_len(const unsigned char* p, unsigned int len) {
     // indirect data content
     // uint8* oid = pkcs7->d.sign->contents->type->data;
     // compare oid
@@ -637,7 +594,7 @@ static unsigned int asn1_simple_hdr_len (const unsigned char *p, unsigned int le
         return 0;
     }
     // 7&8 = 0, f&1 = 1, f&2 = 2, and then 81 => 1, 82 = > 2
-    //return (p[1] & 0x80) ? (2 + (p[1] & 0x7f)) : 2;
+    // return (p[1] & 0x80) ? (2 + (p[1] & 0x7f)) : 2;
     unsigned int ret = 2;
 
     if (0x81 == (0x81 & p[1])) {
@@ -648,54 +605,54 @@ static unsigned int asn1_simple_hdr_len (const unsigned char *p, unsigned int le
     return ret;
 }
 
-int verify_callback (int ok, X509_STORE_CTX *ctx)
-{
+int verify_callback(int ok, X509_STORE_CTX* ctx) {
     char buf[256];
 
-    X509* err_cert = X509_STORE_CTX_get_current_cert (ctx);
-    int err = X509_STORE_CTX_get_error (ctx);
-    int depth = X509_STORE_CTX_get_error_depth (ctx);
+    X509* err_cert = X509_STORE_CTX_get_current_cert(ctx);
+    int err = X509_STORE_CTX_get_error(ctx);
+    int depth = X509_STORE_CTX_get_error_depth(ctx);
 
     // PKCS7_verify use iter's own X509_STORE_CTX
-    //authenticode_context_t* context = (authenticode_context_t*)X509_STORE_CTX_get_ex_data(ctx, 0);
+    // authenticode_context_t* context = (authenticode_context_t*)X509_STORE_CTX_get_ex_data(ctx, 0);
 
     std::string subject;
 
-    X509_NAME_to_string (X509_get_subject_name (err_cert), subject);
+    X509_NAME_to_string(X509_get_subject_name(err_cert), subject);
 
     //__trace (0, format ("#depth=%d %s", depth, subject.c_str ()).c_str ());
 
     if (0 == depth) {
         // find the thread-specified authenticode_context_t
         authenticode_context_t* context = nullptr;
-        _contexts_lock.enter ();
-        authenticode_contexts_map_t::iterator iter = _contexts.find (get_thread_id ());
+        _contexts_lock.enter();
+        authenticode_contexts_map_t::iterator iter = _contexts.find(get_thread_id());
         context = iter->second;
-        _contexts_lock.leave ();
+        _contexts_lock.leave();
 
         if (nullptr != context) {
-            context->lock.enter ();
-            if (false == context->signer.empty ()) {
+            context->lock.enter();
+            if (false == context->signer.empty()) {
                 bool match = false;
-                for (authenticode_signer_set_t::iterator signer_iterator = context->signer.begin (); signer_iterator != context->signer.end (); signer_iterator++) {
+                for (authenticode_signer_set_t::iterator signer_iterator = context->signer.begin(); signer_iterator != context->signer.end();
+                     signer_iterator++) {
                     std::string cn = *signer_iterator;
-                    std::string find = format ("CN=%s", cn.c_str ());
-                    size_t pos = subject.find (find);
+                    std::string find = format("CN=%s", cn.c_str());
+                    size_t pos = subject.find(find);
 
-                    if ((size_t) -1 != pos) {
-                        if (0 == strcmp (subject.substr (pos).c_str (), find.c_str ())) {
+                    if ((size_t)-1 != pos) {
+                        if (0 == strcmp(subject.substr(pos).c_str(), find.c_str())) {
                             match = true;
                             break;
                         }
                     }
-                }           // for
+                }  // for
                 if (false == match) {
                     ok = 0;
                     err = X509_V_ERR_CERT_UNTRUSTED;
-                    X509_STORE_CTX_set_error (ctx, X509_V_ERR_CERT_UNTRUSTED);
+                    X509_STORE_CTX_set_error(ctx, X509_V_ERR_CERT_UNTRUSTED);
                 }
             }
-            context->lock.leave ();
+            context->lock.leave();
         }
     }
 
@@ -706,18 +663,17 @@ int verify_callback (int ok, X509_STORE_CTX *ctx)
         case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:          // (2)
         case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:  // (20)
         {
-            X509* cert = X509_STORE_CTX_get_current_cert (ctx);
-            X509_NAME_oneline (X509_get_issuer_name (cert), buf, 256);
+            X509* cert = X509_STORE_CTX_get_current_cert(ctx);
+            X509_NAME_oneline(X509_get_issuer_name(cert), buf, 256);
             //__trace (0, format ("#issuer= %s", buf).c_str ());
-        }
-        break;
-        case X509_V_ERR_UNABLE_TO_GET_CRL:              // (3)
-        case X509_V_ERR_CERT_NOT_YET_VALID:             // (9)
-        case X509_V_ERR_CERT_HAS_EXPIRED:               // (10)
-        case X509_V_ERR_CRL_NOT_YET_VALID:              // (11)
-        case X509_V_ERR_CRL_HAS_EXPIRED:                // (12)
-        case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD: // (13)
-        case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:  // (14)
+        } break;
+        case X509_V_ERR_UNABLE_TO_GET_CRL:               // (3)
+        case X509_V_ERR_CERT_NOT_YET_VALID:              // (9)
+        case X509_V_ERR_CERT_HAS_EXPIRED:                // (10)
+        case X509_V_ERR_CRL_NOT_YET_VALID:               // (11)
+        case X509_V_ERR_CRL_HAS_EXPIRED:                 // (12)
+        case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:  // (13)
+        case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:   // (14)
             // pass through
             // force X509_V_OK
             // additional error codes
@@ -729,51 +685,49 @@ int verify_callback (int ok, X509_STORE_CTX *ctx)
             //      printf("#notAfter=");
             //      ASN1_UTCTIME_print(bio_err,X509_get_notAfter(ctx->current_cert));
             //      printf("\n");
-            X509_STORE_CTX_set_error (ctx, X509_V_OK);
+            X509_STORE_CTX_set_error(ctx, X509_V_OK);
             ok = 1;
             break;
         case 0:
             break;
         default:
-            //printf("#error %d\n", err);
+            // printf("#error %d\n", err);
             break;
     }
     if (!ok) {
         constexpr char constexpr_errmsg[] = "#verify error:num=";
-        __trace (errorcode_t::internal_error, format ("%s%d:%s", constexpr_errmsg, err, X509_verify_cert_error_string (err)).c_str ());
+        __trace(errorcode_t::internal_error, format("%s%d:%s", constexpr_errmsg, err, X509_verify_cert_error_string(err)).c_str());
     }
     //__trace(0, format("#verify return:%d",ok).c_str());
-    //ok = 1;
+    // ok = 1;
     return ok;
 }
 
-return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, void* pkcs7_pointer, uint32 flags, uint32& result)
-{
+return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, void* pkcs7_pointer, uint32 flags, uint32& result) {
     return_t ret = errorcode_t::success;
-    //result = authenticode_verify_t::verify_unknown;
+    // result = authenticode_verify_t::verify_unknown;
 
     int ret_verify = 0;
     PKCS7* pkcs7 = reinterpret_cast<PKCS7*>(pkcs7_pointer);
     X509_STORE_CTX* store_context = nullptr;
     X509_STORE* store = nullptr;
 
-    //STACK_OF(X509)* chain = nullptr;
+    // STACK_OF(X509)* chain = nullptr;
     BIO* bio = nullptr;
     authenticode_contexts_map_pib_t pib;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == handle || nullptr == pkcs7) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        _contexts_lock.enter ();
-        pib = _contexts.insert (std::make_pair (get_thread_id (), handle));
-        _contexts_lock.leave ();
+        _contexts_lock.enter();
+        pib = _contexts.insert(std::make_pair(get_thread_id(), handle));
+        _contexts_lock.leave();
 
         /* check if it's PKCS#7 signed data */
-        if (0 == PKCS7_type_is_signed (pkcs7)) {
+        if (0 == PKCS7_type_is_signed(pkcs7)) {
             ret = errorcode_t::bad_format;
             __leave2;
         }
@@ -782,16 +736,16 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
 
         {
             int i = 0;
-            STACK_OF (X509) * signers = PKCS7_get0_signers (pkcs7, nullptr, 0);
-            for (i = 0; i < sk_X509_num (signers); i++) {
-                X509 *cert = sk_X509_value (signers, i);
-                get_crl (handle, cert, crl_map);
+            STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7, nullptr, 0);
+            for (i = 0; i < sk_X509_num(signers); i++) {
+                X509* cert = sk_X509_value(signers, i);
+                get_crl(handle, cert, crl_map);
             }
-            sk_X509_free (signers);
+            sk_X509_free(signers);
 
-            for (i = 0; i < sk_X509_num (pkcs7->d.sign->cert); i++) {
-                X509 *cert = sk_X509_value (pkcs7->d.sign->cert, i);
-                get_crl (handle, cert, crl_map);
+            for (i = 0; i < sk_X509_num(pkcs7->d.sign->cert); i++) {
+                X509* cert = sk_X509_value(pkcs7->d.sign->cert, i);
+                get_crl(handle, cert, crl_map);
             }
         }
 
@@ -823,93 +777,91 @@ return_t authenticode_verifier::verify_pkcs7 (authenticode_context_t* handle, vo
         }
 #endif
 
-        int seqhdrlen = asn1_simple_hdr_len (pkcs7->d.sign->contents->d.other->value.sequence->data,
-                                             pkcs7->d.sign->contents->d.other->value.sequence->length);
-        bio = BIO_new_mem_buf (pkcs7->d.sign->contents->d.other->value.sequence->data + seqhdrlen,
-                               pkcs7->d.sign->contents->d.other->value.sequence->length - seqhdrlen);
+        int seqhdrlen = asn1_simple_hdr_len(pkcs7->d.sign->contents->d.other->value.sequence->data, pkcs7->d.sign->contents->d.other->value.sequence->length);
+        bio = BIO_new_mem_buf(pkcs7->d.sign->contents->d.other->value.sequence->data + seqhdrlen,
+                              pkcs7->d.sign->contents->d.other->value.sequence->length - seqhdrlen);
 
-        store = X509_STORE_new ();
-        X509_STORE_set_default_paths (store);
-        //X509_STORE_load_locations(store, nullptr, "/etc/pki/tls/certs/");
+        store = X509_STORE_new();
+        X509_STORE_set_default_paths(store);
+        // X509_STORE_load_locations(store, nullptr, "/etc/pki/tls/certs/");
         // prevent error 20
         // X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
         // unable to get local issuer certificate
-        //X509_STORE_load_locations(store, "trust.crt", nullptr);
+        // X509_STORE_load_locations(store, "trust.crt", nullptr);
 
-        handle->lock.enter ();
-        for (authenticode_trusted_cert_map_t::iterator trusted_cert_it = handle->trusted_cert.begin (); trusted_cert_it != handle->trusted_cert.end (); trusted_cert_it++) {
+        handle->lock.enter();
+        for (authenticode_trusted_cert_map_t::iterator trusted_cert_it = handle->trusted_cert.begin(); trusted_cert_it != handle->trusted_cert.end();
+             trusted_cert_it++) {
             std::string cert_file = trusted_cert_it->first;
             std::string cert_path = trusted_cert_it->second;
 
-            //X509_STORE_load_locations (store, cert_file.empty () ? nullptr : cert_file.c_str (),
+            // X509_STORE_load_locations (store, cert_file.empty () ? nullptr : cert_file.c_str (),
             //                           cert_path.empty () ? nullptr : cert_path.c_str ());
             // load cert wo path
-            if (cert_file.size ()) {
-                X509_LOOKUP* lookup = X509_STORE_add_lookup (store, X509_LOOKUP_file ());
-                X509_load_cert_file (lookup, cert_file.c_str (), X509_FILETYPE_PEM);
+            if (cert_file.size()) {
+                X509_LOOKUP* lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file());
+                X509_load_cert_file(lookup, cert_file.c_str(), X509_FILETYPE_PEM);
             }
-
         }
-        handle->lock.leave ();
+        handle->lock.leave();
 
-        X509_STORE_set_verify_cb_func (store, verify_callback);
-        ERR_clear_error ();
+        X509_STORE_set_verify_cb_func(store, verify_callback);
+        ERR_clear_error();
 
-        //chain = sk_X509_new_null();
+        // chain = sk_X509_new_null();
 
         // prevent error 26
         // X509_V_ERR_INVALID_PURPOSE
         // unsupported certificate purpose
         // http://securitypad.blogspot.kr/2017/01/openssl-pkcs7-verification-unsupported.html
-        store_context = X509_STORE_CTX_new ();
-        X509_STORE_CTX_init (store_context, store, nullptr, nullptr);
-        X509_VERIFY_PARAM* vparam = X509_STORE_CTX_get0_param (store_context);
+        store_context = X509_STORE_CTX_new();
+        X509_STORE_CTX_init(store_context, store, nullptr, nullptr);
+        X509_VERIFY_PARAM* vparam = X509_STORE_CTX_get0_param(store_context);
         int purpose = X509_PURPOSE_ANY;
-        X509_VERIFY_PARAM_set_purpose (vparam, purpose);
-        X509_STORE_set1_param (store, vparam);
+        X509_VERIFY_PARAM_set_purpose(vparam, purpose);
+        X509_STORE_set1_param(store, vparam);
 
         // PKCS7_verify use it's own X509_STORE_CTX
-        //X509_STORE_CTX_set_ex_data(store_context, 0, handle);
+        // X509_STORE_CTX_set_ex_data(store_context, 0, handle);
 
-        for (authenticode_crl_map_t::iterator crl_it = crl_map.begin (); crl_it != crl_map.end (); crl_it++) {
-            X509_CRL* crl = (X509_CRL *) crl_it->second;
+        for (authenticode_crl_map_t::iterator crl_it = crl_map.begin(); crl_it != crl_map.end(); crl_it++) {
+            X509_CRL* crl = (X509_CRL*)crl_it->second;
 
             if (crl) {
-                X509_STORE_add_crl (store, crl);
-                X509_STORE_set_flags (store, X509_V_FLAG_CRL_CHECK);
+                X509_STORE_add_crl(store, crl);
+                X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK);
             }
         }
 
         int flag = 0;
-        ret_verify = PKCS7_verify (pkcs7, pkcs7->d.sign->cert, store, bio, nullptr, flag);
+        ret_verify = PKCS7_verify(pkcs7, pkcs7->d.sign->cert, store, bio, nullptr, flag);
         //__trace(0, format("PKCS7_verify %d", ret_verify).c_str());
-        //printf("Signature verification: %s\n\n", ret_verify ? "ok" : "failed");
+        // printf("Signature verification: %s\n\n", ret_verify ? "ok" : "failed");
         if (ret_verify < 1) {
             ret = errorcode_t::verify;
-            __leave2_trace_openssl (ret);
+            __leave2_trace_openssl(ret);
         }
     }
-    __finally2
-    {
-        //if (nullptr != chain)
+    __finally2 {
+        // if (nullptr != chain)
         //{
         //  sk_X509_free(chain);
         //}
         if (nullptr != bio) {
-            BIO_free (bio);
+            BIO_free(bio);
         }
         if (nullptr != store) {
-            X509_STORE_free (store);
+            X509_STORE_free(store);
         }
         if (nullptr != store_context) {
-            X509_STORE_CTX_free (store_context);
+            X509_STORE_CTX_free(store_context);
         }
         if (nullptr != handle) {
-            _contexts_lock.enter ();
+            _contexts_lock.enter();
             if (true == pib.second) {
-                _contexts.erase (pib.first);
+                _contexts.erase(pib.first);
             }
-            _contexts_lock.leave ();
+            _contexts_lock.leave();
         }
 
         // do nothing
@@ -923,18 +875,16 @@ typedef struct _AUTHENTICODE_RESULT {
     uint32 result;
 } AUTHENTICODE_RESULT;
 typedef std::map<std::string, AUTHENTICODE_RESULT> authenticode_filelist_map_t;
-typedef std::map<std::string, std::string> authenticode_index_map_t; // lower-case
+typedef std::map<std::string, std::string> authenticode_index_map_t;  // lower-case
 typedef struct _AUTHENTICODE_VERIFY_CONTEXT {
     authenticode_filelist_map_t filelist;
     authenticode_index_map_t index;
 } AUTHENTICODE_VERIFY_CONTEXT;
 
-static return_t get_crl (authenticode_context_t* context, X509* cert, authenticode_crl_map_t& crl_map)
-{
+static return_t get_crl(authenticode_context_t* context, X509* cert, authenticode_crl_map_t& crl_map) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == context || nullptr == cert) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -947,25 +897,24 @@ static return_t get_crl (authenticode_context_t* context, X509* cert, authentico
         std::string context_crl_path = context->crl_path;
 
         std::set<std::string> crls;
-        crl_distribution_point (cert, crls);
-        for (std::set<std::string>::iterator crl_it = crls.begin (); crl_it != crls.end (); crl_it++) {
+        crl_distribution_point(cert, crls);
+        for (std::set<std::string>::iterator crl_it = crls.begin(); crl_it != crls.end(); crl_it++) {
             std::string crl_url = *crl_it;
             url_info_t url_info;
 
-            split_url (crl_url.c_str (), &url_info);
-            std::string crl_path = format ("%s/%s/%s", context_crl_path.c_str (), url_info.domainip.c_str (), url_info.uripath.c_str ());
-            std::string crl_file = format ("%s/%s%s", context_crl_path.c_str (), url_info.domainip.c_str (), url_info.uri.c_str ());
+            split_url(crl_url.c_str(), &url_info);
+            std::string crl_path = format("%s/%s/%s", context_crl_path.c_str(), url_info.domainip.c_str(), url_info.uripath.c_str());
+            std::string crl_file = format("%s/%s%s", context_crl_path.c_str(), url_info.domainip.c_str(), url_info.uri.c_str());
 
             //__vtrace(0, "CRL : %s", crl_url.c_str());
 
-            __try2
-            {
-                context->crl_lock.enter ();
+            __try2 {
+                context->crl_lock.enter();
 
-                authenticode_crl_map_t::iterator crl_it = context->crl_map.find (crl_url);
-                if (context->crl_map.end () != crl_it) {
+                authenticode_crl_map_t::iterator crl_it = context->crl_map.find(crl_url);
+                if (context->crl_map.end() != crl_it) {
                     // no matter what crl is null or not
-                    crl_map.insert (std::make_pair (crl_it->first, crl_it->second));
+                    crl_map.insert(std::make_pair(crl_it->first, crl_it->second));
                     __leave2;
                 }
 
@@ -1015,47 +964,40 @@ static return_t get_crl (authenticode_context_t* context, X509* cert, authentico
                 crl_map.insert (std::make_pair (crl_url, crl));
 #endif
             }
-            __finally2
-            {
-                context->crl_lock.leave ();
-            }
+            __finally2 { context->crl_lock.leave(); }
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-static return_t clear_crl (authenticode_context_t* context)
-{
+static return_t clear_crl(authenticode_context_t* context) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == context) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        context->crl_lock.enter ();
-        for (authenticode_crl_map_t::iterator crl_it = context->crl_map.begin (); crl_it != context->crl_map.end (); crl_it++) {
-            X509_CRL* crl = (X509_CRL *) crl_it->second;
+        context->crl_lock.enter();
+        for (authenticode_crl_map_t::iterator crl_it = context->crl_map.begin(); crl_it != context->crl_map.end(); crl_it++) {
+            X509_CRL* crl = (X509_CRL*)crl_it->second;
 
             if (crl) {
-                X509_CRL_free (crl);
+                X509_CRL_free(crl);
             }
         }
-        context->crl_map.clear ();
-        context->crl_lock.leave ();
+        context->crl_map.clear();
+        context->crl_lock.leave();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-}
-}  // namespace
+}  // namespace crypto
+}  // namespace hotplace

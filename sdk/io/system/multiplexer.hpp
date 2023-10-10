@@ -17,21 +17,23 @@ namespace hotplace {
 namespace io {
 
 enum multiplexer_type_t {
-    mux_type_completionport = 1,    /* Windows, Solaris 10, AIX 5 */
-    mux_type_epoll          = 2,    /* linux */
-    mux_type_kqueue         = 3,    /* Mac, FreeBSD */
+    mux_type_completionport = 1, /* Windows, Solaris 10, AIX 5 */
+    mux_type_epoll = 2,          /* linux */
+    mux_type_kqueue = 3,         /* Mac, FreeBSD */
 };
 
 enum multiplexer_event_type_t {
-    mux_tryconnect  = 0,    /* try to sslaccept */
-    mux_connect     = 1,    /* connected */
-    mux_read        = 2,    /* read */
-    mux_write       = 3,    /* send */
-    mux_disconnect  = 4,    /* closed */
+    mux_tryconnect = 0, /* try to sslaccept */
+    mux_connect = 1,    /* connected */
+    mux_read = 2,       /* read */
+    mux_write = 3,      /* send */
+    mux_disconnect = 4, /* closed */
 };
 
-typedef struct {} multiplexer_context_t;
-typedef struct {} multiplexer_controller_context_t;
+typedef struct {
+} multiplexer_context_t;
+typedef struct {
+} multiplexer_controller_context_t;
 
 /**
  * @breif   windows iocp
@@ -69,11 +71,10 @@ typedef struct {} multiplexer_controller_context_t;
  *          mplexer.close (handle);
  *
  */
-class multiplexer_iocp
-{
-public:
-    multiplexer_iocp ();
-    ~multiplexer_iocp ();
+class multiplexer_iocp {
+   public:
+    multiplexer_iocp();
+    ~multiplexer_iocp();
 
     /**
      * @brief   open
@@ -81,13 +82,13 @@ public:
      * @param   size_t reserved [IN] reserved
      * @return  error code (see error.hpp)
      */
-    return_t open (multiplexer_context_t** phandle, size_t reserved);
+    return_t open(multiplexer_context_t** phandle, size_t reserved);
     /**
      * @brief   close
      * @param   void* handle [IN] handle
      * @return  error code (see error.hpp)
      */
-    return_t close (multiplexer_context_t* handle);
+    return_t close(multiplexer_context_t* handle);
     /**
      * @brief   bind
      * @param   void* multiplexer_context_t [IN] handle
@@ -95,7 +96,7 @@ public:
      * @param   void* data [IN] completion key, cannot be nullptr
      * @return  error code (see error.hpp)
      */
-    return_t bind (multiplexer_context_t* handle, handle_t eventsource, void* data);
+    return_t bind(multiplexer_context_t* handle, handle_t eventsource, void* data);
     /**
      * @brief   unbind
      * @param   multiplexer_context_t* handle [IN] handle
@@ -103,7 +104,7 @@ public:
      * @param   void* data [IN] completion key, cannot be nullptr
      * @return  error code (see error.hpp)
      */
-    return_t unbind (multiplexer_context_t* handle, handle_t eventsource, void* data);
+    return_t unbind(multiplexer_context_t* handle, handle_t eventsource, void* data);
     /**
      * @brief   loop
      * @param   multiplexer_context_t* handle [IN]
@@ -116,21 +117,21 @@ public:
      *   // see post method
      *   return_t NetworkRoutine (uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* user_context)
      */
-    return_t event_loop_run (multiplexer_context_t* handle, handle_t listenfd, TYPE_CALLBACK_HANDLEREXV callback_routine, void* user_context);
+    return_t event_loop_run(multiplexer_context_t* handle, handle_t listenfd, TYPE_CALLBACK_HANDLEREXV callback_routine, void* user_context);
     /**
      * @brief   break event_loop_run method
      * @param   multiplexer_context_t* handle [IN]
      * @param   arch_t* token_handle [INOPT] thread-id, if nullptr all event_loop_run stop
      * @return  error code (see error.hpp)
      */
-    return_t event_loop_break (multiplexer_context_t* handle, arch_t* token_handle = nullptr);
+    return_t event_loop_break(multiplexer_context_t* handle, arch_t* token_handle = nullptr);
     /**
      * @brief   break event_loop_run method
      * @param   multiplexer_context_t* handle [IN]
      * @param   size_t concurrent [IN] call event_loop_break
      * @return  error code (see error.hpp)
      */
-    return_t event_loop_break_concurrent (multiplexer_context_t* handle, size_t concurrent);
+    return_t event_loop_break_concurrent(multiplexer_context_t* handle, size_t concurrent);
     /**
      * @brief post
      * @param   multiplexer_context_t* handle [IN]
@@ -143,7 +144,7 @@ public:
      *                data[3] overlapped (win32)
      * @return  error code (see error.hpp)
      */
-    return_t post (multiplexer_context_t* handle, uint32 count, void* data[]);
+    return_t post(multiplexer_context_t* handle, uint32 count, void* data[]);
     /**
      * @brief   setoption
      * @param   multiplexer_context_t* handle [IN]
@@ -152,13 +153,13 @@ public:
      * @return  error code (see error.hpp)
      * @remarks reserved
      */
-    return_t setoption (multiplexer_context_t* handle, arch_t optionvalue, size_t size_optionvalue);
+    return_t setoption(multiplexer_context_t* handle, arch_t optionvalue, size_t size_optionvalue);
     /**
      * @brief   mux_type_completionport
      */
-    multiplexer_type_t type ();
+    multiplexer_type_t type();
 
-protected:
+   protected:
 };
 
 /**
@@ -193,11 +194,10 @@ protected:
  *    mplexer.close (handle);
  *
  */
-class multiplexer_epoll
-{
-public:
-    multiplexer_epoll ();
-    ~multiplexer_epoll ();
+class multiplexer_epoll {
+   public:
+    multiplexer_epoll();
+    ~multiplexer_epoll();
 
     /**
      * @brief   open
@@ -205,13 +205,13 @@ public:
      * @param   size_t concurrent [IN] epoll_create parameter
      * @return  error code (see error.hpp)
      */
-    return_t open (multiplexer_context_t** handle, size_t concurrent);
+    return_t open(multiplexer_context_t** handle, size_t concurrent);
     /**
      * @brief   close
      * @param   multiplexer_context_t* handle [IN]
      * @return  error code (see error.hpp)
      */
-    return_t close (multiplexer_context_t* handle);
+    return_t close(multiplexer_context_t* handle);
     /**
      * @brief   bind
      * @param   multiplexer_context_t* handle [IN] handle
@@ -219,7 +219,7 @@ public:
      * @param   void* data [IN] can be nullptr
      * @return  error code (see error.hpp)
      */
-    return_t bind (multiplexer_context_t* handle, handle_t eventsource, void* data);
+    return_t bind(multiplexer_context_t* handle, handle_t eventsource, void* data);
     /**
      * @brief   unbind
      * @param   multiplexer_context_t* handle [IN] handle
@@ -227,7 +227,7 @@ public:
      * @param   void* data [IN] can be nullptr
      * @return  error code (see error.hpp)
      */
-    return_t unbind (multiplexer_context_t* handle, handle_t eventsource, void* data);
+    return_t unbind(multiplexer_context_t* handle, handle_t eventsource, void* data);
 
     /**
      * @brief loop
@@ -242,21 +242,21 @@ public:
      * @return  error code (see error.hpp)
      * @reamrks
      */
-    return_t event_loop_run (multiplexer_context_t* handle, handle_t listenfd, TYPE_CALLBACK_HANDLEREXV lpfnEventHandler, void* user_context);
+    return_t event_loop_run(multiplexer_context_t* handle, handle_t listenfd, TYPE_CALLBACK_HANDLEREXV lpfnEventHandler, void* user_context);
     /**
      * @brief   break event_loop_run method
      * @param   multiplexer_context_t* handle [IN]
      * @param   arch_t* token_handle [INOPT] thread-id, if nullptr all event_loop_run stop
      * @return  error code (see error.hpp)
      */
-    return_t event_loop_break (multiplexer_context_t* handle, arch_t* token_handle = nullptr);
+    return_t event_loop_break(multiplexer_context_t* handle, arch_t* token_handle = nullptr);
     /**
      * @brief   break event_loop_run method
      * @param   multiplexer_context_t* handle [IN]
      * @param   size_t concurrent [IN] call event_loop_break
      * @return  error code (see error.hpp)
      */
-    return_t event_loop_break_concurrent (multiplexer_context_t* handle, size_t concurrent);
+    return_t event_loop_break_concurrent(multiplexer_context_t* handle, size_t concurrent);
     /**
      * @brief   post
      * @param   multiplexer_context_t* handle [IN]
@@ -266,7 +266,7 @@ public:
      * @remarks
      *          do nothing
      */
-    return_t post (multiplexer_context_t* handle, uint32 count, void* data[]);
+    return_t post(multiplexer_context_t* handle, uint32 count, void* data[]);
     /**
      * @brief   setoption
      * @param   multiplexer_context_t* handle [IN]
@@ -275,37 +275,35 @@ public:
      * @return  error code (see error.hpp)
      * @remarks reserved
      */
-    return_t setoption (multiplexer_context_t* handle, arch_t optionvalue, size_t size_optionvalue);
+    return_t setoption(multiplexer_context_t* handle, arch_t optionvalue, size_t size_optionvalue);
     /**
      * @brief mux_type_epoll
      */
-    multiplexer_type_t type ();
+    multiplexer_type_t type();
 
-protected:
-
+   protected:
 };
 
 /**
  * @brief support event_loop_break (multiplexer_iocp, multiplexer_epoll, MultiplexerKqueue)
  */
-class multiplexer_controller
-{
-public:
-    multiplexer_controller ();
-    ~multiplexer_controller ();
+class multiplexer_controller {
+   public:
+    multiplexer_controller();
+    ~multiplexer_controller();
 
     /**
      * @brief   create a handle
      * @param   multiplexer_controller_context_t** handle [OUT] handle
      * @return  error code (see error.hpp)
      */
-    return_t open (multiplexer_controller_context_t** handle);
+    return_t open(multiplexer_controller_context_t** handle);
     /**
      * @brief   destroy a handle
      * @param   multiplexer_controller_context_t* handle [IN] handle
      * @return  error code (see error.hpp)
      */
-    return_t close (multiplexer_controller_context_t* handle);
+    return_t close(multiplexer_controller_context_t* handle);
 
     /**
      * @brief   run (only one run per thread)
@@ -313,38 +311,37 @@ public:
      * @param   arch_t*   token_handle [OUT] token, thread id
      * @return  error code (see error.hpp)
      */
-    return_t event_loop_new (multiplexer_controller_context_t* handle, arch_t* token_handle);
+    return_t event_loop_new(multiplexer_controller_context_t* handle, arch_t* token_handle);
     /**
      * @brief   stop (one or all)
      * @param   multiplexer_controller_context_t* handle [IN] handle
      * @param   arch_t* token_handle [IN] if nullptr, all event_loop_run stop
      * @return  error code (see error.hpp)
      */
-    return_t event_loop_break (multiplexer_controller_context_t* handle, arch_t* token_handle);
+    return_t event_loop_break(multiplexer_controller_context_t* handle, arch_t* token_handle);
     /**
      * @brief   stop all
      * @param   multiplexer_controller_context_t* handle [IN] handle
      * @param   size_t concurrent [IN] number of concurrent threads
      * @return  error code (see error.hpp)
      */
-    return_t event_loop_break_concurrent (multiplexer_controller_context_t* handle, size_t concurrent);
+    return_t event_loop_break_concurrent(multiplexer_controller_context_t* handle, size_t concurrent);
     /**
      * @brief   wait signal
      * @param   multiplexer_controller_context_t* handle [IN] handle
      * @param   arch_t token_handle [IN] token
      */
-    bool event_loop_test_broken (multiplexer_controller_context_t* handle, arch_t token_handle);
+    bool event_loop_test_broken(multiplexer_controller_context_t* handle, arch_t token_handle);
     /**
      * @brief   free resource
      * @param   multiplexer_controller_context_t* handle [IN] handle
      * @param   arch_t token_handle [IN] token
      * @return  error code (see error.hpp)
      */
-    return_t event_loop_close (multiplexer_controller_context_t* handle, arch_t token_handle);
+    return_t event_loop_close(multiplexer_controller_context_t* handle, arch_t token_handle);
 };
 
-
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
 
 #endif

@@ -13,36 +13,33 @@
 namespace hotplace {
 namespace io {
 
-return_t W2A (stream_t* stream, const wchar_t* source, uint32 codepage)
-{
+return_t W2A(stream_t* stream, const wchar_t* source, uint32 codepage) {
     return_t ret = errorcode_t::success;
 
-    __try2
-    {
+    __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         if (source) {
-            std::vector <char> buffer;
-            int sizeNeed = WideCharToMultiByte (codepage, 0, source, -1, nullptr, 0, nullptr, nullptr);
+            std::vector<char> buffer;
+            int sizeNeed = WideCharToMultiByte(codepage, 0, source, -1, nullptr, 0, nullptr, nullptr);
 
-            buffer.resize (sizeNeed); // including null pad
-            WideCharToMultiByte (codepage, 0, source, -1, &buffer[0], sizeNeed, nullptr, nullptr);
-            if (sizeNeed >= (int) sizeof (wchar_t)) {
-                stream->write ((void*) &buffer[0], sizeNeed - sizeof (char));
+            buffer.resize(sizeNeed);  // including null pad
+            WideCharToMultiByte(codepage, 0, source, -1, &buffer[0], sizeNeed, nullptr, nullptr);
+            if (sizeNeed >= (int)sizeof(wchar_t)) {
+                stream->write((void*)&buffer[0], sizeNeed - sizeof(char));
             }
         } else {
             ret = errorcode_t::invalid_parameter;
         }
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
 }
 
-}
-}
+}  // namespace io
+}  // namespace hotplace

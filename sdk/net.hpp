@@ -14,7 +14,6 @@
 #include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/crypto.hpp>
 #include <hotplace/sdk/io.hpp>
-
 #include <hotplace/sdk/net/basic/client_socket.hpp>
 #include <hotplace/sdk/net/basic/ipaddr_acl.hpp>
 #include <hotplace/sdk/net/basic/sdk.hpp>

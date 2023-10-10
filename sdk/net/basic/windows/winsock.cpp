@@ -13,21 +13,17 @@
 namespace hotplace {
 namespace net {
 
-return_t winsock_startup ()
-{
+return_t winsock_startup() {
     WSADATA wsaData;
     BYTE wMajorVersion = 2;
     BYTE wMinorVersion = 2;
-    WORD wVersionRequested = MAKEWORD ( wMinorVersion, wMajorVersion );
+    WORD wVersionRequested = MAKEWORD(wMinorVersion, wMajorVersion);
 
-    WSAStartup (wVersionRequested, &wsaData);
-    return GetLastError ();
+    WSAStartup(wVersionRequested, &wsaData);
+    return GetLastError();
 }
 
-void winsock_cleanup ()
-{
-    WSACleanup ();
-}
+void winsock_cleanup() { WSACleanup(); }
 
-}
-}  // namespace
+}  // namespace net
+}  // namespace hotplace

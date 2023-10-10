@@ -19,8 +19,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/sdk.hpp>
 #include <stdio.h>
+
+#include <hotplace/sdk/sdk.hpp>
 #include <iostream>
 
 using namespace hotplace;
@@ -28,20 +29,18 @@ using namespace hotplace::io;
 
 test_case _test_case;
 
-void test_trace ()
-{
-    _test_case.begin ("debug_trace");
+void test_trace() {
+    _test_case.begin("debug_trace");
     return_t ret = errorcode_t::success;
     ansi_string stream;
-    ret = debug_trace (&stream);
-    std::cout << stream.c_str () << std::endl;
-    _test_case.test (ret, __FUNCTION__, "debug_trace");
+    ret = debug_trace(&stream);
+    std::cout << stream.c_str() << std::endl;
+    _test_case.test(ret, __FUNCTION__, "debug_trace");
 }
 
-int main (int argc, char** argv)
-{
-    test_trace ();
+int main(int argc, char** argv) {
+    test_trace();
 
-    _test_case.report (5);
-    return _test_case.result ();
+    _test_case.report(5);
+    return _test_case.result();
 }

@@ -13,17 +13,16 @@
 namespace hotplace {
 namespace io {
 
-void binary_load (binary_t& bn, uint32 bnlen, byte_t* data, uint32 len)
-{
-    bn.clear ();
-    bn.resize (bnlen);
+void binary_load(binary_t& bn, uint32 bnlen, byte_t* data, uint32 len) {
+    bn.clear();
+    bn.resize(bnlen);
     if (data) {
         if (len > bnlen) {
             len = bnlen;
         }
-        memcpy (&bn[0] + (bnlen - len), data, len);
+        memcpy(&bn[0] + (bnlen - len), data, len);
     }
 }
 
-}
-}  // namespace
+}  // namespace io
+}  // namespace hotplace
