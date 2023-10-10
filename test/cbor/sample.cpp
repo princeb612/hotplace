@@ -743,9 +743,9 @@ void whatsthis (int argc, char** argv)
         reader.publish (handle, &diagnostic);
         reader.close (handle);
 
-        std::cout << "what u want to know" << std::endl
-                  << "< " << argv[1] << std::endl
-                  << "> " << diagnostic.c_str () << std::endl;
+        std::cout   << "what u want to know" << std::endl
+                    << "< " << argv[1] << std::endl
+                    << "> " << diagnostic.c_str () << std::endl;
     }
 }
 

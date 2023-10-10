@@ -1771,6 +1771,8 @@ void try_refactor_jose_sign ()
     pkey = privkey.select (kid, crypt_sig_t::sig_es256);
     _test_case.assert (kid == "11", __FUNCTION__, "select key from CWK where type is es256"); // alphabetic order...
 
+    _test_case.reset_time ();
+
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -1786,8 +1788,22 @@ void try_refactor_jose_sign ()
     algs.push_back (cose_alg_t::cose_es512);
     ret = cose.sign (handle, &privkey, algs, convert (input), signature);
     _test_case.test (ret, __FUNCTION__, "sign");
-    dump_memory (signature, &bs);
-    printf ("signature\n%s\n", bs.c_str ());
+    {
+        test_case_notimecheck notimecheck (_test_case);
+
+        dump_memory (signature, &bs);
+        printf ("signature\n%s\n", bs.c_str ());
+        printf ("cbor\n%s\n", base16_encode (signature).c_str ());
+
+        basic_stream diagnostic;
+        cbor_reader reader;
+        cbor_reader_context_t* reader_handle = nullptr;
+        reader.open (&reader_handle);
+        reader.parse (reader_handle, signature);
+        reader.publish (reader_handle, &diagnostic);
+        reader.close (reader_handle);
+        printf ("diagnostic\n%s\n", diagnostic.c_str ());
+    }
     ret = cose.verify (handle, &pubkey, signature, result);
     _test_case.test (ret, __FUNCTION__, "verify");
     cose.close (handle);

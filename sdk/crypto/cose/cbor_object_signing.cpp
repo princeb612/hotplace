@@ -100,7 +100,7 @@ return_t cbor_object_signing::sign (cose_context_t* handle, crypto_key* key, std
             composer.build_protected (&cbor_sign_protected, item.protected_list);
             // 1.2 bin_protected
             variant_binary (cbor_sign_protected->data (), item.bin_protected);
-            
+
             // 2 unprotected (kid)
             if (kid.size ()) {
                 // 2.1 compose
@@ -128,6 +128,7 @@ return_t cbor_object_signing::sign (cose_context_t* handle, crypto_key* key, std
             }
         }
 
+        // [prototype] cbor_tag_t::cose_tag_sign only
         ret = write_signature (handle, tag, output);
     }
     __finally2
@@ -236,16 +237,19 @@ return_t cbor_object_signing::write_signature (cose_context_t* handle, uint8 tag
     return_t ret = errorcode_t::success;
     cbor_publisher pub;
     cbor_object_signing_encryption::composer composer;
+    cbor_array* root = nullptr;
     cbor_map* cbor_body_unprotected = nullptr;
+
+    signature.clear ();
 
     composer.build_unprotected (&cbor_body_unprotected, handle->body.unprotected_list);
 
-    cbor_array* root = new cbor_array ();
+    root = new cbor_array ();
     root->tag (true, (cbor_tag_t) tag);
-    *root << new cbor_data (handle->body.bin_protected)
-          << cbor_body_unprotected
-          << new cbor_data (handle->payload)
-          << new cbor_array ();
+    *root   << new cbor_data (handle->body.bin_protected)
+            << cbor_body_unprotected
+            << new cbor_data (handle->payload)
+            << new cbor_array ();
 
     cbor_array* cbor_signatures = (cbor_array*) (*root)[3];
     std::list <cose_parts_t>::iterator iter;
@@ -264,7 +268,6 @@ return_t cbor_object_signing::write_signature (cose_context_t* handle, uint8 tag
     }
 
     pub.publish (root, &signature);
-
     root->release ();
     return ret;
 }
@@ -513,6 +516,7 @@ return_t cbor_object_signing::compose_tobesigned (binary_t& tobesigned, uint8 ta
             *root << new cbor_data ("Signature1");
         } else {
             ret = errorcode_t::request;
+            __leave2;
         }
 
         *root << new cbor_data (body_protected);
