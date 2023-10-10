@@ -142,12 +142,12 @@ int basic_stream::compare (basic_stream& lhs, basic_stream& rhs)
     return strcmp (lhs.c_str (), rhs.c_str ());
 }
 
-bool basic_stream::operator < (basic_stream obj)
+bool basic_stream::operator < (basic_stream& obj)
 {
     return 0 < strcmp ((*this).c_str (), obj.c_str ());
 }
 
-bool basic_stream::operator > (basic_stream obj)
+bool basic_stream::operator > (basic_stream& obj)
 {
     return 0 > strcmp ((*this).c_str (), obj.c_str ());
 }

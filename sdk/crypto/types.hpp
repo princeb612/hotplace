@@ -238,7 +238,6 @@ enum crypt_item_t {
     item_apv            = 8,    // APV - agreement partyVinfo
     item_p2s            = 9,    // P2S - PBES2 salt
 
-    /* key */
     item_rsa_n          = 64,
     item_rsa_e          = 65,
     item_rsa_d          = 66,
@@ -263,8 +262,11 @@ enum crypt_item_t {
     item_zip            = 130,  // zip "DEF"
 
     /* variant */
-    item_epk            = 256,  // ephemeral public key
-    item_p2c            = 257,  // PBES2 count
+    item_epk            = 256,  // ephemeral public key (pointer to EVP_PKEY*)
+    item_p2c            = 257,  // PBES2 count (int32)
+    item_alg            = 258,  // COSE alg (int32)
+    item_curve          = 259,  // elliptic curve (int32)
+    item_curve_signbit  = 260,  // sign bit, compressed (bool)
 };
 
 enum crypt_access_t {
@@ -710,6 +712,12 @@ typedef struct _hash_context_t hash_context_t;
 struct _otp_context_t {};
 typedef struct _otp_context_t otp_context_t;
 
+typedef std::map <std::string, variant_t> crypt_cosemap_t;
+typedef struct _crypt_variant_t {
+    variant_t key;
+    variant_t value;
+} crypt_variant_t;
+typedef std::list<crypt_variant_t> crypt_variantlist_t;
 }
 }  // namespace
 

@@ -189,12 +189,12 @@ int cbor_pair::release ()
     return _shared.delref ();
 }
 
-cbor_data* const cbor_pair::left ()
+cbor_data const* cbor_pair::left ()
 {
     return _lhs;
 }
 
-cbor_object* const cbor_pair::right ()
+cbor_object const* cbor_pair::right ()
 {
     return _rhs;
 }

@@ -111,12 +111,12 @@ public:
      * @brief   operator <
      * @param   basic_stream obj [in]
      */
-    bool operator < (basic_stream obj);
+    bool operator < (basic_stream& obj);
     /**
      * @brief   operator <
      * @param   basic_stream obj [in]
      */
-    bool operator > (basic_stream obj);
+    bool operator > (basic_stream& obj);
 
 protected:
     bufferio _bio;

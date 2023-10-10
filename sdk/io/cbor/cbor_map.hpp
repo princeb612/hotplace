@@ -55,8 +55,8 @@ public:
     cbor_pair (cbor_data* key, cbor_array* object);
     virtual ~cbor_pair ();
 
-    cbor_data* const left ();
-    cbor_object* const right ();
+    cbor_data const* left ();
+    cbor_object const* right ();
 
     virtual int addref ();
     virtual int release ();
@@ -103,8 +103,8 @@ public:
     cbor_map& operator << (cbor_pair* object);
 
     virtual size_t size ();
-    cbor_pair const* operator [] (size_t index);
-    std::list <cbor_pair*> const& accessor ();
+    cbor_pair* operator [] (size_t index);
+    std::list <cbor_pair*>& accessor ();
 
     virtual int addref ();
     virtual int release ();

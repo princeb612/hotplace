@@ -73,29 +73,15 @@ return_t kdf_hkdf (binary_t& derived, size_t dlen, binary_t const& key, binary_t
 
 return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, std::string const& password, binary_t const& salt, int iter, hash_algorithm_t alg)
 {
-    return_t ret = errorcode_t::success;
-    const EVP_MD* md = nullptr;
-    crypto_advisor* advisor = crypto_advisor::get_instance ();
-
-    __try2
-    {
-        md = advisor->find_evp_md (alg);
-        if (nullptr == md) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        derived.resize (dlen);
-        PKCS5_PBKDF2_HMAC (password.c_str (), password.size (), &salt[0], salt.size (), iter, md, dlen, &derived[0]);
-    }
-    __finally2
-    {
-        // do nothing
-    }
-    return ret;
+    return kdf_pbkdf2 (derived, dlen, password.c_str (), password.size (), &salt[0], salt.size (), iter, alg);
 }
 
 return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, int iter, hash_algorithm_t alg)
+{
+    return kdf_pbkdf2 (derived, dlen, (char*) &password[0], password.size (), &salt[0], salt.size (), iter, alg);
+}
+
+return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt, int iter, hash_algorithm_t alg)
 {
     return_t ret = errorcode_t::success;
     const EVP_MD* md = nullptr;
@@ -103,6 +89,11 @@ return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, binary_t const& password, b
 
     __try2
     {
+        if (nullptr == password || nullptr == salt) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         md = advisor->find_evp_md (alg);
         if (nullptr == md) {
             ret = errorcode_t::not_supported;
@@ -110,7 +101,7 @@ return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, binary_t const& password, b
         }
 
         derived.resize (dlen);
-        PKCS5_PBKDF2_HMAC ((char*) &password[0], password.size (), &salt[0], salt.size (), iter, md, dlen, &derived[0]);
+        PKCS5_PBKDF2_HMAC (password, size_password, salt, size_salt, iter, md, dlen, &derived[0]);
     }
     __finally2
     {

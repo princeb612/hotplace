@@ -147,7 +147,7 @@ size_t cbor_map::size ()
     return _array.size ();
 }
 
-cbor_pair const* cbor_map::operator [] (size_t index)
+cbor_pair* cbor_map::operator [] (size_t index)
 {
     cbor_pair* item = nullptr;
 
@@ -159,7 +159,7 @@ cbor_pair const* cbor_map::operator [] (size_t index)
     return item;
 }
 
-std::list <cbor_pair*> const& cbor_map::accessor ()
+std::list <cbor_pair*>& cbor_map::accessor ()
 {
     return _array;
 }

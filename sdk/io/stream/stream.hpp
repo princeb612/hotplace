@@ -144,7 +144,7 @@ enum vtprintf_style_t {
     vtprintf_style_normal   = 0,
     vtprintf_style_cbor     = 1,
 };
-return_t vtprintf (stream_t* stream, variant_t vt, vtprintf_style_t style = vtprintf_style_normal);
+return_t vtprintf (stream_t* stream, variant_t const& vt, vtprintf_style_t style = vtprintf_style_normal);
 
 //
 // part - dump

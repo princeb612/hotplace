@@ -104,7 +104,7 @@ size_t cbor_array::size ()
     return _array.size ();
 }
 
-cbor_object const* cbor_array::operator [] (size_t index)
+cbor_object* cbor_array::operator [] (size_t index)
 {
     cbor_object* item = nullptr;
 
@@ -116,7 +116,7 @@ cbor_object const* cbor_array::operator [] (size_t index)
     return item;
 }
 
-std::list <cbor_object*> const& cbor_array::accessor ()
+std::list <cbor_object*>& cbor_array::accessor ()
 {
     return _array;
 }

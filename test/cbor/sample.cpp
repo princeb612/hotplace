@@ -731,11 +731,30 @@ void test3 ()
     test_parse ("bf6346756ef563416d7421ff", "{_ \"Fun\":true,\"Amt\":-2}");
 }
 
-int main ()
+void whatsthis (int argc, char** argv)
+{
+    if (argc > 1) {
+        binary_t what = base16_decode (argv[1]);
+        basic_stream diagnostic;
+        cbor_reader_context_t* handle = nullptr;
+        cbor_reader reader;
+        reader.open (&handle);
+        reader.parse (handle, what);
+        reader.publish (handle, &diagnostic);
+        reader.close (handle);
+
+        std::cout << "what u want to know" << std::endl
+                  << "< " << argv[1] << std::endl
+                  << "> " << diagnostic.c_str () << std::endl;
+    }
+}
+
+int main (int argc, char** argv)
 {
     test1 ();
     test2 ();
     test3 ();
+    whatsthis (argc, argv);
 
     _test_case.report (5);
     return _test_case.result ();

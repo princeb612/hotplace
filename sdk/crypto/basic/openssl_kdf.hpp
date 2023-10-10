@@ -41,6 +41,7 @@ return_t kdf_hkdf (binary_t& derived, size_t dlen, binary_t const& key, binary_t
  */
 return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, std::string const& password, binary_t const& salt, int iter, hash_algorithm_t alg);
 return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, int iter, hash_algorithm_t alg);
+return_t kdf_pbkdf2 (binary_t& derived, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt, int iter, hash_algorithm_t alg);
 /**
  * @brief   scrypt
  * @param   binary_t& derived [out]

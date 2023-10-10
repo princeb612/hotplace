@@ -81,12 +81,20 @@ return_t write_pem (EVP_PKEY* pkey, BIO* out)
             } else {
                 PEM_write_bio_RSAPublicKey (out, EVP_PKEY_get0_RSA (pkey));
             }
-        } else if (kindof_ecc (pkey)) {
-            const BIGNUM* bn = EC_KEY_get0_private_key (EVP_PKEY_get0_EC_KEY (pkey));
+        } else if (EVP_PKEY_EC == type) {
+            EC_KEY* ec_key = (EC_KEY*) EVP_PKEY_get0_EC_KEY (pkey);
+
+            if (nullptr == ec_key) {
+                ret = errorcode_t::bad_data;
+                throw ret;
+                __leave2_trace (ret);
+            }
+
+            const BIGNUM* bn = EC_KEY_get0_private_key (ec_key);
             if (bn) {
-                PEM_write_bio_ECPrivateKey (out, EVP_PKEY_get0_EC_KEY (pkey), nullptr, nullptr, 0, nullptr, nullptr);
+                PEM_write_bio_ECPrivateKey (out, ec_key, nullptr, nullptr, 0, nullptr, nullptr);
             } else {
-                PEM_write_bio_EC_PUBKEY (out, EVP_PKEY_get0_EC_KEY (pkey));     // same PEM_write_bio_PUBKEY
+                PEM_write_bio_EC_PUBKEY (out, ec_key);     // same PEM_write_bio_PUBKEY
             }
         }
     }

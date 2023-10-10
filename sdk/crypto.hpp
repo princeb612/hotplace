@@ -33,7 +33,6 @@
 #include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
 #include <hotplace/sdk/crypto/basic/time_otp.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
-#include <hotplace/sdk/crypto/cose/cose_composer.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_object_signing.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_web_key.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>

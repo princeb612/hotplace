@@ -62,8 +62,8 @@ public:
     cbor_array& operator << (cbor_map* object);
 
     virtual size_t size ();
-    cbor_object const* operator [] (size_t index);
-    std::list <cbor_object*> const& accessor ();
+    cbor_object* operator [] (size_t index);
+    std::list <cbor_object*>& accessor ();
 
     virtual int addref ();
     virtual int release ();
