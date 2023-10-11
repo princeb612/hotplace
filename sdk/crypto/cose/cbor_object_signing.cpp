@@ -79,7 +79,6 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             // subitem of handle
             cose_parts_t item;
             // composer
-            crypt_variant_t cvt;
             // create a binary using cbor_pushlisher and put it into subitem of handle
             cbor_data* cbor_sign_protected = nullptr;
 
@@ -87,19 +86,18 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
 
             // 1 protected (alg)
             // 1.1 compose
-            variant_set_int16(cvt.key, cose_header_t::cose_header_alg);
-            variant_set_int16(cvt.value, method);
-            item.protected_list.push_back(cvt);
-            composer.build_protected(&cbor_sign_protected, item.protected_list);
+            variant_t value;
+            variant_set_int16(value, method);
+            item.protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_sign_protected, item.protected_map);
             // 1.2 bin_protected
             variant_binary(cbor_sign_protected->data(), item.bin_protected);
 
             // 2 unprotected (kid)
             if (kid.size()) {
                 // 2.1 compose
-                variant_set_int16(cvt.key, cose_header_t::cose_header_kid);
-                variant_set_bstr_new(cvt.value, kid.c_str(), kid.size());
-                item.unprotected_list.push_back(cvt);
+                variant_set_bstr_new(value, kid.c_str(), kid.size());
+                item.unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
                 // bin_unprotected is not a member of the tobesigned
             }
 
@@ -142,7 +140,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
         ret = errorcode_t::verify;
         result = false;
 
-        composer.parse(handle, cbor_tag_t::cose_tag_sign, cbor_tag_t::cose_tag_sign1, input);
+        composer.parse(handle, cbor_tag_t::cose_tag_sign, input);
 
         const char* k = nullptr;
 
@@ -154,11 +152,10 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
             compose_tobesigned(tobesigned, handle->tag, handle->body.bin_protected, item.bin_protected, convert(""), handle->payload);
             int alg = 0;
             std::string kid;
-            composer.finditem(cose_header_t::cose_header_alg, alg, item.protected_map, handle->body.protected_map);
-            composer.finditem(cose_header_t::cose_header_kid, kid, item.unprotected_map, handle->body.unprotected_map);
+            composer.finditem(cose_key_t::cose_alg, alg, item.protected_map, handle->body.protected_map);
+            composer.finditem(cose_key_t::cose_kid, kid, item.unprotected_map, handle->body.unprotected_map);
             if (kid.size()) {
                 k = kid.c_str();
-                ;
             }
 
             check = verify(handle, key, k, (cose_alg_t)alg, tobesigned, item.bin_data);
@@ -185,7 +182,7 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
 
     signature.clear();
 
-    composer.build_unprotected(&cbor_body_unprotected, handle->body.unprotected_list);
+    composer.build_unprotected(&cbor_body_unprotected, handle->body.unprotected_map);
 
     root = new cbor_array();
     root->tag(true, (cbor_tag_t)tag);
@@ -197,7 +194,7 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
         cose_parts_t& item = *iter;
         cbor_map* cbor_sign_unprotected = nullptr;
 
-        composer.build_unprotected(&cbor_sign_unprotected, item.unprotected_list);
+        composer.build_unprotected(&cbor_sign_unprotected, item.unprotected_map);
 
         cbor_array* cbor_signature = new cbor_array();
         *cbor_signature << new cbor_data(item.bin_protected) << cbor_sign_unprotected << new cbor_data(item.bin_data);
@@ -281,6 +278,7 @@ return_t cbor_object_signing::compose_tobesigned(binary_t& tobesigned, uint8 tag
             *root << new cbor_data(sign_protected);
         }
         *root << new cbor_data(aad) << new cbor_data(payload);
+
         pub.publish(root, &tobesigned);
     }
     __finally2 {

@@ -123,13 +123,15 @@ class cbor_object_signing_encryption {
          * @brief   cbor_data for protected
          */
         return_t build_protected(cbor_data** object);
-        return_t build_protected(cbor_data** object, crypt_variantlist_t& input);
+        return_t build_protected(cbor_data** object, cose_variantmap_t& input);
+        return_t build_protected(cbor_data** object, cose_variantmap_t& input, cose_orderlist_t& order);
         return_t build_protected(cbor_data** object, cbor_map* input);
         /**
          * @brief   cbor_map for unprotected
          */
         return_t build_unprotected(cbor_map** object);
-        return_t build_unprotected(cbor_map** object, crypt_variantlist_t& input);
+        return_t build_unprotected(cbor_map** object, cose_variantmap_t& input);
+        return_t build_unprotected(cbor_map** object, cose_variantmap_t& input, cose_orderlist_t& order);
         return_t build_data(cbor_data** object, const char* payload);
         /**
          * @brief   cbor_data for payload
@@ -141,44 +143,47 @@ class cbor_object_signing_encryption {
         /**
          * @brief   parse
          * @param   cose_context_t* handle [in]
-         * @param   cbor_tag_t tag1 [in] cbor_tag_t::cose_tag_sign,  cbor_tag_t::cose_tag_encrypt
-         * @param   cbor_tag_t tag2 [in]
-         *                  cbor_tag_t::cose_tag_sign1    (if tag1 is cbor_tag_t::cose_tag_sign)
-         *                  cbor_tag_t::cose_tag_encrypt0 (if tag1 is cbor_tag_t::cose_tag_encrypt)
+         * @param   cbor_tag_t tag [in] cbor_tag_t::cose_tag_sign,  cbor_tag_t::cose_tag_encrypt
          * @param   binary_t const& input [in]
          * @return  error code (see error.hpp)
          */
-        return_t parse(cose_context_t* handle, cbor_tag_t tag1, cbor_tag_t tag2, binary_t const& input);
+        return_t parse(cose_context_t* handle, cbor_tag_t tag, binary_t const& input);
         /**
          * @brief   read bstr of protected (cbor_data) to list
          * @param   binary_t const& data [in]
-         * @param   crypt_cosemap_t& vtl [out]
+         * @param   cose_variantmap_t& vtl [out]
          * @return  error code (see error.hpp)
          */
-        return_t parse_binary(binary_t const& data, crypt_cosemap_t& vtl);
+        return_t parse_binary(binary_t const& data, cose_variantmap_t& vtl);
         /**
          * @brief   read unprotected (cbor_map) to list
          * @param   cbor_map* data [in]
-         * @param   crypt_cosemap_t& vtl [out]
+         * @param   cose_variantmap_t& vtl [out]
          * @return  error code (see error.hpp)
          */
-        return_t parse_map(cbor_map* data, crypt_cosemap_t& vtl);
+        return_t parse_map(cbor_map* data, cose_variantmap_t& vtl);
+        /**
+         * @brief   read unprotected (cbor_map) to context
+         * @param   cbor_map* data [in]
+         * @param   cose_parts_t& part [out]
+         */
+        return_t parse_unprotected(cbor_map* data, cose_parts_t& part);
         /**
          * @brief   find
          * @param   int key [in]
          * @param   int& value [out]
-         * @param   crypt_cosemap_t& from [in]
-         * @param   crypt_cosemap_t& body [in]
+         * @param   cose_variantmap_t& from [in]
+         * @param   cose_variantmap_t& body [in]
          */
-        return_t finditem(int key, int& value, crypt_cosemap_t& from, crypt_cosemap_t& body);
+        return_t finditem(int key, int& value, cose_variantmap_t& from, cose_variantmap_t& body);
         /**
          * @brief   find
          * @param   int key [in]
          * @param   std::string& value [out]
-         * @param   crypt_cosemap_t& from [in]
-         * @param   crypt_cosemap_t& body [in]
+         * @param   cose_variantmap_t& from [in]
+         * @param   cose_variantmap_t& body [in]
          */
-        return_t finditem(int key, std::string& value, crypt_cosemap_t& from, crypt_cosemap_t& body);
+        return_t finditem(int key, std::string& value, cose_variantmap_t& from, cose_variantmap_t& body);
     };
 };
 

@@ -8,14 +8,17 @@
  * RFC 4648 The Base16, Base32, and Base64 Data Encodings
    * sdk/io/basic/
    * test/encode/
+
  * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
  * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
    * sdk/crypto/basic/
    * test/crypto/
+
  * RFC 7049 Concise Binary Object Representation (CBOR)
  * RFC 8949 Concise Binary Object Representation (CBOR)
    * sdk/io/cbor/
    * test/cbor/
+
  * RFC 7515 JSON Web Signature (JWS)
  * RFC 7516 JSON Web Encryption (JWE)
  * RFC 7517 JSON Web Key (JWK)
@@ -39,22 +42,28 @@
  * RFC 9106 Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications
    * sdk/crypto/basic/
    * test/crypto/
+   * test/kdf/
+
  * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
  * RFC 4493 The AES-CMAC Algorithm
  * NIST CAVP (Cryptographic Algorithm Validation Program) ECDSA https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
    * sdk/crypto/basic/
    * test/hash/
+   * test/ecdsa/
+
  * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
  * RFC 1952 GZIP file format specification version 4.3
  * RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0
  * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
    * test/httpserver/
+
  * RFC 7638 3.1.  Example JWK Thumbprint Computation
    * test/jose/
+
  * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
  * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
-   * sdk/net/tls/x509.cpp
+   * sdk/net/tls/
 
 ## not applied
 
@@ -85,6 +94,14 @@
    * openssl-devel jansson zlib-devel unixodbc-devel (RHEL)
    * libssl-dev libjansson-dev zlib1g-dev unixodbc-dev (ubuntu)
    * valgrind (linux)
+ * make sure root directory hotplace (not hotplace-master nor etc ...)
+   * $ hotplace ./make.sh
+ * os support
+   * tested
+     * RHEL 7 and newer, (including CentOS, Rockey Linux)
+     * ubuntu 20.04 and newer
+     * mingw
+
  * important
    * openssl 1.1.1 or newer
      * RSA-OAEP-256
@@ -97,6 +114,7 @@
    * custom build required in RHEL (RHEL, centos, rocky) and older version
      * -fPIC required
      * algoritm test, random SEGV, ctr_update SEGV (older linux), ...
+
  * how to custom build
    * build custom openssl (example)
      * install perl
@@ -131,13 +149,6 @@
      * ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
      * make
      * make install
- * make sure root directory hotplace (not hotplace-master nor etc ...)
-   * $ hotplace ./make.sh
- * os support
-   * tested
-     * RHEL 7 and newer, (including CentOS, Rockey Linux)
-     * ubuntu 20.04 and newer
-     * mingw
 
 # link
 

@@ -262,6 +262,7 @@ void test_rfc8152_c_1_1() {
     // Signature Algorithm: ECDSA w/ SHA-256, Curve P-256
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -284,22 +285,18 @@ void test_rfc8152_c_1_1() {
     {
         cbor_data* cbor_data_signature_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_es256);  // -7
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_signature_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_es256);  // -7
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_signature_protected, protected_map);
         }
 
         cbor_map* cbor_data_signature_unprotected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_unprotected;
-            variant_set_int16(item.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item.value, "11", 2);
-            list_unprotected.push_back(item);
-            composer.build_unprotected(&cbor_data_signature_unprotected, list_unprotected);
+            cose_variantmap_t unprotected_map;
+            variant_set_binary_new(value, convert("11"));
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_signature_unprotected, unprotected_map);
         }
 
         cbor_data* cbor_data_signature_signature = nullptr;
@@ -325,6 +322,7 @@ void test_rfc8152_c_1_2() {
     // Signature Algorithm: ECDSA w/ SHA-512, Curve P-521
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -348,22 +346,18 @@ void test_rfc8152_c_1_2() {
 
         cbor_data* cbor_data_signature_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_es256);  // -7
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_signature_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_es256);  // -7
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_signature_protected, protected_map);
         }
 
         cbor_map* cbor_data_signature_unprotected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_unprotected;
-            variant_set_int16(item.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item.value, "11", 2);
-            list_unprotected.push_back(item);
-            composer.build_unprotected(&cbor_data_signature_unprotected, list_unprotected);
+            cose_variantmap_t unprotected_map;
+            variant_set_binary_new(value, convert("11"));
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_signature_unprotected, unprotected_map);
         }
 
         cbor_data* cbor_data_signature_signature = nullptr;
@@ -382,22 +376,18 @@ void test_rfc8152_c_1_2() {
 
         cbor_data* cbor_data_signature_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_es512);  // -36
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_signature_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_es512);  // -36
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_signature_protected, protected_map);
         }
 
         cbor_map* cbor_data_signature_unprotected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_unprotected;
-            variant_set_int16(item.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item.value, "bilbo.baggins@hobbiton.example", 30);
-            list_unprotected.push_back(item);
-            composer.build_unprotected(&cbor_data_signature_unprotected, list_unprotected);
+            cose_variantmap_t unprotected_map;
+            variant_set_binary_new(value, convert("bilbo.baggins@hobbiton.example"));
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_signature_unprotected, unprotected_map);
         }
 
         cbor_data* cbor_data_signature_signature = nullptr;
@@ -425,6 +415,7 @@ void test_rfc8152_c_1_3() {
     // The same parameters are used for both the signature and the counter signature.
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -444,26 +435,22 @@ void test_rfc8152_c_1_3() {
     cbor_map* header_unprotected = (cbor_map*)(*root)[1];
     {
         cbor_array* countersign = new cbor_array();
-        *header_unprotected << new cbor_pair(cose_header_t::cose_header_counter_sig, countersign);
+        *header_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, countersign);
 
         cbor_data* cbor_data_countersignature_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_es256);
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_countersignature_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_es256);
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_countersignature_protected, protected_map);
         }
 
         cbor_map* cbor_data_countersignature_unprotected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_unprotected;
-            variant_set_int16(item.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item.value, "11", 2);
-            list_unprotected.push_back(item);
-            composer.build_unprotected(&cbor_data_countersignature_unprotected, list_unprotected);
+            cose_variantmap_t unprotected_map;
+            variant_set_binary_new(value, convert("11"));
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_countersignature_unprotected, unprotected_map);
         }
 
         cbor_data* cbor_data_countersignature_signature = nullptr;
@@ -482,22 +469,18 @@ void test_rfc8152_c_1_3() {
     {
         cbor_data* cbor_data_signature_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_es256);  // -7
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_signature_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_es256);  // -7
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_signature_protected, protected_map);
         }
 
         cbor_map* cbor_data_signature_unprotected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_unprotected;
-            variant_set_int16(item.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item.value, "11", 2);
-            list_unprotected.push_back(item);
-            composer.build_unprotected(&cbor_data_signature_unprotected, list_unprotected);
+            cose_variantmap_t unprotected_map;
+            variant_set_binary_new(value, convert("11"));
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_signature_unprotected, unprotected_map);
         }
 
         cbor_data* cbor_data_signature_signature = nullptr;
@@ -524,6 +507,7 @@ void test_rfc8152_c_1_4() {
     // There is a criticality marker on the "reserved" header parameter
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -537,7 +521,7 @@ void test_rfc8152_c_1_4() {
         cbor_array* crit = new cbor_array();
         *crit << new cbor_data("reserved");  // [+ label]
 
-        *cbor_map_protected << new cbor_pair("reserved", new cbor_data(false)) << new cbor_pair(cose_header_t::cose_header_crit, crit);
+        *cbor_map_protected << new cbor_pair("reserved", new cbor_data(false)) << new cbor_pair(cose_key_t::cose_crit, crit);
 
         composer.build_protected(&cbor_data_protected, cbor_map_protected);
 
@@ -558,22 +542,18 @@ void test_rfc8152_c_1_4() {
     {
         cbor_data* cbor_data_signature_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_es256);  // -7
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_signature_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_es256);  // -7
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_signature_protected, protected_map);
         }
 
         cbor_map* cbor_data_signature_unprotected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_unprotected;
-            variant_set_int16(item.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item.value, "11", 2);
-            list_unprotected.push_back(item);
-            composer.build_unprotected(&cbor_data_signature_unprotected, list_unprotected);
+            cose_variantmap_t unprotected_map;
+            variant_set_binary_new(value, convert("11"));
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_signature_unprotected, unprotected_map);
         }
 
         cbor_data* cbor_data_signature_signature = nullptr;
@@ -596,6 +576,7 @@ void test_rfc8152_c_1_4() {
 void test_rfc8152_c_2_1() {
     _test_case.begin("RFC 8152 C.2");
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -604,22 +585,18 @@ void test_rfc8152_c_2_1() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_es256);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_es256);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_map* cbor_data_unprotected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_unprotected;
-        variant_set_int16(item.key, cose_header_t::cose_header_kid);
-        variant_set_bstr_new(item.value, "11", 2);
-        list_unprotected.push_back(item);
-        composer.build_unprotected(&cbor_data_unprotected, list_unprotected);
+        cose_variantmap_t unprotected_map;
+        variant_set_binary_new(value, convert("11"));
+        unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+        composer.build_unprotected(&cbor_data_unprotected, unprotected_map);
     }
 
     cbor_data* cbor_data_payload = nullptr;
@@ -639,6 +616,7 @@ void test_rfc8152_c_2_1() {
 void test_rfc8152_c_3_1() {
     _test_case.begin("RFC 8152 C.3");
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -647,12 +625,10 @@ void test_rfc8152_c_3_1() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_aes_128_gcm);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_aes_128_gcm);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_data* cbor_data_ciphertext = nullptr;
@@ -664,7 +640,7 @@ void test_rfc8152_c_3_1() {
           << new cbor_array();     // recipients
 
     cbor_map* header_unprotected = (cbor_map*)(*root)[1];
-    { *header_unprotected << new cbor_pair(cose_header_t::cose_header_iv, new cbor_data(base16_decode("c9cf4df2fe6c632bf7886413"))); }
+    { *header_unprotected << new cbor_pair(cose_key_t::cose_iv, new cbor_data(base16_decode("c9cf4df2fe6c632bf7886413"))); }
 
     cbor_array* recipients = (cbor_array*)(*root)[3];
 
@@ -672,12 +648,10 @@ void test_rfc8152_c_3_1() {
     {
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_ecdh_es_hkdf_256);
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_recipient_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_ecdh_es_hkdf_256);
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
 
         cbor_map* cbor_data_recipient_unprotected = new cbor_map();
@@ -686,13 +660,13 @@ void test_rfc8152_c_3_1() {
             constexpr char constexpr_kid[] = "meriadoc.brandybuck@buckland.example";
 
             cbor_map* ephemeral = new cbor_map();
-            *ephemeral << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))    // kty
-                       << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_ec_curve_t::cose_ec_p256))  // crv
-                       << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(base16_decode(constexpr_x)))       // x
-                       << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(true));                            // y
+            *ephemeral << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))    // kty(1)
+                       << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_ec_curve_t::cose_ec_p256))  // crv(-1)
+                       << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(base16_decode(constexpr_x)))       // x(-2)
+                       << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(true));                            // y(-3)
 
-            *cbor_data_recipient_unprotected << new cbor_pair(cose_alg_param_t::cose_ephemeral_key, ephemeral)                         // epk
-                                             << new cbor_pair(cose_header_t::cose_header_kid, new cbor_data(convert(constexpr_kid)));  // kid
+            *cbor_data_recipient_unprotected << new cbor_pair(cose_key_t::cose_ephemeral_key, ephemeral)                     // epk(-1)
+                                             << new cbor_pair(cose_key_t::cose_kid, new cbor_data(convert(constexpr_kid)));  // kid(4)
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
@@ -712,6 +686,7 @@ void test_rfc8152_c_3_1() {
 void test_rfc8152_c_3_2() {
     _test_case.begin("RFC 8152 C.3");
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -720,24 +695,18 @@ void test_rfc8152_c_3_2() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_aes_ccm_16_64_128);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_aes_ccm_16_64_128);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_map* cbor_data_unprotected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_iv);
-        binary_t b16;
-        b16 = base16_decode("89f52f65a1c580933b5261a76c");
-        variant_set_bstr_new(item.value, &b16[0], b16.size());
-        list_protected.push_back(item);
-        composer.build_unprotected(&cbor_data_unprotected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_binary_new(value, base16_decode("89f52f65a1c580933b5261a76c"));
+        protected_map.insert(std::make_pair(cose_key_t::cose_iv, value));
+        composer.build_unprotected(&cbor_data_unprotected, protected_map);
     }
 
     cbor_data* cbor_data_ciphertext = nullptr;
@@ -754,25 +723,19 @@ void test_rfc8152_c_3_2() {
         cbor_array* recipient = new cbor_array();
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_direct_hkdf_sha_256);
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_recipient_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_direct_hkdf_sha_256);
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
         cbor_map* cbor_data_recipient_unprotected = nullptr;
         {
-            crypt_variant_t item1;
-            crypt_variant_t item2;
-            crypt_variantlist_t list_unprotected;
-            variant_set_int16(item1.key, cose_alg_param_t::cose_salt);
-            variant_set_bstr_new(item1.value, "aabbccddeeffgghh", 16);
-            list_unprotected.push_back(item1);
-            variant_set_int16(item2.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item2.value, "our-secret", 10);
-            list_unprotected.push_back(item2);
-            composer.build_unprotected(&cbor_data_recipient_unprotected, list_unprotected);
+            cose_variantmap_t unprotected_map;
+            variant_set_binary_new(value, convert("aabbccddeeffgghh"));
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_salt, value));
+            variant_set_binary_new(value, convert("our-secret"));
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_recipient_unprotected, unprotected_map);
         }
 
         *recipient << cbor_data_recipient_protected      // protected
@@ -790,6 +753,7 @@ void test_rfc8152_c_3_2() {
 void test_rfc8152_c_3_3() {
     _test_case.begin("RFC 8152 C.3");
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -798,12 +762,10 @@ void test_rfc8152_c_3_3() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_aes_128_gcm);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_aes_128_gcm);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     constexpr char constexpr_ciphertext[] = "7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0";
@@ -818,27 +780,23 @@ void test_rfc8152_c_3_3() {
     cbor_map* cbor_data_unprotected = (cbor_map*)(*root)[1];
     {
         cbor_array* countersign = new cbor_array();
-        *cbor_data_unprotected << new cbor_pair(cose_header_t::cose_header_iv, new cbor_data(base16_decode("c9cf4df2fe6c632bf7886413")));
-        *cbor_data_unprotected << new cbor_pair(cose_header_t::cose_header_counter_sig, countersign);
+        *cbor_data_unprotected << new cbor_pair(cose_key_t::cose_iv, new cbor_data(base16_decode("c9cf4df2fe6c632bf7886413")));
+        *cbor_data_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, countersign);
 
         cbor_data* cbor_data_countersignature_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_es512);
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_countersignature_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_es512);
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_countersignature_protected, protected_map);
         }
 
         cbor_map* cbor_data_countersignature_unprotected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_unprotected;
-            variant_set_int16(item.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item.value, "bilbo.baggins@hobbiton.example", 30);
-            list_unprotected.push_back(item);
-            composer.build_unprotected(&cbor_data_countersignature_unprotected, list_unprotected);
+            cose_variantmap_t unprotected_map;
+            variant_set_binary_new(value, convert("bilbo.baggins@hobbiton.example"));
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_countersignature_unprotected, unprotected_map);
         }
 
         constexpr char constexpr_signature[] =
@@ -858,12 +816,10 @@ void test_rfc8152_c_3_3() {
 
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_ecdh_es_hkdf_256);
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_recipient_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_ecdh_es_hkdf_256);
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
@@ -883,8 +839,8 @@ void test_rfc8152_c_3_3() {
                        << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(base16_decode(constexpr_x)))       // x
                        << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(true));                            // y
 
-            *cbor_data_recipient_unprotected << new cbor_pair(cose_alg_param_t::cose_ephemeral_key, ephemeral)                         // epk
-                                             << new cbor_pair(cose_header_t::cose_header_kid, new cbor_data(convert(constexpr_kid)));  // kid
+            *cbor_data_recipient_unprotected << new cbor_pair(cose_key_t::cose_ephemeral_key, ephemeral)                     // epk
+                                             << new cbor_pair(cose_key_t::cose_kid, new cbor_data(convert(constexpr_kid)));  // kid
         }
 
         *recipients << recipient;
@@ -899,6 +855,7 @@ void test_rfc8152_c_3_4() {
     _test_case.begin("RFC 8152 C.3");
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -907,24 +864,18 @@ void test_rfc8152_c_3_4() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_aes_128_gcm);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_aes_128_gcm);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_map* cbor_data_unprotected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_iv);
-        binary_t b16;
-        b16 = base16_decode("02d1f7e6f26c43d4868d87ce");
-        variant_set_bstr_new(item.value, &b16[0], b16.size());
-        list_protected.push_back(item);
-        composer.build_unprotected(&cbor_data_unprotected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_binary_new(value, base16_decode("02d1f7e6f26c43d4868d87ce"));
+        protected_map.insert(std::make_pair(cose_key_t::cose_iv, value));
+        composer.build_unprotected(&cbor_data_unprotected, protected_map);
     }
 
     constexpr char constexpr_ciphertext[] = "64f84d913ba60a76070a9a48f26e97e863e28529d8f5335e5f0165eee976b4a5f6c6f09d";
@@ -942,32 +893,26 @@ void test_rfc8152_c_3_4() {
 
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_ecdh_ss_a128kw);
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_recipient_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_ecdh_ss_a128kw);
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
 
         cbor_map* cbor_data_recipient_unprotected = nullptr;
         {
-            crypt_variant_t item1;
-            crypt_variant_t item2;
-            crypt_variant_t item3;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item1.key, cose_alg_param_t::cose_static_key_id);
-            variant_set_bstr_new(item1.value, "peregrin.took@tuckborough.example", 33);
-            list_protected.push_back(item1);
-            variant_set_int16(item2.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item2.value, "meriadoc.brandybuck@buckland.example", 36);
-            list_protected.push_back(item2);
-            variant_set_int16(item3.key, cose_alg_param_t::cose_partyu_nonce);
-            binary_t b16;
-            b16 = base16_decode("0101");
-            variant_set_bstr_new(item3.value, &b16[0], b16.size());
-            list_protected.push_back(item3);
-            composer.build_unprotected(&cbor_data_recipient_unprotected, list_protected);
+            cose_variantmap_t protected_map;
+            cose_orderlist_t order;
+            order.push_back(cose_key_t::cose_static_key_id);
+            order.push_back(cose_key_t::cose_kid);
+            order.push_back(cose_key_t::cose_partyu_nonce);
+            variant_set_binary_new(value, convert("peregrin.took@tuckborough.example"));
+            protected_map.insert(std::make_pair(cose_key_t::cose_static_key_id, value));
+            variant_set_binary_new(value, convert("meriadoc.brandybuck@buckland.example"));
+            protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            variant_set_binary_new(value, base16_decode("0101"));
+            protected_map.insert(std::make_pair(cose_key_t::cose_partyu_nonce, value));
+            composer.build_unprotected(&cbor_data_recipient_unprotected, protected_map, order);
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
@@ -989,6 +934,7 @@ void test_rfc8152_c_4_1() {
     _test_case.begin("RFC 8152 C.4");
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -997,24 +943,18 @@ void test_rfc8152_c_4_1() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_aes_ccm_16_64_128);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_aes_ccm_16_64_128);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_map* cbor_data_unprotected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_iv);
-        binary_t b16;
-        b16 = base16_decode("89f52f65a1c580933b5261a78c");
-        variant_set_bstr_new(item.value, &b16[0], b16.size());
-        list_protected.push_back(item);
-        composer.build_unprotected(&cbor_data_unprotected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_binary_new(value, base16_decode("89f52f65a1c580933b5261a78c"));
+        protected_map.insert(std::make_pair(cose_key_t::cose_iv, value));
+        composer.build_unprotected(&cbor_data_unprotected, protected_map);
     }
 
     constexpr char constexpr_ciphertext[] = "5974e1b99a3a4cc09a659aa2e9e7fff161d38ce71cb45ce460ffb569";
@@ -1034,6 +974,7 @@ void test_rfc8152_c_4_2() {
     _test_case.begin("RFC 8152 C.4");
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -1042,24 +983,18 @@ void test_rfc8152_c_4_2() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_aes_ccm_16_64_128);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_aes_ccm_16_64_128);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_map* cbor_data_unprotected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_partial_iv);
-        binary_t b16;
-        b16 = base16_decode("61a7");
-        variant_set_bstr_new(item.value, &b16[0], b16.size());
-        list_protected.push_back(item);
-        composer.build_unprotected(&cbor_data_unprotected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_binary_new(value, base16_decode("61a7"));
+        protected_map.insert(std::make_pair(cose_key_t::cose_partial_iv, value));
+        composer.build_unprotected(&cbor_data_unprotected, protected_map);
     }
 
     constexpr char constexpr_ciphertext[] = "252a8911d465c125b6764739700f0141ed09192de139e053bd09abca";
@@ -1079,6 +1014,7 @@ void test_rfc8152_c_5_1() {
     _test_case.begin("RFC 8152 C.5");
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -1087,12 +1023,10 @@ void test_rfc8152_c_5_1() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_aes_cbc_mac_256_64);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_aes_cbc_mac_256_64);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_map* cbor_data_unprotected = nullptr;
@@ -1119,16 +1053,12 @@ void test_rfc8152_c_5_1() {
 
         cbor_map* cbor_data_recipient_unprotected = nullptr;
         {
-            crypt_variant_t item1;
-            crypt_variant_t item2;
-            crypt_variantlist_t list_unprotected;
-            variant_set_int16(item1.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item1.value, cose_alg_t::cose_direct);
-            list_unprotected.push_back(item1);
-            variant_set_int16(item2.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item2.value, "our-secret", 10);
-            list_unprotected.push_back(item2);
-            composer.build_unprotected(&cbor_data_recipient_unprotected, list_unprotected);
+            cose_variantmap_t unprotected_map;
+            variant_set_int16(value, cose_alg_t::cose_direct);
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            variant_set_binary_new(value, convert("our-secret"));
+            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_recipient_unprotected, unprotected_map);
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
@@ -1150,6 +1080,7 @@ void test_rfc8152_c_5_2() {
     _test_case.begin("RFC 8152 C.5");
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -1158,12 +1089,10 @@ void test_rfc8152_c_5_2() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_hs256);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_hs256);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_map* cbor_data_unprotected = nullptr;
@@ -1187,33 +1116,28 @@ void test_rfc8152_c_5_2() {
 
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_ecdh_ss_hkdf_256);
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_recipient_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_ecdh_ss_hkdf_256);
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
 
         cbor_map* cbor_data_recipient_unprotected = nullptr;
         {
-            crypt_variant_t item1;
-            crypt_variant_t item2;
-            crypt_variant_t item3;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item1.key, cose_alg_param_t::cose_static_key_id);
-            variant_set_bstr_new(item1.value, "peregrin.took@tuckborough.example", 33);
-            list_protected.push_back(item1);
-            variant_set_int16(item2.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item2.value, "meriadoc.brandybuck@buckland.example", 36);
-            list_protected.push_back(item2);
-            variant_set_int16(item3.key, cose_alg_param_t::cose_partyu_nonce);
-            binary_t b16;
-            b16 = base16_decode(
-                "4d8553e7e74f3c6a3a9dd3ef286a8195cbf8a23d19558ccfec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b017e7f2a9e5ce4db5");
-            variant_set_bstr_new(item3.value, &b16[0], b16.size());
-            list_protected.push_back(item3);
-            composer.build_unprotected(&cbor_data_recipient_unprotected, list_protected);
+            cose_variantmap_t protected_map;
+            cose_orderlist_t order;
+            order.push_back(cose_key_t::cose_static_key_id);
+            order.push_back(cose_key_t::cose_kid);
+            order.push_back(cose_key_t::cose_partyu_nonce);
+            variant_set_binary_new(value, convert("peregrin.took@tuckborough.example"));
+            protected_map.insert(std::make_pair(cose_key_t::cose_static_key_id, value));
+            variant_set_binary_new(value, convert("meriadoc.brandybuck@buckland.example"));
+            protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            variant_set_binary_new(
+                value, base16_decode(
+                           "4d8553e7e74f3c6a3a9dd3ef286a8195cbf8a23d19558ccfec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b017e7f2a9e5ce4db5"));
+            protected_map.insert(std::make_pair(cose_key_t::cose_partyu_nonce, value));
+            composer.build_unprotected(&cbor_data_recipient_unprotected, protected_map, order);
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
@@ -1235,6 +1159,7 @@ void test_rfc8152_c_5_3() {
     _test_case.begin("RFC 8152 C.5");
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -1243,12 +1168,10 @@ void test_rfc8152_c_5_3() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_aes_cbc_mac_128_64);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_aes_cbc_mac_128_64);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_map* cbor_data_unprotected = nullptr;
@@ -1275,16 +1198,12 @@ void test_rfc8152_c_5_3() {
 
         cbor_map* cbor_data_recipient_unprotected = nullptr;
         {
-            crypt_variant_t item1;
-            crypt_variant_t item2;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item1.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item1.value, cose_alg_t::cose_a256kw);
-            list_protected.push_back(item1);
-            variant_set_int16(item2.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item2.value, "018c0ae5-4d9b-471b-bfd6-eef314bc7037", 36);
-            list_protected.push_back(item2);
-            composer.build_unprotected(&cbor_data_recipient_unprotected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_a256kw);
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            variant_set_binary_new(value, convert("018c0ae5-4d9b-471b-bfd6-eef314bc7037"));
+            protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_recipient_unprotected, protected_map);
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
@@ -1306,6 +1225,7 @@ void test_rfc8152_c_5_4() {
     _test_case.begin("RFC 8152 C.5");
 
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -1314,12 +1234,10 @@ void test_rfc8152_c_5_4() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_hs256);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_hs256);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_map* cbor_data_unprotected = nullptr;
@@ -1343,12 +1261,10 @@ void test_rfc8152_c_5_4() {
 
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
-            crypt_variant_t item;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item.value, cose_alg_t::cose_ecdh_es_a128kw);
-            list_protected.push_back(item);
-            composer.build_protected(&cbor_data_recipient_protected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_ecdh_es_a128kw);
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
 
         cbor_map* cbor_data_recipient_unprotected = new cbor_map();
@@ -1362,8 +1278,8 @@ void test_rfc8152_c_5_4() {
                        << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(base16_decode(constexpr_x)))       // x
                        << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(true));                            // y
 
-            *cbor_data_recipient_unprotected << new cbor_pair(cose_alg_param_t::cose_ephemeral_key, ephemeral)                         // epk
-                                             << new cbor_pair(cose_header_t::cose_header_kid, new cbor_data(convert(constexpr_kid)));  // kid
+            *cbor_data_recipient_unprotected << new cbor_pair(cose_key_t::cose_ephemeral_key, ephemeral)                     // epk
+                                             << new cbor_pair(cose_key_t::cose_kid, new cbor_data(convert(constexpr_kid)));  // kid
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
@@ -1383,16 +1299,12 @@ void test_rfc8152_c_5_4() {
 
         cbor_map* cbor_data_recipient_unprotected = nullptr;
         {
-            crypt_variant_t item1;
-            crypt_variant_t item2;
-            crypt_variantlist_t list_protected;
-            variant_set_int16(item1.key, cose_header_t::cose_header_alg);
-            variant_set_int16(item1.value, cose_alg_t::cose_a256kw);
-            list_protected.push_back(item1);
-            variant_set_int16(item2.key, cose_header_t::cose_header_kid);
-            variant_set_bstr_new(item2.value, "018c0ae5-4d9b-471b-bfd6-eef314bc7037", 36);
-            list_protected.push_back(item2);
-            composer.build_unprotected(&cbor_data_recipient_unprotected, list_protected);
+            cose_variantmap_t protected_map;
+            variant_set_int16(value, cose_alg_t::cose_a256kw);
+            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+            variant_set_binary_new(value, convert("018c0ae5-4d9b-471b-bfd6-eef314bc7037"));
+            protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
+            composer.build_unprotected(&cbor_data_recipient_unprotected, protected_map);
         }
 
         cbor_data* cbor_data_recipient_ciphertext = nullptr;
@@ -1414,6 +1326,7 @@ void test_rfc8152_c_6_1() {
     _test_case.begin("RFC 8152 C.6");
     // C.6.1.  Shared Secret Direct MAC
     cbor_publisher publisher;
+    variant_t value;
 
     cbor_object_signing_encryption::composer composer;
 
@@ -1422,12 +1335,10 @@ void test_rfc8152_c_6_1() {
 
     cbor_data* cbor_data_protected = nullptr;
     {
-        crypt_variant_t item;
-        crypt_variantlist_t list_protected;
-        variant_set_int16(item.key, cose_header_t::cose_header_alg);
-        variant_set_int16(item.value, cose_alg_t::cose_aes_cbc_mac_256_64);
-        list_protected.push_back(item);
-        composer.build_protected(&cbor_data_protected, list_protected);
+        cose_variantmap_t protected_map;
+        variant_set_int16(value, cose_alg_t::cose_aes_cbc_mac_256_64);
+        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
+        composer.build_protected(&cbor_data_protected, protected_map);
     }
 
     cbor_data* cbor_data_payload = nullptr;

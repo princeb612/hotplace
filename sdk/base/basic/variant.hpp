@@ -431,37 +431,36 @@ typedef struct __variant_t {
 #define variant_set_strn_new(vt, value, n)   \
     {                                        \
         vt.type = TYPE_STRING;               \
+        vt.size = 0;                         \
         char* p = (char*)malloc((n) + 1);    \
         if (p) {                             \
             strncpy(p, value, (n));          \
             *(p + (n)) = 0;                  \
         };                                   \
         vt.data.str = p;                     \
-        vt.size = 0;                         \
         vt.flag = variant_flag_t::flag_free; \
     }
 // duplicate
 #define variant_set_bstr_new(vt, value, n)   \
     {                                        \
         vt.type = TYPE_BINARY;               \
+        vt.size = 0;                         \
         void* p = nullptr;                   \
         if (n) {                             \
             p = malloc(n);                   \
             if (p) {                         \
                 memcpy(p, value, (n));       \
+                vt.size = (n);               \
             };                               \
-            vt.data.bstr = (byte_t*)p;       \
-            vt.size = (n);                   \
-        } else {                             \
-            vt.data.bstr = (byte_t*)nullptr; \
-            vt.size = 0;                     \
         };                                   \
+        vt.data.bstr = (byte_t*)p;           \
         vt.flag = variant_flag_t::flag_free; \
     }
 // strndup
 #define variant_set_nstr_new(vt, value, n)   \
     {                                        \
         vt.type = TYPE_NSTRING;              \
+        vt.size = (n);                       \
         char* p = nullptr;                   \
         if (n) {                             \
             p = (char*)malloc((n) + 1);      \
@@ -471,8 +470,23 @@ typedef struct __variant_t {
             };                               \
         };                                   \
         vt.data.str = p;                     \
-        vt.size = (n);                       \
         vt.flag = variant_flag_t::flag_free; \
+    }
+#define variant_set_binary_new(vt, bin)         \
+    {                                           \
+        vt.type = TYPE_BINARY;                  \
+        vt.size = bin.size();                   \
+        void* p = nullptr;                      \
+        if (bin.size()) {                       \
+            p = malloc(bin.size());             \
+            if (p) {                            \
+                memcpy(p, &bin[0], bin.size()); \
+            };                                  \
+        } else {                                \
+            vt.size = 0;                        \
+        };                                      \
+        vt.data.bstr = (byte_t*)p;              \
+        vt.flag = variant_flag_t::flag_free;    \
     }
 
 return_t variant_copy(variant_t* target, const variant_t* source);

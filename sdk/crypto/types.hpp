@@ -396,31 +396,55 @@ enum jws_t {
     jws_eddsa = CRYPT_SIG_VALUE(jws_type_t::jws_type_eddsa, 13),         // 0005000d
 };
 
-enum cose_header_t {
+enum cose_key_t {
     // RFC 8152 Table 2: Common Header Parameters
     // RFC 8152 Table 3: Common Header Parameters
-    cose_header_alg = 1,           // int / tstr
-    cose_header_crit = 2,          // [+ label]
-    cose_header_content_type = 3,  // tstr / uint
-    cose_header_kid = 4,           // bstr
-    cose_header_iv = 5,            // bstr
-    cose_header_partial_iv = 6,    // bstr
+    cose_alg = 1,           // int / tstr
+    cose_crit = 2,          // [+ label]
+    cose_content_type = 3,  // tstr / uint
+    cose_kid = 4,           // bstr
+    cose_iv = 5,            // bstr
+    cose_partial_iv = 6,    // bstr
 
-    cose_header_counter_sig = 7,  // COSE_Signature / [+ COSE_Signature]
+    cose_counter_sig = 7,  // COSE_Signature / [+ COSE_Signature]
 
     // RFC 8152 Table 27: Header Parameter for CounterSignature0
-    cose_header_counter_sig0 = 9,
+    cose_counter_sig0 = 9,
 
     // RFC 9338 Table 1: Common Header Parameters
     // RFC 9338 Table 2: New Common Header Parameters
-    cose_header_counter_sig_v2 = 11,
-    cose_header_counter_sig0_v2 = 12,
+    cose_counter_sig_v2 = 11,
+    cose_counter_sig0_v2 = 12,
 
     // RFC 9360 Table 1: X.509 COSE Header Parameters
-    cose_header_x5bag = 32,
-    cose_header_x5chain = 33,
-    cose_header_x5t = 34,
-    cose_header_x5u = 35,
+    cose_x5bag = 32,
+    cose_x5chain = 33,
+    cose_x5t = 34,
+    cose_x5u = 35,
+
+    // RFC 8152 Table 19: ECDH Algorithm Parameters
+    // RFC 9053 Table 15: ECDH Algorithm Parameters
+    cose_ephemeral_key = -1,
+    cose_static_key = -2,
+    cose_static_key_id = -3,
+
+    // RFC 8152 Table 13: HKDF Algorithm Parameters
+    // RFC 9053 Table 9: HKDF Algorithm Parameters
+    cose_salt = -20,
+
+    // RFC 8152 Table 14: Context Algorithm Parameters
+    // RFC 9053 Table 10: Context Algorithm Parameters
+    cose_partyu_id = -21,
+    cose_partyu_nonce = -22,
+    cose_partyu_other = -23,
+    cose_partyv_id = -24,
+    cose_partyv_nonce = -25,
+    cose_partyv_other = -26,
+
+    // RFC 9360 Table 2: Static ECDH Algorithm Values
+    cose_x5t_sender = -27,
+    cose_x5u_sender = -28,
+    cose_x5chain_sender = -29,
 };
 enum cose_key_lable_t {
     // RFC 8152 Table 3: Key Map Labels
@@ -463,31 +487,6 @@ enum cose_key_lable_t {
     cose_rsa_ri = -10,
     cose_rsa_di = -11,
     cose_rsa_ti = -12,
-};
-enum cose_alg_param_t {
-    // RFC 8152 Table 19: ECDH Algorithm Parameters
-    // RFC 9053 Table 15: ECDH Algorithm Parameters
-    cose_ephemeral_key = -1,
-    cose_static_key = -2,
-    cose_static_key_id = -3,
-
-    // RFC 8152 Table 13: HKDF Algorithm Parameters
-    // RFC 9053 Table 9: HKDF Algorithm Parameters
-    cose_salt = -20,
-
-    // RFC 8152 Table 14: Context Algorithm Parameters
-    // RFC 9053 Table 10: Context Algorithm Parameters
-    cose_partyu_id = -21,
-    cose_partyu_nonce = -22,
-    cose_partyu_other = -23,
-    cose_partyv_id = -24,
-    cose_partyv_nonce = -25,
-    cose_partyv_other = -26,
-
-    // RFC 9360 Table 2: Static ECDH Algorithm Values
-    cose_x5t_sender = -27,
-    cose_x5u_sender = -28,
-    cose_x5chain_sender = -29,
 };
 
 enum cose_kty_t {
@@ -711,12 +710,6 @@ typedef struct _hash_context_t hash_context_t;
 struct _otp_context_t {};
 typedef struct _otp_context_t otp_context_t;
 
-typedef std::map<std::string, variant_t> crypt_cosemap_t;
-typedef struct _crypt_variant_t {
-    variant_t key;
-    variant_t value;
-} crypt_variant_t;
-typedef std::list<crypt_variant_t> crypt_variantlist_t;
 }  // namespace crypto
 }  // namespace hotplace
 
