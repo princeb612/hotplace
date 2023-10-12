@@ -117,8 +117,8 @@ class crypto_keychain {
      *    EVP_PKEY* pkey1 = nullptr, pkey2 = nullptr;
      *    keygen.add_rsa(&crypto_key, "kid.1", 2048);
      *    keygen.add_rsa(&crypto_key, "kid.2", 2048);
-     *    pkey1 = crypto_key.find_first_of(crypto_key_t::kty_rsa, kid);
-     *    pkey2 = crypto_key.get_by_name(crypto_key_t::kty_rsa, "kid.2");
+     *    pkey1 = crypto_key.find_first_of(crypto_kty_t::kty_rsa, kid);
+     *    pkey2 = crypto_key.get_by_name(crypto_kty_t::kty_rsa, "kid.2");
      */
     return_t add_rsa(crypto_key* cryptokey, const char* kid, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /**
@@ -261,8 +261,8 @@ class crypto_keychain {
      *      keyset.add_ec (&keys, "alice", NID_secp384r1);
      *      keyset.add_ec (&keys, "bob", NID_secp384r1);
      *
-     *      EVP_PKEY* alicePrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_key_t::kty_ec, "alice");
-     *      EVP_PKEY* bobPrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_key_t::kty_ec, "bob");
+     *      EVP_PKEY* alicePrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_kty_t::kty_ec, "alice");
+     *      EVP_PKEY* bobPrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_kty_t::kty_ec, "bob");
      *
      *      EVP_PKEY* alicePublicKey = (EVP_PKEY*) get_peer_key (alicePrivateKey);
      *      EVP_PKEY* bobPublicKey = (EVP_PKEY*) get_peer_key (bobPrivateKey);

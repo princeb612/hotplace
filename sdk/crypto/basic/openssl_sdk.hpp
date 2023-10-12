@@ -179,15 +179,15 @@ return_t is_private_key(EVP_PKEY* pkey, bool& result);
 
 /**
  * @brief kindof
- * @param crypto_key_t type [in]
+ * @param crypto_kty_t type [in]
  */
-bool kindof_ecc(crypto_key_t type);
+bool kindof_ecc(crypto_kty_t type);
 /**
  * @brief kty from key
- * @param crypto_key_t type
+ * @param crypto_kty_t type
  * @return oct, RSA, EC, OKP
  */
-const char* nameof_key_type(crypto_key_t type);
+const char* nameof_key_type(crypto_kty_t type);
 
 return_t debug_trace_openssl(stream_t* stream);
 

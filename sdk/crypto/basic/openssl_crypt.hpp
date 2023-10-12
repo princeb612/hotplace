@@ -92,6 +92,16 @@ class openssl_crypt : public crypt_t {
     virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, unsigned size_key,
                           const unsigned char* iv, unsigned size_iv);
     /**
+     * @brief create a context handle (symmetric)
+     * @param crypt_context_t** handle [out]
+     * @param crypt_algorithm_t algorithm [in]
+     * @param crypt_mode_t mode [in]
+     * @param binary_t const& key [in]
+     * @param binary_t const& iv [in]
+     * @return error code (see error.hpp)
+     */
+    virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv);
+    /**
      * @brief destroy a context handle
      * @param crypt_context_t* handle [in]
      * @return error code (see error.hpp)

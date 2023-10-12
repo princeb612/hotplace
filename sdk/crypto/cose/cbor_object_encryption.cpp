@@ -12,6 +12,7 @@
 #include <hotplace/sdk/crypto/cose/cbor_object_encryption.hpp>
 #include <hotplace/sdk/io/cbor/cbor_array.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
 #include <hotplace/sdk/io/cbor/cbor_map.hpp>
 #include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
 #include <hotplace/sdk/io/cbor/cbor_reader.hpp>
@@ -39,38 +40,105 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
     return ret;
 }
 
-return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
+return_t compose_enc_structure(binary_t& enc_structure, uint8 tag, binary_t const& body_protected, binary_t const& aad) {
     return_t ret = errorcode_t::success;
+    cbor_encode encoder;
+    cbor_publisher pub;
+    cbor_array* root = nullptr;
 
+    __try2 {
+        enc_structure.clear();
+
+        root = new cbor_array();
+
+        if (cbor_tag_t::cose_tag_encrypt == tag) {
+            *root << new cbor_data("Encrypt");
+        } else if (cbor_tag_t::cose_tag_encrypt0 == tag) {
+            *root << new cbor_data("Encrypt0");
+        } else {
+            ret = errorcode_t::request;
+            __leave2;
+        }
+
+        *root << new cbor_data(body_protected);
+        *root << new cbor_data(aad);
+
+        pub.publish(root, &enc_structure);
+    }
+    __finally2 {
+        if (root) {
+            root->release();
+        }
+    }
+    return ret;
+}
+
+return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
+    return_t ret = errorcode_t::not_supported;
+#if 0  // studying... just sketch
+    return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
-    cbor_object_signing cose_sign;
     std::set<bool> results;
     cbor_object_signing_encryption::composer composer;
+    EVP_PKEY* pkey = nullptr;
 
     __try2 {
         ret = errorcode_t::verify;
         result = false;
 
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         composer.parse(handle, cbor_tag_t::cose_tag_encrypt, input);
 
         const char* k = nullptr;
 
-        binary_t enc_structure;
+        binary_t aad;
         size_t size_subitems = handle->subitems.size();
         std::list<cose_parts_t>::iterator iter;
         for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
             cose_parts_t& item = *iter;
-            // compose_enc_structure (enc_structure, handle->tag, item.bin_protected, convert (""));
             int alg = 0;
             std::string kid;
-            composer.finditem(cose_key_t::cose_alg, alg, item.protected_map, handle->body.protected_map);
-            composer.finditem(cose_key_t::cose_kid, kid, item.unprotected_map, handle->body.unprotected_map);
+            return_t check = errorcode_t::success;
+            composer.finditem(cose_key_t::cose_alg, alg, item.protected_map);
+            composer.finditem(cose_key_t::cose_kid, kid, item.unprotected_map);
             if (kid.size()) {
                 k = kid.c_str();
             }
 
-            // check = decrypt (handle, key, k, (cose_alg_t) alg, enc_structure, item.bin_data);
-            // results.insert((errorcode_t::success == check) ? true : false);
+            pkey = key->find(kid.c_str(), crypto_kty_t::kty_ec);
+            if (cose_ecdh_es_hkdf_256 == alg) {
+                binary_t secret;
+                binary_t salt;
+                dh_key_agreement(pkey, item.epk, secret);
+                binary_t derived;
+                salt.resize(256 >> 3);
+                // kdf_hkdf(derived, 256 >> 3, secret, salt, convert(""), hash_algorithm_t::sha2_256);
+                // compose_enc_structure(aad, handle->tag, item.bin_protected, convert(""));
+                binary_t iv;
+                // int body_alg = 0;
+                // check = composer.finditem(cose_key_t::cose_alg, body_alg, handle->body.protected_map);
+
+                binary_t decrypted;
+                openssl_crypt crypt;
+                crypt_context_t* crypt_handle = nullptr;
+                // crypt.open(&crypt_handle, crypt_algorithm_t::aes256, crypt_mode_t::gcm, derived, iv);
+                // check = crypt.decrypt2 (crypt_handle, handle->payload, decrypted, aad, tag);
+                // crypt.close(crypt_handle);
+
+                // results.insert((errorcode_t::success == check) ? true : false);
+
+                basic_stream bs;
+                dump_memory(secret, &bs);
+                printf("secret\n%s\n", bs.c_str());
+                dump_memory(derived, &bs);
+                printf("derived\n%s\n", bs.c_str());
+                dump_memory(decrypted, &bs);
+                printf("decrypted\n%s\n", bs.c_str());
+            }
         }
 
         if ((1 == results.size()) && (true == *results.begin())) {
@@ -81,7 +149,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
     __finally2 {
         // do nothing
     }
-
+#endif
     return ret;
 }
 

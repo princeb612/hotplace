@@ -152,8 +152,15 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
             compose_tobesigned(tobesigned, handle->tag, handle->body.bin_protected, item.bin_protected, convert(""), handle->payload);
             int alg = 0;
             std::string kid;
-            composer.finditem(cose_key_t::cose_alg, alg, item.protected_map, handle->body.protected_map);
-            composer.finditem(cose_key_t::cose_kid, kid, item.unprotected_map, handle->body.unprotected_map);
+            return_t check = errorcode_t::success;
+            check = composer.finditem(cose_key_t::cose_alg, alg, item.protected_map);
+            if (errorcode_t::success != check) {
+                check = composer.finditem(cose_key_t::cose_alg, alg, handle->body.protected_map);
+            }
+            check = composer.finditem(cose_key_t::cose_kid, kid, item.unprotected_map);
+            if (errorcode_t::success != check) {
+                check = composer.finditem(cose_key_t::cose_kid, kid, handle->body.unprotected_map);
+            }
             if (kid.size()) {
                 k = kid.c_str();
             }
@@ -238,6 +245,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, co
             case cose_rs256:
             case cose_rs384:
             case cose_rs512:
+            case cose_eddsa:
                 ret = signprocessor.verify(pkey, sig, tobesigned, signature);
                 break;
             default:

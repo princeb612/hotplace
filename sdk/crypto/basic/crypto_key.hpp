@@ -63,8 +63,8 @@ typedef struct _crypto_key_object_t {
  * @remarks
  *          crypto_key key;
  *          // generate a key
- *          key.generate (crypto_key_t::kty_rsa, 1024, "key1");
- *          key.generate (crypto_key_t::kty_hmac, 32, "key1");
+ *          key.generate (crypto_kty_t::kty_rsa, 1024, "key1");
+ *          key.generate (crypto_kty_t::kty_hmac, 32, "key1");
  *          // generate a key
  *          crypto_keychain keyset;
  *          keyset.add_rsa (&key, 1024);// 1024 bits
@@ -141,28 +141,28 @@ class crypto_key {
     return_t add(EVP_PKEY* key, const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief generate
-     * @param crypto_key_t type [in] CRYPTO_KEY_TYPE
-     * @param unsigned int param [in] crypto_key_t::kty_hmac in bytes
-     *                                crypto_key_t::kty_rsa in bits
-     *                                crypto_key_t::kty_ec 256, 384, 521
-     *                                crypto_key_t::kty_okp 25518, 448
+     * @param crypto_kty_t type [in] CRYPTO_KEY_TYPE
+     * @param unsigned int param [in] crypto_kty_t::kty_hmac in bytes
+     *                                crypto_kty_t::kty_rsa in bits
+     *                                crypto_kty_t::kty_ec 256, 384, 521
+     *                                crypto_kty_t::kty_okp 25518, 448
      * @param const char* kid [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
      * @return error code (see error.hpp)
      * @remarks
-     *          key.generate (crypto_key_t::kty_hmac, 32,    "kid", crypto_use_t::use_any); // oct
-     *          key.generate (crypto_key_t::kty_rsa,  2048,  "kid", crypto_use_t::use_any); // RSA
-     *          key.generate (crypto_key_t::kty_ec,   256,   "kid", crypto_use_t::use_any); // EC, P-256
-     *          key.generate (crypto_key_t::kty_ec,   384,   "kid", crypto_use_t::use_any); // EC, P-384
-     *          key.generate (crypto_key_t::kty_ec,   521,   "kid", crypto_use_t::use_any); // EC, P-521
-     *          key.generate (crypto_key_t::kty_okp,  25519, "kid", crypto_use_t::use_any); // OKP, X25519 *
-     *          key.generate (crypto_key_t::kty_okp,  448,   "kid", crypto_use_t::use_any); // OKP, X448 *
-     *          key.generate (crypto_key_t::kty_okp,  25519, "kid", crypto_use_t::use_enc); // OKP, X25519
-     *          key.generate (crypto_key_t::kty_okp,  448,   "kid", crypto_use_t::use_enc); // OKP, X448
-     *          key.generate (crypto_key_t::kty_okp,  25519, "kid", crypto_use_t::use_sig); // OKP, Ed25519
-     *          key.generate (crypto_key_t::kty_okp,  448,   "kid", crypto_use_t::use_sig); // OKP, Ed448
+     *          key.generate (crypto_kty_t::kty_hmac, 32,    "kid", crypto_use_t::use_any); // oct
+     *          key.generate (crypto_kty_t::kty_rsa,  2048,  "kid", crypto_use_t::use_any); // RSA
+     *          key.generate (crypto_kty_t::kty_ec,   256,   "kid", crypto_use_t::use_any); // EC, P-256
+     *          key.generate (crypto_kty_t::kty_ec,   384,   "kid", crypto_use_t::use_any); // EC, P-384
+     *          key.generate (crypto_kty_t::kty_ec,   521,   "kid", crypto_use_t::use_any); // EC, P-521
+     *          key.generate (crypto_kty_t::kty_okp,  25519, "kid", crypto_use_t::use_any); // OKP, X25519 *
+     *          key.generate (crypto_kty_t::kty_okp,  448,   "kid", crypto_use_t::use_any); // OKP, X448 *
+     *          key.generate (crypto_kty_t::kty_okp,  25519, "kid", crypto_use_t::use_enc); // OKP, X25519
+     *          key.generate (crypto_kty_t::kty_okp,  448,   "kid", crypto_use_t::use_enc); // OKP, X448
+     *          key.generate (crypto_kty_t::kty_okp,  25519, "kid", crypto_use_t::use_sig); // OKP, Ed25519
+     *          key.generate (crypto_kty_t::kty_okp,  448,   "kid", crypto_use_t::use_sig); // OKP, Ed448
      */
-    return_t generate(crypto_key_t type, unsigned int param, const char* kid, crypto_use_t use = crypto_use_t::use_any);
+    return_t generate(crypto_kty_t type, unsigned int param, const char* kid, crypto_use_t use = crypto_use_t::use_any);
 
     /**
      * @brief return any key
@@ -177,11 +177,11 @@ class crypto_key {
     EVP_PKEY* select(crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief find
-     * @param crypto_key_t kty [in]
+     * @param crypto_kty_t kty [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* select(crypto_key_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    EVP_PKEY* select(crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief find
      * @param jwa_t alg [in]
@@ -206,11 +206,11 @@ class crypto_key {
     /**
      * @brief find
      * @param std::string& kid [out]
-     * @param crypto_key_t kty [in]
+     * @param crypto_kty_t kty [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* select(std::string& kid, crypto_key_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    EVP_PKEY* select(std::string& kid, crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief find
      * @param std::string& kid [out]
@@ -252,11 +252,11 @@ class crypto_key {
     /**
      * @brief find
      * @param const char* kid [in]
-     * @param crypto_key_t kty [in]
+     * @param crypto_kty_t kty [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    EVP_PKEY* find(const char* kid, crypto_key_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    EVP_PKEY* find(const char* kid, crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief find
      * @param const char* kid [in]
@@ -318,13 +318,13 @@ class crypto_key {
      * @brief key
      * @param EVP_PKEY* pkey [in]
      * @param int flag [in] 0 public only, 1 also private
-     * @param crypto_key_t type [out] crypto_key_t::kty_hmac, crypto_key_t::kty_rsa, crypto_key_t::kty_ec
+     * @param crypto_kty_t type [out] crypto_kty_t::kty_hmac, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      * @parambinary_t& priv [out]
      * @param bool plzero [inopt] preserve leading zero (default false)
      */
-    static return_t get_key(EVP_PKEY* pkey, int flag, crypto_key_t& type, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero = false);
+    static return_t get_key(EVP_PKEY* pkey, int flag, crypto_kty_t& type, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero = false);
 
     /**
      * @brief clear
@@ -363,11 +363,11 @@ class crypto_key {
      * @brief extract
      * @param EVP_PKEY* pkey [in]
      * @param CRYPTO_KEY_FLAG flag [in] CRYPTO_KEY_PUBLIC, CRYPTO_KEY_PRIVATE
-     * @param crypto_key_t type [out]
+     * @param crypto_kty_t type [out]
      * @param crypt_datamap_t& datamap [out]
      * @param bool plzero [inopt] preserve leading zero (default false)
      */
-    static return_t extract(EVP_PKEY* pkey, int flag, crypto_key_t& type, crypt_datamap_t& datamap, bool plzero = false);
+    static return_t extract(EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
 
    private:
     /**
@@ -392,13 +392,13 @@ class crypto_key {
 /**
  * @param crypto_key_object_t key [in]
  */
-crypto_key_t typeof_crypto_key(crypto_key_object_t const& key);
+crypto_kty_t typeof_crypto_key(crypto_key_object_t const& key);
 /**
  * @brief compare
  * @param EVP_PKEY* pkey [in]
- * @param crypto_key_t type [in]
+ * @param crypto_kty_t type [in]
  */
-bool is_kindof(EVP_PKEY* pkey, crypto_key_t type);
+bool is_kindof(EVP_PKEY* pkey, crypto_kty_t type);
 
 /**
  * @brief   dump

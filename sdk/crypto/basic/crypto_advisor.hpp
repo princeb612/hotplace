@@ -342,8 +342,8 @@ class crypto_advisor {
      * @return error code (see error.hpp)
      * @remarks
      *          --------------------------------+----------------
-     *          P-256, P-384, P521              | crypto_key_t::kty_ec
-     *          Ed25519, Ed448, X25519, X448    | crypto_key_t::kty_okp
+     *          P-256, P-384, P521              | crypto_kty_t::kty_ec
+     *          Ed25519, Ed448, X25519, X448    | crypto_kty_t::kty_okp
      *          --------------------------------+----------------
      */
     return_t ktyof_ec_curve(const char* curve, uint32& kty);
@@ -361,10 +361,10 @@ class crypto_advisor {
     /**
      * @brief kty
      * @param EVP_PKEY* pkey [in]
-     * @param crypto_key_t& kty [out] crypto_key_t::kty_hmac, crypto_key_t::kty_rsa, crypto_key_t::kty_ec, crypto_key_t::kty_okp
+     * @param crypto_kty_t& kty [out] crypto_kty_t::kty_hmac, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_okp
      * @return error code (see error.hpp)
      */
-    return_t ktyof_ec_curve(EVP_PKEY* pkey, crypto_key_t& kty);
+    return_t ktyof_ec_curve(EVP_PKEY* pkey, crypto_kty_t& kty);
     /**
      * @brief "alg" from key
      * @param EVP_PKEY* pkey [in]
@@ -407,8 +407,8 @@ class crypto_advisor {
      */
     bool is_kindof(EVP_PKEY* pkey, const char* alg);
 
-    cose_kty_t ktyof(crypto_key_t kty);
-    crypto_key_t ktyof(cose_kty_t kty);
+    cose_kty_t ktyof(crypto_kty_t kty);
+    crypto_kty_t ktyof(cose_kty_t kty);
     jws_t sigof(crypt_sig_t sig);
     crypt_sig_t cose_sigof(cose_alg_t sig);
     crypt_sig_t sigof(jws_t sig);
@@ -439,8 +439,8 @@ class crypto_advisor {
     typedef std::map<std::string, const hint_signature_t*> signature_byname_map_t;
     typedef std::map<std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
     typedef std::map<uint32, const hint_curve_t*> jose_curve_bynid_map_t;
-    typedef std::map<crypto_key_t, cose_kty_t> kty2cose_map_t;
-    typedef std::map<cose_kty_t, crypto_key_t> cose2kty_map_t;
+    typedef std::map<crypto_kty_t, cose_kty_t> kty2cose_map_t;
+    typedef std::map<cose_kty_t, crypto_kty_t> cose2kty_map_t;
     typedef std::map<crypt_sig_t, jws_t> sig2jws_map_t;
     typedef std::map<crypt_sig_t, cose_alg_t> sig2cose_map_t;
     typedef std::map<cose_alg_t, crypt_sig_t> cose2sig_map_t;
@@ -528,7 +528,7 @@ bool kindof_ecc(EVP_PKEY* pkey);
 /**
  * @param EVP_PKEY* key [in]
  */
-crypto_key_t typeof_crypto_key(EVP_PKEY* key);
+crypto_kty_t typeof_crypto_key(EVP_PKEY* key);
 
 }  // namespace crypto
 }  // namespace hotplace

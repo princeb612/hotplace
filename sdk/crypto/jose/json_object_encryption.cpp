@@ -280,7 +280,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
                 __leave2;
             }
 
-            if (crypto_key_t::kty_hmac == alg_info->kty) {
+            if (crypto_kty_t::kty_hmac == alg_info->kty) {
                 /* EVP_KEY_HMAC key data and length */
                 size_t key_length = 0;
                 EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, nullptr, &key_length);
@@ -568,7 +568,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
                 __leave2;
             }
 
-            if (crypto_key_t::kty_hmac == alg_info->kty) {
+            if (crypto_kty_t::kty_hmac == alg_info->kty) {
                 /* EVP_KEY_HMAC key data and length */
                 size_t key_length = 0;
                 EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, nullptr, &key_length);

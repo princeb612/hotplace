@@ -273,7 +273,7 @@ enum crypt_access_t {
     private_key = (1 << 1),
 };
 
-enum crypto_key_t {
+enum crypto_kty_t {
     kty_unknown = 0,
     kty_hmac = 1,  // EVP_PKEY_HMAC    NID_hmac
     kty_rsa = 2,   // EVP_PKEY_RSA     NID_rsaEncryption
@@ -662,8 +662,8 @@ typedef struct _hint_jose_encryption_t {
     const char* alg_name;
 
     int type;          // jwa_t, jwe_t
-    crypto_key_t kty;  // crypto_key_t::kty_rsa, crypto_key_t::kty_ec, crypto_key_t::kty_hmac
-    crypto_key_t alt;  // for example crypto_key_t::kty_okp, if kt is crypto_key_t::kty_ec
+    crypto_kty_t kty;  // crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_hmac
+    crypto_kty_t alt;  // for example crypto_kty_t::kty_okp, if kt is crypto_kty_t::kty_ec
     int mode;          // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
 
     crypt_algorithm_t crypt_alg;  // algorithm for keywrap or GCM
@@ -672,10 +672,16 @@ typedef struct _hint_jose_encryption_t {
     int hash_alg;
 } hint_jose_encryption_t;
 
+typedef struct _hint_cose_encryption_t {
+    cose_alg_t alg;
+    crypto_kty_t kty;
+    // studying
+} hint_cose_encryption_t;
+
 typedef struct _hint_curves_t {
     uint32 nid;
     cose_ec_curve_t cose_crv;
-    crypto_key_t kty;
+    crypto_kty_t kty;
     crypto_use_t use;
     const char* name;  // NIST CURVE
     const char* aka1;  // X9.62, X9.63
@@ -686,7 +692,7 @@ typedef struct _hint_curves_t {
 typedef struct _hint_signature_t {
     crypt_sig_t sig_type;
     jws_t jws_type;
-    crypto_key_t kty;
+    crypto_kty_t kty;
     const char* jws_name;
     hash_algorithm_t alg;
     uint32 count;
@@ -694,7 +700,7 @@ typedef struct _hint_signature_t {
 } hint_signature_t;
 
 typedef struct _hint_kty_name_t {
-    crypto_key_t kty;
+    crypto_kty_t kty;
     const char* name;
 } hint_kty_name_t;
 

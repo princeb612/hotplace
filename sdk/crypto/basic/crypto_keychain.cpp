@@ -652,13 +652,17 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const c
     return_t ret = errorcode_t::success;
 
     switch (nid) {
+        case NID_X25519:
+        case NID_X448:
+        case NID_ED25519:
+        case NID_ED448:
+            ret = errorcode_t::request;
+            break;
         case NID_X9_62_prime256v1:
         case NID_secp384r1:
         case NID_secp521r1:
-            ret = add_ec_nid_EC(cryptokey, kid, alg, nid, x, ybit, d, use);
-            break;
         default:
-            ret = errorcode_t::request;
+            ret = add_ec_nid_EC(cryptokey, kid, alg, nid, x, ybit, d, use);
             break;
     }
     return ret;
@@ -720,7 +724,7 @@ return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, 
                 __leave2_trace_openssl(ret);
             }
         } else {
-            ret_openssl = EC_POINT_set_affine_coordinates_GFp(group, point, bn_x, bn_y, nullptr);
+            ret_openssl = EC_POINT_set_affine_coordinates(group, point, bn_x, bn_y, nullptr);  // EC_POINT_set_affine_coordinates_GFp
             if (ret_openssl != 1) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl(ret);
@@ -841,7 +845,7 @@ return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, 
             // RFC8152 13.1.1.  Double Coordinate Curves
             // Compute the sign bit as laid out in the Elliptic-Curve-Point-to-Octet-String Conversion function of [SEC1]
             // If the sign bit is zero, then encode y as a CBOR false value; otherwise, encode y as a CBOR true value.
-            ret_openssl = EC_POINT_set_compressed_coordinates_GFp(group, point, bn_x, ybit, nullptr);
+            ret_openssl = EC_POINT_set_compressed_coordinates(group, point, bn_x, ybit, nullptr);  // EC_POINT_set_compressed_coordinates_GFp
             if (ret_openssl != 1) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl(ret);

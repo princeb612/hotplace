@@ -206,6 +206,10 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
     return ret;
 }
 
+return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv) {
+    return open(handle, algorithm, mode, &key[0], key.size(), &iv[0], iv.size());
+}
+
 return_t openssl_crypt::close(crypt_context_t* handle) {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);

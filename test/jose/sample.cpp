@@ -569,17 +569,17 @@ void test_rfc7515_bykeygen() {
     return_t ret = errorcode_t::success;
     crypto_key key;
 
-    key.generate(crypto_key_t::kty_hmac, 256, "sample");
-    key.generate(crypto_key_t::kty_rsa, 2048, "sample");
-    key.generate(crypto_key_t::kty_ec, 256, "sample");
+    key.generate(crypto_kty_t::kty_hmac, 256, "sample");
+    key.generate(crypto_kty_t::kty_rsa, 2048, "sample");
+    key.generate(crypto_kty_t::kty_ec, 256, "sample");
 
-    key.generate(crypto_key_t::kty_hmac, 256, "HS256");
-    key.generate(crypto_key_t::kty_rsa, 2048, "RS256");
-    key.generate(crypto_key_t::kty_rsa, 2048, "RS384");
-    key.generate(crypto_key_t::kty_rsa, 2048, "RS512");
-    key.generate(crypto_key_t::kty_ec, 256, "ES256");
-    key.generate(crypto_key_t::kty_ec, 384, "ES384");
-    key.generate(crypto_key_t::kty_ec, 521, "ES512");
+    key.generate(crypto_kty_t::kty_hmac, 256, "HS256");
+    key.generate(crypto_kty_t::kty_rsa, 2048, "RS256");
+    key.generate(crypto_kty_t::kty_rsa, 2048, "RS384");
+    key.generate(crypto_kty_t::kty_rsa, 2048, "RS512");
+    key.generate(crypto_kty_t::kty_ec, 256, "ES256");
+    key.generate(crypto_kty_t::kty_ec, 384, "ES384");
+    key.generate(crypto_kty_t::kty_ec, 521, "ES512");
 
     json_web_signature jws;
     std::string signature;
@@ -1325,8 +1325,8 @@ int test_ecdh() {
     keyset.add_ec(&keys, "alice", NID_secp384r1);
     keyset.add_ec(&keys, "bob", NID_secp384r1);
 
-    EVP_PKEY* alicePrivateKey = (EVP_PKEY*)keys.find("alice", crypto_key_t::kty_ec);
-    EVP_PKEY* bobPrivateKey = (EVP_PKEY*)keys.find("bob", crypto_key_t::kty_ec);
+    EVP_PKEY* alicePrivateKey = (EVP_PKEY*)keys.find("alice", crypto_kty_t::kty_ec);
+    EVP_PKEY* bobPrivateKey = (EVP_PKEY*)keys.find("bob", crypto_kty_t::kty_ec);
 
     EVP_PKEY* alicePublicKey = (EVP_PKEY*)get_peer_key(alicePrivateKey);
     EVP_PKEY* bobPublicKey = (EVP_PKEY*)get_peer_key(bobPrivateKey);
@@ -1956,10 +1956,10 @@ void test_okp() {
     binary_t source;
     std::string signature;
 
-    key.generate(crypto_key_t::kty_okp, 25519, "test1", crypto_use_t::use_enc);
-    key.generate(crypto_key_t::kty_okp, 25519, "test2", crypto_use_t::use_sig);
-    key.generate(crypto_key_t::kty_okp, 448, "test3", crypto_use_t::use_enc);
-    key.generate(crypto_key_t::kty_okp, 448, "test4", crypto_use_t::use_sig);
+    key.generate(crypto_kty_t::kty_okp, 25519, "test1", crypto_use_t::use_enc);
+    key.generate(crypto_kty_t::kty_okp, 25519, "test2", crypto_use_t::use_sig);
+    key.generate(crypto_kty_t::kty_okp, 448, "test3", crypto_use_t::use_enc);
+    key.generate(crypto_kty_t::kty_okp, 448, "test4", crypto_use_t::use_sig);
     key.for_each(dump_crypto_key, nullptr);
 
     jose.open(&handle, &key);

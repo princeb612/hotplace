@@ -522,6 +522,8 @@ return_t cbor_reader::publish(cbor_reader_context_t* handle, cbor_object** root)
 
         if (handle->root) {
             handle->root->addref();
+        } else {
+            ret = errorcode_t::no_data;
         }
         *root = handle->root;
     }

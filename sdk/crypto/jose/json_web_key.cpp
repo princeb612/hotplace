@@ -147,7 +147,7 @@ return_t json_web_key::read_json_keynode(crypto_key* crypto_key, json_t* json) {
 
 typedef struct _json_mapper_item_t {
     EVP_PKEY* pkey;
-    crypto_key_t type;
+    crypto_kty_t type;
     std::string kid;
     int use;  // crypto_use_t
     std::string alg;
@@ -201,22 +201,22 @@ static void jwk_serialize_item(int flag, json_mapper_item_t item, json_t* json_i
     }
 
     /* param */
-    if (crypto_key_t::kty_hmac == item.type) {
+    if (crypto_kty_t::kty_hmac == item.type) {
         json_object_set_new(json_item, "k", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
-    } else if (crypto_key_t::kty_rsa == item.type) {
+    } else if (crypto_kty_t::kty_rsa == item.type) {
         json_object_set_new(json_item, "n", json_string(base64_encode(item.pub1, base64_encoding_t::base64url_encoding).c_str()));
         json_object_set_new(json_item, "e", json_string(base64_encode(item.pub2, base64_encoding_t::base64url_encoding).c_str()));
         if (flag) {
             json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
         }
-    } else if (crypto_key_t::kty_ec == item.type) {
+    } else if (crypto_kty_t::kty_ec == item.type) {
         json_object_set_new(json_item, "crv", json_string(curve_name.c_str()));
         json_object_set_new(json_item, "x", json_string(base64_encode(item.pub1, base64_encoding_t::base64url_encoding).c_str()));
         json_object_set_new(json_item, "y", json_string(base64_encode(item.pub2, base64_encoding_t::base64url_encoding).c_str()));
         if (flag) {
             json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
         }
-    } else if (crypto_key_t::kty_okp == item.type) {
+    } else if (crypto_kty_t::kty_okp == item.type) {
         json_object_set_new(json_item, "crv", json_string(curve_name.c_str()));
         json_object_set_new(json_item, "x", json_string(base64_encode(item.pub1, base64_encoding_t::base64url_encoding).c_str()));
         if (flag) {

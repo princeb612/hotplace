@@ -246,7 +246,7 @@ void cwk_writer(crypto_key_object_t* key, void* param) {
 
         std::string kid = key->kid;
 
-        crypto_key_t kty;
+        crypto_kty_t kty;
         binary_t pub1;
         binary_t pub2;
         binary_t priv;
@@ -269,7 +269,7 @@ void cwk_writer(crypto_key_object_t* key, void* param) {
             *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kid, new cbor_data(convert(kid)));  // 2
         }
 
-        if (crypto_key_t::kty_ec == kty || crypto_key_t::kty_okp == kty) {
+        if (crypto_kty_t::kty_ec == kty || crypto_kty_t::kty_okp == kty) {
             uint32 nid = 0;
             cose_ec_curve_t cose_curve = cose_ec_curve_t::cose_ec_unknown;
 
@@ -279,15 +279,15 @@ void cwk_writer(crypto_key_object_t* key, void* param) {
             *keynode << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_curve))  // -1
                      << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(pub1));         // -2
 
-            if (crypto_key_t::kty_ec == kty) {
+            if (crypto_kty_t::kty_ec == kty) {
                 *keynode << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(pub2));  // -3
             }
             if (priv.size()) {
                 *keynode << new cbor_pair(cose_key_lable_t::cose_ec_d, new cbor_data(priv));  // -4
             }
-        } else if (crypto_key_t::kty_hmac == kty) {
+        } else if (crypto_kty_t::kty_hmac == kty) {
             *keynode << new cbor_pair(cose_key_lable_t::cose_symm_k, new cbor_data(priv));  // -1
-        } else if (crypto_key_t::kty_rsa == kty) {
+        } else if (crypto_kty_t::kty_rsa == kty) {
             *keynode << new cbor_pair(cose_key_lable_t::cose_rsa_n, new cbor_data(pub1))   // -1
                      << new cbor_pair(cose_key_lable_t::cose_rsa_e, new cbor_data(pub2));  // -2
             if (priv.size()) {

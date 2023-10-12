@@ -26,8 +26,8 @@ enum vartype_t {
     TYPE_NULL = 0,
     TYPE_VOID = TYPE_NULL,
 
-    TYPE_BOOLEAN = 1,  // sizeof 1
-    TYPE_BOOL = 2,     // sizeof 4
+    TYPE_BOOLEAN = 1,
+    TYPE_BOOL = 2,
 
     TYPE_CHAR = 3,
     TYPE_INT8 = TYPE_CHAR,
