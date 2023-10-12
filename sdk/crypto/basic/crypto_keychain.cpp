@@ -348,48 +348,28 @@ return_t crypto_keychain::add_rsa_b64u(crypto_key* crypto_key, const char* kid, 
             __leave2;
         }
 
-        binary_t n_decoded;
-        binary_t e_decoded;
-        binary_t d_decoded;
-
-        n_decoded = base64_decode(n_value, strlen(n_value), base64_encoding_t::base64url_encoding);
-        e_decoded = base64_decode(e_value, strlen(e_value), base64_encoding_t::base64url_encoding);
-        if (nullptr != d_value) {
-            d_decoded = base64_decode(d_value, strlen(d_value), base64_encoding_t::base64url_encoding);
-        }
-
-        binary_t p_decoded;
-        binary_t q_decoded;
-        binary_t dp_decoded;
-        binary_t dq_decoded;
-        binary_t qi_decoded;
-
-        if (p_value && q_value && dp_value && dq_value && qi_value) {
-            p_decoded = base64_decode(p_value, strlen(p_value), base64_encoding_t::base64url_encoding);
-            q_decoded = base64_decode(q_value, strlen(q_value), base64_encoding_t::base64url_encoding);
-            dp_decoded = base64_decode(dp_value, strlen(dp_value), base64_encoding_t::base64url_encoding);
-            dq_decoded = base64_decode(dq_value, strlen(dq_value), base64_encoding_t::base64url_encoding);
-            qi_decoded = base64_decode(qi_value, strlen(qi_value), base64_encoding_t::base64url_encoding);
-        }
-
         binary_t bin_n;
         binary_t bin_e;
         binary_t bin_d;
-        bin_n.insert(bin_n.end(), n_decoded.begin(), n_decoded.end());
-        bin_e.insert(bin_e.end(), e_decoded.begin(), e_decoded.end());
-        bin_d.insert(bin_d.end(), d_decoded.begin(), d_decoded.end());
+
+        bin_n = base64_decode(n_value, strlen(n_value), base64_encoding_t::base64url_encoding);
+        bin_e = base64_decode(e_value, strlen(e_value), base64_encoding_t::base64url_encoding);
+        if (nullptr != d_value) {
+            bin_d = base64_decode(d_value, strlen(d_value), base64_encoding_t::base64url_encoding);
+        }
+
+        binary_t bin_p;
+        binary_t bin_q;
+        binary_t bin_dp;
+        binary_t bin_dq;
+        binary_t bin_qi;
 
         if (p_value && q_value && dp_value && dq_value && qi_value) {
-            binary_t bin_p;
-            binary_t bin_q;
-            binary_t bin_dp;
-            binary_t bin_dq;
-            binary_t bin_qi;
-            bin_p.insert(bin_p.end(), p_decoded.begin(), p_decoded.end());
-            bin_q.insert(bin_q.end(), q_decoded.begin(), q_decoded.end());
-            bin_dp.insert(bin_dp.end(), dp_decoded.begin(), dp_decoded.end());
-            bin_dq.insert(bin_dq.end(), dq_decoded.begin(), dq_decoded.end());
-            bin_qi.insert(bin_qi.end(), qi_decoded.begin(), qi_decoded.end());
+            bin_p = base64_decode(p_value, strlen(p_value), base64_encoding_t::base64url_encoding);
+            bin_q = base64_decode(q_value, strlen(q_value), base64_encoding_t::base64url_encoding);
+            bin_dp = base64_decode(dp_value, strlen(dp_value), base64_encoding_t::base64url_encoding);
+            bin_dq = base64_decode(dq_value, strlen(dq_value), base64_encoding_t::base64url_encoding);
+            bin_qi = base64_decode(qi_value, strlen(qi_value), base64_encoding_t::base64url_encoding);
             add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, use);
         } else {
             add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
@@ -412,48 +392,28 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* crypto_key, const char* kid, c
             __leave2;
         }
 
-        binary_t n_decoded;
-        binary_t e_decoded;
-        binary_t d_decoded;
-
-        n_decoded = base64_decode(n_value, strlen(n_value), base64_encoding_t::base64_encoding);
-        e_decoded = base64_decode(e_value, strlen(e_value), base64_encoding_t::base64_encoding);
-        if (nullptr != d_value) {
-            d_decoded = base64_decode(d_value, strlen(d_value), base64_encoding_t::base64_encoding);
-        }
-
-        binary_t p_decoded;
-        binary_t q_decoded;
-        binary_t dp_decoded;
-        binary_t dq_decoded;
-        binary_t qi_decoded;
-
-        if (p_value && q_value && dp_value && dq_value && qi_value) {
-            p_decoded = base64_decode(p_value, strlen(p_value), base64_encoding_t::base64_encoding);
-            q_decoded = base64_decode(q_value, strlen(q_value), base64_encoding_t::base64_encoding);
-            dp_decoded = base64_decode(dp_value, strlen(dp_value), base64_encoding_t::base64_encoding);
-            dq_decoded = base64_decode(dq_value, strlen(dq_value), base64_encoding_t::base64_encoding);
-            qi_decoded = base64_decode(qi_value, strlen(qi_value), base64_encoding_t::base64_encoding);
-        }
-
         binary_t bin_n;
         binary_t bin_e;
         binary_t bin_d;
-        bin_n.insert(bin_n.end(), n_decoded.begin(), n_decoded.end());
-        bin_e.insert(bin_e.end(), e_decoded.begin(), e_decoded.end());
-        bin_d.insert(bin_d.end(), d_decoded.begin(), d_decoded.end());
+
+        bin_n = base64_decode(n_value, strlen(n_value), base64_encoding_t::base64_encoding);
+        bin_e = base64_decode(e_value, strlen(e_value), base64_encoding_t::base64_encoding);
+        if (nullptr != d_value) {
+            bin_d = base64_decode(d_value, strlen(d_value), base64_encoding_t::base64_encoding);
+        }
+
+        binary_t bin_p;
+        binary_t bin_q;
+        binary_t bin_dp;
+        binary_t bin_dq;
+        binary_t bin_qi;
 
         if (p_value && q_value && dp_value && dq_value && qi_value) {
-            binary_t bin_p;
-            binary_t bin_q;
-            binary_t bin_dp;
-            binary_t bin_dq;
-            binary_t bin_qi;
-            bin_p.insert(bin_p.end(), p_decoded.begin(), p_decoded.end());
-            bin_q.insert(bin_q.end(), q_decoded.begin(), q_decoded.end());
-            bin_dp.insert(bin_dp.end(), dp_decoded.begin(), dp_decoded.end());
-            bin_dq.insert(bin_dq.end(), dq_decoded.begin(), dq_decoded.end());
-            bin_qi.insert(bin_qi.end(), qi_decoded.begin(), qi_decoded.end());
+            bin_p = base64_decode(p_value, strlen(p_value), base64_encoding_t::base64_encoding);
+            bin_q = base64_decode(q_value, strlen(q_value), base64_encoding_t::base64_encoding);
+            bin_dp = base64_decode(dp_value, strlen(dp_value), base64_encoding_t::base64_encoding);
+            bin_dq = base64_decode(dq_value, strlen(dq_value), base64_encoding_t::base64_encoding);
+            bin_qi = base64_decode(qi_value, strlen(qi_value), base64_encoding_t::base64_encoding);
             add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, use);
         } else {
             add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
@@ -465,8 +425,8 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* crypto_key, const char* kid, c
     return ret;
 }
 
-return_t crypto_keychain::add_rsa_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d) {
-    return add_rsa(crypto_key, kid, alg, base16_decode(n), base16_decode(e), base16_decode(d));
+return_t crypto_keychain::add_rsa_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d, crypto_use_t use) {
+    return add_rsa(crypto_key, kid, alg, base16_decode(n), base16_decode(e), base16_decode(d), use);
 }
 
 return_t crypto_keychain::add_rsa(crypto_key* crypto_key, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e,
@@ -666,6 +626,10 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const c
             break;
     }
     return ret;
+}
+
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, int nid, binary_t const& x, uint8 ybit, binary_t const& d, crypto_use_t use) {
+    return add_ec(cryptokey, kid, nullptr, nid, x, ybit, d, use);
 }
 
 return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y,
@@ -947,42 +911,51 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, jwa_t a
     return add_ec(cryptokey, kid, hint ? hint->alg_name : nullptr, nid, x, y, d, use);
 }
 
-return_t crypto_keychain::add_ec_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x_value, const char* y_value,
-                                      const char* d_value, crypto_use_t use) {
+return_t crypto_keychain::add_ec_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, const char* y, const char* d,
+                                      crypto_use_t use) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == curve || nullptr == x_value) {
+        if (nullptr == crypto_key || nullptr == curve || nullptr == x) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        binary_t x_decoded;
-        binary_t y_decoded;
-        binary_t d_decoded;
         uint32 nid = 0;
         ret = advisor->nidof_ec_curve(curve, nid);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        x_decoded = base64_decode(x_value, strlen(x_value), base64_encoding_t::base64url_encoding);
-        if (y_value) {
-            /* kty EC */
-            y_decoded = base64_decode(y_value, strlen(y_value), base64_encoding_t::base64url_encoding);
-        }
-        if (d_value) {
-            /* private key */
-            d_decoded = base64_decode(d_value, strlen(d_value), base64_encoding_t::base64url_encoding);
+        ret = add_ec_b64u(crypto_key, kid, alg, nid, x, y, d, use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b64u(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, const char* y, const char* d,
+                                      crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
 
         binary_t bin_x;
         binary_t bin_y;
         binary_t bin_d;
-        bin_x.insert(bin_x.end(), x_decoded.begin(), x_decoded.end());
-        bin_y.insert(bin_y.end(), y_decoded.begin(), y_decoded.end());
-        bin_d.insert(bin_d.end(), d_decoded.begin(), d_decoded.end());
+        bin_x = base64_decode(x, strlen(x), base64_encoding_t::base64url_encoding);
+        if (y) {
+            bin_y = base64_decode(y, strlen(y), base64_encoding_t::base64url_encoding);
+        }
+        if (d) {
+            bin_d = base64_decode(d, strlen(d), base64_encoding_t::base64url_encoding);
+        }
 
         ret = add_ec(crypto_key, kid, alg, nid, bin_x, bin_y, bin_d, use);
     }
@@ -992,44 +965,159 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* crypto_key, const char* kid, c
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x_value, const char* y_value,
-                                     const char* d_value, crypto_use_t use) {
+return_t crypto_keychain::add_ec_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, uint8 ybit, const char* d,
+                                      crypto_use_t use) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == curve || nullptr == x_value) {
+        if (nullptr == crypto_key || nullptr == curve || nullptr == x) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        binary_t x_decoded;
-        binary_t y_decoded;
-        binary_t d_decoded;
         uint32 nid = 0;
         ret = advisor->nidof_ec_curve(curve, nid);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        x_decoded = base64_decode(x_value, strlen(x_value), base64_encoding_t::base64_encoding);
-        if (y_value) {
-            /* kty EC */
-            y_decoded = base64_decode(y_value, strlen(y_value), base64_encoding_t::base64_encoding);
+        ret = add_ec_b64u(crypto_key, kid, alg, nid, x, ybit, d, use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b64u(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, uint8 ybit, const char* d,
+                                      crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
-        if (d_value) {
-            /* private key */
-            d_decoded = base64_decode(d_value, strlen(d_value), base64_encoding_t::base64_encoding);
+        binary_t bin_x;
+        binary_t bin_d;
+        bin_x = base64_decode(x, strlen(x), base64_encoding_t::base64url_encoding);
+        if (d) {
+            bin_d = base64_decode(d, strlen(d), base64_encoding_t::base64url_encoding);
+        }
+
+        ret = add_ec(crypto_key, kid, alg, nid, bin_x, ybit, bin_d, use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, const char* y, const char* d,
+                                     crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == curve || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        uint32 nid = 0;
+        ret = advisor->nidof_ec_curve(curve, nid);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = add_ec_b64(crypto_key, kid, alg, nid, x, y, d, use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b64(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, const char* y, const char* d,
+                                     crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
 
         binary_t bin_x;
         binary_t bin_y;
         binary_t bin_d;
-        bin_x.insert(bin_x.end(), x_decoded.begin(), x_decoded.end());
-        bin_y.insert(bin_y.end(), y_decoded.begin(), y_decoded.end());
-        bin_d.insert(bin_d.end(), d_decoded.begin(), d_decoded.end());
+
+        bin_x = base64_decode(x, strlen(x), base64_encoding_t::base64_encoding);
+        if (y) {
+            /* kty EC */
+            bin_y = base64_decode(y, strlen(y), base64_encoding_t::base64_encoding);
+        }
+        if (d) {
+            /* private key */
+            bin_d = base64_decode(d, strlen(d), base64_encoding_t::base64_encoding);
+        }
 
         ret = add_ec(crypto_key, kid, alg, nid, bin_x, bin_y, bin_d, use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, uint8 ybit, const char* d,
+                                     crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == curve || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        uint32 nid = 0;
+        ret = advisor->nidof_ec_curve(curve, nid);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = add_ec_b64(crypto_key, kid, alg, nid, x, ybit, d, use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b64(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, uint8 ybit, const char* d,
+                                     crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        binary_t bin_x;
+        binary_t bin_d;
+
+        bin_x = base64_decode(x, strlen(x), base64_encoding_t::base64_encoding);
+        if (d) {
+            /* private key */
+            bin_d = base64_decode(d, strlen(d), base64_encoding_t::base64_encoding);
+        }
+
+        ret = add_ec(crypto_key, kid, alg, nid, bin_x, ybit, bin_d, use);
     }
     __finally2 {
         // do nothing
@@ -1039,7 +1127,88 @@ return_t crypto_keychain::add_ec_b64(crypto_key* crypto_key, const char* kid, co
 
 return_t crypto_keychain::add_ec_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, const char* y, const char* d,
                                      crypto_use_t use) {
-    return add_ec(crypto_key, kid, alg, curve, base16_decode(x), base16_decode(y), base16_decode(d), use);
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == curve || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        uint32 nid = 0;
+        ret = advisor->nidof_ec_curve(curve, nid);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = add_ec_b16(crypto_key, kid, alg, nid, x, y, d, use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b16(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, const char* y, const char* d,
+                                     crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = add_ec(crypto_key, kid, alg, nid, base16_decode(x), base16_decode(y), base16_decode(d), use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, uint8 ybit, const char* d,
+                                     crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == curve || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        uint32 nid = 0;
+        ret = advisor->nidof_ec_curve(curve, nid);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = add_ec_b16(crypto_key, kid, alg, nid, x, ybit, d, use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b16(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, uint8 ybit, const char* d,
+                                     crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = add_ec(crypto_key, kid, alg, nid, base16_decode(x), ybit, base16_decode(d), use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 return_t crypto_keychain::add_ec(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const byte_t* x, size_t size_x, const byte_t* y,
@@ -1049,6 +1218,13 @@ return_t crypto_keychain::add_ec(crypto_key* crypto_key, const char* kid, const 
     __try2 {
         if (nullptr == crypto_key || nullptr == curve || nullptr == x) {
             ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        uint32 nid = 0;
+        ret = advisor->nidof_ec_curve(curve, nid);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -1064,7 +1240,7 @@ return_t crypto_keychain::add_ec(crypto_key* crypto_key, const char* kid, const 
             bin_d.insert(bin_d.end(), d, d + size_d);
         }
 
-        ret = add_ec(crypto_key, kid, alg, curve, bin_x, bin_y, bin_d, use);
+        ret = add_ec(crypto_key, kid, alg, nid, bin_x, bin_y, bin_d, use);
     }
     __finally2 {
         // do nothing

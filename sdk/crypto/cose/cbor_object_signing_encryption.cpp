@@ -11,6 +11,7 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_object_encryption.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_object_signing.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_object_signing_encryption.hpp>
@@ -430,8 +431,8 @@ return_t cbor_object_signing_encryption::composer::parse(cose_context_t* handle,
         switch (tag) {
             case cbor_tag_t::cose_tag_sign1:    // 18
             case cbor_tag_t::cose_tag_encrypt:  // 96
-            case cbor_tag_t::cose_tag_sign:     // 98
             case cbor_tag_t::cose_tag_mac:      // 97
+            case cbor_tag_t::cose_tag_sign:     // 98
                 break;
             case cbor_tag_t::cose_tag_encrypt0:  // 16
             case cbor_tag_t::cose_tag_mac0:      // 17
