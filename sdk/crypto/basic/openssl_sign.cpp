@@ -42,11 +42,11 @@ return_t openssl_sign::sign(EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& in
             ret = errorcode_t::request;
             __leave2;
         }
-        int sig_type = hint->sign_type;
+        int group = hint->group;
         hash_algorithm_t hash_alg = hint->alg;
         switch (type) {
             case EVP_PKEY_HMAC:
-                switch (sig_type) {
+                switch (group) {
                     case crypt_sig_type_t::crypt_sig_dgst:
                         ret = sign_digest(pkey, hash_alg, input, signature);
                         break;
@@ -56,7 +56,7 @@ return_t openssl_sign::sign(EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& in
                 }
                 break;
             case EVP_PKEY_RSA:
-                switch (sig_type) {
+                switch (group) {
                     case crypt_sig_type_t::crypt_sig_rsassa_pkcs15:
                         ret = sign_rsassa_pkcs15(pkey, hash_alg, input, signature);
                         break;
@@ -99,11 +99,11 @@ return_t openssl_sign::verify(EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& 
             ret = errorcode_t::request;
             __leave2;
         }
-        int sig_type = hint->sign_type;
+        int group = hint->group;
         hash_algorithm_t hash_alg = hint->alg;
         switch (type) {
             case EVP_PKEY_HMAC:
-                switch (sig_type) {
+                switch (group) {
                     case crypt_sig_type_t::crypt_sig_dgst:
                         ret = verify_digest(pkey, hash_alg, input, signature);
                         break;
@@ -113,7 +113,7 @@ return_t openssl_sign::verify(EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& 
                 }
                 break;
             case EVP_PKEY_RSA:
-                switch (sig_type) {
+                switch (group) {
                     case crypt_sig_type_t::crypt_sig_rsassa_pkcs15:
                         ret = verify_rsassa_pkcs15(pkey, hash_alg, input, signature);
                         break;

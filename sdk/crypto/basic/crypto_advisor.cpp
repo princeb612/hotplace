@@ -1237,7 +1237,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_hs256,
         jws_t::jws_hs256,
-        jws_type_t::jws_type_hmac,
+        jws_group_t::jws_type_hmac,
         crypto_kty_t::kty_hmac,
         "HS256",
         hash_algorithm_t::sha2_256,
@@ -1247,7 +1247,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_hs384,
         jws_t::jws_hs384,
-        jws_type_t::jws_type_hmac,
+        jws_group_t::jws_type_hmac,
         crypto_kty_t::kty_hmac,
         "HS384",
         hash_algorithm_t::sha2_384,
@@ -1257,7 +1257,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_hs512,
         jws_t::jws_hs512,
-        jws_type_t::jws_type_hmac,
+        jws_group_t::jws_type_hmac,
         crypto_kty_t::kty_hmac,
         "HS512",
         hash_algorithm_t::sha2_512,
@@ -1267,7 +1267,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs256,
         jws_t::jws_rs256,
-        jws_type_t::jws_type_rsassa_pkcs15,
+        jws_group_t::jws_type_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         "RS256",
         hash_algorithm_t::sha2_256,
@@ -1277,7 +1277,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs384,
         jws_t::jws_rs384,
-        jws_type_t::jws_type_rsassa_pkcs15,
+        jws_group_t::jws_type_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         "RS384",
         hash_algorithm_t::sha2_384,
@@ -1287,7 +1287,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs512,
         jws_t::jws_rs512,
-        jws_type_t::jws_type_rsassa_pkcs15,
+        jws_group_t::jws_type_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         "RS512",
         hash_algorithm_t::sha2_512,
@@ -1297,7 +1297,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs1,
         jws_t::jws_unknown,
-        jws_type_t::jws_type_rsassa_pkcs15,
+        jws_group_t::jws_type_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         nullptr,
         hash_algorithm_t::sha1,
@@ -1307,7 +1307,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_es256,
         jws_t::jws_es256,
-        jws_type_t::jws_type_ecdsa,
+        jws_group_t::jws_type_ecdsa,
         crypto_kty_t::kty_ec,
         "ES256",
         hash_algorithm_t::sha2_256,
@@ -1317,7 +1317,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_es384,
         jws_t::jws_es384,
-        jws_type_t::jws_type_ecdsa,
+        jws_group_t::jws_type_ecdsa,
         crypto_kty_t::kty_ec,
         "ES384",
         hash_algorithm_t::sha2_384,
@@ -1327,7 +1327,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_es512,
         jws_t::jws_es512,
-        jws_type_t::jws_type_ecdsa,
+        jws_group_t::jws_type_ecdsa,
         crypto_kty_t::kty_ec,
         "ES512",
         hash_algorithm_t::sha2_512,
@@ -1337,7 +1337,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_ps256,
         jws_t::jws_ps256,
-        jws_type_t::jws_type_rsassa_pss,
+        jws_group_t::jws_type_rsassa_pss,
         crypto_kty_t::kty_rsa,
         "PS256",
         hash_algorithm_t::sha2_256,
@@ -1347,7 +1347,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_ps384,
         jws_t::jws_ps384,
-        jws_type_t::jws_type_rsassa_pss,
+        jws_group_t::jws_type_rsassa_pss,
         crypto_kty_t::kty_rsa,
         "PS384",
         hash_algorithm_t::sha2_384,
@@ -1357,7 +1357,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_ps512,
         jws_t::jws_ps512,
-        jws_type_t::jws_type_rsassa_pss,
+        jws_group_t::jws_type_rsassa_pss,
         crypto_kty_t::kty_rsa,
         "PS512",
         hash_algorithm_t::sha2_512,
@@ -1367,7 +1367,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_eddsa,
         jws_t::jws_eddsa,
-        jws_type_t::jws_type_eddsa,
+        jws_group_t::jws_type_eddsa,
         crypto_kty_t::kty_okp,
         "EdDSA",
         hash_algorithm_t::hash_alg_unknown,

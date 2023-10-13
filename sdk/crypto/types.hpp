@@ -356,7 +356,7 @@ enum jwe_t {
     jwe_a256gcm = 6,        // A256GCM
 };
 
-enum jws_type_t {
+enum jws_group_t {
     jws_type_hmac = 1,           // HS256, HS384, HS512
     jws_type_rsassa_pkcs15 = 2,  // RS256, RS384, RS512
     jws_type_ecdsa = 3,          // ES256, ES384, ES512
@@ -683,7 +683,7 @@ typedef struct _hint_curves_t {
 typedef struct _hint_signature_t {
     crypt_sig_t sig_type;
     jws_t jws_type;
-    jws_type_t sign_type;
+    jws_group_t group;
     crypto_kty_t kty;
     const char* jws_name;
     hash_algorithm_t alg;

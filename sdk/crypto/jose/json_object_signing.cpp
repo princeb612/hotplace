@@ -242,29 +242,29 @@ return_t json_object_signing::sign(crypto_key* key, jws_t sig, binary_t const& i
         }
 
         typedef struct _SIGN_TABLE {
-            int sig_type;
+            int group;
             sign_function_t signer;
         } SIGN_TABLE;
 
         SIGN_TABLE sign_table[] = {
             {
-                jws_type_t::jws_type_hmac,
+                jws_group_t::jws_type_hmac,
                 &openssl_sign::sign_hmac,
             },
             {
-                jws_type_t::jws_type_rsassa_pkcs15,
+                jws_group_t::jws_type_rsassa_pkcs15,
                 &openssl_sign::sign_rsassa_pkcs15,
             },
             {
-                jws_type_t::jws_type_ecdsa,
+                jws_group_t::jws_type_ecdsa,
                 &openssl_sign::sign_ecdsa,
             },
             {
-                jws_type_t::jws_type_rsassa_pss,
+                jws_group_t::jws_type_rsassa_pss,
                 &openssl_sign::sign_rsassa_pss,
             },
             {
-                jws_type_t::jws_type_eddsa,
+                jws_group_t::jws_type_eddsa,
                 &openssl_sign::sign_eddsa,
             },
         };
@@ -275,11 +275,11 @@ return_t json_object_signing::sign(crypto_key* key, jws_t sig, binary_t const& i
             ret = errorcode_t::request;
             __leave2;
         }
-        int sig_type = hint->sign_type;
+        int group = hint->group;
 
 #if __cplusplus >= 201103L  // c++11
         const SIGN_TABLE* item =
-            std::find_if(std::begin(sign_table), std::end(sign_table), [sig_type](const SIGN_TABLE& item) { return item.sig_type == sig_type; });
+            std::find_if(std::begin(sign_table), std::end(sign_table), [group](const SIGN_TABLE& item) { return item.group == group; });
         if (std::end(sign_table) != item) {
             signer = item->signer;
         } else {
@@ -289,7 +289,7 @@ return_t json_object_signing::sign(crypto_key* key, jws_t sig, binary_t const& i
 #else
         for (size_t k = 0; k < RTL_NUMBER_OF(sign_table); k++) {
             SIGN_TABLE* item = sign_table + k;
-            if (item->sig_type == sig_type) {
+            if (item->group == group) {
                 signer = item->signer;
                 break;
             }
@@ -344,29 +344,29 @@ return_t json_object_signing::verify(crypto_key* key, const char* kid, jws_t sig
         }
 
         typedef struct _SIGN_TABLE {
-            int sig_type;
+            int group;
             verify_function_t verifier;
         } SIGN_TABLE;
 
         SIGN_TABLE sign_table[] = {
             {
-                jws_type_t::jws_type_hmac,
+                jws_group_t::jws_type_hmac,
                 &openssl_sign::verify_hmac,
             },
             {
-                jws_type_t::jws_type_rsassa_pkcs15,
+                jws_group_t::jws_type_rsassa_pkcs15,
                 &openssl_sign::verify_digest,
             },
             {
-                jws_type_t::jws_type_ecdsa,
+                jws_group_t::jws_type_ecdsa,
                 &openssl_sign::verify_ecdsa,
             },
             {
-                jws_type_t::jws_type_rsassa_pss,
+                jws_group_t::jws_type_rsassa_pss,
                 &openssl_sign::verify_rsassa_pss,
             },
             {
-                jws_type_t::jws_type_eddsa,
+                jws_group_t::jws_type_eddsa,
                 &openssl_sign::verify_eddsa,
             },
         };
@@ -377,11 +377,11 @@ return_t json_object_signing::verify(crypto_key* key, const char* kid, jws_t sig
             ret = errorcode_t::request;
             __leave2;
         }
-        int sig_type = hint->sign_type;
+        int group = hint->group;
 
 #if __cplusplus >= 201103L  // c++11
         const SIGN_TABLE* item =
-            std::find_if(std::begin(sign_table), std::end(sign_table), [sig_type](const SIGN_TABLE& item) { return item.sig_type == sig_type; });
+            std::find_if(std::begin(sign_table), std::end(sign_table), [group](const SIGN_TABLE& item) { return item.group == group; });
         if (std::end(sign_table) != item) {
             verifier = item->verifier;
         } else {
@@ -391,7 +391,7 @@ return_t json_object_signing::verify(crypto_key* key, const char* kid, jws_t sig
 #else
         for (size_t k = 0; k < RTL_NUMBER_OF(sign_table); k++) {
             SIGN_TABLE* item = sign_table + k;
-            if (item->sig_type == sig_type) {
+            if (item->group == group) {
                 verifier = item->verifier;
                 break;
             }
@@ -448,10 +448,10 @@ return_t json_object_signing::check_constraints(jws_t sig, EVP_PKEY* pkey) {
             ret = errorcode_t::request;
             __leave2;
         }
-        int sig_type = hint->sign_type;
-        switch (sig_type) {
-            case jws_type_t::jws_type_rsassa_pkcs15:
-            case jws_type_t::jws_type_rsassa_pss: {
+        int group = hint->group;
+        switch (group) {
+            case jws_group_t::jws_type_rsassa_pkcs15:
+            case jws_group_t::jws_type_rsassa_pss: {
                 int bits = EVP_PKEY_bits((EVP_PKEY*)pkey);
                 if (bits < 2048) {
                     ret = errorcode_t::low_security;
