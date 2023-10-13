@@ -985,7 +985,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "RSA1_5",
         jwa_t::jwa_rsa_1_5,
-        jwa_group_t::jwa_type_rsa,
+        jwa_group_t::jwa_group_rsa,
         crypto_kty_t::kty_rsa,
         crypto_kty_t::kty_unknown,
         crypt_enc_t::rsa_1_5,
@@ -993,7 +993,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "RSA-OAEP",
         jwa_t::jwa_rsa_oaep,
-        jwa_group_t::jwa_type_rsa,
+        jwa_group_t::jwa_group_rsa,
         crypto_kty_t::kty_rsa,
         crypto_kty_t::kty_unknown,
         crypt_enc_t::rsa_oaep,
@@ -1001,7 +1001,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "RSA-OAEP-256",
         jwa_t::jwa_rsa_oaep_256,
-        jwa_group_t::jwa_type_rsa,
+        jwa_group_t::jwa_group_rsa,
         crypto_kty_t::kty_rsa,
         crypto_kty_t::kty_unknown,
         crypt_enc_t::rsa_oaep256,
@@ -1009,7 +1009,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A128KW",
         jwa_t::jwa_a128kw,
-        jwa_group_t::jwa_type_aeskw,
+        jwa_group_t::jwa_group_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1021,7 +1021,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A192KW",
         jwa_t::jwa_a192kw,
-        jwa_group_t::jwa_type_aeskw,
+        jwa_group_t::jwa_group_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1033,7 +1033,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A256KW",
         jwa_t::jwa_a256kw,
-        jwa_group_t::jwa_type_aeskw,
+        jwa_group_t::jwa_group_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1045,7 +1045,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "dir",
         jwa_t::jwa_dir,
-        jwa_group_t::jwa_type_dir,
+        jwa_group_t::jwa_group_dir,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1053,14 +1053,14 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "ECDH-ES",
         jwa_t::jwa_ecdh_es,
-        jwa_group_t::jwa_type_ecdh,
+        jwa_group_t::jwa_group_ecdh,
         crypto_kty_t::kty_ec,
         crypto_kty_t::kty_okp,
     },
     {
         "ECDH-ES+A128KW",
         jwa_t::jwa_ecdh_es_a128kw,
-        jwa_group_t::jwa_type_ecdh_aeskw,
+        jwa_group_t::jwa_group_ecdh_aeskw,
         crypto_kty_t::kty_ec,
         crypto_kty_t::kty_okp,
         0,
@@ -1071,7 +1071,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "ECDH-ES+A192KW",
         jwa_t::jwa_ecdh_es_a192kw,
-        jwa_group_t::jwa_type_ecdh_aeskw,
+        jwa_group_t::jwa_group_ecdh_aeskw,
         crypto_kty_t::kty_ec,
         crypto_kty_t::kty_okp,
         0,
@@ -1082,7 +1082,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "ECDH-ES+A256KW",
         jwa_t::jwa_ecdh_es_a256kw,
-        jwa_group_t::jwa_type_ecdh_aeskw,
+        jwa_group_t::jwa_group_ecdh_aeskw,
         crypto_kty_t::kty_ec,
         crypto_kty_t::kty_okp,
         0,
@@ -1093,7 +1093,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A128GCMKW",
         jwa_t::jwa_a128gcmkw,
-        jwa_group_t::jwa_type_aesgcmkw,
+        jwa_group_t::jwa_group_aesgcmkw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1104,7 +1104,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A192GCMKW",
         jwa_t::jwa_a192gcmkw,
-        jwa_group_t::jwa_type_aesgcmkw,
+        jwa_group_t::jwa_group_aesgcmkw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1115,7 +1115,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A256GCMKW",
         jwa_t::jwa_a256gcmkw,
-        jwa_group_t::jwa_type_aesgcmkw,
+        jwa_group_t::jwa_group_aesgcmkw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1126,7 +1126,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "PBES2-HS256+A128KW",
         jwa_t::jwa_pbes2_hs256_a128kw,
-        jwa_group_t::jwa_type_pbes_hs_aeskw,
+        jwa_group_t::jwa_group_pbes_hs_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1138,7 +1138,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "PBES2-HS384+A192KW",
         jwa_t::jwa_pbes2_hs384_a192kw,
-        jwa_group_t::jwa_type_pbes_hs_aeskw,
+        jwa_group_t::jwa_group_pbes_hs_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1150,7 +1150,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "PBES2-HS512+A256KW",
         jwa_t::jwa_pbes2_hs512_a256kw,
-        jwa_group_t::jwa_type_pbes_hs_aeskw,
+        jwa_group_t::jwa_group_pbes_hs_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1165,7 +1165,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A128CBC-HS256",
         jwe_t::jwe_a128cbc_hs256,
-        jwe_group_t::jwe_type_aescbc_hs,
+        jwe_group_t::jwe_group_aescbc_hs,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1177,7 +1177,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A192CBC-HS384",
         jwe_t::jwe_a192cbc_hs384,
-        jwe_group_t::jwe_type_aescbc_hs,
+        jwe_group_t::jwe_group_aescbc_hs,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1189,7 +1189,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A256CBC-HS512",
         jwe_t::jwe_a256cbc_hs512,
-        jwe_group_t::jwe_type_aescbc_hs,
+        jwe_group_t::jwe_group_aescbc_hs,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1201,7 +1201,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A128GCM",
         jwe_t::jwe_a128gcm,
-        jwe_group_t::jwe_type_aesgcm,
+        jwe_group_t::jwe_group_aesgcm,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1212,7 +1212,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A192GCM",
         jwe_t::jwe_a192gcm,
-        jwe_group_t::jwe_type_aesgcm,
+        jwe_group_t::jwe_group_aesgcm,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1223,7 +1223,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A256GCM",
         jwe_t::jwe_a256gcm,
-        jwe_group_t::jwe_type_aesgcm,
+        jwe_group_t::jwe_group_aesgcm,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1237,7 +1237,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_hs256,
         jws_t::jws_hs256,
-        jws_group_t::jws_type_hmac,
+        jws_group_t::jws_group_hmac,
         crypto_kty_t::kty_hmac,
         "HS256",
         hash_algorithm_t::sha2_256,
@@ -1247,7 +1247,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_hs384,
         jws_t::jws_hs384,
-        jws_group_t::jws_type_hmac,
+        jws_group_t::jws_group_hmac,
         crypto_kty_t::kty_hmac,
         "HS384",
         hash_algorithm_t::sha2_384,
@@ -1257,7 +1257,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_hs512,
         jws_t::jws_hs512,
-        jws_group_t::jws_type_hmac,
+        jws_group_t::jws_group_hmac,
         crypto_kty_t::kty_hmac,
         "HS512",
         hash_algorithm_t::sha2_512,
@@ -1267,7 +1267,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs256,
         jws_t::jws_rs256,
-        jws_group_t::jws_type_rsassa_pkcs15,
+        jws_group_t::jws_group_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         "RS256",
         hash_algorithm_t::sha2_256,
@@ -1277,7 +1277,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs384,
         jws_t::jws_rs384,
-        jws_group_t::jws_type_rsassa_pkcs15,
+        jws_group_t::jws_group_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         "RS384",
         hash_algorithm_t::sha2_384,
@@ -1287,7 +1287,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs512,
         jws_t::jws_rs512,
-        jws_group_t::jws_type_rsassa_pkcs15,
+        jws_group_t::jws_group_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         "RS512",
         hash_algorithm_t::sha2_512,
@@ -1297,7 +1297,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs1,
         jws_t::jws_unknown,
-        jws_group_t::jws_type_rsassa_pkcs15,
+        jws_group_t::jws_group_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         nullptr,
         hash_algorithm_t::sha1,
@@ -1307,7 +1307,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_es256,
         jws_t::jws_es256,
-        jws_group_t::jws_type_ecdsa,
+        jws_group_t::jws_group_ecdsa,
         crypto_kty_t::kty_ec,
         "ES256",
         hash_algorithm_t::sha2_256,
@@ -1317,7 +1317,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_es384,
         jws_t::jws_es384,
-        jws_group_t::jws_type_ecdsa,
+        jws_group_t::jws_group_ecdsa,
         crypto_kty_t::kty_ec,
         "ES384",
         hash_algorithm_t::sha2_384,
@@ -1327,7 +1327,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_es512,
         jws_t::jws_es512,
-        jws_group_t::jws_type_ecdsa,
+        jws_group_t::jws_group_ecdsa,
         crypto_kty_t::kty_ec,
         "ES512",
         hash_algorithm_t::sha2_512,
@@ -1337,7 +1337,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_ps256,
         jws_t::jws_ps256,
-        jws_group_t::jws_type_rsassa_pss,
+        jws_group_t::jws_group_rsassa_pss,
         crypto_kty_t::kty_rsa,
         "PS256",
         hash_algorithm_t::sha2_256,
@@ -1347,7 +1347,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_ps384,
         jws_t::jws_ps384,
-        jws_group_t::jws_type_rsassa_pss,
+        jws_group_t::jws_group_rsassa_pss,
         crypto_kty_t::kty_rsa,
         "PS384",
         hash_algorithm_t::sha2_384,
@@ -1357,7 +1357,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_ps512,
         jws_t::jws_ps512,
-        jws_group_t::jws_type_rsassa_pss,
+        jws_group_t::jws_group_rsassa_pss,
         crypto_kty_t::kty_rsa,
         "PS512",
         hash_algorithm_t::sha2_512,
@@ -1367,7 +1367,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_eddsa,
         jws_t::jws_eddsa,
-        jws_group_t::jws_type_eddsa,
+        jws_group_t::jws_group_eddsa,
         crypto_kty_t::kty_okp,
         "EdDSA",
         hash_algorithm_t::hash_alg_unknown,
@@ -1379,136 +1379,314 @@ const hint_signature_t hint_signatures[] = {
 
 const hint_cose_algorithm_t hint_cose_algorithms[] = {
     {
-        cose_alg_t::cose_a128kw,
+        cose_alg_t::cose_a128kw,  // -3
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aeskw,
     },
     {
-        cose_alg_t::cose_a192kw,
+        cose_alg_t::cose_a192kw,  // -4
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aeskw,
     },
     {
-        cose_alg_t::cose_a256kw,
+        cose_alg_t::cose_a256kw,  // -5
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aeskw,
     },
     {
-        cose_alg_t::cose_direct,
+        cose_alg_t::cose_direct,  // -6
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_direct,
     },
     {
-        cose_alg_t::cose_es256,
+        cose_alg_t::cose_es256,  // -7
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdsa,
     },
     {
-        cose_alg_t::cose_es384,
+        cose_alg_t::cose_es384,  // -35
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdsa,
     },
     {
-        cose_alg_t::cose_es512,
+        cose_alg_t::cose_es512,  // -36
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdsa,
     },
     {
-        cose_alg_t::cose_eddsa,
+        cose_alg_t::cose_eddsa,  // -8
         crypto_kty_t::kty_okp,
+        cose_group_t::cose_group_eddsa,
     },
     {
-        cose_alg_t::cose_direct_hkdf_sha_256,
+        cose_alg_t::cose_direct_hkdf_sha_256,  // -10
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_direct_hkdf_sha,
     },
     {
-        cose_alg_t::cose_direct_hkdf_sha_512,
+        cose_alg_t::cose_direct_hkdf_sha_512,  // -11
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_direct_hkdf_sha,
     },
     {
-        cose_alg_t::cose_direct_hkdf_aes_128,
+        cose_alg_t::cose_direct_hkdf_aes_128,  // -12
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_direct_hkdf_aes,
     },
     {
-        cose_alg_t::cose_direct_hkdf_aes_256,
+        cose_alg_t::cose_direct_hkdf_aes_256,  // -13
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_direct_hkdf_aes,
     },
     {
-        cose_alg_t::cose_sha1,
+        cose_alg_t::cose_sha1,  // -14
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_sha,
     },
     {
-        cose_alg_t::cose_sha256_64,
+        cose_alg_t::cose_sha256_64,  // -15
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_sha,
     },
     {
-        cose_alg_t::cose_sha256,
+        cose_alg_t::cose_sha256,  // -16
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_sha,
     },
     {
-        cose_alg_t::cose_sha512_256,
+        cose_alg_t::cose_sha512_256,  // -17
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_sha,
     },
     {
-        cose_alg_t::cose_sha384,
+        cose_alg_t::cose_sha384,  // -43
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_sha,
     },
     {
-        cose_alg_t::cose_sha512,
+        cose_alg_t::cose_sha512,  // -44
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_sha,
     },
     {
-        cose_alg_t::cose_shake128,
+        cose_alg_t::cose_shake128,  // -18
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_sha,
     },
     {
-        cose_alg_t::cose_shake256,
+        cose_alg_t::cose_shake256,  // -45
         crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_sha,
     },
     {
-        cose_alg_t::cose_ecdh_es_hkdf_256,
+        cose_alg_t::cose_ecdh_es_hkdf_256,  // -25
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdh_es_hkdf,
     },
     {
-        cose_alg_t::cose_ecdh_es_hkdf_512,
+        cose_alg_t::cose_ecdh_es_hkdf_512,  // -26
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdh_es_hkdf,
     },
     {
-        cose_alg_t::cose_ecdh_ss_hkdf_256,
+        cose_alg_t::cose_ecdh_ss_hkdf_256,  // -27
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdh_ss_hkdf,
     },
     {
-        cose_alg_t::cose_ecdh_ss_hkdf_512,
+        cose_alg_t::cose_ecdh_ss_hkdf_512,  // -28
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdh_ss_hkdf,
     },
     {
-        cose_alg_t::cose_ecdh_es_a128kw,
+        cose_alg_t::cose_ecdh_es_a128kw,  // -29
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdh_es_aeskw,
     },
     {
-        cose_alg_t::cose_ecdh_es_a192kw,
+        cose_alg_t::cose_ecdh_es_a192kw,  // -30
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdh_es_aeskw,
     },
     {
-        cose_alg_t::cose_ecdh_es_a256kw,
+        cose_alg_t::cose_ecdh_es_a256kw,  // -31
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdh_es_aeskw,
     },
     {
-        cose_alg_t::cose_ecdh_ss_a128kw,
+        cose_alg_t::cose_ecdh_ss_a128kw,  // -32
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdh_ss_aeskw,
     },
     {
-        cose_alg_t::cose_ecdh_ss_a192kw,
+        cose_alg_t::cose_ecdh_ss_a192kw,  // -33
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdh_ss_aeskw,
     },
     {
-        cose_alg_t::cose_ecdh_ss_a256kw,
+        cose_alg_t::cose_ecdh_ss_a256kw,  // -34
         crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdh_ss_aeskw,
     },
     {
-        cose_alg_t::cose_ps256,
+        cose_alg_t::cose_ps256,  // -37
         crypto_kty_t::kty_rsa,
+        cose_group_t::cose_group_rsassa_pss,
     },
     {
-        cose_alg_t::cose_ps384,
+        cose_alg_t::cose_ps384,  // -38
         crypto_kty_t::kty_rsa,
+        cose_group_t::cose_group_rsassa_pss,
     },
     {
-        cose_alg_t::cose_ps512,
+        cose_alg_t::cose_ps512,  // -39
         crypto_kty_t::kty_rsa,
+        cose_group_t::cose_group_rsassa_pss,
+    },
+    {
+        cose_alg_t::cose_rsaes_oaep_sha1,  // -40
+        crypto_kty_t::kty_rsa,
+        cose_group_t::cose_group_rsa_oaep,
+    },
+    {
+        cose_alg_t::cose_rsaes_oaep_sha256,  // -41
+        crypto_kty_t::kty_rsa,
+        cose_group_t::cose_group_rsa_oaep,
+    },
+    {
+        cose_alg_t::cose_rsaes_oaep_sha512,  // -42
+        crypto_kty_t::kty_rsa,
+        cose_group_t::cose_group_rsa_oaep,
+    },
+    {
+        cose_alg_t::cose_es256k,  // -47
+        crypto_kty_t::kty_ec,
+        cose_group_t::cose_group_ecdsa,
+    },
+    {
+        cose_alg_t::cose_rs256,  // -257
+        crypto_kty_t::kty_rsa,
+        cose_group_t::cose_group_rsassa_pkcs15,
+    },
+    {
+        cose_alg_t::cose_rs384,  // -258
+        crypto_kty_t::kty_rsa,
+        cose_group_t::cose_group_rsassa_pkcs15,
+    },
+    {
+        cose_alg_t::cose_rs512,  // -259,
+        crypto_kty_t::kty_rsa,
+        cose_group_t::cose_group_rsassa_pkcs15,
+    },
+    {
+        cose_alg_t::cose_rs1,  // -65535,
+        crypto_kty_t::kty_rsa,
+        cose_group_t::cose_group_rsassa_pkcs15,
+    },
+    {
+        cose_alg_t::cose_aes_128_gcm,  // 1
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesgcm,
+    },
+    {
+        cose_alg_t::cose_aes_192_gcm,  // 2
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesgcm,
+    },
+    {
+        cose_alg_t::cose_aes_256_gcm,  // 3
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesgcm,
+    },
+    {
+        cose_alg_t::cose_hs256_64,  // 4,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_hmac,
+    },
+    {
+        cose_alg_t::cose_hs256,  // 5,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_hmac,
+    },
+    {
+        cose_alg_t::cose_hs384,  // 6,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_hmac,
+    },
+    {
+        cose_alg_t::cose_hs512,  // 7,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_hmac,
+    },
+    {
+        cose_alg_t::cose_aes_ccm_16_64_128,  // 10,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesccm,
+    },
+    {
+        cose_alg_t::cose_aes_ccm_16_64_256,  // 11,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesccm,
+    },
+    {
+        cose_alg_t::cose_aes_ccm_64_64_128,  // 12,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesccm,
+    },
+    {
+        cose_alg_t::cose_aes_ccm_64_64_256,  // 13,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesccm,
+    },
+    {
+        cose_alg_t::cose_aes_ccm_16_128_128,  // 30,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesccm,
+    },
+    {
+        cose_alg_t::cose_aes_ccm_16_128_256,  // 31,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesccm,
+    },
+    {
+        cose_alg_t::cose_aes_ccm_64_128_128,  // 32,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesccm,
+    },
+    {
+        cose_alg_t::cose_aes_ccm_64_128_256,  // 33,
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aesccm,
+    },
+    {
+        cose_alg_t::cose_aes_cbc_mac_128_64,  // 14
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aescbc_mac,
+    },
+    {
+        cose_alg_t::cose_aes_cbc_mac_256_64,  // 15
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aescbc_mac,
+    },
+    {
+        cose_alg_t::cose_aes_cbc_mac_128_128,  // 25
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aescbc_mac,
+    },
+    {
+        cose_alg_t::cose_aes_cbc_mac_256_128,  // 26
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_aescbc_mac,
+    },
+    {
+        cose_alg_t::cose_chacha20_poly1305,  // 24
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_chacha20,
+    },
+    {
+        cose_alg_t::cose_iv_generation,  // 34
+        crypto_kty_t::kty_hmac,
+        cose_group_t::cose_group_iv,
     },
 };
 

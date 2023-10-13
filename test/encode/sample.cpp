@@ -39,7 +39,7 @@ void test_base16() {
 
     bool test = false;
     test = (strlen(text) == decoded.size());
-    _test_case.assert(test, __FUNCTION__, "base16");
+    _test_case.assert(test, __FUNCTION__, "b16");
 }
 
 void test_base16_func() {
@@ -91,7 +91,7 @@ void test_base16_decode() {
 
     bool test = false;
     test = ((encoded.size() / 2) == decoded.size());
-    _test_case.test(ret, __FUNCTION__, "base16");
+    _test_case.test(ret, __FUNCTION__, "b16");
 }
 
 void test_base16_oddsize() {
@@ -140,15 +140,76 @@ void test_base64() {
     test_base64_routine(lyrics, len, base64_encoding_t::base64url_encoding);
 }
 
-int main() {
-    _test_case.begin("base16 encoding");
+enum {
+    b64u = 1,
+    b64 = 2,
+    b16 = 3,
+};
+typedef struct _OPTION {
+    int mode;
+    std::string content;
+
+    _OPTION() : mode(0) {}
+} OPTION;
+
+void whatsthis(int argc, char** argv) {
+    return_t ret = errorcode_t::success;
+    cmdline_t<OPTION> cmdline;
+
+    cmdline << cmdarg_t<OPTION>("-b64u", "decode base64url",
+                                [&](OPTION& o, char* param) -> void {
+                                    o.mode = b64u;
+                                    o.content = param;
+                                })
+                   .preced()
+                   .optional()
+            << cmdarg_t<OPTION>("-b64", "decode base64",
+                                [&](OPTION& o, char* param) -> void {
+                                    o.mode = b64;
+                                    o.content = param;
+                                })
+                   .preced()
+                   .optional()
+            << cmdarg_t<OPTION>("-b16", "decode base16",
+                                [&](OPTION& o, char* param) -> void {
+                                    o.mode = b16;
+                                    o.content = param;
+                                })
+                   .preced()
+                   .optional();
+    ret = cmdline.parse(argc, argv);
+
+    OPTION o = cmdline.value();
+    if (o.mode) {
+        binary_t what;
+        switch (o.mode) {
+            case b64u:
+            case b64:
+            case b16:
+                what = base16_decode(o.content);
+                break;
+        }
+
+        basic_stream bs;
+        dump_memory(what, &bs);
+
+        std::cout << "what u want to know" << std::endl << "< " << o.content << std::endl << bs.c_str() << std::endl;
+    } else {
+        cmdline.help();
+    }
+}
+
+int main(int argc, char** argv) {
+    _test_case.begin("b16 encoding");
     test_base16();
     test_base16_func();
     test_base16_decode();
     test_base16_oddsize();
 
-    _test_case.begin("base64 encoding");
+    _test_case.begin("b64 encoding");
     test_base64();
+
+    whatsthis(argc, argv);
 
     _test_case.report(5);
     return _test_case.result();

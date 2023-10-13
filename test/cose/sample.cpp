@@ -71,7 +71,7 @@ void dump_crypto_key(crypto_key_object_t* key, void*) {
     }
 }
 
-return_t test_cose_example(cbor_object* root, const char* expect_file, const char* text) {
+return_t test_cose_example(cbor_object* root, const char* expect_file, const char* text, const char* external_aad = nullptr) {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
 
@@ -165,6 +165,7 @@ return_t test_cose_example(cbor_object* root, const char* expect_file, const cha
         // cbor_publisher publisher;
         binary_t signature;
         binary_t decrypted;
+        binary_t external;
         bool result = false;
         cose_context_t* cose_handle = nullptr;
 
@@ -175,12 +176,16 @@ return_t test_cose_example(cbor_object* root, const char* expect_file, const cha
         // privkeys.for_each (dump_crypto_key, nullptr);
         // pubkeys.for_each (dump_crypto_key, nullptr);
 
+        if (external_aad) {
+            external = base16_decode(external_aad);
+        }
+
         if (root->tagged()) {
             switch (root->tag_value()) {
                 case cbor_tag_t::cose_tag_sign:
                 case cbor_tag_t::cose_tag_sign1:
                     cose.open(&cose_handle);
-                    ret = cose.verify(cose_handle, &pubkeys, bin, result);
+                    ret = cose.verify(cose_handle, &pubkeys, bin, external, result);
                     cose.close(cose_handle);
 
                     _test_case.test(ret, __FUNCTION__, "check4.verify %s", text ? text : "");
@@ -188,7 +193,7 @@ return_t test_cose_example(cbor_object* root, const char* expect_file, const cha
                 case cbor_tag_t::cose_tag_encrypt:
                 case cbor_tag_t::cose_tag_encrypt0:
                     cose.open(&cose_handle);
-                    ret = cose.decrypt(cose_handle, &privkeys, bin, result);
+                    ret = cose.decrypt(cose_handle, &privkeys, bin, external, result);
                     cose.close(cose_handle);
 
                     _test_case.test(ret, __FUNCTION__, "check4.decrypt %s", text ? text : "");
@@ -925,7 +930,8 @@ void test_rfc8152_c_3_4() {
         *recipients << recipient;
     }
 
-    test_cose_example(root, "rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
+    // Externally Supplied AAD: h'0011bbcc22dd44ee55ff660077'
+    test_cose_example(root, "rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data", "0011bbcc22dd44ee55ff660077");
 
     root->release();
 }
@@ -1638,6 +1644,7 @@ void try_refactor_jose_sign() {
     cbor_object_signing_encryption cose;
     cose_context_t* handle = nullptr;
     binary_t signature;
+    binary_t external;
     basic_stream bs;
     bool result = true;
     constexpr char input[] = "wild wild world";
@@ -1645,7 +1652,7 @@ void try_refactor_jose_sign() {
     std::list<cose_alg_t> algs;
     algs.push_back(cose_alg_t::cose_es256);
     algs.push_back(cose_alg_t::cose_es512);
-    ret = cose.sign(handle, &privkey, algs, convert(input), signature);
+    ret = cose.sign(handle, &privkey, algs, convert(input), external, signature);
     _test_case.test(ret, __FUNCTION__, "sign");
     {
         test_case_notimecheck notimecheck(_test_case);
@@ -1663,7 +1670,7 @@ void try_refactor_jose_sign() {
         reader.close(reader_handle);
         printf("diagnostic\n%s\n", diagnostic.c_str());
     }
-    ret = cose.verify(handle, &pubkey, signature, result);
+    ret = cose.verify(handle, &pubkey, signature, external, result);
     _test_case.test(ret, __FUNCTION__, "verify");
     cose.close(handle);
 }
@@ -1720,6 +1727,7 @@ void test_github_example() {
         const char* file;
         const char* desc;
         const char* cbor;
+        const char* external;
     } vector[] =
     { {
           &aes_aead_key,
@@ -2099,6 +2107,26 @@ void test_github_example() {
       },
       {
           &key,
+          "sign1-tests/sign-pass-01.json",
+          "sign-pass-01: Redo protected",
+          "D28441A0A201260442313154546869732069732074686520636F6E74656E742E584087DB0D2E5571843B78AC33ECB2830DF7B6E0A4D5B7376DE336B23C591C90C425317E56127FBE0437"
+          "0097CE347087B233BF722B64072BEB4486BDA4031D27244F",
+      },
+      {
+          &key, "sign1-tests/sign-pass-02.json", "sign-pass-02: External",
+          "D28443A10126A10442313154546869732069732074686520636F6E74656E742E584010729CD711CB3813D8D8E944A8DA7111E7B258C9BDCA6135F7AE1ADBEE9509891267837E1E33BD36"
+          "C150326AE62755C6BD8E540C3E8F92D7D225E8DB72B8820B",
+          "11aa22bb33cc44dd55006699",  // external
+      },
+      {
+          &key,
+          "sign1-tests/sign-pass-03.json",
+          "sign-pass-03: Remove CBOR Tag",
+          "8443A10126A10442313154546869732069732074686520636F6E74656E742E58408EB33E4CA31D1C465AB05AAC34CC6B23D58FEF5C083106C4D25A91AEF0B0117E2AF9A291AA32E14AB8"
+          "34DC56ED2A223444547E01F11D3B0916E5A4C345CACB36",
+      },
+      {
+          &key,
           "sign-tests/ecdsa-01.json",
           "ECDSA-01: ECDSA - P-256",
           "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840D71C05DB52C9CE7F1BF5AAC01334BBEACAC1D86A2303E6EEAA89266F45C01ED6"
@@ -2112,11 +2140,10 @@ void test_github_example() {
           "AC98B8544C908B4507DE1E90B717C3D34816FE926A2B98F53AFD2FA0F30A",
       },
       {
-          &key,
-          "sign-tests/sign-pass-02.json",
-          "sign-pass-02: External",
+          &key, "sign-tests/sign-pass-02.json", "sign-pass-02: External",
           "D8628440A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840CBB8DAD9BEAFB890E1A414124D8BFBC26BEDF2A94FCB5A882432BFF6D63E15F574EEB2"
           "AB51D83FA2CBF62672EBF4C7D993B0F4C2447647D831BA57CCA86B930A",
+          "11aa22bb33cc44dd55006699",  // external
       },
       {
           &key,
@@ -2292,6 +2319,7 @@ void test_github_example() {
     cose.open(&handle);
     for (i = 0; i < RTL_NUMBER_OF(vector); i++) {
         binary_t cbor = base16_decode(vector[i].cbor);
+        binary_t external = base16_decode(vector[i].external);
 
         binary_t bin_cbor;
         basic_stream bs;
@@ -2321,7 +2349,7 @@ void test_github_example() {
             switch (tagvalue) {
                 case cbor_tag_t::cose_tag_encrypt0:  // 16
                 case cbor_tag_t::cose_tag_encrypt:   // 96
-                    ret = cose.decrypt(handle, vector[i].key, cbor, result);
+                    ret = cose.decrypt(handle, vector[i].key, cbor, external, result);
                     break;
                 case cbor_tag_t::cose_tag_mac0:  // 17
                 case cbor_tag_t::cose_tag_mac:   // 97
@@ -2329,7 +2357,7 @@ void test_github_example() {
                     break;
                 case cbor_tag_t::cose_tag_sign1:  // 18
                 case cbor_tag_t::cose_tag_sign:   // 98
-                    ret = cose.verify(handle, vector[i].key, cbor, result);
+                    ret = cose.verify(handle, vector[i].key, cbor, external, result);
                     break;
                 default:
                     ret = errorcode_t::bad_data;  // todo, studying, not-tagged

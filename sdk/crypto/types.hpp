@@ -305,13 +305,13 @@ enum crypto_use_t {
 };
 
 enum jwa_group_t {
-    jwa_type_rsa = 1,
-    jwa_type_aeskw = 2,
-    jwa_type_dir = 3,
-    jwa_type_ecdh = 4,
-    jwa_type_ecdh_aeskw = 5,
-    jwa_type_aesgcmkw = 6,
-    jwa_type_pbes_hs_aeskw = 7,
+    jwa_group_rsa = 1,
+    jwa_group_aeskw = 2,
+    jwa_group_dir = 3,
+    jwa_group_ecdh = 4,
+    jwa_group_ecdh_aeskw = 5,
+    jwa_group_aesgcmkw = 6,
+    jwa_group_pbes_hs_aeskw = 7,
 };
 
 /**
@@ -339,8 +339,8 @@ enum jwa_t {
 };
 
 enum jwe_group_t {
-    jwe_type_aescbc_hs = 1,
-    jwe_type_aesgcm = 2,
+    jwe_group_aescbc_hs = 1,
+    jwe_group_aesgcm = 2,
 };
 
 /**
@@ -357,11 +357,11 @@ enum jwe_t {
 };
 
 enum jws_group_t {
-    jws_type_hmac = 1,           // HS256, HS384, HS512
-    jws_type_rsassa_pkcs15 = 2,  // RS256, RS384, RS512
-    jws_type_ecdsa = 3,          // ES256, ES384, ES512
-    jws_type_rsassa_pss = 4,     // PS256, PS384, PS512
-    jws_type_eddsa = 5,          // EdDSA
+    jws_group_hmac = 1,           // HS256, HS384, HS512
+    jws_group_rsassa_pkcs15 = 2,  // RS256, RS384, RS512
+    jws_group_ecdsa = 3,          // ES256, ES384, ES512
+    jws_group_rsassa_pss = 4,     // PS256, PS384, PS512
+    jws_group_eddsa = 5,          // EdDSA
 };
 
 /**
@@ -522,6 +522,29 @@ enum cose_ec_curve_t {
     cose_ec_ed25519 = 6,
     cose_ec_ed448 = 7,
 };
+
+enum cose_group_t {
+    cose_group_aeskw = 1,
+    cose_group_direct = 2,
+    cose_group_ecdsa = 3,
+    cose_group_eddsa = 4,
+    cose_group_direct_hkdf_sha = 5,
+    cose_group_direct_hkdf_aes = 6,
+    cose_group_sha = 7,
+    cose_group_ecdh_es_hkdf = 8,
+    cose_group_ecdh_ss_hkdf = 9,
+    cose_group_ecdh_es_aeskw = 10,
+    cose_group_ecdh_ss_aeskw = 11,
+    cose_group_rsassa_pss = 12,
+    cose_group_rsa_oaep = 13,
+    cose_group_rsassa_pkcs15 = 14,
+    cose_group_aesgcm = 15,
+    cose_group_hmac = 16,
+    cose_group_aesccm = 17,
+    cose_group_aescbc_mac = 18,
+    cose_group_chacha20 = 19,
+    cose_group_iv = 20,
+};
 enum cose_alg_t {
     cose_unknown = 0,
 
@@ -666,6 +689,7 @@ typedef struct _hint_jose_encryption_t {
 typedef struct _hint_cose_algorithm_t {
     cose_alg_t alg;
     crypto_kty_t kty;
+    cose_group_t group;
     // studying
 } hint_cose_algorithm_t;
 

@@ -73,51 +73,54 @@ return_t cbor_object_signing_encryption::close(cose_context_t* handle) {
     return ret;
 }
 
-return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t const& external,
+                                                 binary_t& output) {
     return_t ret = errorcode_t::success;
     cbor_object_encryption cose_encryption;
 
-    ret = cose_encryption.encrypt(handle, key, method, input, output);
+    ret = cose_encryption.encrypt(handle, key, method, input, external, output);
     return ret;
 }
 
-return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
+return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t const& external, binary_t& output) {
     return_t ret = errorcode_t::success;
     cbor_object_encryption cose_encryption;
 
-    ret = cose_encryption.encrypt(handle, key, methods, input, output);
+    ret = cose_encryption.encrypt(handle, key, methods, input, external, output);
     return ret;
 }
 
-return_t cbor_object_signing_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
+return_t cbor_object_signing_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t const& external, bool& result) {
     return_t ret = errorcode_t::success;
     cbor_object_encryption cose_encryption;
 
-    ret = cose_encryption.decrypt(handle, key, input, result);
+    ret = cose_encryption.decrypt(handle, key, input, external, result);
     return ret;
 }
 
-return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t const& external,
+                                              binary_t& output) {
     return_t ret = errorcode_t::success;
     cbor_object_signing cose_sign;
 
-    ret = cose_sign.sign(handle, key, method, input, output);
+    ret = cose_sign.sign(handle, key, method, input, external, output);
     return ret;
 }
 
-return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input,
+                                              binary_t const& external, binary_t& output) {
     return_t ret = errorcode_t::success;
     cbor_object_signing cose_sign;
 
-    ret = cose_sign.sign(handle, key, methods, input, output);
+    ret = cose_sign.sign(handle, key, methods, input, external, output);
     return ret;
 }
 
-return_t cbor_object_signing_encryption::verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
+return_t cbor_object_signing_encryption::verify(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t const& external, bool& result) {
     return_t ret = errorcode_t::success;
     cbor_object_signing cose_sign;
 
-    ret = cose_sign.verify(handle, key, input, result);
+    ret = cose_sign.verify(handle, key, input, external, result);
     return ret;
 }
 
@@ -412,7 +415,7 @@ return_t cbor_object_signing_encryption::composer::parse(cose_context_t* handle,
         }
         ret = reader.parse(reader_context, input);
         if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
+            __leave2;
         }
         ret = reader.publish(reader_context, &root);
         if (errorcode_t::success != ret) {

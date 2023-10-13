@@ -25,37 +25,40 @@ class cbor_object_signing {
     ~cbor_object_signing();
 
     /**
-     * @brief sign
-     * @param cose_context_t* handle [in]
-     * @param crypto_key* key [in]
-     * @param cose_alg_t method [in]
-     * @param binary_t const& input [in]
-     * @param binary_t& output [out]
+     * @brief   sign
+     * @param   cose_context_t* handle [in]
+     * @param   crypto_key* key [in]
+     * @param   cose_alg_t method [in]
+     * @param   binary_t const& input [in]
+     * @param   binary_t const& external [inopt]
+     * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
+    return_t sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t const& external, binary_t& output);
     /**
-     * @brief sign
-     * @param cose_context_t* handle [in]
-     * @param crypto_key* key [in]
-     * @param std::list<cose_alg_t> methods [in]
-     * @param binary_t const& input [in]
-     * @param binary_t& output [out]
+     * @brief   sign
+     * @param   cose_context_t* handle [in]
+     * @param   crypto_key* key [in]
+     * @param   std::list<cose_alg_t> methods [in]
+     * @param   binary_t const& input [in]
+     * @param   binary_t const& external [inopt]
+     * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output);
+    return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t const& external, binary_t& output);
     /**
-     * @brief verify with kid
-     * @param cose_context_t* handle [in]
-     * @param crypto_key* key [in]
-     * @param binary_t const& input [in] CBOR
-     * @param bool& result [out]
+     * @brief   verify with kid
+     * @param   cose_context_t* handle [in]
+     * @param   crypto_key* key [in]
+     * @param   binary_t const& input [in] CBOR
+     * @param   binary_t const& external [inopt]
+     * @param   bool& result [out]
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
+    return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t const& external, bool& result);
 
    protected:
     /**
@@ -83,11 +86,11 @@ class cbor_object_signing {
      * @param   uint8 tag [in]
      * @param   binary_t const& body_protected [in]
      * @param   binary_t const& sign_protected [in]
-     * @param   binary_t const& aad [in]
+     * @param   binary_t const& external [inopt]
      * @param   binary_t const& payload [in]
      * @return  error code (see error.hpp)
      */
-    return_t compose_tobesigned(binary_t& tobesigned, uint8 tag, binary_t const& body_protected, binary_t const& sign_protected, binary_t const& aad,
+    return_t compose_tobesigned(binary_t& tobesigned, uint8 tag, binary_t const& body_protected, binary_t const& sign_protected, binary_t const& external,
                                 binary_t const& payload);
 };
 

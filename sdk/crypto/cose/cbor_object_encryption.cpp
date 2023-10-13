@@ -28,26 +28,28 @@ cbor_object_encryption::~cbor_object_encryption() {
     // do nothing
 }
 
-return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output) {
+return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t const& external,
+                                         binary_t& output) {
     return_t ret = errorcode_t::success;
 
     return ret;
 }
 
-return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
+return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input,
+                                         binary_t const& external, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     return ret;
 }
 
-return_t compose_enc_structure(binary_t& enc_structure, uint8 tag, binary_t const& body_protected, binary_t const& aad) {
+return_t cbor_object_encryption::compose_enc_structure(binary_t& authenticated_data, uint8 tag, binary_t const& body_protected, binary_t const& external) {
     return_t ret = errorcode_t::success;
     cbor_encode encoder;
     cbor_publisher pub;
     cbor_array* root = nullptr;
 
     __try2 {
-        enc_structure.clear();
+        authenticated_data.clear();
 
         root = new cbor_array();
 
@@ -61,9 +63,9 @@ return_t compose_enc_structure(binary_t& enc_structure, uint8 tag, binary_t cons
         }
 
         *root << new cbor_data(body_protected);
-        *root << new cbor_data(aad);
+        *root << new cbor_data(external);
 
-        pub.publish(root, &enc_structure);
+        pub.publish(root, &authenticated_data);
     }
     __finally2 {
         if (root) {
@@ -73,14 +75,17 @@ return_t compose_enc_structure(binary_t& enc_structure, uint8 tag, binary_t cons
     return ret;
 }
 
-return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
+return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t const& external, bool& result) {
     return_t ret = errorcode_t::not_supported;
-#if 0  // studying... just sketch
-    return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
     std::set<bool> results;
     cbor_object_signing_encryption::composer composer;
     EVP_PKEY* pkey = nullptr;
+
+    // RFC 8152 4.3.  Externally Supplied Data
+    // RFC 8152 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
+    // RFC 8152 5.4.  How to Encrypt and Decrypt for AE Algorithms
 
     __try2 {
         ret = errorcode_t::verify;
@@ -95,11 +100,22 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
         const char* k = nullptr;
 
-        binary_t aad;
         size_t size_subitems = handle->subitems.size();
         std::list<cose_parts_t>::iterator iter;
         for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
             cose_parts_t& item = *iter;
+
+            binary_t authenticated_data;
+            binary_t decrypted;
+            binary_t derived;
+            binary_t iv;
+            binary_t salt;
+            binary_t secret;
+            openssl_crypt crypt;
+            crypt_context_t* crypt_handle = nullptr;
+
+            compose_enc_structure(authenticated_data, handle->tag, handle->body.bin_protected, external);
+
             int alg = 0;
             std::string kid;
             return_t check = errorcode_t::success;
@@ -109,37 +125,62 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 k = kid.c_str();
             }
 
-            pkey = key->find(kid.c_str(), crypto_kty_t::kty_ec);
-            if (cose_alg_t::cose_ecdh_es_hkdf_256 == alg) {
-            else if (cose_alg_t::cose_ecdh_es_hkdf_256 == alg) {
-                binary_t secret;
-                binary_t salt;
-                dh_key_agreement(pkey, item.epk, secret);
-                binary_t derived;
-                salt.resize(256 >> 3);
-                // kdf_hkdf(derived, 256 >> 3, secret, salt, convert(""), hash_algorithm_t::sha2_256);
-                // compose_enc_structure(aad, handle->tag, item.bin_protected, convert(""));
-                binary_t iv;
-                // int body_alg = 0;
-                // check = composer.finditem(cose_key_t::cose_alg, body_alg, handle->body.protected_map);
-
-                binary_t decrypted;
-                openssl_crypt crypt;
-                crypt_context_t* crypt_handle = nullptr;
-                // crypt.open(&crypt_handle, crypt_algorithm_t::aes256, crypt_mode_t::gcm, derived, iv);
-                // check = crypt.decrypt2 (crypt_handle, handle->payload, decrypted, aad, tag);
-                // crypt.close(crypt_handle);
-
-                // results.insert((errorcode_t::success == check) ? true : false);
-
-                basic_stream bs;
-                dump_memory(secret, &bs);
-                printf("secret\n%s\n", bs.c_str());
-                dump_memory(derived, &bs);
-                printf("derived\n%s\n", bs.c_str());
-                dump_memory(decrypted, &bs);
-                printf("decrypted\n%s\n", bs.c_str());
+            const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm((cose_alg_t)alg);
+            if (nullptr == hint) {
+                continue;
             }
+
+            pkey = key->find(k, hint->kty);
+            if (nullptr == pkey) {
+                continue;
+            }
+
+            cose_group_t group = hint->group;
+
+            if (cose_group_t::cose_group_aeskw == group) {
+            } else if (cose_group_t::cose_group_direct == group) {
+            } else if (cose_group_t::cose_group_ecdsa == group) {
+            } else if (cose_group_t::cose_group_eddsa == group) {
+            } else if (cose_group_t::cose_group_direct_hkdf_sha == group) {
+            } else if (cose_group_t::cose_group_direct_hkdf_aes == group) {
+            } else if (cose_group_t::cose_group_sha == group) {
+            } else if (cose_group_t::cose_group_ecdh_es_hkdf == group) {
+                dh_key_agreement(pkey, item.epk, secret);
+                hash_algorithm_t hashalg;
+                int dlen = 0;
+                if (cose_ecdh_es_hkdf_256 == alg) {
+                    dlen = 256 >> 3;
+                    hashalg = hash_algorithm_t::sha2_256;
+                } else if (cose_ecdh_es_hkdf_512 == alg) {
+                    dlen = 512 >> 3;
+                    hashalg = hash_algorithm_t::sha2_512;
+                }
+                salt.resize(dlen);
+                kdf_hkdf(derived, dlen, authenticated_data, salt, convert(""), hashalg);
+            } else if (cose_group_t::cose_group_ecdh_ss_hkdf == group) {
+            } else if (cose_group_t::cose_group_ecdh_es_aeskw == group) {
+                dh_key_agreement(pkey, item.epk, secret);
+            } else if (cose_group_t::cose_group_ecdh_ss_aeskw == group) {
+            } else if (cose_group_t::cose_group_rsassa_pss == group) {
+            } else if (cose_group_t::cose_group_rsa_oaep == group) {
+            } else if (cose_group_t::cose_group_rsassa_pkcs15 == group) {
+            } else if (cose_group_t::cose_group_aesgcm == group) {
+            } else if (cose_group_t::cose_group_hmac == group) {
+            } else if (cose_group_t::cose_group_aesccm == group) {
+            } else if (cose_group_t::cose_group_aescbc_mac == group) {
+            } else if (cose_group_t::cose_group_chacha20 == group) {
+            } else if (cose_group_t::cose_group_iv == group) {
+            }
+
+            basic_stream bs;
+            dump_memory(authenticated_data, &bs);
+            printf("\e[35mauthenticated_data\n%s\n%s\n\e[0m", bs.c_str(), base16_encode(authenticated_data).c_str());
+            dump_memory(secret, &bs);
+            printf("secret\n%s\n", bs.c_str());
+            dump_memory(derived, &bs);
+            printf("derived\n%s\n", bs.c_str());
+            dump_memory(decrypted, &bs);
+            printf("decrypted\n%s\n", bs.c_str());
         }
 
         if ((1 == results.size()) && (true == *results.begin())) {
@@ -150,7 +191,6 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
     __finally2 {
         // do nothing
     }
-#endif
     return ret;
 }
 

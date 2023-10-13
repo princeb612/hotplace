@@ -203,7 +203,13 @@ return_t base16_decode(std::string const& source, binary_t& outpart) { return ba
 
 return_t base16_decode(std::string const& source, stream_t* stream) { return base16_decode(source.c_str(), source.size(), stream); }
 
-binary_t base16_decode(const char* source) { return base16_decode(source, strlen(source)); }
+binary_t base16_decode(const char* source) {
+    binary_t outpart;
+    if (source) {
+        outpart = base16_decode(source, strlen(source));
+    }
+    return outpart;
+}
 
 binary_t base16_decode(const char* source, size_t size) {
     binary_t outpart;
