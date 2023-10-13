@@ -684,5 +684,17 @@ return_t cbor_object_signing_encryption::composer::finditem(int key, std::string
     return ret;
 }
 
+return_t cbor_object_signing_encryption::composer::finditem(int key, binary_t& value, cose_variantmap_t& from) {
+    return_t ret = errorcode_t::success;
+    variant_t vt;
+
+    maphint<int, variant_t> hint(from);
+    ret = hint.find(key, &vt);
+    if (errorcode_t::success == ret) {
+        variant_binary(vt, value);
+    }
+    return ret;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

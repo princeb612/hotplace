@@ -188,6 +188,13 @@ class cbor_object_signing_encryption {
          * @param   cose_variantmap_t& from [in]
          */
         return_t finditem(int key, std::string& value, cose_variantmap_t& from);
+        /**
+         * @brief   find
+         * @param   int key [in]
+         * @param   binary_t& value [out]
+         * @param   cose_variantmap_t& from [in]
+         */
+        return_t finditem(int key, binary_t& value, cose_variantmap_t& from);
     };
 };
 

@@ -240,6 +240,14 @@ return_t openssl_crypt::close(crypt_context_t* handle) {
     return ret;
 }
 
+return_t openssl_crypt::open(crypt_context_t** handle, const char* cipher, binary_t const& key, binary_t const& iv) {
+    crypt_algorithm_t algorithm;
+    crypt_mode_t mode;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    advisor->find_evp_cipher(cipher, algorithm, mode);
+    return open(handle, algorithm, mode, key, iv);
+}
+
 return_t openssl_crypt::encrypt(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted,
                                 size_t* size_encrypted) {
     return_t ret = errorcode_t::success;

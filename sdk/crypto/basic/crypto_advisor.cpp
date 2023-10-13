@@ -1958,11 +1958,11 @@ return_t crypto_advisor::build_if_necessary() {
         for (i = 0; i < sizeof_hint_signatures; i++) {
             const hint_signature_t* item = hint_signatures + i;
             _crypt_sig_map.insert(std::make_pair(item->sig_type, item));
-            _jose_sig_map.insert(std::make_pair(item->jws_type, item));
             if (item->jws_name) {
                 _sig_byname_map.insert(std::make_pair(item->jws_name, item));
             }
-            if (jws_t::jws_unknown != item->jws_type) {
+            if (item->jws_type) {
+                _jose_sig_map.insert(std::make_pair(item->jws_type, item));
                 _sig2jws_map.insert(std::make_pair(item->sig_type, item->jws_type));
             }
         }
@@ -2024,7 +2024,6 @@ return_t crypto_advisor::build_if_necessary() {
         for (i = 0; i < RTL_NUMBER_OF(hint_curves); i++) {
             _nid2curve_map.insert(std::make_pair(hint_curves[i].nid, hint_curves[i].cose_crv));
             if (hint_curves[i].cose_crv) {
-                // cose_ec_curve_t::cose_ec_unknown != crv
                 _curve2nid_map.insert(std::make_pair(hint_curves[i].cose_crv, hint_curves[i].nid));
             }
         }

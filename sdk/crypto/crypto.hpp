@@ -46,6 +46,15 @@ class crypt_t {
      */
     virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv) = 0;
     /**
+     * @brief create a context handle (symmetric)
+     * @param crypt_context_t** handle [out]
+     * @param const char* cipher [in] ex. "aes-128-cbc"
+     * @param binary_t const& key [in]
+     * @param binary_t const& iv [in]
+     * @return error code (see error.hpp)
+     */
+    virtual return_t open(crypt_context_t** handle, const char* cipher, binary_t const& key, binary_t const& iv) = 0;
+    /**
      * @brief destroy a context handle
      * @param crypt_context_t* handle [in]
      * @return error code (see error.hpp)

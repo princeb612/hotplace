@@ -9,6 +9,11 @@
  *
  */
 
+#include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_object_encryption.hpp>
 #include <hotplace/sdk/io/cbor/cbor_array.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
@@ -98,6 +103,9 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
         composer.parse(handle, cbor_tag_t::cose_tag_encrypt, input);
 
+        binary_t authenticated_data;
+        compose_enc_structure(authenticated_data, handle->tag, handle->body.bin_protected, external);
+
         const char* k = nullptr;
 
         size_t size_subitems = handle->subitems.size();
@@ -105,16 +113,15 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
         for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
             cose_parts_t& item = *iter;
 
-            binary_t authenticated_data;
             binary_t decrypted;
             binary_t derived;
             binary_t iv;
             binary_t salt;
             binary_t secret;
             openssl_crypt crypt;
+            openssl_hash hash;
             crypt_context_t* crypt_handle = nullptr;
-
-            compose_enc_structure(authenticated_data, handle->tag, handle->body.bin_protected, external);
+            hash_context_t* hash_handle = nullptr;
 
             int alg = 0;
             std::string kid;
@@ -146,17 +153,6 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             } else if (cose_group_t::cose_group_sha == group) {
             } else if (cose_group_t::cose_group_ecdh_es_hkdf == group) {
                 dh_key_agreement(pkey, item.epk, secret);
-                hash_algorithm_t hashalg;
-                int dlen = 0;
-                if (cose_ecdh_es_hkdf_256 == alg) {
-                    dlen = 256 >> 3;
-                    hashalg = hash_algorithm_t::sha2_256;
-                } else if (cose_ecdh_es_hkdf_512 == alg) {
-                    dlen = 512 >> 3;
-                    hashalg = hash_algorithm_t::sha2_512;
-                }
-                salt.resize(dlen);
-                kdf_hkdf(derived, dlen, authenticated_data, salt, convert(""), hashalg);
             } else if (cose_group_t::cose_group_ecdh_ss_hkdf == group) {
             } else if (cose_group_t::cose_group_ecdh_es_aeskw == group) {
                 dh_key_agreement(pkey, item.epk, secret);
@@ -175,12 +171,22 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             basic_stream bs;
             dump_memory(authenticated_data, &bs);
             printf("\e[35mauthenticated_data\n%s\n%s\n\e[0m", bs.c_str(), base16_encode(authenticated_data).c_str());
-            dump_memory(secret, &bs);
-            printf("secret\n%s\n", bs.c_str());
-            dump_memory(derived, &bs);
-            printf("derived\n%s\n", bs.c_str());
-            dump_memory(decrypted, &bs);
-            printf("decrypted\n%s\n", bs.c_str());
+            if (secret.size()) {
+                dump_memory(secret, &bs);
+                printf("secret\n%s\n%s\n", bs.c_str(), base16_encode(secret).c_str());
+            }
+            if (iv.size()) {
+                dump_memory(iv, &bs);
+                printf("iv\n%s\n\%s\n", bs.c_str(), base16_encode(iv).c_str());
+            }
+            if (derived.size()) {
+                dump_memory(derived, &bs);
+                printf("derived\n%s\n%s\n", bs.c_str(), base16_encode(derived).c_str());
+            }
+            if (decrypted.size()) {
+                dump_memory(decrypted, &bs);
+                printf("decrypted\n%s\n%s\n", bs.c_str(), base16_encode(decrypted).c_str());
+            }
         }
 
         if ((1 == results.size()) && (true == *results.begin())) {
