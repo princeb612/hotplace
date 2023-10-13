@@ -227,12 +227,17 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, co
         }
 
         crypt_sig_t sig = advisor->cose_sigof(alg);
-        EVP_PKEY* pkey = nullptr;
+        const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
+        if (nullptr == hint) {
+            ret = errorcode_t::request;  // study
+            __leave2;
+        }
+        EVP_PKEY* pkey = nullptr;  // do not couple kty to alg
         if (kid) {
-            pkey = key->find(kid, sig);
+            pkey = key->find(kid, hint->kty);
         } else {
             std::string k;
-            pkey = key->select(k, sig);
+            pkey = key->select(k, hint->kty);
         }
 
         switch (alg) {

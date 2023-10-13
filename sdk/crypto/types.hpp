@@ -672,11 +672,11 @@ typedef struct _hint_jose_encryption_t {
     int hash_alg;
 } hint_jose_encryption_t;
 
-typedef struct _hint_cose_encryption_t {
+typedef struct _hint_cose_algorithm_t {
     cose_alg_t alg;
     crypto_kty_t kty;
     // studying
-} hint_cose_encryption_t;
+} hint_cose_algorithm_t;
 
 typedef struct _hint_curves_t {
     uint32 nid;

@@ -1331,7 +1331,7 @@ const hint_signature_t hint_signatures[] = {
     },
 };
 
-const hint_cose_encryption_t hint_cose_alg[] = {
+const hint_cose_algorithm_t hint_cose_algorithms[] = {
     {
         cose_alg_t::cose_a128kw,
         crypto_kty_t::kty_hmac,
@@ -1663,6 +1663,7 @@ const hint_kty_name_t hint_kty_names[] = {
 const size_t sizeof_hint_jose_algorithms = RTL_NUMBER_OF(hint_jose_algorithms);
 const size_t sizeof_hint_jose_encryptions = RTL_NUMBER_OF(hint_jose_encryptions);
 const size_t sizeof_hint_signatures = RTL_NUMBER_OF(hint_signatures);
+const size_t sizeof_hint_cose_algorithms = RTL_NUMBER_OF(hint_cose_algorithms);
 const size_t sizeof_hint_curves = RTL_NUMBER_OF(hint_curves);
 const size_t sizeof_hint_kty_names = RTL_NUMBER_OF(hint_kty_names);
 
@@ -1746,6 +1747,10 @@ return_t crypto_advisor::build_if_necessary() {
             for (uint midx = 0; midx < item->count; midx++) {
                 _sig_bynid_map.insert(std::make_pair(item->nid[midx], item));
             }
+        }
+        for (i = 0; i < sizeof_hint_cose_algorithms; i++) {
+            const hint_cose_algorithm_t* item = hint_cose_algorithms + i;
+            _cose_alg_map.insert(std::make_pair(item->alg, item));
         }
         for (i = 0; i < sizeof_hint_curves; i++) {
             const hint_curve_t* item = hint_curves + i;
@@ -2102,6 +2107,14 @@ const hint_signature_t* crypto_advisor::hintof_jose_signature(jws_t sig) {
     maphint<uint32, const hint_signature_t*> hint(_jose_sig_map);
 
     hint.find(sig, &item);
+    return item;
+}
+
+const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(cose_alg_t alg) {
+    const hint_cose_algorithm_t* item = nullptr;
+    maphint<uint32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
+
+    hint.find(alg, &item);
     return item;
 }
 

@@ -157,6 +157,12 @@ class crypto_advisor {
     const hint_signature_t* hintof_jose_signature(jws_t sig);
     /**
      * @brief hint
+     * @param cose_alg_t sig [in]
+     * @return const hint_cose_algorithm_t*
+     */
+    const hint_cose_algorithm_t* hintof_cose_algorithm(cose_alg_t alg);
+    /**
+     * @brief hint
      * @param uint32 nid [in] see ec_curve_t
      *          NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1, NID_ED25519, NID_ED448, NID_X25519, NID_X448
      * @return const hint_curve_t*
@@ -434,6 +440,7 @@ class crypto_advisor {
     typedef std::map<uint32, const openssl_evp_md_method_t*> md_fetch_map_t;
     typedef std::map<uint32, const hint_jose_encryption_t*> jose_encryption_map_t;
     typedef std::map<uint32, const hint_signature_t*> signature_map_t;
+    typedef std::map<uint32, const hint_cose_algorithm_t*> cose_algorithm_map_t;
     typedef std::multimap<uint32, const hint_signature_t*> jose_signature_bynid_map_t;
     typedef std::map<std::string, const hint_jose_encryption_t*> jose_encryption_byname_map_t;
     typedef std::map<std::string, const hint_signature_t*> signature_byname_map_t;
@@ -464,6 +471,7 @@ class crypto_advisor {
     jose_encryption_map_t _enc_map;
     signature_map_t _crypt_sig_map;
     signature_map_t _jose_sig_map;
+    cose_algorithm_map_t _cose_alg_map;
     jose_signature_bynid_map_t _sig_bynid_map;
 
     jose_encryption_byname_map_t _alg_byname_map;

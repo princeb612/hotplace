@@ -1686,8 +1686,10 @@ void test_github_example() {
     cwk.add_ec_b16(&key, "ed448", "EdDSA", "Ed448",
                    "5fd7449b59b461fd2ce787ec616ad46a1da1342485a70e1f8a0ea75d80e96778edf124769b46c7061bd6783df1e50f6cd1fa1abeafe8256180", "",
                    "6c82a562cb808d10d632be89c8513ebf6c929f34ddfa8c9f63c9960ef6e348a3528c8a3fcc2f044e39a3fc5b94492f8f032e7549a20098f95b");
-    cwk.add_ec_b64u(&key, "", "ES512", "P-512", "kTJyP2KSsBBhnb4kjWmMF7WHVsY55xUPgb7k64rDcjatChoZ1nvjKmYmPh5STRKc",
-                    "mM0weMVU2DKsYDxDJkEP9hZiRZtB8fPfXbzINZj_fF7YQRynNWedHEyzAJOX2e8s", "ok3Nq97AXlpEusO7jIy1FZATlBP9PNReMU7DWbkLQ5dU90snHuuHVDjEPmtV0fTo");
+    cwk.add_ec_b64u(&key, "bilbo.baggins@hobbiton.example", "ES512", "P-512",
+                    "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
+                    "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
+                    "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt");
     cwk.add_ec_b16(&key, "Alice Lovelace", "ES256", "P-256", "863aa7bc0326716aa59db5bf66cc660d0591d51e4891bc2e6a9baff5077d927c",
                    "ad4eed482a7985be019e9b1936c16e00190e8bcc48ee12d35ff89f0fc7a099ca", "d42044eb2cd2691e926da4871cf3529ddec6b034f824ba5e050d2c702f97c7a5");
 
@@ -1705,6 +1707,10 @@ void test_github_example() {
                     "399FB1ED4B83F28D356C8E619F1F0DC96BBE8B75C1812CA58F360259EAEB1D17130C3C0A2715A99BE49898E871F6088A29570DC2FFA0CEFFFA27F1F055CBAABFD8894E0CC2"
                     "4F176E34EBAD32278A466F8A34A685ACC8207D9EC1FCBBD094996DC73C6305FCA31668BE57B1699D0BB456CC8871BFFBCD");
 
+    crypto_key aes_aead_key;
+    cwk.add_oct_b64u(&aes_aead_key, "our-secret", nullptr, "hJtXIZ2uSN5kbQfbtTNWbg", crypto_use_t::use_enc);
+    cwk.add_oct_b64u(&aes_aead_key, "sec-256", nullptr, "Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmIl6a1xNPi8QA", crypto_use_t::use_enc);
+
     crypto_key cwtkey;
     cwk.add_ec_b16(&cwtkey, nullptr, "ES256", "P-256", "143329cce7868e416927599cf65a34f3ce2ffda55a7eca69ed8919a394d42f0f",
                    "60f7f1a780d8a783bfb7a2dd6b2796e8128dbbcef9d3d168db9529971a36e7b9", "6c1382765aec5358f117733d281c1c7bdc39884d04a45a1e6c67c858bc206c19");
@@ -1714,9 +1720,108 @@ void test_github_example() {
         const char* file;
         const char* desc;
         const char* cbor;
-        const char* external;
     } vector[] =
     { {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-01.json",
+          "AES-CCM-01: Encrypt w/ AES-CCM 16-128/64 - direct",
+          "D8608443A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A46802388816C040275EE818340A20125044A6F75722D73656372657440",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-02.json",
+          "AES-CCM-02: Encrypt w/ AES-CCM 16-128/128 - direct",
+          "D8608444A101181EA1054D89F52F65A1C580933B5261A72F58246899DA0A132BD2D2B9B10915743EE1F7B92A46801D3D61B6E7C964520652F9D3C8347E8A818340A20125044A6F75722D"
+          "73656372657440",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-03.json",
+          "AES-CCM-03: Encrypt w/ AES-CCM 64-128/64 - direct",
+          "D8608443A1010CA1054789F52F65A1C580581C191BD858DEC79FC11DA3428BDFA446AC240D591F9F0F25E3A3FA4E6C818340A20125044A6F75722D73656372657440",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-04.json",
+          "AES-CCM-04: Encrypt w/ AES-CCM 64-128/128 - direct",
+          "D8608444A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F59482AEA4157167842D7BF5EDD68EC92818340A20125044A6F75722D736563726574"
+          "40",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-05.json",
+          "AES-CCM-05: Encrypt w/ AES-CCM 16-256/64 - direct",
+          "D8608443A1010BA1054D89F52F65A1C580933B5261A72F581C28B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917A8A3EF3313D6D332818340A20125044A6F75722D73656372657440",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-06.json",
+          "AES-CCM-06: Encrypt w/ AES-CCM 16-256/128 - direct",
+          "D8608444A101181FA1054D89F52F65A1C580933B5261A72F582428B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917348CDDC1FD07F3653AD991F9DFB65D50818340A20125044A6F75722D"
+          "73656372657440",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-07.json",
+          "AES-CCM-07: Encrypt w/ AES-CCM 64-256/64 - direct",
+          "D8608443A1010DA1054789F52F65A1C580581C721908D60812806F2660054238E931ADB575771EE26C547EC3DE06C5818340A20125044A6F75722D73656372657440",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-08.json",
+          "AES-CCM-08: Encrypt w/ AES-CCM 64-256/128 - direct",
+          "D8608444A1011821A1054789F52F65A1C5805824721908D60812806F2660054238E931ADB575771EB58752E5F0FB62A828917386A770CE9C818340A20125044A6F75722D736563726574"
+          "40",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-enc-01.json",
+          "AES-CCM-ENC-01: Encrypt w/ AES-CCM 16-128/64 - implicit",
+          "D08343A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-enc-02.json",
+          "AES-CCM-ENC-02: Encrypt w/ AES-CCM 16-128/128 - implicit",
+          "D08344A101181EA1054D89F52F65A1C580933B5261A72F58246899DA0A132BD2D2B9B10915743EE1F7B92A4680903F2C00D37E14D4EBDC7EF2C03CF5A9",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-enc-03.json",
+          "AES-CCM-ENC-03: Encrypt w/ AES-CCM 64-128/64 - implicit",
+          "D08343A1010CA1054789F52F65A1C580581C191BD858DEC79FC11DA3428BDFA446AC240D591FFCF91EEB8035F87A",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-enc-04.json",
+          "AES-CCM-ENC-04: Encrypt w/ AES-CCM 64-128/128 - implicit",
+          "D08344A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F3965FA7CA156FE666BC262807DF0EE99",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-enc-05.json",
+          "AES-CCM-ENC-05: Encrypt w/ AES-CCM 16-256/64 - implicit",
+          "D08343A1010BA1054D89F52F65A1C580933B5261A72F581C28B3BDDFF844A736C5F0EE0F8C691FD0B7ADF9173140CB621DF47C2F",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-enc-06.json",
+          "AES-CCM-ENC-06: Encrypt w/ AES-CCM 16-256/128 - implicit",
+          "D08344A101181FA1054D89F52F65A1C580933B5261A72F582428B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917B0CFA0D187C769A4BA100372A585BCCC",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-enc-07.json",
+          "AES-CCM-ENC-07: Encrypt w/ AES-CCM 64-256/64 - implicit",
+          "D08343A1010DA1054789F52F65A1C580581C721908D60812806F2660054238E931ADB575771E9BC42FF530BAEB00",
+      },
+      {
+          &aes_aead_key,
+          "aes-ccm-examples/aes-ccm-enc-08.json",
+          "AES-CCM-ENC-08: Encrypt w/ AES-CCM 64-256/128 - implicit",
+          "D08344A1011821A1054789F52F65A1C5805824721908D60812806F2660054238E931ADB575771E723C6FFD415A07CDB9FA9CEECC6C81FC",
+      },
+      {
           &key,
           "countersign/signed-01.json",
           "signed-01: Signed message w/ one counter signature on recipient",
@@ -1880,7 +1985,7 @@ void test_github_example() {
 #if 0
       // HSS LMS
       // https://www.openssl.org/roadmap.html
-      // OpenSSL will not be including any of the candidate algorithms until the selection process is complete.
+      // PQC - OpenSSL will not be including any of the candidate algorithms until the selection process is complete.
       {
           &key,
           "hashsig/hashsig-01.json",
@@ -2019,7 +2124,6 @@ void test_github_example() {
           "sign-pass-03: Remove CBOR Tag",
           "8440A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840E2AEAFD40D69D19DFE6E52077C5D7FF4E408282CBEFB5D06CBF414AF2E19D982AC45AC98B8"
           "544C908B4507DE1E90B717C3D34816FE926A2B98F53AFD2FA0F30A",
-          "11aa22bb33cc44dd55006699",
       },
       // TODO - CRT, DER, x5bag, x5chain, x5t
       {
@@ -2092,7 +2196,7 @@ void test_github_example() {
           "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A11822822F582011FA0500D6763AE15A3238296E04C048A8FDD220A0DDA0234824B18FB6666600"
           "5840E2868433DB5EB82E91F8BE52E8A67903A93332634470DE3DD90D52422B62DFE062248248AC388FAF77B277F91C4FB6EE776EDC52069C67F17D9E7FA57AC9BBA9",
       },
-      // not implemented yet
+
       {
           &key,
           "hmac-examples/HMac-01.json",
@@ -2161,35 +2265,78 @@ void test_github_example() {
       },
     };
 
+    int i = 0;
+    cbor_encode e;
+
+    std::map<std::string, int> dictionary;
+    std::map<std::string, int>::iterator iter;
+    uint16 table[] = {
+        cbor_tag_t::cose_tag_encrypt0,  // 16
+        cbor_tag_t::cose_tag_mac0,      // 17
+        cbor_tag_t::cose_tag_sign1,     // 18
+        cbor_tag_t::cose_tag_encrypt,   // 96
+        cbor_tag_t::cose_tag_mac,       // 97
+        cbor_tag_t::cose_tag_sign,      // 98
+    };
+    for (i = 0; i < RTL_NUMBER_OF(table); i++) {
+        binary_t bin;
+        e.encode(bin, cbor_major_t::cbor_major_tag, table[i]);
+        std::string keyword = uppername(base16_encode(bin));
+        dictionary.insert(std::make_pair(keyword, table[i]));
+        printf("%s => %i\n", keyword.c_str(), table[i]);
+    }
+
     bool result = false;
     cbor_object_signing_encryption cose;
     cose_context_t* handle = nullptr;
     cose.open(&handle);
-    for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
+    for (i = 0; i < RTL_NUMBER_OF(vector); i++) {
         binary_t cbor = base16_decode(vector[i].cbor);
 
+        binary_t bin_cbor;
+        basic_stream bs;
         basic_stream diagnostic;
         cbor_reader reader;
         cbor_reader_context_t* reader_handle = nullptr;
         reader.open(&reader_handle);
         reader.parse(reader_handle, cbor);
         reader.publish(reader_handle, &diagnostic);
+        reader.publish(reader_handle, &bin_cbor);
         reader.close(reader_handle);
+        dump_memory(bin_cbor, &bs);
+        printf("cbor\n%s\n", bs.c_str());
         printf("diagnostic\n%s\n", diagnostic.c_str());
 
-        return_t ret = errorcode_t::verify;
-        if (0 == strnicmp("D862", vector[i].cbor, 4)) {  // sign
-            ret = cose.verify(handle, vector[i].key, cbor, result);
-        } else if (0 == strnicmp("D284", vector[i].cbor, 4)) {  // sign1
-            ret = cose.verify(handle, vector[i].key, cbor, result);
+        return_t ret = errorcode_t::success;
+        std::string tagkey(vector[i].cbor, 4);
+        iter = dictionary.find(uppername(tagkey));
+        if (dictionary.end() == iter) {
+            std::string tagkey2(vector[i].cbor, 2);
+            iter = dictionary.find(uppername(tagkey2));
+        }
+        if (iter == dictionary.end()) {
+            ret = errorcode_t::not_found;
         } else {
-            ret = errorcode_t::not_supported;
+            int tagvalue = iter->second;
+            switch (tagvalue) {
+                case cbor_tag_t::cose_tag_encrypt0:  // 16
+                case cbor_tag_t::cose_tag_encrypt:   // 96
+                    ret = cose.decrypt(handle, vector[i].key, cbor, result);
+                    break;
+                case cbor_tag_t::cose_tag_mac0:  // 17
+                case cbor_tag_t::cose_tag_mac:   // 97
+                    ret = errorcode_t::not_supported;
+                    break;
+                case cbor_tag_t::cose_tag_sign1:  // 18
+                case cbor_tag_t::cose_tag_sign:   // 98
+                    ret = cose.verify(handle, vector[i].key, cbor, result);
+                    break;
+                default:
+                    ret = errorcode_t::bad_data;  // todo, studying, not-tagged
+                    break;
+            }
         }
         _test_case.test(ret, __FUNCTION__, "%s %s", vector[i].file, vector[i].desc);
-
-        // switch (tag)
-        // case ... ret = cose.decrypt(handle, &key, cbor, result);
-        // case ... ret = cose.verify(handle, &key, cbor, result);
     }
     cose.close(handle);
 }
@@ -2259,8 +2406,8 @@ int main(int argc, char** argv) {
     // step.1 parse CBOR and load EVP_PKEY
     // step.2 write EVP_PKEY to CBOR
 
-    // test_cbor_web_key();
-    // try_refactor_jose_sign();
+    test_cbor_web_key();
+    try_refactor_jose_sign();
 
     // part 4 https://github.com/cose-wg/Examples
     // A GitHub project has been created at <https://github.com/cose-wg/
