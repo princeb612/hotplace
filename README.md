@@ -1,7 +1,14 @@
-
 # hotplace
 
  * study of personal interests
+ * ![workflow](https://github.com/princeb612/hotplace/actions/workflows/cmake-single-platform.yml/badge.svg)
+ * powered by
+   * ![openssl](https://img.shields.io/badge/openssl-1.1.1/3.0/3.2-green)
+   * ![jansson](https://img.shields.io/badge/jansson-latest-green)
+   * ![zlib](https://img.shields.io/badge/zlb-latest-green)
+ * badge
+   * ![c++11](https://img.shields.io/badge/c++11-green)
+   * ![mingw64](https://img.shields.io/badge/mingw64-green) ![ubuntu](https://img.shields.io/badge/ubuntu-green) ![RHEL](https://img.shields.io/badge/RHEL-green)
 
 ## implemented
 

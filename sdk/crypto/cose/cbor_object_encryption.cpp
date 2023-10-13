@@ -9,6 +9,7 @@
  *
  */
 
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
