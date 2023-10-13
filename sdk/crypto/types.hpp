@@ -183,9 +183,6 @@ enum ec_curve_t {
     ec_brainpoolP512t1 = 934,  // brainpoolP512t1, NID_brainpoolP512t1
 };
 
-#define CRYPT_SIG_VALUE(t, c) ((t << 16) | c)
-#define CRYPT_SIG_TYPE(v) (v >> 16)
-#define CRYPT_SIG_CODE(v) (v & 0xffff)
 enum crypt_sig_type_t {
     crypt_sig_dgst = 0,
     crypt_sig_hmac = 1,
@@ -197,32 +194,31 @@ enum crypt_sig_type_t {
 enum crypt_sig_t {
     sig_unknown = 0,
 
-    sig_hs256 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_hmac, hash_algorithm_t::sha2_256),
-    sig_hs384 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_hmac, hash_algorithm_t::sha2_384),
-    sig_hs512 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_hmac, hash_algorithm_t::sha2_512),
+    sig_hs256 = 1,
+    sig_hs384 = 2,
+    sig_hs512 = 3,
 
-    sig_rs256 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha2_256),
-    sig_rs384 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha2_384),
-    sig_rs512 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha2_512),
-    sig_rs1 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha1),
+    sig_rs256 = 4,
+    sig_rs384 = 5,
+    sig_rs512 = 6,
+    sig_rs1 = 7,
 
-    sig_es256 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_ecdsa, hash_algorithm_t::sha2_256),   // ECDSA w/ SHA-256
-    sig_es384 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_ecdsa, hash_algorithm_t::sha2_384),   // ECDSA w/ SHA-384
-    sig_es512 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_ecdsa, hash_algorithm_t::sha2_512),   // ECDSA w/ SHA-512
-    sig_es256k = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_ecdsa, hash_algorithm_t::sha2_256),  // ECDSA using secp256k1 curve and SHA-256
+    sig_es256 = 9,
+    sig_es384 = 10,
+    sig_es512 = 11,
 
-    sig_ps256 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_rsassa_pss, hash_algorithm_t::sha2_256),
-    sig_ps384 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_rsassa_pss, hash_algorithm_t::sha2_384),
-    sig_ps512 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_rsassa_pss, hash_algorithm_t::sha2_512),
+    sig_ps256 = 12,
+    sig_ps384 = 13,
+    sig_ps512 = 14,
 
-    sig_eddsa = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_eddsa, 0),
+    sig_eddsa = 15,
 
-    sig_sha1 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::sha1),
-    sig_sha256 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::sha2_256),
-    sig_sha384 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::sha2_384),
-    sig_sha512 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::sha2_512),
-    sig_shake128 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::shake128),
-    sig_shake256 = CRYPT_SIG_VALUE(crypt_sig_type_t::crypt_sig_dgst, hash_algorithm_t::shake256),
+    sig_sha1 = 16,
+    sig_sha256 = 17,
+    sig_sha384 = 18,
+    sig_sha512 = 19,
+    sig_shake128 = 20,
+    sig_shake256 = 21,
 };
 
 enum crypt_item_t {
@@ -308,7 +304,7 @@ enum crypto_use_t {
     use_any = (0xffff),
 };
 
-enum jwa_type_t {
+enum jwa_group_t {
     jwa_type_rsa = 1,
     jwa_type_aeskw = 2,
     jwa_type_dir = 3,
@@ -317,53 +313,47 @@ enum jwa_type_t {
     jwa_type_aesgcmkw = 6,
     jwa_type_pbes_hs_aeskw = 7,
 };
-#define CRYPT_AGL_VALUE(t, c) ((t << 16) | c)
-#define CRYPT_ALG_TYPE(v) (v >> 16)
-#define CRYPT_ALG_CODE(v) (v & 0xffff)
 
 /**
  * @brief Cryptographic Algorithms for Key Management
  */
 enum jwa_t {
     jwa_unknown = 0,
-    jwa_rsa_1_5 = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_rsa, 1),                        // RSA1_5
-    jwa_rsa_oaep = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_rsa, 2),                       // RSA-OAEP
-    jwa_rsa_oaep_256 = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_rsa, 3),                   // RSA-OAEP-256
-    jwa_a128kw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_aeskw, 4),                       // A128KW
-    jwa_a192kw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_aeskw, 5),                       // A192KW
-    jwa_a256kw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_aeskw, 6),                       // A256KW
-    jwa_dir = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_dir, 7),                            // dir
-    jwa_ecdh_es = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_ecdh, 8),                       // ECDH-ES
-    jwa_ecdh_es_a128kw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_ecdh_aeskw, 9),          // ECDH-ES+A128KW
-    jwa_ecdh_es_a192kw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_ecdh_aeskw, 10),         // ECDH-ES+A192KW
-    jwa_ecdh_es_a256kw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_ecdh_aeskw, 11),         // ECDH-ES+A256KW
-    jwa_a128gcmkw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_aesgcmkw, 12),                // A128GCMKW
-    jwa_a192gcmkw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_aesgcmkw, 13),                // A192GCMKW
-    jwa_a256gcmkw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_aesgcmkw, 14),                // A256GCMKW
-    jwa_pbes2_hs256_a128kw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_pbes_hs_aeskw, 15),  // PBES2-HS256+A128KW
-    jwa_pbes2_hs384_a192kw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_pbes_hs_aeskw, 16),  // PBES2-HS384+A192KW
-    jwa_pbes2_hs512_a256kw = CRYPT_AGL_VALUE(jwa_type_t::jwa_type_pbes_hs_aeskw, 17),  // PBES2-HS512+A256KW
+    jwa_rsa_1_5 = 1,              // RSA1_5
+    jwa_rsa_oaep = 2,             // RSA-OAEP
+    jwa_rsa_oaep_256 = 3,         // RSA-OAEP-256
+    jwa_a128kw = 4,               // A128KW
+    jwa_a192kw = 5,               // A192KW
+    jwa_a256kw = 6,               // A256KW
+    jwa_dir = 7,                  // dir
+    jwa_ecdh_es = 8,              // ECDH-ES
+    jwa_ecdh_es_a128kw = 9,       // ECDH-ES+A128KW
+    jwa_ecdh_es_a192kw = 10,      // ECDH-ES+A192KW
+    jwa_ecdh_es_a256kw = 11,      // ECDH-ES+A256KW
+    jwa_a128gcmkw = 12,           // A128GCMKW
+    jwa_a192gcmkw = 13,           // A192GCMKW
+    jwa_a256gcmkw = 14,           // A256GCMKW
+    jwa_pbes2_hs256_a128kw = 15,  // PBES2-HS256+A128KW
+    jwa_pbes2_hs384_a192kw = 16,  // PBES2-HS384+A192KW
+    jwa_pbes2_hs512_a256kw = 17,  // PBES2-HS512+A256KW
 };
 
-enum jwe_type_t {
+enum jwe_group_t {
     jwe_type_aescbc_hs = 1,
     jwe_type_aesgcm = 2,
 };
-#define CRYPT_ENC_VALUE(t, c) ((t << 16) | c)
-#define CRYPT_ENC_TYPE(v) (v >> 16)
-#define CRYPT_ENC_CODE(v) (v & 0xffff)
 
 /**
  * @brief Cryptographic Algorithms for Content Encryption
  */
 enum jwe_t {
     jwe_unknown = 0,
-    jwe_a128cbc_hs256 = CRYPT_ENC_VALUE(jwe_type_t::jwe_type_aescbc_hs, 1),  // A128CBC-HS256
-    jwe_a192cbc_hs384 = CRYPT_ENC_VALUE(jwe_type_t::jwe_type_aescbc_hs, 2),  // A192CBC-HS384
-    jwe_a256cbc_hs512 = CRYPT_ENC_VALUE(jwe_type_t::jwe_type_aescbc_hs, 3),  // A256CBC-HS512
-    jwe_a128gcm = CRYPT_ENC_VALUE(jwe_type_t::jwe_type_aesgcm, 4),           // A128GCM
-    jwe_a192gcm = CRYPT_ENC_VALUE(jwe_type_t::jwe_type_aesgcm, 5),           // A192GCM
-    jwe_a256gcm = CRYPT_ENC_VALUE(jwe_type_t::jwe_type_aesgcm, 6),           // A256GCM
+    jwe_a128cbc_hs256 = 1,  // A128CBC-HS256
+    jwe_a192cbc_hs384 = 2,  // A192CBC-HS384
+    jwe_a256cbc_hs512 = 3,  // A256CBC-HS512
+    jwe_a128gcm = 4,        // A128GCM
+    jwe_a192gcm = 5,        // A192GCM
+    jwe_a256gcm = 6,        // A256GCM
 };
 
 enum jws_type_t {
@@ -381,19 +371,19 @@ enum jws_type_t {
  */
 enum jws_t {
     jws_unknown = 0,
-    jws_hs256 = CRYPT_SIG_VALUE(jws_type_t::jws_type_hmac, 1),           // 00010001
-    jws_hs384 = CRYPT_SIG_VALUE(jws_type_t::jws_type_hmac, 2),           // 00010002
-    jws_hs512 = CRYPT_SIG_VALUE(jws_type_t::jws_type_hmac, 3),           // 00010003
-    jws_rs256 = CRYPT_SIG_VALUE(jws_type_t::jws_type_rsassa_pkcs15, 4),  // 00020004
-    jws_rs384 = CRYPT_SIG_VALUE(jws_type_t::jws_type_rsassa_pkcs15, 5),  // 00020005
-    jws_rs512 = CRYPT_SIG_VALUE(jws_type_t::jws_type_rsassa_pkcs15, 6),  // 00020006
-    jws_es256 = CRYPT_SIG_VALUE(jws_type_t::jws_type_ecdsa, 7),          // 00030007
-    jws_es384 = CRYPT_SIG_VALUE(jws_type_t::jws_type_ecdsa, 8),          // 00030008
-    jws_es512 = CRYPT_SIG_VALUE(jws_type_t::jws_type_ecdsa, 9),          // 00030009
-    jws_ps256 = CRYPT_SIG_VALUE(jws_type_t::jws_type_rsassa_pss, 10),    // 0004000a
-    jws_ps384 = CRYPT_SIG_VALUE(jws_type_t::jws_type_rsassa_pss, 11),    // 0004000b
-    jws_ps512 = CRYPT_SIG_VALUE(jws_type_t::jws_type_rsassa_pss, 12),    // 0004000c
-    jws_eddsa = CRYPT_SIG_VALUE(jws_type_t::jws_type_eddsa, 13),         // 0005000d
+    jws_hs256 = 1,
+    jws_hs384 = 2,
+    jws_hs512 = 3,
+    jws_rs256 = 4,
+    jws_rs384 = 5,
+    jws_rs512 = 6,
+    jws_es256 = 7,
+    jws_es384 = 8,
+    jws_es512 = 9,
+    jws_ps256 = 10,
+    jws_ps384 = 11,
+    jws_ps512 = 12,
+    jws_eddsa = 13,
 };
 
 enum cose_key_t {
@@ -662,6 +652,7 @@ typedef struct _hint_jose_encryption_t {
     const char* alg_name;
 
     int type;          // jwa_t, jwe_t
+    int group;         // jwa_group_t, jwe_group_t
     crypto_kty_t kty;  // crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_hmac
     crypto_kty_t alt;  // for example crypto_kty_t::kty_okp, if kt is crypto_kty_t::kty_ec
     int mode;          // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
@@ -692,6 +683,7 @@ typedef struct _hint_curves_t {
 typedef struct _hint_signature_t {
     crypt_sig_t sig_type;
     jws_t jws_type;
+    jws_type_t sign_type;
     crypto_kty_t kty;
     const char* jws_name;
     hash_algorithm_t alg;

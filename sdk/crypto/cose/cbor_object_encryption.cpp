@@ -110,7 +110,8 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             }
 
             pkey = key->find(kid.c_str(), crypto_kty_t::kty_ec);
-            if (cose_ecdh_es_hkdf_256 == alg) {
+            if (cose_alg_t::cose_ecdh_es_hkdf_256 == alg) {
+            else if (cose_alg_t::cose_ecdh_es_hkdf_256 == alg) {
                 binary_t secret;
                 binary_t salt;
                 dh_key_agreement(pkey, item.epk, secret);

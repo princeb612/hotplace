@@ -232,7 +232,11 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, co
             ret = errorcode_t::request;  // study
             __leave2;
         }
-        EVP_PKEY* pkey = nullptr;  // do not couple kty to alg
+        // just find out kty from algorithm
+        // ex. do not couple P-256 to ES256, P-521 to ES512
+        // ecdsa-examples/ecdsa-04.json ECDSA-01: ECDSA - P-256 w/ SHA-512
+        // ecdsa-examples/ecdsa-sig-04.json ECDSA-sig-01: ECDSA - P-256 w/ SHA-512 - implicit
+        EVP_PKEY* pkey = nullptr;
         if (kid) {
             pkey = key->find(kid, hint->kty);
         } else {

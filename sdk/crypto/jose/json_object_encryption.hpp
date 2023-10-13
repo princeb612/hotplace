@@ -259,9 +259,9 @@ class json_object_encryption {
      * @remarks
      *      read from key or generate random value
      *
-     *      jwa_type_t::jwa_type_ecdh, jwa_type_t::jwa_type_ecdh_aeskw : epk
-     *      jwa_type_t::jwa_type_aesgcmkw : iv, tag
-     *      jwa_type_t::jwa_type_pbes_hs_aeskw : p2s, p2c
+     *      jwa_group_t::jwa_type_ecdh, jwa_group_t::jwa_type_ecdh_aeskw : epk
+     *      jwa_group_t::jwa_type_aesgcmkw : iv, tag
+     *      jwa_group_t::jwa_type_pbes_hs_aeskw : p2s, p2c
      */
     return_t prepare_encryption_recipient(jwa_t alg, EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap, crypt_variantmap_t& variantmap);
     /**

@@ -233,6 +233,7 @@ return_t json_object_signing::sign(crypto_key* key, jws_t sig, binary_t const& i
 
 return_t json_object_signing::sign(crypto_key* key, jws_t sig, binary_t const& input, binary_t& output, std::string& kid) {
     return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         if (nullptr == key) {
@@ -269,7 +270,12 @@ return_t json_object_signing::sign(crypto_key* key, jws_t sig, binary_t const& i
         };
 
         sign_function_t signer = nullptr;
-        int sig_type = CRYPT_SIG_TYPE(sig);
+        const hint_signature_t* hint = advisor->hintof_jose_signature(sig);
+        if (nullptr == hint) {
+            ret = errorcode_t::request;
+            __leave2;
+        }
+        int sig_type = hint->sign_type;
 
 #if __cplusplus >= 201103L  // c++11
         const SIGN_TABLE* item =
@@ -327,6 +333,7 @@ return_t json_object_signing::verify(crypto_key* key, jws_t sig, binary_t const&
 
 return_t json_object_signing::verify(crypto_key* key, const char* kid, jws_t sig, binary_t const& input, binary_t const& output, bool& result) {
     return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         result = false;
@@ -365,7 +372,12 @@ return_t json_object_signing::verify(crypto_key* key, const char* kid, jws_t sig
         };
 
         verify_function_t verifier = nullptr;
-        int sig_type = CRYPT_SIG_TYPE(sig);
+        const hint_signature_t* hint = advisor->hintof_jose_signature(sig);
+        if (nullptr == hint) {
+            ret = errorcode_t::request;
+            __leave2;
+        }
+        int sig_type = hint->sign_type;
 
 #if __cplusplus >= 201103L  // c++11
         const SIGN_TABLE* item =
@@ -419,6 +431,7 @@ return_t json_object_signing::verify(crypto_key* key, const char* kid, jws_t sig
 
 return_t json_object_signing::check_constraints(jws_t sig, EVP_PKEY* pkey) {
     return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         if (nullptr == pkey) {
@@ -430,7 +443,12 @@ return_t json_object_signing::check_constraints(jws_t sig, EVP_PKEY* pkey) {
          * RFC 7518 3.5.  Digital Signature with RSASSA-PSS
          * A key of size 2048 bits or larger MUST be used with these algorithms.
          */
-        int sig_type = CRYPT_SIG_TYPE(sig);
+        const hint_signature_t* hint = advisor->hintof_jose_signature(sig);
+        if (nullptr == hint) {
+            ret = errorcode_t::request;
+            __leave2;
+        }
+        int sig_type = hint->sign_type;
         switch (sig_type) {
             case jws_type_t::jws_type_rsassa_pkcs15:
             case jws_type_t::jws_type_rsassa_pss: {

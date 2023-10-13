@@ -239,8 +239,8 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
             __leave2;
         }
 
-        const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm(alg);   // key management
-        const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption(enc);  // content encryption
+        const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);   // key management
+        const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
 
         jose_encryption_t& item = iter->second;
         binary_t cek = item.datamap[crypt_item_t::item_cek];                                      // in, enc
@@ -252,12 +252,12 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
 
         // alg part - encrypted_key from cek
         {
-            const char* alg_name = alg_info->alg_name;
-            crypt_enc_t crypt_mode = (crypt_enc_t)alg_info->mode;
-            crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t)alg_info->crypt_alg;
-            crypt_mode_t alg_crypt_mode = (crypt_mode_t)alg_info->crypt_mode;
-            int alg_keysize = alg_info->keysize;
-            hash_algorithm_t alg_hash_alg = (hash_algorithm_t)alg_info->hash_alg;
+            const char* alg_name = alg_hint->alg_name;
+            crypt_enc_t crypt_mode = (crypt_enc_t)alg_hint->mode;
+            crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t)alg_hint->crypt_alg;
+            crypt_mode_t alg_crypt_mode = (crypt_mode_t)alg_hint->crypt_mode;
+            int alg_keysize = alg_hint->keysize;
+            hash_algorithm_t alg_hash_alg = (hash_algorithm_t)alg_hint->hash_alg;
 
             binary_t oct;
             /* RFC3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
@@ -280,7 +280,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
                 __leave2;
             }
 
-            if (crypto_kty_t::kty_hmac == alg_info->kty) {
+            if (crypto_kty_t::kty_hmac == alg_hint->kty) {
                 /* EVP_KEY_HMAC key data and length */
                 size_t key_length = 0;
                 EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, nullptr, &key_length);
@@ -288,8 +288,8 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
                 EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, &oct[0], &key_length);
             }
 
-            uint32 alg_type = CRYPT_ALG_TYPE(alg);
-            if (jwa_type_t::jwa_type_rsa == alg_type) {
+            uint32 alg_group = alg_hint->group;
+            if (jwa_group_t::jwa_type_rsa == alg_group) {
                 /*
                  * RSA1_5, RSA-OAEP, RSA-OAEP-256
                  * RFC7518 4.2.  Key Encryption with RSAES-PKCS1-v1_5
@@ -300,7 +300,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
                  * RFC7520 5.2. Key Encryption Using RSA-OAEP with AES-GCM
                  */
                 ret = crypt.encrypt(pkey, cek, encrypted_key, crypt_mode);
-            } else if (jwa_type_t::jwa_type_aeskw == alg_type) {
+            } else if (jwa_group_t::jwa_type_aeskw == alg_group) {
                 /*
                  * A128KW, A192KW, A256KW
                  * RFC7518 4.4. Key Wrapping with AES Key Wrap
@@ -310,7 +310,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
                 crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &kw_iv[0], kw_iv.size());
                 ret = crypt.encrypt(handle_kw, &cek[0], cek.size(), encrypted_key);
                 crypt.close(handle_kw);
-            } else if (jwa_type_t::jwa_type_dir == alg_type) {
+            } else if (jwa_group_t::jwa_type_dir == alg_group) {
                 /*
                  * dir
                  * RFC7518 4.5. Direct Encryption with a Shared Symmetric Key
@@ -319,7 +319,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
 
                 /* read cek from HMAC key and then make it the only one cek */
                 cek = oct;
-            } else if (jwa_type_t::jwa_type_ecdh == alg_type) {
+            } else if (jwa_group_t::jwa_type_ecdh == alg_group) {
                 /*
                  * ECDH-ES
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman Ephemeral Static (ECDH-ES)
@@ -328,15 +328,15 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
                  * RFC7520 5.5. Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2
                  */
                 EVP_PKEY* epk = item.recipients[alg].epk;
-                int keylen = enc_info->keysize;
-                uint32 enc_type = CRYPT_ENC_TYPE(enc);
-                if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
+                int keylen = enc_hint->keysize;
+                uint32 enc_group = enc_hint->group;
+                if (jwe_group_t::jwe_type_aescbc_hs == enc_group) {
                     keylen *= 2;
                 }
 
-                ret = ecdh_es(epk, pkey, enc_info->alg_name, "", "", keylen, cek);
+                ret = ecdh_es(epk, pkey, enc_hint->alg_name, "", "", keylen, cek);
                 encrypted_key = cek;
-            } else if (jwa_type_t::jwa_type_ecdh_aeskw == alg_type) {
+            } else if (jwa_group_t::jwa_type_ecdh_aeskw == alg_group) {
                 /*
                  * ECDH-ES+A128KW, ECDH-ES+A192KW, ECDH-ES+A256KW
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman Ephemeral Static (ECDH-ES)
@@ -347,18 +347,18 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
                  */
                 binary_t derived_key;
                 EVP_PKEY* epk = item.recipients[alg].epk;
-                int keylen = alg_info->keysize;
-                uint32 enc_type = CRYPT_ENC_TYPE(enc);
-                if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
+                int keylen = alg_hint->keysize;
+                uint32 enc_group = enc_hint->group;
+                if (jwe_group_t::jwe_type_aescbc_hs == enc_group) {
                     // keylen *= 2;
                 }
-                ret = ecdh_es(epk, pkey, alg_info->alg_name, "", "", keylen, derived_key);
+                ret = ecdh_es(epk, pkey, alg_hint->alg_name, "", "", keylen, derived_key);
 
                 crypt_context_t* handle_kw = nullptr;
                 crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &derived_key[0], derived_key.size(), &kw_iv[0], kw_iv.size());
                 ret = crypt.encrypt(handle_kw, &cek[0], cek.size(), encrypted_key);
                 crypt.close(handle_kw);
-            } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {
+            } else if (jwa_group_t::jwa_type_aesgcmkw == alg_group) {
                 /*
                  * A128GCMKW, A192GCMKW, A256GCMKW
                  * RFC7518 4.7. Key Encryption with AES GCM
@@ -387,7 +387,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
                     }
                 }
 
-            } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {
+            } else if (jwa_group_t::jwa_type_pbes_hs_aeskw == alg_group) {
                 /*
                  * RFC7518 4.8. Key Encryption with PBES2
                  * PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW
@@ -430,12 +430,12 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
 
         // enc part - ciphertext using cek, iv
         {
-            crypt_algorithm_t enc_crypt_alg = (crypt_algorithm_t)enc_info->crypt_alg;
-            crypt_mode_t enc_crypt_mode = (crypt_mode_t)enc_info->crypt_mode;
-            hash_algorithm_t enc_hash_alg = (hash_algorithm_t)enc_info->hash_alg;
+            crypt_algorithm_t enc_crypt_alg = (crypt_algorithm_t)enc_hint->crypt_alg;
+            crypt_mode_t enc_crypt_mode = (crypt_mode_t)enc_hint->crypt_mode;
+            hash_algorithm_t enc_hash_alg = (hash_algorithm_t)enc_hint->hash_alg;
 
-            uint32 enc_type = CRYPT_ENC_TYPE(enc);
-            if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
+            uint32 enc_group = enc_hint->group;
+            if (jwe_group_t::jwe_type_aescbc_hs == enc_group) {
                 int cek_size = cek.size();
                 int64 aad_length = aad.size() * 8;
                 int64 al = hton64(aad_length);
@@ -478,7 +478,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
                     hash.close(handle_hash);
                     crypt.close(handle_crypt);
                 }
-            } else if (jwe_type_t::jwe_type_aesgcm == enc_type) {
+            } else if (jwe_group_t::jwe_type_aesgcm == enc_group) {
                 crypt_context_t* handle_crypt = nullptr;
                 crypt.open(&handle_crypt, (crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, &cek[0], cek.size(), &iv[0], iv.size());
                 /* Content Encryption */
@@ -515,10 +515,10 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
             __leave2;
         }
 
-        const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm(alg);   // key management
-        const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption(enc);  // content encryption
+        const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);   // key management
+        const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
 
-        if (nullptr == alg_info || nullptr == enc_info) {
+        if (nullptr == alg_hint || nullptr == enc_hint) {
             ret = errorcode_t::request;
             __leave2;
         }
@@ -535,12 +535,12 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
 
         // alg part - encrypted_key from cek
         {
-            const char* alg_name = alg_info->alg_name;
-            crypt_enc_t crypt_mode = (crypt_enc_t)alg_info->mode;
-            crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t)alg_info->crypt_alg;
-            crypt_mode_t alg_crypt_mode = (crypt_mode_t)alg_info->crypt_mode;
-            int alg_keysize = alg_info->keysize;
-            hash_algorithm_t alg_hash_alg = (hash_algorithm_t)alg_info->hash_alg;
+            const char* alg_name = alg_hint->alg_name;
+            crypt_enc_t crypt_mode = (crypt_enc_t)alg_hint->mode;
+            crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t)alg_hint->crypt_alg;
+            crypt_mode_t alg_crypt_mode = (crypt_mode_t)alg_hint->crypt_mode;
+            int alg_keysize = alg_hint->keysize;
+            hash_algorithm_t alg_hash_alg = (hash_algorithm_t)alg_hint->hash_alg;
 
             binary_t oct;
             /* RFC3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
@@ -568,7 +568,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
                 __leave2;
             }
 
-            if (crypto_kty_t::kty_hmac == alg_info->kty) {
+            if (crypto_kty_t::kty_hmac == alg_hint->kty) {
                 /* EVP_KEY_HMAC key data and length */
                 size_t key_length = 0;
                 EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, nullptr, &key_length);
@@ -576,8 +576,8 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
                 EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, &oct[0], &key_length);
             }
 
-            uint32 alg_type = CRYPT_ALG_TYPE(alg);
-            if (jwa_type_t::jwa_type_rsa == alg_type) {
+            uint32 alg_group = alg_hint->group;
+            if (jwa_group_t::jwa_type_rsa == alg_group) {
                 /*
                  * RSA1_5, RSA-OAEP, RSA-OAEP-256
                  * RFC7518 4.2.  Key Encryption with RSAES-PKCS1-v1_5
@@ -588,7 +588,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
                  * RFC7520 5.2. Key Encryption Using RSA-OAEP with AES-GCM
                  */
                 ret = crypt.decrypt(pkey, encrypted_key, cek, crypt_mode);
-            } else if (jwa_type_t::jwa_type_aeskw == alg_type) {
+            } else if (jwa_group_t::jwa_type_aeskw == alg_group) {
                 /*
                  * A128KW, A192KW, A256KW
                  * RFC7518 4.4. Key Wrapping with AES Key Wrap
@@ -598,14 +598,14 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
                 crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &kw_iv[0], kw_iv.size());
                 ret = crypt.decrypt(handle_kw, &encrypted_key[0], encrypted_key.size(), cek);
                 crypt.close(handle_kw);
-            } else if (jwa_type_t::jwa_type_dir == alg_type) {
+            } else if (jwa_group_t::jwa_type_dir == alg_group) {
                 /*
                  * dir
                  * RFC7518 4.5. Direct Encryption with a Shared Symmetric Key
                  * RFC7520 5.6. Direct Encryption Using AES-GCM
                  */
                 cek = oct;
-            } else if (jwa_type_t::jwa_type_ecdh == alg_type) {
+            } else if (jwa_group_t::jwa_type_ecdh == alg_group) {
                 /*
                  * ECDH-ES
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman Ephemeral Static (ECDH-ES)
@@ -614,14 +614,14 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
                  * RFC7520 5.5. Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2
                  */
                 EVP_PKEY* epk = item.recipients[alg].epk;
-                int keylen = enc_info->keysize;
-                uint32 enc_type = CRYPT_ENC_TYPE(enc);
-                if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
+                int keylen = enc_hint->keysize;
+                uint32 enc_group = enc_hint->group;
+                if (jwe_group_t::jwe_type_aescbc_hs == enc_group) {
                     keylen *= 2;
                 }
 
-                ret = ecdh_es(pkey, epk, enc_info->alg_name, "", "", keylen, cek);
-            } else if (jwa_type_t::jwa_type_ecdh_aeskw == alg_type) {
+                ret = ecdh_es(pkey, epk, enc_hint->alg_name, "", "", keylen, cek);
+            } else if (jwa_group_t::jwa_type_ecdh_aeskw == alg_group) {
                 /*
                  * ECDH-ES+A128KW, ECDH-ES+A192KW, ECDH-ES+A256KW
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman Ephemeral Static (ECDH-ES)
@@ -632,18 +632,18 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
                  */
                 binary_t derived_key;
                 EVP_PKEY* epk = item.recipients[alg].epk;
-                int keylen = alg_info->keysize;
-                uint32 enc_type = CRYPT_ENC_TYPE(enc);
-                if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
+                int keylen = alg_hint->keysize;
+                uint32 enc_group = enc_hint->group;
+                if (jwe_group_t::jwe_type_aescbc_hs == enc_group) {
                     // keylen *= 2;
                 }
-                ret = ecdh_es(pkey, epk, alg_info->alg_name, "", "", keylen, derived_key);
+                ret = ecdh_es(pkey, epk, alg_hint->alg_name, "", "", keylen, derived_key);
 
                 crypt_context_t* handle_kw = nullptr;
                 crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &derived_key[0], derived_key.size(), &kw_iv[0], kw_iv.size());
                 ret = crypt.decrypt(handle_kw, &encrypted_key[0], encrypted_key.size(), cek);
                 crypt.close(handle_kw);
-            } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {
+            } else if (jwa_group_t::jwa_type_aesgcmkw == alg_group) {
                 /*
                  * A128GCMKW, A192GCMKW, A256GCMKW
                  * RFC7518 4.7. Key Encryption with AES GCM
@@ -658,7 +658,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
                 crypt.open(&handle_crypt, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &iv1[0], iv1.size());
                 ret = crypt.decrypt2(handle_crypt, &encrypted_key[0], encrypted_key.size(), cek, &aad1, &tag1);
                 crypt.close(handle_crypt);
-            } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {
+            } else if (jwa_group_t::jwa_type_pbes_hs_aeskw == alg_group) {
                 /*
                  * RFC7518 4.8. Key Encryption with PBES2
                  * PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW
@@ -698,12 +698,12 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
 
         // enc part - ciphertext using cek, iv
         {
-            crypt_algorithm_t enc_crypt_alg = (crypt_algorithm_t)enc_info->crypt_alg;
-            crypt_mode_t enc_crypt_mode = (crypt_mode_t)enc_info->crypt_mode;
-            hash_algorithm_t enc_hash_alg = (hash_algorithm_t)enc_info->hash_alg;
+            crypt_algorithm_t enc_crypt_alg = (crypt_algorithm_t)enc_hint->crypt_alg;
+            crypt_mode_t enc_crypt_mode = (crypt_mode_t)enc_hint->crypt_mode;
+            hash_algorithm_t enc_hash_alg = (hash_algorithm_t)enc_hint->hash_alg;
 
-            uint32 enc_type = CRYPT_ENC_TYPE(enc);
-            if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
+            uint32 enc_group = enc_hint->group;
+            if (jwe_group_t::jwe_type_aescbc_hs == enc_group) {
                 int cek_size = cek.size();
                 int64 aad_length = aad.size() * 8;
                 int64 al = hton64(aad_length);
@@ -756,7 +756,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
                         crypt.close(handle_crypt);
                     }
                 }
-            } else if (jwe_type_t::jwe_type_aesgcm == enc_type) {
+            } else if (jwe_group_t::jwe_type_aesgcm == enc_group) {
                 crypt_context_t* handle_crypt = nullptr;
                 crypt.open(&handle_crypt, (crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, &cek[0], cek.size(), &iv[0], iv.size());
                 /* Content Encryption */
@@ -774,7 +774,6 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_
 return_t json_object_encryption::check_constraints(jwa_t alg, EVP_PKEY* pkey) {
     return_t ret = errorcode_t::success;
 
-    // int alg_type = CRYPT_ALG_TYPE (alg);
     __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
@@ -813,7 +812,7 @@ return_t json_object_encryption::update_header(std::string const& source_encoded
 
     /* compact, flattened */
     // protected_header
-    json_open_stream(&json_header, source_encoded.c_str());
+    json_open_stream(&json_header, source_encoded.c_str(), true);
     if (json_header) {
         const char* alg_value = nullptr;
         const char* tag_value = nullptr;
@@ -859,19 +858,19 @@ return_t json_object_encryption::prepare_encryption(jose_context_t* handle, jwe_
 
         jose_encryptions_map_t::iterator iter = handle->encryptions.find(enc);
         if (handle->encryptions.end() == iter) {
-            const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption(enc);  // content encryption
-            if (nullptr == enc_info) {
+            const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
+            if (nullptr == enc_hint) {
                 ret = errorcode_t::not_supported;
                 __leave2;
             }
 
-            const EVP_CIPHER* enc_evp_cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(enc_info->crypt_alg, enc_info->crypt_mode);
+            const EVP_CIPHER* enc_evp_cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(enc_hint->crypt_alg, enc_hint->crypt_mode);
             if (nullptr == enc_evp_cipher) {
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
 
-            uint32 enc_type = CRYPT_ENC_TYPE(enc_info->type);
+            uint32 enc_group = enc_hint->group;
             int keysize = EVP_CIPHER_key_length(enc_evp_cipher);
             int ivsize = EVP_CIPHER_iv_length(enc_evp_cipher);
             /* EVP_CIPHER_CTX_key_length, EVP_CIPHER_CTX_iv_length
@@ -880,12 +879,12 @@ return_t json_object_encryption::prepare_encryption(jose_context_t* handle, jwe_
              */
             adjust_range(keysize, 0, EVP_MAX_KEY_LENGTH);
             adjust_range(ivsize, 0, EVP_MAX_IV_LENGTH);
-            if (jwe_type_t::jwe_type_aescbc_hs == enc_type) {
+            if (jwe_group_t::jwe_type_aescbc_hs == enc_group) {
                 keysize *= 2;
             }
 
             jose_encryption_t item;
-            item.enc_info = enc_info;
+            item.enc_info = enc_hint;
 
             /* generate cek if not included "dir", "ECDH-ES" */
             rand.random(item.datamap[crypt_item_t::item_cek], keysize);
@@ -896,7 +895,7 @@ return_t json_object_encryption::prepare_encryption(jose_context_t* handle, jwe_
             if (1 == algs.size()) {
                 jwa_t alg = algs.front();
 
-                // const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);  // key management
+                // const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm (alg);  // key management
                 std::string kid;
                 EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
                 if (nullptr == pkey) {
@@ -927,7 +926,7 @@ return_t json_object_encryption::prepare_encryption(jose_context_t* handle, jwe_
                 for (std::list<jwa_t>::const_iterator iter = algs.begin(); iter != algs.end(); iter++) {
                     jwa_t alg = *iter;
 
-                    // const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);  // key management
+                    // const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm (alg);  // key management
                     std::string kid;
                     EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
 
@@ -960,12 +959,12 @@ return_t json_object_encryption::prepare_encryption_recipient(jwa_t alg, EVP_PKE
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm(alg);  // key management
-    uint32 alg_type = CRYPT_ALG_TYPE(alg);
+    const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);  // key management
+    uint32 alg_group = alg_hint->group;
 
-    recipient.alg_info = alg_info;
+    recipient.alg_info = alg_hint;
 
-    if ((jwa_type_t::jwa_type_ecdh == alg_type) || (jwa_type_t::jwa_type_ecdh_aeskw == alg_type)) {
+    if ((jwa_group_t::jwa_type_ecdh == alg_group) || (jwa_group_t::jwa_type_ecdh_aeskw == alg_group)) {
         // epk, apu, apv
         uint32 nid = 0;
         crypto_key key;
@@ -977,15 +976,15 @@ return_t json_object_encryption::prepare_encryption_recipient(jwa_t alg, EVP_PKE
         variant_t vt;
         variant_set_pointer(vt, recipient.epk);
         variantmap[crypt_item_t::item_epk] = vt;
-    } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {
+    } else if (jwa_group_t::jwa_type_aesgcmkw == alg_group) {
         // iv, tag
-        const EVP_CIPHER* alg_evp_cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(alg_info->crypt_alg, alg_info->crypt_mode);
+        const EVP_CIPHER* alg_evp_cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(alg_hint->crypt_alg, alg_hint->crypt_mode);
         int ivsize = EVP_CIPHER_iv_length(alg_evp_cipher);
         openssl_prng rand;
         rand.random(recipient.datamap[crypt_item_t::item_iv], ivsize);
         datamap[crypt_item_t::item_iv] = recipient.datamap[crypt_item_t::item_iv];
         datamap[crypt_item_t::item_tag] = recipient.datamap[crypt_item_t::item_tag];
-    } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {
+    } else if (jwa_group_t::jwa_type_pbes_hs_aeskw == alg_group) {
         // p2s, p2c
         openssl_prng rand;
         rand.random(recipient.datamap[crypt_item_t::item_p2s], 64);
@@ -1027,6 +1026,7 @@ return_t json_object_encryption::compose_encryption_header(binary_t& header, jwe
         json_header = json_object();
 
         if (jose_compose_t::jose_enc_only & flag) {
+            // const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);
             if (nullptr == enc_value) {
                 ret = errorcode_t::invalid_parameter;
                 __leave2;
@@ -1034,16 +1034,18 @@ return_t json_object_encryption::compose_encryption_header(binary_t& header, jwe
             json_object_set_new(json_header, "enc", json_string(enc_value));
         }
         if (jose_compose_t::jose_alg_only & flag) {
-            if (nullptr == alg_value) {
-                ret = errorcode_t::invalid_parameter;
+            const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);
+            if (nullptr == alg_hint) {
+                ret = errorcode_t::not_supported;
                 __leave2;
             }
+            uint32 alg_group = alg_hint->group;
+
             json_object_set_new(json_header, "alg", json_string(alg_value));
             if (kid.size()) {
                 json_object_set_new(json_header, "kid", json_string(kid.c_str()));
             }
-            uint32 alg_type = CRYPT_ALG_TYPE(alg);
-            if ((jwa_type_t::jwa_type_ecdh == alg_type) || (jwa_type_t::jwa_type_ecdh_aeskw == alg_type)) {
+            if ((jwa_group_t::jwa_type_ecdh == alg_group) || (jwa_group_t::jwa_type_ecdh_aeskw == alg_group)) {
                 // epk, apu, apv
                 binary_t pub1;
                 binary_t pub2;
@@ -1064,13 +1066,13 @@ return_t json_object_encryption::compose_encryption_header(binary_t& header, jwe
                     }
                     json_object_set_new(json_header, "epk", json_epk);
                 }
-            } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {
+            } else if (jwa_group_t::jwa_type_aesgcmkw == alg_group) {
                 // iv, tag
                 binary_t iv1 = datamap[crypt_item_t::item_iv];
                 binary_t tag1 = datamap[crypt_item_t::item_tag];
                 json_object_set_new(json_header, "iv", json_string(base64_encode(&iv1[0], iv1.size(), base64_encoding_t::base64url_encoding).c_str()));
                 json_object_set_new(json_header, "tag", json_string(base64_encode(&tag1[0], tag1.size(), base64_encoding_t::base64url_encoding).c_str()));
-            } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {
+            } else if (jwa_group_t::jwa_type_pbes_hs_aeskw == alg_group) {
                 // p2s, p2c
                 binary_t p2s = datamap[crypt_item_t::item_p2s];
                 uint32 p2c = variantmap[crypt_item_t::item_p2c].data.i32;
@@ -1186,7 +1188,7 @@ return_t json_object_encryption::prepare_decryption(jose_context_t* handle, cons
         const char* enc = nullptr;
         if (protected_header) {
             protected_header_decoded = base64_decode_careful(protected_header, strlen(protected_header), base64_encoding_t::base64url_encoding);
-            ret = json_open_stream(&json_protected, protected_header_decoded.c_str());
+            ret = json_open_stream(&json_protected, protected_header_decoded.c_str(), true);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -1220,14 +1222,14 @@ return_t json_object_encryption::prepare_decryption(jose_context_t* handle, cons
 
         json_unpack_helper(pool, "enc", &enc);
 
-        const hint_jose_encryption_t* hintof_enc = advisor->hintof_jose_encryption(enc);
-        if (nullptr == hintof_enc) {
+        const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);
+        if (nullptr == enc_hint) {
             ret = errorcode_t::not_supported;
             __leave2;
         }
 
-        type = (jwe_t)hintof_enc->type;
-        item.enc_info = hintof_enc;
+        type = (jwe_t)enc_hint->type;
+        item.enc_info = enc_hint;
 
         // do not update if crypt_item_t::item_aad already exists
         // see RFC 7520 5.10.  Including Additional Authenticated Data
@@ -1279,7 +1281,7 @@ return_t json_object_encryption::prepare_decryption_recipient(jose_context_t* ha
             // protected can be nullptr
             // see RFC 7520 5.12.  Protecting Content Only
             std::string protected_header_decoded = base64_decode_careful(protected_header, strlen(protected_header), base64_encoding_t::base64url_encoding);
-            ret_test = json_open_stream(&json_protected, protected_header_decoded.c_str());
+            ret_test = json_open_stream(&json_protected, protected_header_decoded.c_str(), true);
             if (errorcode_t::success != ret_test) {
                 ret = errorcode_t::bad_data;
                 __leave2;
@@ -1299,8 +1301,8 @@ return_t json_object_encryption::prepare_decryption_recipient(jose_context_t* ha
         const char* enc = nullptr;
         json_unpack_helper(pool, "enc", &enc);
 
-        const hint_jose_encryption_t* hintof_enc = advisor->hintof_jose_encryption(enc);
-        if (nullptr == hintof_enc) {
+        const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);
+        if (nullptr == enc_hint) {
             ret = errorcode_t::not_supported;
             __leave2;
         }
@@ -1319,20 +1321,20 @@ return_t json_object_encryption::prepare_decryption_recipient(jose_context_t* ha
         const char* kid = nullptr;
         json_unpack_helper(pool, "alg", &alg);
         json_unpack_helper(pool, "kid", &kid);
-        const hint_jose_encryption_t* hintof_alg = advisor->hintof_jose_algorithm(alg);
-        if (nullptr == hintof_alg) {
+        const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);
+        if (nullptr == alg_hint) {
             ret = errorcode_t::not_supported;
             __leave2;
         }
 
-        recipient.alg_info = hintof_alg;
+        recipient.alg_info = alg_hint;
         if (kid) {
             recipient.kid = kid;
         }
 
-        type = (jwa_t)hintof_alg->type;
-        uint32 alg_type = CRYPT_ALG_TYPE((jwa_t)hintof_alg->type);
-        if ((jwa_type_t::jwa_type_ecdh == alg_type) || (jwa_type_t::jwa_type_ecdh_aeskw == alg_type)) {  // epk
+        type = (jwa_t)alg_hint->type;
+        uint32 alg_group = alg_hint->group;
+        if ((jwa_group_t::jwa_type_ecdh == alg_group) || (jwa_group_t::jwa_type_ecdh_aeskw == alg_group)) {  // epk
             json_t* epk = nullptr;
             const char* apu_value = nullptr;
             const char* apv_value = nullptr;
@@ -1366,7 +1368,7 @@ return_t json_object_encryption::prepare_decryption_recipient(jose_context_t* ha
             if (apv_value) {
                 base64_decode(apv_value, strlen(apv_value), recipient.datamap[crypt_item_t::item_apv], base64_encoding_t::base64url_encoding);
             }
-        } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {  // iv, tag
+        } else if (jwa_group_t::jwa_type_aesgcmkw == alg_group) {  // iv, tag
             const char* iv_value = nullptr;
             const char* tag_value = nullptr;
             json_unpack_helper(pool, "iv", &iv_value);
@@ -1379,7 +1381,7 @@ return_t json_object_encryption::prepare_decryption_recipient(jose_context_t* ha
 
             base64_decode(iv_value, strlen(iv_value), recipient.datamap[crypt_item_t::item_iv], base64_encoding_t::base64url_encoding);
             base64_decode(tag_value, strlen(tag_value), recipient.datamap[crypt_item_t::item_tag], base64_encoding_t::base64url_encoding);
-        } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {  // p2s, p2c
+        } else if (jwa_group_t::jwa_type_pbes_hs_aeskw == alg_group) {  // p2s, p2c
             const char* p2s = nullptr;
             int p2c = -1;
             json_unpack_helper(pool, "p2s", &p2s);
@@ -1636,8 +1638,8 @@ return_t json_object_encryption::write_encryption(jose_context_t* handle, std::s
                                 json_object_set_new(header, "kid", json_string(recipient.kid.c_str()));
                             }
 
-                            uint32 alg_type = CRYPT_ALG_TYPE(alg);
-                            if ((jwa_type_t::jwa_type_ecdh == alg_type) || (jwa_type_t::jwa_type_ecdh_aeskw == alg_type)) {
+                            uint32 alg_group = hint->group;
+                            if ((jwa_group_t::jwa_type_ecdh == alg_group) || (jwa_group_t::jwa_type_ecdh_aeskw == alg_group)) {
                                 binary_t pub1;
                                 binary_t pub2;
                                 EVP_PKEY* epk = recipient.epk;
@@ -1659,14 +1661,14 @@ return_t json_object_encryption::write_encryption(jose_context_t* handle, std::s
                                     }
                                     json_object_set_new(header, "epk", json_epk);
                                 }
-                            } else if (jwa_type_t::jwa_type_aesgcmkw == alg_type) {
+                            } else if (jwa_group_t::jwa_type_aesgcmkw == alg_group) {
                                 std::string b64_iv = base64_encode(&recipient.datamap[crypt_item_t::item_iv][0],
                                                                    recipient.datamap[crypt_item_t::item_iv].size(), base64_encoding_t::base64url_encoding);
                                 std::string b64_tag = base64_encode(&recipient.datamap[crypt_item_t::item_tag][0],
                                                                     recipient.datamap[crypt_item_t::item_tag].size(), base64_encoding_t::base64url_encoding);
                                 json_object_set_new(header, "iv", json_string(b64_iv.c_str()));
                                 json_object_set_new(header, "tag", json_string(b64_tag.c_str()));
-                            } else if (jwa_type_t::jwa_type_pbes_hs_aeskw == alg_type) {
+                            } else if (jwa_group_t::jwa_type_pbes_hs_aeskw == alg_group) {
                                 std::string b64_p2s = base64_encode(&recipient.datamap[crypt_item_t::item_p2s][0],
                                                                     recipient.datamap[crypt_item_t::item_p2s].size(), base64_encoding_t::base64url_encoding);
                                 json_object_set_new(header, "p2s", json_string(b64_p2s.c_str()));

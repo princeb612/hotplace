@@ -985,6 +985,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "RSA1_5",
         jwa_t::jwa_rsa_1_5,
+        jwa_group_t::jwa_type_rsa,
         crypto_kty_t::kty_rsa,
         crypto_kty_t::kty_unknown,
         crypt_enc_t::rsa_1_5,
@@ -992,6 +993,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "RSA-OAEP",
         jwa_t::jwa_rsa_oaep,
+        jwa_group_t::jwa_type_rsa,
         crypto_kty_t::kty_rsa,
         crypto_kty_t::kty_unknown,
         crypt_enc_t::rsa_oaep,
@@ -999,6 +1001,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "RSA-OAEP-256",
         jwa_t::jwa_rsa_oaep_256,
+        jwa_group_t::jwa_type_rsa,
         crypto_kty_t::kty_rsa,
         crypto_kty_t::kty_unknown,
         crypt_enc_t::rsa_oaep256,
@@ -1006,6 +1009,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A128KW",
         jwa_t::jwa_a128kw,
+        jwa_group_t::jwa_type_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1017,6 +1021,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A192KW",
         jwa_t::jwa_a192kw,
+        jwa_group_t::jwa_type_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1028,6 +1033,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A256KW",
         jwa_t::jwa_a256kw,
+        jwa_group_t::jwa_type_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1039,6 +1045,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "dir",
         jwa_t::jwa_dir,
+        jwa_group_t::jwa_type_dir,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1046,12 +1053,14 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "ECDH-ES",
         jwa_t::jwa_ecdh_es,
+        jwa_group_t::jwa_type_ecdh,
         crypto_kty_t::kty_ec,
         crypto_kty_t::kty_okp,
     },
     {
         "ECDH-ES+A128KW",
         jwa_t::jwa_ecdh_es_a128kw,
+        jwa_group_t::jwa_type_ecdh_aeskw,
         crypto_kty_t::kty_ec,
         crypto_kty_t::kty_okp,
         0,
@@ -1062,6 +1071,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "ECDH-ES+A192KW",
         jwa_t::jwa_ecdh_es_a192kw,
+        jwa_group_t::jwa_type_ecdh_aeskw,
         crypto_kty_t::kty_ec,
         crypto_kty_t::kty_okp,
         0,
@@ -1072,6 +1082,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "ECDH-ES+A256KW",
         jwa_t::jwa_ecdh_es_a256kw,
+        jwa_group_t::jwa_type_ecdh_aeskw,
         crypto_kty_t::kty_ec,
         crypto_kty_t::kty_okp,
         0,
@@ -1082,6 +1093,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A128GCMKW",
         jwa_t::jwa_a128gcmkw,
+        jwa_group_t::jwa_type_aesgcmkw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1092,6 +1104,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A192GCMKW",
         jwa_t::jwa_a192gcmkw,
+        jwa_group_t::jwa_type_aesgcmkw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1102,6 +1115,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "A256GCMKW",
         jwa_t::jwa_a256gcmkw,
+        jwa_group_t::jwa_type_aesgcmkw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1112,6 +1126,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "PBES2-HS256+A128KW",
         jwa_t::jwa_pbes2_hs256_a128kw,
+        jwa_group_t::jwa_type_pbes_hs_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1123,6 +1138,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "PBES2-HS384+A192KW",
         jwa_t::jwa_pbes2_hs384_a192kw,
+        jwa_group_t::jwa_type_pbes_hs_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1134,6 +1150,7 @@ const hint_jose_encryption_t hint_jose_algorithms[] = {
     {
         "PBES2-HS512+A256KW",
         jwa_t::jwa_pbes2_hs512_a256kw,
+        jwa_group_t::jwa_type_pbes_hs_aeskw,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1148,6 +1165,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A128CBC-HS256",
         jwe_t::jwe_a128cbc_hs256,
+        jwe_group_t::jwe_type_aescbc_hs,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1159,6 +1177,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A192CBC-HS384",
         jwe_t::jwe_a192cbc_hs384,
+        jwe_group_t::jwe_type_aescbc_hs,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1170,6 +1189,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A256CBC-HS512",
         jwe_t::jwe_a256cbc_hs512,
+        jwe_group_t::jwe_type_aescbc_hs,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1181,6 +1201,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A128GCM",
         jwe_t::jwe_a128gcm,
+        jwe_group_t::jwe_type_aesgcm,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1191,6 +1212,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A192GCM",
         jwe_t::jwe_a192gcm,
+        jwe_group_t::jwe_type_aesgcm,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1201,6 +1223,7 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
     {
         "A256GCM",
         jwe_t::jwe_a256gcm,
+        jwe_group_t::jwe_type_aesgcm,
         crypto_kty_t::kty_hmac,
         crypto_kty_t::kty_unknown,
         0,
@@ -1214,6 +1237,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_hs256,
         jws_t::jws_hs256,
+        jws_type_t::jws_type_hmac,
         crypto_kty_t::kty_hmac,
         "HS256",
         hash_algorithm_t::sha2_256,
@@ -1223,6 +1247,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_hs384,
         jws_t::jws_hs384,
+        jws_type_t::jws_type_hmac,
         crypto_kty_t::kty_hmac,
         "HS384",
         hash_algorithm_t::sha2_384,
@@ -1232,6 +1257,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_hs512,
         jws_t::jws_hs512,
+        jws_type_t::jws_type_hmac,
         crypto_kty_t::kty_hmac,
         "HS512",
         hash_algorithm_t::sha2_512,
@@ -1241,6 +1267,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs256,
         jws_t::jws_rs256,
+        jws_type_t::jws_type_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         "RS256",
         hash_algorithm_t::sha2_256,
@@ -1250,6 +1277,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs384,
         jws_t::jws_rs384,
+        jws_type_t::jws_type_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         "RS384",
         hash_algorithm_t::sha2_384,
@@ -1259,6 +1287,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_rs512,
         jws_t::jws_rs512,
+        jws_type_t::jws_type_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
         "RS512",
         hash_algorithm_t::sha2_512,
@@ -1266,8 +1295,19 @@ const hint_signature_t hint_signatures[] = {
         NID_rsaEncryption,
     },
     {
+        crypt_sig_t::sig_rs1,
+        jws_t::jws_unknown,
+        jws_type_t::jws_type_rsassa_pkcs15,
+        crypto_kty_t::kty_rsa,
+        nullptr,
+        hash_algorithm_t::sha1,
+        1,
+        NID_rsaEncryption,
+    },
+    {
         crypt_sig_t::sig_es256,
         jws_t::jws_es256,
+        jws_type_t::jws_type_ecdsa,
         crypto_kty_t::kty_ec,
         "ES256",
         hash_algorithm_t::sha2_256,
@@ -1277,6 +1317,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_es384,
         jws_t::jws_es384,
+        jws_type_t::jws_type_ecdsa,
         crypto_kty_t::kty_ec,
         "ES384",
         hash_algorithm_t::sha2_384,
@@ -1286,6 +1327,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_es512,
         jws_t::jws_es512,
+        jws_type_t::jws_type_ecdsa,
         crypto_kty_t::kty_ec,
         "ES512",
         hash_algorithm_t::sha2_512,
@@ -1295,6 +1337,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_ps256,
         jws_t::jws_ps256,
+        jws_type_t::jws_type_rsassa_pss,
         crypto_kty_t::kty_rsa,
         "PS256",
         hash_algorithm_t::sha2_256,
@@ -1304,6 +1347,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_ps384,
         jws_t::jws_ps384,
+        jws_type_t::jws_type_rsassa_pss,
         crypto_kty_t::kty_rsa,
         "PS384",
         hash_algorithm_t::sha2_384,
@@ -1313,6 +1357,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_ps512,
         jws_t::jws_ps512,
+        jws_type_t::jws_type_rsassa_pss,
         crypto_kty_t::kty_rsa,
         "PS512",
         hash_algorithm_t::sha2_512,
@@ -1322,6 +1367,7 @@ const hint_signature_t hint_signatures[] = {
     {
         crypt_sig_t::sig_eddsa,
         jws_t::jws_eddsa,
+        jws_type_t::jws_type_eddsa,
         crypto_kty_t::kty_okp,
         "EdDSA",
         hash_algorithm_t::hash_alg_unknown,
