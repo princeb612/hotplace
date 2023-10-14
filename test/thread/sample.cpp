@@ -74,7 +74,7 @@ void test_signalwait_threads() {
     thread_printfln("send signal");
     threads.signal();
 
-    thread_printfln("terminating all threads (running %d)", threads.running());
+    thread_printfln("terminating all threads (running %zi)", threads.running());
     threads.signal_and_wait_all();
     _test_case.assert(0 == threads.running(), __FUNCTION__, "all thread terminated");
 }

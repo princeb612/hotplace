@@ -145,7 +145,7 @@ void test_crypt_algorithms(uint32 cooltime, uint32 unitsize) {
     constexpr char constexpr_text[] = "still a man hears what he wants to hear and disregards the rest";  // the boxer - Simon & Garfunkel
 
     __try2 {
-        std::string condition = format("[test condition cooltime %zi unitsize %zi]", ossl_get_cooltime(), ossl_get_unitsize());
+        std::string condition = format("[test condition cooltime %i unitsize %i]", ossl_get_cooltime(), ossl_get_unitsize());
 
         _test_case.begin("openssl_crypt crypt_mode_t::cbc %s", condition.c_str());
         test_crypto_loop(&openssl_crypt, RTL_NUMBER_OF(algorithm_table), algorithm_table, crypt_mode_t::cbc, 16, keydata, 16, iv, (byte_t*)constexpr_text,

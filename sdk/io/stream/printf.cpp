@@ -90,7 +90,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
         va_array_t va_array;
         for (i = 0; i != va.size(); i++) {
             size_t id = i + 1;
-            std::string find = format("{%d}", id);
+            std::string find = format("{%zi}", id);
             size_t pos = 0;
             while (true) {
                 pos = formatter.find_first_of(find.c_str(), pos);
@@ -126,7 +126,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
             va_new.at(i, v);
             formatter_map_t::iterator fmt_it = formats.find(v.type);
             if (formats.end() != fmt_it) {
-                formatter.replace(format("{%d}", idx + 1).c_str(), fmt_it->second.c_str(), bufferio_flag_t::run_once);
+                formatter.replace(format("{%zi}", idx + 1).c_str(), fmt_it->second.c_str(), bufferio_flag_t::run_once);
             }
         }
 

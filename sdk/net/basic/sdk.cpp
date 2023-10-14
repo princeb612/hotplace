@@ -167,7 +167,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
     int socket_type = 0;
     int ipprotocol = 0;
     int ret_function = 0;
-    uint16 index = 0;
+    unsigned int index = 0;
     struct addrinfo hints;
     struct addrinfo* addrinf = nullptr;
     struct addrinfo* addrinf_traverse = nullptr;
@@ -464,7 +464,7 @@ return_t close_listener(unsigned int nSockets, socket_t* Sockets) {
             __leave2;
         }
 
-        for (uint16 i = 0; i < nSockets; i++) {
+        for (unsigned int i = 0; i < nSockets; i++) {
             if (INVALID_SOCKET != Sockets[i]) {
 #if defined __linux__
                 close(Sockets[i]);
