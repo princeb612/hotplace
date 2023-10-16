@@ -44,6 +44,7 @@ return_t cbor_array::join(cbor_object* object, cbor_object* extra) {
             case cbor_type_t::cbor_type_array:
             case cbor_type_t::cbor_type_data:
             case cbor_type_t::cbor_type_map:
+            case cbor_type_t::cbor_type_simple:
                 _array.push_back(object);
                 break;
             default:

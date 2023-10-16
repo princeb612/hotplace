@@ -25,6 +25,14 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
+enum cose_flag_t {
+    cose_external = 1,
+    cose_partyu = 2,
+    cose_partyv = 3,
+    cose_public = 4,
+    cose_private = 5,
+};
+
 class cbor_object_signing_encryption {
    public:
     cbor_object_signing_encryption();
@@ -42,6 +50,20 @@ class cbor_object_signing_encryption {
      * @return  error code (see error.hpp)
      */
     return_t close(cose_context_t* handle);
+    /**
+     * @brief   set
+     * @param   cose_context_t* handle [in]
+     * @param   int id [in] cose_external, cose_public, cose_private
+     * @param   binary_t const& bin [in]
+     */
+    return_t set(cose_context_t* handle, int id, binary_t const& bin);
+    /**
+     * @brief   set
+     * @param   cose_context_t* handle [in]
+     * @param   int id [in] cose_partyu, cose_partyv
+     * @param   cose_variantmap_t& datamap [in]
+     */
+    return_t set(cose_context_t* handle, int id, cose_variantmap_t& datamap);
 
     /**
      * @brief   encrypt
@@ -49,67 +71,61 @@ class cbor_object_signing_encryption {
      * @param   crypto_key* key [in]
      * @param   cose_alg_t method [in]
      * @param   binary_t const& input [in]
-     * @param   binary_t const& external [inopt]
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      */
-    return_t encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t const& external, binary_t& output);
+    return_t encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
     /**
      * @brief   encrypt
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   std::list<cose_alg_t> methods [in]
      * @param   binary_t const& input [in]
-     * @param   binary_t const& external [inopt]
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      */
-    return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t const& external, binary_t& output);
+    return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output);
     /**
      * @brief   decrypt
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   binary_t const& input [in]
-     * @param   binary_t const& external [inopt]
      * @param   bool& result [out]
      * @return  error code (see error.hpp)
      */
-    return_t decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t const& external, bool& result);
+    return_t decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
     /**
      * @brief   sign
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   cose_alg_t method [in]
      * @param   binary_t const& input [in]
-     * @param   binary_t const& external [inopt]
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t const& external, binary_t& output);
+    return_t sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
     /**
      * @brief   sign
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   std::list<cose_alg_t> methods [in]
      * @param   binary_t const& input [in]
-     * @param   binary_t const& external [inopt]
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t const& external, binary_t& output);
+    return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output);
     /**
      * @brief   verify with kid
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   binary_t const& input [in]
-     * @param   binary_t const& external [inopt]
      * @param   bool& result [out]
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t const& external, bool& result);
+    return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
     /**
      * @brief   clear
      * @param   cose_context_t* handle [in]

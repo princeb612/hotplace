@@ -160,7 +160,7 @@ class crypt_t {
 class hash_t {
    public:
     /**
-     * @brief open
+     * @brief open (hash, HMAC)
      * @param hash_context_t** handle [out]
      * @param hash_algorithm_t alg [in]
      * @param const unsigned char* key [inopt]
@@ -182,6 +182,15 @@ class hash_t {
      *    hash.close(handle)
      */
     virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const unsigned char* key = nullptr, unsigned keysize = 0) = 0;
+    /**
+     * @brief open (CMAC)
+     * @param hash_context_t** handle [out]
+     * @param crypt_algorithm_t alg [in]
+     * @param const unsigned char* key [inopt]
+     * @param unsigned keysize [inopt]
+     * @return error code (see error.hpp)
+     */
+    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, const unsigned char* key = nullptr, unsigned keysize = 0) = 0;
     /**
      * @brief close
      * @param hash_context_t* handle [in]

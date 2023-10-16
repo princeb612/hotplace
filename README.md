@@ -1,7 +1,7 @@
 # hotplace
 
  * study of personal interests
- * ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/cmake-single-platform.yml/badge.svg)
+ * ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/build.yml/badge.svg)
  * ![codeql workflow](https://github.com/princeb612/hotplace/actions/workflows/codeql.yml/badge.svg)
  * powered by
    * ![openssl](https://img.shields.io/badge/openssl-1.1.1/3.0/3.1/3.2-green)

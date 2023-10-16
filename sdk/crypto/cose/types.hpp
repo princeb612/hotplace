@@ -61,6 +61,27 @@ typedef struct _cose_context_t {
     binary_t payload;
     std::list<cose_parts_t> subitems;
 
+    binary_t external;
+    cose_variantmap_t partyu;
+    cose_variantmap_t partyv;
+    binary_t pub;
+    binary_t priv;
+
+    _cose_context_t() : tag(0) {}
+    ~_cose_context_t() {
+        clear();
+        clear_map(partyu);
+        clear_map(partyv);
+        pub.clear();
+        priv.clear();
+    }
+    void clear_map(cose_variantmap_t& map) {
+        cose_variantmap_t::iterator map_iter;
+        for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
+            variant_free(map_iter->second);
+        }
+        map.clear();
+    }
     void clear() {
         tag = 0;
         body.clear();

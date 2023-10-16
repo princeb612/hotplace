@@ -10,13 +10,16 @@ cwd=$(pwd)
 valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 
 if [ $# -eq 0 ]; then
-    array=(base cmdline unittest encode string bufferio stream datetime thread mlfq cbor crypto kdf hash ecdsa jose cose authenticode ipaddr)
+    array=(base bufferio cmdline datetime encode thread) # base
+    array+=(mlfq cbor stream string unittest) # io
+    array+=(crypto kdf hash ecdsa jose cose authenticode) # crypto
+    array+=(ipaddr) # net
     if [ $OSTYPE = "msys" ]; then
         array+=(windows)
     else
         array+=(linux)
     fi
-    # following test file is user interaction required
+    # following test files are user interaction required
     # tcpserver1 tcpserver2 tlsserver httpserver
 else
     if [ -d $1 ]; then

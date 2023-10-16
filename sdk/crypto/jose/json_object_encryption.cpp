@@ -44,9 +44,9 @@ json_object_encryption::~json_object_encryption() {
 
 return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, std::string& output, jose_serialization_t type) {
     return_t ret = errorcode_t::success;
-    json_object_encryption encryption;
 
     __try2 {
+        json_object_signing_encryption::clear_context(handle);
         output.clear();
 
         if (nullptr == handle) {
@@ -63,30 +63,26 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
             binary_t deflated;
             zlib_deflate(zlib_windowbits_t::windowbits_deflate, input, deflated);
 
-            ret = encryption.encrypt(handle, enc, alg, deflated, encrypted);
+            ret = encrypt(handle, enc, alg, deflated, encrypted);
         } else {
-            ret = encryption.encrypt(handle, enc, alg, input, encrypted);
+            ret = encrypt(handle, enc, alg, input, encrypted);
         }
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         ret = write_encryption(handle, output, type);
-
-        json_object_signing_encryption::clear_context(handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 { json_object_signing_encryption::clear_context(handle); }
     return ret;
 }
 
 return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std::list<jwa_t> algs, binary_t const& input, std::string& output,
                                          jose_serialization_t type) {
     return_t ret = errorcode_t::success;
-    json_object_encryption encryption;
 
     __try2 {
+        json_object_signing_encryption::clear_context(handle);
         output.clear();
 
         if (nullptr == handle) {
@@ -118,9 +114,9 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std:
             return_t check = errorcode_t::success;
 
             if (jose_flag_t::jose_deflate & handle->flags) {
-                check = encryption.encrypt(handle, enc, alg, deflated, encrypted);
+                check = encrypt(handle, enc, alg, deflated, encrypted);
             } else {
-                check = encryption.encrypt(handle, enc, alg, input, encrypted);
+                check = encrypt(handle, enc, alg, input, encrypted);
             }
 
             switch (check) {
@@ -136,20 +132,16 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std:
         }
 
         write_encryption(handle, output, type);
-
-        json_object_signing_encryption::clear_context(handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 { json_object_signing_encryption::clear_context(handle); }
     return ret;
 }
 
 return_t json_object_encryption::decrypt(jose_context_t* handle, std::string const& input, binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
-    json_object_encryption encryption;
 
     __try2 {
+        json_object_signing_encryption::clear_context(handle);
         output.clear();
         result = false;
 
@@ -187,9 +179,9 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, std::string con
                     }
 
                     if (kid.empty()) {
-                        ret_test = encryption.decrypt(handle, enc, alg, item.datamap[crypt_item_t::item_ciphertext], output);
+                        ret_test = decrypt(handle, enc, alg, item.datamap[crypt_item_t::item_ciphertext], output);
                     } else {
-                        ret_test = encryption.decrypt(handle, enc, alg, kid.c_str(), item.datamap[crypt_item_t::item_ciphertext], output);
+                        ret_test = decrypt(handle, enc, alg, kid.c_str(), item.datamap[crypt_item_t::item_ciphertext], output);
                     }
                     if ((errorcode_t::success == ret_test) && zip.size() && (0 == memcmp(&zip[0], "DEF", 3))) {
                         binary_t inflated;
@@ -212,12 +204,8 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, std::string con
                 ret = errorcode_t::verify;
             }
         }
-
-        json_object_signing_encryption::clear_context(handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 { json_object_signing_encryption::clear_context(handle); }
     return ret;
 }
 
@@ -849,8 +837,6 @@ return_t json_object_encryption::prepare_encryption(jose_context_t* handle, jwe_
             __leave2;
         }
 
-        json_object_signing_encryption::clear_context(handle);
-
         if (algs.empty()) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -1415,8 +1401,6 @@ return_t json_object_encryption::prepare_decryption(jose_context_t* handle, cons
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        json_object_signing_encryption::clear_context(handle);
 
         return_t ret_test = json_open_stream(&json_root, input, true);
         if (errorcode_t::success == ret_test) {

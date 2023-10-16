@@ -1379,17 +1379,17 @@ const hint_signature_t hint_signatures[] = {
 
 const hint_cose_algorithm_t hint_cose_algorithms[] = {
     {
-        cose_alg_t::cose_a128kw,  // -3
+        cose_alg_t::cose_aes_128_kw,  // -3
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aeskw,
     },
     {
-        cose_alg_t::cose_a192kw,  // -4
+        cose_alg_t::cose_aes_192_kw,  // -4
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aeskw,
     },
     {
-        cose_alg_t::cose_a256kw,  // -5
+        cose_alg_t::cose_aes_256_kw,  // -5
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aeskw,
     },

@@ -78,12 +78,12 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
     json_object_signing sign;
 
     __try2 {
+        json_object_signing_encryption::clear_context(handle);
+
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        json_object_signing_encryption::clear_context(handle);
 
         for (std::list<std::string>::const_iterator iter = headers.begin(); iter != headers.end(); iter++) {
             std::string header = *iter;
@@ -136,9 +136,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 { json_object_signing_encryption::clear_context(handle); }
     return ret;
 }
 
@@ -147,7 +145,9 @@ return_t json_object_signing::verify(jose_context_t* handle, std::string const& 
     json_object_signing sign;
 
     __try2 {
+        json_object_signing_encryption::clear_context(handle);
         result = false;
+
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -214,9 +214,7 @@ return_t json_object_signing::verify(jose_context_t* handle, std::string const& 
             ret = errorcode_t::verify;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 { json_object_signing_encryption::clear_context(handle); }
     return ret;
 }
 

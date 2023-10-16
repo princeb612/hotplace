@@ -550,9 +550,9 @@ enum cose_alg_t {
 
     // RFC 8152 Table 17: AES Key Wrap Algorithm Values
     // RFC 9053 Table 13: AES Key Wrap Algorithm Values
-    cose_a128kw = -3,
-    cose_a192kw = -4,
-    cose_a256kw = -5,
+    cose_aes_128_kw = -3,
+    cose_aes_192_kw = -4,
+    cose_aes_256_kw = -5,
 
     // RFC 8152 Table 15: Direct Key
     // RFC 9053 Table 11: Direct Key

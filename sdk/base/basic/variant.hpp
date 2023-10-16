@@ -153,6 +153,8 @@ typedef struct __variant_t {
     } data;
     uint32 size;
     uint8 flag;
+
+    __variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
 } variant_t;
 
 #define variant_init(vt)                      \

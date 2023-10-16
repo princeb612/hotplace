@@ -18,8 +18,8 @@ namespace hotplace {
 namespace crypto {
 
 enum openssl_hash_context_flag_t {
-    hmac = (1 << 0),
-    cmac = (1 << 1),
+    hash_hmac = (1 << 0),
+    hash_cmac = (1 << 1),
 };
 
 #define OPENSSL_HASH_CONTEXT_SIGNATURE 0x20090912
@@ -54,7 +54,6 @@ openssl_hash::~openssl_hash() {
 
 return_t openssl_hash::open_byname(hash_context_t** handle, const char* algorithm, const unsigned char* key, unsigned keysize) {
     return_t ret = errorcode_t::success;
-    hash_algorithm_t alg;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -63,12 +62,18 @@ return_t openssl_hash::open_byname(hash_context_t** handle, const char* algorith
             __leave2;
         }
 
-        ret = advisor->find_evp_md(algorithm, alg);
-        if (errorcode_t::success != ret) {
-            __leave2;
+        hash_algorithm_t ha;
+        ret = advisor->find_evp_md(algorithm, ha);
+        if (errorcode_t::success == ret) {
+            ret = open(handle, ha, key, keysize);
+        } else {
+            crypt_algorithm_t ca;
+            crypt_mode_t cm;
+            ret = advisor->find_evp_cipher(algorithm, ca, cm);
+            if (errorcode_t::success == ret) {
+                ret = open(handle, ca, key, keysize);
+            }
         }
-
-        ret = open(handle, alg, key, keysize);
     }
     __finally2 {
         // do nothing
@@ -140,7 +145,7 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
         context->_key.resize(key_size);
         memcpy(&context->_key[0], key_data, key_size);
 
-        context->_flags |= openssl_hash_context_flag_t::cmac;
+        context->_flags |= openssl_hash_context_flag_t::hash_cmac;
 
         cmac_context = CMAC_CTX_new();
         if (nullptr == cmac_context) {
@@ -210,7 +215,7 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
 
             EVP_DigestInit_ex(context->_md_context, context->_evp_md, nullptr);
         } else {
-            context->_flags |= openssl_hash_context_flag_t::hmac;
+            context->_flags |= openssl_hash_context_flag_t::hash_hmac;
 
             hmac_context = HMAC_CTX_new();
             if (nullptr == hmac_context) {
@@ -295,9 +300,9 @@ return_t openssl_hash::init(hash_context_t* handle) {
             __leave2;
         }
 
-        if (context->_flags & openssl_hash_context_flag_t::cmac) {
+        if (context->_flags & openssl_hash_context_flag_t::hash_cmac) {
             CMAC_Init(context->_cmac_context, &context->_key[0], context->_key.size(), context->_evp_cipher, nullptr);
-        } else if (context->_flags & openssl_hash_context_flag_t::hmac) {
+        } else if (context->_flags & openssl_hash_context_flag_t::hash_hmac) {
             HMAC_Init_ex(context->_hmac_context, &context->_key[0], context->_key.size(), context->_evp_md, nullptr);
         } else {
             EVP_DigestInit_ex(context->_md_context, context->_evp_md, nullptr);
@@ -327,9 +332,9 @@ return_t openssl_hash::update(hash_context_t* handle, const byte_t* source_data,
             __leave2;
         }
 
-        if (context->_flags & openssl_hash_context_flag_t::cmac) {
+        if (context->_flags & openssl_hash_context_flag_t::hash_cmac) {
             CMAC_Update(context->_cmac_context, source_data, source_size);
-        } else if (context->_flags & openssl_hash_context_flag_t::hmac) {
+        } else if (context->_flags & openssl_hash_context_flag_t::hash_hmac) {
             HMAC_Update(context->_hmac_context, source_data, source_size);
         } else {
             EVP_DigestUpdate(context->_md_context, source_data, source_size);
@@ -390,7 +395,7 @@ return_t openssl_hash::finalize(hash_context_t* handle, binary_t& output) {
             __leave2;
         }
 
-        if (context->_flags & openssl_hash_context_flag_t::cmac) {
+        if (context->_flags & openssl_hash_context_flag_t::hash_cmac) {
             crypto_advisor* advisor = crypto_advisor::get_instance();
             const hint_blockcipher_t* hint = advisor->find_evp_cipher(context->_evp_cipher);
             size_t size_digest = hint->_blocksize;
@@ -402,7 +407,7 @@ return_t openssl_hash::finalize(hash_context_t* handle, binary_t& output) {
             unsigned int size_digest = EVP_MD_size(context->_evp_md);
             output.resize(size_digest);
 
-            if (context->_flags & openssl_hash_context_flag_t::hmac) {
+            if (context->_flags & openssl_hash_context_flag_t::hash_hmac) {
                 HMAC_Final(context->_hmac_context, &output[0], &size_digest);
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
                 HMAC_CTX_reset(context->_hmac_context);
@@ -456,7 +461,7 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
             __leave2;
         }
 
-        if (context->_flags & openssl_hash_context_flag_t::cmac) {
+        if (context->_flags & openssl_hash_context_flag_t::hash_cmac) {
             crypto_advisor* advisor = crypto_advisor::get_instance();
             const hint_blockcipher_t* hint = advisor->find_evp_cipher(context->_evp_cipher);
             unsigned int size_digest = hint->_blocksize;
@@ -474,7 +479,7 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
             unsigned int size_digest = EVP_MD_size(context->_evp_md);
             output.resize(size_digest);
 
-            if (context->_flags & openssl_hash_context_flag_t::hmac) {
+            if (context->_flags & openssl_hash_context_flag_t::hash_hmac) {
                 HMAC_Init_ex(context->_hmac_context, &context->_key[0], context->_key.size(), context->_evp_md, nullptr);
                 HMAC_Update(context->_hmac_context, source_data, source_size);
                 HMAC_Final(context->_hmac_context, &output[0], &size_digest);
@@ -507,6 +512,33 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
 }
 
 crypt_poweredby_t openssl_hash::get_type() { return crypt_poweredby_t::openssl; }
+
+return_t hmac(binary_t& output, hash_algorithm_t alg, binary_t const& key, binary_t const& input) {
+    return_t ret = errorcode_t::success;
+    openssl_hash hash;
+    hash_context_t* handle = nullptr;
+
+    hash.open(&handle, alg, &key[0], key.size());
+    hash.init(handle);
+    hash.update(handle, &input[0], input.size());
+    hash.finalize(handle, output);
+    hash.close(handle);
+
+    return ret;
+}
+
+return_t cmac(binary_t& output, crypt_algorithm_t alg, binary_t const& key, binary_t const& input) {
+    return_t ret = errorcode_t::success;
+    openssl_hash hash;
+    hash_context_t* handle = nullptr;
+
+    hash.open(&handle, alg, &key[0], key.size());
+    hash.init(handle);
+    hash.update(handle, &input[0], input.size());
+    hash.finalize(handle, output);
+    hash.close(handle);
+    return ret;
+}
 
 }  // namespace crypto
 }  // namespace hotplace

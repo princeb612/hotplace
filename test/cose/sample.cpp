@@ -71,7 +71,7 @@ void dump_crypto_key(crypto_key_object_t* key, void*) {
     }
 }
 
-return_t test_cose_example(cbor_object* root, const char* expect_file, const char* text, const char* external_aad = nullptr) {
+return_t test_cose_example(cose_context_t* cose_handle, cbor_object* root, const char* expect_file, const char* text) {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
 
@@ -165,9 +165,7 @@ return_t test_cose_example(cbor_object* root, const char* expect_file, const cha
         // cbor_publisher publisher;
         binary_t signature;
         binary_t decrypted;
-        binary_t external;
         bool result = false;
-        cose_context_t* cose_handle = nullptr;
 
         crypto_key privkeys;
         crypto_key pubkeys;
@@ -176,26 +174,16 @@ return_t test_cose_example(cbor_object* root, const char* expect_file, const cha
         // privkeys.for_each (dump_crypto_key, nullptr);
         // pubkeys.for_each (dump_crypto_key, nullptr);
 
-        if (external_aad) {
-            external = base16_decode(external_aad);
-        }
-
         if (root->tagged()) {
             switch (root->tag_value()) {
                 case cbor_tag_t::cose_tag_sign:
                 case cbor_tag_t::cose_tag_sign1:
-                    cose.open(&cose_handle);
-                    ret = cose.verify(cose_handle, &pubkeys, bin, external, result);
-                    cose.close(cose_handle);
-
+                    ret = cose.verify(cose_handle, &pubkeys, bin, result);
                     _test_case.test(ret, __FUNCTION__, "check4.verify %s", text ? text : "");
                     break;
                 case cbor_tag_t::cose_tag_encrypt:
                 case cbor_tag_t::cose_tag_encrypt0:
-                    cose.open(&cose_handle);
-                    ret = cose.decrypt(cose_handle, &privkeys, bin, external, result);
-                    cose.close(cose_handle);
-
+                    ret = cose.decrypt(cose_handle, &privkeys, bin, result);
                     _test_case.test(ret, __FUNCTION__, "check4.decrypt %s", text ? text : "");
                     break;
                 case cbor_tag_t::cose_tag_mac:
@@ -315,7 +303,11 @@ void test_rfc8152_c_1_1() {
     }
     *signatures << signature;
 
-    test_cose_example(root, "rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -408,7 +400,11 @@ void test_rfc8152_c_1_2() {
         *signatures << signature;
     }
 
-    test_cose_example(root, "rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -500,7 +496,11 @@ void test_rfc8152_c_1_3() {
         *signatures << signature;
     }
 
-    test_cose_example(root, "rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -573,7 +573,11 @@ void test_rfc8152_c_1_4() {
         *signatures << signature;
     }
 
-    test_cose_example(root, "rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -613,7 +617,11 @@ void test_rfc8152_c_2_1() {
 
     *root << cbor_data_protected << cbor_data_unprotected << cbor_data_payload << cbor_data_signature;
 
-    test_cose_example(root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -683,7 +691,11 @@ void test_rfc8152_c_3_1() {
     }
     *recipients << recipient;
 
-    test_cose_example(root, "rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -750,7 +762,27 @@ void test_rfc8152_c_3_2() {
         *recipients << recipient;
     }
 
-    test_cose_example(root, "rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+
+    variant_t vt;
+    cose_variantmap_t partyu;
+    cose_variantmap_t partyv;
+    cose_variantmap_t pub;
+
+    variant_set_binary_new(vt, convert("lighting-client"));
+    partyu.insert(std::make_pair(cose_key_t::cose_partyu_id, vt));
+    cose.set(cose_handle, cose_flag_t::cose_partyu, partyu);
+
+    variant_set_binary_new(vt, convert("lighting-server"));
+    partyv.insert(std::make_pair(cose_key_t::cose_partyv_id, vt));
+    cose.set(cose_handle, cose_flag_t::cose_partyv, partyv);
+
+    cose.set(cose_handle, cose_flag_t::cose_public, convert("Encryption Example 02"));
+
+    test_cose_example(cose_handle, root, "rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -851,7 +883,11 @@ void test_rfc8152_c_3_3() {
         *recipients << recipient;
     }
 
-    test_cose_example(root, "rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -931,7 +967,12 @@ void test_rfc8152_c_3_4() {
     }
 
     // Externally Supplied AAD: h'0011bbcc22dd44ee55ff660077'
-    test_cose_example(root, "rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data", "0011bbcc22dd44ee55ff660077");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    cose.set(cose_handle, cose_flag_t::cose_external, base16_decode("0011bbcc22dd44ee55ff660077"));
+    test_cose_example(cose_handle, root, "rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -971,7 +1012,11 @@ void test_rfc8152_c_4_1() {
           << cbor_data_unprotected  // unprotected
           << cbor_data_ciphertext;  // ciphertext
 
-    test_cose_example(root, "rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -1011,7 +1056,11 @@ void test_rfc8152_c_4_2() {
           << cbor_data_unprotected  // unprotected
           << cbor_data_ciphertext;  // ciphertext
 
-    test_cose_example(root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -1077,7 +1126,11 @@ void test_rfc8152_c_5_1() {
         *recipients << recipient;
     }
 
-    test_cose_example(root, "rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -1156,7 +1209,11 @@ void test_rfc8152_c_5_2() {
         *recipients << recipient;
     }
 
-    test_cose_example(root, "rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -1205,7 +1262,7 @@ void test_rfc8152_c_5_3() {
         cbor_map* cbor_data_recipient_unprotected = nullptr;
         {
             cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_a256kw);
+            variant_set_int16(value, cose_alg_t::cose_aes_256_kw);
             protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
             variant_set_binary_new(value, convert("018c0ae5-4d9b-471b-bfd6-eef314bc7037"));
             protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
@@ -1222,7 +1279,11 @@ void test_rfc8152_c_5_3() {
         *recipients << recipient;
     }
 
-    test_cose_example(root, "rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -1306,7 +1367,7 @@ void test_rfc8152_c_5_4() {
         cbor_map* cbor_data_recipient_unprotected = nullptr;
         {
             cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_a256kw);
+            variant_set_int16(value, cose_alg_t::cose_aes_256_kw);
             protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
             variant_set_binary_new(value, convert("018c0ae5-4d9b-471b-bfd6-eef314bc7037"));
             protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
@@ -1323,7 +1384,11 @@ void test_rfc8152_c_5_4() {
         *recipients << recipient;
     }
 
-    test_cose_example(root, "rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -1358,7 +1423,11 @@ void test_rfc8152_c_6_1() {
           << cbor_data_payload    // payload
           << cbor_data_tag;       // tag
 
-    test_cose_example(root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -1419,7 +1488,11 @@ void test_rfc8152_c_7_1() {
         *root << key;
     }
 
-    test_cose_example(root, "rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -1512,7 +1585,11 @@ void test_rfc8152_c_7_2() {
         *root << key;
     }
 
-    test_cose_example(root, "rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, root, "rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
+    cose.close(cose_handle);
 
     root->release();
 }
@@ -1644,7 +1721,6 @@ void try_refactor_jose_sign() {
     cbor_object_signing_encryption cose;
     cose_context_t* handle = nullptr;
     binary_t signature;
-    binary_t external;
     basic_stream bs;
     bool result = true;
     constexpr char input[] = "wild wild world";
@@ -1652,7 +1728,7 @@ void try_refactor_jose_sign() {
     std::list<cose_alg_t> algs;
     algs.push_back(cose_alg_t::cose_es256);
     algs.push_back(cose_alg_t::cose_es512);
-    ret = cose.sign(handle, &privkey, algs, convert(input), external, signature);
+    ret = cose.sign(handle, &privkey, algs, convert(input), signature);
     _test_case.test(ret, __FUNCTION__, "sign");
     {
         test_case_notimecheck notimecheck(_test_case);
@@ -1670,7 +1746,7 @@ void try_refactor_jose_sign() {
         reader.close(reader_handle);
         printf("diagnostic\n%s\n", diagnostic.c_str());
     }
-    ret = cose.verify(handle, &pubkey, signature, external, result);
+    ret = cose.verify(handle, &pubkey, signature, result);
     _test_case.test(ret, __FUNCTION__, "verify");
     cose.close(handle);
 }
@@ -1728,268 +1804,345 @@ void test_github_example() {
         const char* desc;
         const char* cbor;
         const char* external;
-    } vector[] =
-    { {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-01.json",
-          "AES-CCM-01: Encrypt w/ AES-CCM 16-128/64 - direct",
-          "D8608443A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A46802388816C040275EE818340A20125044A6F75722D73656372657440",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-02.json",
-          "AES-CCM-02: Encrypt w/ AES-CCM 16-128/128 - direct",
-          "D8608444A101181EA1054D89F52F65A1C580933B5261A72F58246899DA0A132BD2D2B9B10915743EE1F7B92A46801D3D61B6E7C964520652F9D3C8347E8A818340A20125044A6F75722D"
-          "73656372657440",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-03.json",
-          "AES-CCM-03: Encrypt w/ AES-CCM 64-128/64 - direct",
-          "D8608443A1010CA1054789F52F65A1C580581C191BD858DEC79FC11DA3428BDFA446AC240D591F9F0F25E3A3FA4E6C818340A20125044A6F75722D73656372657440",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-04.json",
-          "AES-CCM-04: Encrypt w/ AES-CCM 64-128/128 - direct",
-          "D8608444A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F59482AEA4157167842D7BF5EDD68EC92818340A20125044A6F75722D736563726574"
-          "40",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-05.json",
-          "AES-CCM-05: Encrypt w/ AES-CCM 16-256/64 - direct",
-          "D8608443A1010BA1054D89F52F65A1C580933B5261A72F581C28B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917A8A3EF3313D6D332818340A20125044A6F75722D73656372657440",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-06.json",
-          "AES-CCM-06: Encrypt w/ AES-CCM 16-256/128 - direct",
-          "D8608444A101181FA1054D89F52F65A1C580933B5261A72F582428B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917348CDDC1FD07F3653AD991F9DFB65D50818340A20125044A6F75722D"
-          "73656372657440",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-07.json",
-          "AES-CCM-07: Encrypt w/ AES-CCM 64-256/64 - direct",
-          "D8608443A1010DA1054789F52F65A1C580581C721908D60812806F2660054238E931ADB575771EE26C547EC3DE06C5818340A20125044A6F75722D73656372657440",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-08.json",
-          "AES-CCM-08: Encrypt w/ AES-CCM 64-256/128 - direct",
-          "D8608444A1011821A1054789F52F65A1C5805824721908D60812806F2660054238E931ADB575771EB58752E5F0FB62A828917386A770CE9C818340A20125044A6F75722D736563726574"
-          "40",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-enc-01.json",
-          "AES-CCM-ENC-01: Encrypt w/ AES-CCM 16-128/64 - implicit",
-          "D08343A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-enc-02.json",
-          "AES-CCM-ENC-02: Encrypt w/ AES-CCM 16-128/128 - implicit",
-          "D08344A101181EA1054D89F52F65A1C580933B5261A72F58246899DA0A132BD2D2B9B10915743EE1F7B92A4680903F2C00D37E14D4EBDC7EF2C03CF5A9",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-enc-03.json",
-          "AES-CCM-ENC-03: Encrypt w/ AES-CCM 64-128/64 - implicit",
-          "D08343A1010CA1054789F52F65A1C580581C191BD858DEC79FC11DA3428BDFA446AC240D591FFCF91EEB8035F87A",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-enc-04.json",
-          "AES-CCM-ENC-04: Encrypt w/ AES-CCM 64-128/128 - implicit",
-          "D08344A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F3965FA7CA156FE666BC262807DF0EE99",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-enc-05.json",
-          "AES-CCM-ENC-05: Encrypt w/ AES-CCM 16-256/64 - implicit",
-          "D08343A1010BA1054D89F52F65A1C580933B5261A72F581C28B3BDDFF844A736C5F0EE0F8C691FD0B7ADF9173140CB621DF47C2F",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-enc-06.json",
-          "AES-CCM-ENC-06: Encrypt w/ AES-CCM 16-256/128 - implicit",
-          "D08344A101181FA1054D89F52F65A1C580933B5261A72F582428B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917B0CFA0D187C769A4BA100372A585BCCC",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-enc-07.json",
-          "AES-CCM-ENC-07: Encrypt w/ AES-CCM 64-256/64 - implicit",
-          "D08343A1010DA1054789F52F65A1C580581C721908D60812806F2660054238E931ADB575771E9BC42FF530BAEB00",
-      },
-      {
-          &aes_aead_key,
-          "aes-ccm-examples/aes-ccm-enc-08.json",
-          "AES-CCM-ENC-08: Encrypt w/ AES-CCM 64-256/128 - implicit",
-          "D08344A1011821A1054789F52F65A1C5805824721908D60812806F2660054238E931ADB575771E723C6FFD415A07CDB9FA9CEECC6C81FC",
-      },
-      {
-          &key,
-          "countersign/signed-01.json",
-          "signed-01: Signed message w/ one counter signature on recipient",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10127A2078343A10127A10442313158408E1BE2F9453D264812E590499132BEF3FBF9EE9DB27C2C16"
-          "8788E3B7EBE506C04FD3D19FAA9F51232AF5C959E4EF47928834647F56DFBE939112884D08EF250504423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B8"
-          "3557652264E69690DBC1172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
-      },
-      {
-          &key,
-          "countersign/signed-02.json",
-          "signed-02: Signed message w/ two counter signature on signer",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10127A207828343A10127A10442313158408E1BE2F9453D264812E590499132BEF3FBF9EE9DB27C2C"
-          "168788E3B7EBE506C04FD3D19FAA9F51232AF5C959E4EF47928834647F56DFBE939112884D08EF25058343A10126A1044231315840AF049B80D52C3669B29970C133543754F9CC608C"
-          "E41123AE1C827E36B38CB825987F01F22BB8AB13E9C66226EE23178FFA00A4FC220593B6E5AC38960071C9C804423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5"
-          "B7EC83B83557652264E69690DBC1172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
-      },
-      {
-          &key,
-          "countersign/signed-03.json",
-          "signed-03: Signed message w/ one counter signature on message",
-          "D8628443A10300A1078343A10127A1044231315840B7CACBA285C4CD3ED2F0146F419886144CA638D087DE123D400167308ACEABC4B5E5C6A40C0DE0B71167A39175EA56C1FE96C89E"
-          "5E7D30DAF2438A456159A20A54546869732069732074686520636F6E74656E742E818343A10127A104423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B8"
-          "3557652264E69690DBC1172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
-      },
-      {
-          &key,
-          "countersign/signed1-01.json",
-          "signed1-01: Sign 1 structure w/ two counter signatures",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10127A209584036739BEE3AA76D601E9C5F8AA391D9D67168F80DE3968A39FCA86CA00C7B9CC8C823"
-          "9A6D5317C8CCFE1F6308931C739FFA151DF214604C7DA21B85BF0EE7D70F04423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B83557652264E69690DBC1"
-          "172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
-      },
-      {
-          &key,
-          "countersign/signed1-02.json",
-          "signed1-02: Sign 1 structure w/ two counter signatures",
-          "D8628443A10300A1095840D3AFDA37684DE8EBE5F65805D85035083AA5A5CFCF4162411308E3846B8316752E9CE4BDC0ED5AE7B574B9A87D2480CD2FA3875D945908F9F68BDE8AF810"
-          "6E0A54546869732069732074686520636F6E74656E742E818343A10127A104423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B83557652264E69690DBC1"
-          "172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
-      },
-      {
-          &key,
-          "countersign1/signed-01.json",
-          "signed-01: Signed message w/ one countersignature0 on signer",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10127A209584036739BEE3AA76D601E9C5F8AA391D9D67168F80DE3968A39FCA86CA00C7B9CC8C8239A"
-          "6D5317C8CCFE1F6308931C739FFA151DF214604C7DA21B85BF0EE7D70F04423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B83557652264E69690DBC1172D"
-          "DC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
-      },
-      {
-          &key,
-          "countersign1/signed-02.json",
-          "signed-01: Signed message w/ one countersignature0 on signer",
-          "D8628443A10300A1095840D3AFDA37684DE8EBE5F65805D85035083AA5A5CFCF4162411308E3846B8316752E9CE4BDC0ED5AE7B574B9A87D2480CD2FA3875D945908F9F68BDE8AF8106E"
-          "0A54546869732069732074686520636F6E74656E742E818343A10127A104423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B83557652264E69690DBC1172D"
-          "DC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
-      },
-      {
-          &key,
-          "countersign1/signed1-01.json",
-          "signed1-01: Sign 1 structure w/  counter signature 0",
-          "D28445A201270300A2095840845E748A28577E94928D91C06CC3835DE31F1E6C64A24219EFEB2C2DC167B17FC8E1F79966FB09271D38DF60D2749B20B6A09948042B0BB21D7F48AA325A"
-          "65020442313154546869732069732074686520636F6E74656E742E58407142FD2FF96D56DB85BEE905A76BA1D0B7321A95C8C4D3607C5781932B7AFB8711497DFA751BF40B58B3BCC323"
-          "00B1487F3DB34085EEF013BF08F4A44D6FEF0D",
-      },
-      {
-          &cwtkey,
-          "CWT/A_3.json",
-          "CWT - Appendix A.3 - Signed w/ ECDSA 256",
-          "D28443A10126A05850A70175636F61703A2F2F61732E6578616D706C652E636F6D02656572696B77037818636F61703A2F2F6C696768742E6578616D706C652E636F6D041A5612AEB005"
-          "1A5610D9F0061A5610D9F007420B7158405427C1FF28D23FBAD1F29C4C7C6A555E601D6FA29F9179BC3D7438BACACA5ACD08C8D4D4F96131680C429A01F85951ECEE743A52B9B63632C5"
-          "7209120E1C9E30",
-      },
-      {
-          &key,
-          "ecdsa-examples/ecdsa-01.json",
-          "ECDSA-01: ECDSA - P-256",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840D71C05DB52C9CE7F1BF5AAC01334BBEACAC1D86A2303E6EEAA89266F45C01E"
-          "D602CA649EAF790D8BC99D2458457CA6A872061940E7AFBE48E289DFAC146AE258",
-      },
-      {
-          &key,
-          "ecdsa-examples/ecdsa-02.json",
-          "ECDSA-02: ECDSA - P-384",
-          "D8628440A054546869732069732074686520636F6E74656E742E818344A1013822A10444503338345860230DF24B9F31DD2D7D1B9C33CE59073FC21E02BB63DC55847626B5B7F43905"
-          "D59ACC186890BC1FE8B6D12E61B0373FFBA131ECC6C21958CDFF28AD77E0C32F9A0C6CA247135F538496228B2BE5557E7DBD7280DB24B46B68C0772D1BAEF09DE5",
-      },
-      {
-          &key,
-          "ecdsa-examples/ecdsa-03.json",
-          "ECDSA-03: ECDSA - P-512",
-          "D8628440A054546869732069732074686520636F6E74656E742E818344A1013823A104581E62696C626F2E62616767696E7340686F626269746F6E2E6578616D706C65588400A2D28A"
-          "7C2BDB1587877420F65ADF7D0B9A06635DD1DE64BB62974C863F0B160DD2163734034E6AC003B01E8705524C5C4CA479A952F0247EE8CB0B4FB7397BA08D009E0C8BF482270CC5771A"
-          "A143966E5A469A09F613488030C5B07EC6D722E3835ADB5B2D8C44E95FFB13877DD2582866883535DE3BB03D01753F83AB87BB4F7A0297",
-      },
-      {
-          &key,
-          "ecdsa-examples/ecdsa-04.json",
-          "ECDSA-01: ECDSA - P-256 w/ SHA-512",
-          "D8628440A054546869732069732074686520636F6E74656E742E818344A1013823A10442313158400CA5877D333B8E68B917551F947E0977BD3C70D416FDE3F9BB6A30CCBB96E875D0"
-          "941FF22C5DB4087124FB1981A88B2B34C7EE2827679B1318272C3D62622CC8",
-      },
-      {
-          &key,
-          "ecdsa-examples/ecdsa-sig-01.json",
-          "ECDSA-01: ECDSA - P-256 - sign0",
-          "D28445A201260300A10442313154546869732069732074686520636F6E74656E742E58406520BBAF2081D7E0ED0F95F76EB0733D667005F7467CEC4B87B9381A6BA1EDE8E00DF29F32"
-          "A37230F39A842A54821FDD223092819D7728EFB9D3A0080B75380B",
-      },
-      {
-          &key,
-          "ecdsa-examples/ecdsa-sig-02.json",
-          "ECDSA-sig-02: ECDSA - P-384 - sign1",
-          "D28444A1013822A104445033383454546869732069732074686520636F6E74656E742E58605F150ABD1C7D25B32065A14E05D6CB1F665D10769FF455EA9A2E0ADAB5DE63838DB257F0"
-          "949C41E13330E110EBA7B912F34E1546FB1366A2568FAA91EC3E6C8D42F4A67A0EDF731D88C9AEAD52258B2E2C4740EF614F02E9D91E9B7B59622A3C",
-      },
-      {
-          &key,
-          "ecdsa-examples/ecdsa-sig-03.json",
-          "ECDSA-03: ECDSA - P-512 - sign0",
-          "D28444A1013823A104581E62696C626F2E62616767696E7340686F626269746F6E2E6578616D706C6554546869732069732074686520636F6E74656E742E588401664DD6962091B510"
-          "0D6E1833D503539330EC2BC8FD3E8996950CE9F70259D9A30F73794F603B0D3E7C5E9C4C2A57E10211F76E79DF8FFD1B79D7EF5B9FA7DA109001965FA2D37E093BB13C040399C467B3"
-          "B9908C09DB2B0F1F4996FE07BB02AAA121A8E1C671F3F997ADE7D651081017057BD3A8A5FBF394972EA71CFDC15E6F8FE2E1",
-      },
-      {
-          &key,
-          "ecdsa-examples/ecdsa-sig-04.json",
-          "ECDSA-sig-01: ECDSA - P-256 w/ SHA-512 - implicit",
-          "D28444A1013823A10442313154546869732069732074686520636F6E74656E742E5840EB18B84ED674284E5ED861C3943E101BED5DB9F560C0F0292B34362990D1C59B10DF7946CBC6"
-          "CA3DCBD6C17A6DD1D711F50337BAA6B4FCFAE0EFC70E52C1DE0F",
-      },
-      {
-          &key,
-          "eddsa-examples/eddsa-01.json",
-          "EdDSA-01: EdDSA - 25519",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10127A104423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B835576522"
-          "64E69690DBC1172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
-      },
-      {
-          &key,
-          "eddsa-examples/eddsa-02.json",
-          "EdDSA-02: EdDSA - 448",
-          "D8628440A054546869732069732074686520636F6E74656E742E818343A10127A1044565643434385872ABF04F4BC7DFACF70C20C34A3CFBD27719911DC8518B2D67BF6AF62895D0FA"
-          "1E6A1CB8B47AD1297C0E9C34BEB34E50DFFEF14350EBD57842807D54914111150F698543B0A5E1DA1DB79632C6415CE18EF74EDAEA680B0C8881439D869171481D78E2F7D26340C293"
-          "C2ECDED8DE1425851900",
-      },
-      {
-          &key,
-          "eddsa-examples/eddsa-sig-01.json",
-          "EdDSA-01: EdDSA - 25519 - sign0",
-          "D28445A201270300A10442313154546869732069732074686520636F6E74656E742E58407142FD2FF96D56DB85BEE905A76BA1D0B7321A95C8C4D3607C5781932B7AFB8711497DFA751B"
-          "F40B58B3BCC32300B1487F3DB34085EEF013BF08F4A44D6FEF0D",
-      },
-      {
-          &key,
-          "eddsa-examples/eddsa-sig-02.json",
-          "EdDSA-sig-02: EdDSA - 448 - sign1",
-          "D28443A10127A10445656434343854546869732069732074686520636F6E74656E742E5872988240A3A2F189BD486DE14AA77F54686C576A09F2E7ED9BAE910DF9139C2AC3BE7C27B7E1"
-          "0A20FA17C9D57D3510A2CF1F634BC0345AB9BE00849842171D1E9E98B2674C0E38BFCF6C557A1692B01B71015A47AC9F7748840CAD1DA80CBB5B349309FEBB912672B377C8B2072AF159"
-          "8B3700",
-      },
+    } vector[] = {
+        // aes-ccm-examples
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-01.json",
+            "AES-CCM-01: Encrypt w/ AES-CCM 16-128/64 - direct",
+            "D8608443A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A46802388816C040275EE818340A20125044A6F75722D73656372657440",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-02.json",
+            "AES-CCM-02: Encrypt w/ AES-CCM 16-128/128 - direct",
+            "D8608444A101181EA1054D89F52F65A1C580933B5261A72F58246899DA0A132BD2D2B9B10915743EE1F7B92A46801D3D61B6E7C964520652F9D3C8347E8A818340A20125044A6F7572"
+            "2D"
+            "73656372657440",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-03.json",
+            "AES-CCM-03: Encrypt w/ AES-CCM 64-128/64 - direct",
+            "D8608443A1010CA1054789F52F65A1C580581C191BD858DEC79FC11DA3428BDFA446AC240D591F9F0F25E3A3FA4E6C818340A20125044A6F75722D73656372657440",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-04.json",
+            "AES-CCM-04: Encrypt w/ AES-CCM 64-128/128 - direct",
+            "D8608444A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F59482AEA4157167842D7BF5EDD68EC92818340A20125044A6F75722D7365637265"
+            "74"
+            "40",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-05.json",
+            "AES-CCM-05: Encrypt w/ AES-CCM 16-256/64 - direct",
+            "D8608443A1010BA1054D89F52F65A1C580933B5261A72F581C28B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917A8A3EF3313D6D332818340A20125044A6F75722D73656372657440",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-06.json",
+            "AES-CCM-06: Encrypt w/ AES-CCM 16-256/128 - direct",
+            "D8608444A101181FA1054D89F52F65A1C580933B5261A72F582428B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917348CDDC1FD07F3653AD991F9DFB65D50818340A20125044A6F7572"
+            "2D"
+            "73656372657440",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-07.json",
+            "AES-CCM-07: Encrypt w/ AES-CCM 64-256/64 - direct",
+            "D8608443A1010DA1054789F52F65A1C580581C721908D60812806F2660054238E931ADB575771EE26C547EC3DE06C5818340A20125044A6F75722D73656372657440",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-08.json",
+            "AES-CCM-08: Encrypt w/ AES-CCM 64-256/128 - direct",
+            "D8608444A1011821A1054789F52F65A1C5805824721908D60812806F2660054238E931ADB575771EB58752E5F0FB62A828917386A770CE9C818340A20125044A6F75722D7365637265"
+            "74"
+            "40",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-enc-01.json",
+            "AES-CCM-ENC-01: Encrypt w/ AES-CCM 16-128/64 - implicit",
+            "D08343A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-enc-02.json",
+            "AES-CCM-ENC-02: Encrypt w/ AES-CCM 16-128/128 - implicit",
+            "D08344A101181EA1054D89F52F65A1C580933B5261A72F58246899DA0A132BD2D2B9B10915743EE1F7B92A4680903F2C00D37E14D4EBDC7EF2C03CF5A9",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-enc-03.json",
+            "AES-CCM-ENC-03: Encrypt w/ AES-CCM 64-128/64 - implicit",
+            "D08343A1010CA1054789F52F65A1C580581C191BD858DEC79FC11DA3428BDFA446AC240D591FFCF91EEB8035F87A",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-enc-04.json",
+            "AES-CCM-ENC-04: Encrypt w/ AES-CCM 64-128/128 - implicit",
+            "D08344A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F3965FA7CA156FE666BC262807DF0EE99",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-enc-05.json",
+            "AES-CCM-ENC-05: Encrypt w/ AES-CCM 16-256/64 - implicit",
+            "D08343A1010BA1054D89F52F65A1C580933B5261A72F581C28B3BDDFF844A736C5F0EE0F8C691FD0B7ADF9173140CB621DF47C2F",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-enc-06.json",
+            "AES-CCM-ENC-06: Encrypt w/ AES-CCM 16-256/128 - implicit",
+            "D08344A101181FA1054D89F52F65A1C580933B5261A72F582428B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917B0CFA0D187C769A4BA100372A585BCCC",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-enc-07.json",
+            "AES-CCM-ENC-07: Encrypt w/ AES-CCM 64-256/64 - implicit",
+            "D08343A1010DA1054789F52F65A1C580581C721908D60812806F2660054238E931ADB575771E9BC42FF530BAEB00",
+        },
+        {
+            &aes_aead_key,
+            "aes-ccm-examples/aes-ccm-enc-08.json",
+            "AES-CCM-ENC-08: Encrypt w/ AES-CCM 64-256/128 - implicit",
+            "D08344A1011821A1054789F52F65A1C5805824721908D60812806F2660054238E931ADB575771E723C6FFD415A07CDB9FA9CEECC6C81FC",
+        },
+        // aes-gcm-examples
+        {
+            &aes_aead_key,
+            "aes-gcm-examples/aes-gcm-01.json",
+            "AES-GCM-01: Encryption example for spec - ",
+            "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B3581F2C80039826350B97AE2300E42FC818340A20125044A6F75722D73"
+            "656372657440",
+        },
+        {
+            &aes_aead_key,
+            "aes-gcm-examples/aes-gcm-02.json",
+            "AES-GCM-02: Encryption example for spec - ",
+            "D8608443A10102A1054C02D1F7E6F26C43D4868D87CE5824134D3B9223A00C1552C77585C157F467F295919D12124F19F521484C0725410947B4D1CA818340A2012504467365632D34"
+            "3840",
+        },
+        {
+            &aes_aead_key,
+            "aes-gcm-examples/aes-gcm-03.json",
+            "AES-GCM-03: Encryption example for spec - ",
+            "D8608443A10103A1054C02D1F7E6F26C43D4868D87CE58249D64A5A59A3B04867DCCF6B8EF82F7D1A3B25EF862B6EDDB29DF2EF16582172E5B5FC757818340A2012504467365632D36"
+            "3440",
+        },
+        {
+            &aes_aead_key,
+            "aes-gcm-examples/aes-gcm-04.json",
+            "AES-GCM-04: Encryption example for spec - Fail the tag",
+            "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B3581F2C80039826350B97AE2300E42FD818340A20125044A6F75722D73"
+            "656372657440",
+        },
+        {
+            &aes_aead_key,
+            "aes-gcm-examples/aes-gcm-05.json",
+            "AES-GCM-05: Encryption partial IV",
+            "D8608443A10101A1064261A75824D3D893DFF22BDCF09A58CBBE701371AEE31EE0AA3C1C8A6CE8409D5E5E81A6B5C355A644818340A20125044A6F75722D73656372657440",
+        },
+        {
+            &aes_aead_key,
+            "aes-gcm-examples/aes-gcm-enc-01.json",
+            "AES-GCM-ENC-01: Encryption example for spec - implicit",
+            "D08343A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B162E2C03568B41F57C3CC16F9166250A",
+        },
+        {
+            &aes_aead_key,
+            "aes-gcm-examples/aes-gcm-enc-02.json",
+            "AES-GCM-ENC-02: Encryption example for spec - implicit",
+            "D08343A10102A1054C02D1F7E6F26C43D4868D87CE5824134D3B9223A00C1552C77585C157F467F295919D530FBE21F7689AB3CD4D18FFE8E17CEB",
+        },
+        {
+            &aes_aead_key,
+            "aes-gcm-examples/aes-gcm-enc-03.json",
+            "AES-GCM-ENC-03: Encryption example for spec - implicit",
+            "D08343A10103A1054C02D1F7E6F26C43D4868D87CE58249D64A5A59A3B04867DCCF6B8EF82F7D1A3B25EF84ECA2BC5D7593A96E943859A9CC24AD3",
+        },
+        {
+            &aes_aead_key,
+            "aes-gcm-examples/aes-gcm-enc-04.json",
+            "AES-GCM-ENC-04: Encryption example for spec - implicit - Fail the tag",
+            "D08343A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B162E2C03568B41F57C3CC16F9166250B",
+        },
+        // aes-wrap-examples
+        // cbc-mac-examples
+        // chacha-poly-examples
+        // countersign
+        {
+            &key,
+            "countersign/signed-01.json",
+            "signed-01: Signed message w/ one counter signature on recipient",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10127A2078343A10127A10442313158408E1BE2F9453D264812E590499132BEF3FBF9EE9DB27C2C16"
+            "8788E3B7EBE506C04FD3D19FAA9F51232AF5C959E4EF47928834647F56DFBE939112884D08EF250504423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B8"
+            "3557652264E69690DBC1172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
+        },
+        {
+            &key,
+            "countersign/signed-02.json",
+            "signed-02: Signed message w/ two counter signature on signer",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10127A207828343A10127A10442313158408E1BE2F9453D264812E590499132BEF3FBF9EE9DB27C2C"
+            "168788E3B7EBE506C04FD3D19FAA9F51232AF5C959E4EF47928834647F56DFBE939112884D08EF25058343A10126A1044231315840AF049B80D52C3669B29970C133543754F9CC608C"
+            "E41123AE1C827E36B38CB825987F01F22BB8AB13E9C66226EE23178FFA00A4FC220593B6E5AC38960071C9C804423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5"
+            "B7EC83B83557652264E69690DBC1172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
+        },
+        {
+            &key,
+            "countersign/signed-03.json",
+            "signed-03: Signed message w/ one counter signature on message",
+            "D8628443A10300A1078343A10127A1044231315840B7CACBA285C4CD3ED2F0146F419886144CA638D087DE123D400167308ACEABC4B5E5C6A40C0DE0B71167A39175EA56C1FE96C89E"
+            "5E7D30DAF2438A456159A20A54546869732069732074686520636F6E74656E742E818343A10127A104423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B8"
+            "3557652264E69690DBC1172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
+        },
+        {
+            &key,
+            "countersign/signed1-01.json",
+            "signed1-01: Sign 1 structure w/ two counter signatures",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10127A209584036739BEE3AA76D601E9C5F8AA391D9D67168F80DE3968A39FCA86CA00C7B9CC8C823"
+            "9A6D5317C8CCFE1F6308931C739FFA151DF214604C7DA21B85BF0EE7D70F04423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B83557652264E69690DBC1"
+            "172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
+        },
+        {
+            &key,
+            "countersign/signed1-02.json",
+            "signed1-02: Sign 1 structure w/ two counter signatures",
+            "D8628443A10300A1095840D3AFDA37684DE8EBE5F65805D85035083AA5A5CFCF4162411308E3846B8316752E9CE4BDC0ED5AE7B574B9A87D2480CD2FA3875D945908F9F68BDE8AF810"
+            "6E0A54546869732069732074686520636F6E74656E742E818343A10127A104423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B83557652264E69690DBC1"
+            "172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
+        },
+        // countersign1
+        {
+            &key,
+            "countersign1/signed-01.json",
+            "signed-01: Signed message w/ one countersignature0 on signer",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10127A209584036739BEE3AA76D601E9C5F8AA391D9D67168F80DE3968A39FCA86CA00C7B9CC8C823"
+            "9A6D5317C8CCFE1F6308931C739FFA151DF214604C7DA21B85BF0EE7D70F04423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B83557652264E69690DBC1"
+            "172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
+        },
+        {
+            &key,
+            "countersign1/signed-02.json",
+            "signed-01: Signed message w/ one countersignature0 on signer",
+            "D8628443A10300A1095840D3AFDA37684DE8EBE5F65805D85035083AA5A5CFCF4162411308E3846B8316752E9CE4BDC0ED5AE7B574B9A87D2480CD2FA3875D945908F9F68BDE8AF810"
+            "6E0A54546869732069732074686520636F6E74656E742E818343A10127A104423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B83557652264E69690DBC1"
+            "172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
+        },
+        {
+            &key,
+            "countersign1/signed1-01.json",
+            "signed1-01: Sign 1 structure w/  counter signature 0",
+            "D28445A201270300A2095840845E748A28577E94928D91C06CC3835DE31F1E6C64A24219EFEB2C2DC167B17FC8E1F79966FB09271D38DF60D2749B20B6A09948042B0BB21D7F48AA32"
+            "5A65020442313154546869732069732074686520636F6E74656E742E58407142FD2FF96D56DB85BEE905A76BA1D0B7321A95C8C4D3607C5781932B7AFB8711497DFA751BF40B58B3BC"
+            "C32300B1487F3DB34085EEF013BF08F4A44D6FEF0D",
+        },
+        // CWT
+        {
+            &cwtkey,
+            "CWT/A_3.json",
+            "CWT - Appendix A.3 - Signed w/ ECDSA 256",
+            "D28443A10126A05850A70175636F61703A2F2F61732E6578616D706C652E636F6D02656572696B77037818636F61703A2F2F6C696768742E6578616D706C652E636F6D041A5612AEB0"
+            "051A5610D9F0061A5610D9F007420B7158405427C1FF28D23FBAD1F29C4C7C6A555E601D6FA29F9179BC3D7438BACACA5ACD08C8D4D4F96131680C429A01F85951ECEE743A52B9B636"
+            "32C57209120E1C9E30",
+        },
+        // ecdh-direct-examples
+        // ecdh-wrap-examples
+        // ecdsa-examples
+        {
+            &key,
+            "ecdsa-examples/ecdsa-01.json",
+            "ECDSA-01: ECDSA - P-256",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840D71C05DB52C9CE7F1BF5AAC01334BBEACAC1D86A2303E6EEAA89266F45C01E"
+            "D602CA649EAF790D8BC99D2458457CA6A872061940E7AFBE48E289DFAC146AE258",
+        },
+        {
+            &key,
+            "ecdsa-examples/ecdsa-02.json",
+            "ECDSA-02: ECDSA - P-384",
+            "D8628440A054546869732069732074686520636F6E74656E742E818344A1013822A10444503338345860230DF24B9F31DD2D7D1B9C33CE59073FC21E02BB63DC55847626B5B7F43905"
+            "D59ACC186890BC1FE8B6D12E61B0373FFBA131ECC6C21958CDFF28AD77E0C32F9A0C6CA247135F538496228B2BE5557E7DBD7280DB24B46B68C0772D1BAEF09DE5",
+        },
+        {
+            &key,
+            "ecdsa-examples/ecdsa-03.json",
+            "ECDSA-03: ECDSA - P-512",
+            "D8628440A054546869732069732074686520636F6E74656E742E818344A1013823A104581E62696C626F2E62616767696E7340686F626269746F6E2E6578616D706C65588400A2D28A"
+            "7C2BDB1587877420F65ADF7D0B9A06635DD1DE64BB62974C863F0B160DD2163734034E6AC003B01E8705524C5C4CA479A952F0247EE8CB0B4FB7397BA08D009E0C8BF482270CC5771A"
+            "A143966E5A469A09F613488030C5B07EC6D722E3835ADB5B2D8C44E95FFB13877DD2582866883535DE3BB03D01753F83AB87BB4F7A0297",
+        },
+        {
+            &key,
+            "ecdsa-examples/ecdsa-04.json",
+            "ECDSA-01: ECDSA - P-256 w/ SHA-512",
+            "D8628440A054546869732069732074686520636F6E74656E742E818344A1013823A10442313158400CA5877D333B8E68B917551F947E0977BD3C70D416FDE3F9BB6A30CCBB96E875D0"
+            "941FF22C5DB4087124FB1981A88B2B34C7EE2827679B1318272C3D62622CC8",
+        },
+        {
+            &key,
+            "ecdsa-examples/ecdsa-sig-01.json",
+            "ECDSA-01: ECDSA - P-256 - sign0",
+            "D28445A201260300A10442313154546869732069732074686520636F6E74656E742E58406520BBAF2081D7E0ED0F95F76EB0733D667005F7467CEC4B87B9381A6BA1EDE8E00DF29F32"
+            "A37230F39A842A54821FDD223092819D7728EFB9D3A0080B75380B",
+        },
+        {
+            &key,
+            "ecdsa-examples/ecdsa-sig-02.json",
+            "ECDSA-sig-02: ECDSA - P-384 - sign1",
+            "D28444A1013822A104445033383454546869732069732074686520636F6E74656E742E58605F150ABD1C7D25B32065A14E05D6CB1F665D10769FF455EA9A2E0ADAB5DE63838DB257F0"
+            "949C41E13330E110EBA7B912F34E1546FB1366A2568FAA91EC3E6C8D42F4A67A0EDF731D88C9AEAD52258B2E2C4740EF614F02E9D91E9B7B59622A3C",
+        },
+        {
+            &key,
+            "ecdsa-examples/ecdsa-sig-03.json",
+            "ECDSA-03: ECDSA - P-512 - sign0",
+            "D28444A1013823A104581E62696C626F2E62616767696E7340686F626269746F6E2E6578616D706C6554546869732069732074686520636F6E74656E742E588401664DD6962091B510"
+            "0D6E1833D503539330EC2BC8FD3E8996950CE9F70259D9A30F73794F603B0D3E7C5E9C4C2A57E10211F76E79DF8FFD1B79D7EF5B9FA7DA109001965FA2D37E093BB13C040399C467B3"
+            "B9908C09DB2B0F1F4996FE07BB02AAA121A8E1C671F3F997ADE7D651081017057BD3A8A5FBF394972EA71CFDC15E6F8FE2E1",
+        },
+        {
+            &key,
+            "ecdsa-examples/ecdsa-sig-04.json",
+            "ECDSA-sig-01: ECDSA - P-256 w/ SHA-512 - implicit",
+            "D28444A1013823A10442313154546869732069732074686520636F6E74656E742E5840EB18B84ED674284E5ED861C3943E101BED5DB9F560C0F0292B34362990D1C59B10DF7946CBC6"
+            "CA3DCBD6C17A6DD1D711F50337BAA6B4FCFAE0EFC70E52C1DE0F",
+        },
+        // eddsa-examples
+        {
+            &key,
+            "eddsa-examples/eddsa-01.json",
+            "EdDSA-01: EdDSA - 25519",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10127A104423131584077F3EACD11852C4BF9CB1D72FABE6B26FBA1D76092B2B5B7EC83B835576522"
+            "64E69690DBC1172DDC0BF88411C0D25A507FDB247A20C40D5E245FABD3FC9EC106",
+        },
+        {
+            &key,
+            "eddsa-examples/eddsa-02.json",
+            "EdDSA-02: EdDSA - 448",
+            "D8628440A054546869732069732074686520636F6E74656E742E818343A10127A1044565643434385872ABF04F4BC7DFACF70C20C34A3CFBD27719911DC8518B2D67BF6AF62895D0FA"
+            "1E6A1CB8B47AD1297C0E9C34BEB34E50DFFEF14350EBD57842807D54914111150F698543B0A5E1DA1DB79632C6415CE18EF74EDAEA680B0C8881439D869171481D78E2F7D26340C293"
+            "C2ECDED8DE1425851900",
+        },
+        {
+            &key,
+            "eddsa-examples/eddsa-sig-01.json",
+            "EdDSA-01: EdDSA - 25519 - sign0",
+            "D28445A201270300A10442313154546869732069732074686520636F6E74656E742E58407142FD2FF96D56DB85BEE905A76BA1D0B7321A95C8C4D3607C5781932B7AFB8711497DFA75"
+            "1BF40B58B3BCC32300B1487F3DB34085EEF013BF08F4A44D6FEF0D",
+        },
+        {
+            &key,
+            "eddsa-examples/eddsa-sig-02.json",
+            "EdDSA-sig-02: EdDSA - 448 - sign1",
+            "D28443A10127A10445656434343854546869732069732074686520636F6E74656E742E5872988240A3A2F189BD486DE14AA77F54686C576A09F2E7ED9BAE910DF9139C2AC3BE7C27B7"
+            "E10A20FA17C9D57D3510A2CF1F634BC0345AB9BE00849842171D1E9E98B2674C0E38BFCF6C557A1692B01B71015A47AC9F7748840CAD1DA80CBB5B349309FEBB912672B377C8B2072A"
+            "F1598B3700",
+        },
+    // encrypted-tests
+    // enveloped-tests
+    // hashsig
 #if 0
       // HSS LMS
       // https://www.openssl.org/roadmap.html
@@ -2075,221 +2228,206 @@ void test_github_example() {
           "E9CAEBE4A415E291FD107D21DC1F084B1158208249F28F4F7C7E931BA7B3BD0D824A4570",
       },
 #endif
-      {
-          &key,
-          "rsa-pss-examples/rsa-pss-01.json",
-          "RSA-PSS w/ SHA-256",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818344A1013824A104581F6D65726961646F632E6272616E64796275636B407273612E6578616D706C65590100"
-          "3AD4027074989995F25E167F99C9B4096FDC5C242D438D30382AE7B30F83C88D5B5EBECB64D2256D58D3CCE5C47D343BFA532B117C2D04DF3FB20679A99CF3555A7DAE6098BD123B0F34"
-          "41A1E50E897CBAA1B17CE171EBAB20AE2E10F16D6EE918D37AF102175979BE65EBCEDEB47519346EA3ED6D13B5741BC63742AE31342B10B46FE93F39B55FDD6E32128FD8B476FED88F67"
-          "1F304D0943D2C7A33BCE48DF08E1F890CF5ACDA3EF46DA21981C3A687CFFF85EEB276A98612F38D6EE63644859D66A9AD49939EA290F7A9FDFED9AF1246930F522CB8C6909567DCBE272"
-          "9716CB18A31E6F231DB3D69A7A432AA3D6FA1DEF9C9659616BEB626F158378E0FBDD",
-      },
-      {
-          &key,
-          "rsa-pss-examples/rsa-pss-02.json",
-          "RSA-PSS w/ SHA-384",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818344A1013825A104581F6D65726961646F632E6272616E64796275636B407273612E6578616D706C65590100"
-          "556DA92BD3AC5C4908A94EAAEB1C5FB81B6C52C16D82C42D79375F61C3388DA5E87ABEB95530CE3BDC8979DB260C326DF13D9093D5F894C9E6D345C79AB7E64A3CF2A9A8F96CEA20FD55"
-          "A3204AD5C62A4BD4128B09A34154E8E401E45A83180A82A8850ADC01BF5589F811DB189C88117157D81A145DFFB6BB0564B05CF9774FB1EE55787D2AD042EA48831090369EA32A7A4987"
-          "C81D7BC70805505E41ACF62F9CB6CE585159FA146B30B2E2FC6E437841402BAEFC9B189C429C130B8F107F9DDB9FF9378CCF11E36B5179BDEFFF2DB3EE1990F8E1AD7F6631D366C8A09B"
-          "E078A23124CBFC59759AAEA0FEFF48AFA5420B508DA454E9AE4516AAB64C5B346812",
-      },
-      {
-          &key,
-          "rsa-pss-examples/rsa-pss-03.json",
-          "RSA-PSS w/ SHA-512",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818344A1013826A104581F6D65726961646F632E6272616E64796275636B407273612E6578616D706C65590100"
-          "AE12E63095413B1B30C2CD31A7A9F9E541980D66A153C7A458A688DF3D531C3F68668EDE311AF8B2443990C9C8360F7458494AE8707241EC7EEB87B6679D73C160E33622FA966C5D7D64"
-          "5C1321F428BB10B09EAE89E17A503D707CB4ED5506D82A1F8059E9D6ED09265FE8E3C49405B2AE98EEFF0A52E268AEC9E342EEFC1D47A3B744343821B3D34D0F976B040F9BE80D672B87"
-          "6AD843987DFA66F8AB117EADA8B2BCD73725B409B84F729651CEC75092E7FD7562504F49E221B80A71693BC9C5AD438A183E0ED2A3494DDD7AFAD5EAD3B87F51AE102037532379869A9D"
-          "9E169B6C7ADF2D82EA22C656FFE4BF6A2A156F9DF05C53373A3B0AA815E9E5CED03D",
-      },
-      {
-          &key,
-          "sign1-tests/sign-pass-01.json",
-          "sign-pass-01: Redo protected",
-          "D28441A0A201260442313154546869732069732074686520636F6E74656E742E584087DB0D2E5571843B78AC33ECB2830DF7B6E0A4D5B7376DE336B23C591C90C425317E56127FBE0437"
-          "0097CE347087B233BF722B64072BEB4486BDA4031D27244F",
-      },
-      {
-          &key, "sign1-tests/sign-pass-02.json", "sign-pass-02: External",
-          "D28443A10126A10442313154546869732069732074686520636F6E74656E742E584010729CD711CB3813D8D8E944A8DA7111E7B258C9BDCA6135F7AE1ADBEE9509891267837E1E33BD36"
-          "C150326AE62755C6BD8E540C3E8F92D7D225E8DB72B8820B",
-          "11aa22bb33cc44dd55006699",  // external
-      },
-      {
-          &key,
-          "sign1-tests/sign-pass-03.json",
-          "sign-pass-03: Remove CBOR Tag",
-          "8443A10126A10442313154546869732069732074686520636F6E74656E742E58408EB33E4CA31D1C465AB05AAC34CC6B23D58FEF5C083106C4D25A91AEF0B0117E2AF9A291AA32E14AB8"
-          "34DC56ED2A223444547E01F11D3B0916E5A4C345CACB36",
-      },
-      {
-          &key,
-          "sign-tests/ecdsa-01.json",
-          "ECDSA-01: ECDSA - P-256",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840D71C05DB52C9CE7F1BF5AAC01334BBEACAC1D86A2303E6EEAA89266F45C01ED6"
-          "02CA649EAF790D8BC99D2458457CA6A872061940E7AFBE48E289DFAC146AE258",
-      },
-      {
-          &key,
-          "sign-tests/sign-pass-01.json",
-          "sign-pass-01: Redo protected",
-          "D8628441A0A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840E2AEAFD40D69D19DFE6E52077C5D7FF4E408282CBEFB5D06CBF414AF2E19D982AC45"
-          "AC98B8544C908B4507DE1E90B717C3D34816FE926A2B98F53AFD2FA0F30A",
-      },
-      {
-          &key, "sign-tests/sign-pass-02.json", "sign-pass-02: External",
-          "D8628440A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840CBB8DAD9BEAFB890E1A414124D8BFBC26BEDF2A94FCB5A882432BFF6D63E15F574EEB2"
-          "AB51D83FA2CBF62672EBF4C7D993B0F4C2447647D831BA57CCA86B930A",
-          "11aa22bb33cc44dd55006699",  // external
-      },
-      {
-          &key,
-          "sign-tests/sign-pass-03.json",
-          "sign-pass-03: Remove CBOR Tag",
-          "8440A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840E2AEAFD40D69D19DFE6E52077C5D7FF4E408282CBEFB5D06CBF414AF2E19D982AC45AC98B8"
-          "544C908B4507DE1E90B717C3D34816FE926A2B98F53AFD2FA0F30A",
-      },
-      // TODO - CRT, DER, x5bag, x5chain, x5t
-      {
-          &key,
-          "x509-examples/signed-01.json",
-          "signed-01: Signed message w/ x5bag containing one certificate",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A2046E416C696365204C6F76656C61636518205901AD308201A930820150A00302010202144E30"
-          "19548429A2893D04B8EDBA143B8F7D17B276300A06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F7269"
-          "74793020170D3230313230323137323732355A180F32303533313031303137323732355A3019311730150603550403130E416C696365204C6F76656C6163653059301306072A8648CE3D"
-          "020106082A8648CE3D03010703420004863AA7BC0326716AA59DB5BF66CC660D0591D51E4891BC2E6A9BAFF5077D927CAD4EED482A7985BE019E9B1936C16E00190E8BCC48EE12D35FF8"
-          "9F0FC7A099CAA361305F300C0603551D130101FF04023000300F0603551D0F0101FF04050303078000301D0603551D0E041604141151555B01FF3F6DDDF9E5712AD3FF72A2D94D62301F"
-          "0603551D230418301680141E6FC4D0C0DA004A8427CBBD3FE05A99EA2D2D11300A06082A8648CE3D0403020347003044022038FF9207872BA4D685700774783D35BE5B45AF59265A8567"
-          "AE952D7182D5CBA00220163A18388EFE6310517385458AB4D3BBF7A0C23D9C87DA1CF378884FBBCDC86C5840757C633177D2A6E6420961D239518CBAFF96F2B1E739AB9145C2E9846E60"
-          "1B7FAC4208E68EF0C9F754753D6DD3A98D39C8ED95A8F01B3E241A2902AF7230A31A",
-      },
-      {
-          &key,
-          "x509-examples/signed-02.json",
-          "signed-02: Signed message w/ x5bag containing two certificates",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A2046E416C696365204C6F76656C6163651820825901AD308201A930820150A00302010202144E"
-          "3019548429A2893D04B8EDBA143B8F7D17B276300A06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F72"
-          "6974793020170D3230313230323137323732355A180F32303533313031303137323732355A3019311730150603550403130E416C696365204C6F76656C6163653059301306072A8648CE"
-          "3D020106082A8648CE3D03010703420004863AA7BC0326716AA59DB5BF66CC660D0591D51E4891BC2E6A9BAFF5077D927CAD4EED482A7985BE019E9B1936C16E00190E8BCC48EE12D35F"
-          "F89F0FC7A099CAA361305F300C0603551D130101FF04023000300F0603551D0F0101FF04050303078000301D0603551D0E041604141151555B01FF3F6DDDF9E5712AD3FF72A2D94D6230"
-          "1F0603551D230418301680141E6FC4D0C0DA004A8427CBBD3FE05A99EA2D2D11300A06082A8648CE3D0403020347003044022038FF9207872BA4D685700774783D35BE5B45AF59265A85"
-          "67AE952D7182D5CBA00220163A18388EFE6310517385458AB4D3BBF7A0C23D9C87DA1CF378884FBBCDC86C5901A23082019E30820145A003020102021414A4957FD506AA2AAFC669A880"
-          "032E8C95B87624300A06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F726974793020170D3230313230"
-          "323137323333325A180F32303533313031303137323333325A302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F72697479305930"
-          "1306072A8648CE3D020106082A8648CE3D030107034200047B447C98F731337AFBE3BAC96E793AF12865F3BD56B647A1729764191AE111F3161B4D56FA42F26E1B18DD87F9DB42F4C916"
-          "8E420E2CE5E2D149648EE0EE5FB4A3433041300F0603551D130101FF040530030101FF300F0603551D0F0101FF04050303070600301D0603551D0E041604141E6FC4D0C0DA004A8427CB"
-          "BD3FE05A99EA2D2D11300A06082A8648CE3D0403020347003044022006F99B3ACE00007BFB717784DDD230013D8CDCA0BABE20EE00039BEA0898A6D402200FFAF9DE61C1B6BD28BF5DDB"
-          "1A191E63B22EAD4A69468D5222C487D53C33C2045840D27029503ED8CF40C7B73BBCB88C062467C0A50F0897D1559855F4FCF1788874BA8E3843D23B59566BC825102D573817437D91D0"
-          "D765FA2165EFA390B50A03FF",
-      },
-      {
-          &key,
-          "x509-examples/signed-03.json",
-          "signed-03: Signed message w/ x5chain containing one certificate",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A118215901AD308201A930820150A00302010202144E3019548429A2893D04B8EDBA143B8F7D17"
-          "B276300A06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F726974793020170D32303132303231373237"
-          "32355A180F32303533313031303137323732355A3019311730150603550403130E416C696365204C6F76656C6163653059301306072A8648CE3D020106082A8648CE3D03010703420004"
-          "863AA7BC0326716AA59DB5BF66CC660D0591D51E4891BC2E6A9BAFF5077D927CAD4EED482A7985BE019E9B1936C16E00190E8BCC48EE12D35FF89F0FC7A099CAA361305F300C0603551D"
-          "130101FF04023000300F0603551D0F0101FF04050303078000301D0603551D0E041604141151555B01FF3F6DDDF9E5712AD3FF72A2D94D62301F0603551D230418301680141E6FC4D0C0"
-          "DA004A8427CBBD3FE05A99EA2D2D11300A06082A8648CE3D0403020347003044022038FF9207872BA4D685700774783D35BE5B45AF59265A8567AE952D7182D5CBA00220163A18388EFE"
-          "6310517385458AB4D3BBF7A0C23D9C87DA1CF378884FBBCDC86C5840CC4EF1B70DD7F33B2489597B5556507FD5D896C477C1F7FFCCDE82EF3E50718260EE6345E2993B1757C7D521D02E"
-          "923DA25F02DDE0F24B40009FB4FD6B31D2FD",
-      },
-      {
-          &key,
-          "x509-examples/signed-04.json",
-          "signed-04: Signed message w/ x5chain containing two certificates",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A11821825901AD308201A930820150A00302010202144E3019548429A2893D04B8EDBA143B8F7D"
-          "17B276300A06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F726974793020170D323031323032313732"
-          "3732355A180F32303533313031303137323732355A3019311730150603550403130E416C696365204C6F76656C6163653059301306072A8648CE3D020106082A8648CE3D030107034200"
-          "04863AA7BC0326716AA59DB5BF66CC660D0591D51E4891BC2E6A9BAFF5077D927CAD4EED482A7985BE019E9B1936C16E00190E8BCC48EE12D35FF89F0FC7A099CAA361305F300C060355"
-          "1D130101FF04023000300F0603551D0F0101FF04050303078000301D0603551D0E041604141151555B01FF3F6DDDF9E5712AD3FF72A2D94D62301F0603551D230418301680141E6FC4D0"
-          "C0DA004A8427CBBD3FE05A99EA2D2D11300A06082A8648CE3D0403020347003044022038FF9207872BA4D685700774783D35BE5B45AF59265A8567AE952D7182D5CBA00220163A18388E"
-          "FE6310517385458AB4D3BBF7A0C23D9C87DA1CF378884FBBCDC86C5901A23082019E30820145A003020102021414A4957FD506AA2AAFC669A880032E8C95B87624300A06082A8648CE3D"
-          "040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F726974793020170D3230313230323137323333325A180F323035333130"
-          "31303137323333325A302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F726974793059301306072A8648CE3D020106082A8648CE"
-          "3D030107034200047B447C98F731337AFBE3BAC96E793AF12865F3BD56B647A1729764191AE111F3161B4D56FA42F26E1B18DD87F9DB42F4C9168E420E2CE5E2D149648EE0EE5FB4A343"
-          "3041300F0603551D130101FF040530030101FF300F0603551D0F0101FF04050303070600301D0603551D0E041604141E6FC4D0C0DA004A8427CBBD3FE05A99EA2D2D11300A06082A8648"
-          "CE3D0403020347003044022006F99B3ACE00007BFB717784DDD230013D8CDCA0BABE20EE00039BEA0898A6D402200FFAF9DE61C1B6BD28BF5DDB1A191E63B22EAD4A69468D5222C487D5"
-          "3C33C2045840CFFD4CDA8DD573279CD6878F30DC44E1295D045BCB13D93D0C42A2F6F3B58C0757F39116ACD90B84EB0DA8818D2BBEB6B919905AF14BAF804599B772FD4A4ECD",
-      },
-      {
-          &key,
-          "x509-examples/signed-05.json",
-          "signed-05: Signed message w/ certificate digest",
-          "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A11822822F582011FA0500D6763AE15A3238296E04C048A8FDD220A0DDA0234824B18FB6666600"
-          "5840E2868433DB5EB82E91F8BE52E8A67903A93332634470DE3DD90D52422B62DFE062248248AC388FAF77B277F91C4FB6EE776EDC52069C67F17D9E7FA57AC9BBA9",
-      },
+        // hkdf-aes-examples
+        // hkdf-hmac-sha-examples
+        // hmac-examples
+        // mac0-tests
+        // mac-tests
+        // RFC8152
+        // rsa-oaep-examples
+        // rsa-pss-examples
+        {
+            &key,
+            "rsa-pss-examples/rsa-pss-01.json",
+            "RSA-PSS w/ SHA-256",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818344A1013824A104581F6D65726961646F632E6272616E64796275636B407273612E6578616D706C655901"
+            "003AD4027074989995F25E167F99C9B4096FDC5C242D438D30382AE7B30F83C88D5B5EBECB64D2256D58D3CCE5C47D343BFA532B117C2D04DF3FB20679A99CF3555A7DAE6098BD123B"
+            "0F3441A1E50E897CBAA1B17CE171EBAB20AE2E10F16D6EE918D37AF102175979BE65EBCEDEB47519346EA3ED6D13B5741BC63742AE31342B10B46FE93F39B55FDD6E32128FD8B476FE"
+            "D88F671F304D0943D2C7A33BCE48DF08E1F890CF5ACDA3EF46DA21981C3A687CFFF85EEB276A98612F38D6EE63644859D66A9AD49939EA290F7A9FDFED9AF1246930F522CB8C690956"
+            "7DCBE2729716CB18A31E6F231DB3D69A7A432AA3D6FA1DEF9C9659616BEB626F158378E0FBDD",
+        },
+        {
+            &key,
+            "rsa-pss-examples/rsa-pss-02.json",
+            "RSA-PSS w/ SHA-384",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818344A1013825A104581F6D65726961646F632E6272616E64796275636B407273612E6578616D706C655901"
+            "00556DA92BD3AC5C4908A94EAAEB1C5FB81B6C52C16D82C42D79375F61C3388DA5E87ABEB95530CE3BDC8979DB260C326DF13D9093D5F894C9E6D345C79AB7E64A3CF2A9A8F96CEA20"
+            "FD55A3204AD5C62A4BD4128B09A34154E8E401E45A83180A82A8850ADC01BF5589F811DB189C88117157D81A145DFFB6BB0564B05CF9774FB1EE55787D2AD042EA48831090369EA32A"
+            "7A4987C81D7BC70805505E41ACF62F9CB6CE585159FA146B30B2E2FC6E437841402BAEFC9B189C429C130B8F107F9DDB9FF9378CCF11E36B5179BDEFFF2DB3EE1990F8E1AD7F6631D3"
+            "66C8A09BE078A23124CBFC59759AAEA0FEFF48AFA5420B508DA454E9AE4516AAB64C5B346812",
+        },
+        {
+            &key,
+            "rsa-pss-examples/rsa-pss-03.json",
+            "RSA-PSS w/ SHA-512",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818344A1013826A104581F6D65726961646F632E6272616E64796275636B407273612E6578616D706C655901"
+            "00AE12E63095413B1B30C2CD31A7A9F9E541980D66A153C7A458A688DF3D531C3F68668EDE311AF8B2443990C9C8360F7458494AE8707241EC7EEB87B6679D73C160E33622FA966C5D"
+            "7D645C1321F428BB10B09EAE89E17A503D707CB4ED5506D82A1F8059E9D6ED09265FE8E3C49405B2AE98EEFF0A52E268AEC9E342EEFC1D47A3B744343821B3D34D0F976B040F9BE80D"
+            "672B876AD843987DFA66F8AB117EADA8B2BCD73725B409B84F729651CEC75092E7FD7562504F49E221B80A71693BC9C5AD438A183E0ED2A3494DDD7AFAD5EAD3B87F51AE1020375323"
+            "79869A9D9E169B6C7ADF2D82EA22C656FFE4BF6A2A156F9DF05C53373A3B0AA815E9E5CED03D",
+        },
+        // sign1-tests
+        // sign-tests
+        {
+            &key,
+            "sign-tests/sign-pass-01.json",
+            "sign-pass-01: Redo protected",
+            "D8628441A0A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840E2AEAFD40D69D19DFE6E52077C5D7FF4E408282CBEFB5D06CBF414AF2E19D982AC"
+            "45AC98B8544C908B4507DE1E90B717C3D34816FE926A2B98F53AFD2FA0F30A",
+        },
+        {
+            &key, "sign-tests/sign-pass-02.json", "sign-pass-02: External",
+            "D8628440A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840CBB8DAD9BEAFB890E1A414124D8BFBC26BEDF2A94FCB5A882432BFF6D63E15F574EE"
+            "B2AB51D83FA2CBF62672EBF4C7D993B0F4C2447647D831BA57CCA86B930A",
+            "11aa22bb33cc44dd55006699",  // external
+        },
+        {
+            &key,
+            "sign-tests/sign-pass-03.json",
+            "sign-pass-03: Remove CBOR Tag",
+            "8440A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840E2AEAFD40D69D19DFE6E52077C5D7FF4E408282CBEFB5D06CBF414AF2E19D982AC45AC98"
+            "B8544C908B4507DE1E90B717C3D34816FE926A2B98F53AFD2FA0F30A",
+        },
+        // X25519-tests
+        // x509-examples (TODO - CRT, DER, x5bag, x5chain, x5t)
+        {
+            &key,
+            "x509-examples/signed-01.json",
+            "signed-01: Signed message w/ x5bag containing one certificate",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A2046E416C696365204C6F76656C61636518205901AD308201A930820150A00302010202144E"
+            "3019548429A2893D04B8EDBA143B8F7D17B276300A06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F"
+            "726974793020170D3230313230323137323732355A180F32303533313031303137323732355A3019311730150603550403130E416C696365204C6F76656C6163653059301306072A86"
+            "48CE3D020106082A8648CE3D03010703420004863AA7BC0326716AA59DB5BF66CC660D0591D51E4891BC2E6A9BAFF5077D927CAD4EED482A7985BE019E9B1936C16E00190E8BCC48EE"
+            "12D35FF89F0FC7A099CAA361305F300C0603551D130101FF04023000300F0603551D0F0101FF04050303078000301D0603551D0E041604141151555B01FF3F6DDDF9E5712AD3FF72A2"
+            "D94D62301F0603551D230418301680141E6FC4D0C0DA004A8427CBBD3FE05A99EA2D2D11300A06082A8648CE3D0403020347003044022038FF9207872BA4D685700774783D35BE5B45"
+            "AF59265A8567AE952D7182D5CBA00220163A18388EFE6310517385458AB4D3BBF7A0C23D9C87DA1CF378884FBBCDC86C5840757C633177D2A6E6420961D239518CBAFF96F2B1E739AB"
+            "9145C2E9846E601B7FAC4208E68EF0C9F754753D6DD3A98D39C8ED95A8F01B3E241A2902AF7230A31A",
+        },
+        {
+            &key,
+            "x509-examples/signed-02.json",
+            "signed-02: Signed message w/ x5bag containing two certificates",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A2046E416C696365204C6F76656C6163651820825901AD308201A930820150A0030201020214"
+            "4E3019548429A2893D04B8EDBA143B8F7D17B276300A06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F53452043657274696669636174652041757468"
+            "6F726974793020170D3230313230323137323732355A180F32303533313031303137323732355A3019311730150603550403130E416C696365204C6F76656C6163653059301306072A"
+            "8648CE3D020106082A8648CE3D03010703420004863AA7BC0326716AA59DB5BF66CC660D0591D51E4891BC2E6A9BAFF5077D927CAD4EED482A7985BE019E9B1936C16E00190E8BCC48"
+            "EE12D35FF89F0FC7A099CAA361305F300C0603551D130101FF04023000300F0603551D0F0101FF04050303078000301D0603551D0E041604141151555B01FF3F6DDDF9E5712AD3FF72"
+            "A2D94D62301F0603551D230418301680141E6FC4D0C0DA004A8427CBBD3FE05A99EA2D2D11300A06082A8648CE3D0403020347003044022038FF9207872BA4D685700774783D35BE5B"
+            "45AF59265A8567AE952D7182D5CBA00220163A18388EFE6310517385458AB4D3BBF7A0C23D9C87DA1CF378884FBBCDC86C5901A23082019E30820145A003020102021414A4957FD506"
+            "AA2AAFC669A880032E8C95B87624300A06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F7269747930"
+            "20170D3230313230323137323333325A180F32303533313031303137323333325A302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574"
+            "686F726974793059301306072A8648CE3D020106082A8648CE3D030107034200047B447C98F731337AFBE3BAC96E793AF12865F3BD56B647A1729764191AE111F3161B4D56FA42F26E"
+            "1B18DD87F9DB42F4C9168E420E2CE5E2D149648EE0EE5FB4A3433041300F0603551D130101FF040530030101FF300F0603551D0F0101FF04050303070600301D0603551D0E04160414"
+            "1E6FC4D0C0DA004A8427CBBD3FE05A99EA2D2D11300A06082A8648CE3D0403020347003044022006F99B3ACE00007BFB717784DDD230013D8CDCA0BABE20EE00039BEA0898A6D40220"
+            "0FFAF9DE61C1B6BD28BF5DDB1A191E63B22EAD4A69468D5222C487D53C33C2045840D27029503ED8CF40C7B73BBCB88C062467C0A50F0897D1559855F4FCF1788874BA8E3843D23B59"
+            "566BC825102D573817437D91D0D765FA2165EFA390B50A03FF",
+        },
+        {
+            &key,
+            "x509-examples/signed-03.json",
+            "signed-03: Signed message w/ x5chain containing one certificate",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A118215901AD308201A930820150A00302010202144E3019548429A2893D04B8EDBA143B8F7D"
+            "17B276300A06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F726974793020170D3230313230323137"
+            "323732355A180F32303533313031303137323732355A3019311730150603550403130E416C696365204C6F76656C6163653059301306072A8648CE3D020106082A8648CE3D03010703"
+            "420004863AA7BC0326716AA59DB5BF66CC660D0591D51E4891BC2E6A9BAFF5077D927CAD4EED482A7985BE019E9B1936C16E00190E8BCC48EE12D35FF89F0FC7A099CAA361305F300C"
+            "0603551D130101FF04023000300F0603551D0F0101FF04050303078000301D0603551D0E041604141151555B01FF3F6DDDF9E5712AD3FF72A2D94D62301F0603551D23041830168014"
+            "1E6FC4D0C0DA004A8427CBBD3FE05A99EA2D2D11300A06082A8648CE3D0403020347003044022038FF9207872BA4D685700774783D35BE5B45AF59265A8567AE952D7182D5CBA00220"
+            "163A18388EFE6310517385458AB4D3BBF7A0C23D9C87DA1CF378884FBBCDC86C5840CC4EF1B70DD7F33B2489597B5556507FD5D896C477C1F7FFCCDE82EF3E50718260EE6345E2993B"
+            "1757C7D521D02E923DA25F02DDE0F24B40009FB4FD6B31D2FD",
+        },
+        {
+            &key,
+            "x509-examples/signed-04.json",
+            "signed-04: Signed message w/ x5chain containing two certificates",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A11821825901AD308201A930820150A00302010202144E3019548429A2893D04B8EDBA143B8F"
+            "7D17B276300A06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F726974793020170D32303132303231"
+            "37323732355A180F32303533313031303137323732355A3019311730150603550403130E416C696365204C6F76656C6163653059301306072A8648CE3D020106082A8648CE3D030107"
+            "03420004863AA7BC0326716AA59DB5BF66CC660D0591D51E4891BC2E6A9BAFF5077D927CAD4EED482A7985BE019E9B1936C16E00190E8BCC48EE12D35FF89F0FC7A099CAA361305F30"
+            "0C0603551D130101FF04023000300F0603551D0F0101FF04050303078000301D0603551D0E041604141151555B01FF3F6DDDF9E5712AD3FF72A2D94D62301F0603551D230418301680"
+            "141E6FC4D0C0DA004A8427CBBD3FE05A99EA2D2D11300A06082A8648CE3D0403020347003044022038FF9207872BA4D685700774783D35BE5B45AF59265A8567AE952D7182D5CBA002"
+            "20163A18388EFE6310517385458AB4D3BBF7A0C23D9C87DA1CF378884FBBCDC86C5901A23082019E30820145A003020102021414A4957FD506AA2AAFC669A880032E8C95B87624300A"
+            "06082A8648CE3D040302302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F726974793020170D3230313230323137323333325A"
+            "180F32303533313031303137323333325A302C312A30280603550403132153616D706C6520434F534520436572746966696361746520417574686F726974793059301306072A8648CE"
+            "3D020106082A8648CE3D030107034200047B447C98F731337AFBE3BAC96E793AF12865F3BD56B647A1729764191AE111F3161B4D56FA42F26E1B18DD87F9DB42F4C9168E420E2CE5E2"
+            "D149648EE0EE5FB4A3433041300F0603551D130101FF040530030101FF300F0603551D0F0101FF04050303070600301D0603551D0E041604141E6FC4D0C0DA004A8427CBBD3FE05A99"
+            "EA2D2D11300A06082A8648CE3D0403020347003044022006F99B3ACE00007BFB717784DDD230013D8CDCA0BABE20EE00039BEA0898A6D402200FFAF9DE61C1B6BD28BF5DDB1A191E63"
+            "B22EAD4A69468D5222C487D53C33C2045840CFFD4CDA8DD573279CD6878F30DC44E1295D045BCB13D93D0C42A2F6F3B58C0757F39116ACD90B84EB0DA8818D2BBEB6B919905AF14BAF"
+            "804599B772FD4A4ECD",
+        },
+        {
+            &key,
+            "x509-examples/signed-05.json",
+            "signed-05: Signed message w/ certificate digest",
+            "D8628443A10300A054546869732069732074686520636F6E74656E742E818343A10126A11822822F582011FA0500D6763AE15A3238296E04C048A8FDD220A0DDA0234824B18FB66666"
+            "005840E2868433DB5EB82E91F8BE52E8A67903A93332634470DE3DD90D52422B62DFE062248248AC388FAF77B277F91C4FB6EE776EDC52069C67F17D9E7FA57AC9BBA9",
+        },
 
-      {
-          &key,
-          "hmac-examples/HMac-01.json",
-          "HMAC-01: Direct key + HMAC-SHA256",
-          "D8618543A10105A054546869732069732074686520636F6E74656E742E58202BDCC89F058216B8A208DDC6D8B54AA91F48BD63484986565105C9AD5A6682F6818340A20125044A6F75"
-          "722D73656372657440",
-      },
-      {
-          &key,
-          "hmac-examples/HMac-02.json",
-          "HMAC-02: Direct key + HMAC-SHA384",
-          "D8618543A10106A054546869732069732074686520636F6E74656E742E5830B3097F70009A11507409598A83E15BBBBF1982DCE28E5AB6D5A6AFF6897BD24BB8B7479622C9401B2409"
-          "0D458206D587818340A2012504467365632D343840",
-      },
-      {
-          &key,
-          "hmac-examples/HMac-03.json",
-          "HMAC-03: Direct key + HMAC-SHA512",
-          "D8618543A10107A054546869732069732074686520636F6E74656E742E5840CD28A6B3CFBBBF214851B906E050056CB438A8B88905B8B7461977022711A9D8AC5DBC54E29A56D92604"
-          "6B40FC2607C25B344454AA5F68DE09A3E525D3865A05818340A2012504467365632D363440",
-      },
-      {
-          &key,
-          "hmac-examples/HMac-04.json",
-          "HMAC-04: Direct key + HMAC-SHA256 - Incorrect Tag",
-          "D8618543A10105A054546869732069732074686520636F6E74656E742E58202BDCC89F058216B8A208DDC6D8B54AA91F48BD63484986565105C9AD5A6682F7818340A20125044A6F75"
-          "722D73656372657440",
-      },
-      {
-          &key,
-          "hmac-examples/HMac-05.json",
-          "HMAC-05: Direct key + HMAC-SHA256/64",
-          "D8618543A10104A054546869732069732074686520636F6E74656E742E486F35CAB779F77833818340A20125044A6F75722D73656372657440",
-      },
-      {
-          &key,
-          "hmac-examples/HMac-enc-01.json",
-          "HMAC-ENC-01: Direct key + HMAC-SHA256 - implicit",
-          "D18443A10105A054546869732069732074686520636F6E74656E742E5820A1A848D3471F9D61EE49018D244C824772F223AD4F935293F1789FC3A08D8C58",
-      },
-      {
-          &key,
-          "hmac-examples/HMac-enc-02.json",
-          "HMAC-ENC-02: Direct key + HMAC-SHA384 - implicit",
-          "D18443A10106A054546869732069732074686520636F6E74656E742E5830998D26C6459AAEECF44ED20CE00C8CCEDF0A1F3D22A92FC05DB08C5AEB1CB594CAAF5A5C5E2E9D01CCE7E7"
-          "7A93AA8C62",
-      },
-      {
-          &key,
-          "hmac-examples/HMac-enc-03.json",
-          "HMAC-ENC-03: Direct key + HMAC-SHA512 - implicit",
-          "D18443A10107A054546869732069732074686520636F6E74656E742E58404A555BF971F7C1891D9DDF304A1A132E2D6F817449474D813E6D04D65962BED8BBA70C17E1F5308FA39962"
-          "959A4B9B8D7DA8E6D849B209DCD3E98CC0F11EDDF2",
-      },
-      {
-          &key,
-          "hmac-examples/HMac-enc-04.json",
-          "HMAC-ENC-04: Direct key + HMAC-SHA256 - Incorrect Tag - implicit",
-          "D18443A10105A054546869732069732074686520636F6E74656E742E5820A1A848D3471F9D61EE49018D244C824772F223AD4F935293F1789FC3A08D8C59",
-      },
-      {
-          &key,
-          "hmac-examples/HMac-enc-05.json",
-          "HMAC-ENC-05: Direct key + HMAC-SHA256/64 - implicit",
-          "D18443A10104A054546869732069732074686520636F6E74656E742E4811F9E357975FB849",
-      },
+        {
+            &key,
+            "hmac-examples/HMac-01.json",
+            "HMAC-01: Direct key + HMAC-SHA256",
+            "D8618543A10105A054546869732069732074686520636F6E74656E742E58202BDCC89F058216B8A208DDC6D8B54AA91F48BD63484986565105C9AD5A6682F6818340A20125044A6F75"
+            "722D73656372657440",
+        },
+        {
+            &key,
+            "hmac-examples/HMac-02.json",
+            "HMAC-02: Direct key + HMAC-SHA384",
+            "D8618543A10106A054546869732069732074686520636F6E74656E742E5830B3097F70009A11507409598A83E15BBBBF1982DCE28E5AB6D5A6AFF6897BD24BB8B7479622C9401B2409"
+            "0D458206D587818340A2012504467365632D343840",
+        },
+        {
+            &key,
+            "hmac-examples/HMac-03.json",
+            "HMAC-03: Direct key + HMAC-SHA512",
+            "D8618543A10107A054546869732069732074686520636F6E74656E742E5840CD28A6B3CFBBBF214851B906E050056CB438A8B88905B8B7461977022711A9D8AC5DBC54E29A56D92604"
+            "6B40FC2607C25B344454AA5F68DE09A3E525D3865A05818340A2012504467365632D363440",
+        },
+        {
+            &key,
+            "hmac-examples/HMac-04.json",
+            "HMAC-04: Direct key + HMAC-SHA256 - Incorrect Tag",
+            "D8618543A10105A054546869732069732074686520636F6E74656E742E58202BDCC89F058216B8A208DDC6D8B54AA91F48BD63484986565105C9AD5A6682F7818340A20125044A6F75"
+            "722D73656372657440",
+        },
+        {
+            &key,
+            "hmac-examples/HMac-05.json",
+            "HMAC-05: Direct key + HMAC-SHA256/64",
+            "D8618543A10104A054546869732069732074686520636F6E74656E742E486F35CAB779F77833818340A20125044A6F75722D73656372657440",
+        },
+        {
+            &key,
+            "hmac-examples/HMac-enc-01.json",
+            "HMAC-ENC-01: Direct key + HMAC-SHA256 - implicit",
+            "D18443A10105A054546869732069732074686520636F6E74656E742E5820A1A848D3471F9D61EE49018D244C824772F223AD4F935293F1789FC3A08D8C58",
+        },
+        {
+            &key,
+            "hmac-examples/HMac-enc-02.json",
+            "HMAC-ENC-02: Direct key + HMAC-SHA384 - implicit",
+            "D18443A10106A054546869732069732074686520636F6E74656E742E5830998D26C6459AAEECF44ED20CE00C8CCEDF0A1F3D22A92FC05DB08C5AEB1CB594CAAF5A5C5E2E9D01CCE7E7"
+            "7A93AA8C62",
+        },
+        {
+            &key,
+            "hmac-examples/HMac-enc-03.json",
+            "HMAC-ENC-03: Direct key + HMAC-SHA512 - implicit",
+            "D18443A10107A054546869732069732074686520636F6E74656E742E58404A555BF971F7C1891D9DDF304A1A132E2D6F817449474D813E6D04D65962BED8BBA70C17E1F5308FA39962"
+            "959A4B9B8D7DA8E6D849B209DCD3E98CC0F11EDDF2",
+        },
+        {
+            &key,
+            "hmac-examples/HMac-enc-04.json",
+            "HMAC-ENC-04: Direct key + HMAC-SHA256 - Incorrect Tag - implicit",
+            "D18443A10105A054546869732069732074686520636F6E74656E742E5820A1A848D3471F9D61EE49018D244C824772F223AD4F935293F1789FC3A08D8C59",
+        },
+        {
+            &key,
+            "hmac-examples/HMac-enc-05.json",
+            "HMAC-ENC-05: Direct key + HMAC-SHA256/64 - implicit",
+            "D18443A10104A054546869732069732074686520636F6E74656E742E4811F9E357975FB849",
+        },
     };
 
     int i = 0;
@@ -2315,11 +2453,8 @@ void test_github_example() {
 
     bool result = false;
     cbor_object_signing_encryption cose;
-    cose_context_t* handle = nullptr;
-    cose.open(&handle);
     for (i = 0; i < RTL_NUMBER_OF(vector); i++) {
         binary_t cbor = base16_decode(vector[i].cbor);
-        binary_t external = base16_decode(vector[i].external);
 
         binary_t bin_cbor;
         basic_stream bs;
@@ -2345,11 +2480,15 @@ void test_github_example() {
         if (iter == dictionary.end()) {
             ret = errorcode_t::not_found;
         } else {
+            cose_context_t* handle = nullptr;
+            cose.open(&handle);
+
             int tagvalue = iter->second;
             switch (tagvalue) {
                 case cbor_tag_t::cose_tag_encrypt0:  // 16
                 case cbor_tag_t::cose_tag_encrypt:   // 96
-                    ret = cose.decrypt(handle, vector[i].key, cbor, external, result);
+                    ret = errorcode_t::not_supported;
+                    // ret = cose.decrypt(handle, vector[i].key, cbor, result);
                     break;
                 case cbor_tag_t::cose_tag_mac0:  // 17
                 case cbor_tag_t::cose_tag_mac:   // 97
@@ -2357,16 +2496,21 @@ void test_github_example() {
                     break;
                 case cbor_tag_t::cose_tag_sign1:  // 18
                 case cbor_tag_t::cose_tag_sign:   // 98
-                    ret = cose.verify(handle, vector[i].key, cbor, external, result);
+                    if (vector[i].external) {
+                        cose.set(handle, cose_flag_t::cose_external, base16_decode(vector[i].external));
+                    }
+                    ret = cose.verify(handle, vector[i].key, cbor, result);
                     break;
                 default:
                     ret = errorcode_t::bad_data;  // todo, studying, not-tagged
                     break;
             }
+
+            cose.close(handle);
         }
+
         _test_case.test(ret, __FUNCTION__, "%s %s", vector[i].file, vector[i].desc);
     }
-    cose.close(handle);
 }
 
 int main(int argc, char** argv) {

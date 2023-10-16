@@ -37,7 +37,7 @@ return_t variant_copy(variant_t* target, const variant_t* source) {
                     variant_set_str_new((*target), source->data.str);
                     break;
                 default:
-                    memcpy(&target->data, &source->data, RTL_FIELD_SIZE(variant_t, data));
+                    throw;
                     break;
             }
         } else {

@@ -32,8 +32,7 @@ cbor_object_signing::~cbor_object_signing() {
     // do nothing
 }
 
-return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t const& external,
-                                   binary_t& output) {
+return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -45,7 +44,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, cose
         std::list<cose_alg_t> methods;
         methods.push_back(method);
 
-        ret = sign(handle, key, methods, input, external, output);
+        ret = sign(handle, key, methods, input, output);
     }
     __finally2 {
         // do nothing
@@ -53,18 +52,17 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, cose
     return ret;
 }
 
-return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t const& external,
-                                   binary_t& output) {
+return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
+        cbor_object_signing_encryption::clear_context(handle);
+
         if (nullptr == handle || nullptr == key) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        cbor_object_signing_encryption::clear_context(handle);
 
         handle->payload = input;
 
@@ -104,7 +102,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             }
 
             binary_t tobesigned;
-            compose_tobesigned(tobesigned, tag, convert(""), item.bin_protected, external, input);
+            compose_tobesigned(tobesigned, tag, convert(""), item.bin_protected, handle->external, input);
             openssl_sign signprocessor;
             signprocessor.sign(pkey, sig, tobesigned, item.bin_data);  // signature
 
@@ -124,14 +122,12 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
         // [prototype] cbor_tag_t::cose_tag_sign only
         ret = write_signature(handle, tag, output);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 { cbor_object_signing_encryption::clear_context(handle); }
 
     return ret;
 }
 
-return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t const& external, bool& result) {
+return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     cbor_object_signing cose_sign;
@@ -139,6 +135,8 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
     cbor_object_signing_encryption::composer composer;
 
     __try2 {
+        cbor_object_signing_encryption::clear_context(handle);
+
         ret = errorcode_t::verify;
         result = false;
 
@@ -151,7 +149,8 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
         std::list<cose_parts_t>::iterator iter;
         for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
             cose_parts_t& item = *iter;
-            compose_tobesigned(tobesigned, handle->tag, handle->body.bin_protected, item.bin_protected, external, handle->payload);
+            compose_tobesigned(tobesigned, handle->tag, handle->body.bin_protected, item.bin_protected, handle->external, handle->payload);
+
             int alg = 0;
             std::string kid;
             return_t check = errorcode_t::success;
@@ -176,9 +175,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
             ret = errorcode_t::success;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 { cbor_object_signing_encryption::clear_context(handle); }
     return ret;
 }
 
@@ -234,10 +231,19 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, co
             ret = errorcode_t::request;  // study
             __leave2;
         }
+
+        // RFC 8152 8.1.  ECDSA
+        // In order to promote interoperability, it is suggested that SHA-256 be
+        // used only with curve P-256, SHA-384 be used only with curve P-384,
+        // and SHA-512 be used with curve P-521
+
+        // json_object_signing.cpp
+        // ex. key->find (kid, sig, crypto_use_t::use_sig);
+
         // just find out kty from algorithm
-        // ex. do not couple P-256 to ES256, P-521 to ES512
         // ecdsa-examples/ecdsa-04.json ECDSA-01: ECDSA - P-256 w/ SHA-512
         // ecdsa-examples/ecdsa-sig-04.json ECDSA-sig-01: ECDSA - P-256 w/ SHA-512 - implicit
+
         EVP_PKEY* pkey = nullptr;
         if (kid) {
             pkey = key->find(kid, hint->kty);
@@ -276,6 +282,15 @@ return_t cbor_object_signing::compose_tobesigned(binary_t& tobesigned, uint8 tag
     cbor_encode encoder;
     cbor_publisher pub;
     cbor_array* root = nullptr;
+
+    // RFC 8152 4.4.  Signing and Verification Process
+    // Sig_structure = [
+    //    context : "Signature" / "Signature1" / "CounterSignature",
+    //    body_protected : empty_or_serialized_map,
+    //    ? sign_protected : empty_or_serialized_map,
+    //    external_aad : bstr,
+    //    payload : bstr
+    // ]
 
     __try2 {
         tobesigned.clear();
