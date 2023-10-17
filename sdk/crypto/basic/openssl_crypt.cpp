@@ -287,6 +287,8 @@ return_t openssl_crypt::encrypt(crypt_context_t* handle, const unsigned char* da
     return encrypt2(handle, data_plain, size_plain, out_encrypted);
 }
 
+return_t openssl_crypt::encrypt(crypt_context_t* handle, binary_t const& input, binary_t& out) { return encrypt(handle, &input[0], input.size(), out); }
+
 return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted, binary_t* aad,
                                  binary_t* tag) {
     return_t ret = errorcode_t::success;
@@ -311,7 +313,9 @@ return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* d
     return ret;
 }
 
-return_t openssl_crypt::encrypt(crypt_context_t* handle, binary_t const& input, binary_t& out) { return encrypt(handle, &input[0], input.size(), out); }
+return_t openssl_crypt::encrypt2(crypt_context_t* handle, binary_t const& data_plain, binary_t& out_encrypted, binary_t* aad, binary_t* tag) {
+    return encrypt2(handle, &data_plain[0], data_plain.size(), out_encrypted, aad, tag);
+}
 
 return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char* out_encrypted,
                                  size_t* size_encrypted, binary_t* aad, binary_t* tag) {
@@ -348,6 +352,17 @@ return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* d
                 __leave2_trace(ret);
             }
 
+            // https://www.openssl.org/docs/man1.1.1/man3/EVP_CIPHER_iv_length.html
+            // EVP_CTRL_CCM_SET_L
+            //      If not set a default is used (8 for AES CCM).
+            // EVP_CTRL_AEAD_SET_IVLEN
+            //      For GCM AES and OCB AES the default is 12 (i.e. 96 bits)
+            //      The nonce length is given by 15 - L so it is 7 by default for AES CCM.
+            //       If not called a default nonce length of 12 (i.e. 96 bits) is used. (ChaCha20-Poly1305)
+            // EVP_CTRL_AEAD_SET_TAG
+            //      If not set a default value is used (12 for AES CCM)
+            //      For OCB AES, the default tag length is 16 (i.e. 128 bits).
+
             if (crypt_mode_t::gcm == context->mode) {
                 // 16bytes (128bits)
                 // RFC 7516
@@ -362,6 +377,9 @@ return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* d
                 //
                 // RFC 7539 2.5.  The Poly1305 Algorithm
                 //      Poly1305 takes a 32-byte one-time key and a message and produces a 16-byte tag.
+                //
+                // RFC 8152 10.1.  AES GCM
+                // the size of the authentication tag is fixed at 128 bits
                 tag_size = 16;
             } else if (crypt_mode_t::ccm == context->mode) {
                 tag_size = 14;
@@ -372,7 +390,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* d
                 EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_SET_TAG, tag_size, nullptr);
 
                 binary_t& key = context->datamap[crypt_item_t::item_cek];
-                EVP_CipherInit_ex(context->encrypt_context, nullptr, nullptr, &key[0], nullptr, 1);
+                EVP_CipherInit_ex(context->encrypt_context, nullptr, nullptr, &key[0], &iv[0], 1);
 
                 ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, size_plain);
                 if (1 > ret_cipher) {
@@ -446,10 +464,6 @@ return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* d
             tag->resize(tag_size);
             ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag->size(), &(*tag)[0]);
             if (1 > ret_cipher) {
-                // check (openssl 1.1.1, 3.0.x, 3.1.x)
-                // [../openssl-3.1.1/crypto/evp/evp_fetch.c @ 341] error:0308010C:digital envelope routines::unsupported
-                // [../openssl-3.1.1/providers/implementations/ciphers/ciphercommon_ccm.c @ 278] error:1C800066:Provider routines::cipher operation failed
-                // [../openssl-3.1.1/providers/implementations/ciphers/ciphercommon_ccm.c @ 206] error:1C800077:Provider routines::tag not set
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl(ret);
             }
@@ -535,6 +549,10 @@ return_t openssl_crypt::decrypt2(crypt_context_t* handle, const unsigned char* d
     return ret;
 }
 
+return_t openssl_crypt::decrypt2(crypt_context_t* handle, binary_t const& data_encrypted, binary_t& out_decrypted, binary_t* aad, binary_t* tag) {
+    return decrypt2(handle, &data_encrypted[0], data_encrypted.size(), out_decrypted, aad, tag);
+}
+
 return_t openssl_crypt::decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char* out_decrypted,
                                  size_t* size_decrypted, binary_t* aad, binary_t* tag) {
     return_t ret = errorcode_t::success;
@@ -576,7 +594,7 @@ return_t openssl_crypt::decrypt2(crypt_context_t* handle, const unsigned char* d
                 EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag->size(), &(*tag)[0]);
 
                 binary_t& key = context->datamap[crypt_item_t::item_cek];
-                EVP_CipherInit_ex(context->decrypt_context, nullptr, nullptr, &key[0], nullptr, 0);
+                EVP_CipherInit_ex(context->decrypt_context, nullptr, nullptr, &key[0], &iv[0], 0);
 
                 ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, nullptr, size_encrypted);
             } else if (crypt_mode_t::gcm == context->mode) {

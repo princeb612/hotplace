@@ -1615,16 +1615,22 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_aes_128_gcm,  // 1
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aesgcm,
+        0,
+        "aes-128-gcm",
     },
     {
         cose_alg_t::cose_aes_192_gcm,  // 2
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aesgcm,
+        0,
+        "aes-192-gcm",
     },
     {
         cose_alg_t::cose_aes_256_gcm,  // 3
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aesgcm,
+        0,
+        "aes-256-gcm",
     },
     {
         cose_alg_t::cose_hs256_64,  // 4,

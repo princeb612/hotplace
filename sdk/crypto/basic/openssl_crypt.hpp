@@ -152,7 +152,7 @@ class openssl_crypt : public crypt_t {
      */
     virtual return_t encrypt(crypt_context_t* handle, binary_t const& input, binary_t& out);
     /**
-     * @brief encrypt (GCM)
+     * @brief encrypt (GCM/CCM)
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* data_plain
      * @param size_t size_plain [in]
@@ -163,7 +163,16 @@ class openssl_crypt : public crypt_t {
     virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted, binary_t* aad = nullptr,
                               binary_t* tag = nullptr);
     /**
-     * @brief encrypte
+     * @brief encrypt (GCM/CCM)
+     * @param crypt_context_t* handle [in]
+     * @param binary_t const& plain [in]
+     * @param binary_t& out_encrypte [out]
+     * @param binary_t* aad [inopt]
+     * @param binary_t* tag [outopt]
+     */
+    virtual return_t encrypt2(crypt_context_t* handle, binary_t const& plain, binary_t& out_encrypted, binary_t* aad = nullptr, binary_t* tag = nullptr);
+    /**
+     * @brief encrypt
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* data_plain [in]
      * @param size_t size_plain [in]
@@ -209,7 +218,7 @@ class openssl_crypt : public crypt_t {
     virtual return_t decrypt(crypt_context_t* handle, binary_t const& input, binary_t& out);
 
     /**
-     * @brief decrypt (GCM)
+     * @brief decrypt (GCM/CCOM)
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* data_encrypted [in]
      * @param size_t size_encrypted [in]
@@ -219,6 +228,16 @@ class openssl_crypt : public crypt_t {
      */
     virtual return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
                               binary_t* aad = nullptr, binary_t* tag = nullptr);
+    /**
+     * @brief decrypt (GCM/CCOM)
+     * @param crypt_context_t* handle [in]
+     * @param binary_t const& data_encrypted [in]
+     * @param binary_t& out_decrypted [out]
+     * @param binary_t* aad [inpot]
+     * @param binary_t* tag [inopt]
+     */
+    virtual return_t decrypt2(crypt_context_t* handle, binary_t const& data_encrypted, binary_t& out_decrypted, binary_t* aad = nullptr,
+                              binary_t* tag = nullptr);
     /**
      * @brief decrypt
      * @param crypt_context_t* handle [in]

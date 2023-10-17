@@ -687,8 +687,8 @@ typedef struct _hint_cose_algorithm_t {
     cose_alg_t alg;
     crypto_kty_t kty;
     cose_group_t group;
-    int16 kdf_dlen;
-    const char* hkdf_prf;
+    int16 alglen;         // kdf_dlen
+    const char* algname;  // hkdf_prf
     // studying
 } hint_cose_algorithm_t;
 
