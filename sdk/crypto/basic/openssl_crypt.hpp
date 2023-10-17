@@ -142,7 +142,15 @@ class openssl_crypt : public crypt_t {
      *        crypt.encrypt(handle, data_plain, size_plain, data_encrypted);
      */
     virtual return_t encrypt(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted);
-
+    /**
+     * @brief encrypt
+     * @param crypt_context_t* handle [in]
+     * @param binary_t const& input [in]
+     * @param binary_t& out [out]
+     * @return error code (see error.hpp)
+     * @example
+     */
+    virtual return_t encrypt(crypt_context_t* handle, binary_t const& input, binary_t& out);
     /**
      * @brief encrypt (GCM)
      * @param crypt_context_t* handle [in]
@@ -191,6 +199,14 @@ class openssl_crypt : public crypt_t {
      *        crypt.decrypt(handle, data_encrypted, size_encrypted, data_decrypted);
      */
     virtual return_t decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted);
+    /**
+     * @brief decrypt
+     * @param crypt_context_t* handle [in]
+     * @param binary_t const& input [in]
+     * @param binary_t& out [out]
+     * @return error code (see error.hpp)
+     */
+    virtual return_t decrypt(crypt_context_t* handle, binary_t const& input, binary_t& out);
 
     /**
      * @brief decrypt (GCM)

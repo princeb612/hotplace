@@ -90,7 +90,7 @@
  * RFC 9052 CBOR Object Signing and Encryption (COSE): Structures and Process
  * RFC 9053 CBOR Object Signing and Encryption (COSE): Initial Algorithms
  * RFC 9054 CBOR Object Signing and Encryption (COSE): Hash Algorithms
- * RFC 8338 CBOR Object Signing and Encryption (COSE): Countersignatures
+ * RFC 9338 CBOR Object Signing and Encryption (COSE): Countersignatures
  * RFC 9360 CBOR Object Signing and Encryption (COSE): Header Parameters for Carrying and Referencing X.509 Certificates
 
 ## build

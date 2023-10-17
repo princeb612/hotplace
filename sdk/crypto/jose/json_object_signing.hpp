@@ -127,7 +127,7 @@ class json_object_signing {
      * @param binary_t& output [out]
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign(crypto_key* key, jws_t method, binary_t const& input, binary_t& output);
+    return_t dosign(crypto_key* key, jws_t method, binary_t const& input, binary_t& output);
     /**
      * @brief sign and return signature and kid
      * @param crypto_key* key [in]
@@ -137,7 +137,7 @@ class json_object_signing {
      * @param std::string& kid [out]
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign(crypto_key* key, jws_t method, binary_t const& input, binary_t& output, std::string& kid);
+    return_t dosign(crypto_key* key, jws_t method, binary_t const& input, binary_t& output, std::string& kid);
     /**
      * @brief verify
      * @param crypto_key* key [in]
@@ -147,7 +147,7 @@ class json_object_signing {
      * @param bool& result [out]
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t verify(crypto_key* key, jws_t method, binary_t const& input, binary_t const& output, bool& result);
+    return_t doverify(crypto_key* key, jws_t method, binary_t const& input, binary_t const& output, bool& result);
     /**
      * @brief verify with kid
      * @param crypto_key* key [in]
@@ -158,7 +158,7 @@ class json_object_signing {
      * @param bool& result [out]
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t verify(crypto_key* key, const char* kid, jws_t method, binary_t const& input, binary_t const& output, bool& result);
+    return_t doverify(crypto_key* key, const char* kid, jws_t method, binary_t const& input, binary_t const& output, bool& result);
 
     /**
      * @brief constraints
@@ -166,27 +166,32 @@ class json_object_signing {
      * @param EVP_PKEY* pkey [in]
      */
     return_t check_constraints(jws_t sig, EVP_PKEY* pkey);
-    /**
-     * @brief parse
-     * @param jose_context_t* context [in]
-     * @param const char* signature [in]
-     */
-    return_t read_signature(jose_context_t* context, const char* signature);
-    /**
-     * @brief write
-     * @param jose_context_t* context [in]
-     * @param std::string& signature [out]
-     * @param jose_serialization_t type [inopt]
-     */
-    return_t write_signature(jose_context_t* context, std::string& signature, jose_serialization_t type = jose_serialization_t::jose_compact);
-    /**
-     * @brief parse
-     * @param jose_context_t* context [in]
-     * @param const char* protected_header [in]
-     * @param jws_t& method [out]
-     * @param std::string& keyid [out]
-     */
-    return_t parse_signature_header(jose_context_t* context, const char* protected_header, jws_t& method, std::string& keyid);
+
+    class composer {
+       public:
+        composer();
+        /**
+         * @brief parse
+         * @param jose_context_t* context [in]
+         * @param const char* signature [in]
+         */
+        return_t parse_signature(jose_context_t* context, const char* signature);
+        /**
+         * @brief parse
+         * @param jose_context_t* context [in]
+         * @param const char* protected_header [in]
+         * @param jws_t& method [out]
+         * @param std::string& keyid [out]
+         */
+        return_t parse_signature_protected_header(jose_context_t* context, const char* protected_header, jws_t& method, std::string& keyid);
+        /**
+         * @brief write
+         * @param jose_context_t* context [in]
+         * @param std::string& signature [out]
+         * @param jose_serialization_t type [inopt]
+         */
+        return_t compose_signature(jose_context_t* context, std::string& signature, jose_serialization_t type = jose_serialization_t::jose_compact);
+    };
 };
 
 }  // namespace crypto

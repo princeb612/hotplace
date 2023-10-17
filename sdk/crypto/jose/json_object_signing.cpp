@@ -75,7 +75,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::string const& pr
 return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string> const& headers, std::string const& input, std::string& output,
                                    jose_serialization_t type) {
     return_t ret = errorcode_t::success;
-    json_object_signing sign;
+    json_object_signing::composer composer;
 
     __try2 {
         json_object_signing_encryption::clear_context(handle);
@@ -91,7 +91,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
             jws_t sig = jws_t::jws_unknown;
             std::string kid;
 
-            parse_signature_header(handle, header.c_str(), sig, kid);
+            composer.parse_signature_protected_header(handle, header.c_str(), sig, kid);
             if (jws_t::jws_unknown == sig) {
                 size_t header_size = headers.size();
                 if (header_size > 1) {
@@ -113,7 +113,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
 
             binary_t signature;
 
-            return_t check = sign.sign(handle->key, sig, header_claims, signature, kid);
+            return_t check = dosign(handle->key, sig, header_claims, signature, kid);
             if (errorcode_t::success != check) {
                 continue;
             }
@@ -131,7 +131,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = write_signature(handle, output, type);
+        ret = composer.compose_signature(handle, output, type);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -142,7 +142,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
 
 return_t json_object_signing::verify(jose_context_t* handle, std::string const& input, bool& result) {
     return_t ret = errorcode_t::success;
-    json_object_signing sign;
+    json_object_signing::composer composer;
 
     __try2 {
         json_object_signing_encryption::clear_context(handle);
@@ -153,7 +153,7 @@ return_t json_object_signing::verify(jose_context_t* handle, std::string const& 
             __leave2;
         }
 
-        ret = read_signature(handle, input.c_str());
+        ret = composer.parse_signature(handle, input.c_str());
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -168,7 +168,7 @@ return_t json_object_signing::verify(jose_context_t* handle, std::string const& 
             jws_t sig;
             std::string header_kid;
 
-            parse_signature_header(handle, protected_header.c_str(), sig, header_kid);
+            composer.parse_signature_protected_header(handle, protected_header.c_str(), sig, header_kid);
             if (jws_t::jws_unknown == sig) {
                 // RFC 7520 4.7. Protecting Content Only
                 if (jws_t::jws_unknown == item.sig) {
@@ -194,7 +194,7 @@ return_t json_object_signing::verify(jose_context_t* handle, std::string const& 
             binary_t signature_decoded;
 
             base64_decode(item.signature, signature_decoded, base64_encoding_t::base64url_encoding);
-            ret = sign.verify(handle->key, kid, sig, header_claims, signature_decoded, result_per_signature);
+            ret = doverify(handle->key, kid, sig, header_claims, signature_decoded, result_per_signature);
             if (errorcode_t::success != ret) {
                 break;
             }
@@ -221,15 +221,15 @@ return_t json_object_signing::verify(jose_context_t* handle, std::string const& 
 typedef return_t (openssl_sign::*sign_function_t)(EVP_PKEY* pkey, hash_algorithm_t sig, binary_t const& input, binary_t& output);
 typedef return_t (openssl_sign::*verify_function_t)(EVP_PKEY* pkey, hash_algorithm_t sig, binary_t const& input, binary_t const& output);
 
-return_t json_object_signing::sign(crypto_key* key, jws_t sig, binary_t const& input, binary_t& output) {
+return_t json_object_signing::dosign(crypto_key* key, jws_t sig, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     std::string kid;
 
-    ret = sign(key, sig, input, output, kid);
+    ret = dosign(key, sig, input, output, kid);
     return ret;
 }
 
-return_t json_object_signing::sign(crypto_key* key, jws_t sig, binary_t const& input, binary_t& output, std::string& kid) {
+return_t json_object_signing::dosign(crypto_key* key, jws_t sig, binary_t const& input, binary_t& output, std::string& kid) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -324,11 +324,11 @@ return_t json_object_signing::sign(crypto_key* key, jws_t sig, binary_t const& i
     return ret;
 }
 
-return_t json_object_signing::verify(crypto_key* key, jws_t sig, binary_t const& input, binary_t const& output, bool& result) {
-    return verify(key, nullptr, sig, input, output, result);
+return_t json_object_signing::doverify(crypto_key* key, jws_t sig, binary_t const& input, binary_t const& output, bool& result) {
+    return doverify(key, nullptr, sig, input, output, result);
 }
 
-return_t json_object_signing::verify(crypto_key* key, const char* kid, jws_t sig, binary_t const& input, binary_t const& output, bool& result) {
+return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t sig, binary_t const& input, binary_t const& output, bool& result) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -464,7 +464,9 @@ return_t json_object_signing::check_constraints(jws_t sig, EVP_PKEY* pkey) {
     return ret;
 }
 
-return_t json_object_signing::read_signature(jose_context_t* handle, const char* signature) {
+json_object_signing::composer::composer() {}
+
+return_t json_object_signing::composer::parse_signature(jose_context_t* handle, const char* signature) {
     return_t ret = errorcode_t::success;
     json_t* json_root = nullptr;
     split_context_t* split_handle = nullptr;
@@ -619,7 +621,48 @@ return_t json_object_signing::read_signature(jose_context_t* handle, const char*
     return ret;
 }
 
-return_t json_object_signing::write_signature(jose_context_t* handle, std::string& signature, jose_serialization_t type) {
+return_t json_object_signing::composer::parse_signature_protected_header(jose_context_t* handle, const char* header, jws_t& sig, std::string& keyid) {
+    return_t ret = errorcode_t::success;
+    json_t* json_root = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        sig = jws_t::jws_unknown;
+        keyid.clear();
+
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (nullptr == header) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = json_open_stream(&json_root, header, true);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        const char* alg = nullptr;
+        const char* kid = nullptr;
+        json_unpack(json_root, "{s:s}", "alg", &alg);
+        json_unpack(json_root, "{s:s}", "kid", &kid);
+
+        advisor->typeof_jose_signature(alg, sig);
+        if (kid) {
+            keyid = kid;
+        }
+    }
+    __finally2 {
+        if (json_root) {
+            json_decref(json_root);
+        }
+    }
+    return ret;
+}
+
+return_t json_object_signing::composer::compose_signature(jose_context_t* handle, std::string& signature, jose_serialization_t type) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -715,47 +758,6 @@ return_t json_object_signing::write_signature(jose_context_t* handle, std::strin
     }
     __finally2 {
         // do nothing
-    }
-    return ret;
-}
-
-return_t json_object_signing::parse_signature_header(jose_context_t* handle, const char* header, jws_t& sig, std::string& keyid) {
-    return_t ret = errorcode_t::success;
-    json_t* json_root = nullptr;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    __try2 {
-        sig = jws_t::jws_unknown;
-        keyid.clear();
-
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (nullptr == header) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        ret = json_open_stream(&json_root, header, true);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        const char* alg = nullptr;
-        const char* kid = nullptr;
-        json_unpack(json_root, "{s:s}", "alg", &alg);
-        json_unpack(json_root, "{s:s}", "kid", &kid);
-
-        advisor->typeof_jose_signature(alg, sig);
-        if (kid) {
-            keyid = kid;
-        }
-    }
-    __finally2 {
-        if (json_root) {
-            json_decref(json_root);
-        }
     }
     return ret;
 }

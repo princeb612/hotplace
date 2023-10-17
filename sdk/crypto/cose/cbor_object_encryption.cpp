@@ -52,6 +52,13 @@ return_t cbor_object_encryption::compose_enc_structure(binary_t& authenticated_d
     cbor_publisher pub;
     cbor_array* root = nullptr;
 
+    // Enc_structure = [
+    //     context : "Encrypt" / "Encrypt0" / "Enc_Recipient" /
+    //         "Mac_Recipient" / "Rec_Recipient",
+    //     protected : empty_or_serialized_map,
+    //     external_aad : bstr
+    // ]
+
     __try2 {
         authenticated_data.clear();
 
@@ -66,8 +73,7 @@ return_t cbor_object_encryption::compose_enc_structure(binary_t& authenticated_d
             __leave2;
         }
 
-        *root << new cbor_data(body_protected);
-        *root << new cbor_data(external);
+        *root << new cbor_data(body_protected) << new cbor_data(external);
 
         pub.publish(root, &authenticated_data);
     }
@@ -124,8 +130,7 @@ return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binar
     //         ? SuppPrivInfo : bstr
     //     ]
 
-    // AlgorithmID: ... This normally is either a key wrap
-    // algorithm identifier or a content encryption algorithm identifier.
+    // AlgorithmID: ... This normally is either a key wrap algorithm identifier or a content encryption algorithm identifier.
 
     cbor_array* root = nullptr;
 
@@ -211,22 +216,26 @@ return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binar
         cbor_array* partyu = (cbor_array*)(*root)[1];
         cbor_array* partyv = (cbor_array*)(*root)[2];
         cbor_array* pub = (cbor_array*)(*root)[3];
+        // PartyUInfo
         {
             *partyu << kdf_context_item(cose_key_t::cose_partyu_id, source, &handle->partyu)
                     << kdf_context_item(cose_key_t::cose_partyu_nonce, source, &handle->partyu)
                     << kdf_context_item(cose_key_t::cose_partyu_other, source, &handle->partyu);
         }
+        // PartyVInfo
         {
             *partyv << kdf_context_item(cose_key_t::cose_partyv_id, source, &handle->partyv)
                     << kdf_context_item(cose_key_t::cose_partyv_nonce, source, &handle->partyv)
                     << kdf_context_item(cose_key_t::cose_partyv_other, source, &handle->partyv);
         }
+        // SuppPubInfo
         {
             *pub << new cbor_data(keylen) << new cbor_data(source->bin_protected);
             if (handle->pub.size()) {
                 *pub << new cbor_data(handle->pub);
             }
         }
+        // SuppPrivInfo
         {
             if (handle->priv.size()) {
                 *root << new cbor_data(handle->priv);
@@ -283,7 +292,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
             binary_t context;
             binary_t decrypted;
-            binary_t derived;
+            binary_t cek;
             binary_t iv;
             binary_t salt;
             binary_t secret;
@@ -313,9 +322,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
             cose_group_t group = hint->group;
 
-            // compose_kdf_context
-            //      RFC 8152 Table 13: HKDF Algorithm Parameters
-            //      RFC 8152 Table 14: Context Algorithm Parameters
+            // reversing "AAD_hex", "CEK_hex", "Context_hex" from https://github.com/cose-wg/Examples
 
             if (cose_group_t::cose_group_aeskw == group) {
             } else if (cose_group_t::cose_group_direct == group) {
@@ -325,8 +332,9 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             } else if (cose_group_t::cose_group_eddsa == group) {
                 // RFC 8152 8.2. Edwards-Curve Digital Signature Algorithms (EdDSAs)
             } else if (cose_group_t::cose_group_direct_hkdf_sha == group) {
-                // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
+                // RFC 8152 12.1.2.  Direct Key with KDF
                 compose_kdf_context(handle, &item, context);
+                composer.finditem(cose_key_t::cose_salt, salt, item.unprotected_map);
             } else if (cose_group_t::cose_group_direct_hkdf_aes == group) {
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 compose_kdf_context(handle, &item, context);
@@ -336,10 +344,18 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 dh_key_agreement(pkey, item.epk, secret);
                 compose_kdf_context(handle, &item, context);
+                salt.resize(hint->kdf_dlen);
+                kdf_hkdf(cek, hint->kdf_dlen, secret, salt, context, hint->hkdf_prf);
             } else if (cose_group_t::cose_group_ecdh_ss_hkdf == group) {
                 // RFC 8152 12.4.1. ECDH
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
+                std::string static_keyid;
+                composer.finditem(cose_key_t::cose_static_key_id, static_keyid, item.unprotected_map);
+                EVP_PKEY* epk = key->find(static_keyid.c_str(), hint->kty);
+                dh_key_agreement(pkey, epk, secret);
                 compose_kdf_context(handle, &item, context);
+                salt.resize(hint->kdf_dlen);
+                kdf_hkdf(cek, hint->kdf_dlen, secret, salt, context, hint->hkdf_prf);
             } else if (cose_group_t::cose_group_ecdh_es_aeskw == group) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
@@ -349,6 +365,15 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
                 compose_kdf_context(handle, &item, context);
+                std::string static_keyid;
+                composer.finditem(cose_key_t::cose_static_key_id, static_keyid, item.unprotected_map);
+                EVP_PKEY* epk = key->find(static_keyid.c_str(), hint->kty);
+                dh_key_agreement(pkey, epk, secret);
+                // 12.5.  Key Agreement with Key Wrap
+                // encryptedKey = KeyWrap(KDF(DH-Shared, context), CEK)
+                binary_t kw_iv;
+                kw_iv.resize(8);
+                memset(&kw_iv[0], 0xa6, kw_iv.size());
             } else if (cose_group_t::cose_group_rsassa_pss == group) {
             } else if (cose_group_t::cose_group_rsa_oaep == group) {
             } else if (cose_group_t::cose_group_rsassa_pkcs15 == group) {
@@ -366,7 +391,11 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
             basic_stream bs;
             dump_memory(authenticated_data, &bs);
-            printf("authenticated_data\n%s\n%s\n", bs.c_str(), base16_encode(authenticated_data).c_str());
+            printf("aad\n%s\n%s\n", bs.c_str(), base16_encode(authenticated_data).c_str());
+            if (cek.size()) {
+                dump_memory(cek, &bs);
+                printf("cek\n%s\n%s\n", bs.c_str(), base16_encode(cek).c_str());
+            }
             if (context.size()) {
                 dump_memory(context, &bs);
                 printf("context\n%s\n%s\n", bs.c_str(), base16_encode(context).c_str());
@@ -375,13 +404,13 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 dump_memory(decrypted, &bs);
                 printf("decrypted\n%s\n%s\n", bs.c_str(), base16_encode(decrypted).c_str());
             }
-            if (derived.size()) {
-                dump_memory(derived, &bs);
-                printf("derived\n%s\n%s\n", bs.c_str(), base16_encode(derived).c_str());
-            }
             if (iv.size()) {
                 dump_memory(iv, &bs);
                 printf("iv\n%s\n\%s\n", bs.c_str(), base16_encode(iv).c_str());
+            }
+            if (salt.size()) {
+                dump_memory(salt, &bs);
+                printf("salt\n%s\n%s\n", bs.c_str(), base16_encode(salt).c_str());
             }
             if (secret.size()) {
                 dump_memory(secret, &bs);

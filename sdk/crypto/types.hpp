@@ -257,11 +257,8 @@ enum crypt_item_t {
     item_zip = 130,     // zip "DEF"
 
     /* variant */
-    item_epk = 256,            // ephemeral public key (pointer to EVP_PKEY*)
-    item_p2c = 257,            // PBES2 count (int32)
-    item_alg = 258,            // COSE alg (int32)
-    item_curve = 259,          // elliptic curve (int32)
-    item_curve_signbit = 260,  // sign bit, compressed (bool)
+    item_epk = 256,  // ephemeral public key (pointer to EVP_PKEY*)
+    item_p2c = 257,  // PBES2 count (int32)
 };
 
 enum crypt_access_t {
@@ -690,6 +687,8 @@ typedef struct _hint_cose_algorithm_t {
     cose_alg_t alg;
     crypto_kty_t kty;
     cose_group_t group;
+    int16 kdf_dlen;
+    const char* hkdf_prf;
     // studying
 } hint_cose_algorithm_t;
 

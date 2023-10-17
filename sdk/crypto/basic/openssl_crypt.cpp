@@ -311,6 +311,8 @@ return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* d
     return ret;
 }
 
+return_t openssl_crypt::encrypt(crypt_context_t* handle, binary_t const& input, binary_t& out) { return encrypt(handle, &input[0], input.size(), out); }
+
 return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char* out_encrypted,
                                  size_t* size_encrypted, binary_t* aad, binary_t* tag) {
     return_t ret = errorcode_t::success;
@@ -503,6 +505,10 @@ return_t openssl_crypt::decrypt(crypt_context_t* handle, const unsigned char* da
 
 return_t openssl_crypt::decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted) {
     return decrypt2(handle, data_encrypted, size_encrypted, out_decrypted);
+}
+
+return_t openssl_crypt::decrypt(crypt_context_t* handle, binary_t const& input, binary_t& out_decrypted) {
+    return decrypt2(handle, &input[0], input.size(), out_decrypted);
 }
 
 return_t openssl_crypt::decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted, binary_t* aad,

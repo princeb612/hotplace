@@ -84,6 +84,15 @@ class crypt_t {
      * @example
      */
     virtual return_t encrypt(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out) = 0;
+    /**
+     * @brief encrypt
+     * @param crypt_context_t* handle [in]
+     * @param binary_t const& input [in]
+     * @param binary_t& out [out]
+     * @return error code (see error.hpp)
+     * @example
+     */
+    virtual return_t encrypt(crypt_context_t* handle, binary_t const& input, binary_t& out) = 0;
 
     /**
      * @brief encrypt (GCM)
@@ -120,6 +129,14 @@ class crypt_t {
      * @return error code (see error.hpp)
      */
     virtual return_t decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out) = 0;
+    /**
+     * @brief decrypt
+     * @param crypt_context_t* handle [in]
+     * @param binary_t const& input [in]
+     * @param binary_t& out [out]
+     * @return error code (see error.hpp)
+     */
+    virtual return_t decrypt(crypt_context_t* handle, binary_t const& input, binary_t& out) = 0;
 
     /**
      * @brief decrypt (GCM)

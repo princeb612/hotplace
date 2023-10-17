@@ -1,45 +1,45 @@
 
 ## check1
 
-|   |                       |
-|-- |--                     |
-| O | A128KW                |
-| O | A192KW                |
-| O | A256KW                |
-| O | DIRECT                |
-| O | RSA_OAEP_SHA1         |
-| O | RSA_OAEP_SHA256       |
-| O | RSA_OAEP_SHA512       |
-| O | HKDF_SHA_256          |
-| O | HKDF_SHA_512          |
-| O | HKDF_AES_128          |
-| O | HKDF_AES_256          |
-| O | ECDH_ES_HKDF_256      |
-| O | ECDH_ES_HKDF_512      |
-| O | ECDH_SS_HKDF_256      |
-| O | ECDH_SS_HKDF_512      |
-| O | ECDH_ES_A128KW        |
-| O | ECDH_ES_A192KW        |
-| O | ECDH_ES_A256KW        |
-| O | ECDH_ES_A128KW        |
-| O | ECDH_ES_A192KW        |
-| O | ECDH_ES_A256KW        |
-| O | AES_128_GCM           |
-| O | AES_192_GCM           |
-| O | AES_256_GCM           |
-| O | AES_CBC_MAC_128_64    |
-| O | AES_CBC_MAC_256_64    |
-| O | AES_CBC_MAC_128_128   |
-| O | AES_CBC_MAC_256_128   |
-| O | CHACHA20_POLY1305     |
-| X | AES_CCM_16_64_128     |
-| X | AES_CCM_16_64_256     |
-| X | AES_CCM_64_64_128     |
-| X | AES_CCM_64_64_256     |
-| X | AES_CCM_16_128_128    |
-| X | AES_CCM_16_128_256    |
-| X | AES_CCM_64_128_128    |
-| X | AES_CCM_64_128_256    |
+|   |                       | AAD           | Context     | CEK                                           |
+|-- |--                     |--             |--           |--                                             |
+| - | A128KW                | Enc_structure | KDF_Context |                                               |
+| - | A192KW                | Enc_structure | KDF_Context |                                               |
+| - | A256KW                | Enc_structure | KDF_Context |                                               |
+| - | DIRECT                | Enc_structure | KDF_Context |                                               |
+| - | RSA_OAEP_SHA1         | Enc_structure | KDF_Context |                                               |
+| - | RSA_OAEP_SHA256       | Enc_structure | KDF_Context |                                               |
+| - | RSA_OAEP_SHA512       | Enc_structure | KDF_Context |                                               |
+| - | HKDF_SHA_256          | Enc_structure | KDF_Context |                                               |
+| - | HKDF_SHA_512          | Enc_structure | KDF_Context |                                               |
+| - | HKDF_AES_128          | Enc_structure | KDF_Context |                                               |
+| - | HKDF_AES_256          | Enc_structure | KDF_Context |                                               |
+| - | ECDH_ES_HKDF_256      | Enc_structure | KDF_Context | kdf_hkdf (dlen,ecdh_shared,salt,context,prf)  |
+| - | ECDH_ES_HKDF_512      | Enc_structure | KDF_Context | kdf_hkdf (dlen,ecdh_shared,salt,context,prf)  |
+| - | ECDH_SS_HKDF_256      | Enc_structure | KDF_Context | kdf_hkdf (dlen,ecdh_shared,salt,context,prf)  |
+| - | ECDH_SS_HKDF_512      | Enc_structure | KDF_Context | kdf_hkdf (dlen,ecdh_shared,salt,context,prf)  |
+| - | ECDH_ES_A128KW        | Enc_structure | KDF_Context |                                               |
+| - | ECDH_ES_A192KW        | Enc_structure | KDF_Context |                                               |
+| - | ECDH_ES_A256KW        | Enc_structure | KDF_Context |                                               |
+| - | ECDH_ES_A128KW        | Enc_structure | KDF_Context |                                               |
+| - | ECDH_ES_A192KW        | Enc_structure | KDF_Context |                                               |
+| - | ECDH_ES_A256KW        | Enc_structure | KDF_Context |                                               |
+| - | AES_128_GCM           | Enc_structure | KDF_Context |                                               |
+| - | AES_192_GCM           | Enc_structure | KDF_Context |                                               |
+| - | AES_256_GCM           | Enc_structure | KDF_Context |                                               |
+| - | AES_CBC_MAC_128_64    | Enc_structure | KDF_Context |                                               |
+| - | AES_CBC_MAC_256_64    | Enc_structure | KDF_Context |                                               |
+| - | AES_CBC_MAC_128_128   | Enc_structure | KDF_Context |                                               |
+| - | AES_CBC_MAC_256_128   | Enc_structure | KDF_Context |                                               |
+| - | CHACHA20_POLY1305     | Enc_structure | KDF_Context |                                               |
+| - | AES_CCM_16_64_128     | Enc_structure | KDF_Context |                                               |
+| - | AES_CCM_16_64_256     | Enc_structure | KDF_Context |                                               |
+| - | AES_CCM_64_64_128     | Enc_structure | KDF_Context |                                               |
+| - | AES_CCM_64_64_256     | Enc_structure | KDF_Context |                                               |
+| - | AES_CCM_16_128_128    | Enc_structure | KDF_Context |                                               |
+| - | AES_CCM_16_128_256    | Enc_structure | KDF_Context |                                               |
+| - | AES_CCM_64_128_128    | Enc_structure | KDF_Context |                                               |
+| - | AES_CCM_64_128_256    | Enc_structure | KDF_Context |                                               |
 
 * AES-CCM test failed
 
@@ -47,27 +47,27 @@
 
 |   |               |
 |-- |--             |
-| O | HMAC_256_64   |
-| O | HMAC_256_256  |
-| O | HMAC_384_256  |
-| O | HMAC_512_512  |
-| O | RS256         |
-| O | RS384         |
-| O | RS512         |
-| ? | RS1           |
-| O | ES256         |
-| O | ES384         |
-| O | ES512         |
-| ? | ES256K        |
-| O | PS256         |
-| O | PS384         |
-| O | PS512         |
-| O | EdDSA         |
-| O | SHA1          |
-| O | SHA256_64     |
-| O | SHA256        |
-| O | SHA512_256    |
-| O | SHA384        |
-| O | SHA512        |
-| O | SHAKE128      |
-| O | SHAKE256      |
+| - | HMAC_256_64   |
+| - | HMAC_256_256  |
+| - | HMAC_384_256  |
+| - | HMAC_512_512  |
+| - | RS256         |
+| - | RS384         |
+| - | RS512         |
+| - | RS1           |
+| - | ES256         |
+| - | ES384         |
+| - | ES512         |
+| - | ES256K        |
+| - | PS256         |
+| - | PS384         |
+| - | PS512         |
+| - | EdDSA         |
+| - | SHA1          |
+| - | SHA256_64     |
+| - | SHA256        |
+| - | SHA512_256    |
+| - | SHA384        |
+| - | SHA512        |
+| - | SHAKE128      |
+| - | SHAKE256      |

@@ -176,7 +176,6 @@ return_t cbor_object_signing_encryption::verify(cose_context_t* handle, crypto_k
 
 return_t cbor_object_signing_encryption::clear_context(cose_context_t* handle) {
     return_t ret = errorcode_t::success;
-
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;

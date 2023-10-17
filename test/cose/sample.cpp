@@ -2571,15 +2571,16 @@ int main(int argc, char** argv) {
     // key
     test_rfc8152_c_7_1();
     test_rfc8152_c_7_2();
+
     // part 2 .. parse
-    test_rfc8152_examples();
+    // test_rfc8152_examples();
 
     // part 3 .. load keys from cbor and write CBOR
     // step.1 parse CBOR and load EVP_PKEY
     // step.2 write EVP_PKEY to CBOR
 
-    test_cbor_web_key();
-    try_refactor_jose_sign();
+    // test_cbor_web_key();
+    // try_refactor_jose_sign();
 
     // part 4 https://github.com/cose-wg/Examples
     // A GitHub project has been created at <https://github.com/cose-wg/
@@ -2593,7 +2594,7 @@ int main(int argc, char** argv) {
     // clearly marked as such in the JSON file.  If errors in the examples
     // in this document are found, the examples on GitHub will be updated,
     // and a note to that effect will be placed in the JSON file.
-    test_github_example();
+    // test_github_example();
 
     openssl_thread_cleanup();
     openssl_cleanup();

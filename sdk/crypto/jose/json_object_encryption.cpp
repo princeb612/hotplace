@@ -44,6 +44,7 @@ json_object_encryption::~json_object_encryption() {
 
 return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, std::string& output, jose_serialization_t type) {
     return_t ret = errorcode_t::success;
+    json_object_encryption::composer composer;
 
     __try2 {
         json_object_signing_encryption::clear_context(handle);
@@ -56,22 +57,22 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
 
         std::list<jwa_t> algs;
         algs.push_back(alg);
-        prepare_encryption(handle, enc, algs);
+        composer.compose_encryption_dorandom(handle, enc, algs);
 
         binary_t encrypted;
         if (jose_flag_t::jose_deflate & handle->flags) {
             binary_t deflated;
             zlib_deflate(zlib_windowbits_t::windowbits_deflate, input, deflated);
 
-            ret = encrypt(handle, enc, alg, deflated, encrypted);
+            ret = doencrypt(handle, enc, alg, deflated, encrypted);
         } else {
-            ret = encrypt(handle, enc, alg, input, encrypted);
+            ret = doencrypt(handle, enc, alg, input, encrypted);
         }
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        ret = write_encryption(handle, output, type);
+        ret = composer.compose_encryption(handle, output, type);
     }
     __finally2 { json_object_signing_encryption::clear_context(handle); }
     return ret;
@@ -80,6 +81,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
 return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std::list<jwa_t> algs, binary_t const& input, std::string& output,
                                          jose_serialization_t type) {
     return_t ret = errorcode_t::success;
+    json_object_encryption::composer composer;
 
     __try2 {
         json_object_signing_encryption::clear_context(handle);
@@ -101,7 +103,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std:
 
         binary_t encrypted;
 
-        prepare_encryption(handle, enc, algs);
+        composer.compose_encryption_dorandom(handle, enc, algs);
 
         binary_t deflated;
         if (jose_flag_t::jose_deflate & handle->flags) {
@@ -114,9 +116,9 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std:
             return_t check = errorcode_t::success;
 
             if (jose_flag_t::jose_deflate & handle->flags) {
-                check = encrypt(handle, enc, alg, deflated, encrypted);
+                check = doencrypt(handle, enc, alg, deflated, encrypted);
             } else {
-                check = encrypt(handle, enc, alg, input, encrypted);
+                check = doencrypt(handle, enc, alg, input, encrypted);
             }
 
             switch (check) {
@@ -131,7 +133,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std:
             }
         }
 
-        write_encryption(handle, output, type);
+        composer.compose_encryption(handle, output, type);
     }
     __finally2 { json_object_signing_encryption::clear_context(handle); }
     return ret;
@@ -139,6 +141,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std:
 
 return_t json_object_encryption::decrypt(jose_context_t* handle, std::string const& input, binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
+    json_object_encryption::composer composer;
 
     __try2 {
         json_object_signing_encryption::clear_context(handle);
@@ -150,7 +153,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, std::string con
             __leave2;
         }
 
-        prepare_decryption(handle, input.c_str());
+        composer.parse_decryption(handle, input.c_str());
 
         return_t ret_test = errorcode_t::success;
         std::list<bool> results;
@@ -179,9 +182,9 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, std::string con
                     }
 
                     if (kid.empty()) {
-                        ret_test = decrypt(handle, enc, alg, item.datamap[crypt_item_t::item_ciphertext], output);
+                        ret_test = dodecrypt(handle, enc, alg, item.datamap[crypt_item_t::item_ciphertext], output);
                     } else {
-                        ret_test = decrypt(handle, enc, alg, kid.c_str(), item.datamap[crypt_item_t::item_ciphertext], output);
+                        ret_test = dodecrypt(handle, enc, alg, kid.c_str(), item.datamap[crypt_item_t::item_ciphertext], output);
                     }
                     if ((errorcode_t::success == ret_test) && zip.size() && (0 == memcmp(&zip[0], "DEF", 3))) {
                         binary_t inflated;
@@ -201,7 +204,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, std::string con
             if (1 == results.size() && true == results.front()) {
                 //
             } else {
-                ret = errorcode_t::verify;
+                ret = errorcode_t::cipher;
             }
         }
     }
@@ -209,8 +212,9 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, std::string con
     return ret;
 }
 
-return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output) {
+return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
+    json_object_encryption::composer composer;
     openssl_crypt crypt;
     openssl_hash hash;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -369,12 +373,11 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
                 if (1 == handle->encryptions.size()) {
                     /* compact, flattened */
                     std::string header;
-                    update_header(item.header, tag1, aad, header);
+                    composer.compose_encryption_aead_header(item.header, tag1, aad, header);
                     if (header.size()) {
                         item.header = header;
                     }
                 }
-
             } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
                 /*
                  * RFC7518 4.8. Key Encryption with PBES2
@@ -481,11 +484,11 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
     return ret;
 }
 
-return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output) {
-    return decrypt(handle, enc, alg, nullptr, input, output);
+return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output) {
+    return dodecrypt(handle, enc, alg, nullptr, input, output);
 }
 
-return_t json_object_encryption::decrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const char* kid, binary_t const& input, binary_t& output) {
+return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const char* kid, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     openssl_crypt crypt;
     openssl_hash hash;
@@ -792,722 +795,9 @@ return_t json_object_encryption::check_constraints(jwa_t alg, EVP_PKEY* pkey) {
     return ret;
 }
 
-return_t json_object_encryption::update_header(std::string const& source_encoded, binary_t const& tag, binary_t& aad, std::string& output_encoded) {
-    return_t ret = errorcode_t::success;
-    json_t* json_header = nullptr;
+json_object_encryption::composer::composer() {}
 
-    output_encoded.clear();
-
-    /* compact, flattened */
-    // protected_header
-    json_open_stream(&json_header, source_encoded.c_str(), true);
-    if (json_header) {
-        const char* alg_value = nullptr;
-        const char* tag_value = nullptr;
-        json_unpack(json_header, "{s:s}", "alg", &alg_value);
-        json_unpack(json_header, "{s:s}", "tag", &tag_value);
-        if (alg_value) {
-            if ((nullptr == tag_value) || (tag_value && (0 == strlen(tag_value)))) {
-                std::string tag_encoded;
-                tag_encoded = base64_encode(&tag[0], tag.size(), base64_encoding_t::base64url_encoding);
-
-                json_object_set_new(json_header, "tag", json_string(tag_encoded.c_str()));
-                char* contents = json_dumps(json_header, JOSE_JSON_FORMAT);
-                if (nullptr != contents) {
-                    std::string header = contents;
-                    base64_encode((byte_t*)header.c_str(), header.size(), aad, base64_encoding_t::base64url_encoding);  // update for encryption
-                    output_encoded = header;                                                                            // update for JWE.output
-                    free(contents);
-                }
-            }
-        }
-        json_decref(json_header);
-    }
-    return ret;
-}
-
-return_t json_object_encryption::prepare_encryption(jose_context_t* handle, jwe_t enc, std::list<jwa_t> const& algs) {
-    return_t ret = errorcode_t::success;
-    openssl_prng rand;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (algs.empty()) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        jose_encryptions_map_t::iterator iter = handle->encryptions.find(enc);
-        if (handle->encryptions.end() == iter) {
-            const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
-            if (nullptr == enc_hint) {
-                ret = errorcode_t::not_supported;
-                __leave2;
-            }
-
-            const EVP_CIPHER* enc_evp_cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(enc_hint->crypt_alg, enc_hint->crypt_mode);
-            if (nullptr == enc_evp_cipher) {
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
-
-            uint32 enc_group = enc_hint->group;
-            int keysize = EVP_CIPHER_key_length(enc_evp_cipher);
-            int ivsize = EVP_CIPHER_iv_length(enc_evp_cipher);
-            /* EVP_CIPHER_CTX_key_length, EVP_CIPHER_CTX_iv_length
-             * [openssl 3.0.3] compatibility problem
-             * EVP_CIPHER_..._length return EVP_CTRL_RET_UNSUPPORTED(-1)
-             */
-            adjust_range(keysize, 0, EVP_MAX_KEY_LENGTH);
-            adjust_range(ivsize, 0, EVP_MAX_IV_LENGTH);
-            if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
-                keysize *= 2;
-            }
-
-            jose_encryption_t item;
-            item.enc_info = enc_hint;
-
-            /* generate cek if not included "dir", "ECDH-ES" */
-            rand.random(item.datamap[crypt_item_t::item_cek], keysize);
-            rand.random(item.datamap[crypt_item_t::item_iv], ivsize);
-
-            binary_t protected_header;
-
-            if (1 == algs.size()) {
-                jwa_t alg = algs.front();
-
-                // const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm (alg);  // key management
-                std::string kid;
-                EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
-                if (nullptr == pkey) {
-                    ret = errorcode_t::not_found;
-                    __leave2;
-                }
-
-                crypt_datamap_t datamap;
-                crypt_variantmap_t variantmap;
-                jose_recipient_t recipient;
-                prepare_encryption_recipient(alg, pkey, recipient, datamap, variantmap);
-
-                binary_t header;
-                compose_encryption_header(protected_header, enc, alg, jose_compose_t::jose_enc_alg, kid, datamap, variantmap, handle->flags);
-                compose_encryption_header(header, jwe_t::jwe_unknown, alg, jose_compose_t::jose_alg_only, kid, datamap, variantmap);
-
-                item.header.assign((char*)&protected_header[0], protected_header.size());
-                base64_encode(&protected_header[0], protected_header.size(), item.datamap[crypt_item_t::item_aad], base64_encoding_t::base64url_encoding);
-
-                recipient.header = std::string((char*)&header[0], header.size());
-                recipient.kid = kid;
-                item.recipients.insert(std::make_pair(alg, recipient));
-            } else if (algs.size() > 1) {
-                compose_encryption_header(protected_header, enc, jwa_t::jwa_unknown, jose_compose_t::jose_enc_only, "", handle->flags);
-                item.header.assign((char*)&protected_header[0], protected_header.size());
-                base64_encode(&protected_header[0], protected_header.size(), item.datamap[crypt_item_t::item_aad], base64_encoding_t::base64url_encoding);
-
-                for (std::list<jwa_t>::const_iterator iter = algs.begin(); iter != algs.end(); iter++) {
-                    jwa_t alg = *iter;
-
-                    // const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm (alg);  // key management
-                    std::string kid;
-                    EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
-
-                    crypt_datamap_t datamap;
-                    crypt_variantmap_t variantmap;
-                    jose_recipient_t recipient;
-
-                    recipient.kid = kid;
-                    prepare_encryption_recipient(alg, pkey, recipient, datamap, variantmap);
-
-                    binary_t header;
-                    compose_encryption_header(header, jwe_t::jwe_unknown, alg, jose_compose_t::jose_alg_only, kid, datamap, variantmap);
-                    recipient.header = std::string((char*)&header[0], header.size());
-                    item.recipients.insert(std::make_pair(alg, recipient));
-                }
-            }
-
-            handle->protected_header = protected_header;
-            handle->encryptions.insert(std::make_pair(enc, item));
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t json_object_encryption::prepare_encryption_recipient(jwa_t alg, EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap,
-                                                              crypt_variantmap_t& variantmap) {
-    return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);  // key management
-    uint32 alg_group = alg_hint->group;
-
-    recipient.alg_info = alg_hint;
-
-    if ((jwa_group_t::jwa_group_ecdh == alg_group) || (jwa_group_t::jwa_group_ecdh_aeskw == alg_group)) {
-        // epk, apu, apv
-        uint32 nid = 0;
-        crypto_key key;
-        crypto_keychain keyset;
-        std::string kid;
-        nidof_evp_pkey(pkey, nid);                                // "crv" of key
-        keyset.add_ec(&key, nid);                                 // same "crv"
-        recipient.epk = key.select(crypto_use_t::use_enc, true);  // EVP_PKEY_up_ref
-        variant_t vt;
-        variant_set_pointer(vt, recipient.epk);
-        variantmap[crypt_item_t::item_epk] = vt;
-    } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
-        // iv, tag
-        const EVP_CIPHER* alg_evp_cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(alg_hint->crypt_alg, alg_hint->crypt_mode);
-        int ivsize = EVP_CIPHER_iv_length(alg_evp_cipher);
-        openssl_prng rand;
-        rand.random(recipient.datamap[crypt_item_t::item_iv], ivsize);
-        datamap[crypt_item_t::item_iv] = recipient.datamap[crypt_item_t::item_iv];
-        datamap[crypt_item_t::item_tag] = recipient.datamap[crypt_item_t::item_tag];
-    } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
-        // p2s, p2c
-        openssl_prng rand;
-        rand.random(recipient.datamap[crypt_item_t::item_p2s], 64);
-        rand.random(recipient.p2c, 0xffff);
-        variant_t vt;
-        variant_set_int32(vt, recipient.p2c);
-        datamap[crypt_item_t::item_p2s] = recipient.datamap[crypt_item_t::item_p2s];
-        variantmap[crypt_item_t::item_p2c] = vt;
-    }
-    return ret;
-}
-
-return_t json_object_encryption::compose_encryption_header(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, std::string const& kid, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    crypt_datamap_t datamap;
-    crypt_variantmap_t variantmap;
-
-    ret = compose_encryption_header(header, enc, alg, flag, kid, datamap, variantmap, flags);
-    return ret;
-}
-
-return_t json_object_encryption::compose_encryption_header(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, std::string const& kid,
-                                                           crypt_datamap_t& datamap, crypt_variantmap_t& variantmap, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    json_t* json_header = nullptr;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    __try2 {
-        header.clear();
-
-        if (0 == (jose_compose_t::jose_enc_alg & flag)) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        const char* enc_value = advisor->nameof_jose_encryption(enc);
-        const char* alg_value = advisor->nameof_jose_algorithm(alg);
-
-        json_header = json_object();
-
-        if (jose_compose_t::jose_enc_only & flag) {
-            // const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);
-            if (nullptr == enc_value) {
-                ret = errorcode_t::invalid_parameter;
-                __leave2;
-            }
-            json_object_set_new(json_header, "enc", json_string(enc_value));
-        }
-        if (jose_compose_t::jose_alg_only & flag) {
-            const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);
-            if (nullptr == alg_hint) {
-                ret = errorcode_t::not_supported;
-                __leave2;
-            }
-            uint32 alg_group = alg_hint->group;
-
-            json_object_set_new(json_header, "alg", json_string(alg_value));
-            if (kid.size()) {
-                json_object_set_new(json_header, "kid", json_string(kid.c_str()));
-            }
-            if ((jwa_group_t::jwa_group_ecdh == alg_group) || (jwa_group_t::jwa_group_ecdh_aeskw == alg_group)) {
-                // epk, apu, apv
-                binary_t pub1;
-                binary_t pub2;
-                EVP_PKEY* epk = (EVP_PKEY*)variantmap[crypt_item_t::item_epk].data.p;
-                crypto_key::get_public_key(epk, pub1, pub2);
-                json_t* json_epk = json_object();
-                if (json_epk) {
-                    std::string kty;
-                    std::string curve_name;
-                    advisor->ktyof_ec_curve(epk, kty);
-                    advisor->nameof_ec_curve(epk, curve_name);
-
-                    json_object_set_new(json_epk, "kty", json_string(kty.c_str()));
-                    json_object_set_new(json_epk, "crv", json_string(curve_name.c_str()));
-                    json_object_set_new(json_epk, "x", json_string(base64_encode(&pub1[0], pub1.size(), base64_encoding_t::base64url_encoding).c_str()));
-                    if (pub2.size()) {
-                        json_object_set_new(json_epk, "y", json_string(base64_encode(&pub2[0], pub2.size(), base64_encoding_t::base64url_encoding).c_str()));
-                    }
-                    json_object_set_new(json_header, "epk", json_epk);
-                }
-            } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
-                // iv, tag
-                binary_t iv1 = datamap[crypt_item_t::item_iv];
-                binary_t tag1 = datamap[crypt_item_t::item_tag];
-                json_object_set_new(json_header, "iv", json_string(base64_encode(&iv1[0], iv1.size(), base64_encoding_t::base64url_encoding).c_str()));
-                json_object_set_new(json_header, "tag", json_string(base64_encode(&tag1[0], tag1.size(), base64_encoding_t::base64url_encoding).c_str()));
-            } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
-                // p2s, p2c
-                binary_t p2s = datamap[crypt_item_t::item_p2s];
-                uint32 p2c = variantmap[crypt_item_t::item_p2c].data.i32;
-                json_object_set_new(json_header, "p2s", json_string(base64_encode(&p2s[0], p2s.size(), base64_encoding_t::base64url_encoding).c_str()));
-                json_object_set_new(json_header, "p2c", json_integer(p2c));
-            }
-        }
-        if (flags & jose_flag_t::jose_deflate) {
-            json_object_set_new(json_header, "zip", json_string("DEF"));
-        }
-
-        char* contents = json_dumps(json_header, JOSE_JSON_FORMAT);
-        if (nullptr != contents) {
-            header.insert(header.end(), (byte_t*)contents, (byte_t*)contents + strlen(contents));
-            free(contents);
-        } else {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-    }
-    __finally2 {
-        if (json_header) {
-            json_decref(json_header);
-        }
-    }
-
-    return ret;
-}
-
-static void json_unpack_helper(std::list<json_t*> const& pool, const char* key, const char** ptr) {
-    const char* value = nullptr;
-    int ret = 0;
-
-    __try2 {
-        if (nullptr == key || nullptr == ptr) {
-            __leave2;
-        }
-
-        std::list<json_t*>::const_iterator iter;
-        for (iter = pool.begin(); iter != pool.end(); iter++) {
-            ret = json_unpack(*iter, "{s:s}", key, &value);
-            if (0 == ret) {
-                *ptr = value;
-                break;
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-}
-
-static void json_unpack_helper(std::list<json_t*> const& pool, const char* key, int* ptr) {
-    int value = 0;
-    int ret = 0;
-
-    __try2 {
-        if (nullptr == key || nullptr == ptr) {
-            __leave2;
-        }
-
-        std::list<json_t*>::const_iterator iter;
-        for (iter = pool.begin(); iter != pool.end(); iter++) {
-            ret = json_unpack(*iter, "{s:i}", key, &value);
-            if (0 == ret) {
-                *ptr = value;
-                break;
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-}
-
-static void json_unpack_helper(std::list<json_t*> const& pool, const char* key, json_t** ptr) {
-    json_t* value = nullptr;
-    int ret = 0;
-
-    __try2 {
-        if (nullptr == key || nullptr == ptr) {
-            __leave2;
-        }
-
-        std::list<json_t*>::const_iterator iter;
-        for (iter = pool.begin(); iter != pool.end(); iter++) {
-            ret = json_unpack(*iter, "{s:o}", key, &value);
-            if (0 == ret) {
-                *ptr = value;
-                break;
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-}
-
-return_t json_object_encryption::prepare_decryption(jose_context_t* handle, const char* protected_header, const char* encrypted_key, const char* iv,
-                                                    const char* ciphertext, const char* tag, void* json_t_root, jwe_t& type, jose_encryption_t& item) {
-    return_t ret = errorcode_t::success;
-    json_t* json_protected = nullptr;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    json_t* json_root = (json_t*)json_t_root;
-    std::list<json_t*> pool;
-
-    __try2 {
-        type = jwe_t::jwe_unknown;
-
-        // protected can be nullptr
-        // see RFC 7520 5.12.  Protecting Content Only
-        std::string protected_header_decoded;
-        const char* enc = nullptr;
-        if (protected_header) {
-            protected_header_decoded = base64_decode_careful(protected_header, strlen(protected_header), base64_encoding_t::base64url_encoding);
-            ret = json_open_stream(&json_protected, protected_header_decoded.c_str(), true);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-
-            pool.push_back(json_protected);
-        }
-
-        if (json_root) {
-            // RFC 7520 5.10.  Including Additional Authenticated Data
-            // only the flattened JWE JSON Serialization and general JWE JSON Serialization are possible.
-            // check - test failed !!
-            const char* aad = nullptr;
-            json_unpack(json_root, "{s:s}", "aad", &aad);
-            if (aad) {
-                // Concatenation of the JWE Protected Header ".", and the base64url [RFC4648] encoding of AAD as authenticated data
-                binary_t bin_aad;
-                bin_aad.insert(bin_aad.end(), protected_header, protected_header + strlen(protected_header));
-                bin_aad.insert(bin_aad.end(), '.');
-                bin_aad.insert(bin_aad.end(), aad, aad + strlen(aad));
-                item.datamap[crypt_item_t::item_aad] = bin_aad;
-            }
-
-            // RFC 7520 5.12.  Protecting Content Only
-            // only the general JWE JSON Serialization and flattened JWE JSON Serialization are possible.
-            json_t* unprotected_header = nullptr;
-            json_unpack(json_root, "{s:o}", "unprotected", &unprotected_header);
-            if (unprotected_header) {
-                pool.push_back(unprotected_header);
-            }
-        }
-
-        json_unpack_helper(pool, "enc", &enc);
-
-        const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);
-        if (nullptr == enc_hint) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        type = (jwe_t)enc_hint->type;
-        item.enc_info = enc_hint;
-
-        // do not update if crypt_item_t::item_aad already exists
-        // see RFC 7520 5.10.  Including Additional Authenticated Data
-        if (protected_header) {
-            item.datamap.insert(std::make_pair(crypt_item_t::item_aad, convert(protected_header)));
-        }
-
-        item.header = protected_header_decoded;
-        base64_decode(iv, strlen(iv), item.datamap[crypt_item_t::item_iv], base64_encoding_t::base64url_encoding);
-        base64_decode(tag, strlen(tag), item.datamap[crypt_item_t::item_tag], base64_encoding_t::base64url_encoding);
-        base64_decode(ciphertext, strlen(ciphertext), item.datamap[crypt_item_t::item_ciphertext], base64_encoding_t::base64url_encoding);
-
-        const char* zip = nullptr;
-        json_unpack_helper(pool, "zip", &zip);
-        if (zip) {
-            // RFC 7520 5.9.  Compressed Content
-            item.datamap[crypt_item_t::item_zip] = convert(zip);
-        }
-    }
-    __finally2 {
-        if (json_protected) {
-            json_decref(json_protected);
-        }
-    }
-    return ret;
-}
-
-return_t json_object_encryption::prepare_decryption_recipient(jose_context_t* handle, const char* protected_header, const char* encrypted_key,
-                                                              void* json_t_root, void* json_t_recipient_header, jwa_t& type, jose_recipient_t& recipient) {
-    return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    std::list<json_t*> pool;
-
-    json_t* json_root = (json_t*)json_t_root;
-    json_t* json_recipient_header = (json_t*)json_t_recipient_header;
-    json_t* json_protected = nullptr;
-
-    __try2 {
-        recipient.datamap[crypt_item_t::item_encryptedkey].clear();
-
-        type = jwa_t::jwa_unknown;
-
-        return_t ret_test = errorcode_t::success;
-
-        if (json_recipient_header) {
-            pool.push_back(json_recipient_header);
-        }
-        if (protected_header) {
-            // protected can be nullptr
-            // see RFC 7520 5.12.  Protecting Content Only
-            std::string protected_header_decoded = base64_decode_careful(protected_header, strlen(protected_header), base64_encoding_t::base64url_encoding);
-            ret_test = json_open_stream(&json_protected, protected_header_decoded.c_str(), true);
-            if (errorcode_t::success != ret_test) {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
-            pool.push_back(json_protected);
-        }
-        if (json_root) {
-            // RFC 7520 5.12.  Protecting Content Only
-            // only the general JWE JSON Serialization and flattened JWE JSON Serialization are possible.
-            json_t* unprotected_header = nullptr;
-            json_unpack(json_root, "{s:o}", "unprotected", &unprotected_header);
-            if (unprotected_header) {
-                pool.push_back(unprotected_header);
-            }
-        }
-
-        const char* enc = nullptr;
-        json_unpack_helper(pool, "enc", &enc);
-
-        const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);
-        if (nullptr == enc_hint) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        const char* enckey = nullptr;
-        if (encrypted_key) {
-            enckey = encrypted_key;
-        } else {
-            json_unpack_helper(pool, "encrypted_key", &enckey);
-        }
-        if (enckey) {
-            base64_decode(enckey, strlen(enckey), recipient.datamap[crypt_item_t::item_encryptedkey], base64_encoding_t::base64url_encoding);
-        }
-
-        const char* alg = nullptr;
-        const char* kid = nullptr;
-        json_unpack_helper(pool, "alg", &alg);
-        json_unpack_helper(pool, "kid", &kid);
-        const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);
-        if (nullptr == alg_hint) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        recipient.alg_info = alg_hint;
-        if (kid) {
-            recipient.kid = kid;
-        }
-
-        type = (jwa_t)alg_hint->type;
-        uint32 alg_group = alg_hint->group;
-        if ((jwa_group_t::jwa_group_ecdh == alg_group) || (jwa_group_t::jwa_group_ecdh_aeskw == alg_group)) {  // epk
-            json_t* epk = nullptr;
-            const char* apu_value = nullptr;
-            const char* apv_value = nullptr;
-            json_unpack_helper(pool, "epk", &epk);
-            json_unpack_helper(pool, "apu", &apu_value);
-            json_unpack_helper(pool, "apv", &apv_value);
-
-            const char* kty_value = nullptr;
-            const char* crv_value = nullptr;
-            const char* x_value = nullptr;
-            const char* y_value = nullptr;
-
-            if (epk) {
-                json_unpack(epk, "{s:s,s:s,s:s,s:s}", "kty", &kty_value, "crv", &crv_value, "x", &x_value, "y", &y_value);
-                if (nullptr == kty_value || nullptr == crv_value || nullptr == x_value) {
-                    ret = errorcode_t::bad_data;
-                    __leave2;
-                }
-            } else {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
-
-            json_web_key jwk;
-            crypto_key key;
-            jwk.add_ec_b64u(&key, nullptr, nullptr, crv_value, x_value, y_value, nullptr);
-            recipient.epk = key.select(crypto_use_t::use_enc, true);  // EVP_PKEY_up_ref
-            if (apu_value) {
-                base64_decode(apu_value, strlen(apu_value), recipient.datamap[crypt_item_t::item_apu], base64_encoding_t::base64url_encoding);
-            }
-            if (apv_value) {
-                base64_decode(apv_value, strlen(apv_value), recipient.datamap[crypt_item_t::item_apv], base64_encoding_t::base64url_encoding);
-            }
-        } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {  // iv, tag
-            const char* iv_value = nullptr;
-            const char* tag_value = nullptr;
-            json_unpack_helper(pool, "iv", &iv_value);
-            json_unpack_helper(pool, "tag", &tag_value);
-
-            if (nullptr == iv_value || nullptr == tag_value) {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
-
-            base64_decode(iv_value, strlen(iv_value), recipient.datamap[crypt_item_t::item_iv], base64_encoding_t::base64url_encoding);
-            base64_decode(tag_value, strlen(tag_value), recipient.datamap[crypt_item_t::item_tag], base64_encoding_t::base64url_encoding);
-        } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {  // p2s, p2c
-            const char* p2s = nullptr;
-            int p2c = -1;
-            json_unpack_helper(pool, "p2s", &p2s);
-            json_unpack_helper(pool, "p2c", &p2c);
-
-            if (nullptr == p2s || -1 == p2c) {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
-
-            base64_decode(p2s, strlen(p2s), recipient.datamap[crypt_item_t::item_p2s], base64_encoding_t::base64url_encoding);
-            recipient.p2c = p2c;
-        }
-    }
-    __finally2 {
-        if (json_protected) {
-            json_decref(json_protected);
-        }
-    }
-
-    return ret;
-}
-
-return_t json_object_encryption::prepare_decryption(jose_context_t* handle, const char* input) {
-    return_t ret = errorcode_t::success;
-    json_t* json_root = nullptr;
-    split_context_t* split_handle = nullptr;
-
-    __try2 {
-        if (nullptr == handle || nullptr == input) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        return_t ret_test = json_open_stream(&json_root, input, true);
-        if (errorcode_t::success == ret_test) {
-            jose_encryption_t item;
-
-            json_t* json_recipients = nullptr;
-            json_unpack(json_root, "{s:o}", "recipients", &json_recipients);
-
-            if (json_recipients) {  // jose_serialization_t::jose_json
-                if (json_is_array(json_recipients)) {
-                    const char* protected_header = nullptr;
-                    const char* iv = nullptr;
-                    const char* ciphertext = nullptr;
-                    const char* tag = nullptr;
-
-                    json_unpack(json_root, "{s:s}", "protected", &protected_header);
-                    json_unpack(json_root, "{s:s,s:s,s:s}", "iv", &iv, "ciphertext", &ciphertext, "tag", &tag);
-
-                    jwe_t enc_type = jwe_t::jwe_unknown;
-                    prepare_decryption(handle, protected_header, nullptr, iv, ciphertext, tag, json_root, enc_type, item);
-
-                    size_t array_size = json_array_size(json_recipients);
-                    for (size_t index = 0; index < array_size; index++) {
-                        json_t* json_recipient = json_array_get(json_recipients, index);
-                        json_t* json_header = nullptr;
-                        jose_recipient_t recipient;
-                        jwa_t alg_type = jwa_t::jwa_unknown;
-
-                        const char* encrypted_key = nullptr;
-                        // char* header = nullptr;
-
-                        json_unpack(json_recipient, "{s:o}", "header", &json_header);
-                        json_unpack(json_recipient, "{s:s}", "encrypted_key", &encrypted_key);
-
-                        prepare_decryption_recipient(handle, protected_header, encrypted_key, json_root, json_header, alg_type, recipient);
-                        item.recipients.insert(std::make_pair(alg_type, recipient));
-                    }
-                    handle->encryptions.insert(std::make_pair(enc_type, item));
-                } else {
-                    ret = errorcode_t::bad_data;
-                    __leave2;
-                }
-            } else {  // jose_serialization_t::jose_flatjson
-                const char* protected_header = nullptr;
-                const char* encrypted_key = nullptr;
-                const char* iv = nullptr;
-                const char* ciphertext = nullptr;
-                const char* tag = nullptr;
-
-                json_unpack(json_root, "{s:s}", "protected", &protected_header);
-                json_unpack(json_root, "{s:s,s:s,s:s}", "iv", &iv, "ciphertext", &ciphertext, "tag", &tag);
-                json_unpack(json_root, "{s:s}", "encrypted_key", &encrypted_key);  // not exist in case of "dir", "ECDH-ES"
-
-                jose_recipient_t recipient;
-                jwe_t enc_type = jwe_t::jwe_unknown;
-                jwa_t alg_type = jwa_t::jwa_unknown;
-                prepare_decryption(handle, protected_header, encrypted_key, iv, ciphertext, tag, json_root, enc_type, item);
-                prepare_decryption_recipient(handle, protected_header, encrypted_key, json_root, nullptr, alg_type, recipient);
-
-                item.recipients.insert(std::make_pair(alg_type, recipient));
-                handle->encryptions.insert(std::make_pair(enc_type, item));
-            }
-        } else {  // jose_serialization_t::jose_compact
-            size_t count = 0;
-            split_begin(&split_handle, input, ".");
-            split_count(split_handle, count);
-            if (5 != count) {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
-
-            std::string protected_header;
-            std::string encrypted_key;
-            std::string iv;
-            std::string ciphertext;
-            std::string tag;
-
-            /* base64url encoded */
-            split_get(split_handle, 0, protected_header);
-            split_get(split_handle, 1, encrypted_key);
-            split_get(split_handle, 2, iv);
-            split_get(split_handle, 3, ciphertext);
-            split_get(split_handle, 4, tag);
-
-            jose_encryption_t item;
-            jose_recipient_t recipient;
-            jwe_t enc_type = jwe_t::jwe_unknown;
-            jwa_t alg_type = jwa_t::jwa_unknown;
-            prepare_decryption(handle, protected_header.c_str(), encrypted_key.c_str(), iv.c_str(), ciphertext.c_str(), tag.c_str(), nullptr, enc_type, item);
-            prepare_decryption_recipient(handle, protected_header.c_str(), encrypted_key.c_str(), nullptr, nullptr, alg_type, recipient);
-
-            item.recipients.insert(std::make_pair(alg_type, recipient));
-            handle->encryptions.insert(std::make_pair(enc_type, item));
-        }
-    }
-    __finally2 {
-        if (split_handle) {
-            split_end(split_handle);
-        }
-        if (json_root) {
-            json_decref(json_root);
-        }
-    }
-    return ret;
-}
-
-return_t json_object_encryption::write_encryption(jose_context_t* handle, std::string& output, jose_serialization_t type) {
+return_t json_object_encryption::composer::compose_encryption(jose_context_t* handle, std::string& output, jose_serialization_t type) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -1693,6 +983,726 @@ return_t json_object_encryption::write_encryption(jose_context_t* handle, std::s
     __finally2 {
         // do nothing
     }
+    return ret;
+}
+
+return_t json_object_encryption::composer::compose_encryption_aead_header(std::string const& source_encoded, binary_t const& tag, binary_t& aad,
+                                                                          std::string& output_encoded) {
+    return_t ret = errorcode_t::success;
+    json_t* json_header = nullptr;
+
+    output_encoded.clear();
+
+    /* compact, flattened */
+    // protected_header
+    json_open_stream(&json_header, source_encoded.c_str(), true);
+    if (json_header) {
+        const char* alg_value = nullptr;
+        const char* tag_value = nullptr;
+        json_unpack(json_header, "{s:s}", "alg", &alg_value);
+        json_unpack(json_header, "{s:s}", "tag", &tag_value);
+        if (alg_value) {
+            if ((nullptr == tag_value) || (tag_value && (0 == strlen(tag_value)))) {
+                std::string tag_encoded;
+                tag_encoded = base64_encode(&tag[0], tag.size(), base64_encoding_t::base64url_encoding);
+
+                json_object_set_new(json_header, "tag", json_string(tag_encoded.c_str()));
+                char* contents = json_dumps(json_header, JOSE_JSON_FORMAT);
+                if (nullptr != contents) {
+                    std::string header = contents;
+                    base64_encode((byte_t*)header.c_str(), header.size(), aad, base64_encoding_t::base64url_encoding);  // update for encryption
+                    output_encoded = header;                                                                            // update for JWE.output
+                    free(contents);
+                }
+            }
+        }
+        json_decref(json_header);
+    }
+    return ret;
+}
+
+return_t json_object_encryption::composer::compose_encryption_dorandom(jose_context_t* handle, jwe_t enc, std::list<jwa_t> const& algs) {
+    return_t ret = errorcode_t::success;
+    openssl_prng rand;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (algs.empty()) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        jose_encryptions_map_t::iterator iter = handle->encryptions.find(enc);
+        if (handle->encryptions.end() == iter) {
+            const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
+            if (nullptr == enc_hint) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+
+            const EVP_CIPHER* enc_evp_cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(enc_hint->crypt_alg, enc_hint->crypt_mode);
+            if (nullptr == enc_evp_cipher) {
+                ret = errorcode_t::internal_error;
+                __leave2;
+            }
+
+            uint32 enc_group = enc_hint->group;
+            int keysize = EVP_CIPHER_key_length(enc_evp_cipher);
+            int ivsize = EVP_CIPHER_iv_length(enc_evp_cipher);
+            /* EVP_CIPHER_CTX_key_length, EVP_CIPHER_CTX_iv_length
+             * [openssl 3.0.3] compatibility problem
+             * EVP_CIPHER_..._length return EVP_CTRL_RET_UNSUPPORTED(-1)
+             */
+            adjust_range(keysize, 0, EVP_MAX_KEY_LENGTH);
+            adjust_range(ivsize, 0, EVP_MAX_IV_LENGTH);
+            if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
+                keysize *= 2;
+            }
+
+            jose_encryption_t item;
+            item.enc_info = enc_hint;
+
+            /* generate cek if not included "dir", "ECDH-ES" */
+            rand.random(item.datamap[crypt_item_t::item_cek], keysize);
+            rand.random(item.datamap[crypt_item_t::item_iv], ivsize);
+
+            binary_t protected_header;
+
+            if (1 == algs.size()) {
+                jwa_t alg = algs.front();
+
+                // const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm (alg);  // key management
+                std::string kid;
+                EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
+                if (nullptr == pkey) {
+                    ret = errorcode_t::not_found;
+                    __leave2;
+                }
+
+                crypt_datamap_t datamap;
+                crypt_variantmap_t variantmap;
+                jose_recipient_t recipient;
+                docompose_encryption_recipient_random(alg, pkey, recipient, datamap, variantmap);
+
+                binary_t header;
+                docompose_encryption_header_parameter(protected_header, enc, alg, jose_compose_t::jose_enc_alg, kid, datamap, variantmap, handle->flags);
+                docompose_encryption_header_parameter(header, jwe_t::jwe_unknown, alg, jose_compose_t::jose_alg_only, kid, datamap, variantmap);
+
+                item.header.assign((char*)&protected_header[0], protected_header.size());
+                base64_encode(&protected_header[0], protected_header.size(), item.datamap[crypt_item_t::item_aad], base64_encoding_t::base64url_encoding);
+
+                recipient.header = std::string((char*)&header[0], header.size());
+                recipient.kid = kid;
+                item.recipients.insert(std::make_pair(alg, recipient));
+            } else if (algs.size() > 1) {
+                docompose_protected_header(protected_header, enc, jwa_t::jwa_unknown, jose_compose_t::jose_enc_only, "", handle->flags);
+                item.header.assign((char*)&protected_header[0], protected_header.size());
+                base64_encode(&protected_header[0], protected_header.size(), item.datamap[crypt_item_t::item_aad], base64_encoding_t::base64url_encoding);
+
+                for (std::list<jwa_t>::const_iterator iter = algs.begin(); iter != algs.end(); iter++) {
+                    jwa_t alg = *iter;
+
+                    // const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm (alg);  // key management
+                    std::string kid;
+                    EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
+
+                    crypt_datamap_t datamap;
+                    crypt_variantmap_t variantmap;
+                    jose_recipient_t recipient;
+
+                    recipient.kid = kid;
+                    docompose_encryption_recipient_random(alg, pkey, recipient, datamap, variantmap);
+
+                    binary_t header;
+                    docompose_encryption_header_parameter(header, jwe_t::jwe_unknown, alg, jose_compose_t::jose_alg_only, kid, datamap, variantmap);
+                    recipient.header = std::string((char*)&header[0], header.size());
+                    item.recipients.insert(std::make_pair(alg, recipient));
+                }
+            }
+
+            handle->protected_header = protected_header;
+            handle->encryptions.insert(std::make_pair(enc, item));
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t json_object_encryption::composer::docompose_protected_header(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, std::string const& kid,
+                                                                      uint32 flags) {
+    return_t ret = errorcode_t::success;
+    crypt_datamap_t datamap;
+    crypt_variantmap_t variantmap;
+
+    ret = docompose_encryption_header_parameter(header, enc, alg, flag, kid, datamap, variantmap, flags);
+    return ret;
+}
+
+return_t json_object_encryption::composer::docompose_encryption_header_parameter(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag,
+                                                                                 std::string const& kid, crypt_datamap_t& datamap,
+                                                                                 crypt_variantmap_t& variantmap, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    json_t* json_header = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        header.clear();
+
+        if (0 == (jose_compose_t::jose_enc_alg & flag)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        const char* enc_value = advisor->nameof_jose_encryption(enc);
+        const char* alg_value = advisor->nameof_jose_algorithm(alg);
+
+        json_header = json_object();
+
+        if (jose_compose_t::jose_enc_only & flag) {
+            // const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);
+            if (nullptr == enc_value) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
+            json_object_set_new(json_header, "enc", json_string(enc_value));
+        }
+        if (jose_compose_t::jose_alg_only & flag) {
+            const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);
+            if (nullptr == alg_hint) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+            uint32 alg_group = alg_hint->group;
+
+            json_object_set_new(json_header, "alg", json_string(alg_value));
+            if (kid.size()) {
+                json_object_set_new(json_header, "kid", json_string(kid.c_str()));
+            }
+            if ((jwa_group_t::jwa_group_ecdh == alg_group) || (jwa_group_t::jwa_group_ecdh_aeskw == alg_group)) {
+                // epk, apu, apv
+                binary_t pub1;
+                binary_t pub2;
+                EVP_PKEY* epk = (EVP_PKEY*)variantmap[crypt_item_t::item_epk].data.p;
+                crypto_key::get_public_key(epk, pub1, pub2);
+                json_t* json_epk = json_object();
+                if (json_epk) {
+                    std::string kty;
+                    std::string curve_name;
+                    advisor->ktyof_ec_curve(epk, kty);
+                    advisor->nameof_ec_curve(epk, curve_name);
+
+                    json_object_set_new(json_epk, "kty", json_string(kty.c_str()));
+                    json_object_set_new(json_epk, "crv", json_string(curve_name.c_str()));
+                    json_object_set_new(json_epk, "x", json_string(base64_encode(&pub1[0], pub1.size(), base64_encoding_t::base64url_encoding).c_str()));
+                    if (pub2.size()) {
+                        json_object_set_new(json_epk, "y", json_string(base64_encode(&pub2[0], pub2.size(), base64_encoding_t::base64url_encoding).c_str()));
+                    }
+                    json_object_set_new(json_header, "epk", json_epk);
+                }
+            } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
+                // iv, tag
+                binary_t iv1 = datamap[crypt_item_t::item_iv];
+                binary_t tag1 = datamap[crypt_item_t::item_tag];
+                json_object_set_new(json_header, "iv", json_string(base64_encode(&iv1[0], iv1.size(), base64_encoding_t::base64url_encoding).c_str()));
+                json_object_set_new(json_header, "tag", json_string(base64_encode(&tag1[0], tag1.size(), base64_encoding_t::base64url_encoding).c_str()));
+            } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
+                // p2s, p2c
+                binary_t p2s = datamap[crypt_item_t::item_p2s];
+                uint32 p2c = variantmap[crypt_item_t::item_p2c].data.i32;
+                json_object_set_new(json_header, "p2s", json_string(base64_encode(&p2s[0], p2s.size(), base64_encoding_t::base64url_encoding).c_str()));
+                json_object_set_new(json_header, "p2c", json_integer(p2c));
+            }
+        }
+        if (flags & jose_flag_t::jose_deflate) {
+            json_object_set_new(json_header, "zip", json_string("DEF"));
+        }
+
+        char* contents = json_dumps(json_header, JOSE_JSON_FORMAT);
+        if (nullptr != contents) {
+            header.insert(header.end(), (byte_t*)contents, (byte_t*)contents + strlen(contents));
+            free(contents);
+        } else {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+    }
+    __finally2 {
+        if (json_header) {
+            json_decref(json_header);
+        }
+    }
+
+    return ret;
+}
+
+return_t json_object_encryption::composer::docompose_encryption_recipient_random(jwa_t alg, EVP_PKEY* pkey, jose_recipient_t& recipient,
+                                                                                 crypt_datamap_t& datamap, crypt_variantmap_t& variantmap) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);  // key management
+    uint32 alg_group = alg_hint->group;
+
+    recipient.alg_info = alg_hint;
+
+    if ((jwa_group_t::jwa_group_ecdh == alg_group) || (jwa_group_t::jwa_group_ecdh_aeskw == alg_group)) {
+        // epk
+        uint32 nid = 0;
+        crypto_key key;
+        crypto_keychain keyset;
+        std::string kid;
+        nidof_evp_pkey(pkey, nid);                                // "crv" of key
+        keyset.add_ec(&key, nid);                                 // same "crv"
+        recipient.epk = key.select(crypto_use_t::use_enc, true);  // EVP_PKEY_up_ref
+        variant_t vt;
+        variant_set_pointer(vt, recipient.epk);
+        variantmap[crypt_item_t::item_epk] = vt;
+    } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
+        // iv, tag
+        const EVP_CIPHER* alg_evp_cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(alg_hint->crypt_alg, alg_hint->crypt_mode);
+        int ivsize = EVP_CIPHER_iv_length(alg_evp_cipher);
+        openssl_prng rand;
+        rand.random(recipient.datamap[crypt_item_t::item_iv], ivsize);
+        datamap[crypt_item_t::item_iv] = recipient.datamap[crypt_item_t::item_iv];
+        datamap[crypt_item_t::item_tag] = recipient.datamap[crypt_item_t::item_tag];
+    } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
+        // p2s, p2c
+        openssl_prng rand;
+        rand.random(recipient.datamap[crypt_item_t::item_p2s], 64);
+        rand.random(recipient.p2c, 0xffff);
+        variant_t vt;
+        variant_set_int32(vt, recipient.p2c);
+        datamap[crypt_item_t::item_p2s] = recipient.datamap[crypt_item_t::item_p2s];
+        variantmap[crypt_item_t::item_p2c] = vt;
+    }
+    return ret;
+}
+
+static void json_unpack_helper(std::list<json_t*> const& pool, const char* key, const char** ptr) {
+    const char* value = nullptr;
+    int ret = 0;
+
+    __try2 {
+        if (nullptr == key || nullptr == ptr) {
+            __leave2;
+        }
+
+        std::list<json_t*>::const_iterator iter;
+        for (iter = pool.begin(); iter != pool.end(); iter++) {
+            ret = json_unpack(*iter, "{s:s}", key, &value);
+            if (0 == ret) {
+                *ptr = value;
+                break;
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+}
+
+static void json_unpack_helper(std::list<json_t*> const& pool, const char* key, int* ptr) {
+    int value = 0;
+    int ret = 0;
+
+    __try2 {
+        if (nullptr == key || nullptr == ptr) {
+            __leave2;
+        }
+
+        std::list<json_t*>::const_iterator iter;
+        for (iter = pool.begin(); iter != pool.end(); iter++) {
+            ret = json_unpack(*iter, "{s:i}", key, &value);
+            if (0 == ret) {
+                *ptr = value;
+                break;
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+}
+
+static void json_unpack_helper(std::list<json_t*> const& pool, const char* key, json_t** ptr) {
+    json_t* value = nullptr;
+    int ret = 0;
+
+    __try2 {
+        if (nullptr == key || nullptr == ptr) {
+            __leave2;
+        }
+
+        std::list<json_t*>::const_iterator iter;
+        for (iter = pool.begin(); iter != pool.end(); iter++) {
+            ret = json_unpack(*iter, "{s:o}", key, &value);
+            if (0 == ret) {
+                *ptr = value;
+                break;
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+}
+
+return_t json_object_encryption::composer::parse_decryption(jose_context_t* handle, const char* input) {
+    return_t ret = errorcode_t::success;
+    json_t* json_root = nullptr;
+    split_context_t* split_handle = nullptr;
+
+    __try2 {
+        if (nullptr == handle || nullptr == input) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        return_t ret_test = json_open_stream(&json_root, input, true);
+        if (errorcode_t::success == ret_test) {
+            jose_encryption_t item;
+
+            json_t* json_recipients = nullptr;
+            json_unpack(json_root, "{s:o}", "recipients", &json_recipients);
+
+            if (json_recipients) {  // jose_serialization_t::jose_json
+                if (json_is_array(json_recipients)) {
+                    const char* protected_header = nullptr;
+                    const char* iv = nullptr;
+                    const char* ciphertext = nullptr;
+                    const char* tag = nullptr;
+
+                    json_unpack(json_root, "{s:s}", "protected", &protected_header);
+                    json_unpack(json_root, "{s:s,s:s,s:s}", "iv", &iv, "ciphertext", &ciphertext, "tag", &tag);
+
+                    jwe_t enc_type = jwe_t::jwe_unknown;
+                    doparse_decryption(handle, protected_header, nullptr, iv, ciphertext, tag, json_root, enc_type, item);
+
+                    size_t array_size = json_array_size(json_recipients);
+                    for (size_t index = 0; index < array_size; index++) {
+                        json_t* json_recipient = json_array_get(json_recipients, index);
+                        json_t* json_header = nullptr;
+                        jose_recipient_t recipient;
+                        jwa_t alg_type = jwa_t::jwa_unknown;
+
+                        const char* encrypted_key = nullptr;
+                        // char* header = nullptr;
+
+                        json_unpack(json_recipient, "{s:o}", "header", &json_header);
+                        json_unpack(json_recipient, "{s:s}", "encrypted_key", &encrypted_key);
+
+                        doparse_decryption_recipient(handle, protected_header, encrypted_key, json_root, json_header, alg_type, recipient);
+                        item.recipients.insert(std::make_pair(alg_type, recipient));
+                    }
+                    handle->encryptions.insert(std::make_pair(enc_type, item));
+                } else {
+                    ret = errorcode_t::bad_data;
+                    __leave2;
+                }
+            } else {  // jose_serialization_t::jose_flatjson
+                const char* protected_header = nullptr;
+                const char* encrypted_key = nullptr;
+                const char* iv = nullptr;
+                const char* ciphertext = nullptr;
+                const char* tag = nullptr;
+
+                json_unpack(json_root, "{s:s}", "protected", &protected_header);
+                json_unpack(json_root, "{s:s,s:s,s:s}", "iv", &iv, "ciphertext", &ciphertext, "tag", &tag);
+                json_unpack(json_root, "{s:s}", "encrypted_key", &encrypted_key);  // not exist in case of "dir", "ECDH-ES"
+
+                jose_recipient_t recipient;
+                jwe_t enc_type = jwe_t::jwe_unknown;
+                jwa_t alg_type = jwa_t::jwa_unknown;
+                doparse_decryption(handle, protected_header, encrypted_key, iv, ciphertext, tag, json_root, enc_type, item);
+                doparse_decryption_recipient(handle, protected_header, encrypted_key, json_root, nullptr, alg_type, recipient);
+
+                item.recipients.insert(std::make_pair(alg_type, recipient));
+                handle->encryptions.insert(std::make_pair(enc_type, item));
+            }
+        } else {  // jose_serialization_t::jose_compact
+            size_t count = 0;
+            split_begin(&split_handle, input, ".");
+            split_count(split_handle, count);
+            if (5 != count) {
+                ret = errorcode_t::bad_data;
+                __leave2;
+            }
+
+            std::string protected_header;
+            std::string encrypted_key;
+            std::string iv;
+            std::string ciphertext;
+            std::string tag;
+
+            /* base64url encoded */
+            split_get(split_handle, 0, protected_header);
+            split_get(split_handle, 1, encrypted_key);
+            split_get(split_handle, 2, iv);
+            split_get(split_handle, 3, ciphertext);
+            split_get(split_handle, 4, tag);
+
+            jose_encryption_t item;
+            jose_recipient_t recipient;
+            jwe_t enc_type = jwe_t::jwe_unknown;
+            jwa_t alg_type = jwa_t::jwa_unknown;
+            doparse_decryption(handle, protected_header.c_str(), encrypted_key.c_str(), iv.c_str(), ciphertext.c_str(), tag.c_str(), nullptr, enc_type, item);
+            doparse_decryption_recipient(handle, protected_header.c_str(), encrypted_key.c_str(), nullptr, nullptr, alg_type, recipient);
+
+            item.recipients.insert(std::make_pair(alg_type, recipient));
+            handle->encryptions.insert(std::make_pair(enc_type, item));
+        }
+    }
+    __finally2 {
+        if (split_handle) {
+            split_end(split_handle);
+        }
+        if (json_root) {
+            json_decref(json_root);
+        }
+    }
+    return ret;
+}
+
+return_t json_object_encryption::composer::doparse_decryption(jose_context_t* handle, const char* protected_header, const char* encrypted_key, const char* iv,
+                                                              const char* ciphertext, const char* tag, void* json_t_root, jwe_t& type,
+                                                              jose_encryption_t& item) {
+    return_t ret = errorcode_t::success;
+    json_t* json_protected = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    json_t* json_root = (json_t*)json_t_root;
+    std::list<json_t*> pool;
+
+    __try2 {
+        type = jwe_t::jwe_unknown;
+
+        // protected can be nullptr
+        // see RFC 7520 5.12.  Protecting Content Only
+        std::string protected_header_decoded;
+        const char* enc = nullptr;
+        if (protected_header) {
+            protected_header_decoded = base64_decode_careful(protected_header, strlen(protected_header), base64_encoding_t::base64url_encoding);
+            ret = json_open_stream(&json_protected, protected_header_decoded.c_str(), true);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            pool.push_back(json_protected);
+        }
+
+        if (json_root) {
+            // RFC 7520 5.10.  Including Additional Authenticated Data
+            // only the flattened JWE JSON Serialization and general JWE JSON Serialization are possible.
+            // check - test failed !!
+            const char* aad = nullptr;
+            json_unpack(json_root, "{s:s}", "aad", &aad);
+            if (aad) {
+                // Concatenation of the JWE Protected Header ".", and the base64url [RFC4648] encoding of AAD as authenticated data
+                binary_t bin_aad;
+                bin_aad.insert(bin_aad.end(), protected_header, protected_header + strlen(protected_header));
+                bin_aad.insert(bin_aad.end(), '.');
+                bin_aad.insert(bin_aad.end(), aad, aad + strlen(aad));
+                item.datamap[crypt_item_t::item_aad] = bin_aad;
+            }
+
+            // RFC 7520 5.12.  Protecting Content Only
+            // only the general JWE JSON Serialization and flattened JWE JSON Serialization are possible.
+            json_t* unprotected_header = nullptr;
+            json_unpack(json_root, "{s:o}", "unprotected", &unprotected_header);
+            if (unprotected_header) {
+                pool.push_back(unprotected_header);
+            }
+        }
+
+        json_unpack_helper(pool, "enc", &enc);
+
+        const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);
+        if (nullptr == enc_hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        type = (jwe_t)enc_hint->type;
+        item.enc_info = enc_hint;
+
+        // do not update if crypt_item_t::item_aad already exists
+        // see RFC 7520 5.10.  Including Additional Authenticated Data
+        if (protected_header) {
+            item.datamap.insert(std::make_pair(crypt_item_t::item_aad, convert(protected_header)));
+        }
+
+        item.header = protected_header_decoded;
+        base64_decode(iv, strlen(iv), item.datamap[crypt_item_t::item_iv], base64_encoding_t::base64url_encoding);
+        base64_decode(tag, strlen(tag), item.datamap[crypt_item_t::item_tag], base64_encoding_t::base64url_encoding);
+        base64_decode(ciphertext, strlen(ciphertext), item.datamap[crypt_item_t::item_ciphertext], base64_encoding_t::base64url_encoding);
+
+        const char* zip = nullptr;
+        json_unpack_helper(pool, "zip", &zip);
+        if (zip) {
+            // RFC 7520 5.9.  Compressed Content
+            item.datamap[crypt_item_t::item_zip] = convert(zip);
+        }
+    }
+    __finally2 {
+        if (json_protected) {
+            json_decref(json_protected);
+        }
+    }
+    return ret;
+}
+
+return_t json_object_encryption::composer::doparse_decryption_recipient(jose_context_t* handle, const char* protected_header, const char* encrypted_key,
+                                                                        void* json_t_root, void* json_t_recipient_header, jwa_t& type,
+                                                                        jose_recipient_t& recipient) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    std::list<json_t*> pool;
+
+    json_t* json_root = (json_t*)json_t_root;
+    json_t* json_recipient_header = (json_t*)json_t_recipient_header;
+    json_t* json_protected = nullptr;
+
+    __try2 {
+        recipient.datamap[crypt_item_t::item_encryptedkey].clear();
+
+        type = jwa_t::jwa_unknown;
+
+        return_t ret_test = errorcode_t::success;
+
+        if (json_recipient_header) {
+            pool.push_back(json_recipient_header);
+        }
+        if (protected_header) {
+            // protected can be nullptr
+            // see RFC 7520 5.12.  Protecting Content Only
+            std::string protected_header_decoded = base64_decode_careful(protected_header, strlen(protected_header), base64_encoding_t::base64url_encoding);
+            ret_test = json_open_stream(&json_protected, protected_header_decoded.c_str(), true);
+            if (errorcode_t::success != ret_test) {
+                ret = errorcode_t::bad_data;
+                __leave2;
+            }
+            pool.push_back(json_protected);
+        }
+        if (json_root) {
+            // RFC 7520 5.12.  Protecting Content Only
+            // only the general JWE JSON Serialization and flattened JWE JSON Serialization are possible.
+            json_t* unprotected_header = nullptr;
+            json_unpack(json_root, "{s:o}", "unprotected", &unprotected_header);
+            if (unprotected_header) {
+                pool.push_back(unprotected_header);
+            }
+        }
+
+        const char* enc = nullptr;
+        json_unpack_helper(pool, "enc", &enc);
+
+        const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);
+        if (nullptr == enc_hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        const char* enckey = nullptr;
+        if (encrypted_key) {
+            enckey = encrypted_key;
+        } else {
+            json_unpack_helper(pool, "encrypted_key", &enckey);
+        }
+        if (enckey) {
+            base64_decode(enckey, strlen(enckey), recipient.datamap[crypt_item_t::item_encryptedkey], base64_encoding_t::base64url_encoding);
+        }
+
+        const char* alg = nullptr;
+        const char* kid = nullptr;
+        json_unpack_helper(pool, "alg", &alg);
+        json_unpack_helper(pool, "kid", &kid);
+        const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);
+        if (nullptr == alg_hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        recipient.alg_info = alg_hint;
+        if (kid) {
+            recipient.kid = kid;
+        }
+
+        type = (jwa_t)alg_hint->type;
+        uint32 alg_group = alg_hint->group;
+        if ((jwa_group_t::jwa_group_ecdh == alg_group) || (jwa_group_t::jwa_group_ecdh_aeskw == alg_group)) {  // epk
+            json_t* epk = nullptr;
+            const char* apu_value = nullptr;
+            const char* apv_value = nullptr;
+            json_unpack_helper(pool, "epk", &epk);
+            json_unpack_helper(pool, "apu", &apu_value);
+            json_unpack_helper(pool, "apv", &apv_value);
+
+            const char* kty_value = nullptr;
+            const char* crv_value = nullptr;
+            const char* x_value = nullptr;
+            const char* y_value = nullptr;
+
+            if (epk) {
+                json_unpack(epk, "{s:s,s:s,s:s,s:s}", "kty", &kty_value, "crv", &crv_value, "x", &x_value, "y", &y_value);
+                if (nullptr == kty_value || nullptr == crv_value || nullptr == x_value) {
+                    ret = errorcode_t::bad_data;
+                    __leave2;
+                }
+            } else {
+                ret = errorcode_t::bad_data;
+                __leave2;
+            }
+
+            json_web_key jwk;
+            crypto_key key;
+            jwk.add_ec_b64u(&key, nullptr, nullptr, crv_value, x_value, y_value, nullptr);
+            recipient.epk = key.select(crypto_use_t::use_enc, true);  // EVP_PKEY_up_ref
+            if (apu_value) {
+                base64_decode(apu_value, strlen(apu_value), recipient.datamap[crypt_item_t::item_apu], base64_encoding_t::base64url_encoding);
+            }
+            if (apv_value) {
+                base64_decode(apv_value, strlen(apv_value), recipient.datamap[crypt_item_t::item_apv], base64_encoding_t::base64url_encoding);
+            }
+        } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {  // iv, tag
+            const char* iv_value = nullptr;
+            const char* tag_value = nullptr;
+            json_unpack_helper(pool, "iv", &iv_value);
+            json_unpack_helper(pool, "tag", &tag_value);
+
+            if (nullptr == iv_value || nullptr == tag_value) {
+                ret = errorcode_t::bad_data;
+                __leave2;
+            }
+
+            base64_decode(iv_value, strlen(iv_value), recipient.datamap[crypt_item_t::item_iv], base64_encoding_t::base64url_encoding);
+            base64_decode(tag_value, strlen(tag_value), recipient.datamap[crypt_item_t::item_tag], base64_encoding_t::base64url_encoding);
+        } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {  // p2s, p2c
+            const char* p2s = nullptr;
+            int p2c = -1;
+            json_unpack_helper(pool, "p2s", &p2s);
+            json_unpack_helper(pool, "p2c", &p2c);
+
+            if (nullptr == p2s || -1 == p2c) {
+                ret = errorcode_t::bad_data;
+                __leave2;
+            }
+
+            base64_decode(p2s, strlen(p2s), recipient.datamap[crypt_item_t::item_p2s], base64_encoding_t::base64url_encoding);
+            recipient.p2c = p2c;
+        }
+    }
+    __finally2 {
+        if (json_protected) {
+            json_decref(json_protected);
+        }
+    }
+
     return ret;
 }
 

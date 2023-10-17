@@ -30,6 +30,7 @@ namespace crypto {
  * @param   hash_algorithm_t alg [in]
  */
 return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info, hash_algorithm_t alg);
+return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info, const char* alg);
 /**
  * @brief   PBKDF2
  * @param   binary_t& derived [out]

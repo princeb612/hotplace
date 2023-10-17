@@ -513,16 +513,59 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
 
 crypt_poweredby_t openssl_hash::get_type() { return crypt_poweredby_t::openssl; }
 
+return_t hmac(binary_t& output, const char* alg, binary_t const& key, binary_t const& input) {
+    return_t ret = errorcode_t::success;
+    openssl_hash hash;
+    hash_context_t* handle = nullptr;
+
+    __try2 {
+        ret = hash.open_byname(&handle, alg, &key[0], key.size());
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        hash.init(handle);
+        hash.update(handle, &input[0], input.size());
+        hash.finalize(handle, output);
+    }
+    __finally2 { hash.close(handle); }
+
+    return ret;
+}
+
 return_t hmac(binary_t& output, hash_algorithm_t alg, binary_t const& key, binary_t const& input) {
     return_t ret = errorcode_t::success;
     openssl_hash hash;
     hash_context_t* handle = nullptr;
 
-    hash.open(&handle, alg, &key[0], key.size());
-    hash.init(handle);
-    hash.update(handle, &input[0], input.size());
-    hash.finalize(handle, output);
-    hash.close(handle);
+    __try2 {
+        ret = hash.open(&handle, alg, &key[0], key.size());
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        hash.init(handle);
+        hash.update(handle, &input[0], input.size());
+        hash.finalize(handle, output);
+    }
+    __finally2 { hash.close(handle); }
+
+    return ret;
+}
+
+return_t cmac(binary_t& output, const char* alg, binary_t const& key, binary_t const& input) {
+    return_t ret = errorcode_t::success;
+    openssl_hash hash;
+    hash_context_t* handle = nullptr;
+
+    __try2 {
+        ret = hash.open_byname(&handle, alg, &key[0], key.size());
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        hash.init(handle);
+        hash.update(handle, &input[0], input.size());
+        hash.finalize(handle, output);
+    }
+    __finally2 { hash.close(handle); }
 
     return ret;
 }
@@ -532,11 +575,17 @@ return_t cmac(binary_t& output, crypt_algorithm_t alg, binary_t const& key, bina
     openssl_hash hash;
     hash_context_t* handle = nullptr;
 
-    hash.open(&handle, alg, &key[0], key.size());
-    hash.init(handle);
-    hash.update(handle, &input[0], input.size());
-    hash.finalize(handle, output);
-    hash.close(handle);
+    __try2 {
+        ret = hash.open(&handle, alg, &key[0], key.size());
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        hash.init(handle);
+        hash.update(handle, &input[0], input.size());
+        hash.finalize(handle, output);
+    }
+    __finally2 { hash.close(handle); }
+
     return ret;
 }
 

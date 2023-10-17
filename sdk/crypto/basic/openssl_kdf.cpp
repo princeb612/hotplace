@@ -70,6 +70,25 @@ return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t 
     return ret;
 }
 
+return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info, const char* alg) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        hash_algorithm_t ha;
+        ret = advisor->find_evp_md(alg, ha);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = kdf_hkdf(derived, dlen, key, salt, info, ha);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t kdf_pbkdf2(binary_t& derived, size_t dlen, std::string const& password, binary_t const& salt, int iter, hash_algorithm_t alg) {
     return kdf_pbkdf2(derived, dlen, password.c_str(), password.size(), &salt[0], salt.size(), iter, alg);
 }
