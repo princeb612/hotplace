@@ -2640,12 +2640,14 @@ void test_github_example() {
         } else {
             cose_context_t* handle = nullptr;
             cose.open(&handle);
+#if defined DEBUG
             if (vector[i].enc.aad_hex) {
                 cose.set(handle, cose_flag_t::cose_tv_aad, base16_decode(vector[i].enc.aad_hex));
             }
             if (vector[i].enc.cek_hex) {
                 cose.set(handle, cose_flag_t::cose_tv_cek, base16_decode(vector[i].enc.cek_hex));
             }
+#endif
             if (vector[i].external) {
                 cose.set(handle, cose_flag_t::cose_external, base16_decode(vector[i].external));
             }
@@ -2670,12 +2672,13 @@ void test_github_example() {
                     break;
             }
 
+#if defined DEBUG
             binary_t test;
             test = handle->binarymap[cose_flag_t::cose_compare_aad];
             printf("\e[33mAAD %i\e[0m\n", test.size() ? test[0] : 0);
             test = handle->binarymap[cose_flag_t::cose_compare_cek];
             printf("\e[33mCEK %i\e[0m\n", test.size() ? test[0] : 0);
-
+#endif
             cose.close(handle);
         }
 

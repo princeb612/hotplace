@@ -31,7 +31,6 @@ enum cose_flag_t {
     cose_tv_cek = 9,
     cose_compare_aad = 10,
     cose_compare_cek = 11,
-
 #endif
 };
 typedef std::map<int, variant_t> cose_variantmap_t;
