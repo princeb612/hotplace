@@ -325,7 +325,14 @@ class crypto_key {
      * @param bool plzero [inopt] preserve leading zero (default false)
      */
     static return_t get_key(EVP_PKEY* pkey, int flag, crypto_kty_t& type, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero = false);
-
+    /**
+     * @brief key
+     * @param EVP_PKEY* pkey [in]
+     * @param crypto_kty_t type [out] crypto_kty_t::kty_hmac, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec
+     * @parambinary_t& priv [out]
+     * @param bool plzero [inopt] preserve leading zero (default false)
+     */
+    static return_t get_privkey(EVP_PKEY* pkey, crypto_kty_t& type, binary_t& priv, bool plzero = false);
     /**
      * @brief clear
      * @remarks decrement a reference counter of keys and clear a container

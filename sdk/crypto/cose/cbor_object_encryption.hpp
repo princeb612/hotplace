@@ -47,10 +47,11 @@ class cbor_object_encryption {
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   binary_t const& input [in]
+     * @param   binary_t& output [out]
      * @param   bool& result [out]
      * @return  error code (see error.hpp)
      */
-    return_t decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
+    return_t decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, bool& result);
 
    protected:
     return_t compose_enc_structure(binary_t& authenticated_data, uint8 tag, binary_t const& body_protected, binary_t const& aad);

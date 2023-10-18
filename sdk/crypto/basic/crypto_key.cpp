@@ -1203,6 +1203,43 @@ return_t crypto_key::get_key(EVP_PKEY* pkey, int flag, crypto_kty_t& type, binar
     return ret;
 }
 
+return_t crypto_key::get_privkey(EVP_PKEY* pkey, crypto_kty_t& type, binary_t& priv, bool plzero) {
+    return_t ret = errorcode_t::success;
+
+    priv.clear();
+
+    type = crypto_kty_t::kty_unknown;
+    crypt_datamap_t datamap;
+    crypt_datamap_t::iterator iter;
+    int flag_request = crypt_access_t::private_key;
+
+    ret = extract(pkey, flag_request, type, datamap, plzero);
+    if (errorcode_t::success == ret) {
+        if (crypto_kty_t::kty_hmac == type) {
+            iter = datamap.find(crypt_item_t::item_hmac_k);
+            if (datamap.end() != iter) {
+                priv = iter->second;
+            }
+        } else if (crypto_kty_t::kty_rsa == type) {
+            iter = datamap.find(crypt_item_t::item_rsa_d);
+            if (datamap.end() != iter) {
+                priv = iter->second;
+            }
+        } else if (crypto_kty_t::kty_ec == type) {
+            iter = datamap.find(crypt_item_t::item_ec_d);
+            if (datamap.end() != iter) {
+                priv = iter->second;
+            }
+        } else if (crypto_kty_t::kty_okp == type) {
+            iter = datamap.find(crypt_item_t::item_ec_d);
+            if (datamap.end() != iter) {
+                priv = iter->second;
+            }
+        }
+    }
+    return ret;
+}
+
 return_t crypto_key::extract(EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 1;

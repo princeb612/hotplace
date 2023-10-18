@@ -73,7 +73,7 @@ return_t cbor_object_signing_encryption::close(cose_context_t* handle) {
     return ret;
 }
 
-return_t cbor_object_signing_encryption::set(cose_context_t* handle, int id, binary_t const& bin) {
+return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_flag_t id, binary_t const& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -82,13 +82,14 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, int id, bin
         }
         switch (id) {
             case cose_flag_t::cose_external:
-                handle->external = bin;
-                break;
             case cose_flag_t::cose_public:
-                handle->pub = bin;
-                break;
             case cose_flag_t::cose_private:
-                handle->priv = bin;
+            case cose_flag_t::cose_cek:
+#if defined DEBUG
+            case cose_flag_t::cose_tv_aad:
+            case cose_flag_t::cose_tv_cek:
+#endif
+                handle->binarymap.insert(std::make_pair(id, bin));
                 break;
             default:
                 ret = errorcode_t::request;
@@ -142,11 +143,11 @@ return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> 
     return ret;
 }
 
-return_t cbor_object_signing_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
+return_t cbor_object_signing_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
     cbor_object_encryption cose_encryption;
 
-    ret = cose_encryption.decrypt(handle, key, input, result);
+    ret = cose_encryption.decrypt(handle, key, input, output, result);
     return ret;
 }
 

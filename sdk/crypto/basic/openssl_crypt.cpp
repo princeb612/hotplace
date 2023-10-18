@@ -40,6 +40,8 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
     crypto_key* key;
     crypt_datamap_t datamap;
     crypt_variantmap_t variantmap;
+    uint16 lsize;
+    uint16 tsize;
 
     _openssl_crypt_context_t()
         : signature(0),
@@ -48,7 +50,9 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
           mode(crypt_mode_t::crypt_mode_unknown),
           encrypt_context(nullptr),
           decrypt_context(nullptr),
-          key(nullptr) {
+          key(nullptr),
+          lsize(0),
+          tsize(0) {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
         encrypt_context = EVP_CIPHER_CTX_new();
         decrypt_context = EVP_CIPHER_CTX_new();
@@ -210,6 +214,14 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
     return open(handle, algorithm, mode, &key[0], key.size(), &iv[0], iv.size());
 }
 
+return_t openssl_crypt::open(crypt_context_t** handle, const char* cipher, binary_t const& key, binary_t const& iv) {
+    crypt_algorithm_t algorithm;
+    crypt_mode_t mode;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    advisor->find_evp_cipher(cipher, algorithm, mode);
+    return open(handle, algorithm, mode, key, iv);
+}
+
 return_t openssl_crypt::close(crypt_context_t* handle) {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
@@ -240,12 +252,31 @@ return_t openssl_crypt::close(crypt_context_t* handle) {
     return ret;
 }
 
-return_t openssl_crypt::open(crypt_context_t** handle, const char* cipher, binary_t const& key, binary_t const& iv) {
-    crypt_algorithm_t algorithm;
-    crypt_mode_t mode;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    advisor->find_evp_cipher(cipher, algorithm, mode);
-    return open(handle, algorithm, mode, key, iv);
+return_t openssl_crypt::set(crypt_context_t* handle, crypt_ctrl_t id, uint16 param) {
+    return_t ret = errorcode_t::success;
+    openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
+
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        switch (id) {
+            case crypt_ctrl_t::crypt_ctrl_lsize:
+                context->lsize = param;
+                break;
+            case crypt_ctrl_t::crypt_ctrl_tsize:
+                context->tsize = param;
+                break;
+            default:
+                ret = errorcode_t::not_supported;
+                break;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 return_t openssl_crypt::encrypt(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted,
@@ -380,13 +411,15 @@ return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* d
                 //
                 // RFC 8152 10.1.  AES GCM
                 // the size of the authentication tag is fixed at 128 bits
-                tag_size = 16;
+                tag_size = context->tsize ? context->tsize : 16;
             } else if (crypt_mode_t::ccm == context->mode) {
-                tag_size = 14;
+                tag_size = context->tsize ? context->tsize : 14;
+                uint16 lsize = context->lsize ? context->lsize : 8;
+                uint16 nonce_size = 15 - lsize;
 
-                EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_CCM_SET_L, 8, nullptr);
+                EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_CCM_SET_L, lsize, nullptr);
                 // EVP_CTRL_CCM_SET_IVLEN for Nonce (15-L)
-                EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_CCM_SET_IVLEN, 7, nullptr);
+                EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_CCM_SET_IVLEN, nonce_size, nullptr);
                 EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_SET_TAG, tag_size, nullptr);
 
                 binary_t& key = context->datamap[crypt_item_t::item_cek];
@@ -588,9 +621,12 @@ return_t openssl_crypt::decrypt2(crypt_context_t* handle, const unsigned char* d
             }
 
             if (crypt_mode_t::ccm == context->mode) {
-                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_CCM_SET_L, 8, nullptr);
+                uint16 lsize = context->lsize ? context->lsize : 8;
+                uint16 nonce_size = 15 - lsize;
+
+                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_CCM_SET_L, lsize, nullptr);
                 // EVP_CTRL_CCM_SET_IVLEN for Nonce (15-L)
-                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_CCM_SET_IVLEN, 7, nullptr);
+                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_CCM_SET_IVLEN, nonce_size, nullptr);
                 EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag->size(), &(*tag)[0]);
 
                 binary_t& key = context->datamap[crypt_item_t::item_cek];

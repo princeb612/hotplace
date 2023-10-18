@@ -31,19 +31,32 @@ void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, binary_t cons
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_sign sign;
-    EVP_PKEY* pkey = key->any();
+
+#if OPENSSL_VERSION_NUMBER < 0x30200000L
+    switch (alg) {
+        case sha2_512_224:
+        case sha2_512_256:
+            ret = errorcode_t::not_supported;
+            break;
+        default:
+            break;
+    }
+#endif
 
     const hint_curve_t* hint = advisor->hintof_curve_nid(nid);
     const char* hashalg = advisor->nameof_md(alg);
 
-    /* check EC_GROUP_new_by_curve_name:unknown group */
-    EC_KEY* ec = EC_KEY_new_by_curve_name(nid);
+    EVP_PKEY* pkey = key->any();
+    if (errorcode_t::success == ret) {
+        /* check EC_GROUP_new_by_curve_name:unknown group */
+        EC_KEY* ec = EC_KEY_new_by_curve_name(nid);
 
-    if (ec) {
-        EC_KEY_free(ec);
-    } else {
-        ret = errorcode_t::not_supported;
-        ERR_clear_error();
+        if (ec) {
+            EC_KEY_free(ec);
+        } else {
+            ret = errorcode_t::not_supported;
+            ERR_clear_error();
+        }
     }
 
     if (errorcode_t::success == ret) {
@@ -4258,5 +4271,6 @@ int main(int argc, char** argv) {
     }
 
     _test_case.report(5);
+    printf("truncated sha at least openssl 3.0 required\n");
     return _test_case.result();
 }

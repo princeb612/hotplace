@@ -46,13 +46,11 @@ namespace crypto {
 typedef struct _openssl_evp_cipher_method_t {
     crypt_algorithm_t _algorithm;
     crypt_mode_t _mode;
-    const EVP_CIPHER* _cipher;  // const EVP_CIPHER* _cipher;
     const char* _fetchname;
 } openssl_evp_cipher_method_t;
 
 typedef struct _openssl_evp_md_method_t {
     hash_algorithm_t _algorithm;
-    const EVP_MD* _evp_md;
     const char* _fetchname;
 } openssl_evp_md_method_t;
 

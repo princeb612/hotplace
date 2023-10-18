@@ -70,6 +70,11 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
         cbor_object_signing_encryption::composer composer;
         cbor_publisher pub;
         std::list<cose_alg_t>::iterator iter;
+
+        maphint<cose_flag_t, binary_t> hint(handle->binarymap);
+        binary_t external;
+        hint.find(cose_flag_t::cose_external, &external);
+
         for (iter = methods.begin(); iter != methods.end(); iter++) {
             cose_alg_t method = *iter;
             crypt_sig_t sig = advisor->cose_sigof(method);
@@ -102,7 +107,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             }
 
             binary_t tobesigned;
-            compose_tobesigned(tobesigned, tag, convert(""), item.bin_protected, handle->external, input);
+            compose_tobesigned(tobesigned, tag, convert(""), item.bin_protected, external, input);
             openssl_sign signprocessor;
             signprocessor.sign(pkey, sig, tobesigned, item.bin_data);  // signature
 
@@ -144,12 +149,19 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
 
         const char* k = nullptr;
 
+        maphint<cose_flag_t, binary_t> hint(handle->binarymap);
+        binary_t external;
+        hint.find(cose_flag_t::cose_external, &external);
+
         binary_t tobesigned;
         size_t size_subitems = handle->subitems.size();
         std::list<cose_parts_t>::iterator iter;
         for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
+            binary_t cek;
+            hint.find(cose_flag_t::cose_cek, &cek);
+
             cose_parts_t& item = *iter;
-            compose_tobesigned(tobesigned, handle->tag, handle->body.bin_protected, item.bin_protected, handle->external, handle->payload);
+            compose_tobesigned(tobesigned, handle->tag, handle->body.bin_protected, item.bin_protected, external, handle->payload);
 
             int alg = 0;
             std::string kid;

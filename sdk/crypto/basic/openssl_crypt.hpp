@@ -116,6 +116,13 @@ class openssl_crypt : public crypt_t {
      * @return error code (see error.hpp)
      */
     virtual return_t close(crypt_context_t* handle);
+    /**
+     * @brief set
+     * @param crypt_context_t* handle [in]
+     * @param crypt_ctrl_t id [in]
+     * @param uint16 param [in]
+     */
+    virtual return_t set(crypt_context_t* handle, crypt_ctrl_t id, uint16 param);
 
     /**
      * @brief symmetric encrypt

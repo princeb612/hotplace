@@ -27,6 +27,10 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
+crypto_key rfc8152_privkeys;
+crypto_key rfc8152_pubkeys;
+crypto_key rfc8152_privkeys_c4;
+
 return_t dump_test_data(const char* text, basic_stream& diagnostic) {
     return_t ret = errorcode_t::success;
 
@@ -71,12 +75,12 @@ void dump_crypto_key(crypto_key_object_t* key, void*) {
     }
 }
 
-return_t test_cose_example(cose_context_t* cose_handle, cbor_object* root, const char* expect_file, const char* text) {
+return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, cbor_object* root, const char* expect_file, const char* text) {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
 
     __try2 {
-        if (nullptr == root || nullptr == expect_file) {
+        if (nullptr == cose_handle || nullptr == cose_keys || nullptr == root || nullptr == expect_file) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -161,33 +165,31 @@ return_t test_cose_example(cose_context_t* cose_handle, cbor_object* root, const
         }
 
         cbor_object_signing_encryption cose;
-        cbor_web_key cwk;
-        // cbor_publisher publisher;
         binary_t signature;
         binary_t decrypted;
         bool result = false;
-
-        crypto_key privkeys;
-        crypto_key pubkeys;
-        cwk.load_file(&privkeys, "rfc8152_c_7_2.cbor");
-        cwk.load_file(&pubkeys, "rfc8152_c_7_1.cbor");
-        // privkeys.for_each (dump_crypto_key, nullptr);
-        // pubkeys.for_each (dump_crypto_key, nullptr);
 
         if (root->tagged()) {
             switch (root->tag_value()) {
                 case cbor_tag_t::cose_tag_sign:
                 case cbor_tag_t::cose_tag_sign1:
-                    ret = cose.verify(cose_handle, &pubkeys, bin, result);
+                    ret = cose.verify(cose_handle, cose_keys, bin, result);
                     _test_case.test(ret, __FUNCTION__, "check4.verify %s", text ? text : "");
                     break;
                 case cbor_tag_t::cose_tag_encrypt:
-                case cbor_tag_t::cose_tag_encrypt0:
-                    ret = cose.decrypt(cose_handle, &privkeys, bin, result);
+                    ret = cose.decrypt(cose_handle, cose_keys, bin, decrypted, result);
+                    if (errorcode_t::success == ret) {
+                        basic_stream bs;
+                        dump_memory(decrypted, &bs);
+                        printf("%s\n", bs.c_str());
+                    }
                     _test_case.test(ret, __FUNCTION__, "check4.decrypt %s", text ? text : "");
                     break;
                 case cbor_tag_t::cose_tag_mac:
                 case cbor_tag_t::cose_tag_mac0:
+                    ret = errorcode_t::not_supported;  // not yet
+                    _test_case.test(ret, __FUNCTION__, "check4.verify %s", text ? text : "");
+                    break;
                 default:
                     break;
             }
@@ -306,7 +308,7 @@ void test_rfc8152_c_1_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
+    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
     cose.close(cose_handle);
 
     root->release();
@@ -403,7 +405,7 @@ void test_rfc8152_c_1_2() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
+    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
     cose.close(cose_handle);
 
     root->release();
@@ -499,7 +501,7 @@ void test_rfc8152_c_1_3() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
+    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
     cose.close(cose_handle);
 
     root->release();
@@ -576,7 +578,7 @@ void test_rfc8152_c_1_4() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
+    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
     cose.close(cose_handle);
 
     root->release();
@@ -620,7 +622,7 @@ void test_rfc8152_c_2_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
+    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
     cose.close(cose_handle);
 
     root->release();
@@ -694,7 +696,7 @@ void test_rfc8152_c_3_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
     cose.close(cose_handle);
 
     root->release();
@@ -781,7 +783,7 @@ void test_rfc8152_c_3_2() {
 
     cose.set(cose_handle, cose_flag_t::cose_public, convert("Encryption Example 02"));
 
-    test_cose_example(cose_handle, root, "rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
     cose.close(cose_handle);
 
     root->release();
@@ -886,7 +888,7 @@ void test_rfc8152_c_3_3() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
     cose.close(cose_handle);
 
     root->release();
@@ -971,7 +973,7 @@ void test_rfc8152_c_3_4() {
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
     cose.set(cose_handle, cose_flag_t::cose_external, base16_decode("0011bbcc22dd44ee55ff660077"));
-    test_cose_example(cose_handle, root, "rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
     cose.close(cose_handle);
 
     root->release();
@@ -1015,7 +1017,7 @@ void test_rfc8152_c_4_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
+    test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
     cose.close(cose_handle);
 
     root->release();
@@ -1059,7 +1061,7 @@ void test_rfc8152_c_4_2() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
+    test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
     cose.close(cose_handle);
 
     root->release();
@@ -1129,7 +1131,7 @@ void test_rfc8152_c_5_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
     cose.close(cose_handle);
 
     root->release();
@@ -1212,7 +1214,7 @@ void test_rfc8152_c_5_2() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
     cose.close(cose_handle);
 
     root->release();
@@ -1282,7 +1284,7 @@ void test_rfc8152_c_5_3() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
     cose.close(cose_handle);
 
     root->release();
@@ -1387,7 +1389,7 @@ void test_rfc8152_c_5_4() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
     cose.close(cose_handle);
 
     root->release();
@@ -1426,7 +1428,7 @@ void test_rfc8152_c_6_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
     cose.close(cose_handle);
 
     root->release();
@@ -1491,7 +1493,7 @@ void test_rfc8152_c_7_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
+    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
     cose.close(cose_handle);
 
     root->release();
@@ -1588,40 +1590,10 @@ void test_rfc8152_c_7_2() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, root, "rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
     cose.close(cose_handle);
 
     root->release();
-}
-
-void test_rfc8152_examples() {
-    test_cbor_file("rfc8152_b.cbor", "RFC 8152 Appendix B.  Two Layers of Recipient Information");
-    test_cbor_file("rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
-    test_cbor_file("rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
-    test_cbor_file("rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
-    test_cbor_file("rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
-    test_cbor_file("rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
-    test_cbor_file("rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
-    test_cbor_file("rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
-    test_cbor_file("rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
-    test_cbor_file("rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
-    test_cbor_file("rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
-    test_cbor_file("rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
-    test_cbor_file("rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
-    test_cbor_file("rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
-    test_cbor_file("rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
-    test_cbor_file("rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
-    test_cbor_file("rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
-    test_cbor_file("rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
-    test_cbor_file("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
-    test_cbor_file("rfc8778_a_1.cbor", "RFC 8778 A.1.  Example COSE Full Message Signature");
-    test_cbor_file("rfc8778_a_2.cbor", "RFC 8778 A.2.  Example COSE_Sign1 Message");
-    test_cbor_file("rfc9338_a_1_1.cbor", "RFC 9338 A.1.1.  Countersignature");
-    test_cbor_file("rfc9338_a_2_1.cbor", "RFC 9338 A.2.1.  Countersignature");
-    test_cbor_file("rfc9338_a_3_1.cbor", "RFC 9338 A.3.1.  Countersignature on Encrypted Content");
-    test_cbor_file("rfc9338_a_4_1.cbor", "RFC 9338 A.4.1.  Countersignature on Encrypted Content");
-    test_cbor_file("rfc9338_a_5_1.cbor", "RFC 9338 A.5.1.  Countersignature on MAC Content");
-    test_cbor_file("rfc9338_a_6_1.cbor", "RFC 9338 A.6.1.  Countersignature on MAC0 Content");  // typo ? not 159 bytes, but 139 bytes
 }
 
 void test_cbor_key(const char* file, const char* text) {
@@ -1677,12 +1649,39 @@ void test_cbor_key(const char* file, const char* text) {
     _test_case.test(ret, __FUNCTION__, text ? text : "");
 }
 
-void test_cbor_web_key() {
+void test_rfc8152_read_cbor() {
+    test_cbor_file("rfc8152_b.cbor", "RFC 8152 Appendix B.  Two Layers of Recipient Information");
+    test_cbor_file("rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
+    test_cbor_file("rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
+    test_cbor_file("rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
+    test_cbor_file("rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
+    test_cbor_file("rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
+    test_cbor_file("rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
+    test_cbor_file("rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
+    test_cbor_file("rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
+    test_cbor_file("rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
+    test_cbor_file("rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
+    test_cbor_file("rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
+    test_cbor_file("rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
+    test_cbor_file("rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
+    test_cbor_file("rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
+    test_cbor_file("rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
+    test_cbor_file("rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
+    test_cbor_file("rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
+    test_cbor_file("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
+    test_cbor_file("rfc8778_a_1.cbor", "RFC 8778 A.1.  Example COSE Full Message Signature");
+    test_cbor_file("rfc8778_a_2.cbor", "RFC 8778 A.2.  Example COSE_Sign1 Message");
+    test_cbor_file("rfc9338_a_1_1.cbor", "RFC 9338 A.1.1.  Countersignature");
+    test_cbor_file("rfc9338_a_2_1.cbor", "RFC 9338 A.2.1.  Countersignature");
+    test_cbor_file("rfc9338_a_3_1.cbor", "RFC 9338 A.3.1.  Countersignature on Encrypted Content");
+    test_cbor_file("rfc9338_a_4_1.cbor", "RFC 9338 A.4.1.  Countersignature on Encrypted Content");
+    test_cbor_file("rfc9338_a_5_1.cbor", "RFC 9338 A.5.1.  Countersignature on MAC Content");
+    test_cbor_file("rfc9338_a_6_1.cbor", "RFC 9338 A.6.1.  Countersignature on MAC0 Content");  // typo ? not 159 bytes, but 139 bytes
     test_cbor_key("rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
     test_cbor_key("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
 }
 
-void try_refactor_jose_sign() {
+void test_jose_from_cwk() {
     _test_case.begin("crypto_key");
 
     // load keys from CBOR
@@ -1775,6 +1774,8 @@ void test_github_example() {
                     "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt");
     cwk.add_ec_b16(&key, "Alice Lovelace", "ES256", "P-256", "863aa7bc0326716aa59db5bf66cc660d0591d51e4891bc2e6a9baff5077d927c",
                    "ad4eed482a7985be019e9b1936c16e00190e8bcc48ee12d35ff89f0fc7a099ca", "d42044eb2cd2691e926da4871cf3529ddec6b034f824ba5e050d2c702f97c7a5");
+    cwk.add_ec_b64u(&key, "meriadoc.brandybuck@buckland.example", nullptr, "P-256", "Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0",
+                    "HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw", "r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8");
 
     cwk.add_oct_b64u(&key, "our-secret", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg", crypto_use_t::use_enc);
     cwk.add_oct_b64u(&key, "sec-48", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico", crypto_use_t::use_enc);
@@ -1793,6 +1794,13 @@ void test_github_example() {
     crypto_key aes_aead_key;
     cwk.add_oct_b64u(&aes_aead_key, "our-secret", nullptr, "hJtXIZ2uSN5kbQfbtTNWbg", crypto_use_t::use_enc);
     cwk.add_oct_b64u(&aes_aead_key, "sec-256", nullptr, "Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmIl6a1xNPi8QA", crypto_use_t::use_enc);
+    cwk.add_oct_b64u(&aes_aead_key, "sec-192", nullptr, "Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmI", crypto_use_t::use_enc);
+    cwk.add_oct_b64u(&aes_aead_key, "sec-64", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJicoqrvM3e7_paanqKmgsbKztA",
+                     crypto_use_t::use_enc);
+    cwk.add_oct_b64u(&aes_aead_key, "sec-48", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico", crypto_use_t::use_enc);
+
+    crypto_key aes_ccm_05_key;
+    cwk.add_oct_b64u(&aes_ccm_05_key, "our-secret", nullptr, "Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmIl6a1xNPi8QA", crypto_use_t::use_enc);
 
     crypto_key cwtkey;
     cwk.add_ec_b16(&cwtkey, nullptr, "ES256", "P-256", "143329cce7868e416927599cf65a34f3ce2ffda55a7eca69ed8919a394d42f0f",
@@ -1804,6 +1812,13 @@ void test_github_example() {
         const char* desc;
         const char* cbor;
         const char* external;
+        struct {
+            const char* aad_hex;
+            const char* cek_hex;
+        } enc;
+        struct {
+            const char* tobesigned_hex;
+        } recpients[5];
     } vector[] = {
         // aes-ccm-examples
         {
@@ -1811,104 +1826,178 @@ void test_github_example() {
             "aes-ccm-examples/aes-ccm-01.json",
             "AES-CCM-01: Encrypt w/ AES-CCM 16-128/64 - direct",
             "D8608443A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A46802388816C040275EE818340A20125044A6F75722D73656372657440",
+            nullptr,
+            {
+                "8367456E637279707443A1010A40",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         {
             &aes_aead_key,
             "aes-ccm-examples/aes-ccm-02.json",
             "AES-CCM-02: Encrypt w/ AES-CCM 16-128/128 - direct",
             "D8608444A101181EA1054D89F52F65A1C580933B5261A72F58246899DA0A132BD2D2B9B10915743EE1F7B92A46801D3D61B6E7C964520652F9D3C8347E8A818340A20125044A6F7572"
-            "2D"
-            "73656372657440",
+            "2D73656372657440",
+            nullptr,
+            {
+                "8367456E637279707444A101181E40",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         {
             &aes_aead_key,
             "aes-ccm-examples/aes-ccm-03.json",
             "AES-CCM-03: Encrypt w/ AES-CCM 64-128/64 - direct",
             "D8608443A1010CA1054789F52F65A1C580581C191BD858DEC79FC11DA3428BDFA446AC240D591F9F0F25E3A3FA4E6C818340A20125044A6F75722D73656372657440",
+            nullptr,
+            {
+                "8367456E637279707443A1010C40",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
+        {&aes_aead_key,
+         "aes-ccm-examples/aes-ccm-04.json",
+         "AES-CCM-04: Encrypt w/ AES-CCM 64-128/128 - direct",
+         "D8608444A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F59482AEA4157167842D7BF5EDD68EC92818340A20125044A6F75722D7365637265744"
+         "0",
+         nullptr,
+         {
+             "8367456E637279707444A101182040",
+             "849B57219DAE48DE646D07DBB533566E",
+         }},
         {
-            &aes_aead_key,
-            "aes-ccm-examples/aes-ccm-04.json",
-            "AES-CCM-04: Encrypt w/ AES-CCM 64-128/128 - direct",
-            "D8608444A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F59482AEA4157167842D7BF5EDD68EC92818340A20125044A6F75722D7365637265"
-            "74"
-            "40",
-        },
-        {
-            &aes_aead_key,
+            &aes_ccm_05_key,
             "aes-ccm-examples/aes-ccm-05.json",
             "AES-CCM-05: Encrypt w/ AES-CCM 16-256/64 - direct",
             "D8608443A1010BA1054D89F52F65A1C580933B5261A72F581C28B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917A8A3EF3313D6D332818340A20125044A6F75722D73656372657440",
+            nullptr,
+            {
+                "8367456E637279707443A1010B40",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
         },
         {
-            &aes_aead_key,
+            &aes_ccm_05_key,
             "aes-ccm-examples/aes-ccm-06.json",
             "AES-CCM-06: Encrypt w/ AES-CCM 16-256/128 - direct",
             "D8608444A101181FA1054D89F52F65A1C580933B5261A72F582428B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917348CDDC1FD07F3653AD991F9DFB65D50818340A20125044A6F7572"
-            "2D"
-            "73656372657440",
+            "2D73656372657440",
+            nullptr,
+            {
+                "8367456E637279707444A101181F40",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
         },
         {
-            &aes_aead_key,
+            &aes_ccm_05_key,
             "aes-ccm-examples/aes-ccm-07.json",
             "AES-CCM-07: Encrypt w/ AES-CCM 64-256/64 - direct",
             "D8608443A1010DA1054789F52F65A1C580581C721908D60812806F2660054238E931ADB575771EE26C547EC3DE06C5818340A20125044A6F75722D73656372657440",
+            nullptr,
+            {
+                "8367456E637279707443A1010D40",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
         },
         {
-            &aes_aead_key,
+            &aes_ccm_05_key,
             "aes-ccm-examples/aes-ccm-08.json",
             "AES-CCM-08: Encrypt w/ AES-CCM 64-256/128 - direct",
             "D8608444A1011821A1054789F52F65A1C5805824721908D60812806F2660054238E931ADB575771EB58752E5F0FB62A828917386A770CE9C818340A20125044A6F75722D7365637265"
-            "74"
-            "40",
+            "7440",
+            nullptr,
+            {
+                "8367456E637279707444A101182140",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
         },
         {
             &aes_aead_key,
             "aes-ccm-examples/aes-ccm-enc-01.json",
             "AES-CCM-ENC-01: Encrypt w/ AES-CCM 16-128/64 - implicit",
             "D08343A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA",
+            nullptr,
+            {
+                "8368456E63727970743043A1010A40",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         {
             &aes_aead_key,
             "aes-ccm-examples/aes-ccm-enc-02.json",
             "AES-CCM-ENC-02: Encrypt w/ AES-CCM 16-128/128 - implicit",
             "D08344A101181EA1054D89F52F65A1C580933B5261A72F58246899DA0A132BD2D2B9B10915743EE1F7B92A4680903F2C00D37E14D4EBDC7EF2C03CF5A9",
+            nullptr,
+            {
+                "8368456E63727970743044A101181E40",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         {
             &aes_aead_key,
             "aes-ccm-examples/aes-ccm-enc-03.json",
             "AES-CCM-ENC-03: Encrypt w/ AES-CCM 64-128/64 - implicit",
             "D08343A1010CA1054789F52F65A1C580581C191BD858DEC79FC11DA3428BDFA446AC240D591FFCF91EEB8035F87A",
+            nullptr,
+            {
+                "8368456E63727970743043A1010C40",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         {
             &aes_aead_key,
             "aes-ccm-examples/aes-ccm-enc-04.json",
             "AES-CCM-ENC-04: Encrypt w/ AES-CCM 64-128/128 - implicit",
             "D08344A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F3965FA7CA156FE666BC262807DF0EE99",
+            nullptr,
+            {
+                "8368456E63727970743044A101182040",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         {
             &aes_aead_key,
             "aes-ccm-examples/aes-ccm-enc-05.json",
             "AES-CCM-ENC-05: Encrypt w/ AES-CCM 16-256/64 - implicit",
             "D08343A1010BA1054D89F52F65A1C580933B5261A72F581C28B3BDDFF844A736C5F0EE0F8C691FD0B7ADF9173140CB621DF47C2F",
+            nullptr,
+            {
+                "8368456E63727970743043A1010B40",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
         },
         {
             &aes_aead_key,
             "aes-ccm-examples/aes-ccm-enc-06.json",
             "AES-CCM-ENC-06: Encrypt w/ AES-CCM 16-256/128 - implicit",
             "D08344A101181FA1054D89F52F65A1C580933B5261A72F582428B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917B0CFA0D187C769A4BA100372A585BCCC",
+            nullptr,
+            {
+                "8368456E63727970743044A101181F40",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
         },
         {
             &aes_aead_key,
             "aes-ccm-examples/aes-ccm-enc-07.json",
             "AES-CCM-ENC-07: Encrypt w/ AES-CCM 64-256/64 - implicit",
             "D08343A1010DA1054789F52F65A1C580581C721908D60812806F2660054238E931ADB575771E9BC42FF530BAEB00",
+            nullptr,
+            {
+                "8368456E63727970743043A1010D40",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
         },
         {
             &aes_aead_key,
             "aes-ccm-examples/aes-ccm-enc-08.json",
             "AES-CCM-ENC-08: Encrypt w/ AES-CCM 64-256/128 - implicit",
             "D08344A1011821A1054789F52F65A1C5805824721908D60812806F2660054238E931ADB575771E723C6FFD415A07CDB9FA9CEECC6C81FC",
+            nullptr,
+            {
+                "8368456E63727970743044A101182140",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
         },
         // aes-gcm-examples
         {
@@ -1917,6 +2006,11 @@ void test_github_example() {
             "AES-GCM-01: Encryption example for spec - ",
             "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B3581F2C80039826350B97AE2300E42FC818340A20125044A6F75722D73"
             "656372657440",
+            nullptr,
+            {
+                "8367456E637279707443A1010140",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         {
             &aes_aead_key,
@@ -1924,6 +2018,11 @@ void test_github_example() {
             "AES-GCM-02: Encryption example for spec - ",
             "D8608443A10102A1054C02D1F7E6F26C43D4868D87CE5824134D3B9223A00C1552C77585C157F467F295919D12124F19F521484C0725410947B4D1CA818340A2012504467365632D34"
             "3840",
+            nullptr,
+            {
+                "8367456E637279707443A1010240",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A7988",
+            },
         },
         {
             &aes_aead_key,
@@ -1931,6 +2030,11 @@ void test_github_example() {
             "AES-GCM-03: Encryption example for spec - ",
             "D8608443A10103A1054C02D1F7E6F26C43D4868D87CE58249D64A5A59A3B04867DCCF6B8EF82F7D1A3B25EF862B6EDDB29DF2EF16582172E5B5FC757818340A2012504467365632D36"
             "3440",
+            nullptr,
+            {
+                "8367456E637279707443A1010340",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
         },
         {
             &aes_aead_key,
@@ -1938,36 +2042,66 @@ void test_github_example() {
             "AES-GCM-04: Encryption example for spec - Fail the tag",
             "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B3581F2C80039826350B97AE2300E42FD818340A20125044A6F75722D73"
             "656372657440",
+            nullptr,
+            {
+                "8367456E637279707443A1010140",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         {
             &aes_aead_key,
             "aes-gcm-examples/aes-gcm-05.json",
             "AES-GCM-05: Encryption partial IV",
             "D8608443A10101A1064261A75824D3D893DFF22BDCF09A58CBBE701371AEE31EE0AA3C1C8A6CE8409D5E5E81A6B5C355A644818340A20125044A6F75722D73656372657440",
+            nullptr,
+            {
+                "8367456E637279707443A1010140",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         {
             &aes_aead_key,
             "aes-gcm-examples/aes-gcm-enc-01.json",
             "AES-GCM-ENC-01: Encryption example for spec - implicit",
             "D08343A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B162E2C03568B41F57C3CC16F9166250A",
+            nullptr,
+            {
+                "8368456E63727970743043A1010140",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         {
             &aes_aead_key,
             "aes-gcm-examples/aes-gcm-enc-02.json",
             "AES-GCM-ENC-02: Encryption example for spec - implicit",
             "D08343A10102A1054C02D1F7E6F26C43D4868D87CE5824134D3B9223A00C1552C77585C157F467F295919D530FBE21F7689AB3CD4D18FFE8E17CEB",
+            nullptr,
+            {
+                "8368456E63727970743043A1010240",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A7988",
+            },
         },
         {
             &aes_aead_key,
             "aes-gcm-examples/aes-gcm-enc-03.json",
             "AES-GCM-ENC-03: Encryption example for spec - implicit",
             "D08343A10103A1054C02D1F7E6F26C43D4868D87CE58249D64A5A59A3B04867DCCF6B8EF82F7D1A3B25EF84ECA2BC5D7593A96E943859A9CC24AD3",
+            nullptr,
+            {
+                "8368456E63727970743043A1010340",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
         },
         {
             &aes_aead_key,
             "aes-gcm-examples/aes-gcm-enc-04.json",
             "AES-GCM-ENC-04: Encryption example for spec - implicit - Fail the tag",
             "D08343A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B162E2C03568B41F57C3CC16F9166250B",
+            nullptr,
+            {
+                "8368456E63727970743043A1010140",
+                "849B57219DAE48DE646D07DBB533566E",
+            },
         },
         // aes-wrap-examples
         // cbc-mac-examples
@@ -2049,6 +2183,29 @@ void test_github_example() {
             "32C57209120E1C9E30",
         },
         // ecdh-direct-examples
+        {
+            &key,
+            "p256-hkdf-256-01.json",
+            "p256-hkdf-256-01: ECDH-ES direct w/ hkdf-sha-256 for 128-bit key",
+            "D8608443A10101A1054CC9CF4DF2FE6C632BF788641358247ADBE2709CA818FB415F1E5DF66F4E1A51053BA6D65A1A0C52A357DA7A644B8070A151B0818344A1013818A220A4010220"
+            "0121582098F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280225820F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB0458"
+            "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6540",
+            nullptr,
+            {"8367456E637279707443A1010140", "56074D506729CA40C4B4FE50C6439893"},
+        },
+        {
+            &key,
+            "p256-wrap-128-01.json",
+            "p256-wrap-128-01: ECDH-ES direct w/ key wrap 128 for 128-bit key",
+            "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582464F84D913BA60A76070A9A48F26E97E863E2852948658F0811139868826E89218A75715B818344A101381CA220A4010220"
+            "01215820ECDBCEC636CC1408A503BBF6B7311B900C9AED9C5B71503848C89A07D0EF6F5B225820D6D1586710C02203E4E53B20DC7B233CA4C8B6853467B9FB8244A3840ACCD6020458"
+            "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C655818D23BCA11C3F8E35BF6F81412794E159772E946FF4FB31BD1",
+            nullptr,
+            {
+                "8367456E637279707443A1010140",
+                "B2353161740AACF1F7163647984B522A",
+            },
+        },
         // ecdh-wrap-examples
         // ecdsa-examples
         {
@@ -2454,6 +2611,7 @@ void test_github_example() {
     bool result = false;
     cbor_object_signing_encryption cose;
     for (i = 0; i < RTL_NUMBER_OF(vector); i++) {
+        printf("\e[33m%s %s\e[0m\n", vector[i].file, vector[i].desc);
         binary_t cbor = base16_decode(vector[i].cbor);
 
         binary_t bin_cbor;
@@ -2482,29 +2640,41 @@ void test_github_example() {
         } else {
             cose_context_t* handle = nullptr;
             cose.open(&handle);
+            if (vector[i].enc.aad_hex) {
+                cose.set(handle, cose_flag_t::cose_tv_aad, base16_decode(vector[i].enc.aad_hex));
+            }
+            if (vector[i].enc.cek_hex) {
+                cose.set(handle, cose_flag_t::cose_tv_cek, base16_decode(vector[i].enc.cek_hex));
+            }
+            if (vector[i].external) {
+                cose.set(handle, cose_flag_t::cose_external, base16_decode(vector[i].external));
+            }
 
             int tagvalue = iter->second;
+            binary_t decrypted;
             switch (tagvalue) {
-                case cbor_tag_t::cose_tag_encrypt0:  // 16
-                case cbor_tag_t::cose_tag_encrypt:   // 96
-                    ret = errorcode_t::not_supported;
-                    // ret = cose.decrypt(handle, vector[i].key, cbor, result);
+                case cbor_tag_t::cose_tag_encrypt0:  // 16 (D0)
+                case cbor_tag_t::cose_tag_encrypt:   // 96 (D860)
+                    ret = cose.decrypt(handle, vector[i].key, cbor, decrypted, result);
                     break;
-                case cbor_tag_t::cose_tag_mac0:  // 17
-                case cbor_tag_t::cose_tag_mac:   // 97
+                case cbor_tag_t::cose_tag_mac0:  // 17 (D1)
+                case cbor_tag_t::cose_tag_mac:   // 97 (D861)
                     ret = errorcode_t::not_supported;
                     break;
-                case cbor_tag_t::cose_tag_sign1:  // 18
-                case cbor_tag_t::cose_tag_sign:   // 98
-                    if (vector[i].external) {
-                        cose.set(handle, cose_flag_t::cose_external, base16_decode(vector[i].external));
-                    }
+                case cbor_tag_t::cose_tag_sign1:  // 18 (D2)
+                case cbor_tag_t::cose_tag_sign:   // 98 (D862)
                     ret = cose.verify(handle, vector[i].key, cbor, result);
                     break;
                 default:
                     ret = errorcode_t::bad_data;  // todo, studying, not-tagged
                     break;
             }
+
+            binary_t test;
+            test = handle->binarymap[cose_flag_t::cose_compare_aad];
+            printf("\e[33mAAD %i\e[0m\n", test.size() ? test[0] : 0);
+            test = handle->binarymap[cose_flag_t::cose_compare_cek];
+            printf("\e[33mCEK %i\e[0m\n", test.size() ? test[0] : 0);
 
             cose.close(handle);
         }
@@ -2536,53 +2706,57 @@ int main(int argc, char** argv) {
     //      cat outputfile | xxd
     //      xxd -ps outputfile
 
-    // interface design
-    // what kind of member methods required ?
-    // need more simple ones
-    // and then refactor JOSE
+    // part 0 .. try to decode
+    { test_rfc8152_read_cbor(); }
 
     // part 1 .. following cases
-    // cbor_array* to CBOR and diagnostic
+    // encode and decode
     // Test Vector comparison
-    // cbor_array* from CBOR
+    {
+        cbor_web_key cwk;
+        cwk.load_file(&rfc8152_privkeys, "rfc8152_c_7_2.cbor");
+        cwk.load_file(&rfc8152_pubkeys, "rfc8152_c_7_1.cbor");
 
-    // cbor_tag_t::cose_tag_sign
-    test_rfc8152_c_1_1();
-    test_rfc8152_c_1_2();
-    test_rfc8152_c_1_3();
-    test_rfc8152_c_1_4();
-    // cbor_tag_t::cose_tag_sign1
-    test_rfc8152_c_2_1();
-    // cbor_tag_t::cose_tag_encrypt
-    test_rfc8152_c_3_1();
-    test_rfc8152_c_3_2();
-    test_rfc8152_c_3_3();
-    test_rfc8152_c_3_4();
-    // cbor_tag_t::cose_tag_encrypt0
-    test_rfc8152_c_4_1();
-    test_rfc8152_c_4_2();
-    // cbor_tag_t::cose_tag_mac
-    test_rfc8152_c_5_1();
-    test_rfc8152_c_5_2();
-    test_rfc8152_c_5_3();
-    test_rfc8152_c_5_4();
-    // cbor_tag_t::cose_tag_mac0
-    test_rfc8152_c_6_1();
-    // key
-    test_rfc8152_c_7_1();
-    test_rfc8152_c_7_2();
+        // RFC8152/Appendix_C_4_1.json
+        cwk.add_oct_b64u(&rfc8152_privkeys_c4, "our-secret2", nullptr, "hJtXhkV8FJG-Onbc6mxCcY", crypto_use_t::use_enc);
 
-    // part 2 .. parse
-    // test_rfc8152_examples();
+        // rfc8152_privkeys.for_each (dump_crypto_key, nullptr);
+        // rfc8152_pubkeys.for_each (dump_crypto_key, nullptr);
 
-    // part 3 .. load keys from cbor and write CBOR
-    // step.1 parse CBOR and load EVP_PKEY
-    // step.2 write EVP_PKEY to CBOR
+        // cbor_tag_t::cose_tag_sign
+        test_rfc8152_c_1_1();
+        test_rfc8152_c_1_2();
+        test_rfc8152_c_1_3();
+        test_rfc8152_c_1_4();
+        // cbor_tag_t::cose_tag_sign1
+        test_rfc8152_c_2_1();
+        // cbor_tag_t::cose_tag_encrypt
+        test_rfc8152_c_3_1();
+        test_rfc8152_c_3_2();
+        test_rfc8152_c_3_3();
+        test_rfc8152_c_3_4();
+        // cbor_tag_t::cose_tag_encrypt0
+        test_rfc8152_c_4_1();
+        test_rfc8152_c_4_2();
+        // cbor_tag_t::cose_tag_mac
+        test_rfc8152_c_5_1();
+        test_rfc8152_c_5_2();
+        test_rfc8152_c_5_3();
+        test_rfc8152_c_5_4();
+        // cbor_tag_t::cose_tag_mac0
+        test_rfc8152_c_6_1();
+        // key
+        test_rfc8152_c_7_1();
+        test_rfc8152_c_7_2();
+    }
 
-    // test_cbor_web_key();
-    // try_refactor_jose_sign();
+    // part 2 .. test JWK, CWK compatibility
+    {
+        // test crypto_key, crypto_keychain
+        test_jose_from_cwk();
+    }
 
-    // part 4 https://github.com/cose-wg/Examples
+    // part 3 https://github.com/cose-wg/Examples
     // A GitHub project has been created at <https://github.com/cose-wg/
     // Examples> that contains not only the examples presented in this
     // document, but a more complete set of testing examples as well.  Each
@@ -2594,7 +2768,10 @@ int main(int argc, char** argv) {
     // clearly marked as such in the JSON file.  If errors in the examples
     // in this document are found, the examples on GitHub will be updated,
     // and a note to that effect will be placed in the JSON file.
-    // test_github_example();
+    {
+        // implementation status
+        test_github_example();
+    }
 
     openssl_thread_cleanup();
     openssl_cleanup();

@@ -687,8 +687,16 @@ typedef struct _hint_cose_algorithm_t {
     cose_alg_t alg;
     crypto_kty_t kty;
     cose_group_t group;
-    int16 alglen;         // kdf_dlen
-    const char* algname;  // hkdf_prf
+    struct {
+        const char* algname;
+        int16 dlen;
+    } kdf;
+    struct {
+        const char* algname;
+        int16 ksize;
+        int16 tsize;
+        int16 lsize;
+    } param;
     // studying
 } hint_cose_algorithm_t;
 
@@ -730,6 +738,11 @@ typedef struct _hash_context_t hash_context_t;
 
 struct _otp_context_t {};
 typedef struct _otp_context_t otp_context_t;
+
+enum crypt_ctrl_t {
+    crypt_ctrl_lsize = 1,  // L SIZE, sizeof_nonce(iv) = 15-L
+    crypt_ctrl_tsize = 2,  // TAG Size
+};
 
 }  // namespace crypto
 }  // namespace hotplace

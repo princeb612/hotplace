@@ -130,6 +130,12 @@ return_t kdf_scrypt(binary_t& derived, size_t dlen, std::string const& password,
     int ret_openssl = 0;
 
     __try2 {
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+        if (0 == salt.size()) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+#endif
         ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_SCRYPT, nullptr);
         if (nullptr == ctx) {
             ret = errorcode_t::internal_error;

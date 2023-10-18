@@ -136,6 +136,8 @@ class openssl_hash : public hash_t {
     virtual crypt_poweredby_t get_type();
 };
 
+return_t digest(binary_t& output, const char* alg, binary_t const& input);
+return_t digest(binary_t& output, hash_algorithm_t alg, binary_t const& input);
 return_t hmac(binary_t& output, const char* alg, binary_t const& key, binary_t const& input);
 return_t hmac(binary_t& output, hash_algorithm_t alg, binary_t const& key, binary_t const& input);
 return_t cmac(binary_t& output, const char* alg, binary_t const& key, binary_t const& input);

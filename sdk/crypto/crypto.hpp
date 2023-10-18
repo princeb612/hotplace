@@ -61,6 +61,13 @@ class crypt_t {
      */
     virtual return_t close(crypt_context_t* handle) = 0;
     /**
+     * @brief set
+     * @param crypt_context_t* handle [in]
+     * @param crypt_ctrl_t id [in]
+     * @param uint16 param [in]
+     */
+    virtual return_t set(crypt_context_t* handle, crypt_ctrl_t id, uint16 param) = 0;
+    /**
      * @brief encrypt
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* data_plain [in]

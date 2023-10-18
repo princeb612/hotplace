@@ -25,14 +25,6 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-enum cose_flag_t {
-    cose_external = 1,
-    cose_partyu = 2,
-    cose_partyv = 3,
-    cose_public = 4,
-    cose_private = 5,
-};
-
 class cbor_object_signing_encryption {
    public:
     cbor_object_signing_encryption();
@@ -53,10 +45,10 @@ class cbor_object_signing_encryption {
     /**
      * @brief   set
      * @param   cose_context_t* handle [in]
-     * @param   int id [in] cose_external, cose_public, cose_private
+     * @param   cose_flag_t id [in] cose_external, cose_public, cose_private
      * @param   binary_t const& bin [in]
      */
-    return_t set(cose_context_t* handle, int id, binary_t const& bin);
+    return_t set(cose_context_t* handle, cose_flag_t id, binary_t const& bin);
     /**
      * @brief   set
      * @param   cose_context_t* handle [in]
@@ -93,7 +85,7 @@ class cbor_object_signing_encryption {
      * @param   bool& result [out]
      * @return  error code (see error.hpp)
      */
-    return_t decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
+    return_t decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, bool& result);
     /**
      * @brief   sign
      * @param   cose_context_t* handle [in]

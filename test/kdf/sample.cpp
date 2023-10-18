@@ -29,7 +29,7 @@ return_t compare_binary(binary_t const& lhs, binary_t const& rhs) {
 }
 
 void test_kdf_hkdf() {
-    _test_case.begin("kdf");
+    _test_case.begin("hkdf");
 
     return_t ret = errorcode_t::success;
 
@@ -57,7 +57,7 @@ void test_kdf_hkdf() {
 }
 
 void test_kdf_pbkdf2_rfc6070() {
-    _test_case.begin("kdf");
+    _test_case.begin("pbkdf2");
 
     return_t ret = errorcode_t::success;
 
@@ -99,7 +99,7 @@ void test_kdf_pbkdf2_rfc6070() {
 
 void test_kdf_pbkdf2_rfc7914() {
     // RFC 7914 11.  Test Vectors for PBKDF2 with HMAC-SHA-256
-    _test_case.begin("kdf");
+    _test_case.begin("pbkdf2");
 
     return_t ret = errorcode_t::success;
 
@@ -129,7 +129,7 @@ void test_kdf_pbkdf2_rfc7914() {
 
 void test_kdf_scrypt_rfc7914() {
     // RFC 7914 12.  Test Vectors for scrypt
-    _test_case.begin("kdf");
+    _test_case.begin("scrypt (salt zero-length openssl 3.0 required)");
 
     return_t ret = errorcode_t::success;
 
@@ -155,17 +155,21 @@ void test_kdf_scrypt_rfc7914() {
     binary_t result;
 
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        kdf_scrypt(result, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
-        basic_stream bs;
-        dump_memory(result, &bs);
-        std::cout << bs.c_str() << std::endl;
+        ret = kdf_scrypt(result, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
+        if (errorcode_t::success == ret) {
+            basic_stream bs;
+            dump_memory(result, &bs);
+            std::cout << bs.c_str() << std::endl;
 
-        ret = compare_binary(base16_decode(vector[i].expect), result);
+            ret = compare_binary(base16_decode(vector[i].expect), result);
+        }
         _test_case.test(ret, __FUNCTION__, "scrypt");
     }
 }
 
 void test_kdf_argon_rfc9106() {
+    _test_case.begin("argon2d,argon2i,argon2id");
+
 #if OPENSSL_VERSION_NUMBER >= 0x30200000L
     struct {
         argon2_t mode;

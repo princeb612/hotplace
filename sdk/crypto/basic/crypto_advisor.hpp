@@ -538,6 +538,26 @@ bool kindof_ecc(EVP_PKEY* pkey);
  */
 crypto_kty_t typeof_crypto_key(EVP_PKEY* key);
 
+extern const openssl_evp_cipher_method_t evp_cipher_methods[];
+extern const openssl_evp_md_method_t evp_md_methods[];
+extern const hint_blockcipher_t hint_blockciphers[];
+extern const hint_curve_t hint_curves[];
+extern const hint_cose_algorithm_t hint_cose_algorithms[];
+extern const hint_jose_encryption_t hint_jose_algorithms[];
+extern const hint_jose_encryption_t hint_jose_encryptions[];
+extern const hint_kty_name_t hint_kty_names[];
+extern const hint_signature_t hint_signatures[];
+
+extern const size_t sizeof_evp_cipher_methods;
+extern const size_t sizeof_evp_md_methods;
+extern const size_t sizeof_hint_blockciphers;
+extern const size_t sizeof_hint_curves;
+extern const size_t sizeof_hint_cose_algorithms;
+extern const size_t sizeof_hint_jose_algorithms;
+extern const size_t sizeof_hint_jose_encryptions;
+extern const size_t sizeof_hint_kty_names;
+extern const size_t sizeof_hint_signatures;
+
 }  // namespace crypto
 }  // namespace hotplace
 
