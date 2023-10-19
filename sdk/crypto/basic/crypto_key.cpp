@@ -373,7 +373,14 @@ static bool find_discriminant(crypto_key_object_t item, const char* kid, crypt_s
         if (SEARCH_KTY & flags) {
             cond_kty = (kt && is_kindof(item.pkey, kt));
             if (false == cond_kty) {
-                __leave2;
+                if (crypto_kty_t::kty_unknown == alt) {
+                    __leave2;
+                } else {
+                    cond_kty = (kt && is_kindof(item.pkey, alt));
+                    if (false == cond_kty) {
+                        __leave2;
+                    }
+                }
             }
         }
 
@@ -414,7 +421,14 @@ static bool find_discriminant(crypto_key_object_t item, const char* kid, jws_t a
         if (SEARCH_KTY & flags) {
             cond_kty = (kt && is_kindof(item.pkey, kt));
             if (false == cond_kty) {
-                __leave2;
+                if (crypto_kty_t::kty_unknown == alt) {
+                    __leave2;
+                } else {
+                    cond_kty = (kt && is_kindof(item.pkey, alt));
+                    if (false == cond_kty) {
+                        __leave2;
+                    }
+                }
             }
         }
 
@@ -464,7 +478,14 @@ static bool find_discriminant(crypto_key_object_t item, const char* kid, const c
             if (SEARCH_KTY & flags) {
                 cond_kty = (kt && is_kindof(item.pkey, kt));
                 if (false == cond_kty) {
-                    __leave2;
+                    if (crypto_kty_t::kty_unknown == alt) {
+                        __leave2;
+                    } else {
+                        cond_kty = (kt && is_kindof(item.pkey, alt));
+                        if (false == cond_kty) {
+                            __leave2;
+                        }
+                    }
                 }
             }
 
@@ -532,10 +553,15 @@ EVP_PKEY* crypto_key::select(crypto_kty_t kty, crypto_use_t use, bool up_ref) {
     __try2 {
         _lock.enter();
 
+        crypto_kty_t alt = crypto_kty_t::kty_unknown;
+        if (crypto_kty_t::kty_ec == kty) {
+            alt = crypto_kty_t::kty_okp;
+        }
+
         crypto_key_map_t::iterator iter;
         for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
             crypto_key_object_t& item = iter->second;
-            bool test = find_discriminant(item, nullptr, nullptr, kty, crypto_kty_t::kty_unknown, use, SEARCH_KTY);
+            bool test = find_discriminant(item, nullptr, nullptr, kty, alt, use, SEARCH_KTY);
             if (test) {
                 ret_value = item.pkey;
                 break;
@@ -599,8 +625,6 @@ EVP_PKEY* crypto_key::select(crypt_sig_t sig, crypto_use_t use, bool up_ref) {
             __leave2;
         }
 
-        // crypto_kty_t kty = alg_info->kty;
-
         crypto_key_map_t::iterator iter;
         for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
             crypto_key_object_t& item = iter->second;
@@ -632,8 +656,6 @@ EVP_PKEY* crypto_key::select(jws_t sig, crypto_use_t use, bool up_ref) {
         if (nullptr == alg_info) {
             __leave2;
         }
-
-        // crypto_kty_t kty = alg_info->kty;
 
         crypto_key_map_t::iterator iter;
         for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
@@ -692,10 +714,15 @@ EVP_PKEY* crypto_key::select(std::string& kid, crypto_kty_t kty, crypto_use_t us
 
         _lock.enter();
 
+        crypto_kty_t alt = crypto_kty_t::kty_unknown;
+        if (crypto_kty_t::kty_ec == kty) {
+            alt = crypto_kty_t::kty_okp;
+        }
+
         crypto_key_map_t::iterator iter;
         for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
             crypto_key_object_t& item = iter->second;
-            bool test = find_discriminant(item, nullptr, nullptr, kty, crypto_kty_t::kty_unknown, use, SEARCH_KTY);
+            bool test = find_discriminant(item, nullptr, nullptr, kty, alt, use, SEARCH_KTY);
             if (test) {
                 ret_value = item.pkey;
                 kid = item.kid;
@@ -765,8 +792,6 @@ EVP_PKEY* crypto_key::select(std::string& kid, crypt_sig_t sig, crypto_use_t use
             __leave2;
         }
 
-        // crypto_kty_t kty = alg_info->kty;
-
         crypto_key_map_t::iterator iter;
         for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
             crypto_key_object_t& item = iter->second;
@@ -801,8 +826,6 @@ EVP_PKEY* crypto_key::select(std::string& kid, jws_t sig, crypto_use_t use, bool
         if (nullptr == alg_info) {
             __leave2;
         }
-
-        // crypto_kty_t kty = alg_info->kty;
 
         crypto_key_map_t::iterator iter;
         for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
@@ -880,9 +903,14 @@ EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t use, b
             lower_bound = _key_map.lower_bound(k);
             upper_bound = _key_map.upper_bound(k);
 
+            crypto_kty_t alt = crypto_kty_t::kty_unknown;
+            if (crypto_kty_t::kty_ec == kt) {
+                alt = crypto_kty_t::kty_okp;
+            }
+
             for (iter = lower_bound; iter != upper_bound; iter++) {
                 crypto_key_object_t& item = iter->second;
-                bool test = find_discriminant(item, kid, nullptr, kt, crypto_kty_t::kty_unknown, use, SEARCH_KTY);
+                bool test = find_discriminant(item, kid, nullptr, kt, alt, use, SEARCH_KTY);
                 if (test) {
                     ret_value = item.pkey;
                     break;

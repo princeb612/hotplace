@@ -178,6 +178,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                     _test_case.test(ret, __FUNCTION__, "check4.verify %s", text ? text : "");
                     break;
                 case cbor_tag_t::cose_tag_encrypt:
+                case cbor_tag_t::cose_tag_encrypt0:
                     ret = cose.decrypt(cose_handle, cose_keys, bin, decrypted, result);
                     if (errorcode_t::success == ret) {
                         basic_stream bs;
@@ -774,8 +775,8 @@ void test_rfc8152_c_3_2() {
     cose_variantmap_t partyv;
     cose_variantmap_t pub;
 
-    cose.set(cose_handle, cose_param_t::cose_shared_partyu_id, convert("lighting-client"));
-    cose.set(cose_handle, cose_param_t::cose_shared_partyv_id, convert("lighting-server"));
+    cose.set(cose_handle, cose_param_t::cose_shared_apu_id, convert("lighting-client"));
+    cose.set(cose_handle, cose_param_t::cose_shared_apv_id, convert("lighting-server"));
 
     cose.set(cose_handle, cose_param_t::cose_shared_public_other, convert("Encryption Example 02"));
 
@@ -1772,6 +1773,12 @@ void test_github_example() {
                    "ad4eed482a7985be019e9b1936c16e00190e8bcc48ee12d35ff89f0fc7a099ca", "d42044eb2cd2691e926da4871cf3529ddec6b034f824ba5e050d2c702f97c7a5");
     cwk.add_ec_b64u(&key, "meriadoc.brandybuck@buckland.example", nullptr, "P-256", "Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0",
                     "HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw", "r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8");
+    cwk.add_ec_b16(&key, "X25519-1", "EdDSA", "X25519", "7FFE91F5F932DAE92BE603F55FAC0F4C4C9328906EE550EDCB7F6F7626EBC07E", "",
+                   "00a943daa2e38b2edbf0da0434eaaec6016fe25dcd5ecacbc07dc30300567655");
+    cwk.add_ec_b16(&key, "X25519-bob", "EdDSA", "X25519", "DE9EDB7D7B7DC1B4D35B61C2ECE435373F8343C85B78674DADFC7E146F882B4F", "",
+                   "58AB087E624A8A4B79E17F8B83800EE66F3BB1292618B6FD1C2F8B27FF88E06B");
+    cwk.add_ec_b16(&key, "X25519-alice", "EdDSA", "X25519", "8520F0098930A754748B7DDCB43EF75A0DBF3A0D26381AF4EBA4A98EAA9B4E6A", "",
+                   "70076D0A7318A57D3C16C17251B26645DF4C2F87EBC0992AB177FBA51DB92C6A");
 
     cwk.add_oct_b64u(&key, "our-secret", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg", crypto_use_t::use_enc);
     cwk.add_oct_b64u(&key, "sec-48", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico", crypto_use_t::use_enc);
@@ -1829,6 +1836,7 @@ void test_github_example() {
             const char* apv_nonce;
             const char* apv_other;
             const char* pub_other;
+            const char* priv;
         } unsent;
     } vector[] = {
         // aes-ccm-examples
@@ -2108,6 +2116,7 @@ void test_github_example() {
                 "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
             },
         },
+#if defined IMPLEMENTATION_STEP2
         {
             &aes_gcm_04_key,
             "aes-gcm-examples/aes-gcm-enc-04.json",
@@ -2119,10 +2128,11 @@ void test_github_example() {
                 "849B57219DAE48DE646D07DBB533566E",
             },
         },
+#endif
         // aes-wrap-examples
         {
             &aes_ccm_key,
-            "aes-wrap-128-01.json",
+            "aes-wrap-examples/aes-wrap-128-01.json",
             "aes-wrap-128-01: 128-bit key wrap for 128-bit MAC",
             "D8618543A1010EA054546869732069732074686520636F6E74656E742E4836F5AFAF0BAB5D43818340A20122044A6F75722D73656372657458182F8A3D2AA397D3D5C40AAF9F6656BA"
             "FA5DB714EF925B72BC",
@@ -2137,7 +2147,7 @@ void test_github_example() {
         // chacha-poly-examples
         {
             &aes_ccm_key,
-            "chacha-poly-01.json",
+            "chacha-poly-examples/chacha-poly-01.json",
             "ChaCha-Poly1305-01: Encryption example for spec - ",
             "D8608444A1011818A1054C26682306D4FB28CA01B43B8058245F2BD5381BBB04921A8477E55C0D850069674A05E683D416583AA0CEE0E2929CDF648094818340A2012504477365632D"
             "32353640",
@@ -2226,7 +2236,7 @@ void test_github_example() {
         // ecdh-direct-examples
         {
             &key,
-            "p256-hkdf-256-01.json",
+            "ecdh-direct-examples/p256-hkdf-256-01.json",
             "p256-hkdf-256-01: ECDH-ES direct w/ hkdf-sha-256 for 128-bit key",
             "D8608443A10101A1054CC9CF4DF2FE6C632BF788641358247ADBE2709CA818FB415F1E5DF66F4E1A51053BA6D65A1A0C52A357DA7A644B8070A151B0818344A1013818A220A4010220"
             "0121582098F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280225820F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB0458"
@@ -2236,7 +2246,69 @@ void test_github_example() {
         },
         {
             &key,
-            "p256-wrap-128-01.json",
+            "ecdh-direct-examples/p256-hkdf-256-02.json",
+            "p256-hkdf-256-02: ECDH-ES direct w/ hkdf-sha-256 for 256-bit key",
+            "D8608443A10103A1054CC9CF4DF2FE6C632BF788641358243E63CBB945790A3AAA7EBDA78779DFB31FF2EF54DD07C2447A224B6828D3781749A76A4E818344A1013818A220A4010220"
+            "0121582098F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280225820F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB0458"
+            "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6540",
+        },
+        {
+            &key,
+            "ecdh-direct-examples/p256-hkdf-256-03.json",
+            "p256-hkdf-256-03: ECDH-ES direct w/ hkdf-sha-256 for 512-bit key",
+            "D8618543A10107A054546869732069732074686520636F6E74656E742E5840DB49CF4E1444B976C74D550A6134E1A69774AE0F132AD38FB5F409B25740EE564870FBAEB0EE01BA4A7E"
+            "7DFD2BBBECBF21E5BB1B7CCD94210375D3461AF851EA818344A1013818A220A40102200121582098F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D62802258"
+            "20F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB0458246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C654"
+            "0",
+        },
+        {
+            &key,
+            "ecdh-direct-examples/p256-hkdf-512-01.json",
+            "p256-hkdf-512-01: ECDH-ES direct w/ hkdf-sha-512 for 128-bit key",
+            "D8608443A10101A1054CC9CF4DF2FE6C632BF788641358242ACAF2D3BABAFC8B5EE715168DF349AC10E9B82CE51B9E4834F64FF240BE4D49A022A99F818344A1013819A220A4010220"
+            "0121582098F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280225820F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB0458"
+            "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6540",
+        },
+        {
+            &key,
+            "ecdh-direct-examples/p256-hkdf-512-02.json",
+            "p256-hkdf-512-02: ECDH-ES direct w/ hkdf-sha-512 for 256-bit key",
+            "D8608443A10103A1054CC9CF4DF2FE6C632BF788641358242EC2BE4CDDA5838267A7E9529F9FF2CABA6449D03E7A148CA57582D76C8CE77F9D606A77818344A1013819A220A4010220"
+            "0121582098F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280225820F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB0458"
+            "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6540",
+        },
+        {
+            &key,
+            "ecdh-direct-examples/p256-ss-hkdf-256-01.json",
+            "p256-ss-hkdf-256-01: ECDH-SS direct w/ hkdf-sha-256 for 128-bit key",
+            "D8608443A10101A1054CD7923E677B71A3F40A179643582455DE918D6CA1E33BEDE48DB6E48678A8159214E76B2099E74AA52F250B940D13C4E7AB78818344A101381AA321A4200121"
+            "5820EDCBD809C754DB6582C16D6D65747C8AECC92D619C778EB17F13B55C9B3E48F52258200F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A01020458"
+            "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6535584002D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3C9"
+            "CF4DF2FE6C632BF7886413F76E88523A8260B857D70B350027FD842B5E594740",
+            nullptr,
+            {
+                "8367456E637279707443A1010140",
+                "A6C2365CBC7672FBB5DB614B9A223AE3",
+            },
+        },
+        {
+            &key,
+            "ecdh-direct-examples/p256-ss-hkdf-256-02.json",
+            "p256-ss-hkdf-256-02: ECDH-SS direct w/ hkdf-sha-256 for 256-bit key",
+            "D8608443A10103A1054C2DE17507BE74667DA9B7B8AC5824DA8955ED1647756DE4C6846FC3581A8EB2176C583363AFCE78D3868F282F221D20ED6063818344A101381AA321A4200121"
+            "5820EDCBD809C754DB6582C16D6D65747C8AECC92D619C778EB17F13B55C9B3E48F52258200F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A01020458"
+            "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6535584002D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3C9"
+            "CF4DF2FE6C632BF7886413F76E885299E58C2F0F717D59C6123210A16AD92040",
+            nullptr,
+            {
+                "8367456E637279707443A1010340",
+                "A191090130A6FCBAFF6EEC5B70795265B7C18D66F8CDB99E169B4D3332C7DF4E",
+            },
+        },
+        // ecdh-wrap-examples
+        {
+            &key,
+            "ecdh-wrap-examples/p256-wrap-128-01.json",
             "p256-wrap-128-01: ECDH-ES direct w/ key wrap 128 for 128-bit key",
             "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582464F84D913BA60A76070A9A48F26E97E863E2852948658F0811139868826E89218A75715B818344A101381CA220A4010220"
             "01215820ECDBCEC636CC1408A503BBF6B7311B900C9AED9C5B71503848C89A07D0EF6F5B225820D6D1586710C02203E4E53B20DC7B233CA4C8B6853467B9FB8244A3840ACCD6020458"
@@ -2247,7 +2319,6 @@ void test_github_example() {
                 "B2353161740AACF1F7163647984B522A",
             },
         },
-        // ecdh-wrap-examples
         // ecdsa-examples
         {
             &key,
@@ -2567,13 +2638,11 @@ void test_github_example() {
             {},
             {
                 nullptr,
-                "lighting-client",
-                nullptr,
-                nullptr,
-                "lighting-server",
-                nullptr,
-                nullptr,
-                "Encryption Example 02",
+                "6c69676874696e672d636c69656e74",  // "lighting-client",
+                nullptr, nullptr,
+                "6c69676874696e672d736572766572",  // "lighting-server",
+                nullptr, nullptr,
+                "456e6372797074696f6e204578616d706c65203032",  // "Encryption Example 02",
             },
         },
         {
@@ -2689,8 +2758,25 @@ void test_github_example() {
             "672B876AD843987DFA66F8AB117EADA8B2BCD73725B409B84F729651CEC75092E7FD7562504F49E221B80A71693BC9C5AD438A183E0ED2A3494DDD7AFAD5EAD3B87F51AE1020375323"
             "79869A9D9E169B6C7ADF2D82EA22C656FFE4BF6A2A156F9DF05C53373A3B0AA815E9E5CED03D",
         },
-// sign1-tests
-// sign-tests
+    // sign1-tests
+#if defined IMPLEMENTATION_STEP2
+        {
+            &key,
+            "sign1-tests/sign-pass-01.json",
+            "sign-pass-01: Redo protected",
+            "D28441A0A201260442313154546869732069732074686520636F6E74656E742E584087DB0D2E5571843B78AC33ECB2830DF7B6E0A4D5B7376DE336B23C591C90C425317E56127FBE04"
+            "370097CE347087B233BF722B64072BEB4486BDA4031D27244F",
+        },
+#endif
+        {
+            &key,
+            "sign1-tests/sign-pass-02.json",
+            "sign-pass-02: External",
+            "D28443A10126A10442313154546869732069732074686520636F6E74656E742E584010729CD711CB3813D8D8E944A8DA7111E7B258C9BDCA6135F7AE1ADBEE9509891267837E1E33BD"
+            "36C150326AE62755C6BD8E540C3E8F92D7D225E8DB72B8820B",
+            "11aa22bb33cc44dd55006699",
+        },
+    // sign-tests
 #if defined IMPLEMENTATION_STEP2
         {
             &key,
@@ -2716,6 +2802,26 @@ void test_github_example() {
         },
 #endif
         // X25519-tests
+        {
+            &key,
+            "X25519-tests/x25519-hkdf-256-direct.json",
+            "X25519-hkdf-256-direct-01: X25519 direct w/ hkdf-sha-256 for 128-bit key",
+            "D8608443A10101A1054C9862E02EC874A0DF9FB123385824D2B07042F7BA47C61646CCA83AB97FD23AF21F0D2AC75DCB47A9FC293015D8F098AE9C1B818344A1013818A220A3010120"
+            "0421582072FC171C21BF5C682C64D2EF3A71AC877B40013D3754F63D4C3C3A965F1BA77604485832353531392D3140",
+            nullptr,
+            {
+                "8367456E637279707443A1010140",
+                "52291DE41342AC0AC2E31867A1423ACB",
+            },
+        },
+        {
+            &key,
+            "X25519-tests/x25519-ss-hkdf-256-direct.json",
+            "X25519-ss-hkdf-256-direct-01: X25519 direct w/ hkdf-sha-256 for 128-bit key - static sender",
+            "D8608443A10101A1054CCDA8E5632E1501A698960E2B582460F0E32B4E511A964DFA671D95F00463D094EDC3FCB3DF782C0EDEDDD9436FB8CC79F482818344A101381AA3224C583235"
+            "3531392D616C696365044A5832353531392D626F62355840607A92A41974DF0CB967E1C395B21F557469379E011781B6BE9189F40ADFECE4715AB87A79B36FB20913240FBB833FAB14"
+            "B6A72A232A3CB18D1996A16256E44540",
+        },
         // x509-examples (TODO - CRT, DER, x5bag, x5chain, x5t)
         {
             &key,
@@ -2850,18 +2956,42 @@ void test_github_example() {
 #if defined DEBUG
             if (vector[i].enc.aad_hex) {
                 dump_memory(base16_decode(vector[i].enc.aad_hex), &bs);
-                printf("AAD\n%s\n%s\n", vector[i].enc.aad_hex, bs.c_str());
+                printf("AAD\n%s\n%s\n", bs.c_str(), vector[i].enc.aad_hex);
             }
             if (vector[i].enc.cek_hex) {
                 dump_memory(base16_decode(vector[i].enc.cek_hex), &bs);
-                printf("AAD\n%s\n%s\n", vector[i].enc.cek_hex, bs.c_str());
+                printf("CEK\n%s\n%s\n", bs.c_str(), vector[i].enc.cek_hex);
             }
 #endif
             if (vector[i].external) {
                 cose.set(handle, cose_param_t::cose_shared_external, base16_decode(vector[i].external));
             }
             if (vector[i].unsent.iv_hex) {
-                cose.set(handle, cose_param_t::cose_shared_unsent_iv, base16_decode(vector[i].unsent.iv_hex));
+                cose.set(handle, cose_param_t::cose_shared_iv, base16_decode(vector[i].unsent.iv_hex));
+            }
+            if (vector[i].unsent.apu_id) {
+                cose.set(handle, cose_param_t::cose_shared_apu_id, base16_decode(vector[i].unsent.apu_id));
+            }
+            if (vector[i].unsent.apu_nonce) {
+                cose.set(handle, cose_param_t::cose_shared_apu_nonce, base16_decode(vector[i].unsent.apu_nonce));
+            }
+            if (vector[i].unsent.apu_other) {
+                cose.set(handle, cose_param_t::cose_shared_apu_other, base16_decode(vector[i].unsent.apu_other));
+            }
+            if (vector[i].unsent.apv_id) {
+                cose.set(handle, cose_param_t::cose_shared_apv_id, base16_decode(vector[i].unsent.apv_id));
+            }
+            if (vector[i].unsent.apv_nonce) {
+                cose.set(handle, cose_param_t::cose_shared_apv_nonce, base16_decode(vector[i].unsent.apv_nonce));
+            }
+            if (vector[i].unsent.apv_other) {
+                cose.set(handle, cose_param_t::cose_shared_apv_other, base16_decode(vector[i].unsent.apv_other));
+            }
+            if (vector[i].unsent.pub_other) {
+                cose.set(handle, cose_param_t::cose_shared_public_other, base16_decode(vector[i].unsent.pub_other));
+            }
+            if (vector[i].unsent.priv) {
+                cose.set(handle, cose_param_t::cose_shared_private, base16_decode(vector[i].unsent.priv));
             }
 
             int tagvalue = iter->second;

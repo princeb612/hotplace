@@ -20,15 +20,15 @@ namespace crypto {
 
 enum cose_param_t {
     cose_shared_external = 1,
-    cose_shared_partyu_id = 2,
-    cose_shared_partyu_nonce = 3,
-    cose_shared_partyu_other = 4,
-    cose_shared_partyv_id = 5,
-    cose_shared_partyv_nonce = 6,
-    cose_shared_partyv_other = 7,
+    cose_shared_apu_id = 2,
+    cose_shared_apu_nonce = 3,
+    cose_shared_apu_other = 4,
+    cose_shared_apv_id = 5,
+    cose_shared_apv_nonce = 6,
+    cose_shared_apv_other = 7,
     cose_shared_public_other = 8,
     cose_shared_private = 9,
-    cose_shared_unsent_iv = 10,
+    cose_shared_iv = 10,
 
     cose_aad = 11,
     cose_cek = 12,

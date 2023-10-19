@@ -82,15 +82,15 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_param_
         }
         switch (id) {
             case cose_param_t::cose_shared_external:
-            case cose_param_t::cose_shared_partyu_id:
-            case cose_param_t::cose_shared_partyu_nonce:
-            case cose_param_t::cose_shared_partyu_other:
-            case cose_param_t::cose_shared_partyv_id:
-            case cose_param_t::cose_shared_partyv_nonce:
-            case cose_param_t::cose_shared_partyv_other:
+            case cose_param_t::cose_shared_apu_id:
+            case cose_param_t::cose_shared_apu_nonce:
+            case cose_param_t::cose_shared_apu_other:
+            case cose_param_t::cose_shared_apv_id:
+            case cose_param_t::cose_shared_apv_nonce:
+            case cose_param_t::cose_shared_apv_other:
             case cose_param_t::cose_shared_public_other:
             case cose_param_t::cose_shared_private:
-            case cose_param_t::cose_shared_unsent_iv:
+            case cose_param_t::cose_shared_iv:
             case cose_param_t::cose_cek:
                 handle->binarymap[id] = bin;
                 break;
@@ -646,7 +646,7 @@ return_t cbor_object_signing_encryption::composer::parse_unprotected(cbor_map* r
                     maphint<int, variant_t> hint(ephemeral_key);
                     check = hint.find(cose_key_lable_t::cose_lable_kty, &vt);
                     int kty = t_variant_to_int<int>(vt);
-                    if (cose_kty_t::cose_kty_ec2 == kty) {
+                    if (cose_kty_t::cose_kty_ec2 == kty || cose_kty_t::cose_kty_okp == kty) {
                         int crv = 0;
                         binary_t bin_x;
                         binary_t bin_y;

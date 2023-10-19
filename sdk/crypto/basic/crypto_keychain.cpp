@@ -616,7 +616,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const c
         case NID_X448:
         case NID_ED25519:
         case NID_ED448:
-            ret = errorcode_t::request;
+            ret = add_ec_nid_OKP(cryptokey, kid, alg, nid, x, d, use);
             break;
         case NID_X9_62_prime256v1:
         case NID_secp384r1:
@@ -887,7 +887,7 @@ return_t crypto_keychain::add_ec_nid_OKP(crypto_key* cryptokey, const char* kid,
         }
         if (nullptr == pkey) {
             ret = errorcode_t::request;
-            __leave2;
+            __leave2_trace_openssl(ret);
         }
 
         crypto_key_object_t key(pkey, use, kid, alg);
