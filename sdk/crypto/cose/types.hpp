@@ -18,24 +18,24 @@
 namespace hotplace {
 namespace crypto {
 
-enum cose_flag_t {
-    cose_external = 1,
-    cose_partyu = 2,
-    cose_partyv = 3,
-    cose_public = 4,
-    cose_private = 5,
-    cose_aad = 6,
-    cose_cek = 7,
-#if defined DEBUG
-    cose_tv_aad = 8,
-    cose_tv_cek = 9,
-    cose_compare_aad = 10,
-    cose_compare_cek = 11,
-#endif
+enum cose_param_t {
+    cose_shared_external = 1,
+    cose_shared_partyu_id = 2,
+    cose_shared_partyu_nonce = 3,
+    cose_shared_partyu_other = 4,
+    cose_shared_partyv_id = 5,
+    cose_shared_partyv_nonce = 6,
+    cose_shared_partyv_other = 7,
+    cose_shared_public_other = 8,
+    cose_shared_private = 9,
+    cose_shared_unsent_iv = 10,
+
+    cose_aad = 11,
+    cose_cek = 12,
 };
 typedef std::map<int, variant_t> cose_variantmap_t;
 typedef std::list<int> cose_orderlist_t;
-typedef std::map<cose_flag_t, binary_t> cose_binarymap_t;
+typedef std::map<cose_param_t, binary_t> cose_binarymap_t;
 
 typedef struct _cose_parts_t {
     // sign, verify
@@ -77,16 +77,12 @@ typedef struct _cose_context_t {
     binary_t payload;
     std::list<cose_parts_t> subitems;
 
-    cose_variantmap_t partyu;
-    cose_variantmap_t partyv;
     cose_binarymap_t binarymap;
 
     _cose_context_t() : tag(0) {}
     ~_cose_context_t() { clearall(); }
     void clearall() {
         clear();
-        clear_map(partyu);
-        clear_map(partyv);
         binarymap.clear();
     }
     void clear_map(cose_variantmap_t& map) {

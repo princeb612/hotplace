@@ -73,7 +73,7 @@ return_t cbor_object_signing_encryption::close(cose_context_t* handle) {
     return ret;
 }
 
-return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_flag_t id, binary_t const& bin) {
+return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_param_t id, binary_t const& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -81,40 +81,18 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_flag_t
             __leave2;
         }
         switch (id) {
-            case cose_flag_t::cose_external:
-            case cose_flag_t::cose_public:
-            case cose_flag_t::cose_private:
-            case cose_flag_t::cose_cek:
-#if defined DEBUG
-            case cose_flag_t::cose_tv_aad:
-            case cose_flag_t::cose_tv_cek:
-#endif
-                handle->binarymap.insert(std::make_pair(id, bin));
-                break;
-            default:
-                ret = errorcode_t::request;
-                break;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t cbor_object_signing_encryption::set(cose_context_t* handle, int id, cose_variantmap_t& datamap) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        switch (id) {
-            case cose_flag_t::cose_partyu:
-                handle->partyu = datamap;
-                break;
-            case cose_flag_t::cose_partyv:
-                handle->partyv = datamap;
+            case cose_param_t::cose_shared_external:
+            case cose_param_t::cose_shared_partyu_id:
+            case cose_param_t::cose_shared_partyu_nonce:
+            case cose_param_t::cose_shared_partyu_other:
+            case cose_param_t::cose_shared_partyv_id:
+            case cose_param_t::cose_shared_partyv_nonce:
+            case cose_param_t::cose_shared_partyv_other:
+            case cose_param_t::cose_shared_public_other:
+            case cose_param_t::cose_shared_private:
+            case cose_param_t::cose_shared_unsent_iv:
+            case cose_param_t::cose_cek:
+                handle->binarymap[id] = bin;
                 break;
             default:
                 ret = errorcode_t::request;

@@ -36,6 +36,7 @@ class crypto_advisor {
      *      size_t blocksize = blockcipher->_blocksize;
      */
     const hint_blockcipher_t* hintof_blockcipher(crypt_algorithm_t alg);
+    const hint_blockcipher_t* hintof_blockcipher(const char* alg);
     /**
      * @brief find blockcipher hint
      * @param const EVP_CIPHER* cipher [in]

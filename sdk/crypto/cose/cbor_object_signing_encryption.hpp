@@ -45,17 +45,10 @@ class cbor_object_signing_encryption {
     /**
      * @brief   set
      * @param   cose_context_t* handle [in]
-     * @param   cose_flag_t id [in] cose_external, cose_public, cose_private
+     * @param   cose_param_t id [in] cose_external, cose_public, cose_private
      * @param   binary_t const& bin [in]
      */
-    return_t set(cose_context_t* handle, cose_flag_t id, binary_t const& bin);
-    /**
-     * @brief   set
-     * @param   cose_context_t* handle [in]
-     * @param   int id [in] cose_partyu, cose_partyv
-     * @param   cose_variantmap_t& datamap [in]
-     */
-    return_t set(cose_context_t* handle, int id, cose_variantmap_t& datamap);
+    return_t set(cose_context_t* handle, cose_param_t id, binary_t const& bin);
 
     /**
      * @brief   encrypt

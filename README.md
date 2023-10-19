@@ -111,9 +111,9 @@
      * mingw
      * Fedora Core release 4 (Stentz) w/ custom toolchain (GCC 4.8)
 
-# custom toolchain
+## custom toolchain
 
-## openssl
+### openssl
 
  * important
    * openssl 1.1.1 or newer
@@ -156,7 +156,7 @@
      * no thanks man pages
        * $ make install_sw install_ssldirs
 
-## jansson
+### jansson
 
    * build custom jansson (example)
      * see https://github.com/akheron/jansson
@@ -168,7 +168,7 @@
      * make
      * make install
 
-## FC4 custom toolchain
+### FC4 custom toolchain
 
   * toolchain dependencies
     * cmake (2.8.10.2)

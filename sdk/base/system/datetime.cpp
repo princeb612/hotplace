@@ -842,10 +842,10 @@ void system_gettime(int clockid, struct timespec& ts) {
     clock_gettime_t clock_gettime_ptr = nullptr;
     DLSYMAPI(RTLD_DEFAULT, "clock_gettime", clock_gettime_ptr);
     if (clock_gettime_ptr) {
-        // kernel 2.8~ later
+        // kernel 2.7~ later
         (*clock_gettime_ptr)(clockid, &ts);
     } else {
-        // kernel ~2.7 earlier
+        // kernel ~2.6 earlier
         ts.tv_sec = time(nullptr);
         struct timeval tv;
         gettimeofday(&tv, nullptr);

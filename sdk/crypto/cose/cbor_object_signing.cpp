@@ -71,9 +71,9 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
         cbor_publisher pub;
         std::list<cose_alg_t>::iterator iter;
 
-        maphint<cose_flag_t, binary_t> hint(handle->binarymap);
+        maphint<cose_param_t, binary_t> hint(handle->binarymap);
         binary_t external;
-        hint.find(cose_flag_t::cose_external, &external);
+        hint.find(cose_param_t::cose_shared_external, &external);
 
         for (iter = methods.begin(); iter != methods.end(); iter++) {
             cose_alg_t method = *iter;
@@ -149,16 +149,16 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
 
         const char* k = nullptr;
 
-        maphint<cose_flag_t, binary_t> hint(handle->binarymap);
+        maphint<cose_param_t, binary_t> hint(handle->binarymap);
         binary_t external;
-        hint.find(cose_flag_t::cose_external, &external);
+        hint.find(cose_param_t::cose_shared_external, &external);
 
         binary_t tobesigned;
         size_t size_subitems = handle->subitems.size();
         std::list<cose_parts_t>::iterator iter;
         for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
             binary_t cek;
-            hint.find(cose_flag_t::cose_cek, &cek);
+            hint.find(cose_param_t::cose_cek, &cek);
 
             cose_parts_t& item = *iter;
             compose_tobesigned(tobesigned, handle->tag, handle->body.bin_protected, item.bin_protected, external, handle->payload);

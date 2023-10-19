@@ -242,6 +242,19 @@ const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(crypt_algorithm_t a
     return item;
 }
 
+const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(const char* alg) {
+    const hint_blockcipher_t* ret_value = nullptr;
+    if (alg) {
+        maphint<std::string, const openssl_evp_cipher_method_t*> hint(_cipher_byname_map);
+        const openssl_evp_cipher_method_t* item = nullptr;
+        hint.find(alg, &item);
+        if (item) {
+            ret_value = hintof_blockcipher(item->_algorithm);
+        }
+    }
+    return ret_value;
+}
+
 const hint_blockcipher_t* crypto_advisor::find_evp_cipher(const EVP_CIPHER* cipher) {
     const hint_blockcipher_t* blockcipher = nullptr;
     return_t ret = errorcode_t::success;

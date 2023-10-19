@@ -22,6 +22,7 @@
 #include <hotplace/sdk/io/cbor/cbor_map.hpp>
 #include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
 #include <hotplace/sdk/io/cbor/cbor_reader.hpp>
+#include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -85,15 +86,10 @@ return_t cbor_object_encryption::compose_enc_structure(binary_t& authenticated_d
     return ret;
 }
 
-cbor_data* kdf_context_item(cose_key_t id, cose_parts_t* source, cose_variantmap_t* info) {
+cbor_data* kdf_context(cose_context_t* handle, cose_param_t id) {
     return_t ret = errorcode_t::success;
-    cbor_object_signing_encryption::composer composer;
-    binary_t bin;
-    ret = composer.finditem(id, bin, *info);
-    if (errorcode_t::success != ret) {
-        composer.finditem(id, bin, source->unprotected_map);
-    }
     cbor_data* data = nullptr;
+    binary_t& bin = handle->binarymap[id];
     if (bin.size()) {
         data = new cbor_data(bin);
     } else {
@@ -207,7 +203,6 @@ return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binar
         }
 
         if (0 == keylen) {
-            printf("algid %i\n", algid);
             throw;  // studying
         }
 
@@ -216,24 +211,22 @@ return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binar
         cbor_array* partyu = (cbor_array*)(*root)[1];
         cbor_array* partyv = (cbor_array*)(*root)[2];
         cbor_array* pub = (cbor_array*)(*root)[3];
-        maphint<cose_flag_t, binary_t> hint(handle->binarymap);
+        maphint<cose_param_t, binary_t> hint(handle->binarymap);
         // PartyUInfo
         {
-            *partyu << kdf_context_item(cose_key_t::cose_partyu_id, source, &handle->partyu)
-                    << kdf_context_item(cose_key_t::cose_partyu_nonce, source, &handle->partyu)
-                    << kdf_context_item(cose_key_t::cose_partyu_other, source, &handle->partyu);
+            *partyu << kdf_context(handle, cose_param_t::cose_shared_partyu_id) << kdf_context(handle, cose_param_t::cose_shared_partyu_nonce)
+                    << kdf_context(handle, cose_param_t::cose_shared_partyu_other);
         }
         // PartyVInfo
         {
-            *partyv << kdf_context_item(cose_key_t::cose_partyv_id, source, &handle->partyv)
-                    << kdf_context_item(cose_key_t::cose_partyv_nonce, source, &handle->partyv)
-                    << kdf_context_item(cose_key_t::cose_partyv_other, source, &handle->partyv);
+            *partyv << kdf_context(handle, cose_param_t::cose_shared_partyv_id) << kdf_context(handle, cose_param_t::cose_shared_partyv_nonce)
+                    << kdf_context(handle, cose_param_t::cose_shared_partyv_other);
         }
         // SuppPubInfo
         {
             *pub << new cbor_data(keylen) << new cbor_data(source->bin_protected);
             binary_t bin_public;
-            hint.find(cose_flag_t::cose_public, &bin_public);
+            hint.find(cose_param_t::cose_shared_public_other, &bin_public);
             if (bin_public.size()) {
                 *pub << new cbor_data(bin_public);
             }
@@ -241,7 +234,7 @@ return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binar
         // SuppPrivInfo
         {
             binary_t bin_private;
-            hint.find(cose_flag_t::cose_private, &bin_private);
+            hint.find(cose_param_t::cose_shared_private, &bin_private);
             if (bin_private.size()) {
                 *root << new cbor_data(bin_private);
             }
@@ -289,15 +282,32 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
 
         const hint_cose_algorithm_t* enc_hint = advisor->hintof_cose_algorithm((cose_alg_t)enc_alg);
 
-        maphint<cose_flag_t, binary_t> hint(handle->binarymap);
+        maphint<cose_param_t, binary_t> hint(handle->binarymap);
 
+        binary_t partial_iv;
         binary_t iv;
-        iv.resize(8);
-        memset(&iv[0], 0xa6, iv.size());
         composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
+        if (0 == iv.size()) {
+            hint.find(cose_param_t::cose_shared_unsent_iv, &iv);
+        }
+        if (iv.size()) {
+            // RFC 8152 3.1.  Common COSE Headers Parameters
+            // Partial IV
+            // 1.  Left-pad the Partial IV with zeros to the length of IV.
+            // 2.  XOR the padded Partial IV with the context IV.
+            size_t ivsize = iv.size();
+            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, handle->body.unprotected_map);
+            if (partial_iv.size()) {
+                binary_t parial_iv_step1;
+                binary_load(parial_iv_step1, ivsize, &partial_iv[0], partial_iv.size());
+                for (size_t i = 0; i < ivsize; i++) {
+                    iv[i] ^= parial_iv_step1[i];
+                }
+            }
+        }
 
         binary_t cek;
-        hint.find(cose_flag_t::cose_cek, &cek);
+        hint.find(cose_param_t::cose_cek, &cek);
         if (0 == cek.size()) {
             if (cbor_tag_t::cose_tag_encrypt == tag) {
                 ret = errorcode_t::request;
@@ -327,7 +337,7 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
         }
 
         binary_t authenticated_data;
-        hint.find(cose_flag_t::cose_aad, &authenticated_data);
+        hint.find(cose_param_t::cose_aad, &authenticated_data);
 
         binary_t tag;
 
@@ -349,24 +359,6 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
             crypt.close(crypt_handle);
         }
-#if defined DEBUG
-        // remove later
-        {
-            maphint<cose_flag_t, binary_t> hint(handle->binarymap);
-
-            binary_t bin_true;
-            binary_t bin_false;
-            bin_true.push_back(1);
-            bin_true.push_back(0);
-
-            binary_t tv_aad;
-            hint.find(cose_flag_t::cose_tv_aad, &tv_aad);
-            handle->binarymap[cose_flag_t::cose_compare_aad] = (tv_aad.size() && (tv_aad == authenticated_data)) ? bin_true : bin_false;
-            binary_t tv_cek;
-            hint.find(cose_flag_t::cose_tv_cek, &tv_cek);
-            handle->binarymap[cose_flag_t::cose_compare_cek] = (tv_cek.size() && (tv_cek == cek)) ? bin_true : bin_false;
-        }
-#endif
     }
     __finally2 {
         // do nothing
@@ -402,16 +394,19 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
         // AAD_hex
         binary_t authenticated_data;
-        compose_enc_structure(authenticated_data, handle->tag, handle->body.bin_protected, handle->binarymap[cose_flag_t::cose_external]);
+        compose_enc_structure(authenticated_data, handle->tag, handle->body.bin_protected, handle->binarymap[cose_param_t::cose_shared_external]);
         // too many parameters... handle w/ map
-        handle->binarymap[cose_flag_t::cose_aad] = authenticated_data;
+        handle->binarymap[cose_param_t::cose_aad] = authenticated_data;
 
         const char* k = nullptr;
+        binary_t kwiv;
         binary_t iv;
-        iv.resize(8);
-        memset(&iv[0], 0xa6, iv.size());
-        composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
         int enc_alg = 0;
+
+        kwiv.resize(8);
+        memset(&kwiv[0], 0xa6, kwiv.size());
+
+        composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
         composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.protected_map);
 
         size_t size_subitems = handle->subitems.size();
@@ -454,10 +449,15 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 continue;
             }
 
-            pkey = key->find(k, alg_hint->kty);
+            if (k) {
+                pkey = key->find(k, alg_hint->kty);
+            } else {
+                std::string selected_kid;
+                pkey = key->select(selected_kid, alg_hint->kty);
+            }
             if (nullptr == pkey) {
 #if defined DEBUG
-                // throw errorcode_t::internal_error;
+                throw errorcode_t::internal_error;
 #endif
                 continue;
             }
@@ -525,7 +525,11 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 dh_key_agreement(pkey, item.epk, secret);
 
                 compose_kdf_context(handle, &item, context);
+
                 // 12.5.  Key Agreement with Key Wrap
+                crypt.open(&crypt_handle, alg_hint->param.algname, secret, kwiv);
+                crypt.decrypt(crypt_handle, item.bin_data, cek);
+                crypt.close(crypt_handle);
             } else if (cose_group_t::cose_group_ecdhss_aeskw == group) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
@@ -540,7 +544,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 salt.resize(alg_hint->kdf.dlen);
                 kdf_hkdf(kek, alg_hint->kdf.dlen, secret, salt, context, alg_hint->kdf.algname);
 
-                crypt.open(&crypt_handle, alg_hint->param.algname, kek, convert(""));
+                crypt.open(&crypt_handle, alg_hint->param.algname, kek, kwiv);
                 crypt.decrypt(crypt_handle, item.bin_data, cek);
                 crypt.close(crypt_handle);
             } else if (cose_group_t::cose_group_rsassa_pss == group) {
@@ -560,7 +564,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
             if (cek.size()) {
                 // too many parameters... handle w/ map
-                handle->binarymap[cose_flag_t::cose_cek] = cek;
+                handle->binarymap[cose_param_t::cose_cek] = cek;
                 check = dodecrypt(handle, key, cbor_tag_t::cose_tag_encrypt, output);
 
                 results.insert((errorcode_t::success == check) ? true : false);
