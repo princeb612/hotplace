@@ -67,6 +67,15 @@ return_t crypto_advisor::build_if_necessary() {
             _blockcipher_map.insert(std::make_pair(item->_alg, item));
         }
 
+        // openssl-3.0
+        //   - use EVP_CIPHER_fetch/EVP_CIPHER_free, EVP_MD_fetch/EVP_MD_free
+        // openssl-1.1.1
+        //   - use EVP_get_cipherbyname, EVP_get_digestbyname (run-time)
+        //     EVP_CIPHER* and EVP_MD* at extern const structure return nullptr (constexpr in compile-time)
+        //   - not provided "aes-128-wrap", "aes-192-wrap", "aes-256-wrap"
+        //     [FAIL] const EVP_CIPHER* cipher = EVP_get_cipherbyname("aes-128-wrap");
+        //     [PASS] const EVP_CIPHER* cipher = crypto_advisor::get_instance()->find_evp_cipher("aes-128-wrap");
+
         for (i = 0; i < sizeof_evp_cipher_methods; i++) {
             const openssl_evp_cipher_method_t* item = evp_cipher_methods + i;
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)

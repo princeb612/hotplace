@@ -109,6 +109,11 @@
      * RHEL 7 and newer, (including CentOS, Rockey Linux)
      * ubuntu 20.04 and newer
      * mingw
+     * Fedora Core release 4 (Stentz) w/ custom toolchain (GCC 4.8)
+
+# custom toolchain
+
+## openssl
 
  * important
    * openssl 1.1.1 or newer
@@ -116,6 +121,8 @@
      * Ed25519 Ed448 X25519 X448
      * sha3
    * openssl 3.0, 3.1
+     * EVP_CIPHER_fetch/EVP_CIPHER_free, EVP_MD_fetch/EVP_MD_free
+     * truncated sha ("sha2-512/224", "sha2-512/256")
      * failed to load PEM file containing private key
    * openssl 3.2
      * argon2d, argon2i, argon2id
@@ -148,6 +155,9 @@
        * $ make
      * no thanks man pages
        * $ make install_sw install_ssldirs
+
+## jansson
+
    * build custom jansson (example)
      * see https://github.com/akheron/jansson
      * aclocal; autoheader; autoconf;
@@ -157,6 +167,23 @@
      * ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
      * make
      * make install
+
+## FC4 custom toolchain
+
+  * toolchain dependencies
+    * cmake (2.8.10.2)
+    * perl (5.10.0)
+    * m4 (1.4.13)
+    * autoconf (2.65)
+    * automake (1.16.4)
+    * libtool (1.5.2)
+    * make (3.80)
+    * gmp (4.3.2)
+    * mpfr (2.4.2)
+    * mpc (1.0.3)
+    * isl (0.10)
+    * binutils (2.18)
+    * gcc (4.8.5)
 
 # link
 

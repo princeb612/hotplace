@@ -249,6 +249,13 @@ class datetime {
     struct timespec _timespec; /* time_t tv_sec(UTC seconds) + long tv_nsec(nanoseconds) */
 };
 
+/**
+ * @brief clock_gettime (kernel 2.6) replacement
+ * @param int clockid [in] CLOCK_REALTIME, CLOCK_MONOTONIC
+ * @param struct timespec& ts [out]
+ */
+void system_gettime(int clockid, struct timespec& ts);
+
 void time_monotonic(struct timespec& timespec);
 /**
  * @brief   calculate difference

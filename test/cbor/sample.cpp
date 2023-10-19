@@ -711,7 +711,13 @@ void whatsthis(int argc, char** argv) {
         reader.publish(handle, &diagnostic);
         reader.close(handle);
 
-        std::cout << "what u want to know" << std::endl << "< " << argv[1] << std::endl << "> " << diagnostic.c_str() << std::endl;
+        basic_stream bs;
+        dump_memory(what, &bs, 16, 2);
+        std::cout << "what u want to know" << std::endl
+                  << "< " << argv[1] << std::endl
+                  << "> " << diagnostic.c_str() << std::endl
+                  << "> dump" << std::endl
+                  << bs.c_str() << std::endl;
     }
 }
 
@@ -719,8 +725,8 @@ int main(int argc, char** argv) {
     test1();
     test2();
     test3();
-    whatsthis(argc, argv);
 
     _test_case.report(5);
+    whatsthis(argc, argv);
     return _test_case.result();
 }

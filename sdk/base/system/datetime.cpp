@@ -12,6 +12,11 @@
 
 #include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
+#if defined __linux__
+#include <dlfcn.h>
+#include <sys/time.h>
+#include <unistd.h>
+#endif
 
 namespace hotplace {
 
@@ -48,7 +53,7 @@ datetime::~datetime() {
     // do nothing
 }
 
-void datetime::update() { clock_gettime(CLOCK_REALTIME, &_timespec); }
+void datetime::update() { system_gettime(CLOCK_REALTIME, _timespec); }
 
 bool datetime::update_if_elapsed(unsigned long msecs) {
     bool ret = false;
@@ -769,7 +774,7 @@ return_t datetime::asn1time_to_timespec(asn1time_t at, struct timespec& ts) {
     return ret;
 }
 
-void time_monotonic(struct timespec& ts) { clock_gettime(CLOCK_MONOTONIC, &ts); }
+void time_monotonic(struct timespec& ts) { system_gettime(CLOCK_MONOTONIC, ts); }
 
 return_t time_diff(struct timespec& ts, struct timespec begin, struct timespec end) {
     return_t ret = errorcode_t::success;
@@ -827,6 +832,28 @@ return_t time_sum(struct timespec& ts, std::list<struct timespec>& slices) {
     ts.tv_nsec = nsec % EXP9;
 
     return ret;
+}
+
+void system_gettime(int clockid, struct timespec& ts) {
+#if defined __linux__
+// to support a minimal platform
+#define DLSYMAPI(handle, nameof_api, func_ptr) *(void**)(&func_ptr) = dlsym(handle, nameof_api)
+    typedef int (*clock_gettime_t)(clockid_t clockid, struct timespec * tp);
+    clock_gettime_t clock_gettime_ptr = nullptr;
+    DLSYMAPI(RTLD_DEFAULT, "clock_gettime", clock_gettime_ptr);
+    if (clock_gettime_ptr) {
+        // kernel 2.8~ later
+        (*clock_gettime_ptr)(clockid, &ts);
+    } else {
+        // kernel ~2.7 earlier
+        ts.tv_sec = time(nullptr);
+        struct timeval tv;
+        gettimeofday(&tv, nullptr);
+        ts.tv_nsec = tv.tv_usec * 1000;
+    }
+#else
+    clock_gettime(CLOCK_REALTIME, &ts);
+#endif
 }
 
 }  // namespace hotplace

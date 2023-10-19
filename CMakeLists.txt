@@ -22,6 +22,12 @@ if (NOT "$ENV{CXXFLAGS}" STREQUAL "")
     # specify additional include, lib directories
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CXXFLAGS}")
 endif ()
+if (NOT "$ENV{CMAKE_CXX_COMPILER}" STREQUAL "")
+    set (CMAKE_CXX_COMPILER "$ENV{CMAKE_CXX_COMPILER}")
+endif ()
+if (NOT "$ENV{CMAKE_CXX_FLAGS}" STREQUAL "")
+    set (CMAKE_CXX_FLAGS "$ENV{CMAKE_CXX_FLAGS}")
+endif ()
 if (NOT "$ENV{SUPPORT_SHARED}" STREQUAL "")
     set (SUPPORT_SHARED $ENV{SUPPORT_SHARED})
 endif ()
@@ -41,8 +47,7 @@ endif ()
 if (UNIX)
 # -std=c++11
 # -Wl,-z,noexecstack
-# -Wl,--copy-dt-needed-entries # DSO missing from command line
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,-z,noexecstack -Wl,--copy-dt-needed-entries")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,-z,noexecstack")
 else (1)
 endif ()
 
@@ -81,15 +86,18 @@ endif ()
 
 # copy header files to destination
 function(copy_headers_with_hierarchy SOURCE_DIR DESTINATION_DIR)
-    file(GLOB_RECURSE HEADER_FILES ${SOURCE_DIR}/*.hpp ${SOURCE_DIR}/*.h)
+    if(CMAKE_VERSION VERSION_LESS 3.0)
+    else(1)
+        file(GLOB_RECURSE HEADER_FILES ${SOURCE_DIR}/*.hpp ${SOURCE_DIR}/*.h)
 
-    foreach(HEADER_FILE ${HEADER_FILES})
-        file(RELATIVE_PATH HEADER_RELATIVE_PATH ${SOURCE_DIR} ${HEADER_FILE})
-        get_filename_component(HEADER_DESTINATION_PATH "${DESTINATION_DIR}/${HEADER_RELATIVE_PATH}" DIRECTORY)
+        foreach(HEADER_FILE ${HEADER_FILES})
+            file(RELATIVE_PATH HEADER_RELATIVE_PATH ${SOURCE_DIR} ${HEADER_FILE})
+            get_filename_component(HEADER_DESTINATION_PATH "${DESTINATION_DIR}/${HEADER_RELATIVE_PATH}" DIRECTORY)
 
-        file(MAKE_DIRECTORY ${HEADER_DESTINATION_PATH})
-        file(COPY ${HEADER_FILE} DESTINATION ${HEADER_DESTINATION_PATH})
-    endforeach()
+            file(MAKE_DIRECTORY ${HEADER_DESTINATION_PATH})
+            file(COPY ${HEADER_FILE} DESTINATION ${HEADER_DESTINATION_PATH})
+        endforeach()
+    endif()
 endfunction()
 
 # makelib name type source header library

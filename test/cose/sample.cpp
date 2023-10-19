@@ -20,8 +20,9 @@ using namespace hotplace::crypto;
 test_case _test_case;
 typedef struct _OPTION {
     bool dump_keys;
+    bool validate_testvector;
 
-    _OPTION() : dump_keys(false) {
+    _OPTION() : dump_keys(false), validate_testvector(false) {
         // do nothing
     }
 } OPTION;
@@ -641,7 +642,7 @@ void test_rfc8152_c_3_1() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes_128_gcm);
+        variant_set_int16(value, cose_alg_t::cose_aes128gcm);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -664,7 +665,7 @@ void test_rfc8152_c_3_1() {
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
             cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_ecdh_es_hkdf_256);
+            variant_set_int16(value, cose_alg_t::cose_ecdhes_hkdf_256);
             protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
             composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
@@ -715,7 +716,7 @@ void test_rfc8152_c_3_2() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes_ccm_16_64_128);
+        variant_set_int16(value, cose_alg_t::cose_aesccm_16_64_128);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -743,7 +744,7 @@ void test_rfc8152_c_3_2() {
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
             cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_direct_hkdf_sha_256);
+            variant_set_int16(value, cose_alg_t::cose_hkdf_hmac_sha256);
             protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
             composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
@@ -802,7 +803,7 @@ void test_rfc8152_c_3_3() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes_128_gcm);
+        variant_set_int16(value, cose_alg_t::cose_aes128gcm);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -856,7 +857,7 @@ void test_rfc8152_c_3_3() {
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
             cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_ecdh_es_hkdf_256);
+            variant_set_int16(value, cose_alg_t::cose_ecdhes_hkdf_256);
             protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
             composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
@@ -908,7 +909,7 @@ void test_rfc8152_c_3_4() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes_128_gcm);
+        variant_set_int16(value, cose_alg_t::cose_aes128gcm);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -937,7 +938,7 @@ void test_rfc8152_c_3_4() {
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
             cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_ecdh_ss_a128kw);
+            variant_set_int16(value, cose_alg_t::cose_ecdhss_a128kw);
             protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
             composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
@@ -993,7 +994,7 @@ void test_rfc8152_c_4_1() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes_ccm_16_64_128);
+        variant_set_int16(value, cose_alg_t::cose_aesccm_16_64_128);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -1037,7 +1038,7 @@ void test_rfc8152_c_4_2() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes_ccm_16_64_128);
+        variant_set_int16(value, cose_alg_t::cose_aesccm_16_64_128);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -1081,7 +1082,7 @@ void test_rfc8152_c_5_1() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes_cbc_mac_256_64);
+        variant_set_int16(value, cose_alg_t::cose_aescmac_256_64);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -1178,7 +1179,7 @@ void test_rfc8152_c_5_2() {
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
             cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_ecdh_ss_hkdf_256);
+            variant_set_int16(value, cose_alg_t::cose_ecdhss_hkdf_256);
             protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
             composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
@@ -1234,7 +1235,7 @@ void test_rfc8152_c_5_3() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes_cbc_mac_128_64);
+        variant_set_int16(value, cose_alg_t::cose_aescmac_128_64);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -1264,7 +1265,7 @@ void test_rfc8152_c_5_3() {
         cbor_map* cbor_data_recipient_unprotected = nullptr;
         {
             cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_aes_256_kw);
+            variant_set_int16(value, cose_alg_t::cose_aes256kw);
             protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
             variant_set_binary_new(value, convert("018c0ae5-4d9b-471b-bfd6-eef314bc7037"));
             protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
@@ -1331,7 +1332,7 @@ void test_rfc8152_c_5_4() {
         cbor_data* cbor_data_recipient_protected = nullptr;
         {
             cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_ecdh_es_a128kw);
+            variant_set_int16(value, cose_alg_t::cose_ecdhes_a128kw);
             protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
             composer.build_protected(&cbor_data_recipient_protected, protected_map);
         }
@@ -1369,7 +1370,7 @@ void test_rfc8152_c_5_4() {
         cbor_map* cbor_data_recipient_unprotected = nullptr;
         {
             cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_aes_256_kw);
+            variant_set_int16(value, cose_alg_t::cose_aes256kw);
             protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
             variant_set_binary_new(value, convert("018c0ae5-4d9b-471b-bfd6-eef314bc7037"));
             protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
@@ -1409,7 +1410,7 @@ void test_rfc8152_c_6_1() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes_cbc_mac_256_64);
+        variant_set_int16(value, cose_alg_t::cose_aescmac_256_64);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -1815,6 +1816,7 @@ void test_github_example() {
         struct {
             const char* aad_hex;
             const char* cek_hex;
+            const char* tomac_hex;
         } enc;
         struct {
             const char* tobesigned_hex;
@@ -2104,8 +2106,33 @@ void test_github_example() {
             },
         },
         // aes-wrap-examples
+        {
+            &aes_aead_key,
+            "aes-wrap-128-01.json",
+            "aes-wrap-128-01: 128-bit key wrap for 128-bit MAC",
+            "D8618543A1010EA054546869732069732074686520636F6E74656E742E4836F5AFAF0BAB5D43818340A20122044A6F75722D73656372657458182F8A3D2AA397D3D5C40AAF9F6656BA"
+            "FA5DB714EF925B72BC",
+            nullptr,
+            {
+                nullptr,
+                "DDDC08972DF9BE62855291A17A1B4CF7",
+                "84634D414343A1010E4054546869732069732074686520636F6E74656E742E",
+            },
+        },
         // cbc-mac-examples
         // chacha-poly-examples
+        {
+            &aes_aead_key,
+            "chacha-poly-01.json",
+            "ChaCha-Poly1305-01: Encryption example for spec - ",
+            "D8608444A1011818A1054C26682306D4FB28CA01B43B8058245F2BD5381BBB04921A8477E55C0D850069674A05E683D416583AA0CEE0E2929CDF648094818340A2012504477365632D"
+            "32353640",
+            nullptr,
+            {
+                "8367456E637279707444A101181840",
+                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
+            },
+        },
         // countersign
         {
             &key,
@@ -2587,6 +2614,8 @@ void test_github_example() {
         },
     };
 
+    OPTION& option = _cmdline->value();
+
     int i = 0;
     cbor_encode e;
 
@@ -2673,11 +2702,37 @@ void test_github_example() {
             }
 
 #if defined DEBUG
-            binary_t test;
-            test = handle->binarymap[cose_flag_t::cose_compare_aad];
-            printf("\e[33mAAD %i\e[0m\n", test.size() ? test[0] : 0);
-            test = handle->binarymap[cose_flag_t::cose_compare_cek];
-            printf("\e[33mCEK %i\e[0m\n", test.size() ? test[0] : 0);
+            if (option.validate_testvector) {
+                binary_t test;
+                test = handle->binarymap[cose_flag_t::cose_compare_aad];
+                printf("\e[33mAAD %i\e[0m\n", test.size() ? test[0] : 0);
+                test = handle->binarymap[cose_flag_t::cose_tv_aad];
+                if (test.size()) {
+                    dump_memory(test, &bs);
+                    std::string b16 = base16_encode(test);
+                    std::string b64u = base64_encode(b16, base64_encoding_t::base64url_encoding);
+                    printf("Validation\n%s\n%s\n%s\n", bs.c_str(), b16.c_str(), b64u.c_str());
+                }
+                test = handle->binarymap[cose_flag_t::cose_aad];
+                if (test.size()) {
+                    dump_memory(test, &bs);
+                    printf("Computed\n%s\n%s\n", bs.c_str(), base16_encode(test).c_str());
+                }
+                test = handle->binarymap[cose_flag_t::cose_compare_cek];
+                printf("\e[33mCEK %i\e[0m\n", test.size() ? test[0] : 0);
+                test = handle->binarymap[cose_flag_t::cose_tv_cek];
+                if (test.size()) {
+                    dump_memory(test, &bs);
+                    std::string b16 = base16_encode(test);
+                    std::string b64u = base64_encode(b16, base64_encoding_t::base64url_encoding);
+                    printf("Validation\n%s\n%s\n%s\n", bs.c_str(), b16.c_str(), b64u.c_str());
+                }
+                test = handle->binarymap[cose_flag_t::cose_cek];
+                if (test.size()) {
+                    dump_memory(test, &bs);
+                    printf("Computed\n%s\n%s\n", bs.c_str(), base16_encode(test).c_str());
+                }
+            }
 #endif
             cose.close(handle);
         }
@@ -2691,10 +2746,12 @@ int main(int argc, char** argv) {
 
     _cmdline.make_share(new cmdline_t<OPTION>);
     *_cmdline << cmdarg_t<OPTION>("-dump", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-v", "validate", [&](OPTION& o, char* param) -> void { o.validate_testvector = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
     std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
+    std::cout << "option.validate_testvector " << (option.validate_testvector ? 1 : 0) << std::endl;
 
     openssl_startup();
     openssl_thread_setup();

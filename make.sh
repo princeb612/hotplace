@@ -32,6 +32,8 @@ else
     export SUPPORT_ODBC=0
     export SUPPORT_PCH=0
     export SET_STDCPP=c++11
+    # -Wl,--copy-dt-needed-entries # DSO missing from command line
+    export CMAKE_CXX_FLAGS='-Wl,--copy-dt-needed-entries'
     true
 fi
 export CXXFLAGS='-DDEBUG'

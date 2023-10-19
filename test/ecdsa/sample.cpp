@@ -32,7 +32,7 @@ void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, binary_t cons
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_sign sign;
 
-#if OPENSSL_VERSION_NUMBER < 0x30200000L
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     switch (alg) {
         case sha2_512_224:
         case sha2_512_256:

@@ -146,17 +146,17 @@ return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binar
 
         composer.finditem(cose_key_t::cose_alg, recp_alg, source->protected_map);
         switch (recp_alg) {
-            case cose_ecdh_es_a128kw:
-            case cose_ecdh_ss_a128kw:
-                algid = cose_aes_128_kw;  // -3
+            case cose_ecdhes_a128kw:
+            case cose_ecdhss_a128kw:
+                algid = cose_aes128kw;  // -3
                 break;
-            case cose_ecdh_es_a192kw:
-            case cose_ecdh_ss_a192kw:
-                algid = cose_aes_192_kw;  // -4
+            case cose_ecdhes_a192kw:
+            case cose_ecdhss_a192kw:
+                algid = cose_aes192kw;  // -4
                 break;
-            case cose_ecdh_es_a256kw:
-            case cose_ecdh_ss_a256kw:
-                algid = cose_aes_256_kw;  // -5
+            case cose_ecdhes_a256kw:
+            case cose_ecdhss_a256kw:
+                algid = cose_aes256kw;  // -5
                 break;
             default:
                 composer.finditem(cose_key_t::cose_alg, algid, handle->body.protected_map);
@@ -165,39 +165,39 @@ return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binar
 
         int keylen = 0;
         switch (algid) {
-            case cose_aes_128_kw:
-            case cose_aes_128_gcm:
-            case cose_aes_cbc_mac_128_64:
-            case cose_aes_cbc_mac_128_128:
-            case cose_aes_ccm_16_64_128:
-            case cose_aes_ccm_64_64_128:
-            case cose_aes_ccm_16_128_128:
-            case cose_aes_ccm_64_128_128:
-            case cose_direct_hkdf_sha_256:
-            case cose_direct_hkdf_aes_128:
-            case cose_ecdh_es_hkdf_256:
-            case cose_ecdh_ss_hkdf_256:
+            case cose_aes128kw:
+            case cose_aes128gcm:
+            case cose_aescmac_128_64:
+            case cose_aescmac_128_128:
+            case cose_aesccm_16_64_128:
+            case cose_aesccm_64_64_128:
+            case cose_aesccm_16_128_128:
+            case cose_aesccm_64_128_128:
+            case cose_hkdf_hmac_sha256:
+            case cose_hkdf_aescmac128:
+            case cose_ecdhes_hkdf_256:
+            case cose_ecdhss_hkdf_256:
             case cose_hs256_64:
             case cose_hs256:
                 keylen = 128;
                 break;
-            case cose_aes_192_kw:
-            case cose_aes_192_gcm:
+            case cose_aes192kw:
+            case cose_aes192gcm:
             case cose_hs384:
                 keylen = 192;
                 break;
-            case cose_aes_256_kw:
-            case cose_aes_256_gcm:
-            case cose_aes_cbc_mac_256_64:
-            case cose_aes_cbc_mac_256_128:
-            case cose_aes_ccm_16_64_256:
-            case cose_aes_ccm_64_64_256:
-            case cose_aes_ccm_16_128_256:
-            case cose_aes_ccm_64_128_256:
-            case cose_direct_hkdf_sha_512:
-            case cose_direct_hkdf_aes_256:
-            case cose_ecdh_es_hkdf_512:
-            case cose_ecdh_ss_hkdf_512:
+            case cose_aes256kw:
+            case cose_aes256gcm:
+            case cose_aescmac_256_64:
+            case cose_aescmac_256_128:
+            case cose_aesccm_16_64_256:
+            case cose_aesccm_64_64_256:
+            case cose_aesccm_16_128_256:
+            case cose_aesccm_64_128_256:
+            case cose_hkdf_hmac_sha512:
+            case cose_hkdf_aescmac256:
+            case cose_ecdhes_hkdf_512:
+            case cose_ecdhss_hkdf_512:
             case cose_hs512:
                 keylen = 256;
                 break;
@@ -457,7 +457,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             pkey = key->find(k, alg_hint->kty);
             if (nullptr == pkey) {
 #if defined DEBUG
-                throw errorcode_t::internal_error;
+                // throw errorcode_t::internal_error;
 #endif
                 continue;
             }
@@ -475,7 +475,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // RFC 8152 8.1. ECDSA
             } else if (cose_group_t::cose_group_eddsa == group) {
                 // RFC 8152 8.2. Edwards-Curve Digital Signature Algorithms (EdDSAs)
-            } else if (cose_group_t::cose_group_direct_hkdf_sha == group) {
+            } else if (cose_group_t::cose_group_hkdf_hmac == group) {
                 crypto_kty_t kty;
                 key->get_privkey(pkey, kty, secret, true);
 
@@ -486,14 +486,16 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // either the 'salt' parameter of HKDF ot the 'PartyU nonce' parameter of the context structure MUST be present.
                 kdf_hkdf(cek, alg_hint->kdf.dlen, secret, salt, context, alg_hint->kdf.algname);
                 // CEK solved
-            } else if (cose_group_t::cose_group_direct_hkdf_aes == group) {
+            } else if (cose_group_t::cose_group_hkdf_aescmac == group) {
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 crypto_kty_t kty;
                 key->get_privkey(pkey, kty, secret, true);
 
                 compose_kdf_context(handle, &item, context);
+
+                cmac(cek, alg_hint->kdf.algname, context, secret);
             } else if (cose_group_t::cose_group_sha == group) {
-            } else if (cose_group_t::cose_group_ecdh_es_hkdf == group) {
+            } else if (cose_group_t::cose_group_ecdhes_hkdf == group) {
                 // RFC 8152 12.4.1. ECDH
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 dh_key_agreement(pkey, item.epk, secret);
@@ -503,7 +505,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 salt.resize(alg_hint->kdf.dlen);
                 kdf_hkdf(cek, alg_hint->kdf.dlen, secret, salt, context, alg_hint->kdf.algname);
                 // CEK solved
-            } else if (cose_group_t::cose_group_ecdh_ss_hkdf == group) {
+            } else if (cose_group_t::cose_group_ecdhss_hkdf == group) {
                 // RFC 8152 12.4.1. ECDH
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 std::string static_keyid;
@@ -517,14 +519,14 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 salt.resize(alg_hint->kdf.dlen);
                 kdf_hkdf(cek, alg_hint->kdf.dlen, secret, salt, context, alg_hint->kdf.algname);
                 // CEK solved
-            } else if (cose_group_t::cose_group_ecdh_es_aeskw == group) {
+            } else if (cose_group_t::cose_group_ecdhes_aeskw == group) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
                 dh_key_agreement(pkey, item.epk, secret);
 
                 compose_kdf_context(handle, &item, context);
                 // 12.5.  Key Agreement with Key Wrap
-            } else if (cose_group_t::cose_group_ecdh_ss_aeskw == group) {
+            } else if (cose_group_t::cose_group_ecdhss_aeskw == group) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
                 compose_kdf_context(handle, &item, context);
@@ -549,9 +551,9 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             } else if (cose_group_t::cose_group_hmac == group) {
             } else if (cose_group_t::cose_group_aesccm == group) {
                 // RFC 8152 10.2. AES CCM
-            } else if (cose_group_t::cose_group_aescbc_mac == group) {
+            } else if (cose_group_t::cose_group_aescmac == group) {
                 // RFC 9.2. AES Message Authentication Code (AES-CBC-MAC)
-            } else if (cose_group_t::cose_group_chacha20 == group) {
+            } else if (cose_group_t::cose_group_chacha20_poly1305 == group) {
                 // RFC 8152 10.3. ChaCha20 and Poly1305
             } else if (cose_group_t::cose_group_iv == group) {
             }
