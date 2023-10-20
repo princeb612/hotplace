@@ -161,12 +161,8 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
         temp_key.resize(internal_size_key);
         memcpy(&temp_key[0], key, (size_key > internal_size_key ? internal_size_key : size_key));
 
-#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
         // EVP_CIPHER_get_iv_length { return cipher(nullptr)->iv_len; }
         internal_size_iv = EVP_MAX_IV_LENGTH;
-#else
-        internal_size_iv = EVP_CIPHER_CTX_iv_length(context->encrypt_context);
-#endif
         constraint_range(internal_size_iv, 0, EVP_MAX_IV_LENGTH);
         temp_iv.resize(internal_size_iv);
         memcpy(&temp_iv[0], iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
