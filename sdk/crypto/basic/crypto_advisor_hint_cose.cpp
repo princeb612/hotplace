@@ -144,7 +144,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhes_hkdf,
         {
             "sha256",
-            16,
+            32,
         },
     },
     {
@@ -153,7 +153,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhes_hkdf,
         {
             "sha512",
-            32,
+            64,
         },
     },
     {
@@ -162,7 +162,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhss_hkdf,
         {
             "sha256",
-            16,
+            32,
         },
     },
     {
@@ -171,7 +171,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhss_hkdf,
         {
             "sha512",
-            32,
+            64,
         },
     },
     {

@@ -1838,6 +1838,7 @@ void test_github_example() {
             const char* pub_other;
             const char* priv;
         } unsent;
+        int debug;
     } vector[] = {
         // aes-ccm-examples
         {
@@ -2318,6 +2319,8 @@ void test_github_example() {
                 "8367456E637279707443A1010140",
                 "B2353161740AACF1F7163647984B522A",
             },
+            {},
+            1,
         },
         // ecdsa-examples
         {
@@ -2992,6 +2995,9 @@ void test_github_example() {
             }
             if (vector[i].unsent.priv) {
                 cose.set(handle, cose_param_t::cose_shared_private, base16_decode(vector[i].unsent.priv));
+            }
+            if (vector[i].debug) {
+                int break_point_here = 1;
             }
 
             int tagvalue = iter->second;

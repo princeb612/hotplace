@@ -482,16 +482,24 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 continue;
             }
 
+            crypto_kty_t kty;
             EVP_PKEY* epk = nullptr;
 
-            if (composer.exist(cose_key_t::cose_ephemeral_key, item.unprotected_map)) {
-                epk = item.epk;
-            } else if (composer.exist(cose_key_t::cose_static_key, item.unprotected_map)) {
-                epk = item.epk;
-            } else if (composer.exist(cose_key_t::cose_static_key_id, item.unprotected_map)) {
-                std::string static_keyid;
-                composer.finditem(cose_key_t::cose_static_key_id, static_keyid, item.unprotected_map);
-                epk = key->find(static_keyid.c_str(), alg_hint->kty);
+            switch (alg_hint->kty) {
+                case crypto_kty_t::kty_hmac:
+                    key->get_privkey(pkey, kty, secret, true);
+                    break;
+                case crypto_kty_t::kty_ec:
+                    if (composer.exist(cose_key_t::cose_static_key_id, item.unprotected_map)) {
+                        std::string static_keyid;
+                        composer.finditem(cose_key_t::cose_static_key_id, static_keyid, item.unprotected_map);
+                        epk = key->find(static_keyid.c_str(), alg_hint->kty);
+                    } else {
+                        epk = item.epk;
+                    }
+                    break;
+                default:
+                    break;
             }
 
             cose_group_t group = alg_hint->group;
@@ -501,16 +509,12 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             if (cose_group_t::cose_group_aeskw == group) {
             } else if (cose_group_t::cose_group_direct == group) {
                 // RFC 8152 12.1. Direct Encryption
-                crypto_kty_t kty;
-                key->get_privkey(pkey, kty, cek, true);
+                cek = secret;
             } else if (cose_group_t::cose_group_ecdsa == group) {
                 // RFC 8152 8.1. ECDSA
             } else if (cose_group_t::cose_group_eddsa == group) {
                 // RFC 8152 8.2. Edwards-Curve Digital Signature Algorithms (EdDSAs)
             } else if (cose_group_t::cose_group_hkdf_hmac == group) {
-                crypto_kty_t kty;
-                key->get_privkey(pkey, kty, secret, true);
-
                 // RFC 8152 12.1.2.  Direct Key with KDF
                 compose_kdf_context(handle, &item, context);
 
@@ -520,8 +524,6 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // CEK solved
             } else if (cose_group_t::cose_group_hkdf_aescmac == group) {
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
-                crypto_kty_t kty;
-                key->get_privkey(pkey, kty, secret, true);
 
                 compose_kdf_context(handle, &item, context);
 
@@ -547,28 +549,17 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 salt.resize(alg_hint->kdf.dlen);
                 kdf_hkdf(cek, alg_hint->kdf.dlen, secret, salt, context, alg_hint->kdf.algname);
                 // CEK solved
-            } else if (cose_group_t::cose_group_ecdhes_aeskw == group) {
+            } else if (cose_group_t::cose_group_ecdhes_aeskw == group || cose_group_t::cose_group_ecdhss_aeskw == group) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
                 dh_key_agreement(pkey, epk, secret);
 
                 compose_kdf_context(handle, &item, context);
 
-                // 12.5.  Key Agreement with Key Wrap
-                crypt.open(&crypt_handle, alg_hint->param.algname, secret, kwiv);
-                crypt.decrypt(crypt_handle, item.bin_data, cek);
-                crypt.close(crypt_handle);
-            } else if (cose_group_t::cose_group_ecdhss_aeskw == group) {
-                // RFC 8152 12.5.1. ECDH
-                // RFC 8152 12.2.1. AES Key Wrap
-                compose_kdf_context(handle, &item, context);
-
-                dh_key_agreement(pkey, epk, secret);
-
-                // 12.5.  Key Agreement with Key Wrap
                 salt.resize(alg_hint->kdf.dlen);
                 kdf_hkdf(kek, alg_hint->kdf.dlen, secret, salt, context, alg_hint->kdf.algname);
 
+                // 12.5.  Key Agreement with Key Wrap
                 crypt.open(&crypt_handle, alg_hint->param.algname, kek, kwiv);
                 crypt.decrypt(crypt_handle, item.bin_data, cek);
                 crypt.close(crypt_handle);
