@@ -297,6 +297,7 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             hint.find(cose_param_t::cose_shared_iv, &iv);
         }
         if (iv.size()) {
+            // TEST FAILED
             // RFC 8152 3.1.  Common COSE Headers Parameters
             // Partial IV
             // 1.  Left-pad the Partial IV with zeros to the length of IV.
@@ -362,6 +363,18 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             // RFC 8152 10.2.  AES CCM - explains about L and M parameters
             crypt.open(&crypt_handle, enc_hint->param.algname, cek, iv);
             crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_lsize, enc_hint->param.lsize);
+            ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
+            crypt.close(crypt_handle);
+        } else if (cose_group_t::cose_group_chacha20_poly1305 == enc_hint->group) {
+            // TEST FAILED - counter ??
+            size_t enc_size = 0;
+            split(handle->payload, enc_size, tag, enc_hint->param.tsize);
+
+            uint32 counter = 0;
+            binary_t chacha20iv;
+            openssl_chacha20_iv(chacha20iv, counter, iv);
+            // RFC 8152 10.3. ChaCha20 and Poly1305
+            crypt.open(&crypt_handle, enc_hint->param.algname, cek, chacha20iv);
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
             crypt.close(crypt_handle);
         }
@@ -469,6 +482,18 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 continue;
             }
 
+            EVP_PKEY* epk = nullptr;
+
+            if (composer.exist(cose_key_t::cose_ephemeral_key, item.unprotected_map)) {
+                epk = item.epk;
+            } else if (composer.exist(cose_key_t::cose_static_key, item.unprotected_map)) {
+                epk = item.epk;
+            } else if (composer.exist(cose_key_t::cose_static_key_id, item.unprotected_map)) {
+                std::string static_keyid;
+                composer.finditem(cose_key_t::cose_static_key_id, static_keyid, item.unprotected_map);
+                epk = key->find(static_keyid.c_str(), alg_hint->kty);
+            }
+
             cose_group_t group = alg_hint->group;
 
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
@@ -505,7 +530,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             } else if (cose_group_t::cose_group_ecdhes_hkdf == group) {
                 // RFC 8152 12.4.1. ECDH
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
-                dh_key_agreement(pkey, item.epk, secret);
+                dh_key_agreement(pkey, epk, secret);
 
                 compose_kdf_context(handle, &item, context);
 
@@ -515,10 +540,6 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             } else if (cose_group_t::cose_group_ecdhss_hkdf == group) {
                 // RFC 8152 12.4.1. ECDH
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
-                std::string static_keyid;
-                composer.finditem(cose_key_t::cose_static_key_id, static_keyid, item.unprotected_map);
-
-                EVP_PKEY* epk = key->find(static_keyid.c_str(), alg_hint->kty);
                 dh_key_agreement(pkey, epk, secret);
 
                 compose_kdf_context(handle, &item, context);
@@ -529,7 +550,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             } else if (cose_group_t::cose_group_ecdhes_aeskw == group) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
-                dh_key_agreement(pkey, item.epk, secret);
+                dh_key_agreement(pkey, epk, secret);
 
                 compose_kdf_context(handle, &item, context);
 
@@ -542,9 +563,6 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // RFC 8152 12.2.1. AES Key Wrap
                 compose_kdf_context(handle, &item, context);
 
-                std::string static_keyid;
-                composer.finditem(cose_key_t::cose_static_key_id, static_keyid, item.unprotected_map);
-                EVP_PKEY* epk = key->find(static_keyid.c_str(), alg_hint->kty);
                 dh_key_agreement(pkey, epk, secret);
 
                 // 12.5.  Key Agreement with Key Wrap

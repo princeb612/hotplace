@@ -627,7 +627,7 @@ return_t cbor_object_signing_encryption::composer::parse_unprotected(cbor_map* r
             cbor_object* pair_value = (cbor_object*)pair->right();
             cbor_type_t type_value = pair_value->type();
             int keyid = 0;
-            cose_variantmap_t ephemeral_key;
+            cose_variantmap_t dh_key;
 
             keyid = t_variant_to_int<int>(pair_key->data());
 
@@ -638,12 +638,15 @@ return_t cbor_object_signing_encryption::composer::parse_unprotected(cbor_map* r
                 part.unprotected_map.insert(std::make_pair(keyid, vt));
             } else if (cbor_type_t::cbor_type_map == type_value) {
                 cbor_map* map_value = (cbor_map*)pair->right();
-                if (-1 == keyid) {
-                    parse_map(map_value, ephemeral_key);
+                if (-1 == keyid || -2 == keyid) {
+                    // -1 cose_ephemeral_key
+                    // -2 cose_static_key
+
+                    parse_map(map_value, dh_key);
 
                     return_t check = errorcode_t::success;
                     variant_t vt;
-                    maphint<int, variant_t> hint(ephemeral_key);
+                    maphint<int, variant_t> hint(dh_key);
                     check = hint.find(cose_key_lable_t::cose_lable_kty, &vt);
                     int kty = t_variant_to_int<int>(vt);
                     if (cose_kty_t::cose_kty_ec2 == kty || cose_kty_t::cose_kty_okp == kty) {
@@ -684,6 +687,21 @@ return_t cbor_object_signing_encryption::composer::parse_unprotected(cbor_map* r
     }
 
     return ret;
+}
+
+bool cbor_object_signing_encryption::composer::exist(int key, cose_variantmap_t& from) {
+    bool ret_value = false;
+    return_t ret = errorcode_t::success;
+    cose_variantmap_t::iterator iter;
+    basic_stream cosekey;
+    variant_t vt;
+
+    maphint<int, variant_t> hint(from);
+    ret = hint.find(key, &vt);
+    if (errorcode_t::success == ret) {
+        ret_value = true;
+    }
+    return ret_value;
 }
 
 return_t cbor_object_signing_encryption::composer::finditem(int key, int& value, cose_variantmap_t& from) {

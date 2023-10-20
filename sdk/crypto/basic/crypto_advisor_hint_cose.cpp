@@ -477,6 +477,13 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_chacha20_poly1305,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_chacha20_poly1305,
+        {},
+        {
+            "chacha20-poly1305",
+            32,
+            16,
+            3,
+        },
     },
     {
         cose_alg_t::cose_iv_generation,

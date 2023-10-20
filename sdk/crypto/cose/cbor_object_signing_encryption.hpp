@@ -181,6 +181,13 @@ class cbor_object_signing_encryption {
          * @param   int& value [out]
          * @param   cose_variantmap_t& from [in]
          */
+        bool exist(int key, cose_variantmap_t& from);
+        /**
+         * @brief   find
+         * @param   int key [in]
+         * @param   int& value [out]
+         * @param   cose_variantmap_t& from [in]
+         */
         return_t finditem(int key, int& value, cose_variantmap_t& from);
         /**
          * @brief   find

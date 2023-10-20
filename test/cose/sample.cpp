@@ -2131,7 +2131,7 @@ void test_github_example() {
 #endif
         // aes-wrap-examples
         {
-            &aes_ccm_key,
+            &aes_gcm_04_key,
             "aes-wrap-examples/aes-wrap-128-01.json",
             "aes-wrap-128-01: 128-bit key wrap for 128-bit MAC",
             "D8618543A1010EA054546869732069732074686520636F6E74656E742E4836F5AFAF0BAB5D43818340A20122044A6F75722D73656372657458182F8A3D2AA397D3D5C40AAF9F6656BA"

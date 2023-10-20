@@ -852,7 +852,7 @@ void system_gettime(int clockid, struct timespec& ts) {
         ts.tv_nsec = tv.tv_usec * 1000;
     }
 #else
-    clock_gettime(CLOCK_REALTIME, &ts);
+    clock_gettime(clockid, &ts);
 #endif
 }
 

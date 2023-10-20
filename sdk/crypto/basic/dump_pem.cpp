@@ -81,7 +81,9 @@ return_t write_pem(EVP_PKEY* pkey, BIO* out) {
 
             if (nullptr == ec_key) {
                 ret = errorcode_t::bad_data;
+#if defined DEBUG
                 throw ret;
+#endif
                 __leave2_trace(ret);
             }
 
