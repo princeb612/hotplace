@@ -525,9 +525,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             } else if (cose_group_t::cose_group_hkdf_aescmac == group) {
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
 
-                compose_kdf_context(handle, &item, context);
-
-                cmac(cek, alg_hint->kdf.algname, context, secret);
+                // TODO
             } else if (cose_group_t::cose_group_sha == group) {
             } else if (cose_group_t::cose_group_ecdhes_hkdf == group) {
                 // RFC 8152 12.4.1. ECDH
@@ -579,6 +577,14 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             }
 
             if (cek.size()) {
+#if defined DEBUG
+                basic_stream bs;
+                dump_memory(authenticated_data, &bs);
+                printf("AAD\n%s\n%s\n", bs.c_str(), base16_encode(authenticated_data).c_str());
+                dump_memory(cek, &bs);
+                printf("CEK\n%s\n%s\n", bs.c_str(), base16_encode(cek).c_str());
+#endif
+
                 // too many parameters... handle w/ map
                 handle->binarymap[cose_param_t::cose_cek] = cek;
                 check = dodecrypt(handle, key, cbor_tag_t::cose_tag_encrypt, output);

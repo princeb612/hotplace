@@ -20,16 +20,37 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_aes128kw,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aeskw,
+        {
+            "sha256",
+            16,
+        },
+        {
+            "aes-128-wrap",
+        },
     },
     {
         cose_alg_t::cose_aes192kw,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aeskw,
+        {
+            "sha384",
+            24,
+        },
+        {
+            "aes-128-wrap",
+        },
     },
     {
         cose_alg_t::cose_aes256kw,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aeskw,
+        {
+            "sha512",
+            32,
+        },
+        {
+            "aes-128-wrap",
+        },
     },
     {
         cose_alg_t::cose_direct,

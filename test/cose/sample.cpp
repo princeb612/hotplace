@@ -1821,13 +1821,8 @@ void test_github_example() {
         const char* file;
         const char* desc;
         const char* cbor;
-        const char* external;
         struct {
-            const char* aad_hex;
-            const char* cek_hex;
-            const char* tomac_hex;
-        } enc;
-        struct {
+            const char* external;
             const char* iv_hex;
             const char* apu_id;
             const char* apu_nonce;
@@ -1837,7 +1832,12 @@ void test_github_example() {
             const char* apv_other;
             const char* pub_other;
             const char* priv;
-        } unsent;
+        } shared;
+        struct {
+            const char* aad_hex;
+            const char* cek_hex;
+            const char* tomac_hex;
+        } enc;
         int debug;
     } vector[] = {
         // aes-ccm-examples
@@ -1846,11 +1846,6 @@ void test_github_example() {
             "aes-ccm-examples/aes-ccm-01.json",
             "AES-CCM-01: Encrypt w/ AES-CCM 16-128/64 - direct",
             "D8608443A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A46802388816C040275EE818340A20125044A6F75722D73656372657440",
-            nullptr,
-            {
-                "8367456E637279707443A1010A40",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
         {
             &aes_ccm_key,
@@ -1858,43 +1853,25 @@ void test_github_example() {
             "AES-CCM-02: Encrypt w/ AES-CCM 16-128/128 - direct",
             "D8608444A101181EA1054D89F52F65A1C580933B5261A72F58246899DA0A132BD2D2B9B10915743EE1F7B92A46801D3D61B6E7C964520652F9D3C8347E8A818340A20125044A6F7572"
             "2D73656372657440",
-            nullptr,
-            {
-                "8367456E637279707444A101181E40",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
         {
             &aes_ccm_key,
             "aes-ccm-examples/aes-ccm-03.json",
             "AES-CCM-03: Encrypt w/ AES-CCM 64-128/64 - direct",
             "D8608443A1010CA1054789F52F65A1C580581C191BD858DEC79FC11DA3428BDFA446AC240D591F9F0F25E3A3FA4E6C818340A20125044A6F75722D73656372657440",
-            nullptr,
-            {
-                "8367456E637279707443A1010C40",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
-        {&aes_ccm_key,
-         "aes-ccm-examples/aes-ccm-04.json",
-         "AES-CCM-04: Encrypt w/ AES-CCM 64-128/128 - direct",
-         "D8608444A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F59482AEA4157167842D7BF5EDD68EC92818340A20125044A6F75722D7365637265744"
-         "0",
-         nullptr,
-         {
-             "8367456E637279707444A101182040",
-             "849B57219DAE48DE646D07DBB533566E",
-         }},
+        {
+            &aes_ccm_key,
+            "aes-ccm-examples/aes-ccm-04.json",
+            "AES-CCM-04: Encrypt w/ AES-CCM 64-128/128 - direct",
+            "D8608444A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F59482AEA4157167842D7BF5EDD68EC92818340A20125044A6F75722D7365637265"
+            "7440",
+        },
         {
             &aes_ccm_05_key,
             "aes-ccm-examples/aes-ccm-05.json",
             "AES-CCM-05: Encrypt w/ AES-CCM 16-256/64 - direct",
             "D8608443A1010BA1054D89F52F65A1C580933B5261A72F581C28B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917A8A3EF3313D6D332818340A20125044A6F75722D73656372657440",
-            nullptr,
-            {
-                "8367456E637279707443A1010B40",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
         {
             &aes_ccm_05_key,
@@ -1902,22 +1879,12 @@ void test_github_example() {
             "AES-CCM-06: Encrypt w/ AES-CCM 16-256/128 - direct",
             "D8608444A101181FA1054D89F52F65A1C580933B5261A72F582428B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917348CDDC1FD07F3653AD991F9DFB65D50818340A20125044A6F7572"
             "2D73656372657440",
-            nullptr,
-            {
-                "8367456E637279707444A101181F40",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
         {
             &aes_ccm_05_key,
             "aes-ccm-examples/aes-ccm-07.json",
             "AES-CCM-07: Encrypt w/ AES-CCM 64-256/64 - direct",
             "D8608443A1010DA1054789F52F65A1C580581C721908D60812806F2660054238E931ADB575771EE26C547EC3DE06C5818340A20125044A6F75722D73656372657440",
-            nullptr,
-            {
-                "8367456E637279707443A1010D40",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
         {
             &aes_ccm_05_key,
@@ -1925,99 +1892,54 @@ void test_github_example() {
             "AES-CCM-08: Encrypt w/ AES-CCM 64-256/128 - direct",
             "D8608444A1011821A1054789F52F65A1C5805824721908D60812806F2660054238E931ADB575771EB58752E5F0FB62A828917386A770CE9C818340A20125044A6F75722D7365637265"
             "7440",
-            nullptr,
-            {
-                "8367456E637279707444A101182140",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
         {
             &aes_ccm_key,
             "aes-ccm-examples/aes-ccm-enc-01.json",
             "AES-CCM-ENC-01: Encrypt w/ AES-CCM 16-128/64 - implicit",
             "D08343A1010AA1054D89F52F65A1C580933B5261A72F581C6899DA0A132BD2D2B9B10915743EE1F7B92A4680E7C51BDBC1B320EA",
-            nullptr,
-            {
-                "8368456E63727970743043A1010A40",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
         {
             &aes_ccm_key,
             "aes-ccm-examples/aes-ccm-enc-02.json",
             "AES-CCM-ENC-02: Encrypt w/ AES-CCM 16-128/128 - implicit",
             "D08344A101181EA1054D89F52F65A1C580933B5261A72F58246899DA0A132BD2D2B9B10915743EE1F7B92A4680903F2C00D37E14D4EBDC7EF2C03CF5A9",
-            nullptr,
-            {
-                "8368456E63727970743044A101181E40",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
         {
             &aes_ccm_key,
             "aes-ccm-examples/aes-ccm-enc-03.json",
             "AES-CCM-ENC-03: Encrypt w/ AES-CCM 64-128/64 - implicit",
             "D08343A1010CA1054789F52F65A1C580581C191BD858DEC79FC11DA3428BDFA446AC240D591FFCF91EEB8035F87A",
-            nullptr,
-            {
-                "8368456E63727970743043A1010C40",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
         {
             &aes_ccm_key,
             "aes-ccm-examples/aes-ccm-enc-04.json",
             "AES-CCM-ENC-04: Encrypt w/ AES-CCM 64-128/128 - implicit",
             "D08344A1011820A1054789F52F65A1C5805824191BD858DEC79FC11DA3428BDFA446AC240D591F3965FA7CA156FE666BC262807DF0EE99",
-            nullptr,
-            {
-                "8368456E63727970743044A101182040",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
         {
             &aes_ccm_05_key,
             "aes-ccm-examples/aes-ccm-enc-05.json",
             "AES-CCM-ENC-05: Encrypt w/ AES-CCM 16-256/64 - implicit",
             "D08343A1010BA1054D89F52F65A1C580933B5261A72F581C28B3BDDFF844A736C5F0EE0F8C691FD0B7ADF9173140CB621DF47C2F",
-            nullptr,
-            {
-                "8368456E63727970743043A1010B40",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
         {
             &aes_ccm_05_key,
             "aes-ccm-examples/aes-ccm-enc-06.json",
             "AES-CCM-ENC-06: Encrypt w/ AES-CCM 16-256/128 - implicit",
             "D08344A101181FA1054D89F52F65A1C580933B5261A72F582428B3BDDFF844A736C5F0EE0F8C691FD0B7ADF917B0CFA0D187C769A4BA100372A585BCCC",
-            nullptr,
-            {
-                "8368456E63727970743044A101181F40",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
         {
             &aes_ccm_05_key,
             "aes-ccm-examples/aes-ccm-enc-07.json",
             "AES-CCM-ENC-07: Encrypt w/ AES-CCM 64-256/64 - implicit",
             "D08343A1010DA1054789F52F65A1C580581C721908D60812806F2660054238E931ADB575771E9BC42FF530BAEB00",
-            nullptr,
-            {
-                "8368456E63727970743043A1010D40",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
         {
             &aes_ccm_05_key,
             "aes-ccm-examples/aes-ccm-enc-08.json",
             "AES-CCM-ENC-08: Encrypt w/ AES-CCM 64-256/128 - implicit",
             "D08344A1011821A1054789F52F65A1C5805824721908D60812806F2660054238E931ADB575771E723C6FFD415A07CDB9FA9CEECC6C81FC",
-            nullptr,
-            {
-                "8368456E63727970743044A101182140",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
         // aes-gcm-examples
         {
@@ -2026,11 +1948,6 @@ void test_github_example() {
             "AES-GCM-01: Encryption example for spec - ",
             "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B3581F2C80039826350B97AE2300E42FC818340A20125044A6F75722D73"
             "656372657440",
-            nullptr,
-            {
-                "8367456E637279707443A1010140",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
         {
             &aes_gcm_02_key,
@@ -2038,11 +1955,6 @@ void test_github_example() {
             "AES-GCM-02: Encryption example for spec - ",
             "D8608443A10102A1054C02D1F7E6F26C43D4868D87CE5824134D3B9223A00C1552C77585C157F467F295919D12124F19F521484C0725410947B4D1CA818340A2012504467365632D34"
             "3840",
-            nullptr,
-            {
-                "8367456E637279707443A1010240",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A7988",
-            },
         },
         {
             &aes_gcm_03_key,
@@ -2050,11 +1962,6 @@ void test_github_example() {
             "AES-GCM-03: Encryption example for spec - ",
             "D8608443A10103A1054C02D1F7E6F26C43D4868D87CE58249D64A5A59A3B04867DCCF6B8EF82F7D1A3B25EF862B6EDDB29DF2EF16582172E5B5FC757818340A2012504467365632D36"
             "3440",
-            nullptr,
-            {
-                "8367456E637279707443A1010340",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
 #if defined IMPLEMENTATION_STEP2
         {
@@ -2063,11 +1970,6 @@ void test_github_example() {
             "AES-GCM-04: Encryption example for spec - Fail the tag",
             "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B3581F2C80039826350B97AE2300E42FD818340A20125044A6F75722D73"
             "656372657440",
-            nullptr,
-            {
-                "8367456E637279707443A1010140",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
 #endif
         {
@@ -2075,47 +1977,29 @@ void test_github_example() {
             "aes-gcm-examples/aes-gcm-05.json",
             "AES-GCM-05: Encryption partial IV",
             "D8608443A10101A1064261A75824D3D893DFF22BDCF09A58CBBE701371AEE31EE0AA3C1C8A6CE8409D5E5E81A6B5C355A644818340A20125044A6F75722D73656372657440",
-            nullptr,
             {
-                "8367456E637279707443A1010140",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
-            {
+                nullptr,
                 "89F52F65A1C58093000061A7",  // IV
             },
+            {},
         },
         {
             &aes_gcm_04_key,
             "aes-gcm-examples/aes-gcm-enc-01.json",
             "AES-GCM-ENC-01: Encryption example for spec - implicit",
             "D08343A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B162E2C03568B41F57C3CC16F9166250A",
-            nullptr,
-            {
-                "8368456E63727970743043A1010140",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
         {
             &aes_gcm_02_key,
             "aes-gcm-examples/aes-gcm-enc-02.json",
             "AES-GCM-ENC-02: Encryption example for spec - implicit",
             "D08343A10102A1054C02D1F7E6F26C43D4868D87CE5824134D3B9223A00C1552C77585C157F467F295919D530FBE21F7689AB3CD4D18FFE8E17CEB",
-            nullptr,
-            {
-                "8368456E63727970743043A1010240",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A7988",
-            },
         },
         {
             &aes_ccm_05_key,
             "aes-gcm-examples/aes-gcm-enc-03.json",
             "AES-GCM-ENC-03: Encryption example for spec - implicit",
             "D08343A10103A1054C02D1F7E6F26C43D4868D87CE58249D64A5A59A3B04867DCCF6B8EF82F7D1A3B25EF84ECA2BC5D7593A96E943859A9CC24AD3",
-            nullptr,
-            {
-                "8368456E63727970743043A1010340",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
 #if defined IMPLEMENTATION_STEP2
         {
@@ -2123,11 +2007,6 @@ void test_github_example() {
             "aes-gcm-examples/aes-gcm-enc-04.json",
             "AES-GCM-ENC-04: Encryption example for spec - implicit - Fail the tag",
             "D08343A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B162E2C03568B41F57C3CC16F9166250B",
-            nullptr,
-            {
-                "8368456E63727970743043A1010140",
-                "849B57219DAE48DE646D07DBB533566E",
-            },
         },
 #endif
         // aes-wrap-examples
@@ -2137,14 +2016,58 @@ void test_github_example() {
             "aes-wrap-128-01: 128-bit key wrap for 128-bit MAC",
             "D8618543A1010EA054546869732069732074686520636F6E74656E742E4836F5AFAF0BAB5D43818340A20122044A6F75722D73656372657458182F8A3D2AA397D3D5C40AAF9F6656BA"
             "FA5DB714EF925B72BC",
-            nullptr,
-            {
-                nullptr,
-                "DDDC08972DF9BE62855291A17A1B4CF7",
-                "84634D414343A1010E4054546869732069732074686520636F6E74656E742E",
-            },
+        },
+        {
+            &aes_gcm_04_key,
+            "aes-wrap-examples/aes-wrap-128-02.json",
+            "wrap-128-02: 128-bit key wrap for 256-bit MAC",
+            "D8618543A1010FA054546869732069732074686520636F6E74656E742E48BC099BCBDB51AF62818340A20122044A6F75722D7365637265745828CBF83C6935F064FAA9681ACFC3936D"
+            "8A6CE1AB64777D581ACA4BBBFEC3C32206A63056C993C6E609",
+        },
+        {
+            &aes_gcm_04_key,
+            "aes-wrap-examples/aes-wrap-128-03.json",
+            "wrap-128-03: 128-bit key wrap for 512-bit MAC",
+            "D8618543A10107A054546869732069732074686520636F6E74656E742E58400021C21B2A7FADB677DAB64389B3FDA4AAC892D5C81B786A459E4182104A1501462FFD471422AF4D48BE"
+            "EB864951D5947A55E3155E670DFC4A96017B0FD0E725818340A20122044A6F75722D7365637265745848792C46CE0BC689747133FA0DB1F5E2BC4DAAE22F906E93DFCA2DF44F0DF6C2"
+            "CEF16EA8FC91D52AD662C4B49DD0D689E1086EC754347957F80F95C92C887521641B8F637D91C6E258",
+        },
+#if defined IMPLEMENTATION_STEP2
+        {
+            &aes_gcm_04_key,
+            "aes-wrap-examples/aes-wrap-128-04.json",
+            "wrap-128-04: 128-bit key wrap for 128-bit encrypt",
+            "D8608443A10101A1054CDDDC08972DF9BE62855291A158246F5556D71834CD1BD3FDCBFFF28CFA0F7D598C138D23B40C225AF5E3F2096A46C766813D818340A20122044A6F75722D73"
+            "65637265745818112872F405A5AC48A2EDE46AC20E93E3D3A38B9762D0A3E8",
+        },
+        {
+            &aes_gcm_04_key,
+            "aes-wrap-examples/aes-wrap-128-05.json",
+            "wrap-128-05: 128-bit key wrap for 192-bit encrypt",
+            "D8608443A10102A1054CDDDC08972DF9BE62855291A158243CA8EE3F7927A730BC9DBD6FA3070764F6F6319CF2C31FBDA4C288F19CF6F064C8B32E28818340A20122044A6F75722D73"
+            "6563726574582023A276FE917EF97D9D60E1732C02E6B7E5820C2FD2712DE9E36000F74559BC38",
+        },
+#endif
+        {
+            &aes_ccm_key,
+            "aes-wrap-examples/aes-wrap-192-01.json",
+            "wrap-192-01: 192-bit key wrap for 128-bi MAC",
+            "D8618543A1010EA054546869732069732074686520636F6E74656E742E4836F5AFAF0BAB5D43818340A2012304477365632D31393258180C60CBB6DB490AF990714848D249FB599A3E"
+            "2F23B18FF29E",
         },
         // cbc-mac-examples
+        {
+            &key,
+            "cbc-mac-examples/cbc-mac-01.json",
+            "CBC-MAC-01: MAC example with direct shared key and AES-CBC-MAC-128/64",
+            "D8618543A1010EA054546869732069732074686520636F6E74656E742E48C1CA820E6E247089818340A20125044A6F75722D73656372657440",
+        },
+        {
+            &key,
+            "cbc-mac-examples/cbc-mac-enc-01.json",
+            "CBC-MAC-ENC-01: MAC example with direct shared key and AES-CBC-MAC-128/64 - implicit",
+            "D18443A1010EA054546869732069732074686520636F6E74656E742E488584DBF007FDC69F",
+        },
         // chacha-poly-examples
         {
             &aes_ccm_key,
@@ -2152,11 +2075,6 @@ void test_github_example() {
             "ChaCha-Poly1305-01: Encryption example for spec - ",
             "D8608444A1011818A1054C26682306D4FB28CA01B43B8058245F2BD5381BBB04921A8477E55C0D850069674A05E683D416583AA0CEE0E2929CDF648094818340A2012504477365632D"
             "32353640",
-            nullptr,
-            {
-                "8367456E637279707444A101181840",
-                "0F1E2D3C4B5A69788796A5B4C3D2E1F01F2E3D4C5B6A798897A6B5C4D3E2F100",
-            },
         },
         // countersign
         {
@@ -2242,8 +2160,6 @@ void test_github_example() {
             "D8608443A10101A1054CC9CF4DF2FE6C632BF788641358247ADBE2709CA818FB415F1E5DF66F4E1A51053BA6D65A1A0C52A357DA7A644B8070A151B0818344A1013818A220A4010220"
             "0121582098F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280225820F01400B089867804B8E9FC96C3932161F1934F4223069170D924B7E03BF822BB0458"
             "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6540",
-            nullptr,
-            {"8367456E637279707443A1010140", "56074D506729CA40C4B4FE50C6439893"},
         },
         {
             &key,
@@ -2286,11 +2202,6 @@ void test_github_example() {
             "5820EDCBD809C754DB6582C16D6D65747C8AECC92D619C778EB17F13B55C9B3E48F52258200F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A01020458"
             "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6535584002D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3C9"
             "CF4DF2FE6C632BF7886413F76E88523A8260B857D70B350027FD842B5E594740",
-            nullptr,
-            {
-                "8367456E637279707443A1010140",
-                "A6C2365CBC7672FBB5DB614B9A223AE3",
-            },
         },
         {
             &key,
@@ -2300,11 +2211,6 @@ void test_github_example() {
             "5820EDCBD809C754DB6582C16D6D65747C8AECC92D619C778EB17F13B55C9B3E48F52258200F38495E0CFD448E93B1E366C047CBA0D567B3C526BCE36C3F3403A29D9D2A8A01020458"
             "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6535584002D1F7E6F26C43D4868D87CEB2353161740AACF1F7163647984B522A848DF1C3C9"
             "CF4DF2FE6C632BF7886413F76E885299E58C2F0F717D59C6123210A16AD92040",
-            nullptr,
-            {
-                "8367456E637279707443A1010340",
-                "A191090130A6FCBAFF6EEC5B70795265B7C18D66F8CDB99E169B4D3332C7DF4E",
-            },
         },
         // ecdh-wrap-examples
         {
@@ -2314,13 +2220,6 @@ void test_github_example() {
             "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582464F84D913BA60A76070A9A48F26E97E863E2852948658F0811139868826E89218A75715B818344A101381CA220A4010220"
             "01215820ECDBCEC636CC1408A503BBF6B7311B900C9AED9C5B71503848C89A07D0EF6F5B225820D6D1586710C02203E4E53B20DC7B233CA4C8B6853467B9FB8244A3840ACCD6020458"
             "246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C655818D23BCA11C3F8E35BF6F81412794E159772E946FF4FB31BD1",
-            nullptr,
-            {
-                "8367456E637279707443A1010140",
-                "B2353161740AACF1F7163647984B522A",
-            },
-            {},
-            1,
         },
         // ecdsa-examples
         {
@@ -2413,6 +2312,37 @@ void test_github_example() {
             "F1598B3700",
         },
     // encrypted-tests
+#if 0
+        {
+            &key,
+            "encrypted-tests/aes-gcm-01.json",
+            "AES-GCM-01: Encryption example for spec - ",
+            "D08343A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B162E2C03568B41F57C3CC16F9166250A",
+        },
+        {
+            &key,
+            "encrypted-tests/enc-pass-01.json",
+            "env-pass-01: Failure tests",
+            "D08341A0A20101054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B24BEE54AA5D797C8DC845929ACAA47EF",
+        },
+#endif
+        {
+            &key,
+            "encrypted-tests/enc-pass-02.json",
+            "enc-pass-02: Add external data",
+            "D08343A10101A1054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B1DC3A143880CA2883A5630DA08AE1E6E",
+            {
+                "0011bbcc22dd4455dd220099",
+            },
+        },
+#if 0
+        {
+            &key,
+            "encrypted-tests/enc-pass-03.json",
+            "enc-pass-03: Remove leading CBOR tag",
+            "8340A20101054C02D1F7E6F26C43D4868D87CE582460973A94BB2898009EE52ECFD9AB1DD25867374B24BEE54AA5D797C8DC845929ACAA47EF",
+        },
+#endif
     // enveloped-tests
     // hashsig
 #if 0
@@ -2501,6 +2431,16 @@ void test_github_example() {
       },
 #endif
         // hkdf-aes-examples
+        {
+            &aes_ccm_key,
+            "hkdf-aes-examples/hmac-aes-128-01.json",
+            "HKDF-AES-128-01: Direct HKDF AES-128 - with salt",
+            "D8608443A1010AA1054DBFE89563EE070CE187BDF1C472581CEFCF947DDDD19D2E894C9388B6032A987A06FF7E64A88D3C11075E9A818343A1012BA233506161626263636464656566"
+            "6667676868044A6F75722D73656372657440",
+            {},
+            {},
+            1,
+        },
         // hkdf-hmac-sha-examples
         // hmac-examples
         {
@@ -2579,11 +2519,6 @@ void test_github_example() {
             "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582464F84D913BA60A76070A9A48F26E97E863E2852948658F0811139868826E89218A75715B818440A101225818DBD43C4E9D"
             "719C27C6275C67D628D493F090593DB8218F11818344A1013818A220A401022001215820B2ADD44368EA6D641F9CA9AF308B4079AEB519F11E9B8A55A600B21233E86E6822F4045824"
             "6D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6540",
-            nullptr,
-            {
-                "8367456E637279707443A1010140",
-                "B2353161740AACF1F7163647984B522A",
-            },
         },
         {
             &rfc8152_pubkeys,
@@ -2637,10 +2572,8 @@ void test_github_example() {
             "Encryption example for spec - Direct ECDH",
             "D8608443A1010AA1054D89F52F65A1C580933B5261A76C581C753548A19B1307084CA7B2056924ED95F2E3B17006DFE931B687B847818343A10129A233506161626263636464656566"
             "6667676868044A6F75722D73656372657440",
-            nullptr,
-            {},
             {
-                nullptr,
+                nullptr, nullptr,
                 "6c69676874696e672d636c69656e74",  // "lighting-client",
                 nullptr, nullptr,
                 "6c69676874696e672d736572766572",  // "lighting-server",
@@ -2657,11 +2590,6 @@ void test_github_example() {
             "591B483E1D2C31DE003183E434D8FBA18F17A4C7E3DFA003AC1CF3D30D44D2533C4989D3AC38C38B71481CC3430C9D65E7DDFF58247ADBE2709CA818FB415F1E5DF66F4E1A51053BA6"
             "D65A1A0C52A357DA7A644B8070A151B0818344A1013818A220A40102200121582098F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D628022F50458246D6572"
             "6961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C6540",
-            nullptr,
-            {
-                "8367456E637279707443A1010A40",
-                "C3B3584E0EC878C041281299EBE60D98",
-            },
         },
         {
             &rfc8152_privkeys,
@@ -2670,10 +2598,8 @@ void test_github_example() {
             "D8608443A10101A1054C02D1F7E6F26C43D4868D87CE582464F84D913BA60A76070A9A48F26E97E863E28529D8F5335E5F0165EEE976B4A5F6C6F09D818344A101381FA32258217065"
             "72656772696E2E746F6F6B407475636B626F726F7567682E6578616D706C650458246D65726961646F632E6272616E64796275636B406275636B6C616E642E6578616D706C65354201"
             "01581841E0D76F579DBD0D936A662D54D8582037DE2E366FDE1C62",
-            "0011bbcc22dd44ee55ff660077",
             {
-                "8367456E637279707443A101014D0011BBCC22DD44EE55FF660077",
-                "B2353161740AACF1F7163647984B522A",
+                "0011bbcc22dd44ee55ff660077",  // external
             },
         },
         {
@@ -2681,22 +2607,12 @@ void test_github_example() {
             "RFC8152/Appendix_C_4_1.json",
             "Enc-04: Encryption example for spec - Direct ECDH",
             "D08343A1010AA1054D89F52F65A1C580933B5261A78C581C5974E1B99A3A4CC09A659AA2E9E7FFF161D38CE71CB45CE460FFB569",
-            nullptr,
-            {
-                "8368456E63727970743043A1010A40",
-                "849B5786457C1491BE3A76DCEA6C4271",
-            },
         },
         {
             &rfc8152_privkeys_c4,
             "RFC8152/Appendix_C_4_2.json",
             "Encryption example for spec - Direct key - partial IV",
             "D08343A1010AA1064261A7581C252A8911D465C125B6764739700F0141ED09192DE139E053BD09ABCA",
-            nullptr,
-            {
-                "8368456E63727970743043A1010A40",
-                "849B5786457C1491BE3A76DCEA6C4271",
-            },
         },
         {
             &rfc8152_privkeys,
@@ -2811,11 +2727,6 @@ void test_github_example() {
             "X25519-hkdf-256-direct-01: X25519 direct w/ hkdf-sha-256 for 128-bit key",
             "D8608443A10101A1054C9862E02EC874A0DF9FB123385824D2B07042F7BA47C61646CCA83AB97FD23AF21F0D2AC75DCB47A9FC293015D8F098AE9C1B818344A1013818A220A3010120"
             "0421582072FC171C21BF5C682C64D2EF3A71AC877B40013D3754F63D4C3C3A965F1BA77604485832353531392D3140",
-            nullptr,
-            {
-                "8367456E637279707443A1010140",
-                "52291DE41342AC0AC2E31867A1423ACB",
-            },
         },
         {
             &key,
@@ -2966,35 +2877,35 @@ void test_github_example() {
                 printf("CEK\n%s\n%s\n", bs.c_str(), vector[i].enc.cek_hex);
             }
 #endif
-            if (vector[i].external) {
-                cose.set(handle, cose_param_t::cose_shared_external, base16_decode(vector[i].external));
+            if (vector[i].shared.external) {
+                cose.set(handle, cose_param_t::cose_shared_external, base16_decode(vector[i].shared.external));
             }
-            if (vector[i].unsent.iv_hex) {
-                cose.set(handle, cose_param_t::cose_shared_iv, base16_decode(vector[i].unsent.iv_hex));
+            if (vector[i].shared.iv_hex) {
+                cose.set(handle, cose_param_t::cose_shared_iv, base16_decode(vector[i].shared.iv_hex));
             }
-            if (vector[i].unsent.apu_id) {
-                cose.set(handle, cose_param_t::cose_shared_apu_id, base16_decode(vector[i].unsent.apu_id));
+            if (vector[i].shared.apu_id) {
+                cose.set(handle, cose_param_t::cose_shared_apu_id, base16_decode(vector[i].shared.apu_id));
             }
-            if (vector[i].unsent.apu_nonce) {
-                cose.set(handle, cose_param_t::cose_shared_apu_nonce, base16_decode(vector[i].unsent.apu_nonce));
+            if (vector[i].shared.apu_nonce) {
+                cose.set(handle, cose_param_t::cose_shared_apu_nonce, base16_decode(vector[i].shared.apu_nonce));
             }
-            if (vector[i].unsent.apu_other) {
-                cose.set(handle, cose_param_t::cose_shared_apu_other, base16_decode(vector[i].unsent.apu_other));
+            if (vector[i].shared.apu_other) {
+                cose.set(handle, cose_param_t::cose_shared_apu_other, base16_decode(vector[i].shared.apu_other));
             }
-            if (vector[i].unsent.apv_id) {
-                cose.set(handle, cose_param_t::cose_shared_apv_id, base16_decode(vector[i].unsent.apv_id));
+            if (vector[i].shared.apv_id) {
+                cose.set(handle, cose_param_t::cose_shared_apv_id, base16_decode(vector[i].shared.apv_id));
             }
-            if (vector[i].unsent.apv_nonce) {
-                cose.set(handle, cose_param_t::cose_shared_apv_nonce, base16_decode(vector[i].unsent.apv_nonce));
+            if (vector[i].shared.apv_nonce) {
+                cose.set(handle, cose_param_t::cose_shared_apv_nonce, base16_decode(vector[i].shared.apv_nonce));
             }
-            if (vector[i].unsent.apv_other) {
-                cose.set(handle, cose_param_t::cose_shared_apv_other, base16_decode(vector[i].unsent.apv_other));
+            if (vector[i].shared.apv_other) {
+                cose.set(handle, cose_param_t::cose_shared_apv_other, base16_decode(vector[i].shared.apv_other));
             }
-            if (vector[i].unsent.pub_other) {
-                cose.set(handle, cose_param_t::cose_shared_public_other, base16_decode(vector[i].unsent.pub_other));
+            if (vector[i].shared.pub_other) {
+                cose.set(handle, cose_param_t::cose_shared_public_other, base16_decode(vector[i].shared.pub_other));
             }
-            if (vector[i].unsent.priv) {
-                cose.set(handle, cose_param_t::cose_shared_private, base16_decode(vector[i].unsent.priv));
+            if (vector[i].shared.priv) {
+                cose.set(handle, cose_param_t::cose_shared_private, base16_decode(vector[i].shared.priv));
             }
             if (vector[i].debug) {
                 int break_point_here = 1;
