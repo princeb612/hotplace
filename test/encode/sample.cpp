@@ -191,7 +191,7 @@ void whatsthis(int argc, char** argv) {
         }
 
         basic_stream bs;
-        dump_memory(what, &bs);
+        dump_memory(what, &bs, 16, 2);
 
         std::cout << "what u want to know" << std::endl << "< " << o.content << std::endl << bs.c_str() << std::endl;
     } else {
@@ -209,8 +209,7 @@ int main(int argc, char** argv) {
     _test_case.begin("b64 encoding");
     test_base64();
 
-    whatsthis(argc, argv);
-
     _test_case.report(5);
+    whatsthis(argc, argv);
     return _test_case.result();
 }

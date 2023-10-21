@@ -15,8 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <hotplace/sdk/base/basic/bufferio.hpp>
 #include <hotplace/sdk/base/inline.hpp>
+#include <hotplace/sdk/base/stream/bufferio.hpp>
 
 namespace hotplace {
 

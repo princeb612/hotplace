@@ -19,20 +19,30 @@ namespace hotplace {
 namespace crypto {
 
 enum cose_param_t {
-    cose_shared_external = 1,
-    cose_shared_apu_id = 2,
-    cose_shared_apu_nonce = 3,
-    cose_shared_apu_other = 4,
-    cose_shared_apv_id = 5,
-    cose_shared_apv_nonce = 6,
-    cose_shared_apv_other = 7,
-    cose_shared_public_other = 8,
-    cose_shared_private = 9,
-    cose_shared_iv = 10,
+    cose_external = 1,
+    cose_unsent_apu_id = 2,
+    cose_unsent_apu_nonce = 3,
+    cose_unsent_apu_other = 4,
+    cose_unsent_apv_id = 5,
+    cose_unsent_apv_nonce = 6,
+    cose_unsent_apv_other = 7,
+    cose_unsent_pub_other = 8,
+    cose_unsent_priv_other = 9,
+    cose_unsent_iv = 10,
+    cose_unsent_alg = 11,
 
-    cose_aad = 11,
-    cose_cek = 12,
+    // temporary
+    cose_param_aad = 13,
+    cose_param_cek = 14,
+    cose_param_iv = 15,
 };
+enum code_debug_flag_t {
+    // simply want to know reason why routine is failed from testcase report
+    cose_debug_partial_iv = (1 << 1),
+    cose_debug_aescmac = (1 << 2),
+    cose_debug_chacha20_poly1305 = (1 << 3),
+};
+
 typedef std::map<int, variant_t> cose_variantmap_t;
 typedef std::list<int> cose_orderlist_t;
 typedef std::map<cose_param_t, binary_t> cose_binarymap_t;
@@ -78,12 +88,14 @@ typedef struct _cose_context_t {
     std::list<cose_parts_t> subitems;
 
     cose_binarymap_t binarymap;
+    uint32 debug_flag;
 
-    _cose_context_t() : tag(0) {}
+    _cose_context_t() : tag(0), debug_flag(0) {}
     ~_cose_context_t() { clearall(); }
     void clearall() {
         clear();
         binarymap.clear();
+        debug_flag = 0;
     }
     void clear_map(cose_variantmap_t& map) {
         cose_variantmap_t::iterator map_iter;

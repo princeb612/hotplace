@@ -23,27 +23,31 @@ namespace crypto {
 /**
  * @brief   HKDF
  * @param   binary_t& derived [out] derived key
+ * @param   hash_algorithm_t alg [in]
  * @param   size_t dlen [in]
  * @param   binary_t const& key [in]
  * @param   binary_t const& salt [in]
  * @param   binary_t const& info [in]
- * @param   hash_algorithm_t alg [in]
  */
-return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info, hash_algorithm_t alg);
-return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info, const char* alg);
+return_t kdf_hkdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info);
+return_t kdf_hkdf(binary_t& derived, const char* alg, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info);
 /**
  * @brief   PBKDF2
  * @param   binary_t& derived [out]
+ * @param   hash_algorithm_t alg [in]
  * @param   size_t dlen [in]
  * @param   std::string const& password [in]
  * @param   binary_t const& salt [in]
  * @param   int iter [in]
- * @param   hash_algorithm_t alg [in]
  */
-return_t kdf_pbkdf2(binary_t& derived, size_t dlen, std::string const& password, binary_t const& salt, int iter, hash_algorithm_t alg);
-return_t kdf_pbkdf2(binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, int iter, hash_algorithm_t alg);
-return_t kdf_pbkdf2(binary_t& derived, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt, int iter,
-                    hash_algorithm_t alg);
+return_t kdf_pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, std::string const& password, binary_t const& salt, int iter);
+return_t kdf_pbkdf2(binary_t& derived, const char* alg, size_t dlen, std::string const& password, binary_t const& salt, int iter);
+return_t kdf_pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, binary_t const& password, binary_t const& salt, int iter);
+return_t kdf_pbkdf2(binary_t& derived, const char* alg, size_t dlen, binary_t const& password, binary_t const& salt, int iter);
+return_t kdf_pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt,
+                    int iter);
+return_t kdf_pbkdf2(binary_t& derived, const char* alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt,
+                    int iter);
 /**
  * @brief   scrypt
  * @param   binary_t& derived [out]

@@ -70,12 +70,22 @@ return_t basic_stream::fill(size_t l, char c) {
 return_t basic_stream::clear() { return _bio.clear(_handle); }
 
 return_t basic_stream::printf(const char* buf, ...) {
-    return_t ret = 0;
-    va_list ap;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == buf) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-    va_start(ap, buf);
-    ret = _bio.vprintf(_handle, buf, ap);
-    va_end(ap);
+        va_list ap;
+
+        va_start(ap, buf);
+        ret = _bio.vprintf(_handle, buf, ap);
+        va_end(ap);
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -83,12 +93,22 @@ return_t basic_stream::vprintf(const char* buf, va_list ap) { return _bio.vprint
 
 #if defined _WIN32 || defined _WIN64
 return_t basic_stream::printf(const wchar_t* buf, ...) {
-    return_t ret = 0;
-    va_list ap;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == buf) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-    va_start(ap, buf);
-    ret = _bio.vprintf(_handle, buf, ap);
-    va_end(ap);
+        va_list ap;
+
+        va_start(ap, buf);
+        ret = _bio.vprintf(_handle, buf, ap);
+        va_end(ap);
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -98,6 +118,33 @@ return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return _bio.vpr
 basic_stream& basic_stream::operator=(basic_stream obj) {
     clear();
     write(obj.data(), obj.size());
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(const char* str) {
+    if (str) {
+        printf(str);
+    }
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(int value) {
+    printf("%i", value);
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(unsigned int value) {
+    printf("%u", value);
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(long value) {
+    printf("%li", value);
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(unsigned long value) {
+    printf("%lu", value);
     return *this;
 }
 

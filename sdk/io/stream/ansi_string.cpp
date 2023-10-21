@@ -399,8 +399,6 @@ ansi_string& ansi_string::operator<<(uint128 buf) {
 
 #endif
 
-void ansi_string::endl() { printf("\n"); }
-
 int ansi_string::compare(ansi_string& buf) { return strcmp((*this).c_str(), buf.c_str()); }
 
 int ansi_string::compare(ansi_string& lhs, ansi_string& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }

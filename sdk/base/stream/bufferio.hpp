@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __GRAPE_SDK_BASE_BASIC_BUFFERIO__
-#define __GRAPE_SDK_BASE_BASIC_BUFFERIO__
+#ifndef __GRAPE_SDK_BASE_STREAM_BUFFERIO__
+#define __GRAPE_SDK_BASE_STREAM_BUFFERIO__
 
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/error.hpp>

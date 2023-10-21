@@ -81,17 +81,18 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_param_
             __leave2;
         }
         switch (id) {
-            case cose_param_t::cose_shared_external:
-            case cose_param_t::cose_shared_apu_id:
-            case cose_param_t::cose_shared_apu_nonce:
-            case cose_param_t::cose_shared_apu_other:
-            case cose_param_t::cose_shared_apv_id:
-            case cose_param_t::cose_shared_apv_nonce:
-            case cose_param_t::cose_shared_apv_other:
-            case cose_param_t::cose_shared_public_other:
-            case cose_param_t::cose_shared_private:
-            case cose_param_t::cose_shared_iv:
-            case cose_param_t::cose_cek:
+            case cose_param_t::cose_external:
+            case cose_param_t::cose_unsent_apu_id:
+            case cose_param_t::cose_unsent_apu_nonce:
+            case cose_param_t::cose_unsent_apu_other:
+            case cose_param_t::cose_unsent_apv_id:
+            case cose_param_t::cose_unsent_apv_nonce:
+            case cose_param_t::cose_unsent_apv_other:
+            case cose_param_t::cose_unsent_pub_other:
+            case cose_param_t::cose_unsent_priv_other:
+            case cose_param_t::cose_unsent_iv:
+            case cose_param_t::cose_unsent_alg:
+            case cose_param_t::cose_param_cek:
                 handle->binarymap[id] = bin;
                 break;
             default:

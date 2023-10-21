@@ -22,7 +22,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_aeskw,
         {
             "sha256",
-            16,
+            32,
         },
         {
             "aes-128-wrap",
@@ -34,7 +34,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_aeskw,
         {
             "sha384",
-            24,
+            48,
         },
         {
             "aes-128-wrap",
@@ -46,7 +46,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_aeskw,
         {
             "sha512",
-            32,
+            64,
         },
         {
             "aes-128-wrap",
@@ -83,7 +83,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_hkdf_hmac,
         {
             "sha256",
-            16,
+            32,
         },
     },
     {
@@ -92,7 +92,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_hkdf_hmac,
         {
             "sha512",
-            32,
+            64,
         },
     },
     {
@@ -100,11 +100,12 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_hkdf_aescmac,
         {
-            "aes-128-cbc",
-            16,
+            "sha256",
+            32,
         },
         {
-            "aes-128-wrap",
+            "aes-128-cbc",
+            8,
         },
     },
     {
@@ -112,11 +113,12 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_hkdf_aescmac,
         {
-            "aes-256-cbc",
-            32,
+            "sha512",
+            64,
         },
         {
-            "aes-256-wrap",
+            "aes-256-cbc",
+            16,
         },
     },
     {
@@ -201,7 +203,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhes_aeskw,
         {
             "sha256",
-            16,
+            32,
         },
         {
             "aes-128-wrap",
@@ -213,7 +215,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhes_aeskw,
         {
             "sha384",
-            24,
+            48,
         },
         {
             "aes-192-wrap",
@@ -225,7 +227,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhes_aeskw,
         {
             "sha512",
-            32,
+            64,
         },
         {
             "aes-256-wrap",
@@ -237,7 +239,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhss_aeskw,
         {
             "sha256",
-            16,
+            32,
         },
         {
             "aes-128-wrap",
@@ -250,7 +252,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhss_aeskw,
         {
             "sha384",
-            24,
+            48,
         },
         {
             "aes-192-wrap",
@@ -263,7 +265,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhss_aeskw,
         {
             "sha512",
-            32,
+            64,
         },
         {
             "aes-256-wrap",

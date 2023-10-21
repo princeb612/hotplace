@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_IO_STREAM_STRING__
 #define __HOTPLACE_SDK_IO_STREAM_STRING__
 
-#include <hotplace/sdk/base/basic/bufferio.hpp>
+#include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
 
 namespace hotplace {
@@ -122,8 +122,6 @@ class ansi_string : public stream_t {
     ansi_string& operator+=(uint128 buf);
     ansi_string& operator<<(uint128 buf);
 #endif
-
-    void endl();
 
     int compare(ansi_string& buf);
     static int compare(ansi_string& lhs, ansi_string& rhs);
@@ -243,8 +241,6 @@ class wide_string : public stream_t {
     wide_string& operator+=(uint128 buf);
     wide_string& operator<<(uint128 buf);
 #endif
-
-    void endl();
 
     int compare(wide_string& buf);
     static int compare(wide_string& lhs, wide_string& rhs);

@@ -10,7 +10,6 @@ file (GLOB FILEGROUP_SDK_HEADER_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/system/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/io/unittest/*.hpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_IO
@@ -20,7 +19,6 @@ file (GLOB FILEGROUP_SDK_SOURCE_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/string/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/system/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/io/unittest/*.cpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_IO_LINUX

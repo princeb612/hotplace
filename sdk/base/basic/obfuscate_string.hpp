@@ -13,17 +13,13 @@
  * 2023.08.28   Soo Han, Kim        refactor
  */
 
-#ifndef __HOTPLACE_SDK_IO_BASIC_OBFUSCATESTRING__
-#define __HOTPLACE_SDK_IO_BASIC_OBFUSCATESTRING__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_OBFUSCATESTRING__
+#define __HOTPLACE_SDK_BASE_BASIC_OBFUSCATESTRING__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/base/basic/bufferio.hpp>
-#include <hotplace/sdk/io/stream/stream.hpp>
-#include <hotplace/sdk/io/stream/string.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <string>
 
 namespace hotplace {
-namespace io {
 
 /**
  * @brief   obfuscate
@@ -51,7 +47,7 @@ class obfuscate_string {
     obfuscate_string();
     obfuscate_string(const char* source);
     obfuscate_string(std::string& source);
-    obfuscate_string(ansi_string& source);
+    obfuscate_string(basic_stream& source);
     ~obfuscate_string();
 
     /**
@@ -99,10 +95,10 @@ class obfuscate_string {
     obfuscate_string& operator=(std::string& source);
     /**
      * @brief   assign
-     * @param   ansi_string& source [in]
+     * @param   basic_stream& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator=(ansi_string& source);
+    obfuscate_string& operator=(basic_stream& source);
     /**
      * @brief   append
      * @param   const char* source [in]
@@ -117,10 +113,10 @@ class obfuscate_string {
     obfuscate_string& operator+=(std::string& source);
     /**
      * @brief   append
-     * @param   ansi_string& source [in]
+     * @param   basic_stream& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator+=(ansi_string& source);
+    obfuscate_string& operator+=(basic_stream& source);
     /**
      * @brief   append
      * @param   const char* source [in]
@@ -135,10 +131,10 @@ class obfuscate_string {
     obfuscate_string& operator<<(std::string& source);
     /**
      * @brief   append
-     * @param   ansi_string& source [in]
+     * @param   basic_stream& source [in]
      * @return  obfuscate_string&
      */
-    obfuscate_string& operator<<(ansi_string& source);
+    obfuscate_string& operator<<(basic_stream& source);
 
     /**
      * @brief   compare equal
@@ -164,9 +160,9 @@ class obfuscate_string {
      * @brief   append
      * @param   std::string& lhs [out]
      * @param   obfuscate_string const& rhs [in]
-     * @return  ansi_string&
+     * @return  basic_stream&
      */
-    friend ansi_string& operator<<(ansi_string& lhs, obfuscate_string const& rhs);
+    friend basic_stream& operator<<(basic_stream& lhs, obfuscate_string const& rhs);
     /**
      * @brief   append
      * @param   binary_t& lhs [out]
@@ -185,7 +181,6 @@ class obfuscate_string {
     binary_t _contents;
 };
 
-}  // namespace io
 }  // namespace hotplace
 
 #endif

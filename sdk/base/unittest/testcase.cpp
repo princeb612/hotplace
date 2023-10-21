@@ -13,22 +13,19 @@
 #include <hotplace/sdk/base/stl.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
-#include <hotplace/sdk/io/stream/string.hpp>
-#include <hotplace/sdk/io/string/string.hpp>
-#include <hotplace/sdk/io/unittest/testcase.hpp>
+#include <hotplace/sdk/base/unittest/testcase.hpp>
 #include <iostream>
 
 namespace hotplace {
-namespace io {
 
 test_case::test_case() { reset_time(); }
 
 void test_case::begin(const char* case_name, ...) {
     arch_t tid = get_thread_id();
     testcase_per_thread_pib_t pib;
-    ansi_string topic;
-    ansi_string stream;
-    t_stream_binder<ansi_string, console_color> console_colored_stream(stream);
+    basic_stream topic;
+    basic_stream stream;
+    t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
 
     _lock.enter();
 
@@ -225,7 +222,7 @@ void test_case::assert(bool expect, const char* test_function, const char* messa
         ret = errorcode_t::unexpected;
     }
 
-    ansi_string tltle;
+    basic_stream tltle;
     if (nullptr != message) {
         va_list ap;
         va_start(ap, message);
@@ -244,7 +241,7 @@ void test_case::test(return_t result, const char* test_function, const char* mes
     __try2 {
         check_time(elapsed);
 
-        ansi_string tltle;
+        basic_stream tltle;
         if (nullptr != message) {
             va_list ap;
             va_start(ap, message);
@@ -302,8 +299,8 @@ void test_case::test(return_t result, const char* test_function, const char* mes
             _test_list.push_back(topic); /* ordered test cases */
         }
 
-        ansi_string stream;
-        t_stream_binder<ansi_string, console_color> console_colored_stream(stream);
+        basic_stream stream;
+        t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
 
         console_colored_stream << _concolor.turnon() << _concolor.set_style(console_style_t::bold) << _concolor.set_fgcolor(color)
                                << format("[%08x]", result).c_str() << _concolor.set_fgcolor(console_color_t::yellow)
@@ -337,7 +334,7 @@ constexpr char constexpr_message[] = "message";
     stream << concolor.set_fgcolor(color1) << msg;    \
     stream << concolor.set_fgcolor(color2);
 
-void test_case::dump_list_into_stream(unittest_list_t& array, ansi_string& stream) {
+void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stream) {
     console_color_t fgcolor = console_color_t::white;
 
     _concolor.set_style(console_style_t::bold);
@@ -350,8 +347,8 @@ void test_case::dump_list_into_stream(unittest_list_t& array, ansi_string& strea
     for (unittest_list_t::iterator list_iterator = array.begin(); list_iterator != array.end(); list_iterator++) {
         unittest_item_t item = *list_iterator;
 
-        ansi_string error_message;
-        t_stream_binder<ansi_string, console_color> console_colored_stream(error_message);
+        basic_stream error_message;
+        t_stream_binder<basic_stream, console_color> console_colored_stream(error_message);
         switch (item._result) {
             case errorcode_t::success:
                 cprint(console_colored_stream, _concolor, console_color_t::white, fgcolor, constexpr_pass);
@@ -380,7 +377,7 @@ void test_case::dump_list_into_stream(unittest_list_t& array, ansi_string& strea
 }
 
 void test_case::report(uint32 top_count) {
-    ansi_string stream;
+    basic_stream stream;
 
     _lock.enter();
 
@@ -404,8 +401,8 @@ void test_case::report(uint32 top_count) {
     file.close();
 }
 
-void test_case::report_unittest(ansi_string& stream) {
-    t_stream_binder<ansi_string, console_color> console_colored_stream(stream);
+void test_case::report_unittest(basic_stream& stream) {
+    t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
     console_color_t fgcolor = console_color_t::white;
 
     //
@@ -416,9 +413,9 @@ void test_case::report_unittest(ansi_string& stream) {
 
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
     stream.fill(80, '=');
-    stream.endl();
+    stream << "\n";
     console_colored_stream << _concolor.set_fgcolor(fgcolor) << constexpr_report;
-    stream.endl();
+    stream << "\n";
 
     for (unittest_index_t::iterator iter = _test_list.begin(); iter != _test_list.end(); iter++) {
         std::string testcase = *iter;
@@ -441,15 +438,15 @@ void test_case::report_unittest(ansi_string& stream) {
             cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_low);
             stream << " " << status._test_stat._count_low_security;
         }
-        stream.endl();
+        stream << "\n";
 
         stream.fill(80, '-');
-        stream.endl();
+        stream << "\n";
 
         dump_list_into_stream(status._test_list, stream);
 
         stream.fill(80, '-');
-        stream.endl();
+        stream << "\n";
     }
 
     stream << "# ";
@@ -470,13 +467,13 @@ void test_case::report_unittest(ansi_string& stream) {
         cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_low);
         stream << " " << _total._count_low_security;
     }
-    stream.endl();
+    stream << "\n";
     stream.fill(80, '=');
-    stream.endl();
+    stream << "\n";
     if (_total._count_fail) {
         constexpr char constexpr_testfail[] = "TEST FAILED";
         cprint(console_colored_stream, _concolor, console_color_t::red, fgcolor, constexpr_testfail);
-        stream.endl();
+        stream << "\n";
     }
 
     console_colored_stream << _concolor.turnoff();
@@ -484,8 +481,8 @@ void test_case::report_unittest(ansi_string& stream) {
     _lock.leave();
 }
 
-void test_case::report_testtime(ansi_string& stream, uint32 top_count) {
-    t_stream_binder<ansi_string, console_color> console_colored_stream(stream);
+void test_case::report_testtime(basic_stream& stream, uint32 top_count) {
+    t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
 
     _lock.enter();
 
@@ -532,12 +529,12 @@ void test_case::report_testtime(ansi_string& stream, uint32 top_count) {
         stream.printf(constexpr_timesort, array.size());
 
         stream.fill(80, '-');
-        stream.endl();
+        stream << "\n";
 
         dump_list_into_stream(array, stream);
 
         stream.fill(80, '-');
-        stream.endl();
+        stream << "\n";
     }
 
     console_colored_stream << _concolor.turnoff();
@@ -547,5 +544,4 @@ void test_case::report_testtime(ansi_string& stream, uint32 top_count) {
 
 return_t test_case::result() { return _total._count_fail > 0 ? errorcode_t::internal_error : errorcode_t::success; }
 
-}  // namespace io
 }  // namespace hotplace

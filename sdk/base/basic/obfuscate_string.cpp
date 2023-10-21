@@ -10,11 +10,10 @@
 
 #include <string.h>
 
-#include <hotplace/sdk/io/basic/obfuscate_string.hpp>
+#include <hotplace/sdk/base/basic/obfuscate_string.hpp>
 #include <set>
 
 namespace hotplace {
-namespace io {
 
 enum obfuscate_flag_t {
     obfuscate_set_factor = (1 << 0),
@@ -35,7 +34,7 @@ obfuscate_string::obfuscate_string(const char* source) : _flags(0) {
 
 obfuscate_string::obfuscate_string(std::string& source) : _flags(0) { assign(source.c_str(), source.size()); }
 
-obfuscate_string::obfuscate_string(ansi_string& source) : _flags(0) { assign(source.c_str(), source.size()); }
+obfuscate_string::obfuscate_string(basic_stream& source) : _flags(0) { assign(source.c_str(), source.size()); }
 
 obfuscate_string::~obfuscate_string() { cleanup(); }
 
@@ -112,7 +111,7 @@ obfuscate_string& obfuscate_string::operator=(std::string& source) {
     return *this;
 }
 
-obfuscate_string& obfuscate_string::operator=(ansi_string& source) {
+obfuscate_string& obfuscate_string::operator=(basic_stream& source) {
     assign(source.c_str(), source.size());
     return *this;
 }
@@ -132,7 +131,7 @@ obfuscate_string& obfuscate_string::operator+=(std::string& source) {
     return *this;
 }
 
-obfuscate_string& obfuscate_string::operator+=(ansi_string& source) {
+obfuscate_string& obfuscate_string::operator+=(basic_stream& source) {
     append(source.c_str(), source.size());
     return *this;
 }
@@ -152,7 +151,7 @@ obfuscate_string& obfuscate_string::operator<<(std::string& source) {
     return *this;
 }
 
-obfuscate_string& obfuscate_string::operator<<(ansi_string& source) {
+obfuscate_string& obfuscate_string::operator<<(basic_stream& source) {
     append(source.c_str(), source.size());
     return *this;
 }
@@ -170,7 +169,7 @@ std::string& operator<<(std::string& lhs, obfuscate_string const& rhs) {
     return lhs;
 }
 
-ansi_string& operator<<(ansi_string& lhs, obfuscate_string const& rhs) {
+basic_stream& operator<<(basic_stream& lhs, obfuscate_string const& rhs) {
     binary_t::const_iterator it;
 
     for (it = rhs._contents.begin(); it != rhs._contents.end(); it++) {
@@ -197,5 +196,4 @@ void obfuscate_string::startup() {
 
 void obfuscate_string::cleanup() { memset(&_contents[0], 0, _contents.size()); }
 
-}  // namespace io
 }  // namespace hotplace

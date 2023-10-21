@@ -9,19 +9,18 @@
  * 2023.08.15   Soo Han, Kim        elapsed time
  */
 
-#ifndef __HOTPLACE_SDK_IO_UNITEST_TESTCASE__
-#define __HOTPLACE_SDK_IO_UNITEST_TESTCASE__
+#ifndef __HOTPLACE_SDK_BASE_UNITEST_TESTCASE__
+#define __HOTPLACE_SDK_BASE_UNITEST_TESTCASE__
 
 #include <time.h>
 
-#include <hotplace/sdk/base.hpp>
 #include <hotplace/sdk/base/basic/console_color.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <list>
 #include <map>
 #include <string>
 
 namespace hotplace {
-namespace io {
 
 /**
  * @brief   unit test
@@ -159,10 +158,10 @@ class test_case {
     typedef std::pair<time_slice_per_thread_t::iterator, bool> time_slice_per_thread_pib_t;
 
    protected:
-    void report_unittest(ansi_string& stream);
-    void report_testtime(ansi_string& stream, uint32 top_count = -1);
+    void report_unittest(basic_stream& stream);
+    void report_testtime(basic_stream& stream, uint32 top_count = -1);
 
-    void dump_list_into_stream(unittest_list_t& array, ansi_string& stream);
+    void dump_list_into_stream(unittest_list_t& array, basic_stream& stream);
 
     void check_time(struct timespec& time);
 
@@ -201,7 +200,6 @@ class test_case_notimecheck {
     test_case* _tc;
 };
 
-}  // namespace io
 }  // namespace hotplace
 
 #endif

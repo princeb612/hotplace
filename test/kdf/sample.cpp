@@ -46,7 +46,7 @@ void test_kdf_hkdf() {
     binary_t result;
 
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        kdf_hkdf(result, vector[i].dlen, convert(vector[i].password), convert(vector[i].salt), convert(vector[i].info), hash_algorithm_t::sha2_256);
+        kdf_hkdf(result, hash_algorithm_t::sha2_256, vector[i].dlen, convert(vector[i].password), convert(vector[i].salt), convert(vector[i].info));
         basic_stream bs;
         dump_memory(result, &bs);
         std::cout << bs.c_str() << std::endl;
@@ -87,7 +87,7 @@ void test_kdf_pbkdf2_rfc6070() {
         password.insert(password.end(), vector[i].password, vector[i].password + vector[i].size_password);
         binary_t salt;
         salt.insert(salt.end(), vector[i].salt, vector[i].salt + vector[i].size_salt);
-        kdf_pbkdf2(result, vector[i].dlen, password, salt, vector[i].c, hash_algorithm_t::sha1);
+        kdf_pbkdf2(result, hash_algorithm_t::sha1, vector[i].dlen, password, salt, vector[i].c);
         basic_stream bs;
         dump_memory(result, &bs);
         std::cout << bs.c_str() << std::endl;
@@ -117,7 +117,7 @@ void test_kdf_pbkdf2_rfc7914() {
     binary_t result;
 
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        kdf_pbkdf2(result, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].c, hash_algorithm_t::sha2_256);
+        kdf_pbkdf2(result, hash_algorithm_t::sha2_256, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].c);
         basic_stream bs;
         dump_memory(result, &bs);
         std::cout << bs.c_str() << std::endl;

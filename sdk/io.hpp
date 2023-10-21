@@ -15,7 +15,6 @@
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <hotplace/sdk/io/basic/keyvalue.hpp>
 #include <hotplace/sdk/io/basic/mlfq.hpp>
-#include <hotplace/sdk/io/basic/obfuscate_string.hpp>
 #include <hotplace/sdk/io/basic/zlib.hpp>
 #include <hotplace/sdk/io/cbor/cbor_array.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
@@ -37,6 +36,5 @@
 #elif defined _WIN32 || defined _WIN64
 #include <hotplace/sdk/io/system/windows/windows_registry.hpp>
 #endif
-#include <hotplace/sdk/io/unittest/testcase.hpp>
 
 #endif

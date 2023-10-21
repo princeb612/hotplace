@@ -12,10 +12,10 @@
 #define __HOTPLACE_SDK_BASE_STREAM_BASICSTREAM__
 
 #include <stdarg.h>
+#include <string.h>
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/base/basic/bufferio.hpp>
 #include <hotplace/sdk/base/stream.hpp>
+#include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <iostream>
 
 namespace hotplace {
@@ -89,6 +89,12 @@ class basic_stream : public stream_t {
     return_t printf(const wchar_t* buf, ...);
     return_t vprintf(const wchar_t* buf, va_list ap);
 #endif
+
+    basic_stream& operator<<(const char* str);
+    basic_stream& operator<<(int value);
+    basic_stream& operator<<(unsigned int value);
+    basic_stream& operator<<(long value);
+    basic_stream& operator<<(unsigned long value);
 
     /**
      * @brief   operator =

@@ -221,27 +221,27 @@ return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binar
         cbor_array* pub = (cbor_array*)(*root)[3];
         // PartyUInfo
         {
-            *partyu << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyu_id, cose_param_t::cose_shared_apu_id)
-                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyu_nonce, cose_param_t::cose_shared_apu_nonce)
-                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyu_other, cose_param_t::cose_shared_apu_other);
+            *partyu << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyu_id, cose_param_t::cose_unsent_apu_id)
+                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyu_nonce, cose_param_t::cose_unsent_apu_nonce)
+                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyu_other, cose_param_t::cose_unsent_apu_other);
         }
         // PartyVInfo
         {
-            *partyv << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyv_id, cose_param_t::cose_shared_apv_id)
-                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyv_nonce, cose_param_t::cose_shared_apv_nonce)
-                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyv_other, cose_param_t::cose_shared_apv_other);
+            *partyv << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyv_id, cose_param_t::cose_unsent_apv_id)
+                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyv_nonce, cose_param_t::cose_unsent_apv_nonce)
+                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyv_other, cose_param_t::cose_unsent_apv_other);
         }
         // SuppPubInfo
         {
             *pub << new cbor_data(keylen) << new cbor_data(source->bin_protected);
-            binary_t bin_public = handle->binarymap[cose_param_t::cose_shared_public_other];
+            binary_t bin_public = handle->binarymap[cose_param_t::cose_unsent_pub_other];
             if (bin_public.size()) {
                 *pub << new cbor_data(bin_public);
             }
         }
         // SuppPrivInfo
         {
-            binary_t bin_private = handle->binarymap[cose_param_t::cose_shared_private];
+            binary_t bin_private = handle->binarymap[cose_param_t::cose_unsent_priv_other];
             if (bin_private.size()) {
                 *root << new cbor_data(bin_private);
             }
@@ -293,9 +293,10 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
 
         binary_t partial_iv;
         binary_t iv;
+
         composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
         if (0 == iv.size()) {
-            hint.find(cose_param_t::cose_shared_iv, &iv);
+            iv = handle->binarymap[cose_param_t::cose_unsent_iv];
         }
         if (iv.size()) {
             // TEST FAILED
@@ -304,6 +305,7 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             // 1.  Left-pad the Partial IV with zeros to the length of IV.
             // 2.  XOR the padded Partial IV with the context IV.
             size_t ivsize = iv.size();
+            binary_t partial_iv;
             composer.finditem(cose_key_t::cose_partial_iv, partial_iv, handle->body.unprotected_map);
             if (partial_iv.size()) {
                 binary_t partial_iv_step1;
@@ -311,11 +313,15 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
                 for (size_t i = 0; i < ivsize; i++) {
                     iv[i] ^= partial_iv_step1[i];
                 }
+#if defined DEBUG
+                handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
+#endif
             }
         }
 
+        EVP_PKEY* pkey = nullptr;
         binary_t cek;
-        hint.find(cose_param_t::cose_cek, &cek);
+        hint.find(cose_param_t::cose_param_cek, &cek);
         if (0 == cek.size()) {
             if (cbor_tag_t::cose_tag_encrypt == tag) {
                 ret = errorcode_t::request;
@@ -329,7 +335,6 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
                     k = kid.c_str();
                 }
 
-                EVP_PKEY* pkey = nullptr;
                 if (k) {
                     pkey = key->find(k, enc_hint->kty);
                 } else {
@@ -344,11 +349,32 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             }
         }
 
-        binary_t authenticated_data = handle->binarymap[cose_param_t::cose_aad];
+        binary_t authenticated_data = handle->binarymap[cose_param_t::cose_param_aad];
 
         binary_t tag;
 
-        if (cose_group_t::cose_group_aesgcm == enc_hint->group) {
+        // cose_group_aeskw
+        // cose_group_direct
+        // cose_group_ecdsa
+        // cose_group_eddsa
+        // cose_group_hkdf_hmac
+        // cose_group_hkdf_aescmac
+        // cose_group_sha
+        // cose_group_ecdhes_hkdf
+        // cose_group_ecdhss_hkdf
+        // cose_group_ecdhes_aeskw
+        // cose_group_ecdhss_aeskw
+        // cose_group_rsassa_pss
+        // cose_group_rsa_oaep
+        // cose_group_rsassa_pkcs15
+        // cose_group_aesgcm
+        // cose_group_hmac
+        // cose_group_aesccm
+        // cose_group_aescmac
+        // cose_group_chacha20_poly1305
+        // cose_group_iv
+        cose_group_t group = enc_hint->group;
+        if (cose_group_t::cose_group_aesgcm == group) {
             size_t enc_size = 0;
             split(handle->payload, enc_size, tag, enc_hint->param.tsize);
 
@@ -357,7 +383,7 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
             crypt.close(crypt_handle);
 
-        } else if (cose_group_t::cose_group_aesccm == enc_hint->group) {
+        } else if (cose_group_t::cose_group_aesccm == group) {
             size_t enc_size = 0;
             split(handle->payload, enc_size, tag, enc_hint->param.tsize);
 
@@ -366,7 +392,7 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_lsize, enc_hint->param.lsize);
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
             crypt.close(crypt_handle);
-        } else if (cose_group_t::cose_group_chacha20_poly1305 == enc_hint->group) {
+        } else if (cose_group_t::cose_group_chacha20_poly1305 == group) {
             // TEST FAILED - counter ??
             size_t enc_size = 0;
             split(handle->payload, enc_size, tag, enc_hint->param.tsize);
@@ -378,6 +404,9 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             crypt.open(&crypt_handle, enc_hint->param.algname, cek, chacha20iv);
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
             crypt.close(crypt_handle);
+#if defined DEBUG
+            handle->debug_flag |= cose_debug_chacha20_poly1305;
+#endif
         }
     }
     __finally2 {
@@ -414,10 +443,10 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
         // AAD_hex
         binary_t authenticated_data;
-        compose_enc_structure(authenticated_data, handle->tag, handle->body.bin_protected, handle->binarymap[cose_param_t::cose_shared_external]);
+        compose_enc_structure(authenticated_data, handle->tag, handle->body.bin_protected, handle->binarymap[cose_param_t::cose_external]);
 
         // too many parameters... handle w/ map
-        handle->binarymap[cose_param_t::cose_aad] = authenticated_data;
+        handle->binarymap[cose_param_t::cose_param_aad] = authenticated_data;
 
         const char* k = nullptr;
         binary_t kwiv;
@@ -521,12 +550,16 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
                 // using context structure to transform the shared secret into the CEK
                 // either the 'salt' parameter of HKDF ot the 'PartyU nonce' parameter of the context structure MUST be present.
-                kdf_hkdf(cek, alg_hint->kdf.dlen, secret, salt, context, alg_hint->kdf.algname);
+                kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
                 // CEK solved
             } else if (cose_group_t::cose_group_hkdf_aescmac == group) {
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
 
-                // TODO
+                compose_kdf_context(handle, &item, context);
+
+#if defined DEBUG
+                handle->debug_flag |= cose_debug_aescmac;
+#endif
             } else if (cose_group_t::cose_group_sha == group) {
             } else if (cose_group_t::cose_group_ecdhes_hkdf == group) {
                 // RFC 8152 12.4.1. ECDH
@@ -536,7 +569,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 compose_kdf_context(handle, &item, context);
 
                 salt.resize(alg_hint->kdf.dlen);
-                kdf_hkdf(cek, alg_hint->kdf.dlen, secret, salt, context, alg_hint->kdf.algname);
+                kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
                 // CEK solved
             } else if (cose_group_t::cose_group_ecdhss_hkdf == group) {
                 // RFC 8152 12.4.1. ECDH
@@ -546,7 +579,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 compose_kdf_context(handle, &item, context);
 
                 salt.resize(alg_hint->kdf.dlen);
-                kdf_hkdf(cek, alg_hint->kdf.dlen, secret, salt, context, alg_hint->kdf.algname);
+                kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
                 // CEK solved
             } else if (cose_group_t::cose_group_ecdhes_aeskw == group || cose_group_t::cose_group_ecdhss_aeskw == group) {
                 // RFC 8152 12.5.1. ECDH
@@ -556,7 +589,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 compose_kdf_context(handle, &item, context);
 
                 salt.resize(alg_hint->kdf.dlen);
-                kdf_hkdf(kek, alg_hint->kdf.dlen, secret, salt, context, alg_hint->kdf.algname);
+                kdf_hkdf(kek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
 
                 // 12.5.  Key Agreement with Key Wrap
                 crypt.open(&crypt_handle, alg_hint->param.algname, kek, kwiv);
@@ -564,6 +597,21 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 crypt.close(crypt_handle);
             } else if (cose_group_t::cose_group_rsassa_pss == group) {
             } else if (cose_group_t::cose_group_rsa_oaep == group) {
+                crypt_enc_t mode;
+                switch (alg) {
+                    case cose_alg_t::cose_rsaes_oaep_sha1:
+                        mode = crypt_enc_t::rsa_oaep;
+                        break;
+                    case cose_alg_t::cose_rsaes_oaep_sha256:
+                        mode = crypt_enc_t::rsa_oaep256;
+                        break;
+                    case cose_alg_t::cose_rsaes_oaep_sha512:
+                        mode = crypt_enc_t::rsa_oaep512;
+                        break;
+                    default:
+                        break;
+                }
+                crypt.decrypt(pkey, item.bin_data, cek, mode);
             } else if (cose_group_t::cose_group_rsassa_pkcs15 == group) {
             } else if (cose_group_t::cose_group_aesgcm == group) {
                 // RFC 8152 10.1. AES GCM
@@ -574,20 +622,30 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // RFC 9.2. AES Message Authentication Code (AES-CBC-MAC)
             } else if (cose_group_t::cose_group_chacha20_poly1305 == group) {
                 // RFC 8152 10.3. ChaCha20 and Poly1305
+#if defined DEBUG
+                handle->debug_flag |= cose_debug_chacha20_poly1305;
+#endif
             } else if (cose_group_t::cose_group_iv == group) {
             }
 
+            basic_stream bs;
+#if defined DEBUG
+            dump_memory(authenticated_data, &bs);
+            printf("AAD\n%s\n%s\n", bs.c_str(), base16_encode(authenticated_data).c_str());
+            if (kek.size()) {
+                dump_memory(kek, &bs);
+                printf("KEK\n%s\n%s\n", bs.c_str(), base16_encode(kek).c_str());
+            }
+#endif
+
             if (cek.size()) {
 #if defined DEBUG
-                basic_stream bs;
-                dump_memory(authenticated_data, &bs);
-                printf("AAD\n%s\n%s\n", bs.c_str(), base16_encode(authenticated_data).c_str());
                 dump_memory(cek, &bs);
                 printf("CEK\n%s\n%s\n", bs.c_str(), base16_encode(cek).c_str());
 #endif
 
                 // too many parameters... handle w/ map
-                handle->binarymap[cose_param_t::cose_cek] = cek;
+                handle->binarymap[cose_param_t::cose_param_cek] = cek;
                 check = dodecrypt(handle, key, cbor_tag_t::cose_tag_encrypt, output);
 
                 results.insert((errorcode_t::success == check) ? true : false);

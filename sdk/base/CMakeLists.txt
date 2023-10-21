@@ -8,6 +8,7 @@ file (GLOB FILEGROUP_SDK_HEADER_BASE
     ${PROJECT_SOURCE_DIR}/sdk/base/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/base/wcs/system/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/base/wcs/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/unittest/*.hpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_BASE
@@ -15,6 +16,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_BASE
     ${PROJECT_SOURCE_DIR}/sdk/base/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/stream/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/system/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/unittest/*.cpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_BASE_LINUX
@@ -27,6 +29,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_BASE_WIN32
 
 file (GLOB FILEGROUP_SDK_SOURCE_BASE_WIN32_UNICODE
     ${PROJECT_SOURCE_DIR}/sdk/base/basic/unicode/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/stream/unicode/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/system/windows/unicode/*.cpp
 )
 

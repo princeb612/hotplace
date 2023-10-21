@@ -25,8 +25,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_PRINTF__
-#define __HOTPLACE_SDK_BASE_BASIC_PRINTF__
+#ifndef __HOTPLACE_SDK_BASE_STREAM_PRINTF__
+#define __HOTPLACE_SDK_BASE_STREAM_PRINTF__
 
 #include <hotplace/sdk/base/callback.hpp>
 #include <hotplace/sdk/base/charset.hpp>

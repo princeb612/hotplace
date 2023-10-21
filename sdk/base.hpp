@@ -25,15 +25,16 @@
 /* basic */
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/base64.hpp>
-#include <hotplace/sdk/base/basic/bufferio.hpp>
 #include <hotplace/sdk/base/basic/cmdline.hpp>
 #include <hotplace/sdk/base/basic/console_color.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/ieee754.hpp>
-#include <hotplace/sdk/base/basic/printf.hpp>
+#include <hotplace/sdk/base/basic/obfuscate_string.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/bufferio.hpp>
+#include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/system/atomic.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
@@ -54,5 +55,6 @@
 #include <hotplace/sdk/base/system/windows/sdk.hpp>
 #include <hotplace/sdk/base/system/windows/windows_version.hpp>
 #endif
+#include <hotplace/sdk/base/unittest/testcase.hpp>
 
 #endif

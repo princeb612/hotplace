@@ -29,7 +29,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info, hash_algorithm_t alg) {
+return_t kdf_hkdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* ctx = nullptr;
     int ret_openssl = 0;
@@ -70,7 +70,7 @@ return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t 
     return ret;
 }
 
-return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info, const char* alg) {
+return_t kdf_hkdf(binary_t& derived, const char* alg, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -81,7 +81,7 @@ return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t 
             __leave2;
         }
 
-        ret = kdf_hkdf(derived, dlen, key, salt, info, ha);
+        ret = kdf_hkdf(derived, ha, dlen, key, salt, info);
     }
     __finally2 {
         // do nothing
@@ -89,16 +89,24 @@ return_t kdf_hkdf(binary_t& derived, size_t dlen, binary_t const& key, binary_t 
     return ret;
 }
 
-return_t kdf_pbkdf2(binary_t& derived, size_t dlen, std::string const& password, binary_t const& salt, int iter, hash_algorithm_t alg) {
-    return kdf_pbkdf2(derived, dlen, password.c_str(), password.size(), &salt[0], salt.size(), iter, alg);
+return_t kdf_pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, std::string const& password, binary_t const& salt, int iter) {
+    return kdf_pbkdf2(derived, alg, dlen, password.c_str(), password.size(), &salt[0], salt.size(), iter);
 }
 
-return_t kdf_pbkdf2(binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, int iter, hash_algorithm_t alg) {
-    return kdf_pbkdf2(derived, dlen, (char*)&password[0], password.size(), &salt[0], salt.size(), iter, alg);
+return_t kdf_pbkdf2(binary_t& derived, const char* alg, size_t dlen, std::string const& password, binary_t const& salt, int iter) {
+    return kdf_pbkdf2(derived, alg, dlen, password.c_str(), password.size(), &salt[0], salt.size(), iter);
 }
 
-return_t kdf_pbkdf2(binary_t& derived, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt, int iter,
-                    hash_algorithm_t alg) {
+return_t kdf_pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, binary_t const& password, binary_t const& salt, int iter) {
+    return kdf_pbkdf2(derived, alg, dlen, (char*)&password[0], password.size(), &salt[0], salt.size(), iter);
+}
+
+return_t kdf_pbkdf2(binary_t& derived, const char* alg, size_t dlen, binary_t const& password, binary_t const& salt, int iter) {
+    return kdf_pbkdf2(derived, alg, dlen, (char*)&password[0], password.size(), &salt[0], salt.size(), iter);
+}
+
+return_t kdf_pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt,
+                    int iter) {
     return_t ret = errorcode_t::success;
     const EVP_MD* md = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -117,6 +125,26 @@ return_t kdf_pbkdf2(binary_t& derived, size_t dlen, const char* password, size_t
 
         derived.resize(dlen);
         PKCS5_PBKDF2_HMAC(password, size_password, salt, size_salt, iter, md, dlen, &derived[0]);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t kdf_pbkdf2(binary_t& derived, const char* alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt,
+                    int iter) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    __try2 {
+        if (nullptr == alg) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        hash_algorithm_t ha;
+        advisor->find_evp_md(alg, ha);
+        ret = kdf_pbkdf2(derived, ha, dlen, password, size_password, salt, size_salt, iter);
     }
     __finally2 {
         // do nothing

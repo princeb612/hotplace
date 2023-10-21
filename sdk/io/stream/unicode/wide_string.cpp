@@ -398,8 +398,6 @@ wide_string& wide_string::operator<<(wide_string& buf) {
     return *this;
 }
 
-void wide_string::endl() { printf(L"\n"); }
-
 int wide_string::compare(wide_string& buf) { return wcscmp((*this).c_str(), buf.c_str()); }
 
 int wide_string::compare(wide_string& lhs, wide_string& rhs) { return wcscmp(lhs.c_str(), rhs.c_str()); }
