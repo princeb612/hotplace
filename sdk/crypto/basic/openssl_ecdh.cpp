@@ -77,18 +77,18 @@ return_t dh_key_agreement(EVP_PKEY* pkey, EVP_PKEY* peer, binary_t& secret) {
                 ret_test = EVP_PKEY_derive_set_peer(pkey_context, pkey_peer);
                 if (1 > ret_test) {
                     ret = errorcode_t::internal_error;
-                    __leave2;
+                    __leave2_trace_openssl(ret);
                 }
                 ret_test = EVP_PKEY_derive(pkey_context, nullptr, &size_secret);
                 if (1 > ret_test) {
                     ret = errorcode_t::internal_error;
-                    __leave2;
+                    __leave2_trace_openssl(ret);
                 }
                 secret.resize(size_secret);
                 ret_test = EVP_PKEY_derive(pkey_context, &secret[0], &size_secret);
                 if (1 > ret_test) {
                     ret = errorcode_t::internal_error;
-                    __leave2;
+                    __leave2_trace_openssl(ret);
                 }
             }
             __finally2 { EVP_PKEY_free(pkey_peer); }

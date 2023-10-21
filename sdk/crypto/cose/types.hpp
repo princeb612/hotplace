@@ -41,6 +41,7 @@ enum code_debug_flag_t {
     cose_debug_partial_iv = (1 << 1),
     cose_debug_aescmac = (1 << 2),
     cose_debug_chacha20_poly1305 = (1 << 3),
+    cose_debug_aeskw = (1 << 4),
 };
 
 typedef std::map<int, variant_t> cose_variantmap_t;
