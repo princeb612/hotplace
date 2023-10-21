@@ -203,7 +203,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhes_aeskw,
         {
             "sha256",
-            32,
+            16,
         },
         {
             "aes-128-wrap",
@@ -214,8 +214,8 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         crypto_kty_t::kty_ec,
         cose_group_t::cose_group_ecdhes_aeskw,
         {
-            "sha384",
-            48,
+            "sha256",
+            24,
         },
         {
             "aes-192-wrap",
@@ -226,8 +226,8 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         crypto_kty_t::kty_ec,
         cose_group_t::cose_group_ecdhes_aeskw,
         {
-            "sha512",
-            64,
+            "sha256",
+            32,
         },
         {
             "aes-256-wrap",
@@ -239,7 +239,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_ecdhss_aeskw,
         {
             "sha256",
-            32,
+            16,
         },
         {
             "aes-128-wrap",
@@ -251,8 +251,8 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         crypto_kty_t::kty_ec,
         cose_group_t::cose_group_ecdhss_aeskw,
         {
-            "sha384",
-            48,
+            "sha256",
+            24,
         },
         {
             "aes-192-wrap",
@@ -264,8 +264,8 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         crypto_kty_t::kty_ec,
         cose_group_t::cose_group_ecdhss_aeskw,
         {
-            "sha512",
-            64,
+            "sha256",
+            32,
         },
         {
             "aes-256-wrap",

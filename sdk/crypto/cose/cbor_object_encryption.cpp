@@ -537,6 +537,9 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
 
             if (cose_group_t::cose_group_aeskw == group) {
+#if defined DEBUG
+                handle->debug_flag |= cose_debug_aeskw;
+#endif
             } else if (cose_group_t::cose_group_direct == group) {
                 // RFC 8152 12.1. Direct Encryption
                 cek = secret;
@@ -632,6 +635,16 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 #if defined DEBUG
             dump_memory(authenticated_data, &bs);
             printf("AAD\n%s\n%s\n", bs.c_str(), base16_encode(authenticated_data).c_str());
+            dump_memory(context, &bs);
+            printf("Context\n%s\n%s\n", bs.c_str(), base16_encode(context).c_str());
+            if (secret.size()) {
+                dump_memory(secret, &bs);
+                printf("secret\n%s\n%s\n", bs.c_str(), base16_encode(secret).c_str());
+            }
+            if (iv.size()) {
+                dump_memory(iv, &bs);
+                printf("IV\n%s\n%s\n", bs.c_str(), base16_encode(iv).c_str());
+            }
             if (kek.size()) {
                 dump_memory(kek, &bs);
                 printf("KEK\n%s\n%s\n", bs.c_str(), base16_encode(kek).c_str());
