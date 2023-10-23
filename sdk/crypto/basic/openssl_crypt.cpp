@@ -40,6 +40,7 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
     crypto_key* key;
     crypt_datamap_t datamap;
     crypt_variantmap_t variantmap;
+    uint16 padding;
     uint16 lsize;
     uint16 tsize;
 
@@ -51,6 +52,7 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
           encrypt_context(nullptr),
           decrypt_context(nullptr),
           key(nullptr),
+          padding(1),
           lsize(0),
           tsize(0) {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
@@ -211,11 +213,21 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
 }
 
 return_t openssl_crypt::open(crypt_context_t** handle, const char* cipher, binary_t const& key, binary_t const& iv) {
-    crypt_algorithm_t algorithm;
-    crypt_mode_t mode;
+    return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    advisor->find_evp_cipher(cipher, algorithm, mode);
-    return open(handle, algorithm, mode, key, iv);
+
+    __try2 {
+        const hint_cipher_t* hint = advisor->hintof_cipher(cipher);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+        } else {
+            ret = open(handle, hint->_algorithm, hint->_mode, key, iv);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 return_t openssl_crypt::close(crypt_context_t* handle) {
@@ -258,6 +270,9 @@ return_t openssl_crypt::set(crypt_context_t* handle, crypt_ctrl_t id, uint16 par
             __leave2;
         }
         switch (id) {
+            case crypt_ctrl_t::crypt_ctrl_padding:
+                context->padding = param;
+                break;
             case crypt_ctrl_t::crypt_ctrl_lsize:
                 context->lsize = param;
                 break;
@@ -364,6 +379,8 @@ return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* d
             ret = errorcode_t::insufficient_buffer;
             __leave2;
         }
+
+        EVP_CIPHER_CTX_set_padding(context->encrypt_context, context->padding);
 
         int ret_cipher = 0;
         int size_update = 0;
@@ -602,6 +619,8 @@ return_t openssl_crypt::decrypt2(crypt_context_t* handle, const unsigned char* d
             ret = errorcode_t::insufficient_buffer;
             __leave2;
         }
+
+        EVP_CIPHER_CTX_set_padding(context->decrypt_context, context->padding);
 
         int ret_cipher = 0;
         int size_update = 0;

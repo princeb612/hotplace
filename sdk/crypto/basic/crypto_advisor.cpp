@@ -20,7 +20,7 @@ namespace crypto {
 #if (OPENSSL_VERSION_NUMBER < 0x30000000L)
 typedef struct _openssl_evp_cipher_method_older_t {
     const EVP_CIPHER* _cipher;
-    openssl_evp_cipher_method_t method;
+    hint_cipher_t method;
 } openssl_evp_cipher_method_older_t;
 
 const openssl_evp_cipher_method_older_t aes_wrap_methods[] = {
@@ -77,12 +77,10 @@ return_t crypto_advisor::build_if_necessary() {
         //     [PASS] const EVP_CIPHER* cipher = crypto_advisor::get_instance()->find_evp_cipher("aes-128-wrap");
 
         for (i = 0; i < sizeof_evp_cipher_methods; i++) {
-            const openssl_evp_cipher_method_t* item = evp_cipher_methods + i;
+            const hint_cipher_t* item = evp_cipher_methods + i;
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
             EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch(nullptr, item->_fetchname, nullptr);
-            if (nullptr == evp_cipher) {
-                __trace(errorcode_t::debug, "%s", item->_fetchname);
-            } else {
+            if (evp_cipher) {
                 _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->_algorithm, item->_mode), evp_cipher));
                 _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
             }
@@ -93,6 +91,10 @@ return_t crypto_advisor::build_if_necessary() {
                 _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
             }
 #endif
+            if (nullptr == evp_cipher) {
+                __trace(errorcode_t::debug, "%s", item->_fetchname);
+            }
+
             _cipher_fetch_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->_algorithm, item->_mode), item));
             _cipher_byname_map.insert(std::make_pair(item->_fetchname, item));
         }
@@ -105,12 +107,10 @@ return_t crypto_advisor::build_if_necessary() {
 #endif
 
         for (i = 0; i < sizeof_evp_md_methods; i++) {
-            const openssl_evp_md_method_t* item = evp_md_methods + i;
+            const hint_digest_t* item = evp_md_methods + i;
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
             EVP_MD* evp_md = EVP_MD_fetch(nullptr, item->_fetchname, nullptr);
-            if (nullptr == evp_md) {
-                __trace(errorcode_t::debug, "%s", item->_fetchname);
-            } else {
+            if (evp_md) {
                 _md_map.insert(std::make_pair(item->_algorithm, evp_md));
             }
 #else
@@ -119,6 +119,9 @@ return_t crypto_advisor::build_if_necessary() {
                 _md_map.insert(std::make_pair(item->_algorithm, (EVP_MD*)evp_md));
             }
 #endif
+            if (nullptr == evp_md) {
+                __trace(errorcode_t::debug, "%s", item->_fetchname);
+            }
             _md_fetch_map.insert(std::make_pair(item->_algorithm, item));
             _md_byname_map.insert(std::make_pair(item->_fetchname, item));
         }
@@ -245,8 +248,8 @@ const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(crypt_algorithm_t a
 const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(const char* alg) {
     const hint_blockcipher_t* ret_value = nullptr;
     if (alg) {
-        maphint<std::string, const openssl_evp_cipher_method_t*> hint(_cipher_byname_map);
-        const openssl_evp_cipher_method_t* item = nullptr;
+        maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
+        const hint_cipher_t* item = nullptr;
         hint.find(alg, &item);
         if (item) {
             ret_value = hintof_blockcipher(item->_algorithm);
@@ -260,14 +263,15 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher(const EVP_CIPHER* ciph
     return_t ret = errorcode_t::success;
 
     __try2 {
-        crypt_algorithm_t alg = crypt_algorithm_t::crypt_alg_unknown;
-        crypt_mode_t mode = crypt_mode_t::crypt_mode_unknown;
-        ret = find_evp_cipher(cipher, alg, mode);
+        const hint_cipher_t* hint = nullptr;
+        maphint<const EVP_CIPHER*, const hint_cipher_t*> hint_cipher(_evp_cipher_map);
+        ret = hint_cipher.find(cipher, &hint);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        blockcipher = hintof_blockcipher(alg);
+        maphint<uint32, const hint_blockcipher_t*> hint_blockcipher(_blockcipher_map);
+        hint_blockcipher.find(hint->_algorithm, &blockcipher);
     }
     __finally2 {
         // do nothing
@@ -288,8 +292,8 @@ const EVP_CIPHER* crypto_advisor::find_evp_cipher(const char* name) {
     const EVP_CIPHER* ret_value = nullptr;
 
     if (name) {
-        maphint<std::string, const openssl_evp_cipher_method_t*> hint(_cipher_byname_map);
-        const openssl_evp_cipher_method_t* item = nullptr;
+        maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
+        const hint_cipher_t* item = nullptr;
         hint.find(name, &item);
         if (item) {
             ret_value = _cipher_map[CRYPT_CIPHER_VALUE(item->_algorithm, item->_mode)];
@@ -298,53 +302,37 @@ const EVP_CIPHER* crypto_advisor::find_evp_cipher(const char* name) {
     return ret_value;
 }
 
-return_t crypto_advisor::find_evp_cipher(const char* name, crypt_algorithm_t& algorithm, crypt_mode_t& mode) {
-    return_t ret = errorcode_t::success;
-
+const hint_cipher_t* crypto_advisor::hintof_cipher(const char* name) {
+    const hint_cipher_t* ret_value = nullptr;
     __try2 {
         if (nullptr == name) {
-            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        maphint<std::string, const openssl_evp_cipher_method_t*> hint(_cipher_byname_map);
-        const openssl_evp_cipher_method_t* item = nullptr;
-        ret = hint.find(name, &item);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        algorithm = item->_algorithm;
-        mode = item->_mode;
+        maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
+        hint.find(name, &ret_value);
     }
     __finally2 {
         // do nothing
     }
-    return ret;
+    return ret_value;
 }
 
-return_t crypto_advisor::find_evp_cipher(const EVP_CIPHER* cipher, crypt_algorithm_t& algorithm, crypt_mode_t& mode) {
-    return_t ret = errorcode_t::success;
+const hint_cipher_t* crypto_advisor::hintof_cipher(const EVP_CIPHER* cipher) {
+    const hint_cipher_t* ret_value = nullptr;
 
     __try2 {
         if (nullptr == cipher) {
-            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        const openssl_evp_cipher_method_t* method = nullptr;
-        maphint<const EVP_CIPHER*, const openssl_evp_cipher_method_t*> hint(_evp_cipher_map);
-
-        ret = hint.find(cipher, &method);
-        if (errorcode_t::success == ret) {
-            algorithm = method->_algorithm;
-            mode = method->_mode;
-        }
+        maphint<const EVP_CIPHER*, const hint_cipher_t*> hint(_evp_cipher_map);
+        hint.find(cipher, &ret_value);
     }
     __finally2 {
         // do nothing
     }
-    return ret;
+    return ret_value;
 }
 
 const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
@@ -353,8 +341,8 @@ const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mod
 
     __try2 {
         uint32 key = CRYPT_CIPHER_VALUE(algorithm, mode);
-        const openssl_evp_cipher_method_t* item = nullptr;
-        maphint<uint32, const openssl_evp_cipher_method_t*> hint(_cipher_fetch_map);
+        const hint_cipher_t* item = nullptr;
+        maphint<uint32, const hint_cipher_t*> hint(_cipher_fetch_map);
 
         ret = hint.find(key, &item);
         if (errorcode_t::success == ret) {
@@ -403,8 +391,8 @@ const EVP_MD* crypto_advisor::find_evp_md(const char* name) {
     const EVP_MD* ret_value = nullptr;
 
     if (name) {
-        maphint<std::string, const openssl_evp_md_method_t*> hint(_md_byname_map);
-        const openssl_evp_md_method_t* item = nullptr;
+        maphint<std::string, const hint_digest_t*> hint(_md_byname_map);
+        const hint_digest_t* item = nullptr;
         hint.find(name, &item);
         if (item) {
             ret_value = _md_map[item->_algorithm];
@@ -413,28 +401,21 @@ const EVP_MD* crypto_advisor::find_evp_md(const char* name) {
     return ret_value;
 }
 
-return_t crypto_advisor::find_evp_md(const char* name, hash_algorithm_t& algorithm) {
-    return_t ret = errorcode_t::success;
+const hint_digest_t* crypto_advisor::hintof_digest(const char* name) {
+    const hint_digest_t* ret_value = nullptr;
 
     __try2 {
         if (nullptr == name) {
-            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        maphint<std::string, const openssl_evp_md_method_t*> hint(_md_byname_map);
-        const openssl_evp_md_method_t* item = nullptr;
-        ret = hint.find(name, &item);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        algorithm = item->_algorithm;
+        maphint<std::string, const hint_digest_t*> hint(_md_byname_map);
+        hint.find(name, &ret_value);
     }
     __finally2 {
         // do nothing
     }
-    return ret;
+    return ret_value;
 }
 
 hash_algorithm_t crypto_advisor::get_algorithm(crypt_sig_t sig) {
@@ -463,8 +444,8 @@ hash_algorithm_t crypto_advisor::get_algorithm(jws_t sig) {
 
 const char* crypto_advisor::nameof_md(hash_algorithm_t algorithm) {
     const char* ret_value = nullptr;
-    const openssl_evp_md_method_t* item = nullptr;
-    maphint<uint32, const openssl_evp_md_method_t*> hint(_md_fetch_map);
+    const hint_digest_t* item = nullptr;
+    maphint<uint32, const hint_digest_t*> hint(_md_fetch_map);
 
     hint.find(algorithm, &item);
     if (item) {

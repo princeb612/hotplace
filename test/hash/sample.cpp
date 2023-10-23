@@ -38,6 +38,7 @@ void test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, const by
     ansi_string bs;
 
     const char* alg = advisor->nameof_md(algorithm);
+    size_t digest_size = 0;
 
     __try2 {
         if (nullptr == hash_object || nullptr == data) {
@@ -46,13 +47,14 @@ void test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, const by
         }
 
         __try2 {
-            int ret = hash_object->open(&hash_handle, algorithm, key_data, key_size);
+            ret = hash_object->open(&hash_handle, algorithm, key_data, key_size);
             if (errorcode_t::success == ret) {
                 binary_t hashed;
                 hash_object->init(hash_handle);
                 ret = hash_object->update(hash_handle, data, size);
                 if (errorcode_t::success == ret) {
                     ret = hash_object->finalize(hash_handle, hashed);
+                    digest_size = hashed.size();
                     if (errorcode_t::success == ret) {
                         test_case_notimecheck notimecheck(_test_case);
 
@@ -70,7 +72,7 @@ void test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, const by
     }
     __finally2 {
         const char* alg = advisor->nameof_md(algorithm);
-        _test_case.test(ret, __FUNCTION__, "digest algmrithm %d (%s)", algorithm, alg ? alg : "unknown");
+        _test_case.test(ret, __FUNCTION__, "digest algmrithm %d (%s) digest (%i, %i)", algorithm, alg ? alg : "unknown", digest_size, digest_size << 3);
     }
 }
 
@@ -85,6 +87,7 @@ return_t test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, bina
     ansi_string bs;
 
     const char* alg = advisor->nameof_md(algorithm);
+    size_t digest_size = 0;
 
     __try2 {
         if (nullptr == hash_object) {
@@ -93,13 +96,14 @@ return_t test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, bina
         }
 
         __try2 {
-            int ret = hash_object->open(&hash_handle, algorithm, &key[0], key.size());
+            ret = hash_object->open(&hash_handle, algorithm, &key[0], key.size());
             if (errorcode_t::success == ret) {
                 binary_t hashed;
                 hash_object->init(hash_handle);
                 ret = hash_object->update(hash_handle, &data[0], data.size());
                 if (errorcode_t::success == ret) {
                     ret = hash_object->finalize(hash_handle, hashed);
+                    digest_size = hashed.size();
                     if (errorcode_t::success == ret) {
                         test_case_notimecheck notimecheck(_test_case);
 
@@ -123,7 +127,8 @@ return_t test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, bina
     }
     __finally2 {
         const char* alg = advisor->nameof_md(algorithm);
-        _test_case.test(ret, __FUNCTION__, "digest %s algmrithm %d (%s)", text ? text : "", algorithm, alg ? alg : "unknown");
+        _test_case.test(ret, __FUNCTION__, "digest %s algmrithm %d (%s) digest (%i, %i)", text ? text : "", algorithm, alg ? alg : "unknown", digest_size,
+                        digest_size << 3);
     }
     return ret;
 }
@@ -233,10 +238,11 @@ void test_hmacsha_rfc4231() {
 
 void test_hash_algorithms() {
     hash_algorithm_t hash_table[] = {
-        hash_algorithm_t::md4,       hash_algorithm_t::md5,       hash_algorithm_t::sha1,     hash_algorithm_t::sha2_224,    hash_algorithm_t::sha2_256,
-        hash_algorithm_t::sha2_384,  hash_algorithm_t::sha2_512,  hash_algorithm_t::sha3_224, hash_algorithm_t::sha3_256,    hash_algorithm_t::sha3_384,
-        hash_algorithm_t::sha3_512,  hash_algorithm_t::shake128,  hash_algorithm_t::shake256, hash_algorithm_t::blake2b_512, hash_algorithm_t::blake2s_256,
-        hash_algorithm_t::ripemd160, hash_algorithm_t::whirlpool,
+        hash_algorithm_t::md4,          hash_algorithm_t::md5,       hash_algorithm_t::sha1,      hash_algorithm_t::sha2_224,
+        hash_algorithm_t::sha2_256,     hash_algorithm_t::sha2_384,  hash_algorithm_t::sha2_512,  hash_algorithm_t::sha2_512_224,
+        hash_algorithm_t::sha2_512_256, hash_algorithm_t::sha3_224,  hash_algorithm_t::sha3_256,  hash_algorithm_t::sha3_384,
+        hash_algorithm_t::sha3_512,     hash_algorithm_t::shake128,  hash_algorithm_t::shake256,  hash_algorithm_t::blake2b_512,
+        hash_algorithm_t::blake2s_256,  hash_algorithm_t::ripemd160, hash_algorithm_t::whirlpool,
     };
     hash_algorithm_t hmac_table[] = {
         hash_algorithm_t::md4,
@@ -246,6 +252,8 @@ void test_hash_algorithms() {
         hash_algorithm_t::sha2_256,
         hash_algorithm_t::sha2_384,
         hash_algorithm_t::sha2_512,
+        hash_algorithm_t::sha2_512_224,
+        hash_algorithm_t::sha2_512_256,
         hash_algorithm_t::sha3_224,
         hash_algorithm_t::sha3_256,
         hash_algorithm_t::sha3_384,
@@ -287,7 +295,7 @@ void test_aes128cbc_mac_routine(binary_t const& key, binary_t const& message, bi
     hash_context_t* handle = nullptr;
     binary_t result;
 
-    ret = hash.open(&handle, crypt_algorithm_t::aes128, &key[0], key.size());
+    ret = hash.open(&handle, crypt_algorithm_t::aes128, crypt_mode_t::cbc, &key[0], key.size());
     if (errorcode_t::success == ret) {
         hash.init(handle);
         hash.update(handle, &message[0], message.size());

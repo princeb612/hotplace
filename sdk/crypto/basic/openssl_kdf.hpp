@@ -21,16 +21,75 @@ namespace hotplace {
 namespace crypto {
 
 /**
- * @brief   HKDF
- * @param   binary_t& derived [out] derived key
- * @param   hash_algorithm_t alg [in]
- * @param   size_t dlen [in]
- * @param   binary_t const& key [in]
- * @param   binary_t const& salt [in]
- * @param   binary_t const& info [in]
+ * @desc
+ *      HKDF(okm, alg, dlen, ikm, salt, info);
+ *
+ *      KDF_Extract (prk, alg, salt, ikm);
+ *      KDF_Expand (okm, alg, dlen, prk, info);
  */
-return_t kdf_hkdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info);
-return_t kdf_hkdf(binary_t& derived, const char* alg, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info);
+
+/**
+ * @brief   HKDF (Extract and Expand)
+ * @param   binary_t& okm [out] output key material
+ * @param   hash_algorithm_t alg [in] algorithm
+ * @param   size_t dlen [in] length
+ * @param   binary_t const& ikm [in] input key material
+ * @param   binary_t const& salt [in] salt
+ * @param   binary_t const& info [in] info
+ */
+return_t kdf_hkdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, binary_t const& ikm, binary_t const& salt, binary_t const& info);
+return_t kdf_hkdf(binary_t& derived, const char* alg, size_t dlen, binary_t const& ikm, binary_t const& salt, binary_t const& info);
+
+/**
+ * @brief   HKDF_Extract (aka HMAC)
+ * @param   binary_t& prk [out] pseudo-random key
+ * @param   const char* alg [in] algorithm
+ * @param   binary_t const& salt [in] salt
+ * @param   binary_t const& ikm [in] input key material
+ */
+return_t hkdf_extract(binary_t& prk, const char* alg, binary_t const& salt, binary_t const& ikm);
+/**
+ * @brief   HKDF_Expand
+ * @param   binary_t& okm [out] output key material
+ * @param   const char* alg [in] algorithm
+ * @param   size_t dlen [in] length
+ * @param   binary_t const& prk [in] pseudo-random key
+ * @param   binary_t const& info [in] info
+ * @remarks
+ *
+ */
+return_t hkdf_expand(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info);
+/**
+ * @brief   HKDF (Extract and Expand)
+ * @param   binary_t& okm [out] output key material
+ * @param   crypt_algorithm_t alg [in] algorithm
+ * @param   size_t dlen [in] length
+ * @param   binary_t const& ikm [in] input key material
+ * @param   binary_t const& salt [in] salt
+ * @param   binary_t const& info [in] info
+ * @remarks
+ *          CMAC "aes-128-cbc"
+ *          CKDF-Extract "aes-128-cbc"
+ *          CKDF-Expand "aes-128-ecb"
+ */
+return_t kdf_ckdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& ikm, binary_t const& salt, binary_t const& info);
+/**
+ * @brief   CKDF_Extract
+ * @param   binary_t& prk [out] pseudo-random key
+ * @param   crypt_algorithm_t alg [in] algorithm
+ * @param   binary_t const& salt [in] salt
+ * @param   binary_t const& ikm [in] input key material
+ */
+return_t ckdf_extract(binary_t& prk, crypt_algorithm_t alg, binary_t const& salt, binary_t const& ikm);
+/**
+ * @brief   CKDF_Expand
+ * @param   binary_t& okm [in] output key material
+ * @param   crypt_algorithm_t alg [in] algorithm
+ * @param   size_t dlen [in] length
+ * @param   binary_t const& prk [in] pseudo-random key
+ * @param   binary_t const& info [in] info
+ */
+return_t ckdf_expand(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& prk, binary_t const& info);
 /**
  * @brief   PBKDF2
  * @param   binary_t& derived [out]

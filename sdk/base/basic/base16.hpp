@@ -113,6 +113,11 @@ return_t base16_encode(binary_t const& source, stream_t* stream);
  */
 std::string base16_encode(binary_t const& source);
 
+std::string base16_encode(const char* source);
+return_t base16_encode(const char* source, std::string& outpart);
+return_t base16_encode(const char* source, binary_t& outpart);
+return_t base16_encode(std::string const& source, binary_t& outpart);
+
 /**
  * @brief   decode
  * @param   const char* source [in]

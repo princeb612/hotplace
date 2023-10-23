@@ -568,10 +568,10 @@ enum cose_alg_t {
     // RFC 8152 Table 16: Direct Key with KDF
     // RFC 9053 Table 8: HKDF Algorithms
     // RFC 9053 Table 12: Direct Key with KDF
-    cose_hkdf_hmac_sha256 = -10,  // "HKDF SHA-256", "direct+HKDF-SHA-256"
-    cose_hkdf_hmac_sha512 = -11,  // "HKDF SHA-512", "direct+HKDF-SHA-512"
-    cose_hkdf_aescmac128 = -12,   // "HKDF AES-MAC-128", "direct+HKDF-AES-128"
-    cose_hkdf_aescmac256 = -13,   // "HKDF AES-MAC-256", "direct+HKDF-AES-256"
+    cose_hkdf_sha256 = -10,      // "HKDF SHA-256", "direct+HKDF-SHA-256"
+    cose_hkdf_sha512 = -11,      // "HKDF SHA-512", "direct+HKDF-SHA-512"
+    cose_hkdf_aescmac128 = -12,  // "HKDF AES-MAC-128", "direct+HKDF-AES-128"
+    cose_hkdf_aescmac256 = -13,  // "HKDF AES-MAC-256", "direct+HKDF-AES-256"
 
     // RFC 9054 Table 1: SHA-1 Hash Algorithm
     cose_sha1 = -14,  // "SHA-1"
@@ -669,6 +669,18 @@ typedef struct _hint_blockcipher_t {
     uint16 _blockkw;    // blocksize for keywrap (AES)
 } hint_blockcipher_t;
 
+typedef struct _hint_cipher_t {
+    crypt_algorithm_t _algorithm;
+    crypt_mode_t _mode;
+    const char* _fetchname;
+} hint_cipher_t;
+
+typedef struct _hint_digest_t {
+    hash_algorithm_t _algorithm;
+    const char* _fetchname;
+    uint16 _digest_size;
+} hint_digest_t;
+
 typedef struct _hint_jose_encryption_t {
     const char* alg_name;
 
@@ -741,8 +753,9 @@ struct _otp_context_t {};
 typedef struct _otp_context_t otp_context_t;
 
 enum crypt_ctrl_t {
-    crypt_ctrl_lsize = 1,  // L SIZE, sizeof_nonce(iv) = 15-L
-    crypt_ctrl_tsize = 2,  // TAG Size
+    crypt_ctrl_padding = 0,  // EVP_CIPHER_CTX_set_padding
+    crypt_ctrl_lsize = 1,    // L SIZE, sizeof_nonce(iv) = 15-L
+    crypt_ctrl_tsize = 2,    // TAG Size
 };
 
 }  // namespace crypto

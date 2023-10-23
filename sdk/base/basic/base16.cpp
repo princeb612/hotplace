@@ -116,6 +116,44 @@ std::string base16_encode(binary_t const& source) {
 
 return_t base16_encode(binary_t const& source, stream_t* stream) { return base16_encode(&source[0], source.size(), stream); }
 
+std::string base16_encode(const char* source) {
+    std::string outpart;
+    if (source) {
+        base16_encode((const byte_t*)source, strlen(source), outpart);
+    }
+    return outpart;
+}
+
+return_t base16_encode(const char* source, std::string& outpart) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == source) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        base16_encode((const byte_t*)source, strlen(source), outpart);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t base16_encode(const char* source, binary_t& outpart) {
+    return_t ret = errorcode_t::success;
+    if (source) {
+        size_t slen = strlen(source);
+        size_t dlen = 0;
+        ret = base16_encode((const byte_t*)source, slen, (char*)&outpart[0], &dlen);
+        outpart.resize(dlen);
+        ret = base16_encode((const byte_t*)source, slen, (char*)&outpart[0], &dlen);
+    }
+    return ret;
+}
+
+return_t base16_encode(std::string const& source, binary_t& outpart) { return base16_encode(source.c_str(), outpart); }
+
 static byte_t conv(char c) {
     byte_t ret = 0;
 

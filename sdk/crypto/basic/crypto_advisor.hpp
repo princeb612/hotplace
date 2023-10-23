@@ -55,14 +55,16 @@ class crypto_advisor {
      */
     const EVP_CIPHER* find_evp_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
     const EVP_CIPHER* find_evp_cipher(const char* name);
-    return_t find_evp_cipher(const char* name, crypt_algorithm_t& algorithm, crypt_mode_t& mode);
     /**
-     * @brief find alg and mode
-     * @param const EVP_CIPHER* cipher [in]
-     * @param int& algorithm [out]
-     * @param int& mode [out]
+     * @brief hint
+     * @param const char* name [in] ex. "aes-128-cbc"
      */
-    return_t find_evp_cipher(const EVP_CIPHER* cipher, crypt_algorithm_t& algorithm, crypt_mode_t& mode);
+    const hint_cipher_t* hintof_cipher(const char* name);
+    /**
+     * @brief hint
+     * @param const EVP_CIPHER* cipher [in]
+     */
+    const hint_cipher_t* hintof_cipher(const EVP_CIPHER* cipher);
     /**
      * @brief find cipher string
      * @param crypt_algorithm_t algorithm [in] crypt_algorithm_t
@@ -86,7 +88,7 @@ class crypto_advisor {
     const EVP_MD* find_evp_md(crypt_sig_t sig);
     const EVP_MD* find_evp_md(jws_t sig);
     const EVP_MD* find_evp_md(const char* name);
-    return_t find_evp_md(const char* name, hash_algorithm_t& algorithm);
+    const hint_digest_t* hintof_digest(const char* name);
     hash_algorithm_t get_algorithm(crypt_sig_t sig);
     hash_algorithm_t get_algorithm(jws_t sig);
     /**
@@ -433,12 +435,12 @@ class crypto_advisor {
 
     /* data structures for a binary search */
 
-    typedef std::map<uint32, const hint_blockcipher_t*> blockcipher_map_t;           /* pair (alg, hint_blockcipher_t*) */
-    typedef std::map<uint32, EVP_CIPHER*> cipher_map_t;                              /* pair (alg+mode, EVP_CIPHER*) */
-    typedef std::map<uint32, const openssl_evp_cipher_method_t*> cipher_fetch_map_t; /* pair (alg+mode, openssl_evp_cipher_method_t*) */
-    typedef std::map<const EVP_CIPHER*, const openssl_evp_cipher_method_t*> evp_cipher_map_t;
+    typedef std::map<uint32, const hint_blockcipher_t*> blockcipher_map_t; /* pair (alg, hint_blockcipher_t*) */
+    typedef std::map<uint32, EVP_CIPHER*> cipher_map_t;                    /* pair (alg+mode, EVP_CIPHER*) */
+    typedef std::map<uint32, const hint_cipher_t*> cipher_fetch_map_t;     /* pair (alg+mode, hint_cipher_t*) */
+    typedef std::map<const EVP_CIPHER*, const hint_cipher_t*> evp_cipher_map_t;
     typedef std::map<uint32, EVP_MD*> md_map_t; /* pair (alg+mode, EVP_MD*) */
-    typedef std::map<uint32, const openssl_evp_md_method_t*> md_fetch_map_t;
+    typedef std::map<uint32, const hint_digest_t*> md_fetch_map_t;
     typedef std::map<uint32, const hint_jose_encryption_t*> jose_encryption_map_t;
     typedef std::map<uint32, const hint_signature_t*> signature_map_t;
     typedef std::map<uint32, const hint_cose_algorithm_t*> cose_algorithm_map_t;
@@ -456,8 +458,8 @@ class crypto_advisor {
     typedef std::map<uint32, cose_ec_curve_t> nid2curve_map_t;
     typedef std::map<cose_ec_curve_t, uint32> curve2nid_map_t;
 
-    typedef std::map<std::string, const openssl_evp_cipher_method_t*> cipher_byname_map_t; /* "aes-256-cbc" to openssl_evp_cipher_method_t* */
-    typedef std::map<std::string, const openssl_evp_md_method_t*> md_byname_map_t;         /* "sha256" to openssl_evp_md_method_t* */
+    typedef std::map<std::string, const hint_cipher_t*> cipher_byname_map_t; /* "aes-256-cbc" to hint_cipher_t* */
+    typedef std::map<std::string, const hint_digest_t*> md_byname_map_t;     /* "sha256" to hint_digest_t* */
 
     int _flag;
 
@@ -539,8 +541,8 @@ bool kindof_ecc(EVP_PKEY* pkey);
  */
 crypto_kty_t typeof_crypto_key(EVP_PKEY* key);
 
-extern const openssl_evp_cipher_method_t evp_cipher_methods[];
-extern const openssl_evp_md_method_t evp_md_methods[];
+extern const hint_cipher_t evp_cipher_methods[];
+extern const hint_digest_t evp_md_methods[];
 extern const hint_blockcipher_t hint_blockciphers[];
 extern const hint_curve_t hint_curves[];
 extern const hint_cose_algorithm_t hint_cose_algorithms[];
