@@ -45,4 +45,4 @@ for item in ${array[@]}; do
 done
 
 #echo --------------------------------------------------------------------------------
-grep fail `find . -name report`
+# grep fail `find . -name report`

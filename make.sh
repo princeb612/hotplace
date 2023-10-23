@@ -15,6 +15,31 @@
 
 COMMENTS
 
+:<< HELP
+    ctest - build and run ctest
+    redist - redistribute MSYS2(MINGW) binaries
+    test - run examples
+HELP
+
+args=("$@")
+if [ ${#args[@]} -ne 0 ]; then
+    do_clangformat=0
+    do_ctest=0
+    do_redist=0
+    do_test=0
+    for arg in ${args[@]}; do
+        if [ $arg = 'format' ]; then
+            do_clangformat=1
+        elif [ $arg = 'ctest' ]; then
+            do_ctest=1
+        elif [ $arg = 'redist' ]; then
+            do_redist=1
+        elif [ $arg = 'test' ]; then
+            do_test=1
+        fi
+    done
+fi
+
 :<< SWITCHES
     SUPPORT_SHARED  - recompile openssl, jansson with -fPIC
     SUPPORT_ODBC    - unixODBC
@@ -40,14 +65,29 @@ export CXXFLAGS='-DDEBUG'
 
 project_dir=$(pwd)
 
+if [ $do_clangformat = 1 ]; then
+    clang-format -i `find sdk -name \*.\?pp`
+    clang-format -i `find test -name \*.\?pp`
+fi
+
 mkdir -p build
 cd build
 cmake -G 'Unix Makefiles' ..
 time make
 
-# redist binaries to run wo mingw environment
-:<< REDIST
-cd $project_dir
-source redist.msys
-redist
-REDIST
+if [ $do_ctest = 1 ]; then
+    cd $project_dir
+    cd build/test/
+    ctest
+fi
+if [ $do_redist = 1 ]; then
+    # redist binaries to run wo mingw environment
+    cd $project_dir
+    source redist.msys
+    redist
+fi
+if [ $do_test = 1 ]; then
+    cd $project_dir
+    cd build/test/
+    ./test.sh
+fi
