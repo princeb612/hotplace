@@ -308,11 +308,11 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             binary_t partial_iv;
             composer.finditem(cose_key_t::cose_partial_iv, partial_iv, handle->body.unprotected_map);
             if (partial_iv.size()) {
-                binary_t partial_iv_step1;
-                binary_load(partial_iv_step1, ivsize, &partial_iv[0], partial_iv.size());
-                for (size_t i = 0; i < ivsize; i++) {
-                    iv[i] ^= partial_iv_step1[i];
-                }
+                // binary_t partial_iv_step1;
+                // binary_load(partial_iv_step1, ivsize, &partial_iv[0], partial_iv.size());
+                // for (size_t i = 0; i < ivsize; i++) {
+                //     iv[i] ^= partial_iv_step1[i];
+                // }
 #if defined DEBUG
                 handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
 #endif
@@ -489,6 +489,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 k = kid.c_str();
             }
 
+            composer.finditem(cose_key_t::cose_iv, iv, item.unprotected_map);
             composer.finditem(cose_key_t::cose_salt, salt, item.unprotected_map);
 
             const hint_cose_algorithm_t* alg_hint = advisor->hintof_cose_algorithm((cose_alg_t)alg);
@@ -507,7 +508,8 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             }
             if (nullptr == pkey) {
 #if defined DEBUG
-                throw errorcode_t::internal_error;
+                handle->debug_flag |= cose_debug_notfound_key;
+                // throw errorcode_t::internal_error;
 #endif
                 continue;
             }
@@ -541,6 +543,10 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 #endif
 
             if (cose_group_t::cose_group_aeskw == group) {
+                kek = secret;
+                crypt.open(&crypt_handle, alg_hint->param.algname, kek, kwiv);
+                crypt.decrypt(crypt_handle, item.bin_data, cek);
+                crypt.close(crypt_handle);
 #if defined DEBUG
                 handle->debug_flag |= cose_debug_aeskw;
 #endif

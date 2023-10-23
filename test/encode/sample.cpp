@@ -201,14 +201,14 @@ void whatsthis(int argc, char** argv) {
                 break;
             case encode_plaintext:
                 base16_encode(o.content, what);
-                additional << "b16\n  " << convert(what).c_str() << "\n";
-                additional << "b64\n  " << base64_encode(o.content).c_str() << "\n";
-                additional << "b64url\n  " << base64_encode(o.content, base64_encoding_t::base64url_encoding).c_str() << "\n";
+                additional << "> b16\n  " << convert(what).c_str() << "\n";
+                additional << "> b64\n  " << base64_encode(o.content).c_str() << "\n";
+                additional << "> b64url\n  " << base64_encode(o.content, base64_encoding_t::base64url_encoding).c_str() << "\n";
                 break;
             case decode_b16:
                 what = base16_decode(o.content);
-                additional << "b64\n  " << base64_encode(what).c_str() << "\n";
-                additional << "b64url\n  " << base64_encode(what, base64_encoding_t::base64url_encoding).c_str() << "\n";
+                additional << "> b64\n  " << base64_encode(what).c_str() << "\n";
+                additional << "> b64url\n  " << base64_encode(what, base64_encoding_t::base64url_encoding).c_str() << "\n";
                 break;
         }
 

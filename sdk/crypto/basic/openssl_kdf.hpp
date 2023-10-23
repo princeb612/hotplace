@@ -60,7 +60,7 @@ return_t hkdf_extract(binary_t& prk, const char* alg, binary_t const& salt, bina
  */
 return_t hkdf_expand(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info);
 /**
- * @brief   HKDF (Extract and Expand)
+ * @brief   CMAC-based Extract-and-Expand Key Derivation Function (CKDF)
  * @param   binary_t& okm [out] output key material
  * @param   crypt_algorithm_t alg [in] algorithm
  * @param   size_t dlen [in] length
@@ -74,7 +74,7 @@ return_t hkdf_expand(binary_t& okm, const char* alg, size_t dlen, binary_t const
  */
 return_t kdf_ckdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& ikm, binary_t const& salt, binary_t const& info);
 /**
- * @brief   CKDF_Extract
+ * @brief   CMAC-based Extract
  * @param   binary_t& prk [out] pseudo-random key
  * @param   crypt_algorithm_t alg [in] algorithm
  * @param   binary_t const& salt [in] salt
@@ -82,7 +82,7 @@ return_t kdf_ckdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t co
  */
 return_t ckdf_extract(binary_t& prk, crypt_algorithm_t alg, binary_t const& salt, binary_t const& ikm);
 /**
- * @brief   CKDF_Expand
+ * @brief   CMAC-based Expand
  * @param   binary_t& okm [in] output key material
  * @param   crypt_algorithm_t alg [in] algorithm
  * @param   size_t dlen [in] length
