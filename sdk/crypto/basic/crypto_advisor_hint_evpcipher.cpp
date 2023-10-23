@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace crypto {
 
-const openssl_evp_cipher_method_t evp_cipher_methods[] = {
+const hint_cipher_t evp_cipher_methods[] = {
     {
         crypt_algorithm_t::aes128,
         crypt_mode_t::cbc,

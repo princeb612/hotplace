@@ -184,7 +184,7 @@ class crypt_t {
 class hash_t {
    public:
     /**
-     * @brief open (hash, HMAC)
+     * @brief open (hash, HMAC, CMAC)
      * @param hash_context_t** handle [out]
      * @param hash_algorithm_t alg [in]
      * @param const unsigned char* key [inopt]
@@ -196,25 +196,52 @@ class hash_t {
      *    hash.open(&handle, hash_algorithm_t::sha2_256);
      *    hash.hash(handle, source, source_size, hash_data);
      *    hash.close(handle)
+     *    // hash
+     *    hash.open_byname(&handle, "sha256"); // wo key
+     *    hash.hash(handle, source, source_size, hash_data);
+     *    hash.close(handle)
      *    // hmac (HS256)
      *    hash.open(&handle, hash_algorithm_t::sha2_256, key, key_size);
      *    hash.hash(handle, source, source_size, hash_data);
      *    hash.close(handle)
-     *    // hash
-     *    hash.open_byname(&handle, "sha256");
+     *    // hmac (HS256)
+     *    hash.open(&handle, "sha256", key, key_size);
+     *    hash.hash(handle, source, source_size, hash_data);
+     *    hash.close(handle)
+     *    // cmac (AES-128-CBC)
+     *    hash.open(&handle, crypt_algorithm_t::aes128, key, key_size);
+     *    hash.hash(handle, source, source_size, hash_data);
+     *    hash.close(handle)
+     *    // cmac (AES-128-CBC)
+     *    hash.open(&handle, "aes-128-cbc", key, key_size);
      *    hash.hash(handle, source, source_size, hash_data);
      *    hash.close(handle)
      */
+    virtual return_t open_byname(hash_context_t** handle, const char* algorithm, const unsigned char* key = nullptr, unsigned keysize = 0) = 0;
+    /**
+     * @brief open (HMAC, CMAC)
+     */
+    virtual return_t open_byname(hash_context_t** handle, const char* algorithm, binary_t const& key) = 0;
+
     virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const unsigned char* key = nullptr, unsigned keysize = 0) = 0;
+    /**
+     * @brief open (HMAC)
+     */
+    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, binary_t const& key) = 0;
     /**
      * @brief open (CMAC)
      * @param hash_context_t** handle [out]
      * @param crypt_algorithm_t alg [in]
-     * @param const unsigned char* key [inopt]
-     * @param unsigned keysize [inopt]
+     * @param crypt_mode_t mode [in]
+     * @param const unsigned char* key [in]
+     * @param unsigned keysize [in]
      * @return error code (see error.hpp)
      */
-    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, const unsigned char* key = nullptr, unsigned keysize = 0) = 0;
+    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, const unsigned char* key, unsigned keysize) = 0;
+    /**
+     * @brief open (CMAC)
+     */
+    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key) = 0;
     /**
      * @brief close
      * @param hash_context_t* handle [in]
@@ -245,6 +272,7 @@ class hash_t {
      *        hash.free_data(output_data);
      */
     virtual return_t update(hash_context_t* handle, const byte_t* data, size_t datasize) = 0;
+    virtual return_t update(hash_context_t* handle, binary_t const& input) = 0;
     /**
      * @brief get
      * @param hash_context_t* handle [in]

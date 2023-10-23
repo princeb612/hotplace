@@ -16,6 +16,7 @@
 #include <openssl/kdf.h>
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
@@ -75,13 +76,289 @@ return_t kdf_hkdf(binary_t& derived, const char* alg, size_t dlen, binary_t cons
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
-        hash_algorithm_t ha;
-        ret = advisor->find_evp_md(alg, ha);
-        if (errorcode_t::success != ret) {
+        if (nullptr == alg) {
+            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = kdf_hkdf(derived, ha, dlen, key, salt, info);
+        const hint_digest_t* hint = advisor->hintof_digest(alg);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        ret = kdf_hkdf(derived, hint->_algorithm, dlen, key, salt, info);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t hkdf_extract(binary_t& prk, const char* alg, binary_t const& salt, binary_t const& ikm) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == alg) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (0 == salt.size()) {
+            // #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+            // const EVP_MD* md = advisor->find_evp_md(alg);
+            // size = EVP_MD_get_block_size(md);
+            // #endif
+            const hint_digest_t* hint = advisor->hintof_digest(alg);
+            if (nullptr == hint) {
+                ret = errorcode_t::not_found;
+                __leave2;
+            }
+            uint16 size = hint->_digest_size;
+            if (0 == size) {
+                throw;
+            }
+
+            binary_t temp;
+            temp.resize(size);
+            ret = hmac(prk, alg, temp, ikm);
+        } else {
+            ret = hmac(prk, alg, salt, ikm);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t hkdf_expand(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == alg) {
+            __leave2;
+        }
+
+        const hint_digest_t* hint = advisor->hintof_digest(alg);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        size_t digest_size = hint->_digest_size;
+        size_t prk_size = prk.size();
+
+        if (dlen > digest_size * 255) {
+            ret = errorcode_t::out_of_range;
+            __leave2;
+        }
+
+        okm.clear();
+
+        uint32 offset = 0;
+        binary_t t;  // T(0) = empty string (zero length)
+        for (uint32 i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; i++) {
+            binary_t content;  // T(1) = HMAC-Hash(PRK, T(0) | info | 0x01)
+            content.insert(content.end(), t.begin(), t.end());
+            content.insert(content.end(), info.begin(), info.end());
+            content.insert(content.end(), i);  // i = 1..255 (01..ff)
+
+            hmac(t, alg, prk, content);  // T(i) = HMAC-Hash(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
+
+            okm.insert(okm.end(), t.begin(), t.end());  // T = T(1) | T(2) | T(3) | ... | T(N)
+            offset += t.size();
+        }
+        okm.resize(dlen);  // OKM = first L octets of T
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+// RFC 4493 Figure 2.3.  Algorithm AES-CMAC
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// +                   Algorithm AES-CMAC                              +
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// +                                                                   +
+// +   Input    : K    ( 128-bit key )                                 +
+// +            : M    ( message to be authenticated )                 +
+// +            : len  ( length of the message in octets )             +
+// +   Output   : T    ( message authentication code )                 +
+// +                                                                   +
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// +   Constants: const_Zero is 0x00000000000000000000000000000000     +
+// +              const_Bsize is 16                                    +
+// +                                                                   +
+// +   Variables: K1, K2 for 128-bit subkeys                           +
+// +              M_i is the i-th block (i=1..ceil(len/const_Bsize))   +
+// +              M_last is the last block xor-ed with K1 or K2        +
+// +              n      for number of blocks to be processed          +
+// +              r      for number of octets of last block            +
+// +              flag   for denoting if last block is complete or not +
+// +                                                                   +
+// +   Step 1.  (K1,K2) := Generate_Subkey(K);                         +
+// +   Step 2.  n := ceil(len/const_Bsize);                            +
+// +   Step 3.  if n = 0                                               +
+// +            then                                                   +
+// +                 n := 1;                                           +
+// +                 flag := false;                                    +
+// +            else                                                   +
+// +                 if len mod const_Bsize is 0                       +
+// +                 then flag := true;                                +
+// +                 else flag := false;                               +
+// +                                                                   +
+// +   Step 4.  if flag is true                                        +
+// +            then M_last := M_n XOR K1;                             +
+// +            else M_last := padding(M_n) XOR K2;                    +
+// +   Step 5.  X := const_Zero;                                       +
+// +   Step 6.  for i := 1 to n-1 do                                   +
+// +                begin                                              +
+// +                  Y := X XOR M_i;                                  +
+// +                  X := AES-128(K,Y);                               +
+// +                end                                                +
+// +            Y := M_last XOR X;                                     +
+// +            T := AES-128(K,Y);                                     +
+// +   Step 7.  return T;                                              +
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+// RFC 4615 Figure 1.  The AES-CMAC-PRF-128 Algorithm
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// +                        AES-CMAC-PRF-128                           +
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// +                                                                   +
+// + Input  : VK (Variable-length key)                                 +
+// +        : M (Message, i.e., the input data of the PRF)             +
+// +        : VKlen (length of VK in octets)                           +
+// +        : len (length of M in octets)                              +
+// + Output : PRV (128-bit Pseudo-Random Variable)                     +
+// +                                                                   +
+// +-------------------------------------------------------------------+
+// + Variable: K (128-bit key for AES-CMAC)                            +
+// +                                                                   +
+// + Step 1.   If VKlen is equal to 16                                 +
+// + Step 1a.  then                                                    +
+// +               K := VK;                                            +
+// + Step 1b.  else                                                    +
+// +               K := AES-CMAC(0^128, VK, VKlen);                    +
+// + Step 2.   PRV := AES-CMAC(K, M, len);                             +
+// +           return PRV;                                             +
+// +                                                                   +
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+// CKDF follows exactly the same structure as [RFC5869] but HMAC-Hash is replaced by the function AES-CMAC throughout.
+
+// Thus, following HKDF, the CKDF-Extract(salt, IKM) function takes an optional, 16-byte salt and an arbitrary-length "input keying material" (IKM)
+// message. If no salt is given, the 16-byte, all-zero value is used.
+
+// It returns the result of AES-CMAC(key = salt, input = IKM), called the "pseudorandom key" (PRK), which will be 16 bytes long.
+
+// Likewise, the CKDF-Expand(PRK, info, L) function takes the PRK result from CKDF-Extract, an arbitrary "info" argument and a requested number of bytes
+// to produce. It calculates the L-byte result, called the "output keying material" (OKM)
+
+return_t kdf_ckdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& ikm, binary_t const& salt, binary_t const& info) {
+    return_t ret = errorcode_t::success;
+    binary_t prk;
+    __try2 {
+        ret = ckdf_extract(prk, alg, salt, ikm);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = ckdf_expand(okm, alg, dlen, prk, info);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+// the CKDF-Extract(salt, IKM) function takes an optional, 16-byte salt and an arbitrary-length "input keying material" (IKM) message.
+// If no salt is given, the 16-byte, all-zero value is used.
+// It returns the result of AES-CMAC(key = salt, input = IKM), called the "pseudorandom key" (PRK), which will be 16 bytes long.
+return_t ckdf_extract(binary_t& prk, crypt_algorithm_t alg, binary_t const& salt, binary_t const& ikm) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    openssl_hash mac;
+    hash_context_t* mac_handle = nullptr;
+
+    __try2 {
+        prk.clear();
+
+        const hint_blockcipher_t* hint = advisor->hintof_blockcipher(alg);
+        uint16 blocksize = hint->_blocksize;
+
+        if (0 == blocksize) {
+            throw;
+        }
+
+        const byte_t* ptr_salt = &salt[0];
+        size_t size_salt = salt.size();
+        binary_t temp;
+        if (0 == size_salt) {
+            temp.resize(blocksize);
+            ptr_salt = &temp[0];
+            size_salt = blocksize;
+        }
+
+        binary_t k;
+        if (blocksize == size_salt) {
+            // step 1.
+            // step 1a.
+            k.insert(k.end(), ptr_salt, ptr_salt + size_salt);
+        } else {
+            // step 1b.
+            binary_t o128;
+            o128.resize(blocksize);
+
+            mac.open(&mac_handle, crypt_algorithm_t::aes128, crypt_mode_t::cbc, &o128[0], o128.size());
+            mac.init(mac_handle);
+            mac.update(mac_handle, ptr_salt, size_salt);
+            mac.finalize(mac_handle, k);
+            mac.close(mac_handle);
+        }
+        // step 2.
+        mac.open(&mac_handle, crypt_algorithm_t::aes128, crypt_mode_t::cbc, &k[0], k.size());
+        mac.init(mac_handle);
+        mac.update(mac_handle, &ikm[0], ikm.size());
+        mac.finalize(mac_handle, prk);
+        mac.close(mac_handle);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t ckdf_expand(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& prk, binary_t const& info) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        // the CKDF-Expand(PRK, info, L) function takes the PRK result from CKDF-Extract, an arbitrary "info" argument and a requested number of bytes to
+        // produce. It calculates the L-byte result, called the "output keying material" (OKM)
+
+        okm.clear();
+
+        const hint_blockcipher_t* hint = advisor->hintof_blockcipher(alg);
+        uint16 blocksize = hint->_blocksize;
+
+        uint32 offset = 0;
+        binary_t t;  // T(0) = empty string (zero length)
+        for (uint32 i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; i++) {
+            binary_t content;  // T(1) = AES-CMAC(PRK, T(0) | info | 0x01)
+            content.insert(content.end(), t.begin(), t.end());
+            content.insert(content.end(), info.begin(), info.end());
+            content.insert(content.end(), i);  // i = 1..255 (01..ff)
+
+            cmac(t, alg, crypt_mode_t::ecb, prk, content);  // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
+
+            okm.insert(okm.end(), t.begin(), t.end());  // T = T(1) | T(2) | T(3) | ... | T(N)
+            offset += t.size();
+        }
+        okm.resize(dlen);  // OKM = first L octets of T
     }
     __finally2 {
         // do nothing
@@ -136,15 +413,19 @@ return_t kdf_pbkdf2(binary_t& derived, const char* alg, size_t dlen, const char*
                     int iter) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
+
     __try2 {
         if (nullptr == alg) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        hash_algorithm_t ha;
-        advisor->find_evp_md(alg, ha);
-        ret = kdf_pbkdf2(derived, ha, dlen, password, size_password, salt, size_salt, iter);
+        const hint_digest_t* hint = advisor->hintof_digest(alg);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+        }
+
+        ret = kdf_pbkdf2(derived, hint->_algorithm, dlen, password, size_password, salt, size_salt, iter);
     }
     __finally2 {
         // do nothing

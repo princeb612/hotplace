@@ -177,7 +177,7 @@ return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binar
             case cose_aesccm_64_64_128:
             case cose_aesccm_16_128_128:
             case cose_aesccm_64_128_128:
-            case cose_hkdf_hmac_sha256:
+            case cose_hkdf_sha256:
             case cose_hkdf_aescmac128:
             case cose_ecdhes_hkdf_256:
             case cose_ecdhss_hkdf_256:
@@ -198,7 +198,7 @@ return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binar
             case cose_aesccm_64_64_256:
             case cose_aesccm_16_128_256:
             case cose_aesccm_64_128_256:
-            case cose_hkdf_hmac_sha512:
+            case cose_hkdf_sha512:
             case cose_hkdf_aescmac256:
             case cose_ecdhes_hkdf_512:
             case cose_ecdhss_hkdf_512:
@@ -536,6 +536,10 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
 
+#if defined DEBUG
+            printf("alg %i group %i\n", alg, group);
+#endif
+
             if (cose_group_t::cose_group_aeskw == group) {
 #if defined DEBUG
                 handle->debug_flag |= cose_debug_aeskw;
@@ -556,12 +560,26 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
                 // CEK solved
             } else if (cose_group_t::cose_group_hkdf_aescmac == group) {
-                // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
-
                 compose_kdf_context(handle, &item, context);
 
+                // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
+                // RFC 8152 Table 12: HKDF Algorithms
+                //      HKDF AES-MAC-128, AES-CBC-MAC-128, HKDF using AES-MAC as the PRF w/ 128-bit key
+                //      HKDF AES-MAC-256, AES-CBC-MAC-256, HKDF using AES-MAC as the PRF w/ 256-bit key
+
+                // HKDF is defined to use HMAC as the underlying PRF.  However, it is
+                // possible to use other functions in the same construct to provide a
+                // different KDF that is more appropriate in the constrained world.
+                // Specifically, one can use AES-CBC-MAC as the PRF for the expand step,
+                // but not for the extract step.  When using a good random shared secret
+                // of the correct length, the extract step can be skipped.  For the AES
+                // algorithm versions, the extract step is always skipped.
+
+                // TEST FAILED
+                // try ckdf_expand - CEK_hex mismatch
+
 #if defined DEBUG
-                handle->debug_flag |= cose_debug_aescmac;
+                handle->debug_flag |= cose_debug_hkdf_aescmac;
 #endif
             } else if (cose_group_t::cose_group_sha == group) {
             } else if (cose_group_t::cose_group_ecdhes_hkdf == group) {

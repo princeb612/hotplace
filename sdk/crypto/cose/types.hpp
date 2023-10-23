@@ -39,7 +39,7 @@ enum cose_param_t {
 enum code_debug_flag_t {
     // simply want to know reason why routine is failed from testcase report
     cose_debug_partial_iv = (1 << 1),
-    cose_debug_aescmac = (1 << 2),
+    cose_debug_hkdf_aescmac = (1 << 2),
     cose_debug_chacha20_poly1305 = (1 << 3),
     cose_debug_aeskw = (1 << 4),
 };

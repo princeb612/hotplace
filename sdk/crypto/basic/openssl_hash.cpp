@@ -27,7 +27,7 @@ enum openssl_hash_context_flag_t {
 typedef struct _openssl_hash_context_t : public hash_context_t {
     uint32 _signature;
     crypt_poweredby_t _hash_type;
-    uint32 _algorithm;
+    // uint32 _algorithm;
     uint32 _flags;
     EVP_MD_CTX* _md_context;        // hash
     CMAC_CTX* _cmac_context;        // CMAC
@@ -36,7 +36,7 @@ typedef struct _openssl_hash_context_t : public hash_context_t {
     const EVP_MD* _evp_md;          // hash, HMAC
     binary_t _key;                  // CMAC, HMAC
 
-    _openssl_hash_context_t() : _signature(0), _algorithm(0), _flags(0), _md_context(nullptr), _cmac_context(nullptr), _hmac_context(nullptr) {
+    _openssl_hash_context_t() : _signature(0), _flags(0), _md_context(nullptr), _cmac_context(nullptr), _hmac_context(nullptr) {
         // do nothing
     }
 
@@ -62,16 +62,15 @@ return_t openssl_hash::open_byname(hash_context_t** handle, const char* algorith
             __leave2;
         }
 
-        hash_algorithm_t ha;
-        ret = advisor->find_evp_md(algorithm, ha);
-        if (errorcode_t::success == ret) {
-            ret = open(handle, ha, key, keysize);
+        ret = errorcode_t::not_supported;
+
+        const hint_digest_t* hint_digest = advisor->hintof_digest(algorithm);
+        if (hint_digest) {
+            ret = open(handle, hint_digest->_algorithm, key, keysize);
         } else {
-            crypt_algorithm_t ca;
-            crypt_mode_t cm;
-            ret = advisor->find_evp_cipher(algorithm, ca, cm);
-            if (errorcode_t::success == ret) {
-                ret = open(handle, ca, key, keysize);
+            const hint_cipher_t* hint_cipher = advisor->hintof_cipher(algorithm);
+            if (hint_cipher) {
+                ret = open(handle, hint_cipher->_algorithm, hint_cipher->_mode, key, keysize);
             }
         }
     }
@@ -81,98 +80,8 @@ return_t openssl_hash::open_byname(hash_context_t** handle, const char* algorith
     return ret;
 }
 
-return_t openssl_hash::get_digest_size(hash_algorithm_t algorithm, size_t& digest_size) {
-    return_t ret = errorcode_t::success;
-
-    digest_size = 0;
-
-    switch (algorithm) {
-        case hash_algorithm_t::md4:
-            digest_size = (128 >> 3);
-            break;
-        case hash_algorithm_t::md5:
-            digest_size = (128 >> 3);
-            break;
-        case hash_algorithm_t::sha1:
-            digest_size = (160 >> 3);
-            break;
-        case hash_algorithm_t::ripemd160:
-            digest_size = 20;  // RIPEMD160_DIGEST_LENGTH
-            break;
-        case hash_algorithm_t::sha2_256:
-            digest_size = (256 >> 3);
-            break;
-        case hash_algorithm_t::sha2_384:
-            digest_size = (384 >> 3);
-            break;
-        case hash_algorithm_t::sha2_512:
-            digest_size = (512 >> 3);
-            break;
-        default:
-            ret = errorcode_t::invalid_parameter;
-            break;
-    }
-
-    return ret;
-}
-
-return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, const unsigned char* key_data, unsigned key_size) {
-    return_t ret = errorcode_t::success;
-    openssl_hash_context_t* context = nullptr;
-
-    CMAC_CTX* cmac_context = nullptr;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        const EVP_CIPHER* method = (const EVP_CIPHER*)advisor->find_evp_cipher(algorithm, crypt_mode_t::cbc);
-        if (nullptr == method) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        __try_new_catch(context, new openssl_hash_context_t, ret, __leave2);
-
-        context->_signature = OPENSSL_HASH_CONTEXT_SIGNATURE;
-        context->_algorithm = algorithm;
-        context->_hash_type = crypt_poweredby_t::openssl;
-        context->_evp_cipher = method;
-        context->_flags = 0;
-        context->_key.resize(key_size);
-        memcpy(&context->_key[0], key_data, key_size);
-
-        context->_flags |= openssl_hash_context_flag_t::hash_cmac;
-
-        cmac_context = CMAC_CTX_new();
-        if (nullptr == cmac_context) {
-            ret = errorcode_t::out_of_memory;
-            __leave2;
-        }
-        context->_cmac_context = cmac_context;
-
-        CMAC_Init(context->_cmac_context, &context->_key[0], context->_key.size(), context->_evp_cipher, nullptr);
-
-        *handle = context;
-    }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (nullptr != cmac_context) {
-                CMAC_CTX_free(cmac_context);
-            }
-
-            if (nullptr != context) {
-                delete context;
-            }
-
-            // do nothing
-        }
-    }
-
-    return ret;
+return_t openssl_hash::open_byname(hash_context_t** handle, const char* algorithm, binary_t const& key) {
+    return open_byname(handle, algorithm, &key[0], key.size());
 }
 
 return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const unsigned char* key_data, unsigned key_size) {
@@ -198,7 +107,7 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
         __try_new_catch(context, new openssl_hash_context_t, ret, __leave2);
 
         context->_signature = OPENSSL_HASH_CONTEXT_SIGNATURE;
-        context->_algorithm = algorithm;
+        // context->_algorithm = algorithm;
         context->_hash_type = crypt_poweredby_t::openssl;
         context->_evp_md = method;
         context->_flags = 0;
@@ -247,6 +156,71 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
     }
 
     return ret;
+}
+
+return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, binary_t const& key) { return open(handle, algorithm, &key[0], key.size()); }
+
+return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key_data, unsigned key_size) {
+    return_t ret = errorcode_t::success;
+    openssl_hash_context_t* context = nullptr;
+
+    CMAC_CTX* cmac_context = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        const EVP_CIPHER* method = (const EVP_CIPHER*)advisor->find_evp_cipher(algorithm, mode);
+        if (nullptr == method) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        __try_new_catch(context, new openssl_hash_context_t, ret, __leave2);
+
+        context->_signature = OPENSSL_HASH_CONTEXT_SIGNATURE;
+        // context->_algorithm = algorithm;
+        context->_hash_type = crypt_poweredby_t::openssl;
+        context->_evp_cipher = method;
+        context->_flags = 0;
+        context->_key.resize(key_size);
+        memcpy(&context->_key[0], key_data, key_size);
+
+        context->_flags |= openssl_hash_context_flag_t::hash_cmac;
+
+        cmac_context = CMAC_CTX_new();
+        if (nullptr == cmac_context) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+        context->_cmac_context = cmac_context;
+
+        CMAC_Init(context->_cmac_context, &context->_key[0], context->_key.size(), context->_evp_cipher, nullptr);
+
+        *handle = context;
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            if (nullptr != cmac_context) {
+                CMAC_CTX_free(cmac_context);
+            }
+
+            if (nullptr != context) {
+                delete context;
+            }
+
+            // do nothing
+        }
+    }
+
+    return ret;
+}
+
+return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key) {
+    return open(handle, algorithm, mode, &key[0], key.size());
 }
 
 return_t openssl_hash::close(hash_context_t* handle) {
@@ -348,6 +322,8 @@ return_t openssl_hash::update(hash_context_t* handle, const byte_t* source_data,
 
     return ret;
 }
+
+return_t openssl_hash::update(hash_context_t* handle, binary_t const& input) { return update(handle, &input[0], input.size()); }
 
 return_t openssl_hash::finalize(hash_context_t* handle, byte_t** hash_data, size_t* hash_size) {
     return_t ret = errorcode_t::success;
@@ -608,13 +584,13 @@ return_t cmac(binary_t& output, const char* alg, binary_t const& key, binary_t c
     return ret;
 }
 
-return_t cmac(binary_t& output, crypt_algorithm_t alg, binary_t const& key, binary_t const& input) {
+return_t cmac(binary_t& output, crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input) {
     return_t ret = errorcode_t::success;
     openssl_hash hash;
     hash_context_t* handle = nullptr;
 
     __try2 {
-        ret = hash.open(&handle, alg, &key[0], key.size());
+        ret = hash.open(&handle, alg, mode, &key[0], key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }

@@ -40,21 +40,4 @@
 //#include <openssl/whrlpool.h>
 #include <openssl/x509v3.h>
 
-namespace hotplace {
-namespace crypto {
-
-typedef struct _openssl_evp_cipher_method_t {
-    crypt_algorithm_t _algorithm;
-    crypt_mode_t _mode;
-    const char* _fetchname;
-} openssl_evp_cipher_method_t;
-
-typedef struct _openssl_evp_md_method_t {
-    hash_algorithm_t _algorithm;
-    const char* _fetchname;
-} openssl_evp_md_method_t;
-
-}  // namespace crypto
-}  // namespace hotplace
-
 #endif

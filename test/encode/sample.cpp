@@ -141,9 +141,10 @@ void test_base64() {
 }
 
 enum {
-    b64u = 1,
-    b64 = 2,
-    b16 = 3,
+    decode_b64u = 1,
+    decode_b64 = 2,
+    encode_plaintext = 3,
+    decode_b16 = 4,
 };
 typedef struct _OPTION {
     int mode;
@@ -158,21 +159,28 @@ void whatsthis(int argc, char** argv) {
 
     cmdline << cmdarg_t<OPTION>("-b64u", "decode base64url",
                                 [&](OPTION& o, char* param) -> void {
-                                    o.mode = b64u;
+                                    o.mode = decode_b64u;
                                     o.content = param;
                                 })
                    .preced()
                    .optional()
             << cmdarg_t<OPTION>("-b64", "decode base64",
                                 [&](OPTION& o, char* param) -> void {
-                                    o.mode = b64;
+                                    o.mode = decode_b64;
+                                    o.content = param;
+                                })
+                   .preced()
+                   .optional()
+            << cmdarg_t<OPTION>("-t", "plaintext",
+                                [&](OPTION& o, char* param) -> void {
+                                    o.mode = encode_plaintext;
                                     o.content = param;
                                 })
                    .preced()
                    .optional()
             << cmdarg_t<OPTION>("-b16", "decode base16",
                                 [&](OPTION& o, char* param) -> void {
-                                    o.mode = b16;
+                                    o.mode = decode_b16;
                                     o.content = param;
                                 })
                    .preced()
@@ -181,19 +189,39 @@ void whatsthis(int argc, char** argv) {
 
     OPTION o = cmdline.value();
     if (o.mode) {
+        basic_stream bs;
+        basic_stream additional;
         binary_t what;
         switch (o.mode) {
-            case b64u:
-            case b64:
-            case b16:
+            case decode_b64u:
+                what = base64_decode(o.content, base64_encoding_t::base64url_encoding);
+                break;
+            case decode_b64:
+                what = base64_decode(o.content, base64_encoding_t::base64_encoding);
+                break;
+            case encode_plaintext:
+                base16_encode(o.content, what);
+                additional << "b16\n  " << convert(what).c_str() << "\n";
+                additional << "b64\n  " << base64_encode(o.content).c_str() << "\n";
+                additional << "b64url\n  " << base64_encode(o.content, base64_encoding_t::base64url_encoding).c_str() << "\n";
+                break;
+            case decode_b16:
                 what = base16_decode(o.content);
+                additional << "b64\n  " << base64_encode(what).c_str() << "\n";
+                additional << "b64url\n  " << base64_encode(what, base64_encoding_t::base64url_encoding).c_str() << "\n";
                 break;
         }
 
-        basic_stream bs;
-        dump_memory(what, &bs, 16, 2);
+        if (encode_plaintext == o.mode) {
+            dump_memory(convert(o.content), &bs, 16, 2);
+        } else {
+            dump_memory(what, &bs, 16, 2);
+        }
 
         std::cout << "what u want to know" << std::endl << "< " << o.content << std::endl << bs.c_str() << std::endl;
+        if (additional.size()) {
+            std::cout << additional.c_str() << std::endl;
+        }
     } else {
         cmdline.help();
     }
