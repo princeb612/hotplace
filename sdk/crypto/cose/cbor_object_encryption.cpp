@@ -300,6 +300,8 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
         }
         if (iv.size()) {
             // TEST FAILED
+            // test vector wrong ?
+
             // RFC 8152 3.1.  Common COSE Headers Parameters
             // Partial IV
             // 1.  Left-pad the Partial IV with zeros to the length of IV.
@@ -308,10 +310,10 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             binary_t partial_iv;
             composer.finditem(cose_key_t::cose_partial_iv, partial_iv, handle->body.unprotected_map);
             if (partial_iv.size()) {
-                // binary_t partial_iv_step1;
-                // binary_load(partial_iv_step1, ivsize, &partial_iv[0], partial_iv.size());
+                // binary_t aligned_partial_iv;
+                // binary_load(aligned_partial_iv, ivsize, &partial_iv[0], partial_iv.size());
                 // for (size_t i = 0; i < ivsize; i++) {
-                //     iv[i] ^= partial_iv_step1[i];
+                //     iv[i] ^= aligned_partial_iv[i];
                 // }
 #if defined DEBUG
                 handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
@@ -340,6 +342,12 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
                 } else {
                     pkey = key->select(kid, enc_hint->kty);
                 }
+
+#if defined DEBUG
+                if (nullptr == pkey) {
+                    handle->debug_flag |= cose_debug_notfound_key;
+                }
+#endif
 
                 crypto_kty_t kty;
                 key->get_privkey(pkey, kty, cek, true);
@@ -547,9 +555,6 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 crypt.open(&crypt_handle, alg_hint->param.algname, kek, kwiv);
                 crypt.decrypt(crypt_handle, item.bin_data, cek);
                 crypt.close(crypt_handle);
-#if defined DEBUG
-                handle->debug_flag |= cose_debug_aeskw;
-#endif
             } else if (cose_group_t::cose_group_direct == group) {
                 // RFC 8152 12.1. Direct Encryption
                 cek = secret;

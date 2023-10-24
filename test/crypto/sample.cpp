@@ -193,6 +193,7 @@ void validate_openssl_crypt() {
         crypt.set(handle, crypt_ctrl_t::crypt_ctrl_padding, 0);  // EVP_CIPHER_CTX_set_padding(ctx, 0);
         crypt.encrypt(handle, base16_decode(vector[i].plaintext), ciphertext);
         crypt.decrypt(handle, base16_decode(vector[i].ciphertext), plaintext);
+        crypt.close(handle);
         dump_memory(ciphertext, &bs);
         printf("Ciphertext\n%s\n", bs.c_str());
         dump_memory(plaintext, &bs);
