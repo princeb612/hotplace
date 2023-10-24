@@ -99,6 +99,26 @@ class cbor_object {
     uint64 _reserved_size;
 };
 
+/**
+ * @brief   conversion w/ typecheck
+ */
+template <typename T>
+T* cbor_typeof(cbor_object* object, cbor_type_t type) {
+    T* ret_value = nullptr;
+    __try2 {
+        if (nullptr == object) {
+            __leave2;
+        }
+        if (type == object->type()) {
+            ret_value = (T*)object;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret_value;
+}
+
 }  // namespace io
 }  // namespace hotplace
 

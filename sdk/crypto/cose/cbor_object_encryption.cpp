@@ -447,11 +447,11 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             __leave2;
         }
 
-        composer.parse(handle, cbor_tag_t::cose_tag_encrypt, input);
+        composer.parse(handle, input);
 
         // AAD_hex
         binary_t authenticated_data;
-        compose_enc_structure(authenticated_data, handle->tag, handle->body.bin_protected, handle->binarymap[cose_param_t::cose_external]);
+        compose_enc_structure(authenticated_data, handle->cbor_tag, handle->body.bin_protected, handle->binarymap[cose_param_t::cose_external]);
 
         // too many parameters... handle w/ map
         handle->binarymap[cose_param_t::cose_param_aad] = authenticated_data;

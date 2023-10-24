@@ -83,15 +83,16 @@ typedef struct _cose_parts_t {
 } cose_parts_t;
 
 typedef struct _cose_context_t {
-    uint8 tag;
+    uint8 cbor_tag;
     cose_parts_t body;
     binary_t payload;
+    binary_t tag;
     std::list<cose_parts_t> subitems;
 
     cose_binarymap_t binarymap;
     uint32 debug_flag;
 
-    _cose_context_t() : tag(0), debug_flag(0) {}
+    _cose_context_t() : cbor_tag(0), debug_flag(0) {}
     ~_cose_context_t() { clearall(); }
     void clearall() {
         clear();
@@ -106,7 +107,7 @@ typedef struct _cose_context_t {
         map.clear();
     }
     void clear() {
-        tag = 0;
+        cbor_tag = 0;
         body.clear();
         payload.clear();
         std::list<cose_parts_t>::iterator iter;

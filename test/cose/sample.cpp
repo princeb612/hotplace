@@ -189,7 +189,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                     break;
                 case cbor_tag_t::cose_tag_mac:
                 case cbor_tag_t::cose_tag_mac0:
-                    ret = errorcode_t::not_supported;  // not yet
+                    ret = cose.verify(cose_handle, cose_keys, bin, result);
                     _test_case.test(ret, __FUNCTION__, "check4.verify %s", text ? text : "");
                     break;
                 default:

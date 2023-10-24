@@ -150,11 +150,10 @@ class cbor_object_signing_encryption {
         /**
          * @brief   parse
          * @param   cose_context_t* handle [in]
-         * @param   cbor_tag_t tag [in] cbor_tag_t::cose_tag_sign,  cbor_tag_t::cose_tag_encrypt
          * @param   binary_t const& input [in]
          * @return  error code (see error.hpp)
          */
-        return_t parse(cose_context_t* handle, cbor_tag_t tag, binary_t const& input);
+        return_t parse(cose_context_t* handle, binary_t const& input);
         /**
          * @brief   read bstr of protected (cbor_data) to list
          * @param   binary_t const& data [in]

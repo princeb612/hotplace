@@ -107,7 +107,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             }
 
             binary_t tobesigned;
-            compose_tobesigned(tobesigned, tag, convert(""), item.bin_protected, external, input);
+            compose_tobe_processed(tobesigned, tag, convert(""), item.bin_protected, external, input);
             openssl_sign signprocessor;
             signprocessor.sign(pkey, sig, tobesigned, item.bin_data);  // signature
 
@@ -145,7 +145,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
         ret = errorcode_t::verify;
         result = false;
 
-        composer.parse(handle, cbor_tag_t::cose_tag_sign, input);
+        composer.parse(handle, input);
 
         const char* k = nullptr;
 
@@ -161,7 +161,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
             hint.find(cose_param_t::cose_param_cek, &cek);
 
             cose_parts_t& item = *iter;
-            compose_tobesigned(tobesigned, handle->tag, handle->body.bin_protected, item.bin_protected, external, handle->payload);
+            compose_tobe_processed(tobesigned, handle->cbor_tag, handle->body.bin_protected, item.bin_protected, external, handle->payload);
 
             int alg = 0;
             std::string kid;
@@ -178,7 +178,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
                 k = kid.c_str();
             }
 
-            check = verify(handle, key, k, (cose_alg_t)alg, tobesigned, item.bin_data);
+            check = doverify(handle, key, k, (cose_alg_t)alg, tobesigned, item.bin_data);
             results.insert((errorcode_t::success == check) ? true : false);
         }
 
@@ -225,8 +225,8 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
     return ret;
 }
 
-return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, const char* kid, cose_alg_t alg, binary_t const& tobesigned,
-                                     binary_t const& signature) {
+return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, const char* kid, cose_alg_t alg, binary_t const& tobesigned,
+                                       binary_t const& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_sign signprocessor;
@@ -278,7 +278,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, co
                 ret = signprocessor.verify(pkey, sig, tobesigned, signature);
                 break;
             default:
-                ret = errorcode_t::request;  // studying...
+                ret = errorcode_t::not_supported;  // studying...
                 break;
         }
     }
@@ -288,8 +288,8 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, co
     return ret;
 }
 
-return_t cbor_object_signing::compose_tobesigned(binary_t& tobesigned, uint8 tag, binary_t const& body_protected, binary_t const& sign_protected,
-                                                 binary_t const& external, binary_t const& payload) {
+return_t cbor_object_signing::compose_tobe_processed(binary_t& tobesigned, uint8 tag, binary_t const& body_protected, binary_t const& sign_protected,
+                                                     binary_t const& external, binary_t const& payload) {
     return_t ret = errorcode_t::success;
     cbor_encode encoder;
     cbor_publisher pub;
@@ -313,6 +313,10 @@ return_t cbor_object_signing::compose_tobesigned(binary_t& tobesigned, uint8 tag
             *root << new cbor_data("Signature");
         } else if (cbor_tag_t::cose_tag_sign1 == tag) {
             *root << new cbor_data("Signature1");
+        } else if (cbor_tag_t::cose_tag_mac == tag) {
+            *root << new cbor_data("MAC");
+        } else if (cbor_tag_t::cose_tag_mac0 == tag) {
+            *root << new cbor_data("MAC0");
         } else {
             ret = errorcode_t::request;
             __leave2;
