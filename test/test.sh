@@ -27,7 +27,8 @@ else
     fi
 fi
 
-tool=(memcheck helgrind drd cachegrind)
+tool=(memcheck helgrind drd)
+#tool+=(cachegrind)
 for item in ${array[@]}; do
     cd $cwd/$item
     binary=./test-$item

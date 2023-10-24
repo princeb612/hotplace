@@ -21,12 +21,12 @@ COMMENTS
     test - run examples
 HELP
 
+do_clangformat=0
+do_ctest=0
+do_redist=0
+do_test=0
 args=("$@")
 if [ ${#args[@]} -ne 0 ]; then
-    do_clangformat=0
-    do_ctest=0
-    do_redist=0
-    do_test=0
     for arg in ${args[@]}; do
         if [ $arg = 'format' ]; then
             do_clangformat=1

@@ -10,6 +10,10 @@
  * badge
    * ![c++11](https://img.shields.io/badge/c++11-green) ![gcc](https://img.shields.io/badge/gcc-green) ![cmake](https://img.shields.io/badge/cmake-green)
    * ![mingw64](https://img.shields.io/badge/mingw64-green) ![ubuntu](https://img.shields.io/badge/ubuntu-green) ![RHEL](https://img.shields.io/badge/RHEL-green)
+ * status
+   * JOSE ![implemented](https://img.shields.io/badge/implemented-green)
+   * CBOR ![implemented](https://img.shields.io/badge/implemented-green)
+   * COSE ![studying](https://img.shields.io/badge/studying-magenta)
 
 ## implemented
 
@@ -85,6 +89,7 @@
 
  * RFC 8152 CBOR Object Signing and Encryption (COSE)
  * RFC 8230 Using RSA Algorithms with CBOR Object Signing and Encryption (COSE) Messages
+ * RFC 8392 CBOR Web Token (CWT)
  * RFC 8778 Use of the HSS/LMS Hash-Based Signature Algorithm with CBOR Object Signing and Encryption (COSE)
  * RFC 8812 CBOR Object Signing and Encryption (COSE) and JSON Object Signing and Encryption (JOSE) Registrations for Web Authentication (WebAuthn) Algorithms
  * RFC 9021 Use of the Walnut Digital Signature Algorithm with CBOR Object Signing and Encryption (COSE)
@@ -103,6 +108,7 @@
    * openssl-devel jansson zlib-devel unixodbc-devel (RHEL)
    * libssl-dev libjansson-dev zlib1g-dev unixodbc-dev (ubuntu)
    * valgrind (linux)
+   * clang-tools-extra
  * make sure root directory hotplace (not hotplace-master nor etc ...)
    * $ hotplace ./make.sh
  * os support
