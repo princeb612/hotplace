@@ -105,7 +105,7 @@
  * packages to install
    * gcc, g++, binutils, cmake, gdb
    * openssl-devel jansson-devel zlib-devel unixodbc (MINGW)
-   * openssl-devel jansson zlib-devel unixodbc-devel (RHEL)
+   * openssl-devel jansson zlib-devel unixodbc-devel (Rocky/CentOS/RHEL)
    * libssl-dev libjansson-dev zlib1g-dev unixodbc-dev (ubuntu)
    * valgrind (linux)
    * clang-tools-extra
