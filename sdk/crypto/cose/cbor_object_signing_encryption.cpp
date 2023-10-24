@@ -425,7 +425,7 @@ return_t cbor_object_signing_encryption::composer::build_data_b16(cbor_data** ob
     return ret;
 }
 
-return_t cbor_object_signing_encryption::composer::parse(cose_context_t* handle, cbor_tag_t message_tag, binary_t const& input) {
+return_t cbor_object_signing_encryption::composer::parse(cose_context_t* handle, binary_t const& input) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     cbor_reader reader;
@@ -458,69 +458,173 @@ return_t cbor_object_signing_encryption::composer::parse(cose_context_t* handle,
             __leave2_trace(ret);
         }
 
-        size_t size_elem = 4;
-        cbor_tag_t tag = root->tag_value();
-        switch (tag) {
-            case cbor_tag_t::cose_tag_sign1:    // 18
-            case cbor_tag_t::cose_tag_encrypt:  // 96
-            case cbor_tag_t::cose_tag_mac:      // 97
-            case cbor_tag_t::cose_tag_sign:     // 98
+        int elemof_cbor = root->size();
+        cbor_tag_t cbor_tag = root->tag_value();
+
+        enum cose_message_type_t {
+            cose_message_type_not_exist = 0,
+            cose_message_type_protected = 1,
+            cose_message_type_unprotected = 2,
+            cose_message_type_payload = 3,
+            cose_message_type_signature = 4,
+            cose_message_type_items = 5,  // recipients, signatures
+            cose_message_type_tag = 6,
+        };
+        typedef struct _cose_message_structure_t {
+            cbor_tag_t cbor_tag;
+            int elemof_cbor;
+            cose_message_type_t typeof_item[5];
+        } cose_message_structure_t;
+
+        //                      [0]        [1]              [2]         [3]             [4]
+        // cose_tag_encrypt     protected, unprotected_map, ciphertext, [+recipient]
+        // cose_tag_encrypt0    protected, unprotected_map, ciphertext
+        // cose_tag_mac         protected, unprotected_map, payload,    tag,            [+recipient]
+        // cose_tag_mac0        protected, unprotected_map, payload,    tag
+        // cose_tag_sign        protected, unprotected_map, payload,    [+signature]
+        // cose_tag_sign1       protected, unprotected_map, payload,    signature
+        cose_message_structure_t cose_message_structure_table[] = {
+            {
+                cose_tag_encrypt,
+                4,
+                {
+                    cose_message_type_protected,
+                    cose_message_type_unprotected,
+                    cose_message_type_payload,
+                    cose_message_type_items,
+                },
+            },
+            {
+                cose_tag_encrypt0,
+                3,
+                {
+                    cose_message_type_protected,
+                    cose_message_type_unprotected,
+                    cose_message_type_payload,
+                },
+            },
+            {
+                cose_tag_mac,
+                5,
+                {
+                    cose_message_type_protected,
+                    cose_message_type_unprotected,
+                    cose_message_type_payload,
+                    cose_message_type_tag,
+                    cose_message_type_items,
+                },
+            },
+            {
+                cose_tag_mac0,
+                4,
+                {
+                    cose_message_type_protected,
+                    cose_message_type_unprotected,
+                    cose_message_type_payload,
+                    cose_message_type_tag,
+                },
+            },
+            {
+                cose_tag_sign,
+                4,
+                {
+                    cose_message_type_protected,
+                    cose_message_type_unprotected,
+                    cose_message_type_payload,
+                    cose_message_type_items,
+                },
+            },
+            {
+                cose_tag_sign1,
+                4,
+                {
+                    cose_message_type_protected,
+                    cose_message_type_unprotected,
+                    cose_message_type_payload,
+                    cose_message_type_signature,
+                },
+            },
+        };
+
+        cose_message_structure_t* cose_message_map = nullptr;
+        for (unsigned i = 0; i < RTL_NUMBER_OF(cose_message_structure_table); i++) {
+            if (cose_message_structure_table[i].cbor_tag == cbor_tag) {
+                cose_message_map = cose_message_structure_table + i;
                 break;
-            case cbor_tag_t::cose_tag_encrypt0:  // 16
-            case cbor_tag_t::cose_tag_mac0:      // 17
-                size_elem = 3;
-                break;
-            default:
-                ret = errorcode_t::request;
-                break;
+            }
         }
-        if (size_elem != root->size()) {
+        if (nullptr == cose_message_map) {
             ret = errorcode_t::bad_data;
-            __leave2_trace(ret);
+            __leave2;
         }
-        if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
-        }
-
-        cbor_tag_t simple_tag;
-        if (cbor_tag_t::cose_tag_encrypt == message_tag) {
-            simple_tag = cbor_tag_t::cose_tag_encrypt0;
-        } else if (cbor_tag_t::cose_tag_sign == message_tag) {
-            simple_tag = cbor_tag_t::cose_tag_sign1;
-        }
-
-        handle->tag = tag;
-
-        cbor_data* cbor_protected = (cbor_data*)(*(cbor_array*)root)[0];
-        cbor_map* cbor_unprotected = (cbor_map*)(*(cbor_array*)root)[1];
-        cbor_data* cbor_payload = (cbor_data*)(*(cbor_array*)root)[2];
-
-        bool typecheck1 = (cbor_type_t::cbor_type_data == cbor_protected->type());
-        bool typecheck2 = (cbor_type_t::cbor_type_map == cbor_unprotected->type());
-        bool typecheck3 = (cbor_type_t::cbor_type_data == cbor_payload->type());
-        if (typecheck1 && typecheck2 && typecheck3) {
-        } else {
+        if (cose_message_map->elemof_cbor != elemof_cbor) {
             ret = errorcode_t::bad_data;
-            __leave2_trace(ret);
+            __leave2;
         }
 
-        binary_t bin_signer_signature;
-        variant_binary(cbor_protected->data(), handle->body.bin_protected);
-        variant_binary(cbor_payload->data(), handle->payload);
-        composer.parse_binary(handle->body.bin_protected, handle->body.protected_map);
-        composer.parse_map(cbor_unprotected, handle->body.unprotected_map);
+        handle->cbor_tag = cbor_tag;
 
-        if (size_elem > 3) {
-            if (message_tag == tag) {
-                cbor_array* cbor_items = (cbor_array*)(*(cbor_array*)root)[3];  // signatures, recipients
+        for (int i = 0; i < cose_message_map->elemof_cbor; i++) {
+            int typeof_item = cose_message_map->typeof_item[i];
+            cbor_object* item = (*(cbor_array*)root)[i];
+
+            if (cose_message_type_protected == typeof_item) {
+                cbor_data* cbor_protected = cbor_typeof<cbor_data>(item, cbor_type_t::cbor_type_data);
+                if (nullptr == cbor_protected) {
+                    ret = errorcode_t::bad_data;
+                    break;
+                }
+
+                variant_binary(cbor_protected->data(), handle->body.bin_protected);
+                composer.parse_binary(handle->body.bin_protected, handle->body.protected_map);
+            } else if (cose_message_type_unprotected == typeof_item) {
+                cbor_map* cbor_unprotected = cbor_typeof<cbor_map>(item, cbor_type_t::cbor_type_map);
+                if (nullptr == cbor_unprotected) {
+                    ret = errorcode_t::bad_data;
+                    break;
+                }
+
+                composer.parse_map(cbor_unprotected, handle->body.unprotected_map);
+            } else if (cose_message_type_payload == typeof_item) {
+                cbor_data* cbor_payload = cbor_typeof<cbor_data>(item, cbor_type_t::cbor_type_data);
+                if (nullptr == cbor_payload) {
+                    ret = errorcode_t::bad_data;
+                    break;
+                }
+
+                variant_binary(cbor_payload->data(), handle->payload);
+            } else if (cose_message_type_tag == typeof_item) {
+                cbor_data* cbor_item = cbor_typeof<cbor_data>(item, cbor_type_t::cbor_type_data);
+                if (nullptr == cbor_item) {
+                    ret = errorcode_t::bad_data;
+                    break;
+                }
+
+                variant_binary(cbor_item->data(), handle->tag);
+            } else if (cose_message_type_signature == typeof_item) {
+                cbor_data* cbor_item = cbor_typeof<cbor_data>(item, cbor_type_t::cbor_type_data);
+                if (nullptr == cbor_item) {
+                    ret = errorcode_t::bad_data;
+                    break;
+                }
+
+                cose_parts_t part;
+                variant_binary(cbor_item->data(), part.bin_data);
+                handle->subitems.push_back(part);
+            } else if (cose_message_type_items == typeof_item) {
+                cbor_array* cbor_items = cbor_typeof<cbor_array>(item, cbor_type_t::cbor_type_array);
+                if (nullptr == cbor_items) {
+                    ret = errorcode_t::bad_data;
+                    break;
+                }
 
                 size_t size_array = cbor_items->size();
                 for (size_t i = 0; i < size_array; i++) {
                     cbor_array* cbor_item = (cbor_array*)(*cbor_items)[i];  // signature, recipient
                     if (3 == cbor_item->size()) {
-                        cbor_data* cbor_signer_protected = (cbor_data*)(*cbor_item)[0];
-                        cbor_map* cbor_signer_unprotected = (cbor_map*)(*cbor_item)[1];
-                        cbor_data* cbor_signer_signature = (cbor_data*)(*cbor_item)[2];
+                        cbor_data* cbor_signer_protected = cbor_typeof<cbor_data>((*cbor_item)[0], cbor_type_t::cbor_type_data);
+                        cbor_map* cbor_signer_unprotected = cbor_typeof<cbor_map>((*cbor_item)[1], cbor_type_t::cbor_type_map);
+                        cbor_data* cbor_signer_signature = cbor_typeof<cbor_data>((*cbor_item)[2], cbor_type_t::cbor_type_data);
 
                         cose_parts_t part;
                         variant_binary(cbor_signer_protected->data(), part.bin_protected);
@@ -530,12 +634,6 @@ return_t cbor_object_signing_encryption::composer::parse(cose_context_t* handle,
                         handle->subitems.push_back(part);
                     }
                 }
-            } else if (simple_tag == tag) {
-                cbor_data* cbor_item = (cbor_data*)(*(cbor_array*)root)[3];
-
-                cose_parts_t part;
-                variant_binary(cbor_item->data(), part.bin_data);
-                handle->subitems.push_back(part);
             }
         }
     }
