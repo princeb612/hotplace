@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include "sample.hpp"
+
 #include <stdio.h>
 
 #include <hotplace/sdk/sdk.hpp>
@@ -21,185 +23,26 @@ test_case _test_case;
 
 void validate_openssl_crypt() {
     _test_case.begin("CAVP block cipher - AES");
-    // https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/block-ciphers
-    // https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/aes/KAT_AES.zip
-    struct {
-        const char* desc;
-        const char* alg;
-        const char* key;
-        const char* iv;
-        const char* plaintext;
-        const char* ciphertext;
-    } vector[] = {
-        {
-            "CBCGFSbox128.rsp, count = 0",
-            "aes-128-cbc",
-            "00000000000000000000000000000000",
-            "00000000000000000000000000000000",
-            "f34481ec3cc627bacd5dc3fb08f273e6",
-            "0336763e966d92595a567cc9ce537f5e",
-        },
-        {
-            "CBCGFSbox192.rsp, count = 0",
-            "aes-192-cbc",
-            "000000000000000000000000000000000000000000000000",
-            "00000000000000000000000000000000",
-            "1b077a6af4b7f98229de786d7516b639",
-            "275cfc0413d8ccb70513c3859b1d0f72",
-        },
-        {
-            "CBCGFSbox256.rsp, count = 0",
-            "aes-256-cbc",
-            "0000000000000000000000000000000000000000000000000000000000000000",
-            "00000000000000000000000000000000",
-            "014730f80ac625fe84f026c60bfd547d",
-            "5c9d844ed46f9885085e5d6a4f94c7d7",
-        },
 
-        {
-            "CFB128GFSbox128.rsp, count = 0",
-            "aes-128-cfb",
-            "00000000000000000000000000000000",
-            "f34481ec3cc627bacd5dc3fb08f273e6",
-            "00000000000000000000000000000000",
-            "0336763e966d92595a567cc9ce537f5e",
-        },
-        {
-            "CFB128GFSbox192.rsp, count = 0",
-            "aes-192-cfb",
-            "000000000000000000000000000000000000000000000000",
-            "1b077a6af4b7f98229de786d7516b639",
-            "00000000000000000000000000000000",
-            "275cfc0413d8ccb70513c3859b1d0f72",
-        },
-        {
-            "CFB128GFSbox256.rsp, count = 0",
-            "aes-256-cfb",
-            "0000000000000000000000000000000000000000000000000000000000000000",
-            "014730f80ac625fe84f026c60bfd547d",
-            "00000000000000000000000000000000",
-            "5c9d844ed46f9885085e5d6a4f94c7d7",
-        },
-
-#if 0
-        {
-            "CFB1GFSbox128.rsp, count = 0",
-            "aes-128-cfb1",
-            "00000000000000000000000000000000",
-            "f34481ec3cc627bacd5dc3fb08f273e6",
-            "00",
-            "00",
-        },
-        {
-            "CFB1GFSbox192.rsp, count = 0",
-            "aes-192-cfb1",
-            "000000000000000000000000000000000000000000000000",
-            "1b077a6af4b7f98229de786d7516b639",
-            "00",
-            "00",
-        },
-        {
-            "CFB1GFSbox256.rsp, count = 0",
-            "aes-256-cfb1",
-            "0000000000000000000000000000000000000000000000000000000000000000",
-            "014730f80ac625fe84f026c60bfd547d",
-            "00",
-            "00",
-        },
-#endif
-
-        {
-            "CFB8GFSbox128.rsp, count = 0",
-            "aes-128-cfb8",
-            "00000000000000000000000000000000",
-            "f34481ec3cc627bacd5dc3fb08f273e6",
-            "00",
-            "03",
-        },
-        {
-            "CFB8GFSbox192.rsp, count = 0",
-            "aes-192-cfb8",
-            "000000000000000000000000000000000000000000000000",
-            "1b077a6af4b7f98229de786d7516b639",
-            "00",
-            "27",
-        },
-        {
-            "CFB8GFSbox256.rsp, count = 0",
-            "aes-256-cfb8",
-            "0000000000000000000000000000000000000000000000000000000000000000",
-            "014730f80ac625fe84f026c60bfd547d",
-            "00",
-            "5c",
-        },
-
-        {
-            "ECBGFSbox128.rsp, count = 0",
-            "aes-128-ecb",
-            "00000000000000000000000000000000",
-            "",
-            "f34481ec3cc627bacd5dc3fb08f273e6",
-            "0336763e966d92595a567cc9ce537f5e",
-        },
-        {
-            "ECBGFSbox192.rsp, count = 0",
-            "aes-192-ecb",
-            "000000000000000000000000000000000000000000000000",
-            "",
-            "1b077a6af4b7f98229de786d7516b639",
-            "275cfc0413d8ccb70513c3859b1d0f72",
-        },
-        {
-            "ECBGFSbox256.rsp, count = 0",
-            "aes-256-ecb",
-            "0000000000000000000000000000000000000000000000000000000000000000",
-            "",
-            "014730f80ac625fe84f026c60bfd547d",
-            "5c9d844ed46f9885085e5d6a4f94c7d7",
-        },
-
-        {
-            "OFBGFSbox128.rsp, count = 0",
-            "aes-128-ofb",
-            "00000000000000000000000000000000",
-            "f34481ec3cc627bacd5dc3fb08f273e6",
-            "00000000000000000000000000000000",
-            "0336763e966d92595a567cc9ce537f5e",
-        },
-        {
-            "OFBGFSbox192.rsp, count = 0",
-            "aes-192-ofb",
-            "000000000000000000000000000000000000000000000000",
-            "1b077a6af4b7f98229de786d7516b639",
-            "00000000000000000000000000000000",
-            "275cfc0413d8ccb70513c3859b1d0f72",
-        },
-        {
-            "OFBGFSbox256.rsp, count = 0",
-            "aes-256-ofb",
-            "0000000000000000000000000000000000000000000000000000000000000000",
-            "014730f80ac625fe84f026c60bfd547d",
-            "00000000000000000000000000000000",
-            "5c9d844ed46f9885085e5d6a4f94c7d7",
-        },
-    };
     basic_stream bs;
     openssl_crypt crypt;
     crypt_context_t* handle = nullptr;
-    for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
+    for (int i = 0; i < sizeof_test_vector_nist_cavp_blockcipher; i++) {
+        const test_vector_nist_cavp_blockcipher_t* vector = test_vector_nist_cavp_blockcipher + i;
         binary_t ciphertext;
         binary_t plaintext;
-        crypt.open(&handle, vector[i].alg, base16_decode(vector[i].key), base16_decode(vector[i].iv));
-        crypt.set(handle, crypt_ctrl_t::crypt_ctrl_padding, 0);  // EVP_CIPHER_CTX_set_padding(ctx, 0);
-        crypt.encrypt(handle, base16_decode(vector[i].plaintext), ciphertext);
-        crypt.decrypt(handle, base16_decode(vector[i].ciphertext), plaintext);
+        crypt.open(&handle, vector->alg, base16_decode(vector->key), base16_decode(vector->iv));
+        // EVP_CIPHER_CTX_set_padding(ctx, 0);
+        crypt.set(handle, crypt_ctrl_t::crypt_ctrl_padding, 0);
+        crypt.encrypt(handle, base16_decode(vector->plaintext), ciphertext);
+        crypt.decrypt(handle, base16_decode(vector->ciphertext), plaintext);
         crypt.close(handle);
         dump_memory(ciphertext, &bs);
         printf("Ciphertext\n%s\n", bs.c_str());
         dump_memory(plaintext, &bs);
         printf("Plaintext\n%s\n", bs.c_str());
-        _test_case.assert(base16_decode(vector[i].ciphertext) == ciphertext, __FUNCTION__, "%s - encrypt", vector[i].desc);
-        _test_case.assert(base16_decode(vector[i].plaintext) == plaintext, __FUNCTION__, "%s - decrypt", vector[i].desc);
+        _test_case.assert(base16_decode(vector->ciphertext) == ciphertext, __FUNCTION__, "%s - encrypt", vector->desc);
+        _test_case.assert(base16_decode(vector->plaintext) == plaintext, __FUNCTION__, "%s - decrypt", vector->desc);
     }
 }
 
@@ -555,53 +398,9 @@ void test_keywrap_routine(crypt_algorithm_t alg, binary_t const& kek, binary_t c
 void test_keywrap_rfc3394() {
     _test_case.begin("keywrap");
 
-    struct {
-        crypt_algorithm_t alg;
-        const char* kek;
-        const char* key;
-        const char* expect;
-        const char* message;
-    } vector[] = {
-        {// RFC 3394 4.1 Wrap 128 bits of Key Data with a 128-bit KEK
-         // KEK 000102030405060708090A0B0C0D0E0F
-         // Key Data 00112233445566778899AABBCCDDEEFF
-         // Ciphertext:  1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5
-         crypt_algorithm_t::aes128, "000102030405060708090A0B0C0D0E0F", "00112233445566778899AABBCCDDEEFF", "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5",
-         "RFC 3394 4.1 Wrap 128 bits of Key Data with a 128-bit KEK"},
-        {// RFC 3394 4.2 Wrap 128 bits of Key Data with a 192-bit KEK
-         // KEK 000102030405060708090A0B0C0D0E0F1011121314151617
-         // Key Data 00112233445566778899AABBCCDDEEFF
-         // Ciphertext: 96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D
-         crypt_algorithm_t::aes192, "000102030405060708090A0B0C0D0E0F1011121314151617", "00112233445566778899AABBCCDDEEFF",
-         "96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D", "RFC 3394 4.2 Wrap 128 bits of Key Data with a 192-bit KEK"},
-        {// RFC 3394 4.3 Wrap 128 bits of Key Data with a 256-bit KEK
-         // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
-         // Key Data 00112233445566778899AABBCCDDEEFF
-         // Ciphertext: 64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7
-         crypt_algorithm_t::aes256, "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F", "00112233445566778899AABBCCDDEEFF",
-         "64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7", "RFC 3394 4.3 Wrap 128 bits of Key Data with a 256-bit KEK"},
-        {// RFC 3394 4.4 Wrap 192 bits of Key Data with a 192-bit KEK
-         // KEK 000102030405060708090A0B0C0D0E0F1011121314151617
-         // Key Data 00112233445566778899AABBCCDDEEFF0001020304050607
-         // Ciphertext: 031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2
-         crypt_algorithm_t::aes192, "000102030405060708090A0B0C0D0E0F1011121314151617", "00112233445566778899AABBCCDDEEFF0001020304050607",
-         "031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2", "RFC 3394 4.4 Wrap 192 bits of Key Data with a 192-bit KEK"},
-        {// RFC 3394 4.5 Wrap 192 bits of Key Data with a 256-bit KEK
-         // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
-         // Key Data 00112233445566778899AABBCCDDEEFF0001020304050607
-         // Ciphertext: A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1
-         crypt_algorithm_t::aes256, "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F", "00112233445566778899AABBCCDDEEFF0001020304050607",
-         "A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1", "RFC 3394 4.5 Wrap 192 bits of Key Data with a 256-bit KEK"},
-        {// RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK
-         // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
-         // Key Data 00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F
-         // Ciphertext: 28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21
-         crypt_algorithm_t::aes256, "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
-         "00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F", "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21",
-         "RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK"}};
-
-    for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        test_keywrap_routine(vector[i].alg, base16_decode(vector[i].kek), base16_decode(vector[i].key), base16_decode(vector[i].expect), vector[i].message);
+    for (int i = 0; i < sizeof_test_vector_rfc3394; i++) {
+        const test_vector_rfc3394_t* vector = test_vector_rfc3394 + i;
+        test_keywrap_routine(vector->alg, base16_decode(vector->kek), base16_decode(vector->key), base16_decode(vector->expect), vector->message);
     }
 }
 
