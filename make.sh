@@ -25,6 +25,9 @@ do_clangformat=0
 do_ctest=0
 do_redist=0
 do_test=0
+set_debug=0
+
+CXXFLAGS=''
 args=("$@")
 if [ ${#args[@]} -ne 0 ]; then
     for arg in ${args[@]}; do
@@ -36,6 +39,8 @@ if [ ${#args[@]} -ne 0 ]; then
             do_redist=1
         elif [ $arg = 'test' ]; then
             do_test=1
+        elif [ $arg = 'debug' ]; then
+            CXXFLAGS='-DDEBUG'
         fi
     done
 fi
@@ -58,36 +63,40 @@ else
     export SUPPORT_PCH=0
     export SET_STDCPP=c++11
     # -Wl,--copy-dt-needed-entries # DSO missing from command line
-    export CMAKE_CXX_FLAGS='-Wl,--copy-dt-needed-entries'
+    CXXFLAGS='-Wl,--copy-dt-needed-entries ${CXXFLAGS}'
     true
 fi
-export CXXFLAGS='-DDEBUG'
 
-project_dir=$(pwd)
+export HOTPLACE_HOME=$(pwd)
+export CMAKE_CXX_FLAGS=${CXXFLAGS}
 
+# clang-format
 if [ $do_clangformat = 1 ]; then
     clang-format -i `find sdk -name \*.\?pp`
     clang-format -i `find test -name \*.\?pp`
 fi
 
+# build
 mkdir -p build
 cd build
 cmake -G 'Unix Makefiles' ..
 time make
 
+# ctest
 if [ $do_ctest = 1 ]; then
-    cd $project_dir
     cd build/test/
     ctest
 fi
+# redist mingw binaries
 if [ $do_redist = 1 ]; then
     # redist binaries to run wo mingw environment
-    cd $project_dir
+    cd ${HOTPLACE_HOME}
     source redist.msys
     redist
 fi
+# run build/test/test.sh
 if [ $do_test = 1 ]; then
-    cd $project_dir
+    cd ${HOTPLACE_HOME}
     cd build/test/
     ./test.sh
 fi
