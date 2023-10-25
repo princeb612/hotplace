@@ -25,7 +25,6 @@ do_clangformat=0
 do_ctest=0
 do_redist=0
 do_test=0
-set_debug=0
 
 CXXFLAGS=''
 args=("$@")
@@ -40,7 +39,7 @@ if [ ${#args[@]} -ne 0 ]; then
         elif [ $arg = 'test' ]; then
             do_test=1
         elif [ $arg = 'debug' ]; then
-            CXXFLAGS='-DDEBUG'
+            CXXFLAGS='-DDEBUG -g'
         fi
     done
 fi
@@ -63,12 +62,12 @@ else
     export SUPPORT_PCH=0
     export SET_STDCPP=c++11
     # -Wl,--copy-dt-needed-entries # DSO missing from command line
-    CXXFLAGS='-Wl,--copy-dt-needed-entries ${CXXFLAGS}'
+    CXXFLAGS='-Wl,--copy-dt-needed-entries '${CXXFLAGS}
     true
 fi
 
 export HOTPLACE_HOME=$(pwd)
-export CMAKE_CXX_FLAGS=${CXXFLAGS}
+export CXXFLAGS
 
 # clang-format
 if [ $do_clangformat = 1 ]; then
