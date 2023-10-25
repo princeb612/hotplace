@@ -56,6 +56,9 @@
    * sdk/crypto/basic/
    * test/crypto/
    * test/kdf/
+ * Authenticated Encryption with AES-CBC and HMAC-SHA
+   * https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
+   * test/hash/
 
  * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
  * RFC 4493 The AES-CMAC Algorithm
