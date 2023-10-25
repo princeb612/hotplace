@@ -669,6 +669,10 @@ typedef struct _hint_blockcipher_t {
     uint16 _blockkw;    // blocksize for keywrap (AES)
 } hint_blockcipher_t;
 
+uint16 sizeof_key(const hint_blockcipher_t* hint);
+uint16 sizeof_iv(const hint_blockcipher_t* hint);
+uint16 sizeof_block(const hint_blockcipher_t* hint);
+
 typedef struct _hint_cipher_t {
     crypt_algorithm_t _algorithm;
     crypt_mode_t _mode;
@@ -680,6 +684,8 @@ typedef struct _hint_digest_t {
     const char* _fetchname;
     uint16 _digest_size;
 } hint_digest_t;
+
+uint16 sizeof_digest(const hint_digest_t* hint);
 
 typedef struct _hint_jose_encryption_t {
     const char* alg_name;

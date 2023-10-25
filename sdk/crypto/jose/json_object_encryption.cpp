@@ -204,7 +204,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, std::string con
             if (1 == results.size() && true == results.front()) {
                 //
             } else {
-                ret = errorcode_t::cipher;
+                ret = errorcode_t::error_cipher;
             }
         }
     }

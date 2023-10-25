@@ -33,7 +33,9 @@ class crypto_advisor {
      * @example
      *      crypto_advisor* advisor = crypto_advisor::get_instance ();
      *      const hint_blockcipher_t* blockcipher = advisor->hintof_blockcipher (crypt_algorithm_t::aes256);
-     *      size_t blocksize = blockcipher->_blocksize;
+     *      size_t keysize = sizeof_key(blockcipher);
+     *      size_t ivsize = sizeof_iv(blockcipher);
+     *      size_t blocksize = sizeof_block(blockcipher);
      */
     const hint_blockcipher_t* hintof_blockcipher(crypt_algorithm_t alg);
     const hint_blockcipher_t* hintof_blockcipher(const char* alg);
@@ -42,6 +44,7 @@ class crypto_advisor {
      * @param const EVP_CIPHER* cipher [in]
      */
     const hint_blockcipher_t* find_evp_cipher(const EVP_CIPHER* cipher);
+
     /**
      * @brief find cipher method
      * @param crypt_algorithm_t algorithm [in] crypt_algorithm_t

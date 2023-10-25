@@ -143,5 +143,29 @@ const hint_blockcipher_t hint_blockciphers[] = {
 
 const size_t sizeof_hint_blockciphers = RTL_NUMBER_OF(hint_blockciphers);
 
+uint16 sizeof_key(const hint_blockcipher_t* hint) {
+    uint16 ret_value = 0;
+    if (hint) {
+        ret_value = hint->_keysize;
+    }
+    return ret_value;
+}
+
+uint16 sizeof_iv(const hint_blockcipher_t* hint) {
+    uint16 ret_value = 0;
+    if (hint) {
+        ret_value = hint->_ivsize;
+    }
+    return ret_value;
+}
+
+uint16 sizeof_block(const hint_blockcipher_t* hint) {
+    uint16 ret_value = 0;
+    if (hint) {
+        ret_value = hint->_blocksize;
+    }
+    return ret_value;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

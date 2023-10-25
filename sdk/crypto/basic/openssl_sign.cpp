@@ -415,7 +415,7 @@ return_t openssl_sign::verify_digest(EVP_PKEY* pkey, hash_algorithm_t mode, bina
             __leave2;
         }
 
-        ret = errorcode_t::verify;
+        ret = errorcode_t::error_verify;
 
         EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(mode);
 
@@ -470,7 +470,7 @@ return_t openssl_sign::verify_hmac(EVP_PKEY* pkey, hash_algorithm_t mode, binary
         binary_t result;
         ret = sign_digest(pkey, mode, input, result);
         if (result != signature) {
-            ret = errorcode_t::verify;
+            ret = errorcode_t::error_verify;
         }
     }
     __finally2 {
@@ -512,7 +512,7 @@ return_t openssl_sign::verify_ecdsa(EVP_PKEY* pkey, hash_algorithm_t mode, binar
 
         EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey);
 
-        ret = errorcode_t::verify;
+        ret = errorcode_t::error_verify;
 
         hash.open(&hash_handle, mode);
         hash.hash(hash_handle, &input[0], input.size(), hash_value);
@@ -573,7 +573,7 @@ return_t openssl_sign::verify_ecdsa(EVP_PKEY* pkey, hash_algorithm_t mode, binar
          */
         ret_openssl = ECDSA_do_verify(&hash_value[0], hash_value.size(), ecdsa_sig, ec_key);
         if (1 != ret_openssl) {
-            ret = errorcode_t::verify;
+            ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);
         }
 
@@ -601,7 +601,7 @@ return_t openssl_sign::verify_rsassa_pss(EVP_PKEY* pkey, hash_algorithm_t mode, 
             __leave2;
         }
 
-        ret = errorcode_t::verify;
+        ret = errorcode_t::error_verify;
 
         hash.open(&hash_handle, mode);
         hash.hash(hash_handle, &input[0], input.size(), hash_value);
@@ -641,7 +641,7 @@ return_t openssl_sign::verify_eddsa(EVP_PKEY* pkey, hash_algorithm_t mode, binar
             __leave2;
         }
 
-        ret = errorcode_t::verify;
+        ret = errorcode_t::error_verify;
 
         ctx = EVP_MD_CTX_new();
         ret_test = EVP_DigestVerifyInit(ctx, nullptr, nullptr, nullptr, (EVP_PKEY*)pkey);

@@ -12,20 +12,10 @@
  * Date         Name                Description
  */
 
-#include <openssl/crypto.h>
-#include <openssl/kdf.h>
-
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-#include <openssl/core_names.h>
-#include <openssl/params.h>
-#endif
-#if OPENSSL_VERSION_NUMBER >= 0x30200000L
-#include <openssl/thread.h>
-#endif
 
 namespace hotplace {
 namespace crypto {
@@ -115,16 +105,16 @@ return_t hkdf_extract(binary_t& prk, const char* alg, binary_t const& salt, bina
                 ret = errorcode_t::not_found;
                 __leave2;
             }
-            uint16 size = hint->_digest_size;
+            uint16 size = sizeof_digest(hint);
             if (0 == size) {
                 throw;
             }
 
             binary_t temp;
             temp.resize(size);
-            ret = hmac(prk, alg, temp, ikm);
+            ret = hmac(alg, temp, ikm, prk);
         } else {
-            ret = hmac(prk, alg, salt, ikm);
+            ret = hmac(alg, salt, ikm, prk);
         }
     }
     __finally2 {
@@ -148,7 +138,7 @@ return_t hkdf_expand(binary_t& okm, const char* alg, size_t dlen, binary_t const
             __leave2;
         }
 
-        size_t digest_size = hint->_digest_size;
+        size_t digest_size = sizeof_digest(hint);
         size_t prk_size = prk.size();
 
         if (dlen > digest_size * 255) {
@@ -159,17 +149,17 @@ return_t hkdf_expand(binary_t& okm, const char* alg, size_t dlen, binary_t const
         okm.clear();
 
         uint32 offset = 0;
-        binary_t t;  // T(0) = empty string (zero length)
+        binary_t t_block;  // T(0) = empty string (zero length)
         for (uint32 i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; i++) {
             binary_t content;  // T(1) = HMAC-Hash(PRK, T(0) | info | 0x01)
-            content.insert(content.end(), t.begin(), t.end());
+            content.insert(content.end(), t_block.begin(), t_block.end());
             content.insert(content.end(), info.begin(), info.end());
             content.insert(content.end(), i);  // i = 1..255 (01..ff)
 
-            hmac(t, alg, prk, content);  // T(i) = HMAC-Hash(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
+            hmac(alg, prk, content, t_block);  // T(i) = HMAC-Hash(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
 
-            okm.insert(okm.end(), t.begin(), t.end());  // T = T(1) | T(2) | T(3) | ... | T(N)
-            offset += t.size();
+            okm.insert(okm.end(), t_block.begin(), t_block.end());  // T = T(1) | T(2) | T(3) | ... | T(N)
+            offset += t_block.size();
         }
         okm.resize(dlen);  // OKM = first L octets of T
     }
@@ -288,7 +278,7 @@ return_t ckdf_extract(binary_t& prk, crypt_algorithm_t alg, binary_t const& salt
         prk.clear();
 
         const hint_blockcipher_t* hint = advisor->hintof_blockcipher(alg);
-        uint16 blocksize = hint->_blocksize;
+        uint16 blocksize = sizeof_block(hint);
 
         if (0 == blocksize) {
             throw;
@@ -343,20 +333,20 @@ return_t ckdf_expand(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t
         okm.clear();
 
         const hint_blockcipher_t* hint = advisor->hintof_blockcipher(alg);
-        uint16 blocksize = hint->_blocksize;
+        uint16 blocksize = sizeof_block(hint);
 
         uint32 offset = 0;
-        binary_t t;  // T(0) = empty string (zero length)
+        binary_t t_block;  // T(0) = empty string (zero length)
         for (uint32 i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; i++) {
             binary_t content;  // T(1) = AES-CMAC(PRK, T(0) | info | 0x01)
-            content.insert(content.end(), t.begin(), t.end());
+            content.insert(content.end(), t_block.begin(), t_block.end());
             content.insert(content.end(), info.begin(), info.end());
             content.insert(content.end(), i);  // i = 1..255 (01..ff)
 
-            cmac(t, alg, crypt_mode_t::ecb, prk, content);  // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
+            cmac(alg, crypt_mode_t::ecb, prk, content, t_block);  // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
 
-            okm.insert(okm.end(), t.begin(), t.end());  // T = T(1) | T(2) | T(3) | ... | T(N)
-            offset += t.size();
+            okm.insert(okm.end(), t_block.begin(), t_block.end());  // T = T(1) | T(2) | T(3) | ... | T(N)
+            offset += t_block.size();
         }
         okm.resize(dlen);  // OKM = first L octets of T
     }

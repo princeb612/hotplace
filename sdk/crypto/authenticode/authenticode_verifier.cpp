@@ -358,7 +358,7 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
             if (authenticode_engine_id_msi != engine_matched->id()) {
                 bool compare = std::equal(pkcs7_digest.begin(), pkcs7_digest.end(), md_digest.begin());
                 if (false == compare) {
-                    ret = errorcode_t::digest;
+                    ret = errorcode_t::error_digest;
                     __leave2;
                 }
             }
@@ -387,7 +387,7 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
 }
 
 return_t authenticode_verifier::verify_separated(authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result) {
-    return_t ret = errorcode_t::verify;
+    return_t ret = errorcode_t::success;
 
     __try2 {
         if (nullptr == handle) {
@@ -399,6 +399,7 @@ return_t authenticode_verifier::verify_separated(authenticode_context_t* handle,
             __leave2;
         }
 
+        ret = errorcode_t::error_verify;
         result = authenticode_verify_t::verify_unknown;
 
         if (authenticode_flag_t::flag_separated & flags) {
@@ -838,7 +839,7 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
         //__trace(0, format("PKCS7_verify %d", ret_verify).c_str());
         // printf("Signature verification: %s\n\n", ret_verify ? "ok" : "failed");
         if (ret_verify < 1) {
-            ret = errorcode_t::verify;
+            ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);
         }
     }
