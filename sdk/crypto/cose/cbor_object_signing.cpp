@@ -153,7 +153,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
         binary_t external;
         hint.find(cose_param_t::cose_external, &external);
 
-        binary_t tobesigned;
+        binary_t tobe_processed;  // tobesigned, tobemaced
         size_t size_subitems = handle->subitems.size();
         std::list<cose_parts_t>::iterator iter;
         for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
@@ -161,7 +161,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
             hint.find(cose_param_t::cose_param_cek, &cek);
 
             cose_parts_t& item = *iter;
-            compose_tobe_processed(tobesigned, handle->cbor_tag, handle->body.bin_protected, item.bin_protected, external, handle->payload);
+            compose_tobe_processed(tobe_processed, handle->cbor_tag, handle->body.bin_protected, item.bin_protected, external, handle->payload);
 
             int alg = 0;
             std::string kid;
@@ -178,7 +178,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
                 k = kid.c_str();
             }
 
-            check = doverify(handle, key, k, (cose_alg_t)alg, tobesigned, item.bin_data);
+            check = doverify(handle, key, k, (cose_alg_t)alg, tobe_processed, item.bin_data);
             results.insert((errorcode_t::success == check) ? true : false);
         }
 
@@ -225,7 +225,7 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
     return ret;
 }
 
-return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, const char* kid, cose_alg_t alg, binary_t const& tobesigned,
+return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, const char* kid, cose_alg_t alg, binary_t const& tobe_processed,
                                        binary_t const& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -275,7 +275,12 @@ return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, 
             case cose_rs384:
             case cose_rs512:
             case cose_eddsa:
-                ret = signprocessor.verify(pkey, sig, tobesigned, signature);
+                ret = signprocessor.verify(pkey, sig, tobe_processed, signature);
+                break;
+            case cose_aescmac_128_64:
+            case cose_aescmac_256_64:
+            case cose_aescmac_128_128:
+            case cose_aescmac_256_128:
                 break;
             default:
                 ret = errorcode_t::not_supported;  // studying...
@@ -288,7 +293,7 @@ return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, 
     return ret;
 }
 
-return_t cbor_object_signing::compose_tobe_processed(binary_t& tobesigned, uint8 tag, binary_t const& body_protected, binary_t const& sign_protected,
+return_t cbor_object_signing::compose_tobe_processed(binary_t& tobe_processed, uint8 tag, binary_t const& body_protected, binary_t const& sign_protected,
                                                      binary_t const& external, binary_t const& payload) {
     return_t ret = errorcode_t::success;
     cbor_encode encoder;
@@ -305,7 +310,7 @@ return_t cbor_object_signing::compose_tobe_processed(binary_t& tobesigned, uint8
     // ]
 
     __try2 {
-        tobesigned.clear();
+        tobe_processed.clear();
 
         root = new cbor_array();
 
@@ -329,7 +334,7 @@ return_t cbor_object_signing::compose_tobe_processed(binary_t& tobesigned, uint8
         }
         *root << new cbor_data(external) << new cbor_data(payload);
 
-        pub.publish(root, &tobesigned);
+        pub.publish(root, &tobe_processed);
     }
     __finally2 {
         if (root) {

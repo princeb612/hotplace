@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include "sample.hpp"
+
 #include <stdio.h>
 
 #include <hotplace/sdk/sdk.hpp>
@@ -519,6 +521,89 @@ void test_hash_hmac_sign() {
     std::cout << "Sign" << std::endl << bs.c_str() << std::endl;
 }
 
+void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, binary_t const& input, binary_t const& signature) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    openssl_sign sign;
+
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+    switch (alg) {
+        case sha2_512_224:
+        case sha2_512_256:
+            ret = errorcode_t::not_supported;
+            break;
+        default:
+            break;
+    }
+#endif
+
+    const hint_curve_t* hint = advisor->hintof_curve_nid(nid);
+    const char* hashalg = advisor->nameof_md(alg);
+
+    EVP_PKEY* pkey = key->any();
+    if (errorcode_t::success == ret) {
+        /* check EC_GROUP_new_by_curve_name:unknown group */
+        EC_KEY* ec = EC_KEY_new_by_curve_name(nid);
+
+        if (ec) {
+            EC_KEY_free(ec);
+        } else {
+            ret = errorcode_t::not_supported;
+            ERR_clear_error();
+        }
+    }
+
+    if (errorcode_t::success == ret) {
+        ret = sign.verify_ecdsa(pkey, alg, input, signature);
+        OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
+
+        if (option.dump_keys) {
+            test_case_notimecheck notimecheck(_test_case);
+            basic_stream bs;
+            dump_key(pkey, &bs);
+            printf("%s\n", bs.c_str());
+            dump_memory(input, &bs);
+            printf("input\n%s\n", bs.c_str());
+            dump_memory(signature, &bs);
+            printf("sig\n%s\n", bs.c_str());
+        }
+    }
+
+    _test_case.test(ret, __FUNCTION__, "ECDSA %s %s", hint ? hint->name : "", hashalg);
+}
+
+void test_ecdsa_testvector(const test_vector_nist_cavp_ecdsa_t* vector, size_t sizeof_vector, int base16) {
+    for (int i = 0; i < sizeof_vector; i++) {
+        crypto_key key;
+        crypto_keychain keychain;
+
+        keychain.add_ec(&key, vector[i].nid, base16_decode(vector[i].x), base16_decode(vector[i].y), base16_decode(vector[i].d));
+        binary_t signature;
+        binary_t bin_r = base16_decode(vector[i].r);
+        binary_t bin_s = base16_decode(vector[i].s);
+        signature.insert(signature.end(), bin_r.begin(), bin_r.end());
+        signature.insert(signature.end(), bin_s.begin(), bin_s.end());
+
+        binary_t message;
+        if (base16) {
+            message = base16_decode(vector[i].msg);
+        } else {
+            message = convert(vector[i].msg);
+        }
+        test_ecdsa(&key, vector[i].nid, vector[i].alg, message, signature);
+    }
+}
+
+void test_nist_cavp_ecdsa() {
+    _test_case.begin("NIST CAVP ECDSA");
+    test_ecdsa_testvector(test_vector_nist_cavp_ecdsa, sizeof_test_vector_nist_cavp_ecdsa, 1);
+}
+
+void test_rfc6979_ecdsa() {
+    _test_case.begin("RFC6079 ECDSA");
+    test_ecdsa_testvector(test_vector_rfc6079, sizeof_test_vector_rfc6079, 0);
+}
+
 int main(int argc, char** argv) {
     set_trace_option(trace_option_t::trace_bt);
 
@@ -545,6 +630,9 @@ int main(int argc, char** argv) {
         test_totp_rfc6238(hash_algorithm_t::sha2_512);
 
         test_hash_hmac_sign();
+
+        test_nist_cavp_ecdsa();
+        test_rfc6979_ecdsa();
     }
     __finally2 {
         openssl_thread_cleanup();
