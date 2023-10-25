@@ -303,6 +303,9 @@ class openssl_crypt : public crypt_t {
     virtual return_t query(crypt_context_t* handle, size_t cmd, size_t& value);
 };
 
+return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext);
+return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext);
+
 }  // namespace crypto
 }  // namespace hotplace
 

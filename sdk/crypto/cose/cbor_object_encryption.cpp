@@ -439,7 +439,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
     __try2 {
         cbor_object_signing_encryption::clear_context(handle);
-        ret = errorcode_t::verify;
+        ret = errorcode_t::error_verify;
         result = false;
 
         if (nullptr == handle || nullptr == key) {

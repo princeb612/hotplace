@@ -374,7 +374,7 @@ return_t openssl_hash::finalize(hash_context_t* handle, binary_t& output) {
         if (context->_flags & openssl_hash_context_flag_t::hash_cmac) {
             crypto_advisor* advisor = crypto_advisor::get_instance();
             const hint_blockcipher_t* hint = advisor->find_evp_cipher(context->_evp_cipher);
-            size_t size_digest = hint->_blocksize;
+            size_t size_digest = sizeof_block(hint);
             output.resize(size_digest);
 
             CMAC_Final(context->_cmac_context, &output[0], &size_digest);
@@ -440,7 +440,7 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
         if (context->_flags & openssl_hash_context_flag_t::hash_cmac) {
             crypto_advisor* advisor = crypto_advisor::get_instance();
             const hint_blockcipher_t* hint = advisor->find_evp_cipher(context->_evp_cipher);
-            unsigned int size_digest = hint->_blocksize;
+            unsigned int size_digest = sizeof_block(hint);
             output.resize(size_digest);
 
             HMAC_Init_ex(context->_hmac_context, &context->_key[0], context->_key.size(), context->_evp_md, nullptr);
@@ -489,7 +489,7 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
 
 crypt_poweredby_t openssl_hash::get_type() { return crypt_poweredby_t::openssl; }
 
-return_t digest(binary_t& output, const char* alg, binary_t const& input) {
+return_t digest(const char* alg, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     openssl_hash hash;
     hash_context_t* handle = nullptr;
@@ -508,7 +508,7 @@ return_t digest(binary_t& output, const char* alg, binary_t const& input) {
     return ret;
 }
 
-return_t digest(binary_t& output, hash_algorithm_t alg, binary_t const& input) {
+return_t digest(hash_algorithm_t alg, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     openssl_hash hash;
     hash_context_t* handle = nullptr;

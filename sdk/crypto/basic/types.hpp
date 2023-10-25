@@ -30,14 +30,21 @@
 #include <openssl/md4.h>
 #include <openssl/md5.h>
 #include <openssl/pem.h>
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-#include <openssl/provider.h>
-#endif
 #include <openssl/ripemd.h>
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
 #include <openssl/ssl.h>
 //#include <openssl/whrlpool.h>
 #include <openssl/x509v3.h>
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/core_names.h>
+#include <openssl/params.h>
+#include <openssl/provider.h>
+#endif
+
+#if OPENSSL_VERSION_NUMBER >= 0x30200000L
+#include <openssl/thread.h>
+#endif
 
 #endif

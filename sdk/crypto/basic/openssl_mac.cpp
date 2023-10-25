@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t hmac(binary_t& output, const char* alg, binary_t const& key, binary_t const& input) {
+return_t hmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     openssl_hash hash;
     hash_context_t* handle = nullptr;
@@ -36,7 +36,7 @@ return_t hmac(binary_t& output, const char* alg, binary_t const& key, binary_t c
     return ret;
 }
 
-return_t hmac(binary_t& output, hash_algorithm_t alg, binary_t const& key, binary_t const& input) {
+return_t hmac(hash_algorithm_t alg, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     openssl_hash hash;
     hash_context_t* handle = nullptr;
@@ -55,7 +55,7 @@ return_t hmac(binary_t& output, hash_algorithm_t alg, binary_t const& key, binar
     return ret;
 }
 
-return_t cmac(binary_t& output, const char* alg, binary_t const& key, binary_t const& input) {
+return_t cmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     openssl_hash hash;
     hash_context_t* handle = nullptr;
@@ -74,7 +74,7 @@ return_t cmac(binary_t& output, const char* alg, binary_t const& key, binary_t c
     return ret;
 }
 
-return_t cmac(binary_t& output, crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input) {
+return_t cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     openssl_hash hash;
     hash_context_t* handle = nullptr;

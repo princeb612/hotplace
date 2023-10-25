@@ -471,7 +471,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* d
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
-            uint16 blocksize = hint_cipher->_blocksize;
+            uint16 blocksize = sizeof_block(hint_cipher);
             if (crypt_mode_t::wrap == context->mode) {
                 blocksize = hint_cipher->_blockkw;
             }
@@ -682,7 +682,7 @@ return_t openssl_crypt::decrypt2(crypt_context_t* handle, const unsigned char* d
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
-            uint16 blocksize = hint_cipher->_blocksize;
+            uint16 blocksize = sizeof_block(hint_cipher);
             if (crypt_mode_t::wrap == context->mode) {
                 blocksize = hint_cipher->_blockkw;
             }
@@ -968,6 +968,40 @@ return_t openssl_crypt::query(crypt_context_t* handle, size_t cmd, size_t& value
     __finally2 {
         // do nothing
     }
+    return ret;
+}
+
+return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext) {
+    return_t ret = errorcode_t::success;
+    crypt_context_t* crypt_handle = nullptr;
+    openssl_crypt crypt;
+
+    __try2 {
+        ret = crypt.open(&crypt_handle, alg, key, iv);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = crypt.encrypt(crypt_handle, plaintext, ciphertext);
+    }
+    __finally2 { crypt.close(crypt_handle); }
+    return ret;
+}
+
+return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext) {
+    return_t ret = errorcode_t::success;
+    crypt_context_t* crypt_handle = nullptr;
+    openssl_crypt crypt;
+
+    __try2 {
+        ret = crypt.open(&crypt_handle, alg, key, iv);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = crypt.decrypt(crypt_handle, ciphertext, plaintext);
+    }
+    __finally2 { crypt.close(crypt_handle); }
     return ret;
 }
 

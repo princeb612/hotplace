@@ -177,12 +177,19 @@ class openssl_hash : public hash_t {
     virtual crypt_poweredby_t get_type();
 };
 
-return_t digest(binary_t& output, const char* alg, binary_t const& input);
-return_t digest(binary_t& output, hash_algorithm_t alg, binary_t const& input);
-return_t hmac(binary_t& output, const char* alg, binary_t const& key, binary_t const& input);
-return_t hmac(binary_t& output, hash_algorithm_t alg, binary_t const& key, binary_t const& input);
-return_t cmac(binary_t& output, const char* alg, binary_t const& key, binary_t const& input);
-return_t cmac(binary_t& output, crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input);
+return_t digest(const char* alg, binary_t const& input, binary_t& output);
+return_t digest(hash_algorithm_t alg, binary_t const& input, binary_t& output);
+return_t hmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output);
+return_t hmac(hash_algorithm_t alg, binary_t const& key, binary_t const& input, binary_t& output);
+/**
+ * @brief   AES Cipher-Based Message Authentication Code (AES-CMAC)
+ * @desc    RFC 4493 The AES-CMAC Algorithm
+ *          see also kdf_ckdf
+ * @remarks not the same algorithm AES-CBC-MAC
+ *          see also RFC 8152 9.2.  AES Message Authentication Code (AES-CBC-MAC)
+ */
+return_t cmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output);
+return_t cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input, binary_t& output);
 
 }  // namespace crypto
 }  // namespace hotplace

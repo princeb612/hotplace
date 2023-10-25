@@ -120,5 +120,13 @@ const hint_digest_t evp_md_methods[] = {
 
 const size_t sizeof_evp_md_methods = RTL_NUMBER_OF(evp_md_methods);
 
+uint16 sizeof_digest(const hint_digest_t* hint) {
+    uint16 ret_value = 0;
+    if (hint) {
+        ret_value = hint->_digest_size;
+    }
+    return ret_value;
+}
+
 }  // namespace crypto
 }  // namespace hotplace
