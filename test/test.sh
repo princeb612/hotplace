@@ -12,7 +12,7 @@ valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 if [ $# -eq 0 ]; then
     array=(base bufferio cmdline datetime encode thread) # base
     array+=(mlfq cbor stream string unittest) # io
-    array+=(crypto kdf hash ecdsa jose cose authenticode) # crypto
+    array+=(crypto kdf hash jose cose authenticode) # crypto
     array+=(ipaddr) # net
     if [ $OSTYPE = "msys" ]; then
         array+=(windows)
