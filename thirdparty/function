@@ -1,0 +1,78 @@
+
+# downlaod https://www.openssl.org/source/openssl-3.1.4.tar.gz
+function download ()
+{
+    if [ $# -gt 0 ]; then
+        local download_url=$1
+        local tarball=`basename $download_url`
+        if [ ! -f $tarball ]; then
+            wget --no-check-certificate $download_url
+        fi
+    fi
+}
+
+function filename ()
+{
+    echo $1 | sed 's/\r//g' | sed 's/\(.*\)\(.tar.gz\|.tgz\|.tar.bz2\|.zip\)/\1/'
+}
+
+# inflate filename
+function inflate ()
+{
+    if [ $# -gt 0 ]; then
+        local tarball=`basename $1`
+
+        local filename=`echo $1 | sed 's/\r//g' | sed 's/\(.*\)\(.tar.gz\|.tgz\|.tar.bz2\|.zip\)/\1/'`
+        local ext=`echo $tarball | sed 's/\r//g' | sed 's/\(.*\)\(.tar.gz\|.tgz\|.tar.bz2\|.zip\)/\2/'`
+        if [ ! -d $filename ]; then
+            case $ext in
+              .tar.gz)
+                tar xvfz $tarball
+                ;;
+              .tgz)
+                tar xvfz $tarball
+                ;;
+              .tar.bz2)
+                tar xvfj $tarball
+                ;;
+              .zip)
+                unzip $tarball
+                ;;
+            esac
+        fi
+    fi
+}
+
+# build_openssl directory
+function build_openssl ()
+{
+    local install_dir=${HOTPLACE_HOME}/thirdparty
+
+    if [ $OSTYPE = "msys" ]; then
+        # no-shared cause of undefined reference to `strerror_r'
+        ./Configure mingw64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=os -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd no-shared
+    else
+        ./Configure linux-x86_64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=devrandom -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
+    fi
+    make -j 2
+    touch crypto/rand/drbg_ctr.c
+    make -j 2
+    make -j 2 install_sw install_ssldirs
+
+    touch .complete
+}
+
+# build_jansson directory
+function build_jansson ()
+{
+    local install_dir=${HOTPLACE_HOME}/thirdparty
+
+    aclocal; autoheader; autoconf;
+    libtoolize --automake --copy --force
+    automake --foreign --copy --add-missing
+    ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
+    make -j 2
+    make -j 2 install
+
+    touch .complete
+}
