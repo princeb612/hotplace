@@ -62,7 +62,8 @@
 
  * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
  * RFC 4493 The AES-CMAC Algorithm
- * NIST CAVP (Cryptographic Algorithm Validation Program) ECDSA https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
+ * NIST CAVP (Cryptographic Algorithm Validation Program) ECDSA
+   * https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
    * sdk/crypto/basic/
    * test/hash/
 
