@@ -58,14 +58,13 @@
    * test/kdf/
  * Authenticated Encryption with AES-CBC and HMAC-SHA
    * https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
-   * test/hash/
+   * test/crypto/
 
  * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
  * RFC 4493 The AES-CMAC Algorithm
  * NIST CAVP (Cryptographic Algorithm Validation Program) ECDSA https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
    * sdk/crypto/basic/
    * test/hash/
-   * test/ecdsa/
 
  * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
  * RFC 1952 GZIP file format specification version 4.3
@@ -112,7 +111,7 @@
    * libssl-dev libjansson-dev zlib1g-dev unixodbc-dev (ubuntu)
    * valgrind (linux)
    * clang-tools-extra
- * make sure root directory hotplace (not hotplace-master nor etc ...)
+ * ./make.sh debug
    * $ hotplace ./make.sh
  * os support
    * tested

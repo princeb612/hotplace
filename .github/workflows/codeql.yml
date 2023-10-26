@@ -45,11 +45,11 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
     - name: setup
       run: sudo apt install libssl-dev libjansson-dev zlib1g-dev
+
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
     # Initializes the CodeQL tools for scanning.
 
