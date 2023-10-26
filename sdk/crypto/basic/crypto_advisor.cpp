@@ -64,7 +64,7 @@ return_t crypto_advisor::build_if_necessary() {
     if (0 == _flag) {
         for (i = 0; i < sizeof_hint_blockciphers; i++) {
             const hint_blockcipher_t* item = hint_blockciphers + i;
-            _blockcipher_map.insert(std::make_pair(item->_alg, item));
+            _blockcipher_map.insert(std::make_pair(typeof_alg(item), item));
         }
 
         // openssl-3.0
@@ -79,24 +79,24 @@ return_t crypto_advisor::build_if_necessary() {
         for (i = 0; i < sizeof_evp_cipher_methods; i++) {
             const hint_cipher_t* item = evp_cipher_methods + i;
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-            EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch(nullptr, item->_fetchname, nullptr);
+            EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch(nullptr, nameof_alg(item), nullptr);
             if (evp_cipher) {
-                _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->_algorithm, item->_mode), evp_cipher));
+                _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item)), evp_cipher));
                 _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
             }
 #else
-            const EVP_CIPHER* evp_cipher = EVP_get_cipherbyname(item->_fetchname);
+            const EVP_CIPHER* evp_cipher = EVP_get_cipherbyname(nameof_alg(item));
             if (evp_cipher) {
-                _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->_algorithm, item->_mode), (EVP_CIPHER*)evp_cipher));
+                _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item)), (EVP_CIPHER*)evp_cipher));
                 _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
             }
 #endif
             if (nullptr == evp_cipher) {
-                __trace(errorcode_t::debug, "%s", item->_fetchname);
+                __trace(errorcode_t::debug, "%s", nameof_alg(item));
             }
 
-            _cipher_fetch_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->_algorithm, item->_mode), item));
-            _cipher_byname_map.insert(std::make_pair(item->_fetchname, item));
+            _cipher_fetch_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item)), item));
+            _cipher_byname_map.insert(std::make_pair(nameof_alg(item), item));
         }
 #if (OPENSSL_VERSION_NUMBER < 0x30000000L)
         for (i = 0; i < RTL_NUMBER_OF(aes_wrap_methods); i++) {
@@ -109,21 +109,21 @@ return_t crypto_advisor::build_if_necessary() {
         for (i = 0; i < sizeof_evp_md_methods; i++) {
             const hint_digest_t* item = evp_md_methods + i;
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-            EVP_MD* evp_md = EVP_MD_fetch(nullptr, item->_fetchname, nullptr);
+            EVP_MD* evp_md = EVP_MD_fetch(nullptr, nameof_alg(item), nullptr);
             if (evp_md) {
-                _md_map.insert(std::make_pair(item->_algorithm, evp_md));
+                _md_map.insert(std::make_pair(typeof_alg(item), evp_md));
             }
 #else
-            const EVP_MD* evp_md = EVP_get_digestbyname(item->_fetchname);
+            const EVP_MD* evp_md = EVP_get_digestbyname(nameof_alg(item));
             if (evp_md) {
-                _md_map.insert(std::make_pair(item->_algorithm, (EVP_MD*)evp_md));
+                _md_map.insert(std::make_pair(typeof_alg(item), (EVP_MD*)evp_md));
             }
 #endif
             if (nullptr == evp_md) {
-                __trace(errorcode_t::debug, "%s", item->_fetchname);
+                __trace(errorcode_t::debug, "%s", nameof_alg(item));
             }
-            _md_fetch_map.insert(std::make_pair(item->_algorithm, item));
-            _md_byname_map.insert(std::make_pair(item->_fetchname, item));
+            _md_fetch_map.insert(std::make_pair(typeof_alg(item), item));
+            _md_byname_map.insert(std::make_pair(nameof_alg(item), item));
         }
 
         ERR_clear_error();  // errors while EVP_CIPHER_fetch, EVP_MD_fetch
@@ -252,7 +252,7 @@ const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(const char* alg) {
         const hint_cipher_t* item = nullptr;
         hint.find(alg, &item);
         if (item) {
-            ret_value = hintof_blockcipher(item->_algorithm);
+            ret_value = hintof_blockcipher(typeof_alg(item));
         }
     }
     return ret_value;
@@ -271,7 +271,7 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher(const EVP_CIPHER* ciph
         }
 
         maphint<uint32, const hint_blockcipher_t*> hint_blockcipher(_blockcipher_map);
-        hint_blockcipher.find(hint->_algorithm, &blockcipher);
+        hint_blockcipher.find(typeof_alg(hint), &blockcipher);
     }
     __finally2 {
         // do nothing
@@ -296,7 +296,7 @@ const EVP_CIPHER* crypto_advisor::find_evp_cipher(const char* name) {
         const hint_cipher_t* item = nullptr;
         hint.find(name, &item);
         if (item) {
-            ret_value = _cipher_map[CRYPT_CIPHER_VALUE(item->_algorithm, item->_mode)];
+            ret_value = _cipher_map[CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item))];
         }
     }
     return ret_value;
@@ -345,9 +345,7 @@ const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mod
         maphint<uint32, const hint_cipher_t*> hint(_cipher_fetch_map);
 
         ret = hint.find(key, &item);
-        if (errorcode_t::success == ret) {
-            ret_value = item->_fetchname;
-        }
+        ret_value = nameof_alg(item);
     }
     __finally2 {
         // do nothing
@@ -395,7 +393,7 @@ const EVP_MD* crypto_advisor::find_evp_md(const char* name) {
         const hint_digest_t* item = nullptr;
         hint.find(name, &item);
         if (item) {
-            ret_value = _md_map[item->_algorithm];
+            ret_value = _md_map[typeof_alg(item)];
         }
     }
     return ret_value;
@@ -456,9 +454,7 @@ const char* crypto_advisor::nameof_md(hash_algorithm_t algorithm) {
     maphint<uint32, const hint_digest_t*> hint(_md_fetch_map);
 
     hint.find(algorithm, &item);
-    if (item) {
-        ret_value = item->_fetchname;
-    }
+    ret_value = nameof_alg(item);
     return ret_value;
 }
 

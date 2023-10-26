@@ -662,32 +662,36 @@ enum cose_alg_t {
 };
 
 typedef struct _hint_blockcipher_t {
-    crypt_algorithm_t _alg;
-    uint16 _keysize;    // size of key
-    uint16 _ivsize;     // size of initial vector
-    uint16 _blocksize;  // blocksize for en/de-cryption
-    uint16 _blockkw;    // blocksize for keywrap (AES)
+    crypt_algorithm_t algorithm;
+    uint16 keysize;    // size of key
+    uint16 ivsize;     // size of initial vector
+    uint16 blocksize;  // blocksize for en/de-cryption
+    uint16 blockkw;    // blocksize for keywrap (AES)
 } hint_blockcipher_t;
 
+crypt_algorithm_t typeof_alg(const hint_blockcipher_t* hint);
 uint16 sizeof_key(const hint_blockcipher_t* hint);
 uint16 sizeof_iv(const hint_blockcipher_t* hint);
 uint16 sizeof_block(const hint_blockcipher_t* hint);
+uint16 sizeof_blockkw(const hint_blockcipher_t* hint);
 
 typedef struct _hint_cipher_t {
-    crypt_algorithm_t _algorithm;
-    crypt_mode_t _mode;
-    const char* _fetchname;
+    crypt_algorithm_t algorithm;
+    crypt_mode_t mode;
+    const char* fetchname;
 } hint_cipher_t;
 crypt_algorithm_t typeof_alg(const hint_cipher_t* hint);
 crypt_mode_t typeof_mode(const hint_cipher_t* hint);
+const char* nameof_alg(const hint_cipher_t* hint);
 
 typedef struct _hint_digest_t {
-    hash_algorithm_t _algorithm;
-    const char* _fetchname;
-    uint16 _digest_size;
+    hash_algorithm_t algorithm;
+    const char* fetchname;
+    uint16 digest_size;
 } hint_digest_t;
 
 hash_algorithm_t typeof_alg(const hint_digest_t* hint);
+const char* nameof_alg(const hint_digest_t* hint);
 uint16 sizeof_digest(const hint_digest_t* hint);
 
 typedef struct _hint_jose_encryption_t {

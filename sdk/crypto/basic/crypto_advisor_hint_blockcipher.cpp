@@ -143,10 +143,18 @@ const hint_blockcipher_t hint_blockciphers[] = {
 
 const size_t sizeof_hint_blockciphers = RTL_NUMBER_OF(hint_blockciphers);
 
+crypt_algorithm_t typeof_alg(const hint_blockcipher_t* hint) {
+    crypt_algorithm_t ret_value = crypt_algorithm_t::crypt_alg_unknown;
+    if (hint) {
+        ret_value = hint->algorithm;
+    }
+    return ret_value;
+}
+
 uint16 sizeof_key(const hint_blockcipher_t* hint) {
     uint16 ret_value = 0;
     if (hint) {
-        ret_value = hint->_keysize;
+        ret_value = hint->keysize;
     }
     return ret_value;
 }
@@ -154,7 +162,7 @@ uint16 sizeof_key(const hint_blockcipher_t* hint) {
 uint16 sizeof_iv(const hint_blockcipher_t* hint) {
     uint16 ret_value = 0;
     if (hint) {
-        ret_value = hint->_ivsize;
+        ret_value = hint->ivsize;
     }
     return ret_value;
 }
@@ -162,7 +170,7 @@ uint16 sizeof_iv(const hint_blockcipher_t* hint) {
 uint16 sizeof_block(const hint_blockcipher_t* hint) {
     uint16 ret_value = 0;
     if (hint) {
-        ret_value = hint->_blocksize;
+        ret_value = hint->blocksize;
     }
     return ret_value;
 }

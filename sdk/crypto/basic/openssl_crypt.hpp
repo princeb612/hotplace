@@ -167,8 +167,8 @@ class openssl_crypt : public crypt_t {
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [outopt]
      */
-    virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted, binary_t* aad = nullptr,
-                              binary_t* tag = nullptr);
+    virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted,
+                              const binary_t* aad = nullptr, binary_t* tag = nullptr);
     /**
      * @brief encrypt (GCM/CCM)
      * @param crypt_context_t* handle [in]
@@ -177,7 +177,7 @@ class openssl_crypt : public crypt_t {
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [outopt]
      */
-    virtual return_t encrypt2(crypt_context_t* handle, binary_t const& plain, binary_t& out_encrypted, binary_t* aad = nullptr, binary_t* tag = nullptr);
+    virtual return_t encrypt2(crypt_context_t* handle, binary_t const& plain, binary_t& out_encrypted, const binary_t* aad = nullptr, binary_t* tag = nullptr);
     /**
      * @brief encrypt
      * @param crypt_context_t* handle [in]
@@ -189,7 +189,7 @@ class openssl_crypt : public crypt_t {
      * @param binary_t* tag [inopt]
      */
     return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char* out_encrypted, size_t* size_encrypted,
-                      binary_t* aad = nullptr, binary_t* tag = nullptr);
+                      const binary_t* aad = nullptr, binary_t* tag = nullptr);
     /**
      * @brief symmetric decrypt
      * @param crypt_context_t* handle [in]
@@ -234,7 +234,7 @@ class openssl_crypt : public crypt_t {
      * @param binary_t* tag [inopt]
      */
     virtual return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
-                              binary_t* aad = nullptr, binary_t* tag = nullptr);
+                              const binary_t* aad = nullptr, const binary_t* tag = nullptr);
     /**
      * @brief decrypt (GCM/CCOM)
      * @param crypt_context_t* handle [in]
@@ -243,8 +243,8 @@ class openssl_crypt : public crypt_t {
      * @param binary_t* aad [inpot]
      * @param binary_t* tag [inopt]
      */
-    virtual return_t decrypt2(crypt_context_t* handle, binary_t const& data_encrypted, binary_t& out_decrypted, binary_t* aad = nullptr,
-                              binary_t* tag = nullptr);
+    virtual return_t decrypt2(crypt_context_t* handle, binary_t const& data_encrypted, binary_t& out_decrypted, const binary_t* aad = nullptr,
+                              const binary_t* tag = nullptr);
     /**
      * @brief decrypt
      * @param crypt_context_t* handle [in]
@@ -256,7 +256,7 @@ class openssl_crypt : public crypt_t {
      * @param binary_t* tag [inopt]
      */
     return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, byte_t* out_decrypted, size_t* size_decrypted,
-                      binary_t* aad = nullptr, binary_t* tag = nullptr);
+                      const binary_t* aad = nullptr, const binary_t* tag = nullptr);
     /**
      * @brief free memory
      * @remarks see encrypt, decrypt
@@ -304,7 +304,10 @@ class openssl_crypt : public crypt_t {
 };
 
 return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext);
+return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext, binary_t const& aad, binary_t& tag);
 return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext);
+return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext, binary_t const& aad,
+                 binary_t const& tag);
 
 /**
  * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA

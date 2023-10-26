@@ -460,22 +460,23 @@ return_t aead_aes_cbc_hmac_sha2(const test_vector_aead_aes_cbc_hmac_sha2_t* vect
             ret = errorcode_t::not_found;
             __leave2;
         }
-        uint16 digest_size = sizeof_digest(hint_digest);
-        digest_size >>= 1;  // truncate
+        uint16 digestsize = sizeof_digest(hint_digest);
+        digestsize >>= 1;  // truncate
 
         // 2.4 AEAD_AES_128_CBC_HMAC_SHA_256 AES-128 SHA-256 K 32 MAC_KEY_LEN 16 ENC_KEY_LEN 16 T_LEN=16
         // 2.5 AEAD_AES_192_CBC_HMAC_SHA_384 AES-192 SHA-384 K 48 MAC_KEY_LEN 24 ENC_KEY_LEN 24 T_LEN=24
         // 2.6 AEAD_AES_256_CBC_HMAC_SHA_384 AES-256 SHA-384 K 56 MAC_KEY_LEN 32 ENC_KEY_LEN 24 T_LEN=24
         // 2.7 AEAD_AES_256_CBC_HMAC_SHA_512 AES-256 SHA-512 K 64 MAC_KEY_LEN 32 ENC_KEY_LEN 32 T_LEN=32
 
-        if (k.size() < digest_size + keysize) {
+        if (k.size() < std::max(digestsize, keysize)) {
             ret = errorcode_t::bad_data;
             __leave2;
         } else {
             /* MAC_KEY = initial MAC_KEY_LEN bytes of K */
-            mac_key.insert(mac_key.end(), &k[0], &k[0] + digest_size);
+            mac_key.insert(mac_key.end(), &k[0], &k[0] + digestsize);
             /* ENC_KEY = final ENC_KEY_LEN bytes of K */
-            enc_key.insert(enc_key.end(), &k[digest_size], &k[digest_size] + keysize);
+            size_t pos = k.size() - keysize;
+            enc_key.insert(enc_key.end(), &k[pos], &k[pos] + keysize);
         }
 
         /* PS (padding string) .. for PKCS#7 padding */
@@ -514,7 +515,7 @@ return_t aead_aes_cbc_hmac_sha2(const test_vector_aead_aes_cbc_hmac_sha2_t* vect
 
         /* T = MAC(MAC_KEY, A || S || AL) */
         hmac(mac_alg, mac_key, content, t);
-        t.resize(digest_size);
+        t.resize(digestsize);
 
         _test_case.assert(base16_decode(vector->t) == t, __FUNCTION__, "%s T = MAC(MAC_KEY, A || S || AL)", vector->text);
 
@@ -556,15 +557,25 @@ void test_aead_aes_cbc_hmac_sha2() {
     for (int i = 0; i < sizeof_test_vector_aead_aes_cbc_hmac_sha2; i++) {
         const test_vector_aead_aes_cbc_hmac_sha2_t* vector = test_vector_aead_aes_cbc_hmac_sha2 + i;
         aead_aes_cbc_hmac_sha2(vector);
-        binary_t s;
+        binary_t q;
         binary_t t;
         ret = aes_cbc_hmac_sha2_encrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a),
-                                        base16_decode(vector->p), s, t);
-        _test_case.test(ret, __FUNCTION__, "encrypt %s", vector->text);
+                                        base16_decode(vector->p), q, t);
+        {
+            test_case_notimecheck notimecheck(_test_case);
+            dump_memory(q, &bs);
+            printf("%s\n", bs.c_str());
+        }
+        _test_case.assert(base16_decode(vector->q) == q, __FUNCTION__, "encrypt %s", vector->text);
         binary_t p;
         ret =
-            aes_cbc_hmac_sha2_decrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a), s, p, t);
-        _test_case.test(ret, __FUNCTION__, "decrypt %s", vector->text);
+            aes_cbc_hmac_sha2_decrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a), q, p, t);
+        {
+            test_case_notimecheck notimecheck(_test_case);
+            dump_memory(p, &bs);
+            printf("%s\n", bs.c_str());
+        }
+        _test_case.assert(base16_decode(vector->p) == p, __FUNCTION__, "decrypt %s", vector->text);
     }
 }
 

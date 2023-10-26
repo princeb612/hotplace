@@ -427,47 +427,10 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
 
             uint32 enc_group = enc_hint->group;
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
-                int cek_size = cek.size();
-                int64 aad_length = aad.size() * 8;
-                int64 al = hton64(aad_length);
-
-                crypt_context_t* handle_crypt = nullptr;
-                hash_context_t* handle_hash = nullptr;
-                __try2 {
-                    ret = crypt.open(&handle_crypt, (crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, &cek[0] + (cek_size / 2), cek_size / 2,
-                                     &iv[0], iv.size());
-                    if (errorcode_t::success != ret) {
-                        __leave2;
-                    }
-
-                    /* Content Encryption */
-                    ret = crypt.encrypt(handle_crypt, &input[0], input.size(), ciphertext);
-                    if (errorcode_t::success != ret) {
-                        __leave2;
-                    }
-
-                    /* Additional Authentication Tag
-                     * concatenate AAD, IV, CT, AL
-                     */
-                    binary_t hmac_input;
-                    hmac_input.insert(hmac_input.end(), aad.begin(), aad.end());
-                    hmac_input.insert(hmac_input.end(), iv.begin(), iv.end());
-                    hmac_input.insert(hmac_input.end(), ciphertext.begin(), ciphertext.end());
-                    hmac_input.insert(hmac_input.end(), (byte_t*)&al, (byte_t*)&al + sizeof(int64));
-
-                    ret = hash.open(&handle_hash, (hash_algorithm_t)enc_hash_alg, &cek[0], cek_size / 2);
-                    if (errorcode_t::success != ret) {
-                        __leave2;
-                    }
-                    ret = hash.hash(handle_hash, &hmac_input[0], hmac_input.size(), tag);
-                    if (errorcode_t::success != ret) {
-                        __leave2;
-                    }
-                    tag.resize(tag.size() / 2);
-                }
-                __finally2 {
-                    hash.close(handle_hash);
-                    crypt.close(handle_crypt);
+                ret = aes_cbc_hmac_sha2_encrypt((crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, (hash_algorithm_t)enc_hash_alg, cek, iv, aad,
+                                                input, ciphertext, tag);
+                if (errorcode_t::success != ret) {
+                    __leave2;
                 }
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
                 crypt_context_t* handle_crypt = nullptr;
@@ -695,57 +658,10 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
 
             uint32 enc_group = enc_hint->group;
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
-                int cek_size = cek.size();
-                int64 aad_length = aad.size() * 8;
-                int64 al = hton64(aad_length);
-
-                crypt_context_t* handle_crypt = nullptr;
-                hash_context_t* handle_hash = nullptr;
-                __try2 {
-                    /* Additional Authentication Tag
-                     * concatenate AAD, IV, CT, AL
-                     */
-                    binary_t hmac_input;
-                    binary_t tag1;
-                    hmac_input.insert(hmac_input.end(), aad.begin(), aad.end());
-                    hmac_input.insert(hmac_input.end(), iv.begin(), iv.end());
-                    hmac_input.insert(hmac_input.end(), ciphertext.begin(), ciphertext.end());
-                    hmac_input.insert(hmac_input.end(), (byte_t*)&al, (byte_t*)&al + sizeof(int64));
-
-                    ret = hash.open(&handle_hash, (hash_algorithm_t)enc_hash_alg, &cek[0], cek_size / 2);
-                    if (errorcode_t::success != ret) {
-                        __leave2;
-                    }
-                    ret = hash.hash(handle_hash, &hmac_input[0], hmac_input.size(), tag1);
-                    if (errorcode_t::success != ret) {
-                        __leave2;
-                    }
-                    tag1.resize(tag1.size() / 2);
-
-                    if (tag1 != tag) {
-                        ret = errorcode_t::mismatch;
-                        __leave2;
-                    }
-
-                    ret = crypt.open(&handle_crypt, (crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, &cek[0] + (cek_size / 2), cek_size / 2,
-                                     &iv[0], iv.size());
-                    if (errorcode_t::success != ret) {
-                        __leave2;
-                    }
-
-                    /* Content Encryption */
-                    ret = crypt.decrypt(handle_crypt, &ciphertext[0], ciphertext.size(), output);
-                    if (errorcode_t::success != ret) {
-                        __leave2;
-                    }
-                }
-                __finally2 {
-                    if (handle_hash) {
-                        hash.close(handle_hash);
-                    }
-                    if (handle_crypt) {
-                        crypt.close(handle_crypt);
-                    }
+                ret = aes_cbc_hmac_sha2_decrypt((crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, (hash_algorithm_t)enc_hash_alg, cek, iv, aad,
+                                                ciphertext, output, tag);
+                if (errorcode_t::success != ret) {
+                    __leave2;
                 }
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
                 crypt_context_t* handle_crypt = nullptr;
