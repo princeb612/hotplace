@@ -1,7 +1,7 @@
 #ifndef __HOTPLACE_TEST_CRYPTO__
 #define __HOTPLACE_TEST_CRYPTO__
 
-#include <hotplace/sdk/sdk.hpp>
+#include <sdk/sdk.hpp>
 
 typedef struct _test_vector_github_cose_wg_t {
     const char* keysetname;  // crypto_key* key;

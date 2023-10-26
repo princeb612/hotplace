@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 
-#include <hotplace/sdk/io/basic/keyvalue.hpp>
-#include <hotplace/sdk/net/server/network_stream.hpp>
+#include <sdk/io/basic/keyvalue.hpp>
+#include <sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
 using namespace io;

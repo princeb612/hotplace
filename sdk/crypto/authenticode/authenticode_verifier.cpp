@@ -9,17 +9,17 @@
  * 2023.08.27   Soo Han, Kim        get_crl - temporary disabled, under construction
  */
 
-#include <hotplace/sdk/base/stl.hpp>
-#include <hotplace/sdk/base/system/thread.hpp>
-#include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
-#include <hotplace/sdk/crypto/authenticode/authenticode_verifier.hpp>
-#include <hotplace/sdk/crypto/authenticode/sdk.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/io/string/string.hpp>
-#include <hotplace/sdk/io/system/sdk.hpp>
-#include <hotplace/sdk/net/basic/sdk.hpp>
 #include <map>
+#include <sdk/base/stl.hpp>
+#include <sdk/base/system/thread.hpp>
+#include <sdk/base/system/trace.hpp>
+#include <sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
+#include <sdk/crypto/authenticode/authenticode_verifier.hpp>
+#include <sdk/crypto/authenticode/sdk.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/io/string/string.hpp>
+#include <sdk/io/system/sdk.hpp>
+#include <sdk/net/basic/sdk.hpp>
 #include <set>
 
 namespace hotplace {

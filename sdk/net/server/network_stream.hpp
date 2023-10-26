@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKSTREAM__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSTREAM__
 
-#include <hotplace/sdk/net/server/network_protocol.hpp>
+#include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
 namespace net {

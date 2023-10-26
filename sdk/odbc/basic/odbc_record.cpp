@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/odbc/basic/odbc_field.hpp>
-#include <hotplace/sdk/odbc/basic/odbc_record.hpp>
+#include <sdk/odbc/basic/odbc_field.hpp>
+#include <sdk/odbc/basic/odbc_record.hpp>
 
 namespace hotplace {
 namespace odbc {

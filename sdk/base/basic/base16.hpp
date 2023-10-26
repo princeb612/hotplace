@@ -28,8 +28,8 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_BASE16__
 #define __HOTPLACE_SDK_BASE_BASIC_BASE16__
 
-#include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/stream.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/stream.hpp>
 
 namespace hotplace {
 

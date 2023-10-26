@@ -1,7 +1,7 @@
 #ifndef __HOTPLACE_TEST_CRYPTO__
 #define __HOTPLACE_TEST_CRYPTO__
 
-#include <hotplace/sdk/sdk.hpp>
+#include <sdk/sdk.hpp>
 
 using namespace hotplace::crypto;
 
@@ -27,5 +27,23 @@ typedef struct _test_vector_rfc3394_t {
 
 extern const test_vector_rfc3394_t test_vector_rfc3394[];
 extern const size_t sizeof_test_vector_rfc3394;
+
+// Authenticated Encryption with AES-CBC and HMAC-SHA
+typedef struct _test_vector_aead_aes_cbc_hmac_sha2_t {
+    const char* text;
+    const char* enc_alg;
+    const char* mac_alg;
+    const char* k;  // mac_key || enc_key
+    const char* p;
+    const char* iv;
+    const char* a;
+    const char* q;
+    const char* s;  // validation
+    const char* t;  // validation
+    const char* c;  // validation
+} test_vector_aead_aes_cbc_hmac_sha2_t;
+
+extern const test_vector_aead_aes_cbc_hmac_sha2_t test_vector_aead_aes_cbc_hmac_sha2[];
+extern const size_t sizeof_test_vector_aead_aes_cbc_hmac_sha2;
 
 #endif

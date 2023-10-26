@@ -8,11 +8,11 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/odbc/basic/odbc_connector.hpp>
-#include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
-#include <hotplace/sdk/odbc/basic/odbc_field.hpp>
-#include <hotplace/sdk/odbc/basic/odbc_query.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/odbc/basic/odbc_connector.hpp>
+#include <sdk/odbc/basic/odbc_diagnose.hpp>
+#include <sdk/odbc/basic/odbc_field.hpp>
+#include <sdk/odbc/basic/odbc_query.hpp>
 
 namespace hotplace {
 namespace odbc {

@@ -8,12 +8,12 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/io/stream/string.hpp>
-#include <hotplace/sdk/io/system/sdk.hpp>
 #include <iostream>
+#include <sdk/base/system/trace.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/io/stream/string.hpp>
+#include <sdk/io/system/sdk.hpp>
 
 namespace hotplace {
 using namespace io;

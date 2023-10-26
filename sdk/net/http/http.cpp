@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/string/string.hpp>
-#include <hotplace/sdk/net/basic/sdk.hpp>
-#include <hotplace/sdk/net/http/http.hpp>
-#include <hotplace/sdk/net/tls/tls.hpp>
+#include <sdk/io/string/string.hpp>
+#include <sdk/net/basic/sdk.hpp>
+#include <sdk/net/http/http.hpp>
+#include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 using namespace io;

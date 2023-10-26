@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE__
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE__
 
-#include <hotplace/sdk/base.hpp>
+#include <sdk/base.hpp>
 
 namespace hotplace {
 

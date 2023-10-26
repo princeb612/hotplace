@@ -8,14 +8,14 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/system/datetime.hpp>
-#include <hotplace/sdk/base/system/signalwait_threads.hpp>
-#include <hotplace/sdk/io/system/multiplexer.hpp>
-#include <hotplace/sdk/net/server/network_priority_queue.hpp>
-#include <hotplace/sdk/net/server/network_server.hpp>
-#include <hotplace/sdk/net/server/network_session.hpp>
-#include <hotplace/sdk/net/server/network_stream.hpp>
 #include <queue>
+#include <sdk/base/system/datetime.hpp>
+#include <sdk/base/system/signalwait_threads.hpp>
+#include <sdk/io/system/multiplexer.hpp>
+#include <sdk/net/server/network_priority_queue.hpp>
+#include <sdk/net/server/network_server.hpp>
+#include <sdk/net/server/network_session.hpp>
+#include <sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
 using namespace io;

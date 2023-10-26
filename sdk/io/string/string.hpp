@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_IO_STRING_STRING__
 #define __HOTPLACE_SDK_IO_STRING_STRING__
 
-#include <hotplace/sdk/base.hpp>
+#include <sdk/base.hpp>
 #include <string>
 
 namespace hotplace {

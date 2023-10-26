@@ -21,7 +21,7 @@
 
 #include <zlib.h>
 
-#include <hotplace/sdk/io/basic/zlib.hpp>
+#include <sdk/io/basic/zlib.hpp>
 
 namespace hotplace {
 namespace io {

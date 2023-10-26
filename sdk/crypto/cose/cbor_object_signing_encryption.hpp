@@ -12,14 +12,14 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTSIGNINGENCRYPTION__
 #define __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTSIGNINGENCRYPTION__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
-#include <hotplace/sdk/crypto/cose/types.hpp>
-#include <hotplace/sdk/crypto/types.hpp>
-#include <hotplace/sdk/io/cbor/cbor_data.hpp>
-#include <hotplace/sdk/io/cbor/cbor_map.hpp>
-#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
-#include <hotplace/sdk/io/cbor/cbor_reader.hpp>
+#include <sdk/base.hpp>
+#include <sdk/crypto/basic/crypto_key.hpp>
+#include <sdk/crypto/cose/types.hpp>
+#include <sdk/crypto/types.hpp>
+#include <sdk/io/cbor/cbor_data.hpp>
+#include <sdk/io/cbor/cbor_map.hpp>
+#include <sdk/io/cbor/cbor_publisher.hpp>
+#include <sdk/io/cbor/cbor_reader.hpp>
 
 namespace hotplace {
 using namespace io;

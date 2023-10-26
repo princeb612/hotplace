@@ -8,22 +8,22 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/base16.hpp>
-#include <hotplace/sdk/base/basic/base64.hpp>
-#include <hotplace/sdk/base/basic/variant.hpp>
-#include <hotplace/sdk/base/stl.hpp>
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/crypto/cose/cbor_web_key.hpp>
-#include <hotplace/sdk/io/basic/json.hpp>
-#include <hotplace/sdk/io/cbor/cbor_array.hpp>
-#include <hotplace/sdk/io/cbor/cbor_data.hpp>
-#include <hotplace/sdk/io/cbor/cbor_map.hpp>
-#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
-#include <hotplace/sdk/io/cbor/cbor_reader.hpp>
-#include <hotplace/sdk/io/stream/file_stream.hpp>
+#include <sdk/base/basic/base16.hpp>
+#include <sdk/base/basic/base64.hpp>
+#include <sdk/base/basic/variant.hpp>
+#include <sdk/base/stl.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/crypto/cose/cbor_web_key.hpp>
+#include <sdk/io/basic/json.hpp>
+#include <sdk/io/cbor/cbor_array.hpp>
+#include <sdk/io/cbor/cbor_data.hpp>
+#include <sdk/io/cbor/cbor_map.hpp>
+#include <sdk/io/cbor/cbor_publisher.hpp>
+#include <sdk/io/cbor/cbor_reader.hpp>
+#include <sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
 using namespace io;

@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_CRITICALSECTION__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_CRITICALSECTION__
 
-#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
 

@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_TYPES__
 #define __HOTPLACE_SDK_CRYPTO_COSE_TYPES__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/crypto/types.hpp>
+#include <sdk/base.hpp>
+#include <sdk/crypto/types.hpp>
 
 namespace hotplace {
 namespace crypto {

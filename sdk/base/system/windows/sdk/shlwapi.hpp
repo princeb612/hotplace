@@ -91,9 +91,9 @@ typedef DWORD SHCOLSTATEF;
  * ; 빌드시 외부 라이브러리 경로에 포함할 것 (현재 Helper/Trunk/Srs/Test/PortableDevice 에 포함)
  */
 #ifdef _MSC_VER
-#include <hotplace/sdk/base/system/windows/sdk/v6.0A/PortableDevice.h>
-#include <hotplace/sdk/base/system/windows/sdk/v6.0A/PortableDeviceApi.h>
-#include <hotplace/sdk/base/system/windows/sdk/v6.0A/PortableDeviceTypes.h>
+#include <sdk/base/system/windows/sdk/v6.0A/PortableDevice.h>
+#include <sdk/base/system/windows/sdk/v6.0A/PortableDeviceApi.h>
+#include <sdk/base/system/windows/sdk/v6.0A/PortableDeviceTypes.h>
 #endif
 
 /**

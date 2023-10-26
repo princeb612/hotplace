@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWSPE__
 #define __HOTPLACE_SDK_IO_SYSTEM_WINDOWSPE__
 
-#include <hotplace/sdk/base.hpp>
+#include <sdk/base.hpp>
 #if defined __linux__
-#include <hotplace/sdk/io/system/linux/winnt.hpp>
+#include <sdk/io/system/linux/winnt.hpp>
 #elif defined _WIN32
 #include <winnt.h>
 #endif

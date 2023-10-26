@@ -11,13 +11,13 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/base/basic/base16.hpp>
-#include <hotplace/sdk/io/cbor/cbor_array.hpp>
-#include <hotplace/sdk/io/cbor/cbor_data.hpp>
-#include <hotplace/sdk/io/cbor/cbor_map.hpp>
-#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
-#include <hotplace/sdk/io/cbor/cbor_reader.hpp>
-#include <hotplace/sdk/io/system/types.hpp>
+#include <sdk/base/basic/base16.hpp>
+#include <sdk/io/cbor/cbor_array.hpp>
+#include <sdk/io/cbor/cbor_data.hpp>
+#include <sdk/io/cbor/cbor_map.hpp>
+#include <sdk/io/cbor/cbor_publisher.hpp>
+#include <sdk/io/cbor/cbor_reader.hpp>
+#include <sdk/io/system/types.hpp>
 
 namespace hotplace {
 namespace io {

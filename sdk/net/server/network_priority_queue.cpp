@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/net/server/network_priority_queue.hpp>
-#include <hotplace/sdk/net/server/network_session.hpp>
-#include <hotplace/sdk/net/server/network_stream.hpp>
+#include <sdk/net/server/network_priority_queue.hpp>
+#include <sdk/net/server/network_session.hpp>
+#include <sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
 namespace net {

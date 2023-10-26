@@ -12,10 +12,10 @@
 #include <dlfcn.h>     // dladdr
 #include <execinfo.h>  // backtrace
 
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/system/linux/debug_trace.hpp>
-#include <hotplace/sdk/base/system/trace.hpp>
 #include <iostream>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/system/linux/debug_trace.hpp>
+#include <sdk/base/system/trace.hpp>
 
 namespace hotplace {
 

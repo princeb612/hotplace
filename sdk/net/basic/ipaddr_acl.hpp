@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_IPADDRACL__
 #define __HOTPLACE_SDK_NET_BASIC_IPADDRACL__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/net/types.hpp>
 #include <map>
+#include <sdk/base.hpp>
+#include <sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {

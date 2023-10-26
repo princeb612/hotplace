@@ -9,21 +9,21 @@
  *
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_chacha20.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
-#include <hotplace/sdk/crypto/cose/cbor_object_encryption.hpp>
-#include <hotplace/sdk/io/cbor/cbor_array.hpp>
-#include <hotplace/sdk/io/cbor/cbor_data.hpp>
-#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
-#include <hotplace/sdk/io/cbor/cbor_map.hpp>
-#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
-#include <hotplace/sdk/io/cbor/cbor_reader.hpp>
-#include <hotplace/sdk/io/types.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/openssl_chacha20.hpp>
+#include <sdk/crypto/basic/openssl_crypt.hpp>
+#include <sdk/crypto/basic/openssl_ecdh.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
+#include <sdk/crypto/basic/openssl_kdf.hpp>
+#include <sdk/crypto/basic/openssl_sign.hpp>
+#include <sdk/crypto/cose/cbor_object_encryption.hpp>
+#include <sdk/io/cbor/cbor_array.hpp>
+#include <sdk/io/cbor/cbor_data.hpp>
+#include <sdk/io/cbor/cbor_encode.hpp>
+#include <sdk/io/cbor/cbor_map.hpp>
+#include <sdk/io/cbor/cbor_publisher.hpp>
+#include <sdk/io/cbor/cbor_reader.hpp>
+#include <sdk/io/types.hpp>
 
 namespace hotplace {
 namespace crypto {

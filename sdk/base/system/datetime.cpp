@@ -10,8 +10,8 @@
  * 2023.08.15   Soo Han, Kin        added : stopwatch
  */
 
-#include <hotplace/sdk/base/stl.hpp>
-#include <hotplace/sdk/base/system/datetime.hpp>
+#include <sdk/base/stl.hpp>
+#include <sdk/base/system/datetime.hpp>
 #if defined __linux__
 #include <dlfcn.h>
 #include <sys/time.h>

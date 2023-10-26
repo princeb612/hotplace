@@ -10,7 +10,7 @@
 
 #include <sys/time.h>
 
-#include <hotplace/sdk/base/system/linux/semaphore.hpp>
+#include <sdk/base/system/linux/semaphore.hpp>
 
 namespace hotplace {
 

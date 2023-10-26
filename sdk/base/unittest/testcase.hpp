@@ -14,10 +14,10 @@
 
 #include <time.h>
 
-#include <hotplace/sdk/base/basic/console_color.hpp>
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <list>
 #include <map>
+#include <sdk/base/basic/console_color.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <string>
 
 namespace hotplace {

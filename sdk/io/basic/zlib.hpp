@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_IO_BASIC_ZLIB__
 #define __HOTPLACE_SDK_IO_BASIC_ZLIB__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/stream/stream.hpp>
+#include <sdk/base.hpp>
+#include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 namespace io {

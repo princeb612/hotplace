@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK__
 
-#include <hotplace/sdk/base/callback.hpp>
-#include <hotplace/sdk/base/charset.hpp>
-#include <hotplace/sdk/base/inline.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
+#include <sdk/base/callback.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/inline.hpp>
+#include <sdk/base/syntax.hpp>
 
 #if defined __MINGW32__
 
@@ -216,82 +216,82 @@
     };
 
 // advapi32.dll
-#include <hotplace/sdk/base/system/windows/sdk/advapi32.hpp>
+#include <sdk/base/system/windows/sdk/advapi32.hpp>
 
 // crypt32.dll
-#include <hotplace/sdk/base/system/windows/sdk/crypt32.hpp>
+#include <sdk/base/system/windows/sdk/crypt32.hpp>
 
 // dbghelp.dll
-#include <hotplace/sdk/base/system/windows/sdk/dbghelp.hpp>
+#include <sdk/base/system/windows/sdk/dbghelp.hpp>
 
 // iphlpapi.dll
-#include <hotplace/sdk/base/system/windows/sdk/iphlpapi.hpp>
+#include <sdk/base/system/windows/sdk/iphlpapi.hpp>
 
 // kernel32.dll
-#include <hotplace/sdk/base/system/windows/sdk/kernel32.hpp>
+#include <sdk/base/system/windows/sdk/kernel32.hpp>
 
 // mpclient.dll
-#include <hotplace/sdk/base/system/windows/sdk/mpclient.hpp>
+#include <sdk/base/system/windows/sdk/mpclient.hpp>
 
 // msi.dll
-#include <hotplace/sdk/base/system/windows/sdk/msi.hpp>
+#include <sdk/base/system/windows/sdk/msi.hpp>
 
 // mswsock.dll
-#include <hotplace/sdk/base/system/windows/sdk/mswsock.hpp>
+#include <sdk/base/system/windows/sdk/mswsock.hpp>
 
 // netapi32.dll
-#include <hotplace/sdk/base/system/windows/sdk/netapi32.hpp>
+#include <sdk/base/system/windows/sdk/netapi32.hpp>
 
 // ntdll.dll
-#include <hotplace/sdk/base/system/windows/sdk/ntdll.hpp>
+#include <sdk/base/system/windows/sdk/ntdll.hpp>
 
 // occache.dll
-#include <hotplace/sdk/base/system/windows/sdk/occache.hpp>
+#include <sdk/base/system/windows/sdk/occache.hpp>
 
 // powerprof.dll
-#include <hotplace/sdk/base/system/windows/sdk/powerprof.hpp>
+#include <sdk/base/system/windows/sdk/powerprof.hpp>
 
 // psapi.dll
-#include <hotplace/sdk/base/system/windows/sdk/psapi.hpp>
+#include <sdk/base/system/windows/sdk/psapi.hpp>
 
 // setupapi.dll
-#include <hotplace/sdk/base/system/windows/sdk/setupapi.hpp>
+#include <sdk/base/system/windows/sdk/setupapi.hpp>
 
 // shell32.dll
-#include <hotplace/sdk/base/system/windows/sdk/shell32.hpp>
+#include <sdk/base/system/windows/sdk/shell32.hpp>
 
 // shlwapi.dll
-#include <hotplace/sdk/base/system/windows/sdk/shlwapi.hpp>
+#include <sdk/base/system/windows/sdk/shlwapi.hpp>
 
 // svrapi.dll
-#include <hotplace/sdk/base/system/windows/sdk/svrapi.hpp>
+#include <sdk/base/system/windows/sdk/svrapi.hpp>
 
 // user32.dll
-#include <hotplace/sdk/base/system/windows/sdk/user32.hpp>
+#include <sdk/base/system/windows/sdk/user32.hpp>
 
 // userenv.dll
-#include <hotplace/sdk/base/system/windows/sdk/userenv.hpp>
+#include <sdk/base/system/windows/sdk/userenv.hpp>
 
 // wininet.dll
-#include <hotplace/sdk/base/system/windows/sdk/wininet.hpp>
+#include <sdk/base/system/windows/sdk/wininet.hpp>
 
 // winio.dll
-#include <hotplace/sdk/base/system/windows/sdk/winio.hpp>
+#include <sdk/base/system/windows/sdk/winio.hpp>
 
 // wintrust.dll
-#include <hotplace/sdk/base/system/windows/sdk/wintrust.hpp>
+#include <sdk/base/system/windows/sdk/wintrust.hpp>
 
 // wldap32.dll
-#include <hotplace/sdk/base/system/windows/sdk/wldap32.hpp>
+#include <sdk/base/system/windows/sdk/wldap32.hpp>
 
 // ws2_32.dll
-#include <hotplace/sdk/base/system/windows/sdk/ws2_32.hpp>
+#include <sdk/base/system/windows/sdk/ws2_32.hpp>
 
 // wtsapi32.dll
-#include <hotplace/sdk/base/system/windows/sdk/wtsapi32.hpp>
+#include <sdk/base/system/windows/sdk/wtsapi32.hpp>
 
 // wscapi.dll
-#include <hotplace/sdk/base/system/windows/sdk/wscapi.hpp>
+#include <sdk/base/system/windows/sdk/wscapi.hpp>
 
 #define GETPROCADDRESS(function_type, function_pointer, module_handle, api_name, err_code, leave) \
     {                                                                                             \

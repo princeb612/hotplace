@@ -13,7 +13,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_DEBUGTRACE__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_DEBUGTRACE__
 
-#include <hotplace/sdk/base/system/windows/sdk.hpp>
+#include <sdk/base/system/windows/sdk.hpp>
 
 namespace hotplace {
 

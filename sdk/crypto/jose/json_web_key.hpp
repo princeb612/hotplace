@@ -16,8 +16,8 @@
 
 #include <jansson.h>
 
-#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
-#include <hotplace/sdk/crypto/jose/types.hpp>
+#include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/jose/types.hpp>
 
 namespace hotplace {
 namespace crypto {

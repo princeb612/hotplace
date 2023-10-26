@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS__
 #define __HOTPLACE_SDK_NET_TLS_TLS__
 
-#include <hotplace/sdk/crypto/basic/types.hpp>
-#include <hotplace/sdk/net/tls/x509.hpp>
-#include <hotplace/sdk/net/types.hpp>
+#include <sdk/crypto/basic/types.hpp>
+#include <sdk/net/tls/x509.hpp>
+#include <sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {

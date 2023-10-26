@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_TYPES__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_TYPES__
 
-#include <hotplace/sdk/crypto/types.hpp>
+#include <sdk/crypto/types.hpp>
 
 #define OPENSSL_API_COMPAT 10101
 

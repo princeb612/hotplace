@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/io/string/string.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/crypto_key.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/io/string/string.hpp>
 
 namespace hotplace {
 using namespace io;

@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
-#include <hotplace/sdk/io/system/windows_pe.hpp>
+#include <sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
+#include <sdk/io/system/windows_pe.hpp>
 
 namespace hotplace {
 namespace crypto {

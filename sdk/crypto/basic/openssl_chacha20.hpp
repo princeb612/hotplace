@@ -13,8 +13,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CHACHA20__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_CHACHA20__
 
-#include <hotplace/sdk/crypto/basic/types.hpp>
-#include <hotplace/sdk/crypto/types.hpp>
+#include <sdk/crypto/basic/types.hpp>
+#include <sdk/crypto/types.hpp>
 
 namespace hotplace {
 namespace crypto {

@@ -12,9 +12,9 @@
 #define __HOTPLACE_SDK_BASE_TYPES__
 
 #if defined __linux__
-#include <hotplace/sdk/base/system/linux/types.hpp>
+#include <sdk/base/system/linux/types.hpp>
 #elif defined _WIN32 || defined _WIN64
-#include <hotplace/sdk/base/system/windows/types.hpp>
+#include <sdk/base/system/windows/types.hpp>
 #endif
 
 #include <map>

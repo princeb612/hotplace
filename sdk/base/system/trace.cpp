@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/system/trace.hpp>
+#include <sdk/base/system/trace.hpp>
 
 namespace hotplace {
 

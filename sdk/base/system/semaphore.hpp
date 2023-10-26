@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_SEMAPHORE__
 #define __HOTPLACE_SDK_BASE_SYSTEM_SEMAPHORE__
 
-#include <hotplace/sdk/base/types.hpp>
+#include <sdk/base/types.hpp>
 
 namespace hotplace {
 
@@ -35,9 +35,9 @@ class semaphore_t {
 }  // namespace hotplace
 
 #if defined _WIN32 || defined _WIN64
-#include <hotplace/sdk/base/system/windows/semaphore.hpp>
+#include <sdk/base/system/windows/semaphore.hpp>
 #elif defined __linux__
-#include <hotplace/sdk/base/system/linux/semaphore.hpp>
+#include <sdk/base/system/linux/semaphore.hpp>
 #endif
 
 #endif

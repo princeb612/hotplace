@@ -10,9 +10,9 @@
 
 #include <stdarg.h>
 
-#include <hotplace/sdk/base/inline.hpp>
-#include <hotplace/sdk/base/stl.hpp>
 #include <ostream>
+#include <sdk/base/inline.hpp>
+#include <sdk/base/stl.hpp>
 
 namespace hotplace {
 

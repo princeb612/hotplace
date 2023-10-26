@@ -14,7 +14,7 @@
 
 #include <stdlib.h>
 
-#include <hotplace/sdk/base/types.hpp>
+#include <sdk/base/types.hpp>
 #if defined __linux__
 #include <errno.h>
 #include <netdb.h>

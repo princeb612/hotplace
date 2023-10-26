@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/system/linux/thread.hpp>
+#include <sdk/base/system/linux/thread.hpp>
 
 namespace hotplace {
 

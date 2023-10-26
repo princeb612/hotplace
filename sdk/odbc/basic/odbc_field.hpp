@@ -15,10 +15,10 @@
 #ifndef __HOTPLACE_SDK_ODBC_FIELD__
 #define __HOTPLACE_SDK_ODBC_FIELD__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/base/system/datetime.hpp>
-#include <hotplace/sdk/io/stream/string.hpp>
-#include <hotplace/sdk/odbc/types.hpp>
+#include <sdk/base.hpp>
+#include <sdk/base/system/datetime.hpp>
+#include <sdk/io/stream/string.hpp>
+#include <sdk/odbc/types.hpp>
 
 namespace hotplace {
 using namespace io;

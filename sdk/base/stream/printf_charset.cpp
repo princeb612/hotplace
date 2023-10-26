@@ -38,7 +38,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <hotplace/sdk/base/stream/printf.hpp>
+#include <sdk/base/stream/printf.hpp>
 
 namespace hotplace {
 

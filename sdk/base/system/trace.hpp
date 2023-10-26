@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_TRACE__
 #define __HOTPLACE_SDK_BASE_SYSTEM_TRACE__
 
-#include <hotplace/sdk/base.hpp>
+#include <sdk/base.hpp>
 
 namespace hotplace {
 

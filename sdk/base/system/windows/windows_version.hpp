@@ -20,7 +20,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_WINDOWSVERSION__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_WINDOWSVERSION__
 
-#include <hotplace/sdk/base/system/windows/sdk.hpp>
+#include <sdk/base/system/windows/sdk.hpp>
 
 namespace hotplace {
 

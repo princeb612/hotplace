@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/system/datetime.hpp>
-#include <hotplace/sdk/base/system/signalwait_threads.hpp>
+#include <sdk/base/system/datetime.hpp>
+#include <sdk/base/system/signalwait_threads.hpp>
 
 namespace hotplace {
 

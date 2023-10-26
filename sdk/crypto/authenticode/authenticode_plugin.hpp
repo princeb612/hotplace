@@ -16,8 +16,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN__
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN__
 
-#include <hotplace/sdk/io/stream/file_stream.hpp>
 #include <list>
+#include <sdk/io/stream/file_stream.hpp>
 #include <string>
 
 namespace hotplace {

@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEYCHAIN__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEYCHAIN__
 
-#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
-#include <hotplace/sdk/crypto/types.hpp>
+#include <sdk/crypto/basic/crypto_key.hpp>
+#include <sdk/crypto/types.hpp>
 
 namespace hotplace {
 namespace crypto {
