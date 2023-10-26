@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_BASE_STL__
 #define __HOTPLACE_SDK_BASE_STL__
 
-#include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/types.hpp>
 #include <map>
+#include <sdk/base/error.hpp>
+#include <sdk/base/types.hpp>
 
 namespace hotplace {
 

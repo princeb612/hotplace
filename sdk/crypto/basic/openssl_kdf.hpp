@@ -15,7 +15,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_KDF__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_KDF__
 
-#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <sdk/crypto/basic/types.hpp>
 
 namespace hotplace {
 namespace crypto {

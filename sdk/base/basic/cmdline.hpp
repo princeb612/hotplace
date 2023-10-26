@@ -14,11 +14,11 @@
 #define __HOTPLACE_SDK_BASE_BASIC_CMDLINE__
 
 #include <functional>
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/base/stream.hpp>
 #include <iostream>
 #include <list>
 #include <map>
+#include <sdk/base.hpp>
+#include <sdk/base/stream.hpp>
 #include <set>
 
 namespace hotplace {

@@ -10,8 +10,8 @@
 
 #include <stdarg.h>
 
-#include <hotplace/sdk/base/basic/variant.hpp>
 #include <ostream>
+#include <sdk/base/basic/variant.hpp>
 
 namespace hotplace {
 

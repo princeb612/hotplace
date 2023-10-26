@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_SDK__
 #define __HOTPLACE_SDK_IO_SYSTEM_SDK__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/stream/stream.hpp>
+#include <sdk/base.hpp>
+#include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 namespace io {}

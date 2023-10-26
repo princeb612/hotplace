@@ -11,12 +11,12 @@
 #ifndef __GRAPE_SDK_BASE_STREAM_BUFFERIO__
 #define __GRAPE_SDK_BASE_STREAM_BUFFERIO__
 
-#include <hotplace/sdk/base/charset.hpp>
-#include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/system/critical_section.hpp>
-#include <hotplace/sdk/base/types.hpp>
 #include <list>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/system/critical_section.hpp>
+#include <sdk/base/types.hpp>
 
 namespace hotplace {
 

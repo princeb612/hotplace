@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_X509__
 #define __HOTPLACE_SDK_NET_TLS_X509__
 
-#include <hotplace/sdk/io/stream/stream.hpp>
+#include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 using namespace io;

@@ -8,12 +8,12 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/crypto_key.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/crypto/basic/openssl_sign.hpp>
 
 namespace hotplace {
 using namespace io;

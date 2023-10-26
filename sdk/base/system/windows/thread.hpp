@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_THREAD__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_THREAD__
 
-#include <hotplace/sdk/base/system/thread.hpp>
+#include <sdk/base/system/thread.hpp>
 
 namespace hotplace {
 

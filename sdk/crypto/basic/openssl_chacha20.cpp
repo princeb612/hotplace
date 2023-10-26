@@ -10,8 +10,8 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/openssl_chacha20.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/crypto/basic/openssl_chacha20.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
 namespace crypto {

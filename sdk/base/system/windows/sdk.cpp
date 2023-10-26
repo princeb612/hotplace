@@ -11,8 +11,8 @@
 #include <comdef.h>
 #include <comutil.h>
 
-#include <hotplace/sdk/base/system/windows/sdk.hpp>
-#include <hotplace/sdk/base/system/windows/windows_version.hpp>
+#include <sdk/base/system/windows/sdk.hpp>
+#include <sdk/base/system/windows/windows_version.hpp>
 
 namespace hotplace {
 

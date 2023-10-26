@@ -11,7 +11,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/io/cbor/cbor_visitor.hpp>
+#include <sdk/io/cbor/cbor_visitor.hpp>
 
 namespace hotplace {
 namespace io {

@@ -9,7 +9,7 @@
  * 2023.09.12   Soo Han, Kim        CBOR (codename.hotplace)
  */
 
-#include <hotplace/sdk/base/basic/ieee754.hpp>
+#include <sdk/base/basic/ieee754.hpp>
 
 namespace hotplace {
 

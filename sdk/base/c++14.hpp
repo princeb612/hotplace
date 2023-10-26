@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_CPP14__
 #define __HOTPLACE_SDK_BASE_CPP14__
 
-#include <hotplace/sdk/base/types.hpp>
+#include <sdk/base/types.hpp>
 
 namespace hotplace {
 

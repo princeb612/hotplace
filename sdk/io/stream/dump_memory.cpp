@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/io/stream/stream.hpp>
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 namespace io {

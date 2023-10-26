@@ -23,10 +23,10 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_VERIFIER__
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_VERIFIER__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/crypto/authenticode/authenticode_plugin.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
-//#include <hotplace/sdk/io/stream/file_stream.hpp>
+#include <sdk/base.hpp>
+#include <sdk/crypto/authenticode/authenticode_plugin.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
+//#include <sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
 // using namespace io;

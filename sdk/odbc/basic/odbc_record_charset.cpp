@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/stream/string.hpp>
-#include <hotplace/sdk/odbc/basic/odbc_field.hpp>
-#include <hotplace/sdk/odbc/basic/odbc_record.hpp>
+#include <sdk/io/stream/string.hpp>
+#include <sdk/odbc/basic/odbc_field.hpp>
+#include <sdk/odbc/basic/odbc_record.hpp>
 
 namespace hotplace {
 using namespace io;

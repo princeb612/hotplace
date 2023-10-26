@@ -10,11 +10,11 @@
  */
 
 #include <fstream>
-#include <hotplace/sdk/base/stl.hpp>
-#include <hotplace/sdk/base/system/datetime.hpp>
-#include <hotplace/sdk/base/system/thread.hpp>
-#include <hotplace/sdk/base/unittest/testcase.hpp>
 #include <iostream>
+#include <sdk/base/stl.hpp>
+#include <sdk/base/system/datetime.hpp>
+#include <sdk/base/system/thread.hpp>
+#include <sdk/base/unittest/testcase.hpp>
 
 namespace hotplace {
 

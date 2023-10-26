@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/system/windows/windows_registry.hpp>
+#include <sdk/io/system/windows/windows_registry.hpp>
 
 namespace hotplace {
 namespace io {

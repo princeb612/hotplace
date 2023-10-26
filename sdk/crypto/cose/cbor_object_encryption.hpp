@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTENCRYPTION__
 #define __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTENCRYPTION__
 
-#include <hotplace/sdk/crypto/cose/cbor_object_signing_encryption.hpp>
+#include <sdk/crypto/cose/cbor_object_signing_encryption.hpp>
 
 namespace hotplace {
 namespace crypto {

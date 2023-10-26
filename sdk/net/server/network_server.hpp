@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKSERVER__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSERVER__
 
-#include <hotplace/sdk/net/basic/sdk.hpp>
-#include <hotplace/sdk/net/basic/server_socket.hpp>
-#include <hotplace/sdk/net/server/network_protocol.hpp>
-#include <hotplace/sdk/net/types.hpp>
+#include <sdk/net/basic/sdk.hpp>
+#include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/server/network_protocol.hpp>
+#include <sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {

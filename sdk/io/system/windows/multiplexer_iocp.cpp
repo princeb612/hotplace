@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/io/system/multiplexer.hpp>
+#include <sdk/io/system/multiplexer.hpp>
 
 namespace hotplace {
 namespace io {

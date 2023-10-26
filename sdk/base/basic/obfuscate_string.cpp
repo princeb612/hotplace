@@ -10,7 +10,7 @@
 
 #include <string.h>
 
-#include <hotplace/sdk/base/basic/obfuscate_string.hpp>
+#include <sdk/base/basic/obfuscate_string.hpp>
 #include <set>
 
 namespace hotplace {

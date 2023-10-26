@@ -35,7 +35,7 @@
 
 #endif
 
-#include <hotplace/sdk/base.hpp>
+#include <sdk/base.hpp>
 
 namespace hotplace {
 namespace net {

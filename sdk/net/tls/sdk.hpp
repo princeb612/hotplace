@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_SDK__
 #define __HOTPLACE_SDK_NET_TLS_SDK__
 
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/net/types.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {

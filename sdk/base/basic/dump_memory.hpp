@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_DUMPMEMORY__
 #define __HOTPLACE_SDK_BASE_BASIC_DUMPMEMORY__
 
-#include <hotplace/sdk/base/charset.hpp>
-#include <hotplace/sdk/base/stream.hpp>
-#include <hotplace/sdk/base/types.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/stream.hpp>
+#include <sdk/base/types.hpp>
 #include <string>
 
 namespace hotplace {

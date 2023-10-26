@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_IO_BASIC_KEYVALUE__
 #define __HOTPLACE_SDK_IO_BASIC_KEYVALUE__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <map>
+#include <sdk/base.hpp>
+#include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
 namespace io {

@@ -15,7 +15,7 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_BASE64__
 #define __HOTPLACE_SDK_BASE_BASIC_BASE64__
 
-#include <hotplace/sdk/base.hpp>
+#include <sdk/base.hpp>
 
 namespace hotplace {
 

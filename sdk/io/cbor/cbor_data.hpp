@@ -15,9 +15,9 @@
 #define __HOTPLACE_SDK_IO_CBOR_CBORDATA__
 
 #include <deque>
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/cbor/cbor_object.hpp>
-#include <hotplace/sdk/io/stream/stream.hpp>
+#include <sdk/base.hpp>
+#include <sdk/io/cbor/cbor_object.hpp>
+#include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 namespace io {

@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_JOSE_SIGNING__
 #define __HOTPLACE_SDK_CRYPTO_JOSE_SIGNING__
 
-#include <hotplace/sdk/crypto/jose/types.hpp>
+#include <sdk/crypto/jose/types.hpp>
 
 namespace hotplace {
 namespace crypto {

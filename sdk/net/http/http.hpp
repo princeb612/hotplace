@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_HTTP__
 #define __HOTPLACE_SDK_NET_SERVER_HTTP__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/net/server/network_protocol.hpp>
 #include <map>
+#include <sdk/base.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
 namespace net {

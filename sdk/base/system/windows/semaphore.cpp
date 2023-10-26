@@ -10,7 +10,7 @@
 
 #include <windows.h>
 
-#include <hotplace/sdk/base/system/windows/semaphore.hpp>
+#include <sdk/base/system/windows/semaphore.hpp>
 
 namespace hotplace {
 

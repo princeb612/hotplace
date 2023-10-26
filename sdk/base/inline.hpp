@@ -14,9 +14,9 @@
 #include <string.h>
 
 #include <algorithm>
-#include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/types.hpp>
 #include <list>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 #include <string>
 #include <vector>
 

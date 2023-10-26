@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
+#include <sdk/odbc/basic/odbc_diagnose.hpp>
 
 namespace hotplace {
 namespace odbc {

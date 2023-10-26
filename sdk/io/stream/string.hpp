@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_IO_STREAM_STRING__
 #define __HOTPLACE_SDK_IO_STREAM_STRING__
 
-#include <hotplace/sdk/base/stream/bufferio.hpp>
-#include <hotplace/sdk/io/stream/stream.hpp>
+#include <sdk/base/stream/bufferio.hpp>
+#include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 namespace io {

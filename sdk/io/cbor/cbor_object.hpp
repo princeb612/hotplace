@@ -15,9 +15,9 @@
 #define __HOTPLACE_SDK_IO_CBOR_CBOROBJECT__
 
 #include <deque>
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/io/cbor/concise_binary_object_representation.hpp>
-#include <hotplace/sdk/io/stream/stream.hpp>
+#include <sdk/base.hpp>
+#include <sdk/io/cbor/concise_binary_object_representation.hpp>
+#include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 namespace io {

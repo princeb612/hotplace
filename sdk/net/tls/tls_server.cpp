@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/net/tls/tls_server.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/net/tls/tls_server.hpp>
 
 namespace hotplace {
 using namespace crypto;

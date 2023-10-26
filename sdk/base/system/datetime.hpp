@@ -14,11 +14,11 @@
 #include <string.h>
 #include <time.h>
 
-#include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/stream.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/types.hpp>
 #include <list>
+#include <sdk/base/error.hpp>
+#include <sdk/base/stream.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 
 namespace hotplace {
 

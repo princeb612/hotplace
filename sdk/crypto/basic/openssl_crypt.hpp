@@ -15,8 +15,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPT__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPT__
 
-#include <hotplace/sdk/crypto/basic/types.hpp>
-#include <hotplace/sdk/crypto/crypto.hpp>
+#include <sdk/crypto/basic/types.hpp>
+#include <sdk/crypto/crypto.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -305,6 +305,10 @@ class openssl_crypt : public crypt_t {
 
 return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext);
 return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext);
+return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, binary_t const& k, binary_t const& iv, binary_t const& a, binary_t const& p,
+                                   binary_t& q, binary_t& t);
+return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, binary_t const& k, binary_t const& iv, binary_t const& a, binary_t const& q,
+                                   binary_t& p, binary_t const& t);
 
 }  // namespace crypto
 }  // namespace hotplace

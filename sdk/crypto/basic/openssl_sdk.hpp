@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_SDK__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_SDK__
 
-#include <hotplace/sdk/crypto/basic/types.hpp>
-#include <hotplace/sdk/crypto/types.hpp>
-#include <hotplace/sdk/io/stream/stream.hpp>
+#include <sdk/crypto/basic/types.hpp>
+#include <sdk/crypto/types.hpp>
+#include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 using namespace io;

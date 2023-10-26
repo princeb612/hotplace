@@ -9,14 +9,14 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
-#include <hotplace/sdk/crypto/jose/json_object_signing.hpp>
-#include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
-#include <hotplace/sdk/io/basic/json.hpp>
-#include <hotplace/sdk/io/string/string.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/crypto/basic/openssl_sign.hpp>
+#include <sdk/crypto/jose/json_object_signing.hpp>
+#include <sdk/crypto/jose/json_object_signing_encryption.hpp>
+#include <sdk/io/basic/json.hpp>
+#include <sdk/io/string/string.hpp>
 
 namespace hotplace {
 namespace crypto {

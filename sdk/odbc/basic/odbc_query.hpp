@@ -15,9 +15,9 @@
 #ifndef __HOTPLACE_SDK_ODBC_QUERY__
 #define __HOTPLACE_SDK_ODBC_QUERY__
 
-#include <hotplace/sdk/base.hpp>
-#include <hotplace/sdk/odbc/basic/odbc_record.hpp>
-#include <hotplace/sdk/odbc/types.hpp>
+#include <sdk/base.hpp>
+#include <sdk/odbc/basic/odbc_record.hpp>
+#include <sdk/odbc/types.hpp>
 
 namespace hotplace {
 namespace odbc {

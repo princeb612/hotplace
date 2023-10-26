@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_WINNT__
 #define __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_WINNT__
 
-#include <hotplace/sdk/base.hpp>
+#include <sdk/base.hpp>
 
 using namespace hotplace;
 

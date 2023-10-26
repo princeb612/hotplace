@@ -28,10 +28,10 @@
 #ifndef __HOTPLACE_SDK_BASE_STREAM_PRINTF__
 #define __HOTPLACE_SDK_BASE_STREAM_PRINTF__
 
-#include <hotplace/sdk/base/callback.hpp>
-#include <hotplace/sdk/base/charset.hpp>
-#include <hotplace/sdk/base/stream.hpp>
-#include <hotplace/sdk/base/types.hpp>
+#include <sdk/base/callback.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/stream.hpp>
+#include <sdk/base/types.hpp>
 #include <string>
 
 namespace hotplace {

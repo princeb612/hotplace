@@ -9,16 +9,16 @@
  *
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
-#include <hotplace/sdk/crypto/cose/cbor_object_signing.hpp>
-#include <hotplace/sdk/io/cbor/cbor_array.hpp>
-#include <hotplace/sdk/io/cbor/cbor_data.hpp>
-#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
-#include <hotplace/sdk/io/cbor/cbor_map.hpp>
-#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
-#include <hotplace/sdk/io/cbor/cbor_reader.hpp>
-#include <hotplace/sdk/io/cbor/concise_binary_object_representation.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/openssl_sign.hpp>
+#include <sdk/crypto/cose/cbor_object_signing.hpp>
+#include <sdk/io/cbor/cbor_array.hpp>
+#include <sdk/io/cbor/cbor_data.hpp>
+#include <sdk/io/cbor/cbor_encode.hpp>
+#include <sdk/io/cbor/cbor_map.hpp>
+#include <sdk/io/cbor/cbor_publisher.hpp>
+#include <sdk/io/cbor/cbor_reader.hpp>
+#include <sdk/io/cbor/concise_binary_object_representation.hpp>
 
 namespace hotplace {
 using namespace io;

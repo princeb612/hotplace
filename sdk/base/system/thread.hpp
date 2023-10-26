@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_THREAD__
 #define __HOTPLACE_SDK_BASE_SYSTEM_THREAD__
 
-#include <hotplace/sdk/base/callback.hpp>
-#include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/types.hpp>
+#include <sdk/base/callback.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 
 #if defined _WIN32 || defined _WIN64
 #include <windows.h>
@@ -41,9 +41,9 @@ class thread_t {
 }  // namespace hotplace
 
 #if defined _WIN32 || defined _WIN64
-#include <hotplace/sdk/base/system/windows/thread.hpp>
+#include <sdk/base/system/windows/thread.hpp>
 #elif defined __linux__
-#include <hotplace/sdk/base/system/linux/thread.hpp>
+#include <sdk/base/system/linux/thread.hpp>
 #endif
 
 #endif

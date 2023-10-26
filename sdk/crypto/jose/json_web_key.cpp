@@ -11,13 +11,13 @@
  */
 
 #include <fstream>
-#include <hotplace/sdk/base/basic/base64.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/crypto/jose/json_web_key.hpp>
-#include <hotplace/sdk/io/basic/json.hpp>
-#include <hotplace/sdk/io/stream/file_stream.hpp>
+#include <sdk/base/basic/base64.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/crypto/jose/json_web_key.hpp>
+#include <sdk/io/basic/json.hpp>
+#include <sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
 using namespace io;

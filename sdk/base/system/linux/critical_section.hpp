@@ -13,7 +13,7 @@
 
 #include <pthread.h>
 
-#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
 

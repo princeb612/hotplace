@@ -13,8 +13,8 @@
 
 #include <stdarg.h>
 
-#include <hotplace/sdk/base/basic/variant.hpp>
-#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <sdk/base/basic/variant.hpp>
+#include <sdk/base/system/critical_section.hpp>
 #include <vector>
 
 namespace hotplace {
