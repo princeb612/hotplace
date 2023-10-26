@@ -401,6 +401,14 @@ const EVP_MD* crypto_advisor::find_evp_md(const char* name) {
     return ret_value;
 }
 
+const hint_digest_t* crypto_advisor::hintof_digest(hash_algorithm_t algorithm) {
+    const hint_digest_t* ret_value = nullptr;
+    maphint<uint32, const hint_digest_t*> hint(_md_fetch_map);
+
+    hint.find(algorithm, &ret_value);
+    return ret_value;
+}
+
 const hint_digest_t* crypto_advisor::hintof_digest(const char* name) {
     const hint_digest_t* ret_value = nullptr;
 

@@ -591,5 +591,21 @@ const hint_cipher_t evp_cipher_methods[] = {
 
 const size_t sizeof_evp_cipher_methods = RTL_NUMBER_OF(evp_cipher_methods);
 
+crypt_algorithm_t typeof_alg(const hint_cipher_t* hint) {
+    crypt_algorithm_t ret_value = crypt_algorithm_t::crypt_alg_unknown;
+    if (hint) {
+        ret_value = hint->_algorithm;
+    }
+    return ret_value;
+}
+
+crypt_mode_t typeof_mode(const hint_cipher_t* hint) {
+    crypt_mode_t ret_value = crypt_mode_t::crypt_mode_unknown;
+    if (hint) {
+        ret_value = hint->_mode;
+    }
+    return ret_value;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

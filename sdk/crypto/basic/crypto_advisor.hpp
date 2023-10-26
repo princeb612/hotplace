@@ -91,6 +91,7 @@ class crypto_advisor {
     const EVP_MD* find_evp_md(crypt_sig_t sig);
     const EVP_MD* find_evp_md(jws_t sig);
     const EVP_MD* find_evp_md(const char* name);
+    const hint_digest_t* hintof_digest(hash_algorithm_t algorithm);
     const hint_digest_t* hintof_digest(const char* name);
     hash_algorithm_t get_algorithm(crypt_sig_t sig);
     hash_algorithm_t get_algorithm(jws_t sig);
