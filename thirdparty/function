@@ -49,8 +49,8 @@ function build_openssl ()
     local install_dir=${HOTPLACE_HOME}/thirdparty
 
     if [ $OSTYPE = "msys" ]; then
-        # no-shared cause of undefined reference to `strerror_r'
-        ./Configure mingw64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=os -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd no-shared
+        # undefined reference to `strerror_r'
+        ./Configure mingw64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=os -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
     else
         ./Configure linux-x86_64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=devrandom -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
     fi
