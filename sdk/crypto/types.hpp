@@ -678,6 +678,8 @@ typedef struct _hint_cipher_t {
     crypt_mode_t _mode;
     const char* _fetchname;
 } hint_cipher_t;
+crypt_algorithm_t typeof_alg(const hint_cipher_t* hint);
+crypt_mode_t typeof_mode(const hint_cipher_t* hint);
 
 typedef struct _hint_digest_t {
     hash_algorithm_t _algorithm;
@@ -685,6 +687,7 @@ typedef struct _hint_digest_t {
     uint16 _digest_size;
 } hint_digest_t;
 
+hash_algorithm_t typeof_alg(const hint_digest_t* hint);
 uint16 sizeof_digest(const hint_digest_t* hint);
 
 typedef struct _hint_jose_encryption_t {
