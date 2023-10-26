@@ -53,18 +53,18 @@ return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, bin
         binary_t mac_key;
         binary_t enc_key;
 
-        if (k.size() < digestsize + keysize) {
+        if (k.size() < std::max(digestsize, keysize)) {
             ret = errorcode_t::bad_data;
             __leave2;
         } else {
             /* MAC_KEY = initial MAC_KEY_LEN bytes of K */
             mac_key.insert(mac_key.end(), &k[0], &k[0] + digestsize);
             /* ENC_KEY = final ENC_KEY_LEN bytes of K */
-            enc_key.insert(enc_key.end(), &k[digestsize], &k[digestsize] + keysize);
+            size_t pos = k.size() - keysize;
+            enc_key.insert(enc_key.end(), &k[pos], &k[pos] + keysize);
         }
 
         binary_t ps;
-        binary_t s;
 
         uint32 mod = p.size() % blocksize;
         uint32 imod = blocksize - mod;
@@ -72,26 +72,26 @@ return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, bin
 
         uint64 aad_len = hton64(a.size() << 3);
 
-        /* P || PS */
-        binary_t p1;
-        p1.insert(p1.end(), p.begin(), p.end());
-        p1.insert(p1.end(), ps.begin(), ps.end());
-
         /* Q = CBC-ENC(ENC_KEY, P || PS) */
         crypt_context_t* crypt_handle = nullptr;
         openssl_crypt crypt;
         crypt.open(&crypt_handle, enc_alg, enc_key, iv);
+#if 0  // documents described
+        /* P || PS */
+        binary_t p1;
+        p1.insert(p1.end(), p.begin(), p.end());
+        p1.insert(p1.end(), ps.begin(), ps.end());
         crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_padding, 0);
         crypt.encrypt(crypt_handle, p1, q);
+#else  // using openssl pkcs #7 padding
+        crypt.encrypt(crypt_handle, p, q);
+#endif
         crypt.close(crypt_handle);
-
-        /* S = IV || Q */
-        s.insert(s.end(), iv.begin(), iv.end());
-        s.insert(s.end(), q.begin(), q.end());
 
         /* A || S || AL */
         binary_t content;
         content.insert(content.end(), a.begin(), a.end());
+        /* S = IV || Q */
         content.insert(content.end(), iv.begin(), iv.end());
         content.insert(content.end(), q.begin(), q.end());
         content.insert(content.end(), (byte_t*)&aad_len, (byte_t*)&aad_len + sizeof(aad_len));
@@ -207,46 +207,24 @@ return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, bin
         binary_t mac_key;
         binary_t enc_key;
 
-        if (k.size() < digestsize + keysize) {
+        if (k.size() < std::max(digestsize, keysize)) {
             ret = errorcode_t::bad_data;
             __leave2;
         } else {
             /* MAC_KEY = initial MAC_KEY_LEN bytes of K */
             mac_key.insert(mac_key.end(), &k[0], &k[0] + digestsize);
             /* ENC_KEY = final ENC_KEY_LEN bytes of K */
-            enc_key.insert(enc_key.end(), &k[digestsize], &k[digestsize] + keysize);
+            size_t pos = k.size() - keysize;
+            enc_key.insert(enc_key.end(), &k[pos], &k[pos] + keysize);
         }
-
-        binary_t ps;
-
-        uint32 mod = p.size() % blocksize;
-        uint32 imod = blocksize - mod;
-        ps.insert(ps.end(), imod, imod);
-
-        uint64 aad_len = hton64(a.size() << 3);
-
-        /* P || PS */
-        binary_t p1;
-        p1.insert(p1.end(), p.begin(), p.end());
-        p1.insert(p1.end(), ps.begin(), ps.end());
-
-        /* Q = CBC-ENC(ENC_KEY, P || PS) */
-        crypt_context_t* crypt_handle = nullptr;
-        openssl_crypt crypt;
-        crypt.open(&crypt_handle, enc_alg, enc_key, iv);
-        crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_padding, 0);
-        crypt.decrypt(crypt_handle, q, p);
-        crypt.close(crypt_handle);
-
-        /* S = IV || Q */
-        // s.insert(s.end(), iv.begin(), iv.end());
-        // s.insert(s.end(), q.begin(), q.end());
 
         /* A || S || AL */
         binary_t content;
         content.insert(content.end(), a.begin(), a.end());
+        /* S = IV || Q */
         content.insert(content.end(), iv.begin(), iv.end());
         content.insert(content.end(), q.begin(), q.end());
+        uint64 aad_len = hton64(a.size() << 3);
         content.insert(content.end(), (byte_t*)&aad_len, (byte_t*)&aad_len + sizeof(aad_len));
 
         /* T = MAC(MAC_KEY, A || S || AL) */
@@ -257,6 +235,28 @@ return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, bin
             ret = errorcode_t::error_verify;
             __leave2;
         }
+
+        binary_t ps;
+
+        /* Q = CBC-ENC(ENC_KEY, P || PS) */
+        crypt_context_t* crypt_handle = nullptr;
+        openssl_crypt crypt;
+        crypt.open(&crypt_handle, enc_alg, enc_key, iv);
+#if 0  // documents described
+        crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_padding, 0);
+        crypt.decrypt(crypt_handle, q, p);
+        /* P || PS */
+        // binary_t p1;
+        // p1.insert(p1.end(), p.begin(), p.end());
+        // p1.insert(p1.end(), ps.begin(), ps.end());
+        // remove PS
+        if (p.size()) {
+            p.resize (p.size() - p.back());
+        }
+#else
+        crypt.decrypt(crypt_handle, q, p);
+#endif
+        crypt.close(crypt_handle);
     }
     __finally2 {
         // do nothing

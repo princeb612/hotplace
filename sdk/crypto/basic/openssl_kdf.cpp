@@ -77,7 +77,7 @@ return_t kdf_hkdf(binary_t& derived, const char* alg, size_t dlen, binary_t cons
             __leave2;
         }
 
-        ret = kdf_hkdf(derived, hint->_algorithm, dlen, key, salt, info);
+        ret = kdf_hkdf(derived, typeof_alg(hint), dlen, key, salt, info);
     }
     __finally2 {
         // do nothing
@@ -413,9 +413,10 @@ return_t kdf_pbkdf2(binary_t& derived, const char* alg, size_t dlen, const char*
         const hint_digest_t* hint = advisor->hintof_digest(alg);
         if (nullptr == hint) {
             ret = errorcode_t::not_supported;
+            __leave2;
         }
 
-        ret = kdf_pbkdf2(derived, hint->_algorithm, dlen, password, size_password, salt, size_salt, iter);
+        ret = kdf_pbkdf2(derived, typeof_alg(hint), dlen, password, size_password, salt, size_salt, iter);
     }
     __finally2 {
         // do nothing

@@ -66,11 +66,11 @@ return_t openssl_hash::open_byname(hash_context_t** handle, const char* algorith
 
         const hint_digest_t* hint_digest = advisor->hintof_digest(algorithm);
         if (hint_digest) {
-            ret = open(handle, hint_digest->_algorithm, key, keysize);
+            ret = open(handle, typeof_alg(hint_digest), key, keysize);
         } else {
             const hint_cipher_t* hint_cipher = advisor->hintof_cipher(algorithm);
             if (hint_cipher) {
-                ret = open(handle, hint_cipher->_algorithm, hint_cipher->_mode, key, keysize);
+                ret = open(handle, typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, keysize);
             }
         }
     }

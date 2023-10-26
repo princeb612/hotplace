@@ -110,8 +110,8 @@ class crypt_t {
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [outopt]
      */
-    virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted, binary_t* aad = nullptr,
-                              binary_t* tag = nullptr) = 0;
+    virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted,
+                              const binary_t* aad = nullptr, binary_t* tag = nullptr) = 0;
 
     /**
      * @brief decrypt
@@ -155,7 +155,7 @@ class crypt_t {
      * @param binary_t* tag [inopt]
      */
     virtual return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
-                              binary_t* aad = nullptr, binary_t* tag = nullptr) = 0;
+                              const binary_t* aad = nullptr, const binary_t* tag = nullptr) = 0;
 
     /**
      * @brief free
