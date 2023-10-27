@@ -87,13 +87,13 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
 
         const hint_cose_algorithm_t* enc_hint = advisor->hintof_cose_algorithm((cose_alg_t)enc_alg);
 
-        maphint<cose_param_t, binary_t> hint(handle->binarymap);
+        maphint<cose_param_t, binary_t> hint(handle->body.binarymap);
 
         binary_t iv;
 
         composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
         if (0 == iv.size()) {
-            iv = handle->binarymap[cose_param_t::cose_unsent_iv];
+            iv = handle->body.binarymap[cose_param_t::cose_unsent_iv];
         }
         if (iv.size()) {
             // TEST FAILED
@@ -127,39 +127,39 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             __leave2;
         }
 
-        binary_t authenticated_data = handle->binarymap[cose_param_t::cose_param_aad];
+        binary_t authenticated_data = handle->body.binarymap[cose_param_t::cose_param_aad];
 
         binary_t tag;
 
         cose_group_t group = enc_hint->group;
         if (cose_group_t::cose_group_aesgcm == group) {
             size_t enc_size = 0;
-            split(handle->payload, enc_size, tag, enc_hint->param.tsize);
+            split(handle->payload, enc_size, tag, enc_hint->enc.tsize);
 
             // RFC 8152 10.1.  AES GCM
-            crypt.open(&crypt_handle, enc_hint->param.algname, cek, iv);
+            crypt.open(&crypt_handle, enc_hint->enc.algname, cek, iv);
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
             crypt.close(crypt_handle);
 
         } else if (cose_group_t::cose_group_aesccm == group) {
             size_t enc_size = 0;
-            split(handle->payload, enc_size, tag, enc_hint->param.tsize);
+            split(handle->payload, enc_size, tag, enc_hint->enc.tsize);
 
             // RFC 8152 10.2.  AES CCM - explains about L and M parameters
-            crypt.open(&crypt_handle, enc_hint->param.algname, cek, iv);
-            crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_lsize, enc_hint->param.lsize);
+            crypt.open(&crypt_handle, enc_hint->enc.algname, cek, iv);
+            crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_lsize, enc_hint->enc.lsize);
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
             crypt.close(crypt_handle);
         } else if (cose_group_t::cose_group_chacha20_poly1305 == group) {
             // TEST FAILED - counter ??
             size_t enc_size = 0;
-            split(handle->payload, enc_size, tag, enc_hint->param.tsize);
+            split(handle->payload, enc_size, tag, enc_hint->enc.tsize);
 
             uint32 counter = 0;
             binary_t chacha20iv;
             openssl_chacha20_iv(chacha20iv, counter, iv);
             // RFC 8152 10.3. ChaCha20 and Poly1305
-            crypt.open(&crypt_handle, enc_hint->param.algname, cek, chacha20iv);
+            crypt.open(&crypt_handle, enc_hint->enc.algname, cek, chacha20iv);
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
             crypt.close(crypt_handle);
 #if defined DEBUG
@@ -206,7 +206,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
         composer.compose_enc_structure(handle, authenticated_data);
 
         // too many parameters... handle w/ map
-        handle->binarymap[cose_param_t::cose_param_aad] = authenticated_data;
+        handle->body.binarymap[cose_param_t::cose_param_aad] = authenticated_data;
 
         size_t size_multiitems = handle->multiitems.size();
         if (0 == size_multiitems) {
@@ -243,7 +243,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             crypto_kty_t kty;
             binary_t cek;
             key->get_privkey(pkey, kty, cek, true);
-            handle->binarymap[cose_param_t::cose_param_cek] = cek;
+            handle->body.binarymap[cose_param_t::cose_param_cek] = cek;
 
             check = dodecrypt(handle, key, output);
 
@@ -253,7 +253,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             for (iter = handle->multiitems.begin(); iter != handle->multiitems.end(); iter++) {
                 cose_parts_t& item = *iter;
 
-                // cek into handle->binarymap[cose_param_t::cose_param_cek]
+                // cek into handle->body.binarymap[cose_param_t::cose_param_cek]
                 cbor_object_signing_encryption::process_recipient(handle, key, &item);
 
                 check = dodecrypt(handle, key, output);
