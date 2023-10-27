@@ -104,12 +104,12 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                 result = true;
                 break;
             case EVP_PKEY_RSA:
-                if (nullptr != RSA_get0_d(EVP_PKEY_get0_RSA(key))) {
+                if (nullptr != RSA_get0_d(EVP_PKEY_get0_RSA((EVP_PKEY*)key))) {
                     result = true;
                 }
                 break;
             case EVP_PKEY_EC: {
-                const BIGNUM* bn = EC_KEY_get0_private_key(EVP_PKEY_get0_EC_KEY(key));
+                const BIGNUM* bn = EC_KEY_get0_private_key(EVP_PKEY_get0_EC_KEY((EVP_PKEY*)key));
                 if (nullptr != bn) {
                     result = true;
                 }

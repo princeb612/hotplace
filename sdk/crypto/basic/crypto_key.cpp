@@ -1297,7 +1297,7 @@ return_t crypto_key::extract(const EVP_PKEY* pkey, int flag, crypto_kty_t& type,
             const BIGNUM* e = nullptr;
             const BIGNUM* d = nullptr;
 
-            const RSA* rsa = EVP_PKEY_get0_RSA(pkey);
+            const RSA* rsa = EVP_PKEY_get0_RSA((EVP_PKEY*)pkey);
             RSA_get0_key(rsa, &n, &e, &d);
             if (crypt_access_t::public_key & flag) {
                 if (n && e) {
@@ -1386,7 +1386,7 @@ return_t crypto_key::extract(const EVP_PKEY* pkey, int flag, crypto_kty_t& type,
                     }
                 }
                 if (crypt_access_t::private_key & flag) {
-                    const BIGNUM* d = EC_KEY_get0_private_key(EVP_PKEY_get0_EC_KEY(pkey));
+                    const BIGNUM* d = EC_KEY_get0_private_key(EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey));
                     if (d) {
                         int len_d = BN_num_bytes(d);
 

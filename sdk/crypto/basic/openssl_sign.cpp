@@ -243,7 +243,7 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode, b
             __leave2;
         }
 
-        EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey);
+        EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey);
 
         hash.open(&hash_handle, mode);
         hash.hash(hash_handle, &input[0], input.size(), hash_value);
@@ -345,7 +345,7 @@ return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t mo
 
         binary_t buf;
         const EVP_PKEY* key = pkey;
-        RSA* rsa = (RSA*)EVP_PKEY_get0_RSA(key);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+        RSA* rsa = (RSA*)EVP_PKEY_get0_RSA((EVP_PKEY*)key);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
         int bufsize = RSA_size(rsa);
         buf.resize(bufsize);
 
@@ -510,7 +510,7 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode,
             __leave2;
         }
 
-        EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey);
+        EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey);
 
         ret = errorcode_t::error_verify;
 
@@ -611,7 +611,7 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
 
         binary_t buf;
         const EVP_PKEY* key = pkey;
-        RSA* rsa = (RSA*)EVP_PKEY_get0_RSA(key);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+        RSA* rsa = (RSA*)EVP_PKEY_get0_RSA((EVP_PKEY*)key);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
         int bufsize = RSA_size(rsa);
         buf.resize(bufsize);
 

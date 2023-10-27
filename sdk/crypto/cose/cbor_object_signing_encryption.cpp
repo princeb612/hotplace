@@ -518,7 +518,6 @@ return_t cbor_object_signing_encryption::composer::parse(cose_context_t* handle,
     cbor_object* root = nullptr;
     const char* kid = nullptr;
     std::set<bool> results;
-    cbor_object_signing_encryption::composer composer;
 
     __try2 {
         clear_context(handle);
@@ -558,12 +557,12 @@ return_t cbor_object_signing_encryption::composer::parse(cose_context_t* handle,
             cose_message_structure_map.insert(std::make_pair(item->cbor_tag, item));
         }
 
-        cose_message_handler_map[cose_message_type_protected] = &doparse_protected;
-        cose_message_handler_map[cose_message_type_unprotected] = &doparse_unprotected;
-        cose_message_handler_map[cose_message_type_payload] = &doparse_payload;
-        cose_message_handler_map[cose_message_type_signature] = &doparse_signature;
-        cose_message_handler_map[cose_message_type_items] = &doparse_recipients;
-        cose_message_handler_map[cose_message_type_tag] = &doparse_tag;
+        cose_message_handler_map[cose_message_type_protected] = &cbor_object_signing_encryption::composer::doparse_protected;
+        cose_message_handler_map[cose_message_type_unprotected] = &cbor_object_signing_encryption::composer::doparse_unprotected;
+        cose_message_handler_map[cose_message_type_payload] = &cbor_object_signing_encryption::composer::doparse_payload;
+        cose_message_handler_map[cose_message_type_signature] = &cbor_object_signing_encryption::composer::doparse_signature;
+        cose_message_handler_map[cose_message_type_items] = &cbor_object_signing_encryption::composer::doparse_recipients;
+        cose_message_handler_map[cose_message_type_tag] = &cbor_object_signing_encryption::composer::doparse_tag;
 
         const cose_message_structure_t* cose_message_map = cose_message_structure_map[cbor_tag];
         if (nullptr == cose_message_map) {
