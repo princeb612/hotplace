@@ -74,7 +74,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
 
         for (iter = methods.begin(); iter != methods.end(); iter++) {
             cose_alg_t method = *iter;
-            crypt_sig_t sig = advisor->cose_sigof(method);
+            crypt_sig_t sig = advisor->sigof(method);
 
             std::string kid;
             const EVP_PKEY* pkey = key->select(kid, sig);
@@ -104,11 +104,11 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             }
 
             binary_t tobesigned;
-            composer.compose_tobe_signed(handle, &item, tobesigned);
+            composer.compose_sig_structure(handle, &item, tobesigned);
             openssl_sign signprocessor;
             signprocessor.sign(pkey, sig, tobesigned, item.bin_data);  // signature
 
-            handle->subitems.push_back(item);
+            handle->multiitems.push_back(item);
 
             cbor_sign_protected->release();
 
@@ -124,68 +124,57 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
         // [prototype] cbor_tag_t::cose_tag_sign only
         ret = write_signature(handle, tag, output);
     }
-    __finally2 { cbor_object_signing_encryption::clear_context(handle); }
+    __finally2 {
+        cbor_object_signing_encryption::clear_context(handle);
+        // do nothing
+    }
+
+    return ret;
+}
+
+return_t cbor_object_signing::mac(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
+
+    return ret;
+}
+
+return_t cbor_object_signing::mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
 
     return ret;
 }
 
 return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
     return_t ret = errorcode_t::success;
-    return_t check = errorcode_t::success;
-    cbor_object_signing cose_sign;
-    std::set<bool> results;
     cbor_object_signing_encryption::composer composer;
-
     __try2 {
         cbor_object_signing_encryption::clear_context(handle);
-        result = false;
 
-        composer.parse(handle, input);
-
-        const char* k = nullptr;
-
-        // maphint<cose_param_t, binary_t> hint(handle->binarymap);
-
-        binary_t tobe_signed;  // tobesigned, tobemaced
-        size_t size_subitems = handle->subitems.size();
-        std::list<cose_parts_t>::iterator iter;
-        for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
-            // binary_t cek;
-            // hint.find(cose_param_t::cose_param_cek, &cek);
-
-            cose_parts_t& item = *iter;
-            composer.compose_tobe_signed(handle, &item, tobe_signed);
-
-            int alg = 0;
-            std::string kid;
-            return_t check = errorcode_t::success;
-            check = composer.finditem(cose_key_t::cose_alg, alg, item.protected_map);
-            if (errorcode_t::success != check) {
-                check = composer.finditem(cose_key_t::cose_alg, alg, item.unprotected_map);
-                if (errorcode_t::success != check) {
-                    check = composer.finditem(cose_key_t::cose_alg, alg, handle->body.protected_map);
-                }
-            }
-            check = composer.finditem(cose_key_t::cose_kid, kid, item.unprotected_map);
-            if (errorcode_t::success != check) {
-                check = composer.finditem(cose_key_t::cose_kid, kid, handle->body.unprotected_map);
-            }
-            if (kid.size()) {
-                k = kid.c_str();
-            }
-
-            check = doverify(handle, key, k, (cose_alg_t)alg, tobe_signed, item.bin_data);
-            results.insert((errorcode_t::success == check) ? true : false);
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
 
-        if ((1 == results.size()) && (true == *results.begin())) {
-            result = true;
-            ret = errorcode_t::success;
-        } else {
-            ret = errorcode_t::error_verify;
+        ret = composer.parse(handle, input);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        switch (handle->cbor_tag) {
+            case cbor_tag_t::cose_tag_sign:
+            case cbor_tag_t::cose_tag_sign1:
+                ret = doverify_sign(handle, key, result);
+                break;
+            case cbor_tag_t::cose_tag_mac:
+            case cbor_tag_t::cose_tag_mac0:
+                ret = doverify_mac(handle, key, result);
+                break;
         }
     }
-    __finally2 { cbor_object_signing_encryption::clear_context(handle); }
+    __finally2 {
+        cbor_object_signing_encryption::clear_context(handle);
+        // do nothing
+    }
     return ret;
 }
 
@@ -206,7 +195,7 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
 
     cbor_array* cbor_signatures = (cbor_array*)(*root)[3];
     std::list<cose_parts_t>::iterator iter;
-    for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
+    for (iter = handle->multiitems.begin(); iter != handle->multiitems.end(); iter++) {
         cose_parts_t& item = *iter;
         cbor_map* cbor_sign_unprotected = nullptr;
 
@@ -223,8 +212,8 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
     return ret;
 }
 
-return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, const char* kid, cose_alg_t alg, binary_t const& tobe_signed,
-                                       binary_t const& signature) {
+return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* key, const char* kid, cose_alg_t alg, binary_t const& tobe_signed,
+                                            binary_t const& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_sign signprocessor;
@@ -236,7 +225,7 @@ return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, 
             __leave2;
         }
 
-        crypt_sig_t sig = advisor->cose_sigof(alg);
+        crypt_sig_t sig = advisor->sigof(alg);
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
         if (nullptr == hint) {
             ret = errorcode_t::request;  // study
@@ -279,6 +268,208 @@ return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, 
             default:
                 ret = errorcode_t::not_supported;  // studying...
                 break;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* key, bool& result) {
+    return_t ret = errorcode_t::success;
+    return_t check = errorcode_t::success;
+    std::set<bool> results;
+    cbor_object_signing_encryption::composer composer;
+
+    __try2 {
+        result = false;
+
+        const char* k = nullptr;
+
+        // maphint<cose_param_t, binary_t> hint(handle->binarymap);
+
+        binary_t tobe_signed;  // tobesigned, tobemaced
+        size_t size_multiitems = handle->multiitems.size();
+        if (0 == size_multiitems) {
+            composer.compose_sig_structure(handle, nullptr, tobe_signed);
+
+            int alg = 0;
+            std::string kid;
+            return_t check = errorcode_t::success;
+            check = composer.finditem(cose_key_t::cose_alg, alg, handle->body.protected_map);
+            check = composer.finditem(cose_key_t::cose_kid, kid, handle->body.unprotected_map);
+            if (kid.size()) {
+                k = kid.c_str();
+            }
+
+            check = doverify_sign(handle, key, k, (cose_alg_t)alg, tobe_signed, handle->singleitem);
+            results.insert((errorcode_t::success == check) ? true : false);
+        } else {
+            std::list<cose_parts_t>::iterator iter;
+            for (iter = handle->multiitems.begin(); iter != handle->multiitems.end(); iter++) {
+                // binary_t cek;
+                // hint.find(cose_param_t::cose_param_cek, &cek);
+
+                cose_parts_t& item = *iter;
+                composer.compose_sig_structure(handle, &item, tobe_signed);
+
+                int alg = 0;
+                std::string kid;
+                return_t check = errorcode_t::success;
+                check = composer.finditem(cose_key_t::cose_alg, alg, item.protected_map);
+                if (errorcode_t::success != check) {
+                    check = composer.finditem(cose_key_t::cose_alg, alg, item.unprotected_map);
+                    if (errorcode_t::success != check) {
+                        check = composer.finditem(cose_key_t::cose_alg, alg, handle->body.protected_map);
+                    }
+                }
+                check = composer.finditem(cose_key_t::cose_kid, kid, item.unprotected_map);
+                if (errorcode_t::success != check) {
+                    check = composer.finditem(cose_key_t::cose_kid, kid, handle->body.unprotected_map);
+                }
+                if (kid.size()) {
+                    k = kid.c_str();
+                }
+
+                check = doverify_sign(handle, key, k, (cose_alg_t)alg, tobe_signed, item.bin_data);
+                results.insert((errorcode_t::success == check) ? true : false);
+            }
+        }
+
+        if ((1 == results.size()) && (true == *results.begin())) {
+            result = true;
+            ret = errorcode_t::success;
+        } else {
+            ret = errorcode_t::error_verify;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* key) {
+    return_t ret = errorcode_t::success;
+    return_t check = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    cbor_object_signing_encryption::composer composer;
+    int enc_alg = 0;
+
+    __try2 {
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        check = composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.protected_map);
+        if (errorcode_t::success != check) {
+            check = composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.unprotected_map);
+        }
+
+        const hint_cose_algorithm_t* enc_hint = advisor->hintof_cose_algorithm((cose_alg_t)enc_alg);
+
+        maphint<cose_param_t, binary_t> hint(handle->binarymap);
+
+        const EVP_PKEY* pkey = nullptr;
+        binary_t cek;
+        hint.find(cose_param_t::cose_param_cek, &cek);
+        uint8 cbor_tag = handle->cbor_tag;
+        if (0 == cek.size()) {
+            ret = errorcode_t::no_data;
+            __leave2;
+        }
+
+        binary_t authenticated_data = handle->binarymap[cose_param_t::cose_param_aad];
+        binary_t tag;
+        openssl_sign sign;
+
+        cose_group_t group = enc_hint->group;
+        if (cose_group_t::cose_group_hmac == group) {
+            // crypto_key key;
+            // cbor_web_key cwk;
+            // cwk.add_oct(&key, nullptr, cek);
+            // const EVP_PKEY* pkey = key.any();
+            // sign.sign(pkey, advisor->sigof((cose_alg_t)enc_alg), handle->payload, tag);
+            ret = errorcode_t::failed;
+        } else if (cose_group_t::cose_group_aescmac == group) {
+            // binary_t q;
+            // binary_t iv;
+            // iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
+            // ret = aes_cbc_hmac_sha2_encrypt(enc_hint->param.algname, enc_hint->kdf.algname, cek, iv, authenticated_data, handle->payload, q, tag);
+            // if (errorcode_t::success != ret) {
+            //     __leave2;
+            // }
+            // tag.resize(enc_hint->param.tsize);
+            ret = errorcode_t::failed;
+        }
+        if (tag != handle->singleitem) {
+            ret = errorcode_t::error_verify;
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return ret;
+}
+
+return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* key, bool& result) {
+    return_t ret = errorcode_t::success;
+    return_t check = errorcode_t::success;
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
+    std::set<bool> results;
+    cbor_object_signing_encryption::composer composer;
+    // const EVP_PKEY* pkey = nullptr;
+
+    // RFC 8152 4.3.  Externally Supplied Data
+    // RFC 8152 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
+    // RFC 8152 5.4.  How to Encrypt and Decrypt for AE Algorithms
+    // RFC 8152 11.2.  Context Information Structure
+
+    __try2 {
+        result = false;
+
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        handle->debug_flag |= cose_debug_mac;
+
+        // ToMac
+        binary_t tomac;
+        composer.compose_mac_structure(handle, tomac);
+
+        // too many parameters... handle w/ map
+        handle->binarymap[cose_param_t::cose_param_aad] = tomac;
+
+        size_t size_multiitems = handle->multiitems.size();
+        if (0 == size_multiitems) {
+            check = doverify_mac(handle, key);
+
+            results.insert((errorcode_t::success == check) ? true : false);
+        } else {
+            std::list<cose_parts_t>::iterator iter;
+            for (iter = handle->multiitems.begin(); iter != handle->multiitems.end(); iter++) {
+                cose_parts_t& item = *iter;
+
+                // cek into handle->binarymap[cose_param_t::cose_param_cek]
+                cbor_object_signing_encryption::process_recipient(handle, key, &item);
+
+                check = doverify_mac(handle, key);
+
+                results.insert((errorcode_t::success == check) ? true : false);
+            }
+        }
+
+        if ((1 == results.size()) && (true == *results.begin())) {
+            result = true;
+            ret = errorcode_t::success;
+        } else {
+            ret = errorcode_t::error_verify;
         }
     }
     __finally2 {

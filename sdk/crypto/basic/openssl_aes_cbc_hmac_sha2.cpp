@@ -41,6 +41,7 @@ return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, bin
             __leave2;
         }
         uint16 keysize = sizeof_key(hint_blockcipher);
+        uint16 ivsize = sizeof_iv(hint_blockcipher);
         uint16 blocksize = sizeof_block(hint_blockcipher);
         const hint_digest_t* hint_digest = advisor->hintof_digest(mac_alg);
         if (nullptr == hint_digest) {
@@ -64,11 +65,8 @@ return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, bin
             enc_key.insert(enc_key.end(), &k[pos], &k[pos] + keysize);
         }
 
-        binary_t ps;
-
-        uint32 mod = p.size() % blocksize;
-        uint32 imod = blocksize - mod;
-        ps.insert(ps.end(), imod, imod);
+        binary_t tempiv = iv;
+        tempiv.resize(ivsize);
 
         uint64 aad_len = hton64(a.size() << 3);
 
@@ -78,6 +76,10 @@ return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, bin
         crypt.open(&crypt_handle, enc_alg, enc_key, iv);
 #if 0  // documents described
         /* P || PS */
+        binary_t ps;
+        uint32 mod = p.size() % blocksize;
+        uint32 imod = blocksize - mod;
+        ps.insert(ps.end(), imod, imod);
         binary_t p1;
         p1.insert(p1.end(), p.begin(), p.end());
         p1.insert(p1.end(), ps.begin(), ps.end());
@@ -218,6 +220,9 @@ return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, bin
             enc_key.insert(enc_key.end(), &k[pos], &k[pos] + keysize);
         }
 
+        binary_t tempiv = iv;
+        tempiv.resize(ivsize);
+
         /* A || S || AL */
         binary_t content;
         content.insert(content.end(), a.begin(), a.end());
@@ -253,7 +258,7 @@ return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, bin
         if (p.size()) {
             p.resize (p.size() - p.back());
         }
-#else
+#else  // using openssl pkcs #7 padding
         crypt.decrypt(crypt_handle, q, p);
 #endif
         crypt.close(crypt_handle);

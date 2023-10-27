@@ -423,7 +423,7 @@ class crypto_advisor {
     cose_kty_t ktyof(crypto_kty_t kty);
     crypto_kty_t ktyof(cose_kty_t kty);
     jws_t sigof(crypt_sig_t sig);
-    crypt_sig_t cose_sigof(cose_alg_t sig);
+    crypt_sig_t sigof(cose_alg_t sig);
     crypt_sig_t sigof(jws_t sig);
     cose_ec_curve_t curveof(uint32 nid);
     uint32 curveof(cose_ec_curve_t curve);

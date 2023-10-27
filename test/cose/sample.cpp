@@ -6,6 +6,17 @@
  *
  * Revision History
  * Date         Name                Description
+ *
+ * status
+ *  encoding/decoding - v
+ *  sign/verify (except CounterSign) - v
+ *  decryption (except AES-CBC-MAC, Chacha20_poly1305) - v
+ *  mac verification - yet
+ *  encryption - yet
+ *  mac - yet
+ *  sign/verify (including CounterSign) - yet
+ *  X509 - yet
+ *  untagged - yet
  */
 
 #include "sample.hpp"
@@ -22,9 +33,10 @@ using namespace hotplace::crypto;
 test_case _test_case;
 typedef struct _OPTION {
     bool dump_keys;
+    bool short_test;
     bool validate_testvector;
 
-    _OPTION() : dump_keys(false), validate_testvector(false) {
+    _OPTION() : dump_keys(false), short_test(false), validate_testvector(false) {
         // do nothing
     }
 } OPTION;
@@ -191,7 +203,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                     break;
                 case cbor_tag_t::cose_tag_mac:
                 case cbor_tag_t::cose_tag_mac0:
-                    ret = cose.verifymac(cose_handle, cose_keys, bin, result);
+                    ret = cose.verify(cose_handle, cose_keys, bin, result);
                     _test_case.test(ret, __FUNCTION__, "check4.verify %s", text ? text : "");
                     break;
                 default:
@@ -1981,7 +1993,7 @@ void test_github_example() {
                     break;
                 case cbor_tag_t::cose_tag_mac0:  // 17 (D1)
                 case cbor_tag_t::cose_tag_mac:   // 97 (D861)
-                    ret = cose.verifymac(handle, mapped_key, cbor, result);
+                    ret = cose.verify(handle, mapped_key, cbor, result);
                     break;
                 case cbor_tag_t::cose_tag_sign1:  // 18 (D2)
                 case cbor_tag_t::cose_tag_sign:   // 98 (D862)
@@ -2005,6 +2017,9 @@ void test_github_example() {
             if (handle->debug_flag & cose_debug_chacha20_poly1305) {
                 reason << "chacha20_poly1305 ";
             }
+            if (handle->debug_flag & cose_debug_mac) {
+                reason << "mac ";
+            }
 #endif
             cose.close(handle);
         }
@@ -2019,6 +2034,7 @@ int main(int argc, char** argv) {
 
     _cmdline.make_share(new cmdline_t<OPTION>);
     *_cmdline << cmdarg_t<OPTION>("-dump", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-s", "wo github examples", [&](OPTION& o, char* param) -> void { o.short_test = true; }).optional();
     *_cmdline << cmdarg_t<OPTION>("-v", "validate", [&](OPTION& o, char* param) -> void { o.validate_testvector = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
@@ -2103,7 +2119,9 @@ int main(int argc, char** argv) {
     // and a note to that effect will be placed in the JSON file.
     {
         // implementation status
-        test_github_example();
+        if (!option.short_test) {
+            test_github_example();
+        }
     }
 
     openssl_thread_cleanup();

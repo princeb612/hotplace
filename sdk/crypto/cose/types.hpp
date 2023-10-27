@@ -43,6 +43,7 @@ enum code_debug_flag_t {
     cose_debug_partial_iv = (1 << 1),
     cose_debug_hkdf_aescmac = (1 << 2),
     cose_debug_chacha20_poly1305 = (1 << 3),
+    cose_debug_mac = (1 << 4),
 };
 
 typedef std::map<int, variant_t> cose_variantmap_t;
@@ -85,8 +86,8 @@ typedef struct _cose_context_t {
     cbor_tag_t cbor_tag;
     cose_parts_t body;
     binary_t payload;
-    binary_t tag;
-    std::list<cose_parts_t> subitems;
+    binary_t singleitem;                 // signature, tag
+    std::list<cose_parts_t> multiitems;  // [+recipient], [+signature]
 
     cose_binarymap_t binarymap;
     uint32 debug_flag;
@@ -110,11 +111,11 @@ typedef struct _cose_context_t {
         body.clear();
         payload.clear();
         std::list<cose_parts_t>::iterator iter;
-        for (iter = subitems.begin(); iter != subitems.end(); iter++) {
+        for (iter = multiitems.begin(); iter != multiitems.end(); iter++) {
             cose_parts_t& item = *iter;
             item.clear();
         }
-        subitems.clear();
+        multiitems.clear();
     }
 } cose_context_t;
 
