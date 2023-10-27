@@ -48,217 +48,6 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
     return ret;
 }
 
-return_t cbor_object_encryption::compose_enc_structure(binary_t& authenticated_data, uint8 tag, binary_t const& body_protected, binary_t const& external) {
-    return_t ret = errorcode_t::success;
-    cbor_encode encoder;
-    cbor_publisher pub;
-    cbor_array* root = nullptr;
-
-    // Enc_structure = [
-    //     context : "Encrypt" / "Encrypt0" / "Enc_Recipient" /
-    //         "Mac_Recipient" / "Rec_Recipient",
-    //     protected : empty_or_serialized_map,
-    //     external_aad : bstr
-    // ]
-
-    __try2 {
-        authenticated_data.clear();
-
-        root = new cbor_array();
-
-        if (cbor_tag_t::cose_tag_encrypt == tag) {
-            *root << new cbor_data("Encrypt");
-        } else if (cbor_tag_t::cose_tag_encrypt0 == tag) {
-            *root << new cbor_data("Encrypt0");
-        } else {
-            ret = errorcode_t::request;
-            __leave2;
-        }
-
-        *root << new cbor_data(body_protected) << new cbor_data(external);
-
-        pub.publish(root, &authenticated_data);
-    }
-    __finally2 {
-        if (root) {
-            root->release();
-        }
-    }
-    return ret;
-}
-
-cbor_data* cbor_data_kdf_context_item(cose_context_t* handle, cose_parts_t* source, cose_key_t key, cose_param_t shared) {
-    return_t ret = errorcode_t::success;
-    cbor_object_signing_encryption::composer composer;
-    cbor_data* data = nullptr;
-    binary_t bin;
-    if (source) {
-        composer.finditem(key, bin, source->unprotected_map);
-    }
-    if (0 == bin.size()) {
-        bin = handle->binarymap[shared];
-    }
-    if (bin.size()) {
-        data = new cbor_data(bin);
-    } else {
-        data = new cbor_data();  // null(F6)
-    }
-    return data;
-}
-
-return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binary_t& context) {
-    return_t ret = errorcode_t::success;
-
-    // RFC 8152 11.  Key Derivation Functions (KDFs)
-    // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
-    // RFC 8152 11.2.  Context Information Structure
-
-    // reversing "Context_hex" from https://github.com/cose-wg/Examples
-    // ex. ./test-cbor <value of Context_hex>
-
-    // CDDL
-    //     PartyInfo = (
-    //         identity : bstr / nil,
-    //         nonce : bstr / int / nil,
-    //         other : bstr / nil
-    //     )
-    //     COSE_KDF_Context = [
-    //         AlgorithmID : int / tstr,
-    //         PartyUInfo : [ PartyInfo ],
-    //         PartyVInfo : [ PartyInfo ],
-    //         SuppPubInfo : [
-    //             keyDataLength : uint,
-    //             protected : empty_or_serialized_map,
-    //             ? other : bstr
-    //         ],
-    //         ? SuppPrivInfo : bstr
-    //     ]
-
-    // AlgorithmID: ... This normally is either a key wrap algorithm identifier or a content encryption algorithm identifier.
-
-    cbor_array* root = nullptr;
-
-    __try2 {
-        if (nullptr == handle || nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        int algid = 0;
-        int recp_alg = 0;
-        cbor_object_signing_encryption::composer composer;
-
-        composer.finditem(cose_key_t::cose_alg, recp_alg, source->protected_map);
-        switch (recp_alg) {
-            case cose_ecdhes_a128kw:
-            case cose_ecdhss_a128kw:
-                algid = cose_aes128kw;  // -3
-                break;
-            case cose_ecdhes_a192kw:
-            case cose_ecdhss_a192kw:
-                algid = cose_aes192kw;  // -4
-                break;
-            case cose_ecdhes_a256kw:
-            case cose_ecdhss_a256kw:
-                algid = cose_aes256kw;  // -5
-                break;
-            default:
-                composer.finditem(cose_key_t::cose_alg, algid, handle->body.protected_map);
-                break;
-        }
-
-        int keylen = 0;
-        switch (algid) {
-            case cose_aes128kw:
-            case cose_aes128gcm:
-            case cose_aescmac_128_64:
-            case cose_aescmac_128_128:
-            case cose_aesccm_16_64_128:
-            case cose_aesccm_64_64_128:
-            case cose_aesccm_16_128_128:
-            case cose_aesccm_64_128_128:
-            case cose_hkdf_sha256:
-            case cose_hkdf_aescmac128:
-            case cose_ecdhes_hkdf_256:
-            case cose_ecdhss_hkdf_256:
-            case cose_hs256_64:
-            case cose_hs256:
-                keylen = 128;
-                break;
-            case cose_aes192kw:
-            case cose_aes192gcm:
-            case cose_hs384:
-                keylen = 192;
-                break;
-            case cose_aes256kw:
-            case cose_aes256gcm:
-            case cose_aescmac_256_64:
-            case cose_aescmac_256_128:
-            case cose_aesccm_16_64_256:
-            case cose_aesccm_64_64_256:
-            case cose_aesccm_16_128_256:
-            case cose_aesccm_64_128_256:
-            case cose_hkdf_sha512:
-            case cose_hkdf_aescmac256:
-            case cose_ecdhes_hkdf_512:
-            case cose_ecdhss_hkdf_512:
-            case cose_hs512:
-                keylen = 256;
-                break;
-            default:
-                ret = errorcode_t::not_supported;  // studying
-                break;
-        }
-
-        if (0 == keylen) {
-            throw;  // studying
-        }
-
-        root = new cbor_array();
-        *root << new cbor_data(algid) << new cbor_array() << new cbor_array() << new cbor_array();
-        cbor_array* partyu = (cbor_array*)(*root)[1];
-        cbor_array* partyv = (cbor_array*)(*root)[2];
-        cbor_array* pub = (cbor_array*)(*root)[3];
-        // PartyUInfo
-        {
-            *partyu << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyu_id, cose_param_t::cose_unsent_apu_id)
-                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyu_nonce, cose_param_t::cose_unsent_apu_nonce)
-                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyu_other, cose_param_t::cose_unsent_apu_other);
-        }
-        // PartyVInfo
-        {
-            *partyv << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyv_id, cose_param_t::cose_unsent_apv_id)
-                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyv_nonce, cose_param_t::cose_unsent_apv_nonce)
-                    << cbor_data_kdf_context_item(handle, source, cose_key_t::cose_partyv_other, cose_param_t::cose_unsent_apv_other);
-        }
-        // SuppPubInfo
-        {
-            *pub << new cbor_data(keylen) << new cbor_data(source->bin_protected);
-            binary_t bin_public = handle->binarymap[cose_param_t::cose_unsent_pub_other];
-            if (bin_public.size()) {
-                *pub << new cbor_data(bin_public);
-            }
-        }
-        // SuppPrivInfo
-        {
-            binary_t bin_private = handle->binarymap[cose_param_t::cose_unsent_priv_other];
-            if (bin_private.size()) {
-                *root << new cbor_data(bin_private);
-            }
-        }
-
-        cbor_publisher publisher;
-        publisher.publish(root, &context);
-    }
-    __finally2 {
-        if (root) {
-            root->release();
-        }
-    }
-
-    return ret;
-}
-
 return_t split(binary_t const& source, size_t& sizeof_ciphertext, binary_t& tag, size_t tagsize) {
     // RFC 8152 Combine the authentication tag for encryption algorithms with the ciphertext.
     return_t ret = errorcode_t::success;
@@ -439,7 +228,6 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
     __try2 {
         cbor_object_signing_encryption::clear_context(handle);
-        ret = errorcode_t::error_verify;
         result = false;
 
         if (nullptr == handle || nullptr == key) {
@@ -454,7 +242,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
         // AAD_hex
         binary_t authenticated_data;
-        compose_enc_structure(authenticated_data, handle->cbor_tag, handle->body.bin_protected, handle->binarymap[cose_param_t::cose_external]);
+        composer.compose_enc_structure(handle, authenticated_data);
 
         // too many parameters... handle w/ map
         handle->binarymap[cose_param_t::cose_param_aad] = authenticated_data;
@@ -567,14 +355,14 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // RFC 8152 8.2. Edwards-Curve Digital Signature Algorithms (EdDSAs)
             } else if (cose_group_t::cose_group_hkdf_hmac == group) {
                 // RFC 8152 12.1.2.  Direct Key with KDF
-                compose_kdf_context(handle, &item, context);
+                composer.compose_kdf_context(handle, &item, context);
 
                 // using context structure to transform the shared secret into the CEK
                 // either the 'salt' parameter of HKDF ot the 'PartyU nonce' parameter of the context structure MUST be present.
                 kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
                 // CEK solved
             } else if (cose_group_t::cose_group_hkdf_aescmac == group) {
-                compose_kdf_context(handle, &item, context);
+                composer.compose_kdf_context(handle, &item, context);
 
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 // RFC 8152 Table 12: HKDF Algorithms
@@ -600,7 +388,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 dh_key_agreement(pkey, epk, secret);
 
-                compose_kdf_context(handle, &item, context);
+                composer.compose_kdf_context(handle, &item, context);
 
                 salt.resize(alg_hint->kdf.dlen);
                 kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
@@ -610,7 +398,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 dh_key_agreement(pkey, epk, secret);
 
-                compose_kdf_context(handle, &item, context);
+                composer.compose_kdf_context(handle, &item, context);
 
                 salt.resize(alg_hint->kdf.dlen);
                 kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
@@ -620,7 +408,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // RFC 8152 12.2.1. AES Key Wrap
                 dh_key_agreement(pkey, epk, secret);
 
-                compose_kdf_context(handle, &item, context);
+                composer.compose_kdf_context(handle, &item, context);
 
                 salt.resize(alg_hint->kdf.dlen);
                 kdf_hkdf(kek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
@@ -704,6 +492,8 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
         if ((1 == results.size()) && (true == *results.begin())) {
             result = true;
             ret = errorcode_t::success;
+        } else {
+            ret = errorcode_t::error_verify;
         }
     }
     __finally2 { cbor_object_signing_encryption::clear_context(handle); }

@@ -77,18 +77,6 @@ class cbor_object_signing {
      * @return  error code (see error.hpp)
      */
     return_t doverify(cose_context_t* handle, crypto_key* key, const char* kid, cose_alg_t alg, binary_t const& tobesigned, binary_t const& signature);
-    /**
-     * @brief   compose the ToBeSigned/ToBeMaced
-     * @param   binary_t& tobesigned [out]
-     * @param   uint8 tag [in]
-     * @param   binary_t const& body_protected [in]
-     * @param   binary_t const& sign_protected [in]
-     * @param   binary_t const& external [in]
-     * @param   binary_t const& payload [in]
-     * @return  error code (see error.hpp)
-     */
-    return_t compose_tobe_processed(binary_t& tobesigned, uint8 tag, binary_t const& body_protected, binary_t const& sign_protected, binary_t const& external,
-                                    binary_t const& payload);
 };
 
 }  // namespace crypto

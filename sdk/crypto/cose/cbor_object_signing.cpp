@@ -71,10 +71,6 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
         cbor_publisher pub;
         std::list<cose_alg_t>::iterator iter;
 
-        maphint<cose_param_t, binary_t> hint(handle->binarymap);
-        binary_t external;
-        hint.find(cose_param_t::cose_external, &external);
-
         for (iter = methods.begin(); iter != methods.end(); iter++) {
             cose_alg_t method = *iter;
             crypt_sig_t sig = advisor->cose_sigof(method);
@@ -107,7 +103,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             }
 
             binary_t tobesigned;
-            compose_tobe_processed(tobesigned, tag, convert(""), item.bin_protected, external, input);
+            composer.compose_tobe_signed(handle, &item, tobesigned);
             openssl_sign signprocessor;
             signprocessor.sign(pkey, sig, tobesigned, item.bin_data);  // signature
 
@@ -141,34 +137,33 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
 
     __try2 {
         cbor_object_signing_encryption::clear_context(handle);
-
-        ret = errorcode_t::error_verify;
         result = false;
 
         composer.parse(handle, input);
 
         const char* k = nullptr;
 
-        maphint<cose_param_t, binary_t> hint(handle->binarymap);
-        binary_t external;
-        hint.find(cose_param_t::cose_external, &external);
+        // maphint<cose_param_t, binary_t> hint(handle->binarymap);
 
-        binary_t tobe_processed;  // tobesigned, tobemaced
+        binary_t tobe_signed;  // tobesigned, tobemaced
         size_t size_subitems = handle->subitems.size();
         std::list<cose_parts_t>::iterator iter;
         for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
-            binary_t cek;
-            hint.find(cose_param_t::cose_param_cek, &cek);
+            // binary_t cek;
+            // hint.find(cose_param_t::cose_param_cek, &cek);
 
             cose_parts_t& item = *iter;
-            compose_tobe_processed(tobe_processed, handle->cbor_tag, handle->body.bin_protected, item.bin_protected, external, handle->payload);
+            composer.compose_tobe_signed(handle, &item, tobe_signed);
 
             int alg = 0;
             std::string kid;
             return_t check = errorcode_t::success;
             check = composer.finditem(cose_key_t::cose_alg, alg, item.protected_map);
             if (errorcode_t::success != check) {
-                check = composer.finditem(cose_key_t::cose_alg, alg, handle->body.protected_map);
+                check = composer.finditem(cose_key_t::cose_alg, alg, item.unprotected_map);
+                if (errorcode_t::success != check) {
+                    check = composer.finditem(cose_key_t::cose_alg, alg, handle->body.protected_map);
+                }
             }
             check = composer.finditem(cose_key_t::cose_kid, kid, item.unprotected_map);
             if (errorcode_t::success != check) {
@@ -178,13 +173,15 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
                 k = kid.c_str();
             }
 
-            check = doverify(handle, key, k, (cose_alg_t)alg, tobe_processed, item.bin_data);
+            check = doverify(handle, key, k, (cose_alg_t)alg, tobe_signed, item.bin_data);
             results.insert((errorcode_t::success == check) ? true : false);
         }
 
         if ((1 == results.size()) && (true == *results.begin())) {
             result = true;
             ret = errorcode_t::success;
+        } else {
+            ret = errorcode_t::error_verify;
         }
     }
     __finally2 { cbor_object_signing_encryption::clear_context(handle); }
@@ -225,11 +222,12 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
     return ret;
 }
 
-return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, const char* kid, cose_alg_t alg, binary_t const& tobe_processed,
+return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, const char* kid, cose_alg_t alg, binary_t const& tobe_signed,
                                        binary_t const& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_sign signprocessor;
+    openssl_hash macprocessor;
 
     __try2 {
         if (nullptr == handle || nullptr == key) {
@@ -275,12 +273,7 @@ return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, 
             case cose_rs384:
             case cose_rs512:
             case cose_eddsa:
-                ret = signprocessor.verify(pkey, sig, tobe_processed, signature);
-                break;
-            case cose_aescmac_128_64:
-            case cose_aescmac_256_64:
-            case cose_aescmac_128_128:
-            case cose_aescmac_256_128:
+                ret = signprocessor.verify(pkey, sig, tobe_signed, signature);
                 break;
             default:
                 ret = errorcode_t::not_supported;  // studying...
@@ -290,58 +283,6 @@ return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, 
     __finally2 {
         // do nothing
     }
-    return ret;
-}
-
-return_t cbor_object_signing::compose_tobe_processed(binary_t& tobe_processed, uint8 tag, binary_t const& body_protected, binary_t const& sign_protected,
-                                                     binary_t const& external, binary_t const& payload) {
-    return_t ret = errorcode_t::success;
-    cbor_encode encoder;
-    cbor_publisher pub;
-    cbor_array* root = nullptr;
-
-    // RFC 8152 4.4.  Signing and Verification Process
-    // Sig_structure = [
-    //    context : "Signature" / "Signature1" / "CounterSignature",
-    //    body_protected : empty_or_serialized_map,
-    //    ? sign_protected : empty_or_serialized_map,
-    //    external_aad : bstr,
-    //    payload : bstr
-    // ]
-
-    __try2 {
-        tobe_processed.clear();
-
-        root = new cbor_array();
-
-        if (cbor_tag_t::cose_tag_sign == tag) {
-            *root << new cbor_data("Signature");
-        } else if (cbor_tag_t::cose_tag_sign1 == tag) {
-            *root << new cbor_data("Signature1");
-        } else if (cbor_tag_t::cose_tag_mac == tag) {
-            *root << new cbor_data("MAC");
-        } else if (cbor_tag_t::cose_tag_mac0 == tag) {
-            *root << new cbor_data("MAC0");
-        } else {
-            ret = errorcode_t::request;
-            __leave2;
-        }
-
-        *root << new cbor_data(body_protected);
-        if (cbor_tag_t::cose_tag_sign == tag) {
-            // This field is omitted for the COSE_Sign1 signature structure.
-            *root << new cbor_data(sign_protected);
-        }
-        *root << new cbor_data(external) << new cbor_data(payload);
-
-        pub.publish(root, &tobe_processed);
-    }
-    __finally2 {
-        if (root) {
-            root->release();
-        }
-    }
-
     return ret;
 }
 
