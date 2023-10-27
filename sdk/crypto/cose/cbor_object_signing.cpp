@@ -64,6 +64,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             __leave2;
         }
 
+        handle->cbor_tag = cbor_tag_t::cose_tag_sign;
         handle->payload = input;
 
         cbor_tag_t tag = cbor_tag_t::cose_tag_sign;
@@ -200,7 +201,7 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
     composer.build_unprotected(&cbor_body_unprotected, handle->body.unprotected_map);
 
     root = new cbor_array();
-    root->tag(true, (cbor_tag_t)tag);
+    root->tag((cbor_tag_t)tag);
     *root << new cbor_data(handle->body.bin_protected) << cbor_body_unprotected << new cbor_data(handle->payload) << new cbor_array();
 
     cbor_array* cbor_signatures = (cbor_array*)(*root)[3];

@@ -114,7 +114,8 @@ return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_
     return ret;
 }
 
-return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input,
+                                                 binary_t& output) {
     return_t ret = errorcode_t::success;
     cbor_object_encryption cose_encryption;
 
@@ -151,6 +152,30 @@ return_t cbor_object_signing_encryption::verify(cose_context_t* handle, crypto_k
     cbor_object_signing cose_sign;
 
     ret = cose_sign.verify(handle, key, input, result);
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
+    cbor_object_encryption cose_encryption;
+
+    ret = cose_encryption.mac(handle, key, method, input, output);
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
+    cbor_object_encryption cose_encryption;
+
+    ret = cose_encryption.mac(handle, key, methods, input, output);
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::verifymac(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
+    return_t ret = errorcode_t::success;
+    cbor_object_encryption cose_encryption;
+
+    ret = cose_encryption.verify(handle, key, input, result);
     return ret;
 }
 

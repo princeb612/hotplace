@@ -191,7 +191,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                     break;
                 case cbor_tag_t::cose_tag_mac:
                 case cbor_tag_t::cose_tag_mac0:
-                    ret = cose.verify(cose_handle, cose_keys, bin, result);
+                    ret = cose.verifymac(cose_handle, cose_keys, bin, result);
                     _test_case.test(ret, __FUNCTION__, "check4.verify %s", text ? text : "");
                     break;
                 default:
@@ -272,7 +272,7 @@ void test_rfc8152_c_1_1() {
     composer.build_data(&cbor_data_payload, "This is the content.");
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_sign);
+    root->tag(cbor_tag_t::cose_tag_sign);
     *root << cbor_data_protected  // protected, bstr
           << new cbor_map()       // unprotected, map
           << cbor_data_payload    // payload, bstr/nil(detached)
@@ -336,7 +336,7 @@ void test_rfc8152_c_1_2() {
     composer.build_data(&cbor_data_payload, "This is the content.");
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_sign);
+    root->tag(cbor_tag_t::cose_tag_sign);
     *root << cbor_data_protected  // protected
           << new cbor_map()       // unprotected
           << cbor_data_payload    // payload
@@ -433,7 +433,7 @@ void test_rfc8152_c_1_3() {
     composer.build_data(&cbor_data_payload, "This is the content.");
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_sign);
+    root->tag(cbor_tag_t::cose_tag_sign);
     *root << cbor_data_protected  // protected
           << new cbor_map()       // unprotected
           << cbor_data_payload    // payload
@@ -523,7 +523,7 @@ void test_rfc8152_c_1_4() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_sign);
+    root->tag(cbor_tag_t::cose_tag_sign);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -596,7 +596,7 @@ void test_rfc8152_c_2_1() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_sign1);
+    root->tag(cbor_tag_t::cose_tag_sign1);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -640,7 +640,7 @@ void test_rfc8152_c_3_1() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_encrypt);
+    root->tag(cbor_tag_t::cose_tag_encrypt);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -714,7 +714,7 @@ void test_rfc8152_c_3_2() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_encrypt);
+    root->tag(cbor_tag_t::cose_tag_encrypt);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -796,7 +796,7 @@ void test_rfc8152_c_3_3() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_encrypt);
+    root->tag(cbor_tag_t::cose_tag_encrypt);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -902,7 +902,7 @@ void test_rfc8152_c_3_4() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_encrypt);
+    root->tag(cbor_tag_t::cose_tag_encrypt);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -987,7 +987,7 @@ void test_rfc8152_c_4_1() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_encrypt0);
+    root->tag(cbor_tag_t::cose_tag_encrypt0);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -1031,7 +1031,7 @@ void test_rfc8152_c_4_2() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_encrypt0);
+    root->tag(cbor_tag_t::cose_tag_encrypt0);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -1076,7 +1076,7 @@ void test_rfc8152_c_5_1() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_mac);
+    root->tag(cbor_tag_t::cose_tag_mac);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -1146,7 +1146,7 @@ void test_rfc8152_c_5_2() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_mac);
+    root->tag(cbor_tag_t::cose_tag_mac);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -1229,7 +1229,7 @@ void test_rfc8152_c_5_3() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_mac);
+    root->tag(cbor_tag_t::cose_tag_mac);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -1299,7 +1299,7 @@ void test_rfc8152_c_5_4() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_mac);
+    root->tag(cbor_tag_t::cose_tag_mac);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -1404,7 +1404,7 @@ void test_rfc8152_c_6_1() {
     cbor_object_signing_encryption::composer composer;
 
     cbor_array* root = new cbor_array();
-    root->tag(true, cbor_tag_t::cose_tag_mac0);
+    root->tag(cbor_tag_t::cose_tag_mac0);
 
     cbor_data* cbor_data_protected = nullptr;
     {
@@ -1981,7 +1981,7 @@ void test_github_example() {
                     break;
                 case cbor_tag_t::cose_tag_mac0:  // 17 (D1)
                 case cbor_tag_t::cose_tag_mac:   // 97 (D861)
-                    ret = errorcode_t::not_supported;
+                    ret = cose.verifymac(handle, mapped_key, cbor, result);
                     break;
                 case cbor_tag_t::cose_tag_sign1:  // 18 (D2)
                 case cbor_tag_t::cose_tag_sign:   // 98 (D862)

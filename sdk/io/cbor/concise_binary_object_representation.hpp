@@ -62,6 +62,7 @@ enum cbor_major_t {
 };
 
 enum cbor_tag_t {
+    cbor_tag_unknown = -1,
     cbor_tag_std_datetime = 0,
     cbor_tag_epoch_datetime = 1,
     cbor_tag_positive_bignum = 2,
