@@ -102,7 +102,7 @@ return_t crypto_advisor::build_if_necessary() {
 #if (OPENSSL_VERSION_NUMBER < 0x30000000L)
         for (i = 0; i < RTL_NUMBER_OF(aes_wrap_methods); i++) {
             const openssl_evp_cipher_method_older_t* item = aes_wrap_methods + i;
-            _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->method._algorithm, item->method._mode), (EVP_CIPHER*)item->_cipher));
+            _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->method.algorithm, item->method.mode), (EVP_CIPHER*)item->_cipher));
             _evp_cipher_map.insert(std::make_pair(item->_cipher, &item->method));
         }
 #endif

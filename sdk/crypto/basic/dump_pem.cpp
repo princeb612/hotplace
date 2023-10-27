@@ -69,15 +69,15 @@ return_t write_pem(const EVP_PKEY* pkey, BIO* out) {
         int type = EVP_PKEY_id(pkey);
 
         if (EVP_PKEY_HMAC == type) {
-            PEM_write_bio_PrivateKey(out, pkey, nullptr, nullptr, 0, nullptr, nullptr);
+            PEM_write_bio_PrivateKey(out, (EVP_PKEY*)pkey, nullptr, nullptr, 0, nullptr, nullptr);
         } else if (EVP_PKEY_RSA == type) {
-            if (RSA_get0_d(EVP_PKEY_get0_RSA(pkey))) {
-                PEM_write_bio_RSAPrivateKey(out, EVP_PKEY_get0_RSA(pkey), nullptr, nullptr, 0, nullptr, nullptr);
+            if (RSA_get0_d(EVP_PKEY_get0_RSA((EVP_PKEY*)pkey))) {
+                PEM_write_bio_RSAPrivateKey(out, EVP_PKEY_get0_RSA((EVP_PKEY*)pkey), nullptr, nullptr, 0, nullptr, nullptr);
             } else {
-                PEM_write_bio_RSAPublicKey(out, EVP_PKEY_get0_RSA(pkey));
+                PEM_write_bio_RSAPublicKey(out, EVP_PKEY_get0_RSA((EVP_PKEY*)pkey));
             }
         } else if (EVP_PKEY_EC == type) {
-            EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey);
+            EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey);
 
             if (nullptr == ec_key) {
                 ret = errorcode_t::bad_data;

@@ -24,11 +24,11 @@ const EVP_PKEY* get_peer_key(const EVP_PKEY* pkey) {
             __leave2;
         }
 
-        int len = i2d_PUBKEY(pkey, nullptr);
+        int len = i2d_PUBKEY((EVP_PKEY*)pkey, nullptr);
         byte_t* buf = (unsigned char*)OPENSSL_malloc(len);
         if (buf) {
             byte_t* p = buf;
-            len = i2d_PUBKEY(pkey, &p);
+            len = i2d_PUBKEY((EVP_PKEY*)pkey, &p);
 
             const byte_t* p2 = buf;
             peer = d2i_PUBKEY(nullptr, &p2, len);

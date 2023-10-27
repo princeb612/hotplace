@@ -417,7 +417,7 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                 if (is_private) {
                     pkey_param_printf(crypt_item_t::item_rsa_d, priv, stream, hex_part, indent);
 
-                    const RSA* rsa = EVP_PKEY_get0_RSA(pkey);
+                    const RSA* rsa = EVP_PKEY_get0_RSA((EVP_PKEY*)pkey);
                     ret = RSA_solve((RSA*)rsa);
                     if (errorcode_t::success == ret) {
                         const BIGNUM* bn_p = RSA_get0_p(rsa);
