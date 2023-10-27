@@ -26,12 +26,12 @@ typedef std::deque<cbor_object*> cbor_item_dequeue_t;
 typedef struct _cbor_reader_context_t {
     int indef;
     cbor_object* root;
-    uint32 tag_value;
+    cbor_tag_t tag_value;  // temporary
     bool tag_flag;
     cbor_item_dequeue_t parents;
     cbor_item_dequeue_t items;
 
-    _cbor_reader_context_t() : indef(0), root(nullptr), tag_value(0), tag_flag(false) {
+    _cbor_reader_context_t() : indef(0), root(nullptr), tag_value(cbor_tag_t::cbor_tag_unknown), tag_flag(false) {
         // do nothing
     }
 } cbor_reader_context_t;
@@ -175,8 +175,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
             } else if (cbor_major_t::cbor_major_map == lead_type) {
                 push(handle, lead_type, value, flags);
             } else if (cbor_major_t::cbor_major_tag == lead_type) {
-                handle->tag_value = value;
-                handle->tag_flag = true;
+                handle->tag_value = (cbor_tag_t)value;
                 continue;
             } else if (cbor_major_t::cbor_major_simple == lead_type) {
                 cbor_simple_t simple_type = cbor_simple::is_kind_of(cur);
@@ -193,8 +192,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
                 }
             }
 
-            handle->tag_value = 0;
-            handle->tag_flag = false;
+            handle->tag_value = cbor_tag_t::cbor_tag_unknown;
         }
 #if 0
         if (i != size) {
@@ -237,17 +235,17 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int128 dat
         if (cbor_major_t::cbor_major_uint == type) {
             cbor_data* temp = nullptr;
             __try_new_catch(temp, new cbor_data(data), ret, __leave2);
-            temp->tag(handle->tag_flag, (cbor_tag_t)handle->tag_value);
+            temp->tag(handle->tag_value);
             insert(handle, temp);
         } else if (cbor_major_t::cbor_major_nint == type) {
             cbor_data* temp = nullptr;
             __try_new_catch(temp, new cbor_data(data), ret, __leave2);
-            temp->tag(handle->tag_flag, (cbor_tag_t)handle->tag_value);
+            temp->tag(handle->tag_value);
             insert(handle, temp);
         } else if (cbor_major_t::cbor_major_array == type) {
             cbor_array* temp = nullptr;
             __try_new_catch(temp, new cbor_array(flags), ret, __leave2);
-            temp->tag(handle->tag_flag, (cbor_tag_t)handle->tag_value);
+            temp->tag(handle->tag_value);
             if (0 == flags) {
                 temp->reserve(data);
             }
@@ -255,7 +253,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int128 dat
         } else if (cbor_major_t::cbor_major_map == type) {
             cbor_map* temp = nullptr;
             __try_new_catch(temp, new cbor_map(flags), ret, __leave2);
-            temp->tag(handle->tag_flag, (cbor_tag_t)handle->tag_value);
+            temp->tag(handle->tag_value);
             if (0 == flags) {
                 temp->reserve(data);
             }
@@ -264,7 +262,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int128 dat
         } else if (cbor_major_t::cbor_major_simple == type) {
             cbor_simple* temp = nullptr;
             __try_new_catch(temp, new cbor_simple(data), ret, __leave2);
-            temp->tag(handle->tag_flag, (cbor_tag_t)handle->tag_value);
+            temp->tag(handle->tag_value);
             insert(handle, temp);
         }
     }
@@ -291,7 +289,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, const char
             } else {
                 cbor_data* temp = nullptr;
                 __try_new_catch(temp, new cbor_data(data, size), ret, __leave2);
-                temp->tag(handle->tag_flag, (cbor_tag_t)handle->tag_value);
+                temp->tag(handle->tag_value);
                 insert(handle, temp);
             }
         }
@@ -319,7 +317,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, const byte
             } else {
                 cbor_data* temp = nullptr;
                 __try_new_catch(temp, new cbor_data(data, size), ret, __leave2);
-                temp->tag(handle->tag_flag, (cbor_tag_t)handle->tag_value);
+                temp->tag(handle->tag_value);
                 insert(handle, temp);
             }
         }
@@ -342,7 +340,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, float data
         if (cbor_major_t::cbor_major_float == type) {
             cbor_data* temp = nullptr;
             __try_new_catch(temp, new cbor_data(data), ret, __leave2);
-            temp->tag(handle->tag_flag, (cbor_tag_t)handle->tag_value);
+            temp->tag(handle->tag_value);
             insert(handle, temp);
         }
     }
@@ -364,7 +362,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, double dat
         if (cbor_major_t::cbor_major_float == type) {
             cbor_data* temp = nullptr;
             __try_new_catch(temp, new cbor_data(data), ret, __leave2);
-            temp->tag(handle->tag_flag, (cbor_tag_t)handle->tag_value);
+            temp->tag(handle->tag_value);
             insert(handle, temp);
         }
     }

@@ -63,7 +63,7 @@ return_t split(binary_t const& source, size_t& sizeof_ciphertext, binary_t& tag,
     return ret;
 }
 
-return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& output) {
+return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* key, binary_t& output) {
     return_t ret = errorcode_t::not_supported;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption::composer composer;
@@ -113,11 +113,12 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
         const EVP_PKEY* pkey = nullptr;
         binary_t cek;
         hint.find(cose_param_t::cose_param_cek, &cek);
+        uint8 cbor_tag = handle->cbor_tag;
         if (0 == cek.size()) {
-            if (cbor_tag_t::cose_tag_encrypt == tag) {
+            if (cbor_tag_t::cose_tag_encrypt == cbor_tag) {
                 ret = errorcode_t::request;
                 __leave2;
-            } else if (cbor_tag_t::cose_tag_encrypt0 == tag) {
+            } else if (cbor_tag_t::cose_tag_encrypt0 == cbor_tag) {
                 std::string kid;
                 const char* k = nullptr;
 
@@ -214,12 +215,12 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
 }
 
 return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, bool& result) {
-    return_t ret = errorcode_t::not_supported;
+    return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
     std::set<bool> results;
     cbor_object_signing_encryption::composer composer;
-    const EVP_PKEY* pkey = nullptr;
+    // const EVP_PKEY* pkey = nullptr;
 
     // RFC 8152 4.3.  Externally Supplied Data
     // RFC 8152 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
@@ -247,6 +248,132 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
         // too many parameters... handle w/ map
         handle->binarymap[cose_param_t::cose_param_aad] = authenticated_data;
 
+        size_t size_subitems = handle->subitems.size();
+        if (0 == size_subitems) {
+            check = dodecrypt(handle, key, output);
+
+            results.insert((errorcode_t::success == check) ? true : false);
+        } else {
+            std::list<cose_parts_t>::iterator iter;
+            for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
+                cose_parts_t& item = *iter;
+
+                // cek into handle->binarymap[cose_param_t::cose_param_cek]
+                process_recipient(handle, key, &item);
+
+                check = dodecrypt(handle, key, output);
+
+                results.insert((errorcode_t::success == check) ? true : false);
+            }
+        }
+
+        if ((1 == results.size()) && (true == *results.begin())) {
+            result = true;
+            ret = errorcode_t::success;
+        } else {
+            ret = errorcode_t::error_verify;
+        }
+    }
+    __finally2 { cbor_object_signing_encryption::clear_context(handle); }
+    return ret;
+}
+
+return_t cbor_object_encryption::mac(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
+
+    return ret;
+}
+
+return_t cbor_object_encryption::mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
+
+    return ret;
+}
+
+return_t doverify(cose_context_t* handle, crypto_key* key) { return errorcode_t::not_supported; }
+
+return_t cbor_object_encryption::verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
+    return_t ret = errorcode_t::success;
+    return_t check = errorcode_t::success;
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
+    std::set<bool> results;
+    cbor_object_signing_encryption::composer composer;
+    // const EVP_PKEY* pkey = nullptr;
+
+    // RFC 8152 4.3.  Externally Supplied Data
+    // RFC 8152 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
+    // RFC 8152 5.4.  How to Encrypt and Decrypt for AE Algorithms
+    // RFC 8152 11.2.  Context Information Structure
+
+    __try2 {
+        cbor_object_signing_encryption::clear_context(handle);
+        result = false;
+
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = composer.parse(handle, input);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // AAD_hex
+        binary_t authenticated_data;
+        composer.compose_tobe_maced(handle, authenticated_data);
+
+        // too many parameters... handle w/ map
+        handle->binarymap[cose_param_t::cose_param_aad] = authenticated_data;
+
+        size_t size_subitems = handle->subitems.size();
+        if (0 == size_subitems) {
+            check = doverify(handle, key);
+
+            results.insert((errorcode_t::success == check) ? true : false);
+        } else {
+            std::list<cose_parts_t>::iterator iter;
+            for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
+                cose_parts_t& item = *iter;
+
+                // cek into handle->binarymap[cose_param_t::cose_param_cek]
+                process_recipient(handle, key, &item);
+
+                check = doverify(handle, key);
+
+                results.insert((errorcode_t::success == check) ? true : false);
+            }
+        }
+
+        if ((1 == results.size()) && (true == *results.begin())) {
+            result = true;
+            ret = errorcode_t::success;
+        } else {
+            ret = errorcode_t::error_verify;
+        }
+    }
+    __finally2 { cbor_object_signing_encryption::clear_context(handle); }
+    return ret;
+}
+
+return_t cbor_object_encryption::process_recipient(cose_context_t* handle, crypto_key* key, cose_parts_t* item) {
+    return_t ret = errorcode_t::not_supported;
+    return_t check = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    cbor_object_signing_encryption::composer composer;
+    const EVP_PKEY* pkey = nullptr;
+
+    // RFC 8152 4.3.  Externally Supplied Data
+    // RFC 8152 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
+    // RFC 8152 5.4.  How to Encrypt and Decrypt for AE Algorithms
+    // RFC 8152 11.2.  Context Information Structure
+
+    __try2 {
+        if (nullptr == handle || nullptr == key || nullptr == item) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         const char* k = nullptr;
         binary_t kwiv;
         binary_t iv;
@@ -258,245 +385,220 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
         composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
         composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.protected_map);
 
-        size_t size_subitems = handle->subitems.size();
-        std::list<cose_parts_t>::iterator iter;
-        for (iter = handle->subitems.begin(); iter != handle->subitems.end(); iter++) {
-            cose_parts_t& item = *iter;
+        binary_t ciphertext;
+        binary_t context;
+        binary_t cek;
+        binary_t kek;
+        binary_t salt;
+        binary_t secret;
+        binary_t tag;
 
-            binary_t ciphertext;
-            binary_t context;
-            binary_t cek;
-            binary_t kek;
-            binary_t salt;
-            binary_t secret;
-            binary_t tag;
+        openssl_crypt crypt;
+        openssl_hash hash;
+        crypt_context_t* crypt_handle = nullptr;
+        hash_context_t* hash_handle = nullptr;
 
-            openssl_crypt crypt;
-            openssl_hash hash;
-            crypt_context_t* crypt_handle = nullptr;
-            hash_context_t* hash_handle = nullptr;
+        int alg = 0;
+        std::string kid;
+        return_t check = errorcode_t::success;
+        composer.finditem(cose_key_t::cose_alg, alg, item->protected_map);
+        if (0 == alg) {
+            composer.finditem(cose_key_t::cose_alg, alg, item->unprotected_map);
+        }
+        composer.finditem(cose_key_t::cose_kid, kid, item->unprotected_map);
+        if (kid.size()) {
+            k = kid.c_str();
+        }
 
-            int alg = 0;
-            std::string kid;
-            return_t check = errorcode_t::success;
-            composer.finditem(cose_key_t::cose_alg, alg, item.protected_map);
-            if (0 == alg) {
-                composer.finditem(cose_key_t::cose_alg, alg, item.unprotected_map);
-            }
-            composer.finditem(cose_key_t::cose_kid, kid, item.unprotected_map);
-            if (kid.size()) {
-                k = kid.c_str();
-            }
+        composer.finditem(cose_key_t::cose_iv, iv, item->unprotected_map);
+        composer.finditem(cose_key_t::cose_salt, salt, item->unprotected_map);
 
-            composer.finditem(cose_key_t::cose_iv, iv, item.unprotected_map);
-            composer.finditem(cose_key_t::cose_salt, salt, item.unprotected_map);
-
-            const hint_cose_algorithm_t* alg_hint = advisor->hintof_cose_algorithm((cose_alg_t)alg);
-            if (nullptr == alg_hint) {
+        const hint_cose_algorithm_t* alg_hint = advisor->hintof_cose_algorithm((cose_alg_t)alg);
+        if (nullptr == alg_hint) {
 #if defined DEBUG
-                throw errorcode_t::internal_error;
+            throw errorcode_t::internal_error;
 #endif
-                continue;
-            }
+            continue;
+        }
 
-            if (k) {
-                pkey = key->find(k, alg_hint->kty);
-            } else {
-                std::string selected_kid;
-                pkey = key->select(selected_kid, alg_hint->kty);
-            }
-            if (nullptr == pkey) {
+        if (k) {
+            pkey = key->find(k, alg_hint->kty);
+        } else {
+            std::string selected_kid;
+            pkey = key->select(selected_kid, alg_hint->kty);
+        }
+        if (nullptr == pkey) {
 #if defined DEBUG
-                handle->debug_flag |= cose_debug_notfound_key;
-                // throw errorcode_t::internal_error;
+            handle->debug_flag |= cose_debug_notfound_key;
+            // throw errorcode_t::internal_error;
 #endif
-                continue;
-            }
+            continue;
+        }
 
-            crypto_kty_t kty;
-            const EVP_PKEY* epk = nullptr;
+        crypto_kty_t kty;
+        const EVP_PKEY* epk = nullptr;
 
-            switch (alg_hint->kty) {
-                case crypto_kty_t::kty_hmac:
-                    key->get_privkey(pkey, kty, secret, true);
+        switch (alg_hint->kty) {
+            case crypto_kty_t::kty_hmac:
+                key->get_privkey(pkey, kty, secret, true);
+                break;
+            case crypto_kty_t::kty_ec:
+                if (composer.exist(cose_key_t::cose_static_key_id, item->unprotected_map)) {
+                    std::string static_keyid;
+                    composer.finditem(cose_key_t::cose_static_key_id, static_keyid, item->unprotected_map);
+                    epk = key->find(static_keyid.c_str(), alg_hint->kty);
+                } else {
+                    epk = item->epk;
+                }
+                break;
+            default:
+                break;
+        }
+
+        cose_group_t group = alg_hint->group;
+
+        // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
+
+#if defined DEBUG
+        printf("alg %i group %i\n", alg, group);
+#endif
+
+        if (cose_group_t::cose_group_aeskw == group) {
+            kek = secret;
+            crypt.open(&crypt_handle, alg_hint->param.algname, kek, kwiv);
+            crypt.decrypt(crypt_handle, item->bin_data, cek);
+            crypt.close(crypt_handle);
+        } else if (cose_group_t::cose_group_direct == group) {
+            // RFC 8152 12.1. Direct Encryption
+            cek = secret;
+        } else if (cose_group_t::cose_group_ecdsa == group) {
+            // RFC 8152 8.1. ECDSA
+        } else if (cose_group_t::cose_group_eddsa == group) {
+            // RFC 8152 8.2. Edwards-Curve Digital Signature Algorithms (EdDSAs)
+        } else if (cose_group_t::cose_group_hkdf_hmac == group) {
+            // RFC 8152 12.1.2.  Direct Key with KDF
+            composer.compose_kdf_context(handle, item, context);
+
+            // using context structure to transform the shared secret into the CEK
+            // either the 'salt' parameter of HKDF ot the 'PartyU nonce' parameter of the context structure MUST be present.
+            kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
+            // CEK solved
+        } else if (cose_group_t::cose_group_hkdf_aescmac == group) {
+            composer.compose_kdf_context(handle, item, context);
+
+            // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
+            // RFC 8152 Table 12: HKDF Algorithms
+            //      HKDF AES-MAC-128, AES-CBC-MAC-128, HKDF using AES-MAC as the PRF w/ 128-bit key
+            //      HKDF AES-MAC-256, AES-CBC-MAC-256, HKDF using AES-MAC as the PRF w/ 256-bit key
+
+            // HKDF is defined to use HMAC as the underlying PRF.  However, it is
+            // possible to use other functions in the same construct to provide a
+            // different KDF that is more appropriate in the constrained world.
+            // Specifically, one can use AES-CBC-MAC as the PRF for the expand step,
+            // but not for the extract step.  When using a good random shared secret
+            // of the correct length, the extract step can be skipped.  For the AES
+            // algorithm versions, the extract step is always skipped.
+
+            // TEST FAILED
+
+#if defined DEBUG
+            handle->debug_flag |= cose_debug_hkdf_aescmac;
+#endif
+        } else if (cose_group_t::cose_group_sha == group) {
+        } else if (cose_group_t::cose_group_ecdhes_hkdf == group) {
+            // RFC 8152 12.4.1. ECDH
+            // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
+            dh_key_agreement(pkey, epk, secret);
+
+            composer.compose_kdf_context(handle, item, context);
+
+            salt.resize(alg_hint->kdf.dlen);
+            kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
+            // CEK solved
+        } else if (cose_group_t::cose_group_ecdhss_hkdf == group) {
+            // RFC 8152 12.4.1. ECDH
+            // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
+            dh_key_agreement(pkey, epk, secret);
+
+            composer.compose_kdf_context(handle, item, context);
+
+            salt.resize(alg_hint->kdf.dlen);
+            kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
+            // CEK solved
+        } else if (cose_group_t::cose_group_ecdhes_aeskw == group || cose_group_t::cose_group_ecdhss_aeskw == group) {
+            // RFC 8152 12.5.1. ECDH
+            // RFC 8152 12.2.1. AES Key Wrap
+            dh_key_agreement(pkey, epk, secret);
+
+            composer.compose_kdf_context(handle, item, context);
+
+            salt.resize(alg_hint->kdf.dlen);
+            kdf_hkdf(kek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
+
+            // 12.5.  Key Agreement with Key Wrap
+            crypt.open(&crypt_handle, alg_hint->param.algname, kek, kwiv);
+            crypt.decrypt(crypt_handle, item->bin_data, cek);
+            crypt.close(crypt_handle);
+        } else if (cose_group_t::cose_group_rsassa_pss == group) {
+        } else if (cose_group_t::cose_group_rsa_oaep == group) {
+            crypt_enc_t mode;
+            switch (alg) {
+                case cose_alg_t::cose_rsaes_oaep_sha1:
+                    mode = crypt_enc_t::rsa_oaep;
                     break;
-                case crypto_kty_t::kty_ec:
-                    if (composer.exist(cose_key_t::cose_static_key_id, item.unprotected_map)) {
-                        std::string static_keyid;
-                        composer.finditem(cose_key_t::cose_static_key_id, static_keyid, item.unprotected_map);
-                        epk = key->find(static_keyid.c_str(), alg_hint->kty);
-                    } else {
-                        epk = item.epk;
-                    }
+                case cose_alg_t::cose_rsaes_oaep_sha256:
+                    mode = crypt_enc_t::rsa_oaep256;
+                    break;
+                case cose_alg_t::cose_rsaes_oaep_sha512:
+                    mode = crypt_enc_t::rsa_oaep512;
                     break;
                 default:
                     break;
             }
-
-            cose_group_t group = alg_hint->group;
-
-            // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
-
+            crypt.decrypt(pkey, item->bin_data, cek, mode);
+        } else if (cose_group_t::cose_group_rsassa_pkcs15 == group) {
+        } else if (cose_group_t::cose_group_aesgcm == group) {
+            // RFC 8152 10.1. AES GCM
+        } else if (cose_group_t::cose_group_hmac == group) {
+        } else if (cose_group_t::cose_group_aesccm == group) {
+            // RFC 8152 10.2. AES CCM
+        } else if (cose_group_t::cose_group_aescmac == group) {
+            // RFC 9.2. AES Message Authentication Code (AES-CBC-MAC)
+        } else if (cose_group_t::cose_group_chacha20_poly1305 == group) {
+            // RFC 8152 10.3. ChaCha20 and Poly1305
 #if defined DEBUG
-            printf("alg %i group %i\n", alg, group);
+            handle->debug_flag |= cose_debug_chacha20_poly1305;
 #endif
-
-            if (cose_group_t::cose_group_aeskw == group) {
-                kek = secret;
-                crypt.open(&crypt_handle, alg_hint->param.algname, kek, kwiv);
-                crypt.decrypt(crypt_handle, item.bin_data, cek);
-                crypt.close(crypt_handle);
-            } else if (cose_group_t::cose_group_direct == group) {
-                // RFC 8152 12.1. Direct Encryption
-                cek = secret;
-            } else if (cose_group_t::cose_group_ecdsa == group) {
-                // RFC 8152 8.1. ECDSA
-            } else if (cose_group_t::cose_group_eddsa == group) {
-                // RFC 8152 8.2. Edwards-Curve Digital Signature Algorithms (EdDSAs)
-            } else if (cose_group_t::cose_group_hkdf_hmac == group) {
-                // RFC 8152 12.1.2.  Direct Key with KDF
-                composer.compose_kdf_context(handle, &item, context);
-
-                // using context structure to transform the shared secret into the CEK
-                // either the 'salt' parameter of HKDF ot the 'PartyU nonce' parameter of the context structure MUST be present.
-                kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
-                // CEK solved
-            } else if (cose_group_t::cose_group_hkdf_aescmac == group) {
-                composer.compose_kdf_context(handle, &item, context);
-
-                // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
-                // RFC 8152 Table 12: HKDF Algorithms
-                //      HKDF AES-MAC-128, AES-CBC-MAC-128, HKDF using AES-MAC as the PRF w/ 128-bit key
-                //      HKDF AES-MAC-256, AES-CBC-MAC-256, HKDF using AES-MAC as the PRF w/ 256-bit key
-
-                // HKDF is defined to use HMAC as the underlying PRF.  However, it is
-                // possible to use other functions in the same construct to provide a
-                // different KDF that is more appropriate in the constrained world.
-                // Specifically, one can use AES-CBC-MAC as the PRF for the expand step,
-                // but not for the extract step.  When using a good random shared secret
-                // of the correct length, the extract step can be skipped.  For the AES
-                // algorithm versions, the extract step is always skipped.
-
-                // TEST FAILED
-
-#if defined DEBUG
-                handle->debug_flag |= cose_debug_hkdf_aescmac;
-#endif
-            } else if (cose_group_t::cose_group_sha == group) {
-            } else if (cose_group_t::cose_group_ecdhes_hkdf == group) {
-                // RFC 8152 12.4.1. ECDH
-                // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
-                dh_key_agreement(pkey, epk, secret);
-
-                composer.compose_kdf_context(handle, &item, context);
-
-                salt.resize(alg_hint->kdf.dlen);
-                kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
-                // CEK solved
-            } else if (cose_group_t::cose_group_ecdhss_hkdf == group) {
-                // RFC 8152 12.4.1. ECDH
-                // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
-                dh_key_agreement(pkey, epk, secret);
-
-                composer.compose_kdf_context(handle, &item, context);
-
-                salt.resize(alg_hint->kdf.dlen);
-                kdf_hkdf(cek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
-                // CEK solved
-            } else if (cose_group_t::cose_group_ecdhes_aeskw == group || cose_group_t::cose_group_ecdhss_aeskw == group) {
-                // RFC 8152 12.5.1. ECDH
-                // RFC 8152 12.2.1. AES Key Wrap
-                dh_key_agreement(pkey, epk, secret);
-
-                composer.compose_kdf_context(handle, &item, context);
-
-                salt.resize(alg_hint->kdf.dlen);
-                kdf_hkdf(kek, alg_hint->kdf.algname, alg_hint->kdf.dlen, secret, salt, context);
-
-                // 12.5.  Key Agreement with Key Wrap
-                crypt.open(&crypt_handle, alg_hint->param.algname, kek, kwiv);
-                crypt.decrypt(crypt_handle, item.bin_data, cek);
-                crypt.close(crypt_handle);
-            } else if (cose_group_t::cose_group_rsassa_pss == group) {
-            } else if (cose_group_t::cose_group_rsa_oaep == group) {
-                crypt_enc_t mode;
-                switch (alg) {
-                    case cose_alg_t::cose_rsaes_oaep_sha1:
-                        mode = crypt_enc_t::rsa_oaep;
-                        break;
-                    case cose_alg_t::cose_rsaes_oaep_sha256:
-                        mode = crypt_enc_t::rsa_oaep256;
-                        break;
-                    case cose_alg_t::cose_rsaes_oaep_sha512:
-                        mode = crypt_enc_t::rsa_oaep512;
-                        break;
-                    default:
-                        break;
-                }
-                crypt.decrypt(pkey, item.bin_data, cek, mode);
-            } else if (cose_group_t::cose_group_rsassa_pkcs15 == group) {
-            } else if (cose_group_t::cose_group_aesgcm == group) {
-                // RFC 8152 10.1. AES GCM
-            } else if (cose_group_t::cose_group_hmac == group) {
-            } else if (cose_group_t::cose_group_aesccm == group) {
-                // RFC 8152 10.2. AES CCM
-            } else if (cose_group_t::cose_group_aescmac == group) {
-                // RFC 9.2. AES Message Authentication Code (AES-CBC-MAC)
-            } else if (cose_group_t::cose_group_chacha20_poly1305 == group) {
-                // RFC 8152 10.3. ChaCha20 and Poly1305
-#if defined DEBUG
-                handle->debug_flag |= cose_debug_chacha20_poly1305;
-#endif
-            } else if (cose_group_t::cose_group_iv == group) {
-            }
-
-            basic_stream bs;
-#if defined DEBUG
-            dump_memory(authenticated_data, &bs);
-            printf("AAD\n%s\n%s\n", bs.c_str(), base16_encode(authenticated_data).c_str());
-            dump_memory(context, &bs);
-            printf("Context\n%s\n%s\n", bs.c_str(), base16_encode(context).c_str());
-            if (secret.size()) {
-                dump_memory(secret, &bs);
-                printf("secret\n%s\n%s\n", bs.c_str(), base16_encode(secret).c_str());
-            }
-            if (iv.size()) {
-                dump_memory(iv, &bs);
-                printf("IV\n%s\n%s\n", bs.c_str(), base16_encode(iv).c_str());
-            }
-            if (kek.size()) {
-                dump_memory(kek, &bs);
-                printf("KEK\n%s\n%s\n", bs.c_str(), base16_encode(kek).c_str());
-            }
-#endif
-
-            if (cek.size()) {
-#if defined DEBUG
-                dump_memory(cek, &bs);
-                printf("CEK\n%s\n%s\n", bs.c_str(), base16_encode(cek).c_str());
-#endif
-
-                // too many parameters... handle w/ map
-                handle->binarymap[cose_param_t::cose_param_cek] = cek;
-                check = dodecrypt(handle, key, cbor_tag_t::cose_tag_encrypt, output);
-
-                results.insert((errorcode_t::success == check) ? true : false);
-            }
-        }
-        if (0 == handle->subitems.size()) {
-            check = dodecrypt(handle, key, cbor_tag_t::cose_tag_encrypt0, output);
-
-            results.insert((errorcode_t::success == check) ? true : false);
+        } else if (cose_group_t::cose_group_iv == group) {
         }
 
-        if ((1 == results.size()) && (true == *results.begin())) {
-            result = true;
-            ret = errorcode_t::success;
-        } else {
-            ret = errorcode_t::error_verify;
+        handle->binarymap[cose_param_t::cose_param_cek] = cek;
+
+        basic_stream bs;
+#if defined DEBUG
+        binary_t aad = handle->binarymap[cose_param_t::cose_param_aad];
+        if (aad.size()) {
+            dump_memory(aad, &bs);
+            printf("aad\n%s\n%s\n", bs.c_str(), base16_encode(aad).c_str());
         }
+        if (secret.size()) {
+            dump_memory(secret, &bs);
+            printf("secret\n%s\n%s\n", bs.c_str(), base16_encode(secret).c_str());
+        }
+        if (iv.size()) {
+            dump_memory(iv, &bs);
+            printf("IV\n%s\n%s\n", bs.c_str(), base16_encode(iv).c_str());
+        }
+        if (kek.size()) {
+            dump_memory(kek, &bs);
+            printf("KEK\n%s\n%s\n", bs.c_str(), base16_encode(kek).c_str());
+        }
+#endif
     }
-    __finally2 { cbor_object_signing_encryption::clear_context(handle); }
+    __finally2 {
+        // do nothing
+    }
+
     return ret;
 }
 

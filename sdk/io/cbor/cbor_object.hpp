@@ -74,7 +74,7 @@ class cbor_object {
     virtual size_t size();
     uint32 get_flags();
 
-    void tag(bool use, cbor_tag_t tag);
+    void tag(cbor_tag_t tag);
     bool tagged();
     cbor_tag_t tag_value();
 
@@ -94,7 +94,6 @@ class cbor_object {
    private:
     cbor_type_t _type;
     uint32 _flags;
-    bool _tagged;  ///<< addtitional flag (cbor_tag_t::std_datetime is 0)
     cbor_tag_t _tag;
     uint64 _reserved_size;
 };

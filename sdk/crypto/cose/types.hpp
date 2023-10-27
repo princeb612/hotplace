@@ -14,6 +14,7 @@
 
 #include <sdk/base.hpp>
 #include <sdk/crypto/types.hpp>
+#include <sdk/io/cbor/concise_binary_object_representation.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -50,7 +51,6 @@ typedef std::map<cose_param_t, binary_t> cose_binarymap_t;
 
 typedef struct _cose_parts_t {
     // sign, verify
-    uint8 tag;
     binary_t bin_protected;
     binary_t bin_data;
     const EVP_PKEY* epk;
@@ -59,7 +59,7 @@ typedef struct _cose_parts_t {
     cose_variantmap_t unprotected_map;
     cose_orderlist_t unprotected_list;
 
-    _cose_parts_t() : tag(0), epk(nullptr) {}
+    _cose_parts_t() : epk(nullptr) {}
     void clear_map(cose_variantmap_t& map) {
         cose_variantmap_t::iterator map_iter;
         for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
@@ -68,7 +68,6 @@ typedef struct _cose_parts_t {
         map.clear();
     }
     void clear() {
-        tag = 0;
         bin_protected.clear();
         bin_data.clear();
         clear_map(protected_map);
@@ -83,7 +82,7 @@ typedef struct _cose_parts_t {
 } cose_parts_t;
 
 typedef struct _cose_context_t {
-    uint8 cbor_tag;
+    cbor_tag_t cbor_tag;
     cose_parts_t body;
     binary_t payload;
     binary_t tag;
@@ -92,7 +91,7 @@ typedef struct _cose_context_t {
     cose_binarymap_t binarymap;
     uint32 debug_flag;
 
-    _cose_context_t() : cbor_tag(0), debug_flag(0) {}
+    _cose_context_t() : cbor_tag(cbor_tag_t::cbor_tag_unknown), debug_flag(0) {}
     ~_cose_context_t() { clearall(); }
     void clearall() {
         clear();
@@ -107,7 +106,7 @@ typedef struct _cose_context_t {
         map.clear();
     }
     void clear() {
-        cbor_tag = 0;
+        cbor_tag = cbor_tag_t::cbor_tag_unknown;
         body.clear();
         payload.clear();
         std::list<cose_parts_t>::iterator iter;

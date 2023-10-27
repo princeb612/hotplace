@@ -219,7 +219,7 @@ void test_cbor_bstr(binary_t const& value, const char* expect) {
 void test_cbor_tstr_tag(const char* value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
-    cbor->tag(true, tag);
+    cbor->tag(tag);
     cbor_test(cbor, expect);
     cbor->release();
 }
@@ -227,7 +227,7 @@ void test_cbor_tstr_tag(const char* value, cbor_tag_t tag, const char* expect) {
 void test_cbor_bstr_tag(binary_t const& value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
-    cbor->tag(true, tag);
+    cbor->tag(tag);
     cbor_test(cbor, expect);
     cbor->release();
 }
@@ -235,7 +235,7 @@ void test_cbor_bstr_tag(binary_t const& value, cbor_tag_t tag, const char* expec
 void test_cbor_int_tag(int8 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
-    cbor->tag(true, tag);
+    cbor->tag(tag);
     cbor_test(cbor, expect);
     cbor->release();
 }
@@ -243,7 +243,7 @@ void test_cbor_int_tag(int8 value, cbor_tag_t tag, const char* expect) {
 void test_cbor_int_tag(int16 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
-    cbor->tag(true, tag);
+    cbor->tag(tag);
     cbor_test(cbor, expect);
     cbor->release();
 }
@@ -251,7 +251,7 @@ void test_cbor_int_tag(int16 value, cbor_tag_t tag, const char* expect) {
 void test_cbor_int_tag(int32 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
-    cbor->tag(true, tag);
+    cbor->tag(tag);
     cbor_test(cbor, expect);
     cbor->release();
 }
@@ -259,7 +259,7 @@ void test_cbor_int_tag(int32 value, cbor_tag_t tag, const char* expect) {
 void test_cbor_int_tag(int64 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
-    cbor->tag(true, tag);
+    cbor->tag(tag);
     cbor_test(cbor, expect);
     cbor->release();
 }
@@ -267,7 +267,7 @@ void test_cbor_int_tag(int64 value, cbor_tag_t tag, const char* expect) {
 void test_cbor_int_tag(int128 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
-    cbor->tag(true, tag);
+    cbor->tag(tag);
     cbor_test(cbor, expect);
     cbor->release();
 }
@@ -275,7 +275,7 @@ void test_cbor_int_tag(int128 value, cbor_tag_t tag, const char* expect) {
 void test_cbor_float_tag(float value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
-    cbor->tag(true, tag);
+    cbor->tag(tag);
     cbor_test(cbor, expect);
     cbor->release();
 }
@@ -283,7 +283,7 @@ void test_cbor_float_tag(float value, cbor_tag_t tag, const char* expect) {
 void test_cbor_double_tag(double value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
-    cbor->tag(true, tag);
+    cbor->tag(tag);
     cbor_test(cbor, expect);
     cbor->release();
 }
