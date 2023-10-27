@@ -32,10 +32,14 @@ enum cose_param_t {
     cose_unsent_iv = 10,
     cose_unsent_alg = 11,
 
-    // temporary
     cose_param_aad = 13,
     cose_param_cek = 14,
-    cose_param_iv = 15,
+    cose_param_context = 15,
+    cose_param_iv = 16,
+    cose_param_kek = 17,
+    cose_param_secret = 18,
+    cose_param_tobesigned = 19,
+    cose_param_tomac = 20,
 };
 enum code_debug_flag_t {
     // simply want to know reason why routine is failed from testcase report
@@ -54,13 +58,16 @@ typedef struct _cose_parts_t {
     // sign, verify
     binary_t bin_protected;
     binary_t bin_data;
+    cose_alg_t alg;
+    std::string kid;
     const EVP_PKEY* epk;
     cose_variantmap_t protected_map;
     cose_orderlist_t protected_list;
     cose_variantmap_t unprotected_map;
     cose_orderlist_t unprotected_list;
+    cose_binarymap_t binarymap;  // external, unsent, cek, kek, context, aad, secret, tobesigned/tomac
 
-    _cose_parts_t() : epk(nullptr) {}
+    _cose_parts_t() : alg(cose_alg_t::cose_unknown), epk(nullptr) {}
     void clear_map(cose_variantmap_t& map) {
         cose_variantmap_t::iterator map_iter;
         for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
@@ -68,7 +75,12 @@ typedef struct _cose_parts_t {
         }
         map.clear();
     }
+    void clearall() {
+        clear();
+        binarymap.clear();
+    }
     void clear() {
+        alg = cose_alg_t::cose_unknown;
         bin_protected.clear();
         bin_data.clear();
         clear_map(protected_map);
@@ -86,17 +98,16 @@ typedef struct _cose_context_t {
     cbor_tag_t cbor_tag;
     cose_parts_t body;
     binary_t payload;
-    binary_t singleitem;                 // signature, tag
+    binary_t singleitem;                 // signature, tag, ...
     std::list<cose_parts_t> multiitems;  // [+recipient], [+signature]
 
-    cose_binarymap_t binarymap;
     uint32 debug_flag;
 
     _cose_context_t() : cbor_tag(cbor_tag_t::cbor_tag_unknown), debug_flag(0) {}
     ~_cose_context_t() { clearall(); }
     void clearall() {
         clear();
-        binarymap.clear();
+        body.clearall();
         debug_flag = 0;
     }
     void clear_map(cose_variantmap_t& map) {

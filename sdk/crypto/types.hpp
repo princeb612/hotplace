@@ -716,13 +716,13 @@ typedef struct _hint_cose_algorithm_t {
     struct {
         const char* algname;
         int16 dlen;
-    } kdf;
+    } dgst;
     struct {
         const char* algname;
         int16 ksize;
         int16 tsize;
         int16 lsize;
-    } param;
+    } enc;
     // studying
 } hint_cose_algorithm_t;
 

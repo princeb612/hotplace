@@ -344,21 +344,37 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_hs256_64,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_hmac,
+        {
+            "sha256",
+            8,
+        },
     },
     {
         cose_alg_t::cose_hs256,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_hmac,
+        {
+            "sha256",
+            32,
+        },
     },
     {
         cose_alg_t::cose_hs384,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_hmac,
+        {
+            "sha384",
+            48,
+        },
     },
     {
         cose_alg_t::cose_hs512,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_hmac,
+        {
+            "sha512",
+            64,
+        },
     },
     {
         cose_alg_t::cose_aesccm_16_64_128,
