@@ -47,6 +47,7 @@ class cbor_object_signing_encryption {
      * @param   cose_context_t* handle [in]
      * @param   cose_param_t id [in] cose_external, cose_public, cose_private
      * @param   binary_t const& bin [in]
+     * @return  error code (see error.hpp)
      */
     return_t set(cose_context_t* handle, cose_param_t id, binary_t const& bin);
 
@@ -128,6 +129,7 @@ class cbor_object_signing_encryption {
 
         /**
          * @brief   cbor_data for protected
+         * @return  error code (see error.hpp)
          */
         return_t build_protected(cbor_data** object);
         return_t build_protected(cbor_data** object, cose_variantmap_t& input);
@@ -135,6 +137,7 @@ class cbor_object_signing_encryption {
         return_t build_protected(cbor_data** object, cbor_map* input);
         /**
          * @brief   cbor_map for unprotected
+         * @return  error code (see error.hpp)
          */
         return_t build_unprotected(cbor_map** object);
         return_t build_unprotected(cbor_map** object, cose_variantmap_t& input);
@@ -142,6 +145,7 @@ class cbor_object_signing_encryption {
         return_t build_data(cbor_data** object, const char* payload);
         /**
          * @brief   cbor_data for payload
+         * @return  error code (see error.hpp)
          */
         return_t build_data(cbor_data** object, const byte_t* payload, size_t size);
         return_t build_data(cbor_data** object, binary_t const& payload);
@@ -172,6 +176,7 @@ class cbor_object_signing_encryption {
          * @brief   read unprotected (cbor_map) to context
          * @param   cbor_map* data [in]
          * @param   cose_parts_t& part [out]
+         * @return  error code (see error.hpp)
          */
         return_t parse_unprotected(cbor_map* data, cose_parts_t& part);
         /**
@@ -186,6 +191,7 @@ class cbor_object_signing_encryption {
          * @param   int key [in]
          * @param   int& value [out]
          * @param   cose_variantmap_t& from [in]
+         * @return  error code (see error.hpp)
          */
         return_t finditem(int key, int& value, cose_variantmap_t& from);
         /**
@@ -193,6 +199,7 @@ class cbor_object_signing_encryption {
          * @param   int key [in]
          * @param   std::string& value [out]
          * @param   cose_variantmap_t& from [in]
+         * @return  error code (see error.hpp)
          */
         return_t finditem(int key, std::string& value, cose_variantmap_t& from);
         /**
@@ -200,10 +207,43 @@ class cbor_object_signing_encryption {
          * @param   int key [in]
          * @param   binary_t& value [out]
          * @param   cose_variantmap_t& from [in]
+         * @return  error code (see error.hpp)
          */
         return_t finditem(int key, binary_t& value, cose_variantmap_t& from);
+        /**
+         * @brief   compose Enc_structure
+         * @param   cose_context_t* handle [in]
+         * @param   binary_t& authenticated_data [out]
+         * @return  error code (see error.hpp)
+         */
+        return_t compose_enc_structure(cose_context_t* handle, binary_t& authenticated_data);
+        /**
+         * @brief   compose the COSE_KDF_Context
+         * @param   cose_context_t* handle [in]
+         * @param   cose_parts_t* parts [in]
+         * @param   binary_t& kdf_context [out]
+         * @return  error code (see error.hpp)
+         */
+        return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binary_t& kdf_context);
+        /**
+         * @brief   compose the ToBeSigned
+         * @param   cose_context_t* handle [in]
+         * @param   cose_parts_t* parts [in]
+         * @param   binary_t& tobesigned [out]
+         * @return  error code (see error.hpp)
+         */
+        return_t compose_tobe_signed(cose_context_t* handle, cose_parts_t* parts, binary_t& tobesigned);
+        /**
+         * @brief   compose the ToMaced
+         * @param   cose_context_t* handle [in]
+         * @param   binary_t& tobemaced [out]
+         * @return  error code (see error.hpp)
+         */
+        return_t compose_tobe_maced(cose_context_t* handle, binary_t& tobemaced);
 
        protected:
+        cbor_data* docompose_kdf_context_item(cose_context_t* handle, cose_parts_t* source, cose_key_t key, cose_param_t shared);
+
         return_t doparse_protected(cose_context_t* handle, cbor_object* object);
         return_t doparse_unprotected(cose_context_t* handle, cbor_object* object);
         return_t doparse_payload(cose_context_t* handle, cbor_object* object);

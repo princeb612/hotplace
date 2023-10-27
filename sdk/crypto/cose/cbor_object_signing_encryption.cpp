@@ -792,6 +792,310 @@ return_t cbor_object_signing_encryption::composer::finditem(int key, binary_t& v
     return ret;
 }
 
+return_t cbor_object_signing_encryption::composer::compose_enc_structure(cose_context_t* handle, binary_t& authenticated_data) {
+    return_t ret = errorcode_t::success;
+    cbor_encode encoder;
+    cbor_publisher pub;
+    cbor_array* root = nullptr;
+
+    // 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
+    // Enc_structure = [
+    //     context : "Encrypt" / "Encrypt0" / "Enc_Recipient" /
+    //         "Mac_Recipient" / "Rec_Recipient",
+    //     protected : empty_or_serialized_map,
+    //     external_aad : bstr
+    // ]
+
+    __try2 {
+        authenticated_data.clear();
+
+        root = new cbor_array();
+
+        uint8 tag = handle->cbor_tag;
+        if (cbor_tag_t::cose_tag_encrypt == tag) {
+            *root << new cbor_data("Encrypt");
+        } else if (cbor_tag_t::cose_tag_encrypt0 == tag) {
+            *root << new cbor_data("Encrypt0");
+        } else {
+            ret = errorcode_t::request;
+            __leave2;
+        }
+
+        *root << new cbor_data(handle->body.bin_protected) << new cbor_data(handle->binarymap[cose_param_t::cose_external]);
+
+        pub.publish(root, &authenticated_data);
+    }
+    __finally2 {
+        if (root) {
+            root->release();
+        }
+    }
+    return ret;
+}
+
+cbor_data* cbor_object_signing_encryption::composer::docompose_kdf_context_item(cose_context_t* handle, cose_parts_t* source, cose_key_t key,
+                                                                                cose_param_t shared) {
+    return_t ret = errorcode_t::success;
+    cbor_object_signing_encryption::composer composer;
+    cbor_data* data = nullptr;
+    binary_t bin;
+    if (source) {
+        composer.finditem(key, bin, source->unprotected_map);
+    }
+    if (0 == bin.size()) {
+        bin = handle->binarymap[shared];
+    }
+    if (bin.size()) {
+        data = new cbor_data(bin);
+    } else {
+        data = new cbor_data();  // null(F6)
+    }
+    return data;
+}
+
+return_t cbor_object_signing_encryption::composer::compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binary_t& kdf_context) {
+    return_t ret = errorcode_t::success;
+
+    // RFC 8152 11.  Key Derivation Functions (KDFs)
+    // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
+    // RFC 8152 11.2.  Context Information Structure
+
+    // reversing "Context_hex" from https://github.com/cose-wg/Examples
+    // ex. ./test-cbor <value of Context_hex>
+
+    // CDDL
+    //     PartyInfo = (
+    //         identity : bstr / nil,
+    //         nonce : bstr / int / nil,
+    //         other : bstr / nil
+    //     )
+    //     COSE_KDF_Context = [
+    //         AlgorithmID : int / tstr,
+    //         PartyUInfo : [ PartyInfo ],
+    //         PartyVInfo : [ PartyInfo ],
+    //         SuppPubInfo : [
+    //             keyDataLength : uint,
+    //             protected : empty_or_serialized_map,
+    //             ? other : bstr
+    //         ],
+    //         ? SuppPrivInfo : bstr
+    //     ]
+
+    // AlgorithmID: ... This normally is either a key wrap algorithm identifier or a content encryption algorithm identifier.
+
+    cbor_array* root = nullptr;
+
+    __try2 {
+        if (nullptr == handle || nullptr == source) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        int algid = 0;
+        int recp_alg = 0;
+        cbor_object_signing_encryption::composer composer;
+
+        composer.finditem(cose_key_t::cose_alg, recp_alg, source->protected_map);
+        switch (recp_alg) {
+            case cose_ecdhes_a128kw:
+            case cose_ecdhss_a128kw:
+                algid = cose_aes128kw;  // -3
+                break;
+            case cose_ecdhes_a192kw:
+            case cose_ecdhss_a192kw:
+                algid = cose_aes192kw;  // -4
+                break;
+            case cose_ecdhes_a256kw:
+            case cose_ecdhss_a256kw:
+                algid = cose_aes256kw;  // -5
+                break;
+            default:
+                composer.finditem(cose_key_t::cose_alg, algid, handle->body.protected_map);
+                break;
+        }
+
+        int keylen = 0;
+        switch (algid) {
+            case cose_aes128kw:
+            case cose_aes128gcm:
+            case cose_aescmac_128_64:
+            case cose_aescmac_128_128:
+            case cose_aesccm_16_64_128:
+            case cose_aesccm_64_64_128:
+            case cose_aesccm_16_128_128:
+            case cose_aesccm_64_128_128:
+            case cose_hkdf_sha256:
+            case cose_hkdf_aescmac128:
+            case cose_ecdhes_hkdf_256:
+            case cose_ecdhss_hkdf_256:
+            case cose_hs256_64:
+            case cose_hs256:
+                keylen = 128;
+                break;
+            case cose_aes192kw:
+            case cose_aes192gcm:
+            case cose_hs384:
+                keylen = 192;
+                break;
+            case cose_aes256kw:
+            case cose_aes256gcm:
+            case cose_aescmac_256_64:
+            case cose_aescmac_256_128:
+            case cose_aesccm_16_64_256:
+            case cose_aesccm_64_64_256:
+            case cose_aesccm_16_128_256:
+            case cose_aesccm_64_128_256:
+            case cose_hkdf_sha512:
+            case cose_hkdf_aescmac256:
+            case cose_ecdhes_hkdf_512:
+            case cose_ecdhss_hkdf_512:
+            case cose_hs512:
+                keylen = 256;
+                break;
+            default:
+                ret = errorcode_t::not_supported;  // studying
+                break;
+        }
+
+        if (0 == keylen) {
+            throw;  // studying
+        }
+
+        root = new cbor_array();
+        *root << new cbor_data(algid) << new cbor_array() << new cbor_array() << new cbor_array();
+        cbor_array* partyu = (cbor_array*)(*root)[1];
+        cbor_array* partyv = (cbor_array*)(*root)[2];
+        cbor_array* pub = (cbor_array*)(*root)[3];
+        // PartyUInfo
+        {
+            *partyu << docompose_kdf_context_item(handle, source, cose_key_t::cose_partyu_id, cose_param_t::cose_unsent_apu_id)
+                    << docompose_kdf_context_item(handle, source, cose_key_t::cose_partyu_nonce, cose_param_t::cose_unsent_apu_nonce)
+                    << docompose_kdf_context_item(handle, source, cose_key_t::cose_partyu_other, cose_param_t::cose_unsent_apu_other);
+        }
+        // PartyVInfo
+        {
+            *partyv << docompose_kdf_context_item(handle, source, cose_key_t::cose_partyv_id, cose_param_t::cose_unsent_apv_id)
+                    << docompose_kdf_context_item(handle, source, cose_key_t::cose_partyv_nonce, cose_param_t::cose_unsent_apv_nonce)
+                    << docompose_kdf_context_item(handle, source, cose_key_t::cose_partyv_other, cose_param_t::cose_unsent_apv_other);
+        }
+        // SuppPubInfo
+        {
+            *pub << new cbor_data(keylen) << new cbor_data(source->bin_protected);
+            binary_t bin_public = handle->binarymap[cose_param_t::cose_unsent_pub_other];
+            if (bin_public.size()) {
+                *pub << new cbor_data(bin_public);
+            }
+        }
+        // SuppPrivInfo
+        {
+            binary_t bin_private = handle->binarymap[cose_param_t::cose_unsent_priv_other];
+            if (bin_private.size()) {
+                *root << new cbor_data(bin_private);
+            }
+        }
+
+        cbor_publisher publisher;
+        publisher.publish(root, &kdf_context);
+    }
+    __finally2 {
+        if (root) {
+            root->release();
+        }
+    }
+
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::composer::compose_tobe_signed(cose_context_t* handle, cose_parts_t* parts, binary_t& tobesigned) {
+    return_t ret = errorcode_t::success;
+    cbor_encode encoder;
+    cbor_publisher pub;
+    cbor_array* root = nullptr;
+
+    // RFC 8152 4.4.  Signing and Verification Process
+    // Sig_structure = [
+    //    context : "Signature" / "Signature1" / "CounterSignature",
+    //    body_protected : empty_or_serialized_map,
+    //    ? sign_protected : empty_or_serialized_map,
+    //    external_aad : bstr,
+    //    payload : bstr
+    // ]
+
+    __try2 {
+        tobesigned.clear();
+
+        root = new cbor_array();
+
+        uint8 tag = handle->cbor_tag;
+        if (cbor_tag_t::cose_tag_sign == tag) {
+            *root << new cbor_data("Signature");
+        } else if (cbor_tag_t::cose_tag_sign1 == tag) {
+            *root << new cbor_data("Signature1");
+        } else {
+            ret = errorcode_t::request;
+            __leave2;
+        }
+
+        *root << new cbor_data(handle->body.bin_protected);
+        if (cbor_tag_t::cose_tag_sign == tag && parts) {
+            // This field is omitted for the COSE_Sign1 signature structure.
+            *root << new cbor_data(parts->bin_protected);
+        }
+        *root << new cbor_data(handle->binarymap[cose_param_t::cose_external]) << new cbor_data(handle->payload);
+
+        pub.publish(root, &tobesigned);
+    }
+    __finally2 {
+        if (root) {
+            root->release();
+        }
+    }
+
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::composer::compose_tobe_maced(cose_context_t* handle, binary_t& tobemaced) {
+    return_t ret = errorcode_t::success;
+    cbor_encode encoder;
+    cbor_publisher pub;
+    cbor_array* root = nullptr;
+
+    // RFC 8152 6.3.  How to Compute and Verify a MAC
+    // MAC_structure = [
+    //     context : "MAC" / "MAC0",
+    //     protected : empty_or_serialized_map,
+    //     external_aad : bstr,
+    //     payload : bstr
+    // ]
+
+    __try2 {
+        tobemaced.clear();
+
+        root = new cbor_array();
+
+        uint8 tag = handle->cbor_tag;
+        if (cbor_tag_t::cose_tag_mac == tag) {
+            *root << new cbor_data("MAC");
+        } else if (cbor_tag_t::cose_tag_mac0 == tag) {
+            *root << new cbor_data("MAC0");
+        } else {
+            ret = errorcode_t::request;
+            __leave2;
+        }
+
+        *root << new cbor_data(handle->body.bin_protected) << new cbor_data(handle->binarymap[cose_param_t::cose_external]) << new cbor_data(handle->payload);
+
+        pub.publish(root, &tobemaced);
+    }
+    __finally2 {
+        if (root) {
+            root->release();
+        }
+    }
+
+    return ret;
+}
+
 return_t cbor_object_signing_encryption::composer::doparse_protected(cose_context_t* handle, cbor_object* object) {
     return_t ret = errorcode_t::success;
     __try2 {
