@@ -118,7 +118,7 @@ void test0() {
     crypto_key crypto_key_es521;
     jwk.load_file(&crypto_key_es521, "rfc7516_A4.jwk");
 
-    EVP_PKEY* pkey = crypto_key_es521.any();
+    const EVP_PKEY* pkey = crypto_key_es521.any();
     if (pkey) {
         basic_stream bs;
         dump_key(pkey, &bs);
@@ -763,7 +763,7 @@ void test_rfc7516_A1_test() {
     basic_stream bs;
     crypto_key key;
     json_web_key jwk;
-    EVP_PKEY* pkey;
+    const EVP_PKEY* pkey;
     std::string kid;
     std::string jose_header_encoded;
     std::string encrypted_key_encoded;
@@ -1325,11 +1325,11 @@ int test_ecdh() {
     keyset.add_ec(&keys, "alice", NID_secp384r1);
     keyset.add_ec(&keys, "bob", NID_secp384r1);
 
-    EVP_PKEY* alicePrivateKey = (EVP_PKEY*)keys.find("alice", crypto_kty_t::kty_ec);
-    EVP_PKEY* bobPrivateKey = (EVP_PKEY*)keys.find("bob", crypto_kty_t::kty_ec);
+    const EVP_PKEY* alicePrivateKey = keys.find("alice", crypto_kty_t::kty_ec);
+    const EVP_PKEY* bobPrivateKey = keys.find("bob", crypto_kty_t::kty_ec);
 
-    EVP_PKEY* alicePublicKey = (EVP_PKEY*)get_peer_key(alicePrivateKey);
-    EVP_PKEY* bobPublicKey = (EVP_PKEY*)get_peer_key(bobPrivateKey);
+    const EVP_PKEY* alicePublicKey = get_peer_key(alicePrivateKey);
+    const EVP_PKEY* bobPublicKey = get_peer_key(bobPrivateKey);
 
     keys.get_public_key(alicePrivateKey, x_alice, y_alice);
     keys.get_private_key(alicePrivateKey, d_alice);
@@ -1339,8 +1339,8 @@ int test_ecdh() {
     dh_key_agreement(alicePrivateKey, bobPublicKey, secret_alice);
     dh_key_agreement(bobPrivateKey, alicePublicKey, secret_bob);
 
-    EVP_PKEY_free(alicePublicKey);
-    EVP_PKEY_free(bobPublicKey);
+    EVP_PKEY_free((EVP_PKEY*)alicePublicKey);
+    EVP_PKEY_free((EVP_PKEY*)bobPublicKey);
 
     std::cout << "alice public key  x : " << base16_encode(x_alice).c_str() << std::endl
               << "alice public key  y : " << base16_encode(y_alice).c_str() << std::endl
@@ -1373,8 +1373,8 @@ void test_rfc7518_C() {
     key_alice.for_each(dump_crypto_key, nullptr);
     key_bob.for_each(dump_crypto_key, nullptr);
 
-    EVP_PKEY* pkey_alice = key_alice.select(crypto_use_t::use_enc);
-    EVP_PKEY* pkey_bob = key_bob.select(crypto_use_t::use_enc);
+    const EVP_PKEY* pkey_alice = key_alice.select(crypto_use_t::use_enc);
+    const EVP_PKEY* pkey_bob = key_bob.select(crypto_use_t::use_enc);
 
     binary_t secret_bob;
     dh_key_agreement(pkey_bob, pkey_alice, secret_bob);
@@ -1824,7 +1824,7 @@ void test_jwk_thumbprint() {
 
     std::cout << "key item : " << key.size() << std::endl;
 
-    EVP_PKEY* pkey = key.any();
+    const EVP_PKEY* pkey = key.any();
     key.get_public_key(pkey, pub1, pub2);
 
     std::cout << "x : " << base16_encode(pub1).c_str() << std::endl << "y : " << base16_encode(pub2).c_str() << std::endl;
@@ -1888,7 +1888,7 @@ void test_rfc8037() {
     binary_t pub1;
     binary_t pub2;
     binary_t priv;
-    EVP_PKEY* pkey = key.any();
+    const EVP_PKEY* pkey = key.any();
     key.get_key(pkey, pub1, pub2, priv);
 
     std::cout << "x : " << base16_encode(pub1).c_str() << std::endl << "d : " << base16_encode(priv).c_str() << std::endl;
@@ -2006,7 +2006,7 @@ void test_okp() {
 }
 
 void key_dump(crypto_key* key, jwa_t alg, crypto_use_t use) {
-    EVP_PKEY* pkey = nullptr;
+    const EVP_PKEY* pkey = nullptr;
     // size_t key_length = 0;
     binary_t pub1;
     binary_t pub2;
@@ -2029,7 +2029,7 @@ void key_dump(crypto_key* key, jwa_t alg, crypto_use_t use) {
 }
 
 void key_dump(crypto_key* key, jws_t sig, crypto_use_t use) {
-    EVP_PKEY* pkey = nullptr;
+    const EVP_PKEY* pkey = nullptr;
     // size_t key_length = 0;
     binary_t pub1;
     binary_t pub2;

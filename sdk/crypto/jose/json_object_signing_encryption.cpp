@@ -176,7 +176,7 @@ return_t json_object_signing_encryption::clear_context(jose_context_t* handle) {
             for (jose_recipients_t::iterator rit = item.recipients.begin(); rit != item.recipients.end(); rit++) {
                 jose_recipient_t& recipient = rit->second;
 
-                EVP_PKEY_free(recipient.epk);
+                EVP_PKEY_free((EVP_PKEY*)recipient.epk);
             }
         }
 

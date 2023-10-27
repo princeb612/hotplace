@@ -542,7 +542,7 @@ void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, binary_t cons
     const hint_curve_t* hint = advisor->hintof_curve_nid(nid);
     const char* hashalg = advisor->nameof_md(alg);
 
-    EVP_PKEY* pkey = key->any();
+    const EVP_PKEY* pkey = key->any();
     if (errorcode_t::success == ret) {
         /* check EC_GROUP_new_by_curve_name:unknown group */
         EC_KEY* ec = EC_KEY_new_by_curve_name(nid);

@@ -321,7 +321,7 @@ return_t dodecrypt(cose_context_t* handle, crypto_key* key, int tag, binary_t& o
             }
         }
 
-        EVP_PKEY* pkey = nullptr;
+        const EVP_PKEY* pkey = nullptr;
         binary_t cek;
         hint.find(cose_param_t::cose_param_cek, &cek);
         if (0 == cek.size()) {
@@ -430,7 +430,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
     crypto_advisor* advisor = crypto_advisor::get_instance();
     std::set<bool> results;
     cbor_object_signing_encryption::composer composer;
-    EVP_PKEY* pkey = nullptr;
+    const EVP_PKEY* pkey = nullptr;
 
     // RFC 8152 4.3.  Externally Supplied Data
     // RFC 8152 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
@@ -447,7 +447,10 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             __leave2;
         }
 
-        composer.parse(handle, input);
+        ret = composer.parse(handle, input);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         // AAD_hex
         binary_t authenticated_data;
@@ -523,7 +526,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             }
 
             crypto_kty_t kty;
-            EVP_PKEY* epk = nullptr;
+            const EVP_PKEY* epk = nullptr;
 
             switch (alg_hint->kty) {
                 case crypto_kty_t::kty_hmac:
@@ -587,7 +590,6 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 // algorithm versions, the extract step is always skipped.
 
                 // TEST FAILED
-                // try ckdf_expand - CEK_hex mismatch
 
 #if defined DEBUG
                 handle->debug_flag |= cose_debug_hkdf_aescmac;

@@ -19,6 +19,7 @@
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/hmac_otp.hpp>
 #include <sdk/crypto/basic/openssl_chacha20.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>

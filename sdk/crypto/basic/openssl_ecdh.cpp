@@ -16,19 +16,19 @@
 namespace hotplace {
 namespace crypto {
 
-EVP_PKEY* get_peer_key(EVP_PKEY* pkey) {
-    EVP_PKEY* peer = nullptr;
+const EVP_PKEY* get_peer_key(const EVP_PKEY* pkey) {
+    const EVP_PKEY* peer = nullptr;
 
     __try2 {
         if (nullptr == pkey) {
             __leave2;
         }
 
-        int len = i2d_PUBKEY((EVP_PKEY*)pkey, nullptr);
+        int len = i2d_PUBKEY(pkey, nullptr);
         byte_t* buf = (unsigned char*)OPENSSL_malloc(len);
         if (buf) {
             byte_t* p = buf;
-            len = i2d_PUBKEY((EVP_PKEY*)pkey, &p);
+            len = i2d_PUBKEY(pkey, &p);
 
             const byte_t* p2 = buf;
             peer = d2i_PUBKEY(nullptr, &p2, len);
@@ -40,10 +40,10 @@ EVP_PKEY* get_peer_key(EVP_PKEY* pkey) {
         // do nothing
     }
 
-    return (EVP_PKEY*)peer;
+    return peer;
 }
 
-return_t dh_key_agreement(EVP_PKEY* pkey, EVP_PKEY* peer, binary_t& secret) {
+return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* peer, binary_t& secret) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
     int ret_test = 0;
@@ -66,7 +66,7 @@ return_t dh_key_agreement(EVP_PKEY* pkey, EVP_PKEY* peer, binary_t& secret) {
         }
 
         size_t size_secret = 0;
-        EVP_PKEY* pkey_peer = (EVP_PKEY*)get_peer_key(peer);
+        const EVP_PKEY* pkey_peer = get_peer_key(peer);
         if (pkey_peer) {
             __try2 {
                 ret_test = EVP_PKEY_derive_init(pkey_context);
@@ -74,7 +74,7 @@ return_t dh_key_agreement(EVP_PKEY* pkey, EVP_PKEY* peer, binary_t& secret) {
                     ret = errorcode_t::internal_error;
                     __leave2;
                 }
-                ret_test = EVP_PKEY_derive_set_peer(pkey_context, pkey_peer);
+                ret_test = EVP_PKEY_derive_set_peer(pkey_context, (EVP_PKEY*)pkey_peer);
                 if (1 > ret_test) {
                     ret = errorcode_t::internal_error;
                     __leave2_trace_openssl(ret);
@@ -91,7 +91,7 @@ return_t dh_key_agreement(EVP_PKEY* pkey, EVP_PKEY* peer, binary_t& secret) {
                     __leave2_trace_openssl(ret);
                 }
             }
-            __finally2 { EVP_PKEY_free(pkey_peer); }
+            __finally2 { EVP_PKEY_free((EVP_PKEY*)pkey_peer); }
         } else {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -137,7 +137,7 @@ binary_t kdf_parameter_string(const byte_t* source, uint32 sourcelen) {
     return value;
 }
 
-return_t ecdh_es(EVP_PKEY* pkey, EVP_PKEY* peer, const char* algid, const char* apu, const char* apv, uint32 keylen, binary_t& derived) {
+return_t ecdh_es(const EVP_PKEY* pkey, const EVP_PKEY* peer, const char* algid, const char* apu, const char* apv, uint32 keylen, binary_t& derived) {
     return_t ret = errorcode_t::success;
     binary_t dh_secret;
     binary_t otherinfo;

@@ -11,6 +11,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_publisher.hpp>
@@ -128,7 +129,7 @@ static void pkey_param_printf(crypt_item_t type, binary_t const& key, stream_t* 
     }
 }
 
-static void dump_key_openssl(EVP_PKEY* pkey, stream_t* stream, uint8 indent) {
+static void dump_key_openssl(const EVP_PKEY* pkey, stream_t* stream, uint8 indent) {
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
             __leave2;
@@ -341,7 +342,7 @@ static return_t RSA_solve(RSA* rsa) {
     return ret;
 }
 
-return_t dump_key(EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 indent) {
+return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 indent) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -353,7 +354,7 @@ return_t dump_key(EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 indent
 
         stream->clear();
 
-        int type = EVP_PKEY_id((EVP_PKEY*)pkey);
+        int type = EVP_PKEY_id(pkey);
         switch (type) {
             case EVP_PKEY_HMAC:
                 stream->printf("hmac");

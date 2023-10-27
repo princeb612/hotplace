@@ -265,20 +265,20 @@ class openssl_crypt : public crypt_t {
 
     /**
      * @biref asymmetric encrypt
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      * @param binary_t const& input [in]
      * @param binary_t& output [out]
      * @param crypt_enc_t mode [in]
      */
-    return_t encrypt(EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
+    return_t encrypt(const EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
     /**
      * @biref asymmetric decrypt
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      * @param binary_t const& input [in]
      * @param binary_t& output [out]
      * @param crypt_enc_t mode [in]
      */
-    return_t decrypt(EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
+    return_t decrypt(const EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
 
     /**
      * @brief deprecated - expect block operation size
@@ -310,6 +310,14 @@ return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binar
                  binary_t const& tag);
 
 /**
+ * https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
+ * 2.4 AEAD_AES_128_CBC_HMAC_SHA_256 AES-128 SHA-256 K 32 MAC_KEY_LEN 16 ENC_KEY_LEN 16 T_LEN=16
+ * 2.5 AEAD_AES_192_CBC_HMAC_SHA_384 AES-192 SHA-384 K 48 MAC_KEY_LEN 24 ENC_KEY_LEN 24 T_LEN=24
+ * 2.6 AEAD_AES_256_CBC_HMAC_SHA_384 AES-256 SHA-384 K 56 MAC_KEY_LEN 32 ENC_KEY_LEN 24 T_LEN=24
+ * 2.7 AEAD_AES_256_CBC_HMAC_SHA_512 AES-256 SHA-512 K 64 MAC_KEY_LEN 32 ENC_KEY_LEN 32 T_LEN=32
+ */
+
+/**
  * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA
  * @param   const char* enc_alg [in] "aes-128-cbc"
  * @param   const char* mac_alg [in] "sha256"
@@ -320,9 +328,12 @@ return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binar
  * @param   binary_t& q [out] ciphertext
  * @param   binary_t& t [out] AE tag
  * @desc
- *      K = MAC_KEY || ENC_KEY
- *      MAC_KEY = initial MAC_KEY_LEN bytes of K
- *      ENC_KEY = final ENC_KEY_LEN bytes of K
+ *
+ *          K = MAC_KEY || ENC_KEY
+ *          MAC_KEY = initial MAC_KEY_LEN bytes of K
+ *          ENC_KEY = final ENC_KEY_LEN bytes of K
+ *
+ * @sa      RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
  */
 return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, binary_t const& k, binary_t const& iv, binary_t const& a, binary_t const& p,
                                    binary_t& q, binary_t& t);
@@ -348,9 +359,10 @@ return_t aes_cbc_hmac_sha2_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_m
  * @param   binary_t& p [out] plaintext
  * @param   binary_t& t [in] AE tag
  * @desc
- *      K = MAC_KEY || ENC_KEY
- *      MAC_KEY = initial MAC_KEY_LEN bytes of K
- *      ENC_KEY = final ENC_KEY_LEN bytes of K
+ *          K = MAC_KEY || ENC_KEY
+ *          MAC_KEY = initial MAC_KEY_LEN bytes of K
+ *          ENC_KEY = final ENC_KEY_LEN bytes of K
+ * @sa      RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
  */
 return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, binary_t const& k, binary_t const& iv, binary_t const& a, binary_t const& q,
                                    binary_t& p, binary_t const& t);

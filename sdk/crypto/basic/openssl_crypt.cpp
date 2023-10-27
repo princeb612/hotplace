@@ -16,6 +16,7 @@
 #include <sdk/base/system/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
@@ -742,7 +743,7 @@ return_t openssl_crypt::free_data(unsigned char* data) {
     return ret;
 }
 
-return_t openssl_crypt::encrypt(EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode) {
+return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -757,7 +758,7 @@ return_t openssl_crypt::encrypt(EVP_PKEY* pkey, binary_t const& input, binary_t&
             __leave2;
         }
 
-        pkey_context = EVP_PKEY_CTX_new(pkey, nullptr);
+        pkey_context = EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr);
 
         if (nullptr == pkey_context) {
             ret = errorcode_t::internal_error;
@@ -831,7 +832,7 @@ return_t openssl_crypt::encrypt(EVP_PKEY* pkey, binary_t const& input, binary_t&
     return ret;
 }
 
-return_t openssl_crypt::decrypt(EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode) {
+return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -853,7 +854,7 @@ return_t openssl_crypt::decrypt(EVP_PKEY* pkey, binary_t const& input, binary_t&
             __leave2;
         }
 
-        pkey_context = EVP_PKEY_CTX_new(pkey, nullptr);
+        pkey_context = EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr);
 
         if (nullptr == pkey_context) {
             ret = errorcode_t::internal_error;

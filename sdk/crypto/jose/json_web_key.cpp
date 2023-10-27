@@ -14,6 +14,7 @@
 #include <sdk/base/basic/base64.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/crypto/jose/json_web_key.hpp>
 #include <sdk/io/basic/json.hpp>
@@ -146,7 +147,7 @@ return_t json_web_key::read_json_keynode(crypto_key* crypto_key, json_t* json) {
 }
 
 typedef struct _json_mapper_item_t {
-    EVP_PKEY* pkey;
+    const EVP_PKEY* pkey;
     crypto_kty_t type;
     std::string kid;
     int use;  // crypto_use_t

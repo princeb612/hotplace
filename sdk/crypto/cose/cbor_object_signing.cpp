@@ -80,7 +80,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             crypt_sig_t sig = advisor->cose_sigof(method);
 
             std::string kid;
-            EVP_PKEY* pkey = key->select(kid, sig);
+            const EVP_PKEY* pkey = key->select(kid, sig);
             // subitem of handle
             cose_parts_t item;
             // composer
@@ -256,7 +256,7 @@ return_t cbor_object_signing::doverify(cose_context_t* handle, crypto_key* key, 
         // ecdsa-examples/ecdsa-04.json ECDSA-01: ECDSA - P-256 w/ SHA-512
         // ecdsa-examples/ecdsa-sig-04.json ECDSA-sig-01: ECDSA - P-256 w/ SHA-512 - implicit
 
-        EVP_PKEY* pkey = nullptr;
+        const EVP_PKEY* pkey = nullptr;
         if (kid) {
             pkey = key->find(kid, hint->kty);
         } else {

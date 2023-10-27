@@ -163,9 +163,9 @@ class json_object_signing {
     /**
      * @brief constraints
      * @param jws_t sig [in]
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      */
-    return_t check_constraints(jws_t sig, EVP_PKEY* pkey);
+    return_t check_constraints(jws_t sig, const EVP_PKEY* pkey);
 
     class composer {
        public:

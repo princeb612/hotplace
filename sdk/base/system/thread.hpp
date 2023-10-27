@@ -17,7 +17,7 @@
 #include <sdk/base/types.hpp>
 
 #if defined _WIN32 || defined _WIN64
-#include <windows.h>
+#include <sdk/base/system/windows/types.hpp>
 #elif defined __linux__
 #include <pthread.h>
 #endif

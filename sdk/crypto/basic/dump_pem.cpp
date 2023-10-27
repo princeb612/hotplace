@@ -20,7 +20,7 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-return_t write_pem(EVP_PKEY* pkey, stream_t* stream) {
+return_t write_pem(const EVP_PKEY* pkey, stream_t* stream) {
     return_t ret = errorcode_t::success;
     BIO* out = nullptr;
 
@@ -58,7 +58,7 @@ return_t write_pem(EVP_PKEY* pkey, stream_t* stream) {
     return ret;
 }
 
-return_t write_pem(EVP_PKEY* pkey, BIO* out) {
+return_t write_pem(const EVP_PKEY* pkey, BIO* out) {
     return_t ret = errorcode_t::success;
 
     __try2 {
