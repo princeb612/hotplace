@@ -261,11 +261,11 @@ class crypto_keychain {
      *      keyset.add_ec (&keys, "alice", NID_secp384r1);
      *      keyset.add_ec (&keys, "bob", NID_secp384r1);
      *
-     *      EVP_PKEY* alicePrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_kty_t::kty_ec, "alice");
-     *      EVP_PKEY* bobPrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_kty_t::kty_ec, "bob");
+     *      const EVP_PKEY* alicePrivateKey = keys.get_by_name (crypto_kty_t::kty_ec, "alice");
+     *      const EVP_PKEY* bobPrivateKey = keys.get_by_name (crypto_kty_t::kty_ec, "bob");
      *
-     *      EVP_PKEY* alicePublicKey = (EVP_PKEY*) get_peer_key (alicePrivateKey);
-     *      EVP_PKEY* bobPublicKey = (EVP_PKEY*) get_peer_key (bobPrivateKey);
+     *      const EVP_PKEY* alicePublicKey = get_peer_key (alicePrivateKey);
+     *      const EVP_PKEY* bobPublicKey = get_peer_key (bobPrivateKey);
      *
      *      keys.get_public_key (alicePrivateKey, x_alice, y_alice);
      *      keys.get_private_key (alicePrivateKey, d_alice);
@@ -275,8 +275,8 @@ class crypto_keychain {
      *      dh_key_agreement (alicePrivateKey, bobPublicKey, secret_alice);
      *      dh_key_agreement (bobPrivateKey, alicePublicKey, secret_bob);
      *
-     *      crypto_key_free (alicePublicKey);
-     *      crypto_key_free (bobPublicKey);
+     *      crypto_key_free ((EVP_PKEY*)alicePublicKey);
+     *      crypto_key_free ((EVP_PKEY*)bobPublicKey);
      */
     return_t add_ec(crypto_key* cryptokey, const char* kid, int nid, crypto_use_t use = crypto_use_t::use_any);
     /**

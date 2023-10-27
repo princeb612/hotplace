@@ -8,11 +8,12 @@
  * Date         Name                Description
  */
 
-#include <comdef.h>
-#include <comutil.h>
-
 #include <sdk/base/system/windows/sdk.hpp>
 #include <sdk/base/system/windows/windows_version.hpp>
+
+// COM
+#include <comdef.h>
+#include <comutil.h>
 
 namespace hotplace {
 

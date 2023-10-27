@@ -1705,7 +1705,7 @@ void test_jose_from_cwk() {
     jwk.write_pem(&privkey, &pem);
     printf("PEM (private)\n%s\n", pem.c_str());
 
-    EVP_PKEY* pkey = nullptr;
+    const EVP_PKEY* pkey = nullptr;
     std::string kid;
     pkey = privkey.select(kid, crypt_sig_t::sig_es512);
     _test_case.assert(kid == "bilbo.baggins@hobbiton.example", __FUNCTION__, "select key from CWK where type is es512");

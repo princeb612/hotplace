@@ -53,7 +53,7 @@ typedef struct _cose_parts_t {
     uint8 tag;
     binary_t bin_protected;
     binary_t bin_data;
-    EVP_PKEY* epk;
+    const EVP_PKEY* epk;
     cose_variantmap_t protected_map;
     cose_orderlist_t protected_list;
     cose_variantmap_t unprotected_map;
@@ -76,7 +76,7 @@ typedef struct _cose_parts_t {
         protected_list.clear();
         unprotected_list.clear();
         if (epk) {
-            EVP_PKEY_free(epk);
+            EVP_PKEY_free((EVP_PKEY*)epk);
             epk = nullptr;
         }
     }

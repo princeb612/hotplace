@@ -20,10 +20,10 @@ namespace crypto {
 /**
  * @brief   public key of peer
  * @example
- *          EVP_PKEY* alicePublicKey = (EVP_PKEY*) get_peer_key (alicePrivateKey);
- *          crypto_key_free (alicePublicKey);
+ *          const EVP_PKEY* alicePublicKey = get_peer_key (alicePrivateKey);
+ *          crypto_key_free ((EVP_PKEY*)alicePublicKey);
  */
-EVP_PKEY* get_peer_key(EVP_PKEY* pkey);
+const EVP_PKEY* get_peer_key(const EVP_PKEY* pkey);
 /**
  * @brief   Diffie–Hellman key exchange
  * @example
@@ -42,11 +42,11 @@ EVP_PKEY* get_peer_key(EVP_PKEY* pkey);
  *          keyset.add_ec (&keys, "alice", NID_secp384r1);
  *          keyset.add_ec (&keys, "bob", NID_secp384r1);
  *
- *          EVP_PKEY* alicePrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_kty_t::kty_ec, "alice");
- *          EVP_PKEY* bobPrivateKey = (EVP_PKEY*) keys.get_by_name (crypto_kty_t::kty_ec, "bob");
+ *          const EVP_PKEY* alicePrivateKey = keys.get_by_name (crypto_kty_t::kty_ec, "alice");
+ *          const EVP_PKEY* bobPrivateKey = keys.get_by_name (crypto_kty_t::kty_ec, "bob");
  *
- *          EVP_PKEY* alicePublicKey = (EVP_PKEY*) get_peer_key (alicePrivateKey);
- *          EVP_PKEY* bobPublicKey = (EVP_PKEY*) get_peer_key (bobPrivateKey);
+ *          const EVP_PKEY* alicePublicKey = get_peer_key (alicePrivateKey);
+ *          const EVP_PKEY* bobPublicKey = get_peer_key (bobPrivateKey);
  *
  *          keys.get_public_key (alicePrivateKey, x_alice, y_alice);
  *          keys.get_private_key (alicePrivateKey, d_alice);
@@ -56,15 +56,15 @@ EVP_PKEY* get_peer_key(EVP_PKEY* pkey);
  *          dh_key_agreement (alicePrivateKey, bobPublicKey, secret_alice);
  *          dh_key_agreement (bobPrivateKey, alicePublicKey, secret_bob);
  *
- *          crypto_key_free (alicePublicKey);
- *          crypto_key_free (bobPublicKey);
+ *          crypto_key_free ((EVP_PKEY*)alicePublicKey);
+ *          crypto_key_free ((EVP_PKEY*)bobPublicKey);
  */
-return_t dh_key_agreement(EVP_PKEY* pkey, EVP_PKEY* peer, binary_t& secret);
+return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* peer, binary_t& secret);
 
 binary_t kdf_parameter_int(uint32 source);
 binary_t kdf_parameter_string(const char* source);
 binary_t kdf_parameter_string(const byte_t* source, uint32 sourcelen);
-return_t ecdh_es(EVP_PKEY* pkey, EVP_PKEY* peer, const char* algid, const char* apu, const char* apv, uint32 keylen, binary_t& derived);
+return_t ecdh_es(const EVP_PKEY* pkey, const EVP_PKEY* peer, const char* algid, const char* apu, const char* apv, uint32 keylen, binary_t& derived);
 return_t compose_otherinfo(const char* algid, const char* apu, const char* apv, uint32 keybits, binary_t& otherinfo);
 return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen, binary_t& derived);
 

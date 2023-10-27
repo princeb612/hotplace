@@ -218,8 +218,8 @@ return_t json_object_signing::verify(jose_context_t* handle, std::string const& 
     return ret;
 }
 
-typedef return_t (openssl_sign::*sign_function_t)(EVP_PKEY* pkey, hash_algorithm_t sig, binary_t const& input, binary_t& output);
-typedef return_t (openssl_sign::*verify_function_t)(EVP_PKEY* pkey, hash_algorithm_t sig, binary_t const& input, binary_t const& output);
+typedef return_t (openssl_sign::*sign_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, binary_t const& input, binary_t& output);
+typedef return_t (openssl_sign::*verify_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, binary_t const& input, binary_t const& output);
 
 return_t json_object_signing::dosign(crypto_key* key, jws_t sig, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
@@ -297,7 +297,7 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, binary_t const&
         }
 #endif
 
-        EVP_PKEY* pkey = nullptr;
+        const EVP_PKEY* pkey = nullptr;
         pkey = key->select(kid, sig, crypto_use_t::use_sig);
         if (nullptr == pkey) {
             ret = errorcode_t::not_found;
@@ -398,7 +398,7 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
         }
 #endif
 
-        EVP_PKEY* pkey = nullptr;
+        const EVP_PKEY* pkey = nullptr;
         pkey = key->find(kid, sig, crypto_use_t::use_sig);
         if (nullptr == pkey) {
             ret = errorcode_t::not_found;
@@ -425,7 +425,7 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
     return ret;
 }
 
-return_t json_object_signing::check_constraints(jws_t sig, EVP_PKEY* pkey) {
+return_t json_object_signing::check_constraints(jws_t sig, const EVP_PKEY* pkey) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -448,7 +448,7 @@ return_t json_object_signing::check_constraints(jws_t sig, EVP_PKEY* pkey) {
         switch (group) {
             case jws_group_t::jws_group_rsassa_pkcs15:
             case jws_group_t::jws_group_rsassa_pss: {
-                int bits = EVP_PKEY_bits((EVP_PKEY*)pkey);
+                int bits = EVP_PKEY_bits(pkey);
                 if (bits < 2048) {
                     ret = errorcode_t::low_security;
                     __leave2;

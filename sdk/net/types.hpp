@@ -29,9 +29,7 @@
 
 #elif defined _WIN32 || defined _WIN64
 
-#include <mswsock.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#include <sdk/base/system/windows/types.hpp>
 
 #endif
 

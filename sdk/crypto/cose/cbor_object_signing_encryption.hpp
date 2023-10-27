@@ -202,6 +202,14 @@ class cbor_object_signing_encryption {
          * @param   cose_variantmap_t& from [in]
          */
         return_t finditem(int key, binary_t& value, cose_variantmap_t& from);
+
+       protected:
+        return_t doparse_protected(cose_context_t* handle, cbor_object* object);
+        return_t doparse_unprotected(cose_context_t* handle, cbor_object* object);
+        return_t doparse_payload(cose_context_t* handle, cbor_object* object);
+        return_t doparse_tag(cose_context_t* handle, cbor_object* object);
+        return_t doparse_signature(cose_context_t* handle, cbor_object* object);
+        return_t doparse_recipients(cose_context_t* handle, cbor_object* object);
     };
 };
 

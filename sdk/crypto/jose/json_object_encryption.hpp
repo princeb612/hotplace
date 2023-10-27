@@ -156,9 +156,9 @@ class json_object_encryption {
     /**
      * @brief constraints
      * @param jwa_t alg [in]
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      */
-    return_t check_constraints(jwa_t alg, EVP_PKEY* pkey);
+    return_t check_constraints(jwa_t alg, const EVP_PKEY* pkey);
 
     class composer {
        public:
@@ -223,7 +223,7 @@ class json_object_encryption {
         /**
          * @biref recipient
          * @param jwa_t alg [in]
-         * @param EVP_PKEY* pkey [in]
+         * @param const EVP_PKEY* pkey [in]
          * @param jose_recipient_t& recipient [out]
          * @param crypt_datamap_t& datamap [out]
          * @param crypt_variantmap_t& variantmap [out]
@@ -234,7 +234,7 @@ class json_object_encryption {
          *      jwa_group_t::jwa_group_aesgcmkw : iv, tag
          *      jwa_group_t::jwa_group_pbes_hs_aeskw : p2s, p2c
          */
-        return_t docompose_encryption_recipient_random(jwa_t alg, EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap,
+        return_t docompose_encryption_recipient_random(jwa_t alg, const EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap,
                                                        crypt_variantmap_t& variantmap);
         /**
          * @brief decrypt

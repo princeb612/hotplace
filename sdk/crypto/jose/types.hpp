@@ -57,7 +57,7 @@ typedef struct _jose_recipient_t {
 
     crypt_datamap_t datamap;
     crypt_variantmap_t variantmap;  // p2c, epk
-    EVP_PKEY* epk;
+    const EVP_PKEY* epk;
     uint32 p2c;
 
     /* IV, TAG case of A128GCMKW, A192GCMKW, A256GCMKW */

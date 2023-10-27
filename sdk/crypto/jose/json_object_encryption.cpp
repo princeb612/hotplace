@@ -16,6 +16,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/crypto/basic/openssl_ecdh.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
@@ -261,7 +262,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
             memset(&kw_iv[0], 0xa6, kw_iv.size());
 
             std::string kid;
-            EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
+            const EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
             if (nullptr == pkey) {
                 ret = errorcode_t::not_found;
                 __leave2;
@@ -274,10 +275,8 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
 
             if (crypto_kty_t::kty_hmac == alg_hint->kty) {
                 /* EVP_KEY_HMAC key data and length */
-                size_t key_length = 0;
-                EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, nullptr, &key_length);
-                oct.resize(key_length);
-                EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, &oct[0], &key_length);
+                crypto_kty_t kty;
+                crypto_key::get_privkey(pkey, kty, oct, true);
             }
 
             uint32 alg_group = alg_hint->group;
@@ -319,7 +318,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                  *     algorithm, in the Direct Key Agreement mode, or
                  * RFC7520 5.5. Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2
                  */
-                EVP_PKEY* epk = item.recipients[alg].epk;
+                const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = enc_hint->keysize;
                 uint32 enc_group = enc_hint->group;
                 if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
@@ -338,7 +337,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                  * RFC7520 5.4. Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM
                  */
                 binary_t derived_key;
-                EVP_PKEY* epk = item.recipients[alg].epk;
+                const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = alg_hint->keysize;
                 uint32 enc_group = enc_hint->group;
                 if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
@@ -427,6 +426,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
 
             uint32 enc_group = enc_hint->group;
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
+                // // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
                 ret = aes_cbc_hmac_sha2_encrypt((crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, (hash_algorithm_t)enc_hash_alg, cek, iv, aad,
                                                 input, ciphertext, tag);
                 if (errorcode_t::success != ret) {
@@ -505,7 +505,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
             kw_iv.resize(8);
             memset(&kw_iv[0], 0xa6, kw_iv.size());
 
-            EVP_PKEY* pkey = nullptr;
+            const EVP_PKEY* pkey = nullptr;
             if (kid) {
                 pkey = handle->key->find(kid, alg, crypto_use_t::use_enc);
             } else {
@@ -525,9 +525,9 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
             if (crypto_kty_t::kty_hmac == alg_hint->kty) {
                 /* EVP_KEY_HMAC key data and length */
                 size_t key_length = 0;
-                EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, nullptr, &key_length);
+                EVP_PKEY_get_raw_private_key(pkey, nullptr, &key_length);
                 oct.resize(key_length);
-                EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, &oct[0], &key_length);
+                EVP_PKEY_get_raw_private_key(pkey, &oct[0], &key_length);
             }
 
             uint32 alg_group = alg_hint->group;
@@ -567,7 +567,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                  *     algorithm, in the Direct Key Agreement mode, or
                  * RFC7520 5.5. Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2
                  */
-                EVP_PKEY* epk = item.recipients[alg].epk;
+                const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = enc_hint->keysize;
                 uint32 enc_group = enc_hint->group;
                 if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
@@ -585,7 +585,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                  * RFC7520 5.4. Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM
                  */
                 binary_t derived_key;
-                EVP_PKEY* epk = item.recipients[alg].epk;
+                const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = alg_hint->keysize;
                 uint32 enc_group = enc_hint->group;
                 if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
@@ -658,6 +658,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
 
             uint32 enc_group = enc_hint->group;
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
+                // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
                 ret = aes_cbc_hmac_sha2_decrypt((crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, (hash_algorithm_t)enc_hash_alg, cek, iv, aad,
                                                 ciphertext, output, tag);
                 if (errorcode_t::success != ret) {
@@ -678,7 +679,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
     return ret;
 }
 
-return_t json_object_encryption::check_constraints(jwa_t alg, EVP_PKEY* pkey) {
+return_t json_object_encryption::check_constraints(jwa_t alg, const EVP_PKEY* pkey) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -695,7 +696,7 @@ return_t json_object_encryption::check_constraints(jwa_t alg, EVP_PKEY* pkey) {
             case jwa_t::jwa_rsa_1_5:
             case jwa_t::jwa_rsa_oaep:
             case jwa_t::jwa_rsa_oaep_256: {
-                int bits = EVP_PKEY_bits((EVP_PKEY*)pkey);
+                int bits = EVP_PKEY_bits(pkey);
                 if (bits < 2048) {
                     ret = errorcode_t::low_security;
                     __leave2;
@@ -832,7 +833,7 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t* ha
                             if ((jwa_group_t::jwa_group_ecdh == alg_group) || (jwa_group_t::jwa_group_ecdh_aeskw == alg_group)) {
                                 binary_t pub1;
                                 binary_t pub2;
-                                EVP_PKEY* epk = recipient.epk;
+                                const EVP_PKEY* epk = recipient.epk;
                                 crypto_key::get_public_key(epk, pub1, pub2);
                                 json_t* json_epk = json_object();
                                 if (json_epk) {
@@ -994,7 +995,7 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
 
                 // const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm (alg);  // key management
                 std::string kid;
-                EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
+                const EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
                 if (nullptr == pkey) {
                     ret = errorcode_t::not_found;
                     __leave2;
@@ -1025,7 +1026,7 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
 
                     // const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm (alg);  // key management
                     std::string kid;
-                    EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
+                    const EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
 
                     crypt_datamap_t datamap;
                     crypt_variantmap_t variantmap;
@@ -1105,7 +1106,7 @@ return_t json_object_encryption::composer::docompose_encryption_header_parameter
                 // epk, apu, apv
                 binary_t pub1;
                 binary_t pub2;
-                EVP_PKEY* epk = (EVP_PKEY*)variantmap[crypt_item_t::item_epk].data.p;
+                const EVP_PKEY* epk = (const EVP_PKEY*)variantmap[crypt_item_t::item_epk].data.p;
                 crypto_key::get_public_key(epk, pub1, pub2);
                 json_t* json_epk = json_object();
                 if (json_epk) {
@@ -1158,7 +1159,7 @@ return_t json_object_encryption::composer::docompose_encryption_header_parameter
     return ret;
 }
 
-return_t json_object_encryption::composer::docompose_encryption_recipient_random(jwa_t alg, EVP_PKEY* pkey, jose_recipient_t& recipient,
+return_t json_object_encryption::composer::docompose_encryption_recipient_random(jwa_t alg, const EVP_PKEY* pkey, jose_recipient_t& recipient,
                                                                                  crypt_datamap_t& datamap, crypt_variantmap_t& variantmap) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();

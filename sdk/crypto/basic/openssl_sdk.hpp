@@ -169,26 +169,6 @@ return_t ossl_set_unitsize(uint32 bytes);
  */
 uint32 ossl_get_unitsize();
 
-/**
- * @brief is private key
- * @param EVP_PKEY* pkey [in]
- * @param bool& result [out]
- * @return error code (see error.hpp)
- */
-return_t is_private_key(EVP_PKEY* pkey, bool& result);
-
-/**
- * @brief kindof
- * @param crypto_kty_t type [in]
- */
-bool kindof_ecc(crypto_kty_t type);
-/**
- * @brief kty from key
- * @param crypto_kty_t type
- * @return oct, RSA, EC, OKP
- */
-const char* nameof_key_type(crypto_kty_t type);
-
 return_t debug_trace_openssl(stream_t* stream);
 
 }  // namespace crypto

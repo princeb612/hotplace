@@ -8,8 +8,6 @@
  * Date         Name                Description
  */
 
-#include <windows.h>
-
 #include <sdk/base/system/windows/semaphore.hpp>
 
 namespace hotplace {

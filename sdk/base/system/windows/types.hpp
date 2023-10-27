@@ -12,7 +12,9 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_TYPES__
 
 // #warning Please include winsock2.h before windows.h
+#include <mswsock.h>
 #include <winsock2.h>
+#include <ws2tcpip.h>
 // winsock2.h before windows.h
 #include <windows.h>
 

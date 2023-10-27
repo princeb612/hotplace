@@ -362,7 +362,7 @@ class crypto_advisor {
     return_t ktyof_ec_curve(const char* curve, uint32& kty);
     /**
      * @brief kty
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      * @param std::string& kty [out]
      *          oct
      *          RSA
@@ -370,17 +370,17 @@ class crypto_advisor {
      *          OKP
      * @return error code (see error.hpp)
      */
-    return_t ktyof_ec_curve(EVP_PKEY* pkey, std::string& kty);
+    return_t ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty);
     /**
      * @brief kty
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      * @param crypto_kty_t& kty [out] crypto_kty_t::kty_hmac, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_okp
      * @return error code (see error.hpp)
      */
-    return_t ktyof_ec_curve(EVP_PKEY* pkey, crypto_kty_t& kty);
+    return_t ktyof_ec_curve(const EVP_PKEY* pkey, crypto_kty_t& kty);
     /**
      * @brief "alg" from key
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      * @param std::string& curve_name [out]
      *          "P-256", "P384", "P-521", "Ed25519", "Ed448", "X25519", "X448"
      * @return error code (see error.hpp)
@@ -389,36 +389,36 @@ class crypto_advisor {
      *              advisor->nameof_ec_curve (pkey, curve_name);
      *          }
      */
-    return_t nameof_ec_curve(EVP_PKEY* pkey, std::string& curve_name);
+    return_t nameof_ec_curve(const EVP_PKEY* pkey, std::string& curve_name);
 
     /**
      * @brief kind of
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      * @param jwa_t alg [in]
      * @return true if match, false if not
      */
-    bool is_kindof(EVP_PKEY* pkey, jwa_t alg);
+    bool is_kindof(const EVP_PKEY* pkey, jwa_t alg);
     /**
      * @brief kind of
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      * @param crypt_sig_t sig [in]
      * @return true if match, false if not
      */
-    bool is_kindof(EVP_PKEY* pkey, crypt_sig_t sig);
+    bool is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig);
     /**
      * @brief kind of
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      * @param jws_t sig [in]
      * @return true if match, false if not
      */
-    bool is_kindof(EVP_PKEY* pkey, jws_t sig);
+    bool is_kindof(const EVP_PKEY* pkey, jws_t sig);
     /**
      * @brief kind of
-     * @param EVP_PKEY* pkey [in]
+     * @param const EVP_PKEY* pkey [in]
      * @param const char* alg [in] signature algorithms
      * @return true if match, false if not
      */
-    bool is_kindof(EVP_PKEY* pkey, const char* alg);
+    bool is_kindof(const EVP_PKEY* pkey, const char* alg);
 
     cose_kty_t ktyof(crypto_kty_t kty);
     crypto_kty_t ktyof(cose_kty_t kty);
@@ -500,50 +500,6 @@ class crypto_advisor {
     cipher_byname_map_t _cipher_byname_map;
     md_byname_map_t _md_byname_map;
 };
-
-/**
- * @brief curve
- * @param EVP_PKEY* key [in]
- * @param uint32& nid [out]
- *    415 : NID_X9_62_prime256v1 (prime256v1)
- *    715 : NID_secp384r1 (secp384r1)
- *    716 : NID_secp521r1 (secp521r1)
- *    1087: NID_ED25519
- *    1088: NID_ED448
- * @remarks
- *    opensource native type
- *
- *    # define EVP_PKEY_HMAC     NID_hmac
- *    # define EVP_PKEY_RSA      NID_rsaEncryption
- *    # define EVP_PKEY_EC       NID_X9_62_id_ecPublicKey
- *    # define EVP_PKEY_X25519   NID_X25519
- *    # define EVP_PKEY_X448     NID_X448
- *    # define EVP_PKEY_ED25519  NID_ED25519
- *    # define EVP_PKEY_ED448    NID_ED448
- *
- *    #define NID_hmac                   855
- *    #define NID_rsaEncryption          6
- *    #define NID_X9_62_id_ecPublicKey   408
- *    #define NID_X25519                 1034
- *    #define NID_X448                   1035
- *    #define NID_ED25519                1087
- *    #define NID_ED448                  1088
- *
- *    #define NID_X9_62_prime256v1       415
- *    #define NID_secp384r1              715
- *    #define NID_secp521r1              716
- */
-return_t nidof_evp_pkey(EVP_PKEY* key, uint32& nid);
-/**
- * @brief kindof
- * @param EVP_PKEY* pkey [in]
- */
-bool kindof_ecc(EVP_PKEY* pkey);
-
-/**
- * @param EVP_PKEY* key [in]
- */
-crypto_kty_t typeof_crypto_key(EVP_PKEY* key);
 
 extern const hint_cipher_t evp_cipher_methods[];
 extern const hint_digest_t evp_md_methods[];

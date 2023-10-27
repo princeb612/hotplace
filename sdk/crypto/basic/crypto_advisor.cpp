@@ -10,6 +10,7 @@
 
 #include <sdk/base/system/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/io/system/sdk.hpp>
 
 namespace hotplace {
@@ -694,7 +695,7 @@ return_t crypto_advisor::ktyof_ec_curve(const char* curve, uint32& kty) {
     return ret;
 }
 
-return_t crypto_advisor::ktyof_ec_curve(EVP_PKEY* pkey, std::string& kty) {
+return_t crypto_advisor::ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -727,7 +728,7 @@ return_t crypto_advisor::ktyof_ec_curve(EVP_PKEY* pkey, std::string& kty) {
     return ret;
 }
 
-return_t crypto_advisor::nameof_ec_curve(EVP_PKEY* pkey, std::string& name) {
+return_t crypto_advisor::nameof_ec_curve(const EVP_PKEY* pkey, std::string& name) {
     return_t ret = errorcode_t::success;
     uint32 nid = 0;
 
@@ -746,7 +747,7 @@ return_t crypto_advisor::nameof_ec_curve(EVP_PKEY* pkey, std::string& name) {
     return ret;
 }
 
-bool crypto_advisor::is_kindof(EVP_PKEY* pkey, const char* alg) {
+bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, const char* alg) {
     bool test = false;
 
     __try2 {
@@ -771,7 +772,7 @@ bool crypto_advisor::is_kindof(EVP_PKEY* pkey, const char* alg) {
     return test;
 }
 
-bool crypto_advisor::is_kindof(EVP_PKEY* pkey, jwa_t alg) {
+bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, jwa_t alg) {
     bool test = false;
 
     __try2 {
@@ -790,7 +791,7 @@ bool crypto_advisor::is_kindof(EVP_PKEY* pkey, jwa_t alg) {
     return test;
 }
 
-bool crypto_advisor::is_kindof(EVP_PKEY* pkey, crypt_sig_t sig) {
+bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig) {
     bool test = false;
 
     __try2 {
@@ -827,7 +828,7 @@ bool crypto_advisor::is_kindof(EVP_PKEY* pkey, crypt_sig_t sig) {
     return test;
 }
 
-bool crypto_advisor::is_kindof(EVP_PKEY* pkey, jws_t sig) {
+bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, jws_t sig) {
     bool test = false;
 
     __try2 {

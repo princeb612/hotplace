@@ -13,6 +13,7 @@
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 
 namespace hotplace {
@@ -499,8 +500,8 @@ static bool find_discriminant(crypto_key_object_t item, const char* kid, const c
     return ret;
 }
 
-EVP_PKEY* crypto_key::any(bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::any(bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
 
     __try2 {
         _lock.enter();
@@ -521,8 +522,8 @@ EVP_PKEY* crypto_key::any(bool up_ref) {
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select(crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::select(crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
 
     __try2 {
         _lock.enter();
@@ -547,8 +548,8 @@ EVP_PKEY* crypto_key::select(crypto_use_t use, bool up_ref) {
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select(crypto_kty_t kty, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::select(crypto_kty_t kty, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
 
     __try2 {
         _lock.enter();
@@ -578,8 +579,8 @@ EVP_PKEY* crypto_key::select(crypto_kty_t kty, crypto_use_t use, bool up_ref) {
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select(jwa_t alg, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::select(jwa_t alg, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -613,8 +614,8 @@ EVP_PKEY* crypto_key::select(jwa_t alg, crypto_use_t use, bool up_ref) {
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select(crypt_sig_t sig, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::select(crypt_sig_t sig, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -645,8 +646,8 @@ EVP_PKEY* crypto_key::select(crypt_sig_t sig, crypto_use_t use, bool up_ref) {
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select(jws_t sig, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::select(jws_t sig, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -677,8 +678,8 @@ EVP_PKEY* crypto_key::select(jws_t sig, crypto_use_t use, bool up_ref) {
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select(std::string& kid, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::select(std::string& kid, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
 
     __try2 {
         kid.clear();
@@ -706,8 +707,8 @@ EVP_PKEY* crypto_key::select(std::string& kid, crypto_use_t use, bool up_ref) {
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select(std::string& kid, crypto_kty_t kty, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::select(std::string& kid, crypto_kty_t kty, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
 
     __try2 {
         kid.clear();
@@ -740,8 +741,8 @@ EVP_PKEY* crypto_key::select(std::string& kid, crypto_kty_t kty, crypto_use_t us
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select(std::string& kid, jwa_t alg, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::select(std::string& kid, jwa_t alg, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -778,8 +779,8 @@ EVP_PKEY* crypto_key::select(std::string& kid, jwa_t alg, crypto_use_t use, bool
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select(std::string& kid, crypt_sig_t sig, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::select(std::string& kid, crypt_sig_t sig, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -813,8 +814,8 @@ EVP_PKEY* crypto_key::select(std::string& kid, crypt_sig_t sig, crypto_use_t use
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::select(std::string& kid, jws_t sig, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::select(std::string& kid, jws_t sig, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -848,8 +849,8 @@ EVP_PKEY* crypto_key::select(std::string& kid, jws_t sig, crypto_use_t use, bool
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::find(const char* kid, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::find(const char* kid, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
 
     __try2 {
         _lock.enter();
@@ -887,8 +888,8 @@ EVP_PKEY* crypto_key::find(const char* kid, crypto_use_t use, bool up_ref) {
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
 
     __try2 {
         _lock.enter();
@@ -930,8 +931,8 @@ EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t use, b
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -982,8 +983,8 @@ EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, bool up
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::find(const char* kid, crypt_sig_t alg, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::find(const char* kid, crypt_sig_t alg, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -1033,8 +1034,8 @@ EVP_PKEY* crypto_key::find(const char* kid, crypt_sig_t alg, crypto_use_t use, b
     return ret_value;
 }
 
-EVP_PKEY* crypto_key::find(const char* kid, jws_t alg, crypto_use_t use, bool up_ref) {
-    EVP_PKEY* ret_value = nullptr;
+const EVP_PKEY* crypto_key::find(const char* kid, jws_t alg, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -1084,7 +1085,7 @@ EVP_PKEY* crypto_key::find(const char* kid, jws_t alg, crypto_use_t use, bool up
     return ret_value;
 }
 
-return_t crypto_key::get_public_key(EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2) {
+return_t crypto_key::get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2) {
     return_t ret = errorcode_t::success;
 
     pub1.clear();
@@ -1126,7 +1127,7 @@ return_t crypto_key::get_public_key(EVP_PKEY* pkey, binary_t& pub1, binary_t& pu
     return ret;
 }
 
-return_t crypto_key::get_private_key(EVP_PKEY* pkey, binary_t& priv) {
+return_t crypto_key::get_private_key(const EVP_PKEY* pkey, binary_t& priv) {
     return_t ret = errorcode_t::success;
 
     priv.clear();
@@ -1157,19 +1158,19 @@ return_t crypto_key::get_private_key(EVP_PKEY* pkey, binary_t& priv) {
     return ret;
 }
 
-return_t crypto_key::get_key(EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero) {
+return_t crypto_key::get_key(const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv, bool preserve) {
     crypto_kty_t type = crypto_kty_t::kty_unknown;
 
-    return get_key(pkey, 1, type, pub1, pub2, priv, plzero);
+    return get_key(pkey, 1, type, pub1, pub2, priv, preserve);
 }
 
-return_t crypto_key::get_key(EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero) {
+return_t crypto_key::get_key(const EVP_PKEY* pkey, int flag, binary_t& pub1, binary_t& pub2, binary_t& priv, bool preserve) {
     crypto_kty_t type = crypto_kty_t::kty_unknown;
 
-    return get_key(pkey, flag, type, pub1, pub2, priv, plzero);
+    return get_key(pkey, flag, type, pub1, pub2, priv, preserve);
 }
 
-return_t crypto_key::get_key(EVP_PKEY* pkey, int flag, crypto_kty_t& type, binary_t& pub1, binary_t& pub2, binary_t& priv, bool plzero) {
+return_t crypto_key::get_key(const EVP_PKEY* pkey, int flag, crypto_kty_t& type, binary_t& pub1, binary_t& pub2, binary_t& priv, bool preserve) {
     return_t ret = errorcode_t::success;
 
     pub1.clear();
@@ -1184,7 +1185,7 @@ return_t crypto_key::get_key(EVP_PKEY* pkey, int flag, crypto_kty_t& type, binar
     if (flag) {
         flag_request |= crypt_access_t::private_key;
     }
-    ret = extract(pkey, flag_request, type, datamap, plzero);
+    ret = extract(pkey, flag_request, type, datamap, preserve);
     if (errorcode_t::success == ret) {
         if (crypto_kty_t::kty_hmac == type) {
             iter = datamap.find(crypt_item_t::item_hmac_k);
@@ -1231,7 +1232,7 @@ return_t crypto_key::get_key(EVP_PKEY* pkey, int flag, crypto_kty_t& type, binar
     return ret;
 }
 
-return_t crypto_key::get_privkey(EVP_PKEY* pkey, crypto_kty_t& type, binary_t& priv, bool plzero) {
+return_t crypto_key::get_privkey(const EVP_PKEY* pkey, crypto_kty_t& type, binary_t& priv, bool preserve) {
     return_t ret = errorcode_t::success;
 
     priv.clear();
@@ -1241,7 +1242,7 @@ return_t crypto_key::get_privkey(EVP_PKEY* pkey, crypto_kty_t& type, binary_t& p
     crypt_datamap_t::iterator iter;
     int flag_request = crypt_access_t::private_key;
 
-    ret = extract(pkey, flag_request, type, datamap, plzero);
+    ret = extract(pkey, flag_request, type, datamap, preserve);
     if (errorcode_t::success == ret) {
         if (crypto_kty_t::kty_hmac == type) {
             iter = datamap.find(crypt_item_t::item_hmac_k);
@@ -1268,7 +1269,7 @@ return_t crypto_key::get_privkey(EVP_PKEY* pkey, crypto_kty_t& type, binary_t& p
     return ret;
 }
 
-return_t crypto_key::extract(EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
+return_t crypto_key::extract(const EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt_datamap_t& datamap, bool preserve) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 1;
 
@@ -1285,9 +1286,9 @@ return_t crypto_key::extract(EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt
             if ((crypt_access_t::public_key | crypt_access_t::private_key) & flag) {
                 size_t key_length = 0;
                 binary_t bin_k;
-                EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, nullptr, &key_length);
+                EVP_PKEY_get_raw_private_key(pkey, nullptr, &key_length);
                 bin_k.resize(key_length);
-                EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, &bin_k[0], &key_length);
+                EVP_PKEY_get_raw_private_key(pkey, &bin_k[0], &key_length);
 
                 datamap.insert(std::make_pair(crypt_item_t::item_hmac_k, bin_k));
             }
@@ -1332,7 +1333,7 @@ return_t crypto_key::extract(EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt
             __try2 {
                 // preserve leading zero octets
                 uint32 curve_size = 0;
-                if (plzero) {
+                if (preserve) {
                     uint32 nid = 0;
                     nidof_evp_pkey(pkey, nid);
                     switch (nid) {
@@ -1385,7 +1386,7 @@ return_t crypto_key::extract(EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt
                     }
                 }
                 if (crypt_access_t::private_key & flag) {
-                    const BIGNUM* d = EC_KEY_get0_private_key(EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey));
+                    const BIGNUM* d = EC_KEY_get0_private_key(EVP_PKEY_get0_EC_KEY(pkey));
                     if (d) {
                         int len_d = BN_num_bytes(d);
 
@@ -1419,7 +1420,7 @@ return_t crypto_key::extract(EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt
         } else if (crypto_kty_t::kty_okp == type) {
             // preserve leading zero octets
             uint32 curve_size = 0;
-            if (plzero) {
+            if (preserve) {
                 uint32 nid = 0;
                 nidof_evp_pkey(pkey, nid);
                 switch (nid) {
@@ -1438,7 +1439,7 @@ return_t crypto_key::extract(EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt
                 binary_t bin_x;
                 size_t len_x = curve_size ? curve_size : 256;
                 bin_x.resize(len_x);
-                ret_openssl = EVP_PKEY_get_raw_public_key((EVP_PKEY*)pkey, &bin_x[0], &len_x);
+                ret_openssl = EVP_PKEY_get_raw_public_key(pkey, &bin_x[0], &len_x);
                 bin_x.resize(len_x);
 
                 if (curve_size) {
@@ -1455,7 +1456,7 @@ return_t crypto_key::extract(EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt
                 binary_t bin_d;
                 size_t len_d = curve_size ? curve_size : 256;
                 bin_d.resize(len_d);
-                ret_openssl = EVP_PKEY_get_raw_private_key((EVP_PKEY*)pkey, &bin_d[0], &len_d);
+                ret_openssl = EVP_PKEY_get_raw_private_key(pkey, &bin_d[0], &len_d);
                 bin_d.resize(len_d);
 
                 if (curve_size) {
@@ -1515,14 +1516,6 @@ void crypto_key::for_each(void (*fp_dump)(crypto_key_object_t*, void*), void* pa
 }
 
 crypto_kty_t typeof_crypto_key(crypto_key_object_t const& key) { return typeof_crypto_key(key.pkey); }
-
-bool is_kindof(EVP_PKEY* pkey, crypto_kty_t type) {
-    bool test = false;
-    crypto_kty_t kty = typeof_crypto_key(pkey);
-
-    test = (kty == type);
-    return test;
-}
 
 }  // namespace crypto
 }  // namespace hotplace
