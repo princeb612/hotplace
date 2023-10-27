@@ -460,9 +460,12 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_aescmac_128_64,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aescmac,
-        {},
+        {
+            "sha256",
+        },
         {
             "aes-128-cbc",
+            16,
             8,
         },
     },
@@ -470,9 +473,12 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_aescmac_256_64,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aescmac,
-        {},
+        {
+            "sha256",
+        },
         {
             "aes-256-cbc",
+            32,
             8,
         },
     },
@@ -480,9 +486,12 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_aescmac_128_128,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aescmac,
-        {},
+        {
+            "sha256",
+        },
         {
             "aes-128-cbc",
+            16,
             16,
         },
     },
@@ -490,9 +499,12 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_aescmac_256_128,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_aescmac,
-        {},
+        {
+            "sha256",
+        },
         {
             "aes-256-cbc",
+            32,
             16,
         },
     },

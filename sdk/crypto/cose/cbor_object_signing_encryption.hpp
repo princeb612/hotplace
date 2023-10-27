@@ -26,6 +26,9 @@ using namespace io;
 namespace crypto {
 
 class cbor_object_signing_encryption {
+    friend class cbor_object_encryption;
+    friend class cbor_object_signing;
+
    public:
     cbor_object_signing_encryption();
     ~cbor_object_signing_encryption();
@@ -106,16 +109,6 @@ class cbor_object_signing_encryption {
      */
     return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output);
     /**
-     * @brief   verify with kid
-     * @param   cose_context_t* handle [in]
-     * @param   crypto_key* key [in]
-     * @param   binary_t const& input [in]
-     * @param   bool& result [out]
-     * @return  error code (see error.hpp)
-     * @remarks see json_object_signing::verify
-     */
-    return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
-    /**
      * @brief   mac
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
@@ -142,8 +135,9 @@ class cbor_object_signing_encryption {
      * @param   binary_t const& input [in]
      * @param   bool& result [out]
      * @return  error code (see error.hpp)
+     * @remarks see json_object_signing::verify
      */
-    return_t verifymac(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
+    return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
     /**
      * @brief   clear
      * @param   cose_context_t* handle [in]
@@ -264,14 +258,14 @@ class cbor_object_signing_encryption {
          * @param   binary_t& tobesigned [out]
          * @return  error code (see error.hpp)
          */
-        return_t compose_tobe_signed(cose_context_t* handle, cose_parts_t* parts, binary_t& tobesigned);
+        return_t compose_sig_structure(cose_context_t* handle, cose_parts_t* parts, binary_t& tobesigned);
         /**
-         * @brief   compose the ToMaced
+         * @brief   compose the ToMac
          * @param   cose_context_t* handle [in]
-         * @param   binary_t& tobemaced [out]
+         * @param   binary_t& tobemac [out]
          * @return  error code (see error.hpp)
          */
-        return_t compose_tobe_maced(cose_context_t* handle, binary_t& tobemaced);
+        return_t compose_mac_structure(cose_context_t* handle, binary_t& tomac);
 
        protected:
         cbor_data* docompose_kdf_context_item(cose_context_t* handle, cose_parts_t* source, cose_key_t key, cose_param_t shared);
@@ -279,10 +273,15 @@ class cbor_object_signing_encryption {
         return_t doparse_protected(cose_context_t* handle, cbor_object* object);
         return_t doparse_unprotected(cose_context_t* handle, cbor_object* object);
         return_t doparse_payload(cose_context_t* handle, cbor_object* object);
-        return_t doparse_tag(cose_context_t* handle, cbor_object* object);
-        return_t doparse_signature(cose_context_t* handle, cbor_object* object);
-        return_t doparse_recipients(cose_context_t* handle, cbor_object* object);
+        return_t doparse_singleitem(cose_context_t* handle, cbor_object* object);
+        return_t doparse_multiitems(cose_context_t* handle, cbor_object* object);
     };
+
+   protected:
+    /**
+     * @brief cek into handle->binarymap[cose_param_t::cose_param_cek]
+     */
+    static return_t process_recipient(cose_context_t* handle, crypto_key* key, cose_parts_t* item);
 };
 
 typedef cbor_object_signing_encryption COSE;

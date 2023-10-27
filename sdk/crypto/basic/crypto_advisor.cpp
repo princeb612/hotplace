@@ -889,7 +889,7 @@ jws_t crypto_advisor::sigof(crypt_sig_t sig) {
     return type;
 }
 
-crypt_sig_t crypto_advisor::cose_sigof(cose_alg_t sig) {
+crypt_sig_t crypto_advisor::sigof(cose_alg_t sig) {
     crypt_sig_t type = crypt_sig_t::sig_unknown;
     maphint<cose_alg_t, crypt_sig_t> hint(_cose2sig_map);
 
