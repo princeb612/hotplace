@@ -208,13 +208,11 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
         const char* k = nullptr;
         binary_t kwiv;
         binary_t iv;
-        //int enc_alg = 0;
 
         kwiv.resize(8);
         memset(&kwiv[0], 0xa6, kwiv.size());
 
         composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
-        //composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.protected_map);
 
         binary_t context;
         binary_t cek;
@@ -293,7 +291,7 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
 
 #if defined DEBUG
-            printf("alg %i group %i\n", alg, group);
+            printf("\e[1;33malg %i group %i\e[0m\n", alg, group);
 #endif
 
             if (cose_group_t::cose_group_aeskw == group) {
@@ -406,11 +404,13 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
             }
 
             item->binarymap[cose_param_t::cose_param_cek] = cek;
+#if defined DEBUG
             item->binarymap[cose_param_t::cose_param_context] = context;
             item->binarymap[cose_param_t::cose_param_iv] = iv;
             item->binarymap[cose_param_t::cose_param_kek] = kek;
             item->binarymap[cose_param_t::cose_param_salt] = salt;
             item->binarymap[cose_param_t::cose_param_secret] = secret;
+#endif
         } else {
             crypto_kty_t kty;
             key->get_privkey(pkey, kty, cek, true);
