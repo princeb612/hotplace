@@ -55,6 +55,7 @@ class cbor_object_encryption {
 
    protected:
     return_t dodecrypt(cose_context_t* handle, crypto_key* key, binary_t& output);
+    return_t dodecrypt(cose_context_t* handle, crypto_key* key, cose_parts_t* part, binary_t& output);
 };
 
 }  // namespace crypto

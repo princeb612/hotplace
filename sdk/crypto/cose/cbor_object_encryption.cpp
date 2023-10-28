@@ -63,117 +63,6 @@ return_t split(binary_t const& source, size_t& sizeof_ciphertext, binary_t& tag,
     return ret;
 }
 
-return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* key, binary_t& output) {
-    return_t ret = errorcode_t::success;
-    return_t check = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    cbor_object_signing_encryption::composer composer;
-    int enc_alg = 0;
-    openssl_crypt crypt;
-    // openssl_hash hash;
-    crypt_context_t* crypt_handle = nullptr;
-    // hash_context_t* hash_handle = nullptr;
-
-    __try2 {
-        if (nullptr == handle || nullptr == key) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        check = composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.protected_map);
-        if (errorcode_t::success != check) {
-            check = composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.unprotected_map);
-        }
-
-        const hint_cose_algorithm_t* enc_hint = advisor->hintof_cose_algorithm((cose_alg_t)enc_alg);
-
-        maphint<cose_param_t, binary_t> hint(handle->body.binarymap);
-
-        binary_t iv;
-
-        composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
-        if (0 == iv.size()) {
-            iv = handle->body.binarymap[cose_param_t::cose_unsent_iv];
-        }
-        if (iv.size()) {
-            // TEST FAILED
-            // test vector wrong ?
-
-            // RFC 8152 3.1.  Common COSE Headers Parameters
-            // Partial IV
-            // 1.  Left-pad the Partial IV with zeros to the length of IV.
-            // 2.  XOR the padded Partial IV with the context IV.
-            size_t ivsize = iv.size();
-            binary_t partial_iv;
-            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, handle->body.unprotected_map);
-            if (partial_iv.size()) {
-                // binary_t aligned_partial_iv;
-                // binary_load(aligned_partial_iv, ivsize, &partial_iv[0], partial_iv.size());
-                // for (size_t i = 0; i < ivsize; i++) {
-                //     iv[i] ^= aligned_partial_iv[i];
-                // }
-#if defined DEBUG
-                handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
-#endif
-            }
-        }
-
-        const EVP_PKEY* pkey = nullptr;
-        binary_t cek;
-        hint.find(cose_param_t::cose_param_cek, &cek);
-        uint8 cbor_tag = handle->cbor_tag;
-        if (0 == cek.size()) {
-            ret = errorcode_t::no_data;
-            __leave2;
-        }
-
-        binary_t authenticated_data = handle->body.binarymap[cose_param_t::cose_param_aad];
-
-        binary_t tag;
-
-        cose_group_t group = enc_hint->group;
-        if (cose_group_t::cose_group_aesgcm == group) {
-            size_t enc_size = 0;
-            split(handle->payload, enc_size, tag, enc_hint->enc.tsize);
-
-            // RFC 8152 10.1.  AES GCM
-            crypt.open(&crypt_handle, enc_hint->enc.algname, cek, iv);
-            ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
-            crypt.close(crypt_handle);
-
-        } else if (cose_group_t::cose_group_aesccm == group) {
-            size_t enc_size = 0;
-            split(handle->payload, enc_size, tag, enc_hint->enc.tsize);
-
-            // RFC 8152 10.2.  AES CCM - explains about L and M parameters
-            crypt.open(&crypt_handle, enc_hint->enc.algname, cek, iv);
-            crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_lsize, enc_hint->enc.lsize);
-            ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
-            crypt.close(crypt_handle);
-        } else if (cose_group_t::cose_group_chacha20_poly1305 == group) {
-            // TEST FAILED - counter ??
-            size_t enc_size = 0;
-            split(handle->payload, enc_size, tag, enc_hint->enc.tsize);
-
-            uint32 counter = 0;
-            binary_t chacha20iv;
-            openssl_chacha20_iv(chacha20iv, counter, iv);
-            // RFC 8152 10.3. ChaCha20 and Poly1305
-            crypt.open(&crypt_handle, enc_hint->enc.algname, cek, chacha20iv);
-            ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &authenticated_data, &tag);
-            crypt.close(crypt_handle);
-#if defined DEBUG
-            handle->debug_flag |= cose_debug_chacha20_poly1305;
-#endif
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-
-    return ret;
-}
-
 return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
@@ -201,63 +90,18 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             __leave2;
         }
 
-        // AAD_hex
-        binary_t authenticated_data;
-        composer.compose_enc_structure(handle, authenticated_data);
-
-        // too many parameters... handle w/ map
-        handle->body.binarymap[cose_param_t::cose_param_aad] = authenticated_data;
-
         size_t size_multiitems = handle->multiitems.size();
         if (0 == size_multiitems) {
-            int alg = 0;
-            std::string kid;
-            const char* k = nullptr;
-
-            check = composer.finditem(cose_key_t::cose_alg, alg, handle->body.protected_map);
-            if (errorcode_t::success != check) {
-                check = composer.finditem(cose_key_t::cose_alg, alg, handle->body.unprotected_map);
-            }
-            composer.finditem(cose_key_t::cose_kid, kid, handle->body.protected_map);
-            if (kid.size()) {
-                k = kid.c_str();
-            }
-
-            const hint_cose_algorithm_t* enc_hint = advisor->hintof_cose_algorithm((cose_alg_t)alg);
-
-            const EVP_PKEY* pkey = nullptr;
-            if (k) {
-                pkey = key->find(k, enc_hint->kty);
-            } else {
-                pkey = key->select(kid, enc_hint->kty);
-            }
-
-            if (nullptr == pkey) {
-#if defined DEBUG
-                handle->debug_flag |= cose_debug_notfound_key;
-#endif
-                ret = errorcode_t::not_found;
-                __leave2;
-            }
-
-            crypto_kty_t kty;
-            binary_t cek;
-            key->get_privkey(pkey, kty, cek, true);
-            handle->body.binarymap[cose_param_t::cose_param_cek] = cek;
-
-            check = dodecrypt(handle, key, output);
-
+            cbor_object_signing_encryption::process_recipient(handle, key, nullptr);
+            check = dodecrypt(handle, key, nullptr, output);
             results.insert((errorcode_t::success == check) ? true : false);
         } else {
             std::list<cose_parts_t>::iterator iter;
             for (iter = handle->multiitems.begin(); iter != handle->multiitems.end(); iter++) {
                 cose_parts_t& item = *iter;
 
-                // cek into handle->body.binarymap[cose_param_t::cose_param_cek]
                 cbor_object_signing_encryption::process_recipient(handle, key, &item);
-
-                check = dodecrypt(handle, key, output);
-
+                check = dodecrypt(handle, key, &item, output);
                 results.insert((errorcode_t::success == check) ? true : false);
             }
         }
@@ -270,6 +114,158 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
         }
     }
     __finally2 { cbor_object_signing_encryption::clear_context(handle); }
+    return ret;
+}
+
+return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* key, cose_parts_t* part, binary_t& output) {
+    return_t ret = errorcode_t::success;
+    return_t check = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    cbor_object_signing_encryption::composer composer;
+    // int enc_alg = 0;
+    openssl_crypt crypt;
+    crypt_context_t* crypt_handle = nullptr;
+
+    __try2 {
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        cose_alg_t alg = cose_alg_t::cose_unknown;
+        std::string kid;
+        binary_t aad;
+        binary_t cek;
+        binary_t iv;
+        binary_t partial_iv;
+        binary_t tag;
+
+        alg = handle->body.alg;
+        if (part) {
+            kid = part->kid;
+            composer.finditem(cose_key_t::cose_iv, iv, part->unprotected_map);
+            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, part->unprotected_map);
+            cek = part->binarymap[cose_param_t::cose_param_cek];
+        } else {
+            cek = handle->body.binarymap[cose_param_t::cose_param_cek];
+        }
+        if (kid.empty()) {
+            kid = handle->body.kid;
+        }
+        if (0 == iv.size()) {
+            composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
+            if (0 == iv.size()) {
+                iv = handle->body.binarymap[cose_param_t::cose_unsent_iv];
+            }
+        }
+        if (0 == partial_iv.size()) {
+            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, handle->body.unprotected_map);
+        }
+
+        if (iv.size() && partial_iv.size()) {
+            // TEST FAILED
+            // test vector wrong ?
+
+            // RFC 8152 3.1.  Common COSE Headers Parameters
+            // Partial IV
+            // 1.  Left-pad the Partial IV with zeros to the length of IV.
+            // 2.  XOR the padded Partial IV with the context IV.
+            size_t ivsize = iv.size();
+            // binary_t aligned_partial_iv;
+            // binary_load(aligned_partial_iv, ivsize, &partial_iv[0], partial_iv.size());
+            // for (size_t i = 0; i < ivsize; i++) {
+            //     iv[i] ^= aligned_partial_iv[i];
+            // }
+#if defined DEBUG
+            handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
+#endif
+        }
+
+        composer.compose_enc_structure(handle, aad);
+
+        const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
+        if (nullptr == hint) {
+            ret = errorcode_t::request;  // study
+            __leave2;
+        }
+
+        uint8 cbor_tag = handle->cbor_tag;
+        if (0 == cek.size()) {
+            ret = errorcode_t::no_data;
+            __leave2;
+        }
+
+        const EVP_PKEY* pkey = nullptr;
+        if (kid.size()) {
+            pkey = key->find(kid.c_str(), hint->kty);
+        } else {
+            std::string k;
+            pkey = key->select(k, hint->kty);
+        }
+
+        cose_group_t group = hint->group;
+        if (cose_group_t::cose_group_aesgcm == group) {
+            size_t enc_size = 0;
+            split(handle->payload, enc_size, tag, hint->enc.tsize);
+
+            // RFC 8152 10.1.  AES GCM
+            crypt.open(&crypt_handle, hint->enc.algname, cek, iv);
+            ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
+            crypt.close(crypt_handle);
+
+        } else if (cose_group_t::cose_group_aesccm == group) {
+            size_t enc_size = 0;
+            split(handle->payload, enc_size, tag, hint->enc.tsize);
+
+            // RFC 8152 10.2.  AES CCM - explains about L and M parameters
+            crypt.open(&crypt_handle, hint->enc.algname, cek, iv);
+            crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_lsize, hint->enc.lsize);
+            ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
+            crypt.close(crypt_handle);
+        } else if (cose_group_t::cose_group_chacha20_poly1305 == group) {
+            // TEST FAILED - counter ??
+            size_t enc_size = 0;
+            split(handle->payload, enc_size, tag, hint->enc.tsize);
+
+            uint32 counter = 0;
+            binary_t chacha20iv;
+            openssl_chacha20_iv(chacha20iv, counter, iv);
+            // RFC 8152 10.3. ChaCha20 and Poly1305
+            crypt.open(&crypt_handle, hint->enc.algname, cek, chacha20iv);
+            ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
+            crypt.close(crypt_handle);
+#if defined DEBUG
+            handle->debug_flag |= cose_debug_chacha20_poly1305;
+#endif
+        }
+
+#if defined DEBUG
+#define dump(x)                                                           \
+    if (x.size()) {                                                       \
+        dump_memory(x, &bs);                                              \
+        printf("%s\n%s\n%s\n", #x, bs.c_str(), base16_encode(x).c_str()); \
+    }
+
+        {
+            cose_parts_t* temp = part ? part : &handle->body;
+            basic_stream bs;
+            dump(aad);
+            dump(cek);
+            binary_t context = temp->binarymap[cose_param_t::cose_param_context];
+            dump(context);
+            dump(iv);
+            binary_t kek = temp->binarymap[cose_param_t::cose_param_kek];
+            dump(kek);
+            binary_t secret = temp->binarymap[cose_param_t::cose_param_secret];
+            dump(secret);
+            dump(tag);
+        }
+#endif
+    }
+    __finally2 {
+        // do nothing
+    }
+
     return ret;
 }
 

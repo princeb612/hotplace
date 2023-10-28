@@ -262,7 +262,7 @@ class cbor_object_signing_encryption {
         /**
          * @brief   compose the ToMac
          * @param   cose_context_t* handle [in]
-         * @param   binary_t& tobemac [out]
+         * @param   binary_t& tomac [out]
          * @return  error code (see error.hpp)
          */
         return_t compose_mac_structure(cose_context_t* handle, binary_t& tomac);
