@@ -208,13 +208,13 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
         const char* k = nullptr;
         binary_t kwiv;
         binary_t iv;
-        int enc_alg = 0;
+        //int enc_alg = 0;
 
         kwiv.resize(8);
         memset(&kwiv[0], 0xa6, kwiv.size());
 
         composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
-        composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.protected_map);
+        //composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.protected_map);
 
         binary_t context;
         binary_t cek;
@@ -224,15 +224,11 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
         int alg = 0;
         std::string kid;
 
-        if (item) {
-            composer.finditem(cose_key_t::cose_kid, kid, item->unprotected_map);
-            composer.finditem(cose_key_t::cose_alg, alg, item->protected_map);
-            if (0 == alg) {
-                composer.finditem(cose_key_t::cose_alg, alg, item->unprotected_map);
-            }
-        } else {
-            composer.finditem(cose_key_t::cose_kid, kid, handle->body.unprotected_map);
-            composer.finditem(cose_key_t::cose_alg, alg, handle->body.protected_map);
+        cose_parts_t* temp = item ? item : &handle->body;
+        composer.finditem(cose_key_t::cose_kid, kid, temp->unprotected_map);
+        composer.finditem(cose_key_t::cose_alg, alg, temp->protected_map);
+        if (0 == alg) {
+            composer.finditem(cose_key_t::cose_alg, alg, temp->unprotected_map);
         }
         if (kid.size()) {
             k = kid.c_str();
