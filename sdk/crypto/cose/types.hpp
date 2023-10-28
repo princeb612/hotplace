@@ -17,6 +17,7 @@
 #include <sdk/io/cbor/concise_binary_object_representation.hpp>
 
 namespace hotplace {
+using namespace io;
 namespace crypto {
 
 enum cose_param_t {

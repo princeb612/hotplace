@@ -766,9 +766,9 @@ struct _otp_context_t {};
 typedef struct _otp_context_t otp_context_t;
 
 enum crypt_ctrl_t {
-    crypt_ctrl_padding = 0,  // EVP_CIPHER_CTX_set_padding
-    crypt_ctrl_lsize = 1,    // L SIZE, sizeof_nonce(iv) = 15-L
-    crypt_ctrl_tsize = 2,    // TAG Size
+    crypt_ctrl_padding = 1,  // EVP_CIPHER_CTX_set_padding
+    crypt_ctrl_lsize = 2,    // L SIZE, sizeof_nonce(iv) = 15-L
+    crypt_ctrl_tsize = 3,    // TAG Size
 };
 
 }  // namespace crypto
