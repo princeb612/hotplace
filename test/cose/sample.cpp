@@ -1916,64 +1916,65 @@ void test_github_example() {
         } else {
             cose_context_t* handle = nullptr;
             cose.open(&handle);
+
+#define dumps(b, f)                                          \
+    if (f) {                                                 \
+        dump_memory(base16_decode(f), &bs, 16, 2);           \
+        printf("\e[35m>%s %s\n%s\n\e[0m", b, f, bs.c_str()); \
+    }
+
 #if defined DEBUG
-            if (vector->enc.aad_hex) {
-                dump_memory(base16_decode(vector->enc.aad_hex), &bs);
-                printf("\e[35mAAD\n%s\n%s\n\e[0m", bs.c_str(), vector->enc.aad_hex);
-            }
-            if (vector->enc.cek_hex) {
-                dump_memory(base16_decode(vector->enc.cek_hex), &bs);
-                printf("\e[35mCEK\n%s\n%s\n\e[0m", bs.c_str(), vector->enc.cek_hex);
-            }
+            dumps("AAD", vector->enc.aad_hex);
+            dumps("CEK", vector->enc.cek_hex);
 #endif
+            dumps("external", vector->shared.external);
             if (vector->shared.external) {
                 cose.set(handle, cose_param_t::cose_external, base16_decode(vector->shared.external));
-                printf("\e[35m>external %s\n\e[0m", vector->shared.external);
                 properties << "external ";
             }
+            dumps("unsent iv", vector->shared.iv_hex);
             if (vector->shared.iv_hex) {
                 cose.set(handle, cose_param_t::cose_unsent_iv, base16_decode(vector->shared.iv_hex));
-                printf("\e[35m>unsent iv %s\n\e[0m", vector->shared.iv_hex);
                 properties << "iv ";
             }
+            dumps("unsent partyu id", vector->shared.apu_id);
             if (vector->shared.apu_id) {
                 cose.set(handle, cose_param_t::cose_unsent_apu_id, base16_decode(vector->shared.apu_id));
-                printf("\e[35m>unsent partyu id %s\n\e[0m", vector->shared.apu_id);
                 properties << "apu_id ";
             }
+            dumps("unsent partyu nonce", vector->shared.apu_nonce);
             if (vector->shared.apu_nonce) {
                 cose.set(handle, cose_param_t::cose_unsent_apu_nonce, base16_decode(vector->shared.apu_nonce));
-                printf("\e[35m>unsent partyu nonce %s\n\e[0m", vector->shared.apu_nonce);
                 properties << "apu_nonce ";
             }
+            dumps("unsent partyu other", vector->shared.apu_other);
             if (vector->shared.apu_other) {
                 cose.set(handle, cose_param_t::cose_unsent_apu_other, base16_decode(vector->shared.apu_other));
-                printf("\e[35m>unsent partyu other %s\n\e[0m", vector->shared.apu_other);
                 properties << "external apu_other";
             }
+            dumps("unsent partyv id", vector->shared.apv_id);
             if (vector->shared.apv_id) {
                 cose.set(handle, cose_param_t::cose_unsent_apv_id, base16_decode(vector->shared.apv_id));
-                printf("\e[35m>unsent partyv id %s\n\e[0m", vector->shared.apv_id);
                 properties << "apv_id ";
             }
+            dumps("unsent partyv nonce", vector->shared.apv_nonce);
             if (vector->shared.apv_nonce) {
                 cose.set(handle, cose_param_t::cose_unsent_apv_nonce, base16_decode(vector->shared.apv_nonce));
-                printf("\e[35m>unsent partyv nonce %s\n\e[0m", vector->shared.apv_nonce);
                 properties << "apv_nonce ";
             }
+            dumps("unsent partyv other", vector->shared.apv_other);
             if (vector->shared.apv_other) {
                 cose.set(handle, cose_param_t::cose_unsent_apv_other, base16_decode(vector->shared.apv_other));
-                printf("\e[35m>unsent partyv other %s\n\e[0m", vector->shared.apv_other);
                 properties << "apv_other ";
             }
+            dumps("unsent pub other", vector->shared.pub_other);
             if (vector->shared.pub_other) {
                 cose.set(handle, cose_param_t::cose_unsent_pub_other, base16_decode(vector->shared.pub_other));
-                printf("\e[35m>unsent pub other %s\n\e[0m", vector->shared.pub_other);
                 properties << "pub_other ";
             }
+            dumps("unsent private", vector->shared.priv);
             if (vector->shared.priv) {
                 cose.set(handle, cose_param_t::cose_unsent_priv_other, base16_decode(vector->shared.priv));
-                printf("\e[35m>unsent private %s\n\e[0m", vector->shared.priv);
                 properties << "priv ";
             }
             if (vector->debug) {
@@ -1987,7 +1988,7 @@ void test_github_example() {
                 case cbor_tag_t::cose_tag_encrypt:   // 96 (D860)
                     ret = cose.decrypt(handle, mapped_key, cbor, decrypted, result);
                     if (errorcode_t::success == ret) {
-                        dump_memory(decrypted, &bs);
+                        dump_memory(decrypted, &bs, 16, 4);
                         printf("decrypted\n%s\n", bs.c_str());
                     }
                     break;

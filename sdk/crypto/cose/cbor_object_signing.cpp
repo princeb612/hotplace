@@ -393,18 +393,54 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
 
         cose_alg_t alg = cose_alg_t::cose_unknown;
         std::string kid;
+        binary_t cek;
+        binary_t context;
+        binary_t iv;
+        binary_t partial_iv;
+        binary_t tag;
+        binary_t tomac;
+
+        alg = handle->body.alg;
         if (part) {
-            alg = part->alg;
             kid = part->kid;
-        }
-        if (0 == alg) {
-            alg = handle->body.alg;
+            composer.finditem(cose_key_t::cose_iv, iv, part->unprotected_map);
+            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, part->unprotected_map);
+            cek = part->binarymap[cose_param_t::cose_param_cek];
+        } else {
+            cek = handle->body.binarymap[cose_param_t::cose_param_cek];
         }
         if (kid.empty()) {
             kid = handle->body.kid;
         }
+        if (0 == iv.size()) {
+            composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
+            if (0 == iv.size()) {
+                iv = handle->body.binarymap[cose_param_t::cose_unsent_iv];
+            }
+        }
+        if (0 == partial_iv.size()) {
+            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, handle->body.unprotected_map);
+        }
 
-        binary_t tomac;
+        if (iv.size() && partial_iv.size()) {
+            // TEST FAILED
+            // test vector wrong ?
+
+            // RFC 8152 3.1.  Common COSE Headers Parameters
+            // Partial IV
+            // 1.  Left-pad the Partial IV with zeros to the length of IV.
+            // 2.  XOR the padded Partial IV with the context IV.
+            size_t ivsize = iv.size();
+            // binary_t aligned_partial_iv;
+            // binary_load(aligned_partial_iv, ivsize, &partial_iv[0], partial_iv.size());
+            // for (size_t i = 0; i < ivsize; i++) {
+            //     iv[i] ^= aligned_partial_iv[i];
+            // }
+#if defined DEBUG
+            handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
+#endif
+        }
+
         composer.compose_mac_structure(handle, tomac);
 
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
@@ -413,26 +449,58 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             __leave2;
         }
 
+        uint8 cbor_tag = handle->cbor_tag;
+        if (0 == cek.size()) {
+            ret = errorcode_t::no_data;
+            __leave2;
+        }
+
+        const EVP_PKEY* pkey = nullptr;
+        if (kid.size()) {
+            pkey = key->find(kid.c_str(), hint->kty);
+        } else {
+            std::string k;
+            pkey = key->select(k, hint->kty);
+        }
+
         cose_group_t group = hint->group;
         if (cose_group_t::cose_group_hmac == group) {
-            // ret = hmac(hint->dgst.algname, cek, handle->payload, tag);
-            // if (errorcode_t::success != ret) {
-            //    __leave2;
-            //}
-            ret = errorcode_t::error_verify;
+            ret = hmac(hint->dgst.algname, cek, tomac, tag);
+            // ret = errorcode_t::error_verify;
         } else if (cose_group_t::cose_group_aescmac == group) {
-            // binary_t q;
-            // binary_t iv;
-            // iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
-            // ret = aes_cbc_hmac_sha2_encrypt(hint->enc.algname, hint->dgst.algname, cek, iv, authenticated_data, handle->payload, q, tag);
-            // if (errorcode_t::success != ret) {
-            //    __leave2;
-            //}
-            // tag.resize(hint->enc.tsize);
-            ret = errorcode_t::error_verify;
+            binary_t q;
+            binary_t iv;
+            iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
+            ret = aes_cbc_hmac_sha2_encrypt(hint->enc.algname, hint->dgst.algname, cek, iv, convert(""), tomac, q, tag);
+            tag.resize(hint->enc.tsize);
+            // ret = errorcode_t::error_verify;
         }
         if (tag != handle->singleitem) {
             ret = errorcode_t::error_verify;
+        }
+
+#if defined DEBUG
+#define dump(x)                                                                 \
+    if (x.size()) {                                                             \
+        dump_memory(x, &bs, 16, 4);                                             \
+        printf("  %s\n%s\n    %s\n", #x, bs.c_str(), base16_encode(x).c_str()); \
+    }
+
+        {
+            cose_parts_t* temp = part ? part : &handle->body;
+            basic_stream bs;
+            dump(cek);
+            dump(context);
+            dump(iv);
+            binary_t kek = temp->binarymap[cose_param_t::cose_param_kek];
+            dump(kek);
+            binary_t secret = temp->binarymap[cose_param_t::cose_param_secret];
+            dump(secret);
+            dump(tag);
+            dump(tomac);
+        }
+#endif
+        if (errorcode_t::success != ret) {
             __leave2;
         }
     }

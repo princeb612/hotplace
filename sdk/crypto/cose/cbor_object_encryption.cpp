@@ -240,10 +240,10 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
         }
 
 #if defined DEBUG
-#define dump(x)                                                           \
-    if (x.size()) {                                                       \
-        dump_memory(x, &bs);                                              \
-        printf("%s\n%s\n%s\n", #x, bs.c_str(), base16_encode(x).c_str()); \
+#define dump(x)                                                                 \
+    if (x.size()) {                                                             \
+        dump_memory(x, &bs, 16, 4);                                             \
+        printf("  %s\n%s\n    %s\n", #x, bs.c_str(), base16_encode(x).c_str()); \
     }
 
         {
