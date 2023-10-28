@@ -297,10 +297,11 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                  * RFC7518 4.4. Key Wrapping with AES Key Wrap
                  * RFC7520 5.8. Key Wrap Using AES-KeyWrap with AES-GCM
                  */
-                crypt_context_t* handle_kw = nullptr;
-                crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &kw_iv[0], kw_iv.size());
-                ret = crypt.encrypt(handle_kw, &cek[0], cek.size(), encrypted_key);
-                crypt.close(handle_kw);
+                // crypt_context_t* handle_kw = nullptr;
+                // crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &kw_iv[0], kw_iv.size());
+                // ret = crypt.encrypt(handle_kw, &cek[0], cek.size(), encrypted_key);
+                // crypt.close(handle_kw);
+                ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, oct, kw_iv, cek, encrypted_key);
             } else if (jwa_group_t::jwa_group_dir == alg_group) {
                 /*
                  * dir
@@ -345,10 +346,11 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                 }
                 ret = ecdh_es(epk, pkey, alg_hint->alg_name, "", "", keylen, derived_key);
 
-                crypt_context_t* handle_kw = nullptr;
-                crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &derived_key[0], derived_key.size(), &kw_iv[0], kw_iv.size());
-                ret = crypt.encrypt(handle_kw, &cek[0], cek.size(), encrypted_key);
-                crypt.close(handle_kw);
+                // crypt_context_t* handle_kw = nullptr;
+                // crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &derived_key[0], derived_key.size(), &kw_iv[0], kw_iv.size());
+                // ret = crypt.encrypt(handle_kw, &cek[0], cek.size(), encrypted_key);
+                // crypt.close(handle_kw);
+                ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, derived_key, kw_iv, cek, encrypted_key);
             } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
                 /*
                  * A128GCMKW, A192GCMKW, A256GCMKW
@@ -359,10 +361,11 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                 binary_t aad1;                                                          // empty
                 binary_t& tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];  // compute authencation tag here
 
-                crypt_context_t* handle_crypt = nullptr;
-                crypt.open(&handle_crypt, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &iv1[0], iv1.size());
-                ret = crypt.encrypt2(handle_crypt, &cek[0], cek.size(), encrypted_key, &aad1, &tag1);
-                crypt.close(handle_crypt);
+                // crypt_context_t* handle_crypt = nullptr;
+                // crypt.open(&handle_crypt, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &iv1[0], iv1.size());
+                // ret = crypt.encrypt2(handle_crypt, &cek[0], cek.size(), encrypted_key, &aad1, &tag1);
+                // crypt.close(handle_crypt);
+                ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, oct, iv1, cek, encrypted_key, aad1, tag1);
 
                 /*
                  * tag updated
@@ -406,11 +409,12 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                 //                    pbkdf2_derived_key.size (), &pbkdf2_derived_key[0]);
                 kdf_pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, convert(oct), salt, p2c);
 
-                crypt_context_t* crypt_handle = nullptr;
-                crypt.open(&crypt_handle, (crypt_algorithm_t)alg_crypt_alg, alg_crypt_mode, &pbkdf2_derived_key[0], pbkdf2_derived_key.size(), &kw_iv[0],
-                           kw_iv.size());
-                ret = crypt.encrypt(crypt_handle, &cek[0], cek.size(), encrypted_key);
-                crypt.close(crypt_handle);
+                // crypt_context_t* crypt_handle = nullptr;
+                // crypt.open(&crypt_handle, alg_crypt_alg, alg_crypt_mode, &pbkdf2_derived_key[0], pbkdf2_derived_key.size(), &kw_iv[0],
+                //            kw_iv.size());
+                // ret = crypt.encrypt(crypt_handle, &cek[0], cek.size(), encrypted_key);
+                // crypt.close(crypt_handle);
+                ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, pbkdf2_derived_key, kw_iv, cek, encrypted_key);
             }
         }
 
@@ -427,17 +431,15 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
             uint32 enc_group = enc_hint->group;
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
                 // // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
-                ret = aes_cbc_hmac_sha2_encrypt((crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, (hash_algorithm_t)enc_hash_alg, cek, iv, aad,
-                                                input, ciphertext, tag);
-                if (errorcode_t::success != ret) {
-                    __leave2;
-                }
+                ret = aes_cbc_hmac_sha2_encrypt((crypt_algorithm_t)enc_crypt_alg, enc_crypt_mode, (hash_algorithm_t)enc_hash_alg, cek, iv, aad, input,
+                                                ciphertext, tag);
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
-                crypt_context_t* handle_crypt = nullptr;
-                crypt.open(&handle_crypt, (crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, &cek[0], cek.size(), &iv[0], iv.size());
-                /* Content Encryption */
-                ret = crypt.encrypt2(handle_crypt, &input[0], input.size(), ciphertext, &aad, &tag);
-                crypt.close(handle_crypt);
+                // crypt_context_t* handle_crypt = nullptr;
+                // crypt.open(&handle_crypt, enc_crypt_alg, enc_crypt_mode, &cek[0], cek.size(), &iv[0], iv.size());
+                // /* Content Encryption */
+                // ret = crypt.encrypt2(handle_crypt, &input[0], input.size(), ciphertext, &aad, &tag);
+                // crypt.close(handle_crypt);
+                ret = crypt.encrypt(enc_crypt_alg, enc_crypt_mode, cek, iv, input, ciphertext, aad, tag);
             }
         }
     }
@@ -524,10 +526,12 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
 
             if (crypto_kty_t::kty_hmac == alg_hint->kty) {
                 /* EVP_KEY_HMAC key data and length */
-                size_t key_length = 0;
-                EVP_PKEY_get_raw_private_key(pkey, nullptr, &key_length);
-                oct.resize(key_length);
-                EVP_PKEY_get_raw_private_key(pkey, &oct[0], &key_length);
+                // size_t key_length = 0;
+                // EVP_PKEY_get_raw_private_key(pkey, nullptr, &key_length);
+                // oct.resize(key_length);
+                // EVP_PKEY_get_raw_private_key(pkey, &oct[0], &key_length);
+                crypto_kty_t kty;
+                crypto_key::get_privkey(pkey, kty, oct, true);
             }
 
             uint32 alg_group = alg_hint->group;
@@ -548,10 +552,11 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                  * RFC7518 4.4. Key Wrapping with AES Key Wrap
                  * RFC7520 5.8. Key Wrap Using AES-KeyWrap with AES-GCM
                  */
-                crypt_context_t* handle_kw = nullptr;
-                crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &kw_iv[0], kw_iv.size());
-                ret = crypt.decrypt(handle_kw, &encrypted_key[0], encrypted_key.size(), cek);
-                crypt.close(handle_kw);
+                // crypt_context_t* handle_kw = nullptr;
+                // crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &kw_iv[0], kw_iv.size());
+                // ret = crypt.decrypt(handle_kw, &encrypted_key[0], encrypted_key.size(), cek);
+                // crypt.close(handle_kw);
+                ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, oct, kw_iv, encrypted_key, cek);
             } else if (jwa_group_t::jwa_group_dir == alg_group) {
                 /*
                  * dir
@@ -593,10 +598,11 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                 }
                 ret = ecdh_es(pkey, epk, alg_hint->alg_name, "", "", keylen, derived_key);
 
-                crypt_context_t* handle_kw = nullptr;
-                crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &derived_key[0], derived_key.size(), &kw_iv[0], kw_iv.size());
-                ret = crypt.decrypt(handle_kw, &encrypted_key[0], encrypted_key.size(), cek);
-                crypt.close(handle_kw);
+                // crypt_context_t* handle_kw = nullptr;
+                // crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &derived_key[0], derived_key.size(), &kw_iv[0], kw_iv.size());
+                // ret = crypt.decrypt(handle_kw, &encrypted_key[0], encrypted_key.size(), cek);
+                // crypt.close(handle_kw);
+                ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, derived_key, kw_iv, encrypted_key, cek);
             } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
                 /*
                  * A128GCMKW, A192GCMKW, A256GCMKW
@@ -608,10 +614,11 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                 binary_t tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];
 
                 /* cek, aad(null), tag = AESGCM (HMAC.key, iv).decrypt (encryted_key) */
-                crypt_context_t* handle_crypt = nullptr;
-                crypt.open(&handle_crypt, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &iv1[0], iv1.size());
-                ret = crypt.decrypt2(handle_crypt, &encrypted_key[0], encrypted_key.size(), cek, &aad1, &tag1);
-                crypt.close(handle_crypt);
+                // crypt_context_t* handle_crypt = nullptr;
+                // crypt.open(&handle_crypt, alg_crypt_alg, alg_crypt_mode, &oct[0], oct.size(), &iv1[0], iv1.size());
+                // ret = crypt.decrypt2(handle_crypt, &encrypted_key[0], encrypted_key.size(), cek, &aad1, &tag1);
+                // crypt.close(handle_crypt);
+                ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, oct, iv1, encrypted_key, cek, aad1, tag1);
             } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
                 /*
                  * RFC7518 4.8. Key Encryption with PBES2
@@ -639,10 +646,11 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                 //                    pbkdf2_derived_key.size (), &pbkdf2_derived_key[0]);
                 kdf_pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, convert(oct), salt, p2c);
 
-                crypt_context_t* crypt_handle = nullptr;
-                crypt.open(&crypt_handle, alg_crypt_alg, alg_crypt_mode, &pbkdf2_derived_key[0], pbkdf2_derived_key.size(), &kw_iv[0], kw_iv.size());
-                ret = crypt.decrypt(crypt_handle, &encrypted_key[0], encrypted_key.size(), cek);
-                crypt.close(crypt_handle);
+                // crypt_context_t* crypt_handle = nullptr;
+                // crypt.open(&crypt_handle, alg_crypt_alg, alg_crypt_mode, &pbkdf2_derived_key[0], pbkdf2_derived_key.size(), &kw_iv[0], kw_iv.size());
+                // ret = crypt.decrypt(crypt_handle, &encrypted_key[0], encrypted_key.size(), cek);
+                // crypt.close(crypt_handle);
+                ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, pbkdf2_derived_key, kw_iv, encrypted_key, cek);
             }
         }
 
@@ -659,17 +667,14 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
             uint32 enc_group = enc_hint->group;
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
                 // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
-                ret = aes_cbc_hmac_sha2_decrypt((crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, (hash_algorithm_t)enc_hash_alg, cek, iv, aad,
-                                                ciphertext, output, tag);
-                if (errorcode_t::success != ret) {
-                    __leave2;
-                }
+                ret = aes_cbc_hmac_sha2_decrypt(enc_crypt_alg, enc_crypt_mode, (hash_algorithm_t)enc_hash_alg, cek, iv, aad, ciphertext, output, tag);
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
-                crypt_context_t* handle_crypt = nullptr;
-                crypt.open(&handle_crypt, (crypt_algorithm_t)enc_crypt_alg, (crypt_mode_t)enc_crypt_mode, &cek[0], cek.size(), &iv[0], iv.size());
-                /* Content Encryption */
-                ret = crypt.decrypt2(handle_crypt, &ciphertext[0], ciphertext.size(), output, &aad, &tag);
-                crypt.close(handle_crypt);
+                // crypt_context_t* handle_crypt = nullptr;
+                // crypt.open(&handle_crypt, enc_crypt_alg, enc_crypt_mode, &cek[0], cek.size(), &iv[0], iv.size());
+                // /* Content Encryption */
+                // ret = crypt.decrypt2(handle_crypt, &ciphertext[0], ciphertext.size(), output, &aad, &tag);
+                // crypt.close(handle_crypt);
+                ret = crypt.decrypt(enc_crypt_alg, enc_crypt_mode, cek, iv, ciphertext, output, aad, tag);
             }
         }
     }

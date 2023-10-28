@@ -12,6 +12,10 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/basic/openssl_crypt.hpp>
+#include <sdk/crypto/basic/openssl_ecdh.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
+#include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/cose/cbor_object_encryption.hpp>
 #include <sdk/crypto/cose/cbor_object_signing.hpp>
 #include <sdk/crypto/cose/cbor_object_signing_encryption.hpp>

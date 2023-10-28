@@ -22,7 +22,7 @@ t_shared_instance<semaphore> _mutex;
 void thread_printfln(const char* msg, ...) {
     va_list arg;
 
-    printf("[%08x] ", get_thread_id());
+    printf("[%08lx] ", get_thread_id());
     va_start(arg, msg);
     vprintf(msg, arg);
     va_end(arg);

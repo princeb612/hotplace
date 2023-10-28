@@ -696,8 +696,8 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
             break;
     }
     if (!ok) {
-        constexpr char constexpr_errmsg[] = "#verify error:num=";
-        __trace(errorcode_t::internal_error, format("%s%d:%s", constexpr_errmsg, err, X509_verify_cert_error_string(err)).c_str());
+        // constexpr char constexpr_errmsg[] = "#verify error:num=";
+        //__trace(errorcode_t::internal_error, format("%s%d:%s", constexpr_errmsg, err, X509_verify_cert_error_string(err)).c_str());
     }
     //__trace(0, format("#verify return:%d",ok).c_str());
     // ok = 1;

@@ -21,6 +21,11 @@
 namespace hotplace {
 namespace crypto {
 
+typedef struct _encrypt_option_t {
+    crypt_ctrl_t ctrl;
+    uint16 value;
+} encrypt_option_t;
+
 /**
  * @brief openssl_crypt
  * @example
@@ -281,6 +286,31 @@ class openssl_crypt : public crypt_t {
     return_t decrypt(const EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
 
     /**
+     * @brief simple api
+     * @example
+     *      encrypt_option_t options[] = {
+     *          { crypt_ctrl_padding, 0 }, { },
+     *      };
+     *      encrypt("aes-128-cbc", cek, iv, plaintext, ciphertext, options);
+     */
+    return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext,
+                     encrypt_option_t* options = nullptr);
+    return_t encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext,
+                     encrypt_option_t* options = nullptr);
+    return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext, binary_t const& aad,
+                     binary_t& tag, encrypt_option_t* options = nullptr);
+    return_t encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext,
+                     binary_t const& aad, binary_t& tag, encrypt_option_t* options = nullptr);
+    return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext,
+                     encrypt_option_t* options = nullptr);
+    return_t decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext,
+                     encrypt_option_t* options = nullptr);
+    return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext, binary_t const& aad,
+                     binary_t const& tag, encrypt_option_t* options = nullptr);
+    return_t decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext,
+                     binary_t const& aad, binary_t const& tag, encrypt_option_t* options = nullptr);
+
+    /**
      * @brief deprecated - expect block operation size
      * @param crypt_context_t* handle [in]
      * @param size_t size_data [in]
@@ -302,12 +332,6 @@ class openssl_crypt : public crypt_t {
      */
     virtual return_t query(crypt_context_t* handle, size_t cmd, size_t& value);
 };
-
-return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext);
-return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext, binary_t const& aad, binary_t& tag);
-return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext);
-return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext, binary_t const& aad,
-                 binary_t const& tag);
 
 /**
  * https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt

@@ -10,6 +10,8 @@
  */
 
 #include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/openssl_crypt.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_sign.hpp>
 #include <sdk/crypto/cose/cbor_object_signing.hpp>
 #include <sdk/io/cbor/cbor_array.hpp>
@@ -466,15 +468,13 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
         cose_group_t group = hint->group;
         if (cose_group_t::cose_group_hmac == group) {
             ret = hmac(hint->dgst.algname, cek, tomac, tag);
-            // ret = errorcode_t::error_verify;
         } else if (cose_group_t::cose_group_aescmac == group) {
             binary_t q;
             binary_t iv;
             iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
-            ret = aes_cbc_hmac_sha2_encrypt(hint->enc.algname, hint->dgst.algname, cek, iv, convert(""), tomac, q, tag);
-            tag.resize(hint->enc.tsize);
-            // ret = errorcode_t::error_verify;
+            // tag.resize(hint->enc.tsize);
         }
+
         if (tag != handle->singleitem) {
             ret = errorcode_t::error_verify;
         }
