@@ -37,9 +37,10 @@ enum cose_param_t {
     cose_param_context = 15,
     cose_param_iv = 16,
     cose_param_kek = 17,
-    cose_param_secret = 18,
-    cose_param_tobesigned = 19,
-    cose_param_tomac = 20,
+    cose_param_salt = 18,
+    cose_param_secret = 19,
+    cose_param_tobesigned = 20,
+    cose_param_tomac = 21,
 };
 enum code_debug_flag_t {
     // simply want to know reason why routine is failed from testcase report

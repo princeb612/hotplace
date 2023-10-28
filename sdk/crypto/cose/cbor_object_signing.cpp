@@ -149,6 +149,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
     cbor_object_signing_encryption::composer composer;
     __try2 {
         cbor_object_signing_encryption::clear_context(handle);
+        result = false;
 
         if (nullptr == handle || nullptr == key) {
             ret = errorcode_t::invalid_parameter;
@@ -163,12 +164,15 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
         switch (handle->cbor_tag) {
             case cbor_tag_t::cose_tag_sign:
             case cbor_tag_t::cose_tag_sign1:
-                ret = doverify_sign(handle, key, result);
+                ret = doverify_sign(handle, key);
                 break;
             case cbor_tag_t::cose_tag_mac:
             case cbor_tag_t::cose_tag_mac0:
-                ret = doverify_mac(handle, key, result);
+                ret = doverify_mac(handle, key);
                 break;
+        }
+        if (errorcode_t::success == ret) {
+            result = true;
         }
     }
     __finally2 {
@@ -212,13 +216,16 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
     return ret;
 }
 
-return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* key, bool& result) {
+return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* key) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     std::set<bool> results;
 
     __try2 {
-        result = false;
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
         size_t size_multiitems = handle->multiitems.size();
         if (0 == size_multiitems) {
@@ -235,7 +242,6 @@ return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* 
         }
 
         if ((1 == results.size()) && (true == *results.begin())) {
-            result = true;
             ret = errorcode_t::success;
         } else {
             ret = errorcode_t::error_verify;
@@ -329,6 +335,52 @@ return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* 
 return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* key) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
+    std::set<bool> results;
+
+    // RFC 8152 4.3.  Externally Supplied Data
+    // RFC 8152 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
+    // RFC 8152 5.4.  How to Encrypt and Decrypt for AE Algorithms
+    // RFC 8152 11.2.  Context Information Structure
+
+    __try2 {
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        handle->debug_flag |= cose_debug_mac;
+
+        size_t size_multiitems = handle->multiitems.size();
+        if (0 == size_multiitems) {
+            cbor_object_signing_encryption::process_recipient(handle, key, nullptr);
+            check = doverify_mac(handle, key, nullptr, handle->singleitem);
+            results.insert((errorcode_t::success == check) ? true : false);
+        } else {
+            std::list<cose_parts_t>::iterator iter;
+            for (iter = handle->multiitems.begin(); iter != handle->multiitems.end(); iter++) {
+                cose_parts_t& item = *iter;
+
+                cbor_object_signing_encryption::process_recipient(handle, key, &item);
+                check = doverify_mac(handle, key, &item, item.bin_data);
+                results.insert((errorcode_t::success == check) ? true : false);
+            }
+        }
+
+        if ((1 == results.size()) && (true == *results.begin())) {
+            ret = errorcode_t::success;
+        } else {
+            ret = errorcode_t::error_verify;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* key, cose_parts_t* part, binary_t const& tag) {
+    return_t ret = errorcode_t::success;
+    return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption::composer composer;
     int enc_alg = 0;
@@ -339,48 +391,45 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             __leave2;
         }
 
-        check = composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.protected_map);
-        if (errorcode_t::success != check) {
-            check = composer.finditem(cose_key_t::cose_alg, enc_alg, handle->body.unprotected_map);
+        cose_alg_t alg = cose_alg_t::cose_unknown;
+        std::string kid;
+        if (part) {
+            alg = part->alg;
+            kid = part->kid;
+        }
+        if (0 == alg) {
+            alg = handle->body.alg;
+        }
+        if (kid.empty()) {
+            kid = handle->body.kid;
         }
 
-        const hint_cose_algorithm_t* enc_hint = advisor->hintof_cose_algorithm((cose_alg_t)enc_alg);
+        binary_t tomac;
+        composer.compose_mac_structure(handle, tomac);
 
-        maphint<cose_param_t, binary_t> hint(handle->body.binarymap);
-
-        const EVP_PKEY* pkey = nullptr;
-        binary_t cek;
-        hint.find(cose_param_t::cose_param_cek, &cek);
-        uint8 cbor_tag = handle->cbor_tag;
-        if (0 == cek.size()) {
-            ret = errorcode_t::no_data;
+        const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
+        if (nullptr == hint) {
+            ret = errorcode_t::request;  // study
             __leave2;
         }
 
-        binary_t authenticated_data = handle->body.binarymap[cose_param_t::cose_param_aad];
-        binary_t tag;
-        openssl_sign sign;
-
-        cose_group_t group = enc_hint->group;
+        cose_group_t group = hint->group;
         if (cose_group_t::cose_group_hmac == group) {
-            // crypto_key key;
-            // cbor_web_key cwk;
-            // cwk.add_oct(&key, nullptr, cek);
-            // const EVP_PKEY* pkey = key.any();
-            // ret= sign.sign(pkey, advisor->sigof((cose_alg_t)enc_alg), handle->payload, tag);
-            ret = hmac(enc_hint->dgst.algname, cek, handle->payload, tag);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
+            // ret = hmac(hint->dgst.algname, cek, handle->payload, tag);
+            // if (errorcode_t::success != ret) {
+            //    __leave2;
+            //}
+            ret = errorcode_t::error_verify;
         } else if (cose_group_t::cose_group_aescmac == group) {
-            binary_t q;
-            binary_t iv;
-            iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
-            ret = aes_cbc_hmac_sha2_encrypt(enc_hint->enc.algname, enc_hint->dgst.algname, cek, iv, authenticated_data, handle->payload, q, tag);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-            tag.resize(enc_hint->enc.tsize);
+            // binary_t q;
+            // binary_t iv;
+            // iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
+            // ret = aes_cbc_hmac_sha2_encrypt(hint->enc.algname, hint->dgst.algname, cek, iv, authenticated_data, handle->payload, q, tag);
+            // if (errorcode_t::success != ret) {
+            //    __leave2;
+            //}
+            // tag.resize(hint->enc.tsize);
+            ret = errorcode_t::error_verify;
         }
         if (tag != handle->singleitem) {
             ret = errorcode_t::error_verify;
@@ -391,68 +440,6 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
         // do nothing
     }
 
-    return ret;
-}
-
-return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* key, bool& result) {
-    return_t ret = errorcode_t::success;
-    return_t check = errorcode_t::success;
-    // crypto_advisor* advisor = crypto_advisor::get_instance();
-    std::set<bool> results;
-    cbor_object_signing_encryption::composer composer;
-    // const EVP_PKEY* pkey = nullptr;
-
-    // RFC 8152 4.3.  Externally Supplied Data
-    // RFC 8152 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
-    // RFC 8152 5.4.  How to Encrypt and Decrypt for AE Algorithms
-    // RFC 8152 11.2.  Context Information Structure
-
-    __try2 {
-        result = false;
-
-        if (nullptr == handle || nullptr == key) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        handle->debug_flag |= cose_debug_mac;
-
-        // ToMac
-        binary_t tomac;
-        composer.compose_mac_structure(handle, tomac);
-
-        // too many parameters... handle w/ map
-        handle->body.binarymap[cose_param_t::cose_param_aad] = tomac;
-
-        size_t size_multiitems = handle->multiitems.size();
-        if (0 == size_multiitems) {
-            check = doverify_mac(handle, key);
-
-            results.insert((errorcode_t::success == check) ? true : false);
-        } else {
-            std::list<cose_parts_t>::iterator iter;
-            for (iter = handle->multiitems.begin(); iter != handle->multiitems.end(); iter++) {
-                cose_parts_t& item = *iter;
-
-                // cek into handle->body.binarymap[cose_param_t::cose_param_cek]
-                cbor_object_signing_encryption::process_recipient(handle, key, &item);
-
-                check = doverify_mac(handle, key);
-
-                results.insert((errorcode_t::success == check) ? true : false);
-            }
-        }
-
-        if ((1 == results.size()) && (true == *results.begin())) {
-            result = true;
-            ret = errorcode_t::success;
-        } else {
-            ret = errorcode_t::error_verify;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
     return ret;
 }
 
