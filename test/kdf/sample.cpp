@@ -30,6 +30,7 @@ return_t compare_binary(binary_t const& lhs, binary_t const& rhs) {
 
 void test_kdf_hkdf() {
     _test_case.begin("hkdf");
+    openssl_kdf kdf;
 
     return_t ret = errorcode_t::success;
 
@@ -46,7 +47,7 @@ void test_kdf_hkdf() {
     binary_t result;
 
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        kdf_hkdf(result, hash_algorithm_t::sha2_256, vector[i].dlen, convert(vector[i].password), convert(vector[i].salt), convert(vector[i].info));
+        kdf.hmac_kdf(result, hash_algorithm_t::sha2_256, vector[i].dlen, convert(vector[i].password), convert(vector[i].salt), convert(vector[i].info));
         basic_stream bs;
         dump_memory(result, &bs);
         std::cout << bs.c_str() << std::endl;
@@ -60,6 +61,7 @@ void test_kdf_pbkdf2_rfc6070() {
     _test_case.begin("pbkdf2");
 
     return_t ret = errorcode_t::success;
+    openssl_kdf kdf;
 
     // RFC 6070 PKCS #5: Password-Based Key Derivation Function 2 (PBKDF2) Test Vectors
     // 2.  PBKDF2 HMAC-SHA1 Test Vectors
@@ -87,7 +89,7 @@ void test_kdf_pbkdf2_rfc6070() {
         password.insert(password.end(), vector[i].password, vector[i].password + vector[i].size_password);
         binary_t salt;
         salt.insert(salt.end(), vector[i].salt, vector[i].salt + vector[i].size_salt);
-        kdf_pbkdf2(result, hash_algorithm_t::sha1, vector[i].dlen, password, salt, vector[i].c);
+        kdf.pbkdf2(result, hash_algorithm_t::sha1, vector[i].dlen, password, salt, vector[i].c);
         basic_stream bs;
         dump_memory(result, &bs);
         std::cout << bs.c_str() << std::endl;
@@ -102,6 +104,7 @@ void test_kdf_pbkdf2_rfc7914() {
     _test_case.begin("pbkdf2");
 
     return_t ret = errorcode_t::success;
+    openssl_kdf kdf;
 
     struct {
         const char* password;
@@ -117,7 +120,7 @@ void test_kdf_pbkdf2_rfc7914() {
     binary_t result;
 
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        kdf_pbkdf2(result, hash_algorithm_t::sha2_256, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].c);
+        kdf.pbkdf2(result, hash_algorithm_t::sha2_256, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].c);
         basic_stream bs;
         dump_memory(result, &bs);
         std::cout << bs.c_str() << std::endl;
@@ -132,6 +135,7 @@ void test_kdf_scrypt_rfc7914() {
     _test_case.begin("scrypt (salt zero-length openssl 3.0 required)");
 
     return_t ret = errorcode_t::success;
+    openssl_kdf kdf;
 
     struct {
         const char* password;
@@ -155,7 +159,7 @@ void test_kdf_scrypt_rfc7914() {
     binary_t result;
 
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        ret = kdf_scrypt(result, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
+        ret = kdf.scrypt(result, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
         if (errorcode_t::success == ret) {
             basic_stream bs;
             dump_memory(result, &bs);
@@ -169,6 +173,7 @@ void test_kdf_scrypt_rfc7914() {
 
 void test_kdf_argon_rfc9106() {
     _test_case.begin("argon2d,argon2i,argon2id");
+    openssl_kdf kdf;
 
 #if OPENSSL_VERSION_NUMBER >= 0x30200000L
     struct {
@@ -194,7 +199,7 @@ void test_kdf_argon_rfc9106() {
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
         binary_t derived;
 
-        kdf_argon2(derived, vector[i].mode, 32, base16_decode(vector[i].password), base16_decode(vector[i].salt), base16_decode(vector[i].ad),
+        kdf.argon2(derived, vector[i].mode, 32, base16_decode(vector[i].password), base16_decode(vector[i].salt), base16_decode(vector[i].ad),
                    base16_decode(vector[i].secret));
 
         basic_stream bs;
@@ -213,6 +218,7 @@ void test_kdf_argon_rfc9106() {
 
 void test_kdf_extract_expand() {
     _test_case.begin("KDF-Extract/Expand");
+    openssl_kdf kdf;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     // RFC 5869 HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
@@ -313,7 +319,7 @@ void test_kdf_extract_expand() {
         // 2.2 Step 1: Extract
         //  PRK = HMAC-Hash(salt, IKM)
         binary_t prk;
-        hkdf_extract(prk, expand_vector[i].alg, base16_decode(expand_vector[i].salt), base16_decode(expand_vector[i].ikm));
+        kdf.hmac_kdf_extract(prk, expand_vector[i].alg, base16_decode(expand_vector[i].salt), base16_decode(expand_vector[i].ikm));
 
         // dump_memory(prk, &bs);
         // printf("PRK\n%s\n", bs.c_str());
@@ -321,14 +327,14 @@ void test_kdf_extract_expand() {
         // 2.3 Step 2: Expand
         //  HKDF-Expand(PRK, info, L) -> OKM
         binary_t okm;
-        hkdf_expand(okm, expand_vector[i].alg, expand_vector[i].dlen, prk, base16_decode(expand_vector[i].info));
+        kdf.hkdf_expand(okm, expand_vector[i].alg, expand_vector[i].dlen, prk, base16_decode(expand_vector[i].info));
 
         dump_memory(okm, &bs);
         printf("OKM\n%s\n", bs.c_str());
 
         binary_t derived;
-        kdf_hkdf(derived, expand_vector[i].alg, expand_vector[i].dlen, base16_decode(expand_vector[i].ikm), base16_decode(expand_vector[i].salt),
-                 base16_decode(expand_vector[i].info));
+        kdf.hmac_kdf(derived, expand_vector[i].alg, expand_vector[i].dlen, base16_decode(expand_vector[i].ikm), base16_decode(expand_vector[i].salt),
+                     base16_decode(expand_vector[i].info));
         dump_memory(derived, &bs);
         printf("HKDF\n%s\n", bs.c_str());
 
@@ -339,6 +345,7 @@ void test_kdf_extract_expand() {
 
 void test_ckdf() {
     _test_case.begin("CMAC-based Extract-and-Expand Key Derivation Function (CKDF)");
+    openssl_kdf kdf;
 
     // RFC 4615 AES-CMAC-PRF-128
     // study step.1 CKDF_Extract
@@ -400,8 +407,8 @@ void test_ckdf() {
             salt.resize(128 >> 3);
         }
 
-        // ckdf_extract(output, crypt_algorithm_t::aes128, base16_decode(extract_vector[i].salt), base16_decode(extract_vector[i].ikm));
-        ckdf_extract(output, crypt_algorithm_t::aes128, salt, base16_decode(extract_vector[i].ikm));
+        // cmac_kdf_extract(output, crypt_algorithm_t::aes128, base16_decode(extract_vector[i].salt), base16_decode(extract_vector[i].ikm));
+        kdf.cmac_kdf_extract(output, crypt_algorithm_t::aes128, salt, base16_decode(extract_vector[i].ikm));
         dump_memory(output, &bs);
         printf("%s\n", bs.c_str());
         _test_case.assert(output == base16_decode(extract_vector[i].prk), __FUNCTION__, "CKDF_Extract %s - RFC 4615 AES-CMAC-PRF-128", extract_vector[i].desc);
@@ -441,15 +448,15 @@ void test_ckdf() {
 
     for (i = 0; i < RTL_NUMBER_OF(expand_vector); i++) {
         binary_t prk;
-        ckdf_extract(prk, crypt_algorithm_t::aes128, base16_decode(expand_vector[i].salt), base16_decode(expand_vector[i].ikm));
-        // ckdf_extract(prk, crypt_algorithm_t::aes128, salt, base16_decode(expand_vector[i].ikm));
+        kdf.cmac_kdf_extract(prk, crypt_algorithm_t::aes128, base16_decode(expand_vector[i].salt), base16_decode(expand_vector[i].ikm));
+        // cmac_kdf_extract(prk, crypt_algorithm_t::aes128, salt, base16_decode(expand_vector[i].ikm));
 
         binary_t okm;
-        ckdf_expand(okm, crypt_algorithm_t::aes128, expand_vector[i].dlen, base16_decode(expand_vector[i].prk), base16_decode(expand_vector[i].info));
+        kdf.cmac_kdf_expand(okm, crypt_algorithm_t::aes128, expand_vector[i].dlen, base16_decode(expand_vector[i].prk), base16_decode(expand_vector[i].info));
 
         binary_t ckdf_okm;
-        kdf_ckdf(ckdf_okm, crypt_algorithm_t::aes128, expand_vector[i].dlen, base16_decode(expand_vector[i].ikm), base16_decode(expand_vector[i].salt),
-                 base16_decode(expand_vector[i].info));
+        kdf.cmac_kdf(ckdf_okm, crypt_algorithm_t::aes128, expand_vector[i].dlen, base16_decode(expand_vector[i].ikm), base16_decode(expand_vector[i].salt),
+                     base16_decode(expand_vector[i].info));
 
         {
             test_case_notimecheck notimecheck(_test_case);

@@ -218,6 +218,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
     json_object_encryption::composer composer;
     openssl_crypt crypt;
     openssl_hash hash;
+    openssl_kdf kdf;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -407,7 +408,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                 // const EVP_MD* alg_evp_md = (const EVP_MD*) advisor->find_evp_md (alg_hash_alg);
                 // PKCS5_PBKDF2_HMAC ((char *) &oct[0], oct.size (), &salt[0], salt.size (), p2c, alg_evp_md,
                 //                    pbkdf2_derived_key.size (), &pbkdf2_derived_key[0]);
-                kdf_pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, convert(oct), salt, p2c);
+                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, convert(oct), salt, p2c);
 
                 // crypt_context_t* crypt_handle = nullptr;
                 // crypt.open(&crypt_handle, alg_crypt_alg, alg_crypt_mode, &pbkdf2_derived_key[0], pbkdf2_derived_key.size(), &kw_iv[0],
@@ -457,6 +458,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
     return_t ret = errorcode_t::success;
     openssl_crypt crypt;
     openssl_hash hash;
+    openssl_kdf kdf;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -644,7 +646,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                 // const EVP_MD* alg_evp_md = (const EVP_MD*) advisor->find_evp_md (alg_hash_alg);
                 // PKCS5_PBKDF2_HMAC ((char *) &oct[0], oct.size (), &salt[0], salt.size (), p2c, alg_evp_md,
                 //                    pbkdf2_derived_key.size (), &pbkdf2_derived_key[0]);
-                kdf_pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, convert(oct), salt, p2c);
+                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, convert(oct), salt, p2c);
 
                 // crypt_context_t* crypt_handle = nullptr;
                 // crypt.open(&crypt_handle, alg_crypt_alg, alg_crypt_mode, &pbkdf2_derived_key[0], pbkdf2_derived_key.size(), &kw_iv[0], kw_iv.size());

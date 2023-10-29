@@ -17,78 +17,74 @@
 namespace hotplace {
 namespace crypto {
 
-return_t hmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_hash::hmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
-    openssl_hash hash;
     hash_context_t* handle = nullptr;
 
     __try2 {
-        ret = hash.open_byname(&handle, alg, &key[0], key.size());
+        ret = open_byname(&handle, alg, &key[0], key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        hash.init(handle);
-        hash.update(handle, &input[0], input.size());
-        hash.finalize(handle, output);
+        init(handle);
+        update(handle, &input[0], input.size());
+        finalize(handle, output);
     }
-    __finally2 { hash.close(handle); }
+    __finally2 { close(handle); }
 
     return ret;
 }
 
-return_t hmac(hash_algorithm_t alg, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_hash::hmac(hash_algorithm_t alg, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
-    openssl_hash hash;
     hash_context_t* handle = nullptr;
 
     __try2 {
-        ret = hash.open(&handle, alg, &key[0], key.size());
+        ret = open(&handle, alg, &key[0], key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        hash.init(handle);
-        hash.update(handle, &input[0], input.size());
-        hash.finalize(handle, output);
+        init(handle);
+        update(handle, &input[0], input.size());
+        finalize(handle, output);
     }
-    __finally2 { hash.close(handle); }
+    __finally2 { close(handle); }
 
     return ret;
 }
 
-return_t cmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_hash::cmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
-    openssl_hash hash;
     hash_context_t* handle = nullptr;
 
     __try2 {
-        ret = hash.open_byname(&handle, alg, &key[0], key.size());
+        ret = open_byname(&handle, alg, &key[0], key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        hash.init(handle);
-        hash.update(handle, &input[0], input.size());
-        hash.finalize(handle, output);
+        init(handle);
+        update(handle, &input[0], input.size());
+        finalize(handle, output);
     }
-    __finally2 { hash.close(handle); }
+    __finally2 { close(handle); }
 
     return ret;
 }
 
-return_t cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_hash::cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
-    openssl_hash hash;
     hash_context_t* handle = nullptr;
 
     __try2 {
-        ret = hash.open(&handle, alg, mode, &key[0], key.size());
+        ret = open(&handle, alg, mode, &key[0], key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        hash.init(handle);
-        hash.update(handle, &input[0], input.size());
-        hash.finalize(handle, output);
+        init(handle);
+        update(handle, &input[0], input.size());
+        finalize(handle, output);
     }
-    __finally2 { hash.close(handle); }
+    __finally2 { close(handle); }
 
     return ret;
 }

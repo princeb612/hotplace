@@ -262,8 +262,9 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
         if (item) {
             openssl_crypt crypt;
             openssl_hash hash;
-            crypt_context_t* crypt_handle = nullptr;
-            hash_context_t* hash_handle = nullptr;
+            openssl_kdf kdf;
+            // crypt_context_t* crypt_handle = nullptr;
+            // hash_context_t* hash_handle = nullptr;
 
             return_t check = errorcode_t::success;
 
@@ -298,27 +299,28 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
             printf("\e[1;33malg %i group %i\e[0m\n", alg, group);
 #endif
 
-            if (cose_group_t::cose_group_aeskw == group) {
+            if (cose_group_t::cose_group_keywrap_aes == group) {
                 kek = secret;
-                crypt.open(&crypt_handle, alg_hint->enc.algname, kek, kwiv);
-                crypt.decrypt(crypt_handle, item->bin_data, cek);
-                crypt.close(crypt_handle);
-            } else if (cose_group_t::cose_group_direct == group) {
+                // crypt.open(&crypt_handle, alg_hint->enc.algname, kek, kwiv);
+                // crypt.decrypt(crypt_handle, item->bin_data, cek);
+                // crypt.close(crypt_handle);
+                crypt.decrypt(alg_hint->enc.algname, kek, kwiv, item->bin_data, cek);
+            } else if (cose_group_t::cose_group_keyagree_direct == group) {
                 // RFC 8152 12.1. Direct Encryption
                 cek = secret;
-            } else if (cose_group_t::cose_group_ecdsa == group) {
+            } else if (cose_group_t::cose_group_sign_ecdsa == group) {
                 // RFC 8152 8.1. ECDSA
-            } else if (cose_group_t::cose_group_eddsa == group) {
+            } else if (cose_group_t::cose_group_sign_eddsa == group) {
                 // RFC 8152 8.2. Edwards-Curve Digital Signature Algorithms (EdDSAs)
-            } else if (cose_group_t::cose_group_hkdf_hmac == group) {
+            } else if (cose_group_t::cose_group_kdf_hmac == group) {
                 // RFC 8152 12.1.2.  Direct Key with KDF
                 composer.compose_kdf_context(handle, item, context);
 
                 // using context structure to transform the shared secret into the CEK
                 // either the 'salt' parameter of HKDF ot the 'PartyU nonce' parameter of the context structure MUST be present.
-                kdf_hkdf(cek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
+                kdf.hmac_kdf(cek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
                 // CEK solved
-            } else if (cose_group_t::cose_group_hkdf_aescmac == group) {
+            } else if (cose_group_t::cose_group_kdf_aesmac == group) {
                 composer.compose_kdf_context(handle, item, context);
 
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
@@ -326,21 +328,11 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                 //      HKDF AES-MAC-128, AES-CBC-MAC-128, HKDF using AES-MAC as the PRF w/ 128-bit key
                 //      HKDF AES-MAC-256, AES-CBC-MAC-256, HKDF using AES-MAC as the PRF w/ 256-bit key
 
-                // HKDF is defined to use HMAC as the underlying PRF.  However, it is
-                // possible to use other functions in the same construct to provide a
-                // different KDF that is more appropriate in the constrained world.
-                // Specifically, one can use AES-CBC-MAC as the PRF for the expand step,
-                // but not for the extract step.  When using a good random shared secret
-                // of the correct length, the extract step can be skipped.  For the AES
-                // algorithm versions, the extract step is always skipped.
-
-                // TEST FAILED
-
 #if defined DEBUG
                 handle->debug_flag |= cose_debug_hkdf_aescmac;
 #endif
-            } else if (cose_group_t::cose_group_sha == group) {
-            } else if (cose_group_t::cose_group_ecdhes_hkdf == group) {
+            } else if (cose_group_t::cose_group_hash == group) {
+            } else if (cose_group_t::cose_group_keyagree_ecdh_direct == group) {
                 // RFC 8152 12.4.1. ECDH
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 dh_key_agreement(pkey, epk, secret);
@@ -348,19 +340,8 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                 composer.compose_kdf_context(handle, item, context);
 
                 salt.resize(alg_hint->dgst.dlen);
-                kdf_hkdf(cek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
-                // CEK solved
-            } else if (cose_group_t::cose_group_ecdhss_hkdf == group) {
-                // RFC 8152 12.4.1. ECDH
-                // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
-                dh_key_agreement(pkey, epk, secret);
-
-                composer.compose_kdf_context(handle, item, context);
-
-                salt.resize(alg_hint->dgst.dlen);
-                kdf_hkdf(cek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
-                // CEK solved
-            } else if (cose_group_t::cose_group_ecdhes_aeskw == group || cose_group_t::cose_group_ecdhss_aeskw == group) {
+                kdf.hmac_kdf(cek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
+            } else if (cose_group_t::cose_group_keyagree_ecdh_keywrap_aes == group) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
                 dh_key_agreement(pkey, epk, secret);
@@ -368,14 +349,15 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                 composer.compose_kdf_context(handle, item, context);
 
                 salt.resize(alg_hint->dgst.dlen);
-                kdf_hkdf(kek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
+                kdf.hmac_kdf(kek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
 
                 // 12.5.  Key Agreement with Key Wrap
-                crypt.open(&crypt_handle, alg_hint->enc.algname, kek, kwiv);
-                crypt.decrypt(crypt_handle, item->bin_data, cek);
-                crypt.close(crypt_handle);
-            } else if (cose_group_t::cose_group_rsassa_pss == group) {
-            } else if (cose_group_t::cose_group_rsa_oaep == group) {
+                // crypt.open(&crypt_handle, alg_hint->enc.algname, kek, kwiv);
+                // crypt.decrypt(crypt_handle, item->bin_data, cek);
+                // crypt.close(crypt_handle);
+                crypt.decrypt(alg_hint->enc.algname, kek, kwiv, item->bin_data, cek);
+            } else if (cose_group_t::cose_group_sign_rsassa_pss == group) {
+            } else if (cose_group_t::cose_group_sign_rsa_oaep == group) {
                 crypt_enc_t mode;
                 switch (alg) {
                     case cose_alg_t::cose_rsaes_oaep_sha1:
@@ -391,20 +373,20 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                         break;
                 }
                 crypt.decrypt(pkey, item->bin_data, cek, mode);
-            } else if (cose_group_t::cose_group_rsassa_pkcs15 == group) {
-            } else if (cose_group_t::cose_group_aesgcm == group) {
+            } else if (cose_group_t::cose_group_sign_rsassa_pkcs15 == group) {
+            } else if (cose_group_t::cose_group_enc_aesgcm == group) {
                 // RFC 8152 10.1. AES GCM
-            } else if (cose_group_t::cose_group_hmac == group) {
-            } else if (cose_group_t::cose_group_aesccm == group) {
+            } else if (cose_group_t::cose_group_mac_hmac == group) {
+            } else if (cose_group_t::cose_group_enc_aesccm == group) {
                 // RFC 8152 10.2. AES CCM
-            } else if (cose_group_t::cose_group_aescmac == group) {
+            } else if (cose_group_t::cose_group_mac_aescmac == group) {
                 // RFC 9.2. AES Message Authentication Code (AES-CBC-MAC)
-            } else if (cose_group_t::cose_group_chacha20_poly1305 == group) {
+            } else if (cose_group_t::cose_group_enc_chacha20_poly1305 == group) {
                 // RFC 8152 10.3. ChaCha20 and Poly1305
 #if defined DEBUG
                 handle->debug_flag |= cose_debug_chacha20_poly1305;
 #endif
-            } else if (cose_group_t::cose_group_iv == group) {
+            } else if (cose_group_t::cose_group_iv_generate == group) {
             }
 
             item->binarymap[cose_param_t::cose_param_cek] = cek;
