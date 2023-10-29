@@ -514,7 +514,8 @@ return_t aead_aes_cbc_hmac_sha2(const test_vector_aead_aes_cbc_hmac_sha2_t* vect
         content.insert(content.end(), (byte_t*)&aad_len, (byte_t*)&aad_len + sizeof(aad_len));
 
         /* T = MAC(MAC_KEY, A || S || AL) */
-        hmac(mac_alg, mac_key, content, t);
+        openssl_hash hash;
+        hash.hmac(mac_alg, mac_key, content, t);
         t.resize(digestsize);
 
         _test_case.assert(base16_decode(vector->t) == t, __FUNCTION__, "%s T = MAC(MAC_KEY, A || S || AL)", vector->text);

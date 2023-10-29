@@ -99,7 +99,8 @@ return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, bin
         content.insert(content.end(), (byte_t*)&aad_len, (byte_t*)&aad_len + sizeof(aad_len));
 
         /* T = MAC(MAC_KEY, A || S || AL) */
-        hmac(mac_alg, mac_key, content, t);  // t := tag
+        openssl_hash hash;
+        hash.hmac(mac_alg, mac_key, content, t);  // t := tag
         t.resize(digestsize);
     }
     __finally2 {
@@ -234,7 +235,8 @@ return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, bin
 
         /* T = MAC(MAC_KEY, A || S || AL) */
         binary_t tag;
-        hmac(mac_alg, mac_key, content, tag);  // t := tag
+        openssl_hash hash;
+        hash.hmac(mac_alg, mac_key, content, tag);  // t := tag
         tag.resize(digestsize);
         if (t != tag) {
             ret = errorcode_t::error_verify;

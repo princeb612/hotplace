@@ -465,14 +465,16 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             pkey = key->select(k, hint->kty);
         }
 
+        openssl_hash hash;
         cose_group_t group = hint->group;
-        if (cose_group_t::cose_group_hmac == group) {
-            ret = hmac(hint->dgst.algname, cek, tomac, tag);
-        } else if (cose_group_t::cose_group_aescmac == group) {
+        if (cose_group_t::cose_group_mac_hmac == group) {
+            ret = hash.hmac(hint->dgst.algname, cek, tomac, tag);
+        } else if (cose_group_t::cose_group_mac_aescmac == group) {
             binary_t q;
             binary_t iv;
             iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
-            // tag.resize(hint->enc.tsize);
+            openssl_crypt crypt;
+            tag.resize(hint->enc.tsize);
         }
 
         if (tag != handle->singleitem) {

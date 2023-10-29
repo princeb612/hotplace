@@ -204,7 +204,7 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
         }
 
         cose_group_t group = hint->group;
-        if (cose_group_t::cose_group_aesgcm == group) {
+        if (cose_group_t::cose_group_enc_aesgcm == group) {
             size_t enc_size = 0;
             split(handle->payload, enc_size, tag, hint->enc.tsize);
 
@@ -213,7 +213,7 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
             crypt.close(crypt_handle);
 
-        } else if (cose_group_t::cose_group_aesccm == group) {
+        } else if (cose_group_t::cose_group_enc_aesccm == group) {
             size_t enc_size = 0;
             split(handle->payload, enc_size, tag, hint->enc.tsize);
 
@@ -222,7 +222,7 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_lsize, hint->enc.lsize);
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
             crypt.close(crypt_handle);
-        } else if (cose_group_t::cose_group_chacha20_poly1305 == group) {
+        } else if (cose_group_t::cose_group_enc_chacha20_poly1305 == group) {
             // TEST FAILED - counter ??
             size_t enc_size = 0;
             split(handle->payload, enc_size, tag, hint->enc.tsize);

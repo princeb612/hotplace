@@ -304,6 +304,7 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode, b
         int slen = BN_num_bytes(bn_s);
 
         /*
+         * Signature = I2OSP(R, n) | I2OSP(S, n)
          * if unitsize is 4 and r is 12, s is 34
          *  r(4 bytes)  + s(4 bytes)
          *  00 00 00 12 | 00 00 00 34 -> valid
