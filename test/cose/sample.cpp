@@ -8,15 +8,15 @@
  * Date         Name                Description
  *
  * status
- *  encoding/decoding - v
- *  sign/verify (except CounterSign) - v
- *  decryption (except AES-CBC-MAC, Chacha20_poly1305) - v
- *  mac verification - yet
- *  encryption - yet
- *  mac - yet
- *  sign/verify (including CounterSign) - yet
- *  X509 - yet
- *  untagged - yet
+ *  1. encoding/decoding - done
+ *  2. Sign, Enc, Mac
+ *     |       | done               | not yet               | detail                                |
+ *     | --    | --                 | --                    | --                                    |
+ *     | Sign  | sign/verfy         |                       | except CounterSign, x509              |
+ *     | Enc   | decrypt            | encrypt               | except AES-CBC-MAC, Chacha20_poly1305 |
+ *     | Mac   | verify             | create                |                                       |
+ *  3. untagged - not yet
+ *  4. CWT - study
  */
 
 #include "sample.hpp"
@@ -32,11 +32,11 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 typedef struct _OPTION {
+    bool debug;
     bool dump_keys;
-    bool short_test;
-    bool validate_testvector;
+    bool skip_validate;
 
-    _OPTION() : dump_keys(false), short_test(false), validate_testvector(false) {
+    _OPTION() : debug(false), dump_keys(false), skip_validate(false) {
         // do nothing
     }
 } OPTION;
@@ -63,14 +63,17 @@ return_t dump_test_data(const char* text, binary_t const& cbor) {
     return_t ret = errorcode_t::success;
     basic_stream bs;
 
-    dump_memory(cbor, &bs, 32);
+    OPTION& option = _cmdline->value();
+    if (option.debug) {
+        dump_memory(cbor, &bs, 32);
 
-    if (text) {
-        std::cout << text;
-    } else {
-        std::cout << "diagnostic";
+        if (text) {
+            std::cout << text;
+        } else {
+            std::cout << "diagnostic";
+        }
+        std::cout << std::endl << bs.c_str() << std::endl;
     }
-    std::cout << std::endl << bs.c_str() << std::endl;
 
     return ret;
 }
@@ -93,6 +96,7 @@ void dump_crypto_key(crypto_key_object_t* key, void*) {
 return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, cbor_object* root, const char* expect_file, const char* text) {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
+    OPTION& option = _cmdline->value();
 
     __try2 {
         if (nullptr == cose_handle || nullptr == cose_keys || nullptr == root || nullptr == expect_file) {
@@ -126,9 +130,11 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
             size_t file_size = fs.size();
             expect.insert(expect.end(), file_contents, file_contents + file_size);
 
-            dump_test_data("test vector", expect);
-            dump_test_data("diagnostic #1", diagnostic);
-            dump_test_data("cbor #1", bin);
+            if (option.debug) {
+                dump_test_data("test vector", expect);
+                dump_test_data("diagnostic #1", diagnostic);
+                dump_test_data("cbor #1", bin);
+            }
         }
 
         _test_case.assert((bin == expect), __FUNCTION__, "check1.cborcheck %s", text ? text : "");
@@ -152,7 +158,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
         reader.close(handle);
 
         if (newone) {
-            {
+            if (option.debug) {
                 test_case_notimecheck notimecheck(_test_case);
 
                 dump_test_data("diagnostic #2", bs_diagnostic_lv1);
@@ -168,7 +174,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
             binary_t bin_cbor_lv2;
             publisher.publish(newone, &bin_cbor_lv2);
 
-            {
+            if (option.debug) {
                 test_case_notimecheck notimecheck(_test_case);
 
                 dump_test_data("diagnostic #3", bs_diagnostic_lv2);
@@ -1611,6 +1617,7 @@ void test_rfc8152_c_7_2() {
 void test_cbor_key(const char* file, const char* text) {
     _test_case.begin("CBOR encoded keys - order not guaranteed");
     return_t ret = errorcode_t::success;
+    OPTION& option = _cmdline->value();
     crypto_key key;
     cbor_web_key cwk;
 
@@ -1633,7 +1640,7 @@ void test_cbor_key(const char* file, const char* text) {
         ret = cwk.write(&key, cbor_written);
         _test_case.test(ret, __FUNCTION__, "step.write %s", text ? text : "");
 
-        if (1) {
+        if (option.debug) {
             test_case_notimecheck notimecheck(_test_case);
 
             basic_stream bs;
@@ -1695,6 +1702,7 @@ void test_rfc8152_read_cbor() {
 
 void test_jose_from_cwk() {
     _test_case.begin("crypto_key");
+    OPTION& option = _cmdline->value();
 
     // load keys from CBOR
     cbor_web_key cwk;
@@ -1741,7 +1749,7 @@ void test_jose_from_cwk() {
     algs.push_back(cose_alg_t::cose_es512);
     ret = cose.sign(handle, &privkey, algs, convert(input), signature);
     _test_case.test(ret, __FUNCTION__, "sign");
-    {
+    if (option.debug) {
         test_case_notimecheck notimecheck(_test_case);
 
         dump_memory(signature, &bs);
@@ -1764,6 +1772,8 @@ void test_jose_from_cwk() {
 
 void test_github_example() {
     _test_case.begin("https://github.com/cose-wg/Examples");
+
+    OPTION& option = _cmdline->value();
 
     cbor_web_key cwk;
     crypto_key key;
@@ -1849,8 +1859,6 @@ void test_github_example() {
     crypto_key key_hmac_enc_03;
     cwk.add_oct_b64u(&key_hmac_enc_03, "sec-64", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJicoqrvM3e7_paanqKmgsbKztA");
 
-    OPTION& option = _cmdline->value();
-
     std::map<std::string, crypto_key*> keymapper;
 
     keymapper["rfc8152_privkeys"] = &rfc8152_privkeys;
@@ -1900,6 +1908,8 @@ void test_github_example() {
         binary_t cbor = base16_decode(vector->cbor);
         crypto_key* mapped_key = keymapper[vector->keysetname];
 
+        mapped_key->for_each(dump_crypto_key, nullptr);
+
         binary_t bin_cbor;
         basic_stream bs;
         basic_stream diagnostic;
@@ -1910,9 +1920,11 @@ void test_github_example() {
         reader.publish(reader_handle, &diagnostic);
         reader.publish(reader_handle, &bin_cbor);
         reader.close(reader_handle);
-        dump_memory(bin_cbor, &bs);
-        printf("cbor\n%s\n", bs.c_str());
-        printf("diagnostic\n%s\n", diagnostic.c_str());
+        if (option.debug) {
+            dump_memory(bin_cbor, &bs, 16, 2);
+            printf("cbor\n%s\n", bs.c_str());
+            printf("diagnostic\n  %s\n", diagnostic.c_str());
+        }
 
         basic_stream properties;
         basic_stream reason;
@@ -1936,56 +1948,59 @@ void test_github_example() {
         printf("\e[35m>%s %s\n%s\n\e[0m", b, f, bs.c_str()); \
     }
 
-#if defined DEBUG
-            dumps("AAD", vector->enc.aad_hex);
-            dumps("CEK", vector->enc.cek_hex);
-#endif
-            dumps("external", vector->shared.external);
+            if (option.debug) {
+                handle->debug_flag |= code_debug_flag_t::cose_debug_inside;
+
+                dumps("AAD", vector->enc.aad_hex);
+                dumps("CEK", vector->enc.cek_hex);
+                dumps("external", vector->shared.external);
+                dumps("unsent iv", vector->shared.iv_hex);
+                dumps("unsent partyu id", vector->shared.apu_id);
+                dumps("unsent partyu nonce", vector->shared.apu_nonce);
+                dumps("unsent partyu other", vector->shared.apu_other);
+                dumps("unsent partyv id", vector->shared.apv_id);
+                dumps("unsent partyv nonce", vector->shared.apv_nonce);
+                dumps("unsent partyv other", vector->shared.apv_other);
+                dumps("unsent pub other", vector->shared.pub_other);
+                dumps("unsent private", vector->shared.priv);
+            }
+
             if (vector->shared.external) {
                 cose.set(handle, cose_param_t::cose_external, base16_decode(vector->shared.external));
                 properties << "external ";
             }
-            dumps("unsent iv", vector->shared.iv_hex);
             if (vector->shared.iv_hex) {
                 cose.set(handle, cose_param_t::cose_unsent_iv, base16_decode(vector->shared.iv_hex));
                 properties << "iv ";
             }
-            dumps("unsent partyu id", vector->shared.apu_id);
             if (vector->shared.apu_id) {
                 cose.set(handle, cose_param_t::cose_unsent_apu_id, base16_decode(vector->shared.apu_id));
                 properties << "apu_id ";
             }
-            dumps("unsent partyu nonce", vector->shared.apu_nonce);
             if (vector->shared.apu_nonce) {
                 cose.set(handle, cose_param_t::cose_unsent_apu_nonce, base16_decode(vector->shared.apu_nonce));
                 properties << "apu_nonce ";
             }
-            dumps("unsent partyu other", vector->shared.apu_other);
             if (vector->shared.apu_other) {
                 cose.set(handle, cose_param_t::cose_unsent_apu_other, base16_decode(vector->shared.apu_other));
                 properties << "external apu_other";
             }
-            dumps("unsent partyv id", vector->shared.apv_id);
             if (vector->shared.apv_id) {
                 cose.set(handle, cose_param_t::cose_unsent_apv_id, base16_decode(vector->shared.apv_id));
                 properties << "apv_id ";
             }
-            dumps("unsent partyv nonce", vector->shared.apv_nonce);
             if (vector->shared.apv_nonce) {
                 cose.set(handle, cose_param_t::cose_unsent_apv_nonce, base16_decode(vector->shared.apv_nonce));
                 properties << "apv_nonce ";
             }
-            dumps("unsent partyv other", vector->shared.apv_other);
             if (vector->shared.apv_other) {
                 cose.set(handle, cose_param_t::cose_unsent_apv_other, base16_decode(vector->shared.apv_other));
                 properties << "apv_other ";
             }
-            dumps("unsent pub other", vector->shared.pub_other);
             if (vector->shared.pub_other) {
                 cose.set(handle, cose_param_t::cose_unsent_pub_other, base16_decode(vector->shared.pub_other));
                 properties << "pub_other ";
             }
-            dumps("unsent private", vector->shared.priv);
             if (vector->shared.priv) {
                 cose.set(handle, cose_param_t::cose_unsent_priv_other, base16_decode(vector->shared.priv));
                 properties << "priv ";
@@ -2002,7 +2017,7 @@ void test_github_example() {
                     ret = cose.decrypt(handle, mapped_key, cbor, decrypted, result);
                     if (errorcode_t::success == ret) {
                         dump_memory(decrypted, &bs, 16, 4);
-                        printf("decrypted\n%s\n", bs.c_str());
+                        printf("decrypted\n%s\n%s\n", bs.c_str(), base16_encode(decrypted).c_str());
                     }
                     break;
                 case cbor_tag_t::cose_tag_mac0:  // 17 (D1)
@@ -2018,29 +2033,30 @@ void test_github_example() {
                     break;
             }
 
-#if defined DEBUG
-            if (handle->debug_flag & cose_debug_notfound_key) {
-                reason << "!key ";
+            if (option.debug) {
+                if (handle->debug_flag & cose_debug_notfound_key) {
+                    reason << "!key ";
+                }
+                if (handle->debug_flag & cose_debug_partial_iv) {
+                    reason << "partial_iv ";
+                }
+                if (handle->debug_flag & cose_debug_hkdf_aescmac) {
+                    reason << "hkdf_aescmac ";
+                }
+                if (handle->debug_flag & cose_debug_chacha20_poly1305) {
+                    reason << "chacha20_poly1305 ";
+                }
+                if (handle->debug_flag & cose_debug_aescmac) {
+                    reason << "aescmac ";
+                }
+                debug_stream = handle->debug_stream;
             }
-            if (handle->debug_flag & cose_debug_partial_iv) {
-                reason << "partial_iv ";
-            }
-            if (handle->debug_flag & cose_debug_hkdf_aescmac) {
-                reason << "hkdf_aescmac ";
-            }
-            if (handle->debug_flag & cose_debug_chacha20_poly1305) {
-                reason << "chacha20_poly1305 ";
-            }
-            if (handle->debug_flag & cose_debug_aescmac) {
-                reason << "aescmac ";
-            }
-            debug_stream = handle->debug_stream;
-#endif
+
             cose.close(handle);
         }
 
-        _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s%s", vector->file, properties.c_str(), reason.size() ? "[ debug : " : "", reason.c_str(),
-                        reason.size() ? "] " : " ", debug_stream.c_str());
+        _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s%s", vector->file, properties.c_str(), reason.size() ? "\e[1;33m[ debug : " : "", reason.c_str(),
+                        reason.size() ? "]\e[0m " : " ", debug_stream.c_str());
     }
 }
 
@@ -2048,14 +2064,15 @@ int main(int argc, char** argv) {
     set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
 
     _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-dump", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
-    *_cmdline << cmdarg_t<OPTION>("-s", "wo github examples", [&](OPTION& o, char* param) -> void { o.short_test = true; }).optional();
-    *_cmdline << cmdarg_t<OPTION>("-v", "validate", [&](OPTION& o, char* param) -> void { o.validate_testvector = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-s", "skip validation w/ test vector", [&](OPTION& o, char* param) -> void { o.skip_validate = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
+    std::cout << "option.debug " << (option.debug ? 1 : 0) << std::endl;
     std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
-    std::cout << "option.validate_testvector " << (option.validate_testvector ? 1 : 0) << std::endl;
+    std::cout << "option.skip_validate " << (option.skip_validate ? 1 : 0) << std::endl;
 
     openssl_startup();
     openssl_thread_setup();
@@ -2132,16 +2149,14 @@ int main(int argc, char** argv) {
     // clearly marked as such in the JSON file.  If errors in the examples
     // in this document are found, the examples on GitHub will be updated,
     // and a note to that effect will be placed in the JSON file.
-    {
-        // implementation status
-        if (!option.short_test) {
-            test_github_example();
-        }
+    if (!option.skip_validate) {
+        test_github_example();
     }
 
     openssl_thread_cleanup();
     openssl_cleanup();
 
     _test_case.report(5);
+    _cmdline->help();
     return _test_case.result();
 }

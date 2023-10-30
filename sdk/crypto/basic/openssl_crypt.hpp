@@ -299,16 +299,24 @@ class openssl_crypt : public crypt_t {
                      encrypt_option_t* options = nullptr);
     return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext, binary_t const& aad,
                      binary_t& tag, encrypt_option_t* options = nullptr);
+    return_t encrypt(const char* alg, binary_t const& key, binary_t const& iv, const unsigned char* plaintext, size_t size_plaintext, binary_t& ciphertext,
+                     binary_t const& aad, binary_t& tag, encrypt_option_t* options = nullptr);
     return_t encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext,
                      binary_t const& aad, binary_t& tag, encrypt_option_t* options = nullptr);
+    return_t encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, const unsigned char* plaintext,
+                     size_t size_plaintext, binary_t& ciphertext, binary_t const& aad, binary_t& tag, encrypt_option_t* options = nullptr);
     return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext,
                      encrypt_option_t* options = nullptr);
     return_t decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext,
                      encrypt_option_t* options = nullptr);
     return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext, binary_t const& aad,
                      binary_t const& tag, encrypt_option_t* options = nullptr);
+    return_t decrypt(const char* alg, binary_t const& key, binary_t const& iv, const unsigned char* ciphertext, size_t size_ciphertext, binary_t& plaintext,
+                     binary_t const& aad, binary_t const& tag, encrypt_option_t* options = nullptr);
     return_t decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext,
                      binary_t const& aad, binary_t const& tag, encrypt_option_t* options = nullptr);
+    return_t decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, const unsigned char* ciphertext,
+                     size_t size_ciphertext, binary_t& plaintext, binary_t const& aad, binary_t const& tag, encrypt_option_t* options = nullptr);
 
     /**
      * @brief deprecated - expect block operation size

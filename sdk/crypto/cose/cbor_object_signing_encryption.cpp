@@ -244,9 +244,6 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
 
         const hint_cose_algorithm_t* alg_hint = advisor->hintof_cose_algorithm((cose_alg_t)alg);
         if (nullptr == alg_hint) {
-#if defined DEBUG
-            throw errorcode_t::internal_error;
-#endif
             __leave2;
         }
 
@@ -257,9 +254,6 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
             pkey = key->select(selected_kid, alg_hint->kty);
         }
         if (nullptr == pkey) {
-#if defined DEBUG
-            throw errorcode_t::internal_error;
-#endif
             handle->debug_flag |= cose_debug_notfound_key;
             __leave2;
         }
@@ -300,9 +294,10 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
 
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
 
-#if defined DEBUG
-            handle->debug_stream.printf("\e[1;33malg %i(group %i)\e[0m ", alg, group);
-#endif
+            if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
+                constexpr char constexpr_debug_alg[] = "alg %i(group %i) ";
+                handle->debug_stream.printf(constexpr_debug_alg, alg, group);
+            }
 
             if (cose_group_t::cose_group_key_direct == group) {
                 // RFC 8152 12.1. Direct Encryption
@@ -323,9 +318,9 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                 //      HKDF AES-MAC-128, AES-CBC-MAC-128, HKDF using AES-MAC as the PRF w/ 128-bit key
                 //      HKDF AES-MAC-256, AES-CBC-MAC-256, HKDF using AES-MAC as the PRF w/ 256-bit key
 
-#if defined DEBUG
-                handle->debug_flag |= cose_debug_hkdf_aescmac;
-#endif
+                if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
+                    handle->debug_flag |= cose_debug_hkdf_aescmac;
+                }
             } else if (cose_group_t::cose_group_key_aeskw == group) {
                 kek = secret;
                 // crypt.open(&crypt_handle, alg_hint->enc.algname, kek, kwiv);
@@ -375,13 +370,15 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
             }
 
             item->binarymap[cose_param_t::cose_param_cek] = cek;
-#if defined DEBUG
-            item->binarymap[cose_param_t::cose_param_context] = context;
-            item->binarymap[cose_param_t::cose_param_iv] = iv;
-            item->binarymap[cose_param_t::cose_param_kek] = kek;
-            item->binarymap[cose_param_t::cose_param_salt] = salt;
-            item->binarymap[cose_param_t::cose_param_secret] = secret;
-#endif
+
+            if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
+                item->binarymap[cose_param_t::cose_param_context] = context;
+                item->binarymap[cose_param_t::cose_param_iv] = iv;
+                item->binarymap[cose_param_t::cose_param_kek] = kek;
+                item->binarymap[cose_param_t::cose_param_salt] = salt;
+                item->binarymap[cose_param_t::cose_param_secret] = secret;
+            }
+
         } else {
             crypto_kty_t kty;
             key->get_privkey(pkey, kty, cek, true);
@@ -1380,9 +1377,10 @@ return_t cbor_object_signing_encryption::composer::doparse_unprotected(cose_cont
         check = finditem(cose_key_t::cose_kid, kid, handle->body.unprotected_map);
         handle->body.kid = kid;
 
-#if defined DEBUG
-        handle->debug_stream.printf("\e[1;36malg %i\e[0m ", handle->body.alg);
-#endif
+        if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
+            constexpr char constexpr_debug_alg[] = "*alg:%i ";
+            handle->debug_stream.printf(constexpr_debug_alg, handle->body.alg);
+        }
     }
     __finally2 {
         // do nothing
