@@ -53,9 +53,6 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* peer, binary_t& 
 
         if (nullptr == pkey || nullptr == peer) {
             ret = errorcode_t::invalid_parameter;
-#if defined DEBUG
-            throw ret;
-#endif
             __leave2;
         }
 

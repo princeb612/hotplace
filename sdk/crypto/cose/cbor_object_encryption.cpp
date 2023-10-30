@@ -124,7 +124,6 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
     cbor_object_signing_encryption::composer composer;
     // int enc_alg = 0;
     openssl_crypt crypt;
-    crypt_context_t* crypt_handle = nullptr;
 
     __try2 {
         if (nullptr == handle || nullptr == key) {
@@ -176,9 +175,9 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             // for (size_t i = 0; i < ivsize; i++) {
             //     iv[i] ^= aligned_partial_iv[i];
             // }
-#if defined DEBUG
-            handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
-#endif
+            if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
+                handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
+            }
         }
 
         composer.compose_enc_structure(handle, aad);
@@ -209,19 +208,25 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             split(handle->payload, enc_size, tag, hint->enc.tsize);
 
             // RFC 8152 10.1.  AES GCM
-            crypt.open(&crypt_handle, hint->enc.algname, cek, iv);
-            ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
-            crypt.close(crypt_handle);
+            // crypt.open(&crypt_handle, hint->enc.algname, cek, iv);
+            // ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
+            // crypt.close(crypt_handle);
+            crypt.decrypt(hint->enc.algname, cek, iv, &handle->payload[0], enc_size, output, aad, tag);
 
         } else if (cose_group_t::cose_group_enc_aesccm == group) {
             size_t enc_size = 0;
             split(handle->payload, enc_size, tag, hint->enc.tsize);
 
             // RFC 8152 10.2.  AES CCM - explains about L and M parameters
-            crypt.open(&crypt_handle, hint->enc.algname, cek, iv);
-            crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_lsize, hint->enc.lsize);
-            ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
-            crypt.close(crypt_handle);
+            // crypt.open(&crypt_handle, hint->enc.algname, cek, iv);
+            // crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_lsize, hint->enc.lsize);
+            // ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
+            // crypt.close(crypt_handle);
+            encrypt_option_t options[] = {
+                {crypt_ctrl_t::crypt_ctrl_lsize, hint->enc.lsize},
+                {},
+            };
+            crypt.decrypt(hint->enc.algname, cek, iv, &handle->payload[0], enc_size, output, aad, tag, options);
         } else if (cose_group_t::cose_group_enc_chacha20_poly1305 == group) {
             // TEST FAILED - counter ??
             size_t enc_size = 0;
@@ -243,24 +248,24 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             uint32 counter = 0;
             binary_t chacha20iv;
             openssl_chacha20_iv(chacha20iv, counter, iv);
-            crypt.open(&crypt_handle, hint->enc.algname, cek, chacha20iv);
-            ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
-            crypt.close(crypt_handle);
-#if defined DEBUG
-            handle->debug_flag |= cose_debug_chacha20_poly1305;
-#endif
+            // crypt.open(&crypt_handle, hint->enc.algname, cek, chacha20iv);
+            // ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
+            // crypt.close(crypt_handle);
+            crypt.decrypt(hint->enc.algname, cek, chacha20iv, &handle->payload[0], enc_size, output, aad, tag);
+            if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
+                handle->debug_flag |= cose_debug_chacha20_poly1305;
+            }
         } else {
             ret = errorcode_t::request;
         }
 
-#if defined DEBUG
 #define dump(x)                                                                 \
     if (x.size()) {                                                             \
         dump_memory(x, &bs, 16, 4);                                             \
         printf("  %s\n%s\n    %s\n", #x, bs.c_str(), base16_encode(x).c_str()); \
     }
 
-        {
+        if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
             cose_parts_t* temp = part ? part : &handle->body;
             basic_stream bs;
             dump(aad);
@@ -274,7 +279,6 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             dump(secret);
             dump(tag);
         }
-#endif
     }
     __finally2 {
         // do nothing

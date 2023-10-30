@@ -768,16 +768,16 @@ typedef struct _hint_cose_algorithm_t {
     cose_alg_t alg;
     crypto_kty_t kty;
     cose_group_t group;
-    struct {
+    struct _dgst {
         const char* algname;
-        int16 dlen;
-        int16 klen;
+        uint16 dlen;
+        uint16 klen;
     } dgst;
-    struct {
+    struct _enc {
         const char* algname;
-        int16 ksize;
-        int16 tsize;
-        int16 lsize;
+        uint16 ksize;
+        uint16 tsize;
+        uint16 lsize;
     } enc;
     // studying
 } hint_cose_algorithm_t;

@@ -431,9 +431,10 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             // for (size_t i = 0; i < ivsize; i++) {
             //     iv[i] ^= aligned_partial_iv[i];
             // }
-#if defined DEBUG
-            handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
-#endif
+
+            if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
+                handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
+            }
         }
 
         composer.compose_mac_structure(handle, tomac);
@@ -471,9 +472,10 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
             openssl_crypt crypt;
             tag.resize(hint->enc.tsize);
-#if defined DEBUG
-            handle->debug_flag |= cose_debug_aescmac;
-#endif
+
+            if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
+                handle->debug_flag |= cose_debug_aescmac;
+            }
         } else {
             ret = errorcode_t::request;
             __leave2;
@@ -483,14 +485,13 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             ret = errorcode_t::error_verify;
         }
 
-#if defined DEBUG
 #define dump(x)                                                                 \
     if (x.size()) {                                                             \
         dump_memory(x, &bs, 16, 4);                                             \
         printf("  %s\n%s\n    %s\n", #x, bs.c_str(), base16_encode(x).c_str()); \
     }
 
-        {
+        if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
             cose_parts_t* temp = part ? part : &handle->body;
             basic_stream bs;
             dump(cek);
@@ -504,7 +505,7 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             dump(tag);
             dump(tomac);
         }
-#endif
+
         if (errorcode_t::success != ret) {
             __leave2;
         }
