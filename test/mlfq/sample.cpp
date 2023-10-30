@@ -173,6 +173,10 @@ void confirm() {
 }
 
 int main() {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
     thread thread1(scenario, nullptr);
 
     thread1.start();

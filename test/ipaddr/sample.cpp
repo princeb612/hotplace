@@ -150,6 +150,10 @@ void test3() {
 }
 
 int main() {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
     _test_case.begin("smart pointer");
 
     test1();

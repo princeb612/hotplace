@@ -262,8 +262,6 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
             openssl_crypt crypt;
             openssl_hash hash;
             openssl_kdf kdf;
-            // crypt_context_t* crypt_handle = nullptr;
-            // hash_context_t* hash_handle = nullptr;
 
             return_t check = errorcode_t::success;
 

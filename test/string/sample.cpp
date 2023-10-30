@@ -338,6 +338,10 @@ void test_tokenize() {
 }
 
 int main() {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
     test_format();
     test_getline();
     test_gettoken();

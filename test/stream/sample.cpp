@@ -337,6 +337,10 @@ void test_vtprintf() {
 }
 
 int main() {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
     test_consolecolor();
     test_dumpmemory();
     test_i128();

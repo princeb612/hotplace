@@ -156,7 +156,9 @@ void test2() {
 }
 
 int main(int argc, char** argv) {
-    return_t ret = errorcode_t::success;
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
 
     test1(argc, argv);
     test2();
