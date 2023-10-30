@@ -251,7 +251,7 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             // crypt.open(&crypt_handle, hint->enc.algname, cek, chacha20iv);
             // ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
             // crypt.close(crypt_handle);
-            crypt.decrypt(hint->enc.algname, cek, chacha20iv, &handle->payload[0], enc_size, output, aad, tag);
+            ret = crypt.decrypt(hint->enc.algname, cek, chacha20iv, &handle->payload[0], enc_size, output, aad, tag);
             if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
                 handle->debug_flag |= cose_debug_chacha20_poly1305;
             }
