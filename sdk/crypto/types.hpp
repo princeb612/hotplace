@@ -771,6 +771,7 @@ typedef struct _hint_cose_algorithm_t {
     struct {
         const char* algname;
         int16 dlen;
+        int16 klen;
     } dgst;
     struct {
         const char* algname;

@@ -249,6 +249,8 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
 #if defined DEBUG
             handle->debug_flag |= cose_debug_chacha20_poly1305;
 #endif
+        } else {
+            ret = errorcode_t::request;
         }
 
 #if defined DEBUG

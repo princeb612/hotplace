@@ -345,8 +345,6 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             __leave2;
         }
 
-        handle->debug_flag |= cose_debug_mac;
-
         size_t size_multiitems = handle->multiitems.size();
         if (0 == size_multiitems) {
             cbor_object_signing_encryption::process_recipient(handle, key, nullptr);
@@ -391,7 +389,6 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
         cose_alg_t alg = cose_alg_t::cose_unknown;
         std::string kid;
         binary_t cek;
-        binary_t context;
         binary_t iv;
         binary_t partial_iv;
         binary_t tag;
@@ -463,14 +460,23 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
 
         openssl_hash hash;
         cose_group_t group = hint->group;
-        if (cose_group_t::cose_group_mac_hmac == group) {
+        if (cose_group_t::cose_group_hash == group) {
+            throw;
+        } else if (cose_group_t::cose_group_mac_hmac == group) {
             ret = hash.hmac(hint->dgst.algname, cek, tomac, tag);
+            tag.resize(hint->dgst.dlen);  // sha256/64, sha512/256
         } else if (cose_group_t::cose_group_mac_aescmac == group) {
             binary_t q;
             binary_t iv;
             iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
             openssl_crypt crypt;
             tag.resize(hint->enc.tsize);
+#if defined DEBUG
+            handle->debug_flag |= cose_debug_aescmac;
+#endif
+        } else {
+            ret = errorcode_t::request;
+            __leave2;
         }
 
         if (tag != handle->singleitem) {
@@ -488,6 +494,7 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             cose_parts_t* temp = part ? part : &handle->body;
             basic_stream bs;
             dump(cek);
+            binary_t context = temp->binarymap[cose_param_t::cose_param_context];
             dump(context);
             dump(iv);
             binary_t kek = temp->binarymap[cose_param_t::cose_param_kek];
