@@ -19,15 +19,6 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 
-return_t compare_binary(binary_t const& lhs, binary_t const& rhs) {
-    return_t ret = errorcode_t::success;
-
-    if (lhs != rhs) {
-        ret = errorcode_t::mismatch;
-    }
-    return ret;
-}
-
 void test_kdf_hkdf() {
     _test_case.begin("hkdf");
     openssl_kdf kdf;
@@ -52,8 +43,7 @@ void test_kdf_hkdf() {
         dump_memory(result, &bs);
         std::cout << bs.c_str() << std::endl;
 
-        ret = compare_binary(base16_decode(vector[i].expect), result);
-        _test_case.test(ret, __FUNCTION__, "hkdf");
+        _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "hkdf");
     }
 }
 
@@ -94,8 +84,7 @@ void test_kdf_pbkdf2_rfc6070() {
         dump_memory(result, &bs);
         std::cout << bs.c_str() << std::endl;
 
-        ret = compare_binary(base16_decode(vector[i].expect), result);
-        _test_case.test(ret, __FUNCTION__, "RFC6070.pbkdf2 c = %i", vector[i].c);
+        _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "RFC6070.pbkdf2 c = %i", vector[i].c);
     }
 }
 
@@ -125,8 +114,7 @@ void test_kdf_pbkdf2_rfc7914() {
         dump_memory(result, &bs);
         std::cout << bs.c_str() << std::endl;
 
-        ret = compare_binary(base16_decode(vector[i].expect), result);
-        _test_case.test(ret, __FUNCTION__, "RFC7914.pbkdf2 c = %i", vector[i].c);
+        _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "RFC7914.pbkdf2 c = %i", vector[i].c);
     }
 }
 
@@ -164,10 +152,8 @@ void test_kdf_scrypt_rfc7914() {
             basic_stream bs;
             dump_memory(result, &bs);
             std::cout << bs.c_str() << std::endl;
-
-            ret = compare_binary(base16_decode(vector[i].expect), result);
         }
-        _test_case.test(ret, __FUNCTION__, "scrypt");
+        _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "scrypt");
     }
 }
 
@@ -206,10 +192,7 @@ void test_kdf_argon_rfc9106() {
         dump_memory(derived, &bs);
         std::cout << bs.c_str() << std::endl;
 
-        return_t ret = errorcode_t::success;
-        ret = compare_binary(derived, base16_decode(vector[i].expect));
-
-        _test_case.test(ret, __FUNCTION__, "argon2id");
+        _test_case.assert(derived == base16_decode(vector[i].expect), __FUNCTION__, "argon2id");
     }
 #else
     _test_case.test(errorcode_t::not_supported, __FUNCTION__, "argon2d,argon2i,argon2id at least openssl 3.2 required");
@@ -476,6 +459,9 @@ void test_ckdf() {
 
 int main() {
     set_trace_option(trace_option_t::trace_bt);
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
 
     __try2 {
         openssl_startup();

@@ -92,6 +92,10 @@ void test_except() {
 }
 
 int main() {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
     test_unittest();
     test_fail();
 

@@ -259,6 +259,10 @@ void test_tlsserver() {
 }
 
 int main() {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
 #if defined _WIN32 || defined _WIN64
     winsock_startup();
 #endif

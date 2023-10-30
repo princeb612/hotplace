@@ -106,6 +106,10 @@ void test_endian() {
 }
 
 int main() {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
     test_sharedinstance1();
     test_sharedinstance2();
     test_endian();

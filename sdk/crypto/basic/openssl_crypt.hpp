@@ -318,6 +318,14 @@ class openssl_crypt : public crypt_t {
     return_t decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, const unsigned char* ciphertext,
                      size_t size_ciphertext, binary_t& plaintext, binary_t const& aad, binary_t const& tag, encrypt_option_t* options = nullptr);
 
+    return_t maccreate(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& mac, const binary_t* aad = nullptr,
+                       binary_t* tag = nullptr);
+    return_t maccreate(crypt_context_t* handle, binary_t const& plaintext, binary_t& mac, const binary_t* aad = nullptr, binary_t* tag = nullptr);
+    return_t maccreate(const char* alg, binary_t const& key, binary_t const& iv, const unsigned char* data_plain, size_t size_plain, binary_t& mac,
+                       encrypt_option_t* options = nullptr);
+    return_t maccreate(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& mac,
+                       encrypt_option_t* options = nullptr);
+
     /**
      * @brief deprecated - expect block operation size
      * @param crypt_context_t* handle [in]

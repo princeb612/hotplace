@@ -47,6 +47,10 @@ return_t test1(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
     openssl_startup();
 
     __try2 {

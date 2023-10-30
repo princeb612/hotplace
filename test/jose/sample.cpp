@@ -2101,6 +2101,9 @@ void key_match_test() {
 
 int main(int argc, char** argv) {
     set_trace_option(trace_option_t::trace_bt);
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
 
     _cmdline.make_share(new cmdline_t<OPTION>);
     *_cmdline << cmdarg_t<OPTION>("-dump", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();

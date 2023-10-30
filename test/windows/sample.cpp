@@ -74,6 +74,10 @@ void test_trace() {
 }
 
 int main(int argc, char** argv) {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
     test_enum_modules();
     test_trace();
 

@@ -387,7 +387,9 @@ void test1() {
 }
 
 int main() {
-    _test_case.report();
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
 
 #if defined _WIN32 || defined _WIN64
     winsock_startup();

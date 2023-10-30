@@ -113,6 +113,10 @@ int test1(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
     test1(argc, argv);
 
     _test_case.report(5);

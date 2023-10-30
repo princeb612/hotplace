@@ -335,15 +335,6 @@ void test_random() {
     _test_case.test(ret, __FUNCTION__, "random loop %i times", times);
 }
 
-return_t compare_binary(binary_t const& lhs, binary_t const& rhs) {
-    return_t ret = errorcode_t::success;
-
-    if (lhs != rhs) {
-        ret = errorcode_t::mismatch;
-    }
-    return ret;
-}
-
 void test_keywrap_routine(crypt_algorithm_t alg, binary_t const& kek, binary_t const& key, binary_t const& expect, const char* msg) {
     return_t ret = errorcode_t::success;
 
@@ -377,8 +368,6 @@ void test_keywrap_routine(crypt_algorithm_t alg, binary_t const& kek, binary_t c
             printf("key\n%.*s\n", (int)bs.size(), bs.c_str());
             dump_memory(out_kw, &bs);
             printf("keywrap\n%.*s\n", (int)bs.size(), bs.c_str());
-
-            ret = compare_binary(out_kw, expect);
         }
 
         crypt.decrypt(handle, &out_kw[0], out_kw.size(), out_kuw);
@@ -392,7 +381,7 @@ void test_keywrap_routine(crypt_algorithm_t alg, binary_t const& kek, binary_t c
 
         crypt.close(handle);
     }
-    _test_case.test(ret, __FUNCTION__, msg ? msg : "");
+    _test_case.assert(out_kw == expect, __FUNCTION__, msg ? msg : "");
 }
 
 void test_keywrap_rfc3394() {
@@ -582,6 +571,9 @@ void test_aead_aes_cbc_hmac_sha2() {
 
 int main() {
     set_trace_option(trace_option_t::trace_bt);
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
 
     __try2 {
         openssl_startup();

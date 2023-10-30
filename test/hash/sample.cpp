@@ -281,15 +281,6 @@ void test_hash_algorithms() {
     test_hash_loop(&openssl_hash, RTL_NUMBER_OF(hmac_table), hmac_table, (byte_t*)keydata, 32, (byte_t*)text, strlen(text));
 }
 
-return_t compare_binary(binary_t const& lhs, binary_t const& rhs) {
-    return_t ret = errorcode_t::success;
-
-    if (lhs != rhs) {
-        ret = errorcode_t::mismatch;
-    }
-    return ret;
-}
-
 void test_aes128cbc_mac_routine(binary_t const& key, binary_t const& message, binary_t const& expect) {
     return_t ret = errorcode_t::success;
 
@@ -307,10 +298,9 @@ void test_aes128cbc_mac_routine(binary_t const& key, binary_t const& message, bi
         basic_stream bs;
         dump_memory(result, &bs);
         std::cout << "result" << std::endl << bs.c_str() << std::endl;
-        // Figure 2.4.  Algorithm Verify_MAC
-        ret = compare_binary(expect, result);
     }
-    _test_case.test(ret, __FUNCTION__, "cmac test");
+    // Figure 2.4.  Algorithm Verify_MAC
+    _test_case.assert(expect == result, __FUNCTION__, "cmac test");
 }
 
 void test_cmac_rfc4493() {
@@ -608,6 +598,9 @@ void test_rfc6979_ecdsa() {
 
 int main(int argc, char** argv) {
     set_trace_option(trace_option_t::trace_bt);
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
 
     _cmdline.make_share(new cmdline_t<OPTION>);
     *_cmdline << cmdarg_t<OPTION>("-dump", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();

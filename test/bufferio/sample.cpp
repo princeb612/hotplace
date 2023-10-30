@@ -184,6 +184,10 @@ void test_bufferio2() {
 }
 
 int main() {
+#ifdef __MINGW32__
+    setvbuf(stdout, 0, _IOLBF, 1 << 20);
+#endif
+
     test_bufferio();
     test_bufferio2();
 
