@@ -299,20 +299,10 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
             printf("\e[1;33malg %i group %i\e[0m\n", alg, group);
 #endif
 
-            if (cose_group_t::cose_group_keywrap_aes == group) {
-                kek = secret;
-                // crypt.open(&crypt_handle, alg_hint->enc.algname, kek, kwiv);
-                // crypt.decrypt(crypt_handle, item->bin_data, cek);
-                // crypt.close(crypt_handle);
-                crypt.decrypt(alg_hint->enc.algname, kek, kwiv, item->bin_data, cek);
-            } else if (cose_group_t::cose_group_keyagree_direct == group) {
+            if (cose_group_t::cose_group_key_direct == group) {
                 // RFC 8152 12.1. Direct Encryption
                 cek = secret;
-            } else if (cose_group_t::cose_group_sign_ecdsa == group) {
-                // RFC 8152 8.1. ECDSA
-            } else if (cose_group_t::cose_group_sign_eddsa == group) {
-                // RFC 8152 8.2. Edwards-Curve Digital Signature Algorithms (EdDSAs)
-            } else if (cose_group_t::cose_group_kdf_hmac == group) {
+            } else if (cose_group_t::cose_group_key_hkdf_hmac == group) {
                 // RFC 8152 12.1.2.  Direct Key with KDF
                 composer.compose_kdf_context(handle, item, context);
 
@@ -320,7 +310,7 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                 // either the 'salt' parameter of HKDF ot the 'PartyU nonce' parameter of the context structure MUST be present.
                 kdf.hmac_kdf(cek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
                 // CEK solved
-            } else if (cose_group_t::cose_group_kdf_aesmac == group) {
+            } else if (cose_group_t::cose_group_key_hkdf_aes == group) {
                 composer.compose_kdf_context(handle, item, context);
 
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
@@ -331,8 +321,13 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
 #if defined DEBUG
                 handle->debug_flag |= cose_debug_hkdf_aescmac;
 #endif
-            } else if (cose_group_t::cose_group_hash == group) {
-            } else if (cose_group_t::cose_group_keyagree_ecdh_direct == group) {
+            } else if (cose_group_t::cose_group_key_aeskw == group) {
+                kek = secret;
+                // crypt.open(&crypt_handle, alg_hint->enc.algname, kek, kwiv);
+                // crypt.decrypt(crypt_handle, item->bin_data, cek);
+                // crypt.close(crypt_handle);
+                crypt.decrypt(alg_hint->enc.algname, kek, kwiv, item->bin_data, cek);
+            } else if (cose_group_t::cose_group_key_ecdh_hmac == group) {
                 // RFC 8152 12.4.1. ECDH
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 dh_key_agreement(pkey, epk, secret);
@@ -341,7 +336,7 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
 
                 salt.resize(alg_hint->dgst.dlen);
                 kdf.hmac_kdf(cek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
-            } else if (cose_group_t::cose_group_keyagree_ecdh_keywrap_aes == group) {
+            } else if (cose_group_t::cose_group_key_ecdh_aeskw == group) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
                 dh_key_agreement(pkey, epk, secret);
@@ -356,37 +351,22 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                 // crypt.decrypt(crypt_handle, item->bin_data, cek);
                 // crypt.close(crypt_handle);
                 crypt.decrypt(alg_hint->enc.algname, kek, kwiv, item->bin_data, cek);
-            } else if (cose_group_t::cose_group_sign_rsassa_pss == group) {
-            } else if (cose_group_t::cose_group_sign_rsa_oaep == group) {
+            } else if (cose_group_t::cose_group_key_rsa_oaep == group) {
                 crypt_enc_t mode;
                 switch (alg) {
-                    case cose_alg_t::cose_rsaes_oaep_sha1:
+                    case cose_alg_t::cose_rsaoaep1:
                         mode = crypt_enc_t::rsa_oaep;
                         break;
-                    case cose_alg_t::cose_rsaes_oaep_sha256:
+                    case cose_alg_t::cose_rsaoaep256:
                         mode = crypt_enc_t::rsa_oaep256;
                         break;
-                    case cose_alg_t::cose_rsaes_oaep_sha512:
+                    case cose_alg_t::cose_rsaoaep512:
                         mode = crypt_enc_t::rsa_oaep512;
                         break;
                     default:
                         break;
                 }
                 crypt.decrypt(pkey, item->bin_data, cek, mode);
-            } else if (cose_group_t::cose_group_sign_rsassa_pkcs15 == group) {
-            } else if (cose_group_t::cose_group_enc_aesgcm == group) {
-                // RFC 8152 10.1. AES GCM
-            } else if (cose_group_t::cose_group_mac_hmac == group) {
-            } else if (cose_group_t::cose_group_enc_aesccm == group) {
-                // RFC 8152 10.2. AES CCM
-            } else if (cose_group_t::cose_group_mac_aescmac == group) {
-                // RFC 9.2. AES Message Authentication Code (AES-CBC-MAC)
-            } else if (cose_group_t::cose_group_enc_chacha20_poly1305 == group) {
-                // RFC 8152 10.3. ChaCha20 and Poly1305
-#if defined DEBUG
-                handle->debug_flag |= cose_debug_chacha20_poly1305;
-#endif
-            } else if (cose_group_t::cose_group_iv_generate == group) {
             }
 
             item->binarymap[cose_param_t::cose_param_cek] = cek;
@@ -1157,14 +1137,14 @@ return_t cbor_object_signing_encryption::composer::compose_kdf_context(cose_cont
         switch (algid) {
             case cose_aes128kw:
             case cose_aes128gcm:
-            case cose_aescmac_128_64:
-            case cose_aescmac_128_128:
+            case cose_aesmac_128_64:
+            case cose_aesmac_128_128:
             case cose_aesccm_16_64_128:
             case cose_aesccm_64_64_128:
             case cose_aesccm_16_128_128:
             case cose_aesccm_64_128_128:
             case cose_hkdf_sha256:
-            case cose_hkdf_aescmac128:
+            case cose_hkdf_aes128:
             case cose_ecdhes_hkdf_256:
             case cose_ecdhss_hkdf_256:
             case cose_hs256_64:
@@ -1176,14 +1156,14 @@ return_t cbor_object_signing_encryption::composer::compose_kdf_context(cose_cont
                 break;
             case cose_aes256kw:
             case cose_aes256gcm:
-            case cose_aescmac_256_64:
-            case cose_aescmac_256_128:
+            case cose_aesmac_256_64:
+            case cose_aesmac_256_128:
             case cose_aesccm_16_64_256:
             case cose_aesccm_64_64_256:
             case cose_aesccm_16_128_256:
             case cose_aesccm_64_128_256:
             case cose_hkdf_sha512:
-            case cose_hkdf_aescmac256:
+            case cose_hkdf_aes256:
             case cose_ecdhes_hkdf_512:
             case cose_ecdhss_hkdf_512:
             case cose_hs256:
