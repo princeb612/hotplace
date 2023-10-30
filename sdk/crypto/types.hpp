@@ -521,24 +521,81 @@ enum cose_ec_curve_t {
 };
 
 enum cose_group_t {
-    cose_group_enc_aesgcm = 1,
-    cose_group_enc_aesccm = 2,
-    cose_group_enc_chacha20_poly1305 = 3,
-    cose_group_hash = 4,
-    cose_group_iv_generate = 5,
-    cose_group_kdf_hmac = 6,
-    cose_group_kdf_aesmac = 7,
-    cose_group_keyagree_ecdh_direct = 8,
-    cose_group_keyagree_ecdh_keywrap_aes = 9,
-    cose_group_keywrap_aes = 10,
-    cose_group_keyagree_direct = 11,
-    cose_group_mac_aescmac = 12,
-    cose_group_mac_hmac = 13,
-    cose_group_sign_ecdsa = 14,
-    cose_group_sign_eddsa = 15,
-    cose_group_sign_rsa_oaep = 16,
-    cose_group_sign_rsassa_pkcs15 = 17,
-    cose_group_sign_rsassa_pss = 18,
+    // RFC 8152 8. Signature Algorithms
+    //   8.1.  ECDSA
+    //   Table 5, ES256, ES284, ES512
+    cose_group_sign_ecdsa = 1,
+    // RFC 8152 8. Signature Algorithms
+    //   8.2.  Edwards-Curve Digital Signature Algorithms (EdDSAs)
+    //   Table 6, EdDSA
+    cose_group_sign_eddsa = 2,
+    // RFC 8152 9. Message Authentication Code (MAC) Algorithms
+    //   9.1.  Hash-Based Message Authentication Codes (HMACs)
+    //   Table 7, HMAC 256/64, HMAC 256/256, HMAC 384/384, HMAC 512/512
+    cose_group_mac_hmac = 3,
+    // RFC 8152 9. Message Authentication Code (MAC) Algorithms
+    //   9.2.  AES Message Authentication Code (AES-CBC-MAC)
+    //   Table 8, AES-MAC 128/64, AES-MAC 256/64, AES-MAC 128/128, AES-MAC 256/128
+    cose_group_mac_aescmac = 4,
+    // RFC 8152 10. Content Encryption Algorithms
+    //   10.1.  AES GCM
+    //   Table 9, A128GCM, A192GCM, A256GCM
+    cose_group_enc_aesgcm = 5,
+    // RFC 8152 10. Content Encryption Algorithms
+    //   10.2.  AES CCM
+    //   Table 10, AES-CCM-16-64-128, ...
+    cose_group_enc_aesccm = 6,
+    // RFC 8152 10. Content Encryption Algorithms
+    //   10.3.  ChaCha20 and Poly1305
+    //   Table 11, ChaCha20/Poly1305
+    cose_group_enc_chacha20_poly1305 = 7,
+    // RFC 8152 12. Content Key Distribution Methods
+    //   12.1. Direct Encryption
+    //   12.1.1.  Direct Key
+    //   Table 15, direct
+    cose_group_key_direct = 8,
+    // RFC 8152 12. Content Key Distribution Methods
+    //   12.1. Direct Encryption
+    //   12.1.2.  Direct Key with KDF
+    //   Table 16, direct+HKDF-SHA-256, direct+HKDF-SHA-512
+    cose_group_key_hkdf_hmac = 9,
+    // RFC 8152 12. Content Key Distribution Methods
+    //   12.1. Direct Encryption
+    //   12.1.2.  Direct Key with KDF
+    //   Table 16,  direct+HKDF-AES-128, direct+HKDF-AES-256
+    cose_group_key_hkdf_aes = 10,
+    // RFC 8152 12. Content Key Distribution Methods
+    //   12.2. Key Wrap
+    //   12.2.1.  AES Key Wrap
+    //   Table 17, A128KW, A192KW, A256KW
+    cose_group_key_aeskw = 11,
+    // RFC 8152 12. Content Key Distribution Methods
+    //   12.4. Direct Key Agreement
+    //   12.4.1.  ECDH
+    //   Table 18 ECDH-ES+HKDF-256, ECDH-ES+HKDF-512, ECDH-SS+HKDF-256, ECDH-SS+HKDF-512
+    cose_group_key_ecdh_hmac = 12,
+    // RFC 8152 12. Content Key Distribution Methods
+    //   12.5. Key Agreement with Key Wrap
+    //   12.5.1.  ECDH
+    //   Table 20 ECDH-ES+A128KW,ECDH-ES+A192KW, ECDH-ES+A256KW, ECDH-SS+A128KW,ECDH-SS+A192KW, ECDH-SS+A256KW
+    cose_group_key_ecdh_aeskw = 13,
+    // RFC 8230 2.  RSASSA-PSS Signature Algorithm
+    //   Table 1, PS256, PS384, PS512
+    cose_group_sign_rsassa_pss = 14,
+    // RFC 8230 3.  RSAES-OAEP Key Encryption Algorithm
+    //   Table 2, RSAES-OAEP w/ SHA-1, RSAES-OAEP w/ SHA-256, RSAES-OAEP w/ SHA-512
+    cose_group_key_rsa_oaep = 15,
+    // RFC 8812 2.  RSASSA-PKCS1-v1_5 Signature Algorithm
+    //   Table 1, RS256, RS384, RS512, RS1
+    cose_group_sign_rsassa_pkcs15 = 16,
+    // RFC 9053 10.  IANA Considerations
+    //   10.2.  Changes to the "COSE Algorithms" Registry
+    //   Table 23, IV-GENERATION
+    cose_group_iv_generate = 17,
+    // RFC 9054 3.  Hash Algorithm Identifiers
+    //   Table 1, SHA-1
+    //   Table 2, SHA-256/64, SHA-256, SHA-384, SHA-512, SHA-512/256
+    cose_group_hash = 18,
 };
 enum cose_alg_t {
     cose_unknown = 0,
@@ -566,10 +623,10 @@ enum cose_alg_t {
     // RFC 8152 Table 16: Direct Key with KDF
     // RFC 9053 Table 8: HKDF Algorithms
     // RFC 9053 Table 12: Direct Key with KDF
-    cose_hkdf_sha256 = -10,      // "HKDF SHA-256", "direct+HKDF-SHA-256"
-    cose_hkdf_sha512 = -11,      // "HKDF SHA-512", "direct+HKDF-SHA-512"
-    cose_hkdf_aescmac128 = -12,  // "HKDF AES-MAC-128", "direct+HKDF-AES-128"
-    cose_hkdf_aescmac256 = -13,  // "HKDF AES-MAC-256", "direct+HKDF-AES-256"
+    cose_hkdf_sha256 = -10,  // "HKDF SHA-256", "direct+HKDF-SHA-256"
+    cose_hkdf_sha512 = -11,  // "HKDF SHA-512", "direct+HKDF-SHA-512"
+    cose_hkdf_aes128 = -12,  // "HKDF AES-MAC-128", "direct+HKDF-AES-128"
+    cose_hkdf_aes256 = -13,  // "HKDF AES-MAC-256", "direct+HKDF-AES-256"
 
     // RFC 9054 Table 1: SHA-1 Hash Algorithm
     cose_sha1 = -14,  // "SHA-1"
@@ -607,9 +664,9 @@ enum cose_alg_t {
     cose_ps512 = -39,  // "RSA-PSS-512"
 
     // RFC 8230 Table 2: RSAES-OAEP Algorithm Values
-    cose_rsaes_oaep_sha1 = -40,    // "RSA-OAEP"
-    cose_rsaes_oaep_sha256 = -41,  // "RSA-OAEP-256"
-    cose_rsaes_oaep_sha512 = -42,  // "RSA-OAEP-512"
+    cose_rsaoaep1 = -40,    // "RSA-OAEP"
+    cose_rsaoaep256 = -41,  // "RSA-OAEP-256"
+    cose_rsaoaep512 = -42,  // "RSA-OAEP-512"
 
     // RFC 8812 Table 2: ECDSA Algorithm Values
     cose_es256k = -47,  // "ES256K"
@@ -646,10 +703,10 @@ enum cose_alg_t {
 
     // RFC 8152 Table 8: AES-MAC Algorithm Values
     // RFC 9053 Table 4: AES-MAC Algorithm Values
-    cose_aescmac_128_64 = 14,   // "AES-MAC-128/64", AES-MAC 128-bit key, 64-bit tag
-    cose_aescmac_256_64 = 15,   // "AES-MAC-256/64", AES-MAC 256-bit key, 64-bit tag
-    cose_aescmac_128_128 = 25,  // "AES-MAC-128/128", AES-MAC 128-bit key, 128-bit tag
-    cose_aescmac_256_128 = 26,  // "AES-MAC-256/128", AES-MAC 256-bit key, 128-bit tag
+    cose_aesmac_128_64 = 14,   // "AES-MAC-128/64", AES-MAC 128-bit key, 64-bit tag
+    cose_aesmac_256_64 = 15,   // "AES-MAC-256/64", AES-MAC 256-bit key, 64-bit tag
+    cose_aesmac_128_128 = 25,  // "AES-MAC-128/128", AES-MAC 128-bit key, 128-bit tag
+    cose_aesmac_256_128 = 26,  // "AES-MAC-256/128", AES-MAC 256-bit key, 128-bit tag
 
     // RFC 8152 Table 11: Algorithm Value for AES-GCM
     // RFC 9053 Table 7: Algorithm Value for ChaCha20/Poly1305

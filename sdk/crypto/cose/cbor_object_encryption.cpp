@@ -227,10 +227,22 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             size_t enc_size = 0;
             split(handle->payload, enc_size, tag, hint->enc.tsize);
 
+            // RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
+            // RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
+            //     chacha20_aead_encrypt(aad, key, iv, constant, plaintext):
+            //        nonce = constant | iv
+            //        otk = poly1305_key_gen(key, nonce)
+            //        ciphertext = chacha20_encrypt(key, 1, nonce, plaintext)
+            //        mac_data = aad | pad16(aad)
+            //        mac_data |= ciphertext | pad16(ciphertext)
+            //        mac_data |= num_to_8_le_bytes(aad.length)
+            //        mac_data |= num_to_8_le_bytes(ciphertext.length)
+            //        tag = poly1305_mac(mac_data, otk)
+            //        return (ciphertext, tag)
+            // RFC 8152 10.3. ChaCha20 and Poly1305
             uint32 counter = 0;
             binary_t chacha20iv;
             openssl_chacha20_iv(chacha20iv, counter, iv);
-            // RFC 8152 10.3. ChaCha20 and Poly1305
             crypt.open(&crypt_handle, hint->enc.algname, cek, chacha20iv);
             ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
             crypt.close(crypt_handle);

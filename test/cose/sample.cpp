@@ -1093,7 +1093,7 @@ void test_rfc8152_c_5_1() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aescmac_256_64);
+        variant_set_int16(value, cose_alg_t::cose_aesmac_256_64);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -1246,7 +1246,7 @@ void test_rfc8152_c_5_3() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aescmac_128_64);
+        variant_set_int16(value, cose_alg_t::cose_aesmac_128_64);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }
@@ -1421,7 +1421,7 @@ void test_rfc8152_c_6_1() {
     cbor_data* cbor_data_protected = nullptr;
     {
         cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aescmac_256_64);
+        variant_set_int16(value, cose_alg_t::cose_aesmac_256_64);
         protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
         composer.build_protected(&cbor_data_protected, protected_map);
     }

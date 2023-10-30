@@ -310,21 +310,16 @@ return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* 
             pkey = key->select(k, hint->kty);
         }
 
-        switch (alg) {
-            case cose_es256:
-            case cose_es384:
-            case cose_es512:
-            case cose_ps256:
-            case cose_ps384:
-            case cose_ps512:
-            case cose_rs256:
-            case cose_rs384:
-            case cose_rs512:
-            case cose_eddsa:
+        cose_group_t group = hint->group;
+        switch (group) {
+            case cose_group_sign_ecdsa:
+            case cose_group_sign_eddsa:
+            case cose_group_sign_rsassa_pss:
+            case cose_group_sign_rsassa_pkcs15:
                 ret = signprocessor.verify(pkey, sig, tobesigned, signature);
                 break;
             default:
-                ret = errorcode_t::not_supported;  // studying...
+                ret = errorcode_t::request;
                 break;
         }
     }
@@ -432,7 +427,8 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             // Partial IV
             // 1.  Left-pad the Partial IV with zeros to the length of IV.
             // 2.  XOR the padded Partial IV with the context IV.
-            size_t ivsize = iv.size();
+
+            // size_t ivsize = iv.size();
             // binary_t aligned_partial_iv;
             // binary_load(aligned_partial_iv, ivsize, &partial_iv[0], partial_iv.size());
             // for (size_t i = 0; i < ivsize; i++) {

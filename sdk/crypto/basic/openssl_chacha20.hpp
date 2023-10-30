@@ -29,7 +29,7 @@ namespace crypto {
  *
  *          cf.
  *          https://www.openssl.org/docs/man3.0/man3/EVP_chacha20.html
- *          openssl iv 128bites (16bytes) = counter 64bits(LE) + iv 64bits - don't meet specifications
+ *          openssl iv 128bites (16bytes) = counter 64bits(LE) + iv 64bits - 96 or 64
  * @example
  *          constexpr byte_t data_plain[] = "still a man hears what he wants to hear and disregards the rest";
  *          size_t size_plain = RTL_NUMBER_OF (data_plain);
@@ -53,9 +53,9 @@ namespace crypto {
  *
  *          // stream cipher
  *          {
- *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::stream_cipher, &key[0], key.size (), &iv[0], iv.size ());
+ *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::stream_cipher, key, iv);
  *              crypt.encrypt (handle, data_plain, size_plain, data_encrypted);
- *              crypt.decrypt (handle, &data_encrypted[0], data_encrypted.size (), data_decrypted);
+ *              crypt.decrypt (handle, data_encrypted, data_decrypted);
  *              crypt.close (handle);
  *          }
  *
@@ -65,9 +65,9 @@ namespace crypto {
  *              binary_t tag;
  *              openssl_prng rand;
  *              rand.random (aad, 32);
- *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::stream_aead, &key[0], key.size (), &iv[0], iv.size ());
+ *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::stream_aead, key, iv);
  *              crypt.encrypt2 (handle, data_plain, size_plain, data_encrypted, &aad, &tag);
- *              crypt.decrypt2 (handle, &data_encrypted[0], data_encrypted.size (), data_decrypted, &aad, &tag);
+ *              crypt.decrypt2 (handle, data_encrypted, data_decrypted, &aad, &tag);
  *              crypt.close (handle);
  *          }
  */
