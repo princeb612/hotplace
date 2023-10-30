@@ -209,6 +209,12 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
             __leave2;
         }
 
+        uint16 dgst_klen = 0;
+        const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(handle->body.alg);
+        if (hint) {
+            dgst_klen = hint->dgst.klen;
+        }
+
         const char* k = nullptr;
         binary_t kwiv;
         binary_t iv;
@@ -256,7 +262,6 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
 #endif
             handle->debug_flag |= cose_debug_notfound_key;
             __leave2;
-            ;
         }
 
         if (item) {
@@ -296,7 +301,7 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
 
 #if defined DEBUG
-            printf("\e[1;33malg %i group %i\e[0m\n", alg, group);
+            handle->debug_stream.printf("\e[1;33malg %i(group %i)\e[0m ", alg, group);
 #endif
 
             if (cose_group_t::cose_group_key_direct == group) {
@@ -308,7 +313,7 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
 
                 // using context structure to transform the shared secret into the CEK
                 // either the 'salt' parameter of HKDF ot the 'PartyU nonce' parameter of the context structure MUST be present.
-                kdf.hmac_kdf(cek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
+                kdf.hmac_kdf(cek, alg_hint->dgst.algname, dgst_klen ? dgst_klen : alg_hint->dgst.dlen, secret, salt, context);
                 // CEK solved
             } else if (cose_group_t::cose_group_key_hkdf_aes == group) {
                 composer.compose_kdf_context(handle, item, context);
@@ -335,7 +340,7 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                 composer.compose_kdf_context(handle, item, context);
 
                 salt.resize(alg_hint->dgst.dlen);
-                kdf.hmac_kdf(cek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
+                kdf.hmac_kdf(cek, alg_hint->dgst.algname, dgst_klen ? dgst_klen : alg_hint->dgst.dlen, secret, salt, context);
             } else if (cose_group_t::cose_group_key_ecdh_aeskw == group) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
@@ -344,7 +349,7 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                 composer.compose_kdf_context(handle, item, context);
 
                 salt.resize(alg_hint->dgst.dlen);
-                kdf.hmac_kdf(kek, alg_hint->dgst.algname, alg_hint->dgst.dlen, secret, salt, context);
+                kdf.hmac_kdf(kek, alg_hint->dgst.algname, dgst_klen ? dgst_klen : alg_hint->dgst.dlen, secret, salt, context);
 
                 // 12.5.  Key Agreement with Key Wrap
                 // crypt.open(&crypt_handle, alg_hint->enc.algname, kek, kwiv);
@@ -1374,6 +1379,10 @@ return_t cbor_object_signing_encryption::composer::doparse_unprotected(cose_cont
         std::string kid;
         check = finditem(cose_key_t::cose_kid, kid, handle->body.unprotected_map);
         handle->body.kid = kid;
+
+#if defined DEBUG
+        handle->debug_stream.printf("\e[1;36malg %i\e[0m ", handle->body.alg);
+#endif
     }
     __finally2 {
         // do nothing

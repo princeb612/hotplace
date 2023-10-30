@@ -1835,10 +1835,19 @@ void test_github_example() {
     crypto_key aes_gcm_04_key;
     cwk.add_oct_b64u(&aes_gcm_04_key, "our-secret", nullptr, "hJtXIZ2uSN5kbQfbtTNWbg", crypto_use_t::use_enc);
 
+    crypto_key key_hmac_enc_02;
+    cwk.add_oct_b64u(&key_hmac_enc_02, "sec-48", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico", crypto_use_t::use_enc);
+
     crypto_key cwtkey;
     cwk.add_ec_b16(&cwtkey, nullptr, "ES256", "P-256", "143329cce7868e416927599cf65a34f3ce2ffda55a7eca69ed8919a394d42f0f",
                    "60f7f1a780d8a783bfb7a2dd6b2796e8128dbbcef9d3d168db9529971a36e7b9", "6c1382765aec5358f117733d281c1c7bdc39884d04a45a1e6c67c858bc206c19");
     cwk.add_oct_b16(&cwtkey, "our-secret", nullptr, "231f4c4d4d3051fdc2ec0a3851d5b383");
+
+    crypto_key key_cwt_a4;
+    cwk.add_oct_b16(&key_cwt_a4, "our-secret", nullptr, "403697de87af64611c1d32a05dab0fe1fcb715a86ab435f1ec99192d79569388");
+
+    crypto_key key_hmac_enc_03;
+    cwk.add_oct_b64u(&key_hmac_enc_03, "sec-64", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJicoqrvM3e7_paanqKmgsbKztA");
 
     OPTION& option = _cmdline->value();
 
@@ -1855,7 +1864,10 @@ void test_github_example() {
     keymapper["aes_gcm_02_key"] = &aes_gcm_02_key;
     keymapper["aes_gcm_03_key"] = &aes_gcm_03_key;
     keymapper["aes_gcm_04_key"] = &aes_gcm_04_key;
+    keymapper["key_hmac_enc_02"] = &key_hmac_enc_02;
     keymapper["cwtkey"] = &cwtkey;
+    keymapper["key_cwt_a4"] = &key_cwt_a4;
+    keymapper["key_hmac_enc_03"] = &key_hmac_enc_03;
 
     int i = 0;
     cbor_encode e;
@@ -1904,6 +1916,7 @@ void test_github_example() {
 
         basic_stream properties;
         basic_stream reason;
+        basic_stream debug_stream;
         return_t ret = errorcode_t::success;
         std::string tagkey(vector->cbor, 4);
         iter = dictionary.find(uppername(tagkey));
@@ -2018,15 +2031,16 @@ void test_github_example() {
             if (handle->debug_flag & cose_debug_chacha20_poly1305) {
                 reason << "chacha20_poly1305 ";
             }
-            if (handle->debug_flag & cose_debug_mac) {
-                reason << "mac ";
+            if (handle->debug_flag & cose_debug_aescmac) {
+                reason << "aescmac ";
             }
+            debug_stream = handle->debug_stream;
 #endif
             cose.close(handle);
         }
 
-        _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s", vector->file, properties.c_str(), reason.size() ? "[ debug : " : "", reason.c_str(),
-                        reason.size() ? "]" : "");
+        _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s%s", vector->file, properties.c_str(), reason.size() ? "[ debug : " : "", reason.c_str(),
+                        reason.size() ? "] " : " ", debug_stream.c_str());
     }
 }
 

@@ -104,46 +104,62 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             64,
         },
     },
-    {
-        cose_alg_t::cose_sha1,
-        crypto_kty_t::kty_hmac,
-        cose_group_t::cose_group_hash,
-    },
-    {
-        cose_alg_t::cose_sha256_64,
-        crypto_kty_t::kty_hmac,
-        cose_group_t::cose_group_hash,
-    },
-    {
-        cose_alg_t::cose_sha256,
-        crypto_kty_t::kty_hmac,
-        cose_group_t::cose_group_hash,
-    },
-    {
-        cose_alg_t::cose_sha512_256,
-        crypto_kty_t::kty_hmac,
-        cose_group_t::cose_group_hash,
-    },
-    {
-        cose_alg_t::cose_sha384,
-        crypto_kty_t::kty_hmac,
-        cose_group_t::cose_group_hash,
-    },
-    {
-        cose_alg_t::cose_sha512,
-        crypto_kty_t::kty_hmac,
-        cose_group_t::cose_group_hash,
-    },
+    {cose_alg_t::cose_sha1,
+     crypto_kty_t::kty_hmac,
+     cose_group_t::cose_group_hash,
+     {
+         "sha1",
+         160 >> 3,
+     }},
+    {cose_alg_t::cose_sha256_64,
+     crypto_kty_t::kty_hmac,
+     cose_group_t::cose_group_hash,
+     {
+         "sha256",
+         84 >> 3,
+     }},
+    {cose_alg_t::cose_sha256,
+     crypto_kty_t::kty_hmac,
+     cose_group_t::cose_group_hash,
+     {
+         "sha256",
+         256 >> 3,
+     }},
+    {cose_alg_t::cose_sha512_256,
+     crypto_kty_t::kty_hmac,
+     cose_group_t::cose_group_hash,
+     {
+         "sha512",
+         256 >> 3,
+     }},
+    {cose_alg_t::cose_sha384,
+     crypto_kty_t::kty_hmac,
+     cose_group_t::cose_group_hash,
+     {
+         "sha384",
+         384 >> 3,
+     }},
+    {cose_alg_t::cose_sha512,
+     crypto_kty_t::kty_hmac,
+     cose_group_t::cose_group_hash,
+     {
+         "sha512",
+         512 >> 3,
+     }},
     {
         cose_alg_t::cose_shake128,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_hash,
+        {
+            "shake128",
+        },
     },
-    {
-        cose_alg_t::cose_shake256,
-        crypto_kty_t::kty_hmac,
-        cose_group_t::cose_group_hash,
-    },
+    {cose_alg_t::cose_shake256,
+     crypto_kty_t::kty_hmac,
+     cose_group_t::cose_group_hash,
+     {
+         "shake256",
+     }},
     {
         cose_alg_t::cose_ecdhes_hkdf_256,
         crypto_kty_t::kty_ec,
@@ -347,6 +363,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {
             "sha256",
             8,
+            256 >> 3,
         },
     },
     {
@@ -356,6 +373,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {
             "sha256",
             32,
+            256 >> 3,
         },
     },
     {
@@ -365,6 +383,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {
             "sha384",
             48,
+            384 >> 3,
         },
     },
     {
@@ -374,6 +393,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {
             "sha512",
             64,
+            512 >> 3,
         },
     },
     {
@@ -476,9 +496,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_aesmac_128_64,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_mac_aescmac,
-        {
-            "sha256",
-        },
+        {},
         {
             "aes-128-cbc",
             16,
@@ -489,9 +507,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_aesmac_256_64,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_mac_aescmac,
-        {
-            "sha256",
-        },
+        {},
         {
             "aes-256-cbc",
             32,
@@ -502,9 +518,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_aesmac_128_128,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_mac_aescmac,
-        {
-            "sha256",
-        },
+        {},
         {
             "aes-128-cbc",
             16,
@@ -515,9 +529,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_alg_t::cose_aesmac_256_128,
         crypto_kty_t::kty_hmac,
         cose_group_t::cose_group_mac_aescmac,
-        {
-            "sha256",
-        },
+        {},
         {
             "aes-256-cbc",
             32,
