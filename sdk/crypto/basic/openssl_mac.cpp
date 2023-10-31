@@ -182,7 +182,12 @@ return_t openssl_mac::cbc_mac_rfc8152(const char* alg, binary_t const& key, bina
         for (size_t i = 0; i < size_input; i += blocksize) {
             int remain = size_input - i;
             int size = (remain < blocksize) ? remain : blocksize;
-            EVP_CipherUpdate(context, &tag[0], &size_update, &input[i], size);
+            if (remain > blocksize) {
+                EVP_CipherUpdate(context, &tag[0], &size_update, &input[i], blocksize);
+            } else {
+                EVP_CipherUpdate(context, &tag[0], &size_update, &input[i], remain);
+                EVP_CipherUpdate(context, &tag[0], &size_update, &iv[0], blocksize - remain);
+            }
             size_progress += size_update;
             {
                 basic_stream bs;
@@ -190,7 +195,6 @@ return_t openssl_mac::cbc_mac_rfc8152(const char* alg, binary_t const& key, bina
                 printf("%s\n", bs.c_str());
             }
         }
-        EVP_CipherUpdate(context, &tag[0], &size_update, &iv[0], iv.size());  // encrypt final block w/ IV
         tag.resize(tagsize);
     }
     __finally2 {
