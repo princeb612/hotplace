@@ -80,9 +80,20 @@ class openssl_kdf {
      * @param   binary_t const& prk [in] pseudo-random key
      * @param   binary_t const& info [in] info
      * @remarks
-     *
      */
     return_t hkdf_expand(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info);
+    /**
+     * @brief   AES-based KDF_Expand
+     * @param   binary_t& okm [out] output key material
+     * @param   const char* alg [in] algorithm
+     * @param   size_t dlen [in] length
+     * @param   binary_t const& prk [in] pseudo-random key
+     * @param   binary_t const& info [in] info
+     * @remarks RFC 8152 direct+HKDF-AES-128, direct+HKDF-AES-256
+     *          reference https://travis-ci.org/cose-wg/
+     *          just HKDF wo extract
+     */
+    return_t hkdf_expand_aes(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info);
     /**
      * @brief   CMAC-based Extract-and-Expand Key Derivation Function (CKDF)
      * @param   binary_t& okm [out] output key material
@@ -92,6 +103,8 @@ class openssl_kdf {
      * @param   binary_t const& salt [in] salt
      * @param   binary_t const& info [in] info
      * @remarks
+     *          CMAC = CKDF-Extract + CKDF-Expand
+     *
      *          CMAC "aes-128-cbc"
      *          CKDF-Extract "aes-128-cbc"
      *          CKDF-Expand "aes-128-ecb"
