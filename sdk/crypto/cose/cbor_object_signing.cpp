@@ -347,7 +347,7 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
 
         size_t size_multiitems = handle->multiitems.size();
         if (0 == size_multiitems) {
-            cbor_object_signing_encryption::process_recipient(handle, key, nullptr);
+            cbor_object_signing_encryption::process_keyagreement(handle, key, nullptr);
             check = doverify_mac(handle, key, nullptr, handle->singleitem);
             results.insert((errorcode_t::success == check) ? true : false);
         } else {
@@ -355,7 +355,7 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             for (iter = handle->multiitems.begin(); iter != handle->multiitems.end(); iter++) {
                 cose_parts_t& item = *iter;
 
-                cbor_object_signing_encryption::process_recipient(handle, key, &item);
+                cbor_object_signing_encryption::process_keyagreement(handle, key, &item);
                 check = doverify_mac(handle, key, &item, item.bin_data);
                 results.insert((errorcode_t::success == check) ? true : false);
             }

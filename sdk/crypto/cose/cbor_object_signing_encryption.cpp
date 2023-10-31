@@ -191,7 +191,7 @@ return_t cbor_object_signing_encryption::clear_context(cose_context_t* handle) {
     return ret;
 }
 
-return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handle, crypto_key* key, cose_parts_t* item) {
+return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* handle, crypto_key* key, cose_parts_t* item) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -315,6 +315,8 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                 // RFC 8152 Table 12: HKDF Algorithms
                 //      HKDF AES-MAC-128, AES-CBC-MAC-128, HKDF using AES-MAC as the PRF w/ 128-bit key
                 //      HKDF AES-MAC-256, AES-CBC-MAC-256, HKDF using AES-MAC as the PRF w/ 256-bit key
+
+                kdf.hkdf_expand_aes(cek, alg_hint->dgst.algname, dgst_klen ? dgst_klen : alg_hint->dgst.dlen, secret, context);
 
                 if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
                     handle->debug_flag |= cose_debug_hkdf_aes;

@@ -175,6 +175,103 @@ return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, b
     return ret;
 }
 
+return_t openssl_kdf::hkdf_expand_aes(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    EVP_CIPHER_CTX* context = nullptr;
+    openssl_mac mac;
+
+    __try2 {
+        // the CKDF-Expand(PRK, info, L) function takes the PRK result from CKDF-Extract, an arbitrary "info" argument and a requested number of bytes to
+        // produce. It calculates the L-byte result, called the "output keying material" (OKM)
+
+        okm.clear();
+
+        if (nullptr == alg) {
+            __leave2;
+        }
+
+        const hint_blockcipher_t* hint = advisor->hintof_blockcipher(alg);
+        if (nullptr == hint) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        const EVP_CIPHER* cipher = advisor->find_evp_cipher(alg);
+        if (nullptr == cipher) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        context = EVP_CIPHER_CTX_new();
+        if (nullptr == context) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
+        binary_t iv;
+        uint16 blocksize = sizeof_block(hint);
+        uint32 offset = 0;
+        binary_t t_block;  // T(0) = empty string (zero length)
+        int t_block_size = 0;
+        int size_update = 0;
+        iv.resize(16);
+        t_block.resize(EVP_MAX_BLOCK_LENGTH);
+
+        EVP_CipherInit_ex(context, cipher, nullptr, &prk[0], &iv[0], 1);
+        EVP_CIPHER_CTX_set_padding(context, 1);
+
+        for (uint32 i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; i++) {
+            binary_t content;  // T(1) = AES-CMAC(PRK, T(0) | info | 0x01)
+            content.insert(content.end(), &t_block[0], &t_block[0] + t_block_size);
+            content.insert(content.end(), info.begin(), info.end());
+            content.insert(content.end(), i);  // i = 1..255 (01..ff)
+
+            // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
+            int check = EVP_CipherUpdate(context, &t_block[0], &t_block_size, &content[0], content.size());
+
+            okm.insert(okm.end(), &t_block[0], &t_block[0] + t_block_size);  // T = T(1) | T(2) | T(3) | ... | T(N)
+            offset += t_block_size;
+        }
+        okm.resize(dlen);  // OKM = first L octets of T
+    }
+    __finally2 {
+        if (context) {
+            EVP_CIPHER_CTX_free(context);
+        }
+    }
+    /*
+            binary_t temp;
+
+            int size_update = 0;
+            size_t size_input = input.size();
+            uint16 blocksize = sizeof_block(hint_cipher);
+            uint32 unitsize = ossl_get_unitsize();
+            size_t size_progress = 0;
+            for (size_t i = 0; i < size_input; i += blocksize) {
+                int remain = size_input - i;
+                int size = (remain < blocksize) ? remain : blocksize;
+
+                EVP_CipherUpdate(context, &okm[0], &size_update, &temp[i], temp.size());
+                size_progress += size_update;
+
+                if (remain > blocksize) {
+                    EVP_CipherUpdate(context, &okm[0], &size_update, &input[i], blocksize);
+                } else {
+                    EVP_CipherUpdate(context, &okm[0], &size_update, &input[i], remain);
+                    EVP_CipherUpdate(context, &okm[0], &size_update, &iv[0], blocksize - remain);
+                }
+                size_progress += size_update;
+                {
+                    basic_stream bs;
+                    dump_memory(tag, &bs);
+                    printf("%s\n", bs.c_str());
+                }
+            }
+            okm.resize(blocksize);
+    */
+    return ret;
+}
+
 // RFC 4493 Figure 2.3.  Algorithm AES-CMAC
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // +                   Algorithm AES-CMAC                              +

@@ -281,7 +281,7 @@ class cbor_object_signing_encryption {
     /**
      * @brief cek into handle->binarymap[cose_param_t::cose_param_cek]
      */
-    static return_t process_recipient(cose_context_t* handle, crypto_key* key, cose_parts_t* item);
+    static return_t process_keyagreement(cose_context_t* handle, crypto_key* key, cose_parts_t* item);
 };
 
 typedef cbor_object_signing_encryption COSE;
