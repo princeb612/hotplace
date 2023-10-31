@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 
+#include <fstream>
 #include <iostream>
 #include <sdk/sdk.hpp>
 
@@ -149,49 +150,39 @@ enum {
 typedef struct _OPTION {
     int mode;
     std::string content;
+    std::string filename;
 
     _OPTION() : mode(0) {}
+    void set(int m, char* param) {
+        mode = m;
+        if (param) {
+            content = param;
+        }
+    }
+    void setfile(char* param) {
+        if (param) {
+            filename = param;
+        }
+    }
 } OPTION;
 
 void whatsthis(int argc, char** argv) {
     return_t ret = errorcode_t::success;
     cmdline_t<OPTION> cmdline;
 
-    cmdline << cmdarg_t<OPTION>("-b64u", "decode base64url",
-                                [&](OPTION& o, char* param) -> void {
-                                    o.mode = decode_b64u;
-                                    o.content = param;
-                                })
-                   .preced()
-                   .optional()
-            << cmdarg_t<OPTION>("-b64", "decode base64",
-                                [&](OPTION& o, char* param) -> void {
-                                    o.mode = decode_b64;
-                                    o.content = param;
-                                })
-                   .preced()
-                   .optional()
-            << cmdarg_t<OPTION>("-t", "plaintext",
-                                [&](OPTION& o, char* param) -> void {
-                                    o.mode = encode_plaintext;
-                                    o.content = param;
-                                })
-                   .preced()
-                   .optional()
-            << cmdarg_t<OPTION>("-b16", "decode base16",
-                                [&](OPTION& o, char* param) -> void {
-                                    o.mode = decode_b16;
-                                    o.content = param;
-                                })
-                   .preced()
-                   .optional();
+    cmdline << cmdarg_t<OPTION>("-b64u", "decode base64url", [&](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
+            << cmdarg_t<OPTION>("-b64", "decode base64", [&](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()
+            << cmdarg_t<OPTION>("-t", "plaintext", [&](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
+            << cmdarg_t<OPTION>("-b16", "decode base16", [&](OPTION& o, char* param) -> void { o.set(decode_b16, param); }).preced().optional()
+            << cmdarg_t<OPTION>("-out", "write to file", [&](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional();
     ret = cmdline.parse(argc, argv);
 
     OPTION o = cmdline.value();
-    if (o.mode) {
+    if (o.mode && errorcode_t::success == ret) {
         basic_stream bs;
         basic_stream additional;
         binary_t what;
+        binary_t temp;
         switch (o.mode) {
             case decode_b64u:
                 what = base64_decode(o.content, base64_encoding_t::base64url_encoding);
@@ -200,8 +191,9 @@ void whatsthis(int argc, char** argv) {
                 what = base64_decode(o.content, base64_encoding_t::base64_encoding);
                 break;
             case encode_plaintext:
-                base16_encode(o.content, what);
-                additional << "> b16\n  " << convert(what).c_str() << "\n";
+                what = convert(o.content);
+                base16_encode(o.content, temp);
+                additional << "> b16\n  " << convert(temp).c_str() << "\n";
                 additional << "> b64\n  " << base64_encode(o.content).c_str() << "\n";
                 additional << "> b64url\n  " << base64_encode(o.content, base64_encoding_t::base64url_encoding).c_str() << "\n";
                 break;
@@ -216,6 +208,12 @@ void whatsthis(int argc, char** argv) {
             dump_memory(convert(o.content), &bs, 16, 2);
         } else {
             dump_memory(what, &bs, 16, 2);
+        }
+
+        if (o.filename.size() && o.content.size()) {
+            std::ofstream file(o.filename.c_str(), std::ios::trunc);
+            file.write((const char*)&what[0], what.size());
+            file.close();
         }
 
         std::cout << "what u want to know" << std::endl << "< " << o.content << std::endl << bs.c_str() << std::endl;

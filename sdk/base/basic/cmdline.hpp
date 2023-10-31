@@ -268,7 +268,7 @@ void cmdline_t<T>::help() {
     typename cmdline_args_map_t::iterator map_iter;
     typename cmdline_args_set_t::iterator set_iter;
 
-    size_t maxlen = 10;
+    size_t maxlen = 5;
     size_t len = 0;
     for (map_iter = _args.begin(); map_iter != _args.end(); map_iter++) {
         cmdarg_t<T>& item = map_iter->second;
@@ -277,6 +277,7 @@ void cmdline_t<T>::help() {
             maxlen = len;
         }
     }
+    maxlen += 5;  // " arg" for preced case
     std::string fmt = format("\e[%%im%%-%zis\e[0m %%c %%s\n", maxlen);
     for (list_iter = _list.begin(); list_iter != _list.end(); list_iter++) {
         std::string& key = *list_iter;
@@ -300,7 +301,11 @@ void cmdline_t<T>::help() {
             }
         }
 
-        printf(fmt.c_str(), color, item.token(), f, item.desc());
+        constexpr char preced[] = "arg";
+        constexpr char nopreced[] = "   ";
+        std::string expr_arg = format("%s %s", item.token(), cmdline_flag_t::cmdline_preced & flag ? preced : nopreced);
+
+        printf(fmt.c_str(), color, expr_arg.c_str(), f, item.desc());
     }
 }
 
