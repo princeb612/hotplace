@@ -239,36 +239,6 @@ return_t openssl_kdf::hkdf_expand_aes(binary_t& okm, const char* alg, size_t dle
             EVP_CIPHER_CTX_free(context);
         }
     }
-    /*
-            binary_t temp;
-
-            int size_update = 0;
-            size_t size_input = input.size();
-            uint16 blocksize = sizeof_block(hint_cipher);
-            uint32 unitsize = ossl_get_unitsize();
-            size_t size_progress = 0;
-            for (size_t i = 0; i < size_input; i += blocksize) {
-                int remain = size_input - i;
-                int size = (remain < blocksize) ? remain : blocksize;
-
-                EVP_CipherUpdate(context, &okm[0], &size_update, &temp[i], temp.size());
-                size_progress += size_update;
-
-                if (remain > blocksize) {
-                    EVP_CipherUpdate(context, &okm[0], &size_update, &input[i], blocksize);
-                } else {
-                    EVP_CipherUpdate(context, &okm[0], &size_update, &input[i], remain);
-                    EVP_CipherUpdate(context, &okm[0], &size_update, &iv[0], blocksize - remain);
-                }
-                size_progress += size_update;
-                {
-                    basic_stream bs;
-                    dump_memory(tag, &bs);
-                    printf("%s\n", bs.c_str());
-                }
-            }
-            okm.resize(blocksize);
-    */
     return ret;
 }
 
