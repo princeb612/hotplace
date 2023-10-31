@@ -226,7 +226,7 @@ class openssl_mac : public openssl_hash {
     /**
      * @brief   RFC 8152 9.2. AES Message Authentication Code (AES-CBC-MAC)
      * @desc
-     *          referenced this code from https://travis-ci.org/cose-wg/
+     *          reference https://travis-ci.org/cose-wg/
      *          difference ... encrypt final block w/ IV
      */
     return_t cbc_mac_rfc8152(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& input, binary_t& tag, size_t tagsize);

@@ -246,8 +246,38 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
     },
     {
         "key",
+        "cbc-mac-examples/cbc-mac-02.json",
+        "D8618544A1011819A054546869732069732074686520636F6E74656E742E50B242D2A935FEB4D66FF8334AC95BF72B818340A20125044A6F75722D73656372657440",
+    },
+    {
+        "key",
+        "cbc-mac-examples/cbc-mac-03.json",
+        "D8618543A1010FA054546869732069732074686520636F6E74656E742E489E1226BA1F81B848818340A20125044A6F75722D73656372657440",
+    },
+    {
+        "key",
+        "cbc-mac-examples/cbc-mac-04.json",
+        "D8618544A101181AA054546869732069732074686520636F6E74656E742E50DB9C7598A0751C5FF3366B6205BD2AA9818340A20125044A6F75722D73656372657440",
+    },
+    {
+        "key",
         "cbc-mac-examples/cbc-mac-enc-01.json",
         "D18443A1010EA054546869732069732074686520636F6E74656E742E488584DBF007FDC69F",
+    },
+    {
+        "key",
+        "cbc-mac-examples/cbc-mac-enc-02.json",
+        "D18444A1011819A054546869732069732074686520636F6E74656E742E50F0C295E78F3091E95513FA0427ADBE25",
+    },
+    {
+        "key",
+        "cbc-mac-examples/cbc-mac-enc-03.json",
+        "D18443A1010FA054546869732069732074686520636F6E74656E742E48726043745027214F",
+    },
+    {
+        "key",
+        "cbc-mac-examples/cbc-mac-enc-04.json",
+        "D18444A101181AA054546869732069732074686520636F6E74656E742E50403152CC208C1D501E1DC2A789AE49E4",
     },
     // chacha-poly-examples
     {
