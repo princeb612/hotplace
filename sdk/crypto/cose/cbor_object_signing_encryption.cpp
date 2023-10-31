@@ -317,7 +317,7 @@ return_t cbor_object_signing_encryption::process_recipient(cose_context_t* handl
                 //      HKDF AES-MAC-256, AES-CBC-MAC-256, HKDF using AES-MAC as the PRF w/ 256-bit key
 
                 if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
-                    handle->debug_flag |= cose_debug_hkdf_aescmac;
+                    handle->debug_flag |= cose_debug_hkdf_aes;
                 }
             } else if (cose_group_t::cose_group_key_aeskw == group) {
                 kek = secret;

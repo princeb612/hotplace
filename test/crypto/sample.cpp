@@ -503,8 +503,8 @@ return_t aead_aes_cbc_hmac_sha2(const test_vector_aead_aes_cbc_hmac_sha2_t* vect
         content.insert(content.end(), (byte_t*)&aad_len, (byte_t*)&aad_len + sizeof(aad_len));
 
         /* T = MAC(MAC_KEY, A || S || AL) */
-        openssl_hash hash;
-        hash.hmac(mac_alg, mac_key, content, t);
+        openssl_mac mac;
+        mac.hmac(mac_alg, mac_key, content, t);
         t.resize(digestsize);
 
         _test_case.assert(base16_decode(vector->t) == t, __FUNCTION__, "%s T = MAC(MAC_KEY, A || S || AL)", vector->text);
@@ -544,13 +544,14 @@ void test_aead_aes_cbc_hmac_sha2() {
 
     return_t ret = errorcode_t::success;
     basic_stream bs;
+    openssl_aead aead;
     for (int i = 0; i < sizeof_test_vector_aead_aes_cbc_hmac_sha2; i++) {
         const test_vector_aead_aes_cbc_hmac_sha2_t* vector = test_vector_aead_aes_cbc_hmac_sha2 + i;
         aead_aes_cbc_hmac_sha2(vector);
         binary_t q;
         binary_t t;
-        ret = aes_cbc_hmac_sha2_encrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a),
-                                        base16_decode(vector->p), q, t);
+        ret = aead.aes_cbc_hmac_sha2_encrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a),
+                                             base16_decode(vector->p), q, t);
         {
             test_case_notimecheck notimecheck(_test_case);
             dump_memory(q, &bs);
@@ -558,8 +559,8 @@ void test_aead_aes_cbc_hmac_sha2() {
         }
         _test_case.assert(base16_decode(vector->q) == q, __FUNCTION__, "encrypt %s", vector->text);
         binary_t p;
-        ret =
-            aes_cbc_hmac_sha2_decrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a), q, p, t);
+        ret = aead.aes_cbc_hmac_sha2_decrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a), q,
+                                             p, t);
         {
             test_case_notimecheck notimecheck(_test_case);
             dump_memory(p, &bs);

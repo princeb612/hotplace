@@ -10,7 +10,6 @@
  */
 
 #include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/openssl_chacha20.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/crypto/basic/openssl_ecdh.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>

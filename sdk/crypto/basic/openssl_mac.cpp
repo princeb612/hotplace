@@ -17,7 +17,9 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_hash::hmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
+openssl_mac::openssl_mac() : openssl_hash() {}
+
+return_t openssl_mac::hmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -35,7 +37,7 @@ return_t openssl_hash::hmac(const char* alg, binary_t const& key, binary_t const
     return ret;
 }
 
-return_t openssl_hash::hmac(hash_algorithm_t alg, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_mac::hmac(hash_algorithm_t alg, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -53,7 +55,7 @@ return_t openssl_hash::hmac(hash_algorithm_t alg, binary_t const& key, binary_t 
     return ret;
 }
 
-return_t openssl_hash::cmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_mac::cmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -71,7 +73,7 @@ return_t openssl_hash::cmac(const char* alg, binary_t const& key, binary_t const
     return ret;
 }
 
-return_t openssl_hash::cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_mac::cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -86,6 +88,116 @@ return_t openssl_hash::cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t c
     }
     __finally2 { close(handle); }
 
+    return ret;
+}
+
+return_t openssl_mac::cbc_mac(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& input, binary_t& tag, size_t tagsize) {
+    return_t ret = errorcode_t::success;
+    EVP_CIPHER_CTX* context = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    __try2 {
+        tag.resize(input.size() + EVP_MAX_BLOCK_LENGTH);
+
+        if (nullptr == alg) {
+            __leave2;
+        }
+
+        const EVP_CIPHER* cipher = advisor->find_evp_cipher(alg);
+        if (nullptr == cipher) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(alg);
+        if (nullptr == hint_cipher) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        context = EVP_CIPHER_CTX_new();
+        if (nullptr == context) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
+        EVP_CipherInit_ex(context, cipher, nullptr, &key[0], &iv[0], 1);
+        EVP_CIPHER_CTX_set_padding(context, 1);
+
+        int size_update = 0;
+        size_t size_input = input.size();
+        uint16 blocksize = sizeof_block(hint_cipher);
+        uint32 unitsize = ossl_get_unitsize();
+        size_t size_process = 0;
+        for (size_t i = 0; i < size_input; i += blocksize) {
+            int remain = size_input - i;
+            int size = (remain < blocksize) ? remain : blocksize;
+            EVP_CipherUpdate(context, &tag[0], &size_update, &input[i], size);
+            size_process += size_update;
+        }
+        tag.resize(tagsize);
+    }
+    __finally2 {
+        if (context) {
+            EVP_CIPHER_CTX_free(context);
+        }
+    }
+    return ret;
+}
+
+return_t openssl_mac::cbc_mac_rfc8152(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& input, binary_t& tag, size_t tagsize) {
+    return_t ret = errorcode_t::success;
+    EVP_CIPHER_CTX* context = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    __try2 {
+        tag.resize(input.size() + EVP_MAX_BLOCK_LENGTH);
+
+        if (nullptr == alg) {
+            __leave2;
+        }
+
+        const EVP_CIPHER* cipher = advisor->find_evp_cipher(alg);
+        if (nullptr == cipher) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(alg);
+        if (nullptr == hint_cipher) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        context = EVP_CIPHER_CTX_new();
+        if (nullptr == context) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
+        EVP_CipherInit_ex(context, cipher, nullptr, &key[0], &iv[0], 1);
+        EVP_CIPHER_CTX_set_padding(context, 1);
+
+        int size_update = 0;
+        size_t size_input = input.size();
+        uint16 blocksize = sizeof_block(hint_cipher);
+        uint32 unitsize = ossl_get_unitsize();
+        size_t size_progress = 0;
+        for (size_t i = 0; i < size_input; i += blocksize) {
+            int remain = size_input - i;
+            int size = (remain < blocksize) ? remain : blocksize;
+            EVP_CipherUpdate(context, &tag[0], &size_update, &input[i], size);
+            size_progress += size_update;
+            {
+                basic_stream bs;
+                dump_memory(tag, &bs);
+                printf("%s\n", bs.c_str());
+            }
+        }
+        EVP_CipherUpdate(context, &tag[0], &size_update, &iv[0], iv.size());  // encrypt final block w/ IV
+        tag.resize(tagsize);
+    }
+    __finally2 {
+        if (context) {
+            EVP_CIPHER_CTX_free(context);
+        }
+    }
     return ret;
 }
 

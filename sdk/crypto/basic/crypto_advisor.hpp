@@ -51,7 +51,7 @@ class crypto_advisor {
      * @param crypt_mode_t mode [in] crypt_mode_t
      * @return EVP_CIPHER*
      * @remarks
-     *          const EVP_CIPHER* aes_128_cbc = (const EVP_CIPHER*) find_evp_cipher (crypt_algorithm_t::aes128, crypt_mode_t::cbc); // EVP_aes_128_cbc ()
+     *          const EVP_CIPHER* aes_128_cbc = find_evp_cipher (crypt_algorithm_t::aes128, crypt_mode_t::cbc); // EVP_aes_128_cbc ()
      *
      *          can be nullptr
      *          for example, seed deprecated since openssl 3.0

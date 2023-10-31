@@ -536,7 +536,7 @@ enum cose_group_t {
     // RFC 8152 9. Message Authentication Code (MAC) Algorithms
     //   9.2.  AES Message Authentication Code (AES-CBC-MAC)
     //   Table 8, AES-MAC 128/64, AES-MAC 256/64, AES-MAC 128/128, AES-MAC 256/128
-    cose_group_mac_aescmac = 4,
+    cose_group_mac_aes = 4,
     // RFC 8152 10. Content Encryption Algorithms
     //   10.1.  AES GCM
     //   Table 9, A128GCM, A192GCM, A256GCM
@@ -820,12 +820,6 @@ typedef struct _hash_context_t hash_context_t;
 
 struct _otp_context_t {};
 typedef struct _otp_context_t otp_context_t;
-
-enum crypt_ctrl_t {
-    crypt_ctrl_padding = 1,  // EVP_CIPHER_CTX_set_padding
-    crypt_ctrl_lsize = 2,    // L SIZE, sizeof_nonce(iv) = 15-L
-    crypt_ctrl_tsize = 3,    // TAG Size
-};
 
 }  // namespace crypto
 }  // namespace hotplace

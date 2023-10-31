@@ -47,9 +47,9 @@ enum code_debug_flag_t {
     // simply want to know reason why routine is failed from testcase report
     cose_debug_notfound_key = (1 << 0),
     cose_debug_partial_iv = (1 << 1),
-    cose_debug_hkdf_aescmac = (1 << 2),
+    cose_debug_hkdf_aes = (1 << 2),
     cose_debug_chacha20_poly1305 = (1 << 3),
-    cose_debug_aescmac = (1 << 4),
+    cose_debug_mac_aes = (1 << 4),
     cose_debug_inside = (1 << 31),
 };
 

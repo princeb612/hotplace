@@ -170,8 +170,25 @@ class openssl_hash : public hash_t {
      */
     virtual return_t hash(hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& output);
 
+    /**
+     * @brief type
+     * @return crypt_poweredby_t
+     */
+    virtual crypt_poweredby_t get_type();
+};
+
+class openssl_digest : public openssl_hash {
+   public:
+    openssl_digest();
+
     return_t digest(const char* alg, binary_t const& input, binary_t& output);
     return_t digest(hash_algorithm_t alg, binary_t const& input, binary_t& output);
+};
+
+class openssl_mac : public openssl_hash {
+   public:
+    openssl_mac();
+
     return_t hmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output);
     return_t hmac(hash_algorithm_t alg, binary_t const& key, binary_t const& input, binary_t& output);
     /**
@@ -185,10 +202,34 @@ class openssl_hash : public hash_t {
     return_t cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input, binary_t& output);
 
     /**
-     * @brief type
-     * @return crypt_poweredby_t
+     * @brief   CBC-MAC
+     * @desc    insecure... just study
+     *          RFC 3610 Counter with CBC-MAC (CCM)
+     *          2.2.  Authentication
+     *
+     *          The first step is to compute the authentication field T.  This is
+     *          done using CBC-MAC [MAC].  We first define a sequence of blocks B_0,
+     *          B_1, ..., B_n and then apply CBC-MAC to these blocks.
+     *
+     *          The result is a sequence of blocks B0, B1, ..., Bn.  The CBC-MAC is
+     *          computed by:
+     *
+     *             X_1 := E( K, B_0 )
+     *             X_i+1 := E( K, X_i XOR B_i )  for i=1, ..., n
+     *             T := first-M-bytes( X_n+1 )
+     *
+     *          cf. OMAC
+     *          OMAC is the first good CBC-MAC derivative that uses a single key.
+     *          OMAC works the same way CBC-MAC does until the last block, where it XORs the state with an additional value before encrypting.
      */
-    virtual crypt_poweredby_t get_type();
+    return_t cbc_mac(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& input, binary_t& tag, size_t tagsize);
+    /**
+     * @brief   RFC 8152 9.2. AES Message Authentication Code (AES-CBC-MAC)
+     * @desc
+     *          referenced this code from https://travis-ci.org/cose-wg/
+     *          difference ... encrypt final block w/ IV
+     */
+    return_t cbc_mac_rfc8152(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& input, binary_t& tag, size_t tagsize);
 };
 
 }  // namespace crypto
