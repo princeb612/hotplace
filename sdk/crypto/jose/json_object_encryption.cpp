@@ -432,8 +432,8 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
             uint32 enc_group = enc_hint->group;
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
                 // // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
-                ret = aes_cbc_hmac_sha2_encrypt((crypt_algorithm_t)enc_crypt_alg, enc_crypt_mode, (hash_algorithm_t)enc_hash_alg, cek, iv, aad, input,
-                                                ciphertext, tag);
+                openssl_aead aead;
+                ret = aead.aes_cbc_hmac_sha2_encrypt(enc_crypt_alg, enc_crypt_mode, enc_hash_alg, cek, iv, aad, input, ciphertext, tag);
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
                 // crypt_context_t* handle_crypt = nullptr;
                 // crypt.open(&handle_crypt, enc_crypt_alg, enc_crypt_mode, &cek[0], cek.size(), &iv[0], iv.size());
@@ -669,7 +669,8 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
             uint32 enc_group = enc_hint->group;
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
                 // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
-                ret = aes_cbc_hmac_sha2_decrypt(enc_crypt_alg, enc_crypt_mode, (hash_algorithm_t)enc_hash_alg, cek, iv, aad, ciphertext, output, tag);
+                openssl_aead aead;
+                ret = aead.aes_cbc_hmac_sha2_decrypt(enc_crypt_alg, enc_crypt_mode, enc_hash_alg, cek, iv, aad, ciphertext, output, tag);
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
                 // crypt_context_t* handle_crypt = nullptr;
                 // crypt.open(&handle_crypt, enc_crypt_alg, enc_crypt_mode, &cek[0], cek.size(), &iv[0], iv.size());
@@ -969,7 +970,7 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
                 __leave2;
             }
 
-            const EVP_CIPHER* enc_evp_cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(enc_hint->crypt_alg, enc_hint->crypt_mode);
+            const EVP_CIPHER* enc_evp_cipher = advisor->find_evp_cipher(enc_hint->crypt_alg, enc_hint->crypt_mode);
             if (nullptr == enc_evp_cipher) {
                 ret = errorcode_t::internal_error;
                 __leave2;
@@ -1190,7 +1191,7 @@ return_t json_object_encryption::composer::docompose_encryption_recipient_random
         variantmap[crypt_item_t::item_epk] = vt;
     } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
         // iv, tag
-        const EVP_CIPHER* alg_evp_cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(alg_hint->crypt_alg, alg_hint->crypt_mode);
+        const EVP_CIPHER* alg_evp_cipher = advisor->find_evp_cipher(alg_hint->crypt_alg, alg_hint->crypt_mode);
         int ivsize = EVP_CIPHER_iv_length(alg_evp_cipher);
         openssl_prng rand;
         rand.random(recipient.datamap[crypt_item_t::item_iv], ivsize);

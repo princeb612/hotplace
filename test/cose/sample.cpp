@@ -2040,14 +2040,14 @@ void test_github_example() {
                 if (handle->debug_flag & cose_debug_partial_iv) {
                     reason << "partial_iv ";
                 }
-                if (handle->debug_flag & cose_debug_hkdf_aescmac) {
-                    reason << "hkdf_aescmac ";
+                if (handle->debug_flag & cose_debug_hkdf_aes) {
+                    reason << "hkdf_aes ";
                 }
                 if (handle->debug_flag & cose_debug_chacha20_poly1305) {
                     reason << "chacha20_poly1305 ";
                 }
-                if (handle->debug_flag & cose_debug_aescmac) {
-                    reason << "aescmac ";
+                if (handle->debug_flag & cose_debug_mac_aes) {
+                    reason << "mac_aes ";
                 }
                 debug_stream = handle->debug_stream;
             }

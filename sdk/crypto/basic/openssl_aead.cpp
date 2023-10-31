@@ -22,8 +22,10 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, binary_t const& k, binary_t const& iv, binary_t const& a, binary_t const& p,
-                                   binary_t& q, binary_t& t) {
+openssl_aead::openssl_aead() {}
+
+return_t openssl_aead::aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, binary_t const& k, binary_t const& iv, binary_t const& a,
+                                                 binary_t const& p, binary_t& q, binary_t& t) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     __try2 {
@@ -99,8 +101,8 @@ return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, bin
         content.insert(content.end(), (byte_t*)&aad_len, (byte_t*)&aad_len + sizeof(aad_len));
 
         /* T = MAC(MAC_KEY, A || S || AL) */
-        openssl_hash hash;
-        hash.hmac(mac_alg, mac_key, content, t);  // t := tag
+        openssl_mac mac;
+        mac.hmac(mac_alg, mac_key, content, t);  // t := tag
         t.resize(digestsize);
     }
     __finally2 {
@@ -109,8 +111,8 @@ return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, bin
     return ret;
 }
 
-return_t aes_cbc_hmac_sha2_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, binary_t const& k, binary_t const& iv,
-                                   binary_t const& a, binary_t const& p, binary_t& q, binary_t& t) {
+return_t openssl_aead::aes_cbc_hmac_sha2_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, binary_t const& k,
+                                                 binary_t const& iv, binary_t const& a, binary_t const& p, binary_t& q, binary_t& t) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const char* enc_algname = advisor->nameof_cipher(enc_alg, enc_mode);
@@ -119,8 +121,8 @@ return_t aes_cbc_hmac_sha2_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_m
     return ret;
 }
 
-return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, binary_t const& enc_k, binary_t const& mac_k, binary_t const& iv,
-                                   binary_t const& a, binary_t const& p, binary_t& q, binary_t& t) {
+return_t openssl_aead::aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, binary_t const& enc_k, binary_t const& mac_k, binary_t const& iv,
+                                                 binary_t const& a, binary_t const& p, binary_t& q, binary_t& t) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     __try2 {
@@ -164,8 +166,8 @@ return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, bin
     return ret;
 }
 
-return_t aes_cbc_hmac_sha2_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, binary_t const& enc_k, binary_t const& mac_k,
-                                   binary_t const& iv, binary_t const& a, binary_t const& p, binary_t& q, binary_t& t) {
+return_t openssl_aead::aes_cbc_hmac_sha2_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, binary_t const& enc_k,
+                                                 binary_t const& mac_k, binary_t const& iv, binary_t const& a, binary_t const& p, binary_t& q, binary_t& t) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     __try2 {
@@ -179,8 +181,8 @@ return_t aes_cbc_hmac_sha2_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_m
     return ret;
 }
 
-return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, binary_t const& k, binary_t const& iv, binary_t const& a, binary_t const& q,
-                                   binary_t& p, binary_t const& t) {
+return_t openssl_aead::aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, binary_t const& k, binary_t const& iv, binary_t const& a,
+                                                 binary_t const& q, binary_t& p, binary_t const& t) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     __try2 {
@@ -235,8 +237,8 @@ return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, bin
 
         /* T = MAC(MAC_KEY, A || S || AL) */
         binary_t tag;
-        openssl_hash hash;
-        hash.hmac(mac_alg, mac_key, content, tag);  // t := tag
+        openssl_mac mac;
+        mac.hmac(mac_alg, mac_key, content, tag);  // t := tag
         tag.resize(digestsize);
         if (t != tag) {
             ret = errorcode_t::error_verify;
@@ -271,8 +273,8 @@ return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, bin
     return ret;
 }
 
-return_t aes_cbc_hmac_sha2_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, binary_t const& k, binary_t const& iv,
-                                   binary_t const& a, binary_t const& q, binary_t& p, binary_t const& t) {
+return_t openssl_aead::aes_cbc_hmac_sha2_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, binary_t const& k,
+                                                 binary_t const& iv, binary_t const& a, binary_t const& q, binary_t& p, binary_t const& t) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const char* enc_algname = advisor->nameof_cipher(enc_alg, enc_mode);
@@ -281,8 +283,8 @@ return_t aes_cbc_hmac_sha2_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_m
     return ret;
 }
 
-return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, binary_t const& enc_k, binary_t const& mac_k, binary_t const& iv,
-                                   binary_t const& a, binary_t const& q, binary_t& p, binary_t const& t) {
+return_t openssl_aead::aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, binary_t const& enc_k, binary_t const& mac_k, binary_t const& iv,
+                                                 binary_t const& a, binary_t const& q, binary_t& p, binary_t const& t) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     __try2 {
@@ -326,8 +328,9 @@ return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, bin
     return ret;
 }
 
-return_t aes_cbc_hmac_sha2_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, binary_t const& enc_k, binary_t const& mac_k,
-                                   binary_t const& iv, binary_t const& a, binary_t const& q, binary_t& p, binary_t const& t) {
+return_t openssl_aead::aes_cbc_hmac_sha2_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, binary_t const& enc_k,
+                                                 binary_t const& mac_k, binary_t const& iv, binary_t const& a, binary_t const& q, binary_t& p,
+                                                 binary_t const& t) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     __try2 {

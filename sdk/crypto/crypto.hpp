@@ -16,6 +16,12 @@
 namespace hotplace {
 namespace crypto {
 
+enum crypt_ctrl_t {
+    crypt_ctrl_padding = 1,  // EVP_CIPHER_CTX_set_padding
+    crypt_ctrl_lsize = 2,    // L SIZE, sizeof_nonce(iv) = 15-L
+    crypt_ctrl_tsize = 3,    // TAG Size
+};
+
 class crypt_t {
    public:
     /**

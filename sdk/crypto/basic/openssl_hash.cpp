@@ -173,7 +173,7 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
             __leave2;
         }
 
-        const EVP_CIPHER* method = (const EVP_CIPHER*)advisor->find_evp_cipher(algorithm, mode);
+        const EVP_CIPHER* method = advisor->find_evp_cipher(algorithm, mode);
         if (nullptr == method) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -489,7 +489,9 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
 
 crypt_poweredby_t openssl_hash::get_type() { return crypt_poweredby_t::openssl; }
 
-return_t openssl_hash::digest(const char* alg, binary_t const& input, binary_t& output) {
+openssl_digest::openssl_digest() : openssl_hash() {}
+
+return_t openssl_digest::digest(const char* alg, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -507,7 +509,7 @@ return_t openssl_hash::digest(const char* alg, binary_t const& input, binary_t& 
     return ret;
 }
 
-return_t openssl_hash::digest(hash_algorithm_t alg, binary_t const& input, binary_t& output) {
+return_t openssl_digest::digest(hash_algorithm_t alg, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 

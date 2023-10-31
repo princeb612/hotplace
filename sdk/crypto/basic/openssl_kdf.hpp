@@ -8,8 +8,16 @@
  *  RFC 9106 Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications
  *  - openssl-3.2 required
  *
+ *  HKDF = KDF_Extract + KDF_Expand
+ *
+ *      HKDF(okm, alg, dlen, ikm, salt, info);
+ *
+ *      KDF_Extract (prk, alg, salt, ikm);
+ *      KDF_Expand (okm, alg, dlen, prk, info);
+ *
  * Revision History
  * Date         Name                Description
+ *
  */
 
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_KDF__
@@ -87,6 +95,7 @@ class openssl_kdf {
      *          CMAC "aes-128-cbc"
      *          CKDF-Extract "aes-128-cbc"
      *          CKDF-Expand "aes-128-ecb"
+     * @desc    RFC 4493 Figure 2.3.  Algorithm AES-CMAC
      */
     return_t cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& ikm, binary_t const& salt, binary_t const& info);
     /**
@@ -95,6 +104,7 @@ class openssl_kdf {
      * @param   crypt_algorithm_t alg [in] algorithm
      * @param   binary_t const& salt [in] salt
      * @param   binary_t const& ikm [in] input key material
+     * @desc    RFC 4493 Figure 2.3.  Algorithm AES-CMAC
      */
     return_t cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, binary_t const& salt, binary_t const& ikm);
     /**
@@ -104,6 +114,7 @@ class openssl_kdf {
      * @param   size_t dlen [in] length
      * @param   binary_t const& prk [in] pseudo-random key
      * @param   binary_t const& info [in] info
+     * @desc    RFC 4493 Figure 2.3.  Algorithm AES-CMAC
      */
     return_t cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& prk, binary_t const& info);
     /**

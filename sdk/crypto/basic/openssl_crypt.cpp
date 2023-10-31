@@ -128,7 +128,7 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
             __leave2;
         }
 
-        const EVP_CIPHER* cipher = (const EVP_CIPHER*)advisor->find_evp_cipher(algorithm, mode);
+        const EVP_CIPHER* cipher = advisor->find_evp_cipher(algorithm, mode);
         if (nullptr == cipher) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -1254,194 +1254,25 @@ return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
     return ret;
 }
 
-return_t openssl_crypt::maccreate(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& mac, const binary_t* aad,
-                                  binary_t* tag) {
+return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, binary_t const& nonce) { return openssl_chacha20_iv(iv, counter, &nonce[0], nonce.size()); }
+
+return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, size_t nonce_size) {
     return_t ret = errorcode_t::success;
-    openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
     __try2 {
-        if (nullptr == handle || nullptr == data_plain) {
+        if (nullptr == nonce) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (OPENSSL_CRYPT_CONTEXT_SIGNATURE != context->signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
 
-        mac.clear();
+        iv.resize(4);
+        memcpy(&iv[0], (byte_t*)&counter, 4);
 
-        EVP_CIPHER_CTX_set_padding(context->encrypt_context, context->flag & openssl_crypt_flag_t::crypt_blockcipher_padding ? 1 : 0);
-
-        int ret_cipher = 0;
-        int size_update = 0;
-        int size_final = 0;
-        int tag_size = 0;
-        binary_t& iv = context->datamap[crypt_item_t::item_iv];
-
-        EVP_CipherInit(context->encrypt_context, nullptr, nullptr, &iv[0], 1);
-
-        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode)) {
-            if ((nullptr == aad) || (nullptr == tag)) {
-                ret = errorcode_t::invalid_parameter;
-                __leave2_trace(ret);
-            }
-
-            // https://www.openssl.org/docs/man1.1.1/man3/EVP_CIPHER_iv_length.html
-            // EVP_CTRL_CCM_SET_L
-            //      If not set a default is used (8 for AES CCM).
-            // EVP_CTRL_AEAD_SET_IVLEN
-            //      For GCM AES and OCB AES the default is 12 (i.e. 96 bits)
-            //      The nonce length is given by 15 - L so it is 7 by default for AES CCM.
-            //       If not called a default nonce length of 12 (i.e. 96 bits) is used. (ChaCha20-Poly1305)
-            // EVP_CTRL_AEAD_SET_TAG
-            //      If not set a default value is used (12 for AES CCM)
-            //      For OCB AES, the default tag length is 16 (i.e. 128 bits).
-
-            if (crypt_mode_t::gcm == context->mode) {
-                // 16bytes (128bits)
-                // RFC 7516
-                //      Perform authenticated encryption on the plaintext with the AES GCM
-                //      algorithm using the CEK as the encryption key, the JWE
-                //      Initialization Vector, and the Additional Authenticated Data
-                //      value, requesting a 128-bit Authentication Tag output.
-                //
-                //      B.7.  Truncate HMAC Value to Create Authentication Tag
-                //      Use the first half (128 bits) of the HMAC output M as the
-                //      Authentication Tag output T.
-                //
-                // RFC 7539 2.5.  The Poly1305 Algorithm
-                //      Poly1305 takes a 32-byte one-time key and a message and produces a 16-byte tag.
-                //
-                // RFC 8152 10.1.  AES GCM
-                // the size of the authentication tag is fixed at 128 bits
-                tag_size = context->tsize ? context->tsize : 16;
-            } else if (crypt_mode_t::ccm == context->mode) {
-                tag_size = context->tsize ? context->tsize : 14;
-                uint16 lsize = context->lsize ? context->lsize : 8;
-                uint16 nonce_size = 15 - lsize;
-
-                EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_CCM_SET_L, lsize, nullptr);
-                // EVP_CTRL_CCM_SET_IVLEN for Nonce (15-L)
-                EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_CCM_SET_IVLEN, nonce_size, nullptr);
-                EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_SET_TAG, tag_size, nullptr);
-
-                binary_t& key = context->datamap[crypt_item_t::item_cek];
-                EVP_CipherInit_ex(context->encrypt_context, nullptr, nullptr, &key[0], &iv[0], 1);
-
-                ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, size_plain);
-                if (1 > ret_cipher) {
-                    ret = errorcode_t::internal_error;
-                    __leave2_trace_openssl(ret);
-                }
-            }
-
-            ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, &(*aad)[0], aad->size());
-            if (1 > ret_cipher) {
-                ret = errorcode_t::internal_error;
-                __leave2_trace_openssl(ret);
-            }
-        }
-
-        // check hints for block ciphers
-        // EVP_CIPHER_get_block_size, EVP_CIPHER_CTX_get_block_size works wrong (CFB, OFB)
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(context->algorithm);
-        if (nullptr == hint_cipher) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        uint16 blocksize = sizeof_block(hint_cipher);
-        uint32 unitsize = ossl_get_unitsize();
-        size_t size_progress = 0;
-        size_t size_process = 0;
-        basic_stream bs;
-        mac.resize(blocksize + EVP_MAX_BLOCK_LENGTH);
-        for (size_t i = 0; i < size_plain; i += blocksize) {
-            int remain = size_plain - i;
-            int size = (remain < blocksize) ? remain : blocksize;
-            EVP_CipherUpdate(context->encrypt_context, &mac[0], &size_update, data_plain + i, size);
-
-            dump_memory(&mac[0], blocksize, &bs);
-            printf("%s\n", bs.c_str());
-
-            size_progress += size_update;
-            size_process += size_update;
-        }
-        mac.resize(blocksize);
-        // size_update = size_progress;
-
-        // ret_cipher = EVP_CipherFinal(context->encrypt_context, &mac[0], &size_final);
-        // if (1 > ret_cipher) {
-        //     ret = errorcode_t::internal_error;
-        //     __leave2_trace_openssl(ret);
-        // }
-
-        // if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode)) {
-        //     tag->resize(tag_size);
-        //     ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag->size(), &(*tag)[0]);
-        //     if (1 > ret_cipher) {
-        //         ret = errorcode_t::internal_error;
-        //         __leave2_trace_openssl(ret);
-        //     }
-        // }
-        //
-        // *size_encrypted = (size_update + size_final);
+        iv.insert(iv.end(), nonce, nonce + nonce_size);
     }
     __finally2 {
         // do nothing
     }
-
-    return ret;
-}
-
-return_t openssl_crypt::maccreate(crypt_context_t* handle, binary_t const& plaintext, binary_t& mac, const binary_t* aad, binary_t* tag) {
-    return maccreate(handle, &plaintext[0], plaintext.size(), mac, aad, tag);
-}
-
-return_t openssl_crypt::maccreate(const char* alg, binary_t const& key, binary_t const& iv, const unsigned char* data_plain, size_t size_plain, binary_t& mac,
-                                  encrypt_option_t* options) {
-    return_t ret = errorcode_t::success;
-    crypt_context_t* crypt_handle = nullptr;
-
-    __try2 {
-        ret = open(&crypt_handle, alg, key, iv);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
-                set(crypt_handle, option->ctrl, option->value);
-            }
-        }
-
-        ret = maccreate(crypt_handle, data_plain, size_plain, mac, nullptr, nullptr);
-    }
-    __finally2 { close(crypt_handle); }
-    return ret;
-}
-
-return_t openssl_crypt::maccreate(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& plaintext,
-                                  binary_t& mac, encrypt_option_t* options) {
-    return_t ret = errorcode_t::success;
-    crypt_context_t* crypt_handle = nullptr;
-
-    __try2 {
-        ret = open(&crypt_handle, algorithm, mode, key, iv);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
-                set(crypt_handle, option->ctrl, option->value);
-            }
-        }
-
-        ret = maccreate(crypt_handle, plaintext, mac, nullptr, nullptr);
-    }
-    __finally2 { close(crypt_handle); }
     return ret;
 }
 

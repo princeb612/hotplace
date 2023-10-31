@@ -459,22 +459,22 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             pkey = key->select(k, hint->kty);
         }
 
-        openssl_hash hash;
+        openssl_mac mac;
         cose_group_t group = hint->group;
         if (cose_group_t::cose_group_hash == group) {
             throw;
         } else if (cose_group_t::cose_group_mac_hmac == group) {
-            ret = hash.hmac(hint->dgst.algname, cek, tomac, tag);
+            ret = mac.hmac(hint->dgst.algname, cek, tomac, tag);
             tag.resize(hint->dgst.dlen);  // sha256/64, sha512/256
-        } else if (cose_group_t::cose_group_mac_aescmac == group) {
+        } else if (cose_group_t::cose_group_mac_aes == group) {
             binary_t q;
             binary_t iv;
             iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
-            openssl_crypt crypt;
-            tag.resize(hint->enc.tsize);
+            openssl_mac mac;
+            ret = mac.cbc_mac_rfc8152(hint->enc.algname, cek, iv, tomac, tag, hint->enc.tsize);
 
             if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
-                handle->debug_flag |= cose_debug_aescmac;
+                handle->debug_flag |= cose_debug_mac_aes;
             }
         } else {
             ret = errorcode_t::request;
@@ -497,6 +497,7 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             dump(cek);
             binary_t context = temp->binarymap[cose_param_t::cose_param_context];
             dump(context);
+            dump(handle->singleitem);
             dump(iv);
             binary_t kek = temp->binarymap[cose_param_t::cose_param_kek];
             dump(kek);

@@ -92,7 +92,7 @@ return_t openssl_kdf::hmac_kdf(binary_t& derived, const char* alg, size_t dlen, 
 return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, const char* alg, binary_t const& salt, binary_t const& ikm) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    openssl_hash hash;
+    openssl_mac mac;
 
     __try2 {
         if (nullptr == alg) {
@@ -117,9 +117,9 @@ return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, const char* alg, binary_t 
 
             binary_t temp;
             temp.resize(size);
-            ret = hash.hmac(alg, temp, ikm, prk);
+            ret = mac.hmac(alg, temp, ikm, prk);
         } else {
-            ret = hash.hmac(alg, salt, ikm, prk);
+            ret = mac.hmac(alg, salt, ikm, prk);
         }
     }
     __finally2 {
@@ -161,8 +161,8 @@ return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, b
             content.insert(content.end(), info.begin(), info.end());
             content.insert(content.end(), i);  // i = 1..255 (01..ff)
 
-            openssl_hash hash;
-            hash.hmac(alg, prk, content, t_block);  // T(i) = HMAC-Hash(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
+            openssl_mac mac;
+            mac.hmac(alg, prk, content, t_block);  // T(i) = HMAC-Hash(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
 
             okm.insert(okm.end(), t_block.begin(), t_block.end());  // T = T(1) | T(2) | T(3) | ... | T(N)
             offset += t_block.size();
@@ -277,7 +277,7 @@ return_t openssl_kdf::cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen
 return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, binary_t const& salt, binary_t const& ikm) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    openssl_hash mac;
+    openssl_mac mac;
     hash_context_t* mac_handle = nullptr;
 
     __try2 {
@@ -331,7 +331,7 @@ return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, bin
 return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& prk, binary_t const& info) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    openssl_hash hash;
+    openssl_mac mac;
 
     __try2 {
         // the CKDF-Expand(PRK, info, L) function takes the PRK result from CKDF-Extract, an arbitrary "info" argument and a requested number of bytes to
@@ -350,7 +350,7 @@ return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size
             content.insert(content.end(), info.begin(), info.end());
             content.insert(content.end(), i);  // i = 1..255 (01..ff)
 
-            hash.cmac(alg, crypt_mode_t::ecb, prk, content, t_block);  // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
+            mac.cmac(alg, crypt_mode_t::ecb, prk, content, t_block);  // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
 
             okm.insert(okm.end(), t_block.begin(), t_block.end());  // T = T(1) | T(2) | T(3) | ... | T(N)
             offset += t_block.size();
