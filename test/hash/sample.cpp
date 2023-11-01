@@ -21,9 +21,10 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 typedef struct _OPTION {
+    bool debug;
     bool dump_keys;
 
-    _OPTION() : dump_keys(false) {
+    _OPTION() : debug(false), dump_keys(false) {
         // do nothing
     }
 } OPTION;
@@ -597,17 +598,22 @@ void test_rfc6979_ecdsa() {
 }
 
 int main(int argc, char** argv) {
-    set_trace_option(trace_option_t::trace_bt);
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
     _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-dump", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional()
+              << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
+    std::cout << "option.debug " << (option.debug ? 1 : 0) << std::endl;
     std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
+
+    if (option.debug) {
+        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
+    }
 
     __try2 {
         openssl_startup();
@@ -635,6 +641,6 @@ int main(int argc, char** argv) {
     }
 
     _test_case.report(5);
-
+    _cmdline->help();
     return _test_case.result();
 }
