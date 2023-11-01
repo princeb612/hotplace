@@ -87,6 +87,46 @@ void test_sharedinstance2() {
     _test_case.assert(1 == simple_instance2_dtor, __FUNCTION__, "shared instance");
 }
 
+void dump_data(const char* text, void* ptr, size_t size) {
+    basic_stream bs;
+    dump_memory((byte_t*)ptr, size, &bs, 16, 2);
+    std::cout << (text ? text : "") << std::endl << bs.c_str() << std::endl;
+}
+
+void test_reverse() {
+    _test_case.begin("reverse");
+
+#define do_reverse_test(type, val)               \
+    {                                            \
+        type var = val;                          \
+        type temp = reverse(var);                \
+        dump_data("before", &var, sizeof(var));  \
+        dump_data("after", &temp, sizeof(temp)); \
+    }
+
+    do_reverse_test(uint32, 7);
+    do_reverse_test(uint32, -2);
+    do_reverse_test(uint64, 7);
+    do_reverse_test(uint64, -2);
+    do_reverse_test(uint128, 7);
+    do_reverse_test(uint128, -2);
+
+    int i = 0;
+    binary_t bin;
+    for (i = 0; i < 8; i++) {
+        bin.push_back(i);
+    }
+    dump_data("8 bytes", &bin[0], bin.size());
+    uint64 i1 = *(uint64*)&bin[0];
+    do_reverse_test(uint64, i1);
+    for (i = 8; i < 16; i++) {
+        bin.push_back(i);
+    }
+    dump_data("16 bytes", &bin[0], bin.size());
+    uint128 i2 = *(uint128*)&bin[0];
+    do_reverse_test(uint128, i2);
+}
+
 void test_endian() {
     _test_case.begin("endian");
 
@@ -113,6 +153,7 @@ int main() {
     test_sharedinstance1();
     test_sharedinstance2();
     test_endian();
+    test_reverse();
 
     _test_case.report(5);
     return _test_case.result();

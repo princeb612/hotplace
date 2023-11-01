@@ -1271,10 +1271,8 @@ return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, 
         if (is_little_endian()) {
             constant = counter;
         } else {
-#define SWAP16(n) (((((uint16)(n)&0xFF)) << 8) | (((uint16)(n)&0xFF00) >> 8))
-#define SWAP32(n) (((((uint32)(n)&0xFF)) << 24) | ((((uint32)(n)&0xFF00)) << 8) | ((((uint32)(n)&0xFF0000)) >> 8) | ((((uint32)(n)&0xFF000000)) >> 24))
-            // ntohl do nothing, need swap
-            constant = SWAP32(counter);
+            // ntohl do nothing, need reverse
+            constant = reverse(counter);
         }
 
         iv.resize(4);
