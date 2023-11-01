@@ -234,13 +234,13 @@ return_t openssl_kdf::hkdf_expand_aes(binary_t& okm, const char* alg, size_t dle
 
             int size_update = 0;
             size_t size_input = content.size();
-            for (size_t i = 0; i < size_input; i += blocksize) {
-                int remain = size_input - i;
+            for (size_t j = 0; j < size_input; j += blocksize) {
+                int remain = size_input - j;
                 int size = (remain < blocksize) ? remain : blocksize;
                 if (remain > blocksize) {
-                    EVP_CipherUpdate(context, &t_block[0], &size_update, &content[i], blocksize);
+                    EVP_CipherUpdate(context, &t_block[0], &size_update, &content[j], blocksize);
                 } else {
-                    EVP_CipherUpdate(context, &t_block[0], &size_update, &content[i], remain);
+                    EVP_CipherUpdate(context, &t_block[0], &size_update, &content[j], remain);
                     EVP_CipherUpdate(context, &t_block[0], &size_update, &iv[0], blocksize - remain);
                 }
             }

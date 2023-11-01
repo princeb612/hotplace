@@ -1791,7 +1791,7 @@ return_t hash_stream(const char* algorithm, byte_t* stream, size_t size, binary_
 
         hash_context_t* handle = nullptr;
         openssl_hash openssl;
-        ret = openssl.open_byname(&handle, algorithm, nullptr, 0);
+        ret = openssl.open(&handle, algorithm, nullptr, 0);
         if (errorcode_t::success == ret) {
             openssl.hash(handle, stream, size, value);
             openssl.close(handle);

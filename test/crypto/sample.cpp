@@ -227,7 +227,8 @@ void test_chacha20_rfc8439_2_4() {
     byte_t nonce_source[12] = {
         0, 0, 0, 0, 0, 0, 0, 0x4a,
     };
-    openssl_chacha20_iv(nonce, 1, nonce_source, 12);
+    uint32 counter = 1;
+    openssl_chacha20_iv(nonce, counter, nonce_source, 12);
 
     const char* block_source = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
     block << block_source;
@@ -238,7 +239,7 @@ void test_chacha20_rfc8439_2_4() {
         dump_memory(key, &bs);
         printf("key\n%s\n", bs.c_str());
         dump_memory(nonce, &bs);
-        printf("nonce w counter 1\n%s\n", bs.c_str());
+        printf("nonce w counter %i\n%s\n", counter, bs.c_str());
         dump_memory(block, &bs);
         printf("block\n%s\n", bs.c_str());
     }
@@ -285,7 +286,8 @@ void test_chacha20poly1305_rfc8439_2_8() {
     byte_t nonce_source[] = {
         0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
     };
-    openssl_chacha20_iv(nonce, 7, nonce_source, RTL_NUMBER_OF(nonce_source));
+    uint32 counter = 7;
+    openssl_chacha20_iv(nonce, counter, nonce_source, RTL_NUMBER_OF(nonce_source));
 
     // AAD:
     // 000  50 51 52 53 c0 c1 c2 c3 c4 c5 c6 c7              PQRS........
@@ -298,7 +300,7 @@ void test_chacha20poly1305_rfc8439_2_8() {
         dump_memory(key, &bs);
         printf("key\n%s\n", bs.c_str());
         dump_memory(nonce, &bs);
-        printf("nonce w counter 1\n%s\n", bs.c_str());
+        printf("nonce w counter %i\n%s\n", counter, bs.c_str());
     }
 
     const char* block_source = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
