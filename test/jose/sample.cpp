@@ -20,9 +20,10 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 typedef struct _OPTION {
+    bool debug;
     bool dump_keys;
 
-    _OPTION() : dump_keys(false) {
+    _OPTION() : debug(false), dump_keys(false) {
         // do nothing
     }
 } OPTION;
@@ -40,7 +41,96 @@ void print_text(const char* text, ...) {
     std::cout << concolor.turnoff();
 }
 
-void test0() {
+void dump(const char* text, std::string const& value) {
+    if (text) {
+        OPTION& option = _cmdline->value();
+        if (option.debug) {
+            std::cout << text << std::endl << value.c_str() << std::endl;
+        }
+    }
+}
+
+void dump_b64url(const char* text, const byte_t* addr, size_t size) {
+    if (text && addr) {
+        OPTION& option = _cmdline->value();
+        if (option.debug) {
+            printf("%s\n  %s\n", text, base64_encode(addr, size, base64_encoding_t::base64url_encoding).c_str());
+        }
+    }
+}
+
+void dump_b64url(const char* text, binary_t const& bin) {
+    if (text) {
+        OPTION& option = _cmdline->value();
+        if (option.debug) {
+            printf("%s\n  %s\n", text, base64_encode(bin, base64_encoding_t::base64url_encoding).c_str());
+        }
+    }
+}
+
+void dump(const char* text, std::string const str, basic_stream& bs) {
+    if (text) {
+        OPTION& option = _cmdline->value();
+        if (option.debug) {
+            dump_memory(str, &bs, 16, 2);
+            printf("%s\n%s\n", text, bs.c_str());
+        }
+    }
+}
+
+void dump(const char* text, binary_t const bin, basic_stream& bs) {
+    if (text) {
+        OPTION& option = _cmdline->value();
+        if (option.debug) {
+            dump_memory(bin, &bs, 16, 2);
+            printf("%s\n%s\n", text, bs.c_str());
+        }
+    }
+}
+
+void dump(const char* text, const byte_t* addr, size_t size, basic_stream& bs) {
+    if (text && addr) {
+        OPTION& option = _cmdline->value();
+        if (option.debug) {
+            dump_memory(addr, size, &bs, 16, 2);
+            printf("%s\n%s\n", text, bs.c_str());
+        }
+    }
+}
+
+void dump_elem(binary_t const& source) {
+    OPTION& option = _cmdline->value();
+    if (option.debug) {
+        std::cout << "[";
+#if __cplusplus >= 201103L  // c++11
+        for_each(source.begin(), source.end(), [](byte_t c) { printf("%i,", c); });
+#else
+        for (binary_t::iterator iter = source.begin(); iter != source.end(); iter++) {
+            byte_t c = *iter;
+            printf("%i,", c);
+        }
+#endif
+        std::cout << "]" << std::endl;
+    }
+}
+
+void dump_elem(std::string const& source) {
+    OPTION& option = _cmdline->value();
+    if (option.debug) {
+        std::cout << "[";
+#if __cplusplus >= 201103L  // c++11
+        for_each(source.begin(), source.end(), [](byte_t c) { printf("%i,", c); });
+#else
+        for (std::string::iterator iter = source.begin(); iter != source.end(); iter++) {
+            byte_t c = *iter;
+            printf("%i,", c);
+        }
+#endif
+        std::cout << "]" << std::endl;
+    }
+}
+
+void test_basic() {
     print_text("basic informations");
 
     struct {
@@ -178,22 +268,19 @@ void test_rfc7515_A1() {
     ret = jws.sign(&key, (char*)hs256_header, claim, signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS compact) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS compact" << std::endl << signature.c_str() << std::endl;
-    if (stricmp(rfc_result.c_str(), signature.c_str())) {
-        result = false;
-    }
-    _test_case.test(ret, __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS compact) - Verify");
+    dump("JWS compact", signature);
+    _test_case.assert(0 == stricmp(rfc_result.c_str(), signature.c_str()), __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS compact) - Verify");
 
     ret = jws.sign(&key, (char*)hs256_header, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS JSON flattened) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON flattened" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS JSON flattened) - Verify");
 
     ret = jws.sign(&key, (char*)hs256_header, claim, signature, jose_serialization_t::jose_json);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS JSON serialization) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON serialization" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON serialization", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.1. Example JWS Using HMAC SHA-256 (JWS JSON serialization) - Verify");
 }
 
@@ -211,27 +298,27 @@ void test_rfc7515_HS() {
     key.for_each(dump_crypto_key, nullptr);
 
     json_object_signing_encryption jose;
-    std::string jws_result;
+    std::string signature;
 
     jose_context_t* jose_context = nullptr;
     jose.open(&jose_context, &key);
 
-    ret = jose.sign(jose_context, jws_t::jws_hs256, claim, jws_result);
+    ret = jose.sign(jose_context, jws_t::jws_hs256, claim, signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS compact) - Sign");
-    ret = jose.verify(jose_context, jws_result, result);
-    std::cout << "JWS " << std::endl << jws_result.c_str() << std::endl;
+    ret = jose.verify(jose_context, signature, result);
+    dump("JWS Compact", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS compact) - Verify");
 
-    ret = jose.sign(jose_context, jws_t::jws_hs256, claim, jws_result, jose_serialization_t::jose_flatjson);
+    ret = jose.sign(jose_context, jws_t::jws_hs256, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS flat) - Sign");
-    ret = jose.verify(jose_context, jws_result, result);
-    std::cout << "JWS " << std::endl << jws_result.c_str() << std::endl;
+    ret = jose.verify(jose_context, signature, result);
+    dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS flat) - Verify");
 
-    ret = jose.sign(jose_context, jws_t::jws_hs256, claim, jws_result, jose_serialization_t::jose_json);
+    ret = jose.sign(jose_context, jws_t::jws_hs256, claim, signature, jose_serialization_t::jose_json);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS json) - Sign");
-    ret = jose.verify(jose_context, jws_result, result);
-    std::cout << "JWS " << std::endl << jws_result.c_str() << std::endl;
+    ret = jose.verify(jose_context, signature, result);
+    dump("JWS JSON serialization", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS json) - Verify");
 
     jose.close(jose_context);
@@ -282,22 +369,20 @@ void test_rfc7515_A2() {
     ret = jws.sign(&key, (char*)rs256_header, claim, signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS compact) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS compact" << std::endl << signature.c_str() << std::endl;
-    if (stricmp(rfc_result.c_str(), signature.c_str())) {
-        result = false;
-    }
-    _test_case.test(ret, __FUNCTION__, "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS compact) - Verify");
+    dump("JWS Compact", signature);
+    _test_case.assert(0 == stricmp(rfc_result.c_str(), signature.c_str()), __FUNCTION__,
+                      "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS compact) - Verify");
 
     ret = jws.sign(&key, (char*)rs256_header, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS JSON flattened) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON flattened" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS JSON flattened) - Verify");
 
     ret = jws.sign(&key, (char*)rs256_header, claim, signature, jose_serialization_t::jose_json);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS JSON serialization) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON serialization" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON serialization", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.2. Example JWS Using RSASSA-PKCS1-v1_5 SHA-256 (JWS JSON serialization) - Verify");
 }
 
@@ -332,7 +417,7 @@ void test_rfc7515_A3() {
     ret = jws.sign(&key, jws_t::jws_es256, claim, signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS compact) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS compact" << std::endl << signature.c_str() << std::endl;
+    dump("JWS Compact", signature);
     // result changes
     // so test in https://jwt.io
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS compact) - Verify");
@@ -340,19 +425,20 @@ void test_rfc7515_A3() {
     ret = jws.sign(&key, jws_t::jws_es256, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON flattended) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON flattened" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON flattended) - Verify");
 
     ret = jws.sign(&key, jws_t::jws_es256, claim, signature, jose_serialization_t::jose_json);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON serialization) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON serialization" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON serialization", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON serialization) - Verify");
 
-    std::string example =
+    std::string example;
+    example =
         "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-"
         "F4GawxaepmXFCgfTjDxw5djxLa8ISlSApmWQxfKTUJqPP3-Kg6NU1Q";
-    std::cout << "Example" << std::endl << example.c_str() << std::endl;
+    dump("Example", example);
     ret = jws.verify(&key, example, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (Example)");
 }
@@ -388,7 +474,7 @@ void test_rfc7515_A4() {
     ret = jws.sign(&key, jws_t::jws_es512, claim, signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS compact) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS compact" << std::endl << signature.c_str() << std::endl;
+    dump("JWS Compact", signature);
     // result changes
     // so test in https://jwt.io
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS compact) - Verify");
@@ -396,19 +482,20 @@ void test_rfc7515_A4() {
     ret = jws.sign(&key, jws_t::jws_es512, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON flattened) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON flattened" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON flattened) - Verify");
 
     ret = jws.sign(&key, jws_t::jws_es512, claim, signature, jose_serialization_t::jose_json);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON serialization) - Sign");
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON serialization" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON serialization", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON serialization) - Verify");
 
-    std::string example =
+    std::string example;
+    example =
         "eyJhbGciOiJFUzUxMiJ9.UGF5bG9hZA.AdwMgeerwtHoh-l192l60hp9wAHZFVJbLfD_UxMi70cwnZOYaRI1bKPWROc-mZZqwqT2SI-KGDKB34XO0aw_"
         "7XdtAG8GaSwFKdCAPZgoXD2YBJZCPEX3xKpRwcdOO8KpEHwJjyqOgzDO7iKvU8vcnwNrmxYbSW9ERBXukOXolLzeO_Jn";
-    std::cout << "Example" << std::endl << example.c_str() << std::endl;
+    dump("Example", example);
     ret = jws.verify(&key, example, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (Example)");
 }
@@ -445,7 +532,7 @@ void test_rfc7515_A5() {
     // RFC sample - not support low security reason
     constexpr char sample[] = "eyJhbGciOiJub25lIn0.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ";
     ret = jws.verify(&key, sample, result);
-    std::cout << "compact" << std::endl << signature.c_str() << std::endl;
+    dump("JWS Compact", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.5. Example Unsecured JWS (JWS compact) - Verify");
 }
 
@@ -469,7 +556,7 @@ void test_rfc7515_A6() {
     headers.push_back(jws_t::jws_es256);
     jws.sign(&key, headers, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON serialization" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON serialization", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.6. Example JWS Using General JWS JSON Serialization");
 }
 
@@ -490,8 +577,7 @@ void test_rfc7515_A7() {
 
     jws.sign(&key, jws_t::jws_rs256, claim, signature, jose_serialization_t::jose_flatjson);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON flattened" << std::endl << signature.c_str() << std::endl;
-
+    dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.7. Example JWS Using Flattened JWS JSON Serialization");
 }
 
@@ -526,28 +612,28 @@ void test_rfc7515_bypem() {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
     jws.sign(&key, (char*)hs256_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS HS256" << std::endl << signature.c_str() << std::endl;
+    dump("JWS HS256", signature);
     _test_case.test(ret, __FUNCTION__, "HS256");
 #endif
 
     jws.sign(&key, (char*)rs256_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS RS256" << std::endl << signature.c_str() << std::endl;
+    dump("JWS RS256", signature);
     _test_case.test(ret, __FUNCTION__, "RS256");
 
     jws.sign(&key, (char*)es256_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS ES256" << std::endl << signature.c_str() << std::endl;
+    dump("JWS ES256", signature);
     _test_case.test(ret, __FUNCTION__, "ES256");
 
     jws.sign(&key, (char*)es512_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS ES512" << std::endl << signature.c_str() << std::endl;
+    dump("JWS ES512", signature);
     _test_case.test(ret, __FUNCTION__, "ES512");
 
     jws.sign(&key, (char*)ps256_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS PS256" << std::endl << signature.c_str() << std::endl;
+    dump("JWS PS256", signature);
     _test_case.test(ret, __FUNCTION__, "PS256");
 }
 
@@ -587,62 +673,62 @@ void test_rfc7515_bykeygen() {
 
     jws.sign(&key, (char*)hs256_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS HS256" << std::endl << signature.c_str() << std::endl;
+    dump("JWS HS256", signature);
     _test_case.test(ret, __FUNCTION__, "HS256");
 
     jws.sign(&key, (char*)rs256_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS RS256" << std::endl << signature.c_str() << std::endl;
+    dump("JWS RS256", signature);
     _test_case.test(ret, __FUNCTION__, "RS256");
 
     jws.sign(&key, (char*)rs384_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS RS384" << std::endl << signature.c_str() << std::endl;
+    dump("JWS RS384", signature);
     _test_case.test(ret, __FUNCTION__, "RS384");
 
     jws.sign(&key, (char*)rs512_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS RS512" << std::endl << signature.c_str() << std::endl;
+    dump("JWS RS512", signature);
     _test_case.test(ret, __FUNCTION__, "RS512");
 
     jws.sign(&key, (char*)es256_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS ES256" << std::endl << signature.c_str() << std::endl;
+    dump("JWS ES256", signature);
     _test_case.test(ret, __FUNCTION__, "ES256");
 
     jws.sign(&key, (char*)ps256_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS PS256" << std::endl << signature.c_str() << std::endl;
+    dump("JWS PS256", signature);
     _test_case.test(ret, __FUNCTION__, "PS256");
 
     jws.sign(&key, (char*)rs384_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS RS384" << std::endl << signature.c_str() << std::endl;
+    dump("JWS RS384", signature);
     _test_case.test(ret, __FUNCTION__, "RS384");
 
     jws.sign(&key, (char*)es384_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS ES384" << std::endl << signature.c_str() << std::endl;
+    dump("JWS ES384", signature);
     _test_case.test(ret, __FUNCTION__, "ES384");
 
     jws.sign(&key, (char*)ps384_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS PS384" << std::endl << signature.c_str() << std::endl;
+    dump("JWS PS384", signature);
     _test_case.test(ret, __FUNCTION__, "PS384");
 
     jws.sign(&key, (char*)rs512_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS RS512" << std::endl << signature.c_str() << std::endl;
+    dump("JWS RS512", signature);
     _test_case.test(ret, __FUNCTION__, "RS512");
 
     jws.sign(&key, (char*)es512_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS ES512" << std::endl << signature.c_str() << std::endl;
+    dump("JWS ES512", signature);
     _test_case.test(ret, __FUNCTION__, "ES512");
 
     jws.sign(&key, (char*)ps512_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS PS512" << std::endl << signature.c_str() << std::endl;
+    dump("JWS PS512", signature);
     _test_case.test(ret, __FUNCTION__, "PS512");
 
     std::list<std::string> headers;
@@ -652,8 +738,8 @@ void test_rfc7515_bykeygen() {
     headers.push_back((char*)ps256_header);
     jws.sign(&key, headers, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS HS256,RS256,ES256,PS256" << std::endl << signature.c_str() << std::endl;
-    _test_case.test(ret, __FUNCTION__, "HS256");
+    dump("JWS HS256,RS256,ES256,PS256", signature);
+    _test_case.test(ret, __FUNCTION__, "HS256,RS256,ES256,PS256");
 }
 
 return_t test_jose_file(crypto_key* key, const char* file, bool& result) {
@@ -777,57 +863,43 @@ void test_rfc7516_A1_test() {
     jwk.load_file(&key, "rfc7516_A1.jwk");
     key.for_each(dump_crypto_key, nullptr);
 
-    dump_memory((byte_t*)input.c_str(), input.size(), &bs);
-    printf("input\n%s\n", bs.c_str());
-    dump_memory((byte_t*)jose_header.c_str(), jose_header.size(), &bs);
-    printf("jose_header\n%s\n", bs.c_str());
-    dump_memory(cek, RTL_NUMBER_OF(cek), &bs);
-    printf("cek\n%s\n", bs.c_str());
-    dump_memory(encrypted_key, RTL_NUMBER_OF(encrypted_key), &bs);
-    printf("encrypted_key\n%s\n", bs.c_str());
-    dump_memory(iv, RTL_NUMBER_OF(iv), &bs);
-    printf("iv\n%s\n", bs.c_str());
-    dump_memory(aad, RTL_NUMBER_OF(aad), &bs);
-    printf("aad\n%s\n", bs.c_str());
-    dump_memory(ciphertext, RTL_NUMBER_OF(ciphertext), &bs);
-    printf("ciphertext\n%s\n", bs.c_str());
-    dump_memory(tag, RTL_NUMBER_OF(tag), &bs);
-    printf("tag\n%s\n", bs.c_str());
+    dump("input", input, bs);
+    dump("jose_header", jose_header, bs);
+    dump("cek", cek, RTL_NUMBER_OF(cek), bs);
+    dump("encrypted_key", encrypted_key, RTL_NUMBER_OF(encrypted_key), bs);
+    dump("iv", iv, RTL_NUMBER_OF(iv), bs);
+    dump("aad", aad, RTL_NUMBER_OF(aad), bs);
+    dump("ciphertext", ciphertext, RTL_NUMBER_OF(ciphertext), bs);
+    dump("tag", tag, RTL_NUMBER_OF(tag), bs);
 
     // A.1.1
     jose_header_encoded = base64_encode((byte_t*)jose_header.c_str(), jose_header.size(), base64_encoding_t::base64url_encoding);
-    printf("jose_header_encoded\n%s\n", jose_header_encoded.c_str());
+    dump("jose_header_encoded", jose_header_encoded);
     // A.1.3
     encrypted_key_encoded = base64_encode(encrypted_key, RTL_NUMBER_OF(encrypted_key), base64_encoding_t::base64url_encoding);
-    printf("encrypted_key_encoded\n%s\n", encrypted_key_encoded.c_str());
+    dump("encrypted_key_encoded", encrypted_key_encoded);
 
     encrypted_key_data.insert(encrypted_key_data.end(), encrypted_key, encrypted_key + RTL_NUMBER_OF(encrypted_key));
     pkey = key.select(kid, crypto_use_t::use_enc);
     json_object_signing_encryption jose;
     crypt.decrypt(pkey, encrypted_key_data, decrypted_key_data, crypt_enc_t::rsa_oaep);
-    dump_memory(&decrypted_key_data[0], decrypted_key_data.size(), &bs);
-    printf("decrypted_key\n%s\n", bs.c_str());
+    dump("decrypted_key", decrypted_key_data, bs);
 
     if ((decrypted_key_data.size() == RTL_NUMBER_OF(cek)) && (0 == memcmp(&decrypted_key_data[0], cek, RTL_NUMBER_OF(cek)))) {
-        printf("cek match\n");
         result = true;
     } else {
-        printf("cek mismatch\n");
         result = false;
     }
     _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__,
                     "RFC 7516 Appendix A - A.1.  Example JWE using RSAES-OAEP and AES GCM (A.1.3)");
 
     // A.1.4
-    iv_encoded = base64_encode(iv, RTL_NUMBER_OF(iv), base64_encoding_t::base64url_encoding);
-    printf("iv_encoded\n%s\n", iv_encoded.c_str());
+    dump_b64url("iv_encoded", iv, RTL_NUMBER_OF(iv));
     // A.1.5
     aad_data.insert(aad_data.end(), aad, aad + RTL_NUMBER_OF(aad));
     if ((jose_header_encoded.size() == RTL_NUMBER_OF(aad)) && (0 == memcmp(jose_header_encoded.c_str(), aad, RTL_NUMBER_OF(aad)))) {
-        printf("aad match\n");
         result = true;
     } else {
-        printf("aad mismatch\n");
         result = false;
     }
     _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__,
@@ -838,24 +910,18 @@ void test_rfc7516_A1_test() {
     crypt.open(&crypt_handle, crypt_algorithm_t::aes256, crypt_mode_t::gcm, cek, RTL_NUMBER_OF(cek), iv, RTL_NUMBER_OF(iv));
     // tag from plain, aad
     crypt.encrypt2(crypt_handle, (byte_t*)input.c_str(), input.size(), data, &aad_data, &tag_gen);
-    dump_memory(&data[0], data.size(), &bs);
-    printf("data\n%s\n", bs.c_str());
-    dump_memory(&tag_gen[0], tag_gen.size(), &bs);
-    printf("tag_gen\n%s\n", bs.c_str());
+    dump("data", data, bs);
+    dump("tag", tag_gen, bs);
     if ((tag_gen.size() == RTL_NUMBER_OF(tag)) && (0 == memcmp(&tag_gen[0], tag, RTL_NUMBER_OF(tag)))) {
-        printf("tag match\n");
         result = true;
     } else {
-        printf("tag mismatch\n");
         result = false;
     }
     _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__,
                     "RFC 7516 Appendix A - A.1.  Example JWE using RSAES-OAEP and AES GCM (A.1.6, tag)");
     if ((data.size() == RTL_NUMBER_OF(ciphertext)) && (0 == memcmp(&data[0], ciphertext, RTL_NUMBER_OF(ciphertext)))) {
-        printf("ciphertext match\n");
         result = true;
     } else {
-        printf("ciphertext mismatch\n");
         result = false;
     }
     _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__,
@@ -863,22 +929,19 @@ void test_rfc7516_A1_test() {
 
     // plain from ciphertext, aad, tag
     crypt.decrypt2(crypt_handle, ciphertext, RTL_NUMBER_OF(ciphertext), plain, &aad_data, &tag_data);
-    dump_memory(&plain[0], plain.size(), &bs);
-    printf("plain\n%s\n", bs.c_str());
+    dump("plain", plain, bs);
 
-    ciphertext_encoded = base64_encode(&data[0], data.size(), base64_encoding_t::base64url_encoding);
-    printf("ciphertext_encoded\n%s\n", ciphertext_encoded.c_str());
-    tag_encoded = base64_encode(&tag_gen[0], tag_gen.size(), base64_encoding_t::base64url_encoding);
-    printf("tag_encoded\n%s\n", tag_encoded.c_str());
+    dump_b64url("ciphertext_encoded", data);
+    dump_b64url("ta_encoded", tag_gen);
 
     crypt.close(crypt_handle);
 
     // A.1.7
-    printf("header\n%s.\n", jose_header_encoded.c_str());
-    printf("key\n%s.\n", encrypted_key_encoded.c_str());
-    printf("iv\n%s.\n", iv_encoded.c_str());
-    printf("ciphertext\n%s.\n", ciphertext_encoded.c_str());
-    printf("tag\n%s\n", tag_encoded.c_str());
+    dump("header", jose_header_encoded);
+    dump("key", encrypted_key_encoded);
+    dump("iv", iv_encoded);
+    dump("ciphertext", ciphertext_encoded);
+    dump("tag", tag_encoded);
 }
 
 void test_rfc7516_A1() {
@@ -919,9 +982,9 @@ void test_rfc7516_A1() {
 
     jose.close(context);
 
-    std::cout << "RFC 7516 A.1. compact" << std::endl << compact.c_str() << std::endl;
-    std::cout << "RFC 7516 A.1. flattened JSON serialization" << std::endl << json_flat.c_str() << std::endl;
-    std::cout << "RFC 7516 A.1. JSON serialization" << std::endl << json_serial.c_str() << std::endl;
+    dump("RFC 7516 A.1. compact", compact);
+    dump("RFC 7516 A.1. flattened JSON serialization", json_flat);
+    dump("RFC 7516 A.1. JSON serialization", json_serial);
 
     ret = test_jose_file(&key, "rfc7516_A1.jws", result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (file)");
@@ -949,7 +1012,7 @@ void test_rsa_oaep() {
     ret = jose.decrypt(context, output, plain, result);
     jose.close(context);
 
-    std::cout << output.c_str() << std::endl;
+    dump("encrypted", output);
 
     _test_case.test(ret, __FUNCTION__, "RSA-OAEP");
 }
@@ -977,7 +1040,7 @@ void test_rsa_oaep_256() {
     ret = jose.decrypt(context, output, plain, result);
     jose.close(context);
 
-    std::cout << output.c_str() << std::endl;
+    dump("encrypted", output);
 
     _test_case.test(ret, __FUNCTION__, "RSA-OAEP-256");
 }
@@ -1020,9 +1083,9 @@ void test_rfc7516_A2() {
 
     jose.close(context);
 
-    std::cout << "RFC 7516 A.2. compact" << std::endl << compact.c_str() << std::endl;
-    std::cout << "RFC 7516 A.2. flattened JSON serialization" << std::endl << json_flat.c_str() << std::endl;
-    std::cout << "RFC 7516 A.2. JSON serialization" << std::endl << json_serial.c_str() << std::endl;
+    dump("RFC 7516 A.2. compact", compact);
+    dump("RFC 7516 A.2. flattened JSON serialization", json_flat);
+    dump("RFC 7516 A.2. JSON serialization", json_serial);
 
     ret = test_jose_file(&key, "rfc7516_A2.jws", result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (file)");
@@ -1061,9 +1124,9 @@ void test_rfc7516_A3() {
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (json)");
     jose.close(context);
 
-    std::cout << "RFC 7516 A.3. compact" << std::endl << compact.c_str() << std::endl;
-    std::cout << "RFC 7516 A.3. flattened JSON serialization" << std::endl << json_flat.c_str() << std::endl;
-    std::cout << "RFC 7516 A.3. JSON serialization" << std::endl << json_serial.c_str() << std::endl;
+    dump("RFC 7516 A.3. compact", compact);
+    dump("RFC 7516 A.3. flattened JSON serialization", json_flat);
+    dump("RFC 7516 A.3. JSON serialization", json_serial);
 
     ret = test_jose_file(&key, "rfc7516_A3.jws", result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (file)");
@@ -1098,7 +1161,7 @@ void test_rfc7516_A4() {
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.4. JWE Using General JWE JSON Serialization (json)");
     jose.close(context);
 
-    printf("%s\n", json_serial.c_str());
+    dump("RFC 7516 A.4", json_serial);
 
     ret = test_jose_file(&key, "rfc7516_A4.jws", result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.4. JWE Using General JWE JSON Serialization (file)");
@@ -1146,55 +1209,41 @@ void test_rfc7516_B() {
 
     // compute
     __try2 {
-        dump_memory(key, RTL_NUMBER_OF(key), &bs);
-        printf("key\n%s\n", bs.c_str());
-
-        dump_memory(plain, RTL_NUMBER_OF(plain), &bs);
-        printf("plain\n%s\n", bs.c_str());
-
-        dump_memory(iv, RTL_NUMBER_OF(iv), &bs);
-        printf("iv\n%s\n", bs.c_str());
+        dump("key", key, RTL_NUMBER_OF(key), bs);
+        dump("plain", plain, RTL_NUMBER_OF(plain), bs);
+        dump("iv", iv, RTL_NUMBER_OF(iv), bs);
 
         // B.2
         crypt.open(&crypt_handle, crypt_algorithm_t::aes128, crypt_mode_t::cbc, key + 16, 16, iv, 16);
         crypt.encrypt(crypt_handle, plain, RTL_NUMBER_OF(plain), enc_value);
-        dump_memory(&enc_value[0], enc_value.size(), &bs);
-        printf("encryption result (computed)\n%s\n", bs.c_str());
+        dump("encryption result (computed)", enc_value, bs);
         // if (encryption result = encrypted_data) then success
         // test vice versa now
-        dump_memory(encrypted_data, RTL_NUMBER_OF(encrypted_data), &bs);
-        printf("encryption result (rfc sample)\n%.*s\n", (int)bs.size(), bs.c_str());
+        dump("encryption result (rfc sample)", encrypted_data, RTL_NUMBER_OF(encrypted_data), bs);
         crypt.decrypt(crypt_handle, encrypted_data, RTL_NUMBER_OF(encrypted_data), test);
-        printf("decrypted result size %zi\n", test.size());
-        dump_memory(&test[0], test.size(), &bs);
-        printf("decrypt the encryption result (rfc sample)\n%.*s\n", (int)bs.size(), bs.c_str());
+        dump("decrypt the encryption result (rfc sample)", test, bs);
         // B.5
         binary_t concat;  // concatenate AAD, IV, CT, AL
         concat.insert(concat.end(), aad, aad + RTL_NUMBER_OF(aad));
         concat.insert(concat.end(), iv, iv + RTL_NUMBER_OF(iv));
         concat.insert(concat.end(), enc_value.begin(), enc_value.end());
         concat.insert(concat.end(), (byte_t*)&al, (byte_t*)&al + sizeof(int64));
-        dump_memory(&concat[0], concat.size(), &bs);
-        printf("concat\n%s\n", bs.c_str());
-        dump_memory(concat_sample, RTL_NUMBER_OF(concat_sample), &bs);
-        printf("concat (rfc sample)\n%s\n", bs.c_str());
+        dump("concat", concat, bs);
+        dump("concat (rfc sample)", concat_sample, RTL_NUMBER_OF(concat_sample), bs);
         // B.6
         hash.open(&hash_handle, hash_algorithm_t::sha2_256, key, 16);
         hash.hash(hash_handle, &concat[0], concat.size(), hmac_value);
 
-        dump_memory(&hmac_value[0], hmac_value.size(), &bs);
-        printf("hmac_value\n%s\n", bs.c_str());
+        dump("hmac_value", hmac_value, bs);
 
         constexpr byte_t hmac_sample[] = {83, 73, 191, 98,  104, 205, 211, 128, 201, 189, 199, 133, 32,  38, 194, 85,
                                           9,  84, 229, 201, 219, 135, 44,  252, 145, 102, 179, 140, 105, 86, 229, 116};
-        dump_memory(hmac_sample, RTL_NUMBER_OF(hmac_sample), &bs);
-        printf("hmac (rfc sample)\n%s\n", bs.c_str());
+        dump("hmac (rfc sample)", hmac_sample, RTL_NUMBER_OF(hmac_sample), bs);
 
         // B.7
         binary_t trunc;
         trunc.insert(trunc.end(), &hmac_value[0], &hmac_value[0] + 16);
-        dump_memory(&trunc[0], trunc.size(), &bs);
-        printf("trunc\n%s\n", bs.c_str());
+        dump("trunc", trunc, bs);
 
         if ((RTL_NUMBER_OF(tag) == trunc.size()) && (0 == memcmp(&trunc[0], tag, trunc.size()))) {
             // do nothing
@@ -1210,43 +1259,22 @@ void test_rfc7516_B() {
 }
 
 void test_jwk() {
-    print_text("RFC 7517");
-    json_object_signing_encryption jose;
-    json_web_key jwk;
-    crypto_key key;
-    binary_t buffer;
-    size_t buflen = 0;
-
-    jwk.load_file(&key, "rfc7520_priv.jwk");
-    key.for_each(dump_crypto_key, nullptr);
-
-    jwk.write(&key, nullptr, &buflen, 0);
-    buffer.resize(buflen);
-    jwk.write(&key, (char*)&buffer[0], &buflen, 0);
-
-    std::cout << "public key" << std::endl << (char*)&buffer[0] << std::endl;
-
-    jwk.write(&key, nullptr, &buflen, 1);
-    buffer.resize(buflen);
-    jwk.write(&key, (char*)&buffer[0], &buflen, 1);
-
-    std::cout << "private key" << std::endl << (char*)&buffer[0] << std::endl;
+    // preserve leading zero while loading key
 
     // RFC 7520 "kid": "bilbo.baggins@hobbiton.example"
-    // x org AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt
-    //       0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
-    // x bug cpkss6wI7PPlxj3t7A1RqMH3nvL4L5Tzxze_XeeYZnHqxiX-gle70DlGRMqqOq-PJ6RYX7vK0PJFdiAIXlyPQq0
-    //         72992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
-    std::string x1 = "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt";
-    std::string x2 = "cpkss6wI7PPlxj3t7A1RqMH3nvL4L5Tzxze_XeeYZnHqxiX-gle70DlGRMqqOq-PJ6RYX7vK0PJFdiAIXlyPQq0";
-    binary_t b1, b2;
-    base64_decode(x1.c_str(), x1.size(), b1, base64_encoding_t::base64url_encoding);
-    base64_decode(x2.c_str(), x2.size(), b2, base64_encoding_t::base64url_encoding);
-    std::cout << "what's different ?" << std::endl
-              << "x1 : " << x1.c_str() << std::endl
-              << "     " << base16_encode(b1).c_str() << std::endl
-              << "x2 : " << x2.c_str() << std::endl
-              << "     " << base16_encode(b2).c_str() << std::endl;
+    //
+    // original (leading zero preserved)
+    //   AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt
+    //   0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
+    //
+    //   to preserve leading zero
+    //   crypto_key::get_key(key->pkey, mapper->flag, item.type, item.pub1, item.pub2, item.priv, true);
+    //
+    // sample (leading zero not preserved)
+    //   cpkss6wI7PPlxj3t7A1RqMH3nvL4L5Tzxze_XeeYZnHqxiX-gle70DlGRMqqOq-PJ6RYX7vK0PJFdiAIXlyPQq0
+    //   72992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad
+    //
+    //   crypto_key::get_key(key->pkey, mapper->flag, item.type, item.pub1, item.pub2, item.priv, false);
 }
 
 void test_rfc7517_C() {
@@ -1274,7 +1302,7 @@ void test_rfc7517_C() {
     ret = jose.decrypt(context, output, plain, result);
     jose.close(context);
 
-    printf("%.*s\n", (int)output.size(), (char*)&output[0]);
+    dump("decrypted", output);
     _test_case.test(ret, __FUNCTION__, "RFC 7517 Appendix C. Encrypted RSA Private Key");
 }
 
@@ -1295,17 +1323,17 @@ void test_rfc7518_RSASSA_PSS() {
 
     jws.sign(&key, (char*)ps256_header, claim, signature);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS compact" << std::endl << signature.c_str() << std::endl;
+    dump("JWS compact", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7518 3.5.  Digital Signature with RSASSA-PSS (JWS compact)");
 
     jws.sign(&key, (char*)ps256_header, claim, signature, jose_serialization_t::jose_flatjson);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON flattened" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7518 3.5.  Digital Signature with RSASSA-PSS (JWS JSON flattened)");
 
     jws.sign(&key, (char*)ps256_header, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify(&key, signature, result);
-    std::cout << "JWS JSON serialization" << std::endl << signature.c_str() << std::endl;
+    dump("JWS JSON serialization", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7518 3.5.  Digital Signature with RSASSA-PSS (JWS JSON serialization)");
 }
 
@@ -1342,17 +1370,20 @@ int test_ecdh() {
     EVP_PKEY_free((EVP_PKEY*)alicePublicKey);
     EVP_PKEY_free((EVP_PKEY*)bobPublicKey);
 
-    std::cout << "alice public key  x : " << base16_encode(x_alice).c_str() << std::endl
-              << "alice public key  y : " << base16_encode(y_alice).c_str() << std::endl
-              << "alice private key d : " << base16_encode(d_alice).c_str() << std::endl
-              << "bob   public key  x : " << base16_encode(x_bob).c_str() << std::endl
-              << "bob   public key  y : " << base16_encode(y_bob).c_str() << std::endl
-              << "bob   private key d : " << base16_encode(d_bob).c_str() << std::endl
+    OPTION& option = _cmdline->value();
+    if (option.debug) {
+        std::cout << "alice public key  x : " << base16_encode(x_alice).c_str() << std::endl
+                  << "alice public key  y : " << base16_encode(y_alice).c_str() << std::endl
+                  << "alice private key d : " << base16_encode(d_alice).c_str() << std::endl
+                  << "bob   public key  x : " << base16_encode(x_bob).c_str() << std::endl
+                  << "bob   public key  y : " << base16_encode(y_bob).c_str() << std::endl
+                  << "bob   private key d : " << base16_encode(d_bob).c_str() << std::endl
 
-              << "secret computed by alice : " << base16_encode(secret_alice).c_str() << std::endl
-              << "secret computed by bob   : " << base16_encode(secret_bob).c_str()
+                  << "secret computed by alice : " << base16_encode(secret_alice).c_str() << std::endl
+                  << "secret computed by bob   : " << base16_encode(secret_bob).c_str()
 
-              << std::endl;
+                  << std::endl;
+    }
 
     bool result = (secret_alice == secret_bob);
     _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__, "ECDH");
@@ -1399,34 +1430,14 @@ void test_rfc7518_C() {
 
     compose_otherinfo(alg, apu, apv, 16 << 3, otherinfo);
 
-    dump_memory(&otherinfo[0], otherinfo.size(), &bs);
-    std::cout << "otherinfo" << std::endl << bs.c_str() << std::endl;
-    std::cout << "[";
-#if __cplusplus >= 201103L  // c++11
-    for_each(otherinfo.begin(), otherinfo.end(), [](byte_t c) { printf("%i,", c); });
-#else
-    for (binary_t::iterator iter = otherinfo.begin(); iter != otherinfo.end(); iter++) {
-        byte_t c = *iter;
-        printf("%i,", c);
-    }
-#endif
-    std::cout << "]" << std::endl;
+    dump("otherinfo", otherinfo, bs);
+    dump_elem(otherinfo);
 
     binary_t derived;
     concat_kdf(secret_bob, otherinfo, 16, derived);
 
-    dump_memory(&derived[0], derived.size(), &bs);
-    std::cout << "derived" << std::endl << bs.c_str() << std::endl;
-    std::cout << "[";
-#if __cplusplus >= 201103L  // c++11
-    for_each(derived.begin(), derived.end(), [](byte_t c) { printf("%i,", c); });
-#else
-    for (binary_t::iterator iter = derived.begin(); iter != derived.end(); iter++) {
-        byte_t c = *iter;
-        printf("%i,", c);
-    }
-#endif
-    std::cout << "]" << std::endl;
+    dump("derived", derived, bs);
+    dump_elem(derived);
 
     std::string sample = "VqqN6vgjbSBcIijNcacQGg";
     std::string computation = base64_encode(derived, base64_encoding_t::base64url_encoding);
@@ -1437,18 +1448,9 @@ void test_rfc7518_C() {
                     "RFC 7518 Appendix C.  Example ECDH-ES Key Agreement Computation");
 
     ecdh_es(pkey_bob, pkey_alice, alg, apu, apv, 16, derived);
-    dump_memory(&derived[0], derived.size(), &bs);
-    std::cout << "derived" << std::endl << bs.c_str() << std::endl;
-    std::cout << "[";
-#if __cplusplus >= 201103L  // c++11
-    for_each(derived.begin(), derived.end(), [](byte_t c) { printf("%i,", c); });
-#else
-    for (binary_t::iterator iter = derived.begin(); iter != derived.end(); iter++) {
-        byte_t c = *iter;
-        printf("%i,", c);
-    }
-#endif
-    std::cout << "]" << std::endl;
+
+    dump("derived", derived, bs);
+    dump_elem(derived);
 }
 
 return_t test_rfc7520_signature(crypto_key* key, const char* filename, const char* testcase_name) {
@@ -1495,9 +1497,8 @@ return_t test_rfc7520_jwe(crypto_key* key, const char* filename, const char* tes
             jose.open(&handle, key);
             ret = jose.decrypt(handle, std::string((char*)data, datasize), output, result);
             if (errorcode_t::success == ret) {
-                printf("%.*s\n", (int)datasize, data);
-                dump_memory(&output[0], output.size(), &bs);
-                printf("%s\n", bs.c_str());
+                dump("plain", data, datasize, bs);
+                dump("decrypted", output, bs);
             }
             jose.close(handle);
         }
@@ -1691,11 +1692,10 @@ void test_jwe_flattened() {
 
                     ret = jose.encrypt(handle_encrypt, enc, alg, convert(input), encrypted, jose_serialization_t::jose_flatjson);
                     if (errorcode_t::success == ret) {
-                        printf("encrypted\n%s\n", encrypted.c_str());
+                        dump("encrypted", encrypted);
 
                         ret = jose.decrypt(handle_decrypt, encrypted, output, result);
-                        dump_memory(&output[0], output.size(), &bs);
-                        printf("decrypted\n%s\n", bs.c_str());
+                        dump("decrypted", output, bs);
                     }
                     _test_case.test(ret, __FUNCTION__, "RFC 7520 JWE enc %s alg %s", nameof_enc, nameof_alg);
                 }
@@ -1763,7 +1763,8 @@ void test_jwe_json(jwe_t enc) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        printf("encrypted\n%s\n", encrypted.c_str());
+
+        dump("encrypted", encrypted);
 
         ret = jose.decrypt(handle_decrypt, encrypted, output, result);
         if (errorcode_t::success != ret) {
@@ -1841,29 +1842,21 @@ void test_jwk_thumbprint() {
     json_decref(json_root);
 
     // replace (buffer, " ", "");
-    dump_memory((byte_t*)buffer.c_str(), buffer.size(), &bs);
-    std::cout << "dump" << std::endl << bs.c_str() << std::endl;
-
-    std::cout << "[";
-#if __cplusplus >= 201103L  // c++11
-    for_each(buffer.begin(), buffer.end(), [](char c) { printf("%i,", c); });
-#else
-    for (std::string::iterator iter = buffer.begin(); iter != buffer.end(); iter++) {
-        byte_t c = *iter;
-        printf("%i,", c);
-    }
-#endif
-    std::cout << "]" << std::endl;
+    dump("dump", buffer, bs);
+    dump_elem(buffer);
 
     hash_stream("sha256", (byte_t*)buffer.c_str(), buffer.size(), hash_value);
     thumbprint = base64_encode(hash_value, base64_encoding_t::base64url_encoding);
 
-    std::cout << "in lexicographic order : " << std::endl
-              << buffer.c_str() << std::endl
-              << "hash : " << std::endl
-              << base16_encode(hash_value).c_str() << std::endl
-              << "thumbprint :" << std::endl
-              << thumbprint.c_str() << std::endl;
+    OPTION& option = _cmdline->value();
+    if (option.debug) {
+        std::cout << "in lexicographic order : " << std::endl
+                  << buffer.c_str() << std::endl
+                  << "hash : " << std::endl
+                  << base16_encode(hash_value).c_str() << std::endl
+                  << "thumbprint :" << std::endl
+                  << thumbprint.c_str() << std::endl;
+    }
 
     // crv, kty, x, y
     // e, kty, n
@@ -1877,6 +1870,8 @@ void test_jwk_thumbprint() {
 void test_rfc8037() {
     print_text("RFC 8037");
     return_t ret = errorcode_t::success;
+    OPTION& option = _cmdline->value();
+
     json_web_key jwk;
     json_web_signature jws;
     std::string sample;
@@ -1891,7 +1886,9 @@ void test_rfc8037() {
     const EVP_PKEY* pkey = key.any();
     key.get_key(pkey, pub1, pub2, priv);
 
-    std::cout << "x : " << base16_encode(pub1).c_str() << std::endl << "d : " << base16_encode(priv).c_str() << std::endl;
+    if (option.debug) {
+        std::cout << "x : " << base16_encode(pub1).c_str() << std::endl << "d : " << base16_encode(priv).c_str() << std::endl;
+    }
 
     // {"alg":"EdDSA"}
     std::string claim = "Example of Ed25519 signing";
@@ -1899,7 +1896,7 @@ void test_rfc8037() {
     bool result = false;
 
     ret = jws.sign(&key, jws_t::jws_eddsa, claim, signature);
-    printf("%s\n", signature.c_str());
+    dump("signature", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 8037 A.4.  Ed25519 Signing");
 
     ret = jws.verify(&key, signature, result);
@@ -1910,7 +1907,7 @@ void test_rfc8037() {
         "P0JzlnLWG1PPOt7-09PGcvMg3AIbQR6dWbhijcNR4ki4iylGjg5BhVsPt9g7sVvpAr_Mu"
         "M0KAg";
     ret = jws.verify(&key, signature_rfc8037_a5, result);
-    printf("%s\n", signature.c_str());
+    dump("signature", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 8037 A.5.  Ed25519 Validation");
 
     jose_context_t* handle = nullptr;
@@ -1924,7 +1921,7 @@ void test_rfc8037() {
     jose.open(&handle, &jwk_x25519);
     ret = jose.encrypt(handle, jwe_t::jwe_a128gcm, jwa_t::jwa_ecdh_es_a128kw, convert(claim), encrypted, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
-        printf("RFC 8037 A.6.  ECDH-ES with X25519\n%s\n", encrypted.c_str());
+        dump("RFC 8037 A.6.  ECDH-ES with X25519", encrypted);
     }
     jose.close(handle);
     _test_case.test(ret, __FUNCTION__, "RFC 8037 A.6.  ECDH-ES with X25519");
@@ -1935,7 +1932,7 @@ void test_rfc8037() {
     jose.open(&handle, &jwk_x448);
     ret = jose.encrypt(handle, jwe_t::jwe_a256gcm, jwa_t::jwa_ecdh_es_a256kw, convert(claim), encrypted, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
-        printf("RFC 8037 A.7.  ECDH-ES with X448\n%s\n", encrypted.c_str());
+        dump("RFC 8037 A.7.  ECDH-ES with X448", encrypted);
     }
     jose.close(handle);
     _test_case.test(ret, __FUNCTION__, "RFC 8037 A.7.  ECDH-ES with X448");
@@ -1985,11 +1982,10 @@ void test_okp() {
 
             ret = jose.encrypt(handle, encs[i], algs[j], convert(claim), encrypted, jose_serialization_t::jose_flatjson);
             if (errorcode_t::success == ret) {
-                printf("%s\n", encrypted.c_str());
+                dump("encrypted", encrypted);
                 ret = jose.decrypt(handle, encrypted, source, result);
                 if (errorcode_t::success == ret) {
-                    dump_memory(&source[0], source.size(), &bs, 32);
-                    printf("%s\n", bs.c_str());
+                    dump("decrypted", source, bs);
                 }
             }
             _test_case.test(ret, __FUNCTION__, "RFC 8037 JWE with OKP enc %s alg %s", nameof_enc, nameof_alg);
@@ -1998,14 +1994,14 @@ void test_okp() {
 
     ret = jose.sign(handle, jws_t::jws_eddsa, claim, signature, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
-        printf("%s\n", signature.c_str());
+        dump("signature", signature);
         ret = jose.verify(handle, signature, result);
         _test_case.test(ret, __FUNCTION__, "RFC 8037 JWS with OKP");
     }
     jose.close(handle);
 }
 
-void key_dump(crypto_key* key, jwa_t alg, crypto_use_t use) {
+void key_match(crypto_key* key, jwa_t alg, crypto_use_t use) {
     const EVP_PKEY* pkey = nullptr;
     // size_t key_length = 0;
     binary_t pub1;
@@ -2019,16 +2015,21 @@ void key_dump(crypto_key* key, jwa_t alg, crypto_use_t use) {
     print_text("try kt %d alg %s", alg_info->kty, alg_info->alg_name);
     pkey = key->select(kid, alg, use);
     if (pkey) {
-        printf("> kid %s\n", kid.c_str());
-        key->get_key(pkey, pub1, pub2, priv);
+        OPTION& option = _cmdline->value();
+        if (option.dump_keys) {
+            printf("> kid %s\n", kid.c_str());
+            key->get_key(pkey, pub1, pub2, priv);
 
-        basic_stream bs;
-        dump_key(pkey, &bs);
-        printf("%s\n", bs.c_str());
+            basic_stream bs;
+            dump_key(pkey, &bs);
+            printf("%s\n", bs.c_str());
+        }
     }
+    printf(pkey ? "found" : "not found");
+    printf("\n");
 }
 
-void key_dump(crypto_key* key, jws_t sig, crypto_use_t use) {
+void key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
     const EVP_PKEY* pkey = nullptr;
     // size_t key_length = 0;
     binary_t pub1;
@@ -2042,17 +2043,23 @@ void key_dump(crypto_key* key, jws_t sig, crypto_use_t use) {
     print_text("try kt %d alg %s", alg_info->kty, alg_info->jws_name);
     pkey = key->select(kid, sig, use);
     if (pkey) {
-        printf("> kid %s\n", kid.c_str());
-        key->get_key(pkey, pub1, pub2, priv);
+        OPTION& option = _cmdline->value();
+        if (option.dump_keys) {
+            printf("> kid %s\n", kid.c_str());
+            key->get_key(pkey, pub1, pub2, priv);
 
-        basic_stream bs;
-        dump_key(pkey, &bs);
-        printf("%s\n", bs.c_str());
+            basic_stream bs;
+            dump_key(pkey, &bs);
+            printf("%s\n", bs.c_str());
+        }
     }
+    printf(pkey ? "found" : "not found");
+    printf("\n");
 }
 
 void key_match_test() {
     json_web_key jwk;
+    OPTION& option = _cmdline->value();
 
     // crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -2078,7 +2085,7 @@ void key_match_test() {
                         jwa_t::jwa_pbes2_hs384_a192kw,
                         jwa_t::jwa_pbes2_hs512_a256kw};
         for (unsigned int i = 0; i < RTL_NUMBER_OF(algs); i++) {
-            key_dump(&key, algs[i], crypto_use_t::use_enc);
+            key_match(&key, algs[i], crypto_use_t::use_enc);
         }
     }
     __finally2 {}
@@ -2093,29 +2100,33 @@ void key_match_test() {
             jws_t::jws_es256, jws_t::jws_es384, jws_t::jws_es512, jws_t::jws_ps256, jws_t::jws_ps384, jws_t::jws_ps512,
         };
         for (unsigned int i = 0; i < RTL_NUMBER_OF(algs); i++) {
-            key_dump(&key, algs[i], crypto_use_t::use_sig);
+            key_match(&key, algs[i], crypto_use_t::use_sig);
         }
     }
     __finally2 {}
 }
 
 int main(int argc, char** argv) {
-    set_trace_option(trace_option_t::trace_bt);
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
     _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-dump", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
     std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
 
+    if (option.debug) {
+        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
+    }
+
     openssl_startup();
     openssl_thread_setup();
 
-    test0();
+    test_basic();
 
     _test_case.begin("RFC 7515");
 
@@ -2182,5 +2193,6 @@ int main(int argc, char** argv) {
     openssl_cleanup();
 
     _test_case.report(20);
+    _cmdline->help();
     return _test_case.result();
 }
