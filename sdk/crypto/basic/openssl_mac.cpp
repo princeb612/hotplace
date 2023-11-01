@@ -177,8 +177,6 @@ return_t openssl_mac::cbc_mac_rfc8152(const char* alg, binary_t const& key, bina
         int size_update = 0;
         size_t size_input = input.size();
         uint16 blocksize = sizeof_block(hint_cipher);
-        uint32 unitsize = ossl_get_unitsize();
-        size_t size_progress = 0;
         for (size_t i = 0; i < size_input; i += blocksize) {
             int remain = size_input - i;
             int size = (remain < blocksize) ? remain : blocksize;
@@ -187,12 +185,6 @@ return_t openssl_mac::cbc_mac_rfc8152(const char* alg, binary_t const& key, bina
             } else {
                 EVP_CipherUpdate(context, &tag[0], &size_update, &input[i], remain);
                 EVP_CipherUpdate(context, &tag[0], &size_update, &iv[0], blocksize - remain);
-            }
-            size_progress += size_update;
-            {
-                basic_stream bs;
-                dump_memory(tag, &bs);
-                printf("%s\n", bs.c_str());
             }
         }
         tag.resize(tagsize);

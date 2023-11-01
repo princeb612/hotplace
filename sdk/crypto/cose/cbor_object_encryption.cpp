@@ -210,7 +210,7 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             // crypt.open(&crypt_handle, hint->enc.algname, cek, iv);
             // ret = crypt.decrypt2(crypt_handle, &handle->payload[0], enc_size, output, &aad, &tag);
             // crypt.close(crypt_handle);
-            crypt.decrypt(hint->enc.algname, cek, iv, &handle->payload[0], enc_size, output, aad, tag);
+            ret = crypt.decrypt(hint->enc.algname, cek, iv, &handle->payload[0], enc_size, output, aad, tag);
 
         } else if (cose_group_t::cose_group_enc_aesccm == group) {
             size_t enc_size = 0;
@@ -225,7 +225,7 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
                 {crypt_ctrl_t::crypt_ctrl_lsize, hint->enc.lsize},
                 {},
             };
-            crypt.decrypt(hint->enc.algname, cek, iv, &handle->payload[0], enc_size, output, aad, tag, options);
+            ret = crypt.decrypt(hint->enc.algname, cek, iv, &handle->payload[0], enc_size, output, aad, tag, options);
         } else if (cose_group_t::cose_group_enc_chacha20_poly1305 == group) {
             // TEST FAILED - counter ??
             size_t enc_size = 0;
