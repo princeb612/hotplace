@@ -293,6 +293,31 @@ static inline std::wstring concat_filepath(std::wstring const& path, std::wstrin
     return result;
 }
 
+static inline uint16 reverse(uint16 value) { return (((((uint16)(value)&0xFF)) << 8) | (((uint16)(value)&0xFF00) >> 8)); }
+
+#define static_inline_reverse(T1, T2)    \
+    static inline T1 reverse(T1 value) { \
+        union temp {                     \
+            T1 value;                    \
+            struct {                     \
+                T2 high;                 \
+                T2 low;                  \
+            } p;                         \
+        };                               \
+        union temp x, y;                 \
+        x.value = value;                 \
+        y.p.high = reverse(x.p.low);     \
+        y.p.low = reverse(x.p.high);     \
+        return y.value;                  \
+    }
+
+// static inline uint32 reverse(uint32);
+static_inline_reverse(uint32, uint16);
+// static inline uint64 reverse(uint64);
+static_inline_reverse(uint64, uint32);
+// static inline uint128 reverse(uint128);
+static_inline_reverse(uint128, uint64);
+
 }  // namespace hotplace
 
 #endif
