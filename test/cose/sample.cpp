@@ -1835,15 +1835,15 @@ void test_github_example() {
     cwk.add_oct_b64u(&aes_ccm_key, "sec-48", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico", crypto_use_t::use_enc);
     cwk.add_oct_b64u(&aes_ccm_key, "018c0ae5-4d9b-471b-bfd6-eef314bc7037", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg", crypto_use_t::use_enc);
 
-    crypto_key aes_ccm_05_key;
-    cwk.add_oct_b64u(&aes_ccm_05_key, "our-secret", nullptr, "Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmIl6a1xNPi8QA", crypto_use_t::use_enc);
+    crypto_key hmac_aes_256_key;
+    cwk.add_oct_b64u(&hmac_aes_256_key, "our-secret", nullptr, "Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmIl6a1xNPi8QA", crypto_use_t::use_enc);
 
     crypto_key aes_gcm_02_key;
     cwk.add_oct_b64u(&aes_gcm_02_key, "sec-48", nullptr, "Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmI", crypto_use_t::use_enc);
     crypto_key aes_gcm_03_key;
     cwk.add_oct_b64u(&aes_gcm_03_key, "sec-64", nullptr, "Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmIl6a1xNPi8QA", crypto_use_t::use_enc);
-    crypto_key aes_gcm_04_key;
-    cwk.add_oct_b64u(&aes_gcm_04_key, "our-secret", nullptr, "hJtXIZ2uSN5kbQfbtTNWbg", crypto_use_t::use_enc);
+    crypto_key hmac_aes_128_key;
+    cwk.add_oct_b64u(&hmac_aes_128_key, "our-secret", nullptr, "hJtXIZ2uSN5kbQfbtTNWbg", crypto_use_t::use_enc);
 
     crypto_key key_hmac_enc_02;
     cwk.add_oct_b64u(&key_hmac_enc_02, "sec-48", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico", crypto_use_t::use_enc);
@@ -1868,10 +1868,10 @@ void test_github_example() {
     keymapper["ecdh_wrap_p256_key"] = &ecdh_wrap_p256_key;
     keymapper["ecdh_wrap_p521_key"] = &ecdh_wrap_p521_key;
     keymapper["aes_ccm_key"] = &aes_ccm_key;
-    keymapper["aes_ccm_05_key"] = &aes_ccm_05_key;
+    keymapper["hmac_aes_256_key"] = &hmac_aes_256_key;
     keymapper["aes_gcm_02_key"] = &aes_gcm_02_key;
     keymapper["aes_gcm_03_key"] = &aes_gcm_03_key;
-    keymapper["aes_gcm_04_key"] = &aes_gcm_04_key;
+    keymapper["hmac_aes_128_key"] = &hmac_aes_128_key;
     keymapper["key_hmac_enc_02"] = &key_hmac_enc_02;
     keymapper["cwtkey"] = &cwtkey;
     keymapper["key_cwt_a4"] = &key_cwt_a4;
@@ -2061,7 +2061,6 @@ void test_github_example() {
 }
 
 int main(int argc, char** argv) {
-    set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
@@ -2076,6 +2075,10 @@ int main(int argc, char** argv) {
     std::cout << "option.debug " << (option.debug ? 1 : 0) << std::endl;
     std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
     std::cout << "option.skip_validate " << (option.skip_validate ? 1 : 0) << std::endl;
+
+    if (option.debug) {
+        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
+    }
 
     openssl_startup();
     openssl_thread_setup();

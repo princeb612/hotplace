@@ -215,22 +215,38 @@ return_t openssl_kdf::hkdf_expand_aes(binary_t& okm, const char* alg, size_t dle
         int t_block_size = 0;
         int size_update = 0;
         iv.resize(16);
-        t_block.resize(EVP_MAX_BLOCK_LENGTH);
 
-        EVP_CipherInit_ex(context, cipher, nullptr, &prk[0], &iv[0], 1);
         EVP_CIPHER_CTX_set_padding(context, 1);
 
         for (uint32 i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; i++) {
             binary_t content;  // T(1) = AES-CMAC(PRK, T(0) | info | 0x01)
-            content.insert(content.end(), &t_block[0], &t_block[0] + t_block_size);
+            content.insert(content.end(), t_block.begin(), t_block.end());
             content.insert(content.end(), info.begin(), info.end());
             content.insert(content.end(), i);  // i = 1..255 (01..ff)
 
             // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
-            int check = EVP_CipherUpdate(context, &t_block[0], &t_block_size, &content[0], content.size());
+            if (!t_block_size) {
+                t_block_size = blocksize;
+                t_block.resize(blocksize);
+            }
 
-            okm.insert(okm.end(), &t_block[0], &t_block[0] + t_block_size);  // T = T(1) | T(2) | T(3) | ... | T(N)
-            offset += t_block_size;
+            EVP_CipherInit_ex(context, cipher, nullptr, &prk[0], &iv[0], 1);
+
+            int size_update = 0;
+            size_t size_input = content.size();
+            for (size_t i = 0; i < size_input; i += blocksize) {
+                int remain = size_input - i;
+                int size = (remain < blocksize) ? remain : blocksize;
+                if (remain > blocksize) {
+                    EVP_CipherUpdate(context, &t_block[0], &size_update, &content[i], blocksize);
+                } else {
+                    EVP_CipherUpdate(context, &t_block[0], &size_update, &content[i], remain);
+                    EVP_CipherUpdate(context, &t_block[0], &size_update, &iv[0], blocksize - remain);
+                }
+            }
+
+            okm.insert(okm.end(), t_block.begin(), t_block.end());  // T = T(1) | T(2) | T(3) | ... | T(N)
+            offset += t_block.size();
         }
         okm.resize(dlen);  // OKM = first L octets of T
     }
