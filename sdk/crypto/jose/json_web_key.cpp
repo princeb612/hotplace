@@ -284,12 +284,13 @@ static void json_writer(crypto_key_object_t* key, void* param) {
             __leave2;
         }
 
+        // preserve leading zero
         json_mapper_item_t item;
         item.pkey = key->pkey;
         item.kid = key->kid;
         item.use = key->use;
         item.alg = key->alg;
-        crypto_key::get_key(key->pkey, mapper->flag, item.type, item.pub1, item.pub2, item.priv);
+        crypto_key::get_key(key->pkey, mapper->flag, item.type, item.pub1, item.pub2, item.priv, true);
         mapper->items.push_back(item);
     }
     __finally2 {
