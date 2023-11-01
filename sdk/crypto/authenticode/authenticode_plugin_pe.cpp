@@ -388,7 +388,7 @@ return_t authenticode_plugin_pe::digest(file_stream* filestream, const char* alg
             __leave2;
         }
 
-        ret = hash.open_byname(&hash_handle, algorithm);
+        ret = hash.open(&hash_handle, algorithm);
         if (errorcode_t::success != ret) {
             __leave2;
         }

@@ -13,7 +13,7 @@
  *     |       | done               | not yet               | detail                                |
  *     | --    | --                 | --                    | --                                    |
  *     | Sign  | sign/verfy         |                       | except CounterSign, x509              |
- *     | Enc   | decrypt            | encrypt               | except AES-CBC-MAC, Chacha20_poly1305 |
+ *     | Enc   | decrypt            | encrypt               | except Chacha20_poly1305              |
  *     | Mac   | verify             | create                |                                       |
  *  3. untagged - not yet
  *  4. CWT - study
@@ -201,9 +201,11 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                 case cbor_tag_t::cose_tag_encrypt0:
                     ret = cose.decrypt(cose_handle, cose_keys, bin, decrypted, result);
                     if (errorcode_t::success == ret) {
-                        basic_stream bs;
-                        dump_memory(decrypted, &bs);
-                        printf("%s\n", bs.c_str());
+                        if (option.debug) {
+                            basic_stream bs;
+                            dump_memory(decrypted, &bs, 16, 4);
+                            printf("%s\n", bs.c_str());
+                        }
                     }
                     _test_case.test(ret, __FUNCTION__, "check4.decrypt %s", text ? text : "");
                     break;
@@ -225,6 +227,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
 
 void test_cbor_file(const char* expect_file, const char* text) {
     _test_case.begin("parse and generate diagnostic from RFC examples");
+    OPTION& option = _cmdline->value();
 
     console_color concolor;
 
@@ -261,8 +264,10 @@ void test_cbor_file(const char* expect_file, const char* text) {
         reader.publish(handle, &root);
         reader.close(handle);
 
-        dump_test_data("diagnostic", bs_diagnostic);
-        dump_test_data("cbor", bin_cbor);
+        if (option.debug) {
+            dump_test_data("diagnostic", bs_diagnostic);
+            dump_test_data("cbor", bin_cbor);
+        }
 
         root->release();
 
@@ -1718,12 +1723,18 @@ void test_jose_from_cwk() {
     size_t size = 0;
     basic_stream json;
     jwk.write(&privkey, &json, 1);
-    printf("JWK from CBOR key\n%s\n", json.c_str());
+    if (option.debug) {
+        printf("JWK from CBOR key\n%s\n", json.c_str());
+    }
     basic_stream pem;
     jwk.write_pem(&pubkey, &pem);
-    printf("PEM (public)\n%s\n", pem.c_str());
+    if (option.debug) {
+        printf("PEM (public)\n%s\n", pem.c_str());
+    }
     jwk.write_pem(&privkey, &pem);
-    printf("PEM (private)\n%s\n", pem.c_str());
+    if (option.debug) {
+        printf("PEM (private)\n%s\n", pem.c_str());
+    }
 
     const EVP_PKEY* pkey = nullptr;
     std::string kid;
@@ -2016,8 +2027,10 @@ void test_github_example() {
                 case cbor_tag_t::cose_tag_encrypt:   // 96 (D860)
                     ret = cose.decrypt(handle, mapped_key, cbor, decrypted, result);
                     if (errorcode_t::success == ret) {
-                        dump_memory(decrypted, &bs, 16, 4);
-                        printf("decrypted\n%s\n%s\n", bs.c_str(), base16_encode(decrypted).c_str());
+                        if (option.debug) {
+                            dump_memory(decrypted, &bs, 16, 4);
+                            printf("decrypted\n%s\n%s\n", bs.c_str(), base16_encode(decrypted).c_str());
+                        }
                     }
                     break;
                 case cbor_tag_t::cose_tag_mac0:  // 17 (D1)

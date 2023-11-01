@@ -126,6 +126,7 @@ class openssl_crypt : public crypt_t {
      * @param crypt_context_t* handle [in]
      * @param crypt_ctrl_t id [in]
      * @param uint16 param [in]
+     * @return error code (see error.hpp)
      */
     virtual return_t set(crypt_context_t* handle, crypt_ctrl_t id, uint16 param);
 
@@ -160,7 +161,6 @@ class openssl_crypt : public crypt_t {
      * @param binary_t const& input [in]
      * @param binary_t& out [out]
      * @return error code (see error.hpp)
-     * @example
      */
     virtual return_t encrypt(crypt_context_t* handle, binary_t const& input, binary_t& out);
     /**
@@ -171,6 +171,7 @@ class openssl_crypt : public crypt_t {
      * @param binary_t& out_encrypte [out]
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [outopt]
+     * @return error code (see error.hpp)
      */
     virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted,
                               const binary_t* aad = nullptr, binary_t* tag = nullptr);
@@ -181,6 +182,7 @@ class openssl_crypt : public crypt_t {
      * @param binary_t& out_encrypte [out]
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [outopt]
+     * @return error code (see error.hpp)
      */
     virtual return_t encrypt2(crypt_context_t* handle, binary_t const& plain, binary_t& out_encrypted, const binary_t* aad = nullptr, binary_t* tag = nullptr);
     /**
@@ -192,6 +194,7 @@ class openssl_crypt : public crypt_t {
      * @param size_t* size* size_encrypted [inout] should be at least size_encrypted + EVP_MAX_BLOCK_LENGTH
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [inopt]
+     * @return error code (see error.hpp)
      */
     return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char* out_encrypted, size_t* size_encrypted,
                       const binary_t* aad = nullptr, binary_t* tag = nullptr);
@@ -226,6 +229,7 @@ class openssl_crypt : public crypt_t {
      * @param binary_t const& input [in]
      * @param binary_t& out [out]
      * @return error code (see error.hpp)
+     * @return error code (see error.hpp)
      */
     virtual return_t decrypt(crypt_context_t* handle, binary_t const& input, binary_t& out);
 
@@ -237,6 +241,7 @@ class openssl_crypt : public crypt_t {
      * @param binary_t& out_decrypted [out]
      * @param binary_t* aad [inpot]
      * @param binary_t* tag [inopt]
+     * @return error code (see error.hpp)
      */
     virtual return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
                               const binary_t* aad = nullptr, const binary_t* tag = nullptr);
@@ -247,6 +252,7 @@ class openssl_crypt : public crypt_t {
      * @param binary_t& out_decrypted [out]
      * @param binary_t* aad [inpot]
      * @param binary_t* tag [inopt]
+     * @return error code (see error.hpp)
      */
     virtual return_t decrypt2(crypt_context_t* handle, binary_t const& data_encrypted, binary_t& out_decrypted, const binary_t* aad = nullptr,
                               const binary_t* tag = nullptr);
@@ -259,11 +265,13 @@ class openssl_crypt : public crypt_t {
      * @param size_t* size_decrypted [inout] should be at least size_encrypted + EVP_MAX_BLOCK_LENGTH
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [inopt]
+     * @return error code (see error.hpp)
      */
     return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, byte_t* out_decrypted, size_t* size_decrypted,
                       const binary_t* aad = nullptr, const binary_t* tag = nullptr);
     /**
      * @brief free memory
+     * @return error code (see error.hpp)
      * @remarks see encrypt, decrypt
      */
     virtual return_t free_data(unsigned char* data);
@@ -274,6 +282,7 @@ class openssl_crypt : public crypt_t {
      * @param binary_t const& input [in]
      * @param binary_t& output [out]
      * @param crypt_enc_t mode [in]
+     * @return error code (see error.hpp)
      */
     return_t encrypt(const EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
     /**
@@ -282,11 +291,13 @@ class openssl_crypt : public crypt_t {
      * @param binary_t const& input [in]
      * @param binary_t& output [out]
      * @param crypt_enc_t mode [in]
+     * @return error code (see error.hpp)
      */
     return_t decrypt(const EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode);
 
     /**
      * @brief simple api
+     * @return error code (see error.hpp)
      * @example
      *      encrypt_option_t options[] = {
      *          { crypt_ctrl_padding, 0 }, { },
@@ -337,12 +348,14 @@ class openssl_crypt : public crypt_t {
      * @param crypt_context_t* handle [in]
      * @param size_t cmd [in] 1 key size, 2 iv size
      * @param size_t& value [out]
+     * @return error code (see error.hpp)
      */
     virtual return_t query(crypt_context_t* handle, size_t cmd, size_t& value);
 };
 
 /**
  * @brief   EVP_chacha20
+ * @return  error code (see error.hpp)
  * @desc
  *          RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
  *          RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
@@ -421,6 +434,7 @@ class openssl_aead {
      * @param   binary_t const& p [in] plaintext
      * @param   binary_t& q [out] ciphertext
      * @param   binary_t& t [out] AE tag
+     * @return  error code (see error.hpp)
      * @desc
      *
      *          K = MAC_KEY || ENC_KEY
@@ -436,6 +450,7 @@ class openssl_aead {
 
     /**
      * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA
+     * @return  error code (see error.hpp)
      * @desc    each ENC_KEY, MAC_KEY
      */
     return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, binary_t const& enc_k, binary_t const& mac_k, binary_t const& iv,
@@ -452,6 +467,7 @@ class openssl_aead {
      * @param   binary_t const& q [in] ciphertext
      * @param   binary_t& p [out] plaintext
      * @param   binary_t& t [in] AE tag
+     * @return  error code (see error.hpp)
      * @desc
      *          K = MAC_KEY || ENC_KEY
      *          MAC_KEY = initial MAC_KEY_LEN bytes of K
@@ -464,6 +480,7 @@ class openssl_aead {
                                        binary_t const& a, binary_t const& q, binary_t& p, binary_t const& t);
     /**
      * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA
+     * @return  error code (see error.hpp)
      * @desc    each ENC_KEY, MAC_KEY
      */
     return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, binary_t const& enc_k, binary_t const& mac_k, binary_t const& iv,

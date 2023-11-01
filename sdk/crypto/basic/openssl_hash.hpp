@@ -44,7 +44,7 @@ class openssl_hash : public hash_t {
      *    hash.hash(handle, source, source_size, hash_data);
      *    hash.close(handle)
      *    // hash
-     *    hash.open_byname(&handle, "sha256"); // wo key
+     *    hash.open(&handle, "sha256"); // wo key
      *    hash.hash(handle, source, source_size, hash_data);
      *    hash.close(handle)
      *    // hmac (HS256)
@@ -64,11 +64,11 @@ class openssl_hash : public hash_t {
      *    hash.hash(handle, source, source_size, hash_data);
      *    hash.close(handle)
      */
-    virtual return_t open_byname(hash_context_t** handle, const char* algorithm, const unsigned char* key = nullptr, unsigned keysize = 0);
+    virtual return_t open(hash_context_t** handle, const char* algorithm, const unsigned char* key = nullptr, unsigned keysize = 0);
     /**
      * @brief open (HMAC, CMAC)
      */
-    virtual return_t open_byname(hash_context_t** handle, const char* algorithm, binary_t const& key);
+    virtual return_t open(hash_context_t** handle, const char* algorithm, binary_t const& key);
 
     /**
      * @brief open (hash, HMAC)

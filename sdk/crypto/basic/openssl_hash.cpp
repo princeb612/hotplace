@@ -52,7 +52,7 @@ openssl_hash::~openssl_hash() {
     // do nothing
 }
 
-return_t openssl_hash::open_byname(hash_context_t** handle, const char* algorithm, const unsigned char* key, unsigned keysize) {
+return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, const unsigned char* key, unsigned keysize) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -80,9 +80,7 @@ return_t openssl_hash::open_byname(hash_context_t** handle, const char* algorith
     return ret;
 }
 
-return_t openssl_hash::open_byname(hash_context_t** handle, const char* algorithm, binary_t const& key) {
-    return open_byname(handle, algorithm, &key[0], key.size());
-}
+return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, binary_t const& key) { return open(handle, algorithm, &key[0], key.size()); }
 
 return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const unsigned char* key_data, unsigned key_size) {
     return_t ret = errorcode_t::success;
@@ -496,7 +494,7 @@ return_t openssl_digest::digest(const char* alg, binary_t const& input, binary_t
     hash_context_t* handle = nullptr;
 
     __try2 {
-        ret = open_byname(&handle, alg);
+        ret = open(&handle, alg);
         if (errorcode_t::success != ret) {
             __leave2;
         }

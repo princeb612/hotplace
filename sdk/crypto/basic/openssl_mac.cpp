@@ -24,7 +24,7 @@ return_t openssl_mac::hmac(const char* alg, binary_t const& key, binary_t const&
     hash_context_t* handle = nullptr;
 
     __try2 {
-        ret = open_byname(&handle, alg, &key[0], key.size());
+        ret = open(&handle, alg, &key[0], key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -60,7 +60,7 @@ return_t openssl_mac::cmac(const char* alg, binary_t const& key, binary_t const&
     hash_context_t* handle = nullptr;
 
     __try2 {
-        ret = open_byname(&handle, alg, &key[0], key.size());
+        ret = open(&handle, alg, &key[0], key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }

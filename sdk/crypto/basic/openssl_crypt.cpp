@@ -1265,9 +1265,20 @@ return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, 
             __leave2;
         }
 
+        // nonce = constant | iv
+        // constant to little-endian
+        uint32 constant = 0;
+        if (is_little_endian()) {
+            constant = counter;
+        } else {
+#define SWAP16(n) (((((uint16)(n)&0xFF)) << 8) | (((uint16)(n)&0xFF00) >> 8))
+#define SWAP32(n) (((((uint32)(n)&0xFF)) << 24) | ((((uint32)(n)&0xFF00)) << 8) | ((((uint32)(n)&0xFF0000)) >> 8) | ((((uint32)(n)&0xFF000000)) >> 24))
+            // ntohl do nothing, need swap
+            constant = SWAP32(counter);
+        }
+
         iv.resize(4);
         memcpy(&iv[0], (byte_t*)&counter, 4);
-
         iv.insert(iv.end(), nonce, nonce + nonce_size);
     }
     __finally2 {
