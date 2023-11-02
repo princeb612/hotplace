@@ -97,7 +97,7 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_param_
             case cose_param_t::cose_unsent_iv:
             case cose_param_t::cose_unsent_alg:
             case cose_param_t::cose_param_cek:
-                handle->body.binarymap[id] = bin;
+                handle->binarymap[id] = bin;
                 break;
             default:
                 ret = errorcode_t::request;
@@ -191,17 +191,11 @@ return_t cbor_object_signing_encryption::clear_context(cose_context_t* handle) {
     return ret;
 }
 
-return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* handle, crypto_key* key, cose_parts_t* item) {
+return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* handle, crypto_key* key, cose_body_t* item) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption::composer composer;
-    const EVP_PKEY* pkey = nullptr;
-
-    // RFC 8152 4.3.  Externally Supplied Data
-    // RFC 8152 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
-    // RFC 8152 5.4.  How to Encrypt and Decrypt for AE Algorithms
-    // RFC 8152 11.2.  Context Information Structure
 
     __try2 {
         if (nullptr == handle || nullptr == key) {
@@ -209,30 +203,19 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
             __leave2;
         }
 
-        uint16 dgst_klen = 0;
-        const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(handle->body.alg);
-        if (hint) {
-            dgst_klen = hint->dgst.klen;
+        cose_body_t* temp = handle->body;
+        cose_body_t* body = handle->body;
+        if (item) {
+            temp = item;
+            if (item->parent) {
+                body = item->parent;  // two layered
+            }
         }
 
-        const char* k = nullptr;
-        binary_t kwiv;
-        binary_t iv;
-
-        kwiv.resize(8);
-        memset(&kwiv[0], 0xa6, kwiv.size());
-
-        composer.finditem(cose_key_t::cose_iv, iv, handle->body.unprotected_map);
-
-        binary_t context;
-        binary_t cek;
-        binary_t kek;
-        binary_t salt;
-        binary_t secret;
         int alg = 0;
         std::string kid;
+        const char* k = nullptr;
 
-        cose_parts_t* temp = item ? item : &handle->body;
         composer.finditem(cose_key_t::cose_kid, kid, temp->unprotected_map);
         composer.finditem(cose_key_t::cose_alg, alg, temp->protected_map);
         if (0 == alg) {
@@ -247,6 +230,7 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
             __leave2;
         }
 
+        const EVP_PKEY* pkey = nullptr;
         if (k) {
             pkey = key->find(k, alg_hint->kty);
         } else {
@@ -258,14 +242,26 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
             __leave2;
         }
 
+        binary_t cek;
+        binary_t context;
+        binary_t iv;
+        binary_t kek;
+        binary_t kwiv;
+        binary_t salt;
+        binary_t secret;
+
         if (item) {
             openssl_crypt crypt;
             openssl_hash hash;
             openssl_kdf kdf;
 
-            return_t check = errorcode_t::success;
+            kwiv.resize(8);
+            memset(&kwiv[0], 0xa6, kwiv.size());
 
-            composer.finditem(cose_key_t::cose_iv, iv, item->unprotected_map);
+            check = composer.finditem(cose_key_t::cose_iv, iv, body->unprotected_map);
+            if (errorcode_t::success != check) {
+                composer.finditem(cose_key_t::cose_iv, iv, item->unprotected_map);
+            }
             composer.finditem(cose_key_t::cose_salt, salt, item->unprotected_map);
 
             crypto_kty_t kty;
@@ -288,7 +284,23 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
                     break;
             }
 
+            uint16 dgst_klen = 0;
+            const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(body->alg);
+            if (hint) {
+                dgst_klen = hint->dgst.klen;
+            }
+
             cose_group_t group = alg_hint->group;
+
+            std::list<cose_body_t*>::iterator layered_iter;
+            for (layered_iter = item->multiitems.begin(); layered_iter != item->multiitems.end(); layered_iter++) {
+                cose_body_t* layered_item = *layered_iter;
+                secret = layered_item->binarymap[cose_param_t::cose_param_cek];  // KEK
+                if (secret.size()) {
+                    secret.resize(alg_hint->enc.ksize);
+                    break;
+                }
+            }
 
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
 
@@ -316,7 +328,7 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
                 //      HKDF AES-MAC-128, AES-CBC-MAC-128, HKDF using AES-MAC as the PRF w/ 128-bit key
                 //      HKDF AES-MAC-256, AES-CBC-MAC-256, HKDF using AES-MAC as the PRF w/ 256-bit key
 
-                kdf.hkdf_expand_aes(cek, alg_hint->dgst.algname, dgst_klen ? dgst_klen : alg_hint->dgst.dlen, secret, context);
+                kdf.hkdf_expand_aes_rfc8152(cek, alg_hint->dgst.algname, dgst_klen ? dgst_klen : alg_hint->dgst.dlen, secret, context);
 
                 if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
                     handle->debug_flag |= cose_debug_hkdf_aes;
@@ -375,21 +387,36 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
                 item->binarymap[cose_param_t::cose_param_context] = context;
                 item->binarymap[cose_param_t::cose_param_iv] = iv;
                 item->binarymap[cose_param_t::cose_param_kek] = kek;
-                item->binarymap[cose_param_t::cose_param_salt] = salt;
                 item->binarymap[cose_param_t::cose_param_secret] = secret;
+                item->binarymap[cose_param_t::cose_param_salt] = salt;
             }
-
         } else {
+            binary_t cek;
             crypto_kty_t kty;
             key->get_privkey(pkey, kty, cek, true);
 
-            handle->body.binarymap[cose_param_t::cose_param_cek] = cek;
+            handle->binarymap[cose_param_t::cose_param_cek] = cek;
+        }
+
+#define dump(x)                                                                 \
+    if (x.size()) {                                                             \
+        dump_memory(x, &bs, 16, 4);                                             \
+        printf("  %s\n%s\n    %s\n", #x, bs.c_str(), base16_encode(x).c_str()); \
+    }
+
+        if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
+            basic_stream bs;
+            dump(cek);
+            dump(context);
+            dump(iv);
+            dump(kek);
+            dump(salt);
+            dump(secret);
         }
     }
     __finally2 {
         // do nothing
     }
-
     return ret;
 }
 
@@ -596,15 +623,15 @@ return_t cbor_object_signing_encryption::composer::build_unprotected(cbor_map** 
     return ret;
 }
 
-return_t cbor_object_signing_encryption::composer::build_data(cbor_data** object, const char* payload) {
+return_t cbor_object_signing_encryption::composer::build_data(cbor_data** object, const char* bin_payload) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == object || nullptr == payload) {
+        if (nullptr == object || nullptr == bin_payload) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        __try_new_catch(*object, new cbor_data(convert(payload)), ret, __leave2);
+        __try_new_catch(*object, new cbor_data(convert(bin_payload)), ret, __leave2);
     }
     __finally2 {
         // do nothing
@@ -612,7 +639,7 @@ return_t cbor_object_signing_encryption::composer::build_data(cbor_data** object
     return ret;
 }
 
-return_t cbor_object_signing_encryption::composer::build_data(cbor_data** object, const byte_t* payload, size_t size) {
+return_t cbor_object_signing_encryption::composer::build_data(cbor_data** object, const byte_t* bin_payload, size_t size) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -620,7 +647,7 @@ return_t cbor_object_signing_encryption::composer::build_data(cbor_data** object
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        __try_new_catch(*object, new cbor_data(payload, size), ret, __leave2);
+        __try_new_catch(*object, new cbor_data(bin_payload, size), ret, __leave2);
     }
     __finally2 {
         // do nothing
@@ -628,8 +655,8 @@ return_t cbor_object_signing_encryption::composer::build_data(cbor_data** object
     return ret;
 }
 
-return_t cbor_object_signing_encryption::composer::build_data(cbor_data** object, binary_t const& payload) {
-    return build_data(object, &payload[0], payload.size());
+return_t cbor_object_signing_encryption::composer::build_data(cbor_data** object, binary_t const& bin_payload) {
+    return build_data(object, &bin_payload[0], bin_payload.size());
 }
 
 return_t cbor_object_signing_encryption::composer::build_data_b16(cbor_data** object, const char* str) {
@@ -665,10 +692,10 @@ typedef struct _cose_message_structure_t {
 //                      [0]        [1]              [2]         [3]             [4]
 // cose_tag_encrypt     protected, unprotected_map, ciphertext, [+recipient]
 // cose_tag_encrypt0    protected, unprotected_map, ciphertext
-// cose_tag_mac         protected, unprotected_map, payload,    tag,            [+recipient]
-// cose_tag_mac0        protected, unprotected_map, payload,    tag
-// cose_tag_sign        protected, unprotected_map, payload,    [+signature]
-// cose_tag_sign1       protected, unprotected_map, payload,    signature
+// cose_tag_mac         protected, unprotected_map, bin_payload,    tag,            [+recipient]
+// cose_tag_mac0        protected, unprotected_map, bin_payload,    tag
+// cose_tag_sign        protected, unprotected_map, bin_payload,    [+signature]
+// cose_tag_sign1       protected, unprotected_map, bin_payload,    signature
 const cose_message_structure_t cose_message_structure_table[] = {
     {
         cose_tag_encrypt,
@@ -886,7 +913,7 @@ return_t cbor_object_signing_encryption::composer::parse_map(cbor_map* root, cos
     return ret;
 }
 
-return_t cbor_object_signing_encryption::composer::parse_unprotected(cbor_map* root, cose_parts_t& part) {
+return_t cbor_object_signing_encryption::composer::parse_unprotected(cbor_map* root, cose_body_t& part) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -1042,7 +1069,9 @@ return_t cbor_object_signing_encryption::composer::compose_enc_structure(cose_co
             __leave2;
         }
 
-        *root << new cbor_data(handle->body.bin_protected) << new cbor_data(handle->body.binarymap[cose_param_t::cose_external]);
+        cose_body_t* body = handle->body;
+
+        *root << new cbor_data(body->bin_protected) << new cbor_data(handle->binarymap[cose_param_t::cose_external]);
 
         pub.publish(root, &authenticated_data);
     }
@@ -1054,7 +1083,7 @@ return_t cbor_object_signing_encryption::composer::compose_enc_structure(cose_co
     return ret;
 }
 
-cbor_data* cbor_object_signing_encryption::composer::docompose_kdf_context_item(cose_context_t* handle, cose_parts_t* source, cose_key_t key,
+cbor_data* cbor_object_signing_encryption::composer::docompose_kdf_context_item(cose_context_t* handle, cose_body_t* source, cose_key_t key,
                                                                                 cose_param_t shared) {
     return_t ret = errorcode_t::success;
     cbor_object_signing_encryption::composer composer;
@@ -1064,7 +1093,7 @@ cbor_data* cbor_object_signing_encryption::composer::docompose_kdf_context_item(
         composer.finditem(key, bin, source->unprotected_map);
     }
     if (0 == bin.size()) {
-        bin = handle->body.binarymap[shared];
+        bin = handle->binarymap[shared];
     }
     if (bin.size()) {
         data = new cbor_data(bin);
@@ -1074,8 +1103,9 @@ cbor_data* cbor_object_signing_encryption::composer::docompose_kdf_context_item(
     return data;
 }
 
-return_t cbor_object_signing_encryption::composer::compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binary_t& kdf_context) {
+return_t cbor_object_signing_encryption::composer::compose_kdf_context(cose_context_t* handle, cose_body_t* source, binary_t& kdf_context) {
     return_t ret = errorcode_t::success;
+    return_t check = errorcode_t::success;
 
     // RFC 8152 11.  Key Derivation Functions (KDFs)
     // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
@@ -1115,8 +1145,13 @@ return_t cbor_object_signing_encryption::composer::compose_kdf_context(cose_cont
         int algid = 0;
         int recp_alg = 0;
         cbor_object_signing_encryption::composer composer;
+        cose_body_t* temp = handle->body;
+        if (source && source->parent) {
+            temp = source->parent;
+        }
 
         composer.finditem(cose_key_t::cose_alg, recp_alg, source->protected_map);
+        // a key wrap algorithm identifier or a content encryption algorithm identifier
         switch (recp_alg) {
             case cose_ecdhes_a128kw:
             case cose_ecdhss_a128kw:
@@ -1131,7 +1166,10 @@ return_t cbor_object_signing_encryption::composer::compose_kdf_context(cose_cont
                 algid = cose_aes256kw;  // -5
                 break;
             default:
-                composer.finditem(cose_key_t::cose_alg, algid, handle->body.protected_map);
+                check = composer.finditem(cose_key_t::cose_alg, algid, temp->protected_map);
+                if (errorcode_t::success != check) {
+                    composer.finditem(cose_key_t::cose_alg, algid, temp->unprotected_map);
+                }
                 break;
         }
 
@@ -1206,14 +1244,14 @@ return_t cbor_object_signing_encryption::composer::compose_kdf_context(cose_cont
         // SuppPubInfo
         {
             *pub << new cbor_data(keylen) << new cbor_data(source->bin_protected);
-            binary_t bin_public = handle->body.binarymap[cose_param_t::cose_unsent_pub_other];
+            binary_t bin_public = handle->binarymap[cose_param_t::cose_unsent_pub_other];
             if (bin_public.size()) {
                 *pub << new cbor_data(bin_public);
             }
         }
         // SuppPrivInfo
         {
-            binary_t bin_private = handle->body.binarymap[cose_param_t::cose_unsent_priv_other];
+            binary_t bin_private = handle->binarymap[cose_param_t::cose_unsent_priv_other];
             if (bin_private.size()) {
                 *root << new cbor_data(bin_private);
             }
@@ -1231,7 +1269,7 @@ return_t cbor_object_signing_encryption::composer::compose_kdf_context(cose_cont
     return ret;
 }
 
-return_t cbor_object_signing_encryption::composer::compose_sig_structure(cose_context_t* handle, cose_parts_t* parts, binary_t& tobesigned) {
+return_t cbor_object_signing_encryption::composer::compose_sig_structure(cose_context_t* handle, cose_body_t* parts, binary_t& tobesigned) {
     return_t ret = errorcode_t::success;
     cbor_encode encoder;
     cbor_publisher pub;
@@ -1243,7 +1281,7 @@ return_t cbor_object_signing_encryption::composer::compose_sig_structure(cose_co
     //    body_protected : empty_or_serialized_map,
     //    ? sign_protected : empty_or_serialized_map,
     //    external_aad : bstr,
-    //    payload : bstr
+    //    bin_payload : bstr
     // ]
 
     __try2 {
@@ -1261,12 +1299,14 @@ return_t cbor_object_signing_encryption::composer::compose_sig_structure(cose_co
             __leave2;
         }
 
-        *root << new cbor_data(handle->body.bin_protected);
+        cose_body_t* body = handle->body;
+
+        *root << new cbor_data(body->bin_protected);
         if (cbor_tag_t::cose_tag_sign == tag && parts) {
             // This field is omitted for the COSE_Sign1 signature structure.
             *root << new cbor_data(parts->bin_protected);
         }
-        *root << new cbor_data(handle->body.binarymap[cose_param_t::cose_external]) << new cbor_data(handle->payload);
+        *root << new cbor_data(handle->binarymap[cose_param_t::cose_external]) << new cbor_data(body->bin_payload);
 
         pub.publish(root, &tobesigned);
     }
@@ -1290,7 +1330,7 @@ return_t cbor_object_signing_encryption::composer::compose_mac_structure(cose_co
     //     context : "MAC" / "MAC0",
     //     protected : empty_or_serialized_map,
     //     external_aad : bstr,
-    //     payload : bstr
+    //     bin_payload : bstr
     // ]
 
     __try2 {
@@ -1308,8 +1348,9 @@ return_t cbor_object_signing_encryption::composer::compose_mac_structure(cose_co
             __leave2;
         }
 
-        *root << new cbor_data(handle->body.bin_protected) << new cbor_data(handle->body.binarymap[cose_param_t::cose_external])
-              << new cbor_data(handle->payload);
+        cose_body_t* body = handle->body;
+
+        *root << new cbor_data(body->bin_protected) << new cbor_data(handle->binarymap[cose_param_t::cose_external]) << new cbor_data(body->bin_payload);
 
         pub.publish(root, &tomac);
     }
@@ -1331,18 +1372,20 @@ return_t cbor_object_signing_encryption::composer::doparse_protected(cose_contex
             __leave2;
         }
 
+        cose_body_t* body = handle->body;
+
         cbor_data* cbor_protected = cbor_typeof<cbor_data>(object, cbor_type_t::cbor_type_data);
         if (nullptr == cbor_protected) {
             ret = errorcode_t::bad_data;
             __leave2;
         }
 
-        variant_binary(cbor_protected->data(), handle->body.bin_protected);
-        parse_binary(handle->body.bin_protected, handle->body.protected_map);
+        variant_binary(cbor_protected->data(), body->bin_protected);
+        parse_binary(body->bin_protected, body->protected_map);
 
         int alg = 0;
-        check = finditem(cose_key_t::cose_alg, alg, handle->body.protected_map);
-        handle->body.alg = (cose_alg_t)alg;
+        check = finditem(cose_key_t::cose_alg, alg, body->protected_map);
+        body->alg = (cose_alg_t)alg;
     }
     __finally2 {
         // do nothing
@@ -1359,27 +1402,29 @@ return_t cbor_object_signing_encryption::composer::doparse_unprotected(cose_cont
             __leave2;
         }
 
+        cose_body_t* body = handle->body;
+
         cbor_map* cbor_unprotected = cbor_typeof<cbor_map>(object, cbor_type_t::cbor_type_map);
         if (nullptr == cbor_unprotected) {
             ret = errorcode_t::bad_data;
             __leave2;
         }
 
-        parse_map(cbor_unprotected, handle->body.unprotected_map);
+        parse_map(cbor_unprotected, body->unprotected_map);
 
-        if (cose_alg_t::cose_unknown == handle->body.alg) {
+        if (cose_alg_t::cose_unknown == body->alg) {
             int alg = 0;
-            check = finditem(cose_key_t::cose_alg, alg, handle->body.unprotected_map);
-            handle->body.alg = (cose_alg_t)alg;
+            check = finditem(cose_key_t::cose_alg, alg, body->unprotected_map);
+            body->alg = (cose_alg_t)alg;
         }
 
         std::string kid;
-        check = finditem(cose_key_t::cose_kid, kid, handle->body.unprotected_map);
-        handle->body.kid = kid;
+        check = finditem(cose_key_t::cose_kid, kid, body->unprotected_map);
+        body->kid = kid;
 
         if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
             constexpr char constexpr_debug_alg[] = "*alg:%i ";
-            handle->debug_stream.printf(constexpr_debug_alg, handle->body.alg);
+            handle->debug_stream.printf(constexpr_debug_alg, body->alg);
         }
     }
     __finally2 {
@@ -1396,13 +1441,15 @@ return_t cbor_object_signing_encryption::composer::doparse_payload(cose_context_
             __leave2;
         }
 
+        cose_body_t* body = handle->body;
+
         cbor_data* cbor_payload = cbor_typeof<cbor_data>(object, cbor_type_t::cbor_type_data);
         if (nullptr == cbor_payload) {
             ret = errorcode_t::bad_data;
             __leave2;
         }
 
-        variant_binary(cbor_payload->data(), handle->payload);
+        variant_binary(cbor_payload->data(), body->bin_payload);
     }
     __finally2 {
         // do nothing
@@ -1418,13 +1465,15 @@ return_t cbor_object_signing_encryption::composer::doparse_singleitem(cose_conte
             __leave2;
         }
 
+        cose_body_t* body = handle->body;
+
         cbor_data* cbor_item = cbor_typeof<cbor_data>(object, cbor_type_t::cbor_type_data);
         if (nullptr == cbor_item) {
             ret = errorcode_t::bad_data;
             __leave2;
         }
 
-        variant_binary(cbor_item->data(), handle->singleitem);
+        variant_binary(cbor_item->data(), body->singleitem);
     }
     __finally2 {
         // do nothing
@@ -1435,13 +1484,16 @@ return_t cbor_object_signing_encryption::composer::doparse_singleitem(cose_conte
 return_t cbor_object_signing_encryption::composer::doparse_multiitems(cose_context_t* handle, cbor_object* object) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
+
     __try2 {
         if (nullptr == handle || nullptr == object) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        cbor_array* cbor_items = cbor_typeof<cbor_array>(object, cbor_type_t::cbor_type_array);
+        cose_body_t* body = handle->body;
+
+        cbor_array* cbor_items = cbor_typeof<cbor_array>(object, cbor_type_t::cbor_type_array);  // [+signature], [+recipient]
         if (nullptr == cbor_items) {
             ret = errorcode_t::bad_data;
             __leave2;
@@ -1449,32 +1501,71 @@ return_t cbor_object_signing_encryption::composer::doparse_multiitems(cose_conte
 
         size_t size_array = cbor_items->size();
         for (size_t i = 0; i < size_array; i++) {
-            cbor_array* cbor_item = (cbor_array*)(*cbor_items)[i];  // signature, recipient
-            if (3 == cbor_item->size()) {
-                cbor_data* cbor_signer_protected = cbor_typeof<cbor_data>((*cbor_item)[0], cbor_type_t::cbor_type_data);
-                cbor_map* cbor_signer_unprotected = cbor_typeof<cbor_map>((*cbor_item)[1], cbor_type_t::cbor_type_map);
-                cbor_data* cbor_signer_signature = cbor_typeof<cbor_data>((*cbor_item)[2], cbor_type_t::cbor_type_data);
-
-                cose_parts_t part;
-                variant_binary(cbor_signer_protected->data(), part.bin_protected);
-                variant_binary(cbor_signer_signature->data(), part.bin_data);
-                parse_binary(part.bin_protected, part.protected_map);
-                parse_unprotected(cbor_signer_unprotected, part);
-
-                int alg = 0;
-                check = finditem(cose_key_t::cose_alg, alg, part.protected_map);
-                if (errorcode_t::success != check) {
-                    check = finditem(cose_key_t::cose_alg, alg, part.unprotected_map);
+            cbor_array* cbor_item = cbor_typeof<cbor_array>((*cbor_items)[i], cbor_type_t::cbor_type_array);  // [signature], [recipient]
+            cose_body_t* part = new cose_body_t(nullptr);
+            check = doparse_multiitem(cbor_item, *part);
+            if (errorcode_t::success == check) {
+                if (cbor_item->size() == 4) {
+                    // RFC 8152 Appendix B
+                    // two layered structure
+                    cbor_array* cbor_recipients = cbor_typeof<cbor_array>((*cbor_item)[3], cbor_type_t::cbor_type_array);  // [+recipients]
+                    size_t size_recipients = cbor_recipients->size();
+                    for (size_t j = 0; j < size_recipients; j++) {
+                        cbor_array* cbor_recipient = cbor_typeof<cbor_array>((*cbor_recipients)[j], cbor_type_t::cbor_type_array);
+                        cose_body_t* layered_part = new cose_body_t(part);
+                        doparse_multiitem(cbor_recipient, *layered_part);
+                        part->multiitems.push_back(layered_part);
+                    }
                 }
-                part.alg = (cose_alg_t)alg;
-
-                std::string kid;
-                check = finditem(cose_key_t::cose_kid, kid, part.unprotected_map);
-                part.kid = kid;
-
-                handle->multiitems.push_back(part);
+                body->multiitems.push_back(part);
             }
         }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::composer::doparse_multiitem(cbor_array* object, cose_body_t& body) {
+    return_t ret = errorcode_t::success;
+    return_t check = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == object) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (object->size() < 3) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        cbor_data* cbor_protected = cbor_typeof<cbor_data>((*object)[0], cbor_type_t::cbor_type_data);
+        cbor_map* cbor_unprotected = cbor_typeof<cbor_map>((*object)[1], cbor_type_t::cbor_type_map);
+        cbor_data* cbor_payload = cbor_typeof<cbor_data>((*object)[2], cbor_type_t::cbor_type_data);
+
+        if (nullptr == cbor_protected || nullptr == cbor_unprotected || nullptr == cbor_payload) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        variant_binary(cbor_protected->data(), body.bin_protected);
+        variant_binary(cbor_payload->data(), body.bin_data);
+        parse_binary(body.bin_protected, body.protected_map);
+        parse_unprotected(cbor_unprotected, body);
+
+        int alg = 0;
+        check = finditem(cose_key_t::cose_alg, alg, body.protected_map);
+        if (errorcode_t::success != check) {
+            check = finditem(cose_key_t::cose_alg, alg, body.unprotected_map);
+        }
+        body.alg = (cose_alg_t)alg;
+
+        std::string kid;
+        check = finditem(cose_key_t::cose_kid, kid, body.unprotected_map);
+        body.kid = kid;
     }
     __finally2 {
         // do nothing

@@ -60,8 +60,19 @@ class openssl_kdf {
      * @param   binary_t const& ikm [in] input key material
      * @param   binary_t const& salt [in] salt
      * @param   binary_t const& info [in] info
+     * @return  error code (see error.hpp)
      */
     return_t hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, binary_t const& ikm, binary_t const& salt, binary_t const& info);
+    /**
+     * @brief   HKDF (Extract and Expand)
+     * @param   binary_t& okm [out] output key material
+     * @param   const char* alg [in] algorithm
+     * @param   size_t dlen [in] length
+     * @param   binary_t const& ikm [in] input key material
+     * @param   binary_t const& salt [in] salt
+     * @param   binary_t const& info [in] info
+     * @return  error code (see error.hpp)
+     */
     return_t hmac_kdf(binary_t& derived, const char* alg, size_t dlen, binary_t const& ikm, binary_t const& salt, binary_t const& info);
 
     /**
@@ -70,6 +81,7 @@ class openssl_kdf {
      * @param   const char* alg [in] algorithm
      * @param   binary_t const& salt [in] salt
      * @param   binary_t const& ikm [in] input key material
+     * @return  error code (see error.hpp)
      */
     return_t hmac_kdf_extract(binary_t& prk, const char* alg, binary_t const& salt, binary_t const& ikm);
     /**
@@ -79,6 +91,7 @@ class openssl_kdf {
      * @param   size_t dlen [in] length
      * @param   binary_t const& prk [in] pseudo-random key
      * @param   binary_t const& info [in] info
+     * @return  error code (see error.hpp)
      * @remarks
      */
     return_t hkdf_expand(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info);
@@ -89,11 +102,12 @@ class openssl_kdf {
      * @param   size_t dlen [in] length
      * @param   binary_t const& prk [in] pseudo-random key
      * @param   binary_t const& info [in] info
+     * @return  error code (see error.hpp)
      * @remarks RFC 8152 direct+HKDF-AES-128, direct+HKDF-AES-256
      *          reference https://travis-ci.org/cose-wg/
      *          just HKDF wo extract
      */
-    return_t hkdf_expand_aes(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info);
+    return_t hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info);
     /**
      * @brief   CMAC-based Extract-and-Expand Key Derivation Function (CKDF)
      * @param   binary_t& okm [out] output key material
@@ -102,6 +116,7 @@ class openssl_kdf {
      * @param   binary_t const& ikm [in] input key material
      * @param   binary_t const& salt [in] salt
      * @param   binary_t const& info [in] info
+     * @return  error code (see error.hpp)
      * @remarks
      *          CMAC = CKDF-Extract + CKDF-Expand
      *
@@ -117,6 +132,7 @@ class openssl_kdf {
      * @param   crypt_algorithm_t alg [in] algorithm
      * @param   binary_t const& salt [in] salt
      * @param   binary_t const& ikm [in] input key material
+     * @return  error code (see error.hpp)
      * @desc    RFC 4493 Figure 2.3.  Algorithm AES-CMAC
      */
     return_t cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, binary_t const& salt, binary_t const& ikm);
@@ -127,6 +143,7 @@ class openssl_kdf {
      * @param   size_t dlen [in] length
      * @param   binary_t const& prk [in] pseudo-random key
      * @param   binary_t const& info [in] info
+     * @return  error code (see error.hpp)
      * @desc    RFC 4493 Figure 2.3.  Algorithm AES-CMAC
      */
     return_t cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& prk, binary_t const& info);
@@ -138,6 +155,7 @@ class openssl_kdf {
      * @param   std::string const& password [in]
      * @param   binary_t const& salt [in]
      * @param   int iter [in]
+     * @return  error code (see error.hpp)
      */
     return_t pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, std::string const& password, binary_t const& salt, int iter);
     return_t pbkdf2(binary_t& derived, const char* alg, size_t dlen, std::string const& password, binary_t const& salt, int iter);
@@ -162,9 +180,19 @@ class openssl_kdf {
     // bcrypt - blowfish based... (openssl 3.x deprecates bf)
 
     /**
-     * @brief argon2d/2i/2id openssl-3.2 required
-     * @return error code (see error.hpp)
-     *         not_supported .. openssl-1.1.1, 3.0
+     * @brief   argon2d/2i/2id openssl-3.2 required
+     * @param   binary_t& derived [in]
+     * @param   argon2_t mode [in]
+     * @param   size_t dlen [in]
+     * @param   binary_t const& password [in]
+     * @param   binary_t const& salt [in]
+     * @param   binary_t const& ad [in]
+     * @param   binary_t const& secret [in]
+     * @param   uint32 iteration_cost [inopt] default 3
+     * @param   uint32 parallel_cost [inopt] default 4
+     * @param   uint32 memory_cost [inopt] default 32
+     * @return  error code (see error.hpp)
+     *          not_supported .. openssl-1.1.1, 3.0
      */
     return_t argon2(binary_t& derived, argon2_t mode, size_t dlen, binary_t const& password, binary_t const& salt, binary_t const& ad, binary_t const& secret,
                     uint32 iteration_cost = 3, uint32 parallel_cost = 4, uint32 memory_cost = 32);

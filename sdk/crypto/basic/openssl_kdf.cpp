@@ -175,7 +175,7 @@ return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, b
     return ret;
 }
 
-return_t openssl_kdf::hkdf_expand_aes(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info) {
+return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     EVP_CIPHER_CTX* context = nullptr;

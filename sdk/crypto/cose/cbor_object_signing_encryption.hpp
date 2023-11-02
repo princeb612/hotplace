@@ -201,10 +201,10 @@ class cbor_object_signing_encryption {
         /**
          * @brief   read unprotected (cbor_map) to context
          * @param   cbor_map* data [in]
-         * @param   cose_parts_t& part [out]
+         * @param   cose_body_t& part [out]
          * @return  error code (see error.hpp)
          */
-        return_t parse_unprotected(cbor_map* data, cose_parts_t& part);
+        return_t parse_unprotected(cbor_map* data, cose_body_t& part);
         /**
          * @brief   find
          * @param   int key [in]
@@ -246,19 +246,20 @@ class cbor_object_signing_encryption {
         /**
          * @brief   compose the COSE_KDF_Context
          * @param   cose_context_t* handle [in]
-         * @param   cose_parts_t* parts [in]
+         * @param   cose_body_t* source [in]
          * @param   binary_t& kdf_context [out]
          * @return  error code (see error.hpp)
+         * @desc    AlgorithmID: ... This normally is either a key wrap algorithm identifier or a content encryption algorithm identifier.
          */
-        return_t compose_kdf_context(cose_context_t* handle, cose_parts_t* source, binary_t& kdf_context);
+        return_t compose_kdf_context(cose_context_t* handle, cose_body_t* source, binary_t& kdf_context);
         /**
          * @brief   compose the ToBeSigned
          * @param   cose_context_t* handle [in]
-         * @param   cose_parts_t* parts [in]
+         * @param   cose_body_t* parts [in]
          * @param   binary_t& tobesigned [out]
          * @return  error code (see error.hpp)
          */
-        return_t compose_sig_structure(cose_context_t* handle, cose_parts_t* parts, binary_t& tobesigned);
+        return_t compose_sig_structure(cose_context_t* handle, cose_body_t* parts, binary_t& tobesigned);
         /**
          * @brief   compose the ToMac
          * @param   cose_context_t* handle [in]
@@ -268,20 +269,24 @@ class cbor_object_signing_encryption {
         return_t compose_mac_structure(cose_context_t* handle, binary_t& tomac);
 
        protected:
-        cbor_data* docompose_kdf_context_item(cose_context_t* handle, cose_parts_t* source, cose_key_t key, cose_param_t shared);
+        cbor_data* docompose_kdf_context_item(cose_context_t* handle, cose_body_t* source, cose_key_t key, cose_param_t shared);
 
         return_t doparse_protected(cose_context_t* handle, cbor_object* object);
         return_t doparse_unprotected(cose_context_t* handle, cbor_object* object);
         return_t doparse_payload(cose_context_t* handle, cbor_object* object);
         return_t doparse_singleitem(cose_context_t* handle, cbor_object* object);
         return_t doparse_multiitems(cose_context_t* handle, cbor_object* object);
+        return_t doparse_multiitem(cbor_array* object, cose_body_t& body);
     };
 
    protected:
     /**
      * @brief cek into handle->binarymap[cose_param_t::cose_param_cek]
+     * @param cose_context_t* handle [in]
+     * @param crypto_key* key [in]
+     * @param cose_body_t* item [in] compute cek
      */
-    static return_t process_keyagreement(cose_context_t* handle, crypto_key* key, cose_parts_t* item);
+    return_t process_keyagreement(cose_context_t* handle, crypto_key* key, cose_body_t* item);
 };
 
 typedef cbor_object_signing_encryption COSE;

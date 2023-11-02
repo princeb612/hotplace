@@ -23,20 +23,20 @@ class cbor_object_encryption {
     ~cbor_object_encryption();
 
     /**
-     * @brief   encrypt
+     * @brief   encrypt ("Encrypt0")
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   cose_alg_t method [in]
+     * @param   cose_alg_t method [in] must specify an encryption algoritm (see cose_group_enc_aesgcm/cose_group_enc_aesccm)
      * @param   binary_t const& input [in]
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      */
     return_t encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
     /**
-     * @brief   encrypt
+     * @brief   encrypt ("Encrypt")
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   std::list<cose_alg_t> methods [in]
+     * @param   std::list<cose_alg_t> methods [in] at least one encryption algorithm
      * @param   binary_t const& input [in]
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
@@ -55,7 +55,7 @@ class cbor_object_encryption {
 
    protected:
     return_t dodecrypt(cose_context_t* handle, crypto_key* key, binary_t& output);
-    return_t dodecrypt(cose_context_t* handle, crypto_key* key, cose_parts_t* part, binary_t& output);
+    return_t dodecrypt(cose_context_t* handle, crypto_key* key, cose_body_t* part, binary_t& output);
 };
 
 }  // namespace crypto

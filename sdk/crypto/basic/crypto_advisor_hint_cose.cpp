@@ -23,6 +23,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-128-wrap",
+            16,
         },
     },
     {
@@ -32,6 +33,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-192-wrap",
+            24,
         },
     },
     {
@@ -41,6 +43,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-256-wrap",
+            32,
         },
     },
     {
