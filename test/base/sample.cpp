@@ -96,6 +96,18 @@ void dump_data(const char* text, void* ptr, size_t size) {
 void test_reverse() {
     _test_case.begin("reverse");
 
+    uint64 i64 = t_htoi<uint64>("0001020304050607");
+    uint128 i128 = t_htoi<uint128>("000102030405060708090a0b0c0d0e0f");
+
+    if (is_little_endian()) {
+        uint32 i32 = 7;
+        _test_case.assert(ntohl(i32) == reverse(i32), __FUNCTION__, "32bits");
+        _test_case.assert(ntoh64(i64) == reverse(i64), __FUNCTION__, "64bits");
+        _test_case.assert(ntoh128(i128) == reverse(i128), __FUNCTION__, "128bits");
+    } else {
+        // ntoh ... no effect
+    }
+
 #define do_reverse_test(type, val)               \
     {                                            \
         type var = val;                          \
@@ -110,21 +122,8 @@ void test_reverse() {
     do_reverse_test(uint64, -2);
     do_reverse_test(uint128, 7);
     do_reverse_test(uint128, -2);
-
-    int i = 0;
-    binary_t bin;
-    for (i = 0; i < 8; i++) {
-        bin.push_back(i);
-    }
-    dump_data("8 bytes", &bin[0], bin.size());
-    uint64 i1 = *(uint64*)&bin[0];
-    do_reverse_test(uint64, i1);
-    for (i = 8; i < 16; i++) {
-        bin.push_back(i);
-    }
-    dump_data("16 bytes", &bin[0], bin.size());
-    uint128 i2 = *(uint128*)&bin[0];
-    do_reverse_test(uint128, i2);
+    do_reverse_test(uint64, i64);
+    do_reverse_test(uint128, i128);
 }
 
 void test_endian() {

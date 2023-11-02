@@ -199,7 +199,7 @@ void test_kdf_argon_rfc9106() {
 #endif
 }
 
-void test_kdf_extract_expand() {
+void test_kdf_extract_expand_rfc5869() {
     _test_case.begin("KDF-Extract/Expand");
     openssl_kdf kdf;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -217,7 +217,7 @@ void test_kdf_extract_expand() {
         const char* okm;
     } expand_vector[] = {
         {
-            "Test Case 1",
+            "Test Case 1 - Basic test case with SHA-256",
             "sha256",
             42,
             "0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
@@ -227,7 +227,7 @@ void test_kdf_extract_expand() {
             "0x3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865",
         },
         {
-            "Test Case 2",
+            "Test Case 2 - Test with SHA-256 and longer inputs/outputs",
             "sha256",
             82,
             "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f4041424344454647"
@@ -241,7 +241,7 @@ void test_kdf_extract_expand() {
             "c14c01d5c1f3434f1d87",
         },
         {
-            "Test Case 3",
+            "Test Case 3 - Test with SHA-256 and zero-length salt/info",
             "sha256",
             42,
             "0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
@@ -251,7 +251,7 @@ void test_kdf_extract_expand() {
             "0x8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3454e5f3c738d2d9d201395faa4b61a96c8",
         },
         {
-            "Test Case 4",
+            "Test Case 4 - Basic test case with SHA-1",
             "sha1",
             42,
             "0x0b0b0b0b0b0b0b0b0b0b0b",
@@ -261,7 +261,7 @@ void test_kdf_extract_expand() {
             "0x085a01ea1b10f36933068b56efa5ad81a4f14b822f5b091568a9cdd4f155fda2c22e422478d305f3f896",
         },
         {
-            "Test Case 5",
+            "Test Case 5 - Test with SHA-1 and longer inputs/outputs",
             "sha1",
             82,
             "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f4041424344454647"
@@ -275,7 +275,7 @@ void test_kdf_extract_expand() {
             "00e2cff0d0900b52d3b4",
         },
         {
-            "Test Case 6",
+            "Test Case 6 - Test with SHA-1 and zero-length salt/info",
             "sha1",
             42,
             "0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
@@ -285,7 +285,7 @@ void test_kdf_extract_expand() {
             "0x0ac1af7002b3d761d1e55298da9d0506b9ae52057220a306e07b6b87e8df21d0ea00033de03984d34918",
         },
         {
-            "Test Case 7",
+            "Test Case 7 - Test with SHA-1, salt not provided (defaults to HashLen zero octets), zero-length info",
             "sha1",
             42,
             "0x0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
@@ -326,7 +326,7 @@ void test_kdf_extract_expand() {
     }
 }
 
-void test_ckdf() {
+void test_ckdf_rfc4615() {
     _test_case.begin("CMAC-based Extract-and-Expand Key Derivation Function (CKDF)");
     openssl_kdf kdf;
 
@@ -474,8 +474,8 @@ int main() {
         test_kdf_scrypt_rfc7914();
         test_kdf_argon_rfc9106();
 
-        test_kdf_extract_expand();
-        test_ckdf();
+        test_kdf_extract_expand_rfc5869();
+        test_ckdf_rfc4615();
     }
     __finally2 {
         openssl_thread_cleanup();

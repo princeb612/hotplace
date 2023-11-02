@@ -110,6 +110,29 @@ void test_base16_oddsize() {
     _test_case.assert(66 == bin_test.size(), __FUNCTION__, "odd size");
 }
 
+void dump_base16_rfc(const char* text, const char* input) {
+    basic_stream bs;
+
+    std::string encoded = base16_encode_rfc(input);
+    binary_t decoded = base16_decode(encoded);
+    dump_memory(decoded, &bs, 16, 4);
+    printf("%s\n  input   %s\n  encoded %s\n  decoded\n%s\n", text, input, encoded.c_str(), bs.c_str());
+}
+
+void test_base16_rfc() {
+    _test_case.begin("base16_rfc");
+
+    constexpr char expr1[] = "[227, 197, 117, 252, 2, 219, 233, 68, 180, 225, 77, 219]";  // e3 c5 75 fc 2 db e9 44 b4 e1 4d db
+    constexpr char expr2[] = "00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f";
+    constexpr char expr3[] =
+        "80 81 82 83 84 85 86 87 88 89 8a 8b 8c 8d 8e 8f"
+        "90 91 92 93 94 95 96 97 98 99 9a 9b 9c 9d 9e 9f";
+
+    dump_base16_rfc("case1", expr1);
+    dump_base16_rfc("case2", expr2);
+    dump_base16_rfc("case3", expr3);
+}
+
 void test_base64_routine(const char* source, size_t source_size, int encoding) {
     return_t ret = errorcode_t::success;
     basic_stream bs;
@@ -144,8 +167,9 @@ void test_base64() {
 enum {
     decode_b64u = 1,
     decode_b64 = 2,
-    encode_plaintext = 3,
-    decode_b16 = 4,
+    decode_b16 = 3,
+    encode_plaintext = 4,
+    encode_b16_rfc = 5,
 };
 typedef struct _OPTION {
     int mode;
@@ -170,10 +194,57 @@ void whatsthis(int argc, char** argv) {
     return_t ret = errorcode_t::success;
     cmdline_t<OPTION> cmdline;
 
+    // $ ./test-encode -b64u AQIDBAU
+    //  what u want to know
+    //  < AQIDBAU
+    //    00000000 : 01 02 03 04 05 -- -- -- -- -- -- -- -- -- -- -- | .....
+    //  > b16
+    //    0102030405
+    //  > b64
+    //    AQIDBAU=
+
+    // $ ./test-encode -b64 AQIDBAU=
+    //  what u want to know
+    //  < AQIDBAU=
+    //    00000000 : 01 02 03 04 05 -- -- -- -- -- -- -- -- -- -- -- | .....
+    //  > b16
+    //    0102030405
+    //  > b64u
+    //    AQIDBAU
+
+    //  $ ./test-encode -rfc "[1,2 , 3, 4, 5]"
+    //  what u want to know
+    //  < [1,2 , 3, 4, 5]
+    //    00000000 : 01 02 03 04 05 -- -- -- -- -- -- -- -- -- -- -- | .....
+    //  > b16
+    //    0102030405
+    //  > b64
+    //    AQIDBAU=
+    //  > b64url
+    //    AQIDBAU
+
+    //  ./test-encode -rfc "01:02 : 03:04:05"
+    //  what u want to know
+    //  < 01:02 : 03:04:05
+    //    00000000 : 01 02 03 04 05 -- -- -- -- -- -- -- -- -- -- -- | .....
+    //  > b16
+    //    0102030405
+    //  > b64
+    //    AQIDBAU=
+    //  > b64url
+    //    AQIDBAU
+
+    //
+    //  $ echo AQIDBAU= | base64 -d | xxd
+    //  00000000: 0102 0304 05                             .....
+
+    constexpr char constexpr_helpmsg_rfc[] = "encode base16 from rfc style expression ex. \"[1,2,3,4,5]\" or \"01:02:03:04:05\" or \"01 02 03 04 05\"";
+
     cmdline << cmdarg_t<OPTION>("-b64u", "decode base64url", [&](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
             << cmdarg_t<OPTION>("-b64", "decode base64", [&](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()
-            << cmdarg_t<OPTION>("-t", "plaintext", [&](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
             << cmdarg_t<OPTION>("-b16", "decode base16", [&](OPTION& o, char* param) -> void { o.set(decode_b16, param); }).preced().optional()
+            << cmdarg_t<OPTION>("-t", "plaintext", [&](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
+            << cmdarg_t<OPTION>("-rfc", constexpr_helpmsg_rfc, [&](OPTION& o, char* param) -> void { o.set(encode_b16_rfc, param); }).preced().optional()
             << cmdarg_t<OPTION>("-out", "write to file", [&](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional();
     ret = cmdline.parse(argc, argv);
 
@@ -183,12 +254,17 @@ void whatsthis(int argc, char** argv) {
         basic_stream additional;
         binary_t what;
         binary_t temp;
+        std::string stemp;
         switch (o.mode) {
             case decode_b64u:
                 what = base64_decode(o.content, base64_encoding_t::base64url_encoding);
+                additional << "> b16\n  " << base16_encode(what).c_str() << "\n";
+                additional << "> b64\n  " << base64_encode(what).c_str() << "\n";
                 break;
             case decode_b64:
                 what = base64_decode(o.content, base64_encoding_t::base64_encoding);
+                additional << "> b16\n  " << base16_encode(what).c_str() << "\n";
+                additional << "> b64u\n  " << base64_encode(what, base64_encoding_t::base64url_encoding).c_str() << "\n";
                 break;
             case encode_plaintext:
                 what = convert(o.content);
@@ -199,6 +275,13 @@ void whatsthis(int argc, char** argv) {
                 break;
             case decode_b16:
                 what = base16_decode(o.content);
+                additional << "> b64\n  " << base64_encode(what).c_str() << "\n";
+                additional << "> b64url\n  " << base64_encode(what, base64_encoding_t::base64url_encoding).c_str() << "\n";
+                break;
+            case encode_b16_rfc:
+                stemp = base16_encode_rfc(o.content);
+                what = base16_decode(stemp);
+                additional << "> b16\n  " << stemp.c_str() << "\n";
                 additional << "> b64\n  " << base64_encode(what).c_str() << "\n";
                 additional << "> b64url\n  " << base64_encode(what, base64_encoding_t::base64url_encoding).c_str() << "\n";
                 break;
@@ -235,6 +318,7 @@ int main(int argc, char** argv) {
     test_base16_func();
     test_base16_decode();
     test_base16_oddsize();
+    test_base16_rfc();
 
     _test_case.begin("b64 encoding");
     test_base64();

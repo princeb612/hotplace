@@ -164,6 +164,22 @@ binary_t base16_decode(const char* source, size_t size);
  */
 binary_t base16_decode(std::string const& source);
 
+/**
+ * @brief encode
+ * @example
+ *      // RFC 7516
+ *      // Initialization Vector [227, 197, 117, 252, 2, 219, 233, 68, 180, 225, 77, 219]
+ *      std::string iv = base16_encode_rfc("[227, 197, 117, 252, 2, 219, 233, 68, 180, 225, 77, 219]");
+ *      // RFC 7539
+ *      // Key = 00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f
+ *      std::string key = base16_encode_rfc("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f");
+ *      //  000  80 81 82 83 84 85 86 87 88 89 8a 8b 8c 8d 8e 8f  ................
+ *      //  016  90 91 92 93 94 95 96 97 98 99 9a 9b 9c 9d 9e 9f  ................
+ *      binary_t key = base16_encode_rfc("80 81 82 83 84 85 86 87 88 89 8a 8b 8c 8d 8e 8f"
+ *                                       "90 91 92 93 94 95 96 97 98 99 9a 9b 9c 9d 9e 9f");
+ */
+std::string base16_encode_rfc(std::string const& source);
+
 }  // namespace hotplace
 
 #endif

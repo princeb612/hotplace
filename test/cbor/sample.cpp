@@ -20,6 +20,14 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+typedef struct _OPTION {
+    std::string content;
+
+    _OPTION() {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 void encode_test(variant_t vt, binary_t& bin, std::string expect) {
     return_t ret = errorcode_t::success;
@@ -701,8 +709,13 @@ void test3() {
 }
 
 void whatsthis(int argc, char** argv) {
-    if (argc > 1) {
-        binary_t what = base16_decode(argv[1]);
+    _cmdline->parse(argc, argv);
+    OPTION& option = _cmdline->value();
+
+    if (option.content.empty()) {
+        _cmdline->help();
+    } else {
+        binary_t what = base16_decode(option.content);
         basic_stream diagnostic;
         cbor_reader_context_t* handle = nullptr;
         cbor_reader reader;
@@ -714,7 +727,7 @@ void whatsthis(int argc, char** argv) {
         basic_stream bs;
         dump_memory(what, &bs, 16, 2);
         std::cout << "what u want to know" << std::endl
-                  << "< " << argv[1] << std::endl
+                  << "< " << option.content << std::endl
                   << "> " << diagnostic.c_str() << std::endl
                   << "> dump" << std::endl
                   << bs.c_str() << std::endl;
@@ -725,6 +738,9 @@ int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
+
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-d", "decode CBOR", [&](OPTION& o, char* param) -> void { o.content = param; }).preced().optional();
 
     test1();
     test2();
