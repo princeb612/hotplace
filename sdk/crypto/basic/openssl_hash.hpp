@@ -67,6 +67,9 @@ class openssl_hash : public hash_t {
     virtual return_t open(hash_context_t** handle, const char* algorithm, const unsigned char* key = nullptr, unsigned keysize = 0);
     /**
      * @brief open (HMAC, CMAC)
+     * @param hash_context_t** handle [out]
+     * @param const char* algorithm [in]
+     * @param binary_t const& key [in]
      */
     virtual return_t open(hash_context_t** handle, const char* algorithm, binary_t const& key);
 

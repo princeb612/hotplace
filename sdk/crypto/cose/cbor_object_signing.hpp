@@ -94,8 +94,8 @@ class cbor_object_signing {
     return_t doverify_sign(cose_context_t* handle, crypto_key* key);
     return_t doverify_mac(cose_context_t* handle, crypto_key* key);
 
-    return_t doverify_sign(cose_context_t* handle, crypto_key* key, cose_parts_t* part, binary_t const& signature);
-    return_t doverify_mac(cose_context_t* handle, crypto_key* key, cose_parts_t* part, binary_t const& tag);
+    return_t doverify_sign(cose_context_t* handle, crypto_key* key, cose_body_t* part, binary_t const& signature);
+    return_t doverify_mac(cose_context_t* handle, crypto_key* key, cose_body_t* part, binary_t const& tag);
 };
 
 }  // namespace crypto

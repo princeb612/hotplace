@@ -166,7 +166,7 @@ class openssl_crypt : public crypt_t {
     /**
      * @brief encrypt (GCM/CCM)
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_plain
+     * @param const unsigned char* data_plain [in]
      * @param size_t size_plain [in]
      * @param binary_t& out_encrypte [out]
      * @param binary_t* aad [inopt]

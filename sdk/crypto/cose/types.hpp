@@ -57,10 +57,18 @@ typedef std::map<int, variant_t> cose_variantmap_t;
 typedef std::list<int> cose_orderlist_t;
 typedef std::map<cose_param_t, binary_t> cose_binarymap_t;
 
-typedef struct _cose_parts_t {
-    // sign, verify
-    binary_t bin_protected;
+typedef struct _cose_body_t cose_body_t;
+
+// handle->multiitems[]
+// handle->multiitems[].multiitems[] (RFC 8152 Appendix B two layered)
+struct _cose_body_t {
+    struct _cose_body_t* parent;
+    binary_t bin_protected;  // protected
     binary_t bin_data;
+    binary_t bin_payload;
+    binary_t singleitem;                 // signature, tag, ...
+    std::list<cose_body_t*> multiitems;  // [+recipient], [+signature]
+
     cose_alg_t alg;
     std::string kid;
     const EVP_PKEY* epk;
@@ -68,9 +76,10 @@ typedef struct _cose_parts_t {
     cose_orderlist_t protected_list;
     cose_variantmap_t unprotected_map;
     cose_orderlist_t unprotected_list;
-    cose_binarymap_t binarymap;  // external, unsent, cek, kek, context, aad, secret, tobesigned/tomac
+    cose_binarymap_t binarymap;
 
-    _cose_parts_t() : alg(cose_alg_t::cose_unknown), epk(nullptr) {}
+    _cose_body_t(struct _cose_body_t* p) : parent(p), alg(cose_alg_t::cose_unknown), epk(nullptr) {}
+    ~_cose_body_t() { clear(); }
     void clear_map(cose_variantmap_t& map) {
         cose_variantmap_t::iterator map_iter;
         for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
@@ -86,6 +95,16 @@ typedef struct _cose_parts_t {
         alg = cose_alg_t::cose_unknown;
         bin_protected.clear();
         bin_data.clear();
+
+        bin_payload.clear();
+        std::list<cose_body_t*>::iterator iter;
+        for (iter = multiitems.begin(); iter != multiitems.end(); iter++) {
+            cose_body_t* item = *iter;
+            item->clear();
+            delete item;
+        }
+        multiitems.clear();
+
         clear_map(protected_map);
         clear_map(unprotected_map);
         protected_list.clear();
@@ -95,43 +114,33 @@ typedef struct _cose_parts_t {
             epk = nullptr;
         }
     }
-} cose_parts_t;
+};
 
 typedef struct _cose_context_t {
     cbor_tag_t cbor_tag;
-    cose_parts_t body;
-    binary_t payload;
-    binary_t singleitem;                 // signature, tag, ...
-    std::list<cose_parts_t> multiitems;  // [+recipient], [+signature]
+    cose_body_t* body;
+    cose_binarymap_t binarymap;  // external, unsent, cek, kek, context, aad, secret, tobesigned/tomac
 
     uint32 debug_flag;
     basic_stream debug_stream;
 
-    _cose_context_t() : cbor_tag(cbor_tag_t::cbor_tag_unknown), debug_flag(0) {}
-    ~_cose_context_t() { clearall(); }
+    _cose_context_t() : cbor_tag(cbor_tag_t::cbor_tag_unknown), debug_flag(0) { body = new cose_body_t(nullptr); }
+    ~_cose_context_t() {
+        clearall();
+        if (body) {
+            delete body;
+        }
+    }
     void clearall() {
         clear();
-        body.clearall();
         debug_flag = 0;
         debug_stream.clear();
     }
-    void clear_map(cose_variantmap_t& map) {
-        cose_variantmap_t::iterator map_iter;
-        for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
-            variant_free(map_iter->second);
-        }
-        map.clear();
-    }
     void clear() {
         cbor_tag = cbor_tag_t::cbor_tag_unknown;
-        body.clear();
-        payload.clear();
-        std::list<cose_parts_t>::iterator iter;
-        for (iter = multiitems.begin(); iter != multiitems.end(); iter++) {
-            cose_parts_t& item = *iter;
-            item.clear();
+        if (body) {
+            body->clear();
         }
-        multiitems.clear();
     }
 } cose_context_t;
 
