@@ -32,7 +32,7 @@ tool=(memcheck helgrind drd)
 for item in ${array[@]}; do
     cd $cwd/$item
     binary=./test-$item
-    $binary
+    time $binary
     if [ -z $test_valgrind ]; then
         for tool in ${tool[@]}; do
             option=
