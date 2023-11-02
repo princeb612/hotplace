@@ -218,17 +218,11 @@ void test_chacha20_rfc8439_2_4() {
     basic_stream bs;
     uint32 i = 0;
 
-    key.resize(32);
-    for (i = 0; i < 32; i++) {
-        key[i] = i;
-    }
+    key = base16_decode("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
 
     // openssl EVP_chacha20 specific counter+nonce
-    byte_t nonce_source[12] = {
-        0, 0, 0, 0, 0, 0, 0, 0x4a,
-    };
     uint32 counter = 1;
-    openssl_chacha20_iv(nonce, counter, nonce_source, 12);
+    openssl_chacha20_iv(nonce, counter, base16_decode("000000000000004a00000000"));
 
     const char* block_source = "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
     block << block_source;

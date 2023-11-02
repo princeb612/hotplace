@@ -70,6 +70,26 @@ TYPE t_atoi(std::string const& in) {
     return res;
 }
 
+template <typename T>
+T t_htoi(const char* hex) {
+    T value = 0;
+    const char* p = hex;
+    char c = 0;
+    int i = 0;
+    while (c = *p++) {
+        value <<= 4;
+        if ('0' <= c && c <= '9') {
+            i = c - '0';
+        } else if ('A' <= c && c <= 'F') {
+            i = c - 'A' + 10;
+        } else if ('a' <= c && c <= 'f') {
+            i = c - 'a' + 10;
+        }
+        value += i;
+    }
+    return value;
+}
+
 int128 atoi128(std::string const& in);
 uint128 atou128(std::string const& in);
 

@@ -18,20 +18,6 @@ namespace hotplace {
 namespace io {
 
 #if defined _MBCS || defined MBCS
-void replace(std::string& source, std::string const& a, std::string const& b)
-#elif defined _UNICODE || defined UNICODE
-void replace(std::wstring& source, std::wstring const& a, std::wstring const& b)
-#endif
-{
-    size_t i = source.find(a);
-
-    while (std::string::npos != i) {
-        source.replace(i, a.size(), b);
-        i = source.find(a, i + b.size());
-    }
-}
-
-#if defined _MBCS || defined MBCS
 std::string tokenize(std::string const& source, std::string const& tokens, size_t& pos)
 #elif defined _UNICODE || defined UNICODE
 std::wstring tokenize(std::wstring const& source, std::wstring const& tokens, size_t& pos)

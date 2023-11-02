@@ -35,6 +35,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/bufferio.hpp>
 #include <sdk/base/stream/printf.hpp>
+#include <sdk/base/string/string.hpp>
 #include <sdk/base/system/atomic.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/datetime.hpp>
