@@ -59,6 +59,14 @@ typedef std::map<cose_param_t, binary_t> cose_binarymap_t;
 
 typedef struct _cose_body_t cose_body_t;
 
+static inline void cose_variantmap_free(cose_variantmap_t& map) {
+    cose_variantmap_t::iterator map_iter;
+    for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
+        variant_free(map_iter->second);
+    }
+    map.clear();
+}
+
 // handle->multiitems[]
 // handle->multiitems[].multiitems[] (RFC 8152 Appendix B two layered)
 struct _cose_body_t {
@@ -80,13 +88,7 @@ struct _cose_body_t {
 
     _cose_body_t(struct _cose_body_t* p) : parent(p), alg(cose_alg_t::cose_unknown), epk(nullptr) {}
     ~_cose_body_t() { clear(); }
-    void clear_map(cose_variantmap_t& map) {
-        cose_variantmap_t::iterator map_iter;
-        for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
-            variant_free(map_iter->second);
-        }
-        map.clear();
-    }
+
     void clearall() {
         clear();
         binarymap.clear();
@@ -105,8 +107,8 @@ struct _cose_body_t {
         }
         multiitems.clear();
 
-        clear_map(protected_map);
-        clear_map(unprotected_map);
+        cose_variantmap_free(protected_map);
+        cose_variantmap_free(unprotected_map);
         protected_list.clear();
         unprotected_list.clear();
         if (epk) {

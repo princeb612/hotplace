@@ -978,6 +978,7 @@ return_t cbor_object_signing_encryption::composer::parse_unprotected(cbor_map* r
                     }
                 }
             }
+            cose_variantmap_free(dh_key);
         }
     }
     __finally2 {
