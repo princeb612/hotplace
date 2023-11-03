@@ -54,6 +54,7 @@ typedef struct _test_vector_rfc7539_t {
     const char* iv;
     const char* msg;
     const char* aad;
+    const char* tag;
     const char* expect;
 } test_vector_rfc7539_t;
 

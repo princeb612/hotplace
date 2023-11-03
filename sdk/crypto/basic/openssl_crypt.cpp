@@ -1275,8 +1275,8 @@ return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, 
             constant = reverse(counter);
         }
 
-        if(nonce_size > 12) {
-           nonce_size = 12; 
+        if (nonce_size > 12) {
+            nonce_size = 12;
         }
 
         iv.resize(4);
