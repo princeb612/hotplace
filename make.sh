@@ -49,6 +49,7 @@ do_clangformat=0
 do_ctest=0
 do_redist=0
 do_test=0
+do_opt=0
 
 CXXFLAGS=''
 SUPPORT_PCH=0
@@ -61,12 +62,14 @@ if [ ${#args[@]} -ne 0 ]; then
             do_ctest=1
         elif [ $arg = 'redist' ]; then
             do_redist=1
+        elif [ $arg = 'opt' ]; then
+            CXXFLAGS='-O2 '$CXXFLAGS
         elif [ $arg = 'pch' ]; then
             SUPPORT_PCH=1
         elif [ $arg = 'test' ]; then
             do_test=1
         elif [ $arg = 'debug' ]; then
-            CXXFLAGS='-DDEBUG -g'
+            CXXFLAGS='-DDEBUG -g '$CXXFLAGS
         fi
     done
 fi
