@@ -307,6 +307,7 @@ const test_vector_rfc7539_t test_vector_rfc7539[] = {
         "000000000000004a00000000",
         "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.",
         "",
+        "",
         "6e 2e 35 9a 25 68 f9 80 41 ba 07 28 dd 0d 69 81"
         "e9 7e 7a ec 1d 43 60 c2 0a 27 af cc fd 9f ae 0b"
         "f9 1b 65 c5 52 47 33 ab 8f 59 3d ab cd 62 b3 57"
@@ -325,6 +326,7 @@ const test_vector_rfc7539_t test_vector_rfc7539[] = {
         "40 41 42 43 44 45 46 47",
         "Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.",
         "50 51 52 53 c0 c1 c2 c3 c4 c5 c6 c7",
+        "1a:e1:0b:59:4f:09:e2:6a:7e:90:2e:cb:d0:60:06:91",
         "d3 1a 8d 34 64 8e 60 db 7b 86 af bc 53 ef 7e c2"
         "a4 ad ed 51 29 6e 08 fe a9 e2 b5 a7 36 ee 62 d6"
         "3d be a4 5e 8c a9 67 12 82 fa fb 69 da 92 72 8b"

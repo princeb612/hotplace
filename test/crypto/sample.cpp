@@ -207,65 +207,6 @@ void test_crypt_algorithms(uint32 cooltime, uint32 unitsize) {
     }
 }
 
-void test_crypt(const char* text, const char* alg, binary_t const& key, uint32 counter, binary_t const& iv, binary_t const& input, binary_t const& aad,
-                binary_t const& expect) {
-    return_t ret = errorcode_t::success;
-
-    // don't check null parameter
-
-    openssl_crypt crypt;
-    binary_t encrypted;
-    binary_t nonce;
-    binary_t tag;
-    basic_stream bs;
-
-    openssl_chacha20_iv(nonce, counter, iv);
-    ret = crypt.encrypt(alg, key, nonce, input, encrypted, aad, tag);
-    if (errorcode_t::success == ret) {
-        if (encrypted != expect) {
-            ret = errorcode_t::mismatch;
-        }
-    }
-
-    {
-        test_case_notimecheck notimecheck(_test_case);
-
-        dump_memory(key, &bs, 16, 2);
-        printf("key\n%s\n", bs.c_str());
-        dump_memory(iv, &bs, 16, 2);
-        printf("iv\n%s\n", bs.c_str());
-        dump_memory(nonce, &bs, 16, 2);
-        printf("nonce w/ counter %i\n%s\n", counter, bs.c_str());
-        dump_memory(aad, &bs, 16, 2);
-        printf("aad\n%s\n", bs.c_str());
-        dump_memory(input, &bs, 16, 2);
-        printf("input\n%s\n", bs.c_str());
-        dump_memory(encrypted, &bs, 16, 2);
-        printf("encrypted\n%s\n", bs.c_str());
-        dump_memory(expect, &bs, 16, 2);
-        printf("expect\n%s\n", bs.c_str());
-    }
-
-    _test_case.test(ret, __FUNCTION__, "%s %s", text, alg);
-}
-
-void test_rfc7539() {
-    _test_case.begin("RFC 7539/8439");
-
-    // RFC 7539 2.4.  The ChaCha20 Encryption Algorithm
-    // RFC 8439 2.4.  The ChaCha20 Encryption Algorithm
-    // RFC 7539 2.8.  AEAD Construction
-    // RFC 8439 2.8.  AEAD Construction
-
-    for (size_t i = 0; i < sizeof_test_vector_rfc7539; i++) {
-        const test_vector_rfc7539_t* vector = test_vector_rfc7539 + i;
-        binary_t block;
-        block << vector->msg;
-        test_crypt(vector->text, vector->alg, base16_decode_rfc(vector->key), vector->counter, base16_decode_rfc(vector->iv), block,
-                   base16_decode_rfc(vector->aad), base16_decode_rfc(vector->expect));
-    }
-}
-
 void test_random() {
     _test_case.begin("random");
 
@@ -283,10 +224,16 @@ void test_random() {
     _test_case.test(ret, __FUNCTION__, "random loop %i times", times);
 }
 
-void test_keywrap_routine(crypt_algorithm_t alg, binary_t const& kek, binary_t const& key, binary_t const& expect, const char* msg) {
+void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
     return_t ret = errorcode_t::success;
 
     _test_case.reset_time();
+
+    crypt_algorithm_t alg = vector->alg;
+    binary_t const& kek = base16_decode(vector->kek);
+    binary_t const& key = base16_decode(vector->key);
+    binary_t const& expect = base16_decode(vector->expect);
+    const char* msg = vector->message;
 
     openssl_crypt crypt;
     crypt_context_t* handle = nullptr;
@@ -336,8 +283,80 @@ void test_keywrap_rfc3394() {
     _test_case.begin("keywrap");
 
     for (int i = 0; i < sizeof_test_vector_rfc3394; i++) {
-        const test_vector_rfc3394_t* vector = test_vector_rfc3394 + i;
-        test_keywrap_routine(vector->alg, base16_decode(vector->kek), base16_decode(vector->key), base16_decode(vector->expect), vector->message);
+        test_keywrap_rfc3394_testvector(test_vector_rfc3394 + i);
+    }
+}
+
+void test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
+    return_t ret = errorcode_t::success;
+
+    const char* text = vector->text;
+    const char* alg = vector->alg;
+    binary_t const& key = base16_decode_rfc(vector->key);
+    uint32 counter = vector->counter;
+    binary_t const& iv = base16_decode_rfc(vector->iv);
+    binary_t const& input = convert(vector->msg);
+    binary_t const& aad = base16_decode_rfc(vector->aad);
+    binary_t const& expect = base16_decode_rfc(vector->expect);
+    binary_t const& tag1 = base16_decode_rfc(vector->tag);
+
+    openssl_crypt crypt;
+    binary_t encrypted;
+    binary_t nonce;
+    binary_t tag;
+    basic_stream bs;
+
+    openssl_chacha20_iv(nonce, counter, iv);
+    ret = crypt.encrypt(alg, key, nonce, input, encrypted, aad, tag);
+    if (errorcode_t::success == ret) {
+        if (tag.size()) {
+            if (tag != tag) {
+                ret = errorcode_t::mismatch;
+            }
+        }
+        if (encrypted != expect) {
+            ret = errorcode_t::mismatch;
+        }
+    }
+
+    {
+        test_case_notimecheck notimecheck(_test_case);
+
+        dump_memory(key, &bs, 16, 2);
+        printf("key\n%s\n", bs.c_str());
+        dump_memory(iv, &bs, 16, 2);
+        printf("iv\n%s\n", bs.c_str());
+        dump_memory(nonce, &bs, 16, 2);
+        printf("nonce w/ counter %i\n%s\n", counter, bs.c_str());
+        if (aad.size()) {
+            dump_memory(aad, &bs, 16, 2);
+            printf("aad\n%s\n", bs.c_str());
+        }
+        if (tag.size()) {
+            dump_memory(tag, &bs, 16, 2);
+            printf("tag\n%s\n", bs.c_str());
+        }
+        dump_memory(input, &bs, 16, 2);
+        printf("input\n%s\n", bs.c_str());
+        dump_memory(encrypted, &bs, 16, 2);
+        printf("encrypted\n%s\n", bs.c_str());
+        dump_memory(expect, &bs, 16, 2);
+        printf("expect\n%s\n", bs.c_str());
+    }
+
+    _test_case.test(ret, __FUNCTION__, "%s %s", text, alg);
+}
+
+void test_chacha20_rfc7539() {
+    _test_case.begin("RFC 7539/8439");
+
+    // RFC 7539 2.4.  The ChaCha20 Encryption Algorithm
+    // RFC 8439 2.4.  The ChaCha20 Encryption Algorithm
+    // RFC 7539 2.8.  AEAD Construction
+    // RFC 8439 2.8.  AEAD Construction
+
+    for (size_t i = 0; i < sizeof_test_vector_rfc7539; i++) {
+        test_chacha20_rfc7539_testvector(test_vector_rfc7539 + i);
     }
 }
 
@@ -360,7 +379,7 @@ void test_keywrap_rfc3394() {
 // https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
 // 2.1.  Encryption
 // Appendix A.  CBC Encryption and Decryption
-return_t aead_aes_cbc_hmac_sha2(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
+return_t test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -487,34 +506,39 @@ return_t aead_aes_cbc_hmac_sha2(const test_vector_aead_aes_cbc_hmac_sha2_t* vect
     return ret;
 }
 
-void test_aead_aes_cbc_hmac_sha2() {
-    _test_case.begin("Authenticated Encryption with AES-CBC and HMAC-SHA");
-
+void test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
     return_t ret = errorcode_t::success;
     basic_stream bs;
     openssl_aead aead;
+
+    binary_t q;
+    binary_t t;
+    ret = aead.aes_cbc_hmac_sha2_encrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a),
+                                         base16_decode(vector->p), q, t);
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        dump_memory(q, &bs);
+        printf("%s\n", bs.c_str());
+    }
+    _test_case.assert(base16_decode(vector->q) == q, __FUNCTION__, "encrypt %s", vector->text);
+    binary_t p;
+    ret = aead.aes_cbc_hmac_sha2_decrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a), q, p,
+                                         t);
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        dump_memory(p, &bs);
+        printf("%s\n", bs.c_str());
+    }
+    _test_case.assert(base16_decode(vector->p) == p, __FUNCTION__, "decrypt %s", vector->text);
+}
+
+void test_aead_aes_cbc_hmac_sha2() {
+    _test_case.begin("Authenticated Encryption with AES-CBC and HMAC-SHA");
+
     for (int i = 0; i < sizeof_test_vector_aead_aes_cbc_hmac_sha2; i++) {
         const test_vector_aead_aes_cbc_hmac_sha2_t* vector = test_vector_aead_aes_cbc_hmac_sha2 + i;
-        aead_aes_cbc_hmac_sha2(vector);
-        binary_t q;
-        binary_t t;
-        ret = aead.aes_cbc_hmac_sha2_encrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a),
-                                             base16_decode(vector->p), q, t);
-        {
-            test_case_notimecheck notimecheck(_test_case);
-            dump_memory(q, &bs);
-            printf("%s\n", bs.c_str());
-        }
-        _test_case.assert(base16_decode(vector->q) == q, __FUNCTION__, "encrypt %s", vector->text);
-        binary_t p;
-        ret = aead.aes_cbc_hmac_sha2_decrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a), q,
-                                             p, t);
-        {
-            test_case_notimecheck notimecheck(_test_case);
-            dump_memory(p, &bs);
-            printf("%s\n", bs.c_str());
-        }
-        _test_case.assert(base16_decode(vector->p) == p, __FUNCTION__, "decrypt %s", vector->text);
+        test_aead_aes_cbc_hmac_sha2_testvector1(vector);
+        test_aead_aes_cbc_hmac_sha2_testvector2(vector);
     }
 }
 
@@ -537,7 +561,7 @@ int main() {
 
         test_keywrap_rfc3394();
 
-        test_rfc7539();
+        test_chacha20_rfc7539();
 
         test_aead_aes_cbc_hmac_sha2();
     }
