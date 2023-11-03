@@ -309,7 +309,7 @@ void test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
     openssl_chacha20_iv(nonce, counter, iv);
     ret = crypt.encrypt(alg, key, nonce, input, encrypted, aad, tag);
     if (errorcode_t::success == ret) {
-        if (tag.size()) {
+        if (tag1.size() && tag.size()) {
             if (tag != tag) {
                 ret = errorcode_t::mismatch;
             }
@@ -340,8 +340,10 @@ void test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
         printf("input\n%s\n", bs.c_str());
         dump_memory(encrypted, &bs, 16, 2);
         printf("encrypted\n%s\n", bs.c_str());
-        dump_memory(expect, &bs, 16, 2);
-        printf("expect\n%s\n", bs.c_str());
+        if (expect.size()) {
+            dump_memory(expect, &bs, 16, 2);
+            printf("expect\n%s\n", bs.c_str());
+        }
     }
 
     _test_case.test(ret, __FUNCTION__, "%s %s", text, alg);

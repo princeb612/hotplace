@@ -1280,7 +1280,7 @@ return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, 
         }
 
         iv.resize(4);
-        memcpy(&iv[0], (byte_t*)&constant, 4);
+        memcpy(&iv[0], (byte_t*)&constant, sizeof(counter));
         iv.insert(iv.end(), nonce, nonce + nonce_size);
     }
     __finally2 {

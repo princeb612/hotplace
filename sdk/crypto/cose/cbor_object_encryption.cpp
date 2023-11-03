@@ -78,7 +78,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    std::set<bool> results;
+    std::set<return_t> results;
     cbor_object_signing_encryption cose;
     cbor_object_signing_encryption::composer composer;
     // const EVP_PKEY* pkey = nullptr;
@@ -110,7 +110,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
         if (0 == size_multiitems) {
             cose.process_keyagreement(handle, key, nullptr);
             check = dodecrypt(handle, key, nullptr, output);
-            results.insert((errorcode_t::success == check) ? true : false);
+            results.insert(check);
         } else {
             std::list<cose_body_t*>::iterator iter;
             for (iter = body->multiitems.begin(); iter != body->multiitems.end(); iter++) {
@@ -124,13 +124,15 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
 
                 cose.process_keyagreement(handle, key, item);  // CEK
                 check = dodecrypt(handle, key, item, output);
-                results.insert((errorcode_t::success == check) ? true : false);
+                results.insert(check);
             }
         }
 
-        if ((1 == results.size()) && (true == *results.begin())) {
-            result = true;
-            ret = errorcode_t::success;
+        if (1 == results.size()) {
+            ret = *results.begin();
+            if (errorcode_t::success == ret) {
+                result = true;
+            }
         } else {
             ret = errorcode_t::error_verify;
         }
@@ -245,9 +247,8 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             };
             ret = crypt.decrypt(hint->enc.algname, cek, iv, &body->bin_payload[0], enc_size, output, aad, tag, options);
         } else if (cose_group_t::cose_group_enc_chacha20_poly1305 == group) {
-            // TEST FAILED - counter ??
-            size_t enc_size = 0;
-            split(body->bin_payload, enc_size, tag, hint->enc.tsize);
+            // size_t enc_size = 0;
+            // split(body->bin_payload, enc_size, tag, hint->enc.tsize);
 
             // RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
             // RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
@@ -262,10 +263,28 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             //        tag = poly1305_mac(mac_data, otk)
             //        return (ciphertext, tag)
             // RFC 8152 10.3. ChaCha20 and Poly1305
-            uint32 counter = 0;
-            binary_t chacha20iv;
-            openssl_chacha20_iv(chacha20iv, counter, iv);
-            ret = crypt.decrypt(hint->enc.algname, cek, chacha20iv, &body->bin_payload[0], enc_size, output, aad, tag);
+
+            // how to encrypt wo counter ?
+
+            // EVP_CIPHER::(*init) chacha_init_key @openssl
+            // EVP_CIPHER::(*do_cipher) chacha_cipher @openssl
+            // [0..3] key setup
+            // [4..11] key
+            // [12..15] counter (fixed)
+            //    \- ChaCha20_ctr32 @openssl-1.1.1, 3.0, 3.1, 3.2(alpha)
+
+            // cf. libsodium
+            // [0..3] key setup
+            // [4..11] key
+            // [12] counter+0   , counter
+            // [13] counter+4   , iv+0
+            // [14] iv+0        , iv+4
+            // [15] iv+4        , iv+8
+            //        \             \- crypto_aead_chacha20poly1305_ietf_encrypt/decrypt @libsodium
+            //         \- crypto_aead_chacha20poly1305_encrypt/decrypt @libsodium
+
+            ret = errorcode_t::not_supported;
+
             if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
                 handle->debug_flag |= cose_debug_chacha20_poly1305;
             }
