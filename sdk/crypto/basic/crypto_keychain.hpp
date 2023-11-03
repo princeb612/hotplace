@@ -635,6 +635,19 @@ class crypto_keychain {
     return_t add_oct_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* k, crypto_use_t use = crypto_use_t::use_any);
     return_t add_oct_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* k, crypto_use_t use = crypto_use_t::use_any);
 
+    /**
+     * @brief   return key
+     * @param   crypto_key* key [in]
+     * @param   std::string const& kid [in]
+     * @param   crypto_kty_t kty [in]
+     * @param   return_t& code [out]
+     * @remarks
+     *          return key, errorcode_t::success       : kid found
+     *          return key, errorcode_t::inaccurate    : not found kid, but kty exists
+     *          return nullptr, errorcode_t::not_exist : not exist kid nor kty
+     */
+    const EVP_PKEY* choose(crypto_key* key, std::string const& kid, crypto_kty_t kty, return_t& code);
+
    protected:
 };
 

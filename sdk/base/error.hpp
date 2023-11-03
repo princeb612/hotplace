@@ -238,7 +238,7 @@ enum errorcode_t {
     /* 0xef010029 4009820201 */ reserved,
     /* 0xef01002a 4009820202 */ suspicious,
     /* 0xef01002b 4009820203 */ unknown,
-    /* 0xef01002c 4009820204 */ reserved21,
+    /* 0xef01002c 4009820204 */ inaccurate,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,

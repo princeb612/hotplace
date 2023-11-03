@@ -111,7 +111,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             binary_t tobesigned;
             composer.compose_sig_structure(handle, item, tobesigned);
             openssl_sign signprocessor;
-            signprocessor.sign(pkey, sig, tobesigned, item->bin_data);  // signature
+            signprocessor.sign(pkey, sig, tobesigned, item->bin_payload);  // signature
 
             body->multiitems.push_back(item);
 
@@ -119,7 +119,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
 
             switch (method) {
                 case cose_alg_t::cose_hs256_64:
-                    item->bin_data.resize(64 >> 3);
+                    item->bin_payload.resize(64 >> 3);
                     break;
                 default:
                     break;
@@ -214,7 +214,7 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
         composer.build_unprotected(&cbor_sign_unprotected, item->unprotected_map);
 
         cbor_array* cbor_signature = new cbor_array();
-        *cbor_signature << new cbor_data(item->bin_protected) << cbor_sign_unprotected << new cbor_data(item->bin_data);
+        *cbor_signature << new cbor_data(item->bin_protected) << cbor_sign_unprotected << new cbor_data(item->bin_payload);
 
         *cbor_signatures << cbor_signature;
     }
@@ -246,7 +246,7 @@ return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* 
             for (iter = body->multiitems.begin(); iter != body->multiitems.end(); iter++) {
                 cose_body_t* item = *iter;
 
-                check = doverify_sign(handle, key, item, item->bin_data);
+                check = doverify_sign(handle, key, item, item->bin_payload);
                 results.insert((errorcode_t::success == check) ? true : false);
             }
         }
@@ -369,7 +369,7 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
                 cose_body_t* item = *iter;
 
                 cose.process_keyagreement(handle, key, item);
-                check = doverify_mac(handle, key, item, item->bin_data);
+                check = doverify_mac(handle, key, item, item->bin_payload);
                 results.insert((errorcode_t::success == check) ? true : false);
             }
         }
