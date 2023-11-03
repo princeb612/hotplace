@@ -67,13 +67,9 @@ static inline void cose_variantmap_free(cose_variantmap_t& map) {
     map.clear();
 }
 
-// handle->multiitems[]
-// handle->multiitems[].multiitems[] (RFC 8152 Appendix B two layered)
 struct _cose_body_t {
     struct _cose_body_t* parent;
-    binary_t bin_protected;  // protected
-    binary_t bin_data;
-    binary_t bin_payload;
+    binary_t bin_protected;              // protected
     binary_t singleitem;                 // signature, tag, ...
     std::list<cose_body_t*> multiitems;  // [+recipient], [+signature]
 
@@ -85,6 +81,7 @@ struct _cose_body_t {
     cose_variantmap_t unprotected_map;
     cose_orderlist_t unprotected_list;
     cose_binarymap_t binarymap;
+    binary_t bin_payload;
 
     _cose_body_t(struct _cose_body_t* p) : parent(p), alg(cose_alg_t::cose_unknown), epk(nullptr) {}
     ~_cose_body_t() { clear(); }
@@ -96,7 +93,6 @@ struct _cose_body_t {
     void clear() {
         alg = cose_alg_t::cose_unknown;
         bin_protected.clear();
-        bin_data.clear();
 
         bin_payload.clear();
         std::list<cose_body_t*>::iterator iter;

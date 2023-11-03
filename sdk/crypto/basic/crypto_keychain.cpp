@@ -1433,5 +1433,25 @@ return_t crypto_keychain::add_oct_b16(crypto_key* crypto_key, const char* kid, c
     return add_oct(crypto_key, kid, alg, base16_decode(k), use);
 }
 
+const EVP_PKEY* crypto_keychain::choose(crypto_key* key, std::string const& kid, crypto_kty_t kty, return_t& code) {
+    const EVP_PKEY* pkey = nullptr;
+    code = errorcode_t::not_exist;
+    if (key) {
+        if (kid.empty()) {
+            std::string selected_kid;
+            pkey = key->select(selected_kid, kty);
+            if (pkey) {
+                code = errorcode_t::inaccurate;
+            }
+        } else {
+            pkey = key->find(kid.c_str(), kty);
+            if (pkey) {
+                code = errorcode_t::success;
+            }
+        }
+    }
+    return pkey;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

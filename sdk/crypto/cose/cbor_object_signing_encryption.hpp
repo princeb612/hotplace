@@ -287,6 +287,9 @@ class cbor_object_signing_encryption {
      * @param cose_body_t* item [in] compute cek
      */
     return_t process_keyagreement(cose_context_t* handle, crypto_key* key, cose_body_t* item);
+    return_t preprocess_keyagreement(cose_context_t* handle, crypto_key* key, cose_body_t* item);
+
+    return_t get_algkey(cose_context_t* handle, cose_body_t* item, int& alg, std::string& kid);
 };
 
 typedef cbor_object_signing_encryption COSE;
