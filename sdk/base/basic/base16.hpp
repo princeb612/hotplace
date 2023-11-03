@@ -179,6 +179,7 @@ binary_t base16_decode(std::string const& source);
  *                                       "90 91 92 93 94 95 96 97 98 99 9a 9b 9c 9d 9e 9f");
  */
 std::string base16_encode_rfc(std::string const& source);
+binary_t base16_decode_rfc(std::string const& source);
 
 }  // namespace hotplace
 

@@ -268,9 +268,9 @@ std::string base16_encode_rfc(std::string const& source) {
     std::string inpart = source;
     std::string outpart;
 
-    ltrim(rtrim(inpart));
-
     if (false == inpart.empty()) {
+        ltrim(rtrim(inpart));
+
         // pattern 1 [ decimal, decimal, ..., decimal ]
         if (('[' == inpart[0]) && ends_with(inpart, "]")) {
             replace(inpart, "[", "");
@@ -305,6 +305,50 @@ std::string base16_encode_rfc(std::string const& source) {
             replace(inpart, "\n", "");
             replace(inpart, "\xa", "");
             outpart = inpart;
+        }
+    }
+    return outpart;
+}
+
+binary_t base16_decode_rfc(std::string const& source) {
+    std::string inpart = source;
+    binary_t outpart;
+
+    if (false == inpart.empty()) {
+        ltrim(rtrim(inpart));
+
+        // pattern 1 [ decimal, decimal, ..., decimal ]
+        if (('[' == inpart[0]) && ends_with(inpart, "]")) {
+            replace(inpart, "[", "");
+            replace(inpart, "]", "");
+            replace(inpart, " ", "");
+            replace(inpart, "\t", "");
+            replace(inpart, "\r", "");
+            replace(inpart, "\n", "");
+            replace(inpart, "\xa", "");
+            split_context_t* handle = nullptr;
+            size_t count = 0;
+            std::string data;
+            split_begin(&handle, inpart.c_str(), ",");
+            split_count(handle, count);
+            for (size_t i = 0; i < count; i++) {
+                split_get(handle, i, data);
+                int value = atoi(data.c_str());
+                if (value < 256) {
+                    outpart.push_back((byte_t)value);
+                }
+            }
+            split_end(handle);
+        }
+        // pattern 2 hex:hex:...:hex
+        else {
+            replace(inpart, ":", "");
+            replace(inpart, " ", "");
+            replace(inpart, "\t", "");
+            replace(inpart, "\r", "");
+            replace(inpart, "\n", "");
+            replace(inpart, "\xa", "");
+            outpart = base16_decode(inpart);
         }
     }
     return outpart;

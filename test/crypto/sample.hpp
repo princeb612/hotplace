@@ -46,4 +46,18 @@ typedef struct _test_vector_aead_aes_cbc_hmac_sha2_t {
 extern const test_vector_aead_aes_cbc_hmac_sha2_t test_vector_aead_aes_cbc_hmac_sha2[];
 extern const size_t sizeof_test_vector_aead_aes_cbc_hmac_sha2;
 
+typedef struct _test_vector_rfc7539_t {
+    const char* text;
+    const char* alg;
+    const char* key;
+    int counter;
+    const char* iv;
+    const char* msg;
+    const char* aad;
+    const char* expect;
+} test_vector_rfc7539_t;
+
+extern const test_vector_rfc7539_t test_vector_rfc7539[];
+extern const size_t sizeof_test_vector_rfc7539;
+
 #endif

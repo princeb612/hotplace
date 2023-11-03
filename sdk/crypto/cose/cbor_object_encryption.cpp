@@ -119,11 +119,11 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
                 std::list<cose_body_t*>::iterator layered_iter;
                 for (layered_iter = item->multiitems.begin(); layered_iter != item->multiitems.end(); layered_iter++) {
                     cose_body_t* layered_item = *layered_iter;
-                    cose.process_keyagreement(handle, key, layered_item);
+                    cose.process_keyagreement(handle, key, layered_item);  // KEK
                 }
 
-                cose.process_keyagreement(handle, key, item);
-                check = dodecrypt(handle, key, item, output);  // w/ CEK
+                cose.process_keyagreement(handle, key, item);  // CEK
+                check = dodecrypt(handle, key, item, output);
                 results.insert((errorcode_t::success == check) ? true : false);
             }
         }
@@ -144,7 +144,6 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption::composer composer;
-    // int enc_alg = 0;
     openssl_crypt crypt;
 
     __try2 {
@@ -233,9 +232,6 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             split(body->bin_payload, enc_size, tag, hint->enc.tsize);
 
             // RFC 8152 10.1.  AES GCM
-            // crypt.open(&crypt_handle, hint->enc.algname, cek, iv);
-            // ret = crypt.decrypt2(crypt_handle, &body->bin_payload[0], enc_size, output, &aad, &tag);
-            // crypt.close(crypt_handle);
             ret = crypt.decrypt(hint->enc.algname, cek, iv, &body->bin_payload[0], enc_size, output, aad, tag);
 
         } else if (cose_group_t::cose_group_enc_aesccm == group) {
@@ -243,10 +239,6 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             split(body->bin_payload, enc_size, tag, hint->enc.tsize);
 
             // RFC 8152 10.2.  AES CCM - explains about L and M parameters
-            // crypt.open(&crypt_handle, hint->enc.algname, cek, iv);
-            // crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_lsize, hint->enc.lsize);
-            // ret = crypt.decrypt2(crypt_handle, &body->bin_payload[0], enc_size, output, &aad, &tag);
-            // crypt.close(crypt_handle);
             encrypt_option_t options[] = {
                 {crypt_ctrl_t::crypt_ctrl_lsize, hint->enc.lsize},
                 {},
@@ -273,9 +265,6 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             uint32 counter = 0;
             binary_t chacha20iv;
             openssl_chacha20_iv(chacha20iv, counter, iv);
-            // crypt.open(&crypt_handle, hint->enc.algname, cek, chacha20iv);
-            // ret = crypt.decrypt2(crypt_handle, &body->bin_payload[0], enc_size, output, &aad, &tag);
-            // crypt.close(crypt_handle);
             ret = crypt.decrypt(hint->enc.algname, cek, chacha20iv, &body->bin_payload[0], enc_size, output, aad, tag);
             if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
                 handle->debug_flag |= cose_debug_chacha20_poly1305;
