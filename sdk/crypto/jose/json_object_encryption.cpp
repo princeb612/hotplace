@@ -274,7 +274,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                 __leave2;
             }
 
-            if (crypto_kty_t::kty_hmac == alg_hint->kty) {
+            if (crypto_kty_t::kty_oct == alg_hint->kty) {
                 /* EVP_KEY_HMAC key data and length */
                 crypto_kty_t kty;
                 crypto_key::get_privkey(pkey, kty, oct, true);
@@ -526,7 +526,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                 __leave2;
             }
 
-            if (crypto_kty_t::kty_hmac == alg_hint->kty) {
+            if (crypto_kty_t::kty_oct == alg_hint->kty) {
                 /* EVP_KEY_HMAC key data and length */
                 // size_t key_length = 0;
                 // EVP_PKEY_get_raw_private_key(pkey, nullptr, &key_length);

@@ -19,17 +19,13 @@
 namespace hotplace {
 namespace crypto {
 
-typedef struct _crypto_key_object_t {
-    const EVP_PKEY* pkey;
-    std::string kid;
-    uint32 use;      // crypto_use_t
-    uint32 keybits;  // todo
-    std::string alg;
-
-    _crypto_key_object_t() : pkey(nullptr), use(0), keybits(0) {
+class crypto_key_object {
+   public:
+    crypto_key_object() : pkey(nullptr), use(0) {
         // do nothing
     }
-    _crypto_key_object_t(const EVP_PKEY* _key, crypto_use_t _use, const char* _kid, const char* _alg) : pkey(_key), use(_use), keybits(0) {
+
+    crypto_key_object(const EVP_PKEY* _key, crypto_use_t _use, const char* _kid = nullptr, const char* _alg = nullptr) : pkey(_key), use(_use) {
         if (_kid) {
             kid = _kid;
         }
@@ -37,7 +33,13 @@ typedef struct _crypto_key_object_t {
             alg = _alg;
         }
     }
-    _crypto_key_object_t& set(const EVP_PKEY* _key, crypto_use_t _use, const char* _kid, const char* _alg) {
+    crypto_key_object(crypto_key_object const& key) {
+        pkey = key.pkey;
+        use = key.use;
+        kid = key.kid;
+        alg = key.alg;
+    }
+    crypto_key_object& set(const EVP_PKEY* _key, crypto_use_t _use, const char* _kid = nullptr, const char* _alg = nullptr) {
         pkey = _key;
         use = _use;
         if (_kid) {
@@ -48,15 +50,27 @@ typedef struct _crypto_key_object_t {
         }
         return *this;
     }
-    _crypto_key_object_t& set_keybits(uint32 size) {
-        keybits = size;
+    crypto_key_object& operator=(crypto_key_object& key) {
+        pkey = key.pkey;
+        use = key.use;
+        kid = key.kid;
+        alg = key.alg;
         return *this;
     }
+
+    const EVP_PKEY* get_pkey() { return pkey; }
     const char* get_kid() { return kid.c_str(); }
+    std::string get_kid_string() { return kid; }
     uint32 get_use() { return use; }
-    uint32 get_keybits() { return keybits; }
     const char* get_alg() { return alg.c_str(); }
-} crypto_key_object_t;
+    std::string get_alg_string() { return alg; }
+
+   private:
+    const EVP_PKEY* pkey;
+    std::string kid;
+    uint32 use;  // crypto_use_t
+    std::string alg;
+};
 
 /**
  * @brief RSA, EC, oct key container
@@ -64,7 +78,7 @@ typedef struct _crypto_key_object_t {
  *          crypto_key key;
  *          // generate a key
  *          key.generate (crypto_kty_t::kty_rsa, 1024, "key1");
- *          key.generate (crypto_kty_t::kty_hmac, 32, "key1");
+ *          key.generate (crypto_kty_t::kty_oct, 32, "key1");
  *          // generate a key
  *          crypto_keychain keyset;
  *          keyset.add_rsa (&key, 1024);// 1024 bits
@@ -82,6 +96,8 @@ typedef struct _crypto_key_object_t {
 class crypto_key {
    public:
     crypto_key();
+    crypto_key(const crypto_key& object);
+    crypto_key(crypto_key&& object);
     ~crypto_key();
 
     /**
@@ -117,11 +133,11 @@ class crypto_key {
 
     /**
      * @brief add
-     * @param crypto_key_object_t key [in]
+     * @param crypto_key_object key [in]
      * @param bool up_ref [inopt] false by default
      * @return error code (see error.hpp)
      */
-    return_t add(crypto_key_object_t key, bool up_ref = false);
+    return_t add(crypto_key_object key, bool up_ref = false);
     /**
      * @brief add
      * @param EVP_PKEY* key [in]
@@ -142,7 +158,7 @@ class crypto_key {
     /**
      * @brief generate
      * @param crypto_kty_t type [in] CRYPTO_KEY_TYPE
-     * @param unsigned int param [in] crypto_kty_t::kty_hmac in bytes
+     * @param unsigned int param [in] crypto_kty_t::kty_oct in bytes
      *                                crypto_kty_t::kty_rsa in bits
      *                                crypto_kty_t::kty_ec 256, 384, 521
      *                                crypto_kty_t::kty_okp 25518, 448
@@ -150,7 +166,7 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
      * @return error code (see error.hpp)
      * @remarks
-     *          key.generate (crypto_kty_t::kty_hmac, 32,    "kid", crypto_use_t::use_any); // oct
+     *          key.generate (crypto_kty_t::kty_oct,  32,    "kid", crypto_use_t::use_any); // oct
      *          key.generate (crypto_kty_t::kty_rsa,  2048,  "kid", crypto_use_t::use_any); // RSA
      *          key.generate (crypto_kty_t::kty_ec,   256,   "kid", crypto_use_t::use_any); // EC, P-256
      *          key.generate (crypto_kty_t::kty_ec,   384,   "kid", crypto_use_t::use_any); // EC, P-384
@@ -318,7 +334,7 @@ class crypto_key {
      * @brief key
      * @param const EVP_PKEY* pkey [in]
      * @param int flag [in] 0 public only, 1 also private
-     * @param crypto_kty_t type [out] crypto_kty_t::kty_hmac, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec
+     * @param crypto_kty_t type [out] crypto_kty_t::kty_oct, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec
      * @parambinary_t& pub1 [out]
      * @parambinary_t& pub2 [out]
      * @parambinary_t& priv [out]
@@ -328,7 +344,7 @@ class crypto_key {
     /**
      * @brief key
      * @param const EVP_PKEY* pkey [in]
-     * @param crypto_kty_t type [out] crypto_kty_t::kty_hmac, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec
+     * @param crypto_kty_t type [out] crypto_kty_t::kty_oct, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec
      * @parambinary_t& priv [out]
      * @param bool preserve [inopt] preserve leading zero (default false)
      */
@@ -343,17 +359,19 @@ class crypto_key {
      */
     size_t size();
 
+    return_t append(crypto_key* source);
+
     int addref();
     int release();
 
     /**
      * @brief dump
      * @example
-     *  void dump_crypto_key (crypto_key_object_t* key, void*)
+     *  void dump_crypto_key (crypto_key_object* key, void*)
      *  {
      *      uint32 nid = 0;
-     *      nidof_evp_pkey (key->pkey, nid);
-     *      printf ("nid %i kid %s alg %s use %i\n", nid, key->kid.c_str (), key->alg.c_str (), key->use);
+     *      nidof_evp_pkey (key->get_pkey(), nid);
+     *      printf ("nid %i kid %s alg %s use %i\n", nid, key->get_kid(), key->get_alg(), key->get_use());
      *  }
      *  void load_key_and_dump ()
      *  {
@@ -363,7 +381,7 @@ class crypto_key {
      *      key.for_each (dump_crypto_key, nullptr);
      *  }
      */
-    void for_each(void (*)(crypto_key_object_t*, void*), void* param);
+    void for_each(void (*)(crypto_key_object*, void*), void* param);
 
    protected:
     /**
@@ -389,7 +407,7 @@ class crypto_key {
      *  "kty"="OKP" "use"="enc" "kid"="key1"    // ok
      *  "kty"="OKP" "use"="sig" "kid"="key1"    // ok
      */
-    typedef std::multimap<std::string, crypto_key_object_t> crypto_key_map_t;
+    typedef std::multimap<std::string, crypto_key_object> crypto_key_map_t;
     crypto_key_map_t _key_map;
 
     critical_section _lock;
@@ -397,9 +415,9 @@ class crypto_key {
 };
 
 /**
- * @param crypto_key_object_t key [in]
+ * @param crypto_key_object key [in]
  */
-crypto_kty_t typeof_crypto_key(crypto_key_object_t const& key);
+crypto_kty_t typeof_crypto_key(crypto_key_object& key);
 
 /**
  * @brief   dump

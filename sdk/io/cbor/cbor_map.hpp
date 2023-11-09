@@ -55,8 +55,8 @@ class cbor_pair : public cbor_object {
     cbor_pair(cbor_data* key, cbor_array* object);
     virtual ~cbor_pair();
 
-    cbor_data const* left();
-    cbor_object const* right();
+    cbor_data* left();
+    cbor_object* right();
 
     virtual int addref();
     virtual int release();

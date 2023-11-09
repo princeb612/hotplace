@@ -147,11 +147,8 @@ return_t json_web_key::read_json_keynode(crypto_key* crypto_key, json_t* json) {
 }
 
 typedef struct _json_mapper_item_t {
-    const EVP_PKEY* pkey;
     crypto_kty_t type;
-    std::string kid;
-    int use;  // crypto_use_t
-    std::string alg;
+    crypto_key_object key;
     binary_t pub1;
     binary_t pub2;
     binary_t priv;
@@ -179,30 +176,30 @@ static void jwk_serialize_item(int flag, json_mapper_item_t item, json_t* json_i
     json_object_set_new(json_item, "kty", json_string(nameof_key_type(item.type)));
 
     /* kid */
-    if (item.kid.size()) {
-        json_object_set_new(json_item, "kid", json_string(item.kid.c_str()));
+    if (item.key.get_kid_string().size()) {
+        json_object_set_new(json_item, "kid", json_string(item.key.get_kid()));
     }
 
     /* use */
-    if (crypto_use_t::use_sig == item.use) {
+    if (crypto_use_t::use_sig == item.key.get_use()) {
         json_object_set_new(json_item, "use", json_string("sig"));
     }
-    if (crypto_use_t::use_enc == item.use) {
+    if (crypto_use_t::use_enc == item.key.get_use()) {
         json_object_set_new(json_item, "use", json_string("enc"));
     }
 
-    if (item.alg.size()) {
-        json_object_set_new(json_item, "alg", json_string(item.alg.c_str()));
+    if (item.key.get_alg_string().size()) {
+        json_object_set_new(json_item, "alg", json_string(item.key.get_alg()));
     }
 
     std::string curve_name;
 
     if (kindof_ecc(item.type)) {
-        advisor->nameof_ec_curve(item.pkey, curve_name);
+        advisor->nameof_ec_curve(item.key.get_pkey(), curve_name);
     }
 
     /* param */
-    if (crypto_kty_t::kty_hmac == item.type) {
+    if (crypto_kty_t::kty_oct == item.type) {
         json_object_set_new(json_item, "k", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
     } else if (crypto_kty_t::kty_rsa == item.type) {
         json_object_set_new(json_item, "n", json_string(base64_encode(item.pub1, base64_encoding_t::base64url_encoding).c_str()));
@@ -276,7 +273,7 @@ static return_t jwk_serialize(json_mapper_t mapper, CALLBACK_HANDLER callback, v
     return ret;
 }
 
-static void json_writer(crypto_key_object_t* key, void* param) {
+static void json_writer(crypto_key_object* key, void* param) {
     json_mapper_t* mapper = (json_mapper_t*)param;
 
     __try2 {
@@ -286,11 +283,8 @@ static void json_writer(crypto_key_object_t* key, void* param) {
 
         // preserve leading zero
         json_mapper_item_t item;
-        item.pkey = key->pkey;
-        item.kid = key->kid;
-        item.use = key->use;
-        item.alg = key->alg;
-        crypto_key::get_key(key->pkey, mapper->flag, item.type, item.pub1, item.pub2, item.priv, true);
+        item.key = *key;
+        crypto_key::get_key(key->get_pkey(), mapper->flag, item.type, item.pub1, item.pub2, item.priv, true);
         mapper->items.push_back(item);
     }
     __finally2 {

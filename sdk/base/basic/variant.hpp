@@ -447,12 +447,13 @@ typedef struct __variant_t {
     {                                        \
         vt.type = TYPE_BINARY;               \
         vt.size = 0;                         \
-        void* p = nullptr;                   \
+        byte_t* p = nullptr;                 \
         if (n) {                             \
-            p = malloc(n);                   \
+            p = (byte_t*)malloc(n + 1);      \
             if (p) {                         \
                 memcpy(p, value, (n));       \
                 vt.size = (n);               \
+                *(p + n) = 0;                \
             };                               \
         };                                   \
         vt.data.bstr = (byte_t*)p;           \
@@ -474,25 +475,27 @@ typedef struct __variant_t {
         vt.data.str = p;                     \
         vt.flag = variant_flag_t::flag_free; \
     }
-#define variant_set_binary_new(vt, bin)         \
-    {                                           \
-        vt.type = TYPE_BINARY;                  \
-        vt.size = bin.size();                   \
-        void* p = nullptr;                      \
-        if (bin.size()) {                       \
-            p = malloc(bin.size());             \
-            if (p) {                            \
-                memcpy(p, &bin[0], bin.size()); \
-            };                                  \
-        } else {                                \
-            vt.size = 0;                        \
-        };                                      \
-        vt.data.bstr = (byte_t*)p;              \
-        vt.flag = variant_flag_t::flag_free;    \
+#define variant_set_binary_new(vt, bin)      \
+    {                                        \
+        size_t n = bin.size();               \
+        vt.type = TYPE_BINARY;               \
+        vt.size = n;                         \
+        byte_t* p = nullptr;                 \
+        if (n) {                             \
+            p = (byte_t*)malloc(n + 1);      \
+            if (p) {                         \
+                memcpy(p, &bin[0], n);       \
+                *(p + n) = 0;                \
+            };                               \
+        } else {                             \
+            vt.size = 0;                     \
+        };                                   \
+        vt.data.bstr = (byte_t*)p;           \
+        vt.flag = variant_flag_t::flag_free; \
     }
 
-return_t variant_copy(variant_t* target, const variant_t* source);
-return_t variant_move(variant_t* target, variant_t* source);
+return_t variant_copy(variant_t& target, const variant_t& source);
+return_t variant_move(variant_t& target, variant_t& source);
 void variant_free(variant_t& vt);
 return_t variant_binary(variant_t const& vt, binary_t& target);
 return_t variant_string(variant_t const& vt, std::string& target);

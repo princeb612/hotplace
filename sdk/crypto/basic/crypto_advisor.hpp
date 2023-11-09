@@ -374,7 +374,7 @@ class crypto_advisor {
     /**
      * @brief kty
      * @param const EVP_PKEY* pkey [in]
-     * @param crypto_kty_t& kty [out] crypto_kty_t::kty_hmac, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_okp
+     * @param crypto_kty_t& kty [out] crypto_kty_t::kty_oct, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_okp
      * @return error code (see error.hpp)
      */
     return_t ktyof_ec_curve(const EVP_PKEY* pkey, crypto_kty_t& kty);
@@ -505,6 +505,7 @@ extern const hint_cipher_t evp_cipher_methods[];
 extern const hint_digest_t evp_md_methods[];
 extern const hint_blockcipher_t hint_blockciphers[];
 extern const hint_curve_t hint_curves[];
+extern const hint_cose_group_t hint_cose_groups[];
 extern const hint_cose_algorithm_t hint_cose_algorithms[];
 extern const hint_jose_encryption_t hint_jose_algorithms[];
 extern const hint_jose_encryption_t hint_jose_encryptions[];
@@ -515,6 +516,7 @@ extern const size_t sizeof_evp_cipher_methods;
 extern const size_t sizeof_evp_md_methods;
 extern const size_t sizeof_hint_blockciphers;
 extern const size_t sizeof_hint_curves;
+extern const size_t sizeof_hint_cose_groups;
 extern const size_t sizeof_hint_cose_algorithms;
 extern const size_t sizeof_hint_jose_algorithms;
 extern const size_t sizeof_hint_jose_encryptions;

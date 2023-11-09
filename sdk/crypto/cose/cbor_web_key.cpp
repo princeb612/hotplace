@@ -228,7 +228,7 @@ typedef struct _cose_mapper_t {
     }
 } cose_mapper_t;
 
-void cwk_writer(crypto_key_object_t* key, void* param) {
+void cwk_writer(crypto_key_object* key, void* param) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -245,7 +245,7 @@ void cwk_writer(crypto_key_object_t* key, void* param) {
             __leave2;
         }
 
-        std::string kid = key->kid;
+        std::string kid = key->get_kid();
 
         crypto_kty_t kty;
         binary_t pub1;
@@ -256,7 +256,7 @@ void cwk_writer(crypto_key_object_t* key, void* param) {
         // 13.1.1.  Double Coordinate Curves
         // 13.2.  Octet Key Pair
         // Leading zero octets MUST be preserved.
-        ret = crypto_key::get_key(key->pkey, 1, kty, pub1, pub2, priv, true);
+        ret = crypto_key::get_key(key->get_pkey(), 1, kty, pub1, pub2, priv, true);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -274,7 +274,7 @@ void cwk_writer(crypto_key_object_t* key, void* param) {
             uint32 nid = 0;
             cose_ec_curve_t cose_curve = cose_ec_curve_t::cose_ec_unknown;
 
-            nidof_evp_pkey(key->pkey, nid);
+            nidof_evp_pkey(key->get_pkey(), nid);
             cose_curve = advisor->curveof(nid);
 
             *keynode << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_curve))  // -1
@@ -286,7 +286,7 @@ void cwk_writer(crypto_key_object_t* key, void* param) {
             if (priv.size()) {
                 *keynode << new cbor_pair(cose_key_lable_t::cose_ec_d, new cbor_data(priv));  // -4
             }
-        } else if (crypto_kty_t::kty_hmac == kty) {
+        } else if (crypto_kty_t::kty_oct == kty) {
             *keynode << new cbor_pair(cose_key_lable_t::cose_symm_k, new cbor_data(priv));  // -1
         } else if (crypto_kty_t::kty_rsa == kty) {
             *keynode << new cbor_pair(cose_key_lable_t::cose_rsa_n, new cbor_data(pub1))   // -1

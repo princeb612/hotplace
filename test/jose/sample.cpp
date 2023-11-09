@@ -218,17 +218,17 @@ void test_basic() {
     _test_case.assert(true, __FUNCTION__, "baseic informations");
 }
 
-void dump_crypto_key(crypto_key_object_t* key, void*) {
+void dump_crypto_key(crypto_key_object* key, void*) {
     OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
 
     if (option.dump_keys) {
         uint32 nid = 0;
 
-        nidof_evp_pkey(key->pkey, nid);
-        printf("nid %i kid %s alg %s use %i\n", nid, key->kid.c_str(), key->alg.c_str(), key->use);
+        nidof_evp_pkey(key->get_pkey(), nid);
+        printf("nid %i kid %s alg %s use %i\n", nid, key->get_kid(), key->get_alg(), key->get_use());
 
         basic_stream bs;
-        dump_key(key->pkey, &bs);
+        dump_key(key->get_pkey(), &bs);
         printf("%s\n", bs.c_str());
     }
 }
@@ -655,11 +655,11 @@ void test_rfc7515_bykeygen() {
     return_t ret = errorcode_t::success;
     crypto_key key;
 
-    key.generate(crypto_kty_t::kty_hmac, 256, "sample");
+    key.generate(crypto_kty_t::kty_oct, 256, "sample");
     key.generate(crypto_kty_t::kty_rsa, 2048, "sample");
     key.generate(crypto_kty_t::kty_ec, 256, "sample");
 
-    key.generate(crypto_kty_t::kty_hmac, 256, "HS256");
+    key.generate(crypto_kty_t::kty_oct, 256, "HS256");
     key.generate(crypto_kty_t::kty_rsa, 2048, "RS256");
     key.generate(crypto_kty_t::kty_rsa, 2048, "RS384");
     key.generate(crypto_kty_t::kty_rsa, 2048, "RS512");

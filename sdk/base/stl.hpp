@@ -57,6 +57,33 @@ class maphint {
     std::map<K, V>& _source;
 };
 
+template <typename K, typename V>
+class maphint_const {
+   public:
+    maphint_const(std::map<K, V> const& source) : _source(source) {
+        // do nothing
+    }
+
+    return_t find(K const& key, V* value) {
+        return_t ret = errorcode_t::success;
+
+        if (value) {
+            typename std::map<K, V>::const_iterator iter = _source.find(key);
+            if (_source.end() == iter) {
+                ret = errorcode_t::not_found;
+            } else {
+                *value = iter->second;
+            }
+        } else {
+            ret = errorcode_t::invalid_parameter;
+        }
+        return ret;
+    }
+
+   private:
+    std::map<K, V> const& _source;
+};
+
 }  // namespace hotplace
 
 #endif

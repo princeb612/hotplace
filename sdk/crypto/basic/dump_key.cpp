@@ -65,6 +65,7 @@ static void pkey_param_printf(crypt_item_t type, binary_t const& key, stream_t* 
         const char* msg = nullptr;
         hint.find(type, &msg);
         if (msg) {
+            stream->fill(indent / 2, ' ');
             stream->printf("%s\n", msg);
         }
 
@@ -357,7 +358,7 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
         int type = EVP_PKEY_id(pkey);
         switch (type) {
             case EVP_PKEY_HMAC:
-                stream->printf("hmac");
+                stream->printf("oct");
                 break;
             case EVP_PKEY_RSA:
                 stream->printf("RSA");

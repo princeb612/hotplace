@@ -17,7 +17,7 @@ namespace crypto {
 
 const hint_kty_name_t hint_kty_names[] = {
     {
-        crypto_kty_t::kty_hmac,
+        crypto_kty_t::kty_oct,
         "oct",
     },
     {

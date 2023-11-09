@@ -15,38 +15,33 @@
 
 namespace hotplace {
 
-return_t variant_copy(variant_t* target, const variant_t* source) {
+return_t variant_copy(variant_t& target, const variant_t& source) {
     return_t ret = errorcode_t::success;
     variant_t* object = nullptr;
 
     __try2 {
-        if (nullptr == target || nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (variant_flag_t::flag_free == source->flag) {
-            switch (source->type) {
+        if (variant_flag_t::flag_free == source.flag) {
+            switch (source.type) {
                 case TYPE_BINARY:
-                    variant_set_bstr_new((*target), source->data.bstr, source->size);
+                    variant_set_bstr_new(target, source.data.bstr, source.size);
                     break;
                 case TYPE_NSTRING:
-                    variant_set_nstr_new((*target), source->data.str, source->size);
+                    variant_set_nstr_new(target, source.data.str, source.size);
                     break;
                 case TYPE_STRING:
-                    variant_set_str_new((*target), source->data.str);
+                    variant_set_str_new(target, source.data.str);
                     break;
                 default:
                     throw;
                     break;
             }
         } else {
-            memcpy(&target->data, &source->data, RTL_FIELD_SIZE(variant_t, data));
+            memcpy(&target.data, &source.data, RTL_FIELD_SIZE(variant_t, data));
         }
 
-        target->type = source->type;
-        target->size = source->size;
-        target->flag = source->flag;
+        target.type = source.type;
+        target.size = source.size;
+        target.flag = source.flag;
     }
     __finally2 {
         // do nothing
@@ -54,18 +49,13 @@ return_t variant_copy(variant_t* target, const variant_t* source) {
     return ret;
 }
 
-return_t variant_move(variant_t* target, variant_t* source) {
+return_t variant_move(variant_t& target, variant_t& source) {
     return_t ret = errorcode_t::success;
     variant_t* object = nullptr;
 
     __try2 {
-        if (nullptr == target || nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        memcpy(target, source, sizeof(variant_t));  // copy including type and flag
-        source->flag = 0;
+        memcpy(&target, &source, sizeof(variant_t));  // copy including type and flag
+        source.flag = 0;
     }
     __finally2 {
         // do nothing
