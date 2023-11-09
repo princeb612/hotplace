@@ -67,10 +67,10 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             __leave2;
         }
 
-        cose_body_t* body = handle->body;
+        cose_structure_t& body = handle->body;
 
         handle->cbor_tag = cbor_tag_t::cose_tag_sign;
-        body->bin_payload = input;
+        body.bin_payload = input;
 
         cbor_tag_t tag = cbor_tag_t::cose_tag_sign;
         cbor_object_signing_encryption::composer composer;
@@ -84,7 +84,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             std::string kid;
             const EVP_PKEY* pkey = key->select(kid, sig);
             // subitem of handle
-            cose_body_t* item = new cose_body_t(nullptr);
+            cose_structure_t* item = new cose_structure_t;
             // composer
             // create a binary using cbor_pushlisher and put it into subitem of handle
             cbor_data* cbor_sign_protected = nullptr;
@@ -109,11 +109,11 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             }
 
             binary_t tobesigned;
-            composer.compose_sig_structure(handle, item, tobesigned);
+            composer.compose_sig_structure(handle, *item, tobesigned);
             openssl_sign signprocessor;
             signprocessor.sign(pkey, sig, tobesigned, item->bin_payload);  // signature
 
-            body->multiitems.push_back(item);
+            body.add(item);
 
             cbor_sign_protected->release();
 
@@ -195,20 +195,20 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
     cbor_array* root = nullptr;
     cbor_map* cbor_body_unprotected = nullptr;
 
-    cose_body_t* body = handle->body;
+    cose_structure_t& body = handle->body;
 
     signature.clear();
 
-    composer.build_unprotected(&cbor_body_unprotected, body->unprotected_map);
+    composer.build_unprotected(&cbor_body_unprotected, body.unprotected_map);
 
     root = new cbor_array();
     root->tag((cbor_tag_t)tag);
-    *root << new cbor_data(body->bin_protected) << cbor_body_unprotected << new cbor_data(body->bin_payload) << new cbor_array();
+    *root << new cbor_data(body.bin_protected) << cbor_body_unprotected << new cbor_data(body.bin_payload) << new cbor_array();
 
     cbor_array* cbor_signatures = (cbor_array*)(*root)[3];
-    std::list<cose_body_t*>::iterator iter;
-    for (iter = body->multiitems.begin(); iter != body->multiitems.end(); iter++) {
-        cose_body_t* item = *iter;
+    std::list<cose_structure_t*>::iterator iter;
+    for (iter = body.multiitems.begin(); iter != body.multiitems.end(); iter++) {
+        cose_structure_t* item = *iter;
         cbor_map* cbor_sign_unprotected = nullptr;
 
         composer.build_unprotected(&cbor_sign_unprotected, item->unprotected_map);
@@ -235,18 +235,18 @@ return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* 
             __leave2;
         }
 
-        cose_body_t* body = handle->body;
+        cose_structure_t& body = handle->body;
 
-        size_t size_multiitems = body->multiitems.size();
+        size_t size_multiitems = body.multiitems.size();
         if (0 == size_multiitems) {
-            check = doverify_sign(handle, key, nullptr, body->singleitem);
+            check = doverify_sign(handle, key, body, body.singleitem);
             results.insert((errorcode_t::success == check) ? true : false);
         } else {
-            std::list<cose_body_t*>::iterator iter;
-            for (iter = body->multiitems.begin(); iter != body->multiitems.end(); iter++) {
-                cose_body_t* item = *iter;
+            std::list<cose_structure_t*>::iterator iter;
+            for (iter = body.multiitems.begin(); iter != body.multiitems.end(); iter++) {
+                cose_structure_t* item = *iter;
 
-                check = doverify_sign(handle, key, item, item->bin_payload);
+                check = doverify_sign(handle, key, *item, item->bin_payload);
                 results.insert((errorcode_t::success == check) ? true : false);
             }
         }
@@ -263,7 +263,7 @@ return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* 
     return ret;
 }
 
-return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* key, cose_body_t* part, binary_t const& signature) {
+return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* key, cose_structure_t& item, binary_t const& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption::composer composer;
@@ -275,23 +275,23 @@ return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* 
             __leave2;
         }
 
-        cose_body_t* body = handle->body;
+        cose_structure_t& body = handle->body;
 
         cose_alg_t alg = cose_alg_t::cose_unknown;
         std::string kid;
-        if (part) {
-            alg = part->alg;
-            kid = part->kid;
+        if (item.parent) {
+            alg = item.alg;
+            kid = item.kid;
         }
         if (0 == alg) {
-            alg = body->alg;
+            alg = body.alg;
         }
         if (kid.empty()) {
-            kid = body->kid;
+            kid = body.kid;
         }
 
         binary_t tobesigned;
-        composer.compose_sig_structure(handle, part, tobesigned);
+        composer.compose_sig_structure(handle, item, tobesigned);
 
         crypt_sig_t sig = advisor->sigof(alg);
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
@@ -356,20 +356,21 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             __leave2;
         }
 
-        cose_body_t* body = handle->body;
+        cose_structure_t& body = handle->body;
 
-        size_t size_multiitems = body->multiitems.size();
+        bool do_encrypt = false;
+        size_t size_multiitems = body.multiitems.size();
         if (0 == size_multiitems) {
-            cose.process_keyagreement(handle, key, nullptr);
-            check = doverify_mac(handle, key, nullptr, body->singleitem);
+            cose.process_keyagreement(handle, key, body, do_encrypt);
+            check = doverify_mac(handle, key, body, body.singleitem);
             results.insert((errorcode_t::success == check) ? true : false);
         } else {
-            std::list<cose_body_t*>::iterator iter;
-            for (iter = body->multiitems.begin(); iter != body->multiitems.end(); iter++) {
-                cose_body_t* item = *iter;
+            std::list<cose_structure_t*>::iterator iter;
+            for (iter = body.multiitems.begin(); iter != body.multiitems.end(); iter++) {
+                cose_structure_t* item = *iter;
 
-                cose.process_keyagreement(handle, key, item);
-                check = doverify_mac(handle, key, item, item->bin_payload);
+                cose.process_keyagreement(handle, key, *item, do_encrypt);
+                check = doverify_mac(handle, key, *item, item->bin_payload);
                 results.insert((errorcode_t::success == check) ? true : false);
             }
         }
@@ -386,7 +387,7 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
     return ret;
 }
 
-return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* key, cose_body_t* part, binary_t const& tag) {
+return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* key, cose_structure_t& item, binary_t const& tag) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -399,7 +400,7 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             __leave2;
         }
 
-        cose_body_t* body = handle->body;
+        cose_structure_t& body = handle->body;
 
         cose_alg_t alg = cose_alg_t::cose_unknown;
         std::string kid;
@@ -409,26 +410,26 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
         binary_t tag;
         binary_t tomac;
 
-        alg = body->alg;
-        if (part) {
-            kid = part->kid;
-            composer.finditem(cose_key_t::cose_iv, iv, part->unprotected_map);
-            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, part->unprotected_map);
-            cek = part->binarymap[cose_param_t::cose_param_cek];
+        alg = body.alg;
+        if (item.parent) {
+            kid = item.kid;
+            composer.finditem(cose_key_t::cose_iv, iv, item.unprotected_map);
+            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, item.unprotected_map);
+            cek = item.binarymap[cose_param_t::cose_param_cek];
         } else {
             cek = handle->binarymap[cose_param_t::cose_param_cek];
         }
         if (kid.empty()) {
-            kid = body->kid;
+            kid = body.kid;
         }
         if (0 == iv.size()) {
-            composer.finditem(cose_key_t::cose_iv, iv, body->unprotected_map);
+            composer.finditem(cose_key_t::cose_iv, iv, body.unprotected_map);
             if (0 == iv.size()) {
                 iv = handle->binarymap[cose_param_t::cose_unsent_iv];
             }
         }
         if (0 == partial_iv.size()) {
-            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, body->unprotected_map);
+            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, body.unprotected_map);
         }
 
         if (iv.size() && partial_iv.size()) {
@@ -447,8 +448,8 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             //     iv[i] ^= aligned_partial_iv[i];
             // }
 
-            if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
-                handle->debug_flag = code_debug_flag_t::cose_debug_partial_iv;
+            if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
+                handle->debug_flags = cose_flag_t::cose_debug_partial_iv;
             }
         }
 
@@ -487,39 +488,13 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
             openssl_mac mac;
             ret = mac.cbc_mac_rfc8152(hint->enc.algname, cek, iv, tomac, tag, hint->enc.tsize);
-
-            if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
-                handle->debug_flag |= cose_debug_mac_aes;
-            }
         } else {
             ret = errorcode_t::request;
             __leave2;
         }
 
-        if (tag != body->singleitem) {
+        if (tag != body.singleitem) {
             ret = errorcode_t::error_verify;
-        }
-
-#define dump(x)                                                                 \
-    if (x.size()) {                                                             \
-        dump_memory(x, &bs, 16, 4);                                             \
-        printf("  %s\n%s\n    %s\n", #x, bs.c_str(), base16_encode(x).c_str()); \
-    }
-
-        if (code_debug_flag_t::cose_debug_inside & handle->debug_flag) {
-            cose_body_t* temp = part ? part : handle->body;
-            basic_stream bs;
-            dump(cek);
-            binary_t context = temp->binarymap[cose_param_t::cose_param_context];
-            dump(context);
-            dump(body->singleitem);
-            dump(iv);
-            binary_t kek = temp->binarymap[cose_param_t::cose_param_kek];
-            dump(kek);
-            binary_t secret = temp->binarymap[cose_param_t::cose_param_secret];
-            dump(secret);
-            dump(tag);
-            dump(tomac);
         }
 
         if (errorcode_t::success != ret) {

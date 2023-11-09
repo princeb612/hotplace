@@ -20,6 +20,9 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
+typedef struct _cose_context_t cose_context_t;
+// typedef struct _cose_structure_t cose_structure_t;
+
 enum cose_param_t {
     cose_external = 1,
     cose_unsent_apu_id = 2,
@@ -42,105 +45,142 @@ enum cose_param_t {
     cose_param_secret = 19,
     cose_param_tobesigned = 20,
     cose_param_tomac = 21,
+    cose_param_apu_id = 22,
+    cose_param_apu_nonce = 23,
+    cose_param_apu_other = 24,
+    cose_param_apv_id = 25,
+    cose_param_apv_nonce = 26,
+    cose_param_apv_other = 27,
+    cose_param_pub_other = 28,
+    cose_param_priv_other = 29,
 };
-enum code_debug_flag_t {
-    // simply want to know reason why routine is failed from testcase report
-    cose_debug_notfound_key = (1 << 0),
-    cose_debug_partial_iv = (1 << 1),
-    cose_debug_hkdf_aes = (1 << 2),
-    cose_debug_chacha20_poly1305 = (1 << 3),
-    cose_debug_mac_aes = (1 << 4),
-    cose_debug_inside = (1 << 31),
+
+enum cose_flag_t {
+    cose_flag_allow_debug = (1 << 1),
+    cose_flag_auto_keygen = (1 << 2),
+
+    // debug
+    cose_debug_notfound_key = (1 << 16),
+    cose_debug_partial_iv = (1 << 17),
 };
 
 typedef std::map<int, variant_t> cose_variantmap_t;
 typedef std::list<int> cose_orderlist_t;
 typedef std::map<cose_param_t, binary_t> cose_binarymap_t;
 
-typedef struct _cose_body_t cose_body_t;
+static inline void cose_variantmap_copy(cose_variantmap_t& target, cose_variantmap_t& source) {
+    variant_t vt;
+    cose_variantmap_t::iterator map_iter;
+    for (map_iter = source.begin(); map_iter != source.end(); map_iter++) {
+        int key = map_iter->first;
+        variant_t& value = map_iter->second;
+        variant_copy(vt, value);
+        target.insert(std::make_pair(key, vt));
+    }
+}
+
+static inline void cose_variantmap_move(cose_variantmap_t& target, cose_variantmap_t& source) {
+    variant_t vt;
+    cose_variantmap_t::iterator map_iter;
+    for (map_iter = source.begin(); map_iter != source.end(); map_iter++) {
+        int key = map_iter->first;
+        variant_t& value = map_iter->second;
+        variant_move(vt, value);
+        target.insert(std::make_pair(key, vt));
+    }
+    source.clear();
+}
 
 static inline void cose_variantmap_free(cose_variantmap_t& map) {
     cose_variantmap_t::iterator map_iter;
     for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
-        variant_free(map_iter->second);
+        variant_t& value = map_iter->second;
+        variant_free(value);
     }
     map.clear();
 }
 
-struct _cose_body_t {
-    struct _cose_body_t* parent;
-    binary_t bin_protected;              // protected
-    binary_t singleitem;                 // signature, tag, ...
-    std::list<cose_body_t*> multiitems;  // [+recipient], [+signature]
+class cose_structure_t {
+   public:
+    cose_structure_t() : parent(nullptr), alg(cose_alg_t::cose_unknown), epk(nullptr){};
 
-    cose_alg_t alg;
-    std::string kid;
-    const EVP_PKEY* epk;
-    cose_variantmap_t protected_map;
-    cose_orderlist_t protected_list;
-    cose_variantmap_t unprotected_map;
-    cose_orderlist_t unprotected_list;
-    cose_binarymap_t binarymap;
-    binary_t bin_payload;
+    ~cose_structure_t() { clear(); }
 
-    _cose_body_t(struct _cose_body_t* p) : parent(p), alg(cose_alg_t::cose_unknown), epk(nullptr) {}
-    ~_cose_body_t() { clear(); }
-
+    void add(cose_structure_t* child) {
+        child->parent = this;
+        multiitems.push_back(child);
+    }
     void clearall() {
         clear();
         binarymap.clear();
     }
     void clear() {
-        alg = cose_alg_t::cose_unknown;
+        parent = nullptr;
         bin_protected.clear();
-
         bin_payload.clear();
-        std::list<cose_body_t*>::iterator iter;
+        singleitem.clear();
+        std::list<cose_structure_t*>::iterator iter;
         for (iter = multiitems.begin(); iter != multiitems.end(); iter++) {
-            cose_body_t* item = *iter;
-            item->clear();
+            cose_structure_t* item = *iter;
             delete item;
         }
         multiitems.clear();
+
+        alg = cose_alg_t::cose_unknown;
+        kid.clear();
 
         cose_variantmap_free(protected_map);
         cose_variantmap_free(unprotected_map);
         protected_list.clear();
         unprotected_list.clear();
+        key.clear();
         if (epk) {
             EVP_PKEY_free((EVP_PKEY*)epk);
             epk = nullptr;
         }
     }
+
+    // private: // todo refactor
+    cose_structure_t* parent;
+    binary_t bin_protected;  // protected
+    binary_t bin_payload;
+    binary_t singleitem;                      // signature, tag, ...
+    std::list<cose_structure_t*> multiitems;  // [+recipient], [+signature]
+
+    cose_alg_t alg;
+    std::string kid;
+    cose_variantmap_t protected_map;
+    cose_variantmap_t unprotected_map;
+    cose_orderlist_t protected_list;
+    cose_orderlist_t unprotected_list;
+    cose_binarymap_t binarymap;
+    crypto_key key;        // encryption
+    crypto_key ephemeral;  // ephemeral
+    const EVP_PKEY* epk;
 };
 
-typedef struct _cose_context_t {
+struct _cose_context_t {
     cbor_tag_t cbor_tag;
-    cose_body_t* body;
+    cose_structure_t body;
     cose_binarymap_t binarymap;  // external, unsent, cek, kek, context, aad, secret, tobesigned/tomac
 
-    uint32 debug_flag;
+    uint32 flags;
+    uint32 debug_flags;
     basic_stream debug_stream;
 
-    _cose_context_t() : cbor_tag(cbor_tag_t::cbor_tag_unknown), debug_flag(0) { body = new cose_body_t(nullptr); }
-    ~_cose_context_t() {
-        clearall();
-        if (body) {
-            delete body;
-        }
-    }
+    _cose_context_t() : cbor_tag(cbor_tag_t::cbor_tag_unknown), flags(0), debug_flags(0) {}
+    ~_cose_context_t() { clearall(); }
     void clearall() {
         clear();
-        debug_flag = 0;
+        flags = 0;
+        debug_flags = 0;
         debug_stream.clear();
     }
     void clear() {
         cbor_tag = cbor_tag_t::cbor_tag_unknown;
-        if (body) {
-            body->clear();
-        }
+        body.clear();
     }
-} cose_context_t;
+};
 
 }  // namespace crypto
 }  // namespace hotplace

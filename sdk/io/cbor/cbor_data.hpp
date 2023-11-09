@@ -166,7 +166,6 @@ class cbor_simple : public cbor_object {
     virtual void represent(binary_t* b);
 
    private:
-    ;
     cbor_simple_t _type;
     uint8 _value;
 };

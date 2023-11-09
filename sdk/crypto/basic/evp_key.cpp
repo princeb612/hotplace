@@ -65,7 +65,7 @@ crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
 
     switch (type) {
         case EVP_PKEY_HMAC:
-            kty = crypto_kty_t::kty_hmac;
+            kty = crypto_kty_t::kty_oct;
             break;
         case EVP_PKEY_RSA:
             kty = crypto_kty_t::kty_rsa;
@@ -145,7 +145,7 @@ bool kindof_ecc(crypto_kty_t type) { return (crypto_kty_t::kty_ec == type) || (c
 const char* nameof_key_type(crypto_kty_t type) {
     const char* name = "";
 
-    if (crypto_kty_t::kty_hmac == type) {
+    if (crypto_kty_t::kty_oct == type) {
         name = "oct";
     } else if (crypto_kty_t::kty_rsa == type) {
         name = "RSA";

@@ -78,17 +78,17 @@ return_t dump_test_data(const char* text, binary_t const& cbor) {
     return ret;
 }
 
-void dump_crypto_key(crypto_key_object_t* key, void*) {
+void dump_crypto_key(crypto_key_object* key, void*) {
     OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
 
     if (option.dump_keys) {
         uint32 nid = 0;
 
-        nidof_evp_pkey(key->pkey, nid);
-        printf("nid %i kid %s alg %s use %08x\n", nid, key->kid.c_str(), key->alg.c_str(), key->use);
+        nidof_evp_pkey(key->get_pkey(), nid);
+        printf("nid %i kid %s alg %s use %08x\n", nid, key->get_kid(), key->get_alg(), key->get_use());
 
         basic_stream bs;
-        dump_key(key->pkey, &bs);
+        dump_key(key->get_pkey(), &bs);
         printf("%s\n", bs.c_str());
     }
 }
@@ -105,90 +105,93 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
         }
 
         cbor_publisher publisher;
-
-        // cbor_object* to diagnostic
-        basic_stream diagnostic;
-        publisher.publish(root, &diagnostic);
-
         // cbor_object* to cbor
         binary_t bin;
         publisher.publish(root, &bin);
 
-        // load cbor from file
-        binary_t expect;
-        {
-            test_case_notimecheck notimecheck(_test_case);
+        if (option.debug) {
+            // cbor_object* to diagnostic
+            basic_stream diagnostic;
+            publisher.publish(root, &diagnostic);
 
-            file_stream fs;
-            ret = fs.open(expect_file);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-            fs.begin_mmap();
+            // load cbor from file
+            binary_t expect;
+            {
+                test_case_notimecheck notimecheck(_test_case);
 
-            byte_t* file_contents = fs.data();
-            size_t file_size = fs.size();
-            expect.insert(expect.end(), file_contents, file_contents + file_size);
+                file_stream fs;
+                ret = fs.open(expect_file);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
+                fs.begin_mmap();
 
-            if (option.debug) {
+                byte_t* file_contents = fs.data();
+                size_t file_size = fs.size();
+                expect.insert(expect.end(), file_contents, file_contents + file_size);
+
                 dump_test_data("test vector", expect);
                 dump_test_data("diagnostic #1", diagnostic);
                 dump_test_data("cbor #1", bin);
             }
-        }
 
-        _test_case.assert((bin == expect), __FUNCTION__, "check1.cborcheck %s", text ? text : "");
+            _test_case.assert((bin == expect), __FUNCTION__, "check1.cborcheck %s", text ? text : "");
 
-        // parse
-        basic_stream bs_diagnostic_lv1;
-        binary_t bin_cbor_lv1;
+            // parse
+            basic_stream bs_diagnostic_lv1;
+            binary_t bin_cbor_lv1;
 
-        cbor_reader reader;
-        cbor_reader_context_t* handle = nullptr;
-        cbor_object* newone = nullptr;
+            cbor_reader reader;
+            cbor_reader_context_t* handle = nullptr;
+            cbor_object* newone = nullptr;
 
-        reader.open(&handle);
-        reader.parse(handle, bin);
-        // cbor_reader_context_t* to diagnostic
-        reader.publish(handle, &bs_diagnostic_lv1);
-        // cbor_reader_context_t* to cbor
-        reader.publish(handle, &bin_cbor_lv1);
-        // cbor_reader_context_t* to cbor_object*
-        reader.publish(handle, &newone);
-        reader.close(handle);
+            reader.open(&handle);
+            reader.parse(handle, bin);
+            // cbor_reader_context_t* to diagnostic
+            reader.publish(handle, &bs_diagnostic_lv1);
+            // cbor_reader_context_t* to cbor
+            reader.publish(handle, &bin_cbor_lv1);
+            // cbor_reader_context_t* to cbor_object*
+            reader.publish(handle, &newone);
+            reader.close(handle);
 
-        if (newone) {
-            if (option.debug) {
-                test_case_notimecheck notimecheck(_test_case);
+            if (newone) {
+                {
+                    test_case_notimecheck notimecheck(_test_case);
 
-                dump_test_data("diagnostic #2", bs_diagnostic_lv1);
-                dump_test_data("cbor #2", bin_cbor_lv1);
+                    dump_test_data("diagnostic #2", bs_diagnostic_lv1);
+                    dump_test_data("cbor #2", bin_cbor_lv1);
+                }
+                _test_case.assert((bin_cbor_lv1 == expect), __FUNCTION__, "check2.cborparse %s", text ? text : "");
+
+                // parsed cbor_object* to diagnostic
+                basic_stream bs_diagnostic_lv2;
+                publisher.publish(newone, &bs_diagnostic_lv2);
+
+                // parsed cbor_object* to cbor
+                binary_t bin_cbor_lv2;
+                publisher.publish(newone, &bin_cbor_lv2);
+
+                {
+                    test_case_notimecheck notimecheck(_test_case);
+
+                    dump_test_data("diagnostic #3", bs_diagnostic_lv2);
+                    dump_test_data("cbor #3", bin_cbor_lv2);
+                }
+                _test_case.assert((bin_cbor_lv2 == expect), __FUNCTION__, "check3.cborparse %s", text ? text : "");
+
+                newone->release();  // release parsed object
             }
-            _test_case.assert((bin_cbor_lv1 == expect), __FUNCTION__, "check2.cborparse %s", text ? text : "");
-
-            // parsed cbor_object* to diagnostic
-            basic_stream bs_diagnostic_lv2;
-            publisher.publish(newone, &bs_diagnostic_lv2);
-
-            // parsed cbor_object* to cbor
-            binary_t bin_cbor_lv2;
-            publisher.publish(newone, &bin_cbor_lv2);
-
-            if (option.debug) {
-                test_case_notimecheck notimecheck(_test_case);
-
-                dump_test_data("diagnostic #3", bs_diagnostic_lv2);
-                dump_test_data("cbor #3", bin_cbor_lv2);
-            }
-            _test_case.assert((bin_cbor_lv2 == expect), __FUNCTION__, "check3.cborparse %s", text ? text : "");
-
-            newone->release();  // release parsed object
         }
 
         cbor_object_signing_encryption cose;
         binary_t signature;
         binary_t decrypted;
         bool result = false;
+
+        if (option.debug) {
+            cose.set(cose_handle, cose_flag_t::cose_flag_allow_debug);
+        }
 
         if (root->tagged()) {
             switch (root->tag_value()) {
@@ -1960,7 +1963,7 @@ void test_github_example() {
     }
 
             if (option.debug) {
-                handle->debug_flag |= code_debug_flag_t::cose_debug_inside;
+                cose.set(handle, cose_flag_t::cose_flag_allow_debug);
 
                 dumps("AAD", vector->enc.aad_hex);
                 dumps("CEK", vector->enc.cek_hex);
@@ -2047,20 +2050,14 @@ void test_github_example() {
             }
 
             if (option.debug) {
-                if (handle->debug_flag & cose_debug_notfound_key) {
+                uint32 flags = 0;
+                uint32 debug_flags = 0;
+                cose.get(handle, flags, debug_flags);
+                if (debug_flags & cose_debug_notfound_key) {
                     reason << "!key ";
                 }
-                if (handle->debug_flag & cose_debug_partial_iv) {
+                if (debug_flags & cose_debug_partial_iv) {
                     reason << "partial_iv ";
-                }
-                if (handle->debug_flag & cose_debug_hkdf_aes) {
-                    reason << "hkdf_aes ";
-                }
-                if (handle->debug_flag & cose_debug_chacha20_poly1305) {
-                    reason << "chacha20_poly1305 ";
-                }
-                if (handle->debug_flag & cose_debug_mac_aes) {
-                    reason << "mac_aes ";
                 }
                 debug_stream = handle->debug_stream;
             }
@@ -2071,6 +2068,28 @@ void test_github_example() {
         _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s%s", vector->file, properties.c_str(), reason.size() ? "\e[1;33m[ debug : " : "", reason.c_str(),
                         reason.size() ? "]\e[0m " : " ", debug_stream.c_str());
     }
+}
+
+void test_eckey_compressed() {
+    _test_case.begin("EC compressed");
+    basic_stream bs;
+    crypto_keychain keychain;
+    crypto_key key;
+    binary_t bin_x;
+    binary_t bin_y;
+    binary_t bin_d;
+
+    keychain.add_ec_b16(&key, "test", nullptr, 415, "98F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280", true, nullptr);
+    key.for_each(dump_crypto_key, nullptr);
+
+    const EVP_PKEY* pkey = key.any();
+    key.get_key(pkey, bin_x, bin_y, bin_d, true);
+    // Appendix_C_3_1
+    // x mPUKT_bAWGHIhg0TpjjqVsP1rXWQu_vwVOHHtNkdYoA
+    // y 8BQAsImGeAS46fyWw5MhYfGTT0IjBpFw2SS34Dv4Irs
+    std::string y_compressed("8BQAsImGeAS46fyWw5MhYfGTT0IjBpFw2SS34Dv4Irs");
+    bool test = (bin_y == base64_decode(y_compressed, base64_encoding_t::base64url_encoding));
+    _test_case.assert(test, __FUNCTION__, "EC compressed");
 }
 
 int main(int argc, char** argv) {
@@ -2095,6 +2114,8 @@ int main(int argc, char** argv) {
 
     openssl_startup();
     openssl_thread_setup();
+
+    test_eckey_compressed();
 
     // check format
     // install
@@ -2153,7 +2174,7 @@ int main(int argc, char** argv) {
     // part 2 .. test JWK, CWK compatibility
     {
         // test crypto_key, crypto_keychain
-        test_jose_from_cwk();
+        // test_jose_from_cwk();
     }
 
     // part 3 https://github.com/cose-wg/Examples

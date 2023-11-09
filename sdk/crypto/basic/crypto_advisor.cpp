@@ -171,12 +171,12 @@ return_t crypto_advisor::build_if_necessary() {
         }
 
         _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_ec, cose_kty_t::cose_kty_ec2));
-        _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_hmac, cose_kty_t::cose_kty_symm));
+        _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_oct, cose_kty_t::cose_kty_symm));
         _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_okp, cose_kty_t::cose_kty_okp));
         _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_rsa, cose_kty_t::cose_kty_rsa));
 
         _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_ec2, crypto_kty_t::kty_ec));
-        _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_symm, crypto_kty_t::kty_hmac));
+        _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_symm, crypto_kty_t::kty_oct));
         _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_okp, crypto_kty_t::kty_okp));
         _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_rsa, crypto_kty_t::kty_rsa));
 

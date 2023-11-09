@@ -150,7 +150,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key(pkey, use, kid, alg);
+        crypto_key_object key(pkey, use, kid, alg);
 
         ret = cryptokey->add(key);
     }
@@ -213,16 +213,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
 
         // RSA_solve (rsa);
 
-        crypto_key_object_t key;
-        key.pkey = pkey;
-        key.use = use;
-        if (kid) {
-            key.kid = kid;
-        }
-        if (alg) {
-            key.alg = alg;
-        }
-
+        crypto_key_object key(pkey, use, kid, alg);
         cryptokey->add(key);
     }
     __finally2 {
@@ -315,7 +306,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key(pkey, use, kid, alg);
+        crypto_key_object key(pkey, use, kid, alg);
 
         cryptokey->add(key);
     }
@@ -559,7 +550,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const c
         }
 
         if (pkey) {
-            crypto_key_object_t key(pkey, use, kid, alg);
+            crypto_key_object key(pkey, use, kid, alg);
             ret = cryptokey->add(key);
         }
     }
@@ -651,6 +642,20 @@ return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, 
             __leave2;
         }
 
+        uint16 useflag = use;
+        switch (nid) {
+            case NID_X25519:
+            case NID_X448:
+                useflag &= ~crypto_use_t::use_sig;
+                break;
+            case NID_ED25519:
+            case NID_ED448:
+                useflag &= ~crypto_use_t::use_enc;
+                break;
+            default:
+                break;
+        }
+
         bn_x = BN_bin2bn(&x[0], x.size(), nullptr);
         bn_y = BN_bin2bn(&y[0], y.size(), nullptr);
         if (d.size() > 0) {
@@ -708,7 +713,7 @@ return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, 
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key(pkey, use, kid, alg);
+        crypto_key_object key(pkey, (crypto_use_t)useflag, kid, alg);
         switch (nid) {
             case NID_X9_62_prime256v1:
                 break;
@@ -829,7 +834,7 @@ return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, 
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key(pkey, use, kid, alg);
+        crypto_key_object key(pkey, use, kid, alg);
         switch (nid) {
             case NID_X9_62_prime256v1:
                 break;
@@ -890,7 +895,7 @@ return_t crypto_keychain::add_ec_nid_OKP(crypto_key* cryptokey, const char* kid,
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key(pkey, use, kid, alg);
+        crypto_key_object key(pkey, use, kid, alg);
         cryptokey->add(key);
     }
     __finally2 {
@@ -1312,7 +1317,7 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, const 
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key(pkey, use, kid, alg);
+        crypto_key_object key(pkey, use, kid, alg);
 
         ret = cryptokey->add(key);
     }
@@ -1364,7 +1369,7 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, const 
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object_t key(pkey, use, kid, alg);
+        crypto_key_object key(pkey, use, kid, alg);
 
         ret = cryptokey->add(key);
     }

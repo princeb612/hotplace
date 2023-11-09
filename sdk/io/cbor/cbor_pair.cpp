@@ -185,9 +185,9 @@ int cbor_pair::release() {
     return _shared.delref();
 }
 
-cbor_data const* cbor_pair::left() { return _lhs; }
+cbor_data* cbor_pair::left() { return _lhs; }
 
-cbor_object const* cbor_pair::right() { return _rhs; }
+cbor_object* cbor_pair::right() { return _rhs; }
 
 void cbor_pair::represent(stream_t* s) {
     if (s) {

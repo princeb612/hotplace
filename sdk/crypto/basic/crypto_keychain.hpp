@@ -369,16 +369,23 @@ class crypto_keychain {
                     crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief   generate ec key
-     * @param crypto_key* cryptokey [in]
-     * @param const char* kid [inopt]
-     * @param int nid [in]
+     * @param   crypto_key* cryptokey [in]
+     * @param   const char* kid [inopt]
+     * @param   int nid [in]
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
-     * @param binary_t const& x [in]
-     * @param uint8 ybit [in]
-     * @param binary_t const& d [inopt] private key
-     * @return error code (see error.hpp)
+     * @param   binary_t const& x [in]
+     * @param   uint8 ybit [in]
+     * @param   binary_t const& d [inopt] private key
+     * @return  error code (see error.hpp)
+     * @sa      crypto_key::generate
+     *
+     *          keychain.add_ec (key, "kid", NID_X25519, crypto_use_t::use_enc); // ok
+     *          keychain.add_ec (key, "kid", NID_X25519, crypto_use_t::use_enc); // ok
+     *          keychain.add_ec (key, "kid", NID_ED25519, crypto_use_t::use_sig); // ok
+     *          keychain.add_ec (key, "kid", NID_ED448, crypto_use_t::use_sig); // ok
+     *
      */
     return_t add_ec(crypto_key* cryptokey, const char* kid, int nid, binary_t const& x, uint8 ybit, binary_t const& d,
                     crypto_use_t use = crypto_use_t::use_any);

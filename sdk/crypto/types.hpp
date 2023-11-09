@@ -268,10 +268,11 @@ enum crypt_access_t {
 
 enum crypto_kty_t {
     kty_unknown = 0,
-    kty_hmac = 1,  // EVP_PKEY_HMAC    NID_hmac
-    kty_rsa = 2,   // EVP_PKEY_RSA     NID_rsaEncryption
-    kty_ec = 3,    // EVP_PKEY_EC      NID_X9_62_id_ecPublicKey
-    kty_okp = 4,   // EVP_PKEY_ED25519 NID_ED25519, EVP_PKEY_ED448   NID_ED448
+    kty_hmac = 1,        // EVP_PKEY_HMAC    NID_hmac
+    kty_oct = kty_hmac,  // synomym
+    kty_rsa = 2,         // EVP_PKEY_RSA     NID_rsaEncryption
+    kty_ec = 3,          // EVP_PKEY_EC      NID_X9_62_id_ecPublicKey
+    kty_okp = 4,         // EVP_PKEY_ED25519 NID_ED25519, EVP_PKEY_ED448   NID_ED448
     kty_bad = 0xffff,
 };
 
@@ -573,29 +574,31 @@ enum cose_group_t {
     //   12.4. Direct Key Agreement
     //   12.4.1.  ECDH
     //   Table 18 ECDH-ES+HKDF-256, ECDH-ES+HKDF-512, ECDH-SS+HKDF-256, ECDH-SS+HKDF-512
-    cose_group_key_ecdh_hmac = 12,
+    cose_group_key_ecdhes_hmac = 12,
+    cose_group_key_ecdhss_hmac = 13,
     // RFC 8152 12. Content Key Distribution Methods
     //   12.5. Key Agreement with Key Wrap
     //   12.5.1.  ECDH
     //   Table 20 ECDH-ES+A128KW,ECDH-ES+A192KW, ECDH-ES+A256KW, ECDH-SS+A128KW,ECDH-SS+A192KW, ECDH-SS+A256KW
-    cose_group_key_ecdh_aeskw = 13,
+    cose_group_key_ecdhes_aeskw = 14,
+    cose_group_key_ecdhss_aeskw = 15,
     // RFC 8230 2.  RSASSA-PSS Signature Algorithm
     //   Table 1, PS256, PS384, PS512
-    cose_group_sign_rsassa_pss = 14,
+    cose_group_sign_rsassa_pss = 16,
     // RFC 8230 3.  RSAES-OAEP Key Encryption Algorithm
     //   Table 2, RSAES-OAEP w/ SHA-1, RSAES-OAEP w/ SHA-256, RSAES-OAEP w/ SHA-512
-    cose_group_key_rsa_oaep = 15,
+    cose_group_key_rsa_oaep = 17,
     // RFC 8812 2.  RSASSA-PKCS1-v1_5 Signature Algorithm
     //   Table 1, RS256, RS384, RS512, RS1
-    cose_group_sign_rsassa_pkcs15 = 16,
+    cose_group_sign_rsassa_pkcs15 = 18,
     // RFC 9053 10.  IANA Considerations
     //   10.2.  Changes to the "COSE Algorithms" Registry
     //   Table 23, IV-GENERATION
-    cose_group_iv_generate = 17,
+    cose_group_iv_generate = 19,
     // RFC 9054 3.  Hash Algorithm Identifiers
     //   Table 1, SHA-1
     //   Table 2, SHA-256/64, SHA-256, SHA-384, SHA-512, SHA-512/256
-    cose_group_hash = 18,
+    cose_group_hash = 20,
 };
 enum cose_alg_t {
     cose_unknown = 0,
@@ -754,7 +757,7 @@ typedef struct _hint_jose_encryption_t {
 
     int type;          // jwa_t, jwe_t
     int group;         // jwa_group_t, jwe_group_t
-    crypto_kty_t kty;  // crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_hmac
+    crypto_kty_t kty;  // crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_oct
     crypto_kty_t alt;  // for example crypto_kty_t::kty_okp, if kt is crypto_kty_t::kty_ec
     int mode;          // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
 
@@ -764,10 +767,34 @@ typedef struct _hint_jose_encryption_t {
     int hash_alg;
 } hint_jose_encryption_t;
 
+enum cose_hint_flag_t {
+    cose_hint_sign = 1 << 0,
+    cose_hint_enc = 1 << 1,
+    cose_hint_mac = 1 << 2,
+    cose_hint_iv = 1 << 3,
+    cose_hint_salt = 1 << 4,
+    cose_hint_party = 1 << 5,
+    cose_hint_kek = 1 << 6,
+    cose_hint_epk = 1 << 7,
+    cose_hint_static_key = 1 << 8,
+    cose_hint_static_kid = 1 << 9,
+    cose_hint_kty_ec = 1 << 10,
+    cose_hint_kty_okp = 1 << 11,
+    cose_hint_kty_rsa = 1 << 12,
+    cose_hint_kty_oct = 1 << 13,
+    cose_hint_not_supported = 1 << 14,
+};
+
+typedef struct _hint_cose_group_t {
+    cose_group_t group;
+    uint32 hintflags;  // combinations of cose_hint_flag_t
+} hint_cose_group_t;
+
 typedef struct _hint_cose_algorithm_t {
     cose_alg_t alg;
     crypto_kty_t kty;
     cose_group_t group;
+    const hint_cose_group_t* hint_group;
     struct _dgst {
         const char* algname;
         uint16 dlen;

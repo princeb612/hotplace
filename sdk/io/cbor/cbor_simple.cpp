@@ -19,7 +19,7 @@ namespace io {
 
 cbor_simple::cbor_simple(uint8 value) : cbor_object(cbor_type_t::cbor_type_simple), _value(value) { _type = is_kind_of_value(value); }
 
-cbor_simple_t cbor_simple::simple_type() { return _type; }
+cbor_simple_t cbor_simple::simple_type() { return is_kind_of_value(_value); }
 
 cbor_simple_t cbor_simple::is_kind_of(uint8 first) {
     cbor_simple_t type = cbor_simple_t::cbor_simple_error;
@@ -41,20 +41,28 @@ cbor_simple_t cbor_simple::is_kind_of(uint8 first) {
 }
 
 cbor_simple_t cbor_simple::is_kind_of_value(uint8 value) {
-    cbor_simple_t type = cbor_simple_t::cbor_simple_error;
+    cbor_simple_t type = cbor_simple_t::cbor_simple_value;
 
-    if (24 >= value) {
-        type = cbor_simple_t::cbor_simple_value;
+    if (20 == value) {
+        type = cbor_simple_t::cbor_simple_false;
+    } else if (21 == value) {
+        type = cbor_simple_t::cbor_simple_true;
+    } else if (22 == value) {
+        type = cbor_simple_t::cbor_simple_null;
+    } else if (23 == value) {
+        type = cbor_simple_t::cbor_simple_undef;
     } else if (25 == value) {
         type = cbor_simple_t::cbor_simple_half_fp;
     } else if (26 == value) {
         type = cbor_simple_t::cbor_simple_single_fp;
     } else if (27 == value) {
         type = cbor_simple_t::cbor_simple_double_fp;
+    } else if (30 == value) {
+        type = cbor_simple_t::cbor_simple_reserved;
     } else if (31 == value) {
         type = cbor_simple_t::cbor_simple_break;
-    } else {
-        type = cbor_simple_t::cbor_simple_reserved;
+    } else if (24 >= value) {
+        type = cbor_simple_t::cbor_simple_value;
     }
     return type;
 }
