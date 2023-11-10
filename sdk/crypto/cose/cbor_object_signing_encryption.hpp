@@ -177,36 +177,12 @@ class cbor_object_signing_encryption {
     static return_t clear_context(cose_context_t* handle);
 
     /**
-     * @brief   composer
+     * @brief   parser
      */
-    class composer {
+    class parser {
        public:
-        composer();
-        ~composer();
-
-        /**
-         * @brief   cbor_data for protected
-         * @return  error code (see error.hpp)
-         */
-        return_t build_protected(cbor_data** object);
-        return_t build_protected(cbor_data** object, cose_variantmap_t& input);
-        return_t build_protected(cbor_data** object, cose_variantmap_t& input, cose_orderlist_t& order);
-        return_t build_protected(cbor_data** object, cbor_map* input);
-        /**
-         * @brief   cbor_map for unprotected
-         * @return  error code (see error.hpp)
-         */
-        return_t build_unprotected(cbor_map** object);
-        return_t build_unprotected(cbor_map** object, cose_variantmap_t& input);
-        return_t build_unprotected(cbor_map** object, cose_variantmap_t& input, cose_orderlist_t& order);
-        return_t build_data(cbor_data** object, const char* payload);
-        /**
-         * @brief   cbor_data for payload
-         * @return  error code (see error.hpp)
-         */
-        return_t build_data(cbor_data** object, const byte_t* payload, size_t size);
-        return_t build_data(cbor_data** object, binary_t const& payload);
-        return_t build_data_b16(cbor_data** object, const char* str);
+        parser();
+        ~parser();
 
         /**
          * @brief   parse
@@ -215,27 +191,6 @@ class cbor_object_signing_encryption {
          * @return  error code (see error.hpp)
          */
         return_t parse(cose_context_t* handle, binary_t const& input);
-        /**
-         * @brief   read bstr of protected (cbor_data) to list
-         * @param   binary_t const& data [in]
-         * @param   cose_variantmap_t& vtl [out]
-         * @return  error code (see error.hpp)
-         */
-        return_t parse_binary(binary_t const& data, cose_variantmap_t& vtl);
-        /**
-         * @brief   read unprotected (cbor_map) to list
-         * @param   cbor_map* data [in]
-         * @param   cose_variantmap_t& vtl [out]
-         * @return  error code (see error.hpp)
-         */
-        return_t parse_map(cbor_map* data, cose_variantmap_t& vtl);
-        /**
-         * @brief   read unprotected (cbor_map) to context
-         * @param   cbor_map* data [in]
-         * @param   cose_structure_t& item [out]
-         * @return  error code (see error.hpp)
-         */
-        return_t parse_unprotected(cbor_map* data, cose_structure_t& item);
         /**
          * @brief   find
          * @param   int key [in]
@@ -308,6 +263,27 @@ class cbor_object_signing_encryption {
         return_t doparse_singleitem(cose_context_t* handle, cbor_object* object);
         return_t doparse_multiitems(cose_context_t* handle, cbor_object* object);
         return_t doparse_multiitem(cbor_array* object, cose_structure_t& body);
+        /**
+         * @brief   read unprotected (cbor_map) to context
+         * @param   cbor_map* data [in]
+         * @param   cose_structure_t& item [out]
+         * @return  error code (see error.hpp)
+         */
+        return_t doparse_unprotected(cbor_map* data, cose_structure_t& item);
+        /**
+         * @brief   read bstr of protected (cbor_data) to list
+         * @param   binary_t const& data [in]
+         * @param   cose_variantmap_t& vtl [out]
+         * @return  error code (see error.hpp)
+         */
+        return_t doparse_binary(binary_t const& data, cose_variantmap_t& vtl);
+        /**
+         * @brief   read unprotected (cbor_map) to list
+         * @param   cbor_map* data [in]
+         * @param   cose_variantmap_t& vtl [out]
+         * @return  error code (see error.hpp)
+         */
+        return_t doparse_map(cbor_map* data, cose_variantmap_t& vtl);
     };
 
    protected:

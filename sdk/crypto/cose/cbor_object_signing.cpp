@@ -14,6 +14,7 @@
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_sign.hpp>
 #include <sdk/crypto/cose/cbor_object_signing.hpp>
+#include <sdk/crypto/cose/cose_composer.hpp>
 #include <sdk/io/cbor/cbor_array.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_encode.hpp>
@@ -58,6 +59,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption cose;
+    cbor_object_signing_encryption::parser parser;
 
     __try2 {
         cose.clear_context(handle);
@@ -73,7 +75,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
         body.bin_payload = input;
 
         cbor_tag_t tag = cbor_tag_t::cose_tag_sign;
-        cbor_object_signing_encryption::composer composer;
+        cbor_object_signing_encryption_composer::composer composer;
         cbor_publisher pub;
         std::list<cose_alg_t>::iterator iter;
 
@@ -84,7 +86,13 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             std::string kid;
             const EVP_PKEY* pkey = key->select(kid, sig);
             // subitem of handle
-            cose_structure_t* item = new cose_structure_t;
+            cose_structure_t* item = nullptr;
+            __try_new_catch_only(item, new cose_structure_t);
+            if (nullptr == item) {
+                ret = errorcode_t::out_of_memory;
+                break;
+            }
+
             // composer
             // create a binary using cbor_pushlisher and put it into subitem of handle
             cbor_data* cbor_sign_protected = nullptr;
@@ -103,13 +111,13 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
             // 2 unprotected (kid)
             if (kid.size()) {
                 // 2.1 compose
-                variant_set_bstr_new(value, kid.c_str(), kid.size());
+                variant_set_bstr_new(value, (unsigned char*)kid.c_str(), kid.size());
                 item->unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
                 // bin_unprotected is not a member of the tobesigned
             }
 
             binary_t tobesigned;
-            composer.compose_sig_structure(handle, *item, tobesigned);
+            parser.compose_sig_structure(handle, *item, tobesigned);
             openssl_sign signprocessor;
             signprocessor.sign(pkey, sig, tobesigned, item->bin_payload);  // signature
 
@@ -124,6 +132,10 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
                 default:
                     break;
             }
+        }
+
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
 
         // [prototype] cbor_tag_t::cose_tag_sign only
@@ -152,7 +164,8 @@ return_t cbor_object_signing::mac(cose_context_t* handle, crypto_key* key, std::
 return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
     return_t ret = errorcode_t::success;
     cbor_object_signing_encryption cose;
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption::parser parser;
+    // cbor_object_signing_encryption_composer::composer composer;
     __try2 {
         cose.clear_context(handle);
         result = false;
@@ -162,7 +175,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
             __leave2;
         }
 
-        ret = composer.parse(handle, input);
+        ret = parser.parse(handle, input);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -191,7 +204,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
 return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag, binary_t& signature) {
     return_t ret = errorcode_t::success;
     cbor_publisher pub;
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption_composer::composer composer;
     cbor_array* root = nullptr;
     cbor_map* cbor_body_unprotected = nullptr;
 
@@ -266,7 +279,8 @@ return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* 
 return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* key, cose_structure_t& item, binary_t const& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption::parser parser;
+    // cbor_object_signing_encryption_composer::composer composer;
     openssl_sign signprocessor;
 
     __try2 {
@@ -291,7 +305,7 @@ return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* 
         }
 
         binary_t tobesigned;
-        composer.compose_sig_structure(handle, item, tobesigned);
+        parser.compose_sig_structure(handle, item, tobesigned);
 
         crypt_sig_t sig = advisor->sigof(alg);
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
@@ -391,7 +405,8 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption::parser parser;
+    // cbor_object_signing_encryption_composer::composer composer;
     int enc_alg = 0;
 
     __try2 {
@@ -413,8 +428,8 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
         alg = body.alg;
         if (item.parent) {
             kid = item.kid;
-            composer.finditem(cose_key_t::cose_iv, iv, item.unprotected_map);
-            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, item.unprotected_map);
+            parser.finditem(cose_key_t::cose_iv, iv, item.unprotected_map);
+            parser.finditem(cose_key_t::cose_partial_iv, partial_iv, item.unprotected_map);
             cek = item.binarymap[cose_param_t::cose_param_cek];
         } else {
             cek = handle->binarymap[cose_param_t::cose_param_cek];
@@ -423,13 +438,13 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             kid = body.kid;
         }
         if (0 == iv.size()) {
-            composer.finditem(cose_key_t::cose_iv, iv, body.unprotected_map);
+            parser.finditem(cose_key_t::cose_iv, iv, body.unprotected_map);
             if (0 == iv.size()) {
                 iv = handle->binarymap[cose_param_t::cose_unsent_iv];
             }
         }
         if (0 == partial_iv.size()) {
-            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, body.unprotected_map);
+            parser.finditem(cose_key_t::cose_partial_iv, partial_iv, body.unprotected_map);
         }
 
         if (iv.size() && partial_iv.size()) {
@@ -453,7 +468,7 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
             }
         }
 
-        composer.compose_mac_structure(handle, tomac);
+        parser.compose_mac_structure(handle, tomac);
 
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
         if (nullptr == hint) {

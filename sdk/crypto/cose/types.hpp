@@ -64,9 +64,9 @@ enum cose_flag_t {
     cose_debug_partial_iv = (1 << 17),
 };
 
-typedef std::map<int, variant_t> cose_variantmap_t;
 typedef std::list<int> cose_orderlist_t;
 typedef std::map<cose_param_t, binary_t> cose_binarymap_t;
+typedef std::map<int, variant_t> cose_variantmap_t;
 
 static inline void cose_variantmap_copy(cose_variantmap_t& target, cose_variantmap_t& source) {
     variant_t vt;
@@ -101,6 +101,10 @@ static inline void cose_variantmap_free(cose_variantmap_t& map) {
 }
 
 class cose_structure_t {
+    friend class cbor_object_encryption;
+    friend class cbor_object_signing;
+    friend class cbor_object_signing_encryption;
+
    public:
     cose_structure_t() : parent(nullptr), alg(cose_alg_t::cose_unknown), epk(nullptr){};
 
@@ -110,10 +114,12 @@ class cose_structure_t {
         child->parent = this;
         multiitems.push_back(child);
     }
+
     void clearall() {
         clear();
         binarymap.clear();
     }
+
     void clear() {
         parent = nullptr;
         bin_protected.clear();
@@ -140,7 +146,7 @@ class cose_structure_t {
         }
     }
 
-    // private: // todo refactor
+   private:
     cose_structure_t* parent;
     binary_t bin_protected;  // protected
     binary_t bin_payload;
