@@ -17,6 +17,7 @@
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/crypto/basic/openssl_sign.hpp>
 #include <sdk/crypto/cose/cbor_object_encryption.hpp>
+#include <sdk/crypto/cose/cose_composer.hpp>
 #include <sdk/io/cbor/cbor_array.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_encode.hpp>
@@ -27,12 +28,6 @@
 
 namespace hotplace {
 namespace crypto {
-
-return_t prepare_encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods);
-return_t dorandom(cose_context_t* handle, crypto_key* key, cose_alg_t alg, cose_structure_t& item);
-return_t doencrypt(cose_context_t* handle, crypto_key* key, cose_structure_t& item, binary_t const& input, binary_t& ciphertext);
-return_t compose(cbor_array* base, cose_structure_t& item, binary_t const& ciphertext);
-return_t compose(cbor_array* base, cose_structure_t& item);
 
 cbor_object_encryption::cbor_object_encryption() {
     // do nothing
@@ -68,7 +63,7 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
     crypto_advisor* advisor = crypto_advisor::get_instance();
     std::set<return_t> results;
     cbor_object_signing_encryption cose;
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption_composer::composer composer;
     cbor_publisher publisher;
 
     __try2 {
@@ -164,9 +159,9 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
     return ret;
 }
 
-return_t compose(cbor_array* base, cose_structure_t& item, binary_t const& ciphertext) {
+return_t cbor_object_encryption::compose(cbor_array* base, cose_structure_t& item, binary_t const& ciphertext) {
     return_t ret = errorcode_t::success;
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption_composer::composer composer;
 
     cbor_data* cbor_protected_map = nullptr;
     cbor_map* cbor_unprotected_map = nullptr;
@@ -180,9 +175,9 @@ return_t compose(cbor_array* base, cose_structure_t& item, binary_t const& ciphe
     return ret;
 }
 
-return_t compose(cbor_array* base, cose_structure_t& item) {
+return_t cbor_object_encryption::compose(cbor_array* base, cose_structure_t& item) {
     return_t ret = errorcode_t::success;
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption_composer::composer composer;
     cbor_publisher publisher;
 
     cbor_data* cbor_protected_map = nullptr;
@@ -196,11 +191,11 @@ return_t compose(cbor_array* base, cose_structure_t& item) {
     return ret;
 }
 
-return_t prepare_encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods) {
+return_t cbor_object_encryption::prepare_encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption cose;
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption_composer::composer composer;
     cbor_publisher publisher;
 
     __try2 {
@@ -230,11 +225,21 @@ return_t prepare_encrypt(cose_context_t* handle, crypto_key* key, std::list<cose
                 body.alg = alg;
                 dorandom(handle, key, alg, body);
             } else {
-                cose_structure_t* item = new cose_structure_t;
-                item->alg = alg;
-                dorandom(handle, key, alg, *item);
-                handle->body.add(item);
+                cose_structure_t* item = nullptr;
+                __try_new_catch_only(item, new cose_structure_t);
+                if (item) {
+                    item->alg = alg;
+                    dorandom(handle, key, alg, *item);
+                    handle->body.add(item);
+                } else {
+                    ret = errorcode_t::out_of_memory;
+                    break;
+                }
             }
+        }
+
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
 
         if (0 == (cose_hint_flag_t::cose_hint_enc & flags)) {
@@ -248,7 +253,7 @@ return_t prepare_encrypt(cose_context_t* handle, crypto_key* key, std::list<cose
     return ret;
 }
 
-return_t dorandom(cose_context_t* handle, crypto_key* key, cose_alg_t alg, cose_structure_t& item) {
+return_t cbor_object_encryption::dorandom(cose_context_t* handle, crypto_key* key, cose_alg_t alg, cose_structure_t& item) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -444,11 +449,11 @@ return_t dorandom(cose_context_t* handle, crypto_key* key, cose_alg_t alg, cose_
     return ret;
 }
 
-return_t doencrypt(cose_context_t* handle, crypto_key* key, cose_structure_t& item, binary_t const& input, binary_t& ciphertext) {
+return_t cbor_object_encryption::doencrypt(cose_context_t* handle, crypto_key* key, cose_structure_t& item, binary_t const& input, binary_t& ciphertext) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption_composer::composer composer;
     openssl_crypt crypt;
 
 #if 0
@@ -624,7 +629,8 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
     crypto_advisor* advisor = crypto_advisor::get_instance();
     std::set<return_t> results;
     cbor_object_signing_encryption cose;
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption::parser parser;
+    cbor_object_signing_encryption_composer::composer composer;
     // const EVP_PKEY* pkey = nullptr;
 
     // RFC 8152 4.3.  Externally Supplied Data
@@ -641,7 +647,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
             __leave2;
         }
 
-        ret = composer.parse(handle, input);
+        ret = parser.parse(handle, input);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -687,7 +693,8 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    cbor_object_signing_encryption::composer composer;
+    cbor_object_signing_encryption::parser parser;
+    cbor_object_signing_encryption_composer::composer composer;
     openssl_crypt crypt;
 
     __try2 {
@@ -716,8 +723,8 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
 
         if (item.parent) {
             kid = item.kid;
-            composer.finditem(cose_key_t::cose_iv, iv, item.unprotected_map);
-            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, item.unprotected_map);
+            parser.finditem(cose_key_t::cose_iv, iv, item.unprotected_map);
+            parser.finditem(cose_key_t::cose_partial_iv, partial_iv, item.unprotected_map);
             cek = item.binarymap[cose_param_t::cose_param_cek];
         } else {
             cek = handle->binarymap[cose_param_t::cose_param_cek];
@@ -726,13 +733,13 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             kid = body.kid;
         }
         if (0 == iv.size()) {
-            composer.finditem(cose_key_t::cose_iv, iv, body.unprotected_map);
+            parser.finditem(cose_key_t::cose_iv, iv, body.unprotected_map);
             if (0 == iv.size()) {
                 iv = handle->binarymap[cose_param_t::cose_unsent_iv];
             }
         }
         if (0 == partial_iv.size()) {
-            composer.finditem(cose_key_t::cose_partial_iv, partial_iv, body.unprotected_map);
+            parser.finditem(cose_key_t::cose_partial_iv, partial_iv, body.unprotected_map);
         }
 
         if (iv.size() && partial_iv.size()) {
@@ -754,7 +761,7 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
             }
         }
 
-        composer.compose_enc_structure(handle, aad);
+        parser.compose_enc_structure(handle, aad);
 
         uint8 cbor_tag = handle->cbor_tag;
         if (0 == cek.size()) {

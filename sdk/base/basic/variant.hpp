@@ -157,342 +157,485 @@ typedef struct __variant_t {
     __variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
 } variant_t;
 
-#define variant_init(vt)                      \
-    {                                         \
-        vt.type = TYPE_NULL;                  \
-        memset(&vt.data, 0, sizeof(vt.data)); \
-        vt.size = 0;                          \
-        vt.flag = 0;                          \
-    }
-#define variant_set_flag \
-    (vt, flag) { vt.flag |= flag }
-#define variant_unset_flag \
-    (vt, flag) { vt.flag &= ~flag }
+static inline variant_t& variant_init(variant_t& vt) {
+    vt.type = TYPE_NULL;
+    memset(&vt.data, 0, sizeof(vt.data));
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
 
-#define variant_set_bool(vt, value) \
-    {                               \
-        vt.type = TYPE_BOOL;        \
-        vt.data.b = (value);        \
-        vt.size = 0;                \
-        vt.flag = 0;                \
-    }
-#define variant_set_int8(vt, value) \
-    {                               \
-        vt.type = TYPE_INT8;        \
-        vt.data.i8 = (value);       \
-        vt.size = 0;                \
-        vt.flag = 0;                \
-    }
-#define variant_set_uint8(vt, value) \
-    {                                \
-        vt.type = TYPE_UINT8;        \
-        vt.data.ui8 = (value);       \
-        vt.size = 0;                 \
-        vt.flag = 0;                 \
-    }
-#define variant_set_int16(vt, value) \
-    {                                \
-        vt.type = TYPE_INT16;        \
-        vt.data.i16 = (value);       \
-        vt.size = 0;                 \
-        vt.flag = 0;                 \
-    }
-#define variant_set_uint16(vt, value) \
-    {                                 \
-        vt.type = TYPE_UINT16;        \
-        vt.data.ui16 = (value);       \
-        vt.size = 0;                  \
-        vt.flag = 0;                  \
-    }
-#define variant_set_int32(vt, value) \
-    {                                \
-        vt.type = TYPE_INT32;        \
-        vt.data.i32 = (value);       \
-        vt.size = 0;                 \
-        vt.flag = 0;                 \
-    }
-#define variant_set_uint32(vt, value) \
-    {                                 \
-        vt.type = TYPE_UINT32;        \
-        vt.data.ui32 = (value);       \
-        vt.size = 0;                  \
-        vt.flag = 0;                  \
-    }
-#define variant_set_int64(vt, value) \
-    {                                \
-        vt.type = TYPE_INT64;        \
-        vt.data.i64 = (value);       \
-        vt.size = 0;                 \
-        vt.flag = 0;                 \
-    }
-#define variant_set_uint64(vt, value) \
-    {                                 \
-        vt.type = TYPE_UINT64;        \
-        vt.data.ui64 = (value);       \
-        vt.size = 0;                  \
-        vt.flag = 0;                  \
-    }
+static inline variant_t& variant_set_flag(variant_t& vt, uint8 flag) {
+    vt.flag |= flag;
+    return vt;
+}
+
+static inline variant_t& variant_unset_flag(variant_t& vt, uint8 flag) {
+    vt.flag &= ~flag;
+    return vt;
+}
+
+static inline variant_t& variant_set_pointer(variant_t& vt, const void* value) {
+    vt.type = TYPE_POINTER;
+    vt.data.p = (void*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_pointer(void* value) {
+    variant_t vt;
+    return variant_set_pointer(vt, value);
+}
+
+static inline variant_t& variant_set_bool(variant_t& vt, bool value) {
+    vt.type = TYPE_BOOL;
+    vt.data.b = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_bool(bool value) {
+    variant_t vt;
+    return variant_set_bool(vt, value);
+}
+
+static inline variant_t& variant_set_int8(variant_t& vt, int8 value) {
+    vt.type = TYPE_INT8;
+    vt.data.i8 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_int8(int8 value) {
+    variant_t vt;
+    return variant_set_int8(vt, value);
+}
+
+static inline variant_t& variant_set_uint8(variant_t& vt, uint8 value) {
+    vt.type = TYPE_UINT8;
+    vt.data.ui8 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_uint8(uint8 value) {
+    variant_t vt;
+    return variant_set_uint8(vt, value);
+}
+
+static inline variant_t& variant_set_int16(variant_t& vt, int16 value) {
+    vt.type = TYPE_INT16;
+    vt.data.i16 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_int16(int16 value) {
+    variant_t vt;
+    return variant_set_int16(vt, value);
+}
+
+static inline variant_t& variant_set_uint16(variant_t& vt, uint16 value) {
+    vt.type = TYPE_UINT16;
+    vt.data.ui16 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_uint16(uint16 value) {
+    variant_t vt;
+    return variant_set_uint16(vt, value);
+}
+
+static inline variant_t& variant_set_int32(variant_t& vt, int32 value) {
+    vt.type = TYPE_INT32;
+    vt.data.i32 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_int32(int32 value) {
+    variant_t vt;
+    return variant_set_int32(vt, value);
+}
+
+static inline variant_t& variant_set_uint32(variant_t& vt, uint32 value) {
+    vt.type = TYPE_UINT32;
+    vt.data.ui32 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_uint32(uint32 value) {
+    variant_t vt;
+    return variant_set_uint32(vt, value);
+}
+
+static inline variant_t& variant_set_int64(variant_t& vt, int64 value) {
+    vt.type = TYPE_INT64;
+    vt.data.i64 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_int64(int64 value) {
+    variant_t vt;
+    return variant_set_int64(vt, value);
+}
+
+static inline variant_t& variant_set_uint64(variant_t& vt, uint64 value) {
+    vt.type = TYPE_UINT64;
+    vt.data.ui64 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_uint64(uint64 value) {
+    variant_t vt;
+    return variant_set_uint64(vt, value);
+}
+
 #if defined __SIZEOF_INT128__
-#define variant_set_int128(vt, value) \
-    {                                 \
-        vt.type = TYPE_INT128;        \
-        vt.data.i128 = (value);       \
-        vt.size = 0;                  \
-        vt.flag = 0;                  \
-    }
-#define variant_set_uint128(vt, value) \
-    {                                  \
-        vt.type = TYPE_UINT128;        \
-        vt.data.ui128 = (value);       \
-        vt.size = 0;                   \
-        vt.flag = 0;                   \
-    }
-#endif
-#define variant_set_fp16(vt, value) \
-    {                               \
-        vt.type = TYPE_FP16;        \
-        vt.data.ui16 = (value);     \
-        vt.size = 0;                \
-        vt.flag = 0;                \
-    }
-#define variant_set_fp32(vt, value) \
-    {                               \
-        vt.type = TYPE_FLOAT;       \
-        vt.data.f = (value);        \
-        vt.size = 0;                \
-        vt.flag = 0;                \
-    }
-#define variant_set_float(vt, value) \
-    {                                \
-        vt.type = TYPE_FLOAT;        \
-        vt.data.f = (value);         \
-        vt.size = 0;                 \
-        vt.flag = 0;                 \
-    }
-#define variant_set_fp64(vt, value) \
-    {                               \
-        vt.type = TYPE_DOUBLE;      \
-        vt.data.d = (value);        \
-        vt.size = 0;                \
-        vt.flag = 0;                \
-    }
-#define variant_set_double(vt, value) \
-    {                                 \
-        vt.type = TYPE_DOUBLE;        \
-        vt.data.d = (value);          \
-        vt.size = 0;                  \
-        vt.flag = 0;                  \
-    }
-#if defined __SIZEOF_INT128__
-#define variant_set_fp128(vt, value) \
-    {                                \
-        vt.type = TYPE_FP128;        \
-        vt.data.ui128 = (value);     \
-        vt.size = 0;                 \
-        vt.flag = 0;                 \
-    }
+static inline variant_t& variant_set_int128(variant_t& vt, int128 value) {
+    vt.type = TYPE_INT128;
+    vt.data.i128 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_int128(int128 value) {
+    variant_t vt;
+    return variant_set_int128(vt, value);
+}
+
+static inline variant_t& variant_set_uint128(variant_t& vt, uint128 value) {
+    vt.type = TYPE_UINT128;
+    vt.data.ui128 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_uint128(uint128 value) {
+    variant_t vt;
+    return variant_set_uint128(vt, value);
+}
 #endif
 
-#define variant_set_bool_ptr(vt, value) \
-    {                                   \
-        vt.type = TYPE_BOOL;            \
-        vt.data.b = *(bool*)(value);    \
-        vt.size = 0;                    \
-        vt.flag = 0;                    \
-    }
-#define variant_set_int8_ptr(vt, value) \
-    {                                   \
-        vt.type = TYPE_INT8;            \
-        vt.data.i8 = *(int8*)(value);   \
-        vt.size = 0;                    \
-        vt.flag = 0;                    \
-    }
-#define variant_set_uint8_ptr(vt, value) \
-    {                                    \
-        vt.type = TYPE_UINT8;            \
-        vt.data.ui8 = *(uint8*)(value);  \
-        vt.size = 0;                     \
-        vt.flag = 0;                     \
-    }
-#define variant_set_int16_ptr(vt, value) \
-    {                                    \
-        vt.type = TYPE_INT16;            \
-        vt.data.i16 = *(int16*)(value);  \
-        vt.size = 0;                     \
-        vt.flag = 0;                     \
-    }
-#define variant_set_uint16_ptr(vt, value) \
-    {                                     \
-        vt.type = TYPE_UINT16;            \
-        vt.data.ui16 = *(uint16*)(value); \
-        vt.size = 0;                      \
-        vt.flag = 0;                      \
-    }
-#define variant_set_int32_ptr(vt, value) \
-    {                                    \
-        vt.type = TYPE_INT32;            \
-        vt.data.i32 = *(int32*)(value);  \
-        vt.size = 0;                     \
-        vt.flag = 0;                     \
-    }
-#define variant_set_uint32_ptr(vt, value) \
-    {                                     \
-        vt.type = TYPE_UINT32;            \
-        vt.data.ui32 = *(uint32*)(value); \
-        vt.size = 0;                      \
-        vt.flag = 0;                      \
-    }
-#define variant_set_int64_ptr(vt, value) \
-    {                                    \
-        vt.type = TYPE_INT64;            \
-        vt.data.i64 = *(int64*)(value);  \
-        vt.size = 0;                     \
-        vt.flag = 0;                     \
-    }
-#define variant_set_uint64_ptr(vt, value) \
-    {                                     \
-        vt.type = TYPE_UINT64;            \
-        vt.data.ui64 = *(uint64*)(value); \
-        vt.size = 0;                      \
-        vt.flag = 0;                      \
-    }
-#if defined __SIZEOF_INT128__
-#define variant_set_int128_ptr(vt, value) \
-    {                                     \
-        vt.type = TYPE_INT128;            \
-        vt.data.i128 = *(int128*)(value); \
-        vt.size = 0;                      \
-        vt.flag = 0;                      \
-    }
-#define variant_set_uint128_ptr(vt, value)  \
-    {                                       \
-        vt.type = TYPE_UINT128;             \
-        vt.data.ui128 = *(uint128*)(value); \
-        vt.size = 0;                        \
-        vt.flag = 0;                        \
-    }
-#endif
-#define variant_set_float_ptr(vt, value) \
-    {                                    \
-        vt.type = TYPE_FLOAT;            \
-        vt.data.f = *(float*)(value);    \
-        vt.size = 0;                     \
-        vt.flag = 0;                     \
-    }
-#define variant_set_double_ptr(vt, value) \
-    {                                     \
-        vt.type = TYPE_DOUBLE;            \
-        vt.data.d = *(double*)(value);    \
-        vt.size = 0;                      \
-        vt.flag = 0;                      \
-    }
+static inline variant_t& variant_set_fp16(variant_t& vt, uint16 value) {
+    vt.type = TYPE_FP16;
+    vt.data.ui16 = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
 
-#define variant_set_pointer(vt, value) \
-    {                                  \
-        vt.type = TYPE_POINTER;        \
-        vt.data.p = (void*)(value);    \
-        vt.size = 0;                   \
-        vt.flag = 0;                   \
+static inline variant_t variant_fp16(uint16 value) {
+    variant_t vt;
+    return variant_set_fp16(vt, value);
+}
+
+static inline variant_t& variant_set_fp32(variant_t& vt, float value) {
+    vt.type = TYPE_FLOAT;
+    vt.data.f = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_fp32(float value) {
+    variant_t vt;
+    return variant_set_fp32(vt, value);
+}
+
+static inline variant_t& variant_set_float(variant_t& vt, float value) { return variant_set_fp32(vt, value); }
+
+static inline variant_t variant_float(float value) {
+    variant_t vt;
+    return variant_set_fp32(vt, value);
+}
+
+static inline variant_t& variant_set_fp64(variant_t& vt, double value) {
+    vt.type = TYPE_DOUBLE;
+    vt.data.d = (value);
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t variant_fp64(double value) {
+    variant_t vt;
+    return variant_set_fp64(vt, value);
+}
+
+static inline variant_t& variant_set_double(variant_t& vt, double value) { return variant_set_fp64(vt, value); }
+
+static inline variant_t variant_double(double value) {
+    variant_t vt;
+    return variant_set_fp64(vt, value);
+}
+
+static inline variant_t& variant_set_bool_ptr(variant_t& vt, bool* value) {
+    vt.type = TYPE_BOOL;
+    vt.data.b = *(bool*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_int8_ptr(variant_t& vt, int8* value) {
+    vt.type = TYPE_INT8;
+    vt.data.i8 = *(int8*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_int8_ptr(variant_t& vt, uint8* value) {
+    vt.type = TYPE_INT8;
+    vt.data.ui8 = *(uint8*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_int16_ptr(variant_t& vt, int16* value) {
+    vt.type = TYPE_INT16;
+    vt.data.i16 = *(int16*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_int16_ptr(variant_t& vt, uint16* value) {
+    vt.type = TYPE_INT16;
+    vt.data.ui16 = *(uint16*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_int32_ptr(variant_t& vt, int32* value) {
+    vt.type = TYPE_INT32;
+    vt.data.i32 = *(int32*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_int32_ptr(variant_t& vt, uint32* value) {
+    vt.type = TYPE_INT32;
+    vt.data.ui32 = *(uint32*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_int64_ptr(variant_t& vt, int64* value) {
+    vt.type = TYPE_INT64;
+    vt.data.i64 = *(int64*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_int64_ptr(variant_t& vt, uint64* value) {
+    vt.type = TYPE_INT64;
+    vt.data.ui64 = *(uint64*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+#if defined __SIZEOF_INT128__
+static inline variant_t& variant_set_int128_ptr(variant_t& vt, int128* value) {
+    vt.type = TYPE_INT128;
+    vt.data.i128 = *(int128*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_int128_ptr(variant_t& vt, uint128* value) {
+    vt.type = TYPE_INT128;
+    vt.data.ui128 = *(uint128*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+#endif
+
+static inline variant_t& variant_set_float_ptr(variant_t& vt, float* value) {
+    vt.type = TYPE_FLOAT;
+    vt.data.f = *(float*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_double_ptr(variant_t& vt, double* value) {
+    vt.type = TYPE_DOUBLE;
+    vt.data.d = *(double*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_str(variant_t& vt, const char* value) {
+    vt.type = TYPE_STRING;
+    vt.data.str = (char*)value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_nstr(variant_t& vt, const char* value, size_t n) {
+    vt.type = TYPE_NSTRING;
+    vt.data.str = (char*)value;
+    vt.size = n;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_bstr(variant_t& vt, const unsigned char* value, size_t n) {
+    vt.type = TYPE_BINARY;
+    vt.data.bstr = (unsigned char*)value;
+    vt.size = n;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set(variant_t& vt, vartype_t vtype, void* value) {
+    vt.type = vtype;
+    vt.data.p = value;
+    vt.size = 0;
+    vt.flag = 0;
+    return vt;
+}
+
+static inline variant_t& variant_set_str_new(variant_t& vt, const char* value) {
+    vt.type = TYPE_STRING;
+    vt.size = 0;
+    vt.flag = 0;
+    char* p = nullptr;
+    if (value) {
+        p = strdup(value);
+        if (p) {
+            vt.data.str = p;
+            vt.flag = variant_flag_t::flag_free;
+        }
     }
-#define variant_set_str(vt, value)    \
-    {                                 \
-        vt.type = TYPE_STRING;        \
-        vt.data.str = (char*)(value); \
-        vt.size = 0;                  \
-        vt.flag = 0;                  \
+    vt.data.str = p;
+    return vt;
+}
+
+static inline variant_t variant_str_new(const char* value) {
+    variant_t vt;
+    return variant_set_str_new(vt, value);
+}
+
+static inline variant_t& variant_set_strn_new(variant_t& vt, const char* value, size_t n) {
+    vt.type = TYPE_STRING;
+    vt.size = 0;
+    vt.flag = 0;
+    char* p = nullptr;
+    if (n) {
+        p = (char*)malloc(n + 1);
+        if (p) {
+            strncpy(p, value, n);
+            *(p + n) = 0;
+            vt.flag = variant_flag_t::flag_free;
+        }
     }
-#define variant_set_nstr(vt, value, n) \
-    {                                  \
-        vt.type = TYPE_NSTRING;        \
-        vt.data.str = (value);         \
-        vt.size = (n);                 \
-        vt.flag = 0;                   \
+    vt.data.str = p;
+    return vt;
+}
+
+static inline variant_t variant_strn_new(const char* value, size_t n) {
+    variant_t vt;
+    return variant_set_strn_new(vt, value, n);
+}
+
+static inline variant_t& variant_set_bstr_new(variant_t& vt, const unsigned char* value, size_t n) {
+    vt.type = TYPE_BINARY;
+    vt.size = 0;
+    vt.flag = 0;
+    unsigned char* p = nullptr;
+    if (n) {
+        p = (unsigned char*)malloc(n + 1);
+        if (p) {
+            memcpy(p, value, n);
+            *(p + n) = 0;
+            vt.size = n;
+            vt.flag = variant_flag_t::flag_free;
+        }
     }
-#define variant_set_bstr(vt, value, n)   \
-    {                                    \
-        vt.type = TYPE_BINARY;           \
-        vt.data.bstr = (byte_t*)(value); \
-        vt.size = (n);                   \
-        vt.flag = 0;                     \
+    vt.data.bstr = p;
+    return vt;
+}
+
+static inline variant_t variant_bstr_new(const unsigned char* value, size_t n) {
+    variant_t vt;
+    return variant_set_bstr_new(vt, value, n);
+}
+
+static inline variant_t& variant_set_nstr_new(variant_t& vt, const char* value, size_t n) {
+    vt.type = TYPE_NSTRING;
+    vt.size = 0;
+    vt.flag = 0;
+    char* p = nullptr;
+    if (n) {
+        p = (char*)malloc(n + 1);
+        if (p) {
+            strncpy(p, value, n);
+            *(p + n) = 0;
+            vt.size = n;
+            vt.flag = variant_flag_t::flag_free;
+        }
     }
-#define variant_set(vt, vttype, value) \
-    {                                  \
-        vt.type = vttype;              \
-        vt.data.p = (void*)(value);    \
-        vt.flag = 0;                   \
+    vt.data.str = p;
+    return vt;
+}
+
+static inline variant_t variant_nstr_new(const char* value, size_t n) {
+    variant_t vt;
+    return variant_set_nstr_new(vt, value, n);
+}
+
+static inline variant_t& variant_set_binary_new(variant_t& vt, binary_t const& bin) {
+    vt.type = TYPE_BINARY;
+    vt.size = 0;
+    vt.flag = 0;
+    unsigned char* p = nullptr;
+    size_t n = bin.size();
+    if (n) {
+        p = (unsigned char*)malloc(n + 1);
+        if (p) {
+            memcpy(p, &bin[0], n);
+            *(p + n) = 0;
+            vt.size = n;
+            vt.flag = variant_flag_t::flag_free;
+        }
     }
-// strdup
-#define variant_set_str_new(vt, value)       \
-    {                                        \
-        vt.type = TYPE_STRING;               \
-        vt.data.str = strdup(value);         \
-        vt.size = 0;                         \
-        vt.flag = variant_flag_t::flag_free; \
-    }
-// strndup
-#define variant_set_strn_new(vt, value, n)   \
-    {                                        \
-        vt.type = TYPE_STRING;               \
-        vt.size = 0;                         \
-        char* p = (char*)malloc((n) + 1);    \
-        if (p) {                             \
-            strncpy(p, value, (n));          \
-            *(p + (n)) = 0;                  \
-        };                                   \
-        vt.data.str = p;                     \
-        vt.flag = variant_flag_t::flag_free; \
-    }
-// duplicate
-#define variant_set_bstr_new(vt, value, n)   \
-    {                                        \
-        vt.type = TYPE_BINARY;               \
-        vt.size = 0;                         \
-        byte_t* p = nullptr;                 \
-        if (n) {                             \
-            p = (byte_t*)malloc(n + 1);      \
-            if (p) {                         \
-                memcpy(p, value, (n));       \
-                vt.size = (n);               \
-                *(p + n) = 0;                \
-            };                               \
-        };                                   \
-        vt.data.bstr = (byte_t*)p;           \
-        vt.flag = variant_flag_t::flag_free; \
-    }
-// strndup
-#define variant_set_nstr_new(vt, value, n)   \
-    {                                        \
-        vt.type = TYPE_NSTRING;              \
-        vt.size = (n);                       \
-        char* p = nullptr;                   \
-        if (n) {                             \
-            p = (char*)malloc((n) + 1);      \
-            if (p) {                         \
-                strncpy(p, value, (n));      \
-                *(p + (n)) = 0;              \
-            };                               \
-        };                                   \
-        vt.data.str = p;                     \
-        vt.flag = variant_flag_t::flag_free; \
-    }
-#define variant_set_binary_new(vt, bin)      \
-    {                                        \
-        size_t n = bin.size();               \
-        vt.type = TYPE_BINARY;               \
-        vt.size = n;                         \
-        byte_t* p = nullptr;                 \
-        if (n) {                             \
-            p = (byte_t*)malloc(n + 1);      \
-            if (p) {                         \
-                memcpy(p, &bin[0], n);       \
-                *(p + n) = 0;                \
-            };                               \
-        } else {                             \
-            vt.size = 0;                     \
-        };                                   \
-        vt.data.bstr = (byte_t*)p;           \
-        vt.flag = variant_flag_t::flag_free; \
-    }
+    vt.data.bstr = p;
+    return vt;
+}
+
+static inline variant_t variant_binary_new(binary_t const& bin) {
+    variant_t vt;
+    return variant_set_binary_new(vt, bin);
+}
 
 return_t variant_copy(variant_t& target, const variant_t& source);
 return_t variant_move(variant_t& target, variant_t& source);

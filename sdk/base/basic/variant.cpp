@@ -17,7 +17,6 @@ namespace hotplace {
 
 return_t variant_copy(variant_t& target, const variant_t& source) {
     return_t ret = errorcode_t::success;
-    variant_t* object = nullptr;
 
     __try2 {
         if (variant_flag_t::flag_free == source.flag) {
@@ -51,15 +50,10 @@ return_t variant_copy(variant_t& target, const variant_t& source) {
 
 return_t variant_move(variant_t& target, variant_t& source) {
     return_t ret = errorcode_t::success;
-    variant_t* object = nullptr;
 
-    __try2 {
-        memcpy(&target, &source, sizeof(variant_t));  // copy including type and flag
-        source.flag = 0;
-    }
-    __finally2 {
-        // do nothing
-    }
+    memcpy(&target, &source, sizeof(variant_t));  // copy including type and flag
+    variant_init(source);
+
     return ret;
 }
 
