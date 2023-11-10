@@ -16,12 +16,16 @@
 COMMENTS
 
 :<< HELP
-    ctest - build and run ctest
-    debug - debug build
+    cf     - clang-format
+    ctest  - build and run ctest
+    debug  - debug build
     format - clang-format
-    pch - precompiled header
+    opt    - optimize
+    pch    - precompiled header
+    odbc   - ODBC feature
     redist - redistribute MSYS2(MINGW) binaries
-    test - run examples
+    shared -
+    test   - run examples
     ex) ./make.sh format debug pch
 HELP
 
@@ -33,43 +37,45 @@ HELP
 SWITCHES
 
 if [ $OSTYPE = "msys" ]; then
-    export SUPPORT_SHARED=0
-    export SUPPORT_ODBC=0
     true
 else
-    export SUPPORT_SHARED=0
-    export SUPPORT_ODBC=0
     export SET_STDCPP=c++11
     # -Wl,--copy-dt-needed-entries # DSO missing from command line
     CXXFLAGS='-Wl,--copy-dt-needed-entries '${CXXFLAGS}
-    true
 fi
 
 do_clangformat=0
 do_ctest=0
 do_redist=0
 do_test=0
-do_opt=0
 
 CXXFLAGS=''
 SUPPORT_PCH=0
 args=("$@")
 if [ ${#args[@]} -ne 0 ]; then
     for arg in ${args[@]}; do
-        if [ $arg = 'format' ]; then
+        if [ $arg = 'cf' ]; then
             do_clangformat=1
         elif [ $arg = 'ctest' ]; then
             do_ctest=1
-        elif [ $arg = 'redist' ]; then
-            do_redist=1
+        elif [ $arg = 'debug' ]; then
+            CXXFLAGS="${CXXFLAGS} -DDEBUG -g"
+        elif [ $arg = 'format' ]; then
+            do_clangformat=1
+        elif [ $arg = 'odbc' ]; then
+            export SUPPORT_ODBC=1
         elif [ $arg = 'opt' ]; then
-            CXXFLAGS='-O2 '$CXXFLAGS
+            CXXFLAGS="${CXXFLAGS}  -O2"
         elif [ $arg = 'pch' ]; then
             SUPPORT_PCH=1
+        elif [ $arg = 'prof' ]; then
+            CXXFLAGS="${CXXFLAGS}  -pg"
+        elif [ $arg = 'redist' ]; then
+            do_redist=1
+        elif [ $arg = 'shared' ]; then
+            export SUPPORT_SHARED=1
         elif [ $arg = 'test' ]; then
             do_test=1
-        elif [ $arg = 'debug' ]; then
-            CXXFLAGS='-DDEBUG -g '$CXXFLAGS
         fi
     done
 fi
