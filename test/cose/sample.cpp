@@ -65,7 +65,7 @@ return_t dump_test_data(const char* text, binary_t const& cbor) {
 
     OPTION& option = _cmdline->value();
     if (option.debug) {
-        dump_memory(cbor, &bs, 32);
+        dump_memory(cbor, &bs, 32, 4);
 
         if (text) {
             std::cout << text;
@@ -112,7 +112,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
         if (option.debug) {
             // cbor_object* to diagnostic
             basic_stream diagnostic;
-            publisher.publish(root, &diagnostic);
+            // publisher.publish(root, &diagnostic);
 
             // load cbor from file
             binary_t expect;
@@ -130,9 +130,17 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                 size_t file_size = fs.size();
                 expect.insert(expect.end(), file_contents, file_contents + file_size);
 
-                dump_test_data("test vector", expect);
+                cbor_reader reader;
+                cbor_reader_context_t* handle = nullptr;
+                cbor_object* newone = nullptr;
+
+                reader.open(&handle);
+                reader.parse(handle, expect);
+                reader.publish(handle, &diagnostic);
+                reader.close(handle);
+
+                dump_test_data("test vector #1", expect);
                 dump_test_data("diagnostic #1", diagnostic);
-                dump_test_data("cbor #1", bin);
             }
 
             _test_case.assert((bin == expect), __FUNCTION__, "check1.cborcheck %s", text ? text : "");
@@ -340,89 +348,21 @@ void test_rfc8152_c_1_2() {
 void test_rfc8152_c_1_3() {
     _test_case.begin("RFC 8152 C.1");
 
-    // Signature Algorithm: ECDSA w/ SHA-256, Curve P-256
-    // The same parameters are used for both the signature and the counter signature.
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_unprotected().add(
+        cose_alg_t::cose_es256, "11",
+        base16_decode("5ac05e289d5d0e1b0a7f048a5d2b643813ded50bc9e49220f4f7278f85f19d4a77d655c9d3b51e805a74b099e1e085aacd97fc29d72f887e8802bb6650cceb2c"));
+    builder.get_payload().set("This is the content.");
 
-    cbor_publisher publisher;
-    variant_t value;
+    cose_recipient& signature = builder.get_recipients().add(new cose_recipient);
+    signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
+    signature.get_unprotected().add(cose_key_t::cose_kid, "11");
+    signature.get_payload().set_b16(
+        "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
 
-    cbor_object_signing_encryption_composer::composer composer;
-
-    cbor_data* cbor_data_protected = nullptr;
-    composer.build_protected(&cbor_data_protected);
-
-    cbor_data* cbor_data_payload = nullptr;
-    composer.build_data(&cbor_data_payload, "This is the content.");
-
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_sign);
-    *root << cbor_data_protected  // protected
-          << new cbor_map()       // unprotected
-          << cbor_data_payload    // payload
-          << new cbor_array();    // signatures
-
-    cbor_map* header_unprotected = (cbor_map*)(*root)[1];
-    {
-        cbor_array* countersign = new cbor_array();
-        *header_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, countersign);
-
-        cbor_data* cbor_data_countersignature_protected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_es256);
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            composer.build_protected(&cbor_data_countersignature_protected, protected_map);
-        }
-
-        cbor_map* cbor_data_countersignature_unprotected = nullptr;
-        {
-            cose_variantmap_t unprotected_map;
-            variant_set_binary_new(value, convert("11"));
-            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
-            composer.build_unprotected(&cbor_data_countersignature_unprotected, unprotected_map);
-        }
-
-        cbor_data* cbor_data_countersignature_signature = nullptr;
-        {
-            constexpr char constexpr_sig[] =
-                "5ac05e289d5d0e1b0a7f048a5d2b643813ded50bc9e49220f4f7278f85f19d4a77d655c9d3b51e805a74b099e1e085aacd97fc29d72f887e8802bb6650cceb2c";
-            composer.build_data_b16(&cbor_data_countersignature_signature, constexpr_sig);
-        }
-
-        *countersign << cbor_data_countersignature_protected << cbor_data_countersignature_unprotected << cbor_data_countersignature_signature;
-    }
-
-    cbor_array* signatures = (cbor_array*)(*root)[3];
-
-    cbor_array* signature = new cbor_array();
-    {
-        cbor_data* cbor_data_signature_protected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_es256);  // -7
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            composer.build_protected(&cbor_data_signature_protected, protected_map);
-        }
-
-        cbor_map* cbor_data_signature_unprotected = nullptr;
-        {
-            cose_variantmap_t unprotected_map;
-            variant_set_binary_new(value, convert("11"));
-            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
-            composer.build_unprotected(&cbor_data_signature_unprotected, unprotected_map);
-        }
-
-        cbor_data* cbor_data_signature_signature = nullptr;
-        {
-            constexpr char constexpr_sig[] =
-                "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a";
-            composer.build_data_b16(&cbor_data_signature_signature, constexpr_sig);
-        }
-
-        *signature << cbor_data_signature_protected << cbor_data_signature_unprotected << cbor_data_signature_signature;
-
-        *signatures << signature;
-    }
+    builder.compose(cbor_tag_t::cose_tag_sign, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -436,70 +376,19 @@ void test_rfc8152_c_1_3() {
 void test_rfc8152_c_1_4() {
     _test_case.begin("RFC 8152 C.1");
 
-    // Signature Algorithm: ECDSA w/ SHA-256, Curve P-256
-    // There is a criticality marker on the "reserved" header parameter
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().set(base16_decode("a2687265736572766564f40281687265736572766564"));
+    builder.get_payload().set("This is the content.");
 
-    cbor_publisher publisher;
-    variant_t value;
+    cose_recipient& signature = builder.get_recipients().add(new cose_recipient);
+    signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
+    signature.get_unprotected().add(cose_key_t::cose_kid, "11");
+    signature.get_payload().set_b16(
+        "3fc54702aa56e1b2cb20284294c9106a63f91bac658d69351210a031d8fc7c5ff3e4be39445b1a3e83e1510d1aca2f2e8a7c081c7645042b18aba9d1fad1bd9c");
 
-    cbor_object_signing_encryption_composer::composer composer;
-
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_sign);
-
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cbor_map* cbor_map_protected = new cbor_map();
-
-        cbor_array* crit = new cbor_array();
-        *crit << new cbor_data("reserved");  // [+ label]
-
-        *cbor_map_protected << new cbor_pair("reserved", new cbor_data(false)) << new cbor_pair(cose_key_t::cose_crit, crit);
-
-        composer.build_protected(&cbor_data_protected, cbor_map_protected);
-
-        cbor_map_protected->release();
-    }
-
-    cbor_data* cbor_data_payload = nullptr;
-    composer.build_data(&cbor_data_payload, "This is the content.");
-
-    *root << cbor_data_protected  // protected
-          << new cbor_map()       // unprotected
-          << cbor_data_payload    // payload
-          << new cbor_array();    // signatures
-
-    cbor_array* signatures = (cbor_array*)(*root)[3];
-
-    cbor_array* signature = new cbor_array();
-    {
-        cbor_data* cbor_data_signature_protected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_es256);  // -7
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            composer.build_protected(&cbor_data_signature_protected, protected_map);
-        }
-
-        cbor_map* cbor_data_signature_unprotected = nullptr;
-        {
-            cose_variantmap_t unprotected_map;
-            variant_set_binary_new(value, convert("11"));
-            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
-            composer.build_unprotected(&cbor_data_signature_unprotected, unprotected_map);
-        }
-
-        cbor_data* cbor_data_signature_signature = nullptr;
-        {
-            constexpr char constexpr_sig[] =
-                "3fc54702aa56e1b2cb20284294c9106a63f91bac658d69351210a031d8fc7c5ff3e4be39445b1a3e83e1510d1aca2f2e8a7c081c7645042b18aba9d1fad1bd9c";
-            composer.build_data_b16(&cbor_data_signature_signature, constexpr_sig);
-        }
-
-        *signature << cbor_data_signature_protected << cbor_data_signature_unprotected << cbor_data_signature_signature;
-
-        *signatures << signature;
-    }
+    builder.compose(cbor_tag_t::cose_tag_sign, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -563,78 +452,26 @@ void test_rfc8152_c_3_1() {
 
 void test_rfc8152_c_3_2() {
     _test_case.begin("RFC 8152 C.3");
-    cbor_publisher publisher;
-    variant_t value;
 
-    cbor_object_signing_encryption_composer::composer composer;
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesccm_16_64_128);
+    builder.get_unprotected().add(cose_key_t::cose_iv, base16_decode("89f52f65a1c580933b5261a76c"));
+    builder.get_payload().set_b16("753548a19b1307084ca7b2056924ed95f2e3b17006dfe931b687b847");
 
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_encrypt);
+    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_hkdf_sha256);
+    recipient.get_unprotected().add(cose_key_t::cose_salt, "aabbccddeeffgghh").add(cose_key_t::cose_kid, "our-secret");
 
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aesccm_16_64_128);
-        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-        composer.build_protected(&cbor_data_protected, protected_map);
-    }
-
-    cbor_map* cbor_data_unprotected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_binary_new(value, base16_decode("89f52f65a1c580933b5261a76c"));
-        protected_map.insert(std::make_pair(cose_key_t::cose_iv, value));
-        composer.build_unprotected(&cbor_data_unprotected, protected_map);
-    }
-
-    cbor_data* cbor_data_ciphertext = nullptr;
-    composer.build_data_b16(&cbor_data_ciphertext, "753548a19b1307084ca7b2056924ed95f2e3b17006dfe931b687b847");
-
-    *root << cbor_data_protected    // protected
-          << cbor_data_unprotected  // unprotected
-          << cbor_data_ciphertext   // ciphertext
-          << new cbor_array();      // recipients
-
-    cbor_array* recipients = (cbor_array*)(*root)[3];
-
-    {
-        cbor_array* recipient = new cbor_array();
-        cbor_data* cbor_data_recipient_protected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_hkdf_sha256);
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            composer.build_protected(&cbor_data_recipient_protected, protected_map);
-        }
-        cbor_map* cbor_data_recipient_unprotected = nullptr;
-        {
-            cose_variantmap_t unprotected_map;
-            variant_set_binary_new(value, convert("aabbccddeeffgghh"));
-            unprotected_map.insert(std::make_pair(cose_key_t::cose_salt, value));
-            variant_set_binary_new(value, convert("our-secret"));
-            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
-            composer.build_unprotected(&cbor_data_recipient_unprotected, unprotected_map);
-        }
-
-        *recipient << cbor_data_recipient_protected      // protected
-                   << cbor_data_recipient_unprotected    // unprotected
-                   << new cbor_data(base16_decode(""));  // ciphertext
-
-        *recipients << recipient;
-    }
+    builder.compose(cbor_tag_t::cose_tag_encrypt, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
 
-    variant_t vt;
-    cose_variantmap_t partyu;
-    cose_variantmap_t partyv;
-    cose_variantmap_t pub;
-
     cose.set(cose_handle, cose_param_t::cose_unsent_apu_id, convert("lighting-client"));
     cose.set(cose_handle, cose_param_t::cose_unsent_apv_id, convert("lighting-server"));
-
     cose.set(cose_handle, cose_param_t::cose_unsent_pub_other, convert("Encryption Example 02"));
 
     test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
@@ -645,99 +482,27 @@ void test_rfc8152_c_3_2() {
 
 void test_rfc8152_c_3_3() {
     _test_case.begin("RFC 8152 C.3");
-    cbor_publisher publisher;
-    variant_t value;
 
-    cbor_object_signing_encryption_composer::composer composer;
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes128gcm);
+    builder.get_unprotected()
+        .add(cose_key_t::cose_iv, base16_decode("c9cf4df2fe6c632bf7886413"))
+        .add(cose_alg_t::cose_es512, "bilbo.baggins@hobbiton.example",
+             base16_decode("00929663c8789bb28177ae28467e66377da12302d7f9594d2999afa5dfa531294f8896f2b6cdf1740014f4c7f1a358e3a6cf57f4ed6fb02fcf8f7aa989f5dfd07f0"
+                           "700a3a7d8f3c604"
+                           "ba70fa9411bd10c2591b483e1d2c31de003183e434d8fba18f17a4c7e3dfa003ac1cf3d30d44d2533c4989d3ac38c38b71481cc3430c9d65e7ddff"));
+    builder.get_payload().set_b16("7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0");
 
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_encrypt);
+    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhes_hkdf_256);
+    recipient.get_unprotected()
+        .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p256, base16_decode("98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280"),
+             true)
+        .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example");
 
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes128gcm);
-        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-        composer.build_protected(&cbor_data_protected, protected_map);
-    }
-
-    constexpr char constexpr_ciphertext[] = "7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0";
-    cbor_data* cbor_data_ciphertext = nullptr;
-    composer.build_data_b16(&cbor_data_ciphertext, constexpr_ciphertext);
-
-    *root << cbor_data_protected   // protected
-          << new cbor_map()        // unprotected
-          << cbor_data_ciphertext  // ciphertext
-          << new cbor_array();     // recipients
-
-    cbor_map* cbor_data_unprotected = (cbor_map*)(*root)[1];
-    {
-        cbor_array* countersign = new cbor_array();
-        *cbor_data_unprotected << new cbor_pair(cose_key_t::cose_iv, new cbor_data(base16_decode("c9cf4df2fe6c632bf7886413")));
-        *cbor_data_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, countersign);
-
-        cbor_data* cbor_data_countersignature_protected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_es512);
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            composer.build_protected(&cbor_data_countersignature_protected, protected_map);
-        }
-
-        cbor_map* cbor_data_countersignature_unprotected = nullptr;
-        {
-            cose_variantmap_t unprotected_map;
-            variant_set_binary_new(value, convert("bilbo.baggins@hobbiton.example"));
-            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
-            composer.build_unprotected(&cbor_data_countersignature_unprotected, unprotected_map);
-        }
-
-        constexpr char constexpr_signature[] =
-            "00929663c8789bb28177ae28467e66377da12302d7f9594d2999afa5dfa531294f8896f2b6cdf1740014f4c7f1a358e3a6cf57f4ed6fb02fcf8f7aa989f5dfd07f0700a3a7d8f3c604"
-            "ba70fa9411bd10c2591b483e1d2c31de003183e434d8fba18f17a4c7e3dfa003ac1cf3d30d44d2533c4989d3ac38c38b71481cc3430c9d65e7ddff";
-        cbor_data* cbor_data_countersignature_signature = nullptr;
-        composer.build_data_b16(&cbor_data_countersignature_signature, constexpr_signature);
-
-        *countersign << cbor_data_countersignature_protected    // protected
-                     << cbor_data_countersignature_unprotected  // unprotected
-                     << cbor_data_countersignature_signature;   // signature
-    }
-
-    cbor_array* recipients = (cbor_array*)(*root)[3];
-    {
-        cbor_array* recipient = new cbor_array();
-
-        cbor_data* cbor_data_recipient_protected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_ecdhes_hkdf_256);
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            composer.build_protected(&cbor_data_recipient_protected, protected_map);
-        }
-
-        cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        composer.build_data_b16(&cbor_data_recipient_ciphertext, "");
-
-        *recipient << cbor_data_recipient_protected    // protected
-                   << new cbor_map()                   // unprotected
-                   << cbor_data_recipient_ciphertext;  // ciphertext
-
-        cbor_map* cbor_data_recipient_unprotected = (cbor_map*)(*recipient)[1];
-        {
-            constexpr char constexpr_x[] = "98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280";
-            constexpr char constexpr_kid[] = "meriadoc.brandybuck@buckland.example";
-            cbor_map* ephemeral = new cbor_map();
-            *ephemeral << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))    // kty
-                       << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_ec_curve_t::cose_ec_p256))  // crv
-                       << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(base16_decode(constexpr_x)))       // x
-                       << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(true));                            // y
-
-            *cbor_data_recipient_unprotected << new cbor_pair(cose_key_t::cose_ephemeral_key, ephemeral)                     // epk
-                                             << new cbor_pair(cose_key_t::cose_kid, new cbor_data(convert(constexpr_kid)));  // kid
-        }
-
-        *recipients << recipient;
-    }
+    builder.compose(cbor_tag_t::cose_tag_encrypt, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -751,76 +516,22 @@ void test_rfc8152_c_3_3() {
 void test_rfc8152_c_3_4() {
     _test_case.begin("RFC 8152 C.3");
 
-    cbor_publisher publisher;
-    variant_t value;
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes128gcm);
+    builder.get_unprotected().add(cose_key_t::cose_iv, base16_decode("02d1f7e6f26c43d4868d87ce"));
+    builder.get_payload().set_b16("64f84d913ba60a76070a9a48f26e97e863e28529d8f5335e5f0165eee976b4a5f6c6f09d");
 
-    cbor_object_signing_encryption_composer::composer composer;
+    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhss_a128kw);
+    recipient.get_unprotected()
+        .add(cose_key_t::cose_static_key_id, "peregrin.took@tuckborough.example")
+        .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example")
+        .add(cose_key_t::cose_partyu_nonce, base16_decode("0101"));
+    recipient.get_payload().set_b16("41e0d76f579dbd0d936a662d54d8582037de2e366fde1c62");
 
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_encrypt);
-
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aes128gcm);
-        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-        composer.build_protected(&cbor_data_protected, protected_map);
-    }
-
-    cbor_map* cbor_data_unprotected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_binary_new(value, base16_decode("02d1f7e6f26c43d4868d87ce"));
-        protected_map.insert(std::make_pair(cose_key_t::cose_iv, value));
-        composer.build_unprotected(&cbor_data_unprotected, protected_map);
-    }
-
-    constexpr char constexpr_ciphertext[] = "64f84d913ba60a76070a9a48f26e97e863e28529d8f5335e5f0165eee976b4a5f6c6f09d";
-    cbor_data* cbor_data_ciphertext = nullptr;
-    composer.build_data_b16(&cbor_data_ciphertext, constexpr_ciphertext);
-
-    *root << cbor_data_protected    // protected
-          << cbor_data_unprotected  // unprotected
-          << cbor_data_ciphertext   // ciphertext
-          << new cbor_array();      // recipients
-
-    cbor_array* recipients = (cbor_array*)(*root)[3];
-    {
-        cbor_array* recipient = new cbor_array();
-
-        cbor_data* cbor_data_recipient_protected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_ecdhss_a128kw);
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            composer.build_protected(&cbor_data_recipient_protected, protected_map);
-        }
-
-        cbor_map* cbor_data_recipient_unprotected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            cose_orderlist_t order;
-            order.push_back(cose_key_t::cose_static_key_id);
-            order.push_back(cose_key_t::cose_kid);
-            order.push_back(cose_key_t::cose_partyu_nonce);
-            variant_set_binary_new(value, convert("peregrin.took@tuckborough.example"));
-            protected_map.insert(std::make_pair(cose_key_t::cose_static_key_id, value));
-            variant_set_binary_new(value, convert("meriadoc.brandybuck@buckland.example"));
-            protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
-            variant_set_binary_new(value, base16_decode("0101"));
-            protected_map.insert(std::make_pair(cose_key_t::cose_partyu_nonce, value));
-            composer.build_unprotected(&cbor_data_recipient_unprotected, protected_map, order);
-        }
-
-        cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        composer.build_data_b16(&cbor_data_recipient_ciphertext, "41e0d76f579dbd0d936a662d54d8582037de2e366fde1c62");
-
-        *recipient << cbor_data_recipient_protected    // protected
-                   << cbor_data_recipient_unprotected  // unprotected
-                   << cbor_data_recipient_ciphertext;  // ciphertext
-
-        *recipients << recipient;
-    }
+    builder.compose(cbor_tag_t::cose_tag_encrypt, &root);
 
     // Externally Supplied AAD: h'0011bbcc22dd44ee55ff660077'
     cbor_object_signing_encryption cose;
@@ -836,37 +547,14 @@ void test_rfc8152_c_3_4() {
 void test_rfc8152_c_4_1() {
     _test_case.begin("RFC 8152 C.4");
 
-    cbor_publisher publisher;
-    variant_t value;
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesccm_16_64_128);
+    builder.get_unprotected().add(cose_key_t::cose_iv, base16_decode("89f52f65a1c580933b5261a78c"));
+    builder.get_payload().set_b16("5974e1b99a3a4cc09a659aa2e9e7fff161d38ce71cb45ce460ffb569");
 
-    cbor_object_signing_encryption_composer::composer composer;
-
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_encrypt0);
-
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aesccm_16_64_128);
-        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-        composer.build_protected(&cbor_data_protected, protected_map);
-    }
-
-    cbor_map* cbor_data_unprotected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_binary_new(value, base16_decode("89f52f65a1c580933b5261a78c"));
-        protected_map.insert(std::make_pair(cose_key_t::cose_iv, value));
-        composer.build_unprotected(&cbor_data_unprotected, protected_map);
-    }
-
-    constexpr char constexpr_ciphertext[] = "5974e1b99a3a4cc09a659aa2e9e7fff161d38ce71cb45ce460ffb569";
-    cbor_data* cbor_data_ciphertext = nullptr;
-    composer.build_data_b16(&cbor_data_ciphertext, constexpr_ciphertext);
-
-    *root << cbor_data_protected    // protected
-          << cbor_data_unprotected  // unprotected
-          << cbor_data_ciphertext;  // ciphertext
+    builder.compose(cbor_tag_t::cose_tag_encrypt0, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -880,37 +568,14 @@ void test_rfc8152_c_4_1() {
 void test_rfc8152_c_4_2() {
     _test_case.begin("RFC 8152 C.4");
 
-    cbor_publisher publisher;
-    variant_t value;
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesccm_16_64_128);
+    builder.get_unprotected().add(cose_key_t::cose_partial_iv, base16_decode("61a7"));
+    builder.get_payload().set_b16("252a8911d465c125b6764739700f0141ed09192de139e053bd09abca");
 
-    cbor_object_signing_encryption_composer::composer composer;
-
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_encrypt0);
-
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aesccm_16_64_128);
-        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-        composer.build_protected(&cbor_data_protected, protected_map);
-    }
-
-    cbor_map* cbor_data_unprotected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_binary_new(value, base16_decode("61a7"));
-        protected_map.insert(std::make_pair(cose_key_t::cose_partial_iv, value));
-        composer.build_unprotected(&cbor_data_unprotected, protected_map);
-    }
-
-    constexpr char constexpr_ciphertext[] = "252a8911d465c125b6764739700f0141ed09192de139e053bd09abca";
-    cbor_data* cbor_data_ciphertext = nullptr;
-    composer.build_data_b16(&cbor_data_ciphertext, constexpr_ciphertext);
-
-    *root << cbor_data_protected    // protected
-          << cbor_data_unprotected  // unprotected
-          << cbor_data_ciphertext;  // ciphertext
+    builder.compose(cbor_tag_t::cose_tag_encrypt0, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -925,63 +590,17 @@ void test_rfc8152_c_4_2() {
 void test_rfc8152_c_5_1() {
     _test_case.begin("RFC 8152 C.5");
 
-    cbor_publisher publisher;
-    variant_t value;
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesmac_256_64);
+    builder.get_payload().set("This is the content.");
+    builder.get_tag().set_b16("9e1226ba1f81b848");
 
-    cbor_object_signing_encryption_composer::composer composer;
+    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    recipient.get_unprotected().add(cose_key_t::cose_alg, cose_alg_t::cose_direct).add(cose_key_t::cose_kid, "our-secret");
 
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_mac);
-
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aesmac_256_64);
-        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-        composer.build_protected(&cbor_data_protected, protected_map);
-    }
-
-    cbor_map* cbor_data_unprotected = nullptr;
-    { composer.build_unprotected(&cbor_data_unprotected); }
-
-    cbor_data* cbor_data_payload = nullptr;
-    composer.build_data(&cbor_data_payload, "This is the content.");
-
-    cbor_data* cbor_data_tag = nullptr;
-    composer.build_data_b16(&cbor_data_tag, "9e1226ba1f81b848");
-
-    *root << cbor_data_protected    // protected
-          << cbor_data_unprotected  // unprotected
-          << cbor_data_payload      // payload
-          << cbor_data_tag          // tag
-          << new cbor_array();      // recipients
-
-    cbor_array* recipients = (cbor_array*)(*root)[4];
-    {
-        cbor_array* recipient = new cbor_array();
-
-        cbor_data* cbor_data_recipient_protected = nullptr;
-        { composer.build_protected(&cbor_data_recipient_protected); }
-
-        cbor_map* cbor_data_recipient_unprotected = nullptr;
-        {
-            cose_variantmap_t unprotected_map;
-            variant_set_int16(value, cose_alg_t::cose_direct);
-            unprotected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            variant_set_binary_new(value, convert("our-secret"));
-            unprotected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
-            composer.build_unprotected(&cbor_data_recipient_unprotected, unprotected_map);
-        }
-
-        cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        composer.build_data_b16(&cbor_data_recipient_ciphertext, "");
-
-        *recipient << cbor_data_recipient_protected    // protected
-                   << cbor_data_recipient_unprotected  // unprotected
-                   << cbor_data_recipient_ciphertext;  // ciphertext
-
-        *recipients << recipient;
-    }
+    builder.compose(cbor_tag_t::cose_tag_mac, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -995,76 +614,22 @@ void test_rfc8152_c_5_1() {
 void test_rfc8152_c_5_2() {
     _test_case.begin("RFC 8152 C.5");
 
-    cbor_publisher publisher;
-    variant_t value;
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_hs256);
+    builder.get_payload().set("This is the content.");
+    builder.get_tag().set_b16("81a03448acd3d305376eaa11fb3fe416a955be2cbe7ec96f012c994bc3f16a41");
 
-    cbor_object_signing_encryption_composer::composer composer;
+    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhss_hkdf_256);
+    recipient.get_unprotected()
+        .add(cose_key_t::cose_static_key_id, "peregrin.took@tuckborough.example")
+        .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example")
+        .add(cose_key_t::cose_partyu_nonce,
+             base16_decode("4d8553e7e74f3c6a3a9dd3ef286a8195cbf8a23d19558ccfec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b017e7f2a9e5ce4db5"));
 
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_mac);
-
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_hs256);
-        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-        composer.build_protected(&cbor_data_protected, protected_map);
-    }
-
-    cbor_map* cbor_data_unprotected = nullptr;
-    { composer.build_unprotected(&cbor_data_unprotected); }
-
-    cbor_data* cbor_data_payload = nullptr;
-    composer.build_data(&cbor_data_payload, "This is the content.");
-
-    cbor_data* cbor_data_tag = nullptr;
-    composer.build_data_b16(&cbor_data_tag, "81a03448acd3d305376eaa11fb3fe416a955be2cbe7ec96f012c994bc3f16a41");
-
-    *root << cbor_data_protected    // protected
-          << cbor_data_unprotected  // unprotected
-          << cbor_data_payload      // payload
-          << cbor_data_tag          // tag
-          << new cbor_array();      // recipients
-
-    cbor_array* recipients = (cbor_array*)(*root)[4];
-    {
-        cbor_array* recipient = new cbor_array();
-
-        cbor_data* cbor_data_recipient_protected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_ecdhss_hkdf_256);
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            composer.build_protected(&cbor_data_recipient_protected, protected_map);
-        }
-
-        cbor_map* cbor_data_recipient_unprotected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            cose_orderlist_t order;
-            order.push_back(cose_key_t::cose_static_key_id);
-            order.push_back(cose_key_t::cose_kid);
-            order.push_back(cose_key_t::cose_partyu_nonce);
-            variant_set_binary_new(value, convert("peregrin.took@tuckborough.example"));
-            protected_map.insert(std::make_pair(cose_key_t::cose_static_key_id, value));
-            variant_set_binary_new(value, convert("meriadoc.brandybuck@buckland.example"));
-            protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
-            variant_set_binary_new(
-                value, base16_decode(
-                           "4d8553e7e74f3c6a3a9dd3ef286a8195cbf8a23d19558ccfec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b017e7f2a9e5ce4db5"));
-            protected_map.insert(std::make_pair(cose_key_t::cose_partyu_nonce, value));
-            composer.build_unprotected(&cbor_data_recipient_unprotected, protected_map, order);
-        }
-
-        cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        composer.build_data_b16(&cbor_data_recipient_ciphertext, "");
-
-        *recipient << cbor_data_recipient_protected    // protected
-                   << cbor_data_recipient_unprotected  // unprotected
-                   << cbor_data_recipient_ciphertext;  // ciphertext
-
-        *recipients << recipient;
-    }
+    builder.compose(cbor_tag_t::cose_tag_mac, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -1078,63 +643,18 @@ void test_rfc8152_c_5_2() {
 void test_rfc8152_c_5_3() {
     _test_case.begin("RFC 8152 C.5");
 
-    cbor_publisher publisher;
-    variant_t value;
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesmac_128_64);
+    builder.get_payload().set("This is the content.");
+    builder.get_tag().set_b16("36f5afaf0bab5d43");
 
-    cbor_object_signing_encryption_composer::composer composer;
+    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    recipient.get_unprotected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes256kw).add(cose_key_t::cose_kid, "018c0ae5-4d9b-471b-bfd6-eef314bc7037");
+    recipient.get_payload().set_b16("711ab0dc2fc4585dce27effa6781c8093eba906f227b6eb0");
 
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_mac);
-
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aesmac_128_64);
-        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-        composer.build_protected(&cbor_data_protected, protected_map);
-    }
-
-    cbor_map* cbor_data_unprotected = nullptr;
-    { composer.build_unprotected(&cbor_data_unprotected); }
-
-    cbor_data* cbor_data_payload = nullptr;
-    composer.build_data(&cbor_data_payload, "This is the content.");
-
-    cbor_data* cbor_data_tag = nullptr;
-    composer.build_data_b16(&cbor_data_tag, "36f5afaf0bab5d43");
-
-    *root << cbor_data_protected    // protected
-          << cbor_data_unprotected  // unprotected
-          << cbor_data_payload      // payload
-          << cbor_data_tag          // tag
-          << new cbor_array();      // recipients
-
-    cbor_array* recipients = (cbor_array*)(*root)[4];
-    {
-        cbor_array* recipient = new cbor_array();
-
-        cbor_data* cbor_data_recipient_protected = nullptr;
-        { composer.build_protected(&cbor_data_recipient_protected); }
-
-        cbor_map* cbor_data_recipient_unprotected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_aes256kw);
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            variant_set_binary_new(value, convert("018c0ae5-4d9b-471b-bfd6-eef314bc7037"));
-            protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
-            composer.build_unprotected(&cbor_data_recipient_unprotected, protected_map);
-        }
-
-        cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        composer.build_data_b16(&cbor_data_recipient_ciphertext, "711ab0dc2fc4585dce27effa6781c8093eba906f227b6eb0");
-
-        *recipient << cbor_data_recipient_protected    // protected
-                   << cbor_data_recipient_unprotected  // unprotected
-                   << cbor_data_recipient_ciphertext;  // ciphertext
-
-        *recipients << recipient;
-    }
+    builder.compose(cbor_tag_t::cose_tag_mac, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -1148,98 +668,28 @@ void test_rfc8152_c_5_3() {
 void test_rfc8152_c_5_4() {
     _test_case.begin("RFC 8152 C.5");
 
-    cbor_publisher publisher;
-    variant_t value;
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_hs256);
+    builder.get_payload().set("This is the content.");
+    builder.get_tag().set_b16("bf48235e809b5c42e995f2b7d5fa13620e7ed834e337f6aa43df161e49e9323e");
 
-    cbor_object_signing_encryption_composer::composer composer;
+    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhes_a128kw);
+    recipient.get_unprotected()
+        .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p521,
+             base16_decode(
+                 "0043b12669acac3fd27898ffba0bcd2e6c366d53bc4db71f909a759304acfb5e18cdc7ba0b13ff8c7636271a6924b1ac63c02688075b55ef2d613574e7dc242f79c3"),
+             true)
+        .add(cose_key_t::cose_kid, "bilbo.baggins@hobbiton.example");
+    recipient.get_payload().set_b16("339bc4f79984cdc6b3e6ce5f315a4c7d2b0ac466fcea69e8c07dfbca5bb1f661bc5f8e0df9e3eff5");
 
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_mac);
+    cose_recipient& recipient2 = builder.get_recipients().add(new cose_recipient);
+    recipient2.get_unprotected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes256kw).add(cose_key_t::cose_kid, "018c0ae5-4d9b-471b-bfd6-eef314bc7037");
+    recipient2.get_payload().set_b16("0b2c7cfce04e98276342d6476a7723c090dfdd15f9a518e7736549e998370695e6d6a83b4ae507bb");
 
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_hs256);
-        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-        composer.build_protected(&cbor_data_protected, protected_map);
-    }
-
-    cbor_map* cbor_data_unprotected = nullptr;
-    { composer.build_unprotected(&cbor_data_unprotected); }
-
-    cbor_data* cbor_data_payload = nullptr;
-    composer.build_data(&cbor_data_payload, "This is the content.");
-
-    cbor_data* cbor_data_tag = nullptr;
-    composer.build_data_b16(&cbor_data_tag, "bf48235e809b5c42e995f2b7d5fa13620e7ed834e337f6aa43df161e49e9323e");
-
-    *root << cbor_data_protected    // protected
-          << cbor_data_unprotected  // unprotected
-          << cbor_data_payload      // payload
-          << cbor_data_tag          // tag
-          << new cbor_array();      // recipients
-
-    cbor_array* recipients = (cbor_array*)(*root)[4];
-    {
-        cbor_array* recipient = new cbor_array();
-
-        cbor_data* cbor_data_recipient_protected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_ecdhes_a128kw);
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            composer.build_protected(&cbor_data_recipient_protected, protected_map);
-        }
-
-        cbor_map* cbor_data_recipient_unprotected = new cbor_map();
-        {
-            constexpr char constexpr_x[] =
-                "0043b12669acac3fd27898ffba0bcd2e6c366d53bc4db71f909a759304acfb5e18cdc7ba0b13ff8c7636271a6924b1ac63c02688075b55ef2d613574e7dc242f79c3";
-            constexpr char constexpr_kid[] = "bilbo.baggins@hobbiton.example";
-            cbor_map* ephemeral = new cbor_map();
-            *ephemeral << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))    // kty
-                       << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_ec_curve_t::cose_ec_p521))  // crv
-                       << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(base16_decode(constexpr_x)))       // x
-                       << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(true));                            // y
-
-            *cbor_data_recipient_unprotected << new cbor_pair(cose_key_t::cose_ephemeral_key, ephemeral)                     // epk
-                                             << new cbor_pair(cose_key_t::cose_kid, new cbor_data(convert(constexpr_kid)));  // kid
-        }
-
-        cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        composer.build_data_b16(&cbor_data_recipient_ciphertext, "339bc4f79984cdc6b3e6ce5f315a4c7d2b0ac466fcea69e8c07dfbca5bb1f661bc5f8e0df9e3eff5");
-
-        *recipient << cbor_data_recipient_protected    // protected
-                   << cbor_data_recipient_unprotected  // unprotected
-                   << cbor_data_recipient_ciphertext;  // ciphertext
-
-        *recipients << recipient;
-    }
-    {
-        cbor_array* recipient = new cbor_array();
-
-        cbor_data* cbor_data_recipient_protected = nullptr;
-        { composer.build_protected(&cbor_data_recipient_protected); }
-
-        cbor_map* cbor_data_recipient_unprotected = nullptr;
-        {
-            cose_variantmap_t protected_map;
-            variant_set_int16(value, cose_alg_t::cose_aes256kw);
-            protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-            variant_set_binary_new(value, convert("018c0ae5-4d9b-471b-bfd6-eef314bc7037"));
-            protected_map.insert(std::make_pair(cose_key_t::cose_kid, value));
-            composer.build_unprotected(&cbor_data_recipient_unprotected, protected_map);
-        }
-
-        cbor_data* cbor_data_recipient_ciphertext = nullptr;
-        composer.build_data_b16(&cbor_data_recipient_ciphertext, "0b2c7cfce04e98276342d6476a7723c090dfdd15f9a518e7736549e998370695e6d6a83b4ae507bb");
-
-        *recipient << cbor_data_recipient_protected    // protected
-                   << cbor_data_recipient_unprotected  // unprotected
-                   << cbor_data_recipient_ciphertext;  // ciphertext
-
-        *recipients << recipient;
-    }
+    builder.compose(cbor_tag_t::cose_tag_mac, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -1252,33 +702,15 @@ void test_rfc8152_c_5_4() {
 
 void test_rfc8152_c_6_1() {
     _test_case.begin("RFC 8152 C.6");
-    // C.6.1.  Shared Secret Direct MAC
-    cbor_publisher publisher;
-    variant_t value;
 
-    cbor_object_signing_encryption_composer::composer composer;
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cbor_object_signing_encryption_composer builder;
+    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesmac_256_64);
+    builder.get_payload().set("This is the content.");
+    builder.get_tag().set_b16("726043745027214f");
 
-    cbor_array* root = new cbor_array();
-    root->tag(cbor_tag_t::cose_tag_mac0);
-
-    cbor_data* cbor_data_protected = nullptr;
-    {
-        cose_variantmap_t protected_map;
-        variant_set_int16(value, cose_alg_t::cose_aesmac_256_64);
-        protected_map.insert(std::make_pair(cose_key_t::cose_alg, value));
-        composer.build_protected(&cbor_data_protected, protected_map);
-    }
-
-    cbor_data* cbor_data_payload = nullptr;
-    composer.build_data(&cbor_data_payload, "This is the content.");
-
-    cbor_data* cbor_data_tag = nullptr;
-    composer.build_data_b16(&cbor_data_tag, "726043745027214f");
-
-    *root << cbor_data_protected  // protected
-          << new cbor_map()       // unprotected
-          << cbor_data_payload    // payload
-          << cbor_data_tag;       // tag
+    builder.compose(cbor_tag_t::cose_tag_mac0, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;

@@ -28,56 +28,106 @@
 namespace hotplace {
 namespace crypto {
 
+/**
+ * @brief protected
+ */
 class cose_protected {
    public:
     cose_protected();
     ~cose_protected();
 
+    /**
+     * @brief add
+     */
     cose_protected& add(cose_key_t key, uint16 value);
+    /**
+     * @brief set
+     */
+    cose_protected& set(binary_t const& bin);
+    /**
+     * @brief cbor
+     */
     cbor_data* cbor();
 
    private:
-    cose_variantmap_t protected_map;
+    cose_variantmap_t _protected_map;
+    binary_t _bin;
 };
 
+/**
+ * @brief unprotected
+ */
 class cose_unprotected {
    public:
     cose_unprotected();
     ~cose_unprotected();
 
+    /**
+     * @brief add
+     */
     cose_unprotected& add(cose_key_t key, uint16 value);
     cose_unprotected& add(cose_key_t key, const char* value);
     cose_unprotected& add(cose_key_t key, std::string const& value);
     cose_unprotected& add(cose_key_t key, binary_t const& value);
+    /**
+     * @brief ephemeral key
+     */
     cose_unprotected& add(cose_key_t key, uint16 curve, binary_t const& x, binary_t const& y);
     cose_unprotected& add(cose_key_t key, uint16 curve, binary_t const& x, bool ysign);
+    /**
+     * @brief counter signature
+     */
+    cose_unprotected& add(cose_alg_t alg, const char* kid, binary_t const& signature);
+    /**
+     * @brief cbor
+     */
     cbor_map* cbor();
+    cose_orderlist_t& get_order();
 
    private:
-    cose_variantmap_t unprotected_map;
+    cose_variantmap_t _unprotected_map;
+    cose_orderlist_t _order;
 };
 
+/**
+ * @brief signature, ciphertext, tag
+ */
 class cose_binary {
    public:
     cose_binary();
 
+    /**
+     * @brief set
+     */
     cose_binary& set_b16(const char* value);
     cose_binary& set_b16(std::string const& value);
     cose_binary& set(std::string const& value);
     cose_binary& set(binary_t const& value);
+    /**
+     * @brief cbor
+     */
     cbor_data* cbor();
 
    private:
     binary_t payload;
 };
 
+/**
+ * @brief recipient, signature
+ */
 class cose_recipient {
    public:
     cose_recipient();
 
+    /**
+     * @brief get
+     */
     cose_protected& get_protected();
     cose_unprotected& get_unprotected();
     cose_binary& get_payload();
+    /**
+     * @brief cbor
+     */
     cbor_array* cbor();
 
    private:
@@ -86,6 +136,9 @@ class cose_recipient {
     cose_binary _payload;
 };
 
+/**
+ * @brief recipients, signatures
+ */
 class cose_recipients {
    public:
     cose_recipients();
@@ -98,21 +151,9 @@ class cose_recipients {
     std::list<cose_recipient*> recipients;
 };
 
-class cose_key {
-   public:
-    cose_key();
-    void set(uint16 curve, binary_t const& x, binary_t const& y);
-    void set(uint16 curve, binary_t const& x, bool ysign);
-    cbor_map* cbor();
-
-   private:
-    uint16 _curve;
-    binary_t _x;
-    binary_t _y;
-    bool _ysign;
-    bool _compressed;
-};
-
+/**
+ * @brief composer
+ */
 class cbor_object_signing_encryption_composer {
    public:
     cbor_object_signing_encryption_composer();
@@ -163,6 +204,9 @@ class cbor_object_signing_encryption_composer {
      */
     return_t compose(cbor_tag_t cbor_tag, cbor_array** node);
 
+    /**
+     * @brief get
+     */
     cose_protected& get_protected();
     cose_unprotected& get_unprotected();
     cose_binary& get_payload();

@@ -20,6 +20,107 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
+#define TYPE_STATIC_KEY (TYPE_USER)
+#define TYPE_COUNTER_SIG (vartype_t)(TYPE_USER + 1)
+
+class cose_key {
+   public:
+    cose_key() : _curve(0) {}
+    void set(uint16 curve, binary_t const& x, binary_t const& y) {
+        _curve = curve;
+        _x = x;
+        _y = y;
+        _compressed = false;
+    }
+    void set(uint16 curve, binary_t const& x, bool ysign) {
+        _curve = curve;
+        _x = x;
+        _y.clear();
+        _ysign = ysign;
+        _compressed = true;
+    }
+    cbor_map* cbor() {
+        cbor_map* object = nullptr;
+        __try2 {
+            __try_new_catch_only(object, new cbor_map());
+            if (nullptr == object) {
+                __leave2;
+            }
+
+            *object << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))  // kty(1)
+                    << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve))                       // crv(-1)
+                    << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));                            // x(-2)
+
+            if (_compressed) {
+                *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
+            } else {
+                *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)
+            }
+        }
+        __finally2 {
+            // do nothing
+        }
+        return object;
+    }
+
+   private:
+    uint16 _curve;
+    binary_t _x;
+    binary_t _y;
+    bool _ysign;
+    bool _compressed;
+};
+
+class cose_countersign {
+   public:
+    cose_countersign() {}
+
+    cose_protected& get_protected() { return _protected; }
+    cose_unprotected& get_unprotected() { return _unprotected; }
+    cose_binary& get_signature() { return _signature; }
+    cbor_array* cbor() {
+        cbor_array* object = new cbor_array;
+        *object << get_protected().cbor() << get_unprotected().cbor() << get_signature().cbor();
+        return object;
+    }
+
+   private:
+    cose_protected _protected;
+    cose_unprotected _unprotected;
+    cose_binary _signature;
+};
+
+class cose_countersigns {
+   public:
+    cose_countersigns() {}
+
+    cose_countersign& add(cose_countersign* countersign) {
+        std::list<cose_countersign*>::iterator iter = _countersigns.insert(_countersigns.end(), countersign);
+        return **iter;
+    }
+    bool empty() { return 0 == _countersigns.size(); }
+    cbor_array* cbor() {
+        cbor_array* object = nullptr;
+        __try2 {
+            __try_new_catch_only(object, new cbor_array);
+            if (object) {
+                std::list<cose_countersign*>::iterator iter;
+                for (iter = _countersigns.begin(); iter != _countersigns.end(); iter++) {
+                    cose_countersign* sign = *iter;
+                    *object << sign->cbor();
+                }
+            }
+        }
+        __finally2 {
+            // do nothing
+        }
+        return object;
+    }
+
+   private:
+    std::list<cose_countersign*> _countersigns;
+};
+
 cbor_object_signing_encryption_composer::cbor_object_signing_encryption_composer() {}
 
 cbor_object_signing_encryption_composer::composer::composer() {
@@ -33,8 +134,15 @@ return_t cbor_object_signing_encryption_composer::compose(cbor_tag_t cbor_tag, c
     cbor_array* root = new cbor_array;
     root->tag(cbor_tag);
     *root << get_protected().cbor() << get_unprotected().cbor() << get_payload().cbor();
+    if ((cbor_tag_t::cose_tag_mac == cbor_tag) || (cbor_tag_t::cose_tag_mac0 == cbor_tag)) {
+        *root << get_tag().cbor();
+    }
     if (get_recipients().empty()) {
-        *root << get_singleitem().cbor();
+        if ((cbor_tag_t::cose_tag_encrypt0 == cbor_tag) || (cbor_tag_t::cose_tag_mac0 == cbor_tag)) {
+            // do nothing
+        } else {
+            *root << get_singleitem().cbor();
+        }
     } else {
         *root << get_recipients().cbor();
     }
@@ -212,9 +320,12 @@ return_t cbor_object_signing_encryption_composer::composer::build_unprotected(cb
             int key = iter->first;
             variant_t& value = iter->second;
 
-            if (TYPE_USER == value.type) {
+            if (TYPE_STATIC_KEY == value.type) {
                 cose_key* k = (cose_key*)value.data.p;
                 *part_unprotected << new cbor_pair(key, k->cbor());
+            } else if (TYPE_COUNTER_SIG == value.type) {
+                cose_countersign* sign = (cose_countersign*)value.data.p;
+                *part_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, sign->cbor());
             } else {
                 *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(value));
             }
@@ -248,9 +359,12 @@ return_t cbor_object_signing_encryption_composer::composer::build_unprotected(cb
             cose_variantmap_t::iterator map_iter = input.find(key);
             variant_t& value = map_iter->second;
 
-            if (TYPE_USER == value.type) {
+            if (TYPE_STATIC_KEY == value.type) {
                 cose_key* k = (cose_key*)value.data.p;
                 *part_unprotected << new cbor_pair(key, k->cbor());
+            } else if (TYPE_COUNTER_SIG == value.type) {
+                cose_countersign* sign = (cose_countersign*)value.data.p;
+                *part_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, sign->cbor());
             } else {
                 *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(value));
             }
@@ -318,16 +432,26 @@ return_t cbor_object_signing_encryption_composer::composer::build_data_b16(cbor_
 
 cose_protected::cose_protected() {}
 
-cose_protected::~cose_protected() { cose_variantmap_free(protected_map); }
+cose_protected::~cose_protected() { cose_variantmap_free(_protected_map); }
 
 cose_protected& cose_protected::add(cose_key_t key, uint16 value) {
-    protected_map.insert(std::make_pair(key, variant_int16(value)));
+    _protected_map.insert(std::make_pair(key, variant_int16(value)));
     return *this;
 }
+
+cose_protected& cose_protected::set(binary_t const& bin) {
+    _bin = bin;
+    return *this;
+}
+
 cbor_data* cose_protected::cbor() {
     cbor_data* object = nullptr;
     cbor_object_signing_encryption_composer::composer composer;
-    composer.build_protected(&object, protected_map);
+    if (_bin.size()) {
+        object = new cbor_data(_bin);
+    } else {
+        composer.build_protected(&object, _protected_map);
+    }
     return object;
 }
 
@@ -335,38 +459,45 @@ cose_unprotected::cose_unprotected() {}
 
 cose_unprotected::~cose_unprotected() {
     cose_variantmap_t::iterator map_iter;
-    for (map_iter = unprotected_map.begin(); map_iter != unprotected_map.end(); map_iter++) {
+    for (map_iter = _unprotected_map.begin(); map_iter != _unprotected_map.end(); map_iter++) {
         int key = map_iter->first;
         variant_t& value = map_iter->second;
-        if (TYPE_USER == value.type) {
+        if (TYPE_STATIC_KEY == value.type) {
             cose_key* k = (cose_key*)value.data.p;
             delete k;
+        } else if (TYPE_COUNTER_SIG == value.type) {
+            cose_countersign* s = (cose_countersign*)value.data.p;
+            delete s;
         } else {
             variant_free(value);
         }
     }
-    unprotected_map.clear();
+    _unprotected_map.clear();
 }
 
 cose_unprotected& cose_unprotected::add(cose_key_t key, uint16 value) {
-    unprotected_map.insert(std::make_pair(key, variant_int16(value)));
+    _unprotected_map.insert(std::make_pair(key, variant_int16(value)));
+    _order.push_back(key);
     return *this;
 }
 
 cose_unprotected& cose_unprotected::add(cose_key_t key, const char* value) {
     if (value) {
-        unprotected_map.insert(std::make_pair(key, variant_bstr_new((unsigned char*)value, strlen(value))));
+        _unprotected_map.insert(std::make_pair(key, variant_bstr_new((unsigned char*)value, strlen(value))));
+        _order.push_back(key);
     }
     return *this;
 }
 
 cose_unprotected& cose_unprotected::add(cose_key_t key, std::string const& value) {
-    unprotected_map.insert(std::make_pair(key, variant_bstr_new((unsigned char*)value.c_str(), value.size())));
+    _unprotected_map.insert(std::make_pair(key, variant_bstr_new((unsigned char*)value.c_str(), value.size())));
+    _order.push_back(key);
     return *this;
 }
 
 cose_unprotected& cose_unprotected::add(cose_key_t key, binary_t const& value) {
-    unprotected_map.insert(std::make_pair(key, variant_binary_new(value)));
+    _unprotected_map.insert(std::make_pair(key, variant_binary_new(value)));
+    _order.push_back(key);
     return *this;
 }
 
@@ -377,7 +508,8 @@ cose_unprotected& cose_unprotected::add(cose_key_t key, uint16 curve, binary_t c
         if (k) {
             k->set(curve, x, y);
             variant_t vt;
-            unprotected_map.insert(std::make_pair(key, variant_set(vt, TYPE_USER, k)));
+            _unprotected_map.insert(std::make_pair(key, variant_set(vt, TYPE_STATIC_KEY, k)));
+            _order.push_back(key);
         }
     }
     __finally2 {
@@ -393,7 +525,37 @@ cose_unprotected& cose_unprotected::add(cose_key_t key, uint16 curve, binary_t c
         if (k) {
             k->set(curve, x, ysign);
             variant_t vt;
-            unprotected_map.insert(std::make_pair(key, variant_set(vt, TYPE_USER, k)));
+            _unprotected_map.insert(std::make_pair(key, variant_set(vt, TYPE_STATIC_KEY, k)));
+            _order.push_back(key);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return *this;
+}
+
+cose_unprotected& cose_unprotected::add(cose_alg_t alg, const char* kid, binary_t const& signature) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        cose_variantmap_t::iterator iter = _unprotected_map.find(cose_key_t::cose_counter_sig);
+        if (_unprotected_map.end() == iter) {
+            cose_countersign* sign = nullptr;
+            __try_new_catch_only(sign, new cose_countersign);
+            if (sign) {
+                sign->get_protected().add(cose_key_t::cose_alg, alg);
+                if (kid) {
+                    sign->get_unprotected().add(cose_key_t::cose_kid, kid);
+                }
+                sign->get_signature().set(signature);
+
+                variant_t vt;
+                variant_set(vt, TYPE_COUNTER_SIG, sign);
+                _unprotected_map.insert(std::make_pair(cose_key_t::cose_counter_sig, vt));
+                _order.push_back(cose_key_t::cose_counter_sig);
+            }
+        } else {
+            ret = errorcode_t::already_exist;
         }
     }
     __finally2 {
@@ -405,9 +567,11 @@ cose_unprotected& cose_unprotected::add(cose_key_t key, uint16 curve, binary_t c
 cbor_map* cose_unprotected::cbor() {
     cbor_map* object = nullptr;
     cbor_object_signing_encryption_composer::composer composer;
-    composer.build_unprotected(&object, unprotected_map);
+    composer.build_unprotected(&object, _unprotected_map, _order);
     return object;
 }
+
+cose_orderlist_t& cose_unprotected::get_order() { return _order; }
 
 cose_binary::cose_binary() {}
 
@@ -469,47 +633,6 @@ cbor_array* cose_recipients::cbor() {
     for (iter = recipients.begin(); iter != recipients.end(); iter++) {
         cose_recipient* item = *iter;
         *object << item->cbor();
-    }
-    return object;
-}
-
-cose_key::cose_key() : _curve(0) {}
-
-void cose_key::set(uint16 curve, binary_t const& x, binary_t const& y) {
-    _curve = curve;
-    _x = x;
-    _y = y;
-    _compressed = false;
-}
-
-void cose_key::set(uint16 curve, binary_t const& x, bool ysign) {
-    _curve = curve;
-    _x = x;
-    _y.clear();
-    _ysign = ysign;
-    _compressed = true;
-}
-
-cbor_map* cose_key::cbor() {
-    cbor_map* object = nullptr;
-    __try2 {
-        __try_new_catch_only(object, new cbor_map());
-        if (nullptr == object) {
-            __leave2;
-        }
-
-        *object << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))  // kty(1)
-                << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve))                       // crv(-1)
-                << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));                            // x(-2)
-
-        if (_compressed) {
-            *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
-        } else {
-            *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)
-        }
-    }
-    __finally2 {
-        // do nothing
     }
     return object;
 }
