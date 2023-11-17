@@ -13,7 +13,14 @@
 #define __HOTPLACE_SDK_CRYPTO_COSE_TYPES__
 
 #include <sdk/base.hpp>
+#include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/types.hpp>
+#include <sdk/io/cbor/cbor_array.hpp>
+#include <sdk/io/cbor/cbor_data.hpp>
+#include <sdk/io/cbor/cbor_encode.hpp>
+#include <sdk/io/cbor/cbor_map.hpp>
+#include <sdk/io/cbor/cbor_publisher.hpp>
+#include <sdk/io/cbor/cbor_reader.hpp>
 #include <sdk/io/cbor/concise_binary_object_representation.hpp>
 
 namespace hotplace {
@@ -167,15 +174,26 @@ class cose_structure_t {
 
 struct _cose_context_t {
     cbor_tag_t cbor_tag;
-    cose_structure_t body;
-    cose_binarymap_t binarymap;  // external, unsent, cek, kek, context, aad, secret, tobesigned/tomac
 
     uint32 flags;
     uint32 debug_flags;
     basic_stream debug_stream;
 
-    _cose_context_t() : cbor_tag(cbor_tag_t::cbor_tag_unknown), flags(0), debug_flags(0) {}
-    ~_cose_context_t() { clearall(); }
+    // restructuring in progress
+    // cose_composer* composer;
+    // cose_unsent* unsent;
+
+    // to be deprecated
+    cose_structure_t body;
+    cose_binarymap_t binarymap;  // external, unsent, cek, kek, context, aad, secret, tobesigned/tomac
+
+    _cose_context_t() : cbor_tag(cbor_tag_t::cbor_tag_unknown), flags(0), debug_flags(0) {
+        // composer = new cose_composer;
+    }
+    ~_cose_context_t() {
+        clearall();
+        // delete composer;
+    }
     void clearall() {
         clear();
         flags = 0;

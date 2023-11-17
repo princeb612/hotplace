@@ -15,6 +15,7 @@
 #define __HOTPLACE_SDK_IO_CBOR_CBORMAP__
 
 #include <deque>
+#include <map>
 #include <sdk/base.hpp>
 #include <sdk/io/cbor/cbor_object.hpp>
 #include <sdk/io/stream/stream.hpp>
@@ -102,6 +103,19 @@ class cbor_map : public cbor_object {
     cbor_map& add(cbor_pair* object);
     cbor_map& operator<<(cbor_pair* object);
 
+    /**
+     * @brief find
+     * @example
+     *          cbor_object* item = nullptr;
+     *          ret = object->find(1, &item);
+     *          if (errorcode_t::success == ret) {
+     *              // ...
+     *              item->release();
+     *          }
+     */
+    return_t find(int key, cbor_object** object);
+    return_t find(std::string key, cbor_object** object);
+
     virtual size_t size();
     cbor_pair* operator[](size_t index);
     std::list<cbor_pair*>& accessor();
@@ -115,6 +129,8 @@ class cbor_map : public cbor_object {
 
    private:
     std::list<cbor_pair*> _array; /* unordered */
+    std::map<int, cbor_object*> _int_map;
+    std::map<std::string, cbor_object*> _string_map;
 };
 
 }  // namespace io

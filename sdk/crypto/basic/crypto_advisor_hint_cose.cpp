@@ -19,81 +19,101 @@ namespace crypto {
 const hint_cose_group_t hint_cose_groups[] = {
     {
         cose_group_sign_ecdsa,  // 1
+        crypt_category_sign,
         cose_hint_sign | cose_hint_kty_ec,
     },
     {
         cose_group_sign_eddsa,  // 2
+        crypt_category_sign,
         cose_hint_sign | cose_hint_kty_okp,
     },
     {
         cose_group_mac_hmac,  // 3
+        crypt_category_mac,
         cose_hint_mac,
     },
     {
         cose_group_mac_aes,  // 4
+        crypt_category_mac,
         cose_hint_mac,
     },
     {
         cose_group_enc_aesgcm,  // 5
+        crypt_category_encrypt,
         cose_hint_enc | cose_hint_iv,
     },
     {
         cose_group_enc_aesccm,  // 6
+        crypt_category_encrypt,
         cose_hint_enc | cose_hint_iv,
     },
     {
         cose_group_enc_chacha20_poly1305,  // 7
+        crypt_category_encrypt,
         cose_hint_enc | cose_hint_not_supported | cose_hint_iv,
     },
     {
         cose_group_key_direct,  // 8
+        crypt_category_keyagreement,
         cose_hint_kty_oct,
     },
     {
         cose_group_key_hkdf_hmac,  // 9
+        crypt_category_keyagreement,
         cose_hint_salt | cose_hint_party | cose_hint_kty_oct,
     },
     {
         cose_group_key_hkdf_aes,  // 10
+        crypt_category_keyagreement,
         cose_hint_salt | cose_hint_party | cose_hint_kty_oct,
     },
     {
         cose_group_key_aeskw,  // 11
+        crypt_category_keyagreement,
         cose_hint_kek | cose_hint_kty_oct,
     },
     {
         cose_group_key_ecdhes_hmac,  // 12
+        crypt_category_keyagreement,
         cose_hint_salt | cose_hint_party | cose_hint_epk | cose_hint_kty_ec,
     },
     {
         cose_group_key_ecdhss_hmac,  // 13
+        crypt_category_keyagreement,
         cose_hint_salt | cose_hint_party | cose_hint_static_key | cose_hint_static_kid | cose_hint_kty_ec,
     },
     {
         cose_group_key_ecdhes_aeskw,  // 14
+        crypt_category_keyagreement,
         cose_hint_salt | cose_hint_party | cose_hint_kek | cose_hint_epk | cose_hint_kty_ec,
     },
     {
         cose_group_key_ecdhss_aeskw,  // 15
+        crypt_category_keyagreement,
         cose_hint_salt | cose_hint_party | cose_hint_kek | cose_hint_static_key | cose_hint_static_kid | cose_hint_kty_ec,
     },
     {
         cose_group_sign_rsassa_pss,  // 16
+        crypt_category_sign,
         cose_hint_sign | cose_hint_kty_rsa,
     },
     {
         cose_group_key_rsa_oaep,  // 17
+        crypt_category_keyagreement,
         cose_hint_kek | cose_hint_kty_rsa,
     },
     {
         cose_group_sign_rsassa_pkcs15,  // 18
+        crypt_category_sign,
         cose_hint_sign | cose_hint_kty_rsa,
     },
     {
         cose_group_iv_generate,  // 19
+        crypt_category_unknown,
     },
     {
         cose_group_hash,  // 20
+        crypt_category_hash,
     },
 };
 
