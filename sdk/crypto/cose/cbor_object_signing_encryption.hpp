@@ -65,6 +65,7 @@ class cbor_object_signing_encryption {
      */
     return_t set(cose_context_t* handle, cose_param_t id, binary_t const& bin);
 
+#if 0
     /**
      * @brief   encrypt ("Encrypt0")
      * @param   cose_context_t* handle [in]
@@ -107,6 +108,7 @@ class cbor_object_signing_encryption {
      *          encrypt (handle, key, algs2, 2, input, output);
      */
     return_t encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t* methods, size_t size_method, binary_t const& input, binary_t& output);
+#endif
     /**
      * @brief   decrypt
      * @param   cose_context_t* handle [in]
@@ -176,6 +178,9 @@ class cbor_object_signing_encryption {
      */
     static return_t clear_context(cose_context_t* handle);
 
+    ///////////////////////////////////////////////////////////////
+    // refactor in progress
+    ///////////////////////////////////////////////////////////////
     /**
      * @brief   parser
      */

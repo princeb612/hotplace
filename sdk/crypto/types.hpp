@@ -521,6 +521,16 @@ enum cose_ec_curve_t {
     cose_ec_ed448 = 7,
 };
 
+enum crypt_category_t {
+    crypt_category_not_classified = 0,
+    crypt_category_unknown = crypt_category_not_classified,
+    crypt_category_encrypt = 1,
+    crypt_category_mac = 2,
+    crypt_category_sign = 3,
+    crypt_category_hash = 4,
+    crypt_category_keyagreement = 5,
+};
+
 enum cose_group_t {
     // RFC 8152 8. Signature Algorithms
     //   8.1.  ECDSA
@@ -787,6 +797,7 @@ enum cose_hint_flag_t {
 
 typedef struct _hint_cose_group_t {
     cose_group_t group;
+    crypt_category_t category;
     uint32 hintflags;  // combinations of cose_hint_flag_t
 } hint_cose_group_t;
 

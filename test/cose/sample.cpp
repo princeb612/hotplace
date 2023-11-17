@@ -54,7 +54,7 @@ return_t dump_test_data(const char* text, basic_stream& diagnostic) {
     } else {
         std::cout << "diagnostic";
     }
-    std::cout << std::endl << diagnostic.c_str() << std::endl;
+    std::cout << std::endl << "  " << diagnostic.c_str() << std::endl;
 
     return ret;
 }
@@ -170,6 +170,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                     dump_test_data("diagnostic #2", bs_diagnostic_lv1);
                     dump_test_data("cbor #2", bin_cbor_lv1);
                 }
+
                 _test_case.assert((bin_cbor_lv1 == expect), __FUNCTION__, "check2.cborparse %s", text ? text : "");
 
                 // parsed cbor_object* to diagnostic
@@ -186,8 +187,33 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                     dump_test_data("diagnostic #3", bs_diagnostic_lv2);
                     dump_test_data("cbor #3", bin_cbor_lv2);
                 }
+
                 _test_case.assert((bin_cbor_lv2 == expect), __FUNCTION__, "check3.cborparse %s", text ? text : "");
 
+#if 1
+                // untagged message
+                {
+                    test_case_notimecheck notimecheck(_test_case);
+                    cose_composer composer;
+                    binary_t bin_untagged;
+                    basic_stream bs_diagnostic_composed;
+                    cbor_array* cbor_newone = nullptr;
+
+                    cbor_tag_t tag = newone->tag_value();  // backup
+                    newone->tag(cbor_tag_t::cbor_tag_unknown);
+
+                    publisher.publish(newone, &bin_untagged);
+                    composer.parse(bin_untagged);
+                    composer.compose(tag, &cbor_newone);
+
+                    publisher.publish(cbor_newone, &bs_diagnostic_composed);
+                    dump_test_data("\e[1;36mcompose\e[0m", bs_diagnostic_composed);
+
+                    _test_case.assert(true, __FUNCTION__, "check.compose %s", text ? text : "");
+
+                    cbor_newone->release();
+                }
+#endif
                 newone->release();  // release parsed object
             }
         }
@@ -289,20 +315,52 @@ void test_cbor_file(const char* expect_file, const char* text) {
     }
 }
 
+void test_rfc8152_b() {
+    _test_case.begin("RFC 8152 B");
+
+    // interface sketch...
+    cbor_array* root = nullptr;
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes128gcm);
+    composer.get_unprotected().add(cose_key_t::cose_iv, base16_decode("02d1f7e6f26c43d4868d87ce"));
+    composer.get_payload().set(base16_decode("64f84d913ba60a76070a9a48f26e97e863e2852948658f0811139868826e89218a75715b"));
+
+    cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
+    recipient.get_unprotected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes128kw);
+    recipient.get_payload().set(base16_decode("dbd43c4e9d719c27c6275c67d628d493f090593db8218f11"));
+
+    cose_recipient& layered_recipient = recipient.add(new cose_recipient);
+    layered_recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhes_hkdf_256);
+    layered_recipient.get_unprotected()
+        .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p256, base16_decode("b2add44368ea6d641f9ca9af308b4079aeb519f11e9b8a55a600b21233e86e68"),
+             false)
+        .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example");
+
+    composer.compose(cbor_tag_t::cose_tag_encrypt, &root);
+
+    cbor_object_signing_encryption cose;
+    cose_context_t* cose_handle = nullptr;
+    cose.open(&cose_handle);
+    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_b.cbor", "RFC 8152 B.  Two Layers of Recipient Information");
+    cose.close(cose_handle);
+
+    root->release();
+}
+
 void test_rfc8152_c_1_1() {
     _test_case.begin("RFC 8152 C.1");
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_payload().set("This is the content.");
+    cose_composer composer;
+    composer.get_payload().set("This is the content.");
 
-    cose_recipient& signature = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& signature = composer.get_recipients().add(new cose_recipient);
     signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
     signature.get_unprotected().add(cose_key_t::cose_kid, "11");
     signature.get_payload().set_b16(
         "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
-    builder.compose(cbor_tag_t::cose_tag_sign, &root);
+    composer.compose(cbor_tag_t::cose_tag_sign, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -318,23 +376,23 @@ void test_rfc8152_c_1_2() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_payload().set("This is the content.");
+    cose_composer composer;
+    composer.get_payload().set("This is the content.");
 
-    cose_recipient& signature = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& signature = composer.get_recipients().add(new cose_recipient);
     signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
     signature.get_unprotected().add(cose_key_t::cose_kid, "11");
     signature.get_payload().set_b16(
         "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
 
-    cose_recipient& signature2 = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& signature2 = composer.get_recipients().add(new cose_recipient);
     signature2.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es512);
     signature2.get_unprotected().add(cose_key_t::cose_kid, "bilbo.baggins@hobbiton.example");
     signature2.get_payload().set_b16(
         "00a2d28a7c2bdb1587877420f65adf7d0b9a06635dd1de64bb62974c863f0b160dd2163734034e6ac003b01e8705524c5c4ca479a952f0247ee8cb0b4fb7397ba08d009e0c8bf4"
         "82270cc5771aa143966e5a469a09f613488030c5b07ec6d722e3835adb5b2d8c44e95ffb13877dd2582866883535de3bb03d01753f83ab87bb4f7a0297");
 
-    builder.compose(cbor_tag_t::cose_tag_sign, &root);
+    composer.compose(cbor_tag_t::cose_tag_sign, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -350,19 +408,19 @@ void test_rfc8152_c_1_3() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_unprotected().add(
+    cose_composer composer;
+    composer.get_unprotected().add(
         cose_alg_t::cose_es256, "11",
         base16_decode("5ac05e289d5d0e1b0a7f048a5d2b643813ded50bc9e49220f4f7278f85f19d4a77d655c9d3b51e805a74b099e1e085aacd97fc29d72f887e8802bb6650cceb2c"));
-    builder.get_payload().set("This is the content.");
+    composer.get_payload().set("This is the content.");
 
-    cose_recipient& signature = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& signature = composer.get_recipients().add(new cose_recipient);
     signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
     signature.get_unprotected().add(cose_key_t::cose_kid, "11");
     signature.get_payload().set_b16(
         "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
 
-    builder.compose(cbor_tag_t::cose_tag_sign, &root);
+    composer.compose(cbor_tag_t::cose_tag_sign, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -378,17 +436,17 @@ void test_rfc8152_c_1_4() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().set(base16_decode("a2687265736572766564f40281687265736572766564"));
-    builder.get_payload().set("This is the content.");
+    cose_composer composer;
+    composer.get_protected().set(base16_decode("a2687265736572766564f40281687265736572766564"));
+    composer.get_payload().set("This is the content.");
 
-    cose_recipient& signature = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& signature = composer.get_recipients().add(new cose_recipient);
     signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
     signature.get_unprotected().add(cose_key_t::cose_kid, "11");
     signature.get_payload().set_b16(
         "3fc54702aa56e1b2cb20284294c9106a63f91bac658d69351210a031d8fc7c5ff3e4be39445b1a3e83e1510d1aca2f2e8a7c081c7645042b18aba9d1fad1bd9c");
 
-    builder.compose(cbor_tag_t::cose_tag_sign, &root);
+    composer.compose(cbor_tag_t::cose_tag_sign, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -404,14 +462,14 @@ void test_rfc8152_c_2_1() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
-    builder.get_unprotected().add(cose_key_t::cose_kid, "11");
-    builder.get_payload().set("This is the content.");
-    builder.get_singleitem().set_b16(
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
+    composer.get_unprotected().add(cose_key_t::cose_kid, "11");
+    composer.get_payload().set("This is the content.");
+    composer.get_singleitem().set_b16(
         "8eb33e4ca31d1c465ab05aac34cc6b23d58fef5c083106c4d25a91aef0b0117e2af9a291aa32e14ab834dc56ed2a223444547e01f11d3b0916e5a4c345cacb36");
 
-    builder.compose(cbor_tag_t::cose_tag_sign1, &root);
+    composer.compose(cbor_tag_t::cose_tag_sign1, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -427,19 +485,19 @@ void test_rfc8152_c_3_1() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes128gcm);
-    builder.get_unprotected().add(cose_key_t::cose_iv, base16_decode("c9cf4df2fe6c632bf7886413"));
-    builder.get_payload().set_b16("7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0");
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes128gcm);
+    composer.get_unprotected().add(cose_key_t::cose_iv, base16_decode("c9cf4df2fe6c632bf7886413"));
+    composer.get_payload().set_b16("7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0");
 
-    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhes_hkdf_256);
     recipient.get_unprotected()
         .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p256, base16_decode("98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280"),
              true)
         .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example");
 
-    builder.compose(cbor_tag_t::cose_tag_encrypt, &root);
+    composer.compose(cbor_tag_t::cose_tag_encrypt, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -455,16 +513,16 @@ void test_rfc8152_c_3_2() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesccm_16_64_128);
-    builder.get_unprotected().add(cose_key_t::cose_iv, base16_decode("89f52f65a1c580933b5261a76c"));
-    builder.get_payload().set_b16("753548a19b1307084ca7b2056924ed95f2e3b17006dfe931b687b847");
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesccm_16_64_128);
+    composer.get_unprotected().add(cose_key_t::cose_iv, base16_decode("89f52f65a1c580933b5261a76c"));
+    composer.get_payload().set_b16("753548a19b1307084ca7b2056924ed95f2e3b17006dfe931b687b847");
 
-    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_hkdf_sha256);
     recipient.get_unprotected().add(cose_key_t::cose_salt, "aabbccddeeffgghh").add(cose_key_t::cose_kid, "our-secret");
 
-    builder.compose(cbor_tag_t::cose_tag_encrypt, &root);
+    composer.compose(cbor_tag_t::cose_tag_encrypt, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -485,24 +543,24 @@ void test_rfc8152_c_3_3() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes128gcm);
-    builder.get_unprotected()
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes128gcm);
+    composer.get_unprotected()
         .add(cose_key_t::cose_iv, base16_decode("c9cf4df2fe6c632bf7886413"))
         .add(cose_alg_t::cose_es512, "bilbo.baggins@hobbiton.example",
              base16_decode("00929663c8789bb28177ae28467e66377da12302d7f9594d2999afa5dfa531294f8896f2b6cdf1740014f4c7f1a358e3a6cf57f4ed6fb02fcf8f7aa989f5dfd07f0"
                            "700a3a7d8f3c604"
                            "ba70fa9411bd10c2591b483e1d2c31de003183e434d8fba18f17a4c7e3dfa003ac1cf3d30d44d2533c4989d3ac38c38b71481cc3430c9d65e7ddff"));
-    builder.get_payload().set_b16("7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0");
+    composer.get_payload().set_b16("7adbe2709ca818fb415f1e5df66f4e1a51053ba6d65a1a0c52a357da7a644b8070a151b0");
 
-    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhes_hkdf_256);
     recipient.get_unprotected()
         .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p256, base16_decode("98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280"),
              true)
         .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example");
 
-    builder.compose(cbor_tag_t::cose_tag_encrypt, &root);
+    composer.compose(cbor_tag_t::cose_tag_encrypt, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -518,12 +576,12 @@ void test_rfc8152_c_3_4() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes128gcm);
-    builder.get_unprotected().add(cose_key_t::cose_iv, base16_decode("02d1f7e6f26c43d4868d87ce"));
-    builder.get_payload().set_b16("64f84d913ba60a76070a9a48f26e97e863e28529d8f5335e5f0165eee976b4a5f6c6f09d");
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes128gcm);
+    composer.get_unprotected().add(cose_key_t::cose_iv, base16_decode("02d1f7e6f26c43d4868d87ce"));
+    composer.get_payload().set_b16("64f84d913ba60a76070a9a48f26e97e863e28529d8f5335e5f0165eee976b4a5f6c6f09d");
 
-    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhss_a128kw);
     recipient.get_unprotected()
         .add(cose_key_t::cose_static_key_id, "peregrin.took@tuckborough.example")
@@ -531,7 +589,7 @@ void test_rfc8152_c_3_4() {
         .add(cose_key_t::cose_partyu_nonce, base16_decode("0101"));
     recipient.get_payload().set_b16("41e0d76f579dbd0d936a662d54d8582037de2e366fde1c62");
 
-    builder.compose(cbor_tag_t::cose_tag_encrypt, &root);
+    composer.compose(cbor_tag_t::cose_tag_encrypt, &root);
 
     // Externally Supplied AAD: h'0011bbcc22dd44ee55ff660077'
     cbor_object_signing_encryption cose;
@@ -549,12 +607,12 @@ void test_rfc8152_c_4_1() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesccm_16_64_128);
-    builder.get_unprotected().add(cose_key_t::cose_iv, base16_decode("89f52f65a1c580933b5261a78c"));
-    builder.get_payload().set_b16("5974e1b99a3a4cc09a659aa2e9e7fff161d38ce71cb45ce460ffb569");
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesccm_16_64_128);
+    composer.get_unprotected().add(cose_key_t::cose_iv, base16_decode("89f52f65a1c580933b5261a78c"));
+    composer.get_payload().set_b16("5974e1b99a3a4cc09a659aa2e9e7fff161d38ce71cb45ce460ffb569");
 
-    builder.compose(cbor_tag_t::cose_tag_encrypt0, &root);
+    composer.compose(cbor_tag_t::cose_tag_encrypt0, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -570,12 +628,12 @@ void test_rfc8152_c_4_2() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesccm_16_64_128);
-    builder.get_unprotected().add(cose_key_t::cose_partial_iv, base16_decode("61a7"));
-    builder.get_payload().set_b16("252a8911d465c125b6764739700f0141ed09192de139e053bd09abca");
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesccm_16_64_128);
+    composer.get_unprotected().add(cose_key_t::cose_partial_iv, base16_decode("61a7"));
+    composer.get_payload().set_b16("252a8911d465c125b6764739700f0141ed09192de139e053bd09abca");
 
-    builder.compose(cbor_tag_t::cose_tag_encrypt0, &root);
+    composer.compose(cbor_tag_t::cose_tag_encrypt0, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -592,15 +650,15 @@ void test_rfc8152_c_5_1() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesmac_256_64);
-    builder.get_payload().set("This is the content.");
-    builder.get_tag().set_b16("9e1226ba1f81b848");
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesmac_256_64);
+    composer.get_payload().set("This is the content.");
+    composer.get_tag().set_b16("9e1226ba1f81b848");
 
-    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_unprotected().add(cose_key_t::cose_alg, cose_alg_t::cose_direct).add(cose_key_t::cose_kid, "our-secret");
 
-    builder.compose(cbor_tag_t::cose_tag_mac, &root);
+    composer.compose(cbor_tag_t::cose_tag_mac, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -616,12 +674,12 @@ void test_rfc8152_c_5_2() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_hs256);
-    builder.get_payload().set("This is the content.");
-    builder.get_tag().set_b16("81a03448acd3d305376eaa11fb3fe416a955be2cbe7ec96f012c994bc3f16a41");
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_hs256);
+    composer.get_payload().set("This is the content.");
+    composer.get_tag().set_b16("81a03448acd3d305376eaa11fb3fe416a955be2cbe7ec96f012c994bc3f16a41");
 
-    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhss_hkdf_256);
     recipient.get_unprotected()
         .add(cose_key_t::cose_static_key_id, "peregrin.took@tuckborough.example")
@@ -629,7 +687,7 @@ void test_rfc8152_c_5_2() {
         .add(cose_key_t::cose_partyu_nonce,
              base16_decode("4d8553e7e74f3c6a3a9dd3ef286a8195cbf8a23d19558ccfec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b017e7f2a9e5ce4db5"));
 
-    builder.compose(cbor_tag_t::cose_tag_mac, &root);
+    composer.compose(cbor_tag_t::cose_tag_mac, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -645,16 +703,16 @@ void test_rfc8152_c_5_3() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesmac_128_64);
-    builder.get_payload().set("This is the content.");
-    builder.get_tag().set_b16("36f5afaf0bab5d43");
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesmac_128_64);
+    composer.get_payload().set("This is the content.");
+    composer.get_tag().set_b16("36f5afaf0bab5d43");
 
-    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_unprotected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes256kw).add(cose_key_t::cose_kid, "018c0ae5-4d9b-471b-bfd6-eef314bc7037");
     recipient.get_payload().set_b16("711ab0dc2fc4585dce27effa6781c8093eba906f227b6eb0");
 
-    builder.compose(cbor_tag_t::cose_tag_mac, &root);
+    composer.compose(cbor_tag_t::cose_tag_mac, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -670,12 +728,12 @@ void test_rfc8152_c_5_4() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_hs256);
-    builder.get_payload().set("This is the content.");
-    builder.get_tag().set_b16("bf48235e809b5c42e995f2b7d5fa13620e7ed834e337f6aa43df161e49e9323e");
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_hs256);
+    composer.get_payload().set("This is the content.");
+    composer.get_tag().set_b16("bf48235e809b5c42e995f2b7d5fa13620e7ed834e337f6aa43df161e49e9323e");
 
-    cose_recipient& recipient = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhes_a128kw);
     recipient.get_unprotected()
         .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p521,
@@ -685,11 +743,11 @@ void test_rfc8152_c_5_4() {
         .add(cose_key_t::cose_kid, "bilbo.baggins@hobbiton.example");
     recipient.get_payload().set_b16("339bc4f79984cdc6b3e6ce5f315a4c7d2b0ac466fcea69e8c07dfbca5bb1f661bc5f8e0df9e3eff5");
 
-    cose_recipient& recipient2 = builder.get_recipients().add(new cose_recipient);
+    cose_recipient& recipient2 = composer.get_recipients().add(new cose_recipient);
     recipient2.get_unprotected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes256kw).add(cose_key_t::cose_kid, "018c0ae5-4d9b-471b-bfd6-eef314bc7037");
     recipient2.get_payload().set_b16("0b2c7cfce04e98276342d6476a7723c090dfdd15f9a518e7736549e998370695e6d6a83b4ae507bb");
 
-    builder.compose(cbor_tag_t::cose_tag_mac, &root);
+    composer.compose(cbor_tag_t::cose_tag_mac, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -705,12 +763,12 @@ void test_rfc8152_c_6_1() {
 
     // interface sketch...
     cbor_array* root = nullptr;
-    cbor_object_signing_encryption_composer builder;
-    builder.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesmac_256_64);
-    builder.get_payload().set("This is the content.");
-    builder.get_tag().set_b16("726043745027214f");
+    cose_composer composer;
+    composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_aesmac_256_64);
+    composer.get_payload().set("This is the content.");
+    composer.get_tag().set_b16("726043745027214f");
 
-    builder.compose(cbor_tag_t::cose_tag_mac0, &root);
+    composer.compose(cbor_tag_t::cose_tag_mac0, &root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -1173,6 +1231,8 @@ void test_github_example() {
         printf("%s => %i\n", keyword.c_str(), table[i]);
     }
 
+    _test_case.reset_time();
+
     basic_stream bs;
     bool result = false;
     cbor_object_signing_encryption cose;
@@ -1405,6 +1465,7 @@ int main(int argc, char** argv) {
         // rfc8152_privkeys.for_each (dump_crypto_key, nullptr);
         // rfc8152_pubkeys.for_each (dump_crypto_key, nullptr);
 
+        test_rfc8152_b();
         // cbor_tag_t::cose_tag_sign
         test_rfc8152_c_1_1();
         test_rfc8152_c_1_2();

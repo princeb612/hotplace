@@ -37,6 +37,7 @@ cbor_object_encryption::~cbor_object_encryption() {
     // do nothing
 }
 
+#if 0
 return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
@@ -63,7 +64,6 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
     crypto_advisor* advisor = crypto_advisor::get_instance();
     std::set<return_t> results;
     cbor_object_signing_encryption cose;
-    cbor_object_signing_encryption_composer::composer composer;
     cbor_publisher publisher;
 
     __try2 {
@@ -161,7 +161,7 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
 
 return_t cbor_object_encryption::compose(cbor_array* base, cose_structure_t& item, binary_t const& ciphertext) {
     return_t ret = errorcode_t::success;
-    cbor_object_signing_encryption_composer::composer composer;
+    cose_composer::composer composer;
 
     cbor_data* cbor_protected_map = nullptr;
     cbor_map* cbor_unprotected_map = nullptr;
@@ -177,7 +177,7 @@ return_t cbor_object_encryption::compose(cbor_array* base, cose_structure_t& ite
 
 return_t cbor_object_encryption::compose(cbor_array* base, cose_structure_t& item) {
     return_t ret = errorcode_t::success;
-    cbor_object_signing_encryption_composer::composer composer;
+    cose_composer::composer composer;
     cbor_publisher publisher;
 
     cbor_data* cbor_protected_map = nullptr;
@@ -195,7 +195,7 @@ return_t cbor_object_encryption::prepare_encrypt(cose_context_t* handle, crypto_
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption cose;
-    cbor_object_signing_encryption_composer::composer composer;
+    cose_composer::composer composer;
     cbor_publisher publisher;
 
     __try2 {
@@ -453,7 +453,7 @@ return_t cbor_object_encryption::doencrypt(cose_context_t* handle, crypto_key* k
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    cbor_object_signing_encryption_composer::composer composer;
+    cose_composer::composer composer;
     openssl_crypt crypt;
 
 #if 0
@@ -607,6 +607,7 @@ return_t cbor_object_encryption::doencrypt(cose_context_t* handle, crypto_key* k
 
     return ret;
 }
+#endif
 
 return_t split(binary_t const& source, size_t& sizeof_ciphertext, binary_t& tag, size_t tagsize) {
     // RFC 8152 Combine the authentication tag for encryption algorithms with the ciphertext.
@@ -630,7 +631,7 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
     std::set<return_t> results;
     cbor_object_signing_encryption cose;
     cbor_object_signing_encryption::parser parser;
-    cbor_object_signing_encryption_composer::composer composer;
+    // cose_composer::composer composer;
     // const EVP_PKEY* pkey = nullptr;
 
     // RFC 8152 4.3.  Externally Supplied Data
@@ -694,7 +695,7 @@ return_t cbor_object_encryption::dodecrypt(cose_context_t* handle, crypto_key* k
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption::parser parser;
-    cbor_object_signing_encryption_composer::composer composer;
+    // cose_composer::composer composer;
     openssl_crypt crypt;
 
     __try2 {

@@ -531,5 +531,38 @@ return_t cbor_reader::publish(cbor_reader_context_t* handle, cbor_object** root)
     return ret;
 }
 
+return_t cbor_parse(cbor_object** object, binary_t const& cbor) {
+    return_t ret = errorcode_t::success;
+    cbor_reader reader;
+    cbor_reader_context_t* reader_context = nullptr;
+
+    __try2 {
+        if (nullptr == object) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (0 == cbor.size()) {
+            ret = errorcode_t::no_data;
+            __leave2;
+        }
+
+        ret = reader.open(&reader_context);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = reader.parse(reader_context, cbor);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = reader.publish(reader_context, object);
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
+    }
+    __finally2 { reader.close(reader_context); }
+    return ret;
+}
+
 }  // namespace io
 }  // namespace hotplace

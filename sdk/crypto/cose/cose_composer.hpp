@@ -28,10 +28,162 @@
 namespace hotplace {
 namespace crypto {
 
+enum cose_message_type_t {
+    cose_message_unknown = 0,
+    cose_message_protected = 1,
+    cose_message_unprotected = 2,
+    cose_message_payload = 3,
+    cose_message_singleitem = 4,
+    cose_message_layered = 5,  // recipients, signatures
+};
+
+typedef struct _hint_cose_message_structure_t {
+    cbor_tag_t cbor_tag;
+    crypt_category_t category;
+    bool layered;
+    int elemof_cbor;
+    cose_message_type_t typeof_item[5];
+} hint_cose_message_structure_t;
+
+typedef struct _cose_message_cbortype_t {
+    cose_message_type_t type;
+    cbor_type_t cbor_type;
+} cose_message_cbortype_t;
+
+extern const hint_cose_message_structure_t cose_message_structure_table[];
+extern size_t sizeof_hint_cose_message_structure_table;
+
+class cose_advisor {
+   public:
+    static cose_advisor* get_instance();
+
+    cbor_tag_t test(cose_alg_t alg, cbor_array* root);
+
+   protected:
+    cose_advisor();
+    void load();
+
+   private:
+    static cose_advisor _instance;
+    bool loaded;
+
+    typedef std::multimap<crypt_category_t, const hint_cose_message_structure_t*> category_message_multimap_t;
+    typedef std::map<cose_message_type_t, cbor_type_t> cose_message_cbortype_map_t;
+    category_message_multimap_t _category_message_multimap;
+    cose_message_cbortype_map_t _cose_message_cbortype_map;
+};
+
+class cose_composer;
+class cose_recipients;
+class cose_unsent;
+class cose_countersign;
+
+class cose_data {
+    friend class cose_protected;
+    friend class cose_unprotected;
+    friend class cose_binary;
+    friend class cose_recipient;
+    friend class cose_recipients;
+
+   public:
+    cose_data();
+    ~cose_data();
+
+    /**
+     * @brief key/value
+     */
+    cose_data& add_bool(int key, bool value);
+    cose_data& add(int key, int16 value);
+    cose_data& add(int key, const char* value);
+    cose_data& add(int key, const unsigned char* value, size_t size);
+    cose_data& add(int key, std::string const& value);
+    cose_data& add(int key, binary_t const& value);
+    cose_data& add(int key, variant_t const& value);
+    /**
+     * @brief ephemeral/static key
+     */
+    cose_data& add(int key, uint16 curve, binary_t const& x, binary_t const& y);
+    cose_data& add(int key, uint16 curve, binary_t const& x, bool ysign);
+    /**
+     * @brief counter signature
+     */
+    cose_data& add(cose_alg_t alg, const char* kid, binary_t const& signature);
+    cose_data& add(cose_countersign* countersig);
+    cose_data& add(int key, vartype_t vty, void* p);
+    /**
+     * @brief payload (binary/base16)
+     */
+    cose_data& set(binary_t const& value);
+    cose_data& set(std::string const& value);
+    cose_data& set_b16(std::string const value);
+    cose_data& set_b16(const char* value);
+    /**
+     * @brief clear
+     */
+    cose_data& clear();
+
+    /**
+     * @brief   find
+     */
+    bool exist(int key);
+    /**
+     * @brief   find
+     * @return  error code (see error.hpp)
+     */
+    return_t finditem(int key, int& value);
+    /**
+     * @brief   find
+     * @return  error code (see error.hpp)
+     */
+    return_t finditem(int key, std::string& value);
+    /**
+     * @brief   find
+     * @return  error code (see error.hpp)
+     */
+    return_t finditem(int key, binary_t& value);
+
+   protected:
+    /**
+     * @brief   cbor_data for protected
+     * @return  error code (see error.hpp)
+     * @desc    cose_variantmap_t to cbor_data* and _payload
+     */
+    return_t build_protected(cbor_data** object);
+    return_t build_protected(cbor_data** object, cose_variantmap_t& unsent);
+    /**
+     * @brief   cbor_map for unprotected
+     * @return  error code (see error.hpp)
+     */
+    return_t build_unprotected(cbor_map** object);
+    return_t build_unprotected(cbor_map** object, cose_variantmap_t& unsent);
+    /**
+     * @brief   cbor_data for payload
+     * @return  error code (see error.hpp)
+     */
+    return_t build_data(cbor_data** object);
+    /**
+     * @brief   parse
+     */
+    return_t parse_protected(cbor_data* object);
+    return_t parse_unprotected(cbor_map* object);
+    return_t parse_payload(cbor_data* object);
+    return_t parse(cbor_map* object);
+    return_t parse_map(cbor_map* object, cose_variantmap_t& datamap, cose_orderlist_t& order);
+
+   private:
+    cose_variantmap_t _data_map;
+    cose_orderlist_t _order;
+    binary_t _payload;
+};
+
 /**
  * @brief protected
  */
 class cose_protected {
+    friend class cose_composer;
+    friend class cose_data;
+    friend class cose_recipient;
+
    public:
     cose_protected();
     ~cose_protected();
@@ -45,19 +197,33 @@ class cose_protected {
      */
     cose_protected& set(binary_t const& bin);
     /**
+     * @brief clear
+     */
+    cose_protected& clear();
+    /**
      * @brief cbor
      */
     cbor_data* cbor();
 
+   protected:
+    cose_data& data();
+    /**
+     * @brief set
+     */
+    return_t set(cbor_data* object);
+
    private:
-    cose_variantmap_t _protected_map;
-    binary_t _bin;
+    cose_data _protected;
 };
 
 /**
  * @brief unprotected
  */
 class cose_unprotected {
+    friend class cose_composer;
+    friend class cose_data;
+    friend class cose_recipient;
+
    public:
     cose_unprotected();
     ~cose_unprotected();
@@ -79,20 +245,33 @@ class cose_unprotected {
      */
     cose_unprotected& add(cose_alg_t alg, const char* kid, binary_t const& signature);
     /**
+     * @brief clear
+     */
+    cose_unprotected& clear();
+    /**
      * @brief cbor
      */
     cbor_map* cbor();
-    cose_orderlist_t& get_order();
+
+   protected:
+    cose_data& data();
+    /**
+     * @brief set
+     */
+    return_t set(cbor_map* object);
 
    private:
-    cose_variantmap_t _unprotected_map;
-    cose_orderlist_t _order;
+    cose_data _unprotected;
 };
 
 /**
  * @brief signature, ciphertext, tag
  */
 class cose_binary {
+    friend class cose_composer;
+    friend class cose_data;
+    friend class cose_recipient;
+
    public:
     cose_binary();
 
@@ -104,123 +283,222 @@ class cose_binary {
     cose_binary& set(std::string const& value);
     cose_binary& set(binary_t const& value);
     /**
+     * @brief clear
+     */
+    cose_binary& clear();
+    /**
      * @brief cbor
      */
     cbor_data* cbor();
 
+   protected:
+    cose_data& data();
+    /**
+     * @brief set
+     */
+    return_t set(cbor_data* object);
+
    private:
-    binary_t payload;
+    cose_data _payload;
 };
 
-/**
- * @brief recipient, signature
- */
 class cose_recipient {
+    friend class cose_composer;
+
    public:
     cose_recipient();
+    virtual ~cose_recipient();
 
+    /**
+     * @brief add
+     */
+    cose_recipient& add(cose_recipient* recipient = nullptr);
     /**
      * @brief get
      */
     cose_protected& get_protected();
     cose_unprotected& get_unprotected();
     cose_binary& get_payload();
+    cose_binary& get_singleitem();
+    cose_recipients& get_recipients();
+    /**
+     * @brief clear
+     */
+    cose_recipient& clear();
     /**
      * @brief cbor
      */
     cbor_array* cbor();
 
+   protected:
+    void set_parent(cose_recipient* layer);
+    cose_recipient* get_parent();
+    void set_composer(cose_composer* composer);
+    cose_composer* get_composer();
+
+    return_t finditem(int key, int& value);
+    return_t finditem(int key, std::string& value);
+    return_t finditem(int key, binary_t& value);
+
+    return_t parse(cbor_array* root);
+    return_t parse_header(cbor_array* root);
+    return_t parse_message(cbor_array* root);
+
+    return_t parse_protected(cbor_object* object);
+    return_t parse_unprotected(cbor_object* object);
+    return_t parse_payload(cbor_object* object);
+    return_t parse_singleitem(cbor_object* object);
+
    private:
     cose_protected _protected;
     cose_unprotected _unprotected;
     cose_binary _payload;
+    cose_binary _singleitem;
+    cose_recipients* _recipients;
+
+    cose_recipient* _parent;
+    cose_composer* _composer;
+    cbor_tag_t _cbor_tag;
 };
+typedef cose_recipient cose_layer;
 
 /**
  * @brief recipients, signatures
  */
 class cose_recipients {
+    friend class cose_recipient;
+    friend class cose_composer;
+
    public:
     cose_recipients();
+    ~cose_recipients();
 
+    /**
+     * @brief add
+     */
     cose_recipient& add(cose_recipient* recipient);
+    /**
+     * @brief clear
+     */
+    cose_recipients& clear();
+
     bool empty();
+    size_t size();
+
     cbor_array* cbor();
 
    private:
-    std::list<cose_recipient*> recipients;
+    std::list<cose_recipient*> _recipients;
+};
+typedef cose_recipients cose_layers;
+
+class cose_unsent {
+    friend class cose_recipient;
+
+   public:
+    cose_unsent();
+    ~cose_unsent();
+
+    cose_unsent& add(int key, const char* value);
+    cose_unsent& add(int key, const unsigned char* value, size_t size);
+    cose_unsent& add(int key, binary_t const& value);
+
+   protected:
+    cose_data& data();
+    bool isvalid(int key);
+
+   private:
+    cose_data _unsent;
+};
+
+class cose_countersign {
+   public:
+    cose_countersign() {}
+
+    cose_protected& get_protected() { return _protected; }
+    cose_unprotected& get_unprotected() { return _unprotected; }
+    cose_binary& get_signature() { return _signature; }
+    cbor_array* cbor() {
+        cbor_array* object = new cbor_array;
+        *object << get_protected().cbor() << get_unprotected().cbor() << get_signature().cbor();
+        return object;
+    }
+
+   private:
+    cose_protected _protected;
+    cose_unprotected _unprotected;
+    cose_binary _signature;
 };
 
 /**
  * @brief composer
  */
-class cbor_object_signing_encryption_composer {
+class cose_composer {
    public:
-    cbor_object_signing_encryption_composer();
-
-    class composer {
-       public:
-        composer();
-        /**
-         * @brief   cbor_data for protected
-         * @return  error code (see error.hpp)
-         */
-        return_t build_protected(cbor_data** object);
-        return_t build_protected(cbor_data** object, cose_variantmap_t& input);
-        return_t build_protected(cbor_data** object, cose_variantmap_t& input, cose_orderlist_t& order);
-        return_t build_protected(cbor_data** object, cbor_map* input);
-        /**
-         * @brief   cbor_map for unprotected
-         * @return  error code (see error.hpp)
-         */
-        return_t build_unprotected(cbor_map** object);
-        return_t build_unprotected(cbor_map** object, cose_variantmap_t& input);
-        return_t build_unprotected(cbor_map** object, cose_variantmap_t& input, cose_orderlist_t& order);
-        /**
-         * @brief   cbor_data for payload
-         * @return  error code (see error.hpp)
-         */
-        return_t build_data(cbor_data** object, const char* payload);
-        return_t build_data(cbor_data** object, const byte_t* payload, size_t size);
-        return_t build_data(cbor_data** object, binary_t const& payload);
-        return_t build_data_b16(cbor_data** object, const char* str);
-    };
+    cose_composer();
 
     /**
      * @brief   compose
      * @desc
      *          // interface sketch
      *          cbor_array* root = nullptr;
-     *          cose_structure_t builder;
-     *          builder.get_payload().set("This is the content.");
+     *          cose_composer composer;
+     *          composer.get_payload().set("This is the content.");
      *
-     *          cose_recipient& signature = builder.get_recipients().add(new cose_recipient);
+     *          cose_recipient& signature = composer.get_recipients().add(new cose_recipient);
      *          signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
      *          signature.get_unprotected().add(cose_key_t::cose_kid, "11");
      *          signature.get_payload().set_b16("e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
-     *          builder.compose(cbor_tag_t::cose_tag_sign, &root);
+     *          composer.compose(cbor_tag_t::cose_tag_sign, &root); // tagged
+     *          composer.compose(&root); // untagged
      *          // ...
      *          root->release();
      */
-    return_t compose(cbor_tag_t cbor_tag, cbor_array** node);
-
+    return_t compose(cbor_tag_t cbor_tag, cbor_array** object);
+    return_t compose(cbor_array** object);
+    /**
+     * @brief   parse
+     * @desc
+     *          // interface sketch
+     *          cose_composer composer;
+     *          composer.parse(cbor);
+     *          composer.compose(&root);
+     */
+    return_t parse(binary_t const& input);
     /**
      * @brief get
+     * @desc
+     *                      protected  unprotected      payload     singleitem/multiitems
+     *                      [0]        [1]              [2]         [3]             [4]
+     * cose_tag_encrypt     protected, unprotected_map, ciphertext, [+recipient]
+     * cose_tag_encrypt0    protected, unprotected_map, ciphertext
+     * cose_tag_mac         protected, unprotected_map, payload,    tag,            [+recipient]
+     * cose_tag_mac0        protected, unprotected_map, payload,    tag
+     * cose_tag_sign        protected, unprotected_map, payload,    [+signature]
+     * cose_tag_sign1       protected, unprotected_map, payload,    signature
      */
     cose_protected& get_protected();
     cose_unprotected& get_unprotected();
     cose_binary& get_payload();
-    cose_binary& get_tag();
+    cose_binary& get_tag();  // syn. get_singleitem
     cose_binary& get_singleitem();
     cose_recipients& get_recipients();
 
+    cose_layer& get_layer();
+    cose_unsent& get_unsent();
+
+   protected:
+    void clear();
+    // return_t compose_enc_structure(binary_t& authenticated_data);
+
    private:
-    cose_protected _protected;
-    cose_unprotected _unprotected;
-    cose_binary _payload;
-    cose_binary _tag;
-    cose_binary _singleitem;
-    cose_recipients _recipients;
+    // cose_protected _protected;
+    // cose_unprotected _unprotected;
+    // cose_binary _payload;
+    // cose_binary _singleitem;
+    // cose_recipients _recipients;
+    cose_layer _layer;
+    cose_unsent _unsent;
 };
 
 }  // namespace crypto

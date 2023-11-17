@@ -118,6 +118,18 @@ class cbor_reader {
    private:
 };
 
+/**
+ * @brief   parse
+ * @param   cbor_object** object [out]
+ * @param   binary_t const& cbor [in]
+ * @return  error code (see error.hpp)
+ *          no_data if cbor is empty
+ * @remarks
+ *          1. if(0 == cbor.size()) return
+ *          2. if(errorcode_t::no_data == cbor_parse()) return
+ */
+return_t cbor_parse(cbor_object** object, binary_t const& cbor);
+
 }  // namespace io
 }  // namespace hotplace
 

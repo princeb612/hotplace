@@ -57,6 +57,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, cose
 
 return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
+#if 0
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption cose;
     cbor_object_signing_encryption::parser parser;
@@ -75,7 +76,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
         body.bin_payload = input;
 
         cbor_tag_t tag = cbor_tag_t::cose_tag_sign;
-        cbor_object_signing_encryption_composer::composer composer;
+        cose_composer::composer composer;
         cbor_publisher pub;
         std::list<cose_alg_t>::iterator iter;
 
@@ -145,7 +146,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std:
         cose.clear_context(handle);
         // do nothing
     }
-
+#endif
     return ret;
 }
 
@@ -165,7 +166,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
     return_t ret = errorcode_t::success;
     cbor_object_signing_encryption cose;
     cbor_object_signing_encryption::parser parser;
-    // cbor_object_signing_encryption_composer::composer composer;
+    // cose_composer::composer composer;
     __try2 {
         cose.clear_context(handle);
         result = false;
@@ -203,8 +204,9 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
 
 return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag, binary_t& signature) {
     return_t ret = errorcode_t::success;
+#if 0
     cbor_publisher pub;
-    cbor_object_signing_encryption_composer::composer composer;
+    cose_composer::composer composer;
     cbor_array* root = nullptr;
     cbor_map* cbor_body_unprotected = nullptr;
 
@@ -234,6 +236,7 @@ return_t cbor_object_signing::write_signature(cose_context_t* handle, uint8 tag,
 
     pub.publish(root, &signature);
     root->release();
+#endif
     return ret;
 }
 
@@ -280,7 +283,7 @@ return_t cbor_object_signing::doverify_sign(cose_context_t* handle, crypto_key* 
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption::parser parser;
-    // cbor_object_signing_encryption_composer::composer composer;
+    // cose_composer::composer composer;
     openssl_sign signprocessor;
 
     __try2 {
@@ -406,7 +409,7 @@ return_t cbor_object_signing::doverify_mac(cose_context_t* handle, crypto_key* k
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption::parser parser;
-    // cbor_object_signing_encryption_composer::composer composer;
+    // cose_composer::composer composer;
     int enc_alg = 0;
 
     __try2 {
