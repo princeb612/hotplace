@@ -560,6 +560,7 @@ return_t cbor_object_signing_encryption::parser::parse(cose_context_t* handle, b
     cbor_object* root = nullptr;
     const char* kid = nullptr;
     std::set<bool> results;
+    cose_advisor* coseadvisor = cose_advisor::get_instance();
 
     __try2 {
         clear_context(handle);
@@ -587,17 +588,9 @@ return_t cbor_object_signing_encryption::parser::parse(cose_context_t* handle, b
         int elemof_cbor = root->size();
         cbor_tag_t cbor_tag = root->tag_value();
 
-        typedef std::map<cbor_tag_t, const hint_cose_message_structure_t*> cose_message_structure_map_t;
         typedef return_t (cbor_object_signing_encryption::parser::*doparse_handler)(cose_context_t * handle, cbor_object * object);
         typedef std::map<cose_message_type_t, doparse_handler> cose_message_handler_map_t;
-        cose_message_structure_map_t cose_message_structure_map;
         cose_message_handler_map_t cose_message_handler_map;
-
-        unsigned i = 0;
-        for (i = 0; i < sizeof_hint_cose_message_structure_table; i++) {
-            const hint_cose_message_structure_t* item = cose_message_structure_table + i;
-            cose_message_structure_map.insert(std::make_pair(item->cbor_tag, item));
-        }
 
         cose_message_handler_map[cose_message_protected] = &cbor_object_signing_encryption::parser::doparse_protected;
         cose_message_handler_map[cose_message_unprotected] = &cbor_object_signing_encryption::parser::doparse_unprotected;
@@ -605,7 +598,7 @@ return_t cbor_object_signing_encryption::parser::parse(cose_context_t* handle, b
         cose_message_handler_map[cose_message_singleitem] = &cbor_object_signing_encryption::parser::doparse_singleitem;
         cose_message_handler_map[cose_message_layered] = &cbor_object_signing_encryption::parser::doparse_multiitems;
 
-        const hint_cose_message_structure_t* cose_message_map = cose_message_structure_map[cbor_tag];
+        const hint_cose_message_structure_t* cose_message_map = coseadvisor->hintof(cbor_tag);
         if (nullptr == cose_message_map) {
             ret = errorcode_t::bad_data;
             __leave2;

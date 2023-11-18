@@ -57,6 +57,7 @@ class cose_advisor {
    public:
     static cose_advisor* get_instance();
 
+    const hint_cose_message_structure_t* hintof(cbor_tag_t cbor_tag);
     cbor_tag_t test(cose_alg_t alg, cbor_array* root);
 
    protected:
@@ -67,8 +68,10 @@ class cose_advisor {
     static cose_advisor _instance;
     bool loaded;
 
+    typedef std::map<cbor_tag_t, const hint_cose_message_structure_t*> cose_message_structure_map_t;
     typedef std::multimap<crypt_category_t, const hint_cose_message_structure_t*> category_message_multimap_t;
     typedef std::map<cose_message_type_t, cbor_type_t> cose_message_cbortype_map_t;
+    cose_message_structure_map_t cose_message_structure_map;
     category_message_multimap_t _category_message_multimap;
     cose_message_cbortype_map_t _cose_message_cbortype_map;
 };
@@ -169,6 +172,9 @@ class cose_data {
     return_t parse_payload(cbor_data* object);
     return_t parse(cbor_map* object);
     return_t parse_map(cbor_map* object, cose_variantmap_t& datamap, cose_orderlist_t& order);
+
+    bool empty_binary();
+    size_t size_binary();
 
    private:
     cose_variantmap_t _data_map;
@@ -282,6 +288,11 @@ class cose_binary {
     cose_binary& set_b16(std::string const& value);
     cose_binary& set(std::string const& value);
     cose_binary& set(binary_t const& value);
+    /**
+     * @brief empty, size
+     */
+    bool empty();
+    size_t size();
     /**
      * @brief clear
      */
@@ -492,6 +503,8 @@ class cose_composer {
     // return_t compose_enc_structure(binary_t& authenticated_data);
 
    private:
+    cbor_tag_t _cbor_tag;
+
     // cose_protected _protected;
     // cose_unprotected _unprotected;
     // cose_binary _payload;
