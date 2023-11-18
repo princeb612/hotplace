@@ -126,6 +126,37 @@ cose_advisor::cose_advisor() : loaded(false) { load(); }
 
 cose_advisor* cose_advisor::get_instance() { return &_instance; }
 
+void cose_advisor::load() {
+    if (false == loaded) {
+        size_t i = 0;
+        for (i = 0; i < sizeof_hint_cose_message_structure_table; i++) {
+            const hint_cose_message_structure_t* item = cose_message_structure_table + i;
+            cose_message_structure_map.insert(std::make_pair(item->cbor_tag, item));
+        }
+
+        for (i = 0; i < RTL_NUMBER_OF(cose_message_structure_table); i++) {
+            const hint_cose_message_structure_t* item = cose_message_structure_table + i;
+            _category_message_multimap.insert(std::make_pair(item->category, item));
+        }
+
+        for (i = 0; i < RTL_NUMBER_OF(cose_message_cbortype_table); i++) {
+            const cose_message_cbortype_t* item = cose_message_cbortype_table + i;
+            _cose_message_cbortype_map.insert(std::make_pair(item->type, item->cbor_type));
+        }
+
+        loaded = true;
+    }
+}
+
+const hint_cose_message_structure_t* cose_advisor::hintof(cbor_tag_t cbor_tag) {
+    const hint_cose_message_structure_t* hint = nullptr;
+    cose_message_structure_map_t::iterator iter = cose_message_structure_map.find(cbor_tag);
+    if (cose_message_structure_map.end() != iter) {
+        hint = iter->second;
+    }
+    return hint;
+}
+
 cbor_tag_t cose_advisor::test(cose_alg_t alg, cbor_array* root) {
     cbor_tag_t tag = cbor_tag_t::cbor_tag_unknown;
 
@@ -172,23 +203,6 @@ cbor_tag_t cose_advisor::test(cose_alg_t alg, cbor_array* root) {
     return tag;
 }
 
-void cose_advisor::load() {
-    if (false == loaded) {
-        size_t i = 0;
-        for (i = 0; i < RTL_NUMBER_OF(cose_message_structure_table); i++) {
-            const hint_cose_message_structure_t* item = cose_message_structure_table + i;
-            _category_message_multimap.insert(std::make_pair(item->category, item));
-        }
-
-        for (i = 0; i < RTL_NUMBER_OF(cose_message_cbortype_table); i++) {
-            const cose_message_cbortype_t* item = cose_message_cbortype_table + i;
-            _cose_message_cbortype_map.insert(std::make_pair(item->type, item->cbor_type));
-        }
-
-        loaded = true;
-    }
-}
-
 #define TYPE_STATIC_KEY (TYPE_USER)
 #define TYPE_COUNTER_SIG (vartype_t)(TYPE_USER + 1)
 
@@ -220,10 +234,22 @@ class cose_key {
                     << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve))                       // crv(-1)
                     << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));                            // x(-2)
 
-            if (_compressed) {
-                *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
-            } else {
-                *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)
+            switch (_curve) {
+                case cose_ec_p256:
+                case cose_ec_p384:
+                case cose_ec_p521:
+                    if (_compressed) {
+                        *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
+                    } else {
+                        *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)
+                    }
+                    break;
+                case cose_ec_x25519:
+                case cose_ec_x448:
+                case cose_ec_ed25519:
+                case cose_ec_ed448:
+                default:
+                    break;
             }
         }
         __finally2 {
@@ -797,23 +823,43 @@ return_t cose_data::parse(cbor_map* object) {
                         map->find(cose_key_lable_t::cose_ec_x, &cbor_x);
                         map->find(cose_key_lable_t::cose_ec_y, &cbor_y);
 
-                        cbor_data* cbor_data_curve = cbor_typeof<cbor_data>(cbor_curve, cbor_type_t::cbor_type_data);
-                        cbor_data* cbor_data_x = cbor_typeof<cbor_data>(cbor_x, cbor_type_t::cbor_type_data);
-                        cbor_data* cbor_data_y = cbor_typeof<cbor_data>(cbor_y, cbor_type_t::cbor_type_data);
-                        cbor_simple* cbor_simple_y = cbor_typeof<cbor_simple>(cbor_y, cbor_type_t::cbor_type_simple);
+                        if (cbor_curve && cbor_x) {
+                            cbor_data* cbor_data_curve = cbor_typeof<cbor_data>(cbor_curve, cbor_type_t::cbor_type_data);
+                            cbor_data* cbor_data_x = cbor_typeof<cbor_data>(cbor_x, cbor_type_t::cbor_type_data);
+                            cbor_data* cbor_data_y = cbor_typeof<cbor_data>(cbor_y, cbor_type_t::cbor_type_data);
+                            cbor_simple* cbor_simple_y = cbor_typeof<cbor_simple>(cbor_y, cbor_type_t::cbor_type_simple);
 
-                        curve = t_variant_to_int<uint16>(cbor_data_curve->data());
-                        variant_binary(cbor_data_x->data(), bin_x);
-                        if (cbor_data_y) {
-                            variant_binary(cbor_data_y->data(), bin_y);
-                            add(keyid, curve, bin_x, bin_y);
-                        } else if (cbor_simple_y) {
-                            add(keyid, curve, bin_x, cbor_simple_true == cbor_simple_y->simple_type());
+                            curve = t_variant_to_int<uint16>(cbor_data_curve->data());
+                            variant_binary(cbor_data_x->data(), bin_x);
+
+                            switch (curve) {
+                                case cose_ec_p256:
+                                case cose_ec_p384:
+                                case cose_ec_p521:
+                                    if (cbor_data_y) {
+                                        variant_binary(cbor_data_y->data(), bin_y);
+                                        add(keyid, curve, bin_x, bin_y);
+                                    } else if (cbor_simple_y) {
+                                        add(keyid, curve, bin_x, cbor_simple_true == cbor_simple_y->simple_type());
+                                    } else {
+                                        ret = errorcode_t::bad_format;
+                                    }
+                                    break;
+                                case cose_ec_x25519:
+                                case cose_ec_x448:
+                                case cose_ec_ed25519:
+                                case cose_ec_ed448:
+                                    add(keyid, curve, bin_x, bin_y);
+                                    break;
+                            }
+
+                            cbor_curve->release();
+                            cbor_x->release();
                         }
 
-                        cbor_curve->release();
-                        cbor_x->release();
-                        cbor_y->release();
+                        if (cbor_y) {
+                            cbor_y->release();
+                        }
                     } break;
                     default:
                         break;
@@ -852,6 +898,10 @@ return_t cose_data::parse(cbor_map* object) {
     }
     return ret;
 }
+
+bool cose_data::empty_binary() { return 0 == _payload.size(); }
+
+size_t cose_data::size_binary() { return _payload.size(); }
 
 cose_protected::cose_protected() {}
 
@@ -970,6 +1020,10 @@ cose_binary& cose_binary::set(binary_t const& value) {
 return_t cose_binary::set(cbor_data* object) { return _payload.parse_payload(object); }
 
 cose_data& cose_binary::data() { return _payload; }
+
+bool cose_binary::empty() { return _payload.empty_binary(); }
+
+size_t cose_binary::size() { return _payload.size_binary(); }
 
 cose_binary& cose_binary::clear() {
     _payload.clear();
@@ -1379,7 +1433,7 @@ cose_unsent& cose_unsent::add(int key, binary_t const& value) {
     return *this;
 }
 
-cose_composer::cose_composer() { get_layer().set_composer(this); }
+cose_composer::cose_composer() : _cbor_tag(cbor_tag_t::cbor_tag_unknown) { get_layer().set_composer(this); }
 
 return_t cose_composer::compose(cbor_tag_t cbor_tag, cbor_array** object) {
     return_t ret = errorcode_t::success;
@@ -1442,6 +1496,35 @@ return_t cose_composer::compose(cbor_array** object) {
 
     //   then call compose(tag, object);
 
+    // simple implementation ...
+
+    cbor_array* root = nullptr;
+
+    __try2 {
+        if (nullptr == object) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        __try_new_catch(root, new cbor_array, ret, __leave2);
+
+        *root << get_protected().cbor() << get_unprotected().cbor() << get_payload().cbor();
+
+        if (get_singleitem().size()) {
+            *root << get_singleitem().cbor();
+        }
+
+        if (get_recipients().size()) {
+            *root << get_recipients().cbor();
+        }
+
+        root->tag(_cbor_tag);
+        *object = root;
+    }
+    __finally2 {
+        // do nothing
+    }
+
     return ret;
 }
 
@@ -1469,6 +1552,9 @@ return_t cose_composer::parse(binary_t const& input) {
         if (nullptr == cbor_message) {
             ret = errorcode_t::bad_format;
             __leave2;
+        }
+        if (cbor_message->tagged()) {
+            _cbor_tag = cbor_message->tag_value();
         }
 
         // parse cose
