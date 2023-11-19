@@ -80,6 +80,7 @@ class cose_composer;
 class cose_recipients;
 class cose_unsent;
 class cose_countersign;
+class cose_countersigns;
 
 class cose_data {
     friend class cose_protected;
@@ -173,7 +174,11 @@ class cose_data {
     return_t parse_unprotected(cbor_map* object);
     return_t parse_payload(cbor_data* object);
     return_t parse(cbor_map* object);
-    return_t parse_map(cbor_map* object, cose_variantmap_t& datamap, cose_orderlist_t& order);
+    /**
+     * @brief ephemeral-static, static-static
+     */
+    return_t parse_static_key(cbor_map* object, int keyid);
+    return_t parse_counter_signs(cbor_array* object, int keyid);
 
     bool empty_binary();
     size_t size_binary();
@@ -441,6 +446,42 @@ class cose_countersign {
     cose_protected _protected;
     cose_unprotected _unprotected;
     cose_binary _signature;
+};
+
+class cose_countersigns {
+   public:
+    cose_countersigns() {}
+
+    cose_countersign& add(cose_countersign* countersign) {
+        std::list<cose_countersign*>::iterator iter = _countersigns.insert(_countersigns.end(), countersign);
+        return **iter;
+    }
+    bool empty() { return 0 == _countersigns.size(); }
+    size_t size() { return _countersigns.size(); }
+    cbor_array* cbor() {
+        cbor_array* object = nullptr;
+        return_t ret = errorcode_t::success;
+        __try2 {
+            if (_countersigns.size() > 1) {
+                __try_new_catch(object, new cbor_array, ret, __leave2);
+
+                std::list<cose_countersign*>::iterator iter;
+                for (iter = _countersigns.begin(); iter != _countersigns.end(); iter++) {
+                    cose_countersign* sign = *iter;
+                    *object << sign->cbor();
+                }
+            } else if (_countersigns.size() == 1) {
+                object = _countersigns.front()->cbor();
+            }
+        }
+        __finally2 {
+            // do nothing
+        }
+        return object;
+    }
+
+   private:
+    std::list<cose_countersign*> _countersigns;
 };
 
 /**
