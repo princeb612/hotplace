@@ -1263,13 +1263,15 @@ void test_github_example() {
             cbor_publisher publisher;
             cose_composer composer;
             basic_stream bs_diagnostic_composed;
+            binary_t bin_composed;
             cbor_array* cbor_newone = nullptr;
 
             composer.parse(cbor);
-            composer.compose(&cbor_newone);
+            composer.compose(&cbor_newone, bin_composed);
 
             publisher.publish(cbor_newone, &bs_diagnostic_composed);
             dump_test_data("\e[1;36mcompose\e[0m", bs_diagnostic_composed);
+            _test_case.assert(bin_composed == bin_cbor, __FUNCTION__, "compose.parse %s", vector->file);
         }
 
         basic_stream properties;

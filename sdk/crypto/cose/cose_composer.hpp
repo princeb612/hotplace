@@ -107,6 +107,8 @@ class cose_data {
      */
     cose_data& add(int key, uint16 curve, binary_t const& x, binary_t const& y);
     cose_data& add(int key, uint16 curve, binary_t const& x, bool ysign);
+    cose_data& add(int key, uint16 curve, binary_t const& x, binary_t const& y, std::list<int>& order);
+    cose_data& add(int key, uint16 curve, binary_t const& x, bool ysign, std::list<int>& order);
     /**
      * @brief counter signature
      */
@@ -467,6 +469,7 @@ class cose_composer {
      */
     return_t compose(cbor_tag_t cbor_tag, cbor_array** object);
     return_t compose(cbor_array** object);
+    return_t compose(cbor_array** object, binary_t& cbor);
     /**
      * @brief   parse
      * @desc

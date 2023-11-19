@@ -103,19 +103,6 @@ class cbor_map : public cbor_object {
     cbor_map& add(cbor_pair* object);
     cbor_map& operator<<(cbor_pair* object);
 
-    /**
-     * @brief find
-     * @example
-     *          cbor_object* item = nullptr;
-     *          ret = object->find(1, &item);
-     *          if (errorcode_t::success == ret) {
-     *              // ...
-     *              item->release();
-     *          }
-     */
-    return_t find(int key, cbor_object** object);
-    return_t find(std::string key, cbor_object** object);
-
     virtual size_t size();
     cbor_pair* operator[](size_t index);
     std::list<cbor_pair*>& accessor();
@@ -129,8 +116,98 @@ class cbor_map : public cbor_object {
 
    private:
     std::list<cbor_pair*> _array; /* unordered */
-    std::map<int, cbor_object*> _int_map;
-    std::map<std::string, cbor_object*> _string_map;
+};
+
+/**
+ * @brief   hint
+ * @remarks
+ *          // sketch
+ *          cbor_map_hint<int, cbor_map_int_binder> hint(map);
+ *          cbor_object* cbor_curve = nullptr;
+ *          hint.find(cose_key_lable_t::cose_ec_crv, &cbor_curve);
+ *          // ...
+ *          cbor_curve->release();
+ */
+
+template <typename KTY>
+struct cbor_map_int_binder {
+    KTY bind(variant_t vt) { return t_variant_to_int<KTY>(vt); }
+};
+
+template <typename KTY>
+struct cbor_map_string_binder {
+    KTY bind(variant_t vt) {
+        KTY value;
+        variant_string(vt, value);
+        return value;
+    }
+};
+
+/**
+ * @brief build index if necesary
+ */
+template <typename KTY, typename VTK>
+class cbor_map_hint {
+   public:
+    cbor_map_hint(cbor_map* source) : _source(source) {
+        _source->addref();
+        build();
+    }
+    ~cbor_map_hint() { _source->release(); }
+
+    /**
+     * @brief find
+     * @example
+     *          cbor_map_hint<int, cbor_map_int_binder<int>> hint(map)
+     *          cbor_object* item = nullptr;
+     *          ret = hint.find(1, &item);
+     *          if (errorcode_t::success == ret) {
+     *              // ...
+     *              item->release();
+     *          }
+     */
+    return_t find(KTY key, cbor_object** item) {
+        return_t ret = errorcode_t::success;
+        __try2 {
+            if (nullptr == item) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
+
+            typename std::map<KTY, cbor_object*>::iterator iter;
+            iter = _index.find(key);
+            if (_index.end() == iter) {
+                ret = errorcode_t::not_found;
+            } else {
+                cbor_object* object = iter->second;
+                object->addref();
+                *item = object;
+            }
+        }
+        __finally2 {
+            // do nothing
+        }
+        return ret;
+    }
+    void get_order(std::list<KTY>& order) { order = _order; }
+
+   protected:
+    void build() {
+        for (size_t i = 0; i < _source->size(); i++) {
+            cbor_pair* pair = (*_source)[i];
+            cbor_data* left = pair->left();
+            cbor_object* right = pair->right();
+            KTY key = _binder.bind(left->data());
+            _order.push_back(key);
+            _index.insert(std::make_pair(key, right));
+        }
+    }
+
+   private:
+    cbor_map* _source;
+    std::list<KTY> _order;
+    std::map<KTY, cbor_object*> _index;
+    VTK _binder;
 };
 
 }  // namespace io
