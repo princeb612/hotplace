@@ -91,11 +91,9 @@ return_t cbor_map::join(cbor_object* object, cbor_object* extra) {
                 uint16 lhs_flag = inst->data().flag;
                 if (lhs_flag & variant_flag_t::flag_int) {
                     int key = t_variant_to_int<int>(inst->data());
-                    _int_map.insert(std::make_pair(key, extra));
                 } else if (lhs_flag & variant_flag_t::flag_string) {
                     std::string key;
                     variant_string(inst->data(), key);
-                    _string_map.insert(std::make_pair(key, extra));
                 }
             }
         }
@@ -120,52 +118,6 @@ cbor_map& cbor_map::add(cbor_pair* object) {
 cbor_map& cbor_map::operator<<(cbor_pair* object) {
     join(object);
     return *this;
-}
-
-return_t cbor_map::find(int key, cbor_object** object) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == object) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        std::map<int, cbor_object*>::iterator iter = _int_map.find(key);
-        if (_int_map.end() == iter) {
-            ret = errorcode_t::not_found;
-        } else {
-            cbor_object* item = iter->second;
-            item->addref();
-            *object = item;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t cbor_map::find(std::string key, cbor_object** object) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == object) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        std::map<std::string, cbor_object*>::iterator iter = _string_map.find(key);
-        if (_string_map.end() == iter) {
-            ret = errorcode_t::not_found;
-        } else {
-            cbor_object* item = iter->second;
-            item->addref();
-            *object = item;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
 }
 
 size_t cbor_map::size() { return _array.size(); }

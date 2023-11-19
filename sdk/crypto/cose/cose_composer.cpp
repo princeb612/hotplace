@@ -222,6 +222,7 @@ class cose_key {
         _ysign = ysign;
         _compressed = true;
     }
+    void set(cose_orderlist_t& order) { _order = order; }
     cbor_map* cbor() {
         cbor_map* object = nullptr;
         __try2 {
@@ -230,26 +231,54 @@ class cose_key {
                 __leave2;
             }
 
-            *object << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))  // kty(1)
-                    << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve))                       // crv(-1)
-                    << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));                            // x(-2)
-
+            cose_kty_t kty;
             switch (_curve) {
                 case cose_ec_p256:
                 case cose_ec_p384:
                 case cose_ec_p521:
+                    kty = cose_kty_t::cose_kty_ec2;
+                    break;
+                default:
+                    kty = cose_kty_t::cose_kty_okp;
+                    break;
+            }
+
+            if (_order.size()) {
+                for (cose_orderlist_t::iterator iter = _order.begin(); iter != _order.end(); iter++) {
+                    int key = *iter;
+                    switch (key) {
+                        case cose_key_lable_t::cose_lable_kty:
+                            *object << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(kty));
+                            break;
+                        case cose_key_lable_t::cose_ec_crv:
+                            *object << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve));
+                            break;
+                        case cose_key_lable_t::cose_ec_x:
+                            *object << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));
+                            break;
+                        case cose_key_lable_t::cose_ec_y:
+                            if (_compressed) {
+                                *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
+                            } else {
+                                *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            } else {
+                *object << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(kty))  // kty(1)
+                        << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve))  // crv(-1)
+                        << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));       // x(-2)
+
+                if (cose_kty_t::cose_kty_ec2 == kty) {
                     if (_compressed) {
                         *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
                     } else {
                         *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)
                     }
-                    break;
-                case cose_ec_x25519:
-                case cose_ec_x448:
-                case cose_ec_ed25519:
-                case cose_ec_ed448:
-                default:
-                    break;
+                }
             }
         }
         __finally2 {
@@ -264,6 +293,7 @@ class cose_key {
     binary_t _y;
     bool _ysign;
     bool _compressed;
+    cose_orderlist_t _order;
 };
 
 class cose_countersigns {
@@ -346,12 +376,44 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t con
     return *this;
 }
 
+cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t const& y, std::list<int>& order) {
+    cose_key* k = nullptr;
+    __try2 {
+        __try_new_catch_only(k, new cose_key());
+        if (k) {
+            k->set(curve, x, y);
+            k->set(order);
+            add(key, TYPE_STATIC_KEY, k);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return *this;
+}
+
 cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign) {
     cose_key* k = nullptr;
     __try2 {
         __try_new_catch_only(k, new cose_key());
         if (k) {
             k->set(curve, x, ysign);
+            add(key, TYPE_STATIC_KEY, k);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return *this;
+}
+
+cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign, std::list<int>& order) {
+    cose_key* k = nullptr;
+    __try2 {
+        __try_new_catch_only(k, new cose_key());
+        if (k) {
+            k->set(curve, x, ysign);
+            k->set(order);
             add(key, TYPE_STATIC_KEY, k);
         }
     }
@@ -810,6 +872,8 @@ return_t cose_data::parse(cbor_map* object) {
                     case cose_ephemeral_key:  // (-1)
                     case cose_static_key:     // (-2)
                     {
+                        cbor_map_hint<int, cbor_map_int_binder<int>> hint(map);
+                        cose_orderlist_t order;
                         uint16 kty = 0;
                         uint16 curve = 0;
                         binary_t bin_x;
@@ -819,9 +883,10 @@ return_t cose_data::parse(cbor_map* object) {
                         cbor_object* cbor_x = nullptr;
                         cbor_object* cbor_y = nullptr;
 
-                        map->find(cose_key_lable_t::cose_ec_crv, &cbor_curve);
-                        map->find(cose_key_lable_t::cose_ec_x, &cbor_x);
-                        map->find(cose_key_lable_t::cose_ec_y, &cbor_y);
+                        hint.find(cose_key_lable_t::cose_ec_crv, &cbor_curve);
+                        hint.find(cose_key_lable_t::cose_ec_x, &cbor_x);
+                        hint.find(cose_key_lable_t::cose_ec_y, &cbor_y);
+                        hint.get_order(order);
 
                         if (cbor_curve && cbor_x) {
                             cbor_data* cbor_data_curve = cbor_typeof<cbor_data>(cbor_curve, cbor_type_t::cbor_type_data);
@@ -838,9 +903,9 @@ return_t cose_data::parse(cbor_map* object) {
                                 case cose_ec_p521:
                                     if (cbor_data_y) {
                                         variant_binary(cbor_data_y->data(), bin_y);
-                                        add(keyid, curve, bin_x, bin_y);
+                                        add(keyid, curve, bin_x, bin_y, order);
                                     } else if (cbor_simple_y) {
-                                        add(keyid, curve, bin_x, cbor_simple_true == cbor_simple_y->simple_type());
+                                        add(keyid, curve, bin_x, cbor_simple_true == cbor_simple_y->simple_type(), order);
                                     } else {
                                         ret = errorcode_t::bad_format;
                                     }
@@ -1525,6 +1590,16 @@ return_t cose_composer::compose(cbor_array** object) {
         // do nothing
     }
 
+    return ret;
+}
+
+return_t cose_composer::compose(cbor_array** object, binary_t& cbor) {
+    return_t ret = errorcode_t::success;
+    ret = compose(object);
+    if (errorcode_t::success == ret) {
+        cbor_publisher publisher;
+        publisher.publish(*object, &cbor);
+    }
     return ret;
 }
 
