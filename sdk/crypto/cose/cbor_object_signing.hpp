@@ -79,30 +79,6 @@ class cbor_object_signing {
     return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
 
    protected:
-    /**
-     * @brief   write
-     * @param   cose_context_t* handle [in]
-     * @param   uint8 tag [in]
-     * @param   binary_t& signature [out]
-     * @return  error code (see error.hpp)
-     */
-    return_t write_signature(cose_context_t* handle, uint8 tag, binary_t& signature);
-    /*
-     * @brief   verify
-     * @param   cose_context_t* handle [in]
-     * @param   crypto_key* key [in]
-     * @return  error code (see error.hpp)
-     */
-    return_t doverify_sign(cose_context_t* handle, crypto_key* key);
-    return_t doverify_sign(cose_context_t* handle, crypto_key* key, cose_structure_t& item, binary_t const& signature);
-    /*
-     * @brief   verify
-     * @param   cose_context_t* handle [in]
-     * @param   crypto_key* key [in]
-     * @return  error code (see error.hpp)
-     */
-    return_t doverify_mac(cose_context_t* handle, crypto_key* key);
-    return_t doverify_mac(cose_context_t* handle, crypto_key* key, cose_structure_t& item, binary_t const& tag);
 };
 
 }  // namespace crypto

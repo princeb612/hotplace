@@ -31,35 +31,38 @@ typedef struct _cose_context_t cose_context_t;
 // typedef struct _cose_structure_t cose_structure_t;
 
 enum cose_param_t {
-    cose_external = 1,
-    cose_unsent_apu_id = 2,
-    cose_unsent_apu_nonce = 3,
-    cose_unsent_apu_other = 4,
-    cose_unsent_apv_id = 5,
-    cose_unsent_apv_nonce = 6,
-    cose_unsent_apv_other = 7,
-    cose_unsent_pub_other = 8,
-    cose_unsent_priv_other = 9,
-    cose_unsent_iv = 10,
-    cose_unsent_alg = 11,
+    cose_param_base = 0x1000,
 
-    cose_param_aad = 13,
-    cose_param_cek = 14,
-    cose_param_context = 15,
-    cose_param_iv = 16,
-    cose_param_kek = 17,
-    cose_param_salt = 18,
-    cose_param_secret = 19,
-    cose_param_tobesigned = 20,
-    cose_param_tomac = 21,
-    cose_param_apu_id = 22,
-    cose_param_apu_nonce = 23,
-    cose_param_apu_other = 24,
-    cose_param_apv_id = 25,
-    cose_param_apv_nonce = 26,
-    cose_param_apv_other = 27,
-    cose_param_pub_other = 28,
-    cose_param_priv_other = 29,
+    cose_external = cose_param_base + 1,
+    cose_unsent_apu_id = cose_param_base + 2,
+    cose_unsent_apu_nonce = cose_param_base + 3,
+    cose_unsent_apu_other = cose_param_base + 4,
+    cose_unsent_apv_id = cose_param_base + 5,
+    cose_unsent_apv_nonce = cose_param_base + 6,
+    cose_unsent_apv_other = cose_param_base + 7,
+    cose_unsent_pub_other = cose_param_base + 8,
+    cose_unsent_priv_other = cose_param_base + 9,
+    cose_unsent_iv = cose_param_base + 10,
+    cose_unsent_alg = cose_param_base + 11,
+
+    cose_param_aad = cose_param_base + 13,
+    cose_param_cek = cose_param_base + 14,
+    cose_param_context = cose_param_base + 15,
+    cose_param_iv = cose_param_base + 16,
+    cose_param_kek = cose_param_base + 17,
+    cose_param_salt = cose_param_base + 18,
+    cose_param_secret = cose_param_base + 19,
+    cose_param_tobesigned = cose_param_base + 20,
+    cose_param_tomac = cose_param_base + 21,
+    cose_param_apu_id = cose_param_base + 22,
+    cose_param_apu_nonce = cose_param_base + 23,
+    cose_param_apu_other = cose_param_base + 24,
+    cose_param_apv_id = cose_param_base + 25,
+    cose_param_apv_nonce = cose_param_base + 26,
+    cose_param_apv_other = cose_param_base + 27,
+    cose_param_pub_other = cose_param_base + 28,
+    cose_param_priv_other = cose_param_base + 29,
+    cose_param_ciphertext = cose_param_base + 30,
 };
 
 enum cose_flag_t {
@@ -107,87 +110,16 @@ static inline void cose_variantmap_free(cose_variantmap_t& map) {
     map.clear();
 }
 
-class cose_structure_t {
-    friend class cbor_object_encryption;
-    friend class cbor_object_signing;
-    friend class cbor_object_signing_encryption;
-
-   public:
-    cose_structure_t() : parent(nullptr), alg(cose_alg_t::cose_unknown), epk(nullptr){};
-
-    ~cose_structure_t() { clear(); }
-
-    void add(cose_structure_t* child) {
-        child->parent = this;
-        multiitems.push_back(child);
-    }
-
-    void clearall() {
-        clear();
-        binarymap.clear();
-    }
-
-    void clear() {
-        parent = nullptr;
-        bin_protected.clear();
-        bin_payload.clear();
-        singleitem.clear();
-        std::list<cose_structure_t*>::iterator iter;
-        for (iter = multiitems.begin(); iter != multiitems.end(); iter++) {
-            cose_structure_t* item = *iter;
-            delete item;
-        }
-        multiitems.clear();
-
-        alg = cose_alg_t::cose_unknown;
-        kid.clear();
-
-        cose_variantmap_free(protected_map);
-        cose_variantmap_free(unprotected_map);
-        protected_list.clear();
-        unprotected_list.clear();
-        key.clear();
-        if (epk) {
-            EVP_PKEY_free((EVP_PKEY*)epk);
-            epk = nullptr;
-        }
-    }
-
-   private:
-    cose_structure_t* parent;
-    binary_t bin_protected;  // protected
-    binary_t bin_payload;
-    binary_t singleitem;                      // signature, tag, ...
-    std::list<cose_structure_t*> multiitems;  // [+recipient], [+signature]
-
-    cose_alg_t alg;
-    std::string kid;
-    cose_variantmap_t protected_map;
-    cose_variantmap_t unprotected_map;
-    cose_orderlist_t protected_list;
-    cose_orderlist_t unprotected_list;
-    cose_binarymap_t binarymap;
-    crypto_key key;        // encryption
-    crypto_key ephemeral;  // ephemeral
-    const EVP_PKEY* epk;
-};
-
+class cose_composer;
 struct _cose_context_t {
-    cbor_tag_t cbor_tag;
-
     uint32 flags;
     uint32 debug_flags;
     basic_stream debug_stream;
 
     // restructuring in progress
-    // cose_composer* composer;
-    // cose_unsent* unsent;
+    cose_composer* composer;
 
-    // to be deprecated
-    cose_structure_t body;
-    cose_binarymap_t binarymap;  // external, unsent, cek, kek, context, aad, secret, tobesigned/tomac
-
-    _cose_context_t() : cbor_tag(cbor_tag_t::cbor_tag_unknown), flags(0), debug_flags(0) {
+    _cose_context_t() : flags(0), debug_flags(0) {
         // composer = new cose_composer;
     }
     ~_cose_context_t() {
@@ -201,8 +133,7 @@ struct _cose_context_t {
         debug_stream.clear();
     }
     void clear() {
-        cbor_tag = cbor_tag_t::cbor_tag_unknown;
-        body.clear();
+        // do nothing
     }
 };
 

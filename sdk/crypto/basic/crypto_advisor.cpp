@@ -167,6 +167,9 @@ return_t crypto_advisor::build_if_necessary() {
         for (i = 0; i < sizeof_hint_curves; i++) {
             const hint_curve_t* item = hint_curves + i;
             _nid_bycurve_map.insert(std::make_pair(item->name, item));
+            if (cose_ec_curve_t::cose_ec_unknown != item->cose_crv) {
+                _cose_curve_map.insert(std::make_pair(item->cose_crv, item));
+            }
             _curve_bynid_map.insert(std::make_pair(item->nid, item));
         }
 
@@ -531,6 +534,14 @@ const hint_curve_t* crypto_advisor::hintof_curve_nid(uint32 nid) {
     return item;
 }
 
+const hint_curve_t* crypto_advisor::hintof_curve(cose_ec_curve_t curve) {
+    const hint_curve_t* item = nullptr;
+    maphint<cose_ec_curve_t, const hint_curve_t*> hint(_cose_curve_map);
+
+    hint.find(curve, &item);
+    return item;
+}
+
 const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm(const char* alg) {
     const hint_jose_encryption_t* item = nullptr;
 
@@ -887,6 +898,18 @@ jws_t crypto_advisor::sigof(crypt_sig_t sig) {
 
     hint.find(sig, &type);
     return type;
+}
+
+crypt_category_t crypto_advisor::categoryof(cose_alg_t alg) {
+    crypt_category_t category = crypt_category_t::crypt_category_not_classified;
+    maphint<uint32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
+
+    const hint_cose_algorithm_t* item = nullptr;
+    hint.find(alg, &item);
+    if (item) {
+        category = item->hint_group->category;
+    }
+    return category;
 }
 
 crypt_sig_t crypto_advisor::sigof(cose_alg_t sig) {

@@ -76,26 +76,6 @@ class cbor_object_encryption {
     return_t decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, bool& result);
 
    protected:
-    return_t compose(cbor_array* base, cose_structure_t& item, binary_t const& ciphertext);
-    return_t compose(cbor_array* base, cose_structure_t& item);
-    return_t prepare_encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods);
-    return_t dorandom(cose_context_t* handle, crypto_key* key, cose_alg_t alg, cose_structure_t& item);
-    return_t doencrypt(cose_context_t* handle, crypto_key* key, cose_structure_t& item, binary_t const& input, binary_t& ciphertext);
-    /**
-     * @brief   decrypt
-     * @param   cose_context_t* handle [in]
-     * @param   crypto_key* key [in]
-     * @param   binary_t& output [out]
-     */
-    return_t dodecrypt(cose_context_t* handle, crypto_key* key, binary_t& output);
-    /**
-     * @brief   decrypt
-     * @param   cose_context_t* handle [in]
-     * @param   crypto_key* key [in]
-     * @param   cose_structure_t& item [in]
-     * @param   binary_t& output [out]
-     */
-    return_t dodecrypt(cose_context_t* handle, crypto_key* key, cose_structure_t& item, binary_t& output);
 };
 
 }  // namespace crypto

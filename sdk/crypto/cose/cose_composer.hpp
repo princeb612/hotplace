@@ -37,27 +37,37 @@ enum cose_message_type_t {
     cose_message_layered = 5,  // recipients, signatures
 };
 
-typedef struct _hint_cose_message_structure_t {
+enum cose_scope {
+    cose_scope_protected = (1 << 0),
+    cose_scope_unprotected = (1 << 1),
+    cose_scope_unsent = (1 << 2),
+    cose_scope_params = (1 << 3),
+    cose_scope_layer = 0x1111,
+    cose_scope_children = (1 << 4),
+    cose_scope_all = 0x11111111,
+};
+
+typedef struct _hint_cose_structure_t {
     cbor_tag_t cbor_tag;
     crypt_category_t category;
     bool layered;
     int elemof_cbor;
     cose_message_type_t typeof_item[5];
-} hint_cose_message_structure_t;
+} hint_cose_structure_t;
 
 typedef struct _cose_message_cbortype_t {
     cose_message_type_t type;
     cbor_type_t cbor_type;
 } cose_message_cbortype_t;
 
-extern const hint_cose_message_structure_t cose_message_structure_table[];
-extern size_t sizeof_hint_cose_message_structure_table;
+extern const hint_cose_structure_t cose_structure_table[];
+extern size_t sizeof_hint_cose_structure_table;
 
 class cose_advisor {
    public:
     static cose_advisor* get_instance();
 
-    const hint_cose_message_structure_t* hintof(cbor_tag_t cbor_tag);
+    const hint_cose_structure_t* hintof(cbor_tag_t cbor_tag);
     cbor_tag_t test(cose_alg_t alg, cbor_array* root);
 
    protected:
@@ -68,8 +78,8 @@ class cose_advisor {
     static cose_advisor _instance;
     bool loaded;
 
-    typedef std::map<cbor_tag_t, const hint_cose_message_structure_t*> cose_message_structure_map_t;
-    typedef std::multimap<crypt_category_t, const hint_cose_message_structure_t*> category_message_multimap_t;
+    typedef std::map<cbor_tag_t, const hint_cose_structure_t*> cose_message_structure_map_t;
+    typedef std::multimap<crypt_category_t, const hint_cose_structure_t*> category_message_multimap_t;
     typedef std::map<cose_message_type_t, cbor_type_t> cose_message_cbortype_map_t;
     cose_message_structure_map_t cose_message_structure_map;
     category_message_multimap_t _category_message_multimap;
@@ -103,6 +113,10 @@ class cose_data {
     cose_data& add(int key, std::string const& value);
     cose_data& add(int key, binary_t const& value);
     cose_data& add(int key, variant_t const& value);
+
+    cose_data& replace(int key, const unsigned char* value, size_t size);
+    cose_data& replace(int key, binary_t const& value);
+
     /**
      * @brief ephemeral/static key
      */
@@ -182,11 +196,14 @@ class cose_data {
 
     bool empty_binary();
     size_t size_binary();
+    void get_binary(binary_t& bin);
+    crypto_key& get_static_key();
 
    private:
     cose_variantmap_t _data_map;
     cose_orderlist_t _order;
     binary_t _payload;
+    crypto_key _static_key;
 };
 
 /**
@@ -210,6 +227,10 @@ class cose_protected {
      */
     cose_protected& set(binary_t const& bin);
     /**
+     * @brief data
+     */
+    cose_data& data();
+    /**
      * @brief clear
      */
     cose_protected& clear();
@@ -219,7 +240,6 @@ class cose_protected {
     cbor_data* cbor();
 
    protected:
-    cose_data& data();
     /**
      * @brief set
      */
@@ -258,6 +278,11 @@ class cose_unprotected {
      */
     cose_unprotected& add(cose_alg_t alg, const char* kid, binary_t const& signature);
     /**
+     * @brief data
+     */
+    cose_data& data();
+    crypto_key& get_static_key();
+    /**
      * @brief clear
      */
     cose_unprotected& clear();
@@ -267,7 +292,6 @@ class cose_unprotected {
     cbor_map* cbor();
 
    protected:
-    cose_data& data();
     /**
      * @brief set
      */
@@ -296,10 +320,15 @@ class cose_binary {
     cose_binary& set(std::string const& value);
     cose_binary& set(binary_t const& value);
     /**
+     * @brief data
+     */
+    cose_data& data();
+    /**
      * @brief empty, size
      */
     bool empty();
     size_t size();
+    void get(binary_t& bin);
     /**
      * @brief clear
      */
@@ -310,7 +339,6 @@ class cose_binary {
     cbor_data* cbor();
 
    protected:
-    cose_data& data();
     /**
      * @brief set
      */
@@ -322,6 +350,7 @@ class cose_binary {
 
 class cose_recipient {
     friend class cose_composer;
+    friend class cose_data;
 
    public:
     cose_recipient();
@@ -338,7 +367,11 @@ class cose_recipient {
     cose_unprotected& get_unprotected();
     cose_binary& get_payload();
     cose_binary& get_singleitem();
+    cose_binary& get_signature();
+    cose_binary& get_tag();
     cose_recipients& get_recipients();
+    cose_data& get_params();
+    crypto_key& get_static_key();
     /**
      * @brief clear
      */
@@ -348,16 +381,24 @@ class cose_recipient {
      */
     cbor_array* cbor();
 
-   protected:
-    void set_parent(cose_recipient* layer);
-    cose_recipient* get_parent();
+    void set_upperlayer(cose_recipient* layer);
+    cose_recipient* get_upperlayer();
+    cose_recipient* get_upperlayer2();
+    uint16 get_depth();
     void set_composer(cose_composer* composer);
     cose_composer* get_composer();
 
-    return_t finditem(int key, int& value);
-    return_t finditem(int key, std::string& value);
-    return_t finditem(int key, binary_t& value);
+    return_t finditem(int key, int& value, int scope = cose_scope_layer);
+    return_t finditem(int key, std::string& value, int scope = cose_scope_layer);
+    return_t finditem(int key, binary_t& value, int scope = cose_scope_layer);
 
+    return_t setparam(cose_param_t id, binary_t const& bin);
+
+    cose_alg_t get_algorithm();
+    std::string get_kid();
+    void for_each(void (*for_each_handler)(cose_recipient*, void* userdata), void* userdata);
+
+   protected:
     return_t parse(cbor_array* root);
     return_t parse_header(cbor_array* root);
     return_t parse_message(cbor_array* root);
@@ -373,8 +414,10 @@ class cose_recipient {
     cose_binary _payload;
     cose_binary _singleitem;
     cose_recipients* _recipients;
+    cose_data _params;
 
-    cose_recipient* _parent;
+    cose_recipient* _upperlayer;
+    uint16 _depth;
     cose_composer* _composer;
     cbor_tag_t _cbor_tag;
 };
@@ -384,8 +427,9 @@ typedef cose_recipient cose_layer;
  * @brief recipients, signatures
  */
 class cose_recipients {
-    friend class cose_recipient;
     friend class cose_composer;
+    friend class cose_data;
+    friend class cose_recipient;
 
    public:
     cose_recipients();
@@ -402,8 +446,16 @@ class cose_recipients {
 
     bool empty();
     size_t size();
+    cose_recipient* operator[](size_t index);
 
     cbor_array* cbor();
+
+    return_t finditem(int key, int& value, int scope = cose_scope_layer);
+    return_t finditem(int key, std::string& value, int scope = cose_scope_layer);
+    return_t finditem(int key, binary_t& value, int scope = cose_scope_layer);
+
+   protected:
+    void for_each(void (*for_each_handler)(cose_layer*, void* userdata), void* userdata);
 
    private:
     std::list<cose_recipient*> _recipients;
@@ -421,8 +473,9 @@ class cose_unsent {
     cose_unsent& add(int key, const unsigned char* value, size_t size);
     cose_unsent& add(int key, binary_t const& value);
 
-   protected:
     cose_data& data();
+
+   protected:
     bool isvalid(int key);
 
    private:
@@ -535,12 +588,21 @@ class cose_composer {
     cose_protected& get_protected();
     cose_unprotected& get_unprotected();
     cose_binary& get_payload();
-    cose_binary& get_tag();  // syn. get_singleitem
+    /**
+     * @brief tag/signature
+     * @desc syn. get_singleitem
+     */
+    cose_binary& get_tag();
+    cose_binary& get_signature();
     cose_binary& get_singleitem();
+    /**
+     * @brief signatures/recipients
+     */
     cose_recipients& get_recipients();
 
     cose_layer& get_layer();
     cose_unsent& get_unsent();
+    cbor_tag_t get_cbor_tag();
 
    protected:
     void clear();

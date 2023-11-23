@@ -34,9 +34,10 @@ test_case _test_case;
 typedef struct _OPTION {
     bool debug;
     bool dump_keys;
+    bool skip_cbor_basic;
     bool skip_validate;
 
-    _OPTION() : debug(false), dump_keys(false), skip_validate(false) {
+    _OPTION() : debug(false), dump_keys(false), skip_cbor_basic(false), skip_validate(false) {
         // do nothing
     }
 } OPTION;
@@ -200,18 +201,20 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                     cbor_array* cbor_newone = nullptr;
 
                     cbor_tag_t tag = newone->tag_value();  // backup
-                    newone->tag(cbor_tag_t::cbor_tag_unknown);
+                    if (cbor_tag_t::cbor_tag_unknown != tag) {
+                        newone->tag(cbor_tag_t::cbor_tag_unknown);
 
-                    publisher.publish(newone, &bin_untagged);
-                    composer.parse(bin_untagged);
-                    composer.compose(tag, &cbor_newone);
+                        publisher.publish(newone, &bin_untagged);
+                        composer.parse(bin_untagged);
+                        composer.compose(tag, &cbor_newone);
 
-                    publisher.publish(cbor_newone, &bs_diagnostic_composed);
-                    dump_test_data("\e[1;36mcompose\e[0m", bs_diagnostic_composed);
+                        publisher.publish(cbor_newone, &bs_diagnostic_composed);
+                        dump_test_data("\e[1;36mcompose\e[0m", bs_diagnostic_composed);
 
-                    _test_case.assert(true, __FUNCTION__, "check.compose %s", text ? text : "");
+                        _test_case.assert(true, __FUNCTION__, "check.compose %s", text ? text : "");
 
-                    cbor_newone->release();
+                        cbor_newone->release();
+                    }
                 }
 #endif
                 newone->release();  // release parsed object
@@ -1434,6 +1437,7 @@ int main(int argc, char** argv) {
     _cmdline.make_share(new cmdline_t<OPTION>);
     *_cmdline << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = true; }).optional();
     *_cmdline << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-b", "skip basic encoding", [&](OPTION& o, char* param) -> void { o.skip_cbor_basic = true; }).optional();
     *_cmdline << cmdarg_t<OPTION>("-s", "skip validation w/ test vector", [&](OPTION& o, char* param) -> void { o.skip_validate = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
@@ -1462,7 +1466,9 @@ int main(int argc, char** argv) {
     //      xxd -ps outputfile
 
     // part 0 .. try to decode
-    { test_rfc8152_read_cbor(); }
+    if (!option.skip_cbor_basic) {
+        test_rfc8152_read_cbor();
+    }
 
     // part 1 .. following cases
     // encode and decode
