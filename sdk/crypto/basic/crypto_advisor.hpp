@@ -176,6 +176,7 @@ class crypto_advisor {
      * @sa hintof_curve
      */
     const hint_curve_t* hintof_curve_nid(uint32 nid);
+    const hint_curve_t* hintof_curve(cose_ec_curve_t curve);
 
     /**
      * @brief hint
@@ -423,6 +424,7 @@ class crypto_advisor {
     cose_kty_t ktyof(crypto_kty_t kty);
     crypto_kty_t ktyof(cose_kty_t kty);
     jws_t sigof(crypt_sig_t sig);
+    crypt_category_t categoryof(cose_alg_t alg);
     crypt_sig_t sigof(cose_alg_t sig);
     crypt_sig_t sigof(jws_t sig);
     cose_ec_curve_t curveof(uint32 nid);
@@ -453,6 +455,7 @@ class crypto_advisor {
     typedef std::map<std::string, const hint_signature_t*> signature_byname_map_t;
     typedef std::map<std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
     typedef std::map<uint32, const hint_curve_t*> jose_curve_bynid_map_t;
+    typedef std::map<cose_ec_curve_t, const hint_curve_t*> cose_curve_map_t;
     typedef std::map<crypto_kty_t, cose_kty_t> kty2cose_map_t;
     typedef std::map<cose_kty_t, crypto_kty_t> cose2kty_map_t;
     typedef std::map<crypt_sig_t, jws_t> sig2jws_map_t;
@@ -487,6 +490,7 @@ class crypto_advisor {
 
     jose_nid_bycurve_map_t _nid_bycurve_map;
     jose_curve_bynid_map_t _curve_bynid_map;
+    cose_curve_map_t _cose_curve_map;
 
     kty2cose_map_t _kty2cose_map;
     cose2kty_map_t _cose2kty_map;

@@ -19,6 +19,8 @@ return_t variant_copy(variant_t& target, const variant_t& source) {
     return_t ret = errorcode_t::success;
 
     __try2 {
+        variant_free(target);
+
         if (variant_flag_t::flag_free == source.flag) {
             switch (source.type) {
                 case TYPE_BINARY:
@@ -50,6 +52,8 @@ return_t variant_copy(variant_t& target, const variant_t& source) {
 
 return_t variant_move(variant_t& target, variant_t& source) {
     return_t ret = errorcode_t::success;
+
+    variant_free(target);
 
     memcpy(&target, &source, sizeof(variant_t));  // copy including type and flag
     variant_init(source);

@@ -14,6 +14,7 @@
 
 #include <sdk/base.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
+#include <sdk/crypto/cose/cose_composer.hpp>
 #include <sdk/crypto/cose/types.hpp>
 #include <sdk/crypto/types.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
@@ -65,7 +66,6 @@ class cbor_object_signing_encryption {
      */
     return_t set(cose_context_t* handle, cose_param_t id, binary_t const& bin);
 
-#if 0
     /**
      * @brief   encrypt ("Encrypt0")
      * @param   cose_context_t* handle [in]
@@ -108,7 +108,6 @@ class cbor_object_signing_encryption {
      *          encrypt (handle, key, algs2, 2, input, output);
      */
     return_t encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t* methods, size_t size_method, binary_t const& input, binary_t& output);
-#endif
     /**
      * @brief   decrypt
      * @param   cose_context_t* handle [in]
@@ -171,137 +170,33 @@ class cbor_object_signing_encryption {
      * @remarks see json_object_signing::verify
      */
     return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
-    /**
-     * @brief   clear
-     * @param   cose_context_t* handle [in]
-     * @return  error code (see error.hpp)
-     */
-    static return_t clear_context(cose_context_t* handle);
 
-    ///////////////////////////////////////////////////////////////
-    // refactor in progress
-    ///////////////////////////////////////////////////////////////
-    /**
-     * @brief   parser
-     */
-    class parser {
-       public:
-        parser();
-        ~parser();
-
-        /**
-         * @brief   parse
-         * @param   cose_context_t* handle [in]
-         * @param   binary_t const& input [in]
-         * @return  error code (see error.hpp)
-         */
-        return_t parse(cose_context_t* handle, binary_t const& input);
-        /**
-         * @brief   find
-         * @param   int key [in]
-         * @param   int& value [out]
-         * @param   cose_variantmap_t const& from [in]
-         */
-        bool exist(int key, cose_variantmap_t const& from);
-        /**
-         * @brief   find
-         * @param   int key [in]
-         * @param   int& value [out]
-         * @param   cose_variantmap_t const& from [in]
-         * @return  error code (see error.hpp)
-         */
-        return_t finditem(int key, int& value, cose_variantmap_t const& from);
-        /**
-         * @brief   find
-         * @param   int key [in]
-         * @param   std::string& value [out]
-         * @param   cose_variantmap_t const& from [in]
-         * @return  error code (see error.hpp)
-         */
-        return_t finditem(int key, std::string& value, cose_variantmap_t const& from);
-        /**
-         * @brief   find
-         * @param   int key [in]
-         * @param   binary_t& value [out]
-         * @param   cose_variantmap_t const& from [in]
-         * @return  error code (see error.hpp)
-         */
-        return_t finditem(int key, binary_t& value, cose_variantmap_t const& from);
-        /**
-         * @brief   compose Enc_structure
-         * @param   cose_context_t* handle [in]
-         * @param   binary_t& authenticated_data [out]
-         * @return  error code (see error.hpp)
-         */
-        return_t compose_enc_structure(cose_context_t* handle, binary_t& authenticated_data);
-        /**
-         * @brief   compose the COSE_KDF_Context
-         * @param   cose_context_t* handle [in]
-         * @param   cose_structure_t& item [in]
-         * @param   binary_t& kdf_context [out]
-         * @return  error code (see error.hpp)
-         * @desc    AlgorithmID: ... This normally is either a key wrap algorithm identifier or a content encryption algorithm identifier.
-         */
-        return_t compose_kdf_context(cose_context_t* handle, cose_structure_t& item, binary_t& kdf_context);
-        /**
-         * @brief   compose the ToBeSigned
-         * @param   cose_context_t* handle [in]
-         * @param   cose_structure_t& item [in]
-         * @param   binary_t& tobesigned [out]
-         * @return  error code (see error.hpp)
-         */
-        return_t compose_sig_structure(cose_context_t* handle, cose_structure_t& item, binary_t& tobesigned);
-        /**
-         * @brief   compose the ToMac
-         * @param   cose_context_t* handle [in]
-         * @param   binary_t& tomac [out]
-         * @return  error code (see error.hpp)
-         */
-        return_t compose_mac_structure(cose_context_t* handle, binary_t& tomac);
-
-       protected:
-        cbor_data* docompose_kdf_context_item(cose_context_t* handle, cose_structure_t& item, cose_key_t key, cose_param_t shared);
-
-        return_t doparse_protected(cose_context_t* handle, cbor_object* object);
-        return_t doparse_unprotected(cose_context_t* handle, cbor_object* object);
-        return_t doparse_payload(cose_context_t* handle, cbor_object* object);
-        return_t doparse_singleitem(cose_context_t* handle, cbor_object* object);
-        return_t doparse_multiitems(cose_context_t* handle, cbor_object* object);
-        return_t doparse_multiitem(cbor_array* object, cose_structure_t& body);
-        /**
-         * @brief   read unprotected (cbor_map) to context
-         * @param   cbor_map* data [in]
-         * @param   cose_structure_t& item [out]
-         * @return  error code (see error.hpp)
-         */
-        return_t doparse_unprotected(cbor_map* data, cose_structure_t& item);
-        /**
-         * @brief   read bstr of protected (cbor_data) to list
-         * @param   binary_t const& data [in]
-         * @param   cose_variantmap_t& vtl [out]
-         * @return  error code (see error.hpp)
-         */
-        return_t doparse_binary(binary_t const& data, cose_variantmap_t& vtl);
-        /**
-         * @brief   read unprotected (cbor_map) to list
-         * @param   cbor_map* data [in]
-         * @param   cose_variantmap_t& vtl [out]
-         * @return  error code (see error.hpp)
-         */
-        return_t doparse_map(cbor_map* data, cose_variantmap_t& vtl);
-    };
+    return_t process(cose_context_t* handle, crypto_key* key, binary_t const& cbor, binary_t& output);
 
    protected:
-    /**
-     * @brief cek into handle->binarymap[cose_param_t::cose_param_cek]
-     * @param cose_context_t* handle [in]
-     * @param crypto_key* key [in]
-     * @param cose_structure_& item [in] compute cek
-     */
-    return_t process_keyagreement(cose_context_t* handle, crypto_key* key, cose_structure_t& item, bool do_encrypt);
-    return_t preprocess_keyagreement(cose_context_t* handle, crypto_key* key, cose_structure_t& item);
+    return_t subprocess(cose_context_t* handle, crypto_key* key, cose_layer* layer, int mode);
 
-    return_t info_of_strcuture(cose_context_t* handle, cose_structure_t& item, int& alg, std::string& kid);
+    return_t compose_kdf_context(cose_context_t* handle, cose_layer* layer, binary_t& kdf_context);
+    cbor_data* compose_kdf_context_item(cose_context_t* handle, cose_layer* layer, cose_key_t key, cose_param_t param);
+    return_t compose_enc_context(cose_context_t* handle, cose_layer* layer, binary_t& aad);
+    return_t compose_sign_context(cose_context_t* handle, cose_layer* layer, binary_t& tobesigned);
+    return_t compose_mac_context(cose_context_t* handle, cose_layer* layer, binary_t& tomac);
+
+    return_t preprocess_keyagreement(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+    return_t process_keyagreement(cose_context_t* handle, crypto_key* key, cose_layer* layer, bool docrypt);
+
+    return_t doencrypt(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+    return_t dosign(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+    return_t docreatemac(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+
+    return_t dodecrypt(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+    return_t doverifysign(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+    return_t doverifymac(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+
+   private:
+    typedef return_t (cbor_object_signing_encryption::*subprocess_handler)(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+    std::map<cbor_tag_t, subprocess_handler> _handlermap;
+    bool _builtmap;
 };
 
 typedef cbor_object_signing_encryption COSE;

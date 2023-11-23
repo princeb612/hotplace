@@ -122,7 +122,7 @@ class cbor_map : public cbor_object {
  * @brief   hint
  * @remarks
  *          // sketch
- *          cbor_map_hint<int, cbor_map_int_binder> hint(map);
+ *          cbor_map_hint<int, cbor_map_int_binder<int>> hint(map);
  *          cbor_object* cbor_curve = nullptr;
  *          hint.find(cose_key_lable_t::cose_ec_crv, &cbor_curve);
  *          // ...
