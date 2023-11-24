@@ -112,7 +112,7 @@ class cose_data {
     cose_data& add(int key, const unsigned char* value, size_t size);
     cose_data& add(int key, std::string const& value);
     cose_data& add(int key, binary_t const& value);
-    cose_data& add(int key, variant_t const& value);
+    cose_data& add(int key, variant& value);
 
     cose_data& replace(int key, const unsigned char* value, size_t size);
     cose_data& replace(int key, binary_t const& value);
@@ -504,6 +504,13 @@ class cose_countersign {
 class cose_countersigns {
    public:
     cose_countersigns() {}
+    ~cose_countersigns() {
+        std::list<cose_countersign*>::iterator iter;
+        for (iter = _countersigns.begin(); iter != _countersigns.end(); iter++) {
+            cose_countersign* sign = *iter;
+            delete sign;
+        }
+    }
 
     cose_countersign& add(cose_countersign* countersign) {
         std::list<cose_countersign*>::iterator iter = _countersigns.insert(_countersigns.end(), countersign);

@@ -29,13 +29,13 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
-void encode_test(variant_t vt, binary_t& bin, std::string expect) {
+void encode_test(variant& vt, binary_t& bin, std::string expect) {
     return_t ret = errorcode_t::success;
     cbor_encode enc;
     std::string hex;
 
     bin.clear();
-    enc.encode(bin, vt);
+    enc.encode(bin, vt.content());
 
     if (1) {
         test_case_notimecheck notimecheck(_test_case);
@@ -97,9 +97,9 @@ void cbor_test(cbor_object* root, const char* expected) {
 
 void test_cbor_int(int8 value, const char* expect) {
     binary_t bin;
-    variant_t vt;
+    variant vt;
 
-    variant_set_int8(vt, value);
+    vt.set_int8(value);
     encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
@@ -109,9 +109,9 @@ void test_cbor_int(int8 value, const char* expect) {
 
 void test_cbor_int(int16 value, const char* expect) {
     binary_t bin;
-    variant_t vt;
+    variant vt;
 
-    variant_set_int16(vt, value);
+    vt.set_int16(value);
     encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
@@ -121,9 +121,9 @@ void test_cbor_int(int16 value, const char* expect) {
 
 void test_cbor_int(int32 value, const char* expect) {
     binary_t bin;
-    variant_t vt;
+    variant vt;
 
-    variant_set_int32(vt, value);
+    vt.set_int32(value);
     encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
@@ -133,9 +133,9 @@ void test_cbor_int(int32 value, const char* expect) {
 
 void test_cbor_int(int64 value, const char* expect) {
     binary_t bin;
-    variant_t vt;
+    variant vt;
 
-    variant_set_int64(vt, value);
+    vt.set_int64(value);
     encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
@@ -145,9 +145,9 @@ void test_cbor_int(int64 value, const char* expect) {
 
 void test_cbor_int(int128 value, const char* expect) {
     binary_t bin;
-    variant_t vt;
+    variant vt;
 
-    variant_set_int128(vt, value);
+    vt.set_int128(value);
     encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
@@ -157,9 +157,9 @@ void test_cbor_int(int128 value, const char* expect) {
 
 void test_cbor_fp16(uint16 value, const char* expect) {
     binary_t bin;
-    variant_t vt;
+    variant vt;
 
-    variant_set_fp16(vt, value);
+    vt.set_fp16(value);
     encode_test(vt, bin, expect);
 
     fp16_t fp16;
@@ -172,9 +172,9 @@ void test_cbor_fp16(uint16 value, const char* expect) {
 
 void test_cbor_float(float value, const char* expect) {
     binary_t bin;
-    variant_t vt;
+    variant vt;
 
-    variant_set_float(vt, value);
+    vt.set_float(value);
     encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
@@ -184,9 +184,9 @@ void test_cbor_float(float value, const char* expect) {
 
 void test_cbor_double(double value, const char* expect) {
     binary_t bin;
-    variant_t vt;
+    variant vt;
 
-    variant_set_double(vt, value);
+    vt.set_double(value);
     encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
@@ -196,9 +196,9 @@ void test_cbor_double(double value, const char* expect) {
 
 void test_cbor_bool(bool value, const char* expect) {
     binary_t bin;
-    variant_t vt;
+    variant vt;
 
-    variant_set_bool(vt, value);
+    vt.set_bool(value);
     encode_test(vt, bin, expect);
 }
 
@@ -211,9 +211,9 @@ void test_cbor_simple(uint8 value, const char* expect) {
 
 void test_cbor_tstr(const char* value, const char* expect) {
     binary_t bin;
-    variant_t vt;
+    variant vt;
 
-    variant_set_str(vt, value);
+    vt.set_str(value);
     encode_test(vt, bin, expect);
 }
 

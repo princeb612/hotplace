@@ -15,95 +15,326 @@
 
 namespace hotplace {
 
-return_t variant_copy(variant_t& target, const variant_t& source) {
-    return_t ret = errorcode_t::success;
+variant::variant() {}
 
-    __try2 {
-        variant_free(target);
+variant::variant(const variant& source) { copy(source); }
 
-        if (variant_flag_t::flag_free == source.flag) {
-            switch (source.type) {
-                case TYPE_BINARY:
-                    variant_set_bstr_new(target, source.data.bstr, source.size);
-                    break;
-                case TYPE_NSTRING:
-                    variant_set_nstr_new(target, source.data.str, source.size);
-                    break;
-                case TYPE_STRING:
-                    variant_set_str_new(target, source.data.str);
-                    break;
-                default:
-                    throw;
-                    break;
-            }
-        } else {
-            memcpy(&target.data, &source.data, RTL_FIELD_SIZE(variant_t, data));
+variant::variant(variant&& source) { move(source); }
+
+variant::~variant() {
+    if (variant_flag_t::flag_free & _vt.flag) {
+        free(_vt.data.p);
+    }
+}
+
+variant_t& variant::content() { return _vt; }
+
+vartype_t variant::type() { return _vt.type; }
+
+uint16 variant::size() { return _vt.size; }
+
+uint16 variant::flag() { return _vt.flag; }
+
+/**
+ * @brief reset
+ * @example
+ *      vt.reset().set_bool(true);
+ */
+variant& variant::reset() {
+    if (variant_flag_t::flag_free & _vt.flag) {
+        free(_vt.data.p);
+    }
+
+    _vt.type = TYPE_NULL;
+    memset(&_vt.data, 0, RTL_FIELD_SIZE(variant_t, data));
+    _vt.size = 0;
+    _vt.flag = 0;
+    return *this;
+}
+
+variant& variant::set_flag(uint8 flag) {
+    _vt.flag |= flag;
+    return *this;
+}
+
+variant& variant::unset_flag(uint8 flag) {
+    _vt.flag &= ~flag;
+    return *this;
+}
+
+variant& variant::set_pointer(const void* value) {
+    _vt.type = TYPE_POINTER;
+    _vt.data.p = (void*)value;
+    _vt.size = 0;
+    _vt.flag = flag_pointer;
+    return *this;
+}
+
+variant& variant::set_bool(bool value) {
+    _vt.type = TYPE_BOOL;
+    _vt.data.b = (value);
+    _vt.size = 0;
+    _vt.flag = flag_bool;
+    return *this;
+}
+
+variant& variant::set_int8(int8 value) {
+    _vt.type = TYPE_INT8;
+    _vt.data.i8 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant& variant::set_uint8(uint8 value) {
+    _vt.type = TYPE_UINT8;
+    _vt.data.ui8 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant& variant::set_int16(int16 value) {
+    _vt.type = TYPE_INT16;
+    _vt.data.i16 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant& variant::set_uint16(uint16 value) {
+    _vt.type = TYPE_UINT16;
+    _vt.data.ui16 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant& variant::set_int32(int32 value) {
+    _vt.type = TYPE_INT32;
+    _vt.data.i32 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant& variant::set_uint32(uint32 value) {
+    _vt.type = TYPE_UINT32;
+    _vt.data.ui32 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant& variant::set_int64(int64 value) {
+    _vt.type = TYPE_INT64;
+    _vt.data.i64 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant& variant::set_uint64(uint64 value) {
+    _vt.type = TYPE_UINT64;
+    _vt.data.ui64 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_int;
+    return *this;
+}
+
+#if defined __SIZEOF_INT128__
+variant& variant::set_int128(int128 value) {
+    _vt.type = TYPE_INT128;
+    _vt.data.i128 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant& variant::set_uint128(uint128 value) {
+    _vt.type = TYPE_UINT128;
+    _vt.data.ui128 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_int;
+    return *this;
+}
+#endif
+
+variant& variant::set_fp16(uint16 value) {
+    _vt.type = TYPE_FP16;
+    _vt.data.ui16 = (value);
+    _vt.size = 0;
+    _vt.flag = flag_float;
+    return *this;
+}
+
+variant& variant::set_fp32(float value) {
+    _vt.type = TYPE_FLOAT;
+    _vt.data.f = (value);
+    _vt.size = 0;
+    _vt.flag = flag_float;
+    return *this;
+}
+
+variant& variant::set_float(float value) { return set_fp32(value); }
+
+variant& variant::set_fp64(double value) {
+    _vt.type = TYPE_DOUBLE;
+    _vt.data.d = (value);
+    _vt.size = 0;
+    _vt.flag = flag_float;
+    return *this;
+}
+
+variant& variant::set_double(double value) { return set_fp64(value); }
+
+variant& variant::set_str(const char* value) {
+    _vt.type = TYPE_STRING;
+    _vt.data.str = (char*)value;
+    _vt.size = 0;
+    _vt.flag = flag_string;
+    return *this;
+}
+
+variant& variant::set_nstr(const char* value, size_t n) {
+    _vt.type = TYPE_NSTRING;
+    _vt.data.str = (char*)value;
+    _vt.size = n;
+    _vt.flag = flag_string;
+    return *this;
+}
+
+variant& variant::set_bstr(const unsigned char* value, size_t n) {
+    _vt.type = TYPE_BINARY;
+    _vt.data.bstr = (unsigned char*)value;
+    _vt.size = n;
+    _vt.flag = flag_binary;
+    return *this;
+}
+
+variant& variant::set_user_type(vartype_t vtype, void* value) {
+    _vt.type = vtype;
+    _vt.data.p = value;
+    _vt.size = 0;
+    _vt.flag = flag_user_type;
+    return *this;
+}
+
+variant& variant::set_str_new(const char* value) {
+    _vt.type = TYPE_STRING;
+    _vt.size = 0;
+    _vt.flag = flag_string;
+    char* p = nullptr;
+    if (value) {
+        p = strdup(value);
+        if (p) {
+            _vt.data.str = p;
+            _vt.flag |= variant_flag_t::flag_free;
         }
-
-        target.type = source.type;
-        target.size = source.size;
-        target.flag = source.flag;
     }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
+    _vt.data.str = p;
+    return *this;
 }
 
-return_t variant_move(variant_t& target, variant_t& source) {
-    return_t ret = errorcode_t::success;
-
-    variant_free(target);
-
-    memcpy(&target, &source, sizeof(variant_t));  // copy including type and flag
-    variant_init(source);
-
-    return ret;
-}
-
-void variant_free(variant_t& vt) {
-    if (variant_flag_t::flag_free == vt.flag) {
-        switch (vt.type) {
-            case TYPE_STRING:
-            case TYPE_NSTRING:
-            case TYPE_POINTER:
-            case TYPE_BINARY:
-                if (vt.data.p) {
-                    free(vt.data.p);
-                }
-                break;
-            default:
-                break;
+variant& variant::set_strn_new(const char* value, size_t n) {
+    _vt.type = TYPE_STRING;
+    _vt.size = 0;
+    _vt.flag = flag_string;
+    char* p = nullptr;
+    if (n) {
+        p = (char*)malloc(n + 1);
+        if (p) {
+            strncpy(p, value, n);
+            *(p + n) = 0;
+            _vt.size = n;
+            _vt.flag |= variant_flag_t::flag_free;
         }
     }
-    variant_init(vt);
+    _vt.data.str = p;
+    return *this;
 }
 
-return_t variant_binary(variant_t const& vt, binary_t& target) {
+variant& variant::set_bstr_new(const unsigned char* value, size_t n) {
+    _vt.type = TYPE_BINARY;
+    _vt.size = 0;
+    _vt.flag = flag_binary;
+    unsigned char* p = nullptr;
+    if (n) {
+        p = (unsigned char*)malloc(n + 1);
+        if (p) {
+            memcpy(p, value, n);
+            *(p + n) = 0;
+            _vt.size = n;
+            _vt.flag |= variant_flag_t::flag_free;
+        }
+    }
+    _vt.data.bstr = p;
+    return *this;
+}
+
+variant& variant::set_nstr_new(const char* value, size_t n) {
+    _vt.type = TYPE_NSTRING;
+    _vt.size = 0;
+    _vt.flag = flag_string;
+    char* p = nullptr;
+    if (n) {
+        p = (char*)malloc(n + 1);
+        if (p) {
+            strncpy(p, value, n);
+            *(p + n) = 0;
+            _vt.size = n;
+            _vt.flag |= variant_flag_t::flag_free;
+        }
+    }
+    _vt.data.str = p;
+    return *this;
+}
+
+variant& variant::set_binary_new(binary_t const& bin) {
+    _vt.type = TYPE_BINARY;
+    _vt.size = 0;
+    _vt.flag = flag_binary;
+    unsigned char* p = nullptr;
+    size_t n = bin.size();
+    if (n) {
+        p = (unsigned char*)malloc(n + 1);
+        if (p) {
+            memcpy(p, &bin[0], n);
+            *(p + n) = 0;
+            _vt.size = n;
+            _vt.flag |= variant_flag_t::flag_free;
+        }
+    }
+    _vt.data.bstr = p;
+    return *this;
+}
+
+int variant::to_int() { return t_variant_to_int<int>(_vt); }
+
+return_t variant::to_binary(binary_t& target) {
     return_t ret = errorcode_t::success;
 
-    if (TYPE_BINARY == vt.type) {
-        target.resize(vt.size);
-        memcpy(&target[0], vt.data.bstr, vt.size);
+    if (TYPE_BINARY == _vt.type) {
+        target.resize(_vt.size);
+        memcpy(&target[0], _vt.data.bstr, _vt.size);
     } else {
         ret = errorcode_t::mismatch;
     }
     return ret;
 }
-
-return_t variant_string(variant_t const& vt, std::string& target) {
+return_t variant::to_string(std::string& target) {
     return_t ret = errorcode_t::success;
 
-    if (vt.data.str) {
-        if (TYPE_STRING == vt.type) {
-            target = vt.data.str;
-        } else if (TYPE_NSTRING == vt.type) {
-            target.assign(vt.data.str, vt.size);
-        } else if (TYPE_BINARY == vt.type) {
+    if (_vt.data.str) {
+        if (TYPE_STRING == _vt.type) {
+            target = _vt.data.str;
+        } else if (TYPE_NSTRING == _vt.type) {
+            target.assign(_vt.data.str, _vt.size);
+        } else if (TYPE_BINARY == _vt.type) {
             target.clear();
             uint32 i = 0;
             char* p = nullptr;
-            for (i = 0, p = vt.data.str; i < vt.size; i++, p++) {
+            for (i = 0, p = _vt.data.str; i < _vt.size; i++, p++) {
                 if (isprint(*p)) {
                     target.append(p, 1);
                 } else {
@@ -118,5 +349,45 @@ return_t variant_string(variant_t const& vt, std::string& target) {
     }
     return ret;
 }
+
+variant& variant::copy(const variant& source) {
+    __try2 {
+        reset();
+
+        if (variant_flag_t::flag_free & source._vt.flag) {
+            switch (source._vt.type) {
+                case TYPE_BINARY:
+                    set_bstr_new(source._vt.data.bstr, source._vt.size);
+                    break;
+                case TYPE_NSTRING:
+                    set_nstr_new(source._vt.data.str, source._vt.size);
+                    break;
+                case TYPE_STRING:
+                    set_str_new(source._vt.data.str);
+                    break;
+                default:
+                    throw;
+                    break;
+            }
+        } else {
+            memcpy(&_vt, &source._vt, sizeof(variant_t));
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return *this;
+}
+
+variant& variant::move(variant& source) {
+    reset();
+
+    memcpy(&_vt, &source._vt, sizeof(variant_t));  // copy including type and flag
+    memset(&source._vt, 0, sizeof(variant_t));
+
+    return *this;
+}
+
+variant& variant::operator=(const variant& source) { return copy(source); }
 
 }  // namespace hotplace

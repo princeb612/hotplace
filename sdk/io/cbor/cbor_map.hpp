@@ -131,14 +131,14 @@ class cbor_map : public cbor_object {
 
 template <typename KTY>
 struct cbor_map_int_binder {
-    KTY bind(variant_t vt) { return t_variant_to_int<KTY>(vt); }
+    KTY bind(variant vt) { return t_variant_to_int<KTY>(vt.content()); }
 };
 
 template <typename KTY>
 struct cbor_map_string_binder {
-    KTY bind(variant_t vt) {
+    KTY bind(variant vt) {
         KTY value;
-        variant_string(vt, value);
+        vt.to_string(value);
         return value;
     }
 };
@@ -146,7 +146,7 @@ struct cbor_map_string_binder {
 /**
  * @brief build index if necesary
  */
-template <typename KTY, typename VTK>
+template <typename KTY, typename VTBINDER>
 class cbor_map_hint {
    public:
     cbor_map_hint(cbor_map* source) : _source(source) {
@@ -207,7 +207,7 @@ class cbor_map_hint {
     cbor_map* _source;
     std::list<KTY> _order;
     std::map<KTY, cbor_object*> _index;
-    VTK _binder;
+    VTBINDER _binder;
 };
 
 }  // namespace io

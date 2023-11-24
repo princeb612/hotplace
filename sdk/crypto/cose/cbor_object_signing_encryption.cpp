@@ -135,9 +135,6 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_param_
             case cose_param_t::cose_unsent_priv_other:
             case cose_param_t::cose_unsent_iv:
             case cose_param_t::cose_unsent_alg:
-            case cose_param_t::cose_param_cek:
-            case cose_param_t::cose_param_ciphertext:
-            case cose_param_t::cose_param_secret:
                 handle->composer->get_unsent().data().replace(id, bin);
                 break;
             default:

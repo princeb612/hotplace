@@ -42,27 +42,27 @@ namespace hotplace {
  *          do not call directly
  *          see ieee754_as_small_as_possible
  */
-uint8 ieee754_as_small_as_possible(variant_t& vt, float fp) {
+uint8 ieee754_as_small_as_possible(variant& vt, float fp) {
     uint8 ret = 4;
     fp32_t fp32;
 
-    variant_set_fp32(vt, fp);
+    vt.set_fp32(fp);
     fp32.fp = fp;
     if ((0 == (0x3ff & fp32.storage)) && (0x7f800000 != (0x7f800000 & fp32.storage))) {
         uint16 bin16 = fp16_ieee_from_fp32_value(fp32.storage);
         if (0x7c00 != (0x7c00 & bin16)) {
-            variant_set_fp16(vt, bin16);
+            vt.set_fp16(bin16);
             ret = 2;
         }
     }
     return ret;
 }
 
-uint8 ieee754_as_small_as_possible(variant_t& vt, double fp) {
+uint8 ieee754_as_small_as_possible(variant& vt, double fp) {
     uint8 ret = 8;
     fp64_t fp64;
 
-    variant_set_fp64(vt, fp);
+    vt.set_fp64(fp);
     fp64.fp = fp;
     bool cond1 = (0 == (0x7fffff & fp64.storage));
     bool cond2 = (0x7ff0000000000000 == (0x7ff0000000000000 & fp64.storage));

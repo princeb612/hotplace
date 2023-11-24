@@ -322,14 +322,13 @@ void test_vtprintf() {
     _test_case.begin("tokenize");
 
     basic_stream bs;
-    variant_t v;
+    variant v;
 
-    variant_set_int32(v, 10);
-    vtprintf(&bs, v);
+    v.set_int32(10);
+    vtprintf(&bs, v.content());
 
-    variant_set_str_new(v, "sample");
-    vtprintf(&bs, v);
-    variant_free(v);
+    v.set_str_new("sample");
+    vtprintf(&bs, v.content());
 
     std::cout << bs.c_str() << std::endl;
 

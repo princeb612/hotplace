@@ -34,7 +34,7 @@ return_t cbor_tstrings::join(cbor_object* object, cbor_object* extra) {
 
         if (cbor_type_t::cbor_type_data == object->type()) {
             cbor_data* inst = (cbor_data*)object;
-            if (TYPE_STRING == inst->data().type) {
+            if (TYPE_STRING == inst->data().type()) {
                 _array.push_back(inst);
             } else {
                 ret = errorcode_t::not_available;

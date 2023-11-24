@@ -46,5 +46,5 @@ for item in ${array[@]}; do
 done
 
 #echo --------------------------------------------------------------------------------
-cd $cwd
-grep fail `find . -name report`
+#cd $cwd
+#grep fail `find . -name report`

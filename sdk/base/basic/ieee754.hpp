@@ -120,11 +120,11 @@ static inline double fp64_from_binary64(uint64 bin) {
 
 /**
  * @brief   size as small as possible
- * @param   variant_t& vt [out]
+ * @param   variant& vt [out]
  * @param   float fp [in]
  */
-uint8 ieee754_as_small_as_possible(variant_t& vt, float fp);
-uint8 ieee754_as_small_as_possible(variant_t& vt, double fp);
+uint8 ieee754_as_small_as_possible(variant& vt, float fp);
+uint8 ieee754_as_small_as_possible(variant& vt, double fp);
 
 uint16 fp16_from_fp32(float single);
 /**
