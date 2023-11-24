@@ -455,10 +455,11 @@ return_t cbor_encode::encode(binary_t& bin, float value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        variant_t vt;
+        variant var;
         uint32 be = 0;
-        ieee754_as_small_as_possible(vt, value);
+        ieee754_as_small_as_possible(var, value);
 
+        variant_t& vt = var.content();
         switch (vt.type) {
             case vartype_t::TYPE_FP16:
                 bin.push_back((cbor_major_t::cbor_major_float << 5) | 25);
@@ -484,10 +485,11 @@ return_t cbor_encode::encode(binary_t& bin, double value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        variant_t vt;
+        variant var;
         uint64 be = 0;
-        ieee754_as_small_as_possible(vt, value);
+        ieee754_as_small_as_possible(var, value);
 
+        variant_t& vt = var.content();
         switch (vt.type) {
             case vartype_t::TYPE_FP16:
                 bin.push_back((cbor_major_t::cbor_major_float << 5) | 25);

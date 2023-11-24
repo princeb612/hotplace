@@ -17,56 +17,51 @@
 namespace hotplace {
 namespace io {
 
-cbor_data::cbor_data() : cbor_object(cbor_type_t::cbor_type_data) { variant_init(_vt); }
+cbor_data::cbor_data() : cbor_object(cbor_type_t::cbor_type_data) {}
 
-cbor_data::cbor_data(bool value) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_bool(_vt, value); }
+cbor_data::cbor_data(bool value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_bool(value); }
 
-cbor_data::cbor_data(int8 value) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_int8(_vt, value); }
+cbor_data::cbor_data(int8 value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_int8(value); }
 
-cbor_data::cbor_data(int16 value) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_int16(_vt, value); }
+cbor_data::cbor_data(int16 value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_int16(value); }
 
-cbor_data::cbor_data(int32 value) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_int32(_vt, value); }
+cbor_data::cbor_data(int32 value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_int32(value); }
 
-cbor_data::cbor_data(int64 value) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_int64(_vt, value); }
+cbor_data::cbor_data(int64 value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_int64(value); }
 
 #if defined __SIZEOF_INT128__
-cbor_data::cbor_data(int128 value) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_int128(_vt, value); }
+cbor_data::cbor_data(int128 value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_int128(value); }
 #endif
 
-cbor_data::cbor_data(const byte_t* bstr, size_t size) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_bstr_new(_vt, bstr, size); }
+cbor_data::cbor_data(const byte_t* bstr, size_t size) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_bstr_new(bstr, size); }
 
-cbor_data::cbor_data(binary_t const& data) : cbor_object(cbor_type_t::cbor_type_data) {
-    const byte_t* bstr = &data[0];
-    size_t size = data.size();
+cbor_data::cbor_data(binary_t const& data) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_binary_new(data); }
 
-    variant_set_bstr_new(_vt, bstr, size);
-}
+cbor_data::cbor_data(const char* tstr) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_str_new(tstr); }
 
-cbor_data::cbor_data(const char* tstr) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_str_new(_vt, tstr); }
+cbor_data::cbor_data(const char* tstr, size_t length) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_strn_new(tstr, length); }
 
-cbor_data::cbor_data(const char* tstr, size_t length) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_strn_new(_vt, tstr, length); }
+cbor_data::cbor_data(std::string const& data) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_str_new(data.c_str()); }
 
-cbor_data::cbor_data(std::string const& data) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_str_new(_vt, data.c_str()); }
+cbor_data::cbor_data(fp16_t const& value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_fp16(value.storage); }
 
-cbor_data::cbor_data(fp16_t const& value) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_fp16(_vt, value.storage); }
+cbor_data::cbor_data(float value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_float(value); }
 
-cbor_data::cbor_data(float value) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_float(_vt, value); }
+cbor_data::cbor_data(double value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_double(value); }
 
-cbor_data::cbor_data(double value) : cbor_object(cbor_type_t::cbor_type_data) { variant_set_double(_vt, value); }
+cbor_data::cbor_data(variant& vt) : cbor_object(cbor_type_t::cbor_type_data) { _vt.move(vt); }
 
-cbor_data::cbor_data(variant_t& vt) : cbor_object(cbor_type_t::cbor_type_data) { variant_move(_vt, vt); }
+cbor_data::cbor_data(const variant& vt) : cbor_object(cbor_type_t::cbor_type_data) { _vt.copy(vt); }
 
-cbor_data::cbor_data(const variant_t& vt) : cbor_object(cbor_type_t::cbor_type_data) { variant_copy(_vt, vt); }
+cbor_data::~cbor_data() {}
 
-cbor_data::~cbor_data() { variant_free(_vt); }
-
-const variant_t& cbor_data::data() { return _vt; }
+variant& cbor_data::data() { return _vt; }
 
 void cbor_data::represent(stream_t* s) {
+    const variant_t& vt = data().content();
     if (s) {
         if (tagged()) {
             cbor_tag_t tag = tag_value();
-            const variant_t& vt_own = data();
             s->printf("%I64i(", (uint64)tag);
 
             switch (tag) {
@@ -74,29 +69,28 @@ void cbor_data::represent(stream_t* s) {
                 case cbor_tag_t::cbor_tag_negative_bignum:
                     // RFC 8949 Concise Binary Object Representation (CBOR)
                     // Decoders that understand these tags MUST be able to decode bignums that do have leading zeroes.
-                    if ((TYPE_BINARY == vt_own.type) && (vt_own.size <= 16)) {
+                    if ((TYPE_BINARY == vt.type) && (vt.size <= 16)) {
                         cbor_bignum_int128 bn;
-                        int128 temp = bn.load(vt_own.data.bstr, vt_own.size).value();
-                        variant_t vt;
-                        variant_init(vt);
+                        int128 temp = bn.load(vt.data.bstr, vt.size).value();
+                        variant vt_bignum;
                         if (cbor_tag_t::cbor_tag_positive_bignum == tag) {
-                            variant_set_int128(vt, temp);
+                            vt_bignum.set_int128(temp);
                         } else if (cbor_tag_t::cbor_tag_negative_bignum == tag) {
-                            variant_set_int128(vt, -(temp + 1));
+                            vt_bignum.set_int128(-(temp + 1));
                         }
-                        vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
+                        vtprintf(s, vt_bignum.content(), vtprintf_style_t::vtprintf_style_cbor);
                     } else {
-                        vtprintf(s, data(), vtprintf_style_t::vtprintf_style_cbor);
+                        vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
                     }
                     break;
                 default:
-                    vtprintf(s, data(), vtprintf_style_t::vtprintf_style_cbor);
+                    vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
                     break;
             }
 
             s->printf(")");
         } else {
-            vtprintf(s, data(), vtprintf_style_t::vtprintf_style_cbor);
+            vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
         }
     }
 }
@@ -107,7 +101,7 @@ void cbor_data::represent(binary_t* b) {
         binary_t temp;
 
         enc.add_tag(temp, this);
-        enc.encode(temp, data());
+        enc.encode(temp, data().content());
         (*b).insert((*b).end(), temp.begin(), temp.end());
     }
 }

@@ -141,25 +141,25 @@ return_t cbor_web_key::load(crypto_key* crypto_key, cbor_object* root, int flags
                         cbor_data* rhs = (cbor_data*)pair->right();
                         // (nullptr != lhs) && (nullptr != rhs)
                         if ((lhs->type() == rhs->type()) && (cbor_type_t::cbor_type_data == lhs->type())) {
-                            int label = t_variant_to_int<int>(lhs->data());
-                            const variant_t& vt_rhs = rhs->data();
+                            int label = lhs->data().to_int();
+                            const variant_t& vt_rhs = rhs->data().content();
                             if (cose_key_lable_t::cose_lable_kid == label) {  // 2
-                                variant_string(rhs->data(), keyobj.kid);
+                                rhs->data().to_string(keyobj.kid);
                             } else if (cose_key_lable_t::cose_lable_kty == label) {  // 1
-                                keyobj.type = t_variant_to_int<int>(vt_rhs);
+                                keyobj.type = rhs->data().to_int();
                             } else if (-1 == label) {  // ec2 curve, symmetric k
                                 if (TYPE_BINARY == vt_rhs.type) {
                                     // symm
                                     binary_t bin;
-                                    variant_binary(rhs->data(), bin);
+                                    rhs->data().to_binary(bin);
                                     keyobj.attrib.insert(std::make_pair(label, bin));
                                 } else {
                                     // curve if okp, ec2
-                                    keyobj.curve = t_variant_to_int<int>(vt_rhs);
+                                    keyobj.curve = rhs->data().to_int();
                                 }
                             } else if (label < -1) {  // ec2 (-2 x, -3 y, -4 d), rsa (-1 n, -2 e, -3 d, ..., -12 ti)
                                 binary_t bin;
-                                variant_binary(rhs->data(), bin);
+                                rhs->data().to_binary(bin);
                                 keyobj.attrib.insert(std::make_pair(label, bin));
                             }
                         }

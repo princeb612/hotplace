@@ -18,15 +18,18 @@ using namespace hotplace::io;
 
 test_case _test_case;
 t_shared_instance<semaphore> _mutex;
+t_shared_instance<critical_section> _lock;
 
 void thread_printfln(const char* msg, ...) {
     va_list arg;
 
+    _lock->enter();
     printf("[%08lx] ", get_thread_id());
     va_start(arg, msg);
     vprintf(msg, arg);
     va_end(arg);
     printf("\n");
+    _lock->leave();
 }
 
 return_t thread_routine(void* param) {
@@ -54,6 +57,7 @@ void test_signalwait_threads() {
     signalwait_threads threads;
 
     _mutex.make_share(new semaphore);
+    _lock.make_share(new critical_section);
 
     int count = 4;
     threads.set(count, thread_routine, thread_signal, nullptr);

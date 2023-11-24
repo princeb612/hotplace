@@ -35,6 +35,7 @@ return_t trace(return_t errorcode) {
             std::cout << stream.c_str() << std::endl;
         }
     }
+    fflush(stdout);
     return ret;
 }
 

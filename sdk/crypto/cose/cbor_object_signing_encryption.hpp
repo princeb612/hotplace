@@ -171,9 +171,8 @@ class cbor_object_signing_encryption {
      */
     return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
 
-    return_t process(cose_context_t* handle, crypto_key* key, binary_t const& cbor, binary_t& output);
-
    protected:
+    return_t process(cose_context_t* handle, crypto_key* key, binary_t const& cbor, binary_t& output);
     return_t subprocess(cose_context_t* handle, crypto_key* key, cose_layer* layer, int mode);
 
     return_t compose_kdf_context(cose_context_t* handle, cose_layer* layer, binary_t& kdf_context);

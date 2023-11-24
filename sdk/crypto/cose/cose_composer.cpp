@@ -314,27 +314,31 @@ cose_data::cose_data() {}
 cose_data::~cose_data() { clear(); }
 
 cose_data& cose_data::add_bool(int key, bool value) {
-    _data_map.insert(std::make_pair(key, variant_bool(value)));
+    variant var;
+    _data_map.insert(std::make_pair(key, var.set_bool(value)));
     _order.push_back(key);
     return *this;
 }
 
 cose_data& cose_data::add(int key, int16 value) {
-    _data_map.insert(std::make_pair(key, variant_int16(value)));
+    variant var;
+    _data_map.insert(std::make_pair(key, var.set_int16(value)));
     _order.push_back(key);
     return *this;
 }
 
 cose_data& cose_data::add(int key, const char* value) {
     if (value) {
-        _data_map.insert(std::make_pair(key, variant_bstr_new((unsigned char*)value, strlen(value))));
+        variant var;
+        _data_map.insert(std::make_pair(key, var.set_bstr_new((unsigned char*)value, strlen(value))));
         _order.push_back(key);
     }
     return *this;
 }
 
 cose_data& cose_data::add(int key, const unsigned char* value, size_t size) {
-    _data_map.insert(std::make_pair(key, variant_bstr_new(value, size)));
+    variant var;
+    _data_map.insert(std::make_pair(key, var.set_bstr_new(value, size)));
     _order.push_back(key);
     return *this;
 }
@@ -342,11 +346,12 @@ cose_data& cose_data::add(int key, const unsigned char* value, size_t size) {
 cose_data& cose_data::replace(int key, const unsigned char* value, size_t size) {
     cose_variantmap_t::iterator iter = _data_map.find(key);
     if (_data_map.end() != iter) {
-        variant_t& vt_key = iter->second;
-        variant_t vt_new = variant_bstr_new(value, size);
-        variant_move(vt_key, vt_new);
+        variant var;
+        var.set_bstr_new(value, size);
+        iter->second.move(var);
     } else {
-        _data_map.insert(std::make_pair(key, variant_bstr_new(value, size)));
+        variant var;
+        _data_map.insert(std::make_pair(key, var.set_bstr_new(value, size)));
         _order.push_back(key);
     }
     return *this;
@@ -452,7 +457,7 @@ cose_data& cose_data::add(cose_countersign* countersig) {
 
             add(cose_key_t::cose_counter_sig, TYPE_COUNTER_SIG, countersigns);
         } else {
-            countersigns = (cose_countersigns*)iter->second.data.p;
+            countersigns = (cose_countersigns*)iter->second.content().data.p;
         }
 
         countersigns->add(countersig);
@@ -465,17 +470,15 @@ cose_data& cose_data::add(cose_countersign* countersig) {
 
 cose_data& cose_data::add(int key, vartype_t vty, void* p) {
     if (p) {
-        variant_t vt;
-        _data_map.insert(std::make_pair(key, variant_set(vt, vty, p)));
+        variant vt;
+        _data_map.insert(std::make_pair(key, vt.set_user_type(vty, p)));
         _order.push_back(key);
     }
     return *this;
 }
 
-cose_data& cose_data::add(int key, variant_t const& value) {
-    variant_t vt;
-    variant_copy(vt, value);
-    _data_map.insert(std::make_pair(key, vt));
+cose_data& cose_data::add(int key, variant& value) {
+    _data_map.insert(std::make_pair(key, value));
     _order.push_back(key);
     return *this;
 }
@@ -506,7 +509,7 @@ cose_data& cose_data::clear() {
     cose_variantmap_t::iterator map_iter;
     for (map_iter = _data_map.begin(); map_iter != _data_map.end(); map_iter++) {
         int key = map_iter->first;
-        variant_t& value = map_iter->second;
+        variant_t& value = map_iter->second.content();
         if (TYPE_STATIC_KEY == value.type) {
             cose_key* k = (cose_key*)value.data.p;
             delete k;
@@ -514,7 +517,7 @@ cose_data& cose_data::clear() {
             cose_countersigns* signs = (cose_countersigns*)value.data.p;
             delete signs;
         } else {
-            variant_free(value);
+            // do nothing
         }
     }
     _data_map.clear();
@@ -527,11 +530,10 @@ bool cose_data::exist(int key) {
     bool ret_value = false;
     return_t ret = errorcode_t::success;
     basic_stream cosekey;
-    variant_t vt;
+    variant vt;
 
-    maphint_const<int, variant_t> hint(_data_map);
-    ret = hint.find(key, &vt);
-    if (errorcode_t::success == ret) {
+    std::map<int, variant>::iterator iter = _data_map.find(key);
+    if(_data_map.end() != iter) {
         ret_value = true;
     }
     return ret_value;
@@ -540,36 +542,36 @@ bool cose_data::exist(int key) {
 return_t cose_data::finditem(int key, int& value) {
     return_t ret = errorcode_t::success;
     basic_stream cosekey;
-    variant_t vt;
+    variant vt;
 
-    maphint_const<int, variant_t> hint(_data_map);
+    maphint_const<int, variant> hint(_data_map);
     ret = hint.find(key, &vt);
     if (errorcode_t::success == ret) {
-        value = t_variant_to_int<int>(vt);
+        value = vt.to_int();
     }
     return ret;
 }
 
 return_t cose_data::finditem(int key, std::string& value) {
     return_t ret = errorcode_t::success;
-    variant_t vt;
+    variant vt;
 
-    maphint_const<int, variant_t> hint(_data_map);
+    maphint_const<int, variant> hint(_data_map);
     ret = hint.find(key, &vt);
     if (errorcode_t::success == ret) {
-        variant_string(vt, value);
+        vt.to_string(value);
     }
     return ret;
 }
 
 return_t cose_data::finditem(int key, binary_t& value) {
     return_t ret = errorcode_t::success;
-    variant_t vt;
+    variant vt;
 
-    maphint_const<int, variant_t> hint(_data_map);
+    maphint_const<int, variant> hint(_data_map);
     ret = hint.find(key, &vt);
     if (errorcode_t::success == ret) {
-        variant_binary(vt, value);
+        vt.to_binary(value);
     }
     return ret;
 }
@@ -595,7 +597,7 @@ return_t cose_data::build_protected(cbor_data** object) {
                     int key = *list_iter;
 
                     cose_variantmap_t::iterator map_iter = _data_map.find(key);
-                    variant_t& value = map_iter->second;
+                    variant& value = map_iter->second;
                     *part_protected << new cbor_pair(new cbor_data(key), new cbor_data(value));
                 }
 
@@ -642,7 +644,7 @@ return_t cose_data::build_protected(cbor_data** object, cose_variantmap_t& unsen
                     }
 
                     cose_variantmap_t::iterator map_iter = _data_map.find(key);
-                    variant_t& value = map_iter->second;
+                    variant& value = map_iter->second;
                     *part_protected << new cbor_pair(new cbor_data(key), new cbor_data(value));
                 }
 
@@ -680,7 +682,8 @@ return_t cose_data::build_unprotected(cbor_map** object) {
             int key = *list_iter;
 
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
-            variant_t& value = map_iter->second;
+            variant& var = map_iter->second;
+            variant_t& value = var.content();
 
             if (TYPE_STATIC_KEY == value.type) {
                 cose_key* k = (cose_key*)value.data.p;
@@ -689,7 +692,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
                 cose_countersigns* signs = (cose_countersigns*)value.data.p;
                 *part_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, signs->cbor());
             } else {
-                *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(value));
+                *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(var));
             }
         }
 
@@ -723,7 +726,8 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
             }
 
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
-            variant_t& value = map_iter->second;
+            variant& var = map_iter->second;
+            variant_t& value = var.content();
 
             if (TYPE_STATIC_KEY == value.type) {
                 cose_key* k = (cose_key*)value.data.p;
@@ -732,7 +736,7 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
                 cose_countersign* sign = (cose_countersign*)value.data.p;
                 *part_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, sign->cbor());
             } else {
-                *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(value));
+                *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(var));
             }
         }
 
@@ -771,7 +775,7 @@ return_t cose_data::parse_protected(cbor_data* object) {
             __leave2;
         }
 
-        variant_binary(object->data(), _payload);
+        object->data().to_binary(_payload);
 
         if (0 == _payload.size()) {
             __leave2;
@@ -823,7 +827,7 @@ return_t cose_data::parse_payload(cbor_data* object) {
             __leave2;
         }
 
-        variant_binary(object->data(), _payload);
+        object->data().to_binary(_payload);
     }
     __finally2 {
         // do nothing
@@ -847,7 +851,7 @@ return_t cose_data::parse(cbor_map* object) {
 
             cbor_data* pair_key = pair->left();
             int keyid = 0;
-            keyid = t_variant_to_int<int>(pair_key->data());
+            keyid = pair_key->data().to_int();
 
             cbor_object* pair_value = pair->right();
 
@@ -943,15 +947,15 @@ return_t cose_data::parse_static_key(cbor_map* object, int keyid) {
             cbor_data* cbor_data_y = cbor_typeof<cbor_data>(cbor_y, cbor_type_t::cbor_type_data);
             cbor_simple* cbor_simple_y = cbor_typeof<cbor_simple>(cbor_y, cbor_type_t::cbor_type_simple);
 
-            curve = t_variant_to_int<uint16>(cbor_data_curve->data());
-            variant_binary(cbor_data_x->data(), bin_x);
+            curve = cbor_data_curve->data().to_int();
+            cbor_data_x->data().to_binary(bin_x);
 
             switch (curve) {
                 case cose_ec_p256:
                 case cose_ec_p384:
                 case cose_ec_p521:
                     if (cbor_data_y) {
-                        variant_binary(cbor_data_y->data(), bin_y);
+                        cbor_data_y->data().to_binary(bin_y);
                         add(keyid, curve, bin_x, bin_y, order);
                     } else if (cbor_simple_y) {
                         add(keyid, curve, bin_x, cbor_simple_true == cbor_simple_y->simple_type(), order);

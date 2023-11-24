@@ -56,34 +56,18 @@ class cbor_data : public cbor_object {
     cbor_data(fp16_t const& value);
     cbor_data(float value);
     cbor_data(double value);
-    /**
-     * @desc
-     *      variant_t vt;
-     *      variant_set_bstr_new (vt, "Set them free at the break of dawn 'Til one by one, they were gone", 66);
-     *      cbor_data* root = new cbor_data (vt); // variant_move
-     *      root->release ();
-     */
-    cbor_data(variant_t& vt);
-    /**
-     * @desc
-     *      variant_t vt;
-     *      variant_set_bstr_new (vt, "Set them free at the break of dawn 'Til one by one, they were gone", 66);
-     *      const variant_t& temp = vt;
-     *      cbor_data* root = new cbor_data (temp); // variant_copy
-     *      root->release ();
-     *      variant_free (vt);
-     */
-    cbor_data(const variant_t& vt);
+    cbor_data(variant& vt);
+    cbor_data(const variant& vt);
     virtual ~cbor_data();
 
-    const variant_t& data();
+    variant& data();
 
    protected:
     virtual void represent(stream_t* s);
     virtual void represent(binary_t* b);
 
    private:
-    variant_t _vt;
+    variant _vt;
 };
 
 class cbor_bstrings : public cbor_object {

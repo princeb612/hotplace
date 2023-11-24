@@ -191,8 +191,6 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
 
                 _test_case.assert((bin_cbor_lv2 == expect), __FUNCTION__, "check3.cborparse %s", text ? text : "");
 
-#if 1
-                // untagged message
                 {
                     test_case_notimecheck notimecheck(_test_case);
                     cose_composer composer;
@@ -206,7 +204,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
 
                         publisher.publish(newone, &bin_untagged);
                         composer.parse(bin_untagged);
-                        composer.compose(tag, &cbor_newone);
+                        composer.compose(&cbor_newone);
 
                         publisher.publish(cbor_newone, &bs_diagnostic_composed);
                         dump_test_data("\e[1;36mcompose\e[0m", bs_diagnostic_composed);
@@ -216,7 +214,6 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                         cbor_newone->release();
                     }
                 }
-#endif
                 newone->release();  // release parsed object
             }
         }

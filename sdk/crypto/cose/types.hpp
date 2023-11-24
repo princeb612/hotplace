@@ -76,39 +76,7 @@ enum cose_flag_t {
 
 typedef std::list<int> cose_orderlist_t;
 typedef std::map<cose_param_t, binary_t> cose_binarymap_t;
-typedef std::map<int, variant_t> cose_variantmap_t;
-
-static inline void cose_variantmap_copy(cose_variantmap_t& target, cose_variantmap_t& source) {
-    variant_t vt;
-    cose_variantmap_t::iterator map_iter;
-    for (map_iter = source.begin(); map_iter != source.end(); map_iter++) {
-        int key = map_iter->first;
-        variant_t& value = map_iter->second;
-        variant_copy(vt, value);
-        target.insert(std::make_pair(key, vt));
-    }
-}
-
-static inline void cose_variantmap_move(cose_variantmap_t& target, cose_variantmap_t& source) {
-    variant_t vt;
-    cose_variantmap_t::iterator map_iter;
-    for (map_iter = source.begin(); map_iter != source.end(); map_iter++) {
-        int key = map_iter->first;
-        variant_t& value = map_iter->second;
-        variant_move(vt, value);
-        target.insert(std::make_pair(key, vt));
-    }
-    source.clear();
-}
-
-static inline void cose_variantmap_free(cose_variantmap_t& map) {
-    cose_variantmap_t::iterator map_iter;
-    for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
-        variant_t& value = map_iter->second;
-        variant_free(value);
-    }
-    map.clear();
-}
+typedef std::map<int, variant> cose_variantmap_t;
 
 class cose_composer;
 struct _cose_context_t {
@@ -116,16 +84,11 @@ struct _cose_context_t {
     uint32 debug_flags;
     basic_stream debug_stream;
 
-    // restructuring in progress
+    // see cbor_object_signing_encryption::open() and close()
     cose_composer* composer;
 
-    _cose_context_t() : flags(0), debug_flags(0) {
-        // composer = new cose_composer;
-    }
-    ~_cose_context_t() {
-        clearall();
-        // delete composer;
-    }
+    _cose_context_t() : flags(0), debug_flags(0) {}
+    ~_cose_context_t() { clearall(); }
     void clearall() {
         clear();
         flags = 0;
