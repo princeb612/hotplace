@@ -72,6 +72,7 @@ enum cose_flag_t {
     // debug
     cose_debug_notfound_key = (1 << 16),
     cose_debug_partial_iv = (1 << 17),
+    cose_debug_counter_sig = (1 << 18),
 };
 
 typedef std::list<int> cose_orderlist_t;

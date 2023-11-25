@@ -1393,6 +1393,9 @@ void test_github_example() {
                 if (debug_flags & cose_debug_partial_iv) {
                     reason << "partial_iv ";
                 }
+                if (debug_flags & cose_debug_counter_sig) {
+                    reason << "counter_sig ";
+                }
                 debug_stream = handle->debug_stream;
             }
 

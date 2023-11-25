@@ -105,26 +105,13 @@ return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key
     crypto_advisor* advisor = crypto_advisor::get_instance();
     std::set<return_t> results;
     cbor_object_signing_encryption cose;
-    // cose_composer::composer composer;
-    // const EVP_PKEY* pkey = nullptr;
 
     // RFC 8152 4.3.  Externally Supplied Data
     // RFC 8152 5.3.  How to Encrypt and Decrypt for AEAD Algorithms
     // RFC 8152 5.4.  How to Encrypt and Decrypt for AE Algorithms
     // RFC 8152 11.2.  Context Information Structure
 
-    __try2 {
-        result = false;
-
-        if (nullptr == handle || nullptr == key) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
+    return cose.decrypt(handle, key, input, output, result);
 }
 
 }  // namespace crypto
