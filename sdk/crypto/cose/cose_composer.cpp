@@ -309,9 +309,16 @@ class cose_key {
     cose_orderlist_t _order;
 };
 
-cose_data::cose_data() {}
+cose_data::cose_data() : _layer(nullptr) {}
 
 cose_data::~cose_data() { clear(); }
+
+cose_data& cose_data::set_owner(cose_recipient* layer) {
+    _layer = layer;
+    return *this;
+}
+
+cose_recipient* cose_data::get_owner() { return _layer; }
 
 cose_data& cose_data::add_bool(int key, bool value) {
     variant var;
@@ -368,7 +375,7 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t con
     __try2 {
         __try_new_catch_only(k, new cose_key());
         if (k) {
-            k->set(&_static_key, curve, x, y);
+            k->set(&get_owner()->get_static_key(), curve, x, y);
             add(key, TYPE_STATIC_KEY, k);
         }
     }
@@ -383,7 +390,7 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t con
     __try2 {
         __try_new_catch_only(k, new cose_key());
         if (k) {
-            k->set(&_static_key, curve, x, y);
+            k->set(&get_owner()->get_static_key(), curve, x, y);
             k->set(order);
             add(key, TYPE_STATIC_KEY, k);
         }
@@ -399,7 +406,7 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign) 
     __try2 {
         __try_new_catch_only(k, new cose_key());
         if (k) {
-            k->set(&_static_key, curve, x, ysign);
+            k->set(&get_owner()->get_static_key(), curve, x, ysign);
             add(key, TYPE_STATIC_KEY, k);
         }
     }
@@ -414,7 +421,7 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign, 
     __try2 {
         __try_new_catch_only(k, new cose_key());
         if (k) {
-            k->set(&_static_key, curve, x, ysign);
+            k->set(&get_owner()->get_static_key(), curve, x, ysign);
             k->set(order);
             add(key, TYPE_STATIC_KEY, k);
         }
@@ -426,19 +433,22 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign, 
 }
 
 cose_data& cose_data::add(cose_alg_t alg, const char* kid, binary_t const& signature) {
-    cose_countersign* countersig = nullptr;
+    cose_countersign* countersign = nullptr;
     return_t ret = errorcode_t::success;
 
     __try2 {
-        __try_new_catch(countersig, new cose_countersign, ret, __leave2);
+        __try_new_catch(countersign, new cose_countersign, ret, __leave2);
+        countersign->set_upperlayer(get_owner());
+        countersign->set_composer(get_owner()->get_composer());
+        countersign->set_property(cose_property_t::cose_property_countersign);
 
-        countersig->get_protected().add(cose_key_t::cose_alg, alg);
+        countersign->get_protected().add(cose_key_t::cose_alg, alg);
         if (kid) {
-            countersig->get_unprotected().add(cose_key_t::cose_kid, kid);
+            countersign->get_unprotected().add(cose_key_t::cose_kid, kid);
         }
-        countersig->get_signature().set(signature);
+        countersign->get_signature().set(signature);
 
-        add(countersig);
+        add(countersign);
     }
     __finally2 {
         // do nothing
@@ -446,21 +456,16 @@ cose_data& cose_data::add(cose_alg_t alg, const char* kid, binary_t const& signa
     return *this;
 }
 
-cose_data& cose_data::add(cose_countersign* countersig) {
-    cose_countersigns* countersigns = nullptr;
+cose_data& cose_data::add(cose_recipient* countersign) {
     return_t ret = errorcode_t::success;
 
     __try2 {
+        cose_countersigns* countersigns = get_owner()->get_countersigns1();
         cose_variantmap_t::iterator iter = _data_map.find(cose_key_t::cose_counter_sig);
         if (_data_map.end() == iter) {
-            __try_new_catch(countersigns, new cose_countersigns, ret, __leave2);
-
             add(cose_key_t::cose_counter_sig, TYPE_COUNTER_SIG, countersigns);
-        } else {
-            countersigns = (cose_countersigns*)iter->second.content().data.p;
         }
-
-        countersigns->add(countersig);
+        countersigns->add(countersign);
     }
     __finally2 {
         // do nothing
@@ -513,11 +518,6 @@ cose_data& cose_data::clear() {
         if (TYPE_STATIC_KEY == value.type) {
             cose_key* k = (cose_key*)value.data.p;
             delete k;
-        } else if (TYPE_COUNTER_SIG == value.type) {
-            cose_countersigns* signs = (cose_countersigns*)value.data.p;
-            delete signs;
-        } else {
-            // do nothing
         }
     }
     _data_map.clear();
@@ -533,7 +533,7 @@ bool cose_data::exist(int key) {
     variant vt;
 
     std::map<int, variant>::iterator iter = _data_map.find(key);
-    if(_data_map.end() != iter) {
+    if (_data_map.end() != iter) {
         ret_value = true;
     }
     return ret_value;
@@ -542,24 +542,24 @@ bool cose_data::exist(int key) {
 return_t cose_data::finditem(int key, int& value) {
     return_t ret = errorcode_t::success;
     basic_stream cosekey;
-    variant vt;
 
-    maphint_const<int, variant> hint(_data_map);
-    ret = hint.find(key, &vt);
-    if (errorcode_t::success == ret) {
-        value = vt.to_int();
+    std::map<int, variant>::iterator iter = _data_map.find(key);
+    if (_data_map.end() == iter) {
+        ret = errorcode_t::not_found;
+    } else {
+        value = iter->second.to_int();
     }
     return ret;
 }
 
 return_t cose_data::finditem(int key, std::string& value) {
     return_t ret = errorcode_t::success;
-    variant vt;
 
-    maphint_const<int, variant> hint(_data_map);
-    ret = hint.find(key, &vt);
-    if (errorcode_t::success == ret) {
-        vt.to_string(value);
+    std::map<int, variant>::iterator iter = _data_map.find(key);
+    if (_data_map.end() == iter) {
+        ret = errorcode_t::not_found;
+    } else {
+        iter->second.to_string(value);
     }
     return ret;
 }
@@ -568,10 +568,11 @@ return_t cose_data::finditem(int key, binary_t& value) {
     return_t ret = errorcode_t::success;
     variant vt;
 
-    maphint_const<int, variant> hint(_data_map);
-    ret = hint.find(key, &vt);
-    if (errorcode_t::success == ret) {
-        vt.to_binary(value);
+    std::map<int, variant>::iterator iter = _data_map.find(key);
+    if (_data_map.end() == iter) {
+        ret = errorcode_t::not_found;
+    } else {
+        iter->second.to_binary(value);
     }
     return ret;
 }
@@ -689,7 +690,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
                 cose_key* k = (cose_key*)value.data.p;
                 *part_unprotected << new cbor_pair(key, k->cbor());
             } else if (TYPE_COUNTER_SIG == value.type) {
-                cose_countersigns* signs = (cose_countersigns*)value.data.p;
+                cose_countersigns* signs = get_owner()->get_countersigns1();
                 *part_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, signs->cbor());
             } else {
                 *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(var));
@@ -733,7 +734,7 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
                 cose_key* k = (cose_key*)value.data.p;
                 *part_unprotected << new cbor_pair(key, k->cbor());
             } else if (TYPE_COUNTER_SIG == value.type) {
-                cose_countersign* sign = (cose_countersign*)value.data.p;
+                cose_recipient* sign = (cose_recipient*)value.data.p;
                 *part_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, sign->cbor());
             } else {
                 *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(var));
@@ -1000,9 +1001,15 @@ return_t cose_data::parse_counter_signs(cbor_array* object, int keyid) {
             if (countersig_protected && countersig_unprotected && countersig_signature) {
                 cose_countersign* countersign = nullptr;
                 __try_new_catch_only(countersign, new cose_countersign);
+
+                countersign->set_upperlayer(get_owner());
+                countersign->set_composer(get_owner()->get_composer());
+                countersign->set_property(cose_property_t::cose_property_countersign);
+
                 countersign->get_protected().set(countersig_protected);
-                countersign->get_unprotected().set(countersig_unprotected);
+                countersign->get_unprotected().set(countersig_unprotected);  // keep order
                 countersign->get_signature().set(countersig_signature);
+
                 add(countersign);
             }
         }
@@ -1018,8 +1025,6 @@ bool cose_data::empty_binary() { return 0 == _payload.size(); }
 size_t cose_data::size_binary() { return _payload.size(); }
 
 void cose_data::get_binary(binary_t& bin) { bin = _payload; }
-
-crypto_key& cose_data::get_static_key() { return _static_key; }
 
 cose_protected::cose_protected() {}
 
@@ -1102,8 +1107,6 @@ return_t cose_unprotected::set(cbor_map* object) { return _unprotected.parse_unp
 
 cose_data& cose_unprotected::data() { return _unprotected; }
 
-crypto_key& cose_unprotected::get_static_key() { return _unprotected.get_static_key(); }
-
 cose_unprotected& cose_unprotected::clear() {
     _unprotected.clear();
     return *this;
@@ -1158,9 +1161,24 @@ cbor_data* cose_binary::cbor() {
     return object;
 }
 
-cose_recipient::cose_recipient() : _upperlayer(nullptr), _depth(0), _cbor_tag(cbor_tag_t::cbor_tag_unknown) { _recipients = new cose_recipients; }
+cose_recipient::cose_recipient()
+    : _upperlayer(nullptr),
+      _depth(0),
+      _property(cose_property_t::cose_property_normal),
+      _composer(nullptr),
+      _cbor_tag(cbor_tag_t::cbor_tag_unknown),
+      _countersigns(nullptr) {
+    get_protected().data().set_owner(this);
+    get_unprotected().data().set_owner(this);
+    get_payload().data().set_owner(this);
+    get_singleitem().data().set_owner(this);
+}
 
-cose_recipient::~cose_recipient() { delete _recipients; }
+cose_recipient::~cose_recipient() {
+    if (_countersigns) {
+        delete _countersigns;
+    }
+}
 
 void cose_recipient::set_upperlayer(cose_recipient* layer) {
     _upperlayer = layer;
@@ -1187,6 +1205,13 @@ void cose_recipient::set_composer(cose_composer* composer) { _composer = compose
 
 cose_composer* cose_recipient::get_composer() { return _composer; }
 
+cose_recipient& cose_recipient::set_property(uint16 property) {
+    _property = property;
+    return *this;
+}
+
+uint16 cose_recipient::get_property() { return _property; }
+
 cose_recipient& cose_recipient::add(cose_recipient* recipient) {
     cose_recipient* object = recipient;
     if (nullptr == object) {
@@ -1196,7 +1221,7 @@ cose_recipient& cose_recipient::add(cose_recipient* recipient) {
     object->set_upperlayer(this);
     object->set_composer(get_composer());
 
-    return _recipients->add(object);
+    return _recipients.add(object);
 }
 
 return_t cose_recipient::finditem(int key, int& value, int scope) {
@@ -1221,7 +1246,7 @@ return_t cose_recipient::finditem(int key, int& value, int scope) {
             }
         }
         if (cose_scope::cose_scope_children & scope) {
-            ret = _recipients->finditem(key, value, scope);
+            ret = get_recipients().finditem(key, value, scope);
         }
     }
     __finally2 {
@@ -1252,7 +1277,7 @@ return_t cose_recipient::finditem(int key, std::string& value, int scope) {
             }
         }
         if (cose_scope::cose_scope_children & scope) {
-            ret = _recipients->finditem(key, value, scope);
+            ret = get_recipients().finditem(key, value, scope);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
@@ -1292,7 +1317,7 @@ return_t cose_recipient::finditem(int key, binary_t& value, int scope) {
             }
         }
         if (cose_scope::cose_scope_children & scope) {
-            ret = _recipients->finditem(key, value, scope);
+            ret = get_recipients().finditem(key, value, scope);
         }
     }
     __finally2 {
@@ -1558,11 +1583,20 @@ cose_binary& cose_recipient::get_signature() { return _singleitem; }
 
 cose_binary& cose_recipient::get_tag() { return _singleitem; }
 
-cose_recipients& cose_recipient::get_recipients() { return *_recipients; }
+cose_recipients& cose_recipient::get_recipients() { return _recipients; }
 
 cose_data& cose_recipient::get_params() { return _params; }
 
-crypto_key& cose_recipient::get_static_key() { return get_unprotected().get_static_key(); }
+crypto_key& cose_recipient::get_static_key() { return _static_key; }
+
+cose_countersigns* cose_recipient::get_countersigns0() { return _countersigns; }
+
+cose_countersigns* cose_recipient::get_countersigns1() {
+    if (nullptr == _countersigns) {
+        _countersigns = new cose_countersigns;
+    }
+    return _countersigns;
+}
 
 cose_recipient& cose_recipient::clear() {
     _cbor_tag = cbor_tag_t::cbor_tag_unknown;
@@ -1591,17 +1625,15 @@ std::string cose_recipient::get_kid() {
 void cose_recipient::for_each(void (*for_each_handler)(cose_layer*, void* userdata), void* userdata) {
     if (for_each_handler) {
         for_each_handler(this, userdata);
-        _recipients->for_each(for_each_handler, userdata);
+        _recipients.for_each(for_each_handler, userdata);
     }
 }
 
 cbor_array* cose_recipient::cbor() {
     cbor_array* object = new cbor_array;
     *object << get_protected().cbor() << get_unprotected().cbor() << get_payload().cbor();
-    if (_recipients) {
-        if (_recipients->size()) {
-            *object << _recipients->cbor();
-        }
+    if (_recipients.size()) {
+        *object << _recipients.cbor();
     }
     return object;
 }

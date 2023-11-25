@@ -163,9 +163,7 @@ typedef struct __variant_t {
     uint16 size;
     uint16 flag;
 
-    __variant_t() : type(TYPE_NULL), size(0), flag(0) {
-        memset(&data, 0, sizeof(data));
-    }
+    __variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
 } variant_t;
 
 template <typename T>

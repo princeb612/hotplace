@@ -22,6 +22,7 @@ COMMENTS
     format - clang-format
     opt    - optimize
     pch    - precompiled header
+    prof   - gprof
     odbc   - ODBC feature
     redist - redistribute MSYS2(MINGW) binaries
     shared -

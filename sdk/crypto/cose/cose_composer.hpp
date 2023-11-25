@@ -87,10 +87,10 @@ class cose_advisor {
 };
 
 class cose_composer;
+class cose_countersigns;
+class cose_recipient;
 class cose_recipients;
 class cose_unsent;
-class cose_countersign;
-class cose_countersigns;
 
 class cose_data {
     friend class cose_protected;
@@ -128,7 +128,7 @@ class cose_data {
      * @brief counter signature
      */
     cose_data& add(cose_alg_t alg, const char* kid, binary_t const& signature);
-    cose_data& add(cose_countersign* countersig);
+    cose_data& add(cose_recipient* countersig);
     cose_data& add(int key, vartype_t vty, void* p);
     /**
      * @brief payload (binary/base16)
@@ -163,6 +163,9 @@ class cose_data {
     return_t finditem(int key, binary_t& value);
 
    protected:
+    cose_data& set_owner(cose_recipient* layer);
+    cose_recipient* get_owner();
+
     /**
      * @brief   cbor_data for protected
      * @return  error code (see error.hpp)
@@ -197,13 +200,12 @@ class cose_data {
     bool empty_binary();
     size_t size_binary();
     void get_binary(binary_t& bin);
-    crypto_key& get_static_key();
 
    private:
     cose_variantmap_t _data_map;
     cose_orderlist_t _order;
     binary_t _payload;
-    crypto_key _static_key;
+    cose_recipient* _layer;
 };
 
 /**
@@ -281,7 +283,6 @@ class cose_unprotected {
      * @brief data
      */
     cose_data& data();
-    crypto_key& get_static_key();
     /**
      * @brief clear
      */
@@ -348,6 +349,48 @@ class cose_binary {
     cose_data _payload;
 };
 
+/**
+ * @brief recipients, signatures
+ */
+class cose_recipients {
+    friend class cose_composer;
+    friend class cose_data;
+    friend class cose_recipient;
+
+   public:
+    cose_recipients();
+    virtual ~cose_recipients();
+
+    /**
+     * @brief add
+     */
+    cose_recipient& add(cose_recipient* recipient);
+    /**
+     * @brief clear
+     */
+    cose_recipients& clear();
+
+    bool empty();
+    size_t size();
+    cose_recipient* operator[](size_t index);
+
+    virtual cbor_array* cbor();
+
+    return_t finditem(int key, int& value, int scope = cose_scope_layer);
+    return_t finditem(int key, std::string& value, int scope = cose_scope_layer);
+    return_t finditem(int key, binary_t& value, int scope = cose_scope_layer);
+
+   protected:
+    void for_each(void (*for_each_handler)(cose_recipient*, void* userdata), void* userdata);
+
+    std::list<cose_recipient*> _recipients;
+};
+
+enum cose_property_t {
+    cose_property_normal = 0,
+    cose_property_countersign = 1,
+};
+
 class cose_recipient {
     friend class cose_composer;
     friend class cose_data;
@@ -372,6 +415,8 @@ class cose_recipient {
     cose_recipients& get_recipients();
     cose_data& get_params();
     crypto_key& get_static_key();
+    cose_countersigns* get_countersigns0();
+    cose_countersigns* get_countersigns1();
     /**
      * @brief clear
      */
@@ -379,7 +424,7 @@ class cose_recipient {
     /**
      * @brief cbor
      */
-    cbor_array* cbor();
+    virtual cbor_array* cbor();
 
     void set_upperlayer(cose_recipient* layer);
     cose_recipient* get_upperlayer();
@@ -387,6 +432,8 @@ class cose_recipient {
     uint16 get_depth();
     void set_composer(cose_composer* composer);
     cose_composer* get_composer();
+    cose_recipient& set_property(uint16 property);
+    uint16 get_property();
 
     return_t finditem(int key, int& value, int scope = cose_scope_layer);
     return_t finditem(int key, std::string& value, int scope = cose_scope_layer);
@@ -413,53 +460,18 @@ class cose_recipient {
     cose_unprotected _unprotected;
     cose_binary _payload;
     cose_binary _singleitem;
-    cose_recipients* _recipients;
+    cose_recipients _recipients;
+    cose_countersigns* _countersigns;
+    crypto_key _static_key;
     cose_data _params;
 
     cose_recipient* _upperlayer;
     uint16 _depth;
+    uint16 _property;
     cose_composer* _composer;
     cbor_tag_t _cbor_tag;
 };
 typedef cose_recipient cose_layer;
-
-/**
- * @brief recipients, signatures
- */
-class cose_recipients {
-    friend class cose_composer;
-    friend class cose_data;
-    friend class cose_recipient;
-
-   public:
-    cose_recipients();
-    ~cose_recipients();
-
-    /**
-     * @brief add
-     */
-    cose_recipient& add(cose_recipient* recipient);
-    /**
-     * @brief clear
-     */
-    cose_recipients& clear();
-
-    bool empty();
-    size_t size();
-    cose_recipient* operator[](size_t index);
-
-    cbor_array* cbor();
-
-    return_t finditem(int key, int& value, int scope = cose_scope_layer);
-    return_t finditem(int key, std::string& value, int scope = cose_scope_layer);
-    return_t finditem(int key, binary_t& value, int scope = cose_scope_layer);
-
-   protected:
-    void for_each(void (*for_each_handler)(cose_layer*, void* userdata), void* userdata);
-
-   private:
-    std::list<cose_recipient*> _recipients;
-};
 typedef cose_recipients cose_layers;
 
 class cose_unsent {
@@ -482,56 +494,40 @@ class cose_unsent {
     cose_data _unsent;
 };
 
-class cose_countersign {
+class cose_countersign : public cose_recipient {
    public:
-    cose_countersign() {}
+    cose_countersign() : cose_recipient() {}
+    virtual ~cose_countersign() {}
 
-    cose_protected& get_protected() { return _protected; }
-    cose_unprotected& get_unprotected() { return _unprotected; }
-    cose_binary& get_signature() { return _signature; }
-    cbor_array* cbor() {
+    virtual cbor_array* cbor() {
         cbor_array* object = new cbor_array;
         *object << get_protected().cbor() << get_unprotected().cbor() << get_signature().cbor();
         return object;
     }
 
-   private:
-    cose_protected _protected;
-    cose_unprotected _unprotected;
-    cose_binary _signature;
+   protected:
 };
 
-class cose_countersigns {
+class cose_countersigns : public cose_recipients {
    public:
-    cose_countersigns() {}
-    ~cose_countersigns() {
-        std::list<cose_countersign*>::iterator iter;
-        for (iter = _countersigns.begin(); iter != _countersigns.end(); iter++) {
-            cose_countersign* sign = *iter;
-            delete sign;
-        }
-    }
+    cose_countersigns() : cose_recipients() {}
+    virtual ~cose_countersigns() {}
 
-    cose_countersign& add(cose_countersign* countersign) {
-        std::list<cose_countersign*>::iterator iter = _countersigns.insert(_countersigns.end(), countersign);
-        return **iter;
-    }
-    bool empty() { return 0 == _countersigns.size(); }
-    size_t size() { return _countersigns.size(); }
-    cbor_array* cbor() {
+    virtual cbor_array* cbor() {
         cbor_array* object = nullptr;
         return_t ret = errorcode_t::success;
         __try2 {
-            if (_countersigns.size() > 1) {
+            size_t size_countersigns = size();
+            if (size_countersigns > 1) {
                 __try_new_catch(object, new cbor_array, ret, __leave2);
 
-                std::list<cose_countersign*>::iterator iter;
-                for (iter = _countersigns.begin(); iter != _countersigns.end(); iter++) {
-                    cose_countersign* sign = *iter;
-                    *object << sign->cbor();
+                std::list<cose_recipient*>::iterator iter;
+                for (iter = _recipients.begin(); iter != _recipients.end(); iter++) {
+                    cose_recipient* sign = *iter;
+                    *object << sign->cbor();  // array in array
                 }
-            } else if (_countersigns.size() == 1) {
-                object = _countersigns.front()->cbor();
+            } else if (size_countersigns == 1) {
+                object = _recipients.front()->cbor();  // array
             }
         }
         __finally2 {
@@ -539,9 +535,6 @@ class cose_countersigns {
         }
         return object;
     }
-
-   private:
-    std::list<cose_countersign*> _countersigns;
 };
 
 /**
