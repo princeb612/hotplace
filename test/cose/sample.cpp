@@ -1278,17 +1278,9 @@ void test_github_example() {
         basic_stream reason;
         basic_stream debug_stream;
         return_t ret = errorcode_t::success;
-        std::string tagkey(vector->cbor, 4);
-        iter = dictionary.find(uppername(tagkey));
-        if (dictionary.end() == iter) {
-            std::string tagkey2(vector->cbor, 2);
-            iter = dictionary.find(uppername(tagkey2));
-        }
-        if (iter == dictionary.end()) {
-            ret = errorcode_t::not_found;
-        } else {
-            cose_context_t* handle = nullptr;
-            cose.open(&handle);
+
+        cose_context_t* handle = nullptr;
+        cose.open(&handle);
 
 #define dumps(b, f)                                          \
     if (f) {                                                 \
@@ -1296,111 +1288,91 @@ void test_github_example() {
         printf("\e[35m>%s %s\n%s\n\e[0m", b, f, bs.c_str()); \
     }
 
-            if (option.debug) {
-                cose.set(handle, cose_flag_t::cose_flag_allow_debug);
+        if (option.debug) {
+            cose.set(handle, cose_flag_t::cose_flag_allow_debug);
 
-                dumps("AAD", vector->enc.aad_hex);
-                dumps("CEK", vector->enc.cek_hex);
-                dumps("external", vector->shared.external);
-                dumps("unsent iv", vector->shared.iv_hex);
-                dumps("unsent partyu id", vector->shared.apu_id);
-                dumps("unsent partyu nonce", vector->shared.apu_nonce);
-                dumps("unsent partyu other", vector->shared.apu_other);
-                dumps("unsent partyv id", vector->shared.apv_id);
-                dumps("unsent partyv nonce", vector->shared.apv_nonce);
-                dumps("unsent partyv other", vector->shared.apv_other);
-                dumps("unsent pub other", vector->shared.pub_other);
-                dumps("unsent private", vector->shared.priv);
-            }
-
-            if (vector->shared.external) {
-                cose.set(handle, cose_param_t::cose_external, base16_decode(vector->shared.external));
-                properties << "external ";
-            }
-            if (vector->shared.iv_hex) {
-                cose.set(handle, cose_param_t::cose_unsent_iv, base16_decode(vector->shared.iv_hex));
-                properties << "iv ";
-            }
-            if (vector->shared.apu_id) {
-                cose.set(handle, cose_param_t::cose_unsent_apu_id, base16_decode(vector->shared.apu_id));
-                properties << "apu_id ";
-            }
-            if (vector->shared.apu_nonce) {
-                cose.set(handle, cose_param_t::cose_unsent_apu_nonce, base16_decode(vector->shared.apu_nonce));
-                properties << "apu_nonce ";
-            }
-            if (vector->shared.apu_other) {
-                cose.set(handle, cose_param_t::cose_unsent_apu_other, base16_decode(vector->shared.apu_other));
-                properties << "external apu_other";
-            }
-            if (vector->shared.apv_id) {
-                cose.set(handle, cose_param_t::cose_unsent_apv_id, base16_decode(vector->shared.apv_id));
-                properties << "apv_id ";
-            }
-            if (vector->shared.apv_nonce) {
-                cose.set(handle, cose_param_t::cose_unsent_apv_nonce, base16_decode(vector->shared.apv_nonce));
-                properties << "apv_nonce ";
-            }
-            if (vector->shared.apv_other) {
-                cose.set(handle, cose_param_t::cose_unsent_apv_other, base16_decode(vector->shared.apv_other));
-                properties << "apv_other ";
-            }
-            if (vector->shared.pub_other) {
-                cose.set(handle, cose_param_t::cose_unsent_pub_other, base16_decode(vector->shared.pub_other));
-                properties << "pub_other ";
-            }
-            if (vector->shared.priv) {
-                cose.set(handle, cose_param_t::cose_unsent_priv_other, base16_decode(vector->shared.priv));
-                properties << "priv ";
-            }
-            if (vector->debug) {
-                int break_point_here = 1;
-            }
-
-            int tagvalue = iter->second;
-            binary_t decrypted;
-            switch (tagvalue) {
-                case cbor_tag_t::cose_tag_encrypt0:  // 16 (D0)
-                case cbor_tag_t::cose_tag_encrypt:   // 96 (D860)
-                    ret = cose.decrypt(handle, mapped_key, cbor, decrypted, result);
-                    if (errorcode_t::success == ret) {
-                        if (option.debug) {
-                            dump_memory(decrypted, &bs, 16, 4);
-                            printf("decrypted\n%s\n%s\n", bs.c_str(), base16_encode(decrypted).c_str());
-                        }
-                    }
-                    break;
-                case cbor_tag_t::cose_tag_mac0:  // 17 (D1)
-                case cbor_tag_t::cose_tag_mac:   // 97 (D861)
-                    ret = cose.verify(handle, mapped_key, cbor, result);
-                    break;
-                case cbor_tag_t::cose_tag_sign1:  // 18 (D2)
-                case cbor_tag_t::cose_tag_sign:   // 98 (D862)
-                    ret = cose.verify(handle, mapped_key, cbor, result);
-                    break;
-                default:
-                    ret = errorcode_t::bad_data;  // todo, studying, not-tagged
-                    break;
-            }
-
-            if (option.debug) {
-                uint32 flags = 0;
-                uint32 debug_flags = 0;
-                cose.get(handle, flags, debug_flags);
-                if (debug_flags & cose_debug_notfound_key) {
-                    reason << "!key ";
-                }
-                if (debug_flags & cose_debug_partial_iv) {
-                    reason << "partial_iv ";
-                }
-                if (debug_flags & cose_debug_counter_sig) {
-                    reason << "counter_sig ";
-                }
-                debug_stream = handle->debug_stream;
-            }
-
-            cose.close(handle);
+            dumps("AAD", vector->enc.aad_hex);
+            dumps("CEK", vector->enc.cek_hex);
+            dumps("external", vector->shared.external);
+            dumps("unsent iv", vector->shared.iv_hex);
+            dumps("unsent partyu id", vector->shared.apu_id);
+            dumps("unsent partyu nonce", vector->shared.apu_nonce);
+            dumps("unsent partyu other", vector->shared.apu_other);
+            dumps("unsent partyv id", vector->shared.apv_id);
+            dumps("unsent partyv nonce", vector->shared.apv_nonce);
+            dumps("unsent partyv other", vector->shared.apv_other);
+            dumps("unsent pub other", vector->shared.pub_other);
+            dumps("unsent private", vector->shared.priv);
         }
+
+        if (vector->shared.external) {
+            cose.set(handle, cose_param_t::cose_external, base16_decode(vector->shared.external));
+            properties << "external ";
+        }
+        if (vector->shared.iv_hex) {
+            cose.set(handle, cose_param_t::cose_unsent_iv, base16_decode(vector->shared.iv_hex));
+            properties << "iv ";
+        }
+        if (vector->shared.apu_id) {
+            cose.set(handle, cose_param_t::cose_unsent_apu_id, base16_decode(vector->shared.apu_id));
+            properties << "apu_id ";
+        }
+        if (vector->shared.apu_nonce) {
+            cose.set(handle, cose_param_t::cose_unsent_apu_nonce, base16_decode(vector->shared.apu_nonce));
+            properties << "apu_nonce ";
+        }
+        if (vector->shared.apu_other) {
+            cose.set(handle, cose_param_t::cose_unsent_apu_other, base16_decode(vector->shared.apu_other));
+            properties << "external apu_other";
+        }
+        if (vector->shared.apv_id) {
+            cose.set(handle, cose_param_t::cose_unsent_apv_id, base16_decode(vector->shared.apv_id));
+            properties << "apv_id ";
+        }
+        if (vector->shared.apv_nonce) {
+            cose.set(handle, cose_param_t::cose_unsent_apv_nonce, base16_decode(vector->shared.apv_nonce));
+            properties << "apv_nonce ";
+        }
+        if (vector->shared.apv_other) {
+            cose.set(handle, cose_param_t::cose_unsent_apv_other, base16_decode(vector->shared.apv_other));
+            properties << "apv_other ";
+        }
+        if (vector->shared.pub_other) {
+            cose.set(handle, cose_param_t::cose_unsent_pub_other, base16_decode(vector->shared.pub_other));
+            properties << "pub_other ";
+        }
+        if (vector->shared.priv) {
+            cose.set(handle, cose_param_t::cose_unsent_priv_other, base16_decode(vector->shared.priv));
+            properties << "priv ";
+        }
+        if (vector->debug) {
+            int break_point_here = 1;
+        }
+
+        binary_t output;
+        ret = cose.process(handle, mapped_key, cbor, output);
+
+        if (option.debug) {
+            uint32 flags = 0;
+            uint32 debug_flags = 0;
+            cose.get(handle, flags, debug_flags);
+            if (debug_flags & cose_debug_notfound_key) {
+                reason << "!key ";
+            }
+            if (debug_flags & cose_debug_partial_iv) {
+                reason << "partial_iv ";
+            }
+            if (debug_flags & cose_debug_counter_sig) {
+                reason << "counter_sig ";
+            }
+            debug_stream = handle->debug_stream;
+            if (output.size()) {
+                dump_memory(output, &bs, 16, 4);
+                printf("decrypted\n%s\n%s\n", bs.c_str(), base16_encode(output).c_str());
+            }
+        }
+
+        cose.close(handle);
 
         _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s%s", vector->file, properties.c_str(), reason.size() ? "\e[1;33m[ debug : " : "", reason.c_str(),
                         reason.size() ? "]\e[0m " : " ", debug_stream.c_str());
