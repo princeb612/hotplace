@@ -177,7 +177,6 @@ class crypto_advisor {
      */
     const hint_curve_t* hintof_curve_nid(uint32 nid);
     const hint_curve_t* hintof_curve(cose_ec_curve_t curve);
-
     /**
      * @brief hint
      * @param const char* alg [in]
@@ -203,6 +202,12 @@ class crypto_advisor {
      * @return const hint_signature_t*
      */
     const hint_signature_t* hintof_jose_signature(const char* sig);
+    /**
+     * @brief hint
+     * @param const char* alg [in]
+     * @return const hint_cose_algorithm_t*
+     */
+    const hint_cose_algorithm_t* hintof_cose_algorithm(const char* alg);
     /**
      * @brief hint
      * @param const char* curve [in]
@@ -266,6 +271,10 @@ class crypto_advisor {
      *          EdDSA
      */
     const char* nameof_jose_signature(jws_t sig);
+    /**
+     * @brief COSE (name decribed in RFC)
+     */
+    const char* nameof_cose_algorithm(cose_alg_t alg);
 
     /**
      * @brief type
@@ -416,6 +425,13 @@ class crypto_advisor {
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
+     * @param cose_alg_t alg [in]
+     * @return true if match, false if not
+     */
+    bool is_kindof(const EVP_PKEY* pkey, cose_alg_t alg);
+    /**
+     * @brief kind of
+     * @param const EVP_PKEY* pkey [in]
      * @param const char* alg [in] signature algorithms
      * @return true if match, false if not
      */
@@ -453,6 +469,7 @@ class crypto_advisor {
     typedef std::multimap<uint32, const hint_signature_t*> jose_signature_bynid_map_t;
     typedef std::map<std::string, const hint_jose_encryption_t*> jose_encryption_byname_map_t;
     typedef std::map<std::string, const hint_signature_t*> signature_byname_map_t;
+    typedef std::map<std::string, const hint_cose_algorithm_t*> cose_algorithm_byname_map_t;
     typedef std::map<std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
     typedef std::map<uint32, const hint_curve_t*> jose_curve_bynid_map_t;
     typedef std::map<cose_ec_curve_t, const hint_curve_t*> cose_curve_map_t;
@@ -487,6 +504,7 @@ class crypto_advisor {
     jose_encryption_byname_map_t _alg_byname_map;
     jose_encryption_byname_map_t _enc_byname_map;
     signature_byname_map_t _sig_byname_map;
+    cose_algorithm_byname_map_t _cose_algorithm_byname_map;
 
     jose_nid_bycurve_map_t _nid_bycurve_map;
     jose_curve_bynid_map_t _curve_bynid_map;

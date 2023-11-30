@@ -21,189 +21,6 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-const hint_cose_structure_t cose_structure_table[] = {
-    {
-        cose_tag_encrypt,
-        crypt_category_encrypt,
-        true,
-        4,
-        {
-            cose_message_protected,
-            cose_message_unprotected,
-            cose_message_payload,
-            cose_message_layered,
-        },
-    },
-    {
-        cose_tag_encrypt0,
-        crypt_category_encrypt,
-        false,
-        3,
-        {
-            cose_message_protected,
-            cose_message_unprotected,
-            cose_message_payload,
-        },
-    },
-    {
-        cose_tag_mac,
-        crypt_category_mac,
-        true,
-        5,
-        {
-            cose_message_protected,
-            cose_message_unprotected,
-            cose_message_payload,
-            cose_message_singleitem,
-            cose_message_layered,
-        },
-    },
-    {
-        cose_tag_mac0,
-        crypt_category_mac,
-        false,
-        4,
-        {
-            cose_message_protected,
-            cose_message_unprotected,
-            cose_message_payload,
-            cose_message_singleitem,
-        },
-    },
-    {
-        cose_tag_sign,
-        crypt_category_sign,
-        true,
-        4,
-        {
-            cose_message_protected,
-            cose_message_unprotected,
-            cose_message_payload,
-            cose_message_layered,
-        },
-    },
-    {
-        cose_tag_sign1,
-        crypt_category_sign,
-        false,
-        4,
-        {
-            cose_message_protected,
-            cose_message_unprotected,
-            cose_message_payload,
-            cose_message_singleitem,
-        },
-    },
-};
-
-size_t sizeof_hint_cose_structure_table = RTL_NUMBER_OF(cose_structure_table);
-
-const cose_message_cbortype_t cose_message_cbortype_table[] = {
-    {
-        cose_message_protected,
-        cbor_type_t::cbor_type_data,
-    },
-    {
-        cose_message_unprotected,
-        cbor_type_t::cbor_type_map,
-    },
-    {
-        cose_message_payload,
-        cbor_type_t::cbor_type_data,
-    },
-    {
-        cose_message_singleitem,
-        cbor_type_t::cbor_type_data,
-    },
-    {
-        cose_message_layered,
-        cbor_type_t::cbor_type_array,
-    },
-};
-
-cose_advisor cose_advisor::_instance;
-
-cose_advisor::cose_advisor() : loaded(false) { load(); }
-
-cose_advisor* cose_advisor::get_instance() { return &_instance; }
-
-void cose_advisor::load() {
-    if (false == loaded) {
-        size_t i = 0;
-        for (i = 0; i < sizeof_hint_cose_structure_table; i++) {
-            const hint_cose_structure_t* item = cose_structure_table + i;
-            cose_message_structure_map.insert(std::make_pair(item->cbor_tag, item));
-        }
-
-        for (i = 0; i < RTL_NUMBER_OF(cose_structure_table); i++) {
-            const hint_cose_structure_t* item = cose_structure_table + i;
-            _category_message_multimap.insert(std::make_pair(item->category, item));
-        }
-
-        for (i = 0; i < RTL_NUMBER_OF(cose_message_cbortype_table); i++) {
-            const cose_message_cbortype_t* item = cose_message_cbortype_table + i;
-            _cose_message_cbortype_map.insert(std::make_pair(item->type, item->cbor_type));
-        }
-
-        loaded = true;
-    }
-}
-
-const hint_cose_structure_t* cose_advisor::hintof(cbor_tag_t cbor_tag) {
-    const hint_cose_structure_t* hint = nullptr;
-    cose_message_structure_map_t::iterator iter = cose_message_structure_map.find(cbor_tag);
-    if (cose_message_structure_map.end() != iter) {
-        hint = iter->second;
-    }
-    return hint;
-}
-
-cbor_tag_t cose_advisor::test(cose_alg_t alg, cbor_array* root) {
-    cbor_tag_t tag = cbor_tag_t::cbor_tag_unknown;
-
-    __try2 {
-        if (nullptr == root) {
-            __leave2;
-        }
-
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm((cose_alg_t)alg);
-        if (hint) {
-            const hint_cose_group_t* hint_group = hint->hint_group;
-            crypt_category_t category = hint_group->category;
-            size_t size_message = root->size();
-            size_t i = 0;
-
-            category_message_multimap_t::iterator iter;
-            for (iter = _category_message_multimap.lower_bound(category); iter != _category_message_multimap.upper_bound(category); iter++) {
-                const hint_cose_structure_t* item = iter->second;
-
-                bool check = true;
-                if (size_message == item->elemof_cbor) {
-                    for (i = 3; i < item->elemof_cbor; i++) {
-                        cbor_object* object = (*root)[i];
-                        cose_message_type_t message_type = item->typeof_item[i];
-                        cbor_type_t cbor_type = _cose_message_cbortype_map[message_type];
-                        if (cbor_type != object->type()) {
-                            check = false;
-                            break;
-                        }
-                    }
-
-                    if (check) {
-                        tag = item->cbor_tag;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return tag;
-}
-
 #define TYPE_STATIC_KEY (TYPE_USER)
 #define TYPE_COUNTER_SIG (vartype_t)(TYPE_USER + 1)
 
@@ -364,7 +181,11 @@ cose_data& cose_data::replace(int key, const unsigned char* value, size_t size) 
     return *this;
 }
 
+cose_data& cose_data::add(int key, std::string& value) { return add(key, (unsigned char*)value.c_str(), value.size()); }
+
 cose_data& cose_data::add(int key, std::string const& value) { return add(key, (unsigned char*)value.c_str(), value.size()); }
+
+cose_data& cose_data::add(int key, binary_t& value) { return add(key, &value[0], value.size()); }
 
 cose_data& cose_data::add(int key, binary_t const& value) { return add(key, &value[0], value.size()); }
 
@@ -439,7 +260,6 @@ cose_data& cose_data::add(cose_alg_t alg, const char* kid, binary_t const& signa
     __try2 {
         __try_new_catch(countersign, new cose_countersign, ret, __leave2);
         countersign->set_upperlayer(get_owner());
-        countersign->set_composer(get_owner()->get_composer());
         countersign->set_property(cose_property_t::cose_property_countersign);
 
         countersign->get_protected().add(cose_key_t::cose_alg, alg);
@@ -529,8 +349,6 @@ cose_data& cose_data::clear() {
 bool cose_data::exist(int key) {
     bool ret_value = false;
     return_t ret = errorcode_t::success;
-    basic_stream cosekey;
-    variant vt;
 
     std::map<int, variant>::iterator iter = _data_map.find(key);
     if (_data_map.end() != iter) {
@@ -541,7 +359,6 @@ bool cose_data::exist(int key) {
 
 return_t cose_data::finditem(int key, int& value) {
     return_t ret = errorcode_t::success;
-    basic_stream cosekey;
 
     std::map<int, variant>::iterator iter = _data_map.find(key);
     if (_data_map.end() == iter) {
@@ -598,7 +415,7 @@ return_t cose_data::build_protected(cbor_data** object) {
                     int key = *list_iter;
 
                     cose_variantmap_t::iterator map_iter = _data_map.find(key);
-                    variant& value = map_iter->second;
+                    variant value = map_iter->second;
                     *part_protected << new cbor_pair(new cbor_data(key), new cbor_data(value));
                 }
 
@@ -645,7 +462,7 @@ return_t cose_data::build_protected(cbor_data** object, cose_variantmap_t& unsen
                     }
 
                     cose_variantmap_t::iterator map_iter = _data_map.find(key);
-                    variant& value = map_iter->second;
+                    variant value = map_iter->second;
                     *part_protected << new cbor_pair(new cbor_data(key), new cbor_data(value));
                 }
 
@@ -683,17 +500,17 @@ return_t cose_data::build_unprotected(cbor_map** object) {
             int key = *list_iter;
 
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
-            variant& var = map_iter->second;
-            variant_t& value = var.content();
+            variant value = map_iter->second;
+            variant_t& vt = value.content();
 
-            if (TYPE_STATIC_KEY == value.type) {
-                cose_key* k = (cose_key*)value.data.p;
+            if (TYPE_STATIC_KEY == vt.type) {
+                cose_key* k = (cose_key*)vt.data.p;
                 *part_unprotected << new cbor_pair(key, k->cbor());
-            } else if (TYPE_COUNTER_SIG == value.type) {
+            } else if (TYPE_COUNTER_SIG == vt.type) {
                 cose_countersigns* signs = get_owner()->get_countersigns1();
                 *part_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, signs->cbor());
             } else {
-                *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(var));
+                *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(value));
             }
         }
 
@@ -727,17 +544,17 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
             }
 
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
-            variant& var = map_iter->second;
-            variant_t& value = var.content();
+            variant value = map_iter->second;
+            variant_t& vt = value.content();
 
-            if (TYPE_STATIC_KEY == value.type) {
-                cose_key* k = (cose_key*)value.data.p;
+            if (TYPE_STATIC_KEY == vt.type) {
+                cose_key* k = (cose_key*)vt.data.p;
                 *part_unprotected << new cbor_pair(key, k->cbor());
-            } else if (TYPE_COUNTER_SIG == value.type) {
-                cose_recipient* sign = (cose_recipient*)value.data.p;
+            } else if (TYPE_COUNTER_SIG == vt.type) {
+                cose_recipient* sign = (cose_recipient*)vt.data.p;
                 *part_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, sign->cbor());
             } else {
-                *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(var));
+                *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(value));
             }
         }
 
@@ -1078,7 +895,17 @@ cose_unprotected& cose_unprotected::add(cose_key_t key, const char* value) {
     return *this;
 }
 
+cose_unprotected& cose_unprotected::add(cose_key_t key, std::string& value) {
+    _unprotected.add(key, value);
+    return *this;
+}
+
 cose_unprotected& cose_unprotected::add(cose_key_t key, std::string const& value) {
+    _unprotected.add(key, value);
+    return *this;
+}
+
+cose_unprotected& cose_unprotected::add(cose_key_t key, binary_t& value) {
     _unprotected.add(key, value);
     return *this;
 }
@@ -1172,6 +999,7 @@ cose_recipient::cose_recipient()
     get_unprotected().data().set_owner(this);
     get_payload().data().set_owner(this);
     get_singleitem().data().set_owner(this);
+    get_recipients().set_upperlayer(this);
 }
 
 cose_recipient::~cose_recipient() {
@@ -1182,6 +1010,8 @@ cose_recipient::~cose_recipient() {
 
 void cose_recipient::set_upperlayer(cose_recipient* layer) {
     _upperlayer = layer;
+    set_composer(layer->get_composer());
+
     if (layer) {
         _depth = layer->get_depth() + 1;
     }
@@ -1333,6 +1163,28 @@ return_t cose_recipient::setparam(cose_param_t id, binary_t const& bin) {
             case cose_param_t::cose_param_cek:
             case cose_param_t::cose_param_ciphertext:
             case cose_param_t::cose_param_secret:
+            case cose_param_t::cose_param_plaintext:
+                get_params().replace(id, bin);
+                break;
+            default:
+                ret = errorcode_t::request;
+                break;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cose_recipient::getparam(cose_param_t id, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        switch (id) {
+            case cose_param_t::cose_param_cek:
+            case cose_param_t::cose_param_ciphertext:
+            case cose_param_t::cose_param_secret:
+            case cose_param_t::cose_param_plaintext:
                 get_params().replace(id, bin);
                 break;
             default:
@@ -1349,7 +1201,6 @@ return_t cose_recipient::setparam(cose_param_t id, binary_t const& bin) {
 return_t cose_recipient::parse(cbor_array* root) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    bool tagged = false;
     cbor_tag_t cbor_tag = cbor_tag_t::cbor_tag_unknown;
 
     __try2 {
@@ -1363,10 +1214,6 @@ return_t cose_recipient::parse(cbor_array* root) {
         ret = parse_header(root);
         if (errorcode_t::success != ret) {
             __leave2;
-        }
-
-        if (false == root->tagged()) {
-            // parse_validate(root);
         }
 
         ret = parse_message(root);
@@ -1385,7 +1232,6 @@ return_t cose_recipient::parse(cbor_array* root) {
 
 return_t cose_recipient::parse_header(cbor_array* root) {
     return_t ret = errorcode_t::success;
-    bool tagged = false;
 
     __try2 {
         if (nullptr == root) {
@@ -1394,9 +1240,6 @@ return_t cose_recipient::parse_header(cbor_array* root) {
         }
 
         size_t size_message = root->size();
-
-        // check tagged
-        // tagged = root->tagged();
 
         if (size_message < 3) {
             ret = errorcode_t::bad_format;
@@ -1412,20 +1255,6 @@ return_t cose_recipient::parse_header(cbor_array* root) {
         ret = parse_unprotected((*root)[1]);
         if (errorcode_t::success != ret) {
             __leave2;
-        }
-
-        if (false == root->tagged()) {
-            int alg = 0;
-            cbor_tag_t cbor_tag = cbor_tag_t::cbor_tag_unknown;
-            finditem(cose_key_t::cose_alg, alg);
-            if (alg) {
-                cose_advisor* coseadvisor = cose_advisor::get_instance();
-                cbor_tag = coseadvisor->test((cose_alg_t)alg, root);
-                root->tag(cbor_tag);
-            } else {
-                // Appendix C.1.1
-                // 98([h'', {}, h'54....', [[h'A10126', ...]]])
-            }
         }
 
         ret = parse_payload((*root)[2]);
@@ -1594,6 +1423,7 @@ cose_countersigns* cose_recipient::get_countersigns0() { return _countersigns; }
 cose_countersigns* cose_recipient::get_countersigns1() {
     if (nullptr == _countersigns) {
         _countersigns = new cose_countersigns;
+        _countersigns->set_upperlayer(this);
     }
     return _countersigns;
 }
@@ -1603,7 +1433,14 @@ cose_recipient& cose_recipient::clear() {
     get_protected().clear();
     get_unprotected().clear();
     get_payload().clear();
+    get_singleitem().clear();
     get_recipients().clear();
+    if (_countersigns) {
+        delete _countersigns;
+        _countersigns = nullptr;
+    }
+    get_static_key().clear();
+    get_params().clear();
     return *this;
 }
 
@@ -1638,11 +1475,12 @@ cbor_array* cose_recipient::cbor() {
     return object;
 }
 
-cose_recipients::cose_recipients() {}
+cose_recipients::cose_recipients() : _upperlayer(nullptr) {}
 
 cose_recipients::~cose_recipients() { clear(); }
 
 cose_recipient& cose_recipients::add(cose_recipient* recipient) {
+    recipient->set_upperlayer(get_upperlayer());
     std::list<cose_recipient*>::iterator iter = _recipients.insert(_recipients.end(), recipient);
     return **iter;
 }
@@ -1679,6 +1517,13 @@ void cose_recipients::for_each(void (*for_each_handler)(cose_layer*, void* userd
         }
     }
 }
+
+cose_recipients& cose_recipients::set_upperlayer(cose_recipient* layer) {
+    _upperlayer = layer;
+    return *this;
+}
+
+cose_recipient* cose_recipients::get_upperlayer() { return _upperlayer; }
 
 return_t cose_recipients::finditem(int key, int& value, int scope) {
     return_t ret = errorcode_t::not_found;
@@ -1768,6 +1613,13 @@ cose_unsent& cose_unsent::add(int key, const char* value) {
 cose_unsent& cose_unsent::add(int key, const unsigned char* value, size_t size) {
     if (value && isvalid(key)) {
         _unsent.add(key, value, size);
+    }
+    return *this;
+}
+
+cose_unsent& cose_unsent::add(int key, binary_t& value) {
+    if (isvalid(key)) {
+        _unsent.add(key, value);
     }
     return *this;
 }
@@ -1876,10 +1728,38 @@ return_t cose_composer::compose(cbor_array** object) {
 
 return_t cose_composer::compose(cbor_array** object, binary_t& cbor) {
     return_t ret = errorcode_t::success;
-    ret = compose(object);
-    if (errorcode_t::success == ret) {
-        cbor_publisher publisher;
-        publisher.publish(*object, &cbor);
+    __try2 {
+        if (nullptr == object) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = compose(object);
+        if (errorcode_t::success == ret) {
+            cbor_publisher publisher;
+            publisher.publish(*object, &cbor);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cose_composer::diagnose(cbor_array** object, basic_stream& stream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == object) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = compose(object);
+        if (errorcode_t::success == ret) {
+            cbor_publisher publisher;
+            publisher.publish(*object, &stream);
+        }
+    }
+    __finally2 {
+        // do nothing
     }
     return ret;
 }
@@ -1888,7 +1768,6 @@ return_t cose_composer::parse(binary_t const& input) {
     return_t ret = errorcode_t::success;
     cbor_object* root = nullptr;
     cbor_array* cbor_message = nullptr;
-    bool tagged = false;
 
     __try2 {
         clear();

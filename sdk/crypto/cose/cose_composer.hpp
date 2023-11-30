@@ -47,45 +47,6 @@ enum cose_scope {
     cose_scope_all = 0x11111111,
 };
 
-typedef struct _hint_cose_structure_t {
-    cbor_tag_t cbor_tag;
-    crypt_category_t category;
-    bool layered;
-    int elemof_cbor;
-    cose_message_type_t typeof_item[5];
-} hint_cose_structure_t;
-
-typedef struct _cose_message_cbortype_t {
-    cose_message_type_t type;
-    cbor_type_t cbor_type;
-} cose_message_cbortype_t;
-
-extern const hint_cose_structure_t cose_structure_table[];
-extern size_t sizeof_hint_cose_structure_table;
-
-class cose_advisor {
-   public:
-    static cose_advisor* get_instance();
-
-    const hint_cose_structure_t* hintof(cbor_tag_t cbor_tag);
-    cbor_tag_t test(cose_alg_t alg, cbor_array* root);
-
-   protected:
-    cose_advisor();
-    void load();
-
-   private:
-    static cose_advisor _instance;
-    bool loaded;
-
-    typedef std::map<cbor_tag_t, const hint_cose_structure_t*> cose_message_structure_map_t;
-    typedef std::multimap<crypt_category_t, const hint_cose_structure_t*> category_message_multimap_t;
-    typedef std::map<cose_message_type_t, cbor_type_t> cose_message_cbortype_map_t;
-    cose_message_structure_map_t cose_message_structure_map;
-    category_message_multimap_t _category_message_multimap;
-    cose_message_cbortype_map_t _cose_message_cbortype_map;
-};
-
 class cose_composer;
 class cose_countersigns;
 class cose_recipient;
@@ -110,7 +71,9 @@ class cose_data {
     cose_data& add(int key, int16 value);
     cose_data& add(int key, const char* value);
     cose_data& add(int key, const unsigned char* value, size_t size);
+    cose_data& add(int key, std::string& value);
     cose_data& add(int key, std::string const& value);
+    cose_data& add(int key, binary_t& value);
     cose_data& add(int key, binary_t const& value);
     cose_data& add(int key, variant& value);
 
@@ -268,7 +231,9 @@ class cose_unprotected {
      */
     cose_unprotected& add(cose_key_t key, uint16 value);
     cose_unprotected& add(cose_key_t key, const char* value);
+    cose_unprotected& add(cose_key_t key, std::string& value);
     cose_unprotected& add(cose_key_t key, std::string const& value);
+    cose_unprotected& add(cose_key_t key, binary_t& value);
     cose_unprotected& add(cose_key_t key, binary_t const& value);
     /**
      * @brief ephemeral key
@@ -382,8 +347,11 @@ class cose_recipients {
 
    protected:
     void for_each(void (*for_each_handler)(cose_recipient*, void* userdata), void* userdata);
+    cose_recipients& set_upperlayer(cose_recipient* layer);
+    cose_recipient* get_upperlayer();
 
     std::list<cose_recipient*> _recipients;
+    cose_recipient* _upperlayer;
 };
 
 enum cose_property_t {
@@ -440,6 +408,7 @@ class cose_recipient {
     return_t finditem(int key, binary_t& value, int scope = cose_scope_layer);
 
     return_t setparam(cose_param_t id, binary_t const& bin);
+    return_t getparam(cose_param_t id, binary_t& bin);
 
     cose_alg_t get_algorithm();
     std::string get_kid();
@@ -483,6 +452,7 @@ class cose_unsent {
 
     cose_unsent& add(int key, const char* value);
     cose_unsent& add(int key, const unsigned char* value, size_t size);
+    cose_unsent& add(int key, binary_t& value);
     cose_unsent& add(int key, binary_t const& value);
 
     cose_data& data();
@@ -541,6 +511,8 @@ class cose_countersigns : public cose_recipients {
  * @brief composer
  */
 class cose_composer {
+    friend class cbor_object_signing_encryption;
+
    public:
     cose_composer();
 
@@ -564,6 +536,7 @@ class cose_composer {
     return_t compose(cbor_tag_t cbor_tag, cbor_array** object);
     return_t compose(cbor_array** object);
     return_t compose(cbor_array** object, binary_t& cbor);
+    return_t diagnose(cbor_array** object, basic_stream& stream);
     /**
      * @brief   parse
      * @desc

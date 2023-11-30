@@ -49,6 +49,10 @@ cbor_data::cbor_data(float value) : cbor_object(cbor_type_t::cbor_type_data) { _
 
 cbor_data::cbor_data(double value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_double(value); }
 
+cbor_data::cbor_data(variant_t& vt) : cbor_object(cbor_type_t::cbor_type_data) { _vt.move(vt); }
+
+cbor_data::cbor_data(const variant_t& vt) : cbor_object(cbor_type_t::cbor_type_data) { _vt.copy(vt); }
+
 cbor_data::cbor_data(variant& vt) : cbor_object(cbor_type_t::cbor_type_data) { _vt.move(vt); }
 
 cbor_data::cbor_data(const variant& vt) : cbor_object(cbor_type_t::cbor_type_data) { _vt.copy(vt); }

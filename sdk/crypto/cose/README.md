@@ -1,7 +1,7 @@
-party : apu-id/nonce/other, apv-id/nonce/other
-epk   : ephemeral key
-s-key : static key
-s-kid : staic kid
+- party : apu-id/nonce/other, apv-id/nonce/other
+- epk   : ephemeral key
+- s-key : static key
+- s-kid : staic kid
 
 | Name                | Value | Description                                             | aad   | salt  | party | epk   | s-key | s-kid | comments          |
 |---------------------|-------|---------------------------------------------------------|-------| ------|-------|-------|-------|-------|-------------------|

@@ -63,6 +63,7 @@ enum cose_param_t {
     cose_param_pub_other = cose_param_base + 28,
     cose_param_priv_other = cose_param_base + 29,
     cose_param_ciphertext = cose_param_base + 30,
+    cose_param_plaintext = cose_param_base + 31,
 };
 
 enum cose_flag_t {

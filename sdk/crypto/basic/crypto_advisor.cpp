@@ -163,6 +163,7 @@ return_t crypto_advisor::build_if_necessary() {
         for (i = 0; i < sizeof_hint_cose_algorithms; i++) {
             const hint_cose_algorithm_t* item = hint_cose_algorithms + i;
             _cose_alg_map.insert(std::make_pair(item->alg, item));
+            _cose_algorithm_byname_map.insert(std::make_pair(item->name, item));
         }
         for (i = 0; i < sizeof_hint_curves; i++) {
             const hint_curve_t* item = hint_curves + i;
@@ -574,6 +575,17 @@ const hint_signature_t* crypto_advisor::hintof_jose_signature(const char* sig) {
     return item;
 }
 
+const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(const char* alg) {
+    const hint_cose_algorithm_t* item = nullptr;
+
+    if (alg) {
+        maphint<std::string, const hint_cose_algorithm_t*> hint(_cose_algorithm_byname_map);
+        hint.find(alg, &item);
+    }
+
+    return item;
+}
+
 const hint_curve_t* crypto_advisor::hintof_curve(const char* curve) {
     const hint_curve_t* item = nullptr;
 
@@ -614,6 +626,17 @@ const char* crypto_advisor::nameof_jose_signature(jws_t sig) {
 
     if (item) {
         name = item->jws_name;
+    }
+    return name;
+}
+
+const char* crypto_advisor::nameof_cose_algorithm(cose_alg_t alg) {
+    const char* name = nullptr;
+
+    const hint_cose_algorithm_t* item = hintof_cose_algorithm(alg);
+
+    if (item) {
+        name = item->name;
     }
     return name;
 }
@@ -869,6 +892,24 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, jws_t sig) {
             }
         }
         test = (cond1 && cond2 && cond3);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return test;
+}
+
+bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, cose_alg_t alg) {
+    bool test = false;
+
+    __try2 {
+        const hint_cose_algorithm_t* hint = hintof_cose_algorithm(alg);
+        if (nullptr == hint) {
+            __leave2;
+        }
+        crypto_kty_t kty = typeof_crypto_key(pkey);
+        bool cmp1 = (hint->kty == kty);
+        test = (cmp1);
     }
     __finally2 {
         // do nothing

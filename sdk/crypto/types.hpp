@@ -524,7 +524,7 @@ enum cose_ec_curve_t {
 enum crypt_category_t {
     crypt_category_not_classified = 0,
     crypt_category_unknown = crypt_category_not_classified,
-    crypt_category_encrypt = 1,
+    crypt_category_crypt = 1,
     crypt_category_mac = 2,
     crypt_category_sign = 3,
     crypt_category_hash = 4,
@@ -781,18 +781,20 @@ enum cose_hint_flag_t {
     cose_hint_sign = 1 << 0,
     cose_hint_enc = 1 << 1,
     cose_hint_mac = 1 << 2,
-    cose_hint_iv = 1 << 3,
-    cose_hint_salt = 1 << 4,
-    cose_hint_party = 1 << 5,
-    cose_hint_kek = 1 << 6,
-    cose_hint_epk = 1 << 7,
-    cose_hint_static_key = 1 << 8,
-    cose_hint_static_kid = 1 << 9,
-    cose_hint_kty_ec = 1 << 10,
-    cose_hint_kty_okp = 1 << 11,
-    cose_hint_kty_rsa = 1 << 12,
-    cose_hint_kty_oct = 1 << 13,
-    cose_hint_not_supported = 1 << 14,
+    cose_hint_hash = 1 << 3,
+    cose_hint_agree = 1 << 4,
+    cose_hint_iv = 1 << 5,
+    cose_hint_salt = 1 << 6,
+    cose_hint_party = 1 << 7,
+    cose_hint_kek = 1 << 8,
+    cose_hint_epk = 1 << 9,
+    cose_hint_static_key = 1 << 10,
+    cose_hint_static_kid = 1 << 11,
+    cose_hint_kty_ec = 1 << 12,
+    cose_hint_kty_okp = 1 << 13,
+    cose_hint_kty_rsa = 1 << 14,
+    cose_hint_kty_oct = 1 << 15,
+    cose_hint_not_supported = 1 << 16,
 };
 
 typedef struct _hint_cose_group_t {
@@ -803,6 +805,7 @@ typedef struct _hint_cose_group_t {
 
 typedef struct _hint_cose_algorithm_t {
     cose_alg_t alg;
+    const char* name;
     crypto_kty_t kty;
     cose_group_t group;
     const hint_cose_group_t* hint_group;
@@ -817,7 +820,6 @@ typedef struct _hint_cose_algorithm_t {
         uint16 tsize;
         uint16 lsize;
     } enc;
-    // studying
 } hint_cose_algorithm_t;
 
 typedef struct _hint_curves_t {

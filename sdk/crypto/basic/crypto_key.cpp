@@ -290,19 +290,24 @@ return_t crypto_key::generate(crypto_kty_t type, unsigned int param, const char*
                 case 25519:
                     if (use & crypto_use_t::use_enc) {
                         nid = NID_X25519;
-                    } else {
+                        ret = keyset.add_ec(this, kid, nid, use);
+                    }
+                    if (use & crypto_use_t::use_sig) {
                         nid = NID_ED25519;
+                        ret = keyset.add_ec(this, kid, nid, use);
                     }
                     break;
                 case 448:
                     if (use & crypto_use_t::use_enc) {
                         nid = NID_X448;
-                    } else {
+                        ret = keyset.add_ec(this, kid, nid, use);
+                    }
+                    if (use & crypto_use_t::use_sig) {
                         nid = NID_ED448;
+                        ret = keyset.add_ec(this, kid, nid, use);
                     }
                     break;
             }
-            ret = keyset.add_ec(this, kid, nid, use);
         } else {
             ret = errorcode_t::not_supported;
         }
@@ -320,98 +325,8 @@ enum {
     SEARCH_ALT = 0x8,
 };
 
-static bool find_discriminant(crypto_key_object item, const char* kid, jwa_t alg, crypto_kty_t kt, crypto_kty_t alt, crypto_use_t use, uint32 flags) {
-    bool ret = false;
-
-    __try2 {
-        bool cond_use = false;
-        bool cond_alg = false;
-        bool cond_kid = false;
-        bool cond_kty = false;
-        bool cond_alt = false;
-
-        cond_use = (item.get_use() & use);
-        if (false == cond_use) {
-            __leave2;
-        }
-        if (SEARCH_KID & flags) {
-            cond_kid = (kid && (0 == strcmp(item.get_kid(), kid)));
-            if (false == cond_kid) {
-                __leave2;
-            }
-        }
-        if (SEARCH_ALG & flags) {
-            crypto_advisor* advisor = crypto_advisor::get_instance();
-            cond_alg = advisor->is_kindof(item.get_pkey(), alg);
-            if (false == cond_alg) {
-                __leave2;
-            }
-        }
-        if (SEARCH_KTY & flags) {
-            cond_kty = (kt && is_kindof(item.get_pkey(), kt));
-            cond_alt = (alt && is_kindof(item.get_pkey(), alt));
-            if ((false == cond_kty) && (false == cond_alt)) {
-                __leave2;
-            }
-        }
-
-        ret = true;
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-static bool find_discriminant(crypto_key_object item, const char* kid, crypt_sig_t alg, crypto_kty_t kt, crypto_kty_t alt, crypto_use_t use, uint32 flags) {
-    bool ret = false;
-
-    __try2 {
-        bool cond_use = false;
-        bool cond_alg = false;
-        bool cond_kid = false;
-        bool cond_kty = false;
-
-        cond_use = (item.get_use() & use);
-        if (false == cond_use) {
-            __leave2;
-        }
-        if (SEARCH_KID & flags) {
-            cond_kid = (kid && (0 == strcmp(item.get_kid(), kid)));
-            if (false == cond_kid) {
-                __leave2;
-            }
-        }
-        if (SEARCH_ALG & flags) {
-            crypto_advisor* advisor = crypto_advisor::get_instance();
-            cond_alg = advisor->is_kindof(item.get_pkey(), alg);
-            if (false == cond_alg) {
-                __leave2;
-            }
-        }
-        if (SEARCH_KTY & flags) {
-            cond_kty = (kt && is_kindof(item.get_pkey(), kt));
-            if (false == cond_kty) {
-                if (crypto_kty_t::kty_unknown == alt) {
-                    __leave2;
-                } else {
-                    cond_kty = (kt && is_kindof(item.get_pkey(), alt));
-                    if (false == cond_kty) {
-                        __leave2;
-                    }
-                }
-            }
-        }
-
-        ret = true;
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-static bool find_discriminant(crypto_key_object item, const char* kid, jws_t alg, crypto_kty_t kt, crypto_kty_t alt, crypto_use_t use, uint32 flags) {
+template <typename ALGORITHM>
+bool find_discriminant(crypto_key_object item, const char* kid, ALGORITHM alg, crypto_kty_t kt, crypto_kty_t alt, crypto_use_t use, uint32 flags) {
     bool ret = false;
 
     __try2 {
@@ -467,14 +382,21 @@ static bool find_discriminant(crypto_key_object item, const char* kid, const cha
         if (alg) {
             const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm(alg);
             if (alg_info) {
-                ret = find_discriminant(item, kid, (jwa_t)alg_info->type, kt, alt, use, flags);
+                ret = find_discriminant<jwa_t>(item, kid, (jwa_t)alg_info->type, kt, alt, use, flags);
                 if (ret) {
                     __leave2;
                 }
             }
             const hint_signature_t* sig_info = advisor->hintof_jose_signature(alg);
             if (sig_info) {
-                ret = find_discriminant(item, kid, sig_info->jws_type, kt, alt, use, flags);
+                ret = find_discriminant<jws_t>(item, kid, sig_info->jws_type, kt, alt, use, flags);
+                if (ret) {
+                    __leave2;
+                }
+            }
+            const hint_cose_algorithm_t* cose_info = advisor->hintof_cose_algorithm(alg);
+            if (cose_info) {
+                ret = find_discriminant<cose_alg_t>(item, kid, cose_info->alg, kt, alt, use, flags);
                 if (ret) {
                     __leave2;
                 }
@@ -850,6 +772,41 @@ const EVP_PKEY* crypto_key::select(std::string& kid, jws_t sig, crypto_use_t use
         for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
             crypto_key_object& item = iter->second;
             bool test = find_discriminant(item, nullptr, sig, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
+            if (test) {
+                ret_value = item.get_pkey();
+                kid = item.get_kid();
+                break;
+            }
+        }
+        if (nullptr == ret_value) {
+            __leave2;
+        }
+        if (up_ref) {
+            EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
+        }
+    }
+    __finally2 { _lock.leave(); }
+    return ret_value;
+}
+
+const EVP_PKEY* crypto_key::select(std::string& kid, cose_alg_t alg, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        kid.clear();
+
+        _lock.enter();
+
+        const hint_cose_algorithm_t* alg_info = advisor->hintof_cose_algorithm(alg);
+        if (nullptr == alg_info) {
+            __leave2;
+        }
+
+        crypto_key_map_t::iterator iter;
+        for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
+            crypto_key_object& item = iter->second;
+            bool test = find_discriminant(item, nullptr, alg, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
             if (test) {
                 ret_value = item.get_pkey();
                 kid = item.get_kid();
