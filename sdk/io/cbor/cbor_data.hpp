@@ -56,6 +56,8 @@ class cbor_data : public cbor_object {
     cbor_data(fp16_t const& value);
     cbor_data(float value);
     cbor_data(double value);
+    cbor_data(variant_t& vt);
+    cbor_data(const variant_t& vt);
     cbor_data(variant& vt);
     cbor_data(const variant& vt);
     virtual ~cbor_data();

@@ -36,38 +36,42 @@ enum vartype_t {
     TYPE_BYTE = 4,
     TYPE_UINT8 = TYPE_BYTE,
 
-    TYPE_SHORT = 5,
-    TYPE_INT16 = TYPE_SHORT,
-    TYPE_SINT16 = TYPE_SHORT,
+    TYPE_INT16 = 5,
+    TYPE_SHORT = TYPE_INT16,
+    TYPE_SINT16 = TYPE_INT16,
 
-    TYPE_USHORT = 6,
-    TYPE_WORD = TYPE_USHORT,
-    TYPE_UINT16 = TYPE_USHORT,
+    TYPE_UINT16 = 6,
+    TYPE_USHORT = TYPE_UINT16,
+    TYPE_WORD = TYPE_UINT16,
 
     TYPE_INT32 = 7,
     TYPE_SINT32 = TYPE_INT32,
 
-    TYPE_ULONG = 8,
-    TYPE_UINT = 8,
-    TYPE_DWORD = TYPE_ULONG,
-    TYPE_UINT32 = TYPE_ULONG,
+    TYPE_UINT32 = 8,
+    TYPE_DWORD = TYPE_UINT32,
 
     TYPE_INT64 = 9,
     TYPE_SINT64 = TYPE_INT64,
-    TYPE_LONGLONG = TYPE_INT64,
 
-    TYPE_ULONGLONG = 10,
-    TYPE_UINT64 = TYPE_ULONGLONG,
+    TYPE_UINT64 = 10,
+
+    TYPE_INT = TYPE_INT32,
+    TYPE_UINT = TYPE_UINT32,
+    TYPE_LONGLONG = TYPE_INT64,
+    TYPE_ULONGLONG = TYPE_UINT64,
+
 #if defined __linux__
 #if __WORDSIZE == 32
     TYPE_LONG = TYPE_INT32,
+    TYPE_ULONG = TYPE_UINT32,
 #elif __WORDSIZE == 64
     TYPE_LONG = TYPE_INT64,
+    TYPE_ULONG = TYPE_UINT64,
 #endif
 #elif defined _WIN32 || defined _WIN64
     TYPE_LONG = TYPE_INT32,
+    TYPE_ULONG = TYPE_UINT32,
 #endif
-    TYPE_INT = TYPE_INT32,
 
     TYPE_INT128 = 11,
     TYPE_UINT128 = 12,
@@ -279,10 +283,12 @@ class variant {
     variant& set_nstr_new(const char* value, size_t n);
     variant& set_binary_new(binary_t const& bin);
 
-    int to_int();
-    return_t to_binary(binary_t& target);
-    return_t to_string(std::string& target);
+    int to_int() const;
+    return_t to_binary(binary_t& target) const;
+    return_t to_string(std::string& target) const;
 
+    variant& copy(variant_t const& value);
+    variant& move(variant_t& value);
     variant& copy(const variant& source);
     variant& move(variant& source);
     variant& operator=(const variant& source);

@@ -171,8 +171,8 @@ class crypto_key {
      *          key.generate (crypto_kty_t::kty_ec,   256,   "kid", crypto_use_t::use_any); // EC, P-256
      *          key.generate (crypto_kty_t::kty_ec,   384,   "kid", crypto_use_t::use_any); // EC, P-384
      *          key.generate (crypto_kty_t::kty_ec,   521,   "kid", crypto_use_t::use_any); // EC, P-521
-     *          key.generate (crypto_kty_t::kty_okp,  25519, "kid", crypto_use_t::use_any); // OKP, X25519 *
-     *          key.generate (crypto_kty_t::kty_okp,  448,   "kid", crypto_use_t::use_any); // OKP, X448 *
+     *          key.generate (crypto_kty_t::kty_okp,  25519, "kid", crypto_use_t::use_any); // OKP, X25519 and Ed25519
+     *          key.generate (crypto_kty_t::kty_okp,  448,   "kid", crypto_use_t::use_any); // OKP, X448 and Ed448
      *          key.generate (crypto_kty_t::kty_okp,  25519, "kid", crypto_use_t::use_enc); // OKP, X25519
      *          key.generate (crypto_kty_t::kty_okp,  448,   "kid", crypto_use_t::use_enc); // OKP, X448
      *          key.generate (crypto_kty_t::kty_okp,  25519, "kid", crypto_use_t::use_sig); // OKP, Ed25519
@@ -258,6 +258,14 @@ class crypto_key {
      * @param bool up_ref [inopt]
      */
     const EVP_PKEY* select(std::string& kid, jws_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    /**
+     * @brief find
+     * @param std::string& kid [out]
+     * @param cose_alg_t alg [in]
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
+     * @param bool up_ref [inopt]
+     */
+    const EVP_PKEY* select(std::string& kid, cose_alg_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief find
      * @param const char* kid [in]

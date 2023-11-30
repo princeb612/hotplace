@@ -309,9 +309,9 @@ variant& variant::set_binary_new(binary_t const& bin) {
     return *this;
 }
 
-int variant::to_int() { return t_variant_to_int<int>(_vt); }
+int variant::to_int() const { return t_variant_to_int<int>(_vt); }
 
-return_t variant::to_binary(binary_t& target) {
+return_t variant::to_binary(binary_t& target) const {
     return_t ret = errorcode_t::success;
 
     if (TYPE_BINARY == _vt.type) {
@@ -322,7 +322,7 @@ return_t variant::to_binary(binary_t& target) {
     }
     return ret;
 }
-return_t variant::to_string(std::string& target) {
+return_t variant::to_string(std::string& target) const {
     return_t ret = errorcode_t::success;
 
     if (_vt.data.str) {
@@ -350,27 +350,27 @@ return_t variant::to_string(std::string& target) {
     return ret;
 }
 
-variant& variant::copy(const variant& source) {
+variant& variant::copy(variant_t const& value) {
     __try2 {
         reset();
 
-        if (variant_flag_t::flag_free & source._vt.flag) {
-            switch (source._vt.type) {
+        if (variant_flag_t::flag_free & value.flag) {
+            switch (value.type) {
                 case TYPE_BINARY:
-                    set_bstr_new(source._vt.data.bstr, source._vt.size);
+                    set_bstr_new(value.data.bstr, value.size);
                     break;
                 case TYPE_NSTRING:
-                    set_nstr_new(source._vt.data.str, source._vt.size);
+                    set_nstr_new(value.data.str, value.size);
                     break;
                 case TYPE_STRING:
-                    set_str_new(source._vt.data.str);
+                    set_str_new(value.data.str);
                     break;
                 default:
                     throw;
                     break;
             }
         } else {
-            memcpy(&_vt, &source._vt, sizeof(variant_t));
+            memcpy(&_vt, &value, sizeof(variant_t));
         }
     }
     __finally2 {
@@ -379,14 +379,18 @@ variant& variant::copy(const variant& source) {
     return *this;
 }
 
-variant& variant::move(variant& source) {
+variant& variant::move(variant_t& value) {
     reset();
 
-    memcpy(&_vt, &source._vt, sizeof(variant_t));  // copy including type and flag
-    memset(&source._vt, 0, sizeof(variant_t));
+    memcpy(&_vt, &value, sizeof(variant_t));  // copy including type and flag
+    memset(&value, 0, sizeof(variant_t));
 
     return *this;
 }
+
+variant& variant::copy(const variant& source) { return copy(source._vt); }
+
+variant& variant::move(variant& source) { return move(source._vt); }
 
 variant& variant::operator=(const variant& source) { return copy(source); }
 

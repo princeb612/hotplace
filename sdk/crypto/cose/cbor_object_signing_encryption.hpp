@@ -26,6 +26,11 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
+enum cose_mode_t {
+    cose_mode_recv = 0,  // decrypt, verifysign, verifymac
+    cose_mode_send = 1,  // encrypt, sign, createmac
+};
+
 class cbor_object_signing_encryption {
     friend class cbor_object_encryption;
     friend class cbor_object_signing;
@@ -70,44 +75,14 @@ class cbor_object_signing_encryption {
      * @brief   encrypt ("Encrypt0")
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   cose_alg_t method [in] must specify an encryption algoritm (see cose_group_enc_aesgcm/cose_group_enc_aesccm)
+     * @param   std::list<cose_alg_t>& algs [in]
      * @param   binary_t const& input [in]
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      * @example
      *          encrypt (handle, key, cose_aes128gcm, input, output);
      */
-    return_t encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
-    /**
-     * @brief   encrypt ("Encrypt")
-     * @param   cose_context_t* handle [in]
-     * @param   crypto_key* key [in]
-     * @param   std::list<cose_alg_t> methods [in] at least one encryption algorithm
-     * @param   binary_t const& input [in]
-     * @param   binary_t& output [out]
-     * @return  error code (see error.hpp)
-     * @example
-     *          algs.push_back(cose_aes256gcm); // one of cose_group_enc_xxx
-     *          algs.push_back(cose_group_key_ecdhss_hmac); // cose_group_key_xxx
-     *          encrypt (handle, key, algs, input, output);
-     */
-    return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output);
-    /**
-     * @brief   encrypt
-     * @param   cose_context_t* handle [in]
-     * @param   crypto_key* key [in]
-     * @param   cose_alg_t* methods [in]
-     * @param   size_t size_method [in]
-     * @param   binary_t const& input [in]
-     * @param   binary_t& output [out]
-     * @return  error code (see error.hpp)
-     * @example
-     *          cose_alg_t algs[] = { cose_aesccm_16_64_256 };
-     *          cose.encrypt (handle, key, algs, 1, input, output);
-     *          cose_alg_t algs2[] = { cose_aesccm_64_64_256, cose_group_key_ecdhss_hmac, cose_group_key_hkdf_aes, };
-     *          encrypt (handle, key, algs2, 2, input, output);
-     */
-    return_t encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t* methods, size_t size_method, binary_t const& input, binary_t& output);
+    return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, binary_t& output);
     /**
      * @brief   decrypt
      * @param   cose_context_t* handle [in]
@@ -144,16 +119,6 @@ class cbor_object_signing_encryption {
      * @brief   mac
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   cose_alg_t method [in]
-     * @param   binary_t const& input [in]
-     * @param   binary_t& output [out]
-     * @return  error code (see error.hpp)
-     */
-    return_t mac(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
-    /**
-     * @brief   mac
-     * @param   cose_context_t* handle [in]
-     * @param   crypto_key* key [in]
      * @param   std::list<cose_alg_t> methods [in]
      * @param   binary_t const& input [in]
      * @param   binary_t& output [out]
@@ -171,10 +136,25 @@ class cbor_object_signing_encryption {
      */
     return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
 
-    return_t process(cose_context_t* handle, crypto_key* key, binary_t const& cbor, binary_t& output);
+    /**
+     * @brief process
+     * @param cose_context_t* handle [in]
+     * @param crypto_key* key [in]
+     * @param binary_t const& input [in]
+     * @param binary_t& output [out]
+     * @return  error code (see error.hpp)
+     * @examples
+     *          cose_context_t* handle = nullptr;
+     *          cose.open(&handle);
+     *          cose.process(handle, key, cbor, output); // decrypt, verifysign, verifymac (tagged/untagged)
+     *          cose.close(handle);
+     */
+    return_t process(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, cose_mode_t mode = cose_mode_t::cose_mode_recv);
 
    protected:
-    return_t subprocess(cose_context_t* handle, crypto_key* key, cose_layer* layer, int mode);
+    return_t subprocess(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
+    return_t preprocess(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category, binary_t const& input);
+    return_t preprocess_dorandom(cose_context_t* handle, crypto_key* key, cose_layer* layer);
 
     return_t compose_kdf_context(cose_context_t* handle, cose_layer* layer, binary_t& kdf_context);
     cbor_data* compose_kdf_context_item(cose_context_t* handle, cose_layer* layer, cose_key_t key, cose_param_t param);
@@ -183,18 +163,14 @@ class cbor_object_signing_encryption {
     return_t compose_mac_context(cose_context_t* handle, cose_layer* layer, binary_t& tomac);
 
     return_t preprocess_keyagreement(cose_context_t* handle, crypto_key* key, cose_layer* layer);
-    return_t process_keyagreement(cose_context_t* handle, crypto_key* key, cose_layer* layer, bool docrypt);
+    return_t process_keyagreement(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
 
-    return_t doencrypt(cose_context_t* handle, crypto_key* key, cose_layer* layer);
-    return_t dosign(cose_context_t* handle, crypto_key* key, cose_layer* layer);
-    return_t docreatemac(cose_context_t* handle, crypto_key* key, cose_layer* layer);
-
-    return_t dodecrypt(cose_context_t* handle, crypto_key* key, cose_layer* layer);
-    return_t doverifysign(cose_context_t* handle, crypto_key* key, cose_layer* layer);
-    return_t doverifymac(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+    return_t docrypt(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
+    return_t dosign(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
+    return_t domac(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
 
    private:
-    typedef return_t (cbor_object_signing_encryption::*subprocess_handler)(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+    typedef return_t (cbor_object_signing_encryption::*subprocess_handler)(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
     std::map<cbor_tag_t, subprocess_handler> _handlermap;
     bool _builtmap;
 };
