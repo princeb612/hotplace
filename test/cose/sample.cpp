@@ -1401,7 +1401,7 @@ void test_eckey_compressed() {
     _test_case.assert(test, __FUNCTION__, "EC compressed");
 }
 
-void test_sign(crypto_key* key, std::list<cose_alg_t> const& algs, binary_t const& input, const char* text) {
+void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, const char* text) {
     _test_case.begin("sign");
 
     return_t ret = errorcode_t::success;
@@ -1430,29 +1430,25 @@ void test_sign(crypto_key* key, std::list<cose_alg_t> const& algs, binary_t cons
     _test_case.test(ret, __FUNCTION__, "verifysign %s", text);
 }
 
-void test_encrypt(crypto_key* key) {
+void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, const char* text) {
     _test_case.begin("encrypt");
 
     return_t ret = errorcode_t::success;
     OPTION& option = _cmdline->value();
     cose_context_t* handle = nullptr;
     cbor_object_signing_encryption cose;
-    std::list<cose_alg_t> algs;
-    binary_t input = convert("hello world");
     binary_t cbor;
     binary_t dummy;
     cose.open(&handle);
     if (option.debug) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
-    algs.push_back(cose_alg_t::cose_aes128gcm);
-    algs.push_back(cose_alg_t::cose_ecdhes_a128kw);
     ret = cose.encrypt(handle, key, algs, input, cbor);
     if (option.debug) {
         printf("%s\n", base16_encode(cbor).c_str());
     }
     cose.close(handle);
-    _test_case.test(ret, __FUNCTION__, "encrypt");
+    _test_case.test(ret, __FUNCTION__, "encrypt %s", text);
 
     cose.open(&handle);
     if (option.debug) {
@@ -1460,10 +1456,10 @@ void test_encrypt(crypto_key* key) {
     }
     ret = cose.process(handle, key, cbor, dummy);
     cose.close(handle);
-    _test_case.test(ret, __FUNCTION__, "decrypt");
+    _test_case.test(ret, __FUNCTION__, "decrypt %s", text);
 }
 
-void test_mac(crypto_key* key, std::list<cose_alg_t> const& algs, binary_t const& input, const char* text) {
+void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, const char* text) {
     _test_case.begin("mac");
 
     return_t ret = errorcode_t::success;
@@ -1618,6 +1614,10 @@ int main(int argc, char** argv) {
         std::list<cose_alg_t> algs;
         size_t i = 0;
         size_t j = 0;
+        cose_alg_t enc_algs[] = {
+            cose_aes128gcm,        cose_aes192gcm,         cose_aes256gcm,         cose_aesccm_16_64_128,  cose_aesccm_16_64_256,  cose_aesccm_64_64_128,
+            cose_aesccm_64_64_256, cose_aesccm_16_128_128, cose_aesccm_16_128_256, cose_aesccm_64_128_128, cose_aesccm_64_128_256,
+        };
         cose_alg_t sign_algs[] = {
             cose_es256, cose_es384, cose_es512, cose_eddsa, cose_ps256, cose_ps384, cose_ps512, cose_es256k, cose_rs256, cose_rs384, cose_rs512, cose_rs1,
         };
@@ -1637,15 +1637,27 @@ int main(int argc, char** argv) {
             test_sign(&key, algs, input, text.c_str());
         }
 
-        // test_encrypt(&key);
-
-        for (i = 0; i < RTL_NUMBER_OF(mac_algs); i++) {
-            algs.clear();
-            cose_alg_t alg = mac_algs[i];
-            algs.push_back(alg);
+        for (i = 0; i < RTL_NUMBER_OF(enc_algs); i++) {
+            cose_alg_t alg = enc_algs[i];
 
             for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
+                algs.clear();
                 cose_alg_t keyalg = key_algs[j];
+                algs.push_back(alg);
+                algs.push_back(keyalg);
+
+                std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
+                test_encrypt(&key, algs, input, text.c_str());
+            }
+        }
+
+        for (i = 0; i < RTL_NUMBER_OF(mac_algs); i++) {
+            cose_alg_t alg = mac_algs[i];
+
+            for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
+                algs.clear();
+                cose_alg_t keyalg = key_algs[j];
+                algs.push_back(alg);
                 algs.push_back(keyalg);
 
                 std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));

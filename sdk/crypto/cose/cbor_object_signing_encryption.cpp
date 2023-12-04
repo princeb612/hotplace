@@ -193,7 +193,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
     return ret;
 }
 
-return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> algs, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -223,7 +223,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
     return ret;
 }
 
-return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> algs, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle || nullptr == key) {
@@ -557,19 +557,6 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
             prng.random(temp, 16);
             layer->get_unprotected().add(cose_key_t::cose_salt, temp);
         }
-        // if (cose_hint_flag_t::cose_hint_kek & flags) {
-        //     openssl_crypt crypt;
-        //     binary_t kek;
-        //     binary_t kwiv;
-        //     kwiv.resize(8);
-        //     memset(&kwiv[0], 0xa6, kwiv.size());
-        //     const char* enc_alg = hint->enc.algname;
-        //
-        //     uint32 ksize = hint->enc.ksize ? hint->enc.ksize : 32;
-        //     prng.random(temp, ksize);
-        //     crypt.encrypt(enc_alg, kek, kwiv, temp, kek);
-        //     layer->get_payload().set(kek);
-        // }
         if ((cose_hint_flag_t::cose_hint_epk | cose_hint_static_key) & flags) {
             crypto_key statickey;
             binary_t bin_x;
@@ -1331,11 +1318,12 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
         } else if (cose_group_t::cose_group_enc_aesccm == group) {
             // RFC 8152 10.2.  AES CCM - explains about L and M parameters
             encrypt_option_t options[] = {
+                {crypt_ctrl_t::crypt_ctrl_tsize, hint->enc.tsize},
                 {crypt_ctrl_t::crypt_ctrl_lsize, hint->enc.lsize},
                 {},
             };
             if (mode) {
-                ret = crypt.decrypt(hint->enc.algname, cek, iv, input, ciphertext, aad, tag, options);
+                ret = crypt.encrypt(hint->enc.algname, cek, iv, input, ciphertext, aad, tag, options);
             } else {
                 size_t enc_size = 0;
                 split(payload, enc_size, tag, hint->enc.tsize);
