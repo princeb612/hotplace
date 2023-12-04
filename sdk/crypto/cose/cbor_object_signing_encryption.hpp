@@ -108,23 +108,23 @@ class cbor_object_signing_encryption {
      * @brief   sign
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   std::list<cose_alg_t> methods [in]
+     * @param   std::list<cose_alg_t>& methods [in]
      * @param   binary_t const& input [in]
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing::sign
      */
-    return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output);
+    return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& methods, binary_t const& input, binary_t& output);
     /**
      * @brief   mac
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   std::list<cose_alg_t> methods [in]
+     * @param   std::list<cose_alg_t>& methods [in]
      * @param   binary_t const& input [in]
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      */
-    return_t mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output);
+    return_t mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& methods, binary_t const& input, binary_t& output);
     /**
      * @brief   verify with kid
      * @param   cose_context_t* handle [in]
