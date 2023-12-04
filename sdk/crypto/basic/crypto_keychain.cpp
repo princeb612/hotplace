@@ -469,11 +469,8 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const c
         int type = 0;
         switch (nid) {
             case NID_X9_62_prime256v1:
-                type = EVP_PKEY_EC;
-                break;
+            case NID_secp256k1:
             case NID_secp384r1:
-                type = EVP_PKEY_EC;
-                break;
             case NID_secp521r1:
                 type = EVP_PKEY_EC;
                 break;

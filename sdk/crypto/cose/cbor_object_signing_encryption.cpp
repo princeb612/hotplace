@@ -168,6 +168,10 @@ return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_
         if (errorcode_t::success != ret) {
             __leave2;
         }
+
+        cbor_array* root = nullptr;
+        handle->composer->compose(&root, output);
+        root->release();
     }
     __finally2 {
         // do nothing
@@ -400,6 +404,7 @@ return_t cbor_object_signing_encryption::subprocess(cose_context_t* handle, cryp
 return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category,
                                                     binary_t const& input) {
     return_t ret = errorcode_t::success;
+    return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -479,6 +484,7 @@ return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, cryp
         // random
         cose_recipients& recipients1 = body.get_recipients();
 
+        std::set<return_t> results;
         size_t size_recipients1 = recipients1.size();
         if (size_recipients1) {
             for (size_t index1 = 0; index1 < size_recipients1; index1++) {
@@ -487,13 +493,28 @@ return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, cryp
                 size_t size_recipients2 = recipients2.size();
                 for (size_t index2 = 0; index2 < size_recipients2; index2++) {
                     cose_layer* layer2 = recipients2[index2];
-                    ret = preprocess_dorandom(handle, key, layer2);
+                    check = preprocess_dorandom(handle, key, layer2);
+                    results.insert(check);
                 }
-                ret = preprocess_dorandom(handle, key, layer1);
+                check = preprocess_dorandom(handle, key, layer1);
+                results.insert(check);
             }
-            ret = preprocess_dorandom(handle, key, &body);
+            check = preprocess_dorandom(handle, key, &body);
+            results.insert(check);
         } else {
-            ret = preprocess_dorandom(handle, key, &body);
+            check = preprocess_dorandom(handle, key, &body);
+            results.insert(check);
+        }
+
+        if (1 == results.size()) {
+            ret = *results.begin();
+        } else {
+            std::set<return_t>::iterator iter = results.find(errorcode_t::not_supported);
+            if (results.end() == iter) {
+                ret = errorcode_t::failed;
+            } else {
+                ret = errorcode_t::not_supported;
+            }
         }
     }
     __finally2 {
@@ -536,10 +557,34 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
             prng.random(temp, 16);
             layer->get_unprotected().add(cose_key_t::cose_salt, temp);
         }
-        if (cose_hint_flag_t::cose_hint_kek & flags) {
-            uint32 ksize = hint->enc.ksize ? hint->enc.ksize : 32;
-            prng.random(temp, ksize);
-            layer->get_payload().set(temp);
+        // if (cose_hint_flag_t::cose_hint_kek & flags) {
+        //     openssl_crypt crypt;
+        //     binary_t kek;
+        //     binary_t kwiv;
+        //     kwiv.resize(8);
+        //     memset(&kwiv[0], 0xa6, kwiv.size());
+        //     const char* enc_alg = hint->enc.algname;
+        //
+        //     uint32 ksize = hint->enc.ksize ? hint->enc.ksize : 32;
+        //     prng.random(temp, ksize);
+        //     crypt.encrypt(enc_alg, kek, kwiv, temp, kek);
+        //     layer->get_payload().set(kek);
+        // }
+        if ((cose_hint_flag_t::cose_hint_epk | cose_hint_static_key) & flags) {
+            crypto_key statickey;
+            binary_t bin_x;
+            binary_t bin_y;
+            uint16 curve = hint->eckey.curve;
+            cose_key_t cosekey = cose_key_t::cose_key_unknown;
+            if (cose_hint_flag_t::cose_hint_epk & flags) {
+                cosekey = cose_ephemeral_key;  // -1
+            }
+            if (cose_hint_static_key & flags) {
+                cosekey = cose_static_key;  // -2
+            }
+            statickey.generate_cose(cose_kty_t::cose_kty_ec2, curve, nullptr);
+            statickey.get_public_key(statickey.any(), bin_x, bin_y);
+            layer->get_unprotected().add(cosekey, curve, bin_x, bin_y);
         }
     }
     __finally2 {
@@ -972,7 +1017,10 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
             __leave2;
         }
 
-        preprocess_keyagreement(handle, key, layer);
+        ret = preprocess_keyagreement(handle, key, layer);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         cose_alg_t alg = layer->get_algorithm();
         std::string kid = layer->get_kid();
@@ -1005,6 +1053,7 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
             openssl_crypt crypt;
             openssl_hash hash;
             openssl_kdf kdf;
+            openssl_prng prng;
 
             kwiv.resize(8);
             memset(&kwiv[0], 0xa6, kwiv.size());
@@ -1041,7 +1090,7 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
 
                 // using context structure to transform the shared secret into the CEK
                 // either the 'salt' parameter of HKDF ot the 'PartyU nonce' parameter of the context structure MUST be present.
-                kdf.hmac_kdf(cek, digest_alg, dgst_klen, secret, salt, context);
+                ret = kdf.hmac_kdf(cek, digest_alg, dgst_klen, secret, salt, context);
                 // CEK solved
             } else if (cose_group_t::cose_group_key_hkdf_aes == group) {
                 compose_kdf_context(handle, layer, context);
@@ -1051,15 +1100,22 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
                 //      HKDF AES-MAC-128, AES-CBC-MAC-128, HKDF using AES-MAC as the PRF w/ 128-bit key
                 //      HKDF AES-MAC-256, AES-CBC-MAC-256, HKDF using AES-MAC as the PRF w/ 256-bit key
 
-                kdf.hkdf_expand_aes_rfc8152(cek, digest_alg, dgst_klen, secret, context);
+                ret = kdf.hkdf_expand_aes_rfc8152(cek, digest_alg, dgst_klen, secret, context);
             } else if (cose_group_t::cose_group_key_aeskw == group) {
                 kek = secret;
                 binary_t payload;
-                layer->get_payload().get(payload);
+                // layer->get_payload().get(payload);
+                // ret = crypt.decrypt(enc_alg, kek, kwiv, payload, cek);
                 if (mode) {
-                    crypt.encrypt(enc_alg, kek, kwiv, payload, cek);
+                    uint32 ksize = hint->enc.ksize ? hint->enc.ksize : 32;
+                    binary_t temp;
+                    prng.random(cek, ksize);
+
+                    ret = crypt.encrypt(enc_alg, kek, kwiv, cek, temp);
+                    layer->get_payload().set(temp);
                 } else {
-                    crypt.decrypt(enc_alg, kek, kwiv, payload, cek);
+                    layer->get_payload().get(payload);
+                    ret = crypt.decrypt(enc_alg, kek, kwiv, payload, cek);
                 }
             } else if ((cose_group_t::cose_group_key_ecdhes_hmac == group) || (cose_group_t::cose_group_key_ecdhss_hmac == group)) {
                 // RFC 8152 12.4.1. ECDH
@@ -1069,7 +1125,7 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
                 compose_kdf_context(handle, layer, context);
 
                 salt.resize(digest_dlen);
-                kdf.hmac_kdf(cek, digest_alg, dgst_klen, secret, salt, context);
+                ret = kdf.hmac_kdf(cek, digest_alg, dgst_klen, secret, salt, context);
             } else if ((cose_group_t::cose_group_key_ecdhes_aeskw == group) || (cose_group_t::cose_group_key_ecdhss_aeskw == group)) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
@@ -1082,11 +1138,16 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
 
                 // 12.5.  Key Agreement with Key Wrap
                 binary_t payload;
-                layer->get_payload().get(payload);
                 if (mode) {
-                    crypt.encrypt(enc_alg, kek, kwiv, payload, cek);
+                    uint32 ksize = hint->enc.ksize ? hint->enc.ksize : 32;
+                    binary_t temp;
+                    prng.random(cek, ksize);
+
+                    ret = crypt.encrypt(enc_alg, kek, kwiv, cek, temp);
+                    layer->get_payload().set(temp);
                 } else {
-                    crypt.decrypt(enc_alg, kek, kwiv, payload, cek);
+                    layer->get_payload().get(payload);
+                    ret = crypt.decrypt(enc_alg, kek, kwiv, payload, cek);
                 }
             } else if (cose_group_t::cose_group_key_rsa_oaep == group) {
                 crypt_enc_t encmode;
@@ -1105,11 +1166,15 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
                 }
                 const EVP_PKEY* pkey = keychain.choose(key, kid, kty, check);
                 binary_t payload;
-                layer->get_payload().get(payload);
                 if (mode) {
-                    crypt.encrypt(pkey, payload, cek, encmode);
+                    uint32 ksize = hint->enc.ksize ? hint->enc.ksize : 32;
+                    binary_t temp;
+                    prng.random(cek, ksize);
+                    ret = crypt.encrypt(pkey, cek, temp, encmode);
+                    layer->get_payload().set(temp);
                 } else {
-                    crypt.decrypt(pkey, payload, cek, encmode);
+                    layer->get_payload().get(payload);
+                    ret = crypt.decrypt(pkey, payload, cek, encmode);
                 }
             }
 
@@ -1506,9 +1571,6 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
         const EVP_PKEY* pkey = nullptr;
         if (kid.size()) {
             pkey = key->find(kid.c_str(), hint->kty);
-            // } else {
-            //     std::string k;
-            //     pkey = key->select(k, hint->kty);
         }
 
         openssl_mac mac;

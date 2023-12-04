@@ -1401,26 +1401,25 @@ void test_eckey_compressed() {
     _test_case.assert(test, __FUNCTION__, "EC compressed");
 }
 
-void test_sign(crypto_key* key) {
+void test_sign(crypto_key* key, std::list<cose_alg_t> const& algs, binary_t const& input, const char* text) {
     _test_case.begin("sign");
 
     return_t ret = errorcode_t::success;
     OPTION& option = _cmdline->value();
     cose_context_t* handle = nullptr;
     cbor_object_signing_encryption cose;
-    std::list<cose_alg_t> algs;
-    binary_t input = convert("hello world");
     binary_t cbor;
     binary_t dummy;
     cose.open(&handle);
     if (option.debug) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
-    algs.push_back(cose_alg_t::cose_es512);
     ret = cose.sign(handle, key, algs, input, cbor);
-    printf("%s\n", base16_encode(cbor).c_str());
+    if (option.debug) {
+        printf("%s\n", base16_encode(cbor).c_str());
+    }
     cose.close(handle);
-    _test_case.test(ret, __FUNCTION__, "sign");
+    _test_case.test(ret, __FUNCTION__, "sign %s", text);
 
     cose.open(&handle);
     if (option.debug) {
@@ -1428,7 +1427,7 @@ void test_sign(crypto_key* key) {
     }
     ret = cose.process(handle, key, cbor, dummy);
     cose.close(handle);
-    _test_case.test(ret, __FUNCTION__, "verifysign");
+    _test_case.test(ret, __FUNCTION__, "verifysign %s", text);
 }
 
 void test_encrypt(crypto_key* key) {
@@ -1440,40 +1439,20 @@ void test_encrypt(crypto_key* key) {
     cbor_object_signing_encryption cose;
     std::list<cose_alg_t> algs;
     binary_t input = convert("hello world");
-    binary_t output;
-    cose.open(&handle);
-    if (option.debug) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
-    algs.push_back(cose_alg_t::cose_aes256gcm);
-    algs.push_back(cose_alg_t::cose_ecdhes_a256kw);
-    ret = cose.encrypt(handle, key, algs, input, output);
-    printf("%s\n", base16_encode(output).c_str());
-    cose.close(handle);
-    _test_case.test(ret, __FUNCTION__, "encrypt");
-}
-
-void test_mac(crypto_key* key) {
-    _test_case.begin("mac");
-
-    return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
-    cose_context_t* handle = nullptr;
-    cbor_object_signing_encryption cose;
-    std::list<cose_alg_t> algs;
-    binary_t input = convert("hello world");
     binary_t cbor;
     binary_t dummy;
     cose.open(&handle);
     if (option.debug) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
-    algs.push_back(cose_alg_t::cose_aesmac_256_64);
-    algs.push_back(cose_alg_t::cose_direct);
-    ret = cose.mac(handle, key, algs, input, cbor);
-    printf("%s\n", base16_encode(cbor).c_str());
+    algs.push_back(cose_alg_t::cose_aes128gcm);
+    algs.push_back(cose_alg_t::cose_ecdhes_a128kw);
+    ret = cose.encrypt(handle, key, algs, input, cbor);
+    if (option.debug) {
+        printf("%s\n", base16_encode(cbor).c_str());
+    }
     cose.close(handle);
-    _test_case.test(ret, __FUNCTION__, "mac");
+    _test_case.test(ret, __FUNCTION__, "encrypt");
 
     cose.open(&handle);
     if (option.debug) {
@@ -1481,7 +1460,36 @@ void test_mac(crypto_key* key) {
     }
     ret = cose.process(handle, key, cbor, dummy);
     cose.close(handle);
-    _test_case.test(ret, __FUNCTION__, "verifymac");
+    _test_case.test(ret, __FUNCTION__, "decrypt");
+}
+
+void test_mac(crypto_key* key, std::list<cose_alg_t> const& algs, binary_t const& input, const char* text) {
+    _test_case.begin("mac");
+
+    return_t ret = errorcode_t::success;
+    OPTION& option = _cmdline->value();
+    cose_context_t* handle = nullptr;
+    cbor_object_signing_encryption cose;
+    binary_t cbor;
+    binary_t dummy;
+    cose.open(&handle);
+    if (option.debug) {
+        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
+    }
+    ret = cose.mac(handle, key, algs, input, cbor);
+    if (option.debug) {
+        printf("%s\n", base16_encode(cbor).c_str());
+    }
+    cose.close(handle);
+    _test_case.test(ret, __FUNCTION__, "mac %s", text);
+
+    cose.open(&handle);
+    if (option.debug) {
+        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
+    }
+    ret = cose.process(handle, key, cbor, dummy);
+    cose.close(handle);
+    _test_case.test(ret, __FUNCTION__, "verifymac %s", text);
 }
 
 int main(int argc, char** argv) {
@@ -1594,16 +1602,56 @@ int main(int argc, char** argv) {
         _test_case.begin("key generation");
         crypto_key key;
 
-        key.generate(crypto_kty_t::kty_oct, 32, "kid", crypto_use_t::use_any);
-        key.generate(crypto_kty_t::kty_rsa, 2048, "kid", crypto_use_t::use_any);
-        key.generate(crypto_kty_t::kty_ec, 521, "kid", crypto_use_t::use_any);
-        key.generate(crypto_kty_t::kty_okp, 448, "kid", crypto_use_t::use_any);
+        key.generate_nid(crypto_kty_t::kty_oct, 32, "kid_symm", crypto_use_t::use_any);
+        key.generate_nid(crypto_kty_t::kty_rsa, 2048, "kid_rsa", crypto_use_t::use_any);
+        key.generate_nid(crypto_kty_t::kty_ec, NID_X9_62_prime256v1, "kid_ec256", crypto_use_t::use_any);
+        key.generate_nid(crypto_kty_t::kty_ec, NID_secp256k1, "kid_ec256k", crypto_use_t::use_any);
+        key.generate_nid(crypto_kty_t::kty_ec, NID_secp384r1, "kid_ec384", crypto_use_t::use_any);
+        key.generate_nid(crypto_kty_t::kty_ec, NID_secp521r1, "kid_ec521", crypto_use_t::use_any);
+        key.generate_nid(crypto_kty_t::kty_okp, NID_X25519, "kid_x25519", crypto_use_t::use_enc);
+        key.generate_nid(crypto_kty_t::kty_okp, NID_ED25519, "kid_ed25519", crypto_use_t::use_sig);
         key.for_each(dump_crypto_key, nullptr);
         _test_case.assert(true, __FUNCTION__, "key generation");
 
-        test_sign(&key);
-        test_encrypt(&key);
-        test_mac(&key);
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        binary_t input = convert("hello world");
+        std::list<cose_alg_t> algs;
+        size_t i = 0;
+        size_t j = 0;
+        cose_alg_t sign_algs[] = {
+            cose_es256, cose_es384, cose_es512, cose_eddsa, cose_ps256, cose_ps384, cose_ps512, cose_es256k, cose_rs256, cose_rs384, cose_rs512, cose_rs1,
+        };
+        cose_alg_t mac_algs[] = {
+            cose_hs256_64, cose_hs256, cose_hs384, cose_hs512, cose_aesmac_128_64, cose_aesmac_256_64, cose_aesmac_128_128, cose_aesmac_256_128,
+        };
+        cose_alg_t key_algs[] = {
+            cose_aes128kw,      cose_aes192kw,        cose_aes256kw,        cose_direct,          cose_hkdf_sha256,     cose_hkdf_sha512,   cose_hkdf_aes128,
+            cose_hkdf_aes256,   cose_ecdhes_hkdf_256, cose_ecdhes_hkdf_512, cose_ecdhss_hkdf_256, cose_ecdhss_hkdf_512, cose_ecdhes_a128kw, cose_ecdhes_a192kw,
+            cose_ecdhes_a256kw, cose_ecdhss_a128kw,   cose_ecdhss_a192kw,   cose_ecdhss_a256kw,   cose_rsaoaep1,        cose_rsaoaep256,    cose_rsaoaep512,
+        };
+        for (i = 0; i < RTL_NUMBER_OF(sign_algs); i++) {
+            algs.clear();
+            cose_alg_t alg = sign_algs[i];
+            algs.push_back(alg);
+            std::string text = format("%i(%s)", alg, advisor->nameof_cose_algorithm(alg));
+            test_sign(&key, algs, input, text.c_str());
+        }
+
+        // test_encrypt(&key);
+
+        for (i = 0; i < RTL_NUMBER_OF(mac_algs); i++) {
+            algs.clear();
+            cose_alg_t alg = mac_algs[i];
+            algs.push_back(alg);
+
+            for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
+                cose_alg_t keyalg = key_algs[j];
+                algs.push_back(keyalg);
+
+                std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
+                test_mac(&key, algs, input, text.c_str());
+            }
+        }
     }
 
     openssl_thread_cleanup();

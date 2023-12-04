@@ -68,7 +68,7 @@ class cose_data {
      * @brief key/value
      */
     cose_data& add_bool(int key, bool value);
-    cose_data& add(int key, int16 value);
+    cose_data& add(int key, int32 value);
     cose_data& add(int key, const char* value);
     cose_data& add(int key, const unsigned char* value, size_t size);
     cose_data& add(int key, std::string& value);
@@ -186,7 +186,7 @@ class cose_protected {
     /**
      * @brief add
      */
-    cose_protected& add(cose_key_t key, uint16 value);
+    cose_protected& add(cose_key_t key, uint32 value);
     /**
      * @brief set
      */
@@ -229,7 +229,7 @@ class cose_unprotected {
     /**
      * @brief add
      */
-    cose_unprotected& add(cose_key_t key, uint16 value);
+    cose_unprotected& add(cose_key_t key, int32 value);
     cose_unprotected& add(cose_key_t key, const char* value);
     cose_unprotected& add(cose_key_t key, std::string& value);
     cose_unprotected& add(cose_key_t key, std::string const& value);
@@ -237,6 +237,10 @@ class cose_unprotected {
     cose_unprotected& add(cose_key_t key, binary_t const& value);
     /**
      * @brief ephemeral key
+     * @param cose_key_t key [in] cose_key_t::cose_ephemeral_key
+     * @param uint16 curve [in]
+     * @param binary_t const& x [in]
+     * @param binary_t const& y [in]
      */
     cose_unprotected& add(cose_key_t key, uint16 curve, binary_t const& x, binary_t const& y);
     cose_unprotected& add(cose_key_t key, uint16 curve, binary_t const& x, bool ysign);

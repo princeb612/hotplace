@@ -519,39 +519,6 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode,
         hash.hash(hash_handle, &input[0], input.size(), hash_value);
         hash.close(hash_handle);
 
-        uint32 unitsize = 0;
-        // EC_KEY* ec = EVP_PKEY_get1_EC_KEY (pkey);
-        // const EC_GROUP* group = EC_KEY_get0_group (ec);
-        // int nid = EC_GROUP_get_curve_name (group);
-        // NID_X9_62_prime256v1
-        // NID_secp384r1
-        // NID_secp521r1
-        // EC_KEY_free (ec);
-
-        switch (mode) {
-            case hash_algorithm_t::sha1:
-                unitsize = 20;
-                break;
-            case hash_algorithm_t::sha2_224:
-                unitsize = 28;
-                break;
-            case hash_algorithm_t::sha2_256:
-                unitsize = 32;
-                break;  // (256 >> 3) = 32
-            case hash_algorithm_t::sha2_384:
-                unitsize = 48;
-                break;  // (384 >> 3) = 48
-            case hash_algorithm_t::sha2_512:
-                unitsize = 66;
-                break;  // (521 = (65 << 3) + 1), 66
-            case hash_algorithm_t::sha2_512_224:
-                unitsize = 28;
-                break;
-            case hash_algorithm_t::sha2_512_256:
-                unitsize = 32;
-                break;
-        }
-
         ecdsa_sig = ECDSA_SIG_new();
         if (nullptr == ecdsa_sig) {
             ret = errorcode_t::out_of_memory;

@@ -85,6 +85,15 @@ const hint_curve_t hint_curves[] = {
         "secp224r1",
         "wap-wsg-idm-ecid-wtls12",
     },
+    {
+        NID_secp256k1,
+        cose_ec_curve_t::cose_ec_secp256k1,  // RFC8812 ES256K, "secp256k1"
+        crypto_kty_t::kty_ec,
+        crypto_use_t::use_any,
+        nullptr,
+        "ansip256k1",
+        "secp256k1",
+    },
 
     // openssl-3.0
     {
