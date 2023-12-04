@@ -167,7 +167,9 @@ return_t crypto_advisor::build_if_necessary() {
         }
         for (i = 0; i < sizeof_hint_curves; i++) {
             const hint_curve_t* item = hint_curves + i;
-            _nid_bycurve_map.insert(std::make_pair(item->name, item));
+            if (item->name) {
+                _nid_bycurve_map.insert(std::make_pair(item->name, item));
+            }
             if (cose_ec_curve_t::cose_ec_unknown != item->cose_crv) {
                 _cose_curve_map.insert(std::make_pair(item->cose_crv, item));
             }
@@ -196,7 +198,8 @@ return_t crypto_advisor::build_if_necessary() {
             {crypt_sig_t::sig_es256, jws_t::jws_es256, cose_alg_t::cose_es256}, {crypt_sig_t::sig_es384, jws_t::jws_es384, cose_alg_t::cose_es384},
             {crypt_sig_t::sig_es512, jws_t::jws_es512, cose_alg_t::cose_es512}, {crypt_sig_t::sig_ps256, jws_t::jws_ps256, cose_alg_t::cose_ps256},
             {crypt_sig_t::sig_ps384, jws_t::jws_ps384, cose_alg_t::cose_ps384}, {crypt_sig_t::sig_ps512, jws_t::jws_ps512, cose_alg_t::cose_ps512},
-            {crypt_sig_t::sig_eddsa, jws_t::jws_eddsa, cose_alg_t::cose_eddsa},
+            {crypt_sig_t::sig_eddsa, jws_t::jws_eddsa, cose_alg_t::cose_eddsa}, {crypt_sig_t::sig_es256k, jws_t::jws_unknown, cose_alg_t::cose_es256k},
+            {crypt_sig_t::sig_rs1, jws_t::jws_unknown, cose_alg_t::cose_rs1},
         };
         struct _sig2cose cose2sig[] = {
             {crypt_sig_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256_64},
@@ -903,13 +906,22 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, cose_alg_t alg) {
     bool test = false;
 
     __try2 {
+        if (nullptr == pkey) {
+            __leave2;
+        }
         const hint_cose_algorithm_t* hint = hintof_cose_algorithm(alg);
         if (nullptr == hint) {
             __leave2;
         }
         crypto_kty_t kty = typeof_crypto_key(pkey);
         bool cmp1 = (hint->kty == kty);
-        test = (cmp1);
+        bool cmp2 = true;
+        if (crypto_kty_t::kty_ec == kty) {
+            uint32 nid = 0;
+            nidof_evp_pkey(pkey, nid);
+            cmp2 = (hint->eckey.nid == nid);
+        }
+        test = (cmp1 && cmp2);
     }
     __finally2 {
         // do nothing

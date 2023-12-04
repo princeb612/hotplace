@@ -97,6 +97,16 @@ const hint_signature_t hint_signatures[] = {
         NID_X9_62_prime256v1,
     },
     {
+        crypt_sig_t::sig_es256k,
+        jws_t::jws_unknown,
+        jws_group_t::jws_group_ecdsa,
+        crypto_kty_t::kty_ec,
+        "ES256K",
+        hash_algorithm_t::sha2_256,
+        1,
+        NID_secp256k1,
+    },
+    {
         crypt_sig_t::sig_es384,
         jws_t::jws_es384,
         jws_group_t::jws_group_ecdsa,

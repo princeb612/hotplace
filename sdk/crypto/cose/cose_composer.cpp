@@ -144,9 +144,9 @@ cose_data& cose_data::add_bool(int key, bool value) {
     return *this;
 }
 
-cose_data& cose_data::add(int key, int16 value) {
+cose_data& cose_data::add(int key, int32 value) {
     variant var;
-    _data_map.insert(std::make_pair(key, var.set_int16(value)));
+    _data_map.insert(std::make_pair(key, var.set_int32(value)));
     _order.push_back(key);
     return *this;
 }
@@ -847,7 +847,7 @@ cose_protected::cose_protected() {}
 
 cose_protected::~cose_protected() {}
 
-cose_protected& cose_protected::add(cose_key_t key, uint16 value) {
+cose_protected& cose_protected::add(cose_key_t key, uint32 value) {
     _protected.add(key, value);
     return *this;
 }
@@ -885,7 +885,7 @@ cose_unprotected::cose_unprotected() {}
 
 cose_unprotected::~cose_unprotected() {}
 
-cose_unprotected& cose_unprotected::add(cose_key_t key, uint16 value) {
+cose_unprotected& cose_unprotected::add(cose_key_t key, int32 value) {
     _unprotected.add(key, value);
     return *this;
 }

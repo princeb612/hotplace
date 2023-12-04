@@ -219,6 +219,8 @@ enum crypt_sig_t {
     sig_sha512 = 19,
     sig_shake128 = 20,
     sig_shake256 = 21,
+
+    sig_es256k = 22,
 };
 
 enum crypt_item_t {
@@ -385,6 +387,7 @@ enum jws_t {
 };
 
 enum cose_key_t {
+    cose_key_unknown = 0,
     // RFC 8152 Table 2: Common Header Parameters
     // RFC 8152 Table 3: Common Header Parameters
     cose_alg = 1,           // int / tstr
@@ -519,6 +522,7 @@ enum cose_ec_curve_t {
     cose_ec_x448 = 5,
     cose_ec_ed25519 = 6,
     cose_ec_ed448 = 7,
+    cose_ec_secp256k1 = 8,  // RFC 8812 4.2.  COSE Elliptic Curves Registrations "secp256k1"
 };
 
 enum crypt_category_t {
@@ -688,7 +692,7 @@ enum cose_alg_t {
     cose_rs256 = -257,  // "RS256"
     cose_rs384 = -258,  // "RS384"
     cose_rs512 = -259,  // "RS512"
-    cose_rs1 = -65535,  // "RS1"
+    cose_rs1 = -65535,  // "RS1", deprecated RFC 8812 5.3.
 
     // RFC 8152 Table 9: Algorithm Value for AES-GCM
     // RFC 9053 Table 5: Algorithm Values for AES-GCM
@@ -809,6 +813,10 @@ typedef struct _hint_cose_algorithm_t {
     crypto_kty_t kty;
     cose_group_t group;
     const hint_cose_group_t* hint_group;
+    struct _eckey {
+        uint16 nid;
+        cose_ec_curve_t curve;
+    } eckey;
     struct _dgst {
         const char* algname;
         uint16 dlen;
