@@ -24,6 +24,8 @@ typedef struct _test_vector_github_cose_wg_t {
         const char* cek_hex;
         const char* tomac_hex;
     } enc;
+    int skip;
+    int untagged;
     int debug;
 } test_vector_github_cose_wg_t;
 

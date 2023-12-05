@@ -50,16 +50,6 @@ class cbor_object_signing {
      * @brief   mac
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   cose_alg_t method [in]
-     * @param   binary_t const& input [in]
-     * @param   binary_t& output [out]
-     * @return  error code (see error.hpp)
-     */
-    return_t mac(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
-    /**
-     * @brief   mac
-     * @param   cose_context_t* handle [in]
-     * @param   crypto_key* key [in]
      * @param   std::list<cose_alg_t> methods [in]
      * @param   binary_t const& input [in]
      * @param   binary_t& output [out]

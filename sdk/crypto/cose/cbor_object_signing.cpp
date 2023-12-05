@@ -57,18 +57,15 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, cose
 
 return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
-    return ret;
-}
-
-return_t cbor_object_signing::mac(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output) {
-    return_t ret = errorcode_t::success;
-
+    cbor_object_signing_encryption cose;
+    ret = cose.sign(handle, key, methods, input, output);
     return ret;
 }
 
 return_t cbor_object_signing::mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
-
+    cbor_object_signing_encryption cose;
+    ret = cose.mac(handle, key, methods, input, output);
     return ret;
 }
 
@@ -81,6 +78,11 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, bi
         if (nullptr == handle || nullptr == key) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
+        }
+        binary_t dummy;
+        ret = cose.process(handle, key, input, dummy);
+        if (errorcode_t::success == ret) {
+            result = true;
         }
     }
     __finally2 {

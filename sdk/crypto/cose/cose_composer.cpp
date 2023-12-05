@@ -1633,42 +1633,7 @@ cose_unsent& cose_unsent::add(int key, binary_t const& value) {
 
 cose_composer::cose_composer() : _cbor_tag(cbor_tag_t::cbor_tag_unknown) { get_layer().set_composer(this); }
 
-return_t cose_composer::compose(cbor_tag_t cbor_tag, cbor_array** object) {
-    return_t ret = errorcode_t::success;
-    cbor_array* root = nullptr;
-
-    __try2 {
-        if (nullptr == object) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        __try_new_catch(root, new cbor_array, ret, __leave2);
-
-        root->tag(cbor_tag);
-
-        *root << get_protected().cbor() << get_unprotected().cbor() << get_payload().cbor();
-
-        if ((cbor_tag_t::cose_tag_mac == cbor_tag) || (cbor_tag_t::cose_tag_mac0 == cbor_tag) || (cbor_tag_t::cose_tag_sign1 == cbor_tag)) {
-            *root << get_singleitem().cbor();
-        }
-
-        if ((cbor_tag_t::cose_tag_encrypt == cbor_tag) || (cbor_tag_t::cose_tag_sign == cbor_tag) || (cbor_tag_t::cose_tag_mac == cbor_tag)) {
-            if (get_recipients().size()) {
-                *root << get_recipients().cbor();
-            }
-        }
-
-        *object = root;
-    }
-    __finally2 {
-        // do nothing
-    }
-
-    return ret;
-}
-
-return_t cose_composer::compose(cbor_array** object) {
+return_t cose_composer::compose(cbor_array** object, bool tagged) {
     return_t ret = errorcode_t::success;
 
     // implementation sketch
@@ -1694,9 +1659,8 @@ return_t cose_composer::compose(cbor_array** object) {
 
     //   then call compose(tag, object);
 
-    // simple implementation ...
-
     cbor_array* root = nullptr;
+    cbor_tag_t cbor_tag = cbor_tag_t::cbor_tag_unknown;
 
     __try2 {
         if (nullptr == object) {
@@ -1706,17 +1670,43 @@ return_t cose_composer::compose(cbor_array** object) {
 
         __try_new_catch(root, new cbor_array, ret, __leave2);
 
-        *root << get_protected().cbor() << get_unprotected().cbor() << get_payload().cbor();
+        if (cbor_tag_t::cbor_tag_unknown != _cbor_tag) {
+            cbor_tag = _cbor_tag;
+        } else {
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            int alg = 0;
+            get_layer().finditem(cose_key_t::cose_alg, alg, cose_scope_protected | cose_scope_unprotected | cose_scope_children);
+            crypt_category_t category = advisor->categoryof((cose_alg_t)alg);
+            size_t size_recipients = get_recipients().size();
+            switch (category) {
+                case crypt_category_t::crypt_category_crypt:
+                    cbor_tag = size_recipients ? cose_tag_encrypt : cose_tag_encrypt0;
+                    break;
+                case crypt_category_t::crypt_category_mac:
+                    cbor_tag = size_recipients ? cose_tag_mac : cose_tag_mac0;
+                    break;
+                case crypt_category_t::crypt_category_sign:
+                    cbor_tag = size_recipients ? cose_tag_sign : cose_tag_sign1;
+                    break;
+                default:
+                    break;
+            }
+        }
 
-        if (get_singleitem().size()) {
+        *root << get_protected().cbor() << get_unprotected().cbor() << get_payload().cbor();
+        if (tagged) {
+            root->tag(cbor_tag);
+        }
+
+        if ((cbor_tag_t::cose_tag_mac == cbor_tag) || (cbor_tag_t::cose_tag_mac0 == cbor_tag) || (cbor_tag_t::cose_tag_sign1 == cbor_tag)) {
             *root << get_singleitem().cbor();
         }
-
-        if (get_recipients().size()) {
-            *root << get_recipients().cbor();
+        if ((cbor_tag_t::cose_tag_encrypt == cbor_tag) || (cbor_tag_t::cose_tag_sign == cbor_tag) || (cbor_tag_t::cose_tag_mac == cbor_tag)) {
+            if (get_recipients().size()) {
+                *root << get_recipients().cbor();
+            }
         }
 
-        root->tag(_cbor_tag);
         *object = root;
     }
     __finally2 {
@@ -1726,14 +1716,14 @@ return_t cose_composer::compose(cbor_array** object) {
     return ret;
 }
 
-return_t cose_composer::compose(cbor_array** object, binary_t& cbor) {
+return_t cose_composer::compose(cbor_array** object, binary_t& cbor, bool tagged) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == object) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = compose(object);
+        ret = compose(object, tagged);
         if (errorcode_t::success == ret) {
             cbor_publisher publisher;
             publisher.publish(*object, &cbor);
@@ -1745,14 +1735,14 @@ return_t cose_composer::compose(cbor_array** object, binary_t& cbor) {
     return ret;
 }
 
-return_t cose_composer::diagnose(cbor_array** object, basic_stream& stream) {
+return_t cose_composer::diagnose(cbor_array** object, basic_stream& stream, bool tagged) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == object) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = compose(object);
+        ret = compose(object, tagged);
         if (errorcode_t::success == ret) {
             cbor_publisher publisher;
             publisher.publish(*object, &stream);

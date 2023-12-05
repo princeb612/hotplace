@@ -7,16 +7,6 @@
  * Revision History
  * Date         Name                Description
  *
- * status
- *  1. encoding/decoding - done
- *  2. Sign, Enc, Mac
- *     |       | done               | not yet               | detail                                |
- *     | --    | --                 | --                    | --                                    |
- *     | Sign  | sign/verfy         |                       | except CounterSign, x509              |
- *     | Enc   | decrypt            | encrypt               | except Chacha20_poly1305              |
- *     | Mac   | verify             | create                |                                       |
- *  3. untagged - not yet
- *  4. CWT - study
  */
 
 #include "sample.hpp"
@@ -36,8 +26,9 @@ typedef struct _OPTION {
     bool dump_keys;
     bool skip_cbor_basic;
     bool skip_validate;
+    bool skip_gen;
 
-    _OPTION() : debug(false), dump_keys(false), skip_cbor_basic(false), skip_validate(false) {
+    _OPTION() : debug(false), dump_keys(false), skip_cbor_basic(false), skip_validate(false), skip_gen(false) {
         // do nothing
     }
 } OPTION;
@@ -336,7 +327,7 @@ void test_rfc8152_b() {
              false)
         .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example");
 
-    composer.compose(cbor_tag_t::cose_tag_encrypt, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -360,7 +351,7 @@ void test_rfc8152_c_1_1() {
     signature.get_unprotected().add(cose_key_t::cose_kid, "11");
     signature.get_payload().set_b16(
         "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
-    composer.compose(cbor_tag_t::cose_tag_sign, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -392,7 +383,7 @@ void test_rfc8152_c_1_2() {
         "00a2d28a7c2bdb1587877420f65adf7d0b9a06635dd1de64bb62974c863f0b160dd2163734034e6ac003b01e8705524c5c4ca479a952f0247ee8cb0b4fb7397ba08d009e0c8bf4"
         "82270cc5771aa143966e5a469a09f613488030c5b07ec6d722e3835adb5b2d8c44e95ffb13877dd2582866883535de3bb03d01753f83ab87bb4f7a0297");
 
-    composer.compose(cbor_tag_t::cose_tag_sign, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -420,7 +411,7 @@ void test_rfc8152_c_1_3() {
     signature.get_payload().set_b16(
         "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
 
-    composer.compose(cbor_tag_t::cose_tag_sign, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -446,7 +437,7 @@ void test_rfc8152_c_1_4() {
     signature.get_payload().set_b16(
         "3fc54702aa56e1b2cb20284294c9106a63f91bac658d69351210a031d8fc7c5ff3e4be39445b1a3e83e1510d1aca2f2e8a7c081c7645042b18aba9d1fad1bd9c");
 
-    composer.compose(cbor_tag_t::cose_tag_sign, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -469,7 +460,7 @@ void test_rfc8152_c_2_1() {
     composer.get_singleitem().set_b16(
         "8eb33e4ca31d1c465ab05aac34cc6b23d58fef5c083106c4d25a91aef0b0117e2af9a291aa32e14ab834dc56ed2a223444547e01f11d3b0916e5a4c345cacb36");
 
-    composer.compose(cbor_tag_t::cose_tag_sign1, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -497,7 +488,7 @@ void test_rfc8152_c_3_1() {
              true)
         .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example");
 
-    composer.compose(cbor_tag_t::cose_tag_encrypt, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -522,7 +513,7 @@ void test_rfc8152_c_3_2() {
     recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_hkdf_sha256);
     recipient.get_unprotected().add(cose_key_t::cose_salt, "aabbccddeeffgghh").add(cose_key_t::cose_kid, "our-secret");
 
-    composer.compose(cbor_tag_t::cose_tag_encrypt, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -560,7 +551,7 @@ void test_rfc8152_c_3_3() {
              true)
         .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example");
 
-    composer.compose(cbor_tag_t::cose_tag_encrypt, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -589,7 +580,7 @@ void test_rfc8152_c_3_4() {
         .add(cose_key_t::cose_partyu_nonce, base16_decode("0101"));
     recipient.get_payload().set_b16("41e0d76f579dbd0d936a662d54d8582037de2e366fde1c62");
 
-    composer.compose(cbor_tag_t::cose_tag_encrypt, &root);
+    composer.compose(&root);
 
     // Externally Supplied AAD: h'0011bbcc22dd44ee55ff660077'
     cbor_object_signing_encryption cose;
@@ -612,7 +603,7 @@ void test_rfc8152_c_4_1() {
     composer.get_unprotected().add(cose_key_t::cose_iv, base16_decode("89f52f65a1c580933b5261a78c"));
     composer.get_payload().set_b16("5974e1b99a3a4cc09a659aa2e9e7fff161d38ce71cb45ce460ffb569");
 
-    composer.compose(cbor_tag_t::cose_tag_encrypt0, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -633,7 +624,7 @@ void test_rfc8152_c_4_2() {
     composer.get_unprotected().add(cose_key_t::cose_partial_iv, base16_decode("61a7"));
     composer.get_payload().set_b16("252a8911d465c125b6764739700f0141ed09192de139e053bd09abca");
 
-    composer.compose(cbor_tag_t::cose_tag_encrypt0, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -658,7 +649,7 @@ void test_rfc8152_c_5_1() {
     cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_unprotected().add(cose_key_t::cose_alg, cose_alg_t::cose_direct).add(cose_key_t::cose_kid, "our-secret");
 
-    composer.compose(cbor_tag_t::cose_tag_mac, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -687,7 +678,7 @@ void test_rfc8152_c_5_2() {
         .add(cose_key_t::cose_partyu_nonce,
              base16_decode("4d8553e7e74f3c6a3a9dd3ef286a8195cbf8a23d19558ccfec7d34b824f42d92bd06bd2c7f0271f0214e141fb779ae2856abf585a58368b017e7f2a9e5ce4db5"));
 
-    composer.compose(cbor_tag_t::cose_tag_mac, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -712,7 +703,7 @@ void test_rfc8152_c_5_3() {
     recipient.get_unprotected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes256kw).add(cose_key_t::cose_kid, "018c0ae5-4d9b-471b-bfd6-eef314bc7037");
     recipient.get_payload().set_b16("711ab0dc2fc4585dce27effa6781c8093eba906f227b6eb0");
 
-    composer.compose(cbor_tag_t::cose_tag_mac, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -747,7 +738,7 @@ void test_rfc8152_c_5_4() {
     recipient2.get_unprotected().add(cose_key_t::cose_alg, cose_alg_t::cose_aes256kw).add(cose_key_t::cose_kid, "018c0ae5-4d9b-471b-bfd6-eef314bc7037");
     recipient2.get_payload().set_b16("0b2c7cfce04e98276342d6476a7723c090dfdd15f9a518e7736549e998370695e6d6a83b4ae507bb");
 
-    composer.compose(cbor_tag_t::cose_tag_mac, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -768,7 +759,7 @@ void test_rfc8152_c_6_1() {
     composer.get_payload().set("This is the content.");
     composer.get_tag().set_b16("726043745027214f");
 
-    composer.compose(cbor_tag_t::cose_tag_mac0, &root);
+    composer.compose(&root);
 
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
@@ -1238,6 +1229,12 @@ void test_github_example() {
     cbor_object_signing_encryption cose;
     for (i = 0; i < sizeof_test_vector_github_cose_wg; i++) {
         const test_vector_github_cose_wg_t* vector = test_vector_github_cose_wg + i;
+        if (vector->skip) {
+            continue;
+        }
+        if (vector->debug) {
+            int break_point_here = 1;
+        }
 
         printf("\e[33m%s\e[0m\n", vector->file);
         binary_t cbor = base16_decode(vector->cbor);
@@ -1267,7 +1264,7 @@ void test_github_example() {
             cbor_array* cbor_newone = nullptr;
 
             composer.parse(cbor);
-            composer.compose(&cbor_newone, bin_composed);
+            composer.compose(&cbor_newone, bin_composed, vector->untagged ? false : true);
 
             publisher.publish(cbor_newone, &bs_diagnostic_composed);
             dump_test_data("\e[1;36mcompose\e[0m", bs_diagnostic_composed);
@@ -1344,9 +1341,6 @@ void test_github_example() {
         if (vector->shared.priv) {
             cose.set(handle, cose_param_t::cose_unsent_priv_other, base16_decode(vector->shared.priv));
             properties << "priv ";
-        }
-        if (vector->debug) {
-            int break_point_here = 1;
         }
 
         binary_t output;
@@ -1488,6 +1482,199 @@ void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& inpu
     _test_case.test(ret, __FUNCTION__, "verifymac %s", text);
 }
 
+void test_keygen(crypto_key* key) {
+    key->generate_nid(crypto_kty_t::kty_oct, 32, "kid_symm", crypto_use_t::use_any);
+    key->generate_nid(crypto_kty_t::kty_rsa, 2048, "kid_rsa", crypto_use_t::use_any);
+    key->generate_nid(crypto_kty_t::kty_ec, NID_X9_62_prime256v1, "kid_ec256", crypto_use_t::use_any);
+    key->generate_nid(crypto_kty_t::kty_ec, NID_secp256k1, "kid_ec256k", crypto_use_t::use_any);
+    key->generate_nid(crypto_kty_t::kty_ec, NID_secp384r1, "kid_ec384", crypto_use_t::use_any);
+    key->generate_nid(crypto_kty_t::kty_ec, NID_secp521r1, "kid_ec521", crypto_use_t::use_any);
+    key->generate_nid(crypto_kty_t::kty_okp, NID_X25519, "kid_x25519", crypto_use_t::use_enc);
+    key->generate_nid(crypto_kty_t::kty_okp, NID_ED25519, "kid_ed25519", crypto_use_t::use_sig);
+    key->for_each(dump_crypto_key, nullptr);
+    _test_case.assert(true, __FUNCTION__, "key generation");
+}
+
+const cose_alg_t enc_algs[] = {
+    cose_aes128gcm,        cose_aes192gcm,         cose_aes256gcm,         cose_aesccm_16_64_128,  cose_aesccm_16_64_256,  cose_aesccm_64_64_128,
+    cose_aesccm_64_64_256, cose_aesccm_16_128_128, cose_aesccm_16_128_256, cose_aesccm_64_128_128, cose_aesccm_64_128_256,
+};
+const cose_alg_t sign_algs[] = {
+    cose_es256, cose_es384, cose_es512, cose_eddsa, cose_ps256, cose_ps384, cose_ps512, cose_es256k, cose_rs256, cose_rs384, cose_rs512, cose_rs1,
+};
+const cose_alg_t mac_algs[] = {
+    cose_hs256_64, cose_hs256, cose_hs384, cose_hs512, cose_aesmac_128_64, cose_aesmac_256_64, cose_aesmac_128_128, cose_aesmac_256_128,
+};
+const cose_alg_t key_algs[] = {
+    cose_aes128kw,      cose_aes192kw,        cose_aes256kw,        cose_direct,          cose_hkdf_sha256,     cose_hkdf_sha512,   cose_hkdf_aes128,
+    cose_hkdf_aes256,   cose_ecdhes_hkdf_256, cose_ecdhes_hkdf_512, cose_ecdhss_hkdf_256, cose_ecdhss_hkdf_512, cose_ecdhes_a128kw, cose_ecdhes_a192kw,
+    cose_ecdhes_a256kw, cose_ecdhss_a128kw,   cose_ecdhss_a192kw,   cose_ecdhss_a256kw,   cose_rsaoaep1,        cose_rsaoaep256,    cose_rsaoaep512,
+};
+
+void test_selfgen(crypto_key* key) {
+    _test_case.begin("key generation");
+
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    binary_t input = convert("hello world");
+    std::list<cose_alg_t> algs;
+    size_t i = 0;
+    size_t j = 0;
+    for (i = 0; i < RTL_NUMBER_OF(sign_algs); i++) {
+        algs.clear();
+        cose_alg_t alg = sign_algs[i];
+        algs.push_back(alg);
+        std::string text = format("%i(%s)", alg, advisor->nameof_cose_algorithm(alg));
+        test_sign(key, algs, input, text.c_str());
+    }
+
+    for (i = 0; i < RTL_NUMBER_OF(enc_algs); i++) {
+        cose_alg_t alg = enc_algs[i];
+
+        for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
+            algs.clear();
+            cose_alg_t keyalg = key_algs[j];
+            algs.push_back(alg);
+            algs.push_back(keyalg);
+
+            std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
+            test_encrypt(key, algs, input, text.c_str());
+        }
+    }
+
+    for (i = 0; i < RTL_NUMBER_OF(mac_algs); i++) {
+        cose_alg_t alg = mac_algs[i];
+
+        for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
+            algs.clear();
+            cose_alg_t keyalg = key_algs[j];
+            algs.push_back(alg);
+            algs.push_back(keyalg);
+
+            std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
+            test_mac(key, algs, input, text.c_str());
+        }
+    }
+}
+
+void test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t const& input, const char* text) {
+    return_t ret = errorcode_t::success;
+    cbor_object_signing_encryption cose;
+    binary_t cbor;
+
+    cose_context_t* handle = nullptr;
+    OPTION& option = _cmdline->value();
+
+    cose.open(&handle);
+    if (option.debug) {
+        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
+    }
+
+    // sketch
+    cose_layer& body = handle->composer->get_layer();
+    body.get_protected().add(cose_key_t::cose_alg, alg);
+    if (cose_alg_t::cose_unknown != keyalg) {
+        cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
+        recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
+
+        // fill others and compose
+        ret = cose.encrypt2(handle, key, input, cbor);
+    }
+
+    cose.close(handle);
+
+    _test_case.test(ret, __FUNCTION__, "cose %s", text);
+}
+
+void test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t const& input, const char* text) {
+    return_t ret = errorcode_t::success;
+    cbor_object_signing_encryption cose;
+    binary_t cbor;
+
+    cose_context_t* handle = nullptr;
+    OPTION& option = _cmdline->value();
+
+    cose.open(&handle);
+    if (option.debug) {
+        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
+    }
+
+    // sketch
+    cose_layer& body = handle->composer->get_layer();
+    body.get_protected().add(cose_key_t::cose_alg, alg);
+
+    // fill others and compose
+    ret = cose.encrypt2(handle, key, input, cbor);
+
+    cose.close(handle);
+
+    _test_case.test(ret, __FUNCTION__, "cose %s", text);
+}
+
+void test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t const& input, const char* text) {
+    return_t ret = errorcode_t::success;
+    cbor_object_signing_encryption cose;
+    binary_t cbor;
+
+    cose_context_t* handle = nullptr;
+    OPTION& option = _cmdline->value();
+
+    cose.open(&handle);
+    if (option.debug) {
+        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
+    }
+
+    // sketch
+    cose_layer& body = handle->composer->get_layer();
+    body.get_protected().add(cose_key_t::cose_alg, alg);
+    if (cose_alg_t::cose_unknown != keyalg) {
+        cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
+        recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
+
+        // fill others and compose
+        ret = cose.encrypt2(handle, key, input, cbor);
+    }
+
+    cose.close(handle);
+
+    _test_case.test(ret, __FUNCTION__, "cose %s", text);
+}
+
+void test_cose(crypto_key* key) {
+    _test_case.begin("it's fun");
+
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    cbor_object_signing_encryption cose;
+    binary_t input = convert("hello world");
+    size_t i = 0;
+    size_t j = 0;
+
+    for (i = 0; i < RTL_NUMBER_OF(enc_algs); i++) {
+        cose_alg_t alg = enc_algs[i];
+
+        for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
+            cose_alg_t keyalg = key_algs[j];
+            std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
+            test_cose_encrypt(key, alg, keyalg, input, text.c_str());
+        }
+    }
+    for (i = 0; i < RTL_NUMBER_OF(sign_algs); i++) {
+        cose_alg_t alg = sign_algs[i];
+
+        std::string text = format("%i(%s)", alg, advisor->nameof_cose_algorithm(alg));
+        test_cose_sign(key, alg, cose_alg_t::cose_unknown, input, text.c_str());
+    }
+    for (i = 0; i < RTL_NUMBER_OF(mac_algs); i++) {
+        cose_alg_t alg = mac_algs[i];
+
+        for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
+            cose_alg_t keyalg = key_algs[j];
+            std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
+            test_cose_mac(key, alg, keyalg, input, text.c_str());
+        }
+    }
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -1498,12 +1685,14 @@ int main(int argc, char** argv) {
     *_cmdline << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
     *_cmdline << cmdarg_t<OPTION>("-b", "skip basic encoding", [&](OPTION& o, char* param) -> void { o.skip_cbor_basic = true; }).optional();
     *_cmdline << cmdarg_t<OPTION>("-s", "skip validation w/ test vector", [&](OPTION& o, char* param) -> void { o.skip_validate = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-g", "skip self-generated message", [&](OPTION& o, char* param) -> void { o.skip_gen = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
     std::cout << "option.debug " << (option.debug ? 1 : 0) << std::endl;
     std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
     std::cout << "option.skip_validate " << (option.skip_validate ? 1 : 0) << std::endl;
+    std::cout << "option.skip_gen " << (option.skip_gen ? 1 : 0) << std::endl;
 
     if (option.debug) {
         set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
@@ -1594,76 +1783,11 @@ int main(int argc, char** argv) {
     }
 
     // part 4 encrypt/sign/mac
-    {
-        _test_case.begin("key generation");
+    if (!option.skip_gen) {
         crypto_key key;
-
-        key.generate_nid(crypto_kty_t::kty_oct, 32, "kid_symm", crypto_use_t::use_any);
-        key.generate_nid(crypto_kty_t::kty_rsa, 2048, "kid_rsa", crypto_use_t::use_any);
-        key.generate_nid(crypto_kty_t::kty_ec, NID_X9_62_prime256v1, "kid_ec256", crypto_use_t::use_any);
-        key.generate_nid(crypto_kty_t::kty_ec, NID_secp256k1, "kid_ec256k", crypto_use_t::use_any);
-        key.generate_nid(crypto_kty_t::kty_ec, NID_secp384r1, "kid_ec384", crypto_use_t::use_any);
-        key.generate_nid(crypto_kty_t::kty_ec, NID_secp521r1, "kid_ec521", crypto_use_t::use_any);
-        key.generate_nid(crypto_kty_t::kty_okp, NID_X25519, "kid_x25519", crypto_use_t::use_enc);
-        key.generate_nid(crypto_kty_t::kty_okp, NID_ED25519, "kid_ed25519", crypto_use_t::use_sig);
-        key.for_each(dump_crypto_key, nullptr);
-        _test_case.assert(true, __FUNCTION__, "key generation");
-
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        binary_t input = convert("hello world");
-        std::list<cose_alg_t> algs;
-        size_t i = 0;
-        size_t j = 0;
-        cose_alg_t enc_algs[] = {
-            cose_aes128gcm,        cose_aes192gcm,         cose_aes256gcm,         cose_aesccm_16_64_128,  cose_aesccm_16_64_256,  cose_aesccm_64_64_128,
-            cose_aesccm_64_64_256, cose_aesccm_16_128_128, cose_aesccm_16_128_256, cose_aesccm_64_128_128, cose_aesccm_64_128_256,
-        };
-        cose_alg_t sign_algs[] = {
-            cose_es256, cose_es384, cose_es512, cose_eddsa, cose_ps256, cose_ps384, cose_ps512, cose_es256k, cose_rs256, cose_rs384, cose_rs512, cose_rs1,
-        };
-        cose_alg_t mac_algs[] = {
-            cose_hs256_64, cose_hs256, cose_hs384, cose_hs512, cose_aesmac_128_64, cose_aesmac_256_64, cose_aesmac_128_128, cose_aesmac_256_128,
-        };
-        cose_alg_t key_algs[] = {
-            cose_aes128kw,      cose_aes192kw,        cose_aes256kw,        cose_direct,          cose_hkdf_sha256,     cose_hkdf_sha512,   cose_hkdf_aes128,
-            cose_hkdf_aes256,   cose_ecdhes_hkdf_256, cose_ecdhes_hkdf_512, cose_ecdhss_hkdf_256, cose_ecdhss_hkdf_512, cose_ecdhes_a128kw, cose_ecdhes_a192kw,
-            cose_ecdhes_a256kw, cose_ecdhss_a128kw,   cose_ecdhss_a192kw,   cose_ecdhss_a256kw,   cose_rsaoaep1,        cose_rsaoaep256,    cose_rsaoaep512,
-        };
-        for (i = 0; i < RTL_NUMBER_OF(sign_algs); i++) {
-            algs.clear();
-            cose_alg_t alg = sign_algs[i];
-            algs.push_back(alg);
-            std::string text = format("%i(%s)", alg, advisor->nameof_cose_algorithm(alg));
-            test_sign(&key, algs, input, text.c_str());
-        }
-
-        for (i = 0; i < RTL_NUMBER_OF(enc_algs); i++) {
-            cose_alg_t alg = enc_algs[i];
-
-            for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
-                algs.clear();
-                cose_alg_t keyalg = key_algs[j];
-                algs.push_back(alg);
-                algs.push_back(keyalg);
-
-                std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
-                test_encrypt(&key, algs, input, text.c_str());
-            }
-        }
-
-        for (i = 0; i < RTL_NUMBER_OF(mac_algs); i++) {
-            cose_alg_t alg = mac_algs[i];
-
-            for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
-                algs.clear();
-                cose_alg_t keyalg = key_algs[j];
-                algs.push_back(alg);
-                algs.push_back(keyalg);
-
-                std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
-                test_mac(&key, algs, input, text.c_str());
-            }
-        }
+        test_keygen(&key);
+        test_selfgen(&key);
+        test_cose(&key);
     }
 
     openssl_thread_cleanup();

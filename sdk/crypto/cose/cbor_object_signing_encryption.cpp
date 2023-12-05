@@ -179,6 +179,41 @@ return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_
     return ret;
 }
 
+return_t cbor_object_signing_encryption::encrypt2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = preprocess(handle, key, input);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = preprocess_random(handle, key);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        handle->composer->_cbor_tag = cose_tag_encrypt;
+        ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        cbor_array* root = nullptr;
+        handle->composer->compose(&root, output);
+        root->release();
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t cbor_object_signing_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
     ret = process(handle, key, input, output, cose_mode_t::cose_mode_recv);
@@ -207,7 +242,42 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
             __leave2;
         }
 
-        handle->composer->_cbor_tag = cose_tag_sign;
+        handle->composer->_cbor_tag = cose_tag_sign1;
+        ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        cbor_array* root = nullptr;
+        handle->composer->compose(&root, output);
+        root->release();
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::sign2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = preprocess(handle, key, input);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = preprocess_random(handle, key);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        handle->composer->_cbor_tag = cose_tag_encrypt;
         ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -237,6 +307,41 @@ return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key*
         }
 
         handle->composer->_cbor_tag = cose_tag_mac;
+        ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        cbor_array* root = nullptr;
+        handle->composer->compose(&root, output);
+        root->release();
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::mac2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == handle || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = preprocess(handle, key, input);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = preprocess_random(handle, key);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        handle->composer->_cbor_tag = cose_tag_encrypt;
         ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -404,6 +509,48 @@ return_t cbor_object_signing_encryption::subprocess(cose_context_t* handle, cryp
 return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category,
                                                     binary_t const& input) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        ret = preprocess_skeleton(handle, key, algs, category, input);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = preprocess_random(handle, key);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, crypto_key* key, binary_t const& input) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        cose_layer& body = handle->composer->get_layer();
+        body.setparam(cose_param_t::cose_param_plaintext, input);
+
+        ret = preprocess_random(handle, key);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category,
+                                                             binary_t const& input) {
+    return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -480,6 +627,26 @@ return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, cryp
         }
 
         body.setparam(cose_param_t::cose_param_plaintext, input);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_object_signing_encryption::preprocess_random(cose_context_t* handle, crypto_key* key) {
+    return_t ret = errorcode_t::success;
+    return_t check = errorcode_t::success;
+    return_t test = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        cose_layer& body = handle->composer->get_layer();
 
         // random
         cose_recipients& recipients1 = body.get_recipients();
@@ -537,9 +704,22 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
         }
 
         cose_alg_t alg = alg = layer->get_algorithm();
+        crypt_category_t category = advisor->categoryof(alg);
         std::string kid = layer->get_kid();
 
+        // fail if cose_key_t::cose_alg not exist
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
+        if (nullptr == hint) {
+            ret = errorcode_t::request;
+            __leave2;
+        }
+
+        // if kid not provided
+        if (crypt_category_t::crypt_category_keyagreement == category && kid.empty()) {
+            key->select(kid, alg);
+            layer->get_unprotected().add(cose_key_t::cose_kid, kid);
+        }
+
         const hint_cose_group_t* hint_group = hint->hint_group;
         uint32 flags = hint_group->hintflags;
 

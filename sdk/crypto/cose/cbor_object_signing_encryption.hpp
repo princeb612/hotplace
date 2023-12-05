@@ -72,22 +72,70 @@ class cbor_object_signing_encryption {
     return_t set(cose_context_t* handle, cose_param_t id, binary_t const& bin);
 
     /**
-     * @brief   encrypt ("Encrypt0")
+     * @brief   encrypt
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   std::list<cose_alg_t>& algs [in]
      * @param   binary_t const& input [in]
-     * @param   binary_t& output [out]
+     * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
      * @example
-     *          encrypt (handle, key, cose_aes128gcm, input, output);
+     *          const cose_alg_t enc_algs[] = {
+     *              cose_aes128gcm,        cose_aes192gcm,         cose_aes256gcm,         cose_aesccm_16_64_128,  cose_aesccm_16_64_256, cose_aesccm_64_64_128,
+     *              cose_aesccm_64_64_256, cose_aesccm_16_128_128, cose_aesccm_16_128_256, cose_aesccm_64_128_128, cose_aesccm_64_128_256,
+     *          };
+     *          const cose_alg_t key_algs[] = {
+     *              cose_aes128kw, cose_aes192kw, cose_aes256kw,
+     *              cose_direct,
+     *              cose_hkdf_sha256, cose_hkdf_sha512,
+     *              cose_hkdf_aes128, cose_hkdf_aes256, cose_ecdhes_hkdf_256,
+     *              cose_ecdhes_hkdf_512, cose_ecdhss_hkdf_256, cose_ecdhss_hkdf_512,
+     *              cose_ecdhes_a128kw, cose_ecdhes_a192kw, cose_ecdhes_a256kw,
+     *              cose_ecdhss_a128kw, cose_ecdhss_a192kw, cose_ecdhss_a256kw,
+     *              cose_rsaoaep1, cose_rsaoaep256, cose_rsaoaep512,
+     *          };
+     *          for (i = 0; i < RTL_NUMBER_OF(enc_algs); i++) {
+     *              cose_alg_t alg = enc_algs[i];
+     *
+     *              for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
+     *                  algs.clear();
+     *                  cose_alg_t keyalg = key_algs[j];
+     *                  algs.push_back(alg);
+     *                  algs.push_back(keyalg);
+     *
+     *                  cose.encrypt (handle, key, algs, input, output);
+     *              }
+     *          }
      */
     return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, binary_t& output);
+    /**
+     * @brief   encrypt
+     * @param   cose_context_t* handle [in]
+     * @param   crypto_key* key [in]
+     * @param   binary_t const& input [in]
+     * @param   binary_t& output [out] CBOR
+     * @return  error code (see error.hpp)
+     * @example
+     *          cose.open(&handle);
+     *          // sketch
+     *          cose_layer& body = handle->composer->get_layer();
+     *          body.get_protected().add(cose_key_t::cose_alg, alg);
+     *          if (cose_alg_t::cose_unknown != keyalg) {
+     *              cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
+     *              recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
+     *
+     *              // fill others and compose
+     *              ret = cose.encrypt2(handle, key, input, cbor);
+     *          }
+     *          cose.close(handle);
+     */
+    return_t encrypt2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
     /**
      * @brief   decrypt
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   binary_t const& input [in]
+     * @param   binary_t& output [out] decrypted
      * @param   bool& result [out]
      * @return  error code (see error.hpp)
      * @remarks see json_object_encryption::decrypt
@@ -99,7 +147,7 @@ class cbor_object_signing_encryption {
      * @param   crypto_key* key [in]
      * @param   cose_alg_t method [in]
      * @param   binary_t const& input [in]
-     * @param   binary_t& output [out]
+     * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing::sign
      */
@@ -110,21 +158,102 @@ class cbor_object_signing_encryption {
      * @param   crypto_key* key [in]
      * @param   std::list<cose_alg_t>& methods [in]
      * @param   binary_t const& input [in]
-     * @param   binary_t& output [out]
+     * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing::sign
+     * @example
+     *          const cose_alg_t sign_algs[] = {
+     *              cose_es256, cose_es384, cose_es512, cose_eddsa, cose_ps256, cose_ps384, cose_ps512, cose_es256k, cose_rs256, cose_rs384, cose_rs512,
+     * cose_rs1,
+     *          };
+     *          for (i = 0; i < RTL_NUMBER_OF(sign_algs); i++) {
+     *              cose_alg_t alg = sign_algs[i];
+     *
+     *              algs.clear();
+     *              algs.push_back(alg);
+     *
+     *              cose.sign (handle, key, algs, input, output);
+     *          }
      */
     return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& methods, binary_t const& input, binary_t& output);
+    /**
+     * @brief   sign
+     * @param   cose_context_t* handle [in]
+     * @param   crypto_key* key [in]
+     * @param   binary_t const& input [in]
+     * @param   binary_t& output [out] CBOR
+     * @return  error code (see error.hpp)
+     * @example
+     *          cose.open(&handle);
+     *          // sketch
+     *          cose_layer& body = handle->composer->get_layer();
+     *          body.get_protected().add(cose_key_t::cose_alg, alg);
+     *
+     *          // fill others and compose
+     *          ret = cose.sign2(handle, key, input, cbor);
+     *
+     *          cose.close(handle);
+     */
+    return_t sign2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
     /**
      * @brief   mac
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   std::list<cose_alg_t>& methods [in]
      * @param   binary_t const& input [in]
-     * @param   binary_t& output [out]
+     * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
+     * @example
+     *          const cose_alg_t mac_algs[] = {
+     *              cose_hs256_64, cose_hs256, cose_hs384, cose_hs512, cose_aesmac_128_64, cose_aesmac_256_64, cose_aesmac_128_128, cose_aesmac_256_128,
+     *          };
+     *          const cose_alg_t key_algs[] = {
+     *              cose_aes128kw, cose_aes192kw, cose_aes256kw,
+     *              cose_direct,
+     *              cose_hkdf_sha256, cose_hkdf_sha512,
+     *              cose_hkdf_aes128, cose_hkdf_aes256, cose_ecdhes_hkdf_256,
+     *              cose_ecdhes_hkdf_512, cose_ecdhss_hkdf_256, cose_ecdhss_hkdf_512,
+     *              cose_ecdhes_a128kw, cose_ecdhes_a192kw, cose_ecdhes_a256kw,
+     *              cose_ecdhss_a128kw, cose_ecdhss_a192kw, cose_ecdhss_a256kw,
+     *              cose_rsaoaep1, cose_rsaoaep256, cose_rsaoaep512,
+     *          };
+     *          for (i = 0; i < RTL_NUMBER_OF(mac_algs); i++) {
+     *              cose_alg_t alg = mac_algs[i];
+     *
+     *              for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
+     *                  algs.clear();
+     *                  cose_alg_t keyalg = key_algs[j];
+     *                  algs.push_back(alg);
+     *                  algs.push_back(keyalg);
+     *
+     *                  cose.mac (handle, key, algs, input, output);
+     *              }
+     *          }
      */
+
     return_t mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& methods, binary_t const& input, binary_t& output);
+    /**
+     * @brief   mac
+     * @param   cose_context_t* handle [in]
+     * @param   crypto_key* key [in]
+     * @param   binary_t const& input [in]
+     * @param   binary_t& output [out] CBOR
+     * @return  error code (see error.hpp)
+     * @example
+     *          cose.open(&handle);
+     *          // sketch
+     *          cose_layer& body = handle->composer->get_layer();
+     *          body.get_protected().add(cose_key_t::cose_alg, alg);
+     *          if (cose_alg_t::cose_unknown != keyalg) {
+     *              cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
+     *              recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
+     *
+     *              // fill others and compose
+     *              ret = cose.mac2(handle, key, input, cbor);
+     *          }
+     *          cose.close(handle);
+     */
+    return_t mac2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
     /**
      * @brief   verify with kid
      * @param   cose_context_t* handle [in]
@@ -154,6 +283,10 @@ class cbor_object_signing_encryption {
    protected:
     return_t subprocess(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
     return_t preprocess(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category, binary_t const& input);
+    return_t preprocess(cose_context_t* handle, crypto_key* key, binary_t const& input);
+
+    return_t preprocess_skeleton(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category, binary_t const& input);
+    return_t preprocess_random(cose_context_t* handle, crypto_key* key);
     return_t preprocess_dorandom(cose_context_t* handle, crypto_key* key, cose_layer* layer);
 
     return_t compose_kdf_context(cose_context_t* handle, cose_layer* layer, binary_t& kdf_context);
