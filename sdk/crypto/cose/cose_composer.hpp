@@ -532,15 +532,13 @@ class cose_composer {
      *          signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
      *          signature.get_unprotected().add(cose_key_t::cose_kid, "11");
      *          signature.get_payload().set_b16("e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
-     *          composer.compose(cbor_tag_t::cose_tag_sign, &root); // tagged
-     *          composer.compose(&root); // untagged
+     *          composer.compose(&root, true); // true for tagged message , false for untagged message
      *          // ...
      *          root->release();
      */
-    return_t compose(cbor_tag_t cbor_tag, cbor_array** object);
-    return_t compose(cbor_array** object);
-    return_t compose(cbor_array** object, binary_t& cbor);
-    return_t diagnose(cbor_array** object, basic_stream& stream);
+    return_t compose(cbor_array** object, bool tagged = true);
+    return_t compose(cbor_array** object, binary_t& cbor, bool tagged = true);
+    return_t diagnose(cbor_array** object, basic_stream& stream, bool tagged = true);
     /**
      * @brief   parse
      * @desc

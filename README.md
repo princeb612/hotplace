@@ -40,6 +40,11 @@
    * sdk/crypto/jose/
    * test/jose/
 
+ * RFC 8152 CBOR Object Signing and Encryption (COSE)
+ * RFC 8812 CBOR Object Signing and Encryption (COSE) and JSON Object Signing and Encryption (JOSE) Registrations for Web Authentication (WebAuthn) Algorithms
+   * sdk/crypto/cose/
+   * test/cose/
+
 ## applied
 
  * RFC 2144 The CAST-128 Encryption Algorithm (May 1997)
@@ -90,11 +95,9 @@
 
 ## studying
 
- * RFC 8152 CBOR Object Signing and Encryption (COSE)
  * RFC 8230 Using RSA Algorithms with CBOR Object Signing and Encryption (COSE) Messages
  * RFC 8392 CBOR Web Token (CWT)
  * RFC 8778 Use of the HSS/LMS Hash-Based Signature Algorithm with CBOR Object Signing and Encryption (COSE)
- * RFC 8812 CBOR Object Signing and Encryption (COSE) and JSON Object Signing and Encryption (JOSE) Registrations for Web Authentication (WebAuthn) Algorithms
  * RFC 9021 Use of the Walnut Digital Signature Algorithm with CBOR Object Signing and Encryption (COSE)
  * RFC 9052 CBOR Object Signing and Encryption (COSE): Structures and Process
  * RFC 9053 CBOR Object Signing and Encryption (COSE): Initial Algorithms

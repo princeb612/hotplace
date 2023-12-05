@@ -39,6 +39,7 @@ cbor_object_encryption::~cbor_object_encryption() {
 
 return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
+    cbor_object_signing_encryption cose;
 
     __try2 {
         if (nullptr == handle) {
@@ -49,7 +50,7 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
         std::list<cose_alg_t> methods;
         methods.push_back(method);
 
-        ret = encrypt(handle, key, methods, input, output);
+        ret = cose.encrypt(handle, key, methods, input, output);
     }
     __finally2 {
         // do nothing
@@ -59,17 +60,14 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
 
 return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
-    return_t check = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    std::set<return_t> results;
     cbor_object_signing_encryption cose;
-    cbor_publisher publisher;
 
     __try2 {
         if (nullptr == handle || nullptr == key) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        ret = cose.encrypt(handle, key, methods, input, output);
     }
     __finally2 {
         // do nothing
@@ -101,9 +99,6 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
 
 return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
-    return_t check = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    std::set<return_t> results;
     cbor_object_signing_encryption cose;
 
     // RFC 8152 4.3.  Externally Supplied Data
