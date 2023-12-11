@@ -104,6 +104,8 @@ class cbor_reader {
     return_t publish(cbor_reader_context_t* handle, cbor_object** root);
 
    protected:
+    return_t clear(cbor_reader_context_t* handle);
+
     return_t push(cbor_reader_context_t* handle, uint8 type, int128 data, uint32 flags);
     return_t push(cbor_reader_context_t* handle, uint8 type, const char* data, size_t size, uint32 flags);
     return_t push(cbor_reader_context_t* handle, uint8 type, const byte_t* data, size_t size, uint32 flags);
@@ -129,6 +131,10 @@ class cbor_reader {
  *          2. if(errorcode_t::no_data == cbor_parse()) return
  */
 return_t cbor_parse(cbor_object** object, binary_t const& cbor);
+
+return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, binary_t*), binary_t* param);
+return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, stream_t*), stream_t* param);
+
 
 }  // namespace io
 }  // namespace hotplace

@@ -42,6 +42,32 @@ return_t cbor_publisher::publish(cbor_object* object, binary_t* b) {
     return ret;
 }
 
+return_t cbor_publisher::publish(cbor_reader_context_t* handle, binary_t* b) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == handle || nullptr == b) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        b->clear();
+
+        auto func = [](unsigned int idx, cbor_object* object, binary_t* b) -> void {
+                cbor_concise_visitor concise(b);
+                object->accept(&concise);
+            };
+
+        cbor_reader reader;
+        cbor_foreach(handle, func, b);
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return ret;
+}
+
 return_t cbor_publisher::publish(cbor_object* object, stream_t* s) {
     return_t ret = errorcode_t::success;
 
@@ -55,6 +81,35 @@ return_t cbor_publisher::publish(cbor_object* object, stream_t* s) {
 
         cbor_diagnostic_visitor diagnostic(s);
         object->accept(&diagnostic);
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return ret;
+}
+
+return_t cbor_publisher::publish(cbor_reader_context_t* handle, stream_t* s) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == handle || nullptr == s) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        s->clear();
+
+        auto func = [](unsigned int idx, cbor_object* object, stream_t*s ) -> void {
+                if(idx) {
+                    s->printf(",");
+                }
+                cbor_diagnostic_visitor diagnostic(s);
+                object->accept(&diagnostic);
+            };
+
+        cbor_reader reader;
+        cbor_foreach(handle, func, s);
     }
     __finally2 {
         // do nothing

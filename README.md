@@ -13,7 +13,7 @@
  * status
    * JOSE ![implemented](https://img.shields.io/badge/implemented-green)
    * CBOR ![implemented](https://img.shields.io/badge/implemented-green)
-   * COSE ![studying](https://img.shields.io/badge/studying-magenta)
+   * COSE ![studying](https://img.shields.io/badge/implemented-magenta)
 
 ## implemented
 
