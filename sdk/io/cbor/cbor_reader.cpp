@@ -422,7 +422,6 @@ return_t cbor_reader::insert(cbor_reader_context_t* handle, cbor_object* object)
             }
         } else {
             handle->roots.push_back(object);
-            object->addref();
         }
 
         switch (type) {
