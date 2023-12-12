@@ -103,6 +103,12 @@ class cbor_reader {
      */
     return_t publish(cbor_reader_context_t* handle, cbor_object** root);
 
+    /**
+     * @brief   foreach
+     */
+    return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, binary_t*), binary_t* param);
+    return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, stream_t*), stream_t* param);
+
    protected:
     return_t clear(cbor_reader_context_t* handle);
 
@@ -131,10 +137,6 @@ class cbor_reader {
  *          2. if(errorcode_t::no_data == cbor_parse()) return
  */
 return_t cbor_parse(cbor_object** object, binary_t const& cbor);
-
-return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, binary_t*), binary_t* param);
-return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, stream_t*), stream_t* param);
-
 
 }  // namespace io
 }  // namespace hotplace
