@@ -31,7 +31,7 @@ typedef struct _cbor_reader_context_temp_t {
     cbor_item_dequeue_t parents;
     cbor_item_dequeue_t items;
 
-    _cbor_reader_context_temp_t () : indef(0), tag_value(cbor_tag_t::cbor_tag_unknown), tag_flag(false) {}
+    _cbor_reader_context_temp_t() : indef(0), tag_value(cbor_tag_t::cbor_tag_unknown), tag_flag(false) {}
 } cbor_reader_context_temp_t;
 
 typedef struct _cbor_reader_context_t {
@@ -83,8 +83,7 @@ return_t cbor_reader::close(cbor_reader_context_t* handle) {
 
 return_t cbor_reader::clear(cbor_reader_context_t* handle) {
     return_t ret = errorcode_t::success;
-    __try2
-    {
+    __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -100,8 +99,7 @@ return_t cbor_reader::clear(cbor_reader_context_t* handle) {
         handle->temp.parents.clear();
         handle->temp.items.clear();
     }
-    __finally2
-    {
+    __finally2 {
         // do nothing
     }
     return ret;
@@ -538,7 +536,7 @@ return_t cbor_reader::publish(cbor_reader_context_t* handle, cbor_object** root)
         }
 
         if (handle->roots.size()) {
-           cbor_object* object = handle->roots.front();
+            cbor_object* object = handle->roots.front();
             object->addref();
             *root = object;
         } else {
@@ -549,6 +547,36 @@ return_t cbor_reader::publish(cbor_reader_context_t* handle, cbor_object** root)
         // do nothing
     }
     return ret;
+}
+
+template <typename TYPE>
+return_t cbor_foreach_t(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, TYPE*), TYPE* param) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        unsigned idx = 0;
+        cbor_root_t::iterator it;
+        for (it = handle->roots.begin(); it != handle->roots.end(); it++, idx++) {
+            (*function)(idx, *it, param);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_reader::cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, binary_t*), binary_t* param) {
+    return cbor_foreach_t<binary_t>(handle, function, param);
+}
+
+return_t cbor_reader::cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, stream_t*), stream_t* param) {
+    return cbor_foreach_t<stream_t>(handle, function, param);
 }
 
 return_t cbor_parse(cbor_object** object, binary_t const& cbor) {
@@ -582,38 +610,6 @@ return_t cbor_parse(cbor_object** object, binary_t const& cbor) {
     }
     __finally2 { reader.close(reader_context); }
     return ret;
-}
-
-template <typename TYPE>
-return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, TYPE*), TYPE* param) {
-    return_t ret = errorcode_t::success;
-
-    __try2
-    {
-        if(nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        unsigned idx = 0;
-        cbor_root_t::iterator it;
-        for (it = handle->roots.begin(); it != handle->roots.end(); it++, idx++) {
-            (*function)(idx, *it, param);
-        }
-    }
-    __finally2
-    {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, binary_t*), binary_t* param) {
-    return cbor_foreach<binary_t>(handle, function, param);
-}
-
-return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, stream_t*), stream_t* param) {
-    return cbor_foreach<stream_t>(handle, function, param);
 }
 
 }  // namespace io

@@ -41,7 +41,12 @@
    * test/jose/
 
  * RFC 8152 CBOR Object Signing and Encryption (COSE)
+ * RFC 8230 Using RSA Algorithms with CBOR Object Signing and Encryption (COSE) Messages
+ * RFC 8392 CBOR Web Token (CWT)
  * RFC 8812 CBOR Object Signing and Encryption (COSE) and JSON Object Signing and Encryption (JOSE) Registrations for Web Authentication (WebAuthn) Algorithms
+ * RFC 9052 CBOR Object Signing and Encryption (COSE): Structures and Process
+ * RFC 9053 CBOR Object Signing and Encryption (COSE): Initial Algorithms
+ * RFC 9338 CBOR Object Signing and Encryption (COSE): Countersignatures
    * sdk/crypto/cose/
    * test/cose/
 
@@ -95,14 +100,9 @@
 
 ## studying
 
- * RFC 8230 Using RSA Algorithms with CBOR Object Signing and Encryption (COSE) Messages
- * RFC 8392 CBOR Web Token (CWT)
  * RFC 8778 Use of the HSS/LMS Hash-Based Signature Algorithm with CBOR Object Signing and Encryption (COSE)
  * RFC 9021 Use of the Walnut Digital Signature Algorithm with CBOR Object Signing and Encryption (COSE)
- * RFC 9052 CBOR Object Signing and Encryption (COSE): Structures and Process
- * RFC 9053 CBOR Object Signing and Encryption (COSE): Initial Algorithms
  * RFC 9054 CBOR Object Signing and Encryption (COSE): Hash Algorithms
- * RFC 9338 CBOR Object Signing and Encryption (COSE): Countersignatures
  * RFC 9360 CBOR Object Signing and Encryption (COSE): Header Parameters for Carrying and Referencing X.509 Certificates
 
 ## build

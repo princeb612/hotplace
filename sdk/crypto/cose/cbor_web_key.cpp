@@ -116,12 +116,12 @@ return_t cbor_web_key::load(crypto_key* crypto_key, binary_t const& buffer, int 
     return ret;
 }
 
-return_t cbor_web_key::load(crypto_key* crypto_key, cbor_object* root, int flags) {
+return_t cbor_web_key::load(crypto_key* key, cbor_object* root, int flags) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == root) {
+        if (nullptr == key || nullptr == root) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -131,63 +131,83 @@ return_t cbor_web_key::load(crypto_key* crypto_key, cbor_object* root, int flags
             std::list<cbor_object*>::const_iterator iter;
             for (iter = keys.begin(); iter != keys.end(); iter++) {
                 cbor_object* child = *iter;
-                if (cbor_type_t::cbor_type_map == child->type()) {
-                    cose_key_object keyobj;
-                    const std::list<cbor_pair*>& key_contents = ((cbor_map*)child)->accessor();
-                    std::list<cbor_pair*>::const_iterator contents_iter;
-                    for (contents_iter = key_contents.begin(); contents_iter != key_contents.end(); contents_iter++) {
-                        cbor_pair* pair = *contents_iter;
-                        cbor_data* lhs = (cbor_data*)pair->left();
-                        cbor_data* rhs = (cbor_data*)pair->right();
-                        // (nullptr != lhs) && (nullptr != rhs)
-                        if ((lhs->type() == rhs->type()) && (cbor_type_t::cbor_type_data == lhs->type())) {
-                            int label = lhs->data().to_int();
-                            const variant_t& vt_rhs = rhs->data().content();
-                            if (cose_key_lable_t::cose_lable_kid == label) {  // 2
-                                rhs->data().to_string(keyobj.kid);
-                            } else if (cose_key_lable_t::cose_lable_kty == label) {  // 1
-                                keyobj.type = rhs->data().to_int();
-                            } else if (-1 == label) {  // ec2 curve, symmetric k
-                                if (TYPE_BINARY == vt_rhs.type) {
-                                    // symm
-                                    binary_t bin;
-                                    rhs->data().to_binary(bin);
-                                    keyobj.attrib.insert(std::make_pair(label, bin));
-                                } else {
-                                    // curve if okp, ec2
-                                    keyobj.curve = rhs->data().to_int();
-                                }
-                            } else if (label < -1) {  // ec2 (-2 x, -3 y, -4 d), rsa (-1 n, -2 e, -3 d, ..., -12 ti)
-                                binary_t bin;
-                                rhs->data().to_binary(bin);
-                                keyobj.attrib.insert(std::make_pair(label, bin));
-                            }
+                do_load(key, child, flags);
+            }
+        } else if (cbor_type_t::cbor_type_map == root->type()) {
+            do_load(key, root, flags);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_web_key::do_load(crypto_key* crypto_key, cbor_object* object, int flags) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == crypto_key || nullptr == object) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (cbor_type_t::cbor_type_map == object->type()) {
+            cose_key_object keyobj;
+            const std::list<cbor_pair*>& key_contents = ((cbor_map*)object)->accessor();
+            std::list<cbor_pair*>::const_iterator contents_iter;
+            for (contents_iter = key_contents.begin(); contents_iter != key_contents.end(); contents_iter++) {
+                cbor_pair* pair = *contents_iter;
+                cbor_data* lhs = (cbor_data*)pair->left();
+                cbor_data* rhs = (cbor_data*)pair->right();
+                // (nullptr != lhs) && (nullptr != rhs)
+                if ((lhs->type() == rhs->type()) && (cbor_type_t::cbor_type_data == lhs->type())) {
+                    int label = lhs->data().to_int();
+                    const variant_t& vt_rhs = rhs->data().content();
+                    if (cose_key_lable_t::cose_lable_kid == label) {  // 2
+                        rhs->data().to_string(keyobj.kid);
+                    } else if (cose_key_lable_t::cose_lable_kty == label) {  // 1
+                        keyobj.type = rhs->data().to_int();
+                    } else if (-1 == label) {  // ec2 curve, symmetric k
+                        if (TYPE_BINARY == vt_rhs.type) {
+                            // symm
+                            binary_t bin;
+                            rhs->data().to_binary(bin);
+                            keyobj.attrib.insert(std::make_pair(label, bin));
+                        } else {
+                            // curve if okp, ec2
+                            keyobj.curve = rhs->data().to_int();
                         }
-                    }
-                    maphint<int, binary_t> hint_key(keyobj.attrib);
-                    if (cose_kty_t::cose_kty_okp == keyobj.type || cose_kty_t::cose_kty_ec2 == keyobj.type) {  // 1, 2
-                        uint32 nid = advisor->curveof((cose_ec_curve_t)keyobj.curve);
-                        binary_t x;
-                        binary_t y;
-                        binary_t d;
-                        hint_key.find(cose_key_lable_t::cose_ec_x, &x);  // -2
-                        hint_key.find(cose_key_lable_t::cose_ec_y, &y);  // -3
-                        hint_key.find(cose_key_lable_t::cose_ec_d, &d);  // -4
-                        add_ec(crypto_key, keyobj.kid.c_str(), nullptr, nid, x, y, d);
-                    } else if (cose_kty_t::cose_kty_rsa == keyobj.type) {  // 3
-                        binary_t n;
-                        binary_t e;
-                        binary_t d;
-                        hint_key.find(cose_key_lable_t::cose_rsa_n, &n);  // -1
-                        hint_key.find(cose_key_lable_t::cose_rsa_e, &e);  // -2
-                        hint_key.find(cose_key_lable_t::cose_rsa_d, &d);  // -3
-                        add_rsa(crypto_key, keyobj.kid.c_str(), nullptr, n, e, d);
-                    } else if (cose_kty_t::cose_kty_symm == keyobj.type) {  // 4
-                        binary_t k;
-                        hint_key.find(cose_key_lable_t::cose_symm_k, &k);  // -1
-                        add_oct(crypto_key, keyobj.kid.c_str(), nullptr, k);
+                    } else if (label < -1) {  // ec2 (-2 x, -3 y, -4 d), rsa (-1 n, -2 e, -3 d, ..., -12 ti)
+                        binary_t bin;
+                        rhs->data().to_binary(bin);
+                        keyobj.attrib.insert(std::make_pair(label, bin));
                     }
                 }
+            }
+            maphint<int, binary_t> hint_key(keyobj.attrib);
+            if (cose_kty_t::cose_kty_okp == keyobj.type || cose_kty_t::cose_kty_ec2 == keyobj.type) {  // 1, 2
+                uint32 nid = advisor->curveof((cose_ec_curve_t)keyobj.curve);
+                binary_t x;
+                binary_t y;
+                binary_t d;
+                hint_key.find(cose_key_lable_t::cose_ec_x, &x);  // -2
+                hint_key.find(cose_key_lable_t::cose_ec_y, &y);  // -3
+                hint_key.find(cose_key_lable_t::cose_ec_d, &d);  // -4
+                add_ec(crypto_key, keyobj.kid.c_str(), nullptr, nid, x, y, d);
+            } else if (cose_kty_t::cose_kty_rsa == keyobj.type) {  // 3
+                binary_t n;
+                binary_t e;
+                binary_t d;
+                hint_key.find(cose_key_lable_t::cose_rsa_n, &n);  // -1
+                hint_key.find(cose_key_lable_t::cose_rsa_e, &e);  // -2
+                hint_key.find(cose_key_lable_t::cose_rsa_d, &d);  // -3
+                add_rsa(crypto_key, keyobj.kid.c_str(), nullptr, n, e, d);
+            } else if (cose_kty_t::cose_kty_symm == keyobj.type) {  // 4
+                binary_t k;
+                hint_key.find(cose_key_lable_t::cose_symm_k, &k);  // -1
+                add_oct(crypto_key, keyobj.kid.c_str(), nullptr, k);
             }
         }
     }

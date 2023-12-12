@@ -54,12 +54,12 @@ return_t cbor_publisher::publish(cbor_reader_context_t* handle, binary_t* b) {
         b->clear();
 
         auto func = [](unsigned int idx, cbor_object* object, binary_t* b) -> void {
-                cbor_concise_visitor concise(b);
-                object->accept(&concise);
-            };
+            cbor_concise_visitor concise(b);
+            object->accept(&concise);
+        };
 
         cbor_reader reader;
-        cbor_foreach(handle, func, b);
+        reader.cbor_foreach(handle, func, b);
     }
     __finally2 {
         // do nothing
@@ -100,16 +100,16 @@ return_t cbor_publisher::publish(cbor_reader_context_t* handle, stream_t* s) {
 
         s->clear();
 
-        auto func = [](unsigned int idx, cbor_object* object, stream_t*s ) -> void {
-                if(idx) {
-                    s->printf(",");
-                }
-                cbor_diagnostic_visitor diagnostic(s);
-                object->accept(&diagnostic);
-            };
+        auto func = [](unsigned int idx, cbor_object* object, stream_t* s) -> void {
+            if (idx) {
+                s->printf(",");
+            }
+            cbor_diagnostic_visitor diagnostic(s);
+            object->accept(&diagnostic);
+        };
 
         cbor_reader reader;
-        cbor_foreach(handle, func, s);
+        reader.cbor_foreach(handle, func, s);
     }
     __finally2 {
         // do nothing

@@ -135,6 +135,7 @@ class cbor_web_key : public crypto_keychain {
     virtual return_t write_file(crypto_key* cryptokey, const char* file, int flags = 0);
 
    protected:
+    return_t do_load(crypto_key* crypto_key, cbor_object* object, int flags);
 };
 
 }  // namespace crypto
