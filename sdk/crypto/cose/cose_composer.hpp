@@ -164,11 +164,29 @@ class cose_data {
     size_t size_binary();
     void get_binary(binary_t& bin);
 
+    class cose_key {
+       public:
+        cose_key();
+        void set(crypto_key* key, uint16 curve, binary_t const& x, binary_t const& y);
+        void set(crypto_key* key, uint16 curve, binary_t const& x, bool ysign);
+        void set(cose_orderlist_t& order);
+        cbor_map* cbor();
+
+       private:
+        uint16 _curve;
+        binary_t _x;
+        binary_t _y;
+        bool _ysign;
+        bool _compressed;
+        cose_orderlist_t _order;
+    };
+
    private:
     cose_variantmap_t _data_map;
     cose_orderlist_t _order;
     binary_t _payload;
     cose_recipient* _layer;
+    std::list<cose_key*> _keys;
 };
 
 /**

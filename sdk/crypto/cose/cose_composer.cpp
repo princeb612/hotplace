@@ -24,107 +24,100 @@ namespace crypto {
 #define TYPE_STATIC_KEY (TYPE_USER)
 #define TYPE_COUNTER_SIG (vartype_t)(TYPE_USER + 1)
 
-class cose_key {
-   public:
-    cose_key() : _curve(0) {}
-    void set(crypto_key* key, uint16 curve, binary_t const& x, binary_t const& y) {
-        _curve = curve;
-        _x = x;
-        _y = y;
-        _compressed = false;
+cose_data::cose_key::cose_key() : _curve(0) {}
 
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        const hint_curve_t* hint = advisor->hintof_curve((cose_ec_curve_t)curve);
-        crypto_keychain keychain;
-        binary_t d;
-        keychain.add_ec(key, nullptr, hint->nid, x, y, d);
-    }
-    void set(crypto_key* key, uint16 curve, binary_t const& x, bool ysign) {
-        _curve = curve;
-        _x = x;
-        _y.clear();
-        _ysign = ysign;
-        _compressed = true;
+void cose_data::cose_key::set(crypto_key* key, uint16 curve, binary_t const& x, binary_t const& y) {
+    _curve = curve;
+    _x = x;
+    _y = y;
+    _compressed = false;
 
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        const hint_curve_t* hint = advisor->hintof_curve((cose_ec_curve_t)curve);
-        crypto_keychain keychain;
-        binary_t d;
-        keychain.add_ec(key, nullptr, hint->nid, x, ysign, d);
-    }
-    void set(cose_orderlist_t& order) { _order = order; }
-    cbor_map* cbor() {
-        cbor_map* object = nullptr;
-        __try2 {
-            __try_new_catch_only(object, new cbor_map());
-            if (nullptr == object) {
-                __leave2;
-            }
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_curve_t* hint = advisor->hintof_curve((cose_ec_curve_t)curve);
+    crypto_keychain keychain;
+    binary_t d;
+    keychain.add_ec(key, nullptr, hint->nid, x, y, d);
+}
 
-            cose_kty_t kty;
-            switch (_curve) {
-                case cose_ec_p256:
-                case cose_ec_p384:
-                case cose_ec_p521:
-                    kty = cose_kty_t::cose_kty_ec2;
-                    break;
-                default:
-                    kty = cose_kty_t::cose_kty_okp;
-                    break;
-            }
+void cose_data::cose_key::set(crypto_key* key, uint16 curve, binary_t const& x, bool ysign) {
+    _curve = curve;
+    _x = x;
+    _y.clear();
+    _ysign = ysign;
+    _compressed = true;
 
-            if (_order.size()) {
-                for (cose_orderlist_t::iterator iter = _order.begin(); iter != _order.end(); iter++) {
-                    int key = *iter;
-                    switch (key) {
-                        case cose_key_lable_t::cose_lable_kty:
-                            *object << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(kty));
-                            break;
-                        case cose_key_lable_t::cose_ec_crv:
-                            *object << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve));
-                            break;
-                        case cose_key_lable_t::cose_ec_x:
-                            *object << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));
-                            break;
-                        case cose_key_lable_t::cose_ec_y:
-                            if (_compressed) {
-                                *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
-                            } else {
-                                *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)
-                            }
-                            break;
-                        default:
-                            break;
-                    }
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_curve_t* hint = advisor->hintof_curve((cose_ec_curve_t)curve);
+    crypto_keychain keychain;
+    binary_t d;
+    keychain.add_ec(key, nullptr, hint->nid, x, ysign, d);
+}
+
+void cose_data::cose_key::set(cose_orderlist_t& order) { _order = order; }
+
+cbor_map* cose_data::cose_key::cbor() {
+    cbor_map* object = nullptr;
+    __try2 {
+        __try_new_catch_only(object, new cbor_map());
+        if (nullptr == object) {
+            __leave2;
+        }
+
+        cose_kty_t kty;
+        switch (_curve) {
+            case cose_ec_p256:
+            case cose_ec_p384:
+            case cose_ec_p521:
+                kty = cose_kty_t::cose_kty_ec2;
+                break;
+            default:
+                kty = cose_kty_t::cose_kty_okp;
+                break;
+        }
+
+        if (_order.size()) {
+            for (cose_orderlist_t::iterator iter = _order.begin(); iter != _order.end(); iter++) {
+                int key = *iter;
+                switch (key) {
+                    case cose_key_lable_t::cose_lable_kty:
+                        *object << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(kty));
+                        break;
+                    case cose_key_lable_t::cose_ec_crv:
+                        *object << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve));
+                        break;
+                    case cose_key_lable_t::cose_ec_x:
+                        *object << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));
+                        break;
+                    case cose_key_lable_t::cose_ec_y:
+                        if (_compressed) {
+                            *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
+                        } else {
+                            *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)
+                        }
+                        break;
+                    default:
+                        break;
                 }
-            } else {
-                *object << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(kty))  // kty(1)
-                        << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve))  // crv(-1)
-                        << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));       // x(-2)
+            }
+        } else {
+            *object << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(kty))  // kty(1)
+                    << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve))  // crv(-1)
+                    << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));       // x(-2)
 
-                if (cose_kty_t::cose_kty_ec2 == kty) {
-                    if (_compressed) {
-                        *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
-                    } else {
-                        *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)
-                    }
+            if (cose_kty_t::cose_kty_ec2 == kty) {
+                if (_compressed) {
+                    *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
+                } else {
+                    *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)
                 }
             }
         }
-        __finally2 {
-            // do nothing
-        }
-        return object;
     }
-
-   private:
-    uint16 _curve;
-    binary_t _x;
-    binary_t _y;
-    bool _ysign;
-    bool _compressed;
-    cose_orderlist_t _order;
-};
+    __finally2 {
+        // do nothing
+    }
+    return object;
+}
 
 cose_data::cose_data() : _layer(nullptr) {}
 
@@ -193,12 +186,14 @@ cose_data& cose_data::replace(int key, binary_t const& value) { return replace(k
 
 cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t const& y) {
     cose_key* k = nullptr;
+    return_t ret = errorcode_t::success;
     __try2 {
-        __try_new_catch_only(k, new cose_key());
-        if (k) {
-            k->set(&get_owner()->get_static_key(), curve, x, y);
-            add(key, TYPE_STATIC_KEY, k);
-        }
+        __try_new_catch(k, new cose_key(), ret, __leave2);
+
+        k->set(&get_owner()->get_static_key(), curve, x, y);
+        add(key, TYPE_STATIC_KEY, k);
+
+        _keys.push_back(k);
     }
     __finally2 {
         // do nothing
@@ -208,13 +203,15 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t con
 
 cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t const& y, std::list<int>& order) {
     cose_key* k = nullptr;
+    return_t ret = errorcode_t::success;
     __try2 {
-        __try_new_catch_only(k, new cose_key());
-        if (k) {
-            k->set(&get_owner()->get_static_key(), curve, x, y);
-            k->set(order);
-            add(key, TYPE_STATIC_KEY, k);
-        }
+        __try_new_catch(k, new cose_key(), ret, __leave2);
+
+        k->set(&get_owner()->get_static_key(), curve, x, y);
+        k->set(order);
+        add(key, TYPE_STATIC_KEY, k);
+
+        _keys.push_back(k);
     }
     __finally2 {
         // do nothing
@@ -224,12 +221,14 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t con
 
 cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign) {
     cose_key* k = nullptr;
+    return_t ret = errorcode_t::success;
     __try2 {
-        __try_new_catch_only(k, new cose_key());
-        if (k) {
-            k->set(&get_owner()->get_static_key(), curve, x, ysign);
-            add(key, TYPE_STATIC_KEY, k);
-        }
+        __try_new_catch(k, new cose_key(), ret, __leave2);
+
+        k->set(&get_owner()->get_static_key(), curve, x, ysign);
+        add(key, TYPE_STATIC_KEY, k);
+
+        _keys.push_back(k);
     }
     __finally2 {
         // do nothing
@@ -239,13 +238,15 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign) 
 
 cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign, std::list<int>& order) {
     cose_key* k = nullptr;
+    return_t ret = errorcode_t::success;
     __try2 {
-        __try_new_catch_only(k, new cose_key());
-        if (k) {
-            k->set(&get_owner()->get_static_key(), curve, x, ysign);
-            k->set(order);
-            add(key, TYPE_STATIC_KEY, k);
-        }
+        __try_new_catch(k, new cose_key(), ret, __leave2);
+
+        k->set(&get_owner()->get_static_key(), curve, x, ysign);
+        k->set(order);
+        add(key, TYPE_STATIC_KEY, k);
+
+        _keys.push_back(k);
     }
     __finally2 {
         // do nothing
@@ -331,18 +332,14 @@ cose_data& cose_data::set_b16(const char* value) {
 }
 
 cose_data& cose_data::clear() {
-    cose_variantmap_t::iterator map_iter;
-    for (map_iter = _data_map.begin(); map_iter != _data_map.end(); map_iter++) {
-        int key = map_iter->first;
-        variant_t& value = map_iter->second.content();
-        if (TYPE_STATIC_KEY == value.type) {
-            cose_key* k = (cose_key*)value.data.p;
-            delete k;
-        }
-    }
     _data_map.clear();
     _order.clear();
     _payload.clear();
+    for (std::list<cose_key*>::iterator it = _keys.begin(); it != _keys.end(); it++) {
+        cose_key* object = *it;
+        delete object;
+    }
+    _keys.clear();
     return *this;
 }
 
