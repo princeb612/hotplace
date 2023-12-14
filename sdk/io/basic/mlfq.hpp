@@ -167,27 +167,24 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::post(int pri, TYPENAME_T* source, void* p
             __leave2;
         }
 
-        __try2 {
-            _lock.enter();
+        critical_section_guard guard(_lock);
 
-            if (0 == _mode[mlfq_mode_t::mlfq_block]) {
-                ret = errorcode_t::blocked;
-                __leave2;
-            }
-
-            _binder.binder(mlfq_binder_operation_t::binder_v, source, param);  // reference counter ++
-            _size++;
-
-            mlfq_queue_t clean_q;
-            mlfq_map_pib_t pib = _mfq.insert(std::make_pair(pri, clean_q));
-            typename mlfq_map_t::iterator qit = pib.first;
-            mlfq_queue_t& q = qit->second;
-            q.push(source);
-
-            _workingset.insert(source);
-            _semaphore.signal();
+        if (0 == _mode[mlfq_mode_t::mlfq_block]) {
+            ret = errorcode_t::blocked;
+            __leave2;
         }
-        __finally2 { _lock.leave(); }
+
+        _binder.binder(mlfq_binder_operation_t::binder_v, source, param);  // reference counter ++
+        _size++;
+
+        mlfq_queue_t clean_q;
+        mlfq_map_pib_t pib = _mfq.insert(std::make_pair(pri, clean_q));
+        typename mlfq_map_t::iterator qit = pib.first;
+        mlfq_queue_t& q = qit->second;
+        q.push(source);
+
+        _workingset.insert(source);
+        _semaphore.signal();
     }
     __finally2 {
         // do nothing
@@ -221,7 +218,7 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::get(int* pri, TYPENAME_T** source, uint32
         uint32 wait = _semaphore.wait(timeout);
         if (0 == wait) {
             ret = errorcode_t::not_found;
-            _lock.enter();
+            critical_section_guard guard(_lock);
             // greater number mean more priority
             typename mlfq_map_t::reverse_iterator rit;
             for (rit = _mfq.rbegin(); rit != _mfq.rend(); rit++) {
@@ -246,7 +243,6 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::get(int* pri, TYPENAME_T** source, uint32
                     }
                 }
             }
-            _lock.leave();
         } else {
             ret = errorcode_t::not_ready;
         }
@@ -267,13 +263,12 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::cancel(TYPENAME_T* source, void* param) {
     return_t ret = errorcode_t::success;
 
     // delete from workingset
-    _lock.enter();
+    critical_section_guard guard(_lock);
     typename mlfq_set_t::iterator iter = _workingset.find(source);
     if (_workingset.end() != iter) {
         _binder.binder(mlfq_binder_operation_t::binder_p, source, param);  // reference counter --
         _workingset.erase(iter);
     }
-    _lock.leave();
     return ret;
 }
 
@@ -286,7 +281,7 @@ template <typename TYPENAME_T, typename BINDER_T>
 return_t t_mlfq<TYPENAME_T, BINDER_T>::clear(void* param) {
     return_t ret = errorcode_t::success;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
     for (typename mlfq_map_t::iterator it = _mfq.begin(); it != _mfq.end(); it++) {
         mlfq_queue_t& q = it->second;
 
@@ -305,7 +300,6 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::clear(void* param) {
     }
     _size = 0;
     _workingset.clear();
-    _lock.leave();
     return ret;
 }
 
@@ -313,7 +307,7 @@ template <typename TYPENAME_T, typename BINDER_T>
 return_t t_mlfq<TYPENAME_T, BINDER_T>::set(int mode, int value) {
     return_t ret = errorcode_t::success;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
     switch (mode) {
         case mlfq_mode_t::mlfq_block:  // _mode [0]
             _mode[mlfq_mode_t::mlfq_block] = value;
@@ -321,7 +315,6 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::set(int mode, int value) {
         default:
             break;
     }
-    _lock.leave();
 
     return ret;
 }

@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/valist.hpp>
+#include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
 
@@ -21,22 +22,20 @@ valist::valist(const valist& object) : _va_internal(nullptr), _modified(false) {
 valist::~valist() { clear(); }
 
 valist& valist::assign(const valist& object) {
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     _args = object._args;  // copy vector
     _modified = true;
 
-    _lock.leave();
     return *this;
 }
 
 valist& valist::assign(std::vector<variant_t> const& args) {
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     _args = args;  // copy vector
     _modified = true;
 
-    _lock.leave();
     return *this;
 }
 
@@ -200,14 +199,14 @@ valist& valist::operator<<(variant_t const& v) {
 valist& valist::operator<<(const valist& object) { return assign(object); }
 
 void valist::clear() {
-    _lock.enter();
+    critical_section_guard guard(_lock);
+
     _args.clear();
     _modified = true;
     if (nullptr != _va_internal) {
         free(_va_internal);
         _va_internal = nullptr;
     }
-    _lock.leave();
 }
 
 size_t valist::size() { return _args.size(); }
@@ -215,18 +214,18 @@ size_t valist::size() { return _args.size(); }
 return_t valist::at(size_t index, variant_t& v) {
     return_t ret = errorcode_t::success;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
+
     if (index < size()) {
         v = _args[index];
     } else {
         ret = errorcode_t::out_of_range;
     }
-    _lock.leave();
     return ret;
 }
 
 va_list& valist::get() {
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     // va_list ap;
     if (true == _modified || nullptr == _va_internal) {
@@ -261,8 +260,6 @@ va_list& valist::get() {
     _type.va_ptr = _va_internal;
 #endif
 
-    _lock.leave();
-
     return _type.ap;
 }
 
@@ -291,10 +288,9 @@ union va_union {
 void valist::build() {
     int arg_list_size = 0;
     void* arg_list = nullptr;
+    critical_section_guard guard(_lock);
 
     __try2 {
-        _lock.enter();
-
         for (args_t::iterator iter1 = _args.begin(); iter1 != _args.end(); iter1++) {
             variant_t vt = *iter1;
             unsigned native_data_size = 0;
@@ -513,16 +509,14 @@ void valist::build() {
         }
 
         _va_internal = arg_list;
-
-        _lock.leave();
     }
 }
 
 void valist::insert(variant_t const& v) {
-    _lock.enter();
+    critical_section_guard guard(_lock);
+
     _args.push_back(v);
     _modified = true;
-    _lock.leave();
 }
 
 }  // namespace hotplace

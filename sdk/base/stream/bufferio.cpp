@@ -17,6 +17,7 @@
 
 #include <sdk/base/inline.hpp>
 #include <sdk/base/stream/bufferio.hpp>
+#include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
 
@@ -181,45 +182,40 @@ return_t bufferio::write(bufferio_context_t* handle, const void* data, size_t da
             __leave2;
         }
 
-        __try2 {
-            handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
 
-            while (data_size > size_copied) {
-                if (true == handle->bufferio_queue.empty()) {
-                    size_remained = 0;
-                } else {
-                    bufferin_queue_t::reverse_iterator rit = handle->bufferio_queue.rbegin();
-                    bufferio_item = *rit;
-                    size_remained = bufferio_item->limit - bufferio_item->offset;
-                }
+        while (data_size > size_copied) {
+            if (true == handle->bufferio_queue.empty()) {
+                size_remained = 0;
+            } else {
+                bufferin_queue_t::reverse_iterator rit = handle->bufferio_queue.rbegin();
+                bufferio_item = *rit;
+                size_remained = bufferio_item->limit - bufferio_item->offset;
+            }
 
-                if (0 == size_remained) {
-                    ret = extend(handle, handle->block_size, &bufferio_item);
-                    if (errorcode_t::success != ret) {
-                        break;
-                    }
-                    size_remained = handle->block_size;
+            if (0 == size_remained) {
+                ret = extend(handle, handle->block_size, &bufferio_item);
+                if (errorcode_t::success != ret) {
+                    break;
                 }
+                size_remained = handle->block_size;
+            }
 
-                size_to_copy = data_size - size_copied;
-                if (size_remained >= size_to_copy) {
-                    memcpy_inline(bufferio_item->base_address + bufferio_item->offset, bufferio_item->limit - bufferio_item->offset,
-                                  (byte_t*)data + size_copied, size_to_copy);
-                    bufferio_item->offset += size_to_copy;
-                    size_copied += size_to_copy;
-                } else {
-                    memcpy_inline(bufferio_item->base_address + bufferio_item->offset, bufferio_item->limit - bufferio_item->offset,
-                                  (byte_t*)data + size_copied, size_remained);
-                    bufferio_item->offset += size_remained;
-                    size_copied += size_remained;
-                }
+            size_to_copy = data_size - size_copied;
+            if (size_remained >= size_to_copy) {
+                memcpy_inline(bufferio_item->base_address + bufferio_item->offset, bufferio_item->limit - bufferio_item->offset, (byte_t*)data + size_copied,
+                              size_to_copy);
+                bufferio_item->offset += size_to_copy;
+                size_copied += size_to_copy;
+            } else {
+                memcpy_inline(bufferio_item->base_address + bufferio_item->offset, bufferio_item->limit - bufferio_item->offset, (byte_t*)data + size_copied,
+                              size_remained);
+                bufferio_item->offset += size_remained;
+                size_copied += size_remained;
             }
         }
-        __finally2 {
-            handle->bufferio_size += size_copied;
 
-            handle->bufferio_lock.leave();
-        }
+        handle->bufferio_size += size_copied;
     }
     __finally2 {
         // do nothing
@@ -242,10 +238,9 @@ return_t bufferio::clear(bufferio_context_t* handle) {
             __leave2;
         }
 
-        handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
         clear_bufferio_queue_nolock(handle, handle->bufferio_queue);
         handle->bufferio_size = 0;
-        handle->bufferio_lock.leave();
     }
     __finally2 {
         // do nothing
@@ -297,51 +292,48 @@ return_t bufferio::get(bufferio_context_t* handle, byte_t** contents, size_t* co
             __leave2;
         }
 
-        __try2 {
-            handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
 
-            // case1. c_str () after constructor
-            // case2. c_str () after clear
-            if (0 == handle->bufferio_queue.size() && handle->pad_size) {
-                bufferio_t* bufferio_item = nullptr;
-                extend(handle, handle->block_size, &bufferio_item);
-            }
-
-            data_size = handle->bufferio_size;
-            size_t bufferin_queue_size = handle->bufferio_queue.size();
-            if (0 == bufferin_queue_size) {
-                ret = errorcode_t::no_data;
-                *contents = nullptr;
-                *contents_size = 0;
-                __leave2;
-            } else if (1 == bufferin_queue_size) {
-                bufferio_t* front = handle->bufferio_queue.front();
-                *contents = front->base_address;
-                *contents_size = data_size;
-            } else {
-                pad_size = handle->pad_size;
-
-                ret = extend(handle, data_size, &bufferio_newly_allocated, bufferio_flag_t::manual);
-                if (errorcode_t::success != ret) {
-                    __leave2;
-                }
-
-                data = bufferio_newly_allocated->base_address;
-
-                copy_from_bufferio_queue_nolock(data, index, handle->bufferio_queue);
-
-                memset(data + index, 0, handle->pad_size);
-
-                clear_bufferio_queue_nolock(handle, handle->bufferio_queue);
-
-                bufferio_newly_allocated->offset = data_size;
-                handle->bufferio_queue.push_back(bufferio_newly_allocated);
-
-                *contents = data;
-                *contents_size = data_size;
-            }
+        // case1. c_str () after constructor
+        // case2. c_str () after clear
+        if (0 == handle->bufferio_queue.size() && handle->pad_size) {
+            bufferio_t* bufferio_item = nullptr;
+            extend(handle, handle->block_size, &bufferio_item);
         }
-        __finally2 { handle->bufferio_lock.leave(); }
+
+        data_size = handle->bufferio_size;
+        size_t bufferin_queue_size = handle->bufferio_queue.size();
+        if (0 == bufferin_queue_size) {
+            ret = errorcode_t::no_data;
+            *contents = nullptr;
+            *contents_size = 0;
+            __leave2;
+        } else if (1 == bufferin_queue_size) {
+            bufferio_t* front = handle->bufferio_queue.front();
+            *contents = front->base_address;
+            *contents_size = data_size;
+        } else {
+            pad_size = handle->pad_size;
+
+            ret = extend(handle, data_size, &bufferio_newly_allocated, bufferio_flag_t::manual);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            data = bufferio_newly_allocated->base_address;
+
+            copy_from_bufferio_queue_nolock(data, index, handle->bufferio_queue);
+
+            memset(data + index, 0, handle->pad_size);
+
+            clear_bufferio_queue_nolock(handle, handle->bufferio_queue);
+
+            bufferio_newly_allocated->offset = data_size;
+            handle->bufferio_queue.push_back(bufferio_newly_allocated);
+
+            *contents = data;
+            *contents_size = data_size;
+        }
     }
     __finally2 {
         // do nothing
@@ -371,7 +363,7 @@ bool bufferio::compare(bufferio_context_t* handle, const void* data_to_compare, 
         size_t dwCompareRemainSize = size_to_compare;
         size_t dwCompareSize = 0;
 
-        handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
 
         bufferin_queue_t::iterator iter;
         for (iter = handle->bufferio_queue.begin(); iter != handle->bufferio_queue.end() && (dwCompareRemainSize > 0); iter++) {
@@ -387,8 +379,6 @@ bool bufferio::compare(bufferio_context_t* handle, const void* data_to_compare, 
             target_index += pIo->offset;
             dwCompareRemainSize -= pIo->offset;
         }
-
-        handle->bufferio_lock.leave();
 
         ret_bool = ((0 == nCmp) && (0 == dwCompareRemainSize));
     }
@@ -423,7 +413,7 @@ return_t bufferio::cut(bufferio_context_t* handle, uint32 begin_pos, uint32 leng
             __leave2;
         }
 
-        handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
 
         size_t base = 0;
         size_t limit = 0;
@@ -492,7 +482,6 @@ return_t bufferio::cut(bufferio_context_t* handle, uint32 begin_pos, uint32 leng
         }
 
         handle->bufferio_size -= (end_pos - begin_pos);
-        handle->bufferio_lock.leave();
     }
     __finally2 {
         // do nothing
@@ -515,86 +504,83 @@ return_t bufferio::insert(bufferio_context_t* handle, size_t begin_pos, const vo
             __leave2;
         }
 
-        __try2 {
-            handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
 
-            if (handle->bufferio_size < begin_pos) {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
+        if (handle->bufferio_size < begin_pos) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
 
-            if (handle->bufferio_queue.empty()) {
-                write(handle, data, data_size);
-            } else {
-                size_t base = 0;
-                size_t limit = 0;
+        if (handle->bufferio_queue.empty()) {
+            write(handle, data, data_size);
+        } else {
+            size_t base = 0;
+            size_t limit = 0;
 
-                bufferin_queue_t::iterator iter;
-                for (iter = handle->bufferio_queue.begin(); iter != handle->bufferio_queue.end();) {
-                    bufferio_t* bufferio_item = *iter;
+            bufferin_queue_t::iterator iter;
+            for (iter = handle->bufferio_queue.begin(); iter != handle->bufferio_queue.end();) {
+                bufferio_t* bufferio_item = *iter;
 
-                    base = limit;
-                    limit += bufferio_item->offset;
+                base = limit;
+                limit += bufferio_item->offset;
 
-                    if (limit < begin_pos) {
-                        iter++;
-                        continue;
+                if (limit < begin_pos) {
+                    iter++;
+                    continue;
+                }
+
+                size_t size_bufferio_previous = 0;
+                size_t size_bufferio_next = 0;
+                bufferio_t* bufferio_previous = nullptr;
+                bufferio_t* bufferio_next = nullptr;
+                bufferio_t* bufferio_insert = nullptr;
+
+                if ((base <= begin_pos) && (begin_pos <= limit)) {
+                    size_bufferio_previous = begin_pos - base;
+
+                    if (size_bufferio_previous > 0) {
+                        extend(handle, size_bufferio_previous, &bufferio_previous, bufferio_flag_t::manual);
+                        bufferio_previous->offset = size_bufferio_previous;
+                        memcpy(bufferio_previous->base_address, bufferio_item->base_address, size_bufferio_previous);
                     }
 
-                    size_t size_bufferio_previous = 0;
-                    size_t size_bufferio_next = 0;
-                    bufferio_t* bufferio_previous = nullptr;
-                    bufferio_t* bufferio_next = nullptr;
-                    bufferio_t* bufferio_insert = nullptr;
+                    extend(handle, data_size, &bufferio_insert, bufferio_flag_t::manual);
+                    bufferio_insert->offset = data_size;
+                    memcpy(bufferio_insert->base_address, data, data_size);
 
-                    if ((base <= begin_pos) && (begin_pos <= limit)) {
-                        size_bufferio_previous = begin_pos - base;
+                    size_bufferio_next = limit - begin_pos;
 
-                        if (size_bufferio_previous > 0) {
-                            extend(handle, size_bufferio_previous, &bufferio_previous, bufferio_flag_t::manual);
-                            bufferio_previous->offset = size_bufferio_previous;
-                            memcpy(bufferio_previous->base_address, bufferio_item->base_address, size_bufferio_previous);
-                        }
-
-                        extend(handle, data_size, &bufferio_insert, bufferio_flag_t::manual);
-                        bufferio_insert->offset = data_size;
-                        memcpy(bufferio_insert->base_address, data, data_size);
-
-                        size_bufferio_next = limit - begin_pos;
-
-                        if (size_bufferio_next > 0) {
-                            extend(handle, size_bufferio_next, &bufferio_next, bufferio_flag_t::manual);
-                            bufferio_next->offset = size_bufferio_next;
-                            memcpy(bufferio_next->base_address, bufferio_item->base_address + begin_pos, size_bufferio_next);
-                        }
-                    }
-
-                    if (nullptr != bufferio_next || nullptr != bufferio_previous) {
-                        free(bufferio_item->base_address);
-                        free(bufferio_item);
-
-                        handle->bufferio_queue.erase(iter++);
-
-                        if (nullptr != bufferio_next) {
-                            iter = handle->bufferio_queue.insert(iter, bufferio_next);
-                        }
-                        if (nullptr != bufferio_insert) {
-                            iter = handle->bufferio_queue.insert(iter, bufferio_insert);
-                        }
-                        if (nullptr != bufferio_previous) {
-                            iter = handle->bufferio_queue.insert(iter, bufferio_previous);
-                        }
-
-                        break;
-                    } else {
-                        iter++;
+                    if (size_bufferio_next > 0) {
+                        extend(handle, size_bufferio_next, &bufferio_next, bufferio_flag_t::manual);
+                        bufferio_next->offset = size_bufferio_next;
+                        memcpy(bufferio_next->base_address, bufferio_item->base_address + begin_pos, size_bufferio_next);
                     }
                 }
-            }
 
-            handle->bufferio_size += data_size;
+                if (nullptr != bufferio_next || nullptr != bufferio_previous) {
+                    free(bufferio_item->base_address);
+                    free(bufferio_item);
+
+                    handle->bufferio_queue.erase(iter++);
+
+                    if (nullptr != bufferio_next) {
+                        iter = handle->bufferio_queue.insert(iter, bufferio_next);
+                    }
+                    if (nullptr != bufferio_insert) {
+                        iter = handle->bufferio_queue.insert(iter, bufferio_insert);
+                    }
+                    if (nullptr != bufferio_previous) {
+                        iter = handle->bufferio_queue.insert(iter, bufferio_previous);
+                    }
+
+                    break;
+                } else {
+                    iter++;
+                }
+            }
         }
-        __finally2 { handle->bufferio_lock.leave(); }
+
+        handle->bufferio_size += data_size;
     }
     __finally2 {
         // do nothing

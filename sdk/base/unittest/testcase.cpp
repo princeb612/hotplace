@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <sdk/base/stl.hpp>
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/base/system/thread.hpp>
 #include <sdk/base/unittest/testcase.hpp>
@@ -27,7 +28,7 @@ void test_case::begin(const char* case_name, ...) {
     basic_stream stream;
     t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     if (nullptr != case_name) {
         va_list ap;
@@ -53,8 +54,6 @@ void test_case::begin(const char* case_name, ...) {
     std::cout << stream.c_str() << std::endl;
 
     reset_time();
-
-    _lock.leave();
 }
 
 void test_case::reset_time() {
@@ -64,7 +63,7 @@ void test_case::reset_time() {
 
     time_monotonic(now);
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     arch_t tid = get_thread_id();
 
@@ -91,12 +90,10 @@ void test_case::reset_time() {
     if (false == slice_pib.second) {
         slice_pib.first->second.clear();
     }
-
-    _lock.leave();
 }
 
 void test_case::pause_time() {
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     arch_t tid = get_thread_id();
 
@@ -133,12 +130,10 @@ void test_case::pause_time() {
         }
         flag = false;  // turn off thread flag
     }
-
-    _lock.leave();
 }
 
 void test_case::resume_time() {
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     arch_t tid = get_thread_id();
 
@@ -162,8 +157,6 @@ void test_case::resume_time() {
         }
         flag = true;  // turn on thread flag
     }
-
-    _lock.leave();
 }
 
 void test_case::check_time(struct timespec& ts) {
@@ -171,7 +164,7 @@ void test_case::check_time(struct timespec& ts) {
 
     time_slice_t clean_time_slice;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     arch_t tid = get_thread_id();
 
@@ -211,8 +204,6 @@ void test_case::check_time(struct timespec& ts) {
     time_slice_t& slices = slice_pib.first->second;
 
     time_sum(ts, slices);
-
-    _lock.leave();
 }
 
 void test_case::assert(bool expect, const char* test_function, const char* message, ...) {

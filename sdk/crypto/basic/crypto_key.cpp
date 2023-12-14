@@ -10,6 +10,7 @@
 
 #include <fstream>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
@@ -215,9 +216,8 @@ return_t crypto_key::write_pem_file(const char* file, int flags) {
 return_t crypto_key::add(crypto_key_object key, bool up_ref) {
     return_t ret = errorcode_t::success;
 
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         if (nullptr == key.get_pkey()) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -240,7 +240,9 @@ return_t crypto_key::add(crypto_key_object key, bool up_ref) {
 
         _key_map.insert(std::make_pair(key.get_kid(), key));
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -520,10 +522,8 @@ static bool find_discriminant(crypto_key_object item, const char* kid, const cha
 
 const EVP_PKEY* crypto_key::any(bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         if (_key_map.empty()) {
             __leave2;
         }
@@ -536,16 +536,16 @@ const EVP_PKEY* crypto_key::any(bool up_ref) {
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         crypto_key_map_t::iterator iter;
         for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
             crypto_key_object& item = iter->second;
@@ -562,16 +562,16 @@ const EVP_PKEY* crypto_key::select(crypto_use_t use, bool up_ref) {
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(crypto_kty_t kty, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         crypto_kty_t alt = crypto_kty_t::kty_unknown;
         if (crypto_kty_t::kty_ec == kty) {
             alt = crypto_kty_t::kty_okp;
@@ -593,17 +593,17 @@ const EVP_PKEY* crypto_key::select(crypto_kty_t kty, crypto_use_t use, bool up_r
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(jwa_t alg, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm(alg);
         if (nullptr == alg_info) {
             __leave2;
@@ -628,17 +628,17 @@ const EVP_PKEY* crypto_key::select(jwa_t alg, crypto_use_t use, bool up_ref) {
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(crypt_sig_t sig, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         const hint_signature_t* alg_info = advisor->hintof_signature(sig);
         if (nullptr == alg_info) {
             __leave2;
@@ -660,17 +660,17 @@ const EVP_PKEY* crypto_key::select(crypt_sig_t sig, crypto_use_t use, bool up_re
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(jws_t sig, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         const hint_signature_t* alg_info = advisor->hintof_jose_signature(sig);
         if (nullptr == alg_info) {
             __leave2;
@@ -692,17 +692,17 @@ const EVP_PKEY* crypto_key::select(jws_t sig, crypto_use_t use, bool up_ref) {
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(std::string& kid, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
-
+    critical_section_guard guard(_lock);
     __try2 {
         kid.clear();
-
-        _lock.enter();
 
         crypto_key_map_t::iterator iter;
         for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
@@ -721,17 +721,17 @@ const EVP_PKEY* crypto_key::select(std::string& kid, crypto_use_t use, bool up_r
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(std::string& kid, crypto_kty_t kty, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
-
+    critical_section_guard guard(_lock);
     __try2 {
         kid.clear();
-
-        _lock.enter();
 
         crypto_kty_t alt = crypto_kty_t::kty_unknown;
         if (crypto_kty_t::kty_ec == kty) {
@@ -755,18 +755,18 @@ const EVP_PKEY* crypto_key::select(std::string& kid, crypto_kty_t kty, crypto_us
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(std::string& kid, jwa_t alg, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
+    critical_section_guard guard(_lock);
     __try2 {
         kid.clear();
-
-        _lock.enter();
 
         const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm(alg);
         if (nullptr == alg_info) {
@@ -793,18 +793,18 @@ const EVP_PKEY* crypto_key::select(std::string& kid, jwa_t alg, crypto_use_t use
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(std::string& kid, crypt_sig_t sig, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
+    critical_section_guard guard(_lock);
     __try2 {
         kid.clear();
-
-        _lock.enter();
 
         const hint_signature_t* alg_info = advisor->hintof_signature(sig);
         if (nullptr == alg_info) {
@@ -828,18 +828,18 @@ const EVP_PKEY* crypto_key::select(std::string& kid, crypt_sig_t sig, crypto_use
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(std::string& kid, jws_t sig, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
+    critical_section_guard guard(_lock);
     __try2 {
         kid.clear();
-
-        _lock.enter();
 
         const hint_signature_t* alg_info = advisor->hintof_jose_signature(sig);
         if (nullptr == alg_info) {
@@ -863,18 +863,18 @@ const EVP_PKEY* crypto_key::select(std::string& kid, jws_t sig, crypto_use_t use
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::select(std::string& kid, cose_alg_t alg, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
+    critical_section_guard guard(_lock);
     __try2 {
         kid.clear();
-
-        _lock.enter();
 
         const hint_cose_algorithm_t* alg_info = advisor->hintof_cose_algorithm(alg);
         if (nullptr == alg_info) {
@@ -898,16 +898,16 @@ const EVP_PKEY* crypto_key::select(std::string& kid, cose_alg_t alg, crypto_use_
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::find(const char* kid, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         std::string k;
         if (kid) {
             k = kid;
@@ -937,16 +937,16 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_use_t use, bool up_ref)
             ret_value = select(use, up_ref);
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         std::string k;
         if (kid) {
             k = kid;
@@ -980,17 +980,17 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t 
             ret_value = select(kt, use, up_ref);
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm(alg);
         if (nullptr == alg_info) {
             __leave2;
@@ -1032,17 +1032,17 @@ const EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, b
             ret_value = select(alg, use, up_ref);
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::find(const char* kid, crypt_sig_t alg, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         const hint_signature_t* alg_info = advisor->hintof_signature(alg);
         if (nullptr == alg_info) {
             __leave2;
@@ -1083,17 +1083,17 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypt_sig_t alg, crypto_use_t 
             ret_value = select(alg, use, up_ref);
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
 const EVP_PKEY* crypto_key::find(const char* kid, jws_t alg, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         const hint_signature_t* alg_info = advisor->hintof_jose_signature(alg);
         if (nullptr == alg_info) {
             __leave2;
@@ -1134,7 +1134,9 @@ const EVP_PKEY* crypto_key::find(const char* kid, jws_t alg, crypto_use_t use, b
             ret_value = select(alg, use, up_ref);
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret_value;
 }
 
@@ -1531,7 +1533,7 @@ return_t crypto_key::extract(const EVP_PKEY* pkey, int flag, crypto_kty_t& type,
 }
 
 void crypto_key::clear() {
-    _lock.enter();
+    critical_section_guard guard(_lock);
     crypto_key_map_t::iterator iter;
     for (iter = _key_map.begin(); iter != _key_map.end(); iter++) {
         crypto_key_object& item = iter->second;
@@ -1541,7 +1543,6 @@ void crypto_key::clear() {
         }
     }
     _key_map.clear();
-    _lock.leave();
 }
 
 size_t crypto_key::size() { return _key_map.size(); }
@@ -1554,16 +1555,15 @@ return_t crypto_key::append(crypto_key* source) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
         crypto_key_map_t::iterator iter;
-        _lock.enter();
-        source->_lock.enter();
+        critical_section_guard guard(_lock);
+        critical_section_guard guard_source(source->_lock);
         for (iter = source->_key_map.begin(); iter != source->_key_map.end(); iter++) {
             crypto_key_object& item = iter->second;
             EVP_PKEY_up_ref((EVP_PKEY*)item.get_pkey());
             _key_map.insert(std::make_pair(iter->first, iter->second));
         }
-        source->_lock.leave();
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -1576,9 +1576,8 @@ int crypto_key::addref() { return _shared.addref(); }
 int crypto_key::release() { return _shared.delref(); }
 
 void crypto_key::for_each(void (*fp_dump)(crypto_key_object*, void*), void* param) {
+    critical_section_guard guard(_lock);
     __try2 {
-        _lock.enter();
-
         if (nullptr == fp_dump) {
             __leave2;
         }
@@ -1590,7 +1589,9 @@ void crypto_key::for_each(void (*fp_dump)(crypto_key_object*, void*), void* para
             (*fp_dump)(&item, param);
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
 }
 
 crypto_kty_t typeof_crypto_key(crypto_key_object& key) { return typeof_crypto_key(key.get_pkey()); }

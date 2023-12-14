@@ -9,6 +9,7 @@
  */
 
 #include <queue>
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/base/system/signalwait_threads.hpp>
 #include <sdk/io/system/multiplexer.hpp>
@@ -565,9 +566,10 @@ return_t network_server::accept_routine(void* handle) {
             ret = svr.session_accepted(handle, nullptr, (handle_t)accpt_ctx.client_socket, &accpt_ctx.client_addr);
         } else {
             /* prepare for ssl_accept delay */
-            context->accept_queue_lock.enter();
-            context->accept_queue.push(accpt_ctx);
-            context->accept_queue_lock.leave();
+            {
+                critical_section_guard guard(context->accept_queue_lock);
+                context->accept_queue.push(accpt_ctx);
+            }
 
             svr.try_connect(handle, accpt_ctx.client_socket, &accpt_ctx.client_addr);
         }
@@ -635,14 +637,15 @@ return_t network_server::tls_accept_routine(void* handle) {
     __try2 {
         // double check
         accept_context_t accpt_ctx;
-        context->accept_queue_lock.enter();
-        if (false == context->accept_queue.empty()) {
-            accpt_ctx = context->accept_queue.front();
-            context->accept_queue.pop();
-        } else {
-            ret = errorcode_t::empty;
+        {
+            critical_section_guard guard(context->accept_queue_lock);
+            if (false == context->accept_queue.empty()) {
+                accpt_ctx = context->accept_queue.front();
+                context->accept_queue.pop();
+            } else {
+                ret = errorcode_t::empty;
+            }
         }
-        context->accept_queue_lock.leave();
 
         if (errorcode_t::success != ret) {
             __leave2;
@@ -692,13 +695,12 @@ return_t network_server::cleanup_tls_accept(void* handle) {
         }
 
         accept_context_t accpt_ctx;
-        context->accept_queue_lock.enter();
+        critical_section_guard guard(context->accept_queue_lock);
         if (false == context->accept_queue.empty()) {
             accpt_ctx = context->accept_queue.front();
             context->accept_queue.pop();
             close_socket(accpt_ctx.client_socket, true, 0);
         }
-        context->accept_queue_lock.leave();
     }
     __finally2 {
         // do nothing

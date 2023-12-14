@@ -30,13 +30,13 @@ class critical_section_t {
 
 namespace hotplace {
 
-class enter_critical_section {
+class critical_section_guard {
    public:
-    enter_critical_section(critical_section& cs) {
+    critical_section_guard(critical_section& cs) {
         cs.enter();
         _cs = &cs;
     }
-    ~enter_critical_section() { _cs->leave(); }
+    ~critical_section_guard() { _cs->leave(); }
 
    private:
     critical_section* _cs;

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
@@ -26,12 +27,11 @@ return_t network_protocol_group::add(network_protocol* protocol) {
             __leave2;
         }
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         protocol_map_pib_t pib = _protocols.insert(std::make_pair(protocol->protocol_id(), protocol));
         if (true == pib.second) {
             protocol->addref();
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -54,7 +54,7 @@ return_t network_protocol_group::find(uint32 protocol_id, network_protocol** ptr
             __leave2;
         }
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         protocol_map_t::iterator iter = _protocols.find(protocol_id);
         if (_protocols.end() == iter) {
             ret = errorcode_t::not_found;
@@ -63,7 +63,6 @@ return_t network_protocol_group::find(uint32 protocol_id, network_protocol** ptr
             protocol->addref();
             *ptr_protocol = protocol;
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -88,13 +87,12 @@ return_t network_protocol_group::remove(network_protocol* protocol) {
             __leave2;
         }
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         protocol_map_t::iterator iter = _protocols.find(protocol->protocol_id());
         if (_protocols.end() != iter) {
             network_protocol* protocol_ref = iter->second;
             protocol_ref->release();
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -107,14 +105,13 @@ return_t network_protocol_group::clear() {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
         for (protocol_map_t::iterator it = _protocols.begin(); it != _protocols.end(); it++) {
             network_protocol* protocol_ref = it->second;
 
             protocol_ref->release();
         }
         _protocols.clear();
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -139,7 +136,8 @@ return_t network_protocol_group::is_kind_of(void* stream, size_t stream_size, ne
             __leave2;
         }
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
+
         for (protocol_map_t::iterator it = _protocols.begin(); it != _protocols.end(); it++) {
             network_protocol* protocol = it->second;
             return_t dwResult = protocol->is_kind_of(stream, stream_size);
@@ -153,7 +151,6 @@ return_t network_protocol_group::is_kind_of(void* stream, size_t stream_size, ne
                 protocol_match = protocol;
             }
         }
-        _lock.leave();
 
         if (nullptr == protocol_match) {
             ret = errorcode_t::not_supported;

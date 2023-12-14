@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/odbc/basic/odbc_diagnose.hpp>
 
 namespace hotplace {
@@ -50,7 +51,7 @@ void odbc_diagnose::run_handlers(DWORD native_error, const char* state, const ch
     bool control = true;
     database_errorhandler_list_t::iterator it;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
     for (it = _handler_list.begin(); it != _handler_list.end(); it++) {
         errorhandler_item_t& item = *it;
         if (nullptr != item.handler) {
@@ -61,17 +62,15 @@ void odbc_diagnose::run_handlers(DWORD native_error, const char* state, const ch
             }
         }
     }
-    _lock.leave();
 }
 
 void odbc_diagnose::add_handler(DATABASE_ERRORHANDLER error_handler, void* context) {
     if (nullptr != error_handler) {
-        _lock.enter();
+        critical_section_guard guard(_lock);
         errorhandler_item_t item;
         item.handler = error_handler;
         item.context = context;
         _handler_list.push_back(item);
-        _lock.leave();
     }
 }
 

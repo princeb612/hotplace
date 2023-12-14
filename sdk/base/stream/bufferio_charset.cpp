@@ -17,6 +17,7 @@
 
 #include <sdk/base/stream/bufferio.hpp>
 #include <sdk/base/stream/printf.hpp>
+#include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
 
@@ -96,7 +97,7 @@ size_t bufferio::wfind_first_of_routine(bufferio_context_t* handle, int mode, co
             __leave2;
         }
 
-        handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
 
         LPTSTR contents = nullptr;
         size_t contents_size = 0;
@@ -125,7 +126,6 @@ size_t bufferio::wfind_first_of_routine(bufferio_context_t* handle, int mode, co
                 }
             }
         }
-        handle->bufferio_lock.leave();
     }
     __finally2 {
         // do nothing
@@ -153,7 +153,7 @@ size_t bufferio::wfind_first_of_routine(bufferio_context_t* handle, int mode, in
             __leave2;
         }
 
-        handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
 
         LPTSTR contents = nullptr;
         size_t contents_size = 0;
@@ -180,7 +180,6 @@ size_t bufferio::wfind_first_of_routine(bufferio_context_t* handle, int mode, in
                 }
             }
         }
-        handle->bufferio_lock.leave();
     }
     __finally2 {
         // do nothing
@@ -208,7 +207,7 @@ size_t bufferio::wfind_last_of_routine(bufferio_context_t* handle, int mode, con
             __leave2;
         }
 
-        handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
 
         LPTSTR contents = nullptr;
         size_t contents_size = 0;
@@ -236,7 +235,6 @@ size_t bufferio::wfind_last_of_routine(bufferio_context_t* handle, int mode, con
                 }
             }
         }
-        handle->bufferio_lock.leave();
     }
     __finally2 {
         // do nothing
@@ -264,7 +262,7 @@ size_t bufferio::wfind_last_of_routine(bufferio_context_t* handle, int mode, int
             __leave2;
         }
 
-        handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
 
         LPTSTR contents = nullptr;
         size_t contents_size = 0;
@@ -297,7 +295,6 @@ size_t bufferio::wfind_last_of_routine(bufferio_context_t* handle, int mode, int
                 pos--;
             }
         }
-        handle->bufferio_lock.leave();
     }
     __finally2 {
         // do nothing
@@ -331,32 +328,29 @@ return_t bufferio::wreplace(bufferio_context_t* handle, const wchar_t* from, con
             __leave2;
         }
 
-        __try2 {
-            handle->bufferio_lock.enter();
+        critical_section_guard guard(handle->bufferio_lock);
 
-            size_t from_length = _tcslen(from);
-            size_t to_length = _tcslen(to);
+        size_t from_length = _tcslen(from);
+        size_t to_length = _tcslen(to);
 
-            if (from_length > handle->bufferio_size) {
-                ret = errorcode_t::not_found;
-                __leave2;
-            }
+        if (from_length > handle->bufferio_size) {
+            ret = errorcode_t::not_found;
+            __leave2;
+        }
 
-            for (pos = begin; pos <= handle->bufferio_size - from_length; pos++) {
-                size_t ret_find = imp_find_first_of(handle, from, pos);
-                if (-1 != ret_find) {
-                    cut(handle, ret_find * sizeof(TCHAR), from_length * sizeof(TCHAR));
-                    insert(handle, ret_find * sizeof(TCHAR), to, to_length * sizeof(TCHAR));
-                    if (bufferio_flag_t::run_once == flag) {
-                        break;
-                    }
-                    pos += to_length;
-                } else {
-                    pos++;
+        for (pos = begin; pos <= handle->bufferio_size - from_length; pos++) {
+            size_t ret_find = imp_find_first_of(handle, from, pos);
+            if (-1 != ret_find) {
+                cut(handle, ret_find * sizeof(TCHAR), from_length * sizeof(TCHAR));
+                insert(handle, ret_find * sizeof(TCHAR), to, to_length * sizeof(TCHAR));
+                if (bufferio_flag_t::run_once == flag) {
+                    break;
                 }
+                pos += to_length;
+            } else {
+                pos++;
             }
         }
-        __finally2 { handle->bufferio_lock.leave(); }
     }
     __finally2 {
         // do nothing

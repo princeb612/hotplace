@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http.hpp>
@@ -29,7 +30,7 @@ return_t http_header::add(const char* header, const char* value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
         if (nullptr == header || nullptr == value) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -37,7 +38,9 @@ return_t http_header::add(const char* header, const char* value) {
 
         _headers.insert(std::make_pair(header, value));
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -45,20 +48,21 @@ return_t http_header::add(std::string header, std::string value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         _headers.insert(std::make_pair(header, value));
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t http_header::clear() {
     return_t ret = errorcode_t::success;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
     _headers.clear();
-    _lock.leave();
     return ret;
 }
 
@@ -112,7 +116,7 @@ return_t http_header::get_headers(std::string& contents) {
     __try2 {
         //_tclean(contents);
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         for (http_header_map_t::iterator it = _headers.begin(); it != _headers.end(); it++) {
             std::string key = it->first;
             std::string value = it->second;
@@ -120,7 +124,9 @@ return_t http_header::get_headers(std::string& contents) {
             contents.append(format("%s: %s\n", key.c_str(), value.c_str()));
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 

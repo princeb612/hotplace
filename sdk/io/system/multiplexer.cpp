@@ -9,6 +9,7 @@
  */
 
 #include <map>
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/thread.hpp>
 #include <sdk/io/system/multiplexer.hpp>
 
@@ -96,13 +97,12 @@ return_t multiplexer_controller::event_loop_new(multiplexer_controller_context_t
 
         arch_t tid = get_thread_id();
 
-        context->lock.enter();
+        critical_section_guard guard(context->lock);
+
         multiplexer_event_loop_controler_map_pib_t pib = context->control.insert(std::make_pair(tid, 1));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
-
-        context->lock.leave();
 
         if (nullptr != token_handle) {
             *token_handle = tid;
@@ -132,7 +132,8 @@ return_t multiplexer_controller::event_loop_break(multiplexer_controller_context
 
         /* signal */
 
-        context->lock.enter();
+        critical_section_guard guard(context->lock);
+
         if (nullptr == token_handle) {
             for (iter = context->control.begin(); iter != context->control.end(); iter++) {
                 iter->second = 0;
@@ -143,7 +144,6 @@ return_t multiplexer_controller::event_loop_break(multiplexer_controller_context
                 iter->second = 0;
             }
         }
-        context->lock.leave();
     }
     __finally2 {
         // do nothing
@@ -170,7 +170,7 @@ return_t multiplexer_controller::event_loop_break_concurrent(multiplexer_control
         /* signal */
 
         size_t i = 0;
-        context->lock.enter();
+        critical_section_guard guard(context->lock);
         for (iter = context->control.begin(); iter != context->control.end(); iter++) {
             if (i >= concurrent) {
                 break;
@@ -180,7 +180,6 @@ return_t multiplexer_controller::event_loop_break_concurrent(multiplexer_control
                 i++;
             }
         }
-        context->lock.leave();
     }
     __finally2 {
         // do nothing
@@ -196,7 +195,7 @@ bool multiplexer_controller::event_loop_test_broken(multiplexer_controller_conte
     multiplexer_event_loop_controler_map_t::iterator iter;
 
     __try2 {
-        context->lock.enter();
+        critical_section_guard guard(context->lock);
         iter = context->control.find(token_handle);
         if (context->control.end() != iter) {
             if (0 == iter->second) {
@@ -205,7 +204,6 @@ bool multiplexer_controller::event_loop_test_broken(multiplexer_controller_conte
         } else {
             ret_value = true;
         }
-        context->lock.leave();
     }
     __finally2 {
         // do nothing
@@ -221,12 +219,11 @@ return_t multiplexer_controller::event_loop_close(multiplexer_controller_context
     __try2 {
         multiplexer_event_loop_controler_map_t::iterator iter;
 
-        context->lock.enter();
+        critical_section_guard guard(context->lock);
         iter = context->control.find(token_handle);
         if (context->control.end() != iter) {
             context->control.erase(iter);
         }
-        context->lock.leave();
     }
     __finally2 {
         // do nothing

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/io/system/types.hpp>
 #include <sdk/net/basic/ipaddr_acl.hpp>
 #include <sdk/net/types.hpp>  // ws2tcpip.h first
@@ -21,11 +22,10 @@ ipaddr_acl::ipaddr_acl() : _mode(ipaddr_acl_t::blacklist) {
 }
 
 ipaddr_acl::ipaddr_acl(ipaddr_acl& obj) {
-    obj._lock.enter();
+    critical_section_guard guard(obj._lock);
     _mode = obj._mode;
     _single_type_rule = obj._single_type_rule;
     _range_type_rule = obj._range_type_rule;
-    obj._lock.leave();
 }
 
 ipaddr_acl::~ipaddr_acl() {
@@ -75,12 +75,11 @@ return_t ipaddr_acl::add_rule(const char* addr, bool allow) {
             item.addr = 0;
             item.allow = allow;
 
-            _lock.enter();
+            critical_section_guard guard(_lock);
             ipaddress_rule_map_pib_t pib = _single_type_rule.insert(std::make_pair(address, item));
             if (false == pib.second) {
                 ret = errorcode_t::already_exist;
             }
-            _lock.leave();
         }
     }
     __finally2 {
@@ -111,12 +110,11 @@ return_t ipaddr_acl::add_rule(const sockaddr_storage_t* sockaddr, bool allow) {
         item.addr = 0;
         item.allow = allow;
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         ipaddress_rule_map_pib_t pib = _single_type_rule.insert(std::make_pair(address, item));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -159,12 +157,11 @@ return_t ipaddr_acl::add_rule(const char* addr, int mask, bool allow) {
         item.addr = address_to;
         item.allow = allow;
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         ipaddress_rule_map_pib_t pib = _range_type_rule.insert(std::make_pair(address_from, item));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -199,12 +196,11 @@ return_t ipaddr_acl::add_rule(const sockaddr_storage_t* sockaddr, int mask, bool
         item.addr = address_to;
         item.allow = allow;
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         ipaddress_rule_map_pib_t pib = _range_type_rule.insert(std::make_pair(address_from, item));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -246,12 +242,11 @@ return_t ipaddr_acl::add_rule(const char* addr_from, const char* addr_to, bool a
         item.addr = address_to;
         item.allow = allow;
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         ipaddress_rule_map_pib_t pib = _range_type_rule.insert(std::make_pair(address_from, item));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -293,12 +288,11 @@ return_t ipaddr_acl::add_rule(const sockaddr_storage_t* sockaddr_from, const soc
         item.addr = address_to;
         item.allow = allow;
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         ipaddress_rule_map_pib_t pib = _range_type_rule.insert(std::make_pair(address_from, item));
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -309,9 +303,8 @@ return_t ipaddr_acl::add_rule(const sockaddr_storage_t* sockaddr_from, const soc
 return_t ipaddr_acl::clear() {
     return_t ret = errorcode_t::success;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
     _range_type_rule.clear();
-    _lock.leave();
     return ret;
 }
 
@@ -342,24 +335,25 @@ return_t ipaddr_acl::determine(const char* addr, bool& accept) {
 #endif
         std::list<bool> result;
 
-        _lock.enter();
-        ipaddress_rule_map_t::iterator iter = _single_type_rule.find(address);
-        if (_single_type_rule.end() != iter) {
-            result.push_back(iter->second.allow);
-        }
-        for (ipaddress_rule_map_t::iterator iter = _range_type_rule.begin(); iter != _range_type_rule.end(); iter++) {
-            ipaddr_t begin = iter->first;
-            ipaddress_rule_item_t& item = iter->second;
-            ipaddr_t end = item.addr;
+        {
+            critical_section_guard guard(_lock);
+            ipaddress_rule_map_t::iterator iter = _single_type_rule.find(address);
+            if (_single_type_rule.end() != iter) {
+                result.push_back(iter->second.allow);
+            }
+            for (ipaddress_rule_map_t::iterator iter = _range_type_rule.begin(); iter != _range_type_rule.end(); iter++) {
+                ipaddr_t begin = iter->first;
+                ipaddress_rule_item_t& item = iter->second;
+                ipaddr_t end = item.addr;
 
-            if ((begin <= address) && (address <= end)) {
-                result.push_back(item.allow);
-            }
-            if (begin > address) {
-                break;
+                if ((begin <= address) && (address <= end)) {
+                    result.push_back(item.allow);
+                }
+                if (begin > address) {
+                    break;
+                }
             }
         }
-        _lock.leave();
 
         if (result.size()) {
             result.sort();
@@ -404,25 +398,26 @@ return_t ipaddr_acl::determine(const sockaddr_storage_t* sockaddr, bool& accept)
 #endif
         std::list<bool> result;
 
-        _lock.enter();
-        ipaddress_rule_map_t::iterator iter = _single_type_rule.find(address);
-        if (_single_type_rule.end() != iter) {
-            result.push_back(iter->second.allow);
-        }
-        for (ipaddress_rule_map_t::iterator iter = _range_type_rule.begin(); iter != _range_type_rule.end(); iter++) {
-            ipaddr_t begin = iter->first;
-
-            ipaddress_rule_item_t& item = iter->second;
-            ipaddr_t end = item.addr;
-
-            if ((begin <= address) && (address <= end)) {
-                result.push_back(item.allow);
+        {
+            critical_section_guard guard(_lock);
+            ipaddress_rule_map_t::iterator iter = _single_type_rule.find(address);
+            if (_single_type_rule.end() != iter) {
+                result.push_back(iter->second.allow);
             }
-            if (begin > address) {
-                break;
+            for (ipaddress_rule_map_t::iterator iter = _range_type_rule.begin(); iter != _range_type_rule.end(); iter++) {
+                ipaddr_t begin = iter->first;
+
+                ipaddress_rule_item_t& item = iter->second;
+                ipaddr_t end = item.addr;
+
+                if ((begin <= address) && (address <= end)) {
+                    result.push_back(item.allow);
+                }
+                if (begin > address) {
+                    break;
+                }
             }
         }
-        _lock.leave();
 
         if (result.size()) {
             result.sort();
