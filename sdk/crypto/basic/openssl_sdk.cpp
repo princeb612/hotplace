@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/io/string/string.hpp>
@@ -173,48 +174,44 @@ critical_section openssl_threadsafe_lock;
 int openssl_threadsafe_refcount = 0;
 
 void openssl_startup() {
-    openssl_lock.enter();
+    critical_section_guard guard(openssl_lock);
     if (0 == openssl_refcount) {
         openssl_startup_implementation();
     }
     openssl_refcount++;
-    openssl_lock.leave();
 }
 
 void openssl_cleanup() {
-    openssl_lock.enter();
+    critical_section_guard guard(openssl_lock);
     if (openssl_refcount > 0) {
         openssl_refcount--;
         if (0 == openssl_refcount) {
             openssl_cleanup_implementation();
         }
     }
-    openssl_lock.leave();
 }
 
 void openssl_thread_setup() {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
     /* openssl-0.9.8 thread-safe */
-    openssl_threadsafe_lock.enter();
+    critical_section_guard guard(openssl_threadsafe_lock);
     if (0 == openssl_threadsafe_refcount) {
         openssl_thread_setup_implementation();
     }
     openssl_threadsafe_refcount++;
-    openssl_threadsafe_lock.leave();
 #endif
 }
 
 void openssl_thread_cleanup() {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
     /* openssl-0.9.8 thread-safe */
-    openssl_threadsafe_lock.enter();
+    critical_section_guard guard(openssl_threadsafe_lock);
     if (openssl_threadsafe_refcount > 0) {
         openssl_threadsafe_refcount--;
         if (0 == openssl_threadsafe_refcount) {
             openssl_thread_cleanup_implementation();
         }
     }
-    openssl_threadsafe_lock.leave();
 #endif
 }
 

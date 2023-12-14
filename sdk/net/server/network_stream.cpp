@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
@@ -28,9 +29,8 @@ return_t network_stream::produce(void* buf_read, size_t size_buf_read) {
         network_stream_data* buffer_object = new network_stream_data;
         buffer_object->assign(buf_read, size_buf_read);
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         _queue.push_back(buffer_object);
-        _lock.leave();
     }
 
     return ret;
@@ -39,9 +39,8 @@ return_t network_stream::produce(void* buf_read, size_t size_buf_read) {
 bool network_stream::ready() {
     size_t count = 0;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
     count = _queue.size();
-    _lock.leave();
 
     return count > 0;
 }
@@ -57,7 +56,9 @@ return_t network_stream::consume(network_stream_data** ptr_buffer_object) {
         network_stream_data* buffer_object = nullptr;
         network_stream_data* first = nullptr;
         network_stream_data* prev = nullptr;
-        _lock.enter();
+
+        critical_section_guard guard(_lock);
+
         if (true == _queue.empty()) {
             ret = errorcode_t::empty;
         } else {
@@ -74,7 +75,7 @@ return_t network_stream::consume(network_stream_data** ptr_buffer_object) {
                 _queue.pop_front();
             }
         }
-        _lock.leave();
+
         *ptr_buffer_object = first;
     }
 
@@ -103,7 +104,7 @@ return_t network_stream::write_wo_protocol(network_protocol_group* protocol_grou
     return_t ret = errorcode_t::success;
 
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         network_stream_data* buffer_object = nullptr;
         while (false == _queue.empty()) {
@@ -115,7 +116,9 @@ return_t network_stream::write_wo_protocol(network_protocol_group* protocol_grou
             _queue.pop_front();
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -137,7 +140,7 @@ return_t network_stream::write_with_protocol(network_protocol_group* protocol_gr
     bool _run = true;
 
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         for (network_stream_list_t::iterator it = _queue.begin(); it != _queue.end(); it++) {
             roll_count++;
@@ -205,7 +208,9 @@ return_t network_stream::write_with_protocol(network_protocol_group* protocol_gr
             }
         }  // for-loop
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -218,7 +223,8 @@ return_t network_stream::write(network_protocol_group* protocol_group, network_s
             __leave2;
         }
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
+
         if (true == _queue.empty()) {
             ret = errorcode_t::empty;
         } else {
@@ -228,7 +234,6 @@ return_t network_stream::write(network_protocol_group* protocol_group, network_s
                 write_with_protocol(protocol_group, target);
             }
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing

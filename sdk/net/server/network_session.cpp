@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/server/network_priority_queue.hpp>
 #include <sdk/net/server/network_session.hpp>
@@ -92,10 +93,9 @@ int network_session::release() { return _shared.delref(); }
 
 return_t network_session::produce(network_priority_queue* q, void* buf_read, size_t size_buf_read) {
     return_t ret = errorcode_t::success;
+    critical_section_guard guard(_lock);
 
     __try2 {
-        _lock.enter();
-
         if (nullptr == q) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -146,7 +146,6 @@ return_t network_session::produce(network_priority_queue* q, void* buf_read, siz
         }
     }
     __finally2 {
-        _lock.leave();
         // do nothing
     }
 
@@ -180,7 +179,8 @@ return_t network_session_manager::connected(handle_t client_socket, sockaddr_sto
     network_session* session_object = nullptr;
 
     __try2 {
-        _session_lock.enter();
+        critical_section_guard guard(_session_lock);
+
         pairib = _session_map.insert(std::make_pair(client_socket, (network_session*)nullptr));
         if (true == pairib.second) {
             session_object = new network_session(svr_socket);
@@ -190,7 +190,6 @@ return_t network_session_manager::connected(handle_t client_socket, sockaddr_sto
         } else {
             ret = errorcode_t::already_assigned;
         }
-        _session_lock.leave();
     }
     __finally2 {
         // do nothing
@@ -208,7 +207,7 @@ return_t network_session_manager::find(handle_t client_socket, network_session**
             __leave2;
         }
 
-        _session_lock.enter();
+        critical_section_guard guard(_session_lock);
         network_session_map_t::iterator iter = _session_map.find(client_socket);
         if (_session_map.end() == iter) {
             ret = errorcode_t::not_found;
@@ -217,7 +216,6 @@ return_t network_session_manager::find(handle_t client_socket, network_session**
             session_object->addref(); /* in-use */
             *ptr_session_object = session_object;
         }
-        _session_lock.leave();
     }
     __finally2 {
         // do nothing
@@ -242,7 +240,7 @@ return_t network_session_manager::ready_to_close(handle_t client_socket, network
             __leave2;
         }
 
-        _session_lock.enter();
+        critical_section_guard guard(_session_lock);
         network_session_map_t::iterator iter = _session_map.find(client_socket);
         if (_session_map.end() == iter) {
             ret = errorcode_t::not_found;
@@ -252,7 +250,6 @@ return_t network_session_manager::ready_to_close(handle_t client_socket, network
 
             _session_map.erase(iter);
         }
-        _session_lock.leave();
     }
     __finally2 {
         // do nothing

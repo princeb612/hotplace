@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/base/system/signalwait_threads.hpp>
 
@@ -23,7 +24,8 @@ return_t signalwait_threads::set(size_t max_concurrent, SIGNALWAITTHREADS_CALLBA
                                  void* thread_param) {
     return_t ret = errorcode_t::success;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
+
     if (true == _container.empty()) {
         _capacity = max_concurrent;
         _thread_callback_routine = thread_routine;
@@ -32,7 +34,6 @@ return_t signalwait_threads::set(size_t max_concurrent, SIGNALWAITTHREADS_CALLBA
     } else {
         ret = errorcode_t::not_available;
     }
-    _lock.leave();
     return ret;
 }
 
@@ -47,26 +48,24 @@ return_t signalwait_threads::create() {
             __leave2;
         }
 
-        __try2 {
-            _lock.enter();
-            if (_container.size() < _capacity) { /* check max concurrent thread */
-                __try_new_catch(thread_rt, new thread_info, ret, __leave2);
-                __try_new_catch(thread_obj, new thread(thread_routine, thread_rt), ret, __leave2);
+        critical_section_guard guard(_lock);
 
-                // set members before thread starts
-                thread_rt->set_thread(thread_obj);
-                thread_rt->set_container(this);
-                // thread starts here
-                ret = thread_obj->start(); /* CreateThread, pthread_create here */
-                if (errorcode_t::success == ret) {
-                    threadid_t tid = thread_obj->gettid();
-                    _container.insert(std::make_pair(tid, thread_rt));
-                }
-            } else {
-                ret = errorcode_t::max_reached;
+        if (_container.size() < _capacity) { /* check max concurrent thread */
+            __try_new_catch(thread_rt, new thread_info, ret, __leave2);
+            __try_new_catch(thread_obj, new thread(thread_routine, thread_rt), ret, __leave2);
+
+            // set members before thread starts
+            thread_rt->set_thread(thread_obj);
+            thread_rt->set_container(this);
+            // thread starts here
+            ret = thread_obj->start(); /* CreateThread, pthread_create here */
+            if (errorcode_t::success == ret) {
+                threadid_t tid = thread_obj->gettid();
+                _container.insert(std::make_pair(tid, thread_rt));
             }
+        } else {
+            ret = errorcode_t::max_reached;
         }
-        __finally2 { _lock.leave(); }
     }
     __finally2 {
         if (errorcode_t::success != ret) {
@@ -89,20 +88,18 @@ void signalwait_threads::signal() {
 }
 
 void signalwait_threads::signal_and_wait_all(int reserved) {
-    _lock.enter();
-    int loop = _container.size();
+    {
+        critical_section_guard guard(_lock);
+        int loop = _container.size();
 
-    for (int i = 0; i < loop; i++) {
-        signal();
+        for (int i = 0; i < loop; i++) {
+            signal();
+        }
     }
-    _lock.leave();
 
     size_t run = 0;
     while (true) {
-        _lock.enter();
         run = running();
-        _lock.leave();
-
         if (!run) {
             break;
         }
@@ -116,9 +113,8 @@ size_t signalwait_threads::capacity() { return _capacity; }
 size_t signalwait_threads::running() {
     size_t size = 0;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
     size = _container.size();
-    _lock.leave();
     return size;
 }
 
@@ -151,18 +147,19 @@ return_t signalwait_threads::join(threadid_t tid) {
     thread_info* thread_rt = nullptr;
     thread* thread = nullptr;
 
-    _lock.enter();
-    SIGNALWAITTHREADS_MAP::iterator iter = _container.find(tid);
+    {
+        critical_section_guard guard(_lock);
 
-    if (_container.end() == iter) {
-        ret = errorcode_t::not_found;
-    } else {
-        thread_rt = iter->second;
-        thread = thread_rt->get_thread();
+        SIGNALWAITTHREADS_MAP::iterator iter = _container.find(tid);
+        if (_container.end() == iter) {
+            ret = errorcode_t::not_found;
+        } else {
+            thread_rt = iter->second;
+            thread = thread_rt->get_thread();
 
-        _container.erase(iter);
+            _container.erase(iter);
+        }
     }
-    _lock.leave();
 
     if (thread) {
         thread->join(tid);  // valgrind pthread_create problem, so pthread_detach here

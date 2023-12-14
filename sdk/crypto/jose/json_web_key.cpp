@@ -161,14 +161,6 @@ typedef struct _json_mapper_t {
     json_mapper_items_t items;
 } json_mapper_t;
 
-typedef struct _jwk_serialize_string_context_t {
-    std::string* buffer;
-} jwk_serialize_string_context_t;
-
-typedef struct _jwk_serialize_stream_context_t {
-    stream_t* buffer;
-} jwk_serialize_stream_context_t;
-
 static void jwk_serialize_item(int flag, json_mapper_item_t item, json_t* json_item) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -223,11 +215,12 @@ static void jwk_serialize_item(int flag, json_mapper_item_t item, json_t* json_i
     }
 }
 
-static return_t jwk_serialize(json_mapper_t mapper, CALLBACK_HANDLER callback, void* param) {
+template <typename TYPE>
+return_t jwk_serialize_t(json_mapper_t mapper, void (*callback)(char* data, TYPE& parameter), TYPE& param) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == callback || nullptr == param) {
+        if (nullptr == callback) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -293,40 +286,6 @@ static void json_writer(crypto_key_object* key, void* param) {
     // do not return
 }
 
-static return_t jwk_serialize_string_callback(void* data, void* parameter) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == data || nullptr == parameter) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        jwk_serialize_string_context_t* context = (jwk_serialize_string_context_t*)parameter;
-        *(context->buffer) = (char*)data;
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-static return_t jwk_serialize_stream_callback(void* data, void* parameter) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == data || nullptr == parameter) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        jwk_serialize_stream_context_t* context = (jwk_serialize_stream_context_t*)parameter;
-        context->buffer->printf("%s", (char*)data);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
 return_t json_web_key::write(crypto_key* crypto_key, char* buf, size_t* buflen, int flags) {
     return_t ret = errorcode_t::success;
 
@@ -343,9 +302,12 @@ return_t json_web_key::write(crypto_key* crypto_key, char* buf, size_t* buflen, 
         crypto_key->for_each(json_writer, &mapper);
 
         std::string buffer;
-        jwk_serialize_string_context_t context;
-        context.buffer = &buffer;
-        jwk_serialize(mapper, jwk_serialize_string_callback, &context);
+        auto func = [](char* data, std::string& buffer) -> void {
+            if (data) {
+                buffer = data;
+            }
+        };
+        jwk_serialize_t<std::string>(mapper, func, buffer);
 
         *buflen = buffer.size() + 1;
         if (buffer.size() + 1 > size_request) {
@@ -383,9 +345,12 @@ return_t json_web_key::write(crypto_key* crypto_key, std::string& buf, int flags
         mapper.flag = flags;
         crypto_key->for_each(json_writer, &mapper);
 
-        jwk_serialize_string_context_t context;
-        context.buffer = &buf;
-        jwk_serialize(mapper, jwk_serialize_string_callback, &context);
+        auto func = [](char* data, std::string& buffer) -> void {
+            if (data) {
+                buffer = data;
+            }
+        };
+        jwk_serialize_t<std::string>(mapper, func, buf);
     }
     __finally2 {
         // do nothing
@@ -409,9 +374,12 @@ return_t json_web_key::write(crypto_key* crypto_key, stream_t* buf, int flags) {
         mapper.flag = flags;
         crypto_key->for_each(json_writer, &mapper);
 
-        jwk_serialize_stream_context_t context;
-        context.buffer = buf;
-        jwk_serialize(mapper, jwk_serialize_stream_callback, &context);
+        auto func = [](char* data, stream_t*& stream) -> void {
+            if (data) {
+                stream->printf("%s", data);
+            }
+        };
+        jwk_serialize_t<stream_t*>(mapper, func, buf);
     }
     __finally2 {
         // do nothing

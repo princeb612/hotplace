@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/io/basic/keyvalue.hpp>
 
 namespace hotplace {
@@ -33,7 +34,7 @@ return_t key_value::set(const char* name, const char* value, int mode) {
         std::string key(name);
         std::transform(key.begin(), key.end(), key.begin(), tolower);
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         keyvalue_map_pib_t pib = _keyvalues.insert(std::make_pair(key, value));
         if (false == pib.second) {
             if (key_value_mode_t::update == mode) {
@@ -42,7 +43,6 @@ return_t key_value::set(const char* name, const char* value, int mode) {
                 ret = errorcode_t::already_exist;
             }
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -64,12 +64,11 @@ return_t key_value::remove(const char* name) {
         std::string key(name);
         std::transform(key.begin(), key.end(), key.begin(), tolower);
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         keyvalue_map_t::iterator iter = _keyvalues.find(key);
         if (_keyvalues.end() != iter) {
             _keyvalues.erase(iter);
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -81,9 +80,8 @@ return_t key_value::clear() {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
         _keyvalues.clear();
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -102,12 +100,11 @@ bool key_value::exist(const char* name) {
         std::string key(name);
         std::transform(key.begin(), key.end(), key.begin(), tolower);
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         keyvalue_map_t::iterator iter = _keyvalues.find(key);
         if (_keyvalues.end() != iter) {
             ret_value = true;
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -126,12 +123,11 @@ const char* key_value::operator[](const char* name) {
         std::string key(name);
         std::transform(key.begin(), key.end(), key.begin(), tolower);
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         keyvalue_map_t::iterator iter = _keyvalues.find(key);
         if (_keyvalues.end() != iter) {
             ret_value = iter->second.c_str();
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -151,14 +147,13 @@ return_t key_value::query(const char* name, std::string& value) {
         std::string key(name);
         std::transform(key.begin(), key.end(), key.begin(), tolower);
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
         keyvalue_map_t::iterator iter = _keyvalues.find(key);
         if (_keyvalues.end() != iter) {
             value = iter->second;
         } else {
             ret = errorcode_t::not_found;
         }
-        _lock.leave();
     }
     __finally2 {
         // do nothing
@@ -169,18 +164,17 @@ return_t key_value::query(const char* name, std::string& value) {
 return_t key_value::copy(key_value& rhs, int mode) {
     return_t ret = errorcode_t::success;
 
-    rhs._lock.enter();
+    critical_section_guard guard(rhs._lock);
     keyvalue_map_t& source = rhs._keyvalues;
 
     ret = copyfrom(source, mode);
-    rhs._lock.leave();
     return ret;
 }
 
 return_t key_value::copyfrom(std::map<std::string, std::string>& source, int mode) {
     return_t ret = errorcode_t::success;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     if (key_value_mode_t::move == mode) {
         _keyvalues.clear();
@@ -213,16 +207,14 @@ return_t key_value::copyfrom(std::map<std::string, std::string>& source, int mod
 #endif
     }
 
-    _lock.leave();
     return ret;
 }
 
 return_t key_value::copyto(std::map<std::string, std::string>& target) {
     return_t ret = errorcode_t::success;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
     target = _keyvalues;
-    _lock.leave();
     return ret;
 }
 
