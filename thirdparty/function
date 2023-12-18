@@ -76,3 +76,14 @@ function build_jansson ()
 
     touch .complete
 }
+
+function build_zlib ()
+{
+    local install_dir=${HOTPLACE_HOME}/thirdparty
+
+    ./configure --prefix=${install_dir} 
+    make
+    make install
+
+    touch .complete
+}

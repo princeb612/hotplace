@@ -100,6 +100,10 @@
 
 ## studying
 
+ * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
+ * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
+ * RFC 9114 HTTP/3
+
  * RFC 8778 Use of the HSS/LMS Hash-Based Signature Algorithm with CBOR Object Signing and Encryption (COSE)
  * RFC 9021 Use of the Walnut Digital Signature Algorithm with CBOR Object Signing and Encryption (COSE)
  * RFC 9054 CBOR Object Signing and Encryption (COSE): Hash Algorithms
@@ -119,7 +123,7 @@
    * $ hotplace ./make.sh
  * os support
    * tested
-     * RHEL 7 and newer, (including CentOS, Rockey Linux)
+     * RHEL 7 and newer, (including CentOS, Rocky Linux)
      * ubuntu 20.04 and newer
      * mingw
      * Fedora Core release 4 (Stentz) w/ custom toolchain (GCC 4.8)
@@ -136,7 +140,7 @@
    * openssl 3.0, 3.1
      * EVP_CIPHER_fetch/EVP_CIPHER_free, EVP_MD_fetch/EVP_MD_free
      * truncated sha ("sha2-512/224", "sha2-512/256")
-     * failed to load PEM file containing private key
+     * failed to load PEM file containing HMAC private key
    * openssl 3.2
      * argon2d, argon2i, argon2id
    * custom build required in RHEL (RHEL, centos, rocky) and older version
