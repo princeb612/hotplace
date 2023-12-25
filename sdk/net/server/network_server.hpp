@@ -28,6 +28,9 @@ enum netserver_callback_type_t {
 
 typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
 
+struct _network_multiplexer_context_t;
+typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
+
 /**
  * @brief network_server
  * @remarks
@@ -43,7 +46,7 @@ typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(socket_t socket, sockaddr_st
  * @example
  *
  *  network_server netserver;
- *  void* handle = nullptr;
+ *  network_multiplexer_context_t* handle = nullptr;
  *  netserver.open (&handle, AF_INET,  IPPROTO_TCP, PORT, 32000, NetworkRoutine, nullptr);
  *  netserver.consumer_loop_run (handle, 2);
  *  netserver.event_loop_run (handle, 2);
@@ -87,11 +90,11 @@ class network_server {
 
     /**
      * @brief   open
-     * @param   void**                      handle              [OUT] handle
-     * @param   unsigned int                family              [IN] AF_INET for ipv4, AF_INET6 for ipv6
-     * @param   unsigned int                type                [IN] ip protocol, IPPROTO_TCP(or IPPROTO_TCP)
-     * @param   uint16                      port                [IN] port
-     * @param   uint32                      concurrent          [IN] concurrent (linux epoll concerns, windows ignore)
+     * @param   network_multiplexer_context_t** handle              [OUT] handle
+     * @param   unsigned int                    family              [IN] AF_INET for ipv4, AF_INET6 for ipv6
+     * @param   unsigned int                    type                [IN] ip protocol, IPPROTO_TCP(or IPPROTO_TCP)
+     * @param   uint16                          port                [IN] port
+     * @param   uint32                          concurrent          [IN] concurrent (linux epoll concerns, windows ignore)
      *                                                               see epoll_wait
      * @param   TYPE_CALLBACK_HANDLEREXV    callback_routine    [IN] callback
      *            return_t (*TYPE_CALLBACK_HANDLEREXV)
@@ -132,12 +135,12 @@ class network_server {
      *          It'll be automatically created 1 tls_accept_thread, if server_socketis an instance of transport_layer_security_server class.
      *          see tls_accept_loop_run/tls_accept_loop_break
      */
-    return_t open(void** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent, TYPE_CALLBACK_HANDLEREXV lpfnEventHandler,
-                  void* lpParameter, server_socket* svr_socket);
+    return_t open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent,
+                  TYPE_CALLBACK_HANDLEREXV lpfnEventHandler, void* lpParameter, server_socket* svr_socket);
 
     /**
      * @brief   access control or handle tcp before tls upgrade
-     * @param   void*                           handle                  [in]
+     * @param   network_multiplexer_context_t* handle [in]
      * @param   ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler  [in]
      * @return  error code (see error.hpp)
      * @remarks
@@ -167,63 +170,63 @@ class network_server {
      *      // ...
      *    }
      */
-    return_t set_accept_control_handler(void* handle, ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler);
+    return_t set_accept_control_handler(network_multiplexer_context_t* handle, ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler);
 
     /**
      * @brief   add protocol interpreter
-     * @param   void*               handle      [IN]
-     * @param   network_protocol*    protocol    [IN]
+     * @param   network_multiplexer_context_t* handle [IN]
+     * @param   network_protocol* protocol [IN]
      * @return  error code (see error.hpp)
      * @remarks
      *          increase protocol reference counter
      */
-    return_t add_protocol(void* handle, network_protocol* protocol);
+    return_t add_protocol(network_multiplexer_context_t* handle, network_protocol* protocol);
     /**
      * @brief   remove protocol interpreter (by protocol_id)
-     * @param   void*               handle      [IN]
-     * @param   network_protocol*    protocol    [IN]
+     * @param   network_multiplexer_context_t* handle [IN]
+     * @param   network_protocol* protocol [IN]
      * @return  error code (see error.hpp)
      * @remarks
      *          decrease protocol reference counter
      */
-    return_t remove_protocol(void* handle, network_protocol* protocol);
+    return_t remove_protocol(network_multiplexer_context_t* handle, network_protocol* protocol);
     /**
      * @brief   clear protocol
-     * @param   void*   handle  [IN]
+     * @param   network_multiplexer_context_t* handle  [IN]
      * @return  error code (see error.hpp)
      * @remarks
      *          implicitly close method call clear_protocols
      */
-    return_t clear_protocols(void* handle);
+    return_t clear_protocols(network_multiplexer_context_t* handle);
     /**
      * @brief   create/stop tls_accept thread
-     * @param   void*   handle          [IN]
+     * @param   network_multiplexer_context_t* handle [IN]
      * @param   uint32  concurrent_loop [IN] thread count
      * @return  error code (see error.hpp)
      */
-    return_t tls_accept_loop_run(void* handle, uint32 concurrent_loop);
-    return_t tls_accept_loop_break(void* handle, uint32 concurrent_loop);
+    return_t tls_accept_loop_run(network_multiplexer_context_t* handle, uint32 concurrent_loop);
+    return_t tls_accept_loop_break(network_multiplexer_context_t* handle, uint32 concurrent_loop);
     /**
      * @brief   create/stop event thread
-     * @param   void*   handle          [IN]
+     * @param   network_multiplexer_context_t* handle [IN]
      * @param   uint32  concurrent_loop [IN] thread count
      * @return  error code (see error.hpp)
      * @remarks
      */
-    return_t event_loop_run(void* handle, uint32 concurrent_loop);
-    return_t event_loop_break(void* handle, uint32 concurrent_loop);
+    return_t event_loop_run(network_multiplexer_context_t* handle, uint32 concurrent_loop);
+    return_t event_loop_break(network_multiplexer_context_t* handle, uint32 concurrent_loop);
     /**
      * @brief   create/stop consumer thread
-     * @param   void*   handle          [IN]
+     * @param   network_multiplexer_context_t* handle [IN]
      * @param   uint32  concurrent_loop [IN] thread count
      * @return  error code (see error.hpp)
      */
-    return_t consumer_loop_run(void* handle, uint32 concurrent_loop);
-    return_t consumer_loop_break(void* handle, uint32 concurrent_loop);
+    return_t consumer_loop_run(network_multiplexer_context_t* handle, uint32 concurrent_loop);
+    return_t consumer_loop_break(network_multiplexer_context_t* handle, uint32 concurrent_loop);
 
     /**
      * @brief   close
-     * @param   void*           handle      [IN]
+     * @param   network_multiplexer_context_t* handle [IN]
      * @return  error code (see error.hpp)
      * @remarks
      *  do many following things
@@ -233,71 +236,45 @@ class network_server {
      *  4) release all protocols (clear_protocols)
      *  5) close epoll multiplexer
      */
-    return_t close(void* handle);
+    return_t close(network_multiplexer_context_t* handle);
 
    protected:
-    // session
-
-    /**
-     * @brief   accept
-     * @param   void*               handle          [IN]
-     * @param   tls_context_t*      tls_handle      [IN]
-     * @param   handle_t            client_socket   [IN]
-     * @param   sockaddr_storage_t* client_addr     [IN]
-     * @return  error code (see error.hpp)
-     * @remarks
-     */
-    return_t session_accepted(void* handle, tls_context_t* tls_handle, handle_t client_socket, sockaddr_storage_t* client_addr);
-    /**
-     * @brief   connection-close detected
-     * @param   void*               handle          [IN]
-     * @param   handle_t            client_socket   [IN]
-     * @return  error code (see error.hpp)
-     */
-    return_t session_closed(void* handle, handle_t client_socket);
-
-    /**
-     * @brief accepted, before tlsaccept
-     * @param void* handle [in]
-     * @param socket_t client_socket [in]
-     * @param sockaddr_storage_t* client_addr [in]
-     */
-    return_t try_connect(void* handle, socket_t client_socket, sockaddr_storage_t* client_addr);
-
-    // ssl/Tls
-
-    /**
-     * @brief   stop tls_accept
-     * @return  error code (see error.hpp)
-     */
-    return_t cleanup_tls_accept(void* handle);
-
-    // thread ... see signal_wait_threads, signalwait_thread_routine
-
     /**
      * @brief   tcp accept
      * @return  error code (see error.hpp)
      */
     static return_t accept_thread(void* user_context);
+    return_t accept_routine(network_multiplexer_context_t* handle);
+    /**
+     * @brief accepted, before tlsaccept
+     * @param network_multiplexer_context_t* handle [in]
+     * @param socket_t client_socket [in]
+     * @param sockaddr_storage_t* client_addr [in]
+     */
+    return_t try_connect(network_multiplexer_context_t* handle, socket_t client_socket, sockaddr_storage_t* client_addr);
+    return_t tls_accept_ready(network_multiplexer_context_t* handle, bool* ready);
     /**
      * @brief   Tls accept
      * @return  error code (see error.hpp)
      */
     static return_t tls_accept_thread(void* user_context);
+    return_t tls_accept_routine(network_multiplexer_context_t* handle);
+    /**
+     * @brief   stop 1 tls_accept_thread
+     * @return  error code (see error.hpp)
+     */
+    static return_t tls_accept_signal(void* user_context);
+    /**
+     * @brief   stop tls_accept
+     * @return  error code (see error.hpp)
+     */
+    return_t cleanup_tls_accept(network_multiplexer_context_t* handle);
+
     /**
      * @brief   read packet and compose a request
      * @return  error code (see error.hpp)
      */
     static return_t network_thread(void* user_context);
-    /**
-     * @brief   if a request is composed, dispatch a request into callback
-     * @return  error code (see error.hpp)
-     */
-    static return_t consumer_thread(void* user_context);
-
-    return_t accept_routine(void* handle);
-    return_t tls_accept_routine(void* handle);
-    return_t tls_accept_ready(void* handle, bool* ready);
     /**
      * @brief   network processor
      * @param   uint32              type                [IN] see mux_event_type
@@ -310,25 +287,45 @@ class network_server {
      *          see callback parameter of multiplexer_xxx::event_loop_run
      */
     static return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
-    return_t consumer_routine(void* handle);
-
-    // signal ... see signal_wait_threads, signalwait_thread_routine
-
-    /**
-     * @brief   stop 1 tls_accept_thread
-     * @return  error code (see error.hpp)
-     */
-    static return_t tls_accept_signal(void* user_context);
     /**
      * @brief   stop 1 network_thread
      * @return  error code (see error.hpp)
      */
     static return_t network_signal(void* user_context);
+
+    /**
+     * @brief   if a request is composed, dispatch a request into callback
+     * @return  error code (see error.hpp)
+     */
+    static return_t consumer_thread(void* user_context);
+
+    return_t consumer_routine(network_multiplexer_context_t* handle);
+
+    // signal ... see signal_wait_threads, signalwait_thread_routine
+
     /**
      * @brief   stop 1 consumer_thread
      * @return  error code (see error.hpp)
      */
     static return_t consumer_signal(void* user_context);
+
+    /**
+     * @brief   accept
+     * @param   network_multiplexer_context_t* handle [IN]
+     * @param   tls_context_t* tls_handle      [IN]
+     * @param   handle_t client_socket   [IN]
+     * @param   sockaddr_storage_t* client_addr     [IN]
+     * @return  error code (see error.hpp)
+     * @remarks
+     */
+    return_t session_accepted(network_multiplexer_context_t* handle, tls_context_t* tls_handle, handle_t client_socket, sockaddr_storage_t* client_addr);
+    /**
+     * @brief   connection-close detected
+     * @param   network_multiplexer_context_t* handle [IN]
+     * @param   handle_t client_socket [IN]
+     * @return  error code (see error.hpp)
+     */
+    return_t session_closed(network_multiplexer_context_t* handle, handle_t client_socket);
 };
 
 }  // namespace net

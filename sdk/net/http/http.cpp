@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/system/critical_section.hpp>
+#include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http.hpp>
@@ -189,7 +190,7 @@ return_t http_request::open(const char* request, size_t size_request) {
                     _method = token; /* first token aka GET, POST, ... */
 
                     size_t zpos = tpos;
-                    __uri.open(tokenize(str, " ", zpos));
+                    _uri.open(tokenize(str, " ", zpos));
                     /*
                        _uri = tokenize (str, " ", zpos);
                        zpos = 0;
@@ -198,7 +199,7 @@ return_t http_request::open(const char* request, size_t size_request) {
                 }
 
                 std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
-                __header.add(token, remain);
+                _header.add(token, remain);
             }
 
             pos = epos;
@@ -221,22 +222,26 @@ return_t http_request::close() {
 
     _method.clear();
     _request.clear();
-    __header.clear();
-    __uri.close();
+    _header.clear();
+    _uri.close();
     return ret;
 }
 
-http_header* http_request::get_header() { return &__header; }
+http_header* http_request::get_header() { return &_header; }
 
-http_uri* http_request::get_uri() { return &__uri; }
+http_uri& http_request::get_http_uri() { return _uri; }
 
-const char* http_request::get_url() { return __uri.get_url(); }
+const char* http_request::get_uri() { return get_http_uri().get_uri(); }
 
 const char* http_request::get_method() { return _method.c_str(); }
 
 const char* http_request::get_request() { return _request.c_str(); }
 
-http_response::http_response() : _statuscode(0) {
+http_response::http_response() : _request(nullptr), _statuscode(0) {
+    // do nothing
+}
+
+http_response::http_response(http_request* request) : _request(request) {
     // do nothing
 }
 
@@ -244,17 +249,21 @@ http_response::~http_response() {
     // do nothing
 }
 
-return_t http_response::compose(const char* content_type, const char* content, int status_code) {
-    return_t ret = errorcode_t::success;
+http_response& http_response::compose(const char* content_type, int status_code, const char* content, ...) {
+    _content_type.clear();
+    _content.clear();
 
     if (nullptr != content_type) {
         _content_type = content_type;
     }
     if (nullptr != content) {
-        _content = content;
+        va_list ap;
+        va_start(ap, content);
+        _content = format(content, ap);
+        va_end(ap);
     }
     _statuscode = status_code;
-    return ret;
+    return *this;
 }
 
 const char* http_response::content_type() { return _content_type.c_str(); }
@@ -264,6 +273,99 @@ const char* http_response::content() { return _content.c_str(); }
 size_t http_response::content_size() { return _content.size(); }
 
 int http_response::status_code() { return _statuscode; }
+
+http_header* http_response::get_header() { return &_header; }
+
+http_request* http_response::get_request() { return _request; }
+
+http_response& http_response::get_response(basic_stream& bs) {
+    bs.clear();
+
+    std::string accept_encoding;
+    if (_request) {
+        _request->get_header()->get("Accept-Encoding", accept_encoding);
+    }
+
+    std::string headers;
+    get_header()->add("Content-Type", content_type());
+    get_header()->add("Connection", "Keep-Alive");
+    if (std::string::npos != accept_encoding.find("deflate")) {
+        basic_stream encoded;
+        zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), &encoded);
+
+        get_header()->add("Content-Encoding", "deflate");
+        get_header()->add("Content-Length", format("%zi", encoded.size()));
+        get_header()->get_headers(headers);
+        bs.printf("HTTP/1.1 %3i %s\n%s\n", status_code(), http_resource::get_instance()->load(status_code()).c_str(), headers.c_str());
+        bs.write(encoded.data(), encoded.size());
+    } else if (std::string::npos != accept_encoding.find("gzip")) {
+        basic_stream encoded;
+        zlib_deflate(zlib_windowbits_t::windowbits_zlib, (byte_t*)content(), content_size(), &encoded);
+
+        get_header()->add("Content-Encoding", "gzip");
+        get_header()->add("Content-Length", format("%zi", encoded.size()));
+        get_header()->get_headers(headers);
+        bs.printf("HTTP/1.1 %3i %s\n%s\n", status_code(), http_resource::get_instance()->load(status_code()).c_str(), headers.c_str());
+        bs.write(encoded.data(), encoded.size());
+    } else /* identity */ {
+        get_header()->add("Content-Length", format("%zi", content_size()));
+        get_header()->get_headers(headers);
+
+        bs.printf("HTTP/1.1 %3i %s\n%s\n%.*s", status_code(), http_resource::get_instance()->load(status_code()).c_str(), headers.c_str(), content_size(),
+                  content());
+    }
+
+    return *this;
+}
+
+http_resource http_resource::_instance;
+
+http_resource* http_resource::get_instance() { return &_instance; }
+
+http_resource::http_resource() {
+    _status_codes.insert(std::make_pair(100, "Continue"));
+    _status_codes.insert(std::make_pair(101, "Switching Protocols"));
+    _status_codes.insert(std::make_pair(200, "OK"));
+    _status_codes.insert(std::make_pair(201, "Created"));
+    _status_codes.insert(std::make_pair(202, "Accepted"));
+    _status_codes.insert(std::make_pair(204, "No Content"));
+    _status_codes.insert(std::make_pair(205, "Reset Content"));
+    _status_codes.insert(std::make_pair(206, "Partial Content"));
+    _status_codes.insert(std::make_pair(300, "Multiple Choices"));
+    _status_codes.insert(std::make_pair(301, "Moved Permanently"));
+    _status_codes.insert(std::make_pair(302, "Moved Temporarily"));
+    _status_codes.insert(std::make_pair(303, "See Other"));
+    _status_codes.insert(std::make_pair(304, "Not Modified"));
+    _status_codes.insert(std::make_pair(305, "Use Proxy"));
+    _status_codes.insert(std::make_pair(400, "Bad Request"));
+    _status_codes.insert(std::make_pair(401, "Unauthorized"));
+    _status_codes.insert(std::make_pair(403, "Forbidden"));
+    _status_codes.insert(std::make_pair(404, "Not Found"));
+    _status_codes.insert(std::make_pair(405, "Method Not Allowed"));
+    _status_codes.insert(std::make_pair(406, "Not Acceptable"));
+    _status_codes.insert(std::make_pair(407, "Proxy Authentication Required"));
+    _status_codes.insert(std::make_pair(408, "Request Time-out"));
+    _status_codes.insert(std::make_pair(409, "Conflict"));
+    _status_codes.insert(std::make_pair(410, "Gone"));
+    _status_codes.insert(std::make_pair(411, "Length Required"));
+    _status_codes.insert(std::make_pair(412, "Precondition Failed"));
+    _status_codes.insert(std::make_pair(413, "Request Entity Too Large"));
+    _status_codes.insert(std::make_pair(414, "Request-URI Too Large"));
+    _status_codes.insert(std::make_pair(415, "Unsupported Media Type"));
+    _status_codes.insert(std::make_pair(426, "Upgrade Required"));
+    _status_codes.insert(std::make_pair(500, "Internal Server Error"));
+    _status_codes.insert(std::make_pair(501, "Not Implemented"));
+    _status_codes.insert(std::make_pair(502, "Bad Gateway"));
+    _status_codes.insert(std::make_pair(503, "Service Unavailable"));
+    _status_codes.insert(std::make_pair(504, "Gateway Time-out"));
+    _status_codes.insert(std::make_pair(505, "HTTP Version not supported"));
+}
+
+std::string http_resource::load(int errorcode) {
+    std::string message;
+    message = _status_codes.find(errorcode)->second;
+    return message;
+}
 
 http_uri::http_uri() { _shared.make_share(this); }
 
@@ -322,7 +424,7 @@ void http_uri::close() {
     _query.clear();
 }
 
-const char* http_uri::get_url() {
+const char* http_uri::get_uri() {
     const char* ret_value = nullptr;
 
     ret_value = _url.c_str();

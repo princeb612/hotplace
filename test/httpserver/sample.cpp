@@ -72,11 +72,11 @@ http_handler_t http_handler_http_handlers::find(const char* uri) {
 
 // sample handler
 return_t api_test_handler(const char* method, const char* uri, const char* action, const char* request, http_response* response) {
-    response->compose("text/html", "<html><body>page - ok<body></html>", 200);
+    response->compose("text/html", 200, "<html><body>page - ok<body></html>");
     return 0;
 }
 return_t api_v1_test_handler(const char* method, const char* uri, const char* action, const char* request, http_response* response) {
-    response->compose("application/json", "{\"result\":\"ok\"}", 200);
+    response->compose("application/json", 200, "{\"result\":\"ok\"}");
     return 0;
 }
 
@@ -103,20 +103,24 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             printf("read %i (%zi) %.*s\n", session_socket->client_socket, bufsize, (unsigned)bufsize, buf);
             {
                 http_request request;
-                http_response response;
-                ansi_string bs;
+                http_response response(&request);
+                basic_stream bs;
                 request.open(buf, bufsize);
-                std::cout << "url : " << request.get_url() << std::endl;
+                std::cout << "url : " << request.get_uri() << std::endl;
                 std::cout << "method : " << request.get_method() << std::endl;
 
                 /* URI, URL, query */
-                http_uri* uri = request.get_uri();
-                for (size_t i = 0; i < uri->countof_query(); i++) {
+                http_uri& uri = request.get_http_uri();
+                for (size_t i = 0; i < uri.countof_query(); i++) {
                     std::string key;
                     std::string value;
-                    uri->query(i, key, value);
+                    uri.query(i, key, value);
                     std::cout << key.c_str() << " -> " << value.c_str() << std::endl;
                 }
+
+                arch_t use_tls = 0;
+                session->get_server_socket()->query(server_socket_query_t::query_support_tls, &use_tls);
+                std::cout << "tls " << use_tls << std::endl;
 
                 /* header */
                 std::string encoding;
@@ -124,34 +128,20 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 header->get("Accept-Encoding", encoding);
                 std::cout << "encoding " << encoding.c_str() << std::endl;
 
-                http_handler_t handler = router->find(request.get_url());
-                if (nullptr != handler) {
-                    (*handler)(request.get_method(), request.get_url(), "", request.get_request(), &response);
+                if (use_tls) {
+                    http_handler_t handler = router->find(request.get_uri());
+                    if (nullptr != handler) {
+                        (*handler)(request.get_method(), request.get_uri(), "", request.get_request(), &response);
+                    } else {
+                        response.compose("text/html", 404, "<html><body>page not found %s</body></html>", request.get_uri());
+                    }
+                    response.get_response(bs);
                 } else {
-                    response.compose("text/html", format("<html><body>page not found %s</body></html>", request.get_url()).c_str(), 200);
-                }
-
-                bool resp_wo_encoding = false;
-                // same way "Content-Encoding: compress" possible
-                if (0 == stricmp(encoding.c_str(), "deflate")) {
-                    basic_stream encoded;
-                    zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)response.content(), response.content_size(), &encoded);
-
-                    bs.printf("HTTP/1.1 200 OK\nConnection: Keep-Alive\nContent-Type: %s\nContent-Encoding: deflate\nContent-Length: %d\n\n%.*s",
-                              response.content_type(), encoded.size(), encoded.size(), encoded.data());
-                } else if (0 == stricmp(encoding.c_str(), "gzip")) {
-                    basic_stream encoded;
-                    zlib_deflate(zlib_windowbits_t::windowbits_zlib, (byte_t*)response.content(), response.content_size(), &encoded);
-
-                    bs.printf("HTTP/1.1 200 OK\nConnection: Keep-Alive\nContent-Type: %s\nContent-Encoding: gzip\nContent-Length: %d\n\n%.*s",
-                              response.content_type(), encoded.size(), encoded.size(), encoded.data());
-                } else {
-                    resp_wo_encoding = true;
-                }
-
-                if (resp_wo_encoding) {
-                    bs.printf("HTTP/1.1 200 OK\nConnection: Keep-Alive\nContent-Type: %s\nContent-Length: %d\n\n%s", response.content_type(),
-                              response.content_size(), response.content());
+                    // RFC 2817 4. Server Requested Upgrade to HTTP over TLS
+                    http_header* resp_header = response.get_header();
+                    resp_header->add("Upgrade", "TLS/1.2, HTTP/1.1");
+                    resp_header->add("Connection", "Upgrade");
+                    response.compose("text/html", 426, "<html><body>Upgrade %s</body></html>", request.get_uri()).get_response(bs);
                 }
 
                 session->send((const char*)bs.data(), bs.size());
@@ -169,8 +159,10 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 return_t echo_server(void*) {
     return_t ret = errorcode_t::success;
     network_server netserver;
-    void* handle_ipv4 = nullptr;
-    void* handle_ipv6 = nullptr;
+    network_multiplexer_context_t* handle_http_ipv4 = nullptr;
+    network_multiplexer_context_t* handle_http_ipv6 = nullptr;
+    network_multiplexer_context_t* handle_https_ipv4 = nullptr;
+    network_multiplexer_context_t* handle_https_ipv6 = nullptr;
 
     FILE* fp = fopen(FILENAME_RUN, "w");
 
@@ -178,6 +170,7 @@ return_t echo_server(void*) {
 
     SSL_CTX* x509 = nullptr;
     http_protocol* http_prot = nullptr;
+    server_socket svr_sock;
     transport_layer_security* tls = nullptr;
     transport_layer_security_server* tls_server = nullptr;
 
@@ -203,14 +196,23 @@ return_t echo_server(void*) {
         __try_new_catch(tls_server, new transport_layer_security_server(tls), ret, __leave2);
 
         // start server
-        netserver.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
-        netserver.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
-        netserver.add_protocol(handle_ipv4, http_prot);
+        netserver.open(&handle_http_ipv4, AF_INET, IPPROTO_TCP, 80, 32000, network_routine, nullptr, &svr_sock);
+        netserver.open(&handle_http_ipv6, AF_INET6, IPPROTO_TCP, 80, 32000, network_routine, nullptr, &svr_sock);
+        netserver.open(&handle_https_ipv4, AF_INET, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
+        netserver.open(&handle_https_ipv6, AF_INET6, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
+        netserver.add_protocol(handle_http_ipv4, http_prot);
+        netserver.add_protocol(handle_http_ipv6, http_prot);
+        netserver.add_protocol(handle_https_ipv4, http_prot);
+        netserver.add_protocol(handle_https_ipv6, http_prot);
 
-        netserver.consumer_loop_run(handle_ipv4, 2);
-        netserver.consumer_loop_run(handle_ipv6, 2);
-        netserver.event_loop_run(handle_ipv4, 2);
-        netserver.event_loop_run(handle_ipv6, 2);
+        netserver.consumer_loop_run(handle_http_ipv4, 2);
+        netserver.consumer_loop_run(handle_http_ipv6, 2);
+        netserver.consumer_loop_run(handle_https_ipv4, 2);
+        netserver.consumer_loop_run(handle_https_ipv6, 2);
+        netserver.event_loop_run(handle_http_ipv4, 2);
+        netserver.event_loop_run(handle_http_ipv6, 2);
+        netserver.event_loop_run(handle_https_ipv4, 2);
+        netserver.event_loop_run(handle_https_ipv6, 2);
 
         while (true) {
             msleep(1000);
@@ -228,14 +230,20 @@ return_t echo_server(void*) {
 #endif
         }
 
-        netserver.event_loop_break(handle_ipv4, 2);
-        netserver.event_loop_break(handle_ipv6, 2);
-        netserver.consumer_loop_break(handle_ipv4, 2);
-        netserver.consumer_loop_break(handle_ipv6, 2);
+        netserver.event_loop_break(handle_http_ipv4, 2);
+        netserver.event_loop_break(handle_http_ipv6, 2);
+        netserver.event_loop_break(handle_https_ipv4, 2);
+        netserver.event_loop_break(handle_https_ipv6, 2);
+        netserver.consumer_loop_break(handle_http_ipv4, 2);
+        netserver.consumer_loop_break(handle_http_ipv6, 2);
+        netserver.consumer_loop_break(handle_https_ipv4, 2);
+        netserver.consumer_loop_break(handle_https_ipv6, 2);
     }
     __finally2 {
-        netserver.close(handle_ipv4);
-        netserver.close(handle_ipv6);
+        netserver.close(handle_http_ipv4);
+        netserver.close(handle_http_ipv6);
+        netserver.close(handle_https_ipv4);
+        netserver.close(handle_https_ipv6);
 
         http_prot->release();
         tls_server->release();

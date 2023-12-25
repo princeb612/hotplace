@@ -61,8 +61,8 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 return_t echo_server(void* param) {
     return_t ret = errorcode_t::success;
     network_server network_server;
-    void* handle_ipv4 = nullptr;
-    void* handle_ipv6 = nullptr;
+    network_multiplexer_context_t* handle_ipv4 = nullptr;
+    network_multiplexer_context_t* handle_ipv6 = nullptr;
     server_socket svr_sock;
 
     FILE* fp = fopen(FILENAME_RUN, "w");
