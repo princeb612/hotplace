@@ -94,9 +94,9 @@ class http_uri {
     void close();
 
     /**
-     * @brief url
+     * @brief URI
      */
-    const char* get_url();
+    const char* get_uri();
     /**
      * @brief query
      * @param   unsigned        index       [IN] 0 <= index < size_parameter ()
@@ -157,11 +157,11 @@ class http_request {
     /**
      * @brief return the http_uri object
      */
-    http_uri* get_uri();
+    http_uri& get_http_uri();
     /**
      * @brief url
      */
-    const char* get_url();
+    const char* get_uri();
     /**
      * @brief return the method (GET, POST, ...)
      */
@@ -175,25 +175,51 @@ class http_request {
     std::string _method;
     std::string _request;
 
-    http_header __header;
-    http_uri __uri;
+    http_header _header;
+    http_uri _uri;
+};
+
+enum http_response_encoding_t {
+    http_response_encoding_default = 0,
+    http_response_encoding_gzip = 1,
+    http_response_encoding_deflate = 2,
 };
 
 class http_response {
    public:
     http_response();
+    http_response(http_request* request);
     ~http_response();
 
-    return_t compose(const char* content_type, const char* content, int status_code);
+    http_response& compose(const char* content_type, int status_code, const char* content, ...);
     const char* content_type();
     const char* content();
     size_t content_size();
     int status_code();
+    http_header* get_header();
+    http_request* get_request();
+
+    http_response& get_response(basic_stream& bs);
 
    protected:
+    http_request* _request;
+    http_header _header;
     std::string _content_type;
     std::string _content;
     int _statuscode;
+};
+
+class http_resource {
+   public:
+    static http_resource* get_instance();
+
+    std::string load(int errorcode);
+
+   protected:
+    http_resource();
+
+    static http_resource _instance;
+    std::map<int, std::string> _status_codes;
 };
 
 class http_authenticate_provider {

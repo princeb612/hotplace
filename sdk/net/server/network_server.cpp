@@ -80,8 +80,8 @@ network_server::~network_server() {
     // openssl_cleanup ();
 }
 
-return_t network_server::open(void** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent, TYPE_CALLBACK_HANDLEREXV callback_routine,
-                              void* callback_param, server_socket* svr_socket) {
+return_t network_server::open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent,
+                              TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param, server_socket* svr_socket) {
     return_t ret = errorcode_t::success;
 
     network_multiplexer_context_t* context = nullptr;
@@ -170,21 +170,20 @@ return_t network_server::open(void** handle, unsigned int family, unsigned int t
     return ret;
 }
 
-return_t network_server::set_accept_control_handler(void* handle, ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler) {
+return_t network_server::set_accept_control_handler(network_multiplexer_context_t* handle, ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
-        context->accept_control_handler = accept_control_handler;
+        handle->accept_control_handler = accept_control_handler;
     }
     __finally2 {
         // do nothing
@@ -193,21 +192,20 @@ return_t network_server::set_accept_control_handler(void* handle, ACCEPT_CONTROL
     return ret;
 }
 
-return_t network_server::add_protocol(void* handle, network_protocol* protocol_ptr) {
+return_t network_server::add_protocol(network_multiplexer_context_t* handle, network_protocol* protocol_ptr) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
-        ret = context->protocol_group.add(protocol_ptr);
+        ret = handle->protocol_group.add(protocol_ptr);
     }
     __finally2 {
         // do nothing
@@ -216,21 +214,20 @@ return_t network_server::add_protocol(void* handle, network_protocol* protocol_p
     return ret;
 }
 
-return_t network_server::remove_protocol(void* handle, network_protocol* protocol_ptr) {
+return_t network_server::remove_protocol(network_multiplexer_context_t* handle, network_protocol* protocol_ptr) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
-        ret = context->protocol_group.remove(protocol_ptr);
+        ret = handle->protocol_group.remove(protocol_ptr);
     }
     __finally2 {
         // do nothing
@@ -239,21 +236,20 @@ return_t network_server::remove_protocol(void* handle, network_protocol* protoco
     return ret;
 }
 
-return_t network_server::clear_protocols(void* handle) {
+return_t network_server::clear_protocols(network_multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
-        ret = context->protocol_group.clear();
+        ret = handle->protocol_group.clear();
     }
     __finally2 {
         // do nothing
@@ -262,26 +258,25 @@ return_t network_server::clear_protocols(void* handle) {
     return ret;
 }
 
-return_t network_server::tls_accept_loop_run(void* handle, uint32 concurrent_loop) {
+return_t network_server::tls_accept_loop_run(network_multiplexer_context_t* handle, uint32 concurrent_loop) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
-        server_socket* svr_socket = context->svr_socket;
+        server_socket* svr_socket = handle->svr_socket;
         arch_t use_tls = 0;
         svr_socket->query(server_socket_query_t::query_support_tls, &use_tls);
         if (1 == use_tls) {
             for (uint32 i = 0; i < concurrent_loop; i++) {
-                context->tls_accept_threads.create();
+                handle->tls_accept_threads.create();
             }
         }
     }
@@ -292,22 +287,21 @@ return_t network_server::tls_accept_loop_run(void* handle, uint32 concurrent_loo
     return ret;
 }
 
-return_t network_server::tls_accept_loop_break(void* handle, uint32 concurrent_loop) {
+return_t network_server::tls_accept_loop_break(network_multiplexer_context_t* handle, uint32 concurrent_loop) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         for (uint32 i = 0; i < concurrent_loop; i++) {
-            context->tls_accept_threads.signal();
+            handle->tls_accept_threads.signal();
         }
     }
     __finally2 {
@@ -317,23 +311,22 @@ return_t network_server::tls_accept_loop_break(void* handle, uint32 concurrent_l
     return ret;
 }
 
-return_t network_server::event_loop_run(void* handle, uint32 concurrent_loop) {
+return_t network_server::event_loop_run(network_multiplexer_context_t* handle, uint32 concurrent_loop) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         /* if a thread count of network_threads reachs max-concurrent, no more thread is created. */
         for (uint32 i = 0; i < concurrent_loop; i++) {
-            context->network_threads.create();
+            handle->network_threads.create();
         }
     }
     __finally2 {
@@ -343,9 +336,8 @@ return_t network_server::event_loop_run(void* handle, uint32 concurrent_loop) {
     return ret;
 }
 
-return_t network_server::event_loop_break(void* handle, uint32 concurrent_loop) {
+return_t network_server::event_loop_break(network_multiplexer_context_t* handle, uint32 concurrent_loop) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
 #if defined __linux__
     multiplexer_epoll mplexer;
@@ -360,7 +352,7 @@ return_t network_server::event_loop_break(void* handle, uint32 concurrent_loop) 
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
@@ -368,7 +360,7 @@ return_t network_server::event_loop_break(void* handle, uint32 concurrent_loop) 
         /* stop threads */
         uint32 i = 0;
         for (i = 0; i < concurrent_loop; i++) {
-            context->network_threads.signal();
+            handle->network_threads.signal();
         }
     }
     __finally2 {
@@ -378,23 +370,22 @@ return_t network_server::event_loop_break(void* handle, uint32 concurrent_loop) 
     return ret;
 }
 
-return_t network_server::consumer_loop_run(void* handle, uint32 concurrent_loop) {
+return_t network_server::consumer_loop_run(network_multiplexer_context_t* handle, uint32 concurrent_loop) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         /* if a thread count of consumer_threads reachs max-concurrent, no more thread is created. */
         for (uint32 i = 0; i < concurrent_loop; i++) {
-            context->consumer_threads.create();
+            handle->consumer_threads.create();
         }
     }
     __finally2 {
@@ -404,23 +395,22 @@ return_t network_server::consumer_loop_run(void* handle, uint32 concurrent_loop)
     return ret;
 }
 
-return_t network_server::consumer_loop_break(void* handle, uint32 concurrent_loop) {
+return_t network_server::consumer_loop_break(network_multiplexer_context_t* handle, uint32 concurrent_loop) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         /* stop threads */
         for (uint32 i = 0; i < concurrent_loop; i++) {
-            context->consumer_threads.signal();
+            handle->consumer_threads.signal();
         }
     }
     __finally2 {
@@ -430,9 +420,8 @@ return_t network_server::consumer_loop_break(void* handle, uint32 concurrent_loo
     return ret;
 }
 
-return_t network_server::close(void* handle) {
+return_t network_server::close(network_multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
 #if defined __linux__
     multiplexer_epoll mplexer;
@@ -447,29 +436,29 @@ return_t network_server::close(void* handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
-        server_socket* svr_socket = context->svr_socket;
-        svr_socket->close(context->listen_sock, nullptr);
+        server_socket* svr_socket = handle->svr_socket;
+        svr_socket->close(handle->listen_sock, nullptr);
 
         /* stop all threads */
 #if defined _WIN32 || defined _WIN64
-        context->accept_threads.signal_and_wait_all();
+        handle->accept_threads.signal_and_wait_all();
 #endif
-        cleanup_tls_accept(context);
-        context->tls_accept_threads.signal_and_wait_all();
-        context->network_threads.signal_and_wait_all();
-        context->consumer_threads.signal_and_wait_all();
+        cleanup_tls_accept(handle);
+        handle->tls_accept_threads.signal_and_wait_all();
+        handle->network_threads.signal_and_wait_all();
+        handle->consumer_threads.signal_and_wait_all();
 
-        context->protocol_group.clear();
+        handle->protocol_group.clear();
 
-        mplexer.close(context->mplexer_handle);
+        mplexer.close(handle->mplexer_handle);
 
-        context->signature = 0;
-        delete context;
+        handle->signature = 0;
+        delete handle;
     }
     __finally2 {
         // do nothing
@@ -480,21 +469,21 @@ return_t network_server::close(void* handle) {
 
 return_t network_server::accept_thread(void* user_context) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(user_context);
+    network_multiplexer_context_t* handle = reinterpret_cast<network_multiplexer_context_t*>(user_context);
 
     __try2 {
-        if (nullptr == user_context) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         network_server svr;
         do {
-            ret = svr.accept_routine(context);
+            ret = svr.accept_routine(handle);
         } while (errorcode_t::success == ret);
     }
     __finally2 {
@@ -504,9 +493,8 @@ return_t network_server::accept_thread(void* user_context) {
     return ret;
 }
 
-return_t network_server::accept_routine(void* handle) {
+return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
     network_server svr;
 
 #if defined __linux__
@@ -518,11 +506,16 @@ return_t network_server::accept_routine(void* handle) {
 #endif
 
     __try2 {
-        socket_t listen_sock = (socket_t)context->listen_sock;
-        server_socket* svr_socket = context->svr_socket;
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        socket_t listen_sock = (socket_t)handle->listen_sock;
+        server_socket* svr_socket = handle->svr_socket;
 
         accept_context_t accpt_ctx;
-        accpt_ctx.mplexer_context = context;
+        accpt_ctx.mplexer_context = handle;
 
         ret = svr_socket->accept(listen_sock, &accpt_ctx.client_socket, (struct sockaddr*)&accpt_ctx.client_addr, &accpt_ctx.client_addr_len);
         if (INVALID_SOCKET == accpt_ctx.client_socket) {
@@ -540,9 +533,9 @@ return_t network_server::accept_routine(void* handle) {
 
         /* allow/deny based on a network address */
         /* if protocol upgrade needed, use accept_control_handler callback */
-        if (nullptr != context->accept_control_handler) {
+        if (nullptr != handle->accept_control_handler) {
             CALLBACK_CONTROL control = CONTINUE_CONTROL;
-            context->accept_control_handler(accpt_ctx.client_socket, &accpt_ctx.client_addr, &control, context->callback_param);
+            handle->accept_control_handler(accpt_ctx.client_socket, &accpt_ctx.client_addr, &control, handle->callback_param);
             if (STOP_CONTROL == control) {
                 close_socket(accpt_ctx.client_socket, true, 0);
                 __leave2;
@@ -567,8 +560,8 @@ return_t network_server::accept_routine(void* handle) {
         } else {
             /* prepare for ssl_accept delay */
             {
-                critical_section_guard guard(context->accept_queue_lock);
-                context->accept_queue.push(accpt_ctx);
+                critical_section_guard guard(handle->accept_queue_lock);
+                handle->accept_queue.push(accpt_ctx);
             }
 
             svr.try_connect(handle, accpt_ctx.client_socket, &accpt_ctx.client_addr);
@@ -581,9 +574,34 @@ return_t network_server::accept_routine(void* handle) {
     return ret;
 }
 
-return_t network_server::tls_accept_ready(void* handle, bool* ready) {
+return_t network_server::try_connect(network_multiplexer_context_t* handle, socket_t client_socket, sockaddr_storage_t* client_addr) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
+
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        void* dispatch_data[4] = {
+            nullptr,
+        };
+        dispatch_data[0] = (void*)(arch_t)client_socket;
+        dispatch_data[1] = client_addr;
+        handle->callback_routine(multiplexer_event_type_t::mux_tryconnect, 4, dispatch_data, nullptr, handle->callback_param);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t network_server::tls_accept_ready(network_multiplexer_context_t* handle, bool* ready) {
+    return_t ret = errorcode_t::success;
 
     __try2 {
         if (nullptr == handle || nullptr == ready) {
@@ -591,7 +609,7 @@ return_t network_server::tls_accept_ready(void* handle, bool* ready) {
             __leave2;
         }
         bool ret_value = false;
-        ret_value = context->accept_queue.empty() ? false : true;
+        ret_value = handle->accept_queue.empty() ? false : true;
         *ready = ret_value;
     }
     __finally2 {
@@ -602,46 +620,59 @@ return_t network_server::tls_accept_ready(void* handle, bool* ready) {
 
 return_t network_server::tls_accept_thread(void* user_context) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(user_context);
+    network_multiplexer_context_t* handle = reinterpret_cast<network_multiplexer_context_t*>(user_context);
 
-    network_server svr;
-    uint32 ret_wait = 0;
-    uint32 interval = 1;
-    bool ready = false;
-
-    while (true) {
-        ready = false;
-        svr.tls_accept_ready(context, &ready);
-
-        interval = (true == ready) ? 1 : 100; /* control cpu usage */
-        ret_wait = context->tls_accept_mutex.wait(interval);
-        if (0 == ret_wait) {
-            break;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
 
-        if (true == ready) {
-            svr.tls_accept_routine(user_context);
+        network_server svr;
+        uint32 ret_wait = 0;
+        uint32 interval = 1;
+        bool ready = false;
+
+        while (true) {
+            ready = false;
+            svr.tls_accept_ready(handle, &ready);
+
+            interval = (true == ready) ? 1 : 100; /* control cpu usage */
+            ret_wait = handle->tls_accept_mutex.wait(interval);
+            if (0 == ret_wait) {
+                break;
+            }
+
+            if (true == ready) {
+                svr.tls_accept_routine(handle);
+            }
         }
+
+        // openssl_thread_end (); // ssl23_accept memory leak, call for each thread
+        handle->svr_socket->tls_stop_accept();
     }
-
-    // openssl_thread_end (); // ssl23_accept memory leak, call for each thread
-    context->svr_socket->tls_stop_accept();
+    __finally2 {
+        // do nothing
+    }
 
     return ret;
 }
 
-return_t network_server::tls_accept_routine(void* handle) {
+return_t network_server::tls_accept_routine(network_multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
     __try2 {
-        // double check
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         accept_context_t accpt_ctx;
         {
-            critical_section_guard guard(context->accept_queue_lock);
-            if (false == context->accept_queue.empty()) {
-                accpt_ctx = context->accept_queue.front();
-                context->accept_queue.pop();
+            critical_section_guard guard(handle->accept_queue_lock);
+            if (false == handle->accept_queue.empty()) {
+                accpt_ctx = handle->accept_queue.front();
+                handle->accept_queue.pop();
             } else {
                 ret = errorcode_t::empty;
             }
@@ -652,12 +683,12 @@ return_t network_server::tls_accept_routine(void* handle) {
         }
 
         network_server svr;
-        server_socket* svr_socket = context->svr_socket;
+        server_socket* svr_socket = handle->svr_socket;
         tls_context_t* tls_handle = nullptr;
 
         return_t dwResult = svr_socket->tls_accept(accpt_ctx.client_socket, &tls_handle);
         if (errorcode_t::success == dwResult) {
-            svr.session_accepted(context, tls_handle, (handle_t)accpt_ctx.client_socket, &accpt_ctx.client_addr);
+            svr.session_accepted(handle, tls_handle, (handle_t)accpt_ctx.client_socket, &accpt_ctx.client_addr);
             /* tls_handle is release in session_closed member. */
         } else {
             close_socket(accpt_ctx.client_socket, true, 0);
@@ -670,16 +701,26 @@ return_t network_server::tls_accept_routine(void* handle) {
     return ret;
 }
 
-return_t network_server::tls_accept_signal(void* param) {
+return_t network_server::tls_accept_signal(void* user_context) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(param);
+    network_multiplexer_context_t* handle = reinterpret_cast<network_multiplexer_context_t*>(user_context);
 
-    context->tls_accept_mutex.signal();
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        handle->tls_accept_mutex.signal();
+    }
+    __finally2 {
+        // do nothing
+    }
 
     return ret;
 }
 
-return_t network_server::cleanup_tls_accept(void* handle) {
+return_t network_server::cleanup_tls_accept(network_multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -688,17 +729,16 @@ return_t network_server::cleanup_tls_accept(void* handle) {
             __leave2;
         }
 
-        network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         accept_context_t accpt_ctx;
-        critical_section_guard guard(context->accept_queue_lock);
-        if (false == context->accept_queue.empty()) {
-            accpt_ctx = context->accept_queue.front();
-            context->accept_queue.pop();
+        critical_section_guard guard(handle->accept_queue_lock);
+        if (false == handle->accept_queue.empty()) {
+            accpt_ctx = handle->accept_queue.front();
+            handle->accept_queue.pop();
             close_socket(accpt_ctx.client_socket, true, 0);
         }
     }
@@ -710,7 +750,7 @@ return_t network_server::cleanup_tls_accept(void* handle) {
 
 return_t network_server::network_thread(void* user_context) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(user_context);
+    network_multiplexer_context_t* handle = reinterpret_cast<network_multiplexer_context_t*>(user_context);
 
 #if defined __linux__
     multiplexer_epoll mplexer;
@@ -721,16 +761,16 @@ return_t network_server::network_thread(void* user_context) {
 #endif
 
     __try2 {
-        if (nullptr == user_context) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
-        ret = mplexer.event_loop_run(context->mplexer_handle, (handle_t)context->listen_sock, network_routine, user_context);
+        ret = mplexer.event_loop_run(handle->mplexer_handle, (handle_t)handle->listen_sock, network_routine, handle);
     }
     __finally2 {
         // do nothing
@@ -806,7 +846,7 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
 
 return_t network_server::network_signal(void* user_context) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(user_context);
+    network_multiplexer_context_t* handle = reinterpret_cast<network_multiplexer_context_t*>(user_context);
 
 #if defined __linux__
     multiplexer_epoll mplexer;
@@ -816,42 +856,60 @@ return_t network_server::network_signal(void* user_context) {
     multiplexer_iocp mplexer;
 #endif
 
-    mplexer.event_loop_break_concurrent(context->mplexer_handle, 1); /* call event_loop_break just 1 time */
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        mplexer.event_loop_break_concurrent(handle->mplexer_handle, 1); /* call event_loop_break just 1 time */
+    }
+    __finally2 {
+        // do nothing
+    }
 
     return ret;
 }
 
 return_t network_server::consumer_thread(void* user_context) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(user_context);
+    network_multiplexer_context_t* handle = reinterpret_cast<network_multiplexer_context_t*>(user_context);
 
-    network_server svr;
-    uint32 ret_wait = 0;
-
-    while (true) {
-        ret_wait = context->consumer_mutex.wait(100);
-        if (0 == ret_wait) {
-            break;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
 
-        svr.consumer_routine(context);
+        network_server svr;
+        uint32 ret_wait = 0;
+
+        while (true) {
+            ret_wait = handle->consumer_mutex.wait(100);
+            if (0 == ret_wait) {
+                break;
+            }
+
+            svr.consumer_routine(handle);
+        }
+    }
+    __finally2 {
+        // do nothing
     }
 
     return ret;
 }
 
-return_t network_server::consumer_routine(void* handle) {
+return_t network_server::consumer_routine(network_multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
-    if (context->priority_queue.size()) {
+    if (handle->priority_queue.size()) {
         int priority = 0;
         network_session* session_object = nullptr;
-        ret = context->priority_queue.pop(&priority, &session_object);
+        ret = handle->priority_queue.pop(&priority, &session_object);
         if (errorcode_t::success == ret) {
             network_stream_data* buffer_object = nullptr;
             network_stream_data* buffer_item = nullptr;
-            session_object->consume(&context->protocol_group, &buffer_object);
+            session_object->consume(&handle->protocol_group, &buffer_object);
             if (nullptr != buffer_object) {
                 while (true) {
                     buffer_item = buffer_object;
@@ -867,7 +925,7 @@ return_t network_server::consumer_routine(void* handle) {
                     dispatch_data[2] = (void*)buffer_item->size();    /* netserver_callback_type_t::netserver_callback_type_datasize */
                     dispatch_data[3] = session_object;                /* netserver_callback_type_t::netserver_callback_type_session */
 
-                    context->callback_routine(multiplexer_event_type_t::mux_read, 4, dispatch_data, nullptr, context->callback_param);
+                    handle->callback_routine(multiplexer_event_type_t::mux_read, 4, dispatch_data, nullptr, handle->callback_param);
 
                     buffer_object = buffer_object->next();
 
@@ -885,16 +943,25 @@ return_t network_server::consumer_routine(void* handle) {
 
 return_t network_server::consumer_signal(void* user_context) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(user_context);
+    network_multiplexer_context_t* handle = reinterpret_cast<network_multiplexer_context_t*>(user_context);
 
-    context->consumer_mutex.signal();
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        handle->consumer_mutex.signal();
+    }
+    __finally2 {
+        // do nothing
+    }
 
     return ret;
 }
 
-return_t network_server::session_accepted(void* handle, tls_context_t* tls_handle, handle_t client_socket, sockaddr_storage_t* client_addr) {
+return_t network_server::session_accepted(network_multiplexer_context_t* handle, tls_context_t* tls_handle, handle_t client_socket,
+                                          sockaddr_storage_t* client_addr) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
 #if defined __linux__
     multiplexer_epoll mplexer;
@@ -909,18 +976,18 @@ return_t network_server::session_accepted(void* handle, tls_context_t* tls_handl
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         network_session* session_object;
-        ret = context->session_manager.connected(client_socket, client_addr, context->svr_socket, tls_handle, &session_object);
+        ret = handle->session_manager.connected(client_socket, client_addr, handle->svr_socket, tls_handle, &session_object);
         if (errorcode_t::success != ret) {
             __leave2;
         }
         /* associate with multiplex object (iocp, epoll) */
-        mplexer.bind(context->mplexer_handle, client_socket, session_object);
+        mplexer.bind(handle->mplexer_handle, client_socket, session_object);
 #if defined _WIN32 || defined _WIN64
         /* asynchronous */
         session_object->ready_to_read();
@@ -930,7 +997,7 @@ return_t network_server::session_accepted(void* handle, tls_context_t* tls_handl
             nullptr,
         };
         dispatch_data[0] = (void*)session_object->socket_info(); /* NET_OBJECT_SOCKET* */
-        context->callback_routine(multiplexer_event_type_t::mux_connect, 4, dispatch_data, nullptr, context->callback_param);
+        handle->callback_routine(multiplexer_event_type_t::mux_connect, 4, dispatch_data, nullptr, handle->callback_param);
     }
     __finally2 {
         // do nothing
@@ -939,9 +1006,8 @@ return_t network_server::session_accepted(void* handle, tls_context_t* tls_handl
     return ret;
 }
 
-return_t network_server::session_closed(void* handle, handle_t client_socket) {
+return_t network_server::session_closed(network_multiplexer_context_t* handle, handle_t client_socket) {
     return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
 
 #if defined __linux__
     multiplexer_epoll mplexer;
@@ -956,23 +1022,23 @@ return_t network_server::session_closed(void* handle, handle_t client_socket) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
+        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != handle->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         network_session* session_object = nullptr;
         /* remove from session manager, prevent double free(concurrent epoll_wait) */
-        ret = context->session_manager.ready_to_close(client_socket, &session_object);
+        ret = handle->session_manager.ready_to_close(client_socket, &session_object);
         if (errorcode_t::success == ret) {
             /* no more associated, control_delete */
-            mplexer.unbind(context->mplexer_handle, session_object->socket_info()->client_socket, nullptr);
+            mplexer.unbind(handle->mplexer_handle, session_object->socket_info()->client_socket, nullptr);
 
             void* dispatch_data[4] = {
                 nullptr,
             };
             dispatch_data[0] = (void*)session_object->socket_info(); /* NET_OBJECT_SOCKET* */
-            context->callback_routine(multiplexer_event_type_t::mux_disconnect, 4, dispatch_data, nullptr, context->callback_param);
+            handle->callback_routine(multiplexer_event_type_t::mux_disconnect, 4, dispatch_data, nullptr, handle->callback_param);
 
             /* end-of-life. if reference counter is 0, close a socket and delete an instance */
             /* and release tls_handle here */
@@ -983,33 +1049,6 @@ return_t network_server::session_closed(void* handle, handle_t client_socket) {
         // do nothing
     }
 
-    return ret;
-}
-
-return_t network_server::try_connect(void* handle, socket_t client_socket, sockaddr_storage_t* client_addr) {
-    return_t ret = errorcode_t::success;
-    network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(handle);
-
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE != context->signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        void* dispatch_data[4] = {
-            nullptr,
-        };
-        dispatch_data[0] = (void*)(arch_t)client_socket;
-        dispatch_data[1] = client_addr;
-        context->callback_routine(multiplexer_event_type_t::mux_tryconnect, 4, dispatch_data, nullptr, context->callback_param);
-    }
-    __finally2 {
-        // do nothing
-    }
     return ret;
 }
 

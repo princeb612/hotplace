@@ -50,10 +50,9 @@ std::string format(const char* fmt, va_list ap) {
     int ret = 0;
     int needed = size;
 
+    va_copy(vl, ap);  // c++99
     while (true) {
-        va_copy(vl, ap);  // c++99
-        vsnprintf_inline(&buf[0], buf.size(), fmt, vl);
-        va_end(vl);
+        ret = vsnprintf_inline(&buf[0], buf.size(), fmt, vl);
         if ((ret < 0) || (ret >= needed)) {
             needed *= 2;
             buf.resize(needed + 1);
@@ -61,6 +60,7 @@ std::string format(const char* fmt, va_list ap) {
             break;
         }
     }
+    va_end(vl);
 
     return std::string(&buf[0]);
 }

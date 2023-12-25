@@ -15,15 +15,22 @@
 namespace hotplace {
 namespace net {
 
+enum http_method_t {
+    HTTP_OPTIONS = 1,
+    HTTP_GET = 2,
+    HTTP_HEAD = 3,
+    HTTP_POST = 4,
+    HTTP_PUT = 5,
+    HTTP_DELETE = 6,
+    HTTP_TRACE = 7,
+};
+
 struct _HTTP_METHOD {
     size_t length;
     const char* method;
 };
 struct _HTTP_METHOD _http_methods[] = {
-    {3, "GET"},
-    {4, "POST"},
-    {3, "PUT"},
-    {6, "DELETE"},
+    {3, "GET"}, {4, "POST"}, {3, "PUT"}, {6, "DELETE"}, {4, "HEAD"}, {7, "OPTIONS"}, {5, "TRACE"},
 };
 
 http_protocol::http_protocol() : network_protocol() {
