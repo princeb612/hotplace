@@ -112,7 +112,22 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
             }
         }
     } else {
-        *state = protocol_state_t::protocol_state_data;
+        if (0 == strcmp("HTTP", stream_data)) {
+            *state = protocol_state_t::protocol_state_data;
+        } else {
+            const char* search_carragereturn_newline = nullptr;
+            while (true) {
+                search_carragereturn_newline = strstr(search_stream_data, "\r\n");
+                if (nullptr != search_carragereturn_newline) {
+                    *request_size = (search_carragereturn_newline - stream_data + 2);
+                    *state = protocol_state_t::protocol_state_data;
+                } else {
+                    *state = protocol_state_t::protocol_state_complete;
+                    break;
+                }
+                search_stream_data = (search_carragereturn_newline + 2);
+            }
+        }
     }
 
     return errorcode_t::success;
