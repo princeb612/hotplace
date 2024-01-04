@@ -171,7 +171,8 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
         if (p < epos) {
             *brk = startpos + p - pos + 1;
         } else {
-            ret = errorcode_t::not_found;
+            *brk = sizestream;
+            // ret = errorcode_t::not_found;
         }
     }
     __finally2 {

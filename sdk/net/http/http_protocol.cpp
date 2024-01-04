@@ -25,14 +25,6 @@ enum http_method_t {
     HTTP_TRACE = 7,
 };
 
-struct _HTTP_METHOD {
-    size_t length;
-    const char* method;
-};
-struct _HTTP_METHOD _http_methods[] = {
-    {3, "GET"}, {4, "POST"}, {3, "PUT"}, {6, "DELETE"}, {4, "HEAD"}, {7, "OPTIONS"}, {5, "TRACE"},
-};
-
 http_protocol::http_protocol() : network_protocol() {
     // do nothing
 }
@@ -56,9 +48,17 @@ return_t http_protocol::is_kind_of(void* stream, size_t stream_size) {
             __leave2;
         }
 
-        for (int i = 0; i < (int)RTL_NUMBER_OF(_http_methods); i++) {
-            if (stream_size >= _http_methods[i].length) {
-                int ret_compare = strnicmp((char*)stream, _http_methods[i].method, _http_methods[i].length);
+        struct _HTTP_TOKEN {
+            size_t length;
+            const char* method;
+        };
+        struct _HTTP_TOKEN _http_token[] = {
+            {4, "HTTP"}, {3, "GET"}, {4, "POST"}, {3, "PUT"}, {6, "DELETE"}, {4, "HEAD"}, {7, "OPTIONS"}, {5, "TRACE"},
+        };
+
+        for (int i = 0; i < (int)RTL_NUMBER_OF(_http_token); i++) {
+            if (stream_size >= _http_token[i].length) {
+                int ret_compare = strnicmp((char*)stream, _http_token[i].method, _http_token[i].length);
                 if (0 == ret_compare) {
                     found = true;
                     break;
@@ -112,18 +112,7 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
             }
         }
     } else {
-        const char* search_carragereturn_newline = nullptr;
-        while (true) {
-            search_carragereturn_newline = strstr(search_stream_data, "\r\n");
-            if (nullptr != search_carragereturn_newline) {
-                *request_size = (search_carragereturn_newline - stream_data + 2);
-                *state = protocol_state_t::protocol_state_data;
-            } else {
-                *state = protocol_state_t::protocol_state_complete;
-                break;
-            }
-            search_stream_data = (search_carragereturn_newline + 2);
-        }
+        *state = protocol_state_t::protocol_state_data;
     }
 
     return errorcode_t::success;
