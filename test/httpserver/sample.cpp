@@ -104,6 +104,8 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     basic_stream bs;
     std::string message;
 
+    OPTION& option = cmdline->value();
+
     switch (type) {
         case mux_connect:
             std::cout << "connect " << session_socket->client_socket << std::endl;
