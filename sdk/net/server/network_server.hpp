@@ -128,8 +128,8 @@ class network_server {
      *              data_array[0] socket
      *              data_array[1] sockaddr_storage_t*
      *
-     * @param   void*                       callback_param      [IN] callback parameter
-     * @param   server_socket*               svr_socket          [IN] socket layer (see also server_socket, transport_layer_security_server)
+     * @param   void*                           callback_param      [IN] callback parameter
+     * @param   server_socket*                  svr_socket          [IN] socket layer (see also server_socket, transport_layer_security_server)
      * @return  error code (see error.hpp)
      * @remarks
      *          It'll be automatically created 1 tls_accept_thread, if server_socketis an instance of transport_layer_security_server class.

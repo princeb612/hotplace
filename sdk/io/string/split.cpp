@@ -23,7 +23,7 @@ return_t split_url(const char* url, url_info_t* info) {
         }
 
         info->protocol.clear();
-        info->domainip.clear();
+        info->host.clear();
         info->port = 0;
         info->uri.clear();
         info->uripath.clear();
@@ -44,7 +44,7 @@ return_t split_url(const char* url, url_info_t* info) {
 
             pos_uri = input.find_first_of("/", pos_protocol + 3);
             if (std::string::npos == pos_uri) {
-                info->domainip = input.substr(pos_protocol + 3);
+                info->host = input.substr(pos_protocol + 3);
                 has_uri = 0;
             } else {
                 pos_port = input.find_first_of(":", pos_protocol + 3);
@@ -60,9 +60,9 @@ return_t split_url(const char* url, url_info_t* info) {
                         info->port = 0;
                     }
 
-                    info->domainip = input.substr(pos_protocol + 3, pos_uri - pos_protocol - 3);
+                    info->host = input.substr(pos_protocol + 3, pos_uri - pos_protocol - 3);
                 } else {
-                    info->domainip = input.substr(pos_protocol + 3, pos_port - pos_protocol - 3);
+                    info->host = input.substr(pos_protocol + 3, pos_port - pos_protocol - 3);
                     info->port = atoi(input.substr(pos_port + 1, pos_uri - pos_port - 1).c_str());
                 }
 
@@ -87,6 +87,13 @@ return_t split_url(const char* url, url_info_t* info) {
             } else {
                 info->urifile = input.substr(pos_uripath + 1);
             }
+        }
+
+        if (info->uri.empty()) {
+            info->uri = "/";
+        }
+        if (info->uripath.empty()) {
+            info->uripath = "/";
         }
     }
     __finally2 {

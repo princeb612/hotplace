@@ -28,37 +28,61 @@ namespace net {
  *      openssl_startup ();
  *      openssl_thread_setup ();
  *
- *      x509_t* cert_handle = nullptr;
  *      socket_t sock = 0;
- *      x509_create (&cert_handle, 0);
  *
  *      tls_context_t* handle = nullptr;
- *      transport_layer_security_client cli;
- *      cli.open (&cert, cert_handle);
- *      ret = cli.connect (&sock, &handle, option.host.c_str (), option.port, 3);
+ *      SSL_CTX* x509 = nullptr;
+ *      x509_open_simple(&x509);
+ *      transport_layer_security tls(x509);
+ *      transport_layer_security_client cli(&tls);
+ *
+ *      ret = cli.connect(&sock, &handle, url_info.host.c_str(), url_info.port, 3);
  *      if (errorcode_t::success == ret) {
- *          printf ("connected %d\n", sock);
- *          std::string request;
- *          request = "GET /";
+ *          printf("connected %d\n", sock);
+ *
+ *          http_request req;
+ *          req.open(format("GET %s HTTP/1.1", url_info.uri.c_str()));
+ *          basic_stream body;
+ *          req.get_request(body);
  *
  *          size_t cbsent = 0;
- *          std::string body = format ("GET / HTTP/1.1\nContent-Length: 0\n\n");
- *          cli.send (sock, handle, body.c_str (), body.size(), &cbsent);
+ *          ret = cli.send(sock, handle, body.c_str(), body.size(), &cbsent);
+ *          printf("sent %zi\n", cbsent);
  *
- *          char buf [4];
- *          size_t sizeread = 0;
+ *          if (errorcode_t::success == ret) {
+ *              char buf[4];
+ *              size_t sizeread = 0;
  *
- *          ret = cli.read (sock, handle, buf, sizeof (buf), &sizeread);
- *          printf ("status 0x%08x - %.*s\n", ret, (int)sizeread, buf);
- *          while (errorcode_t::more_data == ret) {
- *              ret = cli.more (sock, handle, buf, sizeof (buf), &sizeread);
- *              printf ("status 0x%08x - %.*s\n", ret, (int)sizeread, buf);
+ *              network_protocol_group group;
+ *              http_protocol http;
+ *              network_stream stream_read; // fragmented
+ *              network_stream stream_interpreted; // prototol interpreted
+ *              group.add(&http);
+ *
+ *              ret = cli.read(sock, handle, buf, sizeof(buf), &sizeread);
+ *              stream_read.produce(buf, sizeread);
+ *              while (errorcode_t::more_data == ret) {
+ *                  ret = cli.more(sock, handle, buf, sizeof(buf), &sizeread);
+ *                  stream_read.produce(buf, sizeread);
+ *              }
+ *
+ *              stream_read.write(&group, &stream_interpreted);
+ *              network_stream_data* data = nullptr;
+ *              stream_interpreted.consume(&data);
+ *              if(data) {
+ *                  printf("recv %zi\n", data->size());
+ *
+ *                  basic_stream bs;
+ *                  dump_memory((byte_t*)data->content(), data->size(), &bs);
+ *                  printf("%s\n", bs.c_str());
+ *                  data->release();
+ *              }
  *          }
  *
- *          cli.close (sock, handle);
+ *          cli.close(sock, handle);
  *      }
  *
- *      cert.close (cert_handle);
+ *      SSL_CTX_free(x509);
  *
  *      openssl_thread_cleanup ();
  *      openssl_cleanup ();

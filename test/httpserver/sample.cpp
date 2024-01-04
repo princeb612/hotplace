@@ -24,7 +24,16 @@ using namespace hotplace::net;
 test_case _test_case;
 
 #define FILENAME_RUN _T (".run")
-#define PORT 9000
+
+typedef struct _OPTION {
+    int port;
+    int port_tls;
+    int debug;
+
+    _OPTION() : port(80), port_tls(9000), debug(0) {}
+} OPTION;
+
+t_shared_instance<cmdline_t<OPTION> > cmdline;
 
 typedef return_t (*http_handler_t)(const char* method, const char* uri, const char* action, const char* request, http_response* response);
 typedef std::map<std::string, http_handler_t> handler_http_handlers_t;
@@ -101,32 +110,39 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             break;
         case mux_read:
             printf("read %i (%zi) %.*s\n", session_socket->client_socket, bufsize, (unsigned)bufsize, buf);
+            // dump_memory((unsigned char*)buf, bufsize, &bs, 32);
+            // printf("%s\n", bs.c_str());
             {
+                arch_t use_tls = 0;
+                session->get_server_socket()->query(server_socket_query_t::query_support_tls, &use_tls);
+
                 http_request request;
                 http_response response(&request);
                 basic_stream bs;
                 request.open(buf, bufsize);
-                std::cout << "url : " << request.get_uri() << std::endl;
-                std::cout << "method : " << request.get_method() << std::endl;
 
-                /* URI, URL, query */
-                http_uri& uri = request.get_http_uri();
-                for (size_t i = 0; i < uri.countof_query(); i++) {
-                    std::string key;
-                    std::string value;
-                    uri.query(i, key, value);
-                    std::cout << key.c_str() << " -> " << value.c_str() << std::endl;
-                }
-
-                arch_t use_tls = 0;
-                session->get_server_socket()->query(server_socket_query_t::query_support_tls, &use_tls);
-                std::cout << "tls " << use_tls << std::endl;
-
-                /* header */
                 std::string encoding;
                 http_header* header = request.get_header();
-                header->get("Accept-Encoding", encoding);
-                std::cout << "encoding " << encoding.c_str() << std::endl;
+
+                if (option.debug) {
+                    std::cout << "uri : " << request.get_uri() << std::endl;
+                    std::cout << "method : " << request.get_method() << std::endl;
+
+                    /* URI, URL, query */
+                    http_uri& uri = request.get_http_uri();
+                    for (size_t i = 0; i < uri.countof_query(); i++) {
+                        std::string key;
+                        std::string value;
+                        uri.query(i, key, value);
+                        std::cout << key.c_str() << " -> " << value.c_str() << std::endl;
+                    }
+
+                    std::cout << "tls : " << use_tls << std::endl;
+
+                    /* header */
+                    header->get("Accept-Encoding", encoding);
+                    std::cout << "encoding : " << encoding.c_str() << std::endl << std::endl;
+                }
 
                 if (use_tls) {
                     http_handler_t handler = router->find(request.get_uri());
@@ -157,6 +173,8 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 }
 
 return_t echo_server(void*) {
+    OPTION& option = cmdline->value();
+
     return_t ret = errorcode_t::success;
     network_server netserver;
     network_multiplexer_context_t* handle_http_ipv4 = nullptr;
@@ -196,10 +214,10 @@ return_t echo_server(void*) {
         __try_new_catch(tls_server, new transport_layer_security_server(tls), ret, __leave2);
 
         // start server
-        netserver.open(&handle_http_ipv4, AF_INET, IPPROTO_TCP, 80, 32000, network_routine, nullptr, &svr_sock);
-        netserver.open(&handle_http_ipv6, AF_INET6, IPPROTO_TCP, 80, 32000, network_routine, nullptr, &svr_sock);
-        netserver.open(&handle_https_ipv4, AF_INET, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
-        netserver.open(&handle_https_ipv6, AF_INET6, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
+        netserver.open(&handle_http_ipv4, AF_INET, IPPROTO_TCP, option.port, 32000, network_routine, nullptr, &svr_sock);
+        netserver.open(&handle_http_ipv6, AF_INET6, IPPROTO_TCP, option.port, 32000, network_routine, nullptr, &svr_sock);
+        netserver.open(&handle_https_ipv4, AF_INET, IPPROTO_TCP, option.port_tls, 32000, network_routine, nullptr, tls_server);
+        netserver.open(&handle_https_ipv6, AF_INET6, IPPROTO_TCP, option.port_tls, 32000, network_routine, nullptr, tls_server);
         netserver.add_protocol(handle_http_ipv4, http_prot);
         netserver.add_protocol(handle_http_ipv6, http_prot);
         netserver.add_protocol(handle_https_ipv4, http_prot);
@@ -266,10 +284,17 @@ void test_tlsserver() {
     __finally2 { thread1.wait(-1); }
 }
 
-int main() {
+int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
+
+    cmdline.make_share(new cmdline_t<OPTION>);
+    *cmdline << cmdarg_t<OPTION>("-h", "http  port (default 80)", [&](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
+             << cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
+             << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = 1; }).optional();
+
+    cmdline->parse(argc, argv);
 
 #if defined _WIN32 || defined _WIN64
     winsock_startup();
@@ -287,5 +312,6 @@ int main() {
 #endif
 
     _test_case.report();
+    cmdline->help();
     return _test_case.result();
 }

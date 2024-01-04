@@ -28,7 +28,7 @@ class client_socket {
     /**
      * @brief   connect
      * @param   socket_t*       sock            [OUT]
-     * @param   tls_context_t** tls_handle      [OUT] ignore
+     * @param   tls_context_t** tls_handle      [OUT]
      * @param   const char*     address         [IN]
      * @param   uint16          port            [IN]
      * @param   uint32          timeout         [IN]
@@ -38,7 +38,7 @@ class client_socket {
     /**
      * @brief   close
      * @param   socket_t        sock            [IN] see connect
-     * @param   tls_context_t*  tls_handle      [IN] ignore
+     * @param   tls_context_t*  tls_handle      [IN]
      * @return error code (see error.hpp)
      */
     virtual return_t close(socket_t sock, tls_context_t* tls_handle);
@@ -46,7 +46,7 @@ class client_socket {
     /**
      * @brief   read
      * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN] ignore
+     * @param   tls_context_t*  tls_handle      [IN]
      * @param   char*           ptr_data        [OUT]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbread          [OUT]
@@ -56,7 +56,7 @@ class client_socket {
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN] ignore
+     * @param   tls_context_t*  tls_handle      [IN]
      * @param   const char*     ptr_data        [IN]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         size_sent       [OUT]

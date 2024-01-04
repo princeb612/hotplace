@@ -144,6 +144,7 @@ class http_request {
      * @return error code (see error.hpp)
      */
     return_t open(const char* request, size_t size_request);
+    return_t open(std::string const& request);
     /**
      * @brief close
      * @return error code (see error.hpp)
@@ -171,18 +172,14 @@ class http_request {
      */
     const char* get_request();
 
+    http_request& get_request(basic_stream& bs);
+
    protected:
     std::string _method;
     std::string _request;
 
     http_header _header;
     http_uri _uri;
-};
-
-enum http_response_encoding_t {
-    http_response_encoding_default = 0,
-    http_response_encoding_gzip = 1,
-    http_response_encoding_deflate = 2,
 };
 
 class http_response {
@@ -213,7 +210,7 @@ class http_resource {
    public:
     static http_resource* get_instance();
 
-    std::string load(int errorcode);
+    std::string load(int status);
 
    protected:
     http_resource();

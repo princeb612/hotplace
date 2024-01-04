@@ -157,7 +157,7 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
 //
 typedef struct _url_info_t {
     std::string protocol;
-    std::string domainip;
+    std::string host;
     int port;
     std::string uri;
     std::string uripath;
@@ -173,21 +173,21 @@ typedef struct _url_info_t {
  *        const char *url = "http://test.com/download/meta/file.txt";
  *        split_url(url, &info);
  *        // info.protocol => http
- *        // info.domainip => test.com
+ *        // info.host => test.com
  *        // info.port => 80
  *        // info.uri => /download/meta/file.txt
  *        // info.uripath => download/meta
  *        // info.urifile => file.txt
  * @remarks
- *        input                             -> prot / domainip / uripath  / urifile
- *        http://test.com/download/file.txt -> http / test.com / download / file.txt
- *        http://test.com/download/         -> http / test.com / download / NA
- *        http://test.com/download          -> http / test.com / NA       / download
- *        http://test.com/a/b/              -> http / test.com / a/b      / NA
- *        http://test.com/a/b               -> http / test.com / a        / b
- *        http://test.com                   -> http / test.com / NA       / NA
- *        /download/file.txt                -> NA   / NA       / download / file.txt
- *        /download/                        -> NA   / NA       / download / N/A
+ *        input                             -> prot + host     + uripath  + urifile
+ *        http://test.com/download/file.txt -> http + test.com + download + file.txt
+ *        http://test.com/download/         -> http + test.com + download + NA
+ *        http://test.com/download          -> http + test.com + /        + download
+ *        http://test.com/a/b/              -> http + test.com + a/b      + NA
+ *        http://test.com/a/b               -> http + test.com + a        + b
+ *        http://test.com                   -> http + test.com + /        + NA
+ *        /download/file.txt                -> NA   + NA       + download + file.txt
+ *        /download/                        -> NA   + NA       + download + N/A
  */
 return_t split_url(const char* url, url_info_t* info);
 

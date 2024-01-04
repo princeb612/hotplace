@@ -137,9 +137,9 @@ class network_session_manager {
      * @brief   new network_session
      * @param   handle_t            client_socket       [IN]
      * @param   sockaddr_storage_t* sockaddr            [IN]
-     * @param   server_socket*       svr_socket          [IN]
+     * @param   server_socket*      svr_socket          [IN]
      * @param   tls_context_t*      tls_handle          [IN]
-     * @param   network_session**    ptr_session_object  [OUT] use release to free
+     * @param   network_session**   ptr_session_object  [OUT] use release to free
      * @return  error code (see error.hpp)
      */
     return_t connected(handle_t client_socket, sockaddr_storage_t* sockaddr, server_socket* svr_socket, tls_context_t* tls_handle,
@@ -147,7 +147,7 @@ class network_session_manager {
     /**
      * @brief   find a network session
      * @param   handle_t            client_socket       [IN]
-     * @param   network_session**    ptr_session_object  [OUT] referenced, call release
+     * @param   network_session**   ptr_session_object  [OUT] referenced, call release
      * @return  error code (see error.hpp)
      * @example
      *          network_session* session = session_manager.find (client_socket);
@@ -171,8 +171,8 @@ class network_session_manager {
     network_session* operator[](handle_t client_socket);
     /**
      * @brief   remove from session list
-     * @param   handle_t          client_socket       [IN]
-     * @param   network_session**  ptr_session_object  [OUT]
+     * @param   handle_t            client_socket       [IN]
+     * @param   network_session**   ptr_session_object  [OUT]
      * @return  error code (see error.hpp)
      */
     return_t ready_to_close(handle_t client_socket, network_session** ptr_session_object);

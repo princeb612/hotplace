@@ -906,8 +906,8 @@ static return_t get_crl(authenticode_context_t* context, X509* cert, authenticod
             url_info_t url_info;
 
             split_url(crl_url.c_str(), &url_info);
-            std::string crl_path = format("%s/%s/%s", context_crl_path.c_str(), url_info.domainip.c_str(), url_info.uripath.c_str());
-            std::string crl_file = format("%s/%s%s", context_crl_path.c_str(), url_info.domainip.c_str(), url_info.uri.c_str());
+            std::string crl_path = format("%s/%s/%s", context_crl_path.c_str(), url_info.host.c_str(), url_info.uripath.c_str());
+            std::string crl_file = format("%s/%s%s", context_crl_path.c_str(), url_info.host.c_str(), url_info.uri.c_str());
 
             //__vtrace(0, "CRL : %s", crl_url.c_str());
 
@@ -933,7 +933,7 @@ static return_t get_crl(authenticode_context_t* context, X509* cert, authenticod
                         url_info_t url;
                         split_url (context->proxy_url.c_str (), &url);
                         cmdline_proxy += format ("-e http_proxy=%s://%s@%s:%d/ ",
-                                                 url.protocol.c_str (), context->proxy_user.c_str (), url.domainip.c_str (), url.port);
+                                                 url.protocol.c_str (), context->proxy_user.c_str (), url.host.c_str (), url.port);
                     }
                 }
 

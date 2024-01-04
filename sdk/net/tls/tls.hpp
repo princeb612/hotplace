@@ -84,13 +84,13 @@ class transport_layer_security {
     /**
      * @brief   socket layer handshake
      * @param   tls_context_t** handle      [OUT]
-     * @param   socket_t        Sock        [IN] client socket
+     * @param   socket_t        clisock     [IN] socket
      * @remarks 연결된 소켓에 대해 handshake 를 진행한다.
      *
-     *          client_socket = accept (...);                    // client socket
-     *          ret = ssl->accept (&sslhandle, client_socket); // handshake
+     *          client_socket = accept (...);
+     *          ret = ssl->accept (handle, client_socket); // handshake
      */
-    return_t accept(tls_context_t** handle, socket_t Sock);
+    return_t accept(tls_context_t** handle, socket_t sock);
     /**
      * @brief   close
      * @param   tls_context_t*  handle      [IN]
