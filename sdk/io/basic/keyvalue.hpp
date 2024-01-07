@@ -14,9 +14,14 @@
 #include <map>
 #include <sdk/base.hpp>
 #include <sdk/base/system/critical_section.hpp>
+#include <unordered_map>
 
 namespace hotplace {
 namespace io {
+
+enum key_value_flag_t {
+    key_value_case_sensitive = (1 << 0),
+};
 
 /**
  * move    clear and assign
@@ -31,8 +36,14 @@ enum key_value_mode_t { move = 0, update, keep };
  */
 class key_value {
    public:
-    key_value();
+    /**
+     * @brief constructor
+     * @param uint32 flags [inopt]
+     */
+    key_value(uint32 flags = key_value_flag_t::key_value_case_sensitive);
     ~key_value();
+
+    key_value& set(uint32 flags);
 
     /**
      * @brief   add, update
@@ -46,6 +57,7 @@ class key_value {
      *          set (key1, value2, key_value::mode_update); // update, return errorcode_t::success
      */
     return_t set(const char* name, const char* value, int mode = key_value_mode_t::update);
+    return_t set(std::string name, std::string value, int mode = key_value_mode_t::update);
     /**
      * @brief   update
      * @param   const char* name [in]
@@ -94,6 +106,7 @@ class key_value {
      *          kv.query ("value", value); // ""
      */
     return_t query(const char* name, std::string& value);
+    std::string get(std::string const& name);
 
     /**
      * @brief   copy
@@ -110,8 +123,10 @@ class key_value {
      */
     return_t copy(key_value& rhs, int mode = key_value_mode_t::update);
 
-    return_t copyfrom(std::map<std::string, std::string>& source, int mode);
-    return_t copyto(std::map<std::string, std::string>& target);
+    return_t copyfrom(std::unordered_map<std::string, std::string>& source, int mode);
+    return_t copyto(std::unordered_map<std::string, std::string>& target);
+
+    void foreach (std::function<void(std::string const&, std::string const&, void*)> func, void* param = nullptr);
 
     /**
      * @brief   operator =
@@ -129,12 +144,13 @@ class key_value {
     key_value& operator<<(key_value& rhs);
 
     /* key, value */
-    typedef std::map<std::string, std::string> keyvalue_map_t;
+    typedef std::unordered_map<std::string, std::string> keyvalue_map_t;
     typedef std::pair<keyvalue_map_t::iterator, bool> keyvalue_map_pib_t;
 
    protected:
     critical_section _lock;
     keyvalue_map_t _keyvalues;
+    uint32 _flags;
 };
 
 }  // namespace io

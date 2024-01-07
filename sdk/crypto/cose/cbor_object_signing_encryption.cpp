@@ -16,6 +16,7 @@
 #include <sdk/crypto/basic/openssl_ecdh.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/crypto/basic/openssl_sign.hpp>
 #include <sdk/crypto/cose/cbor_object_encryption.hpp>
 #include <sdk/crypto/cose/cbor_object_signing.hpp>

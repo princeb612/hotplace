@@ -131,5 +131,36 @@ return_t http_header::get_headers(std::string& contents) {
     return ret;
 }
 
+return_t http_header::to_keyvalue(std::string const& value, key_value& kv) {
+    return_t ret = errorcode_t::success;
+
+    kv.clear();
+
+    std::string token;
+    std::string k;
+    std::string v;
+    size_t pos = 0;
+    while (true) {
+        token = tokenize(value, " ", pos);
+        if ((size_t)-1 == pos) {
+            break;
+        }
+
+        if (std::string::npos != token.find("=")) {
+            ltrim(rtrim(token));
+            if (ends_with(token, ",")) {
+                token.erase(token.end() - 1);
+            }
+
+            size_t tpos = 0;
+            k = tokenize(token, "=", tpos);
+            v = tokenize(token, "\"", tpos);
+
+            kv.set(k, v);
+        }
+    }
+    return ret;
+}
+
 }  // namespace net
 }  // namespace hotplace

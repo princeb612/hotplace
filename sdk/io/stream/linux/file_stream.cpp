@@ -203,9 +203,9 @@ return_t file_stream::end_mmap() {
 
 int file_stream::get_stream_type() { return _stream_type; }
 
-byte_t* file_stream::data() { return _file_data; }
+byte_t* file_stream::data() const { return _file_data; }
 
-uint64 file_stream::size() {
+uint64 file_stream::size() const {
     // ~ 4GB
     // return _filesize_low;
     uint64 ret_value = 0;

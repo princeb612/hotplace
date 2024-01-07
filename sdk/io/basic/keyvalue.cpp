@@ -14,12 +14,17 @@
 namespace hotplace {
 namespace io {
 
-key_value::key_value() {
+key_value::key_value(uint32 flags) : _flags(flags) {
     // do nothing
 }
 
 key_value::~key_value() {
     // do nothing
+}
+
+key_value& key_value::set(uint32 flags) {
+    _flags = flags;
+    return *this;
 }
 
 return_t key_value::set(const char* name, const char* value, int mode) {
@@ -32,7 +37,33 @@ return_t key_value::set(const char* name, const char* value, int mode) {
         }
 
         std::string key(name);
-        std::transform(key.begin(), key.end(), key.begin(), tolower);
+        if (0 == (key_value_flag_t::key_value_case_sensitive & _flags)) {
+            std::transform(key.begin(), key.end(), key.begin(), tolower);
+        }
+
+        critical_section_guard guard(_lock);
+        keyvalue_map_pib_t pib = _keyvalues.insert(std::make_pair(key, value));
+        if (false == pib.second) {
+            if (key_value_mode_t::update == mode) {
+                pib.first->second = value;
+            } else {
+                ret = errorcode_t::already_exist;
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t key_value::set(std::string key, std::string value, int mode) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (0 == (key_value_flag_t::key_value_case_sensitive & _flags)) {
+            std::transform(key.begin(), key.end(), key.begin(), tolower);
+        }
 
         critical_section_guard guard(_lock);
         keyvalue_map_pib_t pib = _keyvalues.insert(std::make_pair(key, value));
@@ -62,7 +93,9 @@ return_t key_value::remove(const char* name) {
         }
 
         std::string key(name);
-        std::transform(key.begin(), key.end(), key.begin(), tolower);
+        if (0 == (key_value_flag_t::key_value_case_sensitive & _flags)) {
+            std::transform(key.begin(), key.end(), key.begin(), tolower);
+        }
 
         critical_section_guard guard(_lock);
         keyvalue_map_t::iterator iter = _keyvalues.find(key);
@@ -98,7 +131,9 @@ bool key_value::exist(const char* name) {
         }
 
         std::string key(name);
-        std::transform(key.begin(), key.end(), key.begin(), tolower);
+        if (0 == (key_value_flag_t::key_value_case_sensitive & _flags)) {
+            std::transform(key.begin(), key.end(), key.begin(), tolower);
+        }
 
         critical_section_guard guard(_lock);
         keyvalue_map_t::iterator iter = _keyvalues.find(key);
@@ -121,7 +156,9 @@ const char* key_value::operator[](const char* name) {
         }
 
         std::string key(name);
-        std::transform(key.begin(), key.end(), key.begin(), tolower);
+        if (0 == (key_value_flag_t::key_value_case_sensitive & _flags)) {
+            std::transform(key.begin(), key.end(), key.begin(), tolower);
+        }
 
         critical_section_guard guard(_lock);
         keyvalue_map_t::iterator iter = _keyvalues.find(key);
@@ -145,7 +182,9 @@ return_t key_value::query(const char* name, std::string& value) {
         }
 
         std::string key(name);
-        std::transform(key.begin(), key.end(), key.begin(), tolower);
+        if (0 == (key_value_flag_t::key_value_case_sensitive & _flags)) {
+            std::transform(key.begin(), key.end(), key.begin(), tolower);
+        }
 
         critical_section_guard guard(_lock);
         keyvalue_map_t::iterator iter = _keyvalues.find(key);
@@ -161,6 +200,12 @@ return_t key_value::query(const char* name, std::string& value) {
     return ret;
 }
 
+std::string key_value::get(std::string const& name) {
+    std::string ret_value;
+    query(name.c_str(), ret_value);
+    return ret_value;
+}
+
 return_t key_value::copy(key_value& rhs, int mode) {
     return_t ret = errorcode_t::success;
 
@@ -171,7 +216,7 @@ return_t key_value::copy(key_value& rhs, int mode) {
     return ret;
 }
 
-return_t key_value::copyfrom(std::map<std::string, std::string>& source, int mode) {
+return_t key_value::copyfrom(std::unordered_map<std::string, std::string>& source, int mode) {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);
@@ -210,7 +255,7 @@ return_t key_value::copyfrom(std::map<std::string, std::string>& source, int mod
     return ret;
 }
 
-return_t key_value::copyto(std::map<std::string, std::string>& target) {
+return_t key_value::copyto(std::unordered_map<std::string, std::string>& target) {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);
@@ -227,6 +272,14 @@ key_value& key_value::operator=(key_value& rhs) {
 key_value& key_value::operator<<(key_value& rhs) {
     copy(rhs, key_value_mode_t::update);
     return *this;
+}
+
+void key_value::foreach (std::function<void(std::string const&, std::string const&, void*)> func, void* param) {
+    critical_section_guard guard(_lock);
+    keyvalue_map_t::iterator iter;
+    for (iter = _keyvalues.begin(); iter != _keyvalues.end(); iter++) {
+        func(iter->first, iter->second, param);
+    }
 }
 
 }  // namespace io

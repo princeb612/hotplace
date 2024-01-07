@@ -238,23 +238,25 @@ return_t file_stream::end_mmap() {
 
 int file_stream::get_stream_type() { return _stream_type; }
 
-byte_t* file_stream::data() { return _file_data; }
+byte_t* file_stream::data() const { return _file_data; }
 
-uint64 file_stream::size() {
+uint64 file_stream::size() const {
     // ~ 4GB
     // return _filesize_low;
     size_t ret_value = 0;
+    uint32 filesize_low = 0;
+    uint32 filesize_high = 0;
 
     if (INVALID_HANDLE_VALUE != _file_handle) {
         BY_HANDLE_FILE_INFORMATION fi;
         GetFileInformationByHandle(_file_handle, &fi);
 
-        _filesize_low = fi.nFileSizeLow;
-        _filesize_high = fi.nFileSizeHigh;
+        filesize_low = fi.nFileSizeLow;
+        filesize_high = fi.nFileSizeHigh;
     }
-    ret_value = _filesize_high;
+    ret_value = filesize_high;
     ret_value <<= 32;
-    ret_value += _filesize_low;
+    ret_value += filesize_low;
     return ret_value;
 }
 
@@ -273,6 +275,12 @@ void file_stream::seek(int64 lfilepos, int64* ptrfilepos, uint32 method) {
         li.QuadPart = lfilepos;
 
         if (true == is_mmapped()) {
+            BY_HANDLE_FILE_INFORMATION fi;
+            GetFileInformationByHandle(_file_handle, &fi);
+
+            _filesize_low = fi.nFileSizeLow;
+            _filesize_high = fi.nFileSizeHigh;
+
             switch (method) {
                 case FILE_BEGIN:
                     _filepos_low = li.LowPart;

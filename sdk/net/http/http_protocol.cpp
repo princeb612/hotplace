@@ -112,7 +112,7 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
             }
         }
     } else {
-        if (0 == strcmp("HTTP", stream_data)) {
+        if (0 == strncmp("HTTP", stream_data, 4)) {
             *state = protocol_state_t::protocol_state_data;
         } else {
             const char* search_carragereturn_newline = nullptr;

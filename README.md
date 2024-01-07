@@ -91,12 +91,16 @@
  * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
    * sdk/net/tls/
 
+ * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+ * RFC 2069 An Extension to HTTP : Digest Access Authentication
+ * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+ * RFC 7616 HTTP Digest Access Authentication
+   * merlin project
+   * sdk/net/http
+   * test/httpserver
+
 ## not applied
 
-  * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
-  * RFC 2069 An Extension to HTTP : Digest Access Authentication
-  * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
-    * merlin project
 
 ## studying
 

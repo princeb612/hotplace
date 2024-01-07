@@ -146,7 +146,7 @@ class bufferio {
      * @param uint32 flag [IN] flag
      * @return error code (see error.hpp)
      */
-    return_t get(bufferio_context_t* handle, byte_t** contents, size_t* contents_size, uint32 flag = 0);
+    return_t get(bufferio_context_t* handle, byte_t** contents, size_t* contents_size, uint32 flag = 0) const;
     /**
      * @brief compare
      * @param bufferio_context_t* handle [IN] handle
@@ -269,7 +269,7 @@ class bufferio {
      * @return
      * @remarks
      */
-    return_t extend(bufferio_context_t* handle, size_t alloc_size, bufferio_t** allocated_pointer, uint32 flag = 0);
+    return_t extend(bufferio_context_t* handle, size_t alloc_size, bufferio_t** allocated_pointer, uint32 flag = 0) const;
 
     /**
      * @brief find

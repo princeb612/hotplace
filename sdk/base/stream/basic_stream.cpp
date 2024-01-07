@@ -32,7 +32,7 @@ basic_stream::basic_stream(const basic_stream& stream) : _handle(nullptr) {
 
 basic_stream::~basic_stream() { _bio.close(_handle); }
 
-const char* basic_stream::c_str() {
+const char* basic_stream::c_str() const {
     char* data = nullptr;
     size_t size = 0;
 
@@ -40,7 +40,7 @@ const char* basic_stream::c_str() {
     return data;
 }
 
-byte_t* basic_stream::data() {
+byte_t* basic_stream::data() const {
     byte_t* data = nullptr;
     size_t size = 0;
 
@@ -48,7 +48,7 @@ byte_t* basic_stream::data() {
     return data;
 }
 
-uint64 basic_stream::size() {
+uint64 basic_stream::size() const {
     byte_t* data = nullptr;
     size_t size = 0;
 
@@ -115,9 +115,23 @@ return_t basic_stream::printf(const wchar_t* buf, ...) {
 return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return _bio.vprintf(_handle, buf, ap); }
 #endif
 
-basic_stream& basic_stream::operator=(basic_stream obj) {
+basic_stream& basic_stream::operator=(basic_stream const& obj) {
     clear();
     write(obj.data(), obj.size());
+    return *this;
+}
+
+basic_stream& basic_stream::operator=(std::string const& str) {
+    clear();
+    printf(str.c_str());
+    return *this;
+}
+
+basic_stream& basic_stream::operator=(const char* str) {
+    clear();
+    if (str) {
+        printf(str);
+    }
     return *this;
 }
 
@@ -148,7 +162,12 @@ basic_stream& basic_stream::operator<<(unsigned long value) {
     return *this;
 }
 
-int basic_stream::compare(basic_stream obj) { return strcmp((*this).c_str(), obj.c_str()); }
+basic_stream& basic_stream::operator<<(std::string const& value) {
+    printf("%s", value.c_str());
+    return *this;
+}
+
+int basic_stream::compare(basic_stream const& obj) { return strcmp((*this).c_str(), obj.c_str()); }
 
 int basic_stream::compare(basic_stream& lhs, basic_stream& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 

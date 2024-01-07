@@ -110,7 +110,7 @@ return_t bufferio::close(bufferio_context_t* handle) {
     return ret;
 }
 
-return_t bufferio::extend(bufferio_context_t* handle, size_t alloc_size, bufferio_t** allocated_pointer, uint32 flag) {
+return_t bufferio::extend(bufferio_context_t* handle, size_t alloc_size, bufferio_t** allocated_pointer, uint32 flag) const {
     return_t ret = errorcode_t::success;
     void* memory_allocated = nullptr;
     bufferio_t* bufferio_newly_allocated = nullptr;
@@ -273,7 +273,7 @@ return_t bufferio::size(bufferio_context_t* handle, size_t* contents_size) {
     return ret;
 }
 
-return_t bufferio::get(bufferio_context_t* handle, byte_t** contents, size_t* contents_size, uint32 flags) {
+return_t bufferio::get(bufferio_context_t* handle, byte_t** contents, size_t* contents_size, uint32 flags) const {
     return_t ret = errorcode_t::success;
     size_t index = 0;
     size_t data_size = 0;
