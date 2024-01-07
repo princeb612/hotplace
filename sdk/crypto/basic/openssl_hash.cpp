@@ -525,5 +525,55 @@ return_t openssl_digest::digest(hash_algorithm_t alg, binary_t const& input, bin
     return ret;
 }
 
+return_t openssl_digest::digest(const char* alg, basic_stream const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
+    hash_context_t* handle = nullptr;
+
+    __try2 {
+        ret = open(&handle, alg);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        init(handle);
+        update(handle, input.data(), input.size());
+        finalize(handle, output);
+    }
+    __finally2 { close(handle); }
+    return ret;
+}
+
+return_t openssl_digest::digest(const char* alg, basic_stream const& input, std::string& hashstring) {
+    return_t ret = errorcode_t::success;
+    binary_t output;
+    ret = digest(alg, input, output);
+    hashstring = base16_encode(output);
+    return ret;
+}
+
+return_t openssl_digest::digest(const char* alg, std::string const& input, binary_t& output) {
+    return_t ret = errorcode_t::success;
+    hash_context_t* handle = nullptr;
+
+    __try2 {
+        ret = open(&handle, alg);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        init(handle);
+        update(handle, (byte_t*)input.c_str(), input.size());
+        finalize(handle, output);
+    }
+    __finally2 { close(handle); }
+    return ret;
+}
+
+return_t openssl_digest::digest(const char* alg, std::string const& input, std::string& hashstring) {
+    return_t ret = errorcode_t::success;
+    binary_t output;
+    ret = digest(alg, input, output);
+    hashstring = base16_encode(output);
+    return ret;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

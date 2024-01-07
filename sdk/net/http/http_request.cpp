@@ -87,15 +87,15 @@ return_t http_request::open(const char* request, size_t size_request) {
                 } else {
                     std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
                     _header.add(token, remain);
-
-                    if (size_request > epos) {
-                        _request.assign(request + epos, size_request - epos);
-                    }
                 }
             }
 
             pos = epos;
             line++;
+        }
+
+        if (size_request > epos) {
+            _request.assign(request + epos, size_request - epos);
         }
     }
     __finally2 {

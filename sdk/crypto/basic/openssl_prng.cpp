@@ -68,5 +68,16 @@ return_t openssl_prng::random(uint32& i, uint32 mask) {
     return ret;
 }
 
+std::string openssl_prng::nonce(size_t size) {
+    std::string ret_value;
+
+    binary_t buffer;
+    buffer.resize(size);
+    RAND_bytes(&buffer[0], buffer.size());
+    base16_encode(buffer, ret_value);
+
+    return ret_value;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

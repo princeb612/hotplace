@@ -80,14 +80,14 @@ class file_stream : public stream_t {
      * @remarks
      * @sa
      */
-    virtual byte_t* data();
+    virtual byte_t* data() const;
     /**
      * @brief size
      * @return
      * @remarks
      * @sa
      */
-    virtual uint64 size();
+    virtual uint64 size() const;
 
     /**
      * @brief

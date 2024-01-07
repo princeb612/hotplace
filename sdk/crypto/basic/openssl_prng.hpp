@@ -43,6 +43,7 @@ class openssl_prng {
     return_t random(unsigned char* buf, size_t size);
     return_t random(binary_t& buffer, size_t size);
     return_t random(uint32& i, uint32 mask = (uint32)~1);
+    std::string nonce(size_t size);
 };
 
 }  // namespace crypto

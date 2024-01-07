@@ -49,15 +49,15 @@ class basic_stream : public stream_t {
     /**
      * @brief   c-style string
      */
-    const char* c_str();
+    const char* c_str() const;
     /**
      * @brief   data
      */
-    byte_t* data();
+    byte_t* data() const;
     /**
      * @brief   size
      */
-    uint64 size();
+    uint64 size() const;
     /**
      * @brief   write
      * @param   void* data [in]
@@ -95,18 +95,21 @@ class basic_stream : public stream_t {
     basic_stream& operator<<(unsigned int value);
     basic_stream& operator<<(long value);
     basic_stream& operator<<(unsigned long value);
+    basic_stream& operator<<(std::string const& value);
 
     /**
      * @brief   operator =
      * @param   basic_stream obj [in]
      */
-    basic_stream& operator=(basic_stream obj);
+    basic_stream& operator=(basic_stream const& obj);
+    basic_stream& operator=(std::string const& str);
+    basic_stream& operator=(const char* str);
 
     /**
      * @brief   compare
      * @param   basic_stream obj [in]
      */
-    int compare(basic_stream obj);
+    int compare(basic_stream const& obj);
     /**
      * @brief   compare
      * @param   basic_stream lhs [in]

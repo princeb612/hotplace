@@ -33,7 +33,7 @@ ansi_string::ansi_string(const ansi_string& stream) {
 
 ansi_string::~ansi_string() { _bio.close(_handle); }
 
-byte_t* ansi_string::data() {
+byte_t* ansi_string::data() const {
     byte_t* data = nullptr;
     size_t size = 0;
 
@@ -41,7 +41,7 @@ byte_t* ansi_string::data() {
     return data;
 }
 
-uint64 ansi_string::size() {
+uint64 ansi_string::size() const {
     byte_t* data = nullptr;
     size_t size = 0;
 

@@ -33,7 +33,7 @@ wide_string::wide_string(const wide_string& stream) {
 
 wide_string::~wide_string() { _bio.close(_handle); }
 
-byte_t* wide_string::data() {
+byte_t* wide_string::data() const {
     byte_t* data = nullptr;
     size_t size = 0;
 
@@ -41,7 +41,7 @@ byte_t* wide_string::data() {
     return data;
 }
 
-uint64 wide_string::size() {
+uint64 wide_string::size() const {
     byte_t* data = nullptr;
     size_t size = 0;
 

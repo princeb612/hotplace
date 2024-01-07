@@ -27,11 +27,85 @@ http_response::http_response(http_request* request) : _request(request) {
     // do nothing
 }
 
-http_response::~http_response() {
-    // do nothing
+http_response::~http_response() { close(); }
+
+return_t http_response::open(const char* response, size_t size_response) {
+    return_t ret = errorcode_t::success;
+    return_t ret_getline = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == response) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        close();
+
+        size_t line = 1;
+        size_t pos = 0, epos = 0;
+        while (true) {
+            ret_getline = getline(response, size_response, pos, &epos);
+            if (errorcode_t::success != ret_getline) {
+                break;
+            }
+
+            std::string token, str(response + pos, epos - pos);
+            size_t tpos = 0;
+            token = tokenize(str, ": ", tpos);
+            token = rtrim(token);
+
+            if (0 == token.size()) {
+                break;
+            }
+
+            if ((epos <= size_response) && (tpos < size_response)) { /* if token (space, colon) not found */
+                while (isspace(str[tpos])) {
+                    tpos++; /* swallow trailing spaces */
+                }
+                if (1 == line) {
+                    size_t lpos = 0;
+                    tokenize(str, " ", lpos);
+                    std::string status = tokenize(str, " ", lpos);
+                    _statuscode = atoi(status.c_str());
+                } else {
+                    std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
+                    _header.add(token, remain);
+                }
+            }
+
+            pos = epos;
+            line++;
+        }
+
+        if (size_response > epos) {
+            _content.assign(response + epos, size_response - epos);
+        }
+
+        _header.get("Content-Type", _content_type);
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return ret;
 }
 
-http_response& http_response::compose(const char* content_type, int status_code, const char* content, ...) {
+return_t http_response::open(std::string const& response) { return open(response.c_str(), response.size()); }
+
+return_t http_response::close() {
+    return_t ret = errorcode_t::success;
+
+    return ret;
+}
+
+http_response& http_response::compose(int status_code) {
+    _content_type.clear();
+    _content.clear();
+    _statuscode = status_code;
+    return *this;
+}
+
+http_response& http_response::compose(int status_code, const char* content_type, const char* content, ...) {
     _content_type.clear();
     _content.clear();
 
@@ -70,13 +144,18 @@ http_response& http_response::get_response(basic_stream& bs) {
         method = _request->get_method();
     }
 
+    http_resource* resource = http_resource::get_instance();
+
     std::string headers;
-    get_header()->add("Content-Type", content_type());
+    if (_content_type.size() && content_size()) {
+        get_header()->add("Content-Type", content_type());
+    }
     get_header()->add("Connection", "Keep-Alive");
+
     if (0 == strcmp("HEAD", method.c_str())) {
         get_header()->add("Content-Length", "0");
         get_header()->get_headers(headers);
-        bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n", status_code(), http_resource::get_instance()->load(status_code()).c_str(), headers.c_str());
+        bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n", status_code(), resource->load(status_code()).c_str(), headers.c_str());
     } else {
         if (std::string::npos != accept_encoding.find("deflate")) {
             basic_stream encoded;
@@ -85,7 +164,7 @@ http_response& http_response::get_response(basic_stream& bs) {
             get_header()->add("Content-Encoding", "deflate");
             get_header()->add("Content-Length", format("%zi", encoded.size()));
             get_header()->get_headers(headers);
-            bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n", status_code(), http_resource::get_instance()->load(status_code()).c_str(), headers.c_str());
+            bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n", status_code(), resource->load(status_code()).c_str(), headers.c_str());
             bs.write(encoded.data(), encoded.size());
         } else if (std::string::npos != accept_encoding.find("gzip")) {
             basic_stream encoded;
@@ -94,14 +173,13 @@ http_response& http_response::get_response(basic_stream& bs) {
             get_header()->add("Content-Encoding", "gzip");
             get_header()->add("Content-Length", format("%zi", encoded.size()));
             get_header()->get_headers(headers);
-            bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n", status_code(), http_resource::get_instance()->load(status_code()).c_str(), headers.c_str());
+            bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n", status_code(), resource->load(status_code()).c_str(), headers.c_str());
             bs.write(encoded.data(), encoded.size());
         } else /* "identity" */ {
             get_header()->add("Content-Length", format("%zi", content_size()));
             get_header()->get_headers(headers);
 
-            bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n%.*s", status_code(), http_resource::get_instance()->load(status_code()).c_str(), headers.c_str(),
-                      content_size(), content());
+            bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n%.*s", status_code(), resource->load(status_code()).c_str(), headers.c_str(), content_size(), content());
         }
     }
 
