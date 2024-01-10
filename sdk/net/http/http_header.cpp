@@ -27,44 +27,33 @@ http_header::~http_header() {
     // do nothing
 }
 
-return_t http_header::add(const char* header, const char* value) {
-    return_t ret = errorcode_t::success;
-
+http_header& http_header::add(const char* header, const char* value) {
     __try2 {
-        critical_section_guard guard(_lock);
         if (nullptr == header || nullptr == value) {
-            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        _headers.insert(std::make_pair(header, value));
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t http_header::add(std::string header, std::string value) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
         critical_section_guard guard(_lock);
-
         _headers.insert(std::make_pair(header, value));
     }
     __finally2 {
         // do nothing
     }
-    return ret;
+    return *this;
 }
 
-return_t http_header::clear() {
-    return_t ret = errorcode_t::success;
+http_header& http_header::add(std::string header, std::string value) {
+    critical_section_guard guard(_lock);
+    _headers.insert(std::make_pair(header, value));
 
+    return *this;
+}
+
+http_header& http_header::clear() {
     critical_section_guard guard(_lock);
     _headers.clear();
-    return ret;
+
+    return *this;
 }
 
 const char* http_header::get(const char* header, std::string& content) {
@@ -134,29 +123,28 @@ return_t http_header::get_headers(std::string& contents) {
 return_t http_header::to_keyvalue(std::string const& value, key_value& kv) {
     return_t ret = errorcode_t::success;
 
-    kv.clear();
-
     std::string token;
     std::string k;
     std::string v;
     size_t pos = 0;
     while (true) {
-        token = tokenize(value, " ", pos);
-        if ((size_t)-1 == pos) {
-            break;
-        }
+        token = tokenize(value, " ", pos, tokenize_mode_t::token_quoted);
 
-        if (std::string::npos != token.find("=")) {
+        if (token.size() && (std::string::npos != token.find("="))) {
             ltrim(rtrim(token));
             if (ends_with(token, ",")) {
                 token.erase(token.end() - 1);
             }
 
             size_t tpos = 0;
-            k = tokenize(token, "=", tpos);
-            v = tokenize(token, "\"", tpos);
+            k = tokenize(token, "=", tpos);   // key1="value1", key2="value2, value3", key3=value4
+            v = tokenize(token, "\"", tpos);  // unquot
 
             kv.set(k, v);
+        }
+
+        if ((size_t)-1 == pos) {
+            break;
         }
     }
     return ret;

@@ -112,21 +112,12 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
             }
         }
     } else {
-        if (0 == strncmp("HTTP", stream_data, 4)) {
-            *state = protocol_state_t::protocol_state_data;
-        } else {
-            const char* search_carragereturn_newline = nullptr;
-            while (true) {
-                search_carragereturn_newline = strstr(search_stream_data, "\r\n");
-                if (nullptr != search_carragereturn_newline) {
-                    *request_size = (search_carragereturn_newline - stream_data + 2);
-                    *state = protocol_state_t::protocol_state_data;
-                } else {
-                    *state = protocol_state_t::protocol_state_complete;
-                    break;
-                }
-                search_stream_data = (search_carragereturn_newline + 2);
-            }
+        *state = protocol_state_t::protocol_state_data;
+
+        const char* search_carragereturn_newline = strstr(search_stream_data, "\r\n\r\n");
+        if (search_carragereturn_newline) {
+            *request_size = (search_carragereturn_newline - stream_data + 4);
+            *state = protocol_state_t::protocol_state_complete;
         }
     }
 

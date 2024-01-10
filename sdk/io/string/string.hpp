@@ -67,9 +67,12 @@ bool gettoken(std::wstring const& source, std::wstring const& token, size_t inde
  *      }
  *  }
  */
-std::string tokenize(std::string const& source, std::string const& tokens, size_t& pos);
+enum tokenize_mode_t {
+    token_quoted = 1,
+};
+std::string tokenize(std::string const& source, std::string const& tokens, size_t& pos, int mode = 0);
 #if defined _WIN32 || defined _WIN64
-std::wstring tokenize(std::wstring const& source, std::wstring const& tokens, size_t& pos);
+std::wstring tokenize(std::wstring const& source, std::wstring const& tokens, size_t& pos, int mode = 0);
 #endif
 
 /**

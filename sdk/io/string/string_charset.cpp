@@ -18,9 +18,9 @@ namespace hotplace {
 namespace io {
 
 #if defined _MBCS || defined MBCS
-std::string tokenize(std::string const& source, std::string const& tokens, size_t& pos)
+std::string tokenize(std::string const& source, std::string const& tokens, size_t& pos, int mode)
 #elif defined _UNICODE || defined UNICODE
-std::wstring tokenize(std::wstring const& source, std::wstring const& tokens, size_t& pos)
+std::wstring tokenize(std::wstring const& source, std::wstring const& tokens, size_t& pos, int mode)
 #endif
 {
 #if defined _MBCS || defined MBCS
@@ -37,11 +37,27 @@ std::wstring tokenize(std::wstring const& source, std::wstring const& tokens, si
     if ((npos != pos) || (pos < source.size())) {
         tokenpos.clear();
         startpos = pos;
+
+        size_t temppos = 0;
+        size_t quotpos = 0;
+        if (tokenize_mode_t::token_quoted & mode) {
+            quotpos = source.find_first_of('\"', startpos);  // check quoted
+        }
+
         // find first token
         for (size_t i = 0; i < sizetoken; i++) {
-            size_t temppos = source.find_first_of(tokens[i], startpos);
+            temppos = source.find_first_of(tokens[i], startpos);
             if ((size_t)-1 == temppos) {
                 continue;
+            }
+            if (tokenize_mode_t::token_quoted & mode) {
+                if (quotpos < temppos) {
+                    temppos = source.find_first_of('\"', quotpos + 1);
+                    temppos = source.find_first_of(tokens[i], temppos + 1);
+                    if ((size_t)-1 == temppos) {
+                        continue;
+                    }
+                }
             }
 
             tokenpos.push_back(temppos);

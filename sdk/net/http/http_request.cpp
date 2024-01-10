@@ -95,7 +95,7 @@ return_t http_request::open(const char* request, size_t size_request) {
         }
 
         if (size_request > epos) {
-            _request.assign(request + epos, size_request - epos);
+            _content.assign(request + epos, size_request - epos);
         }
     }
     __finally2 {
@@ -111,13 +111,13 @@ return_t http_request::close() {
     return_t ret = errorcode_t::success;
 
     _method.clear();
-    _request.clear();
+    _content.clear();
     _header.clear();
     _uri.close();
     return ret;
 }
 
-http_header* http_request::get_header() { return &_header; }
+http_header& http_request::get_header() { return _header; }
 
 http_uri& http_request::get_http_uri() { return _uri; }
 
@@ -125,15 +125,14 @@ const char* http_request::get_uri() { return get_http_uri().get_uri(); }
 
 const char* http_request::get_method() { return _method.c_str(); }
 
-const char* http_request::get_request() { return _request.c_str(); }
+std::string http_request::get_content() { return _content; }
 
 http_request& http_request::get_request(basic_stream& bs) {
     std::string headers;
-    get_header()->add("Content-Length", format("%zi", _request.size()));
-    get_header()->add("Connection", "Keep-Alive");
-    get_header()->get_headers(headers);
+    bs.clear();
+    get_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
 
-    bs.printf("%s %s HTTP/1.1\r\n%s\r\n%s", get_method(), get_uri(), headers.c_str(), get_request());
+    bs.printf("%s %s HTTP/1.1\r\n%s\r\n%s", get_method(), get_uri(), headers.c_str(), get_content().c_str());
 
     return *this;
 }

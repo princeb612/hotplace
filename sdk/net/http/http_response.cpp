@@ -130,7 +130,7 @@ size_t http_response::content_size() { return _content.size(); }
 
 int http_response::status_code() { return _statuscode; }
 
-http_header* http_response::get_header() { return &_header; }
+http_header& http_response::get_header() { return _header; }
 
 http_request* http_response::get_request() { return _request; }
 
@@ -140,7 +140,7 @@ http_response& http_response::get_response(basic_stream& bs) {
     std::string accept_encoding;
     basic_stream method;
     if (_request) {
-        _request->get_header()->get("Accept-Encoding", accept_encoding);
+        _request->get_header().get("Accept-Encoding", accept_encoding);
         method = _request->get_method();
     }
 
@@ -148,36 +148,30 @@ http_response& http_response::get_response(basic_stream& bs) {
 
     std::string headers;
     if (_content_type.size() && content_size()) {
-        get_header()->add("Content-Type", content_type());
+        get_header().add("Content-Type", content_type());
     }
-    get_header()->add("Connection", "Keep-Alive");
+    get_header().add("Connection", "Keep-Alive");
 
     if (0 == strcmp("HEAD", method.c_str())) {
-        get_header()->add("Content-Length", "0");
-        get_header()->get_headers(headers);
+        get_header().add("Content-Length", "0").get_headers(headers);
         bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n", status_code(), resource->load(status_code()).c_str(), headers.c_str());
     } else {
         if (std::string::npos != accept_encoding.find("deflate")) {
             basic_stream encoded;
             zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), &encoded);
 
-            get_header()->add("Content-Encoding", "deflate");
-            get_header()->add("Content-Length", format("%zi", encoded.size()));
-            get_header()->get_headers(headers);
+            get_header().add("Content-Encoding", "deflate").add("Content-Length", format("%zi", encoded.size())).get_headers(headers);
             bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n", status_code(), resource->load(status_code()).c_str(), headers.c_str());
             bs.write(encoded.data(), encoded.size());
         } else if (std::string::npos != accept_encoding.find("gzip")) {
             basic_stream encoded;
             zlib_deflate(zlib_windowbits_t::windowbits_zlib, (byte_t*)content(), content_size(), &encoded);
 
-            get_header()->add("Content-Encoding", "gzip");
-            get_header()->add("Content-Length", format("%zi", encoded.size()));
-            get_header()->get_headers(headers);
+            get_header().add("Content-Encoding", "gzip").add("Content-Length", format("%zi", encoded.size())).get_headers(headers);
             bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n", status_code(), resource->load(status_code()).c_str(), headers.c_str());
             bs.write(encoded.data(), encoded.size());
         } else /* "identity" */ {
-            get_header()->add("Content-Length", format("%zi", content_size()));
-            get_header()->get_headers(headers);
+            get_header().add("Content-Length", format("%zi", content_size())).get_headers(headers);
 
             bs.printf("HTTP/1.1 %3i %s\r\n%s\r\n%.*s", status_code(), resource->load(status_code()).c_str(), headers.c_str(), content_size(), content());
         }

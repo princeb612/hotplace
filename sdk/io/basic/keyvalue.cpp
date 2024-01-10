@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace io {
 
-key_value::key_value(uint32 flags) : _flags(flags) {
+key_value::key_value(uint32 flags) : _flags(flags), _order(0) {
     // do nothing
 }
 
@@ -49,6 +49,10 @@ return_t key_value::set(const char* name, const char* value, int mode) {
             } else {
                 ret = errorcode_t::already_exist;
             }
+        } else {
+            ++_order;
+            _order_map.insert({_order, name});  // c++11, Aggregate initialization
+            _reverse_order_map.insert({name, _order});
         }
     }
     __finally2 {
@@ -57,31 +61,15 @@ return_t key_value::set(const char* name, const char* value, int mode) {
     return ret;
 }
 
-return_t key_value::set(std::string key, std::string value, int mode) {
+return_t key_value::set(std::string const& key, std::string const& value, int mode) {
     return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (0 == (key_value_flag_t::key_value_case_sensitive & _flags)) {
-            std::transform(key.begin(), key.end(), key.begin(), tolower);
-        }
-
-        critical_section_guard guard(_lock);
-        keyvalue_map_pib_t pib = _keyvalues.insert(std::make_pair(key, value));
-        if (false == pib.second) {
-            if (key_value_mode_t::update == mode) {
-                pib.first->second = value;
-            } else {
-                ret = errorcode_t::already_exist;
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
+    ret = set(key.c_str(), value.c_str(), mode);
     return ret;
 }
 
 return_t key_value::update(const char* name, const char* value) { return set(name, value, key_value_mode_t::update); }
+
+return_t key_value::update(std::string const& name, std::string const& value) { return update(name.c_str(), value.c_str()); }
 
 return_t key_value::remove(const char* name) {
     return_t ret = errorcode_t::success;
@@ -102,6 +90,9 @@ return_t key_value::remove(const char* name) {
         if (_keyvalues.end() != iter) {
             _keyvalues.erase(iter);
         }
+        key_reverse_order_map_t::iterator reverse_order_iter = _reverse_order_map.find(key);
+        _order_map.erase(reverse_order_iter->second);
+        _reverse_order_map.erase(reverse_order_iter);
     }
     __finally2 {
         // do nothing
@@ -115,6 +106,9 @@ return_t key_value::clear() {
     __try2 {
         critical_section_guard guard(_lock);
         _keyvalues.clear();
+        _order = 0;
+        _order_map.clear();
+        _reverse_order_map.clear();
     }
     __finally2 {
         // do nothing
@@ -216,46 +210,25 @@ return_t key_value::copy(key_value& rhs, int mode) {
     return ret;
 }
 
-return_t key_value::copyfrom(std::unordered_map<std::string, std::string>& source, int mode) {
+return_t key_value::copyfrom(std::map<std::string, std::string>& source, int mode) {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);
 
     if (key_value_mode_t::move == mode) {
-        _keyvalues.clear();
-        _keyvalues.insert(source.begin(), source.end());
-    } else {
-#if __cplusplus >= 201103L  // c++11
-        for_each(source.begin(), source.end(), [this, mode](std::pair<std::string, std::string> p) {
-            auto iter = _keyvalues.find(p.first);
-            if (_keyvalues.end() == iter) {
-                _keyvalues.insert(p);
-            } else {
-                if (key_value_mode_t::update == mode) {
-                    iter->second = p.second;
-                }
-            }
-        });
-#else
-        for (keyvalue_map_t::iterator source_iter = source.begin(); source_iter != source.end(); source_iter++) {
-            std::string key = source_iter->first;
-            std::string value = source_iter->second;
-            keyvalue_map_t::iterator iter = _keyvalues.find(key);
-            if (_keyvalues.end() == iter) {
-                _keyvalues.insert(std::make_pair(key, value));
-            } else {
-                if (key_value_mode_t::update == mode) {
-                    iter->second = value;
-                }
-            }
-        }
-#endif
+        clear();
+    }
+
+    for (keyvalue_map_t::iterator source_iter = source.begin(); source_iter != source.end(); source_iter++) {
+        std::string key = source_iter->first;
+        std::string value = source_iter->second;
+        set(key, value, mode);
     }
 
     return ret;
 }
 
-return_t key_value::copyto(std::unordered_map<std::string, std::string>& target) {
+return_t key_value::copyto(std::map<std::string, std::string>& target) {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);
@@ -264,8 +237,7 @@ return_t key_value::copyto(std::unordered_map<std::string, std::string>& target)
 }
 
 key_value& key_value::operator=(key_value& rhs) {
-    clear();
-    copy(rhs, key_value_mode_t::update);
+    copy(rhs, key_value_mode_t::move);
     return *this;
 }
 
@@ -276,8 +248,9 @@ key_value& key_value::operator<<(key_value& rhs) {
 
 void key_value::foreach (std::function<void(std::string const&, std::string const&, void*)> func, void* param) {
     critical_section_guard guard(_lock);
-    keyvalue_map_t::iterator iter;
-    for (iter = _keyvalues.begin(); iter != _keyvalues.end(); iter++) {
+    key_order_map_t::iterator order_iter;
+    for (order_iter = _order_map.begin(); order_iter != _order_map.end(); order_iter++) {
+        keyvalue_map_t::iterator iter = _keyvalues.find(order_iter->second);
         func(iter->first, iter->second, param);
     }
 }

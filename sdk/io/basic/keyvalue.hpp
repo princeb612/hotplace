@@ -52,12 +52,12 @@ class key_value {
      * @param   uint32           flags   [INOPT] 1 overwrite, 0 keep old
      * @return  error code (see error.hpp)
      * @remarks
-     *          set (key1, value1); // return errorcode_t::success
-     *          set (key1, value2); // return errorcode_t::already_exist
-     *          set (key1, value2, key_value::mode_update); // update, return errorcode_t::success
+     *          set (key1, value1, key_value_mode_t::keep); // return errorcode_t::success
+     *          set (key1, value2, key_value_mode_t::keep); // return errorcode_t::already_exist
+     *          set (key1, value2, key_value_mode_t::update); // update, return errorcode_t::success
      */
     return_t set(const char* name, const char* value, int mode = key_value_mode_t::update);
-    return_t set(std::string name, std::string value, int mode = key_value_mode_t::update);
+    return_t set(std::string const& name, std::string const& value, int mode = key_value_mode_t::update);
     /**
      * @brief   update
      * @param   const char* name [in]
@@ -67,6 +67,7 @@ class key_value {
      *          set(name, value, key_value_mode_t::update);
      */
     return_t update(const char* name, const char* value);
+    return_t update(std::string const& name, std::string const& value);
     /**
      * @brief   remove
      * @param   const char*     name    [IN]
@@ -110,7 +111,7 @@ class key_value {
 
     /**
      * @brief   copy
-     * @param   key_value&       rhs   [IN]
+     * @param   key_value&      rhs   [IN]
      * @param   int             mode  [IN]
      * @return  error code (see error.hpp)
      * @remarks
@@ -123,8 +124,8 @@ class key_value {
      */
     return_t copy(key_value& rhs, int mode = key_value_mode_t::update);
 
-    return_t copyfrom(std::unordered_map<std::string, std::string>& source, int mode);
-    return_t copyto(std::unordered_map<std::string, std::string>& target);
+    return_t copyfrom(std::map<std::string, std::string>& source, int mode);
+    return_t copyto(std::map<std::string, std::string>& target);
 
     void foreach (std::function<void(std::string const&, std::string const&, void*)> func, void* param = nullptr);
 
@@ -132,7 +133,7 @@ class key_value {
      * @brief   operator =
      * @param   key_value& rhs [in]
      * @return  key_value&
-     * @remarks copy with key_value_mode_t::update
+     * @remarks copy with key_value_mode_t::move
      */
     key_value& operator=(key_value& rhs);
     /**
@@ -144,13 +145,19 @@ class key_value {
     key_value& operator<<(key_value& rhs);
 
     /* key, value */
-    typedef std::unordered_map<std::string, std::string> keyvalue_map_t;
+    typedef std::map<std::string, std::string> keyvalue_map_t;
     typedef std::pair<keyvalue_map_t::iterator, bool> keyvalue_map_pib_t;
+
+    typedef std::map<int, std::string> key_order_map_t;
+    typedef std::map<std::string, int> key_reverse_order_map_t;
 
    protected:
     critical_section _lock;
     keyvalue_map_t _keyvalues;
+    key_order_map_t _order_map;
+    key_reverse_order_map_t _reverse_order_map;
     uint32 _flags;
+    uint32 _order;
 };
 
 }  // namespace io

@@ -131,6 +131,7 @@ return_t network_session::produce(network_priority_queue* q, void* buf_read, siz
                                                   size_buf_read, &cbread); /*SSL_read */
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream()->produce(buf_read, cbread);
+
                     data_ready = true;
                 } else {
                     break;

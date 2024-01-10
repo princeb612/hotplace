@@ -95,6 +95,7 @@ class basic_stream : public stream_t {
     basic_stream& operator<<(unsigned int value);
     basic_stream& operator<<(long value);
     basic_stream& operator<<(unsigned long value);
+    basic_stream& operator<<(basic_stream const& value);
     basic_stream& operator<<(std::string const& value);
 
     /**
