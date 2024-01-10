@@ -160,8 +160,14 @@ void test_basic_authenticate() {
 
     OPTION& option = cmdline->value();
 
-    resolver.basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, std::string const& credential) -> bool {
+    resolver.basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
         bool test = false;
+        std::string challenge = provider->get_challenge(request);
+
+        size_t pos = 0;
+        tokenize(challenge, " ", pos); // Basic
+        std::string credential = tokenize(challenge, " ", pos); // base64(user:password)
+
         test = (credential == base64_encode("user:password"));
         return test;
     });
@@ -315,26 +321,24 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
 
     OPTION& option = cmdline->value();
 
-    resolver.digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, std::string const& credential) -> bool {
+    resolver.digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
         bool ret_value = false;
         return_t ret = errorcode_t::success;
         http_digest_access_authenticate_provider* digest_provider = (http_digest_access_authenticate_provider*)provider;
         key_value kv;
 
-        if (option.debug) {
-            printf("credential\n%s\n", credential.c_str());
-        }
-
-        ret = digest_provider->prepare_digest_access(session, request, credential, kv);
+        ret = digest_provider->prepare_digest_access(session, request, response, kv);
         if (errorcode_t::success == ret) {
-            kv.set("password", "password");  // read from cache, file, database
+            // get username from kv.get("username"), and then read password from cached data
+            kv.set("password", "password");
 
             if (option.debug) {
                 printf("* session opaque:=%s\n", session->get_session_data()->get("opaque").c_str());
                 kv.foreach ([&](std::string const& k, std::string const& v, void* param) -> void { printf("> %s:=%s\n", k.c_str(), v.c_str()); });
             }
 
-            return_t ret = digest_provider->digest_digest_access(session, request, kv);
+            // and then call provider->digest_digest_access
+            return_t ret = digest_provider->digest_digest_access(session, request, response, kv);
             if (errorcode_t::success == ret) {
                 ret_value = true;
             }

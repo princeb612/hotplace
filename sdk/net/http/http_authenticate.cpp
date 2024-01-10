@@ -28,7 +28,8 @@ http_basic_authenticate_provider::http_basic_authenticate_provider(const char* r
 
 http_basic_authenticate_provider::~http_basic_authenticate_provider() {}
 
-bool http_basic_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request) {
+bool http_basic_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
+                                                http_response* response) {
     bool ret_value = false;
     return_t ret = errorcode_t::success;
     __try2 {
@@ -41,12 +42,10 @@ bool http_basic_authenticate_provider::try_auth(http_authenticate_resolver* reso
         constexpr char constexpr_authorization[] = "Authorization";
         constexpr char constexpr_basic[] = "Basic";
         std::string token_scheme;
-        std::string token_auth;
         request->get_header().get_token(constexpr_authorization, 0, token_scheme);
-        request->get_header().get(constexpr_authorization, token_auth);
 
         if (0 == strcmp(constexpr_basic, token_scheme.c_str())) {
-            ret_value = resolver->basic_authenticate(this, session, request, token_auth);
+            ret_value = resolver->basic_authenticate(this, session, request, response);
         }
     }
     __finally2 {
@@ -137,7 +136,8 @@ http_digest_access_authenticate_provider::http_digest_access_authenticate_provid
 
 http_digest_access_authenticate_provider::~http_digest_access_authenticate_provider() {}
 
-bool http_digest_access_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request) {
+bool http_digest_access_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
+                                                        http_response* response) {
     bool ret_value = false;
     return_t ret = errorcode_t::success;
     __try2 {
@@ -151,12 +151,10 @@ bool http_digest_access_authenticate_provider::try_auth(http_authenticate_resolv
         constexpr char constexpr_authorization[] = "Authorization";
         constexpr char constexpr_digest[] = "Digest";
         std::string token_scheme;
-        std::string token_auth;
         request->get_header().get_token(constexpr_authorization, 0, token_scheme);
-        request->get_header().get(constexpr_authorization, token_auth);
 
         if (0 == strcmp(constexpr_digest, token_scheme.c_str())) {
-            ret_value = resolver->digest_authenticate(this, session, request, token_auth);
+            ret_value = resolver->digest_authenticate(this, session, request, response);
         }
     }
     __finally2 {
@@ -177,8 +175,9 @@ return_t http_digest_access_authenticate_provider::request_auth(network_session*
         std::string nonce;
         std::string opaque;
 
-        nonce = prng.nonce(16);  // should be uniquely generated each time a 401 response is made
+        nonce = prng.nonce(16);
         opaque = prng.nonce(16);
+        session->get_session_data()->set("nonce", nonce);    // should be uniquely generated each time a 401 response is made
         session->get_session_data()->set("opaque", opaque);  // should be returned by the client unchanged in the Authorization header of subsequent requests
 
         basic_stream cred;
@@ -199,7 +198,7 @@ return_t http_digest_access_authenticate_provider::request_auth(network_session*
     return ret;
 }
 
-return_t http_digest_access_authenticate_provider::prepare_digest_access(network_session* session, http_request* request, std::string const& credential,
+return_t http_digest_access_authenticate_provider::prepare_digest_access(network_session* session, http_request* request, http_response* response,
                                                                          key_value& kv) {
     return_t ret = errorcode_t::mismatch;
     __try2 {
@@ -211,9 +210,13 @@ return_t http_digest_access_authenticate_provider::prepare_digest_access(network
         session->get_session_data()->query("opaque", opaque_session);
 
         if (false == opaque_session.empty()) {
-            http_header::to_keyvalue(credential, kv);
+            std::string challenge = get_challenge(request);
+            http_header::to_keyvalue(challenge, kv);
 
             if (kv.get("realm") != get_realm()) {
+                __leave2;
+            }
+            if (kv.get("nonce") != session->get_session_data()->get("nonce")) {
                 __leave2;
             }
             if (kv.get("opaque") != opaque_session) {
@@ -228,7 +231,8 @@ return_t http_digest_access_authenticate_provider::prepare_digest_access(network
     return ret;
 }
 
-return_t http_digest_access_authenticate_provider::digest_digest_access(network_session* session, http_request* request, key_value& kv) {
+return_t http_digest_access_authenticate_provider::digest_digest_access(network_session* session, http_request* request, http_response* response,
+                                                                        key_value& kv) {
     return_t ret = errorcode_t::mismatch;
     __try2 {
         if (nullptr == session || nullptr == request) {
@@ -275,9 +279,9 @@ return_t http_digest_access_authenticate_provider::digest_digest_access(network_
 
         // RFC 2617 3.2.2.3 A2
         // If the qop parameter's value is "auth" or is unspecified
-        //      A2       = ":" digest-uri-value
+        //      A2       = Method ":" digest-uri-value
         // If the qop value is "auth-int"
-        //      A2       = ":" digest-uri-value ":" H(entity-body)
+        //      A2       = Method ":" digest-uri-value ":" H(entity-body)
         dgst.clear().add(request->get_method()).add(":").add(kv.get("uri"));
         if ("auth-int" == qop) {
             // RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
@@ -314,6 +318,20 @@ return_t http_digest_access_authenticate_provider::digest_digest_access(network_
 
         if (digest_response == kv.get("response")) {
             ret = errorcode_t::success;
+
+#if 0
+            // chrome, edge dont response w/ nextnonce
+            std::string nextnonce;
+            basic_stream auth_info;
+            openssl_prng prng;
+            nextnonce = prng.nonce(16);
+            auth_info << "nextnonce=\"" << nextnonce << "\"";
+            if(qop.size()) {
+                auth_info << ", qop=" << qop;
+            }
+            response->get_header().add("Authentication-Info", auth_info.c_str());
+            session->get_session_data()->set("nonce", nextnonce);
+#endif
         }
     }
     __finally2 {
@@ -345,7 +363,8 @@ http_bearer_authenticate_provider::http_bearer_authenticate_provider(const char*
 
 http_bearer_authenticate_provider::~http_bearer_authenticate_provider() {}
 
-bool http_bearer_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request) {
+bool http_bearer_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
+                                                 http_response* response) {
     bool ret_value = false;
     return_t ret = errorcode_t::success;
     __try2 {
@@ -397,7 +416,7 @@ http_authenticate_resolver::http_authenticate_resolver() : _basic_resolver(nullp
 return_t http_authenticate_resolver::resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) {
     return_t ret = errorcode_t::success;
 
-    bool test = provider->try_auth(this, session, request);
+    bool test = provider->try_auth(this, session, request, response);
     if (false == test) {
         ret = errorcode_t::mismatch;
     }
@@ -410,12 +429,9 @@ http_authenticate_resolver& http_authenticate_resolver::basic_resolver(authentic
 }
 
 bool http_authenticate_resolver::basic_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
-                                                    std::string const& auth) {
+                                                    http_response* response) {
     bool ret_value = false;
-    size_t pos = 0;
-    tokenize(auth, " ", pos);                     // Basic
-    std::string cred = tokenize(auth, " ", pos);  // Credentials
-    ret_value = _basic_resolver(provider, session, request, cred);
+    ret_value = _basic_resolver(provider, session, request, response);
     return ret_value;
 }
 
@@ -425,12 +441,9 @@ http_authenticate_resolver& http_authenticate_resolver::digest_resolver(authenti
 }
 
 bool http_authenticate_resolver::digest_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
-                                                     std::string const& auth) {
+                                                     http_response* response) {
     bool ret_value = false;
-    size_t pos = 0;
-    tokenize(auth, " ", pos);             // Digest
-    std::string cred = auth.substr(pos);  // Credentials
-    ret_value = _digest_resolver(provider, session, request, cred);
+    ret_value = _digest_resolver(provider, session, request, response);
     return ret_value;
 }
 
@@ -440,12 +453,9 @@ http_authenticate_resolver& http_authenticate_resolver::bearer_resolver(authenti
 }
 
 bool http_authenticate_resolver::bearer_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
-                                                     std::string const& auth) {
+                                                     http_response* response) {
     bool ret_value = false;
-    size_t pos = 0;
-    tokenize(auth, " ", pos);                     // Bearer
-    std::string cred = tokenize(auth, " ", pos);  // Credentials
-    ret_value = _bearer_resolver(provider, session, request, cred);
+    ret_value = _bearer_resolver(provider, session, request, response);
     return ret_value;
 }
 
