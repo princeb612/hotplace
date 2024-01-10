@@ -162,6 +162,11 @@ basic_stream& basic_stream::operator<<(unsigned long value) {
     return *this;
 }
 
+basic_stream& basic_stream::operator<<(basic_stream const& value) {
+    write(value.data(), value.size());
+    return *this;
+}
+
 basic_stream& basic_stream::operator<<(std::string const& value) {
     printf("%s", value.c_str());
     return *this;

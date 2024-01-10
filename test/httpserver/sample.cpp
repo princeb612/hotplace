@@ -40,6 +40,17 @@ void api_v1_test_handler(http_request* request, http_response* response) { respo
 
 t_shared_instance<http_router> _http_router;
 
+void cprint(const char* text, ...) {
+    console_color _concolor;
+
+    std::cout << _concolor.turnon().set_fgcolor(console_color_t::cyan);
+    va_list ap;
+    va_start(ap, text);
+    vprintf(text, ap);
+    va_end(ap);
+    std::cout << _concolor.turnoff() << std::endl;
+}
+
 return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
     net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
@@ -57,10 +68,14 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            std::cout << "connect " << session_socket->client_socket << std::endl;
+            cprint("connect %i", session_socket->client_socket);
             break;
         case mux_read:
-            printf("read %i (%zi) %.*s\n", session_socket->client_socket, bufsize, (unsigned)bufsize, buf);
+            cprint("read %i", session_socket->client_socket);
+            if (option.debug) {
+                printf("%.*s\n", (unsigned)bufsize, buf);
+            }
+
             {
                 arch_t use_tls = 0;
                 session->get_server_socket()->query(server_socket_query_t::query_support_tls, &use_tls);
@@ -70,12 +85,8 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 basic_stream bs;
                 request.open(buf, bufsize);
 
-                if (option.debug) {
-                    dump_memory((unsigned char*)buf, bufsize, &bs, 32);
-                    printf("%s\n", bs.c_str());
-
+                if (0) {
                     std::string encoding;
-                    http_header* header = request.get_header();
 
                     std::cout << "uri : " << request.get_uri() << std::endl;
                     std::cout << "method : " << request.get_method() << std::endl;
@@ -92,7 +103,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     std::cout << "tls : " << use_tls << std::endl;
 
                     /* header */
-                    header->get("Accept-Encoding", encoding);
+                    request.get_header().get("Accept-Encoding", encoding);
                     std::cout << "encoding : " << encoding.c_str() << std::endl << std::endl;
                 }
 
@@ -104,10 +115,15 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     response.get_response(bs);
                 } else {
                     // RFC 2817 4. Server Requested Upgrade to HTTP over TLS
-                    http_header* resp_header = response.get_header();
-                    resp_header->add("Upgrade", "TLS/1.2, HTTP/1.1");
-                    resp_header->add("Connection", "Upgrade");
+                    response.get_header().add("Upgrade", "TLS/1.2, HTTP/1.1").add("Connection", "Upgrade");
                     response.compose(426, "text/html", "<html><body>Upgrade %s</body></html>", request.get_uri()).get_response(bs);
+                }
+
+                if (option.debug) {
+                    cprint("send %i", session_socket->client_socket);
+                    std::string headers;
+                    response.get_header().get_headers(headers);
+                    printf("%s\r\n%s\r\n\r\n", headers.c_str(), response.content());
                 }
 
                 session->send((const char*)bs.data(), bs.size());
@@ -177,120 +193,38 @@ return_t echo_server(void*) {
                      response->compose(200, "text/html", "<html><body>request %s<br><pre>%s</pre></body></html>", request->get_uri(), bs.c_str());
                  })
             .add("/auth/basic", default_handler)
-            //.add("/auth/digest", default_handler)
-            //.add("/auth/bearer", default_handler)
+            .add("/auth/digest", default_handler)
+            .add("/auth/bearer", default_handler)
             .add("/auth/basic", new http_basic_authenticate_provider("Hello World"))
-            //.add("/auth/digest", new http_digest_access_authenticate_provider("happiness"))
-            //.add("/auth/bearer", new http_digest_access_authenticate_provider("hotplace"))
-            ;
+            .add("/auth/digest", new http_digest_access_authenticate_provider("happiness", "SHA-256-sess", "auth, auth-int"))
+            .add("/auth/bearer", new http_bearer_authenticate_provider("hotplace"));
 
+        // simple implementation
         (*_http_router)
             .get_authenticate_resolver()
-            .basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, std::string credential) -> bool {
-                // simple implementation (using file, database, ...)
+            .basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, std::string const& credential) -> bool {
                 std::set<std::string>::iterator iter = basic_credentials.find(credential);
                 bool ret_value = (basic_credentials.end() != iter);
                 return ret_value;
             })
-            .digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, std::string credential) -> bool {
-                // simple implementation (using file, database, ...)
+            .digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, std::string const& credential) -> bool {
                 bool ret_value = false;
-                std::string opaque_session;
-                session->get_session_data()->query("opaque", opaque_session);
+                return_t ret = errorcode_t::success;
+                http_digest_access_authenticate_provider* digest_provider = (http_digest_access_authenticate_provider*)provider;
+                key_value kv;
 
-                if (false == opaque_session.empty()) {
-                    key_value kv;
-                    http_header::to_keyvalue(credential, kv);
-
-                    std::string alg;
-                    std::string hashalg = "md5";  // default
-                    std::string username;
+                ret = digest_provider->prepare_digest_access(session, request, credential, kv);
+                if (errorcode_t::success == ret) {
+                    std::string username = kv.get("username");
                     std::string password;
-                    std::string opaque;
-                    std::string response;
-
-                    opaque = kv.get("opaque");
-                    if (opaque == opaque_session) {
-                        alg = kv.get("algorithm");
-                        username = kv.get("username");
-                        response = kv.get("response");
-
-                        std::map<std::string, std::string>::iterator iter = digest_access_credentials.find(username);
-                        if (digest_access_credentials.end() != iter) {
-                            password = iter->second;
+                    std::map<std::string, std::string>::iterator iter = digest_access_credentials.find(username);
+                    if (digest_access_credentials.end() != iter) {
+                        password = iter->second;
+                        kv.set("password", password);
+                        return_t ret = digest_provider->digest_digest_access(session, request, kv);
+                        if (errorcode_t::success == ret) {
+                            ret_value = true;
                         }
-
-                        openssl_digest dgst;
-
-                        // RFC 2617 3.2.2.1 Request-Digest
-                        // RFC 7616 3.4.1.  Response
-                        //      If the qop value is "auth" or "auth-int":
-                        //          response = <"> < KD ( H(A1), unq(nonce)
-                        //                                       ":" nc
-                        //                                       ":" unq(cnonce)
-                        //                                       ":" unq(qop)
-                        //                                       ":" H(A2)
-                        //                              ) <">
-                        // RFC 7616
-                        //      MD5, SHA-512-256, SHA-256
-                        //      MD5-sess, SHA-512-256-sess, SHA-256-sess
-                        std::map<std::string, std::string> algmap;
-                        algmap.insert(std::make_pair("MD5", "md5"));
-                        algmap.insert(std::make_pair("MD5-sess", "md5"));
-                        algmap.insert(std::make_pair("SHA-512-256", "sha2-512/256"));
-                        algmap.insert(std::make_pair("SHA-512-256-sess", "sha2-512/256"));
-                        algmap.insert(std::make_pair("SHA-256", "sha256"));
-                        algmap.insert(std::make_pair("SHA-256-sess", "sha256"));
-
-                        if (alg.size()) {
-                            std::map<std::string, std::string>::iterator alg_iter = algmap.find(alg);
-                            if (algmap.end() != alg_iter) {
-                                hashalg = alg_iter->second;
-                            }
-                        }
-
-                        std::string digest_ha1;
-                        std::string digest_ha2;
-
-                        // RFC 2617 3.2.2.2 A1
-                        basic_stream stream_a1;
-                        stream_a1 << username << ":" << provider->get_realm() << ":" << password;
-                        dgst.digest(hashalg.c_str(), stream_a1, digest_ha1);
-
-                        if (ends_with(alg, "-sess")) {
-                            basic_stream stream_sess_a1;
-                            stream_sess_a1 << digest_ha1 << ":" << kv.get("nonce") << ":" << kv.get("cnonce");
-                            dgst.digest(hashalg.c_str(), stream_sess_a1, digest_ha1);
-                        }
-
-                        // RFC 2617 3.2.2.3 A2
-                        basic_stream stream_a2;
-                        stream_a2 << request->get_method() << ":" << kv.get("uri");
-                        if ("auth-int" == kv.get("qop")) {
-                            crypto_advisor* advisor = crypto_advisor::get_instance();
-                            binary_t bin;
-                            const hint_digest_t* hint = advisor->hintof_digest(hashalg.c_str());
-                            if (hint) {
-                                bin.resize(hint->digest_size);
-                            }
-                            stream_a2 << ":";
-                            stream_a2.write(&bin[0], bin.size());
-                        }
-                        dgst.digest(hashalg.c_str(), stream_a2, digest_ha2);
-
-                        // RFC 2617 3.2.2.1 Request-Digest
-                        basic_stream sequence;
-                        std::string digest_response;
-                        sequence << digest_ha1 << ":" << kv.get("nonce") << ":" << kv.get("nc") << ":" << kv.get("cnonce") << ":" << kv.get("qop") << ":"
-                                 << digest_ha2;
-                        dgst.digest(hashalg.c_str(), sequence, digest_response);
-
-                        printf(">>> %s => %s\n", stream_a1.c_str(), digest_ha1.c_str());
-                        printf(">>> %s => %s\n", stream_a2.c_str(), digest_ha1.c_str());
-                        printf(">>> %s => %s\n", sequence.c_str(), digest_response.c_str());
-                        printf(">>> %s %s\n", response.c_str(), digest_response.c_str());
-
-                        ret_value = (digest_response == response);
                     }
                 }
 

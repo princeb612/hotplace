@@ -32,7 +32,17 @@ typedef struct _OPTION {
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
-console_color _concolor;
+
+void cprint(const char* text, ...) {
+    console_color _concolor;
+
+    std::cout << _concolor.turnon().set_fgcolor(console_color_t::cyan);
+    va_list ap;
+    va_start(ap, text);
+    vprintf(text, ap);
+    va_end(ap);
+    std::cout << _concolor.turnoff() << std::endl;
+}
 
 void test_request() {
     _test_case.begin("request");
@@ -73,7 +83,7 @@ void test_request() {
     _test_case.assert(0 == strcmp(method, "GET"), __FUNCTION__, "method");
 
     std::string header_accept_encoding;
-    request.get_header()->get("Accept-Encoding", header_accept_encoding);
+    request.get_header().get("Accept-Encoding", header_accept_encoding);
     _test_case.assert(header_accept_encoding == "gzip, deflate, br", __FUNCTION__, "header");
 }
 
@@ -81,7 +91,7 @@ void test_response_compose() {
     _test_case.begin("response");
 
     http_response response;
-    response.get_header()->add("Connection", "Keep-Alive");
+    response.get_header().add("Connection", "Keep-Alive");
     response.compose(200, "text/html", "<html><body>hello</body></html>");
 
     OPTION& option = cmdline->value();
@@ -111,39 +121,292 @@ void test_response_parse() {
         "Connection: Keep-Alive\r\n"
         "Content-Length: 42\r\n"
         "Content-Type: text/html\r\n"
-        "WWW-Authenticate: Digest realm=\"helloworld\", qop=\"auth,auth-int\", nonce=\"40dc29366886273821be1fcc5e23e9d7e9\", "
+        "WWW-Authenticate: Digest realm=\"helloworld\", qop=\"auth, auth-int\", nonce=\"40dc29366886273821be1fcc5e23e9d7e9\", "
         "opaque=\"8be41306f5b9bb30019350c33b182858\"\r\n"
         "\r\n"
         "<html><body>401 Unauthorized</body></html>";
 
     response.open(input);
 
-    response.get_header()->get("WWW-Authenticate", wwwauth);
+    response.get_header().get("WWW-Authenticate", wwwauth);
     http_header::to_keyvalue(wwwauth, kv);
 
     if (option.debug) {
-        kv.foreach ([&](std::string const& k, std::string const& v, void* param) -> void { printf("%s=%s\n", k.c_str(), v.c_str()); });
+        kv.foreach ([&](std::string const& k, std::string const& v, void* param) -> void { printf("> %s:=%s\n", k.c_str(), v.c_str()); });
     }
 
     _test_case.assert(401 == response.status_code(), __FUNCTION__, "status");
     std::string content_length;
-    response.get_header()->get("Content-Length", content_length);
+    response.get_header().get("Content-Length", content_length);
     _test_case.assert("42" == content_length, __FUNCTION__, "Content-Length");
-    _test_case.assert(42 == response.content_size(), __FUNCTION__, "Content-Length");
+    _test_case.assert(42 == response.content_size(), __FUNCTION__, "size of content");
     _test_case.assert(0 == strcmp(response.content_type(), "text/html"), __FUNCTION__, "Content-Type");
-    _test_case.assert(0 == strcmp("auth,auth-int", kv["qop"]), __FUNCTION__, "qop from WWW-Authenticate");
+    _test_case.assert(0 == strcmp("helloworld", kv["realm"]), __FUNCTION__, "realm from WWW-Authenticate");
+    _test_case.assert(0 == strcmp("auth, auth-int", kv["qop"]), __FUNCTION__, "qop from WWW-Authenticate");
     _test_case.assert(0 == strcmp("40dc29366886273821be1fcc5e23e9d7e9", kv["nonce"]), __FUNCTION__, "nonce from WWW-Authenticate");
+    _test_case.assert(0 == strcmp("8be41306f5b9bb30019350c33b182858", kv["opaque"]), __FUNCTION__, "opaque from WWW-Authenticate");
+}
+
+void test_basic_authenticate() {
+    _test_case.begin("Basic Authentication Scheme");
+    return_t ret = errorcode_t::success;
+    server_socket socket;  // dummy
+    network_session session(&socket);
+    http_basic_authenticate_provider provider("basic realm");
+    http_authenticate_resolver resolver;
+    http_request request;
+    http_response response;
+    basic_stream bs;
+
+    OPTION& option = cmdline->value();
+
+    resolver.basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, std::string const& credential) -> bool {
+        bool test = false;
+        test = (credential == base64_encode("user:password"));
+        return test;
+    });
+
+    // server response
+    provider.request_auth(&session, &request, &response);
+
+    if (option.debug) {
+        response.get_response(bs);
+
+        cprint("server response");
+        printf("%s\n", bs.c_str());
+    }
+
+    std::function<return_t(std::string const& user, std::string const& password)> test_resolver = [&](std::string const& user,
+                                                                                                      std::string const& password) -> return_t {
+        return_t ret_value = errorcode_t::failed;
+
+        basic_stream cred;
+        cred << user << ":" << password;
+
+        // client request
+        request.open("GET / HTTP/1.1");
+        request.get_header().add("Authorization", format("Basic %s", base64_encode(cred.c_str()).c_str()));
+
+        if (option.debug) {
+            request.get_request(bs);
+
+            cprint("client request");
+            printf("%s\n", bs.c_str());
+        }
+
+        response.close();
+
+        // resolver
+        ret_value = resolver.resolve(&provider, &session, &request, &response);
+        return ret_value;
+    };
+
+    ret = test_resolver("user", "password");
+    _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Basic Authentication Scheme (positive case)");
+    ret = test_resolver("user", "password1");
+    _test_case.assert((errorcode_t::success != ret), __FUNCTION__, "Basic Authentication Scheme (negative case)");
+}
+
+/**
+ * calcuration routine
+ * cf. see http_digest_access_authenticate_provider::digest_digest_access (slightly diffrent)
+ */
+return_t calc_digest_digest_access(http_authenticate_provider* provider, network_session* session, http_request* request, key_value& kv,
+                                   std::string& digest_response) {
+    return_t ret = errorcode_t::success;
+    OPTION& option = cmdline->value();
+    __try2 {
+        if (nullptr == session || nullptr == request) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        std::string alg;
+        std::string hashalg = "md5";  // default
+        std::string username;
+        std::string password;
+        std::string opaque;
+
+        alg = kv.get("algorithm");
+        username = kv.get("username");
+        password = kv.get("password");
+        opaque = kv.get("opaque");
+
+        openssl_digest dgst;
+
+        // RFC 7616
+        //      MD5, SHA-512-256, SHA-256
+        //      MD5-sess, SHA-512-256-sess, SHA-256-sess
+        std::map<std::string, std::string> algmap;
+        algmap.insert(std::make_pair("MD5", "md5"));
+        algmap.insert(std::make_pair("MD5-sess", "md5"));
+        algmap.insert(std::make_pair("SHA-512-256", "sha2-512/256"));
+        algmap.insert(std::make_pair("SHA-512-256-sess", "sha2-512/256"));
+        algmap.insert(std::make_pair("SHA-256", "sha256"));
+        algmap.insert(std::make_pair("SHA-256-sess", "sha256"));
+
+        if (alg.size()) {
+            std::map<std::string, std::string>::iterator alg_iter = algmap.find(alg);
+            if (algmap.end() != alg_iter) {
+                hashalg = alg_iter->second;
+            }
+        }
+
+        std::string digest_ha1;
+        std::string digest_ha2;
+
+        // RFC 2617 3.2.2.2 A1
+        basic_stream stream_a1;
+        stream_a1 << username << ":" << provider->get_realm() << ":" << password;
+        dgst.digest(hashalg.c_str(), stream_a1, digest_ha1);
+
+        if (ends_with(alg, "-sess")) {
+            basic_stream stream_sess_a1;
+            stream_sess_a1 << digest_ha1 << ":" << kv.get("nonce") << ":" << kv.get("cnonce");
+            dgst.digest(hashalg.c_str(), stream_sess_a1, digest_ha1);
+        }
+
+        // RFC 2617 3.2.2.3 A2
+        basic_stream stream_a2;
+        stream_a2 << request->get_method() << ":" << request->get_uri();
+        std::string qop = kv.get("qop");
+        if ("auth-int" == qop) {
+            ret = errorcode_t::not_available;  // studying
+            __leave2;
+        }
+        dgst.digest(hashalg.c_str(), stream_a2, digest_ha2);
+
+        // RFC 2617 3.2.2.1 Request-Digest
+        // RFC 7616 3.4.1.  Response
+        //      If the qop value is "auth" or "auth-int":
+        //          response = <"> < KD ( H(A1), unq(nonce)
+        //                                       ":" nc
+        //                                       ":" unq(cnonce)
+        //                                       ":" unq(qop)
+        //                                       ":" H(A2)
+        //                              ) <">
+        basic_stream sequence;
+        sequence << digest_ha1 << ":" << kv.get("nonce") << ":" << kv.get("nc") << ":" << kv.get("cnonce") << ":" << kv.get("qop") << ":" << digest_ha2;
+        dgst.digest(hashalg.c_str(), sequence, digest_response);
+
+        if (option.debug) {
+            printf("+ a1 %s\n", stream_a1.c_str());
+            printf("+ a2 %s\n", stream_a2.c_str());
+            printf("+ seq %s\n", sequence.c_str());
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return ret;
+}
+
+void test_digest_access_authenticate(const char* alg = nullptr) {
+    _test_case.begin("Digest Access Authentication Scheme");
+    return_t ret = errorcode_t::success;
+    server_socket socket;  // dummy
+    network_session session(&socket);
+    http_digest_access_authenticate_provider provider("digest realm", alg);
+    http_authenticate_resolver resolver;
+    http_request request;
+    http_response response;
+    basic_stream bs;
+
+    OPTION& option = cmdline->value();
+
+    resolver.digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, std::string const& credential) -> bool {
+        bool ret_value = false;
+        return_t ret = errorcode_t::success;
+        http_digest_access_authenticate_provider* digest_provider = (http_digest_access_authenticate_provider*)provider;
+        key_value kv;
+
+        if (option.debug) {
+            printf("credential\n%s\n", credential.c_str());
+        }
+
+        ret = digest_provider->prepare_digest_access(session, request, credential, kv);
+        if (errorcode_t::success == ret) {
+            kv.set("password", "password");  // read from cache, file, database
+
+            if (option.debug) {
+                printf("* session opaque:=%s\n", session->get_session_data()->get("opaque").c_str());
+                kv.foreach ([&](std::string const& k, std::string const& v, void* param) -> void { printf("> %s:=%s\n", k.c_str(), v.c_str()); });
+            }
+
+            return_t ret = digest_provider->digest_digest_access(session, request, kv);
+            if (errorcode_t::success == ret) {
+                ret_value = true;
+            }
+        }
+
+        return ret_value;
+    });
+
+    // server response
+    provider.request_auth(&session, &request, &response);
+
+    if (option.debug) {
+        response.get_response(bs);
+
+        cprint("server response");
+        printf("%s\n", bs.c_str());
+    }
+
+    std::string auth;
+    std::string cred;
+    key_value kv;
+    size_t pos = 0;
+    response.get_header().get("WWW-Authenticate", auth);
+    http_header::to_keyvalue(auth, kv);
+
+    std::function<return_t(std::string const& user, std::string const& password)> test_resolver = [&](std::string const& user,
+                                                                                                      std::string const& password) -> return_t {
+        return_t ret_value = errorcode_t::failed;
+
+        std::string response_calc;
+        kv.set("username", user);
+        kv.set("password", password);
+        kv.set("qop", "auth");
+        kv.set("nc", "00000002");
+        kv.set("cnonce", "0123456789abcdef");
+        if (kv.get("algorithm").empty()) {
+            kv.set("algorithm", "MD5");
+        }
+
+        // client request
+        request.open("GET /auth/digest HTTP/1.1");                                    // set a method and an uri
+        calc_digest_digest_access(&provider, &session, &request, kv, response_calc);  // calcurate a response
+        request.get_header().add(
+            "Authorization",
+            format("Digest username=\"%s\", realm=\"%s\", algorithm=%s, nonce=\"%s\", uri=\"%s\", response=\"%s\", opaque=\"%s\", qop=%s, nc=%s, cnonce=\"%s\"",
+                   kv.get("username").c_str(), provider.get_realm().c_str(), kv.get("algorithm").c_str(), kv.get("nonce").c_str(), request.get_uri(),
+                   response_calc.c_str(), kv.get("opaque").c_str(), kv.get("qop").c_str(), kv.get("nc").c_str(), kv.get("cnonce").c_str()));  // set a response
+
+        if (option.debug) {
+            request.get_request(bs);
+
+            cprint("client request");
+            printf("%s\n", bs.c_str());
+        }
+
+        response.close();
+
+        // resolver
+        ret_value = resolver.resolve(&provider, &session, &request, &response);
+        return ret_value;
+    };
+
+    ret = test_resolver("user", "password1");
+    _test_case.assert((errorcode_t::success != ret), __FUNCTION__, "Digest Access Authentication Scheme (negative case) algorithm=%s", alg ? alg : "");
+    ret = test_resolver("user", "password");
+    _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Digest Access Authentication Scheme (positive case) algorithm=%s", alg ? alg : "");
 }
 
 void test_get() {
     _test_case.begin("get");
     return_t ret = errorcode_t::success;
     OPTION& option = cmdline->value();
-
-    std::function<void(const char*)> cprint = [&](const char* text) -> void {
-        std::cout << _concolor.turnon().set_fgcolor(console_color_t::cyan) << text;
-        std::cout << _concolor.turnoff() << std::endl;
-    };
 
     __try2 {
         url_info_t url_info;
@@ -241,10 +504,19 @@ int main(int argc, char** argv) {
              << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = 1; }).optional();
 
     cmdline->parse(argc, argv);
+    OPTION& option = cmdline->value();
 
     test_request();
     test_response_compose();
     test_response_parse();
+    test_basic_authenticate();
+    test_digest_access_authenticate();
+    test_digest_access_authenticate("MD5");
+    test_digest_access_authenticate("MD5-sess");
+    test_digest_access_authenticate("SHA-256");
+    test_digest_access_authenticate("SHA-256-sess");
+    test_digest_access_authenticate("SHA-512-256");
+    test_digest_access_authenticate("SHA-512-256-sess");
     test_get();
 
     openssl_thread_end();
