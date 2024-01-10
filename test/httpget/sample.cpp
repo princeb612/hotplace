@@ -165,8 +165,8 @@ void test_basic_authenticate() {
         std::string challenge = provider->get_challenge(request);
 
         size_t pos = 0;
-        tokenize(challenge, " ", pos); // Basic
-        std::string credential = tokenize(challenge, " ", pos); // base64(user:password)
+        tokenize(challenge, " ", pos);                           // Basic
+        std::string credential = tokenize(challenge, " ", pos);  // base64(user:password)
 
         test = (credential == base64_encode("user:password"));
         return test;
