@@ -307,7 +307,7 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
     return_t ret = errorcode_t::success;
     server_socket socket;  // dummy
     network_session session(&socket);
-    http_digest_access_authenticate_provider provider("digest realm", alg);
+    http_digest_access_authenticate_provider provider("digest realm", alg, "auth");
     http_authenticate_resolver resolver;
     http_request request;
     http_response response;
