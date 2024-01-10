@@ -186,12 +186,16 @@ return_t echo_server(void*) {
         (*_http_router)
             .add("/api/test", api_test_handler)
             .add("/api/v1/test", api_v1_test_handler)
+#if __cplusplus >= 201402L  // c++14
             .add("/test",
                  [&](http_request* request, http_response* response) -> void {
                      basic_stream bs;
                      request->get_request(bs);
                      response->compose(200, "text/html", "<html><body>request %s<br><pre>%s</pre></body></html>", request->get_uri(), bs.c_str());
                  })
+#else
+            .add("/test", default_handler)  // gcc 4.8
+#endif
             .add("/auth/basic", default_handler)
             .add("/auth/digest", default_handler)
             .add("/auth/bearer", default_handler)
@@ -202,26 +206,34 @@ return_t echo_server(void*) {
         // simple implementation
         (*_http_router)
             .get_authenticate_resolver()
-            .basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, std::string const& credential) -> bool {
+            .basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
+                std::string challenge = provider->get_challenge(request);
+
+                size_t pos = 0;
+                tokenize(challenge, " ", pos); // Basic
+                std::string credential = tokenize(challenge, " ", pos); // base64(user:password)
+
                 std::set<std::string>::iterator iter = basic_credentials.find(credential);
                 bool ret_value = (basic_credentials.end() != iter);
                 return ret_value;
             })
-            .digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, std::string const& credential) -> bool {
+            .digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
                 bool ret_value = false;
                 return_t ret = errorcode_t::success;
                 http_digest_access_authenticate_provider* digest_provider = (http_digest_access_authenticate_provider*)provider;
                 key_value kv;
 
-                ret = digest_provider->prepare_digest_access(session, request, credential, kv);
+                ret = digest_provider->prepare_digest_access(session, request, response, kv);
                 if (errorcode_t::success == ret) {
+                    // get username from kv.get("username"), and then read password from cached data
+                    // and then call provider->digest_digest_access
                     std::string username = kv.get("username");
                     std::string password;
                     std::map<std::string, std::string>::iterator iter = digest_access_credentials.find(username);
                     if (digest_access_credentials.end() != iter) {
                         password = iter->second;
                         kv.set("password", password);
-                        return_t ret = digest_provider->digest_digest_access(session, request, kv);
+                        return_t ret = digest_provider->digest_digest_access(session, request, response, kv);
                         if (errorcode_t::success == ret) {
                             ret_value = true;
                         }

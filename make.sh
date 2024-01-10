@@ -53,6 +53,9 @@ do_test=0
 CXXFLAGS=''
 SUPPORT_PCH=0
 args=("$@")
+
+export HOTPLACE_HOME=$(pwd)
+
 if [ ${#args[@]} -ne 0 ]; then
     for arg in ${args[@]}; do
         if [ $arg = 'cf' ]; then
@@ -77,11 +80,17 @@ if [ ${#args[@]} -ne 0 ]; then
             export SUPPORT_SHARED=1
         elif [ $arg = 'test' ]; then
             do_test=1
+        elif [ $arg = 'toolchain' ]; then
+            # custom toolchain
+            toolchain_dir=${HOTPLACE_HOME}/thirdparty/toolchain
+            thirdparty_dir=${HOTPLACE_HOME}/thirdparty/toolchain
+            export LD_LIBRARY_PATH=${toolchain_dir}/lib:${LD_LIBRARY_PATH}
+            export PATH=${thirdparty_dir}/bin:${toolchain_dir}/bin:$PATH
+            export CMAKE_CXX_COMPILER=${toolchain_dir}/bin/c++
         fi
     done
 fi
 
-export HOTPLACE_HOME=$(pwd)
 export CXXFLAGS
 export SUPPORT_PCH
 
