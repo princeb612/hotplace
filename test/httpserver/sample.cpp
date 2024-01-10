@@ -159,6 +159,12 @@ return_t echo_server(void*) {
     transport_layer_security_server* tls_server = nullptr;
 
     __try2 {
+        // Digest Access Authentication userhash
+        std::string digest_access_realm = "happiness";
+        std::string digest_access_alg = "SHA-256-sess";
+        std::string digest_access_qop = "auth, auth-int";
+        bool digest_access_userhash = true;
+
         // part of ssl certificate
         ret = x509_open(&x509, "server.crt", "server.key");
         _test_case.test(ret, __FUNCTION__, "x509");
@@ -169,10 +175,19 @@ return_t echo_server(void*) {
         // "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES128-SHA256:AES256-GCM-SHA384:AES256-SHA256:!aNULL:!eNULL:!LOW:!EXP:!RC4");
         SSL_CTX_set_verify(x509, 0, nullptr);
 
+        rfc2617_digest dgst;
         std::set<std::string> basic_credentials;
         basic_credentials.insert(base64_encode("user:password"));
+        typedef struct _userhash_data {
+            std::string username;
+            std::string password;
+        } userhash_data;
         std::map<std::string, std::string> digest_access_credentials;
-        digest_access_credentials.insert(std::make_pair("user", "password"));
+        std::map<std::string, userhash_data> digest_access_userhash_credentials;
+        digest_access_credentials.insert(std::make_pair("user", "password"));  // userhash=false
+        userhash_data userdata = {"user", "password"};
+        dgst.clear().add("user").add(":").add(digest_access_realm).digest(digest_access_alg);
+        digest_access_userhash_credentials.insert(std::make_pair(dgst.get(), userdata));  // userhash=true
 
         /* route */
         _http_router.make_share(new http_router);
@@ -200,7 +215,8 @@ return_t echo_server(void*) {
             .add("/auth/digest", default_handler)
             .add("/auth/bearer", default_handler)
             .add("/auth/basic", new http_basic_authenticate_provider("Hello World"))
-            .add("/auth/digest", new http_digest_access_authenticate_provider("happiness", "SHA-256-sess", "auth, auth-int"))
+            .add("/auth/digest", new http_digest_access_authenticate_provider(digest_access_realm.c_str(), digest_access_alg.c_str(), digest_access_qop.c_str(),
+                                                                              digest_access_userhash))
             .add("/auth/bearer", new http_bearer_authenticate_provider("hotplace"));
 
         // simple implementation
@@ -210,8 +226,8 @@ return_t echo_server(void*) {
                 std::string challenge = provider->get_challenge(request);
 
                 size_t pos = 0;
-                tokenize(challenge, " ", pos); // Basic
-                std::string credential = tokenize(challenge, " ", pos); // base64(user:password)
+                tokenize(challenge, " ", pos);                           // Basic
+                std::string credential = tokenize(challenge, " ", pos);  // base64(user:password)
 
                 std::set<std::string>::iterator iter = basic_credentials.find(credential);
                 bool ret_value = (basic_credentials.end() != iter);
@@ -229,11 +245,24 @@ return_t echo_server(void*) {
                     // and then call provider->digest_digest_access
                     std::string username = kv.get("username");
                     std::string password;
-                    std::map<std::string, std::string>::iterator iter = digest_access_credentials.find(username);
-                    if (digest_access_credentials.end() != iter) {
-                        password = iter->second;
+                    bool found = false;
+                    if (digest_access_userhash) {
+                        std::map<std::string, userhash_data>::iterator iter = digest_access_userhash_credentials.find(username);
+                        if (digest_access_userhash_credentials.end() != iter) {
+                            found = true;
+                            kv.set("username", iter->second.username);
+                            password = iter->second.password;
+                        }
+                    } else {
+                        std::map<std::string, std::string>::iterator iter = digest_access_credentials.find(username);
+                        if (digest_access_credentials.end() != iter) {
+                            found = true;
+                            password = iter->second;
+                        }
+                    }
+                    if (found) {
                         kv.set("password", password);
-                        return_t ret = digest_provider->digest_digest_access(session, request, response, kv);
+                        ret = digest_provider->digest_digest_access(session, request, response, kv);
                         if (errorcode_t::success == ret) {
                             ret_value = true;
                         }

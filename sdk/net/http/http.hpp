@@ -364,7 +364,7 @@ class http_digest_access_authenticate_provider : public http_authenticate_provid
      * @param   const char* realm [in]
      */
     http_digest_access_authenticate_provider(const char* realm);
-    http_digest_access_authenticate_provider(const char* realm, const char* algorithm, const char* qop);
+    http_digest_access_authenticate_provider(const char* realm, const char* algorithm, const char* qop, bool userhash = false);
     virtual ~http_digest_access_authenticate_provider();
 
     virtual bool try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response);
@@ -398,13 +398,21 @@ class http_digest_access_authenticate_provider : public http_authenticate_provid
      * @param   const char* qop [inopt] "auth, auth-int", "auth-int, auth", "auth", "auth-int"
      */
     http_digest_access_authenticate_provider& set_qop(const char* qop);
+    /**
+     * @brief   userhash
+     * @param   bool enable [in]
+     * @remarks RFC7616 HTTP Digest Access Authentication
+     */
+    http_digest_access_authenticate_provider& set_userhash(bool enable);
 
     std::string get_algorithm();
     std::string get_qop();
+    bool get_userhash();
 
    private:
     std::string _algorithm;
     std::string _qop;
+    bool _userhash;
 };
 
 class http_bearer_authenticate_provider : public http_authenticate_provider {

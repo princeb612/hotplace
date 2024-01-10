@@ -109,8 +109,29 @@ rfc2617_digest& rfc2617_digest::operator<<(basic_stream const& data) {
 rfc2617_digest& rfc2617_digest::digest(std::string const& algorithm) {
     openssl_digest dgst;
     std::string digest_value;
-    dgst.digest(algorithm.c_str(), _stream, digest_value);
+
+    // RFC 7616
+    //      MD5, SHA-512-256, SHA-256
+    //      MD5-sess, SHA-512-256-sess, SHA-256-sess
+    std::map<std::string, std::string> algmap;
+    algmap.insert(std::make_pair("MD5", "md5"));
+    algmap.insert(std::make_pair("MD5-sess", "md5"));
+    algmap.insert(std::make_pair("SHA-512-256", "sha2-512/256"));
+    algmap.insert(std::make_pair("SHA-512-256-sess", "sha2-512/256"));
+    algmap.insert(std::make_pair("SHA-256", "sha256"));
+    algmap.insert(std::make_pair("SHA-256-sess", "sha256"));
+
+    std::string hashalg;
+    std::map<std::string, std::string>::iterator alg_iter = algmap.find(algorithm);
+    if (algmap.end() != alg_iter) {
+        hashalg = alg_iter->second;
+    } else {
+        hashalg = "md5";  // default
+    }
+
+    dgst.digest(hashalg.c_str(), _stream, digest_value);
     _stream = digest_value;
+
     return *this;
 }
 
@@ -126,12 +147,13 @@ rfc2617_digest& rfc2617_digest::clear() {
 }
 
 http_digest_access_authenticate_provider::http_digest_access_authenticate_provider(const char* realm)
-    : http_authenticate_provider(realm), _qop("auth, auth-int") {}
+    : http_authenticate_provider(realm), _qop("auth, auth-int"), _userhash(false) {}
 
-http_digest_access_authenticate_provider::http_digest_access_authenticate_provider(const char* realm, const char* algorithm, const char* qop)
+http_digest_access_authenticate_provider::http_digest_access_authenticate_provider(const char* realm, const char* algorithm, const char* qop, bool userhash)
     : http_authenticate_provider(realm) {
     set_algorithm(algorithm);
     set_qop(qop);
+    set_userhash(userhash);
 }
 
 http_digest_access_authenticate_provider::~http_digest_access_authenticate_provider() {}
@@ -186,6 +208,9 @@ return_t http_digest_access_authenticate_provider::request_auth(network_session*
             cred << ", algorithm=" << get_algorithm();
         }
         cred << ", qop=\"" << get_qop() << "\", nonce=\"" << nonce << "\", opaque=\"" << opaque << "\"";
+        if (get_userhash()) {
+            cred << ", userhash=true";
+        }
         response->get_header().add("WWW-Authenticate", cred.c_str());
 
         int status_code = 401;
@@ -213,15 +238,18 @@ return_t http_digest_access_authenticate_provider::prepare_digest_access(network
             std::string challenge = get_challenge(request);
             http_header::to_keyvalue(challenge, kv);
 
-            if (kv.get("realm") != get_realm()) {
-                __leave2;
-            }
             if (kv.get("nonce") != session->get_session_data()->get("nonce")) {
                 __leave2;
             }
             if (kv.get("opaque") != opaque_session) {
                 __leave2;
             }
+            if (kv.get("realm") != get_realm()) {
+                __leave2;
+            }
+            // if (get_userhash() && ("true" != kv.get("userhash"))) {
+            //     __leave2;
+            // }
             ret = errorcode_t::success;
         }
     }
@@ -241,29 +269,11 @@ return_t http_digest_access_authenticate_provider::digest_digest_access(network_
         }
 
         std::string alg;
-        std::string hashalg = "md5";  // default
+        std::string hashalg = get_algorithm();
         std::string qop;
 
         alg = kv.get("algorithm");
         qop = kv.get("qop");
-
-        // RFC 7616
-        //      MD5, SHA-512-256, SHA-256
-        //      MD5-sess, SHA-512-256-sess, SHA-256-sess
-        std::map<std::string, std::string> algmap;
-        algmap.insert(std::make_pair("MD5", "md5"));
-        algmap.insert(std::make_pair("MD5-sess", "md5"));
-        algmap.insert(std::make_pair("SHA-512-256", "sha2-512/256"));
-        algmap.insert(std::make_pair("SHA-512-256-sess", "sha2-512/256"));
-        algmap.insert(std::make_pair("SHA-256", "sha256"));
-        algmap.insert(std::make_pair("SHA-256-sess", "sha256"));
-
-        if (alg.size()) {
-            std::map<std::string, std::string>::iterator alg_iter = algmap.find(alg);
-            if (algmap.end() != alg_iter) {
-                hashalg = alg_iter->second;
-            }
-        }
 
         rfc2617_digest dgst;
         std::string digest_ha1;
@@ -320,7 +330,7 @@ return_t http_digest_access_authenticate_provider::digest_digest_access(network_
             ret = errorcode_t::success;
 
 #if 0
-            // chrome, edge dont response w/ nextnonce
+            // chrome, edge dont response nonce w/ nextnonce
             std::string nextnonce;
             basic_stream auth_info;
             openssl_prng prng;
@@ -355,9 +365,16 @@ http_digest_access_authenticate_provider& http_digest_access_authenticate_provid
     return *this;
 }
 
+http_digest_access_authenticate_provider& http_digest_access_authenticate_provider::set_userhash(bool enable) {
+    _userhash = enable;
+    return *this;
+}
+
 std::string http_digest_access_authenticate_provider::get_algorithm() { return _algorithm; }
 
 std::string http_digest_access_authenticate_provider::get_qop() { return _qop; }
+
+bool http_digest_access_authenticate_provider::get_userhash() { return _userhash; }
 
 http_bearer_authenticate_provider::http_bearer_authenticate_provider(const char* realm) : http_authenticate_provider(realm) {}
 
