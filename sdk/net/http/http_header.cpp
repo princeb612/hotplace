@@ -56,17 +56,28 @@ http_header& http_header::clear() {
     return *this;
 }
 
-const char* http_header::get(const char* header, std::string& content) {
+const char* http_header::get(const char* header, std::string& value) {
     const char* ret_value = nullptr;
 
     if (nullptr != header) {
         http_header_map_t::iterator iter = _headers.find(std::string(header));
         if (_headers.end() != iter) {
-            content = iter->second;
-            ret_value = content.c_str();
+            value = iter->second;
+            ret_value = value.c_str();
         }
     }
 
+    return ret_value;
+}
+
+std::string http_header::get(const char* header) {
+    std::string ret_value;
+    if (nullptr != header) {
+        http_header_map_t::iterator iter = _headers.find(std::string(header));
+        if (_headers.end() != iter) {
+            ret_value = iter->second;
+        }
+    }
     return ret_value;
 }
 

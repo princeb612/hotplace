@@ -60,12 +60,26 @@ http_resource::http_resource() {
     _status_codes.insert(std::make_pair(503, "Service Unavailable"));
     _status_codes.insert(std::make_pair(504, "Gateway Time-out"));
     _status_codes.insert(std::make_pair(505, "HTTP Version not supported"));
+
+    _methods.insert(std::make_pair(http_method_t::HTTP_OPTIONS, "OPTIONS"));
+    _methods.insert(std::make_pair(http_method_t::HTTP_GET, "GET"));
+    _methods.insert(std::make_pair(http_method_t::HTTP_HEAD, "HEAD"));
+    _methods.insert(std::make_pair(http_method_t::HTTP_POST, "POST"));
+    _methods.insert(std::make_pair(http_method_t::HTTP_PUT, "PUT"));
+    _methods.insert(std::make_pair(http_method_t::HTTP_DELETE, "DELETE"));
+    _methods.insert(std::make_pair(http_method_t::HTTP_TRACE, "TRACE"));
 }
 
 std::string http_resource::load(int status) {
     std::string message;
     message = _status_codes.find(status)->second;
     return message;
+}
+
+std::string http_resource::get_method(http_method_t method) {
+    std::string resource;
+    resource = _methods.find(method)->second;
+    return resource;
 }
 
 }  // namespace net

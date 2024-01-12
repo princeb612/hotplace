@@ -74,7 +74,16 @@ return_t client_socket::read(socket_t sock, tls_context_t* tls_handle, char* ptr
         if (nullptr != size_read) {
             *size_read = ret_recv;
         }
+        if (size_data == ret_recv) {
+            ret = errorcode_t::more_data;
+        }
     }
+    return ret;
+}
+
+return_t client_socket::more(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread) {
+    return_t ret = errorcode_t::success;
+    ret = read(sock, tls_handle, ptr_data, size_data, cbread);
     return ret;
 }
 

@@ -15,16 +15,6 @@
 namespace hotplace {
 namespace net {
 
-enum http_method_t {
-    HTTP_OPTIONS = 1,
-    HTTP_GET = 2,
-    HTTP_HEAD = 3,
-    HTTP_POST = 4,
-    HTTP_PUT = 5,
-    HTTP_DELETE = 6,
-    HTTP_TRACE = 7,
-};
-
 http_protocol::http_protocol() : network_protocol() {
     // do nothing
 }

@@ -53,6 +53,7 @@ class client_socket {
      * @return error code (see error.hpp)
      */
     virtual return_t read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
+    virtual return_t more(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]

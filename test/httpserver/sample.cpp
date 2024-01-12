@@ -8,6 +8,7 @@
  *
  * Revision History
  * Date         Name                Description
+ *
  */
 
 #include <signal.h>
@@ -30,7 +31,7 @@ typedef struct _OPTION {
     int port_tls;
     int debug;
 
-    _OPTION() : port(80), port_tls(9000), debug(0) {}
+    _OPTION() : port(8080), port_tls(9000), debug(0) {}
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
@@ -103,7 +104,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     std::cout << "tls : " << use_tls << std::endl;
 
                     /* header */
-                    request.get_header().get("Accept-Encoding", encoding);
+                    request.get_http_header().get("Accept-Encoding", encoding);
                     std::cout << "encoding : " << encoding.c_str() << std::endl << std::endl;
                 }
 
@@ -114,15 +115,13 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     }
                     response.get_response(bs);
                 } else {
-                    // RFC 2817 4. Server Requested Upgrade to HTTP over TLS
-                    response.get_header().add("Upgrade", "TLS/1.2, HTTP/1.1").add("Connection", "Upgrade");
-                    response.compose(426, "text/html", "<html><body>Upgrade %s</body></html>", request.get_uri()).get_response(bs);
+                    response.compose(200, "text/html", "<html><body>%s</body></html>", request.get_uri()).get_response(bs);
                 }
 
                 if (option.debug) {
                     cprint("send %i", session_socket->client_socket);
                     std::string headers;
-                    response.get_header().get_headers(headers);
+                    response.get_http_header().get_headers(headers);
                     printf("%s\r\n%s\r\n\r\n", headers.c_str(), response.content());
                 }
 
@@ -159,11 +158,15 @@ return_t echo_server(void*) {
     transport_layer_security_server* tls_server = nullptr;
 
     __try2 {
-        // Digest Access Authentication userhash
+        // Basic Authentication (realm)
+        std::string basic_realm = "Hello World";
+        // Digest Access Authentication (realm/algorithm/qop/userhash)
         std::string digest_access_realm = "happiness";
         std::string digest_access_alg = "SHA-256-sess";
-        std::string digest_access_qop = "auth, auth-int";
+        std::string digest_access_qop = "auth";
         bool digest_access_userhash = true;
+        // Bearer Authentication (realm)
+        std::string bearer_realm = "hotplace";
 
         // part of ssl certificate
         ret = x509_open(&x509, "server.crt", "server.key");
@@ -214,10 +217,10 @@ return_t echo_server(void*) {
             .add("/auth/basic", default_handler)
             .add("/auth/digest", default_handler)
             .add("/auth/bearer", default_handler)
-            .add("/auth/basic", new http_basic_authenticate_provider("Hello World"))
+            .add("/auth/basic", new http_basic_authenticate_provider(basic_realm.c_str()))
             .add("/auth/digest", new http_digest_access_authenticate_provider(digest_access_realm.c_str(), digest_access_alg.c_str(), digest_access_qop.c_str(),
                                                                               digest_access_userhash))
-            .add("/auth/bearer", new http_bearer_authenticate_provider("hotplace"));
+            .add("/auth/bearer", new http_bearer_authenticate_provider(bearer_realm.c_str()));
 
         // simple implementation
         (*_http_router)
@@ -241,7 +244,7 @@ return_t echo_server(void*) {
 
                 ret = digest_provider->prepare_digest_access(session, request, response, kv);
                 if (errorcode_t::success == ret) {
-                    // get username from kv.get("username"), and then read password from cached data
+                    // get username from kv.get("username"), and then read password (cache, in-memory db)
                     // and then call provider->digest_digest_access
                     std::string username = kv.get("username");
                     std::string password;
