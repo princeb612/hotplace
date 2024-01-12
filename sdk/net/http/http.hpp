@@ -23,6 +23,7 @@
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/io/basic/keyvalue.hpp>
+#include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/client_socket.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/tls/tls_client.hpp>
