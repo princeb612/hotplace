@@ -19,9 +19,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_request::http_request() {
-    // do nothing
-}
+http_request::http_request() { _shared.make_share(this); }
 
 http_request::~http_request() { close(); }
 
@@ -105,6 +103,24 @@ return_t http_request::open(const char* request, size_t size_request) {
     return ret;
 }
 
+return_t http_request::open(const char* request) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == request) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = open(request, strlen(request));
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t http_request::open(basic_stream const& request) { return open(request.c_str(), request.size()); }
+
 return_t http_request::open(std::string const& request) { return open(request.c_str(), request.size()); }
 
 return_t http_request::close() {
@@ -117,7 +133,7 @@ return_t http_request::close() {
     return ret;
 }
 
-http_header& http_request::get_header() { return _header; }
+http_header& http_request::get_http_header() { return _header; }
 
 http_uri& http_request::get_http_uri() { return _uri; }
 
@@ -125,17 +141,31 @@ const char* http_request::get_uri() { return get_http_uri().get_uri(); }
 
 const char* http_request::get_method() { return _method.c_str(); }
 
+http_request& http_request::compose(http_method_t method, std::string const& uri, std::string const& body) {
+    close();
+
+    http_resource* resource = http_resource::get_instance();
+    _method = resource->get_method(method);
+    get_http_uri().open(uri);
+    _content = body;
+    return *this;
+}
+
 std::string http_request::get_content() { return _content; }
 
 http_request& http_request::get_request(basic_stream& bs) {
     std::string headers;
     bs.clear();
-    get_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
+    get_http_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
 
     bs.printf("%s %s HTTP/1.1\r\n%s\r\n%s", get_method(), get_uri(), headers.c_str(), get_content().c_str());
 
     return *this;
 }
+
+void http_request::addref() { _shared.addref(); }
+
+void http_request::release() { _shared.delref(); }
 
 }  // namespace net
 }  // namespace hotplace

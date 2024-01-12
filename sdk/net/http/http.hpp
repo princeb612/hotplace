@@ -7,27 +7,39 @@
  * Revision History
  * Date         Name                Description
  *
- * Basic Authentication
- * Digest Access Authentication
- *      algorithm=MD5
- *      algorithm=MD5-sess
- *      algorithm=SHA-256
- *      algorithm=SHA-256-sess
+ * spec list
  *      qop=auth
+ *      algorithm=MD5|MD5-sess|SHA-256|SHA-256-sess
+ *      userhash
+ * todo list
+ *      qop=auth-int
+ *      nextnonce
  */
 
-#ifndef __HOTPLACE_SDK_NET_SERVER_HTTP__
-#define __HOTPLACE_SDK_NET_SERVER_HTTP__
+#ifndef __HOTPLACE_SDK_NET_HTTP__
+#define __HOTPLACE_SDK_NET_HTTP__
 
 #include <map>
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/io/basic/keyvalue.hpp>
+#include <sdk/net/basic/client_socket.hpp>
 #include <sdk/net/server/network_protocol.hpp>
+#include <sdk/net/tls/tls_client.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
+
+enum http_method_t {
+    HTTP_OPTIONS = 1,
+    HTTP_GET = 2,
+    HTTP_HEAD = 3,
+    HTTP_POST = 4,
+    HTTP_PUT = 5,
+    HTTP_DELETE = 6,
+    HTTP_TRACE = 7,
+};
 
 class http_header {
    public:
@@ -83,12 +95,13 @@ class http_header {
     /**
      * @brief read a header
      * @param   const char* header [in]
-     * @param   std::string& content [out]
+     * @param   std::string& value [out]
      * @return  value
      * @sample
      *          header.get ("Content-Length", conent_length);
      */
-    const char* get(const char* header, std::string& content);
+    const char* get(const char* header, std::string& value);
+    std::string get(const char* header);
     /**
      * @brief   read a header token
      * @param   const char* header [in]
@@ -189,6 +202,8 @@ class http_request {
      * @return error code (see error.hpp)
      */
     return_t open(const char* request, size_t size_request);
+    return_t open(const char* request);
+    return_t open(basic_stream const& request);
     return_t open(std::string const& request);
     /**
      * @brief  close
@@ -199,7 +214,7 @@ class http_request {
     /**
      * @brief return the http_header object
      */
-    http_header& get_header();
+    http_header& get_http_header();
     /**
      * @brief return the http_uri object
      */
@@ -217,9 +232,16 @@ class http_request {
      */
     std::string get_content();
 
-    http_request& get_request(basic_stream& bs);
+    http_request& compose(http_method_t method, std::string const& uri, std::string const& body);
+    http_request& get_request(basic_stream& stream);
+
+    void addref();
+    void release();
 
    protected:
+    t_shared_reference<http_request> _shared;
+
+   private:
     std::string _method;
     std::string _content;
 
@@ -240,6 +262,8 @@ class http_response {
      * @return error code (see error.hpp)
      */
     return_t open(const char* response, size_t size_response);
+    return_t open(const char* response);
+    return_t open(basic_stream const& response);
     return_t open(std::string const& response);
     /* *
      * @brief  close
@@ -253,12 +277,18 @@ class http_response {
     const char* content();
     size_t content_size();
     int status_code();
-    http_header& get_header();
-    http_request* get_request();
+    http_header& get_http_header();
+    http_request* get_http_request();
 
     http_response& get_response(basic_stream& bs);
 
+    void addref();
+    void release();
+
    protected:
+    t_shared_reference<http_response> _shared;
+
+   private:
     http_request* _request;
     http_header _header;
     std::string _content_type;
@@ -271,250 +301,53 @@ class http_resource {
     static http_resource* get_instance();
 
     std::string load(int status);
+    std::string get_method(http_method_t method);
 
    protected:
     http_resource();
 
     static http_resource _instance;
     std::map<int, std::string> _status_codes;
-};
-
-class http_authenticate_resolver;
-
-class http_authenticate_provider {
-   public:
-    http_authenticate_provider(std::string const& realm) : _realm(realm) { _shared.make_share(this); }
-
-    virtual bool try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response) = 0;
-    virtual return_t request_auth(network_session* session, http_request* request, http_response* response) = 0;
-
-    virtual std::string get_challenge(http_request* request) {
-        std::string token_auth;
-        constexpr char constexpr_authorization[] = "Authorization";
-        request->get_header().get(constexpr_authorization, token_auth);
-        return token_auth;
-    }
-    virtual int addref() { return _shared.addref(); }
-    virtual int release() { return _shared.delref(); }
-
-    std::string get_realm() { return _realm; }
-
-   protected:
-    t_shared_reference<http_authenticate_provider> _shared;
-    std::string _realm;
+    std::map<http_method_t, std::string> _methods;
 };
 
 /**
- * @brief   basic
- *          RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+ * @brief   simple client
+ * @sample
+ *      // sketch
  *
- *          Server
- *              WWW-Authenticate: Basic realm="basic realm"
- *          Client
- *              Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+ *      http_client client;
+ *      http_response* response = nullptr;
+ *      client.request("https://localhost:9000/", &response); // connect, send, read
+ *      // ...
+ *      resposne->release();
+ *
+ *      http_request request;
+ *      request.compose(GET, "/");
+ *      request.get_http_header().add("Accept-Encoding", "gzip, deflate");
+ *      client.request(request, &response);
+ *      // ...
+ *      response->release();
  */
-class http_basic_authenticate_provider : public http_authenticate_provider {
+class http_client {
    public:
-    http_basic_authenticate_provider(const char* realm);
-    virtual ~http_basic_authenticate_provider();
+    http_client();
+    ~http_client();
 
-    virtual bool try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response);
-    virtual return_t request_auth(network_session* session, http_request* request, http_response* response);
-};
-
-class rfc2617_digest {
-   public:
-    rfc2617_digest();
-    rfc2617_digest& add(const char* data);
-    rfc2617_digest& add(std::string const& data);
-    rfc2617_digest& add(basic_stream const& data);
-    rfc2617_digest& operator<<(const char* data);
-    rfc2617_digest& operator<<(std::string const& data);
-    rfc2617_digest& operator<<(basic_stream const& data);
-    rfc2617_digest& digest(std::string const& algorithm);
-    std::string get();
-    rfc2617_digest& clear();
-
-   private:
-    basic_stream _stream;
-};
-
-/**
- * @brief   digest
- *          RFC 2069 An Extension to HTTP : Digest Access Authentication
- *          RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
- *
- *          Server
- *              WWW-Authenticate: Digest realm="digest realm", qop="auth, auth-int",
- *                                       nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093", opaque="5ccc069c403ebaf9f0171e9517f40e41"
- *
- *          Client
- *              Authorization: Digest username="test",
- *                             realm="Protected",
- *                             nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
- *                             uri="/login",
- *                             response="dc17f5db4addad1490b3f565064c3621",
- *                             opaque="5ccc069c403ebaf9f0171e9517f40e41",
- *                             qop=auth, nc=00000001, cnonce="3ceef920aacfb49e"
- */
-class http_digest_access_authenticate_provider : public http_authenticate_provider {
-   public:
-    /**
-     * @brief   constructor
-     * @param   const char* realm [in]
-     */
-    http_digest_access_authenticate_provider(const char* realm);
-    http_digest_access_authenticate_provider(const char* realm, const char* algorithm, const char* qop, bool userhash = false);
-    virtual ~http_digest_access_authenticate_provider();
-
-    virtual bool try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response);
-    virtual return_t request_auth(network_session* session, http_request* request, http_response* response);
-
-    /**
-     * @brief   compare opaque
-     * @param   network_session* session [in]
-     * @param   http_request* request [in]
-     * @param   http_response* response [in]
-     * @param   key_value& kv [inout]
-     */
-    return_t prepare_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv);
-    /**
-     * @brief   digest
-     * @param   network_session* session [in]
-     * @param   http_request* request [in]
-     * @param   http_response* response [in]
-     * @param   key_value& kv [inout]
-     */
-    return_t digest_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv);
-
-    /**
-     * @brief   algorithm
-     * @param   const char* algorithm [in] "MD5", "MD5-sess", "SHA-256", "SHA-256-sess" (tested - chrome, edge)
-     *                                     "SHA-512-256", "SHA-512-256-sess"
-     */
-    http_digest_access_authenticate_provider& set_algorithm(const char* algorithm);
-    /**
-     * @brief   quality of protection, "auth" authentication/"auth-int" authentication with integrity protection
-     * @param   const char* qop [inopt] "auth, auth-int", "auth-int, auth", "auth", "auth-int"
-     */
-    http_digest_access_authenticate_provider& set_qop(const char* qop);
-    /**
-     * @brief   userhash
-     * @param   bool enable [in]
-     * @remarks RFC7616 HTTP Digest Access Authentication
-     */
-    http_digest_access_authenticate_provider& set_userhash(bool enable);
-
-    std::string get_algorithm();
-    std::string get_qop();
-    bool get_userhash();
-
-   private:
-    std::string _algorithm;
-    std::string _qop;
-    bool _userhash;
-};
-
-class http_bearer_authenticate_provider : public http_authenticate_provider {
-   public:
-    http_bearer_authenticate_provider(const char* realm);
-    virtual ~http_bearer_authenticate_provider();
-
-    virtual bool try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response);
-    virtual return_t request_auth(network_session* session, http_request* request, http_response* response);
-};
-
-typedef std::function<bool(http_authenticate_provider*, network_session*, http_request* request, http_response* response)> authenticate_handler_t;
-class http_authenticate_resolver {
-   public:
-    http_authenticate_resolver();
-
-    /**
-     * @brief resolve
-     * @param http_authenticate_provider* provider [in]
-     * @param network_session* session [in]
-     * @param http_request* request [in]
-     * @param http_response* response [in]
-     * @return error code (see error.hpp)
-     */
-    return_t resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
-
-    /**
-     * @brief register resolver
-     * @param authenticate_handler_t resolver [in]
-     */
-    http_authenticate_resolver& basic_resolver(authenticate_handler_t resolver);
-    /*
-     * @brief authenticate
-     * @param http_authenticate_provider* provider [in]
-     * @param http_response* response [in]
-     * @remarks
-     *          RFC2617 HTTP Authentication: Basic and Digest Access Authentication
-     */
-    bool basic_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
-    http_authenticate_resolver& digest_resolver(authenticate_handler_t resolver);
-    /*
-     * @brief authenticate
-     * @param http_authenticate_provider* provider [in]
-     * @param network_session* session [in]
-     * @param http_response* response [in]
-     * @remarks
-     *          RFC2617 HTTP Authentication: Basic and Digest Access Authentication
-     */
-    bool digest_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
-    http_authenticate_resolver& bearer_resolver(authenticate_handler_t resolver);
-    /*
-     * @brief authenticate
-     * @param http_authenticate_provider* provider [in]
-     * @param network_session* session [in]
-     * @param http_response* response [in]
-     * @remarks
-     *          RFC6750 The OAuth 2.0 Authorization Framework: Bearer Token Usage
-     */
-    bool bearer_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
-
-   private:
-    authenticate_handler_t _basic_resolver;
-    authenticate_handler_t _digest_resolver;
-    authenticate_handler_t _bearer_resolver;
-};
-
-typedef void (*http_request_handler_t)(http_request*, http_response*);
-typedef std::function<void(http_request*, http_response*)> http_request_function_t;
-
-class http_router {
-   public:
-    http_router();
-    ~http_router();
-
-    http_router& add(const char* uri, http_request_handler_t handler);
-    http_router& add(const char* uri, http_request_function_t handler);
-    http_router& add(const char* uri, http_authenticate_provider* handler);
-
-    return_t route(const char* uri, network_session* session, http_request* request, http_response* response);
-
-    http_authenticate_resolver& get_authenticate_resolver();
+    http_client& request(std::string const& url, http_response** response);
+    http_client& request(http_request& request, http_response** response);
 
    protected:
-    bool try_auth(const char* uri, http_request* request, http_response* response, http_authenticate_provider** provider);
+    http_client& request_and_response(url_info_t const& url_info, http_request& request, http_response** response);
+    http_client& close();
 
    private:
-    void clear();
-
-    typedef struct _http_router_t {
-        http_request_handler_t handler;
-        http_request_function_t stdfunc;
-
-        _http_router_t() : handler(nullptr), stdfunc(nullptr) {}
-    } http_router_t;
-    typedef std::map<std::string, http_router_t> handler_map_t;
-    typedef std::map<std::string, http_authenticate_provider*> authenticate_map_t;
-    typedef std::pair<authenticate_map_t::iterator, bool> authenticate_map_pib_t;
-
-    critical_section _lock;
-    handler_map_t _handler_map;
-    authenticate_map_t _authenticate_map;
-    http_authenticate_resolver _resolver;
+    socket_t _socket;
+    client_socket* _client_socket;
+    transport_layer_security_client* _tls_client_socket;
+    tls_context_t* _tls_context;
+    SSL_CTX* _x509;
+    url_info_t _url_info;
 };
 
 }  // namespace net

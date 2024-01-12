@@ -13,6 +13,8 @@
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http.hpp>
+#include <sdk/net/http/http_authenticate.hpp>
+#include <sdk/net/http/http_router.hpp>
 #include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {

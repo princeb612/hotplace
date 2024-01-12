@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_CRITICALSECTION__
 
 #include <sdk/base/system/critical_section.hpp>
+#include <sdk/base/system/windows/types.hpp>
 
 namespace hotplace {
 

@@ -83,7 +83,7 @@ void test_request() {
     _test_case.assert(0 == strcmp(method, "GET"), __FUNCTION__, "method");
 
     std::string header_accept_encoding;
-    request.get_header().get("Accept-Encoding", header_accept_encoding);
+    request.get_http_header().get("Accept-Encoding", header_accept_encoding);
     _test_case.assert(header_accept_encoding == "gzip, deflate, br", __FUNCTION__, "header");
 }
 
@@ -91,7 +91,7 @@ void test_response_compose() {
     _test_case.begin("response");
 
     http_response response;
-    response.get_header().add("Connection", "Keep-Alive");
+    response.get_http_header().add("Connection", "Keep-Alive");
     response.compose(200, "text/html", "<html><body>hello</body></html>");
 
     OPTION& option = cmdline->value();
@@ -128,7 +128,7 @@ void test_response_parse() {
 
     response.open(input);
 
-    response.get_header().get("WWW-Authenticate", wwwauth);
+    response.get_http_header().get("WWW-Authenticate", wwwauth);
     http_header::to_keyvalue(wwwauth, kv);
 
     if (option.debug) {
@@ -137,7 +137,7 @@ void test_response_parse() {
 
     _test_case.assert(401 == response.status_code(), __FUNCTION__, "status");
     std::string content_length;
-    response.get_header().get("Content-Length", content_length);
+    response.get_http_header().get("Content-Length", content_length);
     _test_case.assert("42" == content_length, __FUNCTION__, "Content-Length");
     _test_case.assert(42 == response.content_size(), __FUNCTION__, "size of content");
     _test_case.assert(0 == strcmp(response.content_type(), "text/html"), __FUNCTION__, "Content-Type");
@@ -191,7 +191,7 @@ void test_basic_authenticate() {
 
         // client request
         request.open("GET / HTTP/1.1");
-        request.get_header().add("Authorization", format("Basic %s", base64_encode(cred.c_str()).c_str()));
+        request.get_http_header().add("Authorization", format("Basic %s", base64_encode(cred.c_str()).c_str()));
 
         if (option.debug) {
             request.get_request(bs);
@@ -329,7 +329,7 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
 
         ret = digest_provider->prepare_digest_access(session, request, response, kv);
         if (errorcode_t::success == ret) {
-            // get username from kv.get("username"), and then read password from cached data
+            // get username from kv.get("username"), and then read password (cache, in-memory db)
             kv.set("password", "password");
 
             if (option.debug) {
@@ -361,7 +361,7 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
     std::string cred;
     key_value kv;
     size_t pos = 0;
-    response.get_header().get("WWW-Authenticate", auth);
+    response.get_http_header().get("WWW-Authenticate", auth);
     http_header::to_keyvalue(auth, kv);
 
     std::function<return_t(std::string const& user, std::string const& password)> test_resolver = [&](std::string const& user,
@@ -381,7 +381,7 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
         // client request
         request.open("GET /auth/digest HTTP/1.1");                                    // set a method and an uri
         calc_digest_digest_access(&provider, &session, &request, kv, response_calc);  // calcurate a response
-        request.get_header().add(
+        request.get_http_header().add(
             "Authorization",
             format("Digest username=\"%s\", realm=\"%s\", algorithm=%s, nonce=\"%s\", uri=\"%s\", response=\"%s\", opaque=\"%s\", qop=%s, nc=%s, cnonce=\"%s\"",
                    kv.get("username").c_str(), provider.get_realm().c_str(), kv.get("algorithm").c_str(), kv.get("nonce").c_str(), request.get_uri(),
@@ -444,15 +444,19 @@ void test_get() {
             size_t cbsent = 0;
             ret = cli.send(sock, handle, body.c_str(), body.size(), &cbsent);
             if (errorcode_t::success == ret) {
-                char buf[4];
+                char buf[16];
                 size_t sizeread = 0;
 
                 if (0 == option.mode) {
                     ret = cli.read(sock, handle, buf, sizeof(buf), &sizeread);
-                    printf("status 0x%08x - %.*s\n", ret, (int)sizeread, buf);
+
+                    dump_memory((byte_t*)buf, sizeread, &bs);
+                    printf("%s\n", bs.c_str());
                     while (errorcode_t::more_data == ret) {
                         ret = cli.more(sock, handle, buf, sizeof(buf), &sizeread);
-                        printf("status 0x%08x - %.*s\n", ret, (int)sizeread, buf);
+
+                        dump_memory((byte_t*)buf, sizeread, &bs);
+                        printf("%s\n", bs.c_str());
                     }
                 } else {
                     network_protocol_group group;
@@ -490,6 +494,45 @@ void test_get() {
     }
 }
 
+void test_client() {
+    _test_case.begin("client");
+
+    // see test/http_server
+
+    http_client client;
+    http_response* response = nullptr;
+
+    cprint("http");
+    client.request("http://localhost:8080/", &response);
+    if (response) {
+        basic_stream bs;
+        response->get_response(bs);
+        printf("%s\n", bs.c_str());
+        response->release();
+    }
+
+    cprint("https request1");
+    client.request("https://localhost:9000/", &response);
+    if (response) {
+        basic_stream bs;
+        response->get_response(bs);
+        printf("%s\n", bs.c_str());
+        response->release();
+    }
+
+    cprint("https request2");
+    http_request request;
+    request.compose(http_method_t::HTTP_GET, "/test", "");
+    request.get_http_header().add("Accept-Encoding", "gzip, deflate");
+    client.request(request, &response);
+    if (response) {
+        basic_stream bs;
+        response->get_response(bs);
+        printf("%s\n", bs.c_str());
+        response->release();
+    }
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -522,6 +565,7 @@ int main(int argc, char** argv) {
     test_digest_access_authenticate("SHA-512-256");
     test_digest_access_authenticate("SHA-512-256-sess");
     test_get();
+    test_client();
 
     openssl_thread_end();
     openssl_cleanup();

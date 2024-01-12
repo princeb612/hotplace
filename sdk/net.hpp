@@ -19,7 +19,9 @@
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/http/http.hpp>
+#include <sdk/net/http/http_authenticate.hpp>
 #include <sdk/net/http/http_protocol.hpp>
+#include <sdk/net/http/http_router.hpp>
 #include <sdk/net/server/network_priority_queue.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_server.hpp>

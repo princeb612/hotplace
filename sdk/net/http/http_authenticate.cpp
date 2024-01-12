@@ -16,6 +16,7 @@
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http.hpp>
+#include <sdk/net/http/http_authenticate.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/tls.hpp>
 
@@ -42,7 +43,7 @@ bool http_basic_authenticate_provider::try_auth(http_authenticate_resolver* reso
         constexpr char constexpr_authorization[] = "Authorization";
         constexpr char constexpr_basic[] = "Basic";
         std::string token_scheme;
-        request->get_header().get_token(constexpr_authorization, 0, token_scheme);
+        request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
 
         if (0 == strcmp(constexpr_basic, token_scheme.c_str())) {
             ret_value = resolver->basic_authenticate(this, session, request, response);
@@ -62,7 +63,7 @@ return_t http_basic_authenticate_provider::request_auth(network_session* session
             __leave2;
         }
 
-        response->get_header().add("WWW-Authenticate", format("Basic realm=\"%s\"", _realm.c_str()));
+        response->get_http_header().add("WWW-Authenticate", format("Basic realm=\"%s\"", _realm.c_str()));
 
         int status_code = 401;
         std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());
@@ -173,7 +174,7 @@ bool http_digest_access_authenticate_provider::try_auth(http_authenticate_resolv
         constexpr char constexpr_authorization[] = "Authorization";
         constexpr char constexpr_digest[] = "Digest";
         std::string token_scheme;
-        request->get_header().get_token(constexpr_authorization, 0, token_scheme);
+        request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
 
         if (0 == strcmp(constexpr_digest, token_scheme.c_str())) {
             ret_value = resolver->digest_authenticate(this, session, request, response);
@@ -211,7 +212,7 @@ return_t http_digest_access_authenticate_provider::request_auth(network_session*
         if (get_userhash()) {
             cred << ", userhash=true";
         }
-        response->get_header().add("WWW-Authenticate", cred.c_str());
+        response->get_http_header().add("WWW-Authenticate", cred.c_str());
 
         int status_code = 401;
         std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());
@@ -247,9 +248,9 @@ return_t http_digest_access_authenticate_provider::prepare_digest_access(network
             if (kv.get("realm") != get_realm()) {
                 __leave2;
             }
-            // if (get_userhash() && ("true" != kv.get("userhash"))) {
-            //     __leave2;
-            // }
+            if (get_userhash() && ("true" != kv.get("userhash"))) {
+                __leave2;
+            }
             ret = errorcode_t::success;
         }
     }
@@ -329,8 +330,10 @@ return_t http_digest_access_authenticate_provider::digest_digest_access(network_
         if (digest_response == kv.get("response")) {
             ret = errorcode_t::success;
 
+            // RFC2617 3.2.3 The Authentication-Info Header
+            // If the nextnonce field is present the client SHOULD use it when constructing the Authorization header for its next request.
+            // but ... chrome, edge don't use nextnonce
 #if 0
-            // chrome, edge dont response nonce w/ nextnonce
             std::string nextnonce;
             basic_stream auth_info;
             openssl_prng prng;
@@ -339,8 +342,8 @@ return_t http_digest_access_authenticate_provider::digest_digest_access(network_
             if(qop.size()) {
                 auth_info << ", qop=" << qop;
             }
-            response->get_header().add("Authentication-Info", auth_info.c_str());
-            session->get_session_data()->set("nonce", nextnonce);
+            response->get_http_header().add("Authentication-Info", auth_info.c_str());
+            // session->get_session_data()->set("nonce", nextnonce);
 #endif
         }
     }
@@ -394,8 +397,8 @@ bool http_bearer_authenticate_provider::try_auth(http_authenticate_resolver* res
         constexpr char constexpr_bearer[] = "Bearer";
         std::string token_scheme;
         std::string token_auth;
-        request->get_header().get_token(constexpr_authorization, 0, token_scheme);
-        request->get_header().get(constexpr_authorization, token_auth);
+        request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
+        request->get_http_header().get(constexpr_authorization, token_auth);
 
         if (0 == strcmp(constexpr_bearer, token_scheme.c_str())) {
             ret_value = true;
@@ -416,7 +419,7 @@ return_t http_bearer_authenticate_provider::request_auth(network_session* sessio
             __leave2;
         }
 
-        response->get_header().add("WWW-Authenticate", format("Bearer realm=\"%s\"", _realm.c_str()));
+        response->get_http_header().add("WWW-Authenticate", format("Bearer realm=\"%s\"", _realm.c_str()));
 
         int status_code = 401;
         std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());
