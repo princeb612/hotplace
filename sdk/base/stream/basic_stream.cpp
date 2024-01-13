@@ -169,8 +169,8 @@ basic_stream& basic_stream::operator<<(unsigned long value) {
     return *this;
 }
 
-basic_stream& basic_stream::operator<<(size_t value) {
-    printf("%zi", value);
+basic_stream& basic_stream::operator<<(unsigned long long value) {
+    printf("%llu", value);
     return *this;
 }
 
