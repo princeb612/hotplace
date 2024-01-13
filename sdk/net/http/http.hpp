@@ -83,13 +83,13 @@ class http_header {
      *              "cnonce=\"f3806458ed81c203\"";
      *
      *          http_header::to_keyvalue(auth, kv);
-     *          const char* nonce = kv.get("nonce");
-     *          const char* uri = kv.get("uri");
-     *          const char* response = kv.get("response");
-     *          const char* opaque = kv.get("opaque");
-     *          const char* qop = kv.get("qop");
-     *          const char* nc = kv.get("nc");
-     *          const char* cnonce = kv.get("cnonce");
+     *          std::string nonce = kv.get("nonce");
+     *          std::string uri = kv.get("uri");
+     *          std::string response = kv.get("response");
+     *          std::string opaque = kv.get("opaque");
+     *          std::string qop = kv.get("qop");
+     *          std::string nc = kv.get("nc");
+     *          std::string cnonce = kv.get("cnonce");
      */
     static return_t to_keyvalue(std::string const& value, key_value& kv);
 
@@ -180,6 +180,19 @@ class http_uri {
      * @remarks
      */
     size_t countof_query();
+
+    /*
+     * @brief   conversion
+     * @param   std::string const& value [in]
+     * @param   key_value& kv [out]
+     * @return  error code (see error.hpp)
+     * @sample
+     *      const char* input = "/resource?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw";
+     *      http_uri::to_keyvalue(input, kv);
+     *      std::string client_id = kv.get("client_id");
+     *      std::string client_secret = kv.get("client_secret");
+     */
+    static return_t to_keyvalue(std::string const& value, key_value& kv);
 
     void addref();
     void release();
@@ -343,6 +356,7 @@ class http_client {
     http_client& request(std::string const& url, http_response** response);
     http_client& request(http_request& request, http_response** response);
     http_client& close();
+    http_client& set_ttl(uint32 milliseconds);
 
    protected:
     http_client& request_and_response(url_info_t const& url_info, http_request& request, http_response** response);
@@ -354,6 +368,7 @@ class http_client {
     tls_context_t* _tls_context;
     SSL_CTX* _x509;
     url_info_t _url_info;
+    uint32 _ttl;
 };
 
 }  // namespace net

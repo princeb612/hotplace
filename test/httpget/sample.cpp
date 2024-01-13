@@ -89,7 +89,7 @@ void test_request() {
 }
 
 void test_response_compose() {
-    _test_case.begin("response");
+    _test_case.begin("response.compose");
 
     http_response response;
     response.get_http_header().add("Connection", "Keep-Alive");
@@ -110,7 +110,7 @@ void test_response_compose() {
 }
 
 void test_response_parse() {
-    _test_case.begin("response");
+    _test_case.begin("response.open");
     OPTION& option = cmdline->value();
 
     http_response response;
@@ -146,6 +146,44 @@ void test_response_parse() {
     _test_case.assert(0 == strcmp("auth, auth-int", kv["qop"]), __FUNCTION__, "qop from WWW-Authenticate");
     _test_case.assert(0 == strcmp("40dc29366886273821be1fcc5e23e9d7e9", kv["nonce"]), __FUNCTION__, "nonce from WWW-Authenticate");
     _test_case.assert(0 == strcmp("8be41306f5b9bb30019350c33b182858", kv["opaque"]), __FUNCTION__, "opaque from WWW-Authenticate");
+}
+
+void test_uri_form_encoded_body_parameter() {
+    _test_case.begin("form encoded body parameter");
+    http_request request1;
+    http_request request2;
+    basic_stream request_stream1;
+    basic_stream request_stream2;
+
+    request1.compose(http_method_t::HTTP_GET, "/auth/bearer?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw", "");  // reform if body is empty
+    request1.get_http_header().add("Accept-Encoding", "gzip, deflate");
+    request1.get_request(request_stream1);
+
+    // another way
+    request2.compose(http_method_t::HTTP_GET, "/auth/bearer", "client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw");
+    request2.get_http_header().add("Content-Type", "application/x-www-form-urlencoded").add("Accept-Encoding", "gzip, deflate");
+    request2.get_request(request_stream2);
+
+    OPTION& option = cmdline->value();
+
+    if (option.debug) {
+        printf("%s\n", request_stream1.c_str());
+        printf("%s\n", request_stream2.c_str());
+    }
+
+    _test_case.assert(request_stream1 == request_stream2, __FUNCTION__, "form encoded body parameter");
+}
+
+void test_uri(const char* input) {
+    _test_case.begin("uri");
+    key_value kv;
+    http_uri::to_keyvalue(input, kv);
+    std::string client_id = kv.get("client_id");
+    std::string client_secret = kv.get("client_secret");
+    printf("client_id %s\n", client_id.c_str());
+    printf("client_secret %s\n", client_secret.c_str());
+    _test_case.assert("s6BhdRkqt3" == client_id, __FUNCTION__, "client_id");
+    _test_case.assert("7Fjfp0ZBr1KtDRbnfVdmIw" == client_secret, __FUNCTION__, "client_secret");
 }
 
 void test_basic_authenticate() {
@@ -505,13 +543,15 @@ void test_get() {
 
 void test_client() {
     _test_case.begin("client");
+    OPTION& option = cmdline->value();
 
     // see test/http_server
 
     http_client client;
     http_response* response = nullptr;
 
-    cprint("http");
+    cprint("https");
+    client.set_ttl(60000);  // 1 min
     client.request("https://localhost:9000/api/test?access_token=mF_9.B5f-4.1JqM", &response);
     if (response) {
         basic_stream bs;
@@ -520,22 +560,58 @@ void test_client() {
         response->release();
     }
 
-    cprint("https request1");
+    // RFC 6750 2.2.  Form-Encoded Body Parameter
+    // RFC 6750 4.  Example Access Token Response (implement http_bearer_authenticate_provider)
+    cprint("client_id+client_secret");
     http_request request;
-    if (1) {
-        request.compose(http_method_t::HTTP_GET, "/api/test?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw", "");
-        // request.get_http_header().add("Accept-Encoding", "gzip, deflate");
-    } else {
-        // another way
-        request.compose(http_method_t::HTTP_GET, "/api/test", "client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw");
-        request.get_http_header().add("Content-Type", "application/x-www-form-urlencoded").add("Accept-Encoding", "gzip, deflate");
-    }
+    int status_code = 0;
+    basic_stream stream;
+    request.compose(http_method_t::HTTP_GET, "/auth/bearer?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw", "");  // reform if body is empty
+    request.get_http_header().add("Accept-Encoding", "gzip, deflate");
     client.request(request, &response);
     if (response) {
+        status_code = response->status_code();
+        stream << response->content();
+
         basic_stream bs;
         response->get_response(bs);
         printf("%s\n", bs.c_str());
         response->release();
+    }
+
+    std::string access_token;
+    json_t* json_root = nullptr;
+    json_open_stream(&json_root, stream.c_str());
+    if (json_root) {
+        const char* unp_access_token = nullptr;
+        const char* unp_token_type = nullptr;
+        json_unpack(json_root, "{s:s}", "access_token", &unp_access_token);
+        json_unpack(json_root, "{s:s}", "token_type", &unp_token_type);
+
+        if (unp_access_token && (0 == strcmp("Bearer", unp_token_type))) {
+            access_token = unp_access_token;
+        }
+
+        json_decref(json_root);
+    }
+
+    if (200 == status_code) {
+        // json
+
+        cprint("access_token");
+        request.compose(http_method_t::HTTP_GET, "/auth/bearer", "");
+        request.get_http_header().add("Authorization", format("Bearer %s", access_token.c_str()));
+        client.request(request, &response);
+        if (response) {
+            basic_stream bs;
+            response->get_response(bs);
+            printf("%s\n", bs.c_str());
+            response->release();
+        }
+    } else if (401 == status_code) {
+        //
+    } else {
+        //
     }
 }
 
@@ -560,9 +636,14 @@ int main(int argc, char** argv) {
     cmdline->parse(argc, argv);
     OPTION& option = cmdline->value();
 
+    // request
     test_request();
+
+    // response
     test_response_compose();
     test_response_parse();
+
+    // authenticate
     test_basic_authenticate();
     test_digest_access_authenticate();
     test_digest_access_authenticate("MD5");
@@ -572,7 +653,24 @@ int main(int argc, char** argv) {
     test_digest_access_authenticate("SHA-512-256");
     test_digest_access_authenticate("SHA-512-256-sess");
 
+    // uri
+    test_uri_form_encoded_body_parameter();
+    const char* input1 = "/resource?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw";
+    const char* input2 = "/resource?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw";
+    test_uri(input1);
+    test_uri(input2);
+
+    // network test
     if (option.connect) {
+        // how to test
+        // terminal 1
+        //   cd hotplace
+        //   ./make.sh debug pch
+        //   cd build/test/httpserver
+        //   ./test-httpserver -d
+        // terminal 2
+        //   cd build/test/httpget
+        //   ./test-httpget -d -c
         test_get();
         test_client();
     }

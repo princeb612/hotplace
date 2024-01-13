@@ -13,7 +13,8 @@
  * status
    * JOSE ![implemented](https://img.shields.io/badge/implemented-green)
    * CBOR ![implemented](https://img.shields.io/badge/implemented-green)
-   * COSE ![studying](https://img.shields.io/badge/implemented-magenta)
+   * COSE ![implemented](https://img.shields.io/badge/implemented-green)
+   * HTTP/1.1,2,3 ![studying](https://img.shields.io/badge/implemented-magenta)
 
 ## implemented
 
@@ -94,9 +95,9 @@
  * RFC 2069 An Extension to HTTP : Digest Access Authentication
  * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
  * RFC 7616 HTTP Digest Access Authentication
-   * merlin project
    * sdk/net/http
    * test/httpserver
+   * test/httpget
 
 ## not applied
 

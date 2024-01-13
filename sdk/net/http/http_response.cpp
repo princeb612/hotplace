@@ -127,6 +127,7 @@ return_t http_response::close() {
 
     _content_type.clear();
     _content.clear();
+    // check... do not clear header
 
     return ret;
 }
