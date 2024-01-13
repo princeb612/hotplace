@@ -292,20 +292,13 @@ return_t echo_server(void*) {
                     }
                 } else {
                     key_value kv;
-                    http_header::to_keyvalue(challenge, kv);
+                    http_uri::to_keyvalue(challenge, kv);
                     token = kv.get("access_token");
                     std::string client_id = kv.get("client_id");
                     std::string client_secret = kv.get("client_secret");
                     std::map<std::string, std::string>::iterator iter = bearer_credentials.find(client_id);
                     if (iter != bearer_credentials.end()) {
-                        openssl_prng prng;
-                        std::string access_token = prng.nonce(16);
-                        std::string refresh_token = prng.nonce(16);
-                        response->compose(200, "application/json", "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"refresh_token\":\"%s\"}",
-                                          access_token.c_str(), refresh_token.c_str());
-                        session->get_session_data()->set("access_token", access_token);
-                        session->get_session_data()->set("refresh_token", refresh_token);
-                        ret_value = true;
+                        session->get_session_data()->set("bearer", "access_token");  // hmm... I need something grace
                     }
                 }
 

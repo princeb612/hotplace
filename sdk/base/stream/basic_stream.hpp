@@ -131,6 +131,8 @@ class basic_stream : public stream_t {
      */
     bool operator>(basic_stream& obj);
 
+    bool operator==(basic_stream& obj);
+
    protected:
     bufferio _bio;
     bufferio_context_t* _handle;

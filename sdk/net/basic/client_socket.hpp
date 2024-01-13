@@ -64,6 +64,12 @@ class client_socket {
      * @return error code (see error.hpp)
      */
     virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent);
+
+    client_socket& set_ttl(uint32 milliseconds);
+    uint32 get_ttl();
+
+   private:
+    uint32 _ttl;  // msec, default 1,000 msec (1 sec)
 };
 
 }  // namespace net

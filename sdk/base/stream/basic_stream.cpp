@@ -192,4 +192,6 @@ bool basic_stream::operator<(basic_stream& obj) { return 0 < strcmp((*this).c_st
 
 bool basic_stream::operator>(basic_stream& obj) { return 0 > strcmp((*this).c_str(), obj.c_str()); }
 
+bool basic_stream::operator==(basic_stream& obj) { return 0 == strcmp((*this).c_str(), obj.c_str()); }
+
 }  // namespace hotplace

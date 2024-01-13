@@ -128,6 +128,41 @@ return_t http_uri::query(std::string key, std::string& value) {
 
 size_t http_uri::countof_query() { return _query_kv.size(); }
 
+return_t http_uri::to_keyvalue(std::string const& value, key_value& kv) {
+    return_t ret = errorcode_t::success;
+
+    std::string input;
+    std::string token;
+    std::string k;
+    std::string v;
+    size_t pos = 0;
+
+    input = tokenize(value, "?", pos); /* until '?' character */
+    if (std::string::npos != pos) {
+        input = value.substr(pos);
+    }
+
+    pos = 0;
+    while (true) {
+        token = tokenize(input, "&", pos);
+
+        if (token.size() && (std::string::npos != token.find("="))) {
+            ltrim(rtrim(token));
+
+            size_t tpos = 0;
+            k = tokenize(token, "=", tpos);
+            v = tokenize(token, "=", tpos);
+
+            kv.set(k, v);
+        }
+
+        if ((size_t)-1 == pos) {
+            break;
+        }
+    }
+    return ret;
+}
+
 void http_uri::addref() { _shared.addref(); }
 
 void http_uri::release() { _shared.delref(); }

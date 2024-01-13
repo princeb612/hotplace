@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-transport_layer_security_client::transport_layer_security_client(transport_layer_security* tls) : _tls(tls) {
+transport_layer_security_client::transport_layer_security_client(transport_layer_security* tls) : client_socket(), _tls(tls) {
     if (nullptr == tls) {
         throw errorcode_t::insufficiency;
     }
@@ -75,7 +75,7 @@ return_t transport_layer_security_client::read(socket_t sock, tls_context_t* tls
      * in case read 8 bytes and 2 bytes remains, return errorcode_t::more_data
      */
     while (true) {
-        ret = wait_socket(sock, 1000, SOCK_WAIT_READABLE);
+        ret = wait_socket(sock, get_ttl(), SOCK_WAIT_READABLE);
         if (errorcode_t::success == ret) {
             ret = _tls->read(tls_handle, tls_io_flag_t::read_ssl_read | tls_io_flag_t::read_bio_write | tls_io_flag_t::read_socket_recv, ptr_data, size_data,
                              cbread);

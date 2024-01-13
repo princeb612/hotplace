@@ -93,6 +93,7 @@ return_t http_request::open(const char* request, size_t size_request, bool optim
             _content.assign(request + epos, size_request - epos);
         }
 
+        // RFC 6750 2.2.  Form-Encoded Body Parameter
         if (optimize) {
             if (_uri.countof_query()) {
                 constexpr char constexpr_content_type[] = "Content-Type";
@@ -161,7 +162,7 @@ http_request& http_request::compose(http_method_t method, std::string const& uri
     }
     stream << "\r\n" << body;
 
-    open(stream, true);  // parse and optimize
+    open(stream, true);  // reform if body is empty
 
     return *this;
 }

@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-client_socket::client_socket() {
+client_socket::client_socket() : _ttl(1000) {
     // do nothing
 }
 
@@ -55,7 +55,7 @@ return_t client_socket::close(socket_t sock, tls_context_t* tls_handle) {
 return_t client_socket::read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read) {
     return_t ret = errorcode_t::success;
 
-    ret = wait_socket(sock, 1000, SOCK_WAIT_READABLE);
+    ret = wait_socket(sock, _ttl, SOCK_WAIT_READABLE);
     if (errorcode_t::success == ret) {
 #if defined _WIN32 || defined _WIN64
         int ret_recv = recv(sock, ptr_data, (int)size_data, 0);
@@ -112,6 +112,15 @@ return_t client_socket::send(socket_t sock, tls_context_t* tls_handle, const cha
     }
     return ret;
 }
+
+client_socket& client_socket::set_ttl(uint32 milliseconds) {
+    if (milliseconds) {
+        _ttl = milliseconds;
+    }
+    return *this;
+}
+
+uint32 client_socket::get_ttl() { return _ttl; }
 
 }  // namespace net
 }  // namespace hotplace

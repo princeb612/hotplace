@@ -460,11 +460,25 @@ return_t http_bearer_authenticate_provider::request_auth(network_session* sessio
             __leave2;
         }
 
-        response->get_http_header().add("WWW-Authenticate", format("Bearer realm=\"%s\"", _realm.c_str()));
+        std::string session_bearer = session->get_session_data()->get("bearer");
+        if ("access_token" == session_bearer) {
+            session->get_session_data()->remove("bearer");
 
-        int status_code = 401;
-        std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());
-        response->compose(status_code, "text/html", body.c_str());
+            openssl_prng prng;
+            std::string access_token = prng.nonce(16);
+            std::string refresh_token = prng.nonce(16);
+            session->get_session_data()->set("access_token", access_token);
+            session->get_session_data()->set("refresh_token", refresh_token);
+
+            response->compose(200, "application/json", "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"refresh_token\":\"%s\"}", access_token.c_str(),
+                              refresh_token.c_str());
+        } else {
+            response->get_http_header().add("WWW-Authenticate", format("Bearer realm=\"%s\"", _realm.c_str()));
+
+            int status_code = 401;
+            std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());
+            response->compose(status_code, "text/html", body.c_str());
+        }
     }
     __finally2 {
         // do nothing
