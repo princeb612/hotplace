@@ -35,30 +35,17 @@ http_client::~http_client() {
     SSL_CTX_free(_x509);
 }
 
-http_client& http_client::request(std::string const& url, http_response** response) {
+client_socket* http_client::connect(std::string const& url) {
     url_info_t url_info;
     split_url(url.c_str(), &url_info);
 
-    http_request request;
-    request.compose(http_method_t::HTTP_GET, url_info.uri, "");
-
-    return request_and_response(url_info, request, response);
+    return connect(url_info);
 }
 
-http_client& http_client::request(http_request& request, http_response** response) { return request_and_response(_url_info, request, response); }
-
-http_client& http_client::request_and_response(url_info_t const& url_info, http_request& request, http_response** response) {
+client_socket* http_client::connect(url_info_t const& url_info) {
     return_t ret = errorcode_t::success;
     client_socket* client = nullptr;
-
     __try2 {
-        if (nullptr == response) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        *response = nullptr;
-
         // reconnect
         if ((_url_info.protocol != url_info.protocol) || (_url_info.host != url_info.host) || (_url_info.port != url_info.port)) {
             close();
@@ -78,6 +65,40 @@ http_client& http_client::request_and_response(url_info_t const& url_info, http_
             ret = client->connect(&_socket, &_tls_context, url_info.host.c_str(), url_info.port, 5);
             _url_info = url_info;
         }
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return client;
+}
+
+http_client& http_client::request(std::string const& url, http_response** response) {
+    url_info_t url_info;
+    split_url(url.c_str(), &url_info);
+
+    http_request request;
+    request.get_http_header().add("Host", basic_stream("%s:%i", url_info.host.c_str(), url_info.port).c_str());
+    request.compose(http_method_t::HTTP_GET, url_info.uri, "");
+
+    return request_and_response(url_info, request, response);
+}
+
+http_client& http_client::request(http_request& request, http_response** response) { return request_and_response(_url_info, request, response); }
+
+http_client& http_client::request_and_response(url_info_t const& url_info, http_request& request, http_response** response) {
+    return_t ret = errorcode_t::success;
+    client_socket* client = nullptr;
+
+    __try2 {
+        if (nullptr == response) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        *response = nullptr;
+
+        client = connect(url_info);
 
         // connected
         if (_socket) {

@@ -26,9 +26,10 @@ test_case _test_case;
 typedef struct _OPTION {
     std::string url;
     int mode;
+    int connect;
     int debug;
 
-    _OPTION() : url("https://localhost:9000/"), mode(0), debug(0) {}
+    _OPTION() : url("https://localhost:9000/"), mode(0), connect(0), debug(0) {}
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
@@ -172,19 +173,19 @@ void test_basic_authenticate() {
         return test;
     });
 
-    // server response
     provider.request_auth(&session, &request, &response);
-
-    if (option.debug) {
-        response.get_response(bs);
-
-        cprint("server response");
-        printf("%s\n", bs.c_str());
-    }
 
     std::function<return_t(std::string const& user, std::string const& password)> test_resolver = [&](std::string const& user,
                                                                                                       std::string const& password) -> return_t {
-        return_t ret_value = errorcode_t::failed;
+        return_t ret = errorcode_t::failed;
+
+        // server response
+        if (option.debug) {
+            response.get_response(bs);
+
+            cprint("server response");
+            printf("%s\n", bs.c_str());
+        }
 
         basic_stream cred;
         cred << user << ":" << password;
@@ -203,8 +204,11 @@ void test_basic_authenticate() {
         response.close();
 
         // resolver
-        ret_value = resolver.resolve(&provider, &session, &request, &response);
-        return ret_value;
+        bool test = resolver.resolve(&provider, &session, &request, &response);
+        if (test) {
+            ret = errorcode_t::success;
+        }
+        return ret;
     };
 
     ret = test_resolver("user", "password");
@@ -227,78 +231,72 @@ return_t calc_digest_digest_access(http_authenticate_provider* provider, network
             __leave2;
         }
 
+        http_digest_access_authenticate_provider* dgst_provider = (http_digest_access_authenticate_provider*)provider;
+
         std::string alg;
-        std::string hashalg = "md5";  // default
-        std::string username;
-        std::string password;
-        std::string opaque;
+        std::string hashalg = dgst_provider->get_algorithm();
+        std::string qop;
 
         alg = kv.get("algorithm");
-        username = kv.get("username");
-        password = kv.get("password");
-        opaque = kv.get("opaque");
+        qop = kv.get("qop");
 
-        openssl_digest dgst;
-
-        // RFC 7616
-        //      MD5, SHA-512-256, SHA-256
-        //      MD5-sess, SHA-512-256-sess, SHA-256-sess
-        std::map<std::string, std::string> algmap;
-        algmap.insert(std::make_pair("MD5", "md5"));
-        algmap.insert(std::make_pair("MD5-sess", "md5"));
-        algmap.insert(std::make_pair("SHA-512-256", "sha2-512/256"));
-        algmap.insert(std::make_pair("SHA-512-256-sess", "sha2-512/256"));
-        algmap.insert(std::make_pair("SHA-256", "sha256"));
-        algmap.insert(std::make_pair("SHA-256-sess", "sha256"));
-
-        if (alg.size()) {
-            std::map<std::string, std::string>::iterator alg_iter = algmap.find(alg);
-            if (algmap.end() != alg_iter) {
-                hashalg = alg_iter->second;
-            }
-        }
-
+        rfc2617_digest dgst_a1;
+        rfc2617_digest dgst_a2;
+        rfc2617_digest dgst_sequence;
         std::string digest_ha1;
         std::string digest_ha2;
 
         // RFC 2617 3.2.2.2 A1
-        basic_stream stream_a1;
-        stream_a1 << username << ":" << provider->get_realm() << ":" << password;
-        dgst.digest(hashalg.c_str(), stream_a1, digest_ha1);
-
+        dgst_a1.clear().add(kv.get("username")).add(":").add(provider->get_realm()).add(":").add(kv.get("password")).digest(hashalg);
         if (ends_with(alg, "-sess")) {
-            basic_stream stream_sess_a1;
-            stream_sess_a1 << digest_ha1 << ":" << kv.get("nonce") << ":" << kv.get("cnonce");
-            dgst.digest(hashalg.c_str(), stream_sess_a1, digest_ha1);
+            digest_ha1 = dgst_a1.add(":").add(kv.get("nonce")).add(":").add(kv.get("cnonce")).digest(hashalg).get();
+        } else {
+            digest_ha1 = dgst_a1.get();
         }
 
         // RFC 2617 3.2.2.3 A2
-        basic_stream stream_a2;
-        stream_a2 << request->get_method() << ":" << request->get_uri();
-        std::string qop = kv.get("qop");
+        // If the qop parameter's value is "auth" or is unspecified
+        //      A2       = Method ":" digest-uri-value
+        // If the qop value is "auth-int"
+        //      A2       = Method ":" digest-uri-value ":" H(entity-body)
+        dgst_a2.clear().add(request->get_method()).add(":").add(kv.get("uri"));
         if ("auth-int" == qop) {
-            ret = errorcode_t::not_available;  // studying
-            __leave2;
+            // RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
+            // 7.2 Entity Body
+            basic_stream entity_body(request->get_content().c_str());
+            rfc2617_digest entity_dgst;
+            entity_dgst.add(entity_body).digest(hashalg);
+            dgst_a2.add(":").add(entity_dgst.get());
         }
-        dgst.digest(hashalg.c_str(), stream_a2, digest_ha2);
+        digest_ha2 = dgst_a2.digest(hashalg).get();
 
         // RFC 2617 3.2.2.1 Request-Digest
         // RFC 7616 3.4.1.  Response
         //      If the qop value is "auth" or "auth-int":
-        //          response = <"> < KD ( H(A1), unq(nonce)
-        //                                       ":" nc
-        //                                       ":" unq(cnonce)
-        //                                       ":" unq(qop)
-        //                                       ":" H(A2)
-        //                              ) <">
-        basic_stream sequence;
-        sequence << digest_ha1 << ":" << kv.get("nonce") << ":" << kv.get("nc") << ":" << kv.get("cnonce") << ":" << kv.get("qop") << ":" << digest_ha2;
-        dgst.digest(hashalg.c_str(), sequence, digest_response);
+        //          request-digest  = <"> < KD ( H(A1),     unq(nonce-value)
+        //                                              ":" nc-value
+        //                                              ":" unq(cnonce-value)
+        //                                              ":" unq(qop-value)
+        //                                              ":" H(A2)
+        //                                      ) <">
+        //
+        //      If the "qop" directive is not present
+        //          request-digest  =
+        //             <"> < KD ( H(A1), unq(nonce-value) ":" H(A2) ) >
+        //             <">
+
+        // std::string digest_response;
+        dgst_sequence.clear().add(digest_ha1).add(":").add(kv.get("nonce"));
+        if (("auth" == qop) || ("auth-int" == qop)) {
+            dgst_sequence.add(":").add(kv.get("nc")).add(":").add(kv.get("cnonce")).add(":").add(kv.get("qop"));
+        }
+        dgst_sequence.add(":").add(digest_ha2);
+        digest_response = dgst_sequence.digest(hashalg).get();
 
         if (option.debug) {
-            printf("+ a1 %s\n", stream_a1.c_str());
-            printf("+ a2 %s\n", stream_a2.c_str());
-            printf("+ seq %s\n", sequence.c_str());
+            printf("- a1 %s -> %s\n", dgst_a1.get_sequence().c_str(), digest_ha1.c_str());
+            printf("- a2 %s -> %s\n", dgst_a2.get_sequence().c_str(), digest_ha2.c_str());
+            printf("- resp %s -> %s\n", dgst_sequence.get_sequence().c_str(), digest_response.c_str());
         }
     }
     __finally2 {
@@ -327,7 +325,8 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
         http_digest_access_authenticate_provider* digest_provider = (http_digest_access_authenticate_provider*)provider;
         key_value kv;
 
-        ret = digest_provider->prepare_digest_access(session, request, response, kv);
+        ret = digest_provider->prepare_digest_access(session, request, response, kv);  // update (key, value)
+        cprint("[%08x] prepare_digest_access", ret);
         if (errorcode_t::success == ret) {
             // get username from kv.get("username"), and then read password (cache, in-memory db)
             kv.set("password", "password");
@@ -347,39 +346,45 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
         return ret_value;
     });
 
-    // server response
     provider.request_auth(&session, &request, &response);
-
-    if (option.debug) {
-        response.get_response(bs);
-
-        cprint("server response");
-        printf("%s\n", bs.c_str());
-    }
-
-    std::string auth;
-    std::string cred;
-    key_value kv;
-    size_t pos = 0;
-    response.get_http_header().get("WWW-Authenticate", auth);
-    http_header::to_keyvalue(auth, kv);
 
     std::function<return_t(std::string const& user, std::string const& password)> test_resolver = [&](std::string const& user,
                                                                                                       std::string const& password) -> return_t {
-        return_t ret_value = errorcode_t::failed;
+        return_t ret = errorcode_t::failed;
+
+        // server response
+        if (option.debug) {
+            response.get_response(bs);
+
+            cprint("session nonce %s", session.get_session_data()->get("nonce").c_str());
+            cprint("session opaque %s", session.get_session_data()->get("opaque").c_str());
+
+            cprint("server response");
+            printf("%s\n", bs.c_str());
+        }
+
+        // calcuration
+        std::string auth;
+        std::string cred;
+        key_value kv;
+        size_t pos = 0;
+        response.get_http_header().get("WWW-Authenticate", auth);
+        http_header::to_keyvalue(auth, kv);
 
         std::string response_calc;
         kv.set("username", user);
-        kv.set("password", password);
+        kv.set("password", password);  // calc
         kv.set("qop", "auth");
         kv.set("nc", "00000002");
         kv.set("cnonce", "0123456789abcdef");
         if (kv.get("algorithm").empty()) {
-            kv.set("algorithm", "MD5");
+            kv.set("algorithm", "MD5");  // calc
         }
 
         // client request
-        request.open("GET /auth/digest HTTP/1.1");                                    // set a method and an uri
+        request.open("GET /auth/digest HTTP/1.1");  // set a method and an uri
+        kv.set("uri", request.get_uri());
+
         calc_digest_digest_access(&provider, &session, &request, kv, response_calc);  // calcurate a response
         request.get_http_header().add(
             "Authorization",
@@ -397,8 +402,12 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
         response.close();
 
         // resolver
-        ret_value = resolver.resolve(&provider, &session, &request, &response);
-        return ret_value;
+        bool test = resolver.resolve(&provider, &session, &request, &response);
+        if (test) {
+            ret = errorcode_t::success;
+        }
+        cprint("[%08x] %s:%s", ret, user.c_str(), password.c_str());
+        return ret;
     };
 
     ret = test_resolver("user", "password1");
@@ -477,7 +486,7 @@ void test_get() {
                     stream_interpreted.consume(&data);
                     if (data) {
                         cprint("response");
-                        printf("%.*s\n", data->size(), data->content());
+                        printf("%.*s\n", (unsigned)data->size(), (char*)data->content());
 
                         data->release();
                     }
@@ -503,7 +512,7 @@ void test_client() {
     http_response* response = nullptr;
 
     cprint("http");
-    client.request("http://localhost:8080/", &response);
+    client.request("https://localhost:9000/api/test?access_token=mF_9.B5f-4.1JqM", &response);
     if (response) {
         basic_stream bs;
         response->get_response(bs);
@@ -512,18 +521,15 @@ void test_client() {
     }
 
     cprint("https request1");
-    client.request("https://localhost:9000/", &response);
-    if (response) {
-        basic_stream bs;
-        response->get_response(bs);
-        printf("%s\n", bs.c_str());
-        response->release();
-    }
-
-    cprint("https request2");
     http_request request;
-    request.compose(http_method_t::HTTP_GET, "/test", "");
-    request.get_http_header().add("Accept-Encoding", "gzip, deflate");
+    if (1) {
+        request.compose(http_method_t::HTTP_GET, "/api/test?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw", "");
+        // request.get_http_header().add("Accept-Encoding", "gzip, deflate");
+    } else {
+        // another way
+        request.compose(http_method_t::HTTP_GET, "/api/test", "client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw");
+        request.get_http_header().add("Content-Type", "application/x-www-form-urlencoded").add("Accept-Encoding", "gzip, deflate");
+    }
     client.request(request, &response);
     if (response) {
         basic_stream bs;
@@ -546,7 +552,8 @@ int main(int argc, char** argv) {
 
     cmdline.make_share(new cmdline_t<OPTION>);
 
-    *cmdline << cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/)", [&](OPTION& o, char* param) -> void { o.url = param; }).preced().optional()
+    *cmdline << cmdarg_t<OPTION>("-c", "connect", [&](OPTION& o, char* param) -> void { o.connect = 1; }).optional()
+             << cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/)", [&](OPTION& o, char* param) -> void { o.url = param; }).preced().optional()
              << cmdarg_t<OPTION>("-p", "read stream using http_protocol", [&](OPTION& o, char* param) -> void { o.mode = 1; }).optional()
              << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = 1; }).optional();
 
@@ -564,8 +571,11 @@ int main(int argc, char** argv) {
     test_digest_access_authenticate("SHA-256-sess");
     test_digest_access_authenticate("SHA-512-256");
     test_digest_access_authenticate("SHA-512-256-sess");
-    test_get();
-    test_client();
+
+    if (option.connect) {
+        test_get();
+        test_client();
+    }
 
     openssl_thread_end();
     openssl_cleanup();

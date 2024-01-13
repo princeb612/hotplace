@@ -262,40 +262,19 @@ void file_stream::seek(int64 file_pos, int64* ptr_file_pos, uint32 method) {
     }
 }
 
-return_t file_stream::write(void* data, size_t size_data) {
+return_t file_stream::write(const void* data, size_t size_data) {
     return_t ret = errorcode_t::success;
 
-    __try2 {
-        if (true == is_open()) {
-            if (true == is_mmapped()) {
-                if ((_filepos_high > 0) || (((uint32)-1 - _filepos_low) < size_data)) {
-                    ret = errorcode_t::not_supported;
-                } else {
-                    memcpy(reinterpret_cast<byte_t*>(data) + _filepos_low, data, size_data);
-                    uint32 size_mask = ~_filepos_low;
-                    if (size_mask < size_data) {
-                        _filepos_high++;
-                    }
-                    _filepos_low += size_data;
-                }
-            } else {
-                uint32 dwIndex = 0;
-                int len = 0;
-                while (size_data) {
-                    len = ::write(_file_handle, (byte_t*)data + dwIndex, size_data);
-                    if (-1 == len) {
-                        ret = errno;
-                        break;
-                    }
-                    size_data -= len;
-                    dwIndex += len;
-                }
-            }
-        } else {
+    uint32 dwIndex = 0;
+    int len = 0;
+    while (size_data) {
+        len = ::write(_file_handle, (byte_t*)data + dwIndex, size_data);
+        if (-1 == len) {
+            ret = errno;
+            break;
         }
-    }
-    __finally2 {
-        // do nothing
+        size_data -= len;
+        dwIndex += len;
     }
     return ret;
 }

@@ -109,20 +109,21 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 }
 
                 if (use_tls) {
-                    ret = router->route(request.get_uri(), session, &request, &response);
-                    if (errorcode_t::success != ret) {
-                        response.compose(404, "text/html", "<html><body>page not found %s</body></html>", request.get_uri());
-                    }
+                    // using http_router
+                    router->route(request.get_uri(), session, &request, &response);
                     response.get_response(bs);
                 } else {
-                    response.compose(200, "text/html", "<html><body>%s</body></html>", request.get_uri()).get_response(bs);
+                    // handle wo http_router
+                    response.compose(200, "text/html", "<html><body>%s<pre>%s</pre></body></html>", request.get_uri(), bs.c_str());
                 }
 
                 if (option.debug) {
                     cprint("send %i", session_socket->client_socket);
-                    std::string headers;
-                    response.get_http_header().get_headers(headers);
-                    printf("%s\r\n%s\r\n\r\n", headers.c_str(), response.content());
+                    basic_stream resp;
+                    response.get_response(resp);
+                    basic_stream temp;
+                    dump_memory(resp, &temp);
+                    printf("%s\n", temp.c_str());
                 }
 
                 session->send((const char*)bs.data(), bs.size());
@@ -181,6 +182,7 @@ return_t echo_server(void*) {
         rfc2617_digest dgst;
         std::set<std::string> basic_credentials;
         basic_credentials.insert(base64_encode("user:password"));
+
         typedef struct _userhash_data {
             std::string username;
             std::string password;
@@ -191,6 +193,9 @@ return_t echo_server(void*) {
         userhash_data userdata = {"user", "password"};
         dgst.clear().add("user").add(":").add(digest_access_realm).digest(digest_access_alg);
         digest_access_userhash_credentials.insert(std::make_pair(dgst.get(), userdata));  // userhash=true
+
+        std::map<std::string, std::string> bearer_credentials;
+        bearer_credentials.insert(std::make_pair("s6BhdRkqt3", "7Fjfp0ZBr1KtDRbnfVdmIw"));  // client_id, client_secret
 
         /* route */
         _http_router.make_share(new http_router);
@@ -269,6 +274,38 @@ return_t echo_server(void*) {
                         if (errorcode_t::success == ret) {
                             ret_value = true;
                         }
+                    }
+                }
+
+                return ret_value;
+            })
+            .bearer_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
+                bool ret_value = false;
+                std::string challenge = provider->get_challenge(request);
+                std::string token;
+
+                if (0 == strncmp("Bearer", challenge.c_str(), 6)) {
+                    size_t pos = 6;
+                    token = tokenize(challenge, " ", pos);
+                    if (token == session->get_session_data()->get("access_token")) {
+                        ret_value = true;
+                    }
+                } else {
+                    key_value kv;
+                    http_header::to_keyvalue(challenge, kv);
+                    token = kv.get("access_token");
+                    std::string client_id = kv.get("client_id");
+                    std::string client_secret = kv.get("client_secret");
+                    std::map<std::string, std::string>::iterator iter = bearer_credentials.find(client_id);
+                    if (iter != bearer_credentials.end()) {
+                        openssl_prng prng;
+                        std::string access_token = prng.nonce(16);
+                        std::string refresh_token = prng.nonce(16);
+                        response->compose(200, "application/json", "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"refresh_token\":\"%s\"}",
+                                          access_token.c_str(), refresh_token.c_str());
+                        session->get_session_data()->set("access_token", access_token);
+                        session->get_session_data()->set("refresh_token", refresh_token);
+                        ret_value = true;
                     }
                 }
 

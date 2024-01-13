@@ -49,7 +49,7 @@ uint64 wide_string::size() const {
     return size;
 }
 
-return_t wide_string::write(void* data, size_t size) { return _bio.write(_handle, data, size); }
+return_t wide_string::write(const void* data, size_t size) { return _bio.write(_handle, data, size); }
 
 return_t wide_string::fill(size_t l, char c) {
     return_t ret = errorcode_t::success;

@@ -25,6 +25,21 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
+/**
+
+    coding rule to avoid unit-test failure
+
+    bool xxx_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
+                                                http_response* response) {
+        ...
+        ret_value  = resolver->xxx_authenticate(this, session, request, response);
+        if (false == ret_value) {
+            do not call resolver->request_auth // after request_auth, session data change
+        }
+    }
+
+ */
+
 http_basic_authenticate_provider::http_basic_authenticate_provider(const char* realm) : http_authenticate_provider(realm) {}
 
 http_basic_authenticate_provider::~http_basic_authenticate_provider() {}
@@ -32,10 +47,8 @@ http_basic_authenticate_provider::~http_basic_authenticate_provider() {}
 bool http_basic_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
                                                 http_response* response) {
     bool ret_value = false;
-    return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == request) {
-            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
@@ -79,31 +92,37 @@ rfc2617_digest::rfc2617_digest() {}
 
 rfc2617_digest& rfc2617_digest::add(const char* data) {
     _stream << data;
+    _sequence << data;
     return *this;
 }
 
 rfc2617_digest& rfc2617_digest::add(std::string const& data) {
     _stream << data;
+    _sequence << data;
     return *this;
 }
 
 rfc2617_digest& rfc2617_digest::add(basic_stream const& data) {
     _stream << data;
+    _sequence << data;
     return *this;
 }
 
 rfc2617_digest& rfc2617_digest::operator<<(const char* data) {
     _stream << data;
+    _sequence << data;
     return *this;
 }
 
 rfc2617_digest& rfc2617_digest::operator<<(std::string const& data) {
     _stream << data;
+    _sequence << data;
     return *this;
 }
 
 rfc2617_digest& rfc2617_digest::operator<<(basic_stream const& data) {
     _stream << data;
+    _sequence << data;
     return *this;
 }
 
@@ -132,6 +151,10 @@ rfc2617_digest& rfc2617_digest::digest(std::string const& algorithm) {
 
     dgst.digest(hashalg.c_str(), _stream, digest_value);
     _stream = digest_value;
+    basic_stream temp;
+    temp << "_H<" << algorithm << ">(";
+    _sequence.insert(0, temp.data(), temp.size());
+    _sequence.write(")", 1);
 
     return *this;
 }
@@ -142,8 +165,15 @@ std::string rfc2617_digest::get() {
     return ret_value;
 }
 
+std::string rfc2617_digest::get_sequence() {
+    std::string ret_value;
+    ret_value = _sequence.c_str();
+    return ret_value;
+}
+
 rfc2617_digest& rfc2617_digest::clear() {
     _stream.clear();
+    _sequence.clear();
     return *this;
 }
 
@@ -162,10 +192,8 @@ http_digest_access_authenticate_provider::~http_digest_access_authenticate_provi
 bool http_digest_access_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
                                                         http_response* response) {
     bool ret_value = false;
-    return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == request) {
-            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
@@ -193,6 +221,9 @@ return_t http_digest_access_authenticate_provider::request_auth(network_session*
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        response->close();
+        response->get_http_header().clear();
 
         openssl_prng prng;
         std::string nonce;
@@ -276,16 +307,18 @@ return_t http_digest_access_authenticate_provider::digest_digest_access(network_
         alg = kv.get("algorithm");
         qop = kv.get("qop");
 
-        rfc2617_digest dgst;
+        rfc2617_digest dgst_a1;
+        rfc2617_digest dgst_a2;
+        rfc2617_digest dgst_sequence;
         std::string digest_ha1;
         std::string digest_ha2;
 
         // RFC 2617 3.2.2.2 A1
-        dgst.clear().add(kv.get("username")).add(":").add(get_realm()).add(":").add(kv.get("password")).digest(hashalg);
+        dgst_a1.clear().add(kv.get("username")).add(":").add(get_realm()).add(":").add(kv.get("password")).digest(hashalg);
         if (ends_with(alg, "-sess")) {
-            digest_ha1 = dgst.add(":").add(kv.get("nonce")).add(":").add(kv.get("cnonce")).digest(hashalg).get();
+            digest_ha1 = dgst_a1.add(":").add(kv.get("nonce")).add(":").add(kv.get("cnonce")).digest(hashalg).get();
         } else {
-            digest_ha1 = dgst.get();
+            digest_ha1 = dgst_a1.get();
         }
 
         // RFC 2617 3.2.2.3 A2
@@ -293,16 +326,16 @@ return_t http_digest_access_authenticate_provider::digest_digest_access(network_
         //      A2       = Method ":" digest-uri-value
         // If the qop value is "auth-int"
         //      A2       = Method ":" digest-uri-value ":" H(entity-body)
-        dgst.clear().add(request->get_method()).add(":").add(kv.get("uri"));
+        dgst_a2.clear().add(request->get_method()).add(":").add(kv.get("uri"));
         if ("auth-int" == qop) {
             // RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
             // 7.2 Entity Body
             basic_stream entity_body(request->get_content().c_str());
             rfc2617_digest entity_dgst;
             entity_dgst.add(entity_body).digest(hashalg);
-            dgst.add(":").add(entity_dgst.get());
+            dgst_a2.add(":").add(entity_dgst.get());
         }
-        digest_ha2 = dgst.digest(hashalg).get();
+        digest_ha2 = dgst_a2.digest(hashalg).get();
 
         // RFC 2617 3.2.2.1 Request-Digest
         // RFC 7616 3.4.1.  Response
@@ -320,12 +353,18 @@ return_t http_digest_access_authenticate_provider::digest_digest_access(network_
         //             <">
 
         std::string digest_response;
-        dgst.clear().add(digest_ha1).add(":").add(kv.get("nonce"));
+        dgst_sequence.clear().add(digest_ha1).add(":").add(kv.get("nonce"));
         if (("auth" == qop) || ("auth-int" == qop)) {
-            dgst.add(":").add(kv.get("nc")).add(":").add(kv.get("cnonce")).add(":").add(kv.get("qop"));
+            dgst_sequence.add(":").add(kv.get("nc")).add(":").add(kv.get("cnonce")).add(":").add(kv.get("qop"));
         }
-        dgst.add(":").add(digest_ha2);
-        digest_response = dgst.digest(hashalg).get();
+        dgst_sequence.add(":").add(digest_ha2);
+        digest_response = dgst_sequence.digest(hashalg).get();
+
+        // if (1) {
+        //     printf("* a1 %s -> %s\n", dgst_a1.get_sequence().c_str(), digest_ha1.c_str());
+        //     printf("* a2 %s -> %s\n", dgst_a2.get_sequence().c_str(), digest_ha2.c_str());
+        //     printf("* resp %s -> %s\n", dgst_sequence.get_sequence().c_str(), digest_response.c_str());
+        // }
 
         if (digest_response == kv.get("response")) {
             ret = errorcode_t::success;
@@ -386,29 +425,31 @@ http_bearer_authenticate_provider::~http_bearer_authenticate_provider() {}
 bool http_bearer_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
                                                  http_response* response) {
     bool ret_value = false;
-    return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == request) {
-            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         constexpr char constexpr_authorization[] = "Authorization";
         constexpr char constexpr_bearer[] = "Bearer";
         std::string token_scheme;
-        std::string token_auth;
         request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
-        request->get_http_header().get(constexpr_authorization, token_auth);
 
-        if (0 == strcmp(constexpr_bearer, token_scheme.c_str())) {
-            ret_value = true;
-            __leave2;
+        bool test = false;
+        if (constexpr_bearer == token_scheme) {
+            test = true;
+        } else if (request->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
+            test = true;
+        }
+
+        if (test) {
+            ret_value = resolver->bearer_authenticate(this, session, request, response);
         }
     }
     __finally2 {
         // do nothing
     }
-    return ret;
+    return ret_value;
 }
 
 return_t http_bearer_authenticate_provider::request_auth(network_session* session, http_request* request, http_response* response) {
@@ -431,16 +472,31 @@ return_t http_bearer_authenticate_provider::request_auth(network_session* sessio
     return ret;
 }
 
+std::string http_bearer_authenticate_provider::get_challenge(http_request* request) {
+    std::string challenge;
+
+    __try2 {
+        constexpr char constexpr_authorization[] = "Authorization";
+        request->get_http_header().get(constexpr_authorization, challenge);
+        if (false == challenge.empty()) {
+            __leave2;
+        }
+
+        if (request->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
+            challenge = request->get_content();
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return challenge;
+}
+
 http_authenticate_resolver::http_authenticate_resolver() : _basic_resolver(nullptr) {}
 
-return_t http_authenticate_resolver::resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) {
-    return_t ret = errorcode_t::success;
-
-    bool test = provider->try_auth(this, session, request, response);
-    if (false == test) {
-        ret = errorcode_t::mismatch;
-    }
-    return ret;
+bool http_authenticate_resolver::resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) {
+    return provider->try_auth(this, session, request, response);
 }
 
 http_authenticate_resolver& http_authenticate_resolver::basic_resolver(authenticate_handler_t resolver) {
@@ -451,7 +507,9 @@ http_authenticate_resolver& http_authenticate_resolver::basic_resolver(authentic
 bool http_authenticate_resolver::basic_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
                                                     http_response* response) {
     bool ret_value = false;
-    ret_value = _basic_resolver(provider, session, request, response);
+    if (_basic_resolver) {
+        ret_value = _basic_resolver(provider, session, request, response);
+    }
     return ret_value;
 }
 
@@ -463,7 +521,9 @@ http_authenticate_resolver& http_authenticate_resolver::digest_resolver(authenti
 bool http_authenticate_resolver::digest_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
                                                      http_response* response) {
     bool ret_value = false;
-    ret_value = _digest_resolver(provider, session, request, response);
+    if (_digest_resolver) {
+        ret_value = _digest_resolver(provider, session, request, response);
+    }
     return ret_value;
 }
 
@@ -475,7 +535,9 @@ http_authenticate_resolver& http_authenticate_resolver::bearer_resolver(authenti
 bool http_authenticate_resolver::bearer_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
                                                      http_response* response) {
     bool ret_value = false;
-    ret_value = _bearer_resolver(provider, session, request, response);
+    if (_bearer_resolver) {
+        ret_value = _bearer_resolver(provider, session, request, response);
+    }
     return ret_value;
 }
 

@@ -84,9 +84,11 @@ class rfc2617_digest {
     rfc2617_digest& operator<<(basic_stream const& data);
     rfc2617_digest& digest(std::string const& algorithm);
     std::string get();
+    std::string get_sequence();
     rfc2617_digest& clear();
 
    private:
+    basic_stream _sequence;
     basic_stream _stream;
 };
 
@@ -173,6 +175,8 @@ class http_bearer_authenticate_provider : public http_authenticate_provider {
 
     virtual bool try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response);
     virtual return_t request_auth(network_session* session, http_request* request, http_response* response);
+
+    virtual std::string get_challenge(http_request* request);
 };
 
 typedef std::function<bool(http_authenticate_provider*, network_session*, http_request* request, http_response* response)> authenticate_handler_t;
@@ -186,15 +190,14 @@ class http_authenticate_resolver {
      * @param network_session* session [in]
      * @param http_request* request [in]
      * @param http_response* response [in]
-     * @return error code (see error.hpp)
      */
-    return_t resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
+    bool resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
 
     /**
-     * @brief register resolver
-     * @param authenticate_handler_t resolver [in]
+     * @brief register handler
+     * @param authenticate_handler_t handler [in]
      */
-    http_authenticate_resolver& basic_resolver(authenticate_handler_t resolver);
+    http_authenticate_resolver& basic_resolver(authenticate_handler_t handler);
     /*
      * @brief authenticate
      * @param http_authenticate_provider* provider [in]
@@ -203,7 +206,11 @@ class http_authenticate_resolver {
      *          RFC2617 HTTP Authentication: Basic and Digest Access Authentication
      */
     bool basic_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
-    http_authenticate_resolver& digest_resolver(authenticate_handler_t resolver);
+    /**
+     * @brief register handler
+     * @param authenticate_handler_t handler [in]
+     */
+    http_authenticate_resolver& digest_resolver(authenticate_handler_t handler);
     /*
      * @brief authenticate
      * @param http_authenticate_provider* provider [in]
@@ -213,7 +220,11 @@ class http_authenticate_resolver {
      *          RFC2617 HTTP Authentication: Basic and Digest Access Authentication
      */
     bool digest_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
-    http_authenticate_resolver& bearer_resolver(authenticate_handler_t resolver);
+    /**
+     * @brief register handler
+     * @param authenticate_handler_t handler [in]
+     */
+    http_authenticate_resolver& bearer_resolver(authenticate_handler_t handler);
     /*
      * @brief authenticate
      * @param http_authenticate_provider* provider [in]

@@ -16,9 +16,12 @@ namespace hotplace {
 
 basic_stream::basic_stream(size_t allocsize, uint32 flags) : _handle(nullptr) { _bio.open(&_handle, allocsize, 1, flags); }
 
-basic_stream::basic_stream(const char* data) : _handle(nullptr) {
+basic_stream::basic_stream(const char* data, ...) : _handle(nullptr) {
+    va_list ap;
+    va_start(ap, data);
     _bio.open(&_handle, 1 << 10, 1);
-    _bio.write(_handle, data, strlen(data));
+    _bio.vprintf(_handle, data, ap);
+    va_end(ap);
 }
 
 basic_stream::basic_stream(const basic_stream& stream) : _handle(nullptr) {
@@ -56,7 +59,11 @@ uint64 basic_stream::size() const {
     return size;
 }
 
-return_t basic_stream::write(void* data, size_t size) { return _bio.write(_handle, data, size); }
+return_t basic_stream::write(const void* data, size_t size) { return _bio.write(_handle, data, size); }
+
+return_t basic_stream::cut(uint32 begin_pos, uint32 length) { return _bio.cut(_handle, begin_pos, length); }
+
+return_t basic_stream::insert(size_t begin, const void* data, size_t data_size) { return _bio.insert(_handle, begin, data, data_size); }
 
 return_t basic_stream::fill(size_t l, char c) {
     return_t ret = errorcode_t::success;
@@ -159,6 +166,11 @@ basic_stream& basic_stream::operator<<(long value) {
 
 basic_stream& basic_stream::operator<<(unsigned long value) {
     printf("%lu", value);
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(size_t value) {
+    printf("%zi", value);
     return *this;
 }
 

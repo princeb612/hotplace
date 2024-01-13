@@ -311,41 +311,27 @@ void file_stream::seek(int64 lfilepos, int64* ptrfilepos, uint32 method) {
     }
 }
 
-return_t file_stream::write(void* data, size_t size_data) {
+return_t file_stream::write(const void* data, size_t size_data) {
     return_t ret = errorcode_t::success;
 
-    __try2 {
-        if (true == is_open()) {
-            if (true == is_mmapped()) {
-                if ((_filepos_high > 0) || (-1 - _filepos_low < size_data)) {
-                    ret = errorcode_t::not_supported;
-                } else {
-                    memcpy(reinterpret_cast<byte_t*>(data) + _filepos_low, data, size_data);
-                    uint32 size_mask = ~_filepos_low;
-                    if (size_mask < size_data) {
-                        _filepos_high++;
-                    }
-                    _filepos_low += size_data;
-                }
-            } else {
-                byte_t* mem = (byte_t*)data;
-                uint32 idx = 0;
-                while (size_data) {
-                    DWORD written = 0;
-                    BOOL test = WriteFile(_file_handle, mem + idx, size_data, &written, nullptr);
-                    if (FALSE == test) {
-                        ret = GetLastError();
-                        break;
-                    }
-                    size_data -= written;
-                    idx += written;
-                }
-            }
-        } else {
+    // windows
+    // handle = CreateFileMapping ( ..., filesize + tobewritten, ...);
+    // fileptr = MapViewOfFile(handle)
+    // memcpy (fileptr + filesize, data, tobewritten);
+
+    // linux .. not work
+
+    byte_t* mem = (byte_t*)data;
+    uint32 idx = 0;
+    while (size_data) {
+        DWORD written = 0;
+        BOOL test = WriteFile(_file_handle, mem + idx, size_data, &written, nullptr);
+        if (FALSE == test) {
+            ret = GetLastError();
+            break;
         }
-    }
-    __finally2 {
-        // do nothing
+        size_data -= written;
+        idx += written;
     }
     return ret;
 }

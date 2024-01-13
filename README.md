@@ -17,15 +17,6 @@
 
 ## implemented
 
- * RFC 4648 The Base16, Base32, and Base64 Data Encodings
-   * sdk/io/basic/
-   * test/encode/
-
- * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
- * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
-   * sdk/crypto/basic/
-   * test/crypto/
-
  * RFC 7049 Concise Binary Object Representation (CBOR)
  * RFC 8949 Concise Binary Object Representation (CBOR)
    * sdk/io/cbor/
@@ -51,6 +42,15 @@
    * test/cose/
 
 ## applied
+
+ * RFC 4648 The Base16, Base32, and Base64 Data Encodings
+   * sdk/io/basic/
+   * test/encode/
+
+ * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
+ * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
+   * sdk/crypto/basic/
+   * test/crypto/
 
  * RFC 2144 The CAST-128 Encryption Algorithm (May 1997)
  * RFC 2612 The CAST-256 Encryption Algorithm (June 1999)
@@ -91,7 +91,6 @@
  * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
    * sdk/net/tls/
 
- * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
  * RFC 2069 An Extension to HTTP : Digest Access Authentication
  * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
  * RFC 7616 HTTP Digest Access Authentication

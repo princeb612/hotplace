@@ -13,9 +13,14 @@
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http.hpp>
+#include <sdk/net/http/http_authenticate.hpp>
 #include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 using namespace io;
-namespace net {}  // namespace net
+namespace net {
+
+// reserved
+
+}  // namespace net
 }  // namespace hotplace
