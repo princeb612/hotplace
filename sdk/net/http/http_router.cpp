@@ -61,6 +61,22 @@ http_router& http_router::add(const char* uri, http_authenticate_provider* handl
     return *this;
 }
 
+http_router& http_router::add(int status_code, http_request_handler_t handler) {
+    critical_section_guard guard(_lock);
+    http_router_t route;
+    route.handler = handler;
+    _status_handler_map.insert(std::make_pair(status_code, route));
+    return *this;
+}
+
+http_router& http_router::add(int status_code, http_request_function_t handler) {
+    critical_section_guard guard(_lock);
+    http_router_t route;
+    route.stdfunc = handler;
+    _status_handler_map.insert(std::make_pair(status_code, route));
+    return *this;
+}
+
 return_t http_router::route(const char* uri, network_session* session, http_request* request, http_response* response) {
     return_t ret = errorcode_t::success;
     http_authenticate_provider* provider = nullptr;
@@ -71,33 +87,36 @@ return_t http_router::route(const char* uri, network_session* session, http_requ
             __leave2;
         }
 
-        try_auth(uri, request, response, &provider);
+        get_auth_provider(uri, request, response, &provider);
         if (provider) {
-            return_t test = get_authenticate_resolver().resolve(provider, session, request, response);
-            if (errorcode_t::success != test) {
+            bool test = get_authenticate_resolver().resolve(provider, session, request, response);
+            if (false == test) {
                 provider->request_auth(session, request, response);
                 __leave2;
             }
         }
 
-        http_router_t route;
-
+        http_router_t routing;
         {
             critical_section_guard guard(_lock);
 
             handler_map_t::iterator iter = _handler_map.find(uri);
             if (_handler_map.end() != iter) {
-                route = iter->second;
+                routing = iter->second;
             } else {
-                ret = errorcode_t::not_found;
-                __leave2;
+                status_handler_map_t::iterator status_iter = _status_handler_map.find(404);
+                if (_status_handler_map.end() != status_iter) {
+                    routing = status_iter->second;
+                }
             }
         }
 
-        if (route.handler) {
-            (*route.handler)(request, response);
-        } else if (route.stdfunc) {
-            route.stdfunc(request, response);
+        if (routing.handler) {
+            (*routing.handler)(request, response);
+        } else if (routing.stdfunc) {
+            routing.stdfunc(request, response);
+        } else {
+            status404_handler(request, response);
         }
     }
     __finally2 {
@@ -109,9 +128,15 @@ return_t http_router::route(const char* uri, network_session* session, http_requ
     return ret;
 }
 
+void http_router::status404_handler(http_request* request, http_response* response) {
+    http_resource* resource = http_resource::get_instance();
+    int status_code = 404;
+    response->compose(status_code, "text/html", "<html><body>%i %s</body></html>", status_code, resource->load(status_code).c_str());
+}
+
 http_authenticate_resolver& http_router::get_authenticate_resolver() { return _resolver; }
 
-bool http_router::try_auth(const char* uri, http_request* request, http_response* response, http_authenticate_provider** provider) {
+bool http_router::get_auth_provider(const char* uri, http_request* request, http_response* response, http_authenticate_provider** provider) {
     bool ret_value = false;
     return_t ret = errorcode_t::success;
     http_authenticate_provider* auth_provider = nullptr;
@@ -137,6 +162,7 @@ bool http_router::try_auth(const char* uri, http_request* request, http_response
         } else {
             auth_provider->addref();
             *provider = auth_provider;
+            ret_value = true;
         }
     }
     __finally2 {

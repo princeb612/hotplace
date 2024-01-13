@@ -42,13 +42,17 @@ class http_router {
     http_router& add(const char* uri, http_request_handler_t handler);
     http_router& add(const char* uri, http_request_function_t handler);
     http_router& add(const char* uri, http_authenticate_provider* handler);
+    http_router& add(int status_code, http_request_handler_t handler);
+    http_router& add(int status_code, http_request_function_t handler);
 
     return_t route(const char* uri, network_session* session, http_request* request, http_response* response);
+
+    static void status404_handler(http_request* request, http_response* response);
 
     http_authenticate_resolver& get_authenticate_resolver();
 
    protected:
-    bool try_auth(const char* uri, http_request* request, http_response* response, http_authenticate_provider** provider);
+    bool get_auth_provider(const char* uri, http_request* request, http_response* response, http_authenticate_provider** provider);
 
    private:
     void clear();
@@ -60,11 +64,13 @@ class http_router {
         _http_router_t() : handler(nullptr), stdfunc(nullptr) {}
     } http_router_t;
     typedef std::map<std::string, http_router_t> handler_map_t;
+    typedef std::map<int, http_router_t> status_handler_map_t;
     typedef std::map<std::string, http_authenticate_provider*> authenticate_map_t;
     typedef std::pair<authenticate_map_t::iterator, bool> authenticate_map_pib_t;
 
     critical_section _lock;
     handler_map_t _handler_map;
+    status_handler_map_t _status_handler_map;
     authenticate_map_t _authenticate_map;
     http_authenticate_resolver _resolver;
 };

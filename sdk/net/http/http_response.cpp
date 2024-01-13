@@ -125,19 +125,20 @@ return_t http_response::open(std::string const& response) { return open(response
 return_t http_response::close() {
     return_t ret = errorcode_t::success;
 
+    _content_type.clear();
+    _content.clear();
+
     return ret;
 }
 
 http_response& http_response::compose(int status_code) {
-    _content_type.clear();
-    _content.clear();
+    close();
     _statuscode = status_code;
     return *this;
 }
 
 http_response& http_response::compose(int status_code, const char* content_type, const char* content, ...) {
-    _content_type.clear();
-    _content.clear();
+    close();
 
     if (nullptr != content_type) {
         _content_type = content_type;

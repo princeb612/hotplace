@@ -23,7 +23,7 @@ http_request::http_request() { _shared.make_share(this); }
 
 http_request::~http_request() { close(); }
 
-return_t http_request::open(const char* request, size_t size_request) {
+return_t http_request::open(const char* request, size_t size_request, bool optimize) {
     return_t ret = errorcode_t::success;
     return_t ret_getline = errorcode_t::success;
 
@@ -51,6 +51,7 @@ return_t http_request::open(const char* request, size_t size_request) {
          * line 3 -> break loop if no space nor colon
          */
 
+        std::string uri;
         size_t line = 1;
         size_t pos = 0, epos = 0;
         while (true) {
@@ -76,12 +77,8 @@ return_t http_request::open(const char* request, size_t size_request) {
                     _method = token; /* first token aka GET, POST, ... */
 
                     size_t zpos = tpos;
-                    _uri.open(tokenize(str, " ", zpos));
-                    /*
-                       _uri = tokenize (str, " ", zpos);
-                       zpos = 0;
-                       _url = tokenize (_uri, "?", zpos);
-                     */
+                    uri = tokenize(str, " ", zpos);
+                    _uri.open(uri);
                 } else {
                     std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
                     _header.add(token, remain);
@@ -95,6 +92,19 @@ return_t http_request::open(const char* request, size_t size_request) {
         if (size_request > epos) {
             _content.assign(request + epos, size_request - epos);
         }
+
+        if (optimize) {
+            if (_uri.countof_query()) {
+                constexpr char constexpr_content_type[] = "Content-Type";
+                constexpr char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
+                if ((false == _header.contains(constexpr_content_type, constexpr_url_encoded)) && _content.empty()) {
+                    _header.add(constexpr_content_type, constexpr_url_encoded);
+                    _content = _uri.get_query();
+                    pos = 0;
+                    _uri.open(tokenize(uri, "?", pos));
+                }
+            }
+        }
     }
     __finally2 {
         // do nothing
@@ -103,7 +113,7 @@ return_t http_request::open(const char* request, size_t size_request) {
     return ret;
 }
 
-return_t http_request::open(const char* request) {
+return_t http_request::open(const char* request, bool optimize) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == request) {
@@ -111,7 +121,7 @@ return_t http_request::open(const char* request) {
             __leave2;
         }
 
-        ret = open(request, strlen(request));
+        ret = open(request, strlen(request), optimize);
     }
     __finally2 {
         // do nothing
@@ -119,9 +129,9 @@ return_t http_request::open(const char* request) {
     return ret;
 }
 
-return_t http_request::open(basic_stream const& request) { return open(request.c_str(), request.size()); }
+return_t http_request::open(basic_stream const& request, bool optimize) { return open(request.c_str(), request.size(), optimize); }
 
-return_t http_request::open(std::string const& request) { return open(request.c_str(), request.size()); }
+return_t http_request::open(std::string const& request, bool optimize) { return open(request.c_str(), request.size(), optimize); }
 
 return_t http_request::close() {
     return_t ret = errorcode_t::success;
@@ -142,12 +152,17 @@ const char* http_request::get_uri() { return get_http_uri().get_uri(); }
 const char* http_request::get_method() { return _method.c_str(); }
 
 http_request& http_request::compose(http_method_t method, std::string const& uri, std::string const& body) {
-    close();
-
     http_resource* resource = http_resource::get_instance();
-    _method = resource->get_method(method);
-    get_http_uri().open(uri);
-    _content = body;
+    basic_stream stream;
+
+    stream << resource->get_method(method) << " " << uri << " HTTP/1.1\r\n";
+    if (body.size()) {
+        stream << "Content-Length: " << body.size() << "\r\n";
+    }
+    stream << "\r\n" << body;
+
+    open(stream, true);  // parse and optimize
+
     return *this;
 }
 

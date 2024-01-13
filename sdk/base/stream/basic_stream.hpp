@@ -35,7 +35,7 @@ class basic_stream : public stream_t {
      * @brief   constructor
      * @param   const char* data [in]
      */
-    basic_stream(const char* data);
+    basic_stream(const char* data, ...);
     /**
      * @brief   constructor
      * @param   const basic_stream& stream [in]
@@ -63,7 +63,9 @@ class basic_stream : public stream_t {
      * @param   void* data [in]
      * @param   size_t size [in]
      */
-    return_t write(void* data, size_t size);
+    return_t write(const void* data, size_t size);
+    return_t cut(uint32 begin_pos, uint32 length);
+    return_t insert(size_t begin, const void* data, size_t data_size);
     /**
      * @brief   fill
      * @param   size_t l [in]
@@ -95,6 +97,7 @@ class basic_stream : public stream_t {
     basic_stream& operator<<(unsigned int value);
     basic_stream& operator<<(long value);
     basic_stream& operator<<(unsigned long value);
+    basic_stream& operator<<(size_t value);
     basic_stream& operator<<(basic_stream const& value);
     basic_stream& operator<<(std::string const& value);
 

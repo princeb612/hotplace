@@ -36,20 +36,28 @@ return_t http_uri::open(const char* uri) {
             __leave2;
         }
 
-        std::string param;
+        close();
+
+        std::string input = uri;
         std::string token;
         std::string item;
         size_t pos = 0;
         size_t ppos = 0;
 
-        _url = tokenize(uri, "?", pos); /* until '?' character */
+        _uri = tokenize(input, "?", pos); /* until '?' character */
+        if (std::string::npos != pos) {
+            _query = input.substr(pos);
+            if (ends_with(_query, "\r\n\r\n")) {
+                _query.erase(_query.end() - 4);
+            }
+        }
 
         /* parameters */
-        param = tokenize(uri, "?", pos);
-        if (param.size()) {
+        _query = tokenize(uri, "?", pos);
+        if (_query.size()) {
             pos = 0;
             while (true) {
-                token = tokenize(param, "&", pos);
+                token = tokenize(_query, "&", pos);
                 if (true == token.empty()) {
                     break;
                 }
@@ -60,7 +68,7 @@ return_t http_uri::open(const char* uri) {
                     ppos = 0;
                 }
 
-                _query.insert(std::make_pair(item, token.substr(ppos)));
+                _query_kv.insert(std::make_pair(item, token.substr(ppos)));
             }
         }
     }
@@ -72,22 +80,30 @@ return_t http_uri::open(const char* uri) {
 }
 
 void http_uri::close() {
-    _url.clear();
+    _uri.clear();
     _query.clear();
+    _query_kv.clear();
 }
 
 const char* http_uri::get_uri() {
     const char* ret_value = nullptr;
 
-    ret_value = _url.c_str();
+    ret_value = _uri.c_str();
+    return ret_value;
+}
+
+const char* http_uri::get_query() {
+    const char* ret_value = nullptr;
+
+    ret_value = _query.c_str();
     return ret_value;
 }
 
 return_t http_uri::query(unsigned index, std::string& key, std::string& value) {
     return_t ret = errorcode_t::success;
 
-    if (index < _query.size()) {
-        PARAMETERS::iterator iter = _query.begin();
+    if (index < _query_kv.size()) {
+        PARAMETERS::iterator iter = _query_kv.begin();
         std::advance(iter, index);
         key = iter->first;
         value = iter->second;
@@ -100,9 +116,9 @@ return_t http_uri::query(unsigned index, std::string& key, std::string& value) {
 return_t http_uri::query(std::string key, std::string& value) {
     return_t ret = errorcode_t::success;
 
-    PARAMETERS::iterator iter = _query.find(key);
+    PARAMETERS::iterator iter = _query_kv.find(key);
 
-    if (_query.end() != iter) {
+    if (_query_kv.end() != iter) {
         value = iter->second;
     } else {
         ret = errorcode_t::not_found;
@@ -110,7 +126,7 @@ return_t http_uri::query(std::string key, std::string& value) {
     return ret;
 }
 
-size_t http_uri::countof_query() { return _query.size(); }
+size_t http_uri::countof_query() { return _query_kv.size(); }
 
 void http_uri::addref() { _shared.addref(); }
 

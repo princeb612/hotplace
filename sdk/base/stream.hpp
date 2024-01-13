@@ -30,7 +30,7 @@ class stream_t {
 
     virtual byte_t* data() const = 0;
     virtual uint64 size() const = 0;
-    virtual return_t write(void* data, size_t size) = 0;
+    virtual return_t write(const void* data, size_t size) = 0;
     virtual return_t fill(size_t l, char c) = 0;
     virtual return_t clear() = 0;
 

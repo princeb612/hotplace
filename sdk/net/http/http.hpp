@@ -103,6 +103,7 @@ class http_header {
      */
     const char* get(const char* header, std::string& value);
     std::string get(const char* header);
+    bool contains(const char* header, const char* value);
     /**
      * @brief   read a header token
      * @param   const char* header [in]
@@ -154,6 +155,7 @@ class http_uri {
      * @brief URI
      */
     const char* get_uri();
+    const char* get_query();
     /**
      * @brief query
      * @param   unsigned        index       [IN] 0 <= index < size_parameter ()
@@ -183,10 +185,11 @@ class http_uri {
     void release();
 
    protected:
-    std::string _url;
+    std::string _uri;
+    std::string _query;
 
     typedef std::map<std::string, std::string> PARAMETERS;
-    PARAMETERS _query;
+    PARAMETERS _query_kv;
 
     t_shared_reference<http_uri> _shared;
 };
@@ -202,10 +205,10 @@ class http_request {
      * @param  size_t          size_request    [IN]
      * @return error code (see error.hpp)
      */
-    return_t open(const char* request, size_t size_request);
-    return_t open(const char* request);
-    return_t open(basic_stream const& request);
-    return_t open(std::string const& request);
+    return_t open(const char* request, size_t size_request, bool optimize = false);
+    return_t open(const char* request, bool optimize = false);
+    return_t open(basic_stream const& request, bool optimize = false);
+    return_t open(std::string const& request, bool optimize = false);
     /**
      * @brief  close
      * @return error code (see error.hpp)
@@ -335,12 +338,14 @@ class http_client {
     http_client();
     ~http_client();
 
+    client_socket* connect(std::string const& url);
+    client_socket* connect(url_info_t const& url_info);
     http_client& request(std::string const& url, http_response** response);
     http_client& request(http_request& request, http_response** response);
+    http_client& close();
 
    protected:
     http_client& request_and_response(url_info_t const& url_info, http_request& request, http_response** response);
-    http_client& close();
 
    private:
     socket_t _socket;

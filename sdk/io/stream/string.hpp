@@ -26,7 +26,7 @@ class ansi_string : public stream_t {
 
     byte_t* data() const;
     uint64 size() const;
-    return_t write(void* data, size_t size);
+    return_t write(const void* data, size_t size);
     return_t fill(size_t l, char c);
     return_t clear();
 
@@ -150,7 +150,7 @@ class wide_string : public stream_t {
 
     byte_t* data() const;
     uint64 size() const;
-    return_t write(void* data, size_t size);
+    return_t write(const void* data, size_t size);
     return_t fill(size_t l, char c);
     return_t clear();
 

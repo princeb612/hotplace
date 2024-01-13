@@ -59,6 +59,7 @@ http_header& http_header::clear() {
 const char* http_header::get(const char* header, std::string& value) {
     const char* ret_value = nullptr;
 
+    value.clear();
     if (nullptr != header) {
         http_header_map_t::iterator iter = _headers.find(std::string(header));
         if (_headers.end() != iter) {
@@ -81,8 +82,25 @@ std::string http_header::get(const char* header) {
     return ret_value;
 }
 
+bool http_header::contains(const char* header, const char* value) {
+    bool ret_value = false;
+    if (header && value) {
+        http_header_map_t::iterator iter = _headers.find(std::string(header));
+        if (_headers.end() != iter) {
+            std::string body = iter->second;
+            size_t pos = body.find(value);
+            if (std::string::npos != pos) {
+                ret_value = true;
+            }
+        }
+    }
+    return ret_value;
+}
+
 const char* http_header::get_token(const char* header, unsigned index, std::string& token) {
     const char* ret_value = nullptr;
+
+    token.clear();
 
     std::string content;
     std::string temp;

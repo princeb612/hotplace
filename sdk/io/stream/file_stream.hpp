@@ -206,7 +206,7 @@ class file_stream : public stream_t {
      *          in case of mmaped status, all write operation work up to (4G - 1) bytes
      * @sa
      */
-    virtual return_t write(void* data, size_t size_data);
+    virtual return_t write(const void* data, size_t size_data);
     virtual return_t fill(size_t l, char c);
     /**
      * @brief read

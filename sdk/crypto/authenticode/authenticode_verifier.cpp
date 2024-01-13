@@ -642,7 +642,7 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
                     std::string find = format("CN=%s", cn.c_str());
                     size_t pos = subject.find(find);
 
-                    if ((size_t)-1 != pos) {
+                    if (std::string::npos != pos) {
                         if (0 == strcmp(subject.substr(pos).c_str(), find.c_str())) {
                             match = true;
                             break;
