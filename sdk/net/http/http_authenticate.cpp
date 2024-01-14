@@ -25,21 +25,6 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-/**
-
-    coding rule to avoid unit-test failure
-
-    bool xxx_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
-                                                http_response* response) {
-        ...
-        ret_value  = resolver->xxx_authenticate(this, session, request, response);
-        if (false == ret_value) {
-            do not call resolver->request_auth // after request_auth, session data change
-        }
-    }
-
- */
-
 http_basic_authenticate_provider::http_basic_authenticate_provider(const char* realm) : http_authenticate_provider(realm) {}
 
 http_basic_authenticate_provider::~http_basic_authenticate_provider() {}
@@ -291,8 +276,7 @@ return_t http_digest_access_authenticate_provider::prepare_digest_access(network
     return ret;
 }
 
-return_t http_digest_access_authenticate_provider::digest_digest_access(network_session* session, http_request* request, http_response* response,
-                                                                        key_value& kv) {
+return_t http_digest_access_authenticate_provider::auth_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv) {
     return_t ret = errorcode_t::mismatch;
     __try2 {
         if (nullptr == session || nullptr == request) {
@@ -465,8 +449,8 @@ return_t http_bearer_authenticate_provider::request_auth(network_session* sessio
             session->get_session_data()->remove("bearer");
 
             openssl_prng prng;
-            std::string access_token = prng.nonce(16);
-            std::string refresh_token = prng.nonce(16);
+            std::string access_token = prng.token(16);
+            std::string refresh_token = prng.token(16);
             session->get_session_data()->set("access_token", access_token);
             session->get_session_data()->set("refresh_token", refresh_token);
 

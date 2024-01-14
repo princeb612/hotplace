@@ -64,7 +64,7 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
             case zlib_windowbits_t::windowbits_deflate:
                 wbit = -MAX_WBITS;
                 break;
-            case zlib_windowbits_t::windowbits_zlib:
+            case zlib_windowbits_t::windowbits_gzip:
                 wbit = MAX_WBITS + 16;
                 break;
         }
@@ -124,7 +124,7 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
             case zlib_windowbits_t::windowbits_deflate:
                 wbit = -MAX_WBITS;
                 break;
-            case zlib_windowbits_t::windowbits_zlib:
+            case zlib_windowbits_t::windowbits_gzip:
                 wbit = MAX_WBITS + 16;
                 break;
         }
@@ -192,7 +192,7 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
             case zlib_windowbits_t::windowbits_deflate:
                 wbit = -MAX_WBITS;
                 break;
-            case zlib_windowbits_t::windowbits_zlib:
+            case zlib_windowbits_t::windowbits_gzip:
                 wbit = MAX_WBITS + 16;
                 break;
         }
@@ -252,7 +252,7 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
             case zlib_windowbits_t::windowbits_deflate:
                 wbit = -MAX_WBITS;
                 break;
-            case zlib_windowbits_t::windowbits_zlib:
+            case zlib_windowbits_t::windowbits_gzip:
                 wbit = MAX_WBITS + 16;
                 break;
         }

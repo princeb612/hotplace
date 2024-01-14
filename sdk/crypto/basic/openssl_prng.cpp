@@ -79,5 +79,16 @@ std::string openssl_prng::nonce(size_t size) {
     return ret_value;
 }
 
+std::string openssl_prng::token(size_t size) {
+    std::string ret_value;
+
+    binary_t buffer;
+    buffer.resize(size);
+    RAND_bytes(&buffer[0], buffer.size());
+    ret_value = base64_encode(buffer, base64_encoding_t::base64url_encoding);
+
+    return ret_value;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

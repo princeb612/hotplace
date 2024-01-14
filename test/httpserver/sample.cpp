@@ -250,7 +250,7 @@ return_t echo_server(void*) {
                 ret = digest_provider->prepare_digest_access(session, request, response, kv);
                 if (errorcode_t::success == ret) {
                     // get username from kv.get("username"), and then read password (cache, in-memory db)
-                    // and then call provider->digest_digest_access
+                    // and then call provider->auth_digest_access
                     std::string username = kv.get("username");
                     std::string password;
                     bool found = false;
@@ -270,7 +270,7 @@ return_t echo_server(void*) {
                     }
                     if (found) {
                         kv.set("password", password);
-                        ret = digest_provider->digest_digest_access(session, request, response, kv);
+                        ret = digest_provider->auth_digest_access(session, request, response, kv);
                         if (errorcode_t::success == ret) {
                             ret_value = true;
                         }

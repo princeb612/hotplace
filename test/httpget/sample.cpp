@@ -176,12 +176,16 @@ void test_uri_form_encoded_body_parameter() {
 
 void test_uri(const char* input) {
     _test_case.begin("uri");
+    OPTION& option = cmdline->value();
+
     key_value kv;
     http_uri::to_keyvalue(input, kv);
     std::string client_id = kv.get("client_id");
     std::string client_secret = kv.get("client_secret");
-    printf("client_id %s\n", client_id.c_str());
-    printf("client_secret %s\n", client_secret.c_str());
+    if (option.debug) {
+        printf("client_id %s\n", client_id.c_str());
+        printf("client_secret %s\n", client_secret.c_str());
+    }
     _test_case.assert("s6BhdRkqt3" == client_id, __FUNCTION__, "client_id");
     _test_case.assert("7Fjfp0ZBr1KtDRbnfVdmIw" == client_secret, __FUNCTION__, "client_secret");
 }
@@ -257,7 +261,7 @@ void test_basic_authenticate() {
 
 /**
  * calcuration routine
- * cf. see http_digest_access_authenticate_provider::digest_digest_access (slightly diffrent)
+ * cf. see http_digest_access_authenticate_provider::auth_digest_access (slightly diffrent)
  */
 return_t calc_digest_digest_access(http_authenticate_provider* provider, network_session* session, http_request* request, key_value& kv,
                                    std::string& digest_response) {
@@ -374,8 +378,8 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
                 kv.foreach ([&](std::string const& k, std::string const& v, void* param) -> void { printf("> %s:=%s\n", k.c_str(), v.c_str()); });
             }
 
-            // and then call provider->digest_digest_access
-            return_t ret = digest_provider->digest_digest_access(session, request, response, kv);
+            // and then call provider->auth_digest_access
+            return_t ret = digest_provider->auth_digest_access(session, request, response, kv);
             if (errorcode_t::success == ret) {
                 ret_value = true;
             }
@@ -486,7 +490,9 @@ void test_get() {
             req.get_request(body);
 
             cprint("request");
-            std::cout << body.c_str() << std::endl;
+            if (option.debug) {
+                std::cout << body.c_str() << std::endl;
+            }
 
             size_t cbsent = 0;
             ret = cli.send(sock, handle, body.c_str(), body.size(), &cbsent);
@@ -497,13 +503,17 @@ void test_get() {
                 if (0 == option.mode) {
                     ret = cli.read(sock, handle, buf, sizeof(buf), &sizeread);
 
-                    dump_memory((byte_t*)buf, sizeread, &bs);
-                    printf("%s\n", bs.c_str());
+                    if (option.debug) {
+                        dump_memory((byte_t*)buf, sizeread, &bs);
+                        printf("%s\n", bs.c_str());
+                    }
                     while (errorcode_t::more_data == ret) {
                         ret = cli.more(sock, handle, buf, sizeof(buf), &sizeread);
 
-                        dump_memory((byte_t*)buf, sizeread, &bs);
-                        printf("%s\n", bs.c_str());
+                        if (option.debug) {
+                            dump_memory((byte_t*)buf, sizeread, &bs);
+                            printf("%s\n", bs.c_str());
+                        }
                     }
                 } else {
                     network_protocol_group group;
@@ -524,7 +534,9 @@ void test_get() {
                     stream_interpreted.consume(&data);
                     if (data) {
                         cprint("response");
-                        printf("%.*s\n", (unsigned)data->size(), (char*)data->content());
+                        if (option.debug) {
+                            printf("%.*s\n", (unsigned)data->size(), (char*)data->content());
+                        }
 
                         data->release();
                     }
@@ -554,9 +566,11 @@ void test_client() {
     client.set_ttl(60000);  // 1 min
     client.request("https://localhost:9000/api/test?access_token=mF_9.B5f-4.1JqM", &response);
     if (response) {
-        basic_stream bs;
-        response->get_response(bs);
-        printf("%s\n", bs.c_str());
+        if (option.debug) {
+            basic_stream bs;
+            response->get_response(bs);
+            printf("%s\n", bs.c_str());
+        }
         response->release();
     }
 
@@ -573,39 +587,44 @@ void test_client() {
         status_code = response->status_code();
         stream << response->content();
 
-        basic_stream bs;
-        response->get_response(bs);
-        printf("%s\n", bs.c_str());
-        response->release();
-    }
-
-    std::string access_token;
-    json_t* json_root = nullptr;
-    json_open_stream(&json_root, stream.c_str());
-    if (json_root) {
-        const char* unp_access_token = nullptr;
-        const char* unp_token_type = nullptr;
-        json_unpack(json_root, "{s:s}", "access_token", &unp_access_token);
-        json_unpack(json_root, "{s:s}", "token_type", &unp_token_type);
-
-        if (unp_access_token && (0 == strcmp("Bearer", unp_token_type))) {
-            access_token = unp_access_token;
+        if (option.debug) {
+            basic_stream bs;
+            response->get_response(bs);
+            printf("%s\n", bs.c_str());
         }
-
-        json_decref(json_root);
+        response->release();
     }
 
     if (200 == status_code) {
         // json
+        std::string access_token;
 
+        json_t* json_root = nullptr;
+        json_open_stream(&json_root, stream.c_str());
+        if (json_root) {
+            const char* unp_access_token = nullptr;
+            const char* unp_token_type = nullptr;
+            json_unpack(json_root, "{s:s}", "access_token", &unp_access_token);
+            json_unpack(json_root, "{s:s}", "token_type", &unp_token_type);
+
+            if (unp_access_token && (0 == strcmp("Bearer", unp_token_type))) {
+                access_token = unp_access_token;
+            }
+
+            json_decref(json_root);
+        }
+
+        // Bearer
         cprint("access_token");
         request.compose(http_method_t::HTTP_GET, "/auth/bearer", "");
         request.get_http_header().add("Authorization", format("Bearer %s", access_token.c_str()));
         client.request(request, &response);
         if (response) {
-            basic_stream bs;
-            response->get_response(bs);
-            printf("%s\n", bs.c_str());
+            if (option.debug) {
+                basic_stream bs;
+                response->get_response(bs);
+                printf("%s\n", bs.c_str());
+            }
             response->release();
         }
     } else if (401 == status_code) {
@@ -613,6 +632,8 @@ void test_client() {
     } else {
         //
     }
+
+    _test_case.assert(200 == status_code, __FUNCTION__, "Bearer Authentication");
 }
 
 int main(int argc, char** argv) {
@@ -629,9 +650,9 @@ int main(int argc, char** argv) {
     cmdline.make_share(new cmdline_t<OPTION>);
 
     *cmdline << cmdarg_t<OPTION>("-c", "connect", [&](OPTION& o, char* param) -> void { o.connect = 1; }).optional()
-             << cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/)", [&](OPTION& o, char* param) -> void { o.url = param; }).preced().optional()
              << cmdarg_t<OPTION>("-p", "read stream using http_protocol", [&](OPTION& o, char* param) -> void { o.mode = 1; }).optional()
-             << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = 1; }).optional();
+             << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+             << cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/)", [&](OPTION& o, char* param) -> void { o.url = param; }).preced().optional();
 
     cmdline->parse(argc, argv);
     OPTION& option = cmdline->value();

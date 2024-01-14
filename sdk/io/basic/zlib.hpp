@@ -21,7 +21,7 @@ namespace io {
 enum zlib_windowbits_t {
     windowbits_compress = 0, /* using windowBits MAX_WBITS(15) */
     windowbits_deflate = 1,  /* RFC1951 : DEFLATE Compressed Data Format Specification version 1.3, using windowBits -MAX_WBITS(-15) */
-    windowbits_zlib = 2,     /* RFC1952 : GZIP file format specification version 4.3, using windowBits MAX_WBITS + 16(31) */
+    windowbits_gzip = 2,     /* RFC1952 : GZIP file format specification version 4.3, using windowBits MAX_WBITS + 16(31) */
 };
 
 return_t zlib_deflate(zlib_windowbits_t windowbits, binary_t const& input, binary_t& output);

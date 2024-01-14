@@ -41,15 +41,22 @@ class key_value {
      * @param uint32 flags [inopt]
      */
     key_value(uint32 flags = key_value_flag_t::key_value_case_sensitive);
+    /**
+     * @brief destructor
+     */
     ~key_value();
 
+    /**
+     * @brief set
+     * @param uint32 flags [in]
+     */
     key_value& set(uint32 flags);
 
     /**
      * @brief   add, update
      * @param   const char*     name    [IN]
      * @param   const char*     value   [IN]
-     * @param   uint32           flags   [INOPT] 1 overwrite, 0 keep old
+     * @param   uint32          mode    [INOPT] 1 overwrite, 0 keep old
      * @return  error code (see error.hpp)
      * @remarks
      *          set (key1, value1, key_value_mode_t::keep); // return errorcode_t::success
@@ -124,9 +131,19 @@ class key_value {
      */
     return_t copy(key_value& rhs, int mode = key_value_mode_t::update);
 
+    /**
+     * @brief   copy
+     * @return  error code (see error.hpp)
+     * @sa      copy
+     */
     return_t copyfrom(std::map<std::string, std::string>& source, int mode);
     return_t copyto(std::map<std::string, std::string>& target);
 
+    /**
+     * @brief   foreach
+     * @param   std::function<void(std::string const&, std::string const&, void*)> func [in]
+     * @param   void* param [inopt]
+     */
     void foreach (std::function<void(std::string const&, std::string const&, void*)> func, void* param = nullptr);
 
     /**
@@ -144,6 +161,7 @@ class key_value {
      */
     key_value& operator<<(key_value& rhs);
 
+   protected:
     /* key, value */
     typedef std::map<std::string, std::string> keyvalue_map_t;
     typedef std::pair<keyvalue_map_t::iterator, bool> keyvalue_map_pib_t;
@@ -151,7 +169,6 @@ class key_value {
     typedef std::map<int, std::string> key_order_map_t;
     typedef std::map<std::string, int> key_reverse_order_map_t;
 
-   protected:
     critical_section _lock;
     keyvalue_map_t _keyvalues;
     key_order_map_t _order_map;

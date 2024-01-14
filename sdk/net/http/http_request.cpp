@@ -156,7 +156,7 @@ http_request& http_request::compose(http_method_t method, std::string const& uri
     http_resource* resource = http_resource::get_instance();
     basic_stream stream;
 
-    stream << resource->get_method(method) << " " << uri << " HTTP/1.1\r\n";
+    stream << resource->get_method(method) << " " << uri << " " << get_version() << "\r\n";
     if (body.size()) {
         stream << "Content-Length: " << body.size() << "\r\n";
     }
@@ -174,10 +174,12 @@ http_request& http_request::get_request(basic_stream& bs) {
     bs.clear();
     get_http_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
 
-    bs.printf("%s %s HTTP/1.1\r\n%s\r\n%s", get_method(), get_uri(), headers.c_str(), get_content().c_str());
+    bs << get_method() << " " << get_uri() << " " << get_version() << "\r\n" << headers << "\r\n" << get_content();
 
     return *this;
 }
+
+std::string http_request::get_version() { return "HTTP/1.1"; }
 
 void http_request::addref() { _shared.addref(); }
 
