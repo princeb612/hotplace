@@ -168,6 +168,8 @@ return_t echo_server(void*) {
         bool digest_access_userhash = true;
         // Bearer Authentication (realm)
         std::string bearer_realm = "hotplace";
+        // OAuth 2.0 (realm)
+        std::string oauth2_realm = "somewhere over the rainbow";
 
         // part of ssl certificate
         ret = x509_open(&x509, "server.crt", "server.key");
@@ -222,10 +224,13 @@ return_t echo_server(void*) {
             .add("/auth/basic", default_handler)
             .add("/auth/digest", default_handler)
             .add("/auth/bearer", default_handler)
+            .add("/auth/oauth2", default_handler)
+            .add(404, default_handler)
             .add("/auth/basic", new http_basic_authenticate_provider(basic_realm.c_str()))
             .add("/auth/digest", new http_digest_access_authenticate_provider(digest_access_realm.c_str(), digest_access_alg.c_str(), digest_access_qop.c_str(),
                                                                               digest_access_userhash))
-            .add("/auth/bearer", new http_bearer_authenticate_provider(bearer_realm.c_str()));
+            .add("/auth/bearer", new http_bearer_authenticate_provider(bearer_realm.c_str()))
+            .add("/auth/oauth2", new oauth2_provider(oauth2_realm.c_str()));
 
         // simple implementation
         (*_http_router)
@@ -280,6 +285,31 @@ return_t echo_server(void*) {
                 return ret_value;
             })
             .bearer_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
+                bool ret_value = false;
+                std::string challenge = provider->get_challenge(request);
+                std::string token;
+
+                if (0 == strncmp("Bearer", challenge.c_str(), 6)) {
+                    size_t pos = 6;
+                    token = tokenize(challenge, " ", pos);
+                    if (token == session->get_session_data()->get("access_token")) {
+                        ret_value = true;
+                    }
+                } else {
+                    key_value kv;
+                    http_uri::to_keyvalue(challenge, kv);
+                    token = kv.get("access_token");
+                    std::string client_id = kv.get("client_id");
+                    std::string client_secret = kv.get("client_secret");
+                    std::map<std::string, std::string>::iterator iter = bearer_credentials.find(client_id);
+                    if (iter != bearer_credentials.end()) {
+                        session->get_session_data()->set("bearer", "access_token");  // hmm... I need something grace
+                    }
+                }
+
+                return ret_value;
+            })
+            .oauth2_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
                 bool ret_value = false;
                 std::string challenge = provider->get_challenge(request);
                 std::string token;

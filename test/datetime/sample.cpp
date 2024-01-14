@@ -55,7 +55,7 @@ void apply_timespan(datetime* dt, timespan_t ts) {
 }
 
 void test_time() {
-    timespan_t ts = {3, 30, 111};
+    timespan_t ts(3, 30, 111);
     long nsec = 0;
 
     _test_case.begin("class datetime");
