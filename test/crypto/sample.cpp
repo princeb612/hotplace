@@ -224,6 +224,40 @@ void test_random() {
     _test_case.test(ret, __FUNCTION__, "random loop %i times", times);
 }
 
+void test_nonce() {
+    _test_case.begin("random");
+
+    return_t ret = errorcode_t::success;
+    std::string nonce;
+    openssl_prng random;
+    int i = 0;
+    int times = 30;
+
+    for (i = 0; i < times; i++) {
+        nonce = random.nonce(16);
+        printf("nonce %s\n", nonce.c_str());
+    }
+
+    _test_case.test(ret, __FUNCTION__, "nonce loop %i times", times);
+}
+
+void test_token() {
+    _test_case.begin("random");
+
+    return_t ret = errorcode_t::success;
+    std::string token;
+    openssl_prng random;
+    int i = 0;
+    int times = 30;
+
+    for (i = 0; i < times; i++) {
+        token = random.token(16);
+        printf("token %s\n", token.c_str());
+    }
+
+    _test_case.test(ret, __FUNCTION__, "token loop %i times", times);
+}
+
 void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
     return_t ret = errorcode_t::success;
 
@@ -560,6 +594,8 @@ int main() {
         test_crypt_algorithms(0, 0);      // speed
 
         test_random();
+        test_nonce();
+        test_token();
 
         test_keywrap_rfc3394();
 

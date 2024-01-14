@@ -33,11 +33,15 @@ typedef struct _systemtime_t {
     uint16 minute;
     uint16 second;
     uint16 milliseconds;
+
+    _systemtime_t() : year(0), month(0), dayofweek(0), day(0), hour(0), minute(0), second(0), milliseconds(0) {}
 } systemtime_t;
 
 typedef struct _filetime_t {
     uint32 low;
     uint32 high;
+
+    _filetime_t() : low(0), high(0) {}
 } filetime_t;
 
 typedef struct _datetime_t {
@@ -48,12 +52,16 @@ typedef struct _datetime_t {
     uint16 minute;
     uint16 second;
     uint32 milliseconds;
+
+    _datetime_t() : year(0), month(0), day(0), hour(0), minute(0), second(0), milliseconds(0) {}
 } datetime_t;
 
 typedef struct _timespan_t {
     int32 days;
     int32 seconds;
     int32 milliseconds;
+
+    _timespan_t() : days(0), seconds(0), milliseconds(0) {}
 } timespan_t;
 
 #pragma pack(pop)
