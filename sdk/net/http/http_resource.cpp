@@ -24,6 +24,8 @@ http_resource http_resource::_instance;
 http_resource* http_resource::get_instance() { return &_instance; }
 
 http_resource::http_resource() {
+    // RFC 2616 HTTP/1.1
+    // 6.1.1 Status Code and Reason Phrase
     _status_codes.insert(std::make_pair(100, "Continue"));
     _status_codes.insert(std::make_pair(101, "Switching Protocols"));
     _status_codes.insert(std::make_pair(200, "OK"));
@@ -61,6 +63,7 @@ http_resource::http_resource() {
     _status_codes.insert(std::make_pair(504, "Gateway Time-out"));
     _status_codes.insert(std::make_pair(505, "HTTP Version not supported"));
 
+    // 5.1.1 Method
     _methods.insert(std::make_pair(http_method_t::HTTP_OPTIONS, "OPTIONS"));
     _methods.insert(std::make_pair(http_method_t::HTTP_GET, "GET"));
     _methods.insert(std::make_pair(http_method_t::HTTP_HEAD, "HEAD"));

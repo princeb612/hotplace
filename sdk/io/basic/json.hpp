@@ -19,6 +19,22 @@
 namespace hotplace {
 namespace io {
 
+/**
+ * @brief   json
+ * @param   json_t** object [out]
+ * @param   const char* buffer [in]
+ * @param   bool suppress [inopt] default false
+ * @sample
+ *          json_t* json_root = nullptr;
+ *          json_open_stream(&json_root, json_stream);
+ *          if (json_root) {
+ *              const char* unp_access_token = nullptr;
+ *              const char* unp_token_type = nullptr;
+ *              json_unpack(json_root, "{s:s}", "access_token", &unp_access_token);
+ *              json_unpack(json_root, "{s:s}", "token_type", &unp_token_type);
+ *              json_decref(json_root);
+ *          }
+ */
 static inline return_t json_open_stream(json_t** object, const char* buffer, bool suppress = false) {
     return_t ret = errorcode_t::success;
 
@@ -49,6 +65,12 @@ static inline return_t json_open_stream(json_t** object, const char* buffer, boo
     return ret;
 }
 
+/**
+ * @brief   json
+ * @param   json_t** object [out]
+ * @param   const char* file [in]
+ * @param   bool suppress [inopt] default false
+ */
 static inline return_t json_open_file(json_t** object, const char* file, bool suppress = false) {
     return_t ret = errorcode_t::success;
 

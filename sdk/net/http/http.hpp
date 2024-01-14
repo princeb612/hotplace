@@ -48,26 +48,26 @@ class http_header {
     virtual ~http_header();
 
     /**
-     * @brief  add a header
-     * @param  const char*     header      [IN]
-     * @param  const char*     value       [IN]
-     * @return *this
+     * @brief   add a header
+     * @param   const char*     header      [IN]
+     * @param   const char*     value       [IN]
+     * @return  *this
      * @remarks
      *          header.add ("WWW-Authenticate", "Basic realm=\"protected\"");
      */
     http_header& add(const char* header, const char* value);
 
     /**
-     * @brief  add a header
-     * @param  std::string     header      [IN]
-     * @param  std::string     value       [IN]
-     * @return *this
+     * @brief   add a header
+     * @param   std::string     header      [IN]
+     * @param   std::string     value       [IN]
+     * @return  *this
      */
     http_header& add(std::string header, std::string value);
 
     /**
-     * @brief  clear
-     * @return *this
+     * @brief   clear
+     * @return  *this
      */
     http_header& clear();
 
@@ -94,7 +94,7 @@ class http_header {
     static return_t to_keyvalue(std::string const& value, key_value& kv);
 
     /**
-     * @brief read a header
+     * @brief   read a header
      * @param   const char* header [in]
      * @param   std::string& value [out]
      * @return  value
@@ -103,6 +103,14 @@ class http_header {
      */
     const char* get(const char* header, std::string& value);
     std::string get(const char* header);
+    /**
+     * @brief   contains
+     * @param   const char* header [in]
+     * @param   const char* value [in]
+     * @sample
+     *          header.add("Content-Type", "text/html;charset=UTF-8");
+     *          test = header.contains("Content-Type", "text/html");
+     */
     bool contains(const char* header, const char* value);
     /**
      * @brief   read a header token
@@ -141,10 +149,10 @@ class http_uri {
 
     /**
      * @brief open
-     * @param std::string uri [in]
+     * @param std::string const& uri [in]
      * @return error code (see error.hpp)
      */
-    return_t open(std::string uri);
+    return_t open(std::string const& uri);
     return_t open(const char* uri);
     /**
      * @brief close
@@ -157,11 +165,11 @@ class http_uri {
     const char* get_uri();
     const char* get_query();
     /**
-     * @brief query
+     * @brief   query
      * @param   unsigned        index       [IN] 0 <= index < size_parameter ()
      * @param   std::string&    key         [OUT]
      * @param   std::string&    value       [OUT]
-     * @return error code (see error.hpp)
+     * @return  error code (see error.hpp)
      * @remarks
      *          http_uri url ("/resource/entity?spec=full&period=week")
      *          url.query (0, key, value) return spec and full
@@ -169,12 +177,12 @@ class http_uri {
      */
     return_t query(unsigned index, std::string& key, std::string& value);
     /**
-     * @brief read a param
-     * @param std::string key [in]
-     * @param std::string& value [out]
-     * @return error code (see error.hpp)
+     * @brief   read a param
+     * @param   std::string const& key [in]
+     * @param   std::string& value [out]
+     * @return  error code (see error.hpp)
      */
-    return_t query(std::string key, std::string& value);
+    return_t query(std::string const& key, std::string& value);
     /**
      * @brief count of query
      * @remarks
@@ -187,10 +195,10 @@ class http_uri {
      * @param   key_value& kv [out]
      * @return  error code (see error.hpp)
      * @sample
-     *      const char* input = "/resource?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw";
-     *      http_uri::to_keyvalue(input, kv);
-     *      std::string client_id = kv.get("client_id");
-     *      std::string client_secret = kv.get("client_secret");
+     *          const char* input = "/resource?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw";
+     *          http_uri::to_keyvalue(input, kv);
+     *          std::string client_id = kv.get("client_id");
+     *          std::string client_secret = kv.get("client_secret");
      */
     static return_t to_keyvalue(std::string const& value, key_value& kv);
 
@@ -213,44 +221,57 @@ class http_request {
     virtual ~http_request();
 
     /**
-     * @brief  open
-     * @param  const char*     request         [IN]
-     * @param  size_t          size_request    [IN]
-     * @return error code (see error.hpp)
+     * @brief   open
+     * @param   const char*     request         [IN]
+     * @param   size_t          size_request    [IN]
+     * @param   bool            optimize        [inopt]
+     * @return  error code (see error.hpp)
      */
     return_t open(const char* request, size_t size_request, bool optimize = false);
     return_t open(const char* request, bool optimize = false);
     return_t open(basic_stream const& request, bool optimize = false);
     return_t open(std::string const& request, bool optimize = false);
     /**
-     * @brief  close
-     * @return error code (see error.hpp)
+     * @brief   close
+     * @return  error code (see error.hpp)
      */
     return_t close();
 
     /**
-     * @brief return the http_header object
+     * @brief   return the http_header object
      */
     http_header& get_http_header();
     /**
-     * @brief return the http_uri object
+     * @brief   return the http_uri object
      */
     http_uri& get_http_uri();
     /**
-     * @brief url
+     * @brief   uri
      */
     const char* get_uri();
     /**
-     * @brief return the method (GET, POST, ...)
+     * @brief   return the method (GET, POST, ...)
      */
     const char* get_method();
     /**
-     * @brief content
+     * @brief   content
      */
     std::string get_content();
 
+    /**
+     * @brief   compose
+     * @param   http_method_t method [in]
+     * @param   std::string const& uri [in]
+     * @param   std::string const& body [in]
+     */
     http_request& compose(http_method_t method, std::string const& uri, std::string const& body);
+    /**
+     * @brief   load
+     * @param   basic_stream& stream [out]
+     */
     http_request& get_request(basic_stream& stream);
+
+    virtual std::string get_version();
 
     void addref();
     void release();
@@ -273,10 +294,10 @@ class http_response {
     ~http_response();
 
     /* *
-     * @brief  open
-     * @param  const char*     response        [IN]
-     * @param  size_t          size_response   [IN]
-     * @return error code (see error.hpp)
+     * @brief   open
+     * @param   const char*     response        [IN]
+     * @param   size_t          size_response   [IN]
+     * @return  error code (see error.hpp)
      */
     return_t open(const char* response, size_t size_response);
     return_t open(const char* response);
@@ -288,16 +309,38 @@ class http_response {
      */
     return_t close();
 
+    /**
+     * @brief   compose
+     */
     http_response& compose(int status_code);
     http_response& compose(int status_code, const char* content_type, const char* content, ...);
+    /**
+     * @brief   Content-Type
+     */
     const char* content_type();
+    /**
+     * @brief   content
+     */
     const char* content();
     size_t content_size();
+    /**
+     * @brief   status code
+     */
     int status_code();
+    /**
+     * @brief   header
+     */
     http_header& get_http_header();
+    /**
+     * @brief   request
+     */
     http_request* get_http_request();
-
+    /**
+     * @brief   response
+     */
     http_response& get_response(basic_stream& bs);
+
+    virtual std::string get_version();
 
     void addref();
     void release();
@@ -315,9 +358,19 @@ class http_response {
 
 class http_resource {
    public:
+    /**
+     * @brief   singleton instance
+     */
     static http_resource* get_instance();
 
+    /**
+     * @brief   status code message
+     * @remarks RFC 2616 HTTP/1.1 6.1.1 Status Code and Reason Phrase
+     */
     std::string load(int status);
+    /**
+     * @brief   method
+     */
     std::string get_method(http_method_t method);
 
    protected:

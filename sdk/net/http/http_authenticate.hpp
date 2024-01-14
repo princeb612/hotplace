@@ -32,22 +32,57 @@ namespace net {
 
 class http_authenticate_resolver;
 
+/**
+ * @brief   authentication
+ * @sample
+ *          // sketch
+ *          bool xxx_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
+ *                                                      http_response* response) {
+ *              ...
+ *              ret_value  = resolver->xxx_authenticate(this, session, request, response);
+ *              if (false == ret_value) {
+ *                  do not call resolver->request_auth // after request_auth, session data change
+ *              }
+ *          }
+ */
 class http_authenticate_provider {
    public:
     http_authenticate_provider(std::string const& realm) : _realm(realm) { _shared.make_share(this); }
 
+    /**
+     * @brief   try
+     * @param   http_authenticate_resolver* resolver [in]
+     * @param   network_session* session [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     * @return  error code (see error.hpp)
+     */
     virtual bool try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response) = 0;
+    /**
+     * @brief   401 Unauthorized
+     * @param   network_session* session [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     * @return  error code (see error.hpp)
+     */
     virtual return_t request_auth(network_session* session, http_request* request, http_response* response) = 0;
-
+    /**
+     * @brief   challenge
+     * @param   http_request* request [in]
+     */
     virtual std::string get_challenge(http_request* request) {
         std::string token_auth;
         constexpr char constexpr_authorization[] = "Authorization";
         request->get_http_header().get(constexpr_authorization, token_auth);
         return token_auth;
     }
+
     virtual int addref() { return _shared.addref(); }
     virtual int release() { return _shared.delref(); }
 
+    /**
+     * @brief   realm
+     */
     std::string get_realm() { return _realm; }
 
    protected:
@@ -69,7 +104,22 @@ class http_basic_authenticate_provider : public http_authenticate_provider {
     http_basic_authenticate_provider(const char* realm);
     virtual ~http_basic_authenticate_provider();
 
+    /**
+     * @brief   try
+     * @param   http_authenticate_resolver* resolver [in]
+     * @param   network_session* session [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     * @return  error code (see error.hpp)
+     */
     virtual bool try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response);
+    /**
+     * @brief   401 Unauthorized
+     * @param   network_session* session [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     * @return  error code (see error.hpp)
+     */
     virtual return_t request_auth(network_session* session, http_request* request, http_response* response);
 };
 
@@ -120,7 +170,22 @@ class http_digest_access_authenticate_provider : public http_authenticate_provid
     http_digest_access_authenticate_provider(const char* realm, const char* algorithm, const char* qop, bool userhash = false);
     virtual ~http_digest_access_authenticate_provider();
 
+    /**
+     * @brief   try
+     * @param   http_authenticate_resolver* resolver [in]
+     * @param   network_session* session [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     * @return  error code (see error.hpp)
+     */
     virtual bool try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response);
+    /**
+     * @brief   401 Unauthorized
+     * @param   network_session* session [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     * @return  error code (see error.hpp)
+     */
     virtual return_t request_auth(network_session* session, http_request* request, http_response* response);
 
     /**
@@ -138,7 +203,7 @@ class http_digest_access_authenticate_provider : public http_authenticate_provid
      * @param   http_response* response [in]
      * @param   key_value& kv [inout]
      */
-    return_t digest_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv);
+    return_t auth_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv);
 
     /**
      * @brief   algorithm
@@ -173,7 +238,22 @@ class http_bearer_authenticate_provider : public http_authenticate_provider {
     http_bearer_authenticate_provider(const char* realm);
     virtual ~http_bearer_authenticate_provider();
 
+    /**
+     * @brief   try
+     * @param   http_authenticate_resolver* resolver [in]
+     * @param   network_session* session [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     * @return  error code (see error.hpp)
+     */
     virtual bool try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response);
+    /**
+     * @brief   200 OK / 401 Unauthorized
+     * @param   network_session* session [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     * @return  error code (see error.hpp)
+     */
     virtual return_t request_auth(network_session* session, http_request* request, http_response* response);
 
     virtual std::string get_challenge(http_request* request);
@@ -185,51 +265,52 @@ class http_authenticate_resolver {
     http_authenticate_resolver();
 
     /**
-     * @brief resolve
-     * @param http_authenticate_provider* provider [in]
-     * @param network_session* session [in]
-     * @param http_request* request [in]
-     * @param http_response* response [in]
+     * @brief   resolve
+     * @param   http_authenticate_provider* provider [in]
+     * @param   network_session* session [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     * @return  result
      */
     bool resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
 
     /**
-     * @brief register handler
-     * @param authenticate_handler_t handler [in]
+     * @brief   register handler
+     * @param   authenticate_handler_t handler [in]
      */
     http_authenticate_resolver& basic_resolver(authenticate_handler_t handler);
     /*
-     * @brief authenticate
-     * @param http_authenticate_provider* provider [in]
-     * @param http_response* response [in]
+     * @brief   authenticate
+     * @param   http_authenticate_provider* provider [in]
+     * @param   http_response* response [in]
      * @remarks
      *          RFC2617 HTTP Authentication: Basic and Digest Access Authentication
      */
     bool basic_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
     /**
-     * @brief register handler
-     * @param authenticate_handler_t handler [in]
+     * @brief   register handler
+     * @param   authenticate_handler_t handler [in]
      */
     http_authenticate_resolver& digest_resolver(authenticate_handler_t handler);
     /*
-     * @brief authenticate
-     * @param http_authenticate_provider* provider [in]
-     * @param network_session* session [in]
-     * @param http_response* response [in]
+     * @brief   authenticate
+     * @param   http_authenticate_provider* provider [in]
+     * @param   network_session* session [in]
+     * @param   http_response* response [in]
      * @remarks
      *          RFC2617 HTTP Authentication: Basic and Digest Access Authentication
      */
     bool digest_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
     /**
-     * @brief register handler
-     * @param authenticate_handler_t handler [in]
+     * @brief   register handler
+     * @param   authenticate_handler_t handler [in]
      */
     http_authenticate_resolver& bearer_resolver(authenticate_handler_t handler);
     /*
-     * @brief authenticate
-     * @param http_authenticate_provider* provider [in]
-     * @param network_session* session [in]
-     * @param http_response* response [in]
+     * @brief   authenticate
+     * @param   http_authenticate_provider* provider [in]
+     * @param   network_session* session [in]
+     * @param   http_response* response [in]
      * @remarks
      *          RFC6750 The OAuth 2.0 Authorization Framework: Bearer Token Usage
      */

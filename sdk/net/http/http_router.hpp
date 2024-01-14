@@ -39,19 +39,48 @@ class http_router {
     http_router();
     ~http_router();
 
+    /**
+     * @brief   register a handler
+     */
     http_router& add(const char* uri, http_request_handler_t handler);
     http_router& add(const char* uri, http_request_function_t handler);
     http_router& add(const char* uri, http_authenticate_provider* handler);
+    /**
+     * @brief   register a handler
+     * @sample
+     *          router.add(404, [&](http_request* request, http_response* response) -> void {
+     *                  response->compose(404, "text/html", "<html><body>404 Not Found</body></html>";
+     *              });
+     */
     http_router& add(int status_code, http_request_handler_t handler);
     http_router& add(int status_code, http_request_function_t handler);
 
+    /**
+     * @brief   route
+     * @param   const char* uri [in]
+     * @param   network_session* session [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     */
     return_t route(const char* uri, network_session* session, http_request* request, http_response* response);
-
+    /**
+     * @brief   default handler (404 Not Found)
+     */
     static void status404_handler(http_request* request, http_response* response);
-
+    /**
+     * @brief   resolver
+     */
     http_authenticate_resolver& get_authenticate_resolver();
 
    protected:
+    /**
+     * @brief   http_authenticate_provider
+     * @param   const char* uri [in]
+     * @param   http_request* request [in]
+     * @param   http_response* response [in]
+     * @param   http_authenticate_provider** provider [out]
+     * @return  result
+     */
     bool get_auth_provider(const char* uri, http_request* request, http_response* response, http_authenticate_provider** provider);
 
    private:

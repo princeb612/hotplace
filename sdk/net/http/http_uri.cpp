@@ -25,7 +25,7 @@ http_uri::~http_uri() {
     // do nothing
 }
 
-return_t http_uri::open(std::string uri) { return open(uri.c_str()); }
+return_t http_uri::open(std::string const& uri) { return open(uri.c_str()); }
 
 return_t http_uri::open(const char* uri) {
     return_t ret = errorcode_t::success;
@@ -113,7 +113,7 @@ return_t http_uri::query(unsigned index, std::string& key, std::string& value) {
     return ret;
 }
 
-return_t http_uri::query(std::string key, std::string& value) {
+return_t http_uri::query(std::string const& key, std::string& value) {
     return_t ret = errorcode_t::success;
 
     PARAMETERS::iterator iter = _query_kv.find(key);
