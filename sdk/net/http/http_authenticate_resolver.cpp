@@ -73,5 +73,19 @@ bool http_authenticate_resolver::bearer_authenticate(http_authenticate_provider*
     return ret_value;
 }
 
+http_authenticate_resolver& http_authenticate_resolver::oauth2_resolver(authenticate_handler_t resolver) {
+    _oauth2_resolver = resolver;
+    return *this;
+}
+
+bool http_authenticate_resolver::oauth2_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
+                                                     http_response* response) {
+    bool ret_value = false;
+    if (_bearer_resolver) {
+        ret_value = _oauth2_resolver(provider, session, request, response);
+    }
+    return ret_value;
+}
+
 }  // namespace net
 }  // namespace hotplace

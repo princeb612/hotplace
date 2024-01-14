@@ -316,10 +316,26 @@ class http_authenticate_resolver {
      */
     bool bearer_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
 
+    /**
+     * @brief   register handler
+     * @param   authenticate_handler_t handler [in]
+     */
+    http_authenticate_resolver& oauth2_resolver(authenticate_handler_t handler);
+    /*
+     * @brief   authenticate
+     * @param   http_authenticate_provider* provider [in]
+     * @param   network_session* session [in]
+     * @param   http_response* response [in]
+     * @remarks
+     *          RFC6749 OAuth 2.0
+     */
+    bool oauth2_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
+
    private:
     authenticate_handler_t _basic_resolver;
     authenticate_handler_t _digest_resolver;
     authenticate_handler_t _bearer_resolver;
+    authenticate_handler_t _oauth2_resolver;
 };
 
 }  // namespace net

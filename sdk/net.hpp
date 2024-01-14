@@ -22,6 +22,7 @@
 #include <sdk/net/http/http_authenticate.hpp>
 #include <sdk/net/http/http_protocol.hpp>
 #include <sdk/net/http/http_router.hpp>
+#include <sdk/net/http/oauth2.hpp>
 #include <sdk/net/server/network_priority_queue.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_server.hpp>
