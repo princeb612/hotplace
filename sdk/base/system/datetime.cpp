@@ -60,9 +60,7 @@ bool datetime::update_if_elapsed(unsigned long msecs) {
 
     datetime now;
     datetime temp(_timespec);
-    timespan_t ts = {
-        0,
-    };
+    timespan_t ts;
 
     ts.milliseconds = msecs;
     temp += ts;

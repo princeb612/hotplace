@@ -8,9 +8,13 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/system/datetime.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
+#include <sdk/io/system/types.hpp>
 
 namespace hotplace {
+using namespace io;
 namespace crypto {
 
 openssl_prng::openssl_prng() {
@@ -71,6 +75,10 @@ return_t openssl_prng::random(uint32& i, uint32 mask) {
 std::string openssl_prng::nonce(size_t size) {
     std::string ret_value;
 
+    if (size < 8) {
+        size = 8;
+    }
+
     binary_t buffer;
     buffer.resize(size);
     RAND_bytes(&buffer[0], buffer.size());
@@ -82,10 +90,24 @@ std::string openssl_prng::nonce(size_t size) {
 std::string openssl_prng::token(size_t size) {
     std::string ret_value;
 
+    if (size < 8) {
+        size = 8;
+    }
+
+    datetime dt;
+    basic_stream bs;
+
+    struct timespec ts = {
+        0,
+    };
+    dt.gettimespec(&ts);
+    uint64 sec = hton64(ts.tv_sec);
+    base16_encode((byte_t*)&sec, sizeof(sec), ret_value);
+
     binary_t buffer;
     buffer.resize(size);
     RAND_bytes(&buffer[0], buffer.size());
-    ret_value = base64_encode(buffer, base64_encoding_t::base64url_encoding);
+    ret_value += base64_encode(buffer, base64_encoding_t::base64url_encoding);
 
     return ret_value;
 }
