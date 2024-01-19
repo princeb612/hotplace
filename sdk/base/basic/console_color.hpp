@@ -6,7 +6,6 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.12   Soo Han, Kim        reboot, cprintf deprecated
  */
 
 #ifndef __HOTPLACE_SDK_BASE_BASIC_CONSOLECOLOR__

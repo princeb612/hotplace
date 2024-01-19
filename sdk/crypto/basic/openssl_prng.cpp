@@ -94,15 +94,18 @@ std::string openssl_prng::token(size_t size) {
         size = 8;
     }
 
+#if 0
     datetime dt;
     basic_stream bs;
-
+    
     struct timespec ts = {
         0,
     };
     dt.gettimespec(&ts);
     uint64 sec = hton64(ts.tv_sec);
     base16_encode((byte_t*)&sec, sizeof(sec), ret_value);
+    //ret_value += base64_encode((byte_t*)&sec, sizeof(sec), base64_encoding_t::base64url_encoding);
+#endif
 
     binary_t buffer;
     buffer.resize(size);

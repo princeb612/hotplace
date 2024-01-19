@@ -34,6 +34,24 @@ namespace net {
 typedef void (*http_request_handler_t)(http_request*, http_response*);
 typedef std::function<void(http_request*, http_response*)> http_request_function_t;
 
+class html_documents {
+   public:
+    html_documents();
+    html_documents(std::string const& directory);
+
+    std::string& map(std::string const& uri, std::string& local);
+    return_t load(std::string const& uri, binary_t& content);
+
+   protected:
+    return_t loadfile(std::string const& local, binary_t& content);
+
+   private:
+    std::string _root;
+    critical_section _lock;
+    std::map<std::string, time_t> _timestamp_map;
+    std::map<std::string, binary_t> _cache_map;
+};
+
 class http_router {
    public:
     http_router();
@@ -72,6 +90,8 @@ class http_router {
      */
     http_authenticate_resolver& get_authenticate_resolver();
 
+    html_documents& get_html_documents();
+
    protected:
     /**
      * @brief   http_authenticate_provider
@@ -102,6 +122,7 @@ class http_router {
     status_handler_map_t _status_handler_map;
     authenticate_map_t _authenticate_map;
     http_authenticate_resolver _resolver;
+    html_documents _http_documents;
 };
 
 }  // namespace net

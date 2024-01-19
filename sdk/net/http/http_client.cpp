@@ -47,14 +47,14 @@ client_socket* http_client::connect(url_info_t const& url_info) {
     client_socket* client = nullptr;
     __try2 {
         // reconnect
-        if ((_url_info.protocol != url_info.protocol) || (_url_info.host != url_info.host) || (_url_info.port != url_info.port)) {
+        if ((_url_info.scheme != url_info.scheme) || (_url_info.host != url_info.host) || (_url_info.port != url_info.port)) {
             close();
         }
 
         // connect
-        if ("https" == url_info.protocol) {
+        if ("https" == url_info.scheme) {
             client = _tls_client_socket;
-        } else if ("http" == url_info.protocol) {
+        } else if ("http" == url_info.scheme) {
             client = _client_socket;
         } else {
             __leave2;
@@ -62,7 +62,20 @@ client_socket* http_client::connect(url_info_t const& url_info) {
 
         // not connected
         if (0 == _socket) {
-            ret = client->connect(&_socket, &_tls_context, url_info.host.c_str(), url_info.port, 5);
+            std::string host;
+            uint16 port = 0;
+            if (url_info.host.empty()) {
+                host = _host;
+            } else {
+                host = url_info.host;
+            }
+            if (0 == url_info.port) {
+                port = _port;
+            } else {
+                port = url_info.port;
+            }
+
+            ret = client->connect(&_socket, &_tls_context, host.c_str(), port, 5);
             if (errorcode_t::success == ret) {
                 _url_info = url_info;
                 client->set_ttl(_ttl);
@@ -162,6 +175,12 @@ http_client& http_client::set_ttl(uint32 milliseconds) {
     if (milliseconds) {
         _ttl = milliseconds;
     }
+    return *this;
+}
+
+http_client& http_client::set(std::string const& host, uint16 port) {
+    _host = host;
+    _port = port;
     return *this;
 }
 

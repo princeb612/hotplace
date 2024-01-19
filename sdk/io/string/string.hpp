@@ -156,17 +156,33 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
 #endif
 
 //
+// std::regex
+//
+void regex_token(std::string const& input, std::string const& expr, size_t& pos, std::list<std::string>& tokens);
+
+//
 // split_url
 //
 typedef struct _url_info_t {
-    std::string protocol;
+    std::string scheme;
     std::string host;
     int port;
     std::string uri;
     std::string uripath;
-    std::string urifile;
+    std::string query;
+    std::string fragment;
 
     _url_info_t() : port(0) {}
+
+    void clear() {
+        scheme.clear();
+        host.clear();
+        port = 0;
+        uri.clear();
+        uripath.clear();
+        query.clear();
+        fragment.clear();
+    }
 } url_info_t;
 
 /**
@@ -179,18 +195,18 @@ typedef struct _url_info_t {
  *        // info.host => test.com
  *        // info.port => 80
  *        // info.uri => /download/meta/file.txt
- *        // info.uripath => download/meta
+ *        // info.uripath => /download/meta
  *        // info.urifile => file.txt
  * @remarks
- *        input                             -> prot + host     + uripath  + urifile
- *        http://test.com/download/file.txt -> http + test.com + download + file.txt
- *        http://test.com/download/         -> http + test.com + download + NA
- *        http://test.com/download          -> http + test.com + /        + download
- *        http://test.com/a/b/              -> http + test.com + a/b      + NA
- *        http://test.com/a/b               -> http + test.com + a        + b
- *        http://test.com                   -> http + test.com + /        + NA
- *        /download/file.txt                -> NA   + NA       + download + file.txt
- *        /download/                        -> NA   + NA       + download + N/A
+ *        input                             -> prot + host     + uripath
+ *        http://test.com/download/file.txt -> http + test.com + /download/file.txt
+ *        http://test.com/download/         -> http + test.com + /download/
+ *        http://test.com/download          -> http + test.com + /download
+ *        http://test.com/a/b/              -> http + test.com + /a/b/
+ *        http://test.com/a/b               -> http + test.com + /a/b
+ *        http://test.com                   -> http + test.com + /
+ *        /download/file.txt                -> NA   + NA       + /download/file.txt
+ *        /download/                        -> NA   + NA       + /download/
  */
 return_t split_url(const char* url, url_info_t* info);
 

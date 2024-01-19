@@ -1,6 +1,6 @@
 # hotplace
 
- * study of personal interests
+ * Research on personal interests
  * ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/build.yml/badge.svg)
  * ![codeql workflow](https://github.com/princeb612/hotplace/actions/workflows/codeql.yml/badge.svg)
  * powered by

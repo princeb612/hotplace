@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 6749 OAuth 2.0
  *
  * Revision History
  * Date         Name                Description
@@ -41,16 +42,15 @@ bool oauth2_provider::try_auth(http_authenticate_resolver* resolver, network_ses
         std::string token_scheme;
         request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
 
-        bool test = false;
         if (constexpr_bearer == token_scheme) {
-            test = true;
+            //
         } else if (request->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
-            test = true;
+            //
+        } else {
+            __leave2;
         }
 
-        if (test) {
-            ret_value = resolver->bearer_authenticate(this, session, request, response);
-        }
+        ret_value = resolver->oauth2_authenticate(this, session, request, response);
     }
     __finally2 {
         // do nothing

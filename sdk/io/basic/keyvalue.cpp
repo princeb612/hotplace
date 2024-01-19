@@ -255,5 +255,7 @@ void key_value::foreach (std::function<void(std::string const&, std::string cons
     }
 }
 
+bool key_value::empty() { return _keyvalues.size() == 0; }
+
 }  // namespace io
 }  // namespace hotplace
