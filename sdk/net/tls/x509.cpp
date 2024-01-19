@@ -166,5 +166,29 @@ return_t x509_open(SSL_CTX** context, const char* cert_file, const char* key_fil
     return ret;
 }
 
+x509cert::x509cert(const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _x509(nullptr) {
+    x509_open(&_x509, cert_file, key_file, password, chain_file);
+}
+
+x509cert::~x509cert() {
+    if (_x509) {
+        SSL_CTX_free(_x509);
+    }
+}
+
+x509cert& x509cert::set_cipher_list(const char* list) {
+    if (list) {
+        SSL_CTX_set_cipher_list(_x509, list);
+    }
+    return *this;
+}
+
+x509cert& x509cert::set_verify(int mode) {
+    SSL_CTX_set_verify(_x509, 0, nullptr);
+    return *this;
+}
+
+SSL_CTX* x509cert::get() { return _x509; }
+
 }  // namespace net
 }  // namespace hotplace

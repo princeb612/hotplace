@@ -10,6 +10,7 @@
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/io/basic/zlib.hpp>
+#include <sdk/io/stream/file_stream.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http.hpp>
@@ -20,6 +21,59 @@
 namespace hotplace {
 using namespace io;
 namespace net {
+
+html_documents::html_documents() : _root(".") {}
+
+html_documents::html_documents(std::string const& directory) : _root(directory) {}
+
+std::string& html_documents::map(std::string const& uri, std::string& local) {
+    local = concat_filepath(_root, uri);
+    return local;
+}
+
+return_t html_documents::load(std::string const& uri, binary_t& content) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        // search from cache
+        {
+            critical_section_guard guard(_lock);
+            std::map<std::string, binary_t>::iterator iter = _cache_map.find(uri);
+            if (_cache_map.end() != iter) {
+                content = iter->second;
+                __leave2;
+            }
+        }
+
+        // if not found, try to read from file
+
+        std::string local;
+        map(uri, local);
+
+        ret = loadfile(local, content);
+        if (errorcode_t::success == ret) {
+            critical_section_guard guard(_lock);
+            _cache_map.insert(std::make_pair(uri, content));
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t html_documents::loadfile(std::string const& local, binary_t& content) {
+    return_t ret = errorcode_t::success;
+
+    content.clear();
+
+    file_stream fs;
+    ret = fs.open(local.c_str());
+    if (errorcode_t::success == ret) {
+        fs.begin_mmap();
+        content.insert(content.end(), fs.data(), fs.data() + fs.size());
+    }
+    return ret;
+}
 
 http_router::http_router() {}
 
@@ -135,6 +189,8 @@ void http_router::status404_handler(http_request* request, http_response* respon
 }
 
 http_authenticate_resolver& http_router::get_authenticate_resolver() { return _resolver; }
+
+html_documents& http_router::get_html_documents() { return _http_documents; }
 
 bool http_router::get_auth_provider(const char* uri, http_request* request, http_response* response, http_authenticate_provider** provider) {
     bool ret_value = false;

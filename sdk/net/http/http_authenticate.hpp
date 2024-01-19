@@ -331,11 +331,32 @@ class http_authenticate_resolver {
      */
     bool oauth2_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
 
+    http_authenticate_resolver& basic_credential(std::string const& username, std::string const& password);
+    http_authenticate_resolver& basic_credential(std::string const& challenge);
+    http_authenticate_resolver& digest_access_credential(std::string const& username, std::string const& password);
+    http_authenticate_resolver& digest_access_credential(std::string const& realm, std::string const& algorithm, std::string const& username,
+                                                         std::string const& password);
+    http_authenticate_resolver& bearer_credential(std::string const& client_id, std::string const& client_secret);
+
+    /**
+     * @brief   authorization server resonse
+     */
+    http_authenticate_resolver& add_auth(std::string const& client_id, std::string const& client_secret, std::string const& redirect_uri);
+    bool login(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
+
    private:
     authenticate_handler_t _basic_resolver;
     authenticate_handler_t _digest_resolver;
     authenticate_handler_t _bearer_resolver;
     authenticate_handler_t _oauth2_resolver;
+
+    critical_section _lock;
+    std::set<std::string> _basic_credential;                       // set(base64_encode(concat(username, ":", password)))
+    std::map<std::string, std::string> _digest_access_credential;  // map(username, password)
+    std::map<std::string, std::string> _digest_access_userhash;    // map(_H(username:realm), username)
+    std::map<std::string, std::string> _bearer_credential;         // map(client_id, client_secret)
+    std::map<std::string, std::string> _oauth2_credential;         // map(client_id, client_secret)
+    std::map<std::string, std::string> _redirect_uri;              // map(client_id, redirect_uri)
 };
 
 }  // namespace net

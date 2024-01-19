@@ -196,7 +196,7 @@ return_t http_digest_access_authenticate_provider::prepare_digest_access(network
                                                                          key_value& kv) {
     return_t ret = errorcode_t::mismatch;
     __try2 {
-        if (nullptr == session || nullptr == request) {
+        if (nullptr == session || nullptr == request || nullptr == response) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -231,7 +231,7 @@ return_t http_digest_access_authenticate_provider::prepare_digest_access(network
 return_t http_digest_access_authenticate_provider::auth_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv) {
     return_t ret = errorcode_t::mismatch;
     __try2 {
-        if (nullptr == session || nullptr == request) {
+        if (nullptr == session || nullptr == request || nullptr == response) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }

@@ -161,6 +161,8 @@ class key_value {
      */
     key_value& operator<<(key_value& rhs);
 
+    bool empty();
+
    protected:
     /* key, value */
     typedef std::map<std::string, std::string> keyvalue_map_t;

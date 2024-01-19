@@ -262,9 +262,9 @@ class http_request {
      * @brief   compose
      * @param   http_method_t method [in]
      * @param   std::string const& uri [in]
-     * @param   std::string const& body [in]
+     * @param   std::string const& body [inopt]
      */
-    http_request& compose(http_method_t method, std::string const& uri, std::string const& body);
+    http_request& compose(http_method_t method, std::string const& uri, std::string const& body = std::string(""));
     /**
      * @brief   load
      * @param   basic_stream& stream [out]
@@ -410,6 +410,7 @@ class http_client {
     http_client& request(http_request& request, http_response** response);
     http_client& close();
     http_client& set_ttl(uint32 milliseconds);
+    http_client& set(std::string const& host, uint16 port);
 
    protected:
     http_client& request_and_response(url_info_t const& url_info, http_request& request, http_response** response);
@@ -422,6 +423,8 @@ class http_client {
     SSL_CTX* _x509;
     url_info_t _url_info;
     uint32 _ttl;
+    std::string _host;
+    uint16 _port;
 };
 
 }  // namespace net

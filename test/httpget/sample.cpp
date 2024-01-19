@@ -45,6 +45,48 @@ void cprint(const char* text, ...) {
     std::cout << _concolor.turnoff() << std::endl;
 }
 
+void do_split_url(const char* url, url_info_t* url_info) {
+    split_url(url, url_info);
+
+    OPTION& option = cmdline->value();
+    if (option.debug) {
+        basic_stream bs;
+        bs << "> scheme : " << url_info->scheme << "\n"
+           << "> host : " << url_info->host << "\n"
+           << "> port : " << url_info->port << "\n"
+           << "> uri : " << url_info->uri << "\n"
+           << "> uri.path : " << url_info->uripath << "\n";
+        std::cout << bs.c_str();
+    }
+}
+
+void test_uri() {
+    _test_case.begin("uri");
+    url_info_t url_info;
+
+    do_split_url("http://test.com/download/meta/file.txt", &url_info);
+
+    _test_case.assert("http" == url_info.scheme, __FUNCTION__, "uri.scheme");
+    _test_case.assert("test.com" == url_info.host, __FUNCTION__, "uri.host");
+    _test_case.assert(80 == url_info.port, __FUNCTION__, "uri.port");
+    _test_case.assert("/download/meta/file.txt" == url_info.uripath, __FUNCTION__, "uri.uripath");
+
+    do_split_url("http://test.com/download/", &url_info);
+
+    _test_case.assert("/download/" == url_info.uripath, __FUNCTION__, "uri.uripath");
+
+    do_split_url("http://test.com/download", &url_info);
+
+    _test_case.assert("/download" == url_info.uripath, __FUNCTION__, "uri.uripath");
+
+    do_split_url("/auth/v1/authorize?response_type=code&client_id=abcdefg&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb&state=xyz", &url_info);
+    key_value kv;
+    http_uri::to_keyvalue(url_info.uri, kv);
+
+    _test_case.assert("/auth/v1/authorize" == url_info.uripath, __FUNCTION__, "uri.uripath");
+    _test_case.assert("code" == kv.get("response_type"), __FUNCTION__, "query");
+}
+
 void test_request() {
     _test_case.begin("request");
     // chrome browser request data https://127.0.0.1:9000/test
@@ -203,17 +245,7 @@ void test_basic_authenticate() {
 
     OPTION& option = cmdline->value();
 
-    resolver.basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
-        bool test = false;
-        std::string challenge = provider->get_challenge(request);
-
-        size_t pos = 0;
-        tokenize(challenge, " ", pos);                           // Basic
-        std::string credential = tokenize(challenge, " ", pos);  // base64(user:password)
-
-        test = (credential == base64_encode("user:password"));
-        return test;
-    });
+    resolver.basic_credential("user", "password");
 
     provider.request_auth(&session, &request, &response);
 
@@ -353,7 +385,9 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
     return_t ret = errorcode_t::success;
     server_socket socket;  // dummy
     network_session session(&socket);
-    http_digest_access_authenticate_provider provider("digest realm", alg, "auth");
+    std::string realm = "digest realm";
+    std::string qop = "auth";
+    http_digest_access_authenticate_provider provider(realm.c_str(), alg, qop.c_str());
     http_authenticate_resolver resolver;
     http_request request;
     http_response response;
@@ -361,32 +395,7 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
 
     OPTION& option = cmdline->value();
 
-    resolver.digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
-        bool ret_value = false;
-        return_t ret = errorcode_t::success;
-        http_digest_access_authenticate_provider* digest_provider = (http_digest_access_authenticate_provider*)provider;
-        key_value kv;
-
-        ret = digest_provider->prepare_digest_access(session, request, response, kv);  // update (key, value)
-        cprint("[%08x] prepare_digest_access", ret);
-        if (errorcode_t::success == ret) {
-            // get username from kv.get("username"), and then read password (cache, in-memory db)
-            kv.set("password", "password");
-
-            if (option.debug) {
-                printf("* session opaque:=%s\n", session->get_session_data()->get("opaque").c_str());
-                kv.foreach ([&](std::string const& k, std::string const& v, void* param) -> void { printf("> %s:=%s\n", k.c_str(), v.c_str()); });
-            }
-
-            // and then call provider->auth_digest_access
-            return_t ret = digest_provider->auth_digest_access(session, request, response, kv);
-            if (errorcode_t::success == ret) {
-                ret_value = true;
-            }
-        }
-
-        return ret_value;
-    });
+    resolver.digest_access_credential(realm, alg ? alg : "", "user", "password");
 
     provider.request_auth(&session, &request, &response);
 
@@ -467,7 +476,7 @@ void test_get() {
         url_info_t url_info;
         split_url(option.url.c_str(), &url_info);
 
-        if ("https" != url_info.protocol) {
+        if ("https" != url_info.scheme) {
             __leave2;
         }
 
@@ -656,6 +665,9 @@ int main(int argc, char** argv) {
 
     cmdline->parse(argc, argv);
     OPTION& option = cmdline->value();
+
+    // uri
+    test_uri();
 
     // request
     test_request();

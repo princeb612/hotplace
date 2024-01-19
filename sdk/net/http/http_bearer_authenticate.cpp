@@ -42,16 +42,15 @@ bool http_bearer_authenticate_provider::try_auth(http_authenticate_resolver* res
         std::string token_scheme;
         request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
 
-        bool test = false;
         if (constexpr_bearer == token_scheme) {
-            test = true;
+            //
         } else if (request->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
-            test = true;
+            //
+        } else {
+            __leave2;
         }
 
-        if (test) {
-            ret_value = resolver->bearer_authenticate(this, session, request, response);
-        }
+        ret_value = resolver->bearer_authenticate(this, session, request, response);
     }
     __finally2 {
         // do nothing

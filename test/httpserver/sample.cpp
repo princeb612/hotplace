@@ -152,11 +152,15 @@ return_t echo_server(void*) {
 
     fclose(fp);
 
-    SSL_CTX* x509 = nullptr;
     http_protocol* http_prot = nullptr;
     server_socket svr_sock;
     transport_layer_security* tls = nullptr;
     transport_layer_security_server* tls_server = nullptr;
+
+    // part of ssl certificate
+    x509cert cert("server.crt", "server.key");
+    cert.set_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
+        .set_verify(0);
 
     __try2 {
         // Basic Authentication (realm)
@@ -170,34 +174,7 @@ return_t echo_server(void*) {
         std::string bearer_realm = "hotplace";
         // OAuth 2.0 (realm)
         std::string oauth2_realm = "somewhere over the rainbow";
-
-        // part of ssl certificate
-        ret = x509_open(&x509, "server.crt", "server.key");
-        _test_case.test(ret, __FUNCTION__, "x509");
-
-        SSL_CTX_set_cipher_list(x509,
-                                "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256");
-        // SSL_CTX_set_cipher_list (x509,
-        // "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES128-SHA256:AES256-GCM-SHA384:AES256-SHA256:!aNULL:!eNULL:!LOW:!EXP:!RC4");
-        SSL_CTX_set_verify(x509, 0, nullptr);
-
-        rfc2617_digest dgst;
-        std::set<std::string> basic_credentials;
-        basic_credentials.insert(base64_encode("user:password"));
-
-        typedef struct _userhash_data {
-            std::string username;
-            std::string password;
-        } userhash_data;
-        std::map<std::string, std::string> digest_access_credentials;
-        std::map<std::string, userhash_data> digest_access_userhash_credentials;
-        digest_access_credentials.insert(std::make_pair("user", "password"));  // userhash=false
-        userhash_data userdata = {"user", "password"};
-        dgst.clear().add("user").add(":").add(digest_access_realm).digest(digest_access_alg);
-        digest_access_userhash_credentials.insert(std::make_pair(dgst.get(), userdata));  // userhash=true
-
-        std::map<std::string, std::string> bearer_credentials;
-        bearer_credentials.insert(std::make_pair("s6BhdRkqt3", "7Fjfp0ZBr1KtDRbnfVdmIw"));  // client_id, client_secret
+        std::string redirect_uri = "https://127.0.0.1/auth/v1/token";
 
         /* route */
         _http_router.make_share(new http_router);
@@ -207,136 +184,54 @@ return_t echo_server(void*) {
             request->get_request(bs);
             response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
         };
+        std::function<void(http_request*, http_response*)> error_handler = [&](http_request* request, http_response* response) -> void {
+            basic_stream bs;
+            request->get_request(bs);
+            response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
+        };
+
+        html_documents http_documents = _http_router->get_html_documents();
 
         (*_http_router)
+            .add("/",
+                 [&](http_request* request, http_response* response) -> void {
+                     binary_t content;
+                     http_documents.load("/index.html", content);
+                     response->compose(200, "text/html", "%.*s", content.size(), &content[0]);
+                 })
             .add("/api/test", api_test_handler)
             .add("/api/v1/test", api_v1_test_handler)
-#if __cplusplus >= 201402L  // c++14
-            .add("/test",
-                 [&](http_request* request, http_response* response) -> void {
-                     basic_stream bs;
-                     request->get_request(bs);
-                     response->compose(200, "text/html", "<html><body>request %s<br><pre>%s</pre></body></html>", request->get_uri(), bs.c_str());
-                 })
-#else
-            .add("/test", default_handler)  // gcc 4.8
-#endif
+            .add("/test", default_handler)
             .add("/auth/basic", default_handler)
             .add("/auth/digest", default_handler)
             .add("/auth/bearer", default_handler)
-            .add("/auth/oauth2", default_handler)
-            .add(404, default_handler)
+            .add("/auth/token", default_handler)
+            .add(404, error_handler)
             .add("/auth/basic", new http_basic_authenticate_provider(basic_realm.c_str()))
             .add("/auth/digest", new http_digest_access_authenticate_provider(digest_access_realm.c_str(), digest_access_alg.c_str(), digest_access_qop.c_str(),
                                                                               digest_access_userhash))
             .add("/auth/bearer", new http_bearer_authenticate_provider(bearer_realm.c_str()))
-            .add("/auth/oauth2", new oauth2_provider(oauth2_realm.c_str()));
+            .add("/auth/token", new oauth2_provider(oauth2_realm.c_str()));
 
         // simple implementation
         (*_http_router)
             .get_authenticate_resolver()
-            .basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
-                std::string challenge = provider->get_challenge(request);
-
-                size_t pos = 0;
-                tokenize(challenge, " ", pos);                           // Basic
-                std::string credential = tokenize(challenge, " ", pos);  // base64(user:password)
-
-                std::set<std::string>::iterator iter = basic_credentials.find(credential);
-                bool ret_value = (basic_credentials.end() != iter);
-                return ret_value;
-            })
-            .digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
-                bool ret_value = false;
-                return_t ret = errorcode_t::success;
-                http_digest_access_authenticate_provider* digest_provider = (http_digest_access_authenticate_provider*)provider;
-                key_value kv;
-
-                ret = digest_provider->prepare_digest_access(session, request, response, kv);
-                if (errorcode_t::success == ret) {
-                    // get username from kv.get("username"), and then read password (cache, in-memory db)
-                    // and then call provider->auth_digest_access
-                    std::string username = kv.get("username");
-                    std::string password;
-                    bool found = false;
-                    if (digest_access_userhash) {
-                        std::map<std::string, userhash_data>::iterator iter = digest_access_userhash_credentials.find(username);
-                        if (digest_access_userhash_credentials.end() != iter) {
-                            found = true;
-                            kv.set("username", iter->second.username);
-                            password = iter->second.password;
-                        }
-                    } else {
-                        std::map<std::string, std::string>::iterator iter = digest_access_credentials.find(username);
-                        if (digest_access_credentials.end() != iter) {
-                            found = true;
-                            password = iter->second;
-                        }
-                    }
-                    if (found) {
-                        kv.set("password", password);
-                        ret = digest_provider->auth_digest_access(session, request, response, kv);
-                        if (errorcode_t::success == ret) {
-                            ret_value = true;
-                        }
-                    }
-                }
-
-                return ret_value;
-            })
-            .bearer_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
-                bool ret_value = false;
-                std::string challenge = provider->get_challenge(request);
-                std::string token;
-
-                if (0 == strncmp("Bearer", challenge.c_str(), 6)) {
-                    size_t pos = 6;
-                    token = tokenize(challenge, " ", pos);
-                    if (token == session->get_session_data()->get("access_token")) {
-                        ret_value = true;
-                    }
-                } else {
-                    key_value kv;
-                    http_uri::to_keyvalue(challenge, kv);
-                    token = kv.get("access_token");
-                    std::string client_id = kv.get("client_id");
-                    std::string client_secret = kv.get("client_secret");
-                    std::map<std::string, std::string>::iterator iter = bearer_credentials.find(client_id);
-                    if (iter != bearer_credentials.end()) {
-                        session->get_session_data()->set("bearer", "access_token");  // hmm... I need something grace
-                    }
-                }
-
-                return ret_value;
-            })
-            .oauth2_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
-                bool ret_value = false;
-                std::string challenge = provider->get_challenge(request);
-                std::string token;
-
-                if (0 == strncmp("Bearer", challenge.c_str(), 6)) {
-                    size_t pos = 6;
-                    token = tokenize(challenge, " ", pos);
-                    if (token == session->get_session_data()->get("access_token")) {
-                        ret_value = true;
-                    }
-                } else {
-                    key_value kv;
-                    http_uri::to_keyvalue(challenge, kv);
-                    token = kv.get("access_token");
-                    std::string client_id = kv.get("client_id");
-                    std::string client_secret = kv.get("client_secret");
-                    std::map<std::string, std::string>::iterator iter = bearer_credentials.find(client_id);
-                    if (iter != bearer_credentials.end()) {
-                        session->get_session_data()->set("bearer", "access_token");  // hmm... I need something grace
-                    }
-                }
-
-                return ret_value;
-            });
+            // builtin basic_resolver, digest_resolver, bearer_resolver
+            .basic_credential(base64_encode("user:password"))
+            .digest_access_credential(digest_access_realm, digest_access_alg, "user", "password")
+            .bearer_credential("s6BhdRkqt3", "7Fjfp0ZBr1KtDRbnfVdmIw")
+            .add_auth("s6BhdRkqt3", "7Fjfp0ZBr1KtDRbnfVdmIw", redirect_uri)  // authentication server
+            // basic_resolver, digest_resolver, bearer_resolver if necessary
+            // .basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
+            //    /* ... */ })
+            // .digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
+            //    /* ... */ })
+            // .bearer_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
+            //    /* ... */ })
+            ;
 
         /* server */
-        __try_new_catch(tls, new transport_layer_security(x509), ret, __leave2);
+        __try_new_catch(tls, new transport_layer_security(cert.get()), ret, __leave2);
         __try_new_catch(http_prot, new http_protocol, ret, __leave2);
         __try_new_catch(tls_server, new transport_layer_security_server(tls), ret, __leave2);
 
@@ -393,7 +288,6 @@ return_t echo_server(void*) {
         http_prot->release();
         tls_server->release();
         tls->release();
-        SSL_CTX_free(x509);
     }
 
     return ret;
