@@ -16,8 +16,8 @@
  *      nextnonce
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP__
-#define __HOTPLACE_SDK_NET_HTTP__
+#ifndef __HOTPLACE_SDK_NET_HTTP_RESOURCE__
+#define __HOTPLACE_SDK_NET_HTTP_RESOURCE__
 
 #include <map>
 #include <sdk/base.hpp>
@@ -25,12 +25,6 @@
 #include <sdk/io/basic/keyvalue.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/client_socket.hpp>
-#include <sdk/net/http/http_client.hpp>
-#include <sdk/net/http/http_header.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_resource.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/http/http_uri.hpp>
 #include <sdk/net/http/types.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/tls/tls_client.hpp>
@@ -39,7 +33,30 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-// HTTP/1.1
+class http_resource {
+   public:
+    /**
+     * @brief   singleton instance
+     */
+    static http_resource* get_instance();
+
+    /**
+     * @brief   status code message
+     * @remarks RFC 2616 HTTP/1.1 6.1.1 Status Code and Reason Phrase
+     */
+    std::string load(int status);
+    /**
+     * @brief   method
+     */
+    std::string get_method(http_method_t method);
+
+   protected:
+    http_resource();
+
+    static http_resource _instance;
+    std::map<int, std::string> _status_codes;
+    std::map<http_method_t, std::string> _methods;
+};
 
 }  // namespace net
 }  // namespace hotplace

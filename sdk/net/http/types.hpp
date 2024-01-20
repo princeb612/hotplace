@@ -16,8 +16,8 @@
  *      nextnonce
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP__
-#define __HOTPLACE_SDK_NET_HTTP__
+#ifndef __HOTPLACE_SDK_NET_HTTP_TYPES__
+#define __HOTPLACE_SDK_NET_HTTP_TYPES__
 
 #include <map>
 #include <sdk/base.hpp>
@@ -25,13 +25,6 @@
 #include <sdk/io/basic/keyvalue.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/client_socket.hpp>
-#include <sdk/net/http/http_client.hpp>
-#include <sdk/net/http/http_header.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_resource.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/http/http_uri.hpp>
-#include <sdk/net/http/types.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/tls/tls_client.hpp>
 
@@ -39,7 +32,15 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-// HTTP/1.1
+enum http_method_t {
+    HTTP_OPTIONS = 1,
+    HTTP_GET = 2,
+    HTTP_HEAD = 3,
+    HTTP_POST = 4,
+    HTTP_PUT = 5,
+    HTTP_DELETE = 6,
+    HTTP_TRACE = 7,
+};
 
 }  // namespace net
 }  // namespace hotplace

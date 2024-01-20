@@ -166,6 +166,8 @@ return_t x509_open(SSL_CTX** context, const char* cert_file, const char* key_fil
     return ret;
 }
 
+x509cert::x509cert() : _x509(nullptr) { x509_open_simple(&_x509); }
+
 x509cert::x509cert(const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _x509(nullptr) {
     x509_open(&_x509, cert_file, key_file, password, chain_file);
 }

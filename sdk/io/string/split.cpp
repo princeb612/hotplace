@@ -75,8 +75,7 @@ return_t split_url(const char* url, url_info_t* info) {
                         info->port = 80;
                     } else if ("https" == info->scheme) {
                         info->port = 443;
-                    }
-                    if ("ftp" == info->scheme) {
+                    } else if ("ftp" == info->scheme) {
                         info->port = 21;
                     }
                 }

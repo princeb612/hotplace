@@ -193,12 +193,13 @@ return_t echo_server(void*) {
         html_documents http_documents = _http_router->get_html_documents();
 
         (*_http_router)
-            .add("/",
-                 [&](http_request* request, http_response* response) -> void {
-                     binary_t content;
-                     http_documents.load("/index.html", content);
-                     response->compose(200, "text/html", "%.*s", content.size(), &content[0]);
-                 })
+            .get_html_documents()
+            .add_documents_root("/", ".")
+            .add_content_type(".html", "text/html")
+            .add_content_type(".json", "text/json")
+            .set_default_document("index.html");
+
+        (*_http_router)
             .add("/api/test", api_test_handler)
             .add("/api/v1/test", api_v1_test_handler)
             .add("/test", default_handler)
