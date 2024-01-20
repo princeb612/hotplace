@@ -342,7 +342,7 @@ class http_authenticate_resolver {
      * @brief   authorization server resonse
      */
     http_authenticate_resolver& add_auth(std::string const& client_id, std::string const& client_secret, std::string const& redirect_uri);
-    bool login(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
+    // bool login(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
 
    private:
     authenticate_handler_t _basic_resolver;

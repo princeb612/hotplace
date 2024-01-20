@@ -13,7 +13,7 @@ if [ $# -eq 0 ]; then
     array=(base bufferio cmdline datetime encode thread) # base
     array+=(mlfq cbor stream string unittest) # io
     array+=(crypto kdf hash jose cose authenticode) # crypto
-    array+=(ipaddr) # net
+    array+=(ipaddr httptest) # net
     if [ $OSTYPE = "msys" ]; then
         array+=(windows)
     else

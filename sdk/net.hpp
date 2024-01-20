@@ -20,9 +20,16 @@
 #include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/http/http.hpp>
 #include <sdk/net/http/http_authenticate.hpp>
+#include <sdk/net/http/http_client.hpp>
+#include <sdk/net/http/http_header.hpp>
 #include <sdk/net/http/http_protocol.hpp>
+#include <sdk/net/http/http_request.hpp>
+#include <sdk/net/http/http_resource.hpp>
+#include <sdk/net/http/http_response.hpp>
 #include <sdk/net/http/http_router.hpp>
+#include <sdk/net/http/http_uri.hpp>
 #include <sdk/net/http/oauth2.hpp>
+#include <sdk/net/http/types.hpp>
 #include <sdk/net/server/network_priority_queue.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_server.hpp>

@@ -154,6 +154,20 @@ http_response& http_response::compose(int status_code, const char* content_type,
     return *this;
 }
 
+http_response& http_response::compose(int status_code, std::string const& content_type, const char* content, ...) {
+    close();
+
+    _content_type = content_type;
+    if (nullptr != content) {
+        va_list ap;
+        va_start(ap, content);
+        _content = format(content, ap);
+        va_end(ap);
+    }
+    _statuscode = status_code;
+    return *this;
+}
+
 const char* http_response::content_type() { return _content_type.c_str(); }
 
 const char* http_response::content() { return _content.c_str(); }

@@ -239,69 +239,71 @@ http_authenticate_resolver& http_authenticate_resolver::add_auth(std::string con
     return *this;
 }
 
+/*
 bool http_authenticate_resolver::login(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) {
     bool ret_value = false;
-    return_t ret = errorcode_t::success;
-    std::string error;
-    __try2 {
-        key_value kv;
+        return_t ret = errorcode_t::success;
+        std::string error;
+        __try2 {
+            key_value kv;
 
-        if (request->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
-            http_header::to_keyvalue(request->get_content(), kv);
-        } else {
-            http_header::to_keyvalue(request->get_uri(), kv);
-        }
+            if (request->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
+                http_header::to_keyvalue(request->get_content(), kv);
+            } else {
+                http_header::to_keyvalue(request->get_uri(), kv);
+            }
 
-        if (kv.empty()) {
-            ret = errorcode_t::invalid_request;
-            __leave2;
-        }
-
-        std::string response_type = kv.get("response_type");
-        std::string client_id = kv.get("client_id");
-        std::string redirect_uri = kv.get("redirect_uri");
-
-        if ("code" != response_type) {
-            ret = errorcode_t::unsupported_response_type;
-            __leave2;
-        }
-
-        {
-            critical_section_guard guard(_lock);
-
-            std::map<std::string, std::string>::iterator iter_redirect = _redirect_uri.find(client_id);
-            if (_redirect_uri.end() == iter_redirect) {
-                ret = errorcode_t::unauthorized_client;
+            if (kv.empty()) {
+                ret = errorcode_t::invalid_request;
                 __leave2;
             }
-            std::map<std::string, std::string>::iterator iter_cred = _oauth2_credential.find(client_id);
-            if (_oauth2_credential.end() == iter_cred) {
-                ret = errorcode_t::unauthorized_client;
+
+            std::string response_type = kv.get("response_type");
+            std::string client_id = kv.get("client_id");
+            std::string redirect_uri = kv.get("redirect_uri");
+
+            if ("code" != response_type) {
+                ret = errorcode_t::unsupported_response_type;
+                __leave2;
+            }
+
+            {
+                critical_section_guard guard(_lock);
+
+                std::map<std::string, std::string>::iterator iter_redirect = _redirect_uri.find(client_id);
+                if (_redirect_uri.end() == iter_redirect) {
+                    ret = errorcode_t::unauthorized_client;
+                    __leave2;
+                }
+                std::map<std::string, std::string>::iterator iter_cred = _oauth2_credential.find(client_id);
+                if (_oauth2_credential.end() == iter_cred) {
+                    ret = errorcode_t::unauthorized_client;
+                    __leave2;
+                }
+            }
+
+            constexpr char constexpr_authorization[] = "Authorization";
+            constexpr char constexpr_basic[] = "Basic";
+            constexpr char constexpr_digest[] = "Digest";
+            std::string token_scheme;
+            request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
+
+            if (0 == strcmp(constexpr_basic, token_scheme.c_str())) {
+                ret_value = basic_authenticate(provider, session, request, response);
+            } else if (0 == strcmp(constexpr_digest, token_scheme.c_str())) {
+                ret_value = digest_authenticate(provider, session, request, response);
+            }
+            if (false == ret_value) {
+                ret = errorcode_t::access_denied;
                 __leave2;
             }
         }
-
-        constexpr char constexpr_authorization[] = "Authorization";
-        constexpr char constexpr_basic[] = "Basic";
-        constexpr char constexpr_digest[] = "Digest";
-        std::string token_scheme;
-        request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
-
-        if (0 == strcmp(constexpr_basic, token_scheme.c_str())) {
-            ret_value = basic_authenticate(provider, session, request, response);
-        } else if (0 == strcmp(constexpr_digest, token_scheme.c_str())) {
-            ret_value = digest_authenticate(provider, session, request, response);
+        __finally2 {
+            // do nothing
         }
-        if (false == ret_value) {
-            ret = errorcode_t::access_denied;
-            __leave2;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
     return ret_value;
 }
+*/
 
 }  // namespace net
 }  // namespace hotplace

@@ -33,7 +33,7 @@ add_subdirectory (tcpserver1)
 add_subdirectory (tcpserver2)
 add_subdirectory (tlsserver)
 add_subdirectory (httpserver)
-add_subdirectory (httpget)
+add_subdirectory (httptest)
 
 # odbc
 if (SUPPORT_ODBC)
