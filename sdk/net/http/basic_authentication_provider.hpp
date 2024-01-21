@@ -6,24 +6,44 @@
  *
  * Revision History
  * Date         Name                Description
+ *
+ * spec list
+ *      qop=auth
+ *      algorithm=MD5|MD5-sess|SHA-256|SHA-256-sess
+ *      userhash
+ * todo list
+ *      qop=auth-int
+ *      nextnonce
  */
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
-#include <sdk/net/basic/sdk.hpp>
+#ifndef __HOTPLACE_SDK_NET_HTTP_BASIC_AUTHENTICATION_PROVIDER__
+#define __HOTPLACE_SDK_NET_HTTP_BASIC_AUTHENTICATION_PROVIDER__
+
+#include <map>
+#include <sdk/base.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/io/basic/keyvalue.hpp>
 #include <sdk/net/http/http.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/tls/tls.hpp>
+#include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
 
-class oauth2_provider : public http_authenticate_provider {
+/**
+ * @brief   basic
+ *          RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+ *
+ *          Server
+ *              WWW-Authenticate: Basic realm="basic realm"
+ *          Client
+ *              Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+ */
+class basic_authentication_provider : public http_authenticate_provider {
    public:
-    oauth2_provider(const char* realm);
-    virtual ~oauth2_provider();
+    basic_authentication_provider(const char* realm);
+    virtual ~basic_authentication_provider();
 
     /**
      * @brief   try
@@ -35,16 +55,16 @@ class oauth2_provider : public http_authenticate_provider {
      */
     virtual bool try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request, http_response* response);
     /**
-     * @brief   200 OK / 401 Unauthorized
+     * @brief   401 Unauthorized
      * @param   network_session* session [in]
      * @param   http_request* request [in]
      * @param   http_response* response [in]
      * @return  error code (see error.hpp)
      */
     virtual return_t request_auth(network_session* session, http_request* request, http_response* response);
-
-    virtual std::string get_challenge(http_request* request);
 };
 
 }  // namespace net
 }  // namespace hotplace
+
+#endif

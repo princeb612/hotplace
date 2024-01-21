@@ -237,8 +237,8 @@ void test_basic_authenticate() {
     return_t ret = errorcode_t::success;
     server_socket socket;  // dummy
     network_session session(&socket);
-    http_basic_authenticate_provider provider("basic realm");
-    http_authenticate_resolver resolver;
+    basic_authentication_provider provider("basic realm");
+    http_authentication_resolver resolver;
     http_request request;
     http_response response;
     basic_stream bs;
@@ -293,7 +293,7 @@ void test_basic_authenticate() {
 
 /**
  * calcuration routine
- * cf. see http_digest_access_authenticate_provider::auth_digest_access (slightly diffrent)
+ * cf. see digest_access_authentication_provider::auth_digest_access (slightly diffrent)
  */
 return_t calc_digest_digest_access(http_authenticate_provider* provider, network_session* session, http_request* request, key_value& kv,
                                    std::string& digest_response) {
@@ -305,7 +305,7 @@ return_t calc_digest_digest_access(http_authenticate_provider* provider, network
             __leave2;
         }
 
-        http_digest_access_authenticate_provider* dgst_provider = (http_digest_access_authenticate_provider*)provider;
+        digest_access_authentication_provider* dgst_provider = (digest_access_authentication_provider*)provider;
 
         std::string alg;
         std::string hashalg = dgst_provider->get_algorithm();
@@ -387,8 +387,8 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
     network_session session(&socket);
     std::string realm = "digest realm";
     std::string qop = "auth";
-    http_digest_access_authenticate_provider provider(realm.c_str(), alg, qop.c_str());
-    http_authenticate_resolver resolver;
+    digest_access_authentication_provider provider(realm.c_str(), alg, qop.c_str());
+    http_authentication_resolver resolver;
     http_request request;
     http_response response;
     basic_stream bs;
