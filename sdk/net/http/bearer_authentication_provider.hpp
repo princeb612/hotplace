@@ -6,24 +6,35 @@
  *
  * Revision History
  * Date         Name                Description
+ *
+ * spec list
+ *      qop=auth
+ *      algorithm=MD5|MD5-sess|SHA-256|SHA-256-sess
+ *      userhash
+ * todo list
+ *      qop=auth-int
+ *      nextnonce
  */
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
-#include <sdk/net/basic/sdk.hpp>
+#ifndef __HOTPLACE_SDK_NET_HTTP_BEARER_AUTHENTICATION_PROVIDER__
+#define __HOTPLACE_SDK_NET_HTTP_BEARER_AUTHENTICATION_PROVIDER__
+
+#include <map>
+#include <sdk/base.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/io/basic/keyvalue.hpp>
 #include <sdk/net/http/http.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/tls/tls.hpp>
+#include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
 
-class oauth2_provider : public http_authenticate_provider {
+class bearer_authentication_provider : public http_authenticate_provider {
    public:
-    oauth2_provider(const char* realm);
-    virtual ~oauth2_provider();
+    bearer_authentication_provider(const char* realm);
+    virtual ~bearer_authentication_provider();
 
     /**
      * @brief   try
@@ -48,3 +59,5 @@ class oauth2_provider : public http_authenticate_provider {
 
 }  // namespace net
 }  // namespace hotplace
+
+#endif

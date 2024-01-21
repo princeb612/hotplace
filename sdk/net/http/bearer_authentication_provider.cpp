@@ -15,8 +15,8 @@
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
+#include <sdk/net/http/bearer_authentication_provider.hpp>
 #include <sdk/net/http/http.hpp>
-#include <sdk/net/http/http_authenticate.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/tls.hpp>
 
@@ -25,12 +25,12 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-http_bearer_authenticate_provider::http_bearer_authenticate_provider(const char* realm) : http_authenticate_provider(realm) {}
+bearer_authentication_provider::bearer_authentication_provider(const char* realm) : http_authenticate_provider(realm) {}
 
-http_bearer_authenticate_provider::~http_bearer_authenticate_provider() {}
+bearer_authentication_provider::~bearer_authentication_provider() {}
 
-bool http_bearer_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
-                                                 http_response* response) {
+bool bearer_authentication_provider::try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request,
+                                              http_response* response) {
     bool ret_value = false;
     __try2 {
         if (nullptr == session || nullptr == request) {
@@ -58,7 +58,7 @@ bool http_bearer_authenticate_provider::try_auth(http_authenticate_resolver* res
     return ret_value;
 }
 
-return_t http_bearer_authenticate_provider::request_auth(network_session* session, http_request* request, http_response* response) {
+return_t bearer_authentication_provider::request_auth(network_session* session, http_request* request, http_response* response) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == request || nullptr == response) {
@@ -92,7 +92,7 @@ return_t http_bearer_authenticate_provider::request_auth(network_session* sessio
     return ret;
 }
 
-std::string http_bearer_authenticate_provider::get_challenge(http_request* request) {
+std::string bearer_authentication_provider::get_challenge(http_request* request) {
     std::string challenge;
 
     __try2 {

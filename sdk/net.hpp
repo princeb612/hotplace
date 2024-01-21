@@ -18,8 +18,13 @@
 #include <sdk/net/basic/ipaddr_acl.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/http/basic_authentication_provider.hpp>
+#include <sdk/net/http/bearer_authentication_provider.hpp>
+#include <sdk/net/http/digest_access_authentication_provider.hpp>
+#include <sdk/net/http/html_documents.hpp>
 #include <sdk/net/http/http.hpp>
-#include <sdk/net/http/http_authenticate.hpp>
+#include <sdk/net/http/http_authentication_provider.hpp>
+#include <sdk/net/http/http_authentication_resolver.hpp>
 #include <sdk/net/http/http_client.hpp>
 #include <sdk/net/http/http_header.hpp>
 #include <sdk/net/http/http_protocol.hpp>

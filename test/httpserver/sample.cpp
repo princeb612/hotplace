@@ -208,10 +208,10 @@ return_t echo_server(void*) {
             .add("/auth/bearer", default_handler)
             .add("/auth/token", default_handler)
             .add(404, error_handler)
-            .add("/auth/basic", new http_basic_authenticate_provider(basic_realm.c_str()))
-            .add("/auth/digest", new http_digest_access_authenticate_provider(digest_access_realm.c_str(), digest_access_alg.c_str(), digest_access_qop.c_str(),
-                                                                              digest_access_userhash))
-            .add("/auth/bearer", new http_bearer_authenticate_provider(bearer_realm.c_str()))
+            .add("/auth/basic", new basic_authentication_provider(basic_realm.c_str()))
+            .add("/auth/digest", new digest_access_authentication_provider(digest_access_realm.c_str(), digest_access_alg.c_str(), digest_access_qop.c_str(),
+                                                                           digest_access_userhash))
+            .add("/auth/bearer", new bearer_authentication_provider(bearer_realm.c_str()))
             .add("/auth/token", new oauth2_provider(oauth2_realm.c_str()));
 
         // simple implementation

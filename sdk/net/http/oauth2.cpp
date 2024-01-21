@@ -17,7 +17,7 @@
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http.hpp>
-#include <sdk/net/http/http_authenticate.hpp>
+#include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/tls.hpp>
 
@@ -30,7 +30,7 @@ oauth2_provider::oauth2_provider(const char* realm) : http_authenticate_provider
 
 oauth2_provider::~oauth2_provider() {}
 
-bool oauth2_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request, http_response* response) {
+bool oauth2_provider::try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request, http_response* response) {
     bool ret_value = false;
     __try2 {
         if (nullptr == session || nullptr == request) {

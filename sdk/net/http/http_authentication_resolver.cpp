@@ -16,7 +16,7 @@
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http.hpp>
-#include <sdk/net/http/http_authenticate.hpp>
+#include <sdk/net/http/http_authentication_resolver.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/tls.hpp>
 
@@ -25,19 +25,19 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-http_authenticate_resolver::http_authenticate_resolver() : _basic_resolver(nullptr) {}
+http_authentication_resolver::http_authentication_resolver() : _basic_resolver(nullptr) {}
 
-bool http_authenticate_resolver::resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) {
+bool http_authentication_resolver::resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) {
     return provider->try_auth(this, session, request, response);
 }
 
-http_authenticate_resolver& http_authenticate_resolver::basic_resolver(authenticate_handler_t resolver) {
+http_authentication_resolver& http_authentication_resolver::basic_resolver(authenticate_handler_t resolver) {
     _basic_resolver = resolver;
     return *this;
 }
 
-bool http_authenticate_resolver::basic_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
-                                                    http_response* response) {
+bool http_authentication_resolver::basic_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
+                                                      http_response* response) {
     bool ret_value = false;
     __try2 {
         if (_basic_resolver) {
@@ -64,20 +64,20 @@ bool http_authenticate_resolver::basic_authenticate(http_authenticate_provider* 
     return ret_value;
 }
 
-http_authenticate_resolver& http_authenticate_resolver::digest_resolver(authenticate_handler_t resolver) {
+http_authentication_resolver& http_authentication_resolver::digest_resolver(authenticate_handler_t resolver) {
     _digest_resolver = resolver;
     return *this;
 }
 
-bool http_authenticate_resolver::digest_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
-                                                     http_response* response) {
+bool http_authentication_resolver::digest_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
+                                                       http_response* response) {
     bool ret_value = false;
     __try2 {
         if (_digest_resolver) {
             ret_value = _digest_resolver(provider, session, request, response);
         } else {
             return_t ret = errorcode_t::success;
-            http_digest_access_authenticate_provider* digest_provider = (http_digest_access_authenticate_provider*)provider;
+            digest_access_authentication_provider* digest_provider = (digest_access_authentication_provider*)provider;
             key_value kv;
 
             ret = digest_provider->prepare_digest_access(session, request, response, kv);
@@ -117,13 +117,13 @@ bool http_authenticate_resolver::digest_authenticate(http_authenticate_provider*
     return ret_value;
 }
 
-http_authenticate_resolver& http_authenticate_resolver::bearer_resolver(authenticate_handler_t resolver) {
+http_authentication_resolver& http_authentication_resolver::bearer_resolver(authenticate_handler_t resolver) {
     _bearer_resolver = resolver;
     return *this;
 }
 
-bool http_authenticate_resolver::bearer_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
-                                                     http_response* response) {
+bool http_authentication_resolver::bearer_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
+                                                       http_response* response) {
     bool ret_value = false;
     if (_bearer_resolver) {
         ret_value = _bearer_resolver(provider, session, request, response);
@@ -155,13 +155,13 @@ bool http_authenticate_resolver::bearer_authenticate(http_authenticate_provider*
     return ret_value;
 }
 
-http_authenticate_resolver& http_authenticate_resolver::oauth2_resolver(authenticate_handler_t resolver) {
+http_authentication_resolver& http_authentication_resolver::oauth2_resolver(authenticate_handler_t resolver) {
     _oauth2_resolver = resolver;
     return *this;
 }
 
-bool http_authenticate_resolver::oauth2_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
-                                                     http_response* response) {
+bool http_authentication_resolver::oauth2_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
+                                                       http_response* response) {
     bool ret_value = false;
     if (_bearer_resolver) {
         ret_value = _oauth2_resolver(provider, session, request, response);
@@ -193,7 +193,7 @@ bool http_authenticate_resolver::oauth2_authenticate(http_authenticate_provider*
     return ret_value;
 }
 
-http_authenticate_resolver& http_authenticate_resolver::basic_credential(std::string const& username, std::string const& password) {
+http_authentication_resolver& http_authentication_resolver::basic_credential(std::string const& username, std::string const& password) {
     basic_stream bs;
     bs << username << ":" << password;
 
@@ -202,20 +202,20 @@ http_authenticate_resolver& http_authenticate_resolver::basic_credential(std::st
     return *this;
 }
 
-http_authenticate_resolver& http_authenticate_resolver::basic_credential(std::string const& challenge) {
+http_authentication_resolver& http_authentication_resolver::basic_credential(std::string const& challenge) {
     critical_section_guard guard(_lock);
     _basic_credential.insert(challenge);
     return *this;
 }
 
-http_authenticate_resolver& http_authenticate_resolver::digest_access_credential(std::string const& username, std::string const& password) {
+http_authentication_resolver& http_authentication_resolver::digest_access_credential(std::string const& username, std::string const& password) {
     critical_section_guard guard(_lock);
     _digest_access_credential.insert(std::make_pair(username, password));
     return *this;
 }
 
-http_authenticate_resolver& http_authenticate_resolver::digest_access_credential(std::string const& realm, std::string const& algorithm,
-                                                                                 std::string const& username, std::string const& password) {
+http_authentication_resolver& http_authentication_resolver::digest_access_credential(std::string const& realm, std::string const& algorithm,
+                                                                                     std::string const& username, std::string const& password) {
     rfc2617_digest dgst;
     dgst.add(username).add(":").add(realm).digest(algorithm);
 
@@ -225,14 +225,14 @@ http_authenticate_resolver& http_authenticate_resolver::digest_access_credential
     return *this;
 }
 
-http_authenticate_resolver& http_authenticate_resolver::bearer_credential(std::string const& client_id, std::string const& client_secret) {
+http_authentication_resolver& http_authentication_resolver::bearer_credential(std::string const& client_id, std::string const& client_secret) {
     critical_section_guard guard(_lock);
     _bearer_credential.insert(std::make_pair(client_id, client_secret));
     return *this;
 }
 
-http_authenticate_resolver& http_authenticate_resolver::add_auth(std::string const& client_id, std::string const& client_secret,
-                                                                 std::string const& redirect_uri) {
+http_authentication_resolver& http_authentication_resolver::add_auth(std::string const& client_id, std::string const& client_secret,
+                                                                     std::string const& redirect_uri) {
     critical_section_guard guard(_lock);
     _oauth2_credential.insert(std::make_pair(client_id, client_secret));
     _redirect_uri.insert(std::make_pair(client_id, redirect_uri));
@@ -240,7 +240,7 @@ http_authenticate_resolver& http_authenticate_resolver::add_auth(std::string con
 }
 
 /*
-bool http_authenticate_resolver::login(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) {
+bool http_authentication_resolver::login(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) {
     bool ret_value = false;
         return_t ret = errorcode_t::success;
         std::string error;

@@ -15,8 +15,8 @@
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
+#include <sdk/net/http/digest_access_authentication_provider.hpp>
 #include <sdk/net/http/http.hpp>
-#include <sdk/net/http/http_authenticate.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/tls.hpp>
 
@@ -114,20 +114,20 @@ rfc2617_digest& rfc2617_digest::clear() {
     return *this;
 }
 
-http_digest_access_authenticate_provider::http_digest_access_authenticate_provider(const char* realm)
+digest_access_authentication_provider::digest_access_authentication_provider(const char* realm)
     : http_authenticate_provider(realm), _qop("auth, auth-int"), _userhash(false) {}
 
-http_digest_access_authenticate_provider::http_digest_access_authenticate_provider(const char* realm, const char* algorithm, const char* qop, bool userhash)
+digest_access_authentication_provider::digest_access_authentication_provider(const char* realm, const char* algorithm, const char* qop, bool userhash)
     : http_authenticate_provider(realm) {
     set_algorithm(algorithm);
     set_qop(qop);
     set_userhash(userhash);
 }
 
-http_digest_access_authenticate_provider::~http_digest_access_authenticate_provider() {}
+digest_access_authentication_provider::~digest_access_authentication_provider() {}
 
-bool http_digest_access_authenticate_provider::try_auth(http_authenticate_resolver* resolver, network_session* session, http_request* request,
-                                                        http_response* response) {
+bool digest_access_authentication_provider::try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request,
+                                                     http_response* response) {
     bool ret_value = false;
     __try2 {
         if (nullptr == session || nullptr == request) {
@@ -151,7 +151,7 @@ bool http_digest_access_authenticate_provider::try_auth(http_authenticate_resolv
     return ret_value;
 }
 
-return_t http_digest_access_authenticate_provider::request_auth(network_session* session, http_request* request, http_response* response) {
+return_t digest_access_authentication_provider::request_auth(network_session* session, http_request* request, http_response* response) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == request || nullptr == response) {
@@ -192,8 +192,7 @@ return_t http_digest_access_authenticate_provider::request_auth(network_session*
     return ret;
 }
 
-return_t http_digest_access_authenticate_provider::prepare_digest_access(network_session* session, http_request* request, http_response* response,
-                                                                         key_value& kv) {
+return_t digest_access_authentication_provider::prepare_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv) {
     return_t ret = errorcode_t::mismatch;
     __try2 {
         if (nullptr == session || nullptr == request || nullptr == response) {
@@ -228,7 +227,7 @@ return_t http_digest_access_authenticate_provider::prepare_digest_access(network
     return ret;
 }
 
-return_t http_digest_access_authenticate_provider::auth_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv) {
+return_t digest_access_authentication_provider::auth_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv) {
     return_t ret = errorcode_t::mismatch;
     __try2 {
         if (nullptr == session || nullptr == request || nullptr == response) {
@@ -329,30 +328,30 @@ return_t http_digest_access_authenticate_provider::auth_digest_access(network_se
     return ret;
 }
 
-http_digest_access_authenticate_provider& http_digest_access_authenticate_provider::set_algorithm(const char* algorithm) {
+digest_access_authentication_provider& digest_access_authentication_provider::set_algorithm(const char* algorithm) {
     if (algorithm) {
         _algorithm = algorithm;
     }
     return *this;
 }
 
-http_digest_access_authenticate_provider& http_digest_access_authenticate_provider::set_qop(const char* qop) {
+digest_access_authentication_provider& digest_access_authentication_provider::set_qop(const char* qop) {
     if (qop) {
         _qop = qop;
     }
     return *this;
 }
 
-http_digest_access_authenticate_provider& http_digest_access_authenticate_provider::set_userhash(bool enable) {
+digest_access_authentication_provider& digest_access_authentication_provider::set_userhash(bool enable) {
     _userhash = enable;
     return *this;
 }
 
-std::string http_digest_access_authenticate_provider::get_algorithm() { return _algorithm; }
+std::string digest_access_authentication_provider::get_algorithm() { return _algorithm; }
 
-std::string http_digest_access_authenticate_provider::get_qop() { return _qop; }
+std::string digest_access_authentication_provider::get_qop() { return _qop; }
 
-bool http_digest_access_authenticate_provider::get_userhash() { return _userhash; }
+bool digest_access_authentication_provider::get_userhash() { return _userhash; }
 
 }  // namespace net
 }  // namespace hotplace
