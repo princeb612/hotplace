@@ -23,6 +23,8 @@ http_header::http_header() {
     // do nothing
 }
 
+http_header::http_header(const http_header& object) { _headers = object._headers; }
+
 http_header::~http_header() {
     // do nothing
 }

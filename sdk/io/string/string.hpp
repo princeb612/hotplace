@@ -189,24 +189,15 @@ typedef struct _url_info_t {
  * split url
  * @example
  *        url_info_t info;
- *        const char *url = "http://test.com/download/meta/file.txt";
+ *        const char *url = "http://test.com/resource?client_id=12345#part1";
  *        split_url(url, &info);
  *        // info.protocol => http
  *        // info.host => test.com
  *        // info.port => 80
- *        // info.uri => /download/meta/file.txt
- *        // info.uripath => /download/meta
- *        // info.urifile => file.txt
- * @remarks
- *        input                             -> prot + host     + uripath
- *        http://test.com/download/file.txt -> http + test.com + /download/file.txt
- *        http://test.com/download/         -> http + test.com + /download/
- *        http://test.com/download          -> http + test.com + /download
- *        http://test.com/a/b/              -> http + test.com + /a/b/
- *        http://test.com/a/b               -> http + test.com + /a/b
- *        http://test.com                   -> http + test.com + /
- *        /download/file.txt                -> NA   + NA       + /download/file.txt
- *        /download/                        -> NA   + NA       + /download/
+ *        // info.uri => /resource?client_id=12345
+ *        // info.uripath => /resource
+ *        // info.query => client_id=12345
+ *        // info.fragment => part1
  */
 return_t split_url(const char* url, url_info_t* info);
 

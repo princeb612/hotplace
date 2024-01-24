@@ -36,6 +36,7 @@ namespace net {
 class http_header {
    public:
     http_header();
+    http_header(const http_header& object);
     virtual ~http_header();
 
     /**

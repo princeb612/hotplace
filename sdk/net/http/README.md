@@ -1,0 +1,24 @@
+## HTTP/1.0
+  - one request per connection
+  - problem of RTT (packet round-trip time)
+    - HTTP/1.1 Persistent Connection
+
+## HTTP/1.1
+  - Persistent Connection
+    - keep-alive option
+  - pipelining
+    - client sends requests sequentially wo waiting for a response to the previous request
+    - server responds in the order in which the requests were received
+  - problem of TCP HOLB (Head of Line Blocking)
+    - if the response to the previous request is delayed, all subsequent requests are blocked and the response is delayed
+    - HTTP/2.0 SPDY, HTTP/3.0 QUIC
+
+## HTTP/2.0
+  - Multiplexed streams
+    - SPDY (TCP-based)
+    - problem of HOLB still exists
+  - Head Compression
+  - Server Push
+
+## HTTP/3.0
+  - QUIC (UDP-based)

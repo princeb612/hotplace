@@ -38,6 +38,7 @@ class http_response {
    public:
     http_response();
     http_response(http_request* request);
+    http_response(const http_response& object);
     ~http_response();
 
     /* *
@@ -62,6 +63,16 @@ class http_response {
     http_response& compose(int status_code);
     http_response& compose(int status_code, const char* content_type, const char* content, ...);
     http_response& compose(int status_code, std::string const& content_type, const char* content, ...);
+    /**
+     * @brief   respond
+     * @example
+     *          response.get_http_header().clear();
+     *          response.compose(200, "text/html>", "<html><body></body></html>");
+     *          basic_stream bs;
+     *          response.get_response(bs)
+     *          session->send((const char*)bs.data(), bs.size());
+     */
+    return_t respond(network_session* session);
     /**
      * @brief   Content-Type
      */

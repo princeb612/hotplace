@@ -21,6 +21,14 @@ namespace net {
 
 http_uri::http_uri() { _shared.make_share(this); }
 
+http_uri::http_uri(const http_uri& object) {
+    _shared.make_share(this);
+    _uri = object._uri;
+    _uripath = object._uripath;
+    _query = object._query;
+    _query_kv = object._query_kv;
+}
+
 http_uri::~http_uri() {
     // do nothing
 }
@@ -38,39 +46,13 @@ return_t http_uri::open(const char* uri) {
 
         close();
 
-        std::string input = uri;
-        std::string token;
-        std::string item;
-        size_t pos = 0;
-        size_t ppos = 0;
+        url_info_t url_info;
+        split_url(uri, &url_info);
 
-        _uri = tokenize(input, "?", pos); /* until '?' character */
-        if (std::string::npos != pos) {
-            _query = input.substr(pos);
-            if (ends_with(_query, "\r\n\r\n")) {
-                _query.erase(_query.end() - 4);
-            }
-        }
-
-        /* parameters */
-        _query = tokenize(uri, "?", pos);
-        if (_query.size()) {
-            pos = 0;
-            while (true) {
-                token = tokenize(_query, "&", pos);
-                if (true == token.empty()) {
-                    break;
-                }
-
-                ppos = 0;
-                item = tokenize(token, "=", ppos);
-                if (ppos > token.size()) {
-                    ppos = 0;
-                }
-
-                _query_kv.insert(std::make_pair(item, token.substr(ppos)));
-            }
-        }
+        _uri = url_info.uri;
+        _uripath = url_info.uripath;
+        _query = url_info.query;
+        to_keyvalue(_query, _query_kv);
     }
     __finally2 {
         // do nothing
@@ -92,6 +74,13 @@ const char* http_uri::get_uri() {
     return ret_value;
 }
 
+const char* http_uri::get_uripath() {
+    const char* ret_value = nullptr;
+
+    ret_value = _uripath.c_str();
+    return ret_value;
+}
+
 const char* http_uri::get_query() {
     const char* ret_value = nullptr;
 
@@ -99,30 +88,9 @@ const char* http_uri::get_query() {
     return ret_value;
 }
 
-return_t http_uri::query(unsigned index, std::string& key, std::string& value) {
-    return_t ret = errorcode_t::success;
-
-    if (index < _query_kv.size()) {
-        PARAMETERS::iterator iter = _query_kv.begin();
-        std::advance(iter, index);
-        key = iter->first;
-        value = iter->second;
-    } else {
-        ret = errorcode_t::out_of_range;
-    }
-    return ret;
-}
-
 return_t http_uri::query(std::string const& key, std::string& value) {
     return_t ret = errorcode_t::success;
-
-    PARAMETERS::iterator iter = _query_kv.find(key);
-
-    if (_query_kv.end() != iter) {
-        value = iter->second;
-    } else {
-        ret = errorcode_t::not_found;
-    }
+    ret = _query_kv.query(key, value);
     return ret;
 }
 
@@ -162,6 +130,8 @@ return_t http_uri::to_keyvalue(std::string const& value, key_value& kv) {
     }
     return ret;
 }
+
+key_value& http_uri::get_query_keyvalue() { return _query_kv; }
 
 void http_uri::addref() { _shared.addref(); }
 

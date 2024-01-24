@@ -18,6 +18,14 @@ key_value::key_value(uint32 flags) : _flags(flags), _order(0) {
     // do nothing
 }
 
+key_value::key_value(const key_value& object) {
+    _keyvalues = object._keyvalues;
+    _order_map = object._order_map;
+    _reverse_order_map = object._reverse_order_map;
+    _flags = object._flags;
+    _order = object._order;
+}
+
 key_value::~key_value() {
     // do nothing
 }
@@ -175,6 +183,18 @@ return_t key_value::query(const char* name, std::string& value) {
             __leave2;
         }
 
+        ret = query(std::string(name), value);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t key_value::query(std::string const& name, std::string& value) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
         std::string key(name);
         if (0 == (key_value_flag_t::key_value_case_sensitive & _flags)) {
             std::transform(key.begin(), key.end(), key.begin(), tolower);
@@ -236,11 +256,6 @@ return_t key_value::copyto(std::map<std::string, std::string>& target) {
     return ret;
 }
 
-key_value& key_value::operator=(key_value& rhs) {
-    copy(rhs, key_value_mode_t::move);
-    return *this;
-}
-
 key_value& key_value::operator<<(key_value& rhs) {
     copy(rhs, key_value_mode_t::update);
     return *this;
@@ -256,6 +271,8 @@ void key_value::foreach (std::function<void(std::string const&, std::string cons
 }
 
 bool key_value::empty() { return _keyvalues.size() == 0; }
+
+size_t key_value::size() { return _keyvalues.size(); }
 
 }  // namespace io
 }  // namespace hotplace

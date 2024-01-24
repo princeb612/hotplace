@@ -21,11 +21,32 @@ namespace net {
 
 http_response::http_response() : _request(nullptr), _statuscode(0) { _shared.make_share(this); }
 
-http_response::http_response(http_request* request) : _request(request) {
-    // do nothing
+http_response::http_response(http_request* request) : _request(request), _statuscode(0) {
+    _shared.make_share(this);
+    if (_request) {
+        _request->addref();
+    }
 }
 
-http_response::~http_response() { close(); }
+http_response::http_response(const http_response& object) {
+    _shared.make_share(this);
+    _request = object._request;
+    if (_request) {
+        _request->addref();
+    }
+    _header = object._header;
+    _content_type = object._content_type;
+    _content = object._content;
+    _statuscode = object._statuscode;
+}
+
+http_response::~http_response() {
+    close();
+
+    if (_request) {
+        _request->release();
+    }
+}
 
 return_t http_response::open(const char* response, size_t size_response) {
     return_t ret = errorcode_t::success;
@@ -127,7 +148,6 @@ return_t http_response::close() {
 
     _content_type.clear();
     _content.clear();
-    // check... do not clear header
 
     return ret;
 }
@@ -166,6 +186,24 @@ http_response& http_response::compose(int status_code, std::string const& conten
     }
     _statuscode = status_code;
     return *this;
+}
+
+return_t http_response::respond(network_session* session) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        basic_stream bs;
+        get_response(bs);
+        session->send((const char*)bs.data(), bs.size());
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 const char* http_response::content_type() { return _content_type.c_str(); }

@@ -29,6 +29,11 @@ enum protocol_state_t {
     protocol_state_crash,       /* reserved */
 };
 
+enum protocol_constraints_t {
+    protocol_packet_size = 0,
+    protocol_constraints_the_end,
+};
+
 /**
  * network_multiplexer_processor data structures
  */
@@ -76,9 +81,15 @@ class network_session;
 class network_session_manager;
 class network_stream;
 
+/**
+ * @brief   protocol interpreter
+ */
 class network_protocol {
    public:
-    network_protocol() { _shared.make_share(this); }
+    network_protocol() {
+        _shared.make_share(this);
+        _constraints.resize(protocol_constraints_t::protocol_constraints_the_end);
+    }
     virtual ~network_protocol() {}
 
     /**
@@ -100,6 +111,26 @@ class network_protocol {
         return errorcode_t::success;
     }
     /**
+     * @brief   constraints
+     */
+    virtual return_t set_constraints(protocol_constraints_t id, size_t value) {
+        return_t ret = errorcode_t::success;
+        if (id < protocol_constraints_t::protocol_constraints_the_end) {
+            _constraints[id] = value;
+        } else {
+            ret = errorcode_t::invalid_request;
+        }
+        return ret;
+    }
+    virtual size_t get_constraints(protocol_constraints_t id) {
+        size_t ret_value = 0;
+        if (id < protocol_constraints_t::protocol_constraints_the_end) {
+            ret_value = _constraints[id];
+        }
+        return ret_value;
+    }
+
+    /**
      * @brief   id
      * @remarks default port number
      */
@@ -110,6 +141,7 @@ class network_protocol {
 
    protected:
     t_shared_reference<network_protocol> _shared;
+    std::vector<size_t> _constraints;
 };
 
 class network_protocol_group {

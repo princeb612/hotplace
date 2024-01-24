@@ -36,8 +36,12 @@ typedef struct _OPTION {
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
 
-void api_test_handler(http_request* request, http_response* response) { response->compose(200, "text/html", "<html><body>page - ok<body></html>"); }
-void api_v1_test_handler(http_request* request, http_response* response) { response->compose(200, "application/json", "{\"result\":\"ok\"}"); }
+void api_test_handler(network_session*, http_request* request, http_response* response) {
+    response->compose(200, "text/html", "<html><body>page - ok<body></html>");
+}
+void api_v1_test_handler(network_session*, http_request* request, http_response* response) {
+    response->compose(200, "application/json", "{\"result\":\"ok\"}");
+}
 
 t_shared_instance<http_router> _http_router;
 
@@ -89,17 +93,13 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 if (0) {
                     std::string encoding;
 
-                    std::cout << "uri : " << request.get_uri() << std::endl;
+                    std::cout << "uri : " << request.get_http_uri().get_uri() << std::endl;
                     std::cout << "method : " << request.get_method() << std::endl;
 
                     /* URI, URL, query */
                     http_uri& uri = request.get_http_uri();
-                    for (size_t i = 0; i < uri.countof_query(); i++) {
-                        std::string key;
-                        std::string value;
-                        uri.query(i, key, value);
-                        std::cout << key.c_str() << " -> " << value.c_str() << std::endl;
-                    }
+                    uri.get_query_keyvalue().foreach (
+                        [&](std::string const& key, std::string const& value, void* param) -> void { std::cout << key << " : " << value << std::endl; });
 
                     std::cout << "tls : " << use_tls << std::endl;
 
@@ -110,11 +110,13 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
                 if (use_tls) {
                     // using http_router
-                    router->route(request.get_uri(), session, &request, &response);
-                    response.get_response(bs);
+                    router->route(session, &request, &response);
                 } else {
                     // handle wo http_router
-                    response.compose(200, "text/html", "<html><body>%s<pre>%s</pre></body></html>", request.get_uri(), bs.c_str());
+                    response.get_http_header().add("Upgrade", "TLS/1.2, HTTP/1.1").add("Connection", "Upgrade");
+                    int status_code = 426;
+                    response.compose(status_code, "text/html", "<html><body><a href='https://localhost:%d%s'>%d %s</a><br></body></html>", option.port_tls,
+                                     request.get_http_uri().get_uri(), status_code, http_resource::get_instance()->load(status_code).c_str());
                 }
 
                 if (option.debug) {
@@ -126,7 +128,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     printf("%s\n", temp.c_str());
                 }
 
-                session->send((const char*)bs.data(), bs.size());
+                response.respond(session);
                 fflush(stdout);
             }
 
@@ -174,23 +176,115 @@ return_t echo_server(void*) {
         std::string bearer_realm = "hotplace";
         // OAuth 2.0 (realm)
         std::string oauth2_realm = "somewhere over the rainbow";
-        std::string redirect_uri = "https://127.0.0.1/auth/v1/token";
 
         /* route */
         _http_router.make_share(new http_router);
 
-        std::function<void(http_request*, http_response*)> default_handler = [&](http_request* request, http_response* response) -> void {
+        std::function<void(network_session*, http_request*, http_response*)> default_handler = [&](network_session* session, http_request* request,
+                                                                                                   http_response* response) -> void {
             basic_stream bs;
             request->get_request(bs);
             response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
         };
-        std::function<void(http_request*, http_response*)> error_handler = [&](http_request* request, http_response* response) -> void {
+        std::function<void(network_session*, http_request*, http_response*)> error_handler = [&](network_session* session, http_request* request,
+                                                                                                 http_response* response) -> void {
             basic_stream bs;
             request->get_request(bs);
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
         };
 
-        html_documents http_documents = _http_router->get_html_documents();
+        std::function<void(network_session*, http_request*, http_response*)> weblogin_handler = [&](network_session* session, http_request* request,
+                                                                                                    http_response* response) -> void {
+            // studying RFC 6749
+
+            // resource server
+            //      create an app
+            //      - [out] app id
+            //      - [in] valid domain, redirect_uri, permission (query email)
+            //      validate, test, review and then published
+            //
+            // client
+            //      RFC 6749 4.1.1.  Authorization Request
+
+            basic_stream req;
+            openssl_prng prng;
+            std::string state;
+            state = prng.nonce(16);
+            std::string auth_server = "https://localhost:9000";
+            std::string auth_uri = "/auth/authorize";
+            std::string client_id = "12345";
+            std::string redirect_uri = "https://localhost:9000/auth/cb";
+            req << auth_server << auth_uri << "?response_type=code&client_id=" << client_id << "&redirect_uri=" << redirect_uri << "&state=" << state;
+            response->get_http_header().add("Location", req.c_str());
+            response->compose(302);
+        };
+        std::function<void(network_session*, http_request*, http_response*)> auth_handler = [&](network_session* session, http_request* request,
+                                                                                                http_response* response) -> void {
+            // studying RFC 6749
+
+            // this uri authenticated
+
+            // login
+            //      RFC 6749 4.1.2.  Authorization Response
+            //          HTTP/1.1 302 Found
+            //          Location: https://client.example.com/cb?code=SplxlOBeZQQYbYS6WxSbIA
+
+            key_value& kv = request->get_http_uri().get_query_keyvalue();
+
+            std::string response_type = kv.get("response_type");
+            std::string client_id = kv.get("client_id");
+            std::string redirect_uri = kv.get("redirect_uri");
+            std::string state = kv.get("state");
+            std::string code;
+
+            openssl_prng prng;
+            code = prng.nonce(16);
+
+            basic_stream resp;
+            resp << redirect_uri << "?code=" << code << "&state=" << state;
+            response->get_http_header().add("Location", resp.c_str());
+            response->compose(302);
+
+            session->get_session_data()->set("state", state);
+        };
+        std::function<void(network_session*, http_request*, http_response*)> cb_handler = [&](network_session* session, http_request* request,
+                                                                                              http_response* response) -> void {
+            // studying RFC 6749
+
+            key_value& kv = request->get_http_uri().get_query_keyvalue();
+            std::string code = kv.get("code");
+            std::string state = kv.get("state");
+
+            if (state == session->get_session_data()->get("state")) {
+                //      RFC 6749 4.1.3.  Access Token Request
+
+                http_request req;
+                basic_stream req_content;
+                std::string auth_server = "https://localhost:9000";
+                std::string token_uri = "/auth/token";
+                std::string redirect_uri = "https://localhost:9000/auth/cb";
+
+                req_content << "grant_type=authorization_code&code=" << code << "&redirect_uri=" << redirect_uri;
+                req.get_http_header().add("Authorization", base64_encode("user:password")).add("Content-Type", "application/x-www-form-urlencoded");
+                req.compose(http_method_t::HTTP_POST, token_uri, req_content.c_str());
+
+                // make a request
+
+                // TODO ...
+
+                // temporary response
+                basic_stream bs;
+                req.get_request(bs);
+                response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
+
+            } else {
+                response->compose(200, "text/html", "<html><body>invalid_request</body></html>");
+            }
+        };
+        std::function<void(network_session*, http_request*, http_response*)> token_handler = [&](network_session* session, http_request* request,
+                                                                                                 http_response* response) -> void {
+            // ...
+        };
 
         (*_http_router)
             .get_html_documents()
@@ -200,19 +294,29 @@ return_t echo_server(void*) {
             .set_default_document("index.html");
 
         (*_http_router)
+            // http_router
             .add("/api/test", api_test_handler)
             .add("/api/v1/test", api_v1_test_handler)
             .add("/test", default_handler)
-            .add("/auth/basic", default_handler)
-            .add("/auth/digest", default_handler)
-            .add("/auth/bearer", default_handler)
-            .add("/auth/token", default_handler)
             .add(404, error_handler)
+            // basic authentication
+            .add("/auth/basic", default_handler)
             .add("/auth/basic", new basic_authentication_provider(basic_realm.c_str()))
+            // digest access authentication
+            .add("/auth/digest", default_handler)
             .add("/auth/digest", new digest_access_authentication_provider(digest_access_realm.c_str(), digest_access_alg.c_str(), digest_access_qop.c_str(),
                                                                            digest_access_userhash))
+            // bearer authentication
+            .add("/auth/bearer", default_handler)
             .add("/auth/bearer", new bearer_authentication_provider(bearer_realm.c_str()))
-            .add("/auth/token", new oauth2_provider(oauth2_realm.c_str()));
+            // studying RFC 6749
+            .add("/auth/weblogin", weblogin_handler)
+            .add("/auth/authorize", auth_handler)
+            .add("/auth/authorize", new digest_access_authentication_provider(digest_access_realm.c_str(), digest_access_alg.c_str(), digest_access_qop.c_str(),
+                                                                              digest_access_userhash))
+            .add("/auth/cb", cb_handler)
+            .add("/auth/token", token_handler)
+            .add("/auth/token", new basic_authentication_provider(basic_realm.c_str()));
 
         // simple implementation
         (*_http_router)
@@ -221,7 +325,6 @@ return_t echo_server(void*) {
             .basic_credential(base64_encode("user:password"))
             .digest_access_credential(digest_access_realm, digest_access_alg, "user", "password")
             .bearer_credential("s6BhdRkqt3", "7Fjfp0ZBr1KtDRbnfVdmIw")
-            .add_auth("s6BhdRkqt3", "7Fjfp0ZBr1KtDRbnfVdmIw", redirect_uri)  // authentication server
             // basic_resolver, digest_resolver, bearer_resolver if necessary
             // .basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
             //    /* ... */ })
@@ -235,6 +338,8 @@ return_t echo_server(void*) {
         __try_new_catch(tls, new transport_layer_security(cert.get()), ret, __leave2);
         __try_new_catch(http_prot, new http_protocol, ret, __leave2);
         __try_new_catch(tls_server, new transport_layer_security_server(tls), ret, __leave2);
+
+        http_prot->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 
         // start server
         netserver.open(&handle_http_ipv4, AF_INET, IPPROTO_TCP, option.port, 32000, network_routine, nullptr, &svr_sock);

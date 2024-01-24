@@ -31,9 +31,6 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-typedef void (*http_request_handler_t)(http_request*, http_response*);
-typedef std::function<void(http_request*, http_response*)> http_request_function_t;
-
 class html_documents {
    public:
     html_documents();

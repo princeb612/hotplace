@@ -110,12 +110,6 @@ class http_authentication_resolver {
                                                            std::string const& password);
     http_authentication_resolver& bearer_credential(std::string const& client_id, std::string const& client_secret);
 
-    /**
-     * @brief   authorization server resonse
-     */
-    http_authentication_resolver& add_auth(std::string const& client_id, std::string const& client_secret, std::string const& redirect_uri);
-    // bool login(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
-
    private:
     authenticate_handler_t _basic_resolver;
     authenticate_handler_t _digest_resolver;

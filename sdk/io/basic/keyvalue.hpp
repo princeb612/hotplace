@@ -41,6 +41,7 @@ class key_value {
      * @param uint32 flags [inopt]
      */
     key_value(uint32 flags = key_value_flag_t::key_value_case_sensitive);
+    key_value(const key_value& object);
     /**
      * @brief destructor
      */
@@ -114,6 +115,7 @@ class key_value {
      *          kv.query ("value", value); // ""
      */
     return_t query(const char* name, std::string& value);
+    return_t query(std::string const& name, std::string& value);
     std::string get(std::string const& name);
 
     /**
@@ -147,13 +149,6 @@ class key_value {
     void foreach (std::function<void(std::string const&, std::string const&, void*)> func, void* param = nullptr);
 
     /**
-     * @brief   operator =
-     * @param   key_value& rhs [in]
-     * @return  key_value&
-     * @remarks copy with key_value_mode_t::move
-     */
-    key_value& operator=(key_value& rhs);
-    /**
      * @brief   operator <<
      * @param   key_value& rhs [in]
      * @return  key_value&
@@ -162,6 +157,7 @@ class key_value {
     key_value& operator<<(key_value& rhs);
 
     bool empty();
+    size_t size();
 
    protected:
     /* key, value */

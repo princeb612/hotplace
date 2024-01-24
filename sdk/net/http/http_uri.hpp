@@ -37,6 +37,7 @@ namespace net {
 class http_uri {
    public:
     http_uri();
+    http_uri(const http_uri& object);
     ~http_uri();
 
     /**
@@ -55,19 +56,8 @@ class http_uri {
      * @brief URI
      */
     const char* get_uri();
+    const char* get_uripath();
     const char* get_query();
-    /**
-     * @brief   query
-     * @param   unsigned        index       [IN] 0 <= index < size_parameter ()
-     * @param   std::string&    key         [OUT]
-     * @param   std::string&    value       [OUT]
-     * @return  error code (see error.hpp)
-     * @remarks
-     *          http_uri url ("/resource/entity?spec=full&period=week")
-     *          url.query (0, key, value) return spec and full
-     *          url.query (1, key, value) return period and week
-     */
-    return_t query(unsigned index, std::string& key, std::string& value);
     /**
      * @brief   read a param
      * @param   std::string const& key [in]
@@ -87,22 +77,31 @@ class http_uri {
      * @param   key_value& kv [out]
      * @return  error code (see error.hpp)
      * @sample
-     *          const char* input = "/resource?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw";
+     *          const char* input = "/resource?client_id=s6BhdRkqt3";
      *          http_uri::to_keyvalue(input, kv);
      *          std::string client_id = kv.get("client_id");
-     *          std::string client_secret = kv.get("client_secret");
      */
     static return_t to_keyvalue(std::string const& value, key_value& kv);
+
+    /**
+     * @brief   keyvalue of query
+     * @example
+     *          uri.get_query_keyvalue().foreach(
+     *              [&](std::string const& key, std::string const& value, void* param) -> void {
+     *                  std::cout << key << " : " << value << std::endl;
+     *              }
+     *          );
+     */
+    key_value& get_query_keyvalue();
 
     void addref();
     void release();
 
    protected:
     std::string _uri;
+    std::string _uripath;
     std::string _query;
-
-    typedef std::map<std::string, std::string> PARAMETERS;
-    PARAMETERS _query_kv;
+    key_value _query_kv;
 
     t_shared_reference<http_uri> _shared;
 };
