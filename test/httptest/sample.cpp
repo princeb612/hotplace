@@ -56,6 +56,11 @@ void do_split_url(const char* url, url_info_t* url_info) {
            << "> port : " << url_info->port << "\n"
            << "> uri : " << url_info->uri << "\n"
            << "> uri.path : " << url_info->uripath << "\n";
+
+        key_value kv;
+        http_uri::to_keyvalue(url_info->query, kv);
+        kv.foreach ([&](std::string const& key, std::string const& value, void* param) -> void { bs << "> query : " << key << " : " << value << "\n"; });
+
         std::cout << bs.c_str();
     }
 }
@@ -64,27 +69,29 @@ void test_uri() {
     _test_case.begin("uri");
     url_info_t url_info;
 
-    do_split_url("http://test.com/download/meta/file.txt", &url_info);
+    do_split_url("https://test.com/resource?client_id=12345#part1", &url_info);
 
-    _test_case.assert("http" == url_info.scheme, __FUNCTION__, "uri.scheme");
+    _test_case.assert("https" == url_info.scheme, __FUNCTION__, "uri.scheme");
     _test_case.assert("test.com" == url_info.host, __FUNCTION__, "uri.host");
-    _test_case.assert(80 == url_info.port, __FUNCTION__, "uri.port");
-    _test_case.assert("/download/meta/file.txt" == url_info.uripath, __FUNCTION__, "uri.uripath");
+    _test_case.assert(443 == url_info.port, __FUNCTION__, "uri.port");
+    _test_case.assert("/resource?client_id=12345#part1" == url_info.uri, __FUNCTION__, "uri.uri");
+    _test_case.assert("/resource" == url_info.uripath, __FUNCTION__, "uri.uripath");
+    _test_case.assert("client_id=12345" == url_info.query, __FUNCTION__, "uri.query");
+    _test_case.assert("part1" == url_info.fragment, __FUNCTION__, "uri.fragment");
 
-    do_split_url("http://test.com/download/", &url_info);
-
-    _test_case.assert("/download/" == url_info.uripath, __FUNCTION__, "uri.uripath");
-
-    do_split_url("http://test.com/download", &url_info);
-
-    _test_case.assert("/download" == url_info.uripath, __FUNCTION__, "uri.uripath");
+    key_value kv;
 
     do_split_url("/auth/v1/authorize?response_type=code&client_id=abcdefg&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb&state=xyz", &url_info);
-    key_value kv;
     http_uri::to_keyvalue(url_info.uri, kv);
 
     _test_case.assert("/auth/v1/authorize" == url_info.uripath, __FUNCTION__, "uri.uripath");
     _test_case.assert("code" == kv.get("response_type"), __FUNCTION__, "query");
+    _test_case.assert("xyz" == kv.get("state"), __FUNCTION__, "query");
+
+    do_split_url("/auth/v1/authorize?response_type=code&client_id=abcdefg&redirect_uri=https://client.example.com/cb&state=xyz#part1", &url_info);
+    http_uri::to_keyvalue(url_info.uri, kv);
+
+    _test_case.assert("https://client.example.com/cb" == kv.get("redirect_uri"), __FUNCTION__, "query");
 }
 
 void test_request() {
@@ -119,7 +126,7 @@ void test_request() {
         printf("%s\n", input);
     }
 
-    const char* uri = request.get_uri();
+    const char* uri = request.get_http_uri().get_uri();
     _test_case.assert(0 == strcmp(uri, "/test"), __FUNCTION__, "uri");
 
     const char* method = request.get_method();
@@ -232,7 +239,7 @@ void test_uri(const char* input) {
     _test_case.assert("7Fjfp0ZBr1KtDRbnfVdmIw" == client_secret, __FUNCTION__, "client_secret");
 }
 
-void test_basic_authenticate() {
+void test_basic_authentication() {
     _test_case.begin("Basic Authentication Scheme");
     return_t ret = errorcode_t::success;
     server_socket socket;  // dummy
@@ -265,6 +272,7 @@ void test_basic_authenticate() {
         cred << user << ":" << password;
 
         // client request
+        request.get_http_header().clear();
         request.open("GET / HTTP/1.1");
         request.get_http_header().add("Authorization", format("Basic %s", base64_encode(cred.c_str()).c_str()));
 
@@ -380,7 +388,7 @@ return_t calc_digest_digest_access(http_authenticate_provider* provider, network
     return ret;
 }
 
-void test_digest_access_authenticate(const char* alg = nullptr) {
+void test_digest_access_authentication(const char* alg = nullptr) {
     _test_case.begin("Digest Access Authentication Scheme");
     return_t ret = errorcode_t::success;
     server_socket socket;  // dummy
@@ -433,15 +441,17 @@ void test_digest_access_authenticate(const char* alg = nullptr) {
         }
 
         // client request
+        request.get_http_header().clear();
         request.open("GET /auth/digest HTTP/1.1");  // set a method and an uri
-        kv.set("uri", request.get_uri());
+        kv.set("uri", request.get_http_uri().get_uri());
 
         calc_digest_digest_access(&provider, &session, &request, kv, response_calc);  // calcurate a response
         request.get_http_header().add(
             "Authorization",
             format("Digest username=\"%s\", realm=\"%s\", algorithm=%s, nonce=\"%s\", uri=\"%s\", response=\"%s\", opaque=\"%s\", qop=%s, nc=%s, cnonce=\"%s\"",
-                   kv.get("username").c_str(), provider.get_realm().c_str(), kv.get("algorithm").c_str(), kv.get("nonce").c_str(), request.get_uri(),
-                   response_calc.c_str(), kv.get("opaque").c_str(), kv.get("qop").c_str(), kv.get("nc").c_str(), kv.get("cnonce").c_str()));  // set a response
+                   kv.get("username").c_str(), provider.get_realm().c_str(), kv.get("algorithm").c_str(), kv.get("nonce").c_str(),
+                   request.get_http_uri().get_uri(), response_calc.c_str(), kv.get("opaque").c_str(), kv.get("qop").c_str(), kv.get("nc").c_str(),
+                   kv.get("cnonce").c_str()));  // set a response
 
         if (option.debug) {
             request.get_request(bs);
@@ -677,14 +687,14 @@ int main(int argc, char** argv) {
     test_response_parse();
 
     // authenticate
-    test_basic_authenticate();
-    test_digest_access_authenticate();
-    test_digest_access_authenticate("MD5");
-    test_digest_access_authenticate("MD5-sess");
-    test_digest_access_authenticate("SHA-256");
-    test_digest_access_authenticate("SHA-256-sess");
-    test_digest_access_authenticate("SHA-512-256");
-    test_digest_access_authenticate("SHA-512-256-sess");
+    test_basic_authentication();
+    test_digest_access_authentication();
+    test_digest_access_authentication("MD5");
+    test_digest_access_authentication("MD5-sess");
+    test_digest_access_authentication("SHA-256");
+    test_digest_access_authentication("SHA-256-sess");
+    test_digest_access_authentication("SHA-512-256");
+    test_digest_access_authentication("SHA-512-256-sess");
 
     // uri
     test_uri_form_encoded_body_parameter();

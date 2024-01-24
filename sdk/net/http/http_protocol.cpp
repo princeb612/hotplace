@@ -72,45 +72,48 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
     const char* stream_data = (const char*)stream->data();
     uint32 stream_size = stream->size();
 
-#if 0
-    /* TEST */
-    if (sizeMem > BUFSIZE1M) {
-        *state = protocol_state_t::protocol_state_crash;
-    }
-#endif
+    __try2 {
+        size_t packet_size = get_constraints(protocol_constraints_t::protocol_packet_size);
+        if (packet_size && stream_size > packet_size) {
+            *state = protocol_state_t::protocol_state_crash;
+            __leave2;
+        }
 
-    const char* search_stream_data = stream_data;
-    /* "Content-Length: " */
-    char STRING_CONTENT_LENGTH__[] = {
-        'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'L', 'e', 'n', 'g', 't', 'h', ':', ' ', 0,
-    };
-    const char* search_content_length = strstr(stream_data, STRING_CONTENT_LENGTH__);
-    if (search_content_length) {
-        const char* end_of_content_length = search_content_length + strlen(STRING_CONTENT_LENGTH__);
-        const char* search_carragereturn_newline = strstr(search_content_length, "\r\n\r\n");
-        if (search_carragereturn_newline) {
-            std::string content_length(end_of_content_length, search_carragereturn_newline - end_of_content_length);
-            int ret_atoi = atoi(content_length.c_str());
+        const char* search_stream_data = stream_data;
+        /* "Content-Length: " */
+        char STRING_CONTENT_LENGTH__[] = {
+            'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'L', 'e', 'n', 'g', 't', 'h', ':', ' ', 0,
+        };
+        const char* search_content_length = strstr(stream_data, STRING_CONTENT_LENGTH__);
+        if (search_content_length) {
+            const char* end_of_content_length = search_content_length + strlen(STRING_CONTENT_LENGTH__);
+            const char* search_carragereturn_newline = strstr(search_content_length, "\r\n\r\n");
+            if (search_carragereturn_newline) {
+                std::string content_length(end_of_content_length, search_carragereturn_newline - end_of_content_length);
+                int ret_atoi = atoi(content_length.c_str());
 
-            size_t size_need = (search_carragereturn_newline - stream_data) + 4 + ret_atoi;
+                size_t size_need = (search_carragereturn_newline - stream_data) + 4 + ret_atoi;
 
-            if (size_need > stream_size) {
-                *state = protocol_state_t::protocol_state_data;
-            } else {
-                *request_size = size_need;
+                if (size_need > stream_size) {
+                    *state = protocol_state_t::protocol_state_data;
+                } else {
+                    *request_size = size_need;
+                    *state = protocol_state_t::protocol_state_complete;
+                }
+            }
+        } else {
+            *state = protocol_state_t::protocol_state_data;
+
+            const char* search_carragereturn_newline = strstr(search_stream_data, "\r\n\r\n");
+            if (search_carragereturn_newline) {
+                *request_size = (search_carragereturn_newline - stream_data + 4);
                 *state = protocol_state_t::protocol_state_complete;
             }
         }
-    } else {
-        *state = protocol_state_t::protocol_state_data;
-
-        const char* search_carragereturn_newline = strstr(search_stream_data, "\r\n\r\n");
-        if (search_carragereturn_newline) {
-            *request_size = (search_carragereturn_newline - stream_data + 4);
-            *state = protocol_state_t::protocol_state_complete;
-        }
     }
-
+    __finally2 {
+        // do nothing
+    }
     return errorcode_t::success;
 }
 

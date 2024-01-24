@@ -21,6 +21,14 @@ namespace net {
 
 http_request::http_request() { _shared.make_share(this); }
 
+http_request::http_request(const http_request& object) {
+    _shared.make_share(this);
+    _method = object._method;
+    _content = object._content;
+    _header = object._header;
+    _uri = object._uri;
+}
+
 http_request::~http_request() { close(); }
 
 return_t http_request::open(const char* request, size_t size_request, bool optimize) {
@@ -139,7 +147,6 @@ return_t http_request::close() {
 
     _method.clear();
     _content.clear();
-    _header.clear();
     _uri.close();
     return ret;
 }
@@ -147,8 +154,6 @@ return_t http_request::close() {
 http_header& http_request::get_http_header() { return _header; }
 
 http_uri& http_request::get_http_uri() { return _uri; }
-
-const char* http_request::get_uri() { return get_http_uri().get_uri(); }
 
 const char* http_request::get_method() { return _method.c_str(); }
 
@@ -174,7 +179,7 @@ http_request& http_request::get_request(basic_stream& bs) {
     bs.clear();
     get_http_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
 
-    bs << get_method() << " " << get_uri() << " " << get_version() << "\r\n" << headers << "\r\n" << get_content();
+    bs << get_method() << " " << get_http_uri().get_uri() << " " << get_version() << "\r\n" << headers << "\r\n" << get_content();
 
     return *this;
 }

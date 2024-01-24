@@ -38,6 +38,7 @@ namespace net {
 class http_request {
    public:
     http_request();
+    http_request(const http_request& object);
     virtual ~http_request();
 
     /**
@@ -66,10 +67,6 @@ class http_request {
      */
     http_uri& get_http_uri();
     /**
-     * @brief   uri
-     */
-    const char* get_uri();
-    /**
      * @brief   return the method (GET, POST, ...)
      */
     const char* get_method();
@@ -83,6 +80,11 @@ class http_request {
      * @param   http_method_t method [in]
      * @param   std::string const& uri [in]
      * @param   std::string const& body [inopt]
+     * @example
+     *          request.get_http_header()
+     *                  .clear()
+     *                  .add("User-Agent", "client");
+     *          request.compose(200, "text/plain", "hello world");
      */
     http_request& compose(http_method_t method, std::string const& uri, std::string const& body = std::string(""));
     /**

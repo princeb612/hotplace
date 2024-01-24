@@ -84,19 +84,21 @@ return_t split_url(const char* url, url_info_t* info) {
 
         info->uri = url + pos;
 
-        regex_token(url, "^/[a-zA-Z0-9/.]*", pos, tokens);
+        regex_token(url, "^/[a-zA-Z0-9./]*", pos, tokens);
         if (tokens.size()) {
             info->uripath = *tokens.begin();
         }
 
-        regex_token(url, "[?][a-zA-Z0-9&=%_+]*", pos, tokens);
+        regex_token(url, "[?][a-zA-Z0-9&%+./:=_]*", pos, tokens);
         if (tokens.size()) {
             info->query = *tokens.begin();
+            info->query.erase(info->query.begin());  // "?" query
         }
 
-        regex_token(url, "[#][a-zA-Z0-9_+]*", pos, tokens);
+        regex_token(url, "[#][a-zA-Z0-9+_]*", pos, tokens);
         if (tokens.size()) {
             info->fragment = *tokens.begin();
+            info->fragment.erase(info->fragment.begin());  // "#" fragment
         }
     }
     __finally2 {
