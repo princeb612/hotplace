@@ -43,6 +43,15 @@ class openssl_prng {
     return_t random(unsigned char* buf, size_t size);
     return_t random(binary_t& buffer, size_t size);
     return_t random(uint32& i, uint32 mask = (uint32)~1);
+
+    /**
+     * @brief   nonce, token
+     * @param   size_t size [in] size of byte stream
+     * @param   encoding_t expr [in]
+     * @param   bool usetime [inopt] default false. if true, prefix time
+     */
+    std::string rand(size_t size, encoding_t expr, bool usetime = false);
+
     /**
      * @brief   nonce
      * @remarks minimum size is 8

@@ -16,17 +16,18 @@
 COMMENTS
 
 :<< HELP
-    cf     - clang-format
-    ctest  - build and run ctest
-    debug  - debug build
-    format - clang-format
-    opt    - optimize
-    pch    - precompiled header
-    prof   - gprof
-    odbc   - ODBC feature
-    redist - redistribute MSYS2(MINGW) binaries
-    shared -
-    test   - run examples
+    cf       - clang-format
+    ctest    - build and run ctest
+    debug    - debug build
+    format   - clang-format
+    makefile - makefile only
+    opt      - optimize
+    pch      - precompiled header
+    prof     - gprof
+    odbc     - ODBC feature
+    redist   - redistribute MSYS2(MINGW) binaries
+    shared   -
+    test     - run examples
     ex) ./make.sh format debug pch
 HELP
 
@@ -47,6 +48,7 @@ fi
 
 do_clangformat=0
 do_ctest=0
+do_makefile=0
 do_redist=0
 do_test=0
 
@@ -64,6 +66,8 @@ if [ ${#args[@]} -ne 0 ]; then
             do_ctest=1
         elif [ $arg = 'debug' ]; then
             CXXFLAGS="${CXXFLAGS} -DDEBUG -g"
+        elif [ $arg = 'makefile' ]; then
+            do_makefile=1
         elif [ $arg = 'format' ]; then
             do_clangformat=1
         elif [ $arg = 'odbc' ]; then
@@ -104,6 +108,9 @@ fi
 mkdir -p build
 cd build
 cmake -G 'Unix Makefiles' ..
+if [ $do_makefile = 1 ]; then
+    exit
+fi
 time make
 
 # ctest

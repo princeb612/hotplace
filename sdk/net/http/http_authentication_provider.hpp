@@ -47,7 +47,7 @@ class http_authentication_resolver;
  */
 class http_authenticate_provider {
    public:
-    http_authenticate_provider(std::string const& realm) : _realm(realm) { _shared.make_share(this); }
+    http_authenticate_provider(std::string const& realm);
 
     /**
      * @brief   try
@@ -70,20 +70,15 @@ class http_authenticate_provider {
      * @brief   challenge
      * @param   http_request* request [in]
      */
-    virtual std::string get_challenge(http_request* request) {
-        std::string token_auth;
-        constexpr char constexpr_authorization[] = "Authorization";
-        request->get_http_header().get(constexpr_authorization, token_auth);
-        return token_auth;
-    }
+    virtual std::string get_challenge(http_request* request);
 
-    virtual int addref() { return _shared.addref(); }
-    virtual int release() { return _shared.delref(); }
+    virtual int addref();
+    virtual int release();
 
     /**
      * @brief   realm
      */
-    std::string get_realm() { return _realm; }
+    std::string get_realm();
 
    protected:
     t_shared_reference<http_authenticate_provider> _shared;

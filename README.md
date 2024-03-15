@@ -126,8 +126,9 @@
    * libssl-dev libjansson-dev zlib1g-dev unixodbc-dev (ubuntu)
    * valgrind (linux)
    * clang-tools-extra
- * ./make.sh debug
-   * $ hotplace ./make.sh
+ * build script
+   * cd hotplace
+   * ./make.sh debug pch
  * os support
    * tested
      * RHEL 7 and newer, (including CentOS, Rocky Linux)

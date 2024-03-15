@@ -235,7 +235,11 @@ void test_nonce() {
 
     for (i = 0; i < times; i++) {
         nonce = random.nonce(16);
-        printf("nonce %s\n", nonce.c_str());
+        printf("nonce.1 %s\n", nonce.c_str());
+    }
+    for (i = 0; i < times; i++) {
+        nonce = random.rand(16, 16, true);
+        printf("nonce.2 %s\n", nonce.c_str());
     }
 
     _test_case.test(ret, __FUNCTION__, "nonce loop %i times", times);
@@ -252,7 +256,11 @@ void test_token() {
 
     for (i = 0; i < times; i++) {
         token = random.token(16);
-        printf("token %s\n", token.c_str());
+        printf("token.1 %s\n", token.c_str());
+    }
+    for (i = 0; i < times; i++) {
+        token = random.rand(16, 64, true);
+        printf("token.2 %s\n", token.c_str());
     }
 
     _test_case.test(ret, __FUNCTION__, "token loop %i times", times);

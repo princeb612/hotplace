@@ -31,6 +31,12 @@ RETURN_T type_cast(TYPE param) {
 typedef unsigned char byte_t;
 typedef std::vector<byte_t> binary_t;
 
+enum encoding_t {
+    encoding_base16 = 1,
+    encoding_base64,
+    encoding_base64url,
+};
+
 #ifndef _WIN32  // winnt.h
 #define RTL_NUMBER_OF(x) (sizeof(x) / sizeof(x[0]))
 #define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))

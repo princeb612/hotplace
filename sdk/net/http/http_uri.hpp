@@ -97,7 +97,7 @@ class http_uri {
     void addref();
     void release();
 
-   protected:
+   private:
     std::string _uri;
     std::string _uripath;
     std::string _query;

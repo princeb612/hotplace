@@ -134,7 +134,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
             break;
         case mux_disconnect:
-            std::cout << "disconnect " << session_socket->client_socket << std::endl;
+            cprint("disconnect %i", session_socket->client_socket);
             break;
     }
     return ret;
@@ -201,7 +201,7 @@ return_t echo_server(void*) {
             //      create an app
             //      - [out] app id
             //      - [in] valid domain, redirect_uri, permission (query email)
-            //      validate, test, review and then published
+            //      validate, test, review and then publish
             //
             // client
             //      RFC 6749 4.1.1.  Authorization Request
@@ -260,30 +260,45 @@ return_t echo_server(void*) {
 
                 http_request req;
                 basic_stream req_content;
-                std::string auth_server = "https://localhost:9000";
-                std::string token_uri = "/auth/token";
+                std::string token_uri = "https://localhost:9000/auth/token";
                 std::string redirect_uri = "https://localhost:9000/auth/cb";
 
                 req_content << "grant_type=authorization_code&code=" << code << "&redirect_uri=" << redirect_uri;
-                req.get_http_header().add("Authorization", base64_encode("user:password")).add("Content-Type", "application/x-www-form-urlencoded");
+                req.get_http_header()
+                    .add("Authorization", format("Basic %s", base64_encode("user:password").c_str()))
+                    .add("Content-Type", "application/x-www-form-urlencoded");
                 req.compose(http_method_t::HTTP_POST, token_uri, req_content.c_str());
 
                 // make a request
-
-                // TODO ...
-
-                // temporary response
                 basic_stream bs;
-                req.get_request(bs);
-                response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
+                http_client client;
+                client.set_ttl(10000);
+                http_response* resp = nullptr;
+                client.request(req, &resp);
+                if (resp) {
+                    req.get_request(bs);
+                    printf("%s\n", bs.c_str());
+                    resp->get_response(bs);
+                    printf("%s\n", bs.c_str());
+                    *response = *resp;
+                    resp->release();
+                } else {
+                    printf("error\n");
 
+                    // temporary response
+                    req.get_request(bs);
+                    response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
+                }
             } else {
                 response->compose(200, "text/html", "<html><body>invalid_request</body></html>");
             }
         };
         std::function<void(network_session*, http_request*, http_response*)> token_handler = [&](network_session* session, http_request* request,
                                                                                                  http_response* response) -> void {
-            // ...
+            basic_stream bs;
+            request->get_request(bs);
+            printf("token\n%s\n", bs.c_str());
+            response->compose(200, "text/plain", "token");
         };
 
         (*_http_router)
@@ -324,7 +339,7 @@ return_t echo_server(void*) {
             // builtin basic_resolver, digest_resolver, bearer_resolver
             .basic_credential(base64_encode("user:password"))
             .digest_access_credential(digest_access_realm, digest_access_alg, "user", "password")
-            .bearer_credential("s6BhdRkqt3", "7Fjfp0ZBr1KtDRbnfVdmIw")
+            .bearer_credential("clientid", "token")
             // basic_resolver, digest_resolver, bearer_resolver if necessary
             // .basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
             //    /* ... */ })

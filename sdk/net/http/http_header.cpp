@@ -36,7 +36,10 @@ http_header& http_header::add(const char* header, const char* value) {
         }
 
         critical_section_guard guard(_lock);
-        _headers.insert(std::make_pair(header, value));
+        http_header_map_pib_t pib = _headers.insert(std::make_pair(header, value));
+        if (false == pib.second) {
+            pib.first->second = value;
+        }
     }
     __finally2 {
         // do nothing
@@ -46,7 +49,10 @@ http_header& http_header::add(const char* header, const char* value) {
 
 http_header& http_header::add(std::string header, std::string value) {
     critical_section_guard guard(_lock);
-    _headers.insert(std::make_pair(header, value));
+    http_header_map_pib_t pib = _headers.insert(std::make_pair(header, value));
+    if (false == pib.second) {
+        pib.first->second = value;
+    }
 
     return *this;
 }
