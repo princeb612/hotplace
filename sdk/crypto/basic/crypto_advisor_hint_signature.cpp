@@ -81,7 +81,7 @@ const hint_signature_t hint_signatures[] = {
         jws_t::jws_unknown,
         jws_group_t::jws_group_rsassa_pkcs15,
         crypto_kty_t::kty_rsa,
-        nullptr,
+        "RS1",
         hash_algorithm_t::sha1,
         1,
         NID_rsaEncryption,

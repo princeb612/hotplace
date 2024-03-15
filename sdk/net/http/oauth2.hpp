@@ -99,6 +99,9 @@ class oauth2_credentials {
      */
     return_t refresh_token(std::string& next_access_token, std::string& next_refresh_token, std::string const& refresh_token, uint16 expire = 60 * 60);
 
+   protected:
+    return_t do_build_appid(std::string& appid, std::string const& userid, std::string const& appname);
+
    private:
     /**
      *  web application > client id

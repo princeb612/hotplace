@@ -284,6 +284,7 @@ void test_hash_algorithms() {
 
 void test_aes128cbc_mac_routine(binary_t const& key, binary_t const& message, binary_t const& expect) {
     return_t ret = errorcode_t::success;
+    OPTION& option = _cmdline->value();
 
     openssl_hash hash;
     hash_context_t* handle = nullptr;
@@ -296,9 +297,12 @@ void test_aes128cbc_mac_routine(binary_t const& key, binary_t const& message, bi
         hash.update(handle, &message[0], message.size());
         hash.finalize(handle, result);
         hash.close(handle);
-        basic_stream bs;
-        dump_memory(result, &bs);
-        std::cout << "result" << std::endl << bs.c_str() << std::endl;
+
+        if (option.debug) {
+            basic_stream bs;
+            dump_memory(result, &bs);
+            std::cout << "result" << std::endl << bs.c_str() << std::endl;
+        }
     }
     // Figure 2.4.  Algorithm Verify_MAC
     _test_case.assert(expect == result, __FUNCTION__, "cmac test");
@@ -331,6 +335,7 @@ void test_cmac_rfc4493() {
 
 uint32 test_hotp_rfc4226() {
     _test_case.begin("HOTP (RFC 4226)");
+    OPTION& option = _cmdline->value();
 
     uint32 ret = errorcode_t::success;
     otp_context_t* handle = nullptr;
@@ -343,10 +348,10 @@ uint32 test_hotp_rfc4226() {
         uint32 code = 0;
         for (int i = 0; i < 10; i++) {
             hotp.get(handle, code);
+            output.push_back(code);
 
-            {
+            if (option.debug) {
                 test_case_notimecheck notimecheck(_test_case);
-                output.push_back(code);
                 std::cout << "counter " << i << " code " << code << std::endl;
             }
         }
@@ -360,8 +365,6 @@ uint32 test_hotp_rfc4226() {
     if (0 != memcmp(&output[0], &sha1_hotp_result[0], 10 * sizeof(uint32))) {
         ret = errorcode_t::internal_error;
     }
-
-    std::cout << std::endl;
 
     _test_case.test(ret, __FUNCTION__, "RFC4226 HOTP algoritm sha1 + 10 test vectors tested");
 
@@ -412,6 +415,7 @@ TOTP_TEST_DATA _totp_test_data[] = {
 
 uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
     _test_case.begin("TOTP/SHA1 (RFC6238)");
+    OPTION& option = _cmdline->value();
 
     uint32 ret = errorcode_t::success;
     otp_context_t* handle = nullptr;
@@ -440,7 +444,7 @@ uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
                 totp.get(handle, counter[i], code);
                 output.push_back(code);
 
-                {
+                if (option.debug) {
                     test_case_notimecheck notimecheck(_test_case);
                     std::cout << "counter " << counter[i] << " code " << code << std::endl;
                 }
@@ -461,6 +465,8 @@ uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
 }
 
 void test_hash_hmac_sign() {
+    OPTION& option = _cmdline->value();
+
     crypto_key key;
     crypto_keychain keychain;
     constexpr char key_source[] = "000102030405060708090a0b0c0d0e0f";
@@ -476,9 +482,11 @@ void test_hash_hmac_sign() {
     openssl_hash hash;
     openssl_sign sign;
 
-    // source
-    dump_memory(bin_in, &bs);
-    std::cout << "source" << std::endl << bs.c_str() << std::endl;
+    if (option.debug) {
+        // source
+        dump_memory(bin_in, &bs);
+        std::cout << "source" << std::endl << bs.c_str() << std::endl;
+    }
 
     // openssl_hash hash
     hash_context_t* hash_context = nullptr;
@@ -486,8 +494,10 @@ void test_hash_hmac_sign() {
     hash.hash(hash_context, &bin_in[0], bin_in.size(), result);
     hash.close(hash_context);
 
-    dump_memory(result, &bs);
-    std::cout << "hash" << std::endl << bs.c_str() << std::endl;
+    if (option.debug) {
+        dump_memory(result, &bs);
+        std::cout << "hash" << std::endl << bs.c_str() << std::endl;
+    }
 
     // EVP_Digest (hash)
     unsigned int size = 0;
@@ -495,8 +505,11 @@ void test_hash_hmac_sign() {
     EVP_Digest(&bin_in[0], bin_in.size(), &result[0], &size, EVP_sha256(), nullptr);
     result.resize(size);
     EVP_Digest(&bin_in[0], bin_in.size(), &result[0], &size, EVP_sha256(), nullptr);
-    dump_memory(result, &bs);
-    std::cout << "Digest" << std::endl << bs.c_str() << std::endl;
+
+    if (option.debug) {
+        dump_memory(result, &bs);
+        std::cout << "Digest" << std::endl << bs.c_str() << std::endl;
+    }
 
     // openssl_hash hmac
     hash_context_t* hmac_context = nullptr;
@@ -504,14 +517,18 @@ void test_hash_hmac_sign() {
     hash.hash(hmac_context, &bin_in[0], bin_in.size(), result);
     hash.close(hmac_context);
 
-    dump_memory(result, &bs);
-    std::cout << "HMAC" << std::endl << bs.c_str() << std::endl;
+    if (option.debug) {
+        dump_memory(result, &bs);
+        std::cout << "HMAC" << std::endl << bs.c_str() << std::endl;
+    }
 
     // openssl_sign
     sign.sign_digest(key.any(), hash_algorithm_t::sha2_256, bin_key, result);
 
-    dump_memory(result, &bs);
-    std::cout << "Sign" << std::endl << bs.c_str() << std::endl;
+    if (option.debug) {
+        dump_memory(result, &bs);
+        std::cout << "Sign" << std::endl << bs.c_str() << std::endl;
+    }
 }
 
 void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, binary_t const& input, binary_t const& signature) {

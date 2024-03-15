@@ -98,6 +98,24 @@ return_t oauth2_credentials::refresh_token(std::string& next_access_token, std::
     return ret;
 }
 
+return_t oauth2_credentials::do_build_appid(std::string& appid, std::string const& userid, std::string const& appname) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (userid.empty() && appname.empty()) {
+            ret = errorcode_t::invalid_parameter;
+        }
+
+        basic_stream stream;
+        stream << userid << ":" << appname;
+        openssl_digest dgst;
+        dgst.digest("SHA-256", stream, appid, encoding_t::encoding_base16);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 oauth2_authorizationcode_provider::oauth2_authorizationcode_provider() : http_authenticate_provider("") {}
 
 oauth2_authorizationcode_provider::~oauth2_authorizationcode_provider() {}
