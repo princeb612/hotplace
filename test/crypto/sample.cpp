@@ -238,7 +238,7 @@ void test_nonce() {
         printf("nonce.1 %s\n", nonce.c_str());
     }
     for (i = 0; i < times; i++) {
-        nonce = random.rand(16, 16, true);
+        nonce = random.rand(16, encoding_t::encoding_base16, true);
         printf("nonce.2 %s\n", nonce.c_str());
     }
 
@@ -259,7 +259,7 @@ void test_token() {
         printf("token.1 %s\n", token.c_str());
     }
     for (i = 0; i < times; i++) {
-        token = random.rand(16, 64, true);
+        token = random.rand(16, encoding_t::encoding_base64url, true);
         printf("token.2 %s\n", token.c_str());
     }
 
