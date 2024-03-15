@@ -188,10 +188,10 @@ class openssl_digest : public openssl_hash {
     return_t digest(hash_algorithm_t alg, binary_t const& input, binary_t& output);
 
     return_t digest(const char* alg, basic_stream const& input, binary_t& output);
-    return_t digest(const char* alg, basic_stream const& input, std::string& hashstring);
+    return_t digest(const char* alg, basic_stream const& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16);
 
     return_t digest(const char* alg, std::string const& input, binary_t& output);
-    return_t digest(const char* alg, std::string const& input, std::string& hashstring);
+    return_t digest(const char* alg, std::string const& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16);
 };
 
 class openssl_mac : public openssl_hash {

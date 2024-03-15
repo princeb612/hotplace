@@ -142,13 +142,12 @@ bool http_authentication_resolver::bearer_authenticate(http_authenticate_provide
             http_uri::to_keyvalue(challenge, kv);
             token = kv.get("access_token");
             std::string client_id = kv.get("client_id");
-            std::string client_secret = kv.get("client_secret");
 
             critical_section_guard guard(_lock);
 
             std::map<std::string, std::string>::iterator iter = _bearer_credential.find(client_id);
             if (iter != _bearer_credential.end()) {
-                session->get_session_data()->set("bearer", "access_token");  // hmm... I need something grace
+                session->get_session_data()->set("bearer", "access_token");
             }
         }
     }
@@ -163,33 +162,6 @@ http_authentication_resolver& http_authentication_resolver::oauth2_resolver(auth
 bool http_authentication_resolver::oauth2_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
                                                        http_response* response) {
     bool ret_value = false;
-    if (_bearer_resolver) {
-        ret_value = _oauth2_resolver(provider, session, request, response);
-    } else {
-        std::string challenge = provider->get_challenge(request);
-        std::string token;
-
-        if (0 == strncmp("Bearer", challenge.c_str(), 6)) {
-            size_t pos = 6;
-            token = tokenize(challenge, " ", pos);
-            if (token == session->get_session_data()->get("access_token")) {
-                ret_value = true;
-            }
-        } else {
-            key_value kv;
-            http_uri::to_keyvalue(challenge, kv);
-            token = kv.get("access_token");
-            std::string client_id = kv.get("client_id");
-            std::string client_secret = kv.get("client_secret");
-
-            critical_section_guard guard(_lock);
-
-            std::map<std::string, std::string>::iterator iter = _bearer_credential.find(client_id);
-            if (iter != _bearer_credential.end()) {
-                session->get_session_data()->set("bearer", "access_token");  // hmm... I need something grace
-            }
-        }
-    }
     return ret_value;
 }
 
@@ -225,10 +197,28 @@ http_authentication_resolver& http_authentication_resolver::digest_access_creden
     return *this;
 }
 
-http_authentication_resolver& http_authentication_resolver::bearer_credential(std::string const& client_id, std::string const& client_secret) {
+http_authentication_resolver& http_authentication_resolver::bearer_credential(std::string const& client_id, std::string const& access_token) {
     critical_section_guard guard(_lock);
-    _bearer_credential.insert(std::make_pair(client_id, client_secret));
+    _bearer_credential.insert(std::make_pair(client_id, access_token));
     return *this;
+}
+
+return_t to_appid(std::string& appid, std::string const& userid, std::string const& appname) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (userid.empty() && appname.empty()) {
+            ret = errorcode_t::invalid_parameter;
+        }
+
+        basic_stream stream;
+        stream << userid << ":" << appname;
+        openssl_digest dgst;
+        dgst.digest("SHA-256", stream, appid, encoding_t::encoding_base16);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 }  // namespace net

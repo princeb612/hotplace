@@ -86,7 +86,7 @@ rfc2617_digest& rfc2617_digest::digest(std::string const& algorithm) {
         hashalg = "md5";  // default
     }
 
-    dgst.digest(hashalg.c_str(), _stream, digest_value);
+    dgst.digest(hashalg.c_str(), _stream, digest_value, encoding_t::encoding_base16);
     _stream = digest_value;
     basic_stream temp;
     temp << "_H<" << algorithm << ">(";

@@ -87,6 +87,7 @@ void test_uri() {
     _test_case.assert("/auth/v1/authorize" == url_info.uripath, __FUNCTION__, "uri.uripath");
     _test_case.assert("code" == kv.get("response_type"), __FUNCTION__, "query");
     _test_case.assert("xyz" == kv.get("state"), __FUNCTION__, "query");
+    _test_case.assert("https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb" == kv.get("redirect_uri"), __FUNCTION__, "query");
 
     do_split_url("/auth/v1/authorize?response_type=code&client_id=abcdefg&redirect_uri=https://client.example.com/cb&state=xyz#part1", &url_info);
     http_uri::to_keyvalue(url_info.uri, kv);
@@ -204,13 +205,13 @@ void test_uri_form_encoded_body_parameter() {
     basic_stream request_stream1;
     basic_stream request_stream2;
 
-    request1.compose(http_method_t::HTTP_GET, "/auth/bearer?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw", "");  // reform if body is empty
+    request1.compose(http_method_t::HTTP_GET, "/auth/bearer?client_id=clientid", "");  // reform if body is empty
     request1.get_http_header().add("Accept-Encoding", "gzip, deflate");
     request1.get_request(request_stream1);
 
     // another way
-    request2.compose(http_method_t::HTTP_GET, "/auth/bearer", "client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw");
-    request2.get_http_header().add("Content-Type", "application/x-www-form-urlencoded").add("Accept-Encoding", "gzip, deflate");
+    request2.get_http_header().clear().add("Content-Type", "application/x-www-form-urlencoded").add("Accept-Encoding", "gzip, deflate");
+    request2.compose(http_method_t::HTTP_GET, "/auth/bearer", "client_id=clientid");
     request2.get_request(request_stream2);
 
     OPTION& option = cmdline->value();
@@ -223,20 +224,22 @@ void test_uri_form_encoded_body_parameter() {
     _test_case.assert(request_stream1 == request_stream2, __FUNCTION__, "form encoded body parameter");
 }
 
-void test_uri(const char* input) {
+void test_uri2() {
+    const char* input = "/resource?client_id=clientid&access_token=token";
+
     _test_case.begin("uri");
     OPTION& option = cmdline->value();
 
     key_value kv;
     http_uri::to_keyvalue(input, kv);
     std::string client_id = kv.get("client_id");
-    std::string client_secret = kv.get("client_secret");
+    std::string access_token = kv.get("access_token");
     if (option.debug) {
         printf("client_id %s\n", client_id.c_str());
-        printf("client_secret %s\n", client_secret.c_str());
+        printf("access_token %s\n", access_token.c_str());
     }
-    _test_case.assert("s6BhdRkqt3" == client_id, __FUNCTION__, "client_id");
-    _test_case.assert("7Fjfp0ZBr1KtDRbnfVdmIw" == client_secret, __FUNCTION__, "client_secret");
+    _test_case.assert("clientid" == client_id, __FUNCTION__, "client_id");
+    _test_case.assert("token" == access_token, __FUNCTION__, "access_token");
 }
 
 void test_basic_authentication() {
@@ -477,8 +480,12 @@ void test_digest_access_authentication(const char* alg = nullptr) {
     _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Digest Access Authentication Scheme (positive case) algorithm=%s", alg ? alg : "");
 }
 
-void test_get() {
-    _test_case.begin("get");
+/*
+ * @brief   basic implementation
+ * @sa      test_get_httpclient
+ */
+void test_get_tlsclient() {
+    _test_case.begin("transport_layer_security_client");
     return_t ret = errorcode_t::success;
     OPTION& option = cmdline->value();
 
@@ -572,40 +579,26 @@ void test_get() {
     }
 }
 
-void test_client() {
-    _test_case.begin("client");
+/*
+ * @brief   simple implementation
+ * @sa      test_get_tlsclient
+ */
+void test_get_httpclient() {
+    _test_case.begin("http_client");
     OPTION& option = cmdline->value();
 
-    // see test/http_server
-
     http_client client;
+    http_request request;
     http_response* response = nullptr;
 
-    cprint("https");
+    client.set_url(option.url);
     client.set_ttl(60000);  // 1 min
-    client.request("https://localhost:9000/api/test?access_token=mF_9.B5f-4.1JqM", &response);
-    if (response) {
-        if (option.debug) {
-            basic_stream bs;
-            response->get_response(bs);
-            printf("%s\n", bs.c_str());
-        }
-        response->release();
-    }
 
-    // RFC 6750 2.2.  Form-Encoded Body Parameter
-    // RFC 6750 4.  Example Access Token Response (implement http_bearer_authenticate_provider)
-    cprint("client_id+client_secret");
-    http_request request;
-    int status_code = 0;
-    basic_stream stream;
-    request.compose(http_method_t::HTTP_GET, "/auth/bearer?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw", "");  // reform if body is empty
+    request.compose(http_method_t::HTTP_GET, "/");
     request.get_http_header().add("Accept-Encoding", "gzip, deflate");
+
     client.request(request, &response);
     if (response) {
-        status_code = response->status_code();
-        stream << response->content();
-
         if (option.debug) {
             basic_stream bs;
             response->get_response(bs);
@@ -613,46 +606,6 @@ void test_client() {
         }
         response->release();
     }
-
-    if (200 == status_code) {
-        // json
-        std::string access_token;
-
-        json_t* json_root = nullptr;
-        json_open_stream(&json_root, stream.c_str());
-        if (json_root) {
-            const char* unp_access_token = nullptr;
-            const char* unp_token_type = nullptr;
-            json_unpack(json_root, "{s:s}", "access_token", &unp_access_token);
-            json_unpack(json_root, "{s:s}", "token_type", &unp_token_type);
-
-            if (unp_access_token && (0 == strcmp("Bearer", unp_token_type))) {
-                access_token = unp_access_token;
-            }
-
-            json_decref(json_root);
-        }
-
-        // Bearer
-        cprint("access_token");
-        request.compose(http_method_t::HTTP_GET, "/auth/bearer", "");
-        request.get_http_header().add("Authorization", format("Bearer %s", access_token.c_str()));
-        client.request(request, &response);
-        if (response) {
-            if (option.debug) {
-                basic_stream bs;
-                response->get_response(bs);
-                printf("%s\n", bs.c_str());
-            }
-            response->release();
-        }
-    } else if (401 == status_code) {
-        //
-    } else {
-        //
-    }
-
-    _test_case.assert(200 == status_code, __FUNCTION__, "Bearer Authentication");
 }
 
 int main(int argc, char** argv) {
@@ -678,6 +631,8 @@ int main(int argc, char** argv) {
 
     // uri
     test_uri();
+    test_uri_form_encoded_body_parameter();
+    test_uri2();
 
     // request
     test_request();
@@ -696,13 +651,6 @@ int main(int argc, char** argv) {
     test_digest_access_authentication("SHA-512-256");
     test_digest_access_authentication("SHA-512-256-sess");
 
-    // uri
-    test_uri_form_encoded_body_parameter();
-    const char* input1 = "/resource?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw";
-    const char* input2 = "/resource?client_id=s6BhdRkqt3&client_secret=7Fjfp0ZBr1KtDRbnfVdmIw";
-    test_uri(input1);
-    test_uri(input2);
-
     // network test
     if (option.connect) {
         // how to test
@@ -714,8 +662,8 @@ int main(int argc, char** argv) {
         // terminal 2
         //   cd build/test/httpget
         //   ./test-httpget -d -c
-        test_get();
-        test_client();
+        test_get_tlsclient();
+        test_get_httpclient();
     }
 
     openssl_thread_end();

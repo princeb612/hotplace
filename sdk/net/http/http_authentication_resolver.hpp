@@ -32,6 +32,7 @@ using namespace io;
 namespace net {
 
 typedef std::function<bool(http_authenticate_provider*, network_session*, http_request* request, http_response* response)> authenticate_handler_t;
+
 class http_authentication_resolver {
    public:
     http_authentication_resolver();
@@ -103,12 +104,12 @@ class http_authentication_resolver {
      */
     bool oauth2_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
 
-    http_authentication_resolver& basic_credential(std::string const& username, std::string const& password);
+    http_authentication_resolver& basic_credential(std::string const& userid, std::string const& password);
     http_authentication_resolver& basic_credential(std::string const& challenge);
-    http_authentication_resolver& digest_access_credential(std::string const& username, std::string const& password);
-    http_authentication_resolver& digest_access_credential(std::string const& realm, std::string const& algorithm, std::string const& username,
+    http_authentication_resolver& digest_access_credential(std::string const& userid, std::string const& password);
+    http_authentication_resolver& digest_access_credential(std::string const& realm, std::string const& algorithm, std::string const& userid,
                                                            std::string const& password);
-    http_authentication_resolver& bearer_credential(std::string const& client_id, std::string const& client_secret);
+    http_authentication_resolver& bearer_credential(std::string const& client_id, std::string const& access_token);
 
    private:
     authenticate_handler_t _basic_resolver;
@@ -117,12 +118,10 @@ class http_authentication_resolver {
     authenticate_handler_t _oauth2_resolver;
 
     critical_section _lock;
-    std::set<std::string> _basic_credential;                       // set(base64_encode(concat(username, ":", password)))
-    std::map<std::string, std::string> _digest_access_credential;  // map(username, password)
-    std::map<std::string, std::string> _digest_access_userhash;    // map(_H(username:realm), username)
-    std::map<std::string, std::string> _bearer_credential;         // map(client_id, client_secret)
-    std::map<std::string, std::string> _oauth2_credential;         // map(client_id, client_secret)
-    std::map<std::string, std::string> _redirect_uri;              // map(client_id, redirect_uri)
+    std::set<std::string> _basic_credential;                       // set(base64_encode(concat(userid, ":", password)))
+    std::map<std::string, std::string> _digest_access_credential;  // map(userid, password)
+    std::map<std::string, std::string> _digest_access_userhash;    // map(_H(userid:realm), userid)
+    std::map<std::string, std::string> _bearer_credential;         // map(client_id, access_token)
 };
 
 }  // namespace net
