@@ -203,23 +203,5 @@ http_authentication_resolver& http_authentication_resolver::bearer_credential(st
     return *this;
 }
 
-return_t to_appid(std::string& appid, std::string const& userid, std::string const& appname) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (userid.empty() && appname.empty()) {
-            ret = errorcode_t::invalid_parameter;
-        }
-
-        basic_stream stream;
-        stream << userid << ":" << appname;
-        openssl_digest dgst;
-        dgst.digest("SHA-256", stream, appid, encoding_t::encoding_base16);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
 }  // namespace net
 }  // namespace hotplace

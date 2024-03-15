@@ -132,6 +132,7 @@ void dump_elem(std::string const& source) {
 
 void test_basic() {
     print_text("basic informations");
+    OPTION option = _cmdline->value();
 
     struct {
         const char* name;
@@ -210,12 +211,15 @@ void test_basic() {
 
     const EVP_PKEY* pkey = crypto_key_es521.any();
     if (pkey) {
-        basic_stream bs;
-        dump_key(pkey, &bs);
-        printf("%s\n", bs.c_str());
+        if (option.debug) {
+            basic_stream bs;
+            dump_key(pkey, &bs);
+            printf("%s\n", bs.c_str());
+        }
     }
 
     _test_case.assert(true, __FUNCTION__, "baseic informations");
+    _test_case.assert(nullptr != pkey, __FUNCTION__, "jwk");
 }
 
 void dump_crypto_key(crypto_key_object* key, void*) {
