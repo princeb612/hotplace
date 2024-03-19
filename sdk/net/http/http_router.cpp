@@ -17,6 +17,7 @@
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
+#include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/http/http_router.hpp>
 #include <sdk/net/tls/tls.hpp>
 

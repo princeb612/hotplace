@@ -255,7 +255,7 @@ void test_basic_authentication() {
 
     OPTION& option = cmdline->value();
 
-    resolver.basic_credential("user", "password");
+    resolver.get_basic_credentials().add("user", "password");
 
     provider.request_auth(&session, &request, &response);
 
@@ -398,7 +398,7 @@ void test_digest_access_authentication(const char* alg = nullptr) {
     network_session session(&socket);
     std::string realm = "digest realm";
     std::string qop = "auth";
-    digest_access_authentication_provider provider(realm.c_str(), alg, qop.c_str());
+    digest_access_authentication_provider provider(realm, alg, qop.c_str());
     http_authentication_resolver resolver;
     http_request request;
     http_response response;
@@ -406,7 +406,7 @@ void test_digest_access_authentication(const char* alg = nullptr) {
 
     OPTION& option = cmdline->value();
 
-    resolver.digest_access_credential(realm, alg ? alg : "", "user", "password");
+    resolver.get_digest_credentials().add(realm, alg ? alg : "", "user", "password");
 
     provider.request_auth(&session, &request, &response);
 
@@ -485,7 +485,7 @@ void test_digest_access_authentication(const char* alg = nullptr) {
  * @sa      test_get_httpclient
  */
 void test_get_tlsclient() {
-    _test_case.begin("transport_layer_security_client");
+    _test_case.begin("httpserver test");
     return_t ret = errorcode_t::success;
     OPTION& option = cmdline->value();
 
@@ -577,6 +577,7 @@ void test_get_tlsclient() {
     __finally2 {
         // do nothing
     }
+    _test_case.assert(true, __FUNCTION__, "transport_layer_security_client");
 }
 
 /*
@@ -584,9 +585,10 @@ void test_get_tlsclient() {
  * @sa      test_get_tlsclient
  */
 void test_get_httpclient() {
-    _test_case.begin("http_client");
+    _test_case.begin("httpserver test");
     OPTION& option = cmdline->value();
 
+    return_t ret = errorcode_t::failed;
     http_client client;
     http_request request;
     http_response* response = nullptr;
@@ -605,7 +607,68 @@ void test_get_httpclient() {
             printf("%s\n", bs.c_str());
         }
         response->release();
+        if (200 == response->status_code()) {
+            ret = errorcode_t::success;
+        }
     }
+    _test_case.test(ret, __FUNCTION__, "http_client");
+}
+
+void test_bearer_token() {
+    _test_case.begin("httpserver test");
+    OPTION& option = cmdline->value();
+
+    return_t ret = errorcode_t::failed;
+    http_client client;
+    http_request request;
+    http_response* response = nullptr;
+    client.set_url(option.url);
+    client.set_ttl(60000);  // 1 min
+
+    request.compose(http_method_t::HTTP_GET, "/auth/bearer");
+    request.get_http_header().clear().add("Accept-Encoding", "gzip, deflate").add("Authorization", "Bearer token");
+
+    client.request(request, &response);
+    if (response) {
+        if (option.debug) {
+            basic_stream bs;
+            response->get_response(bs);
+            printf("%s\n", bs.c_str());
+        }
+        response->release();
+        if (200 == response->status_code()) {
+            ret = errorcode_t::success;
+        }
+    }
+    _test_case.test(ret, __FUNCTION__, "bearer");
+}
+
+void test_rfc6749_authorizationcode() {
+    _test_case.begin("oauth2");
+    OPTION& option = cmdline->value();
+
+    return_t ret = errorcode_t::failed;
+    http_client client;
+    http_request request;
+    http_response* response = nullptr;
+    client.set_url(option.url);
+    client.set_ttl(60000);  // 1 min
+
+    request.compose(http_method_t::HTTP_GET, "/authorize?response_type=code&client_id=s6BhdRkqt3&state=xyz&redirect_uri=https%3A%2F%2Flocalhost%2Fcb");
+
+    client.request(request, &response);
+    if (response) {
+        if (option.debug) {
+            basic_stream bs;
+            response->get_response(bs);
+            printf("%s\n", bs.c_str());
+        }
+        response->release();
+        if (302 == response->status_code()) {
+            ret = errorcode_t::success;
+        }
+    }
+    _test_case.test(ret, __FUNCTION__, "oauth2");
 }
 
 int main(int argc, char** argv) {
@@ -664,6 +727,9 @@ int main(int argc, char** argv) {
         //   ./test-httpget -d -c
         test_get_tlsclient();
         test_get_httpclient();
+
+        test_bearer_token();
+        test_rfc6749_authorizationcode();
     }
 
     openssl_thread_end();

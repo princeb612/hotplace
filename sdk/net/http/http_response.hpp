@@ -26,6 +26,7 @@
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/client_socket.hpp>
 #include <sdk/net/http/http_header.hpp>
+#include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_uri.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/tls/tls_client.hpp>

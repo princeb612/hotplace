@@ -73,6 +73,17 @@ bool datetime::update_if_elapsed(unsigned long msecs) {
     return ret;
 }
 
+bool datetime::elapsed(timespan_t ts) {
+    bool ret = false;
+    datetime now;
+    datetime temp(_timespec);
+    temp += ts;
+    if (now > temp) {
+        ret = true;
+    }
+    return ret;
+}
+
 return_t datetime::gettimespec(struct timespec* ts) {
     return_t ret = errorcode_t::success;
 

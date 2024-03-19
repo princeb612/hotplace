@@ -7,13 +7,6 @@
  * Revision History
  * Date         Name                Description
  *
- * spec list
- *      qop=auth
- *      algorithm=MD5|MD5-sess|SHA-256|SHA-256-sess
- *      userhash
- * todo list
- *      qop=auth-int
- *      nextnonce
  */
 
 #ifndef __HOTPLACE_SDK_NET_HTTP_BASIC_AUTHENTICATION_PROVIDER__
@@ -23,7 +16,7 @@
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/io/basic/keyvalue.hpp>
-#include <sdk/net/http/http.hpp>
+#include <sdk/net/http/basic_credentials.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
@@ -42,7 +35,7 @@ namespace net {
  */
 class basic_authentication_provider : public http_authenticate_provider {
    public:
-    basic_authentication_provider(const char* realm);
+    basic_authentication_provider(std::string const& realm);
     virtual ~basic_authentication_provider();
 
     /**

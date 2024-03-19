@@ -7,13 +7,6 @@
  * Revision History
  * Date         Name                Description
  *
- * spec list
- *      qop=auth
- *      algorithm=MD5|MD5-sess|SHA-256|SHA-256-sess
- *      userhash
- * todo list
- *      qop=auth-int
- *      nextnonce
  */
 
 #ifndef __HOTPLACE_SDK_NET_HTTP_BEARER_AUTHENTICATION_PROVIDER__
@@ -23,8 +16,10 @@
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/io/basic/keyvalue.hpp>
-#include <sdk/net/http/http.hpp>
+#include <sdk/net/http/bearer_credentials.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
+#include <sdk/net/http/http_request.hpp>
+#include <sdk/net/http/http_response.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
@@ -33,7 +28,7 @@ namespace net {
 
 class bearer_authentication_provider : public http_authenticate_provider {
    public:
-    bearer_authentication_provider(const char* realm);
+    bearer_authentication_provider(std::string const& realm);
     virtual ~bearer_authentication_provider();
 
     /**

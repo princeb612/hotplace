@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base.hpp>
 #include <sdk/base/inline.hpp>
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/system/critical_section.hpp>
