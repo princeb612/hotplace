@@ -161,6 +161,8 @@ class datetime {
      */
     bool update_if_elapsed(unsigned long msecs);
 
+    bool elapsed(timespan_t ts);
+
     return_t gettimespec(struct timespec* ts);
     return_t getlocaltime(struct tm* tm, long* nsec = nullptr);
     return_t getgmtime(struct tm* tm, long* nsec = nullptr);
@@ -183,7 +185,6 @@ class datetime {
 
     /**
      * @brief compare
-     * @return true if equal
      */
     bool operator==(datetime rhs);
     bool operator!=(datetime rhs);

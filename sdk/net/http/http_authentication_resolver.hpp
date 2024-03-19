@@ -23,8 +23,11 @@
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/io/basic/keyvalue.hpp>
-#include <sdk/net/http/http.hpp>
+#include <sdk/net/http/basic_authentication_provider.hpp>
+#include <sdk/net/http/bearer_authentication_provider.hpp>
+#include <sdk/net/http/digest_access_authentication_provider.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
+#include <sdk/net/http/oauth2.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
@@ -104,12 +107,10 @@ class http_authentication_resolver {
      */
     bool oauth2_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
 
-    http_authentication_resolver& basic_credential(std::string const& userid, std::string const& password);
-    http_authentication_resolver& basic_credential(std::string const& challenge);
-    http_authentication_resolver& digest_access_credential(std::string const& userid, std::string const& password);
-    http_authentication_resolver& digest_access_credential(std::string const& realm, std::string const& algorithm, std::string const& userid,
-                                                           std::string const& password);
-    http_authentication_resolver& bearer_credential(std::string const& client_id, std::string const& access_token);
+    basic_credentials& get_basic_credentials();
+    digest_credentials& get_digest_credentials();
+    bearer_credentials& get_bearer_credentials();
+    oauth2_credentials& get_oauth2_credentials();
 
    private:
     authenticate_handler_t _basic_resolver;
@@ -117,11 +118,10 @@ class http_authentication_resolver {
     authenticate_handler_t _bearer_resolver;
     authenticate_handler_t _oauth2_resolver;
 
-    critical_section _lock;
-    std::set<std::string> _basic_credential;                       // set(base64_encode(concat(userid, ":", password)))
-    std::map<std::string, std::string> _digest_access_credential;  // map(userid, password)
-    std::map<std::string, std::string> _digest_access_userhash;    // map(_H(userid:realm), userid)
-    std::map<std::string, std::string> _bearer_credential;         // map(client_id, access_token)
+    basic_credentials _basic_credentials;
+    digest_credentials _digest_credentials;
+    bearer_credentials _bearer_credentials;
+    oauth2_credentials _oauth2_credentials;
 };
 
 }  // namespace net

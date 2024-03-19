@@ -23,32 +23,14 @@
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/io/basic/keyvalue.hpp>
-#include <sdk/net/http/http.hpp>
+#include <sdk/net/http/digest_credentials.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
+#include <sdk/net/http/rfc2617_digest.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
-
-class rfc2617_digest {
-   public:
-    rfc2617_digest();
-    rfc2617_digest& add(const char* data);
-    rfc2617_digest& add(std::string const& data);
-    rfc2617_digest& add(basic_stream const& data);
-    rfc2617_digest& operator<<(const char* data);
-    rfc2617_digest& operator<<(std::string const& data);
-    rfc2617_digest& operator<<(basic_stream const& data);
-    rfc2617_digest& digest(std::string const& algorithm);
-    std::string get();
-    std::string get_sequence();
-    rfc2617_digest& clear();
-
-   private:
-    basic_stream _sequence;
-    basic_stream _stream;
-};
 
 /**
  * @brief   digest
@@ -74,8 +56,8 @@ class digest_access_authentication_provider : public http_authenticate_provider 
      * @brief   constructor
      * @param   const char* realm [in]
      */
-    digest_access_authentication_provider(const char* realm);
-    digest_access_authentication_provider(const char* realm, const char* algorithm, const char* qop, bool userhash = false);
+    digest_access_authentication_provider(std::string const& realm);
+    digest_access_authentication_provider(std::string const& realm, const char* algorithm, const char* qop, bool userhash = false);
     virtual ~digest_access_authentication_provider();
 
     /**

@@ -40,12 +40,23 @@ enum oauth2_grant_t {
 
 class access_token {
    public:
-    access_token() { _shared.make_share(this); }
+    access_token(std::string const& client_id, std::string const& accesstoken, std::string const& refreshtoken, uint16 expire);
+
+    std::string atoken() const;
+    std::string rtoken() const;
+    std::string client_id() const;
+    bool expired();
+    time_t expire_time();
+
+    void addref();
+    void release();
 
    private:
-    std::string client_id;
-    std::string refresh_token;
-    uint16 expire;
+    std::string _client_id;
+    std::string _access_token;
+    std::string _refresh_token;
+    datetime _time;
+    uint16 _expire;
 
     t_shared_reference<access_token> _shared;
 };
@@ -64,13 +75,20 @@ class oauth2_credentials {
      * @param   std::string const& redirect_uri [in]
      * @param   std::list<std::string> scope [in]
      */
-    return_t register_webapp(std::string& client_id, std::string& client_secret, std::string const& userid, std::string const& appname,
-                             std::string const& redirect_uri, std::list<std::string> scope);
+    return_t add(std::string& client_id, std::string& client_secret, std::string const& userid, std::string const& appname, std::string const& redirect_uri,
+                 std::list<std::string> scope);
+    return_t push(std::string const& client_id, std::string const& client_secret, std::string const& userid, std::string const& appname,
+                  std::string const& redirect_uri, std::list<std::string> scope);
     /**
      * @brief   unregister an web application
      * @param   std::string const& client_id [in]
      */
-    return_t unregister_webapp(std::string const& client_id);
+    return_t remove(std::string const& client_id);
+
+    /**
+     * @brief   list of client_id
+     */
+    return_t list(std::string const& userid, std::list<std::string>& clientid);
 
     /**
      * @brief   access_token
@@ -79,17 +97,17 @@ class oauth2_credentials {
      * @param   std::string const& client_id [in]
      * @param   uint16 expire [inopt]
      */
-    return_t grant_access_token(std::string& access_token, std::string& refresh_token, std::string const& client_id, uint16 expire = 60 * 60);
+    return_t grant(std::string& access_token, std::string& refresh_token, std::string const& client_id, uint16 expire = 60 * 60);
     /**
      * @brief   revoke an access_token
      * @param   std::string const& access_token [in]
      */
-    return_t revoke_access_token(std::string const& access_token);
+    return_t revoke(std::string const& access_token);
     /**
      * @brief   validate
      * @param   std::string const& access_token [in]
      */
-    return_t valid_access_token(std::string const& access_token);
+    return_t isvalid(std::string const& access_token);
     /**
      * @brief   refresh
      * @param   std::string& next_access_token [out]
@@ -97,12 +115,16 @@ class oauth2_credentials {
      * @param   std::string const& refresh_token [in]
      * @param   uint16 expire [inopt]
      */
-    return_t refresh_token(std::string& next_access_token, std::string& next_refresh_token, std::string const& refresh_token, uint16 expire = 60 * 60);
+    return_t refresh(std::string& next_access_token, std::string& next_refresh_token, std::string const& refresh_token, uint16 expire = 60 * 60);
+
+    void revoke_if_expired();
 
    protected:
-    return_t do_build_appid(std::string& appid, std::string const& userid, std::string const& appname);
+    void clear();
 
    private:
+    critical_section _lock;
+
     /**
      *  web application > client id
      *  login: userid
@@ -114,16 +136,30 @@ class oauth2_credentials {
      */
 
     typedef struct _webapp_t {
+        std::string userid;
+
         std::string appname;
-        std::list<std::string> scope;
         std::string redirect_uri;
+        std::list<std::string> scope;
 
         std::string client_id;
         std::string client_secret;
 
-        std::string userid;
         std::string email;
         std::string email_developer;
+
+        _webapp_t() {}
+        _webapp_t& clear() {
+            userid.clear();
+            appname.clear();
+            redirect_uri.clear();
+            scope.clear();
+            client_id.clear();
+            client_secret.clear();
+            email.clear();
+            email_developer.clear();
+            return *this;
+        }
     } webapp_t;
 
     typedef std::multimap<std::string, std::string> user_clientid_t;  // multimap<userid, client_id>
@@ -132,9 +168,12 @@ class oauth2_credentials {
     user_clientid_t _user_clientid;
     webapps_t _webapps;
 
-    // client_id - (access_token, refresh_token) (1..*)
+    typedef std::map<std::string, access_token*> tokens_t;  // map<access_token, class access_token*>
+    tokens_t _access_tokens;
+    tokens_t _refresh_tokens;
 
-    // typedef std::map<std::string, access_token_t> access_tokens_t;  // map<access_token, access_token_t>
+    typedef std::multimap<time_t, access_token*> expire_t;
+    expire_t _expires;
 };
 
 class oauth2_authorizationcode_provider : public http_authenticate_provider {

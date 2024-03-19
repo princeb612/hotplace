@@ -49,13 +49,7 @@ bool http_authentication_resolver::basic_authenticate(http_authenticate_provider
             tokenize(challenge, " ", pos);                           // Basic
             std::string credential = tokenize(challenge, " ", pos);  // base64(user:password)
 
-            critical_section_guard guard(_lock);
-            std::set<std::string>::iterator iter = _basic_credential.find(credential);
-            ret_value = (_basic_credential.end() != iter);
-
-            if (ret_value) {
-                __leave2;
-            }
+            ret_value = get_basic_credentials().verify(provider, credential);
         }
     }
     __finally2 {
@@ -85,28 +79,11 @@ bool http_authentication_resolver::digest_authenticate(http_authenticate_provide
                 // get username from kv.get("username"), and then read password (cache, in-memory db)
                 // and then call provider->auth_digest_access
 
-                critical_section_guard guard(_lock);
+                get_digest_credentials().verify(provider, kv);
 
-                std::string username = kv.get("username");
-                std::string password;
-                if (digest_provider->get_userhash()) {
-                    std::map<std::string, std::string>::iterator iter_userhash = _digest_access_userhash.find(username);
-                    if (_digest_access_userhash.end() != iter_userhash) {
-                        kv.set("username", iter_userhash->second);
-                        password = _digest_access_credential[iter_userhash->second];
-                    }
-                } else {
-                    std::map<std::string, std::string>::iterator iter = _digest_access_credential.find(username);
-                    if (_digest_access_credential.end() != iter) {
-                        password = iter->second;
-                    }
-                }
-                if (password.size()) {
-                    kv.set("password", password);
-                    ret = digest_provider->auth_digest_access(session, request, response, kv);
-                    if (errorcode_t::success == ret) {
-                        ret_value = true;
-                    }
+                ret = digest_provider->auth_digest_access(session, request, response, kv);
+                if (errorcode_t::success == ret) {
+                    ret_value = true;
                 }
             }
         }
@@ -134,21 +111,8 @@ bool http_authentication_resolver::bearer_authenticate(http_authenticate_provide
         if (0 == strncmp("Bearer", challenge.c_str(), 6)) {
             size_t pos = 6;
             token = tokenize(challenge, " ", pos);
-            if (token == session->get_session_data()->get("access_token")) {
-                ret_value = true;
-            }
-        } else {
-            key_value kv;
-            http_uri::to_keyvalue(challenge, kv);
-            token = kv.get("access_token");
-            std::string client_id = kv.get("client_id");
 
-            critical_section_guard guard(_lock);
-
-            std::map<std::string, std::string>::iterator iter = _bearer_credential.find(client_id);
-            if (iter != _bearer_credential.end()) {
-                session->get_session_data()->set("bearer", "access_token");
-            }
+            ret_value = get_bearer_credentials().verify(provider, token);
         }
     }
     return ret_value;
@@ -165,43 +129,13 @@ bool http_authentication_resolver::oauth2_authenticate(http_authenticate_provide
     return ret_value;
 }
 
-http_authentication_resolver& http_authentication_resolver::basic_credential(std::string const& username, std::string const& password) {
-    basic_stream bs;
-    bs << username << ":" << password;
+basic_credentials& http_authentication_resolver::get_basic_credentials() { return _basic_credentials; }
 
-    critical_section_guard guard(_lock);
-    _basic_credential.insert(base64_encode(bs.data(), bs.size()));
-    return *this;
-}
+digest_credentials& http_authentication_resolver::get_digest_credentials() { return _digest_credentials; }
 
-http_authentication_resolver& http_authentication_resolver::basic_credential(std::string const& challenge) {
-    critical_section_guard guard(_lock);
-    _basic_credential.insert(challenge);
-    return *this;
-}
+bearer_credentials& http_authentication_resolver::get_bearer_credentials() { return _bearer_credentials; }
 
-http_authentication_resolver& http_authentication_resolver::digest_access_credential(std::string const& username, std::string const& password) {
-    critical_section_guard guard(_lock);
-    _digest_access_credential.insert(std::make_pair(username, password));
-    return *this;
-}
-
-http_authentication_resolver& http_authentication_resolver::digest_access_credential(std::string const& realm, std::string const& algorithm,
-                                                                                     std::string const& username, std::string const& password) {
-    rfc2617_digest dgst;
-    dgst.add(username).add(":").add(realm).digest(algorithm);
-
-    critical_section_guard guard(_lock);
-    _digest_access_credential.insert(std::make_pair(username, password));
-    _digest_access_userhash.insert(std::make_pair(dgst.get(), username));
-    return *this;
-}
-
-http_authentication_resolver& http_authentication_resolver::bearer_credential(std::string const& client_id, std::string const& access_token) {
-    critical_section_guard guard(_lock);
-    _bearer_credential.insert(std::make_pair(client_id, access_token));
-    return *this;
-}
+oauth2_credentials& http_authentication_resolver::get_oauth2_credentials() { return _oauth2_credentials; }
 
 }  // namespace net
 }  // namespace hotplace

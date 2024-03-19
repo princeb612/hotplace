@@ -106,6 +106,7 @@
 
  * RFC 2817 Upgrading to TLS Within HTTP/1.1
  * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
+ * RFC 6749 OAuth 2.0
  * RFC 9114 HTTP/3
 
 ## next time

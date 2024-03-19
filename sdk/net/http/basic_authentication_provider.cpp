@@ -16,7 +16,8 @@
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/basic_authentication_provider.hpp>
-#include <sdk/net/http/http.hpp>
+#include <sdk/net/http/http_authentication_resolver.hpp>
+#include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/tls.hpp>
 
@@ -25,7 +26,7 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-basic_authentication_provider::basic_authentication_provider(const char* realm) : http_authenticate_provider(realm) {}
+basic_authentication_provider::basic_authentication_provider(std::string const& realm) : http_authenticate_provider(realm) {}
 
 basic_authentication_provider::~basic_authentication_provider() {}
 

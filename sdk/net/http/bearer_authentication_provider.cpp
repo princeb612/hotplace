@@ -16,7 +16,8 @@
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/bearer_authentication_provider.hpp>
-#include <sdk/net/http/http.hpp>
+#include <sdk/net/http/http_authentication_resolver.hpp>
+#include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/tls.hpp>
 
@@ -25,7 +26,7 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-bearer_authentication_provider::bearer_authentication_provider(const char* realm) : http_authenticate_provider(realm) {}
+bearer_authentication_provider::bearer_authentication_provider(std::string const& realm) : http_authenticate_provider(realm) {}
 
 bearer_authentication_provider::~bearer_authentication_provider() {}
 
@@ -42,11 +43,7 @@ bool bearer_authentication_provider::try_auth(http_authentication_resolver* reso
         std::string token_scheme;
         request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
 
-        if (constexpr_bearer == token_scheme) {
-            //
-        } else if (request->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
-            //
-        } else {
+        if (constexpr_bearer != token_scheme) {
             __leave2;
         }
 
@@ -66,25 +63,11 @@ return_t bearer_authentication_provider::request_auth(network_session* session, 
             __leave2;
         }
 
-        std::string session_bearer = session->get_session_data()->get("bearer");
-        if ("access_token" == session_bearer) {
-            session->get_session_data()->remove("bearer");
+        response->get_http_header().add("WWW-Authenticate", format("Bearer realm=\"%s\"", _realm.c_str()));
 
-            openssl_prng prng;
-            std::string access_token = prng.token(16);
-            std::string refresh_token = prng.token(16);
-            session->get_session_data()->set("access_token", access_token);
-            session->get_session_data()->set("refresh_token", refresh_token);
-
-            response->compose(200, "application/json", "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"refresh_token\":\"%s\"}", access_token.c_str(),
-                              refresh_token.c_str());
-        } else {
-            response->get_http_header().add("WWW-Authenticate", format("Bearer realm=\"%s\"", _realm.c_str()));
-
-            int status_code = 401;
-            std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());
-            response->compose(status_code, "text/html", body.c_str());
-        }
+        int status_code = 401;
+        std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());
+        response->compose(status_code, "text/html", body.c_str());
     }
     __finally2 {
         // do nothing
@@ -98,13 +81,6 @@ std::string bearer_authentication_provider::get_challenge(http_request* request)
     __try2 {
         constexpr char constexpr_authorization[] = "Authorization";
         request->get_http_header().get(constexpr_authorization, challenge);
-        if (false == challenge.empty()) {
-            __leave2;
-        }
-
-        if (request->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
-            challenge = request->get_content();
-        }
     }
     __finally2 {
         // do nothing

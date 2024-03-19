@@ -206,7 +206,7 @@ return_t echo_server(void*) {
             // client
             //      RFC 6749 4.1.1.  Authorization Request
 
-            basic_stream req;
+            basic_stream stream;
             openssl_prng prng;
             std::string state;
             state = prng.nonce(16);
@@ -214,8 +214,8 @@ return_t echo_server(void*) {
             std::string auth_uri = "/auth/authorize";
             std::string client_id = "12345";
             std::string redirect_uri = "https://localhost:9000/auth/cb";
-            req << auth_server << auth_uri << "?response_type=code&client_id=" << client_id << "&redirect_uri=" << redirect_uri << "&state=" << state;
-            response->get_http_header().add("Location", req.c_str());
+            stream << auth_server << auth_uri << "?response_type=code&client_id=" << client_id << "&redirect_uri=" << redirect_uri << "&state=" << state;
+            response->get_http_header().add("Location", stream.c_str());
             response->compose(302);
         };
         std::function<void(network_session*, http_request*, http_response*)> auth_handler = [&](network_session* session, http_request* request,
@@ -316,38 +316,28 @@ return_t echo_server(void*) {
             .add(404, error_handler)
             // basic authentication
             .add("/auth/basic", default_handler)
-            .add("/auth/basic", new basic_authentication_provider(basic_realm.c_str()))
+            .add("/auth/basic", new basic_authentication_provider(basic_realm))
             // digest access authentication
             .add("/auth/digest", default_handler)
-            .add("/auth/digest", new digest_access_authentication_provider(digest_access_realm.c_str(), digest_access_alg.c_str(), digest_access_qop.c_str(),
-                                                                           digest_access_userhash))
+            .add("/auth/digest",
+                 new digest_access_authentication_provider(digest_access_realm, digest_access_alg.c_str(), digest_access_qop.c_str(), digest_access_userhash))
             // bearer authentication
             .add("/auth/bearer", default_handler)
-            .add("/auth/bearer", new bearer_authentication_provider(bearer_realm.c_str()))
+            .add("/auth/bearer", new bearer_authentication_provider(bearer_realm))
             // studying RFC 6749
-            .add("/auth/weblogin", weblogin_handler)
+            .add("/authorize", weblogin_handler)
             .add("/auth/authorize", auth_handler)
-            .add("/auth/authorize", new digest_access_authentication_provider(digest_access_realm.c_str(), digest_access_alg.c_str(), digest_access_qop.c_str(),
-                                                                              digest_access_userhash))
+            .add("/auth/authorize",
+                 new digest_access_authentication_provider(digest_access_realm, digest_access_alg.c_str(), digest_access_qop.c_str(), digest_access_userhash))
             .add("/auth/cb", cb_handler)
             .add("/auth/token", token_handler)
-            .add("/auth/token", new basic_authentication_provider(basic_realm.c_str()));
+            .add("/auth/token", new basic_authentication_provider(basic_realm));
 
-        // simple implementation
-        (*_http_router)
-            .get_authenticate_resolver()
-            // builtin basic_resolver, digest_resolver, bearer_resolver
-            .basic_credential(base64_encode("user:password"))
-            .digest_access_credential(digest_access_realm, digest_access_alg, "user", "password")
-            .bearer_credential("clientid", "token")
-            // basic_resolver, digest_resolver, bearer_resolver if necessary
-            // .basic_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
-            //    /* ... */ })
-            // .digest_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
-            //    /* ... */ })
-            // .bearer_resolver([&](http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) -> bool {
-            //    /* ... */ })
-            ;
+        http_authentication_resolver& resolver = (*_http_router).get_authenticate_resolver();
+        resolver.get_basic_credentials().add("user", "password");
+        resolver.get_digest_credentials().add(digest_access_realm, digest_access_alg, "user", "password");
+        resolver.get_bearer_credentials().add("clientid", "token");
+        resolver.get_oauth2_credentials().push("s6BhdRkqt3", "secret", "user", "testapp", "https://localhost/cb", std::list<std::string>());
 
         /* server */
         __try_new_catch(tls, new transport_layer_security(cert.get()), ret, __leave2);
