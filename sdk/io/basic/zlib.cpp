@@ -16,7 +16,6 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.13   Soo Han, Kim        reboot : bin2hex, hex2bin
  */
 
 #include <zlib.h>

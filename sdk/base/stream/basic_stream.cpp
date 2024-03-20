@@ -149,6 +149,11 @@ basic_stream& basic_stream::operator<<(const char* str) {
     return *this;
 }
 
+basic_stream& basic_stream::operator<<(char value) {
+    printf("%c", value);
+    return *this;
+}
+
 basic_stream& basic_stream::operator<<(int value) {
     printf("%i", value);
     return *this;

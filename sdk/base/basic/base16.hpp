@@ -33,6 +33,11 @@
 
 namespace hotplace {
 
+enum base16_flag_t {
+    base16_notrunc = (1 << 0),
+    base16_capital = (1 << 1),
+};
+
 /*
  * @brief   encode
  * @param   const byte_t* source [in]
@@ -53,23 +58,25 @@ return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buf
  * @param   const byte_t* source [in]
  * @param   size_t size [in]
  * @param   std::string& outpart [out]
+ * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
  * @example
  *          binary_t source = convert ("wild wild world");
  *          std::string encoded;
  *          base16_decode (&source[0], source.size, encoded);
  */
-return_t base16_encode(const byte_t* source, size_t size, std::string& outpart);
+return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, uint32 flags = 0);
 /*
  * @brief   encode
  * @param   const byte_t* source [in]
  * @param   size_t size [in]
  * @param   stream_t* stream [out]
+ * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
  * @example
  *          binary_t source = convert ("wild wild world");
  *          basic_stream encoded;
  *          base16_decode (&source[0], source.size, &encoded);
  */
-return_t base16_encode(const byte_t* source, size_t size, stream_t* stream);
+return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint32 flags = 0);
 /*
  * @brief   encode
  * @param   binary_t const& source [in]
@@ -88,12 +95,13 @@ return_t base16_encode(binary_t const& source, char* buf, size_t* buflen);
  * @brief   encode
  * @param   binary_t const& source [in]
  * @param   std::string& outpart [out]
+ * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
  * @example
  *          binary_t source = convert ("wild wild world");
  *          std::string encoded;
  *          base16_decode (source, encoded);
  */
-return_t base16_encode(binary_t const& source, std::string& outpart);
+return_t base16_encode(binary_t const& source, std::string& outpart, uint32 flags = 0);
 /*
  * @brief   encode
  * @param   binary_t const& source [in]
@@ -123,27 +131,31 @@ return_t base16_encode(std::string const& source, binary_t& outpart);
  * @param   const char* source [in]
  * @param   size_t size [in]
  * @param   binary_t& outpart [out]
+ * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc
  */
-return_t base16_decode(const char* source, size_t size, binary_t& outpart);
+return_t base16_decode(const char* source, size_t size, binary_t& outpart, uint32 flags = 0);
 /**
  * @brief   decode
  * @param   const char* source [in]
  * @param   size_t size [in]
  * @param   stream_t* stream [out]
+ * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc
  */
-return_t base16_decode(const char* source, size_t size, stream_t* stream);
+return_t base16_decode(const char* source, size_t size, stream_t* stream, uint32 flags = 0);
 /**
  * @brief   decode
  * @param   std::string const& source [in]
  * @param   binary_t& outpart [out]
+ * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc
  */
-return_t base16_decode(std::string const& source, binary_t& outpart);
+return_t base16_decode(std::string const& source, binary_t& outpart, uint32 flags = 0);
 /**
  * @brief   decode
  * @param   std::string const& source [in]
  * @param   stream_t* stream [out]
+ * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc
  */
-return_t base16_decode(std::string const& source, stream_t* stream);
+return_t base16_decode(std::string const& source, stream_t* stream, uint32 flags = 0);
 /**
  * @brief   decode
  * @param   const char* source [in]

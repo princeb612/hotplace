@@ -1,4 +1,16 @@
 #!/bin/bash -x
+:<<COMMENTS
+@author Soo Han, Kim (princeb612.kr@gmail.com)
+@remarks
+
+    * platform support - mingw, linux
+    * packages to install
+      gcc, g++, binutils, cmake, gdb
+      valgrind (linux)
+    * make
+      $ ./make.sh
+
+COMMENTS
 
 set -e
 

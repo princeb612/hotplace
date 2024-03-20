@@ -67,6 +67,29 @@ void http_uri::close() {
     _query_kv.clear();
 }
 
+return_t http_uri::set_query(const char* query) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == query) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // _query = query;
+        ret = to_keyvalue(query, _query_kv);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t http_uri::set_query(std::string const& query) {
+    return_t ret = errorcode_t::success;
+    ret = to_keyvalue(query, _query_kv);
+    return ret;
+}
+
 const char* http_uri::get_uri() {
     const char* ret_value = nullptr;
 

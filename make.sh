@@ -1,6 +1,6 @@
 #!/bin/bash
 :<<COMMENTS
-@author Soo han, Kim (princeb612.kr@gmail.com)
+@author Soo Han, Kim (princeb612.kr@gmail.com)
 @remarks
 
     * platform support - mingw, linux
@@ -17,10 +17,10 @@ COMMENTS
 
 :<< HELP
     cf       - clang-format
+    cmake    - makefile only (only clang-format possible)
     ctest    - build and run ctest
     debug    - debug build
     format   - clang-format
-    makefile - makefile only
     opt      - optimize
     pch      - precompiled header
     prof     - gprof
@@ -62,12 +62,12 @@ if [ ${#args[@]} -ne 0 ]; then
     for arg in ${args[@]}; do
         if [ $arg = 'cf' ]; then
             do_clangformat=1
+        elif [ $arg = 'cmake' ]; then
+            do_makefile=1
         elif [ $arg = 'ctest' ]; then
             do_ctest=1
         elif [ $arg = 'debug' ]; then
             CXXFLAGS="${CXXFLAGS} -DDEBUG -g"
-        elif [ $arg = 'makefile' ]; then
-            do_makefile=1
         elif [ $arg = 'format' ]; then
             do_clangformat=1
         elif [ $arg = 'odbc' ]; then

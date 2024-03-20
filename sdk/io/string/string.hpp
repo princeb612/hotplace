@@ -160,6 +160,16 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
 //
 void regex_token(std::string const& input, std::string const& expr, size_t& pos, std::list<std::string>& tokens);
 
+// escape_url
+// https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb
+// https://client.example.com/cb
+enum escapeurl_t {
+    escape_reserved = (1 << 0),
+    escape_unreserved = (1 << 1),
+};
+return_t escape_url(const char* url, stream_t* s, uint32 flags = 0);
+return_t unescape_url(const char* url, stream_t* s);
+
 //
 // split_url
 //

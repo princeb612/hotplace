@@ -93,6 +93,7 @@ class basic_stream : public stream_t {
 #endif
 
     basic_stream& operator<<(const char* str);
+    basic_stream& operator<<(char value);
     basic_stream& operator<<(int value);
     basic_stream& operator<<(unsigned int value);
     basic_stream& operator<<(long value);
