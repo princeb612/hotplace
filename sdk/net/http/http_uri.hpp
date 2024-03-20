@@ -52,6 +52,9 @@ class http_uri {
      */
     void close();
 
+    return_t set_query(const char* query);
+    return_t set_query(std::string const& query);
+
     /**
      * @brief URI
      */

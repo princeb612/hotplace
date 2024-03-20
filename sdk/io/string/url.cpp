@@ -9,6 +9,7 @@
  */
 
 #include <regex>
+#include <sdk/base/basic/base16.hpp>
 #include <sdk/io/string/string.hpp>
 
 namespace hotplace {
@@ -33,16 +34,118 @@ void regex_token(std::string const& input, std::string const& expr, size_t& pos,
     }
 }
 
-return_t split_url(const char* url, url_info_t* info) {
+return_t escape_url(const char* url, stream_t* s, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == url || nullptr == s) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        s->clear();
+
+        // RFC 2396 URI Generic Syntax
+        std::set<char> charmap;
+        constexpr char lowalpha[] = "abcdefghijklmnopqrstuvwxyz";
+        constexpr char upalpha[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        constexpr char digit[] = "0123456789";
+        constexpr char reserved[] = ";/?:@&=+$,";
+        constexpr char mark[] = "-_.!~*'()";
+        constexpr char delims[] = "<>#%%\"";
+
+        for (auto elem : lowalpha) {
+            charmap.insert(elem);
+        }
+        for (auto elem : upalpha) {
+            charmap.insert(elem);
+        }
+        for (auto elem : digit) {
+            charmap.insert(elem);
+        }
+
+        // 2.2. Reserved Characters
+        // If the data for a URI component would conflict with the reserved purpose, then ...
+        // if (escapeurl_t::escape_reserved & flags) {
+        for (auto elem : reserved) {
+            charmap.insert(elem);
+        }
+        // }
+        // 2.3. Unreserved Characters
+        // if (escapeurl_t::escape_unreserved & flags) {
+        for (auto elem : mark) {
+            charmap.insert(elem);
+        }
+        // }
+
+        // 2.4.3. Excluded US-ASCII Characters
+        for (auto elem : delims) {
+            charmap.insert(elem);
+        }
+
+        size_t size = strlen(url);
+
+        for (unsigned i = 0; i < size; i++) {
+            char c = url[i];
+            std::set<char>::iterator iter = charmap.find(c);
+            if (charmap.end() == iter) {
+                // 2.4.1. Escaped Encoding
+                s->printf("%%");
+                base16_encode((byte_t*)&c, 1, s, base16_flag_t::base16_notrunc | base16_flag_t::base16_capital);
+            } else {
+                s->printf("%c", c);
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t unescape_url(const char* url, stream_t* s) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == url || nullptr == s) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        s->clear();
+
+        size_t size = strlen(url);
+
+        for (unsigned i = 0; i < size; i++) {
+            char c = url[i];
+            if ('%' == c) {
+                if (size >= i + 2) {
+                    base16_decode(url + (i + 1), 2, s, base16_flag_t::base16_notrunc);
+                    i += 2;
+                }
+            } else {
+                s->printf("%c", c);
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t split_url(const char* src, url_info_t* info) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == url || nullptr == info) {
+        if (nullptr == src || nullptr == info) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         info->clear();
+
+        basic_stream stream;
+        unescape_url(src, &stream);
+        const char* url = stream.c_str();
 
         /*
          *  http_URL       = "http:" "//" host [ ":" port ] [ abs_path ]

@@ -35,6 +35,10 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
+enum http_request_flag_t {
+    http_request_compose = (1 << 0),
+};
+
 class http_request {
    public:
     http_request();
@@ -45,13 +49,12 @@ class http_request {
      * @brief   open
      * @param   const char*     request         [IN]
      * @param   size_t          size_request    [IN]
-     * @param   bool            optimize        [inopt]
      * @return  error code (see error.hpp)
      */
-    return_t open(const char* request, size_t size_request, bool optimize = false);
-    return_t open(const char* request, bool optimize = false);
-    return_t open(basic_stream const& request, bool optimize = false);
-    return_t open(std::string const& request, bool optimize = false);
+    return_t open(const char* request, size_t size_request, uint32 flags = 0);
+    return_t open(const char* request, uint32 flags = 0);
+    return_t open(basic_stream const& request, uint32 flags = 0);
+    return_t open(std::string const& request, uint32 flags = 0);
     /**
      * @brief   close
      * @return  error code (see error.hpp)

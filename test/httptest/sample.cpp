@@ -84,10 +84,10 @@ void test_uri() {
     do_split_url("/auth/v1/authorize?response_type=code&client_id=abcdefg&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb&state=xyz", &url_info);
     http_uri::to_keyvalue(url_info.uri, kv);
 
-    _test_case.assert("/auth/v1/authorize" == url_info.uripath, __FUNCTION__, "uri.uripath");
-    _test_case.assert("code" == kv.get("response_type"), __FUNCTION__, "query");
-    _test_case.assert("xyz" == kv.get("state"), __FUNCTION__, "query");
-    _test_case.assert("https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb" == kv.get("redirect_uri"), __FUNCTION__, "query");
+    _test_case.assert("/auth/v1/authorize" == url_info.uripath, __FUNCTION__, "query.uripath");
+    _test_case.assert("code" == kv.get("response_type"), __FUNCTION__, "query.response_type");
+    _test_case.assert("xyz" == kv.get("state"), __FUNCTION__, "query.state");
+    _test_case.assert("https://client.example.com/cb" == kv.get("redirect_uri"), __FUNCTION__, "query.redirect_uri");
 
     do_split_url("/auth/v1/authorize?response_type=code&client_id=abcdefg&redirect_uri=https://client.example.com/cb&state=xyz#part1", &url_info);
     http_uri::to_keyvalue(url_info.uri, kv);
@@ -139,7 +139,7 @@ void test_request() {
 }
 
 void test_response_compose() {
-    _test_case.begin("response.compose");
+    _test_case.begin("response");
 
     http_response response;
     response.get_http_header().add("Connection", "Keep-Alive");
@@ -160,7 +160,7 @@ void test_response_compose() {
 }
 
 void test_response_parse() {
-    _test_case.begin("response.open");
+    _test_case.begin("response");
     OPTION& option = cmdline->value();
 
     http_response response;
@@ -199,7 +199,7 @@ void test_response_parse() {
 }
 
 void test_uri_form_encoded_body_parameter() {
-    _test_case.begin("form encoded body parameter");
+    _test_case.begin("uri");
     http_request request1;
     http_request request2;
     basic_stream request_stream1;
@@ -225,10 +225,10 @@ void test_uri_form_encoded_body_parameter() {
 }
 
 void test_uri2() {
-    const char* input = "/resource?client_id=clientid&access_token=token";
-
     _test_case.begin("uri");
     OPTION& option = cmdline->value();
+
+    const char* input = "/resource?client_id=clientid&access_token=token";
 
     key_value kv;
     http_uri::to_keyvalue(input, kv);
@@ -240,6 +240,23 @@ void test_uri2() {
     }
     _test_case.assert("clientid" == client_id, __FUNCTION__, "client_id");
     _test_case.assert("token" == access_token, __FUNCTION__, "access_token");
+}
+
+void test_escape_url() {
+    _test_case.begin("uri");
+    OPTION& option = cmdline->value();
+
+    constexpr char input[] = "https://test.com:8080/%7Eb612%2Ftest%2Ehtml";
+
+    basic_stream unescaped;
+    unescape_url(input, &unescaped);
+
+    if (option.debug) {
+        std::cout << "unescape : " << unescaped.c_str() << std::endl;
+    }
+
+    constexpr char expect[] = "https://test.com:8080/~b612/test.html";
+    _test_case.assert(0 == strcmp(unescaped.c_str(), expect), __FUNCTION__, "unescape_url");
 }
 
 void test_basic_authentication() {
@@ -696,6 +713,7 @@ int main(int argc, char** argv) {
     test_uri();
     test_uri_form_encoded_body_parameter();
     test_uri2();
+    test_escape_url();
 
     // request
     test_request();

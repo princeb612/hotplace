@@ -32,7 +32,7 @@ http_request::http_request(const http_request& object) {
 
 http_request::~http_request() { close(); }
 
-return_t http_request::open(const char* request, size_t size_request, bool optimize) {
+return_t http_request::open(const char* request, size_t size_request, uint32 flags) {
     return_t ret = errorcode_t::success;
     return_t ret_getline = errorcode_t::success;
 
@@ -102,17 +102,21 @@ return_t http_request::open(const char* request, size_t size_request, bool optim
             _content.assign(request + epos, size_request - epos);
         }
 
-        // RFC 6750 2.2.  Form-Encoded Body Parameter
-        if (optimize) {
-            if (_uri.countof_query()) {
-                constexpr char constexpr_content_type[] = "Content-Type";
-                constexpr char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
-                if ((false == _header.contains(constexpr_content_type, constexpr_url_encoded)) && _content.empty()) {
+        constexpr char constexpr_content_type[] = "Content-Type";
+        constexpr char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
+        if (_content.empty()) {
+            if (http_request_flag_t::http_request_compose & flags) {
+                if ((std::string::npos != uri.find("?")) && (false == _header.contains(constexpr_content_type, constexpr_url_encoded))) {
+                    // RFC 6750 2.2.  Form-Encoded Body Parameter
                     _header.add(constexpr_content_type, constexpr_url_encoded);
                     _content = _uri.get_query();
                     pos = 0;
                     _uri.open(tokenize(uri, "?", pos));
                 }
+            }
+        } else {
+            if (_header.contains(constexpr_content_type, constexpr_url_encoded)) {
+                _uri.set_query(_content);
             }
         }
     }
@@ -123,7 +127,7 @@ return_t http_request::open(const char* request, size_t size_request, bool optim
     return ret;
 }
 
-return_t http_request::open(const char* request, bool optimize) {
+return_t http_request::open(const char* request, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == request) {
@@ -131,7 +135,7 @@ return_t http_request::open(const char* request, bool optimize) {
             __leave2;
         }
 
-        ret = open(request, strlen(request), optimize);
+        ret = open(request, strlen(request), flags);
     }
     __finally2 {
         // do nothing
@@ -139,9 +143,9 @@ return_t http_request::open(const char* request, bool optimize) {
     return ret;
 }
 
-return_t http_request::open(basic_stream const& request, bool optimize) { return open(request.c_str(), request.size(), optimize); }
+return_t http_request::open(basic_stream const& request, uint32 flags) { return open(request.c_str(), request.size(), flags); }
 
-return_t http_request::open(std::string const& request, bool optimize) { return open(request.c_str(), request.size(), optimize); }
+return_t http_request::open(std::string const& request, uint32 flags) { return open(request.c_str(), request.size(), flags); }
 
 return_t http_request::close() {
     return_t ret = errorcode_t::success;
@@ -168,7 +172,7 @@ http_request& http_request::compose(http_method_t method, std::string const& uri
     }
     stream << "\r\n" << body;
 
-    open(stream, true);  // reform if body is empty
+    open(stream, http_request_flag_t::http_request_compose);  // reform if body is empty
 
     return *this;
 }

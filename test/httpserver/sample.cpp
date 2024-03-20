@@ -193,36 +193,9 @@ return_t echo_server(void*) {
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
         };
 
-        std::function<void(network_session*, http_request*, http_response*)> weblogin_handler = [&](network_session* session, http_request* request,
-                                                                                                    http_response* response) -> void {
-            // studying RFC 6749
-
-            // resource server
-            //      create an app
-            //      - [out] app id
-            //      - [in] valid domain, redirect_uri, permission (query email)
-            //      validate, test, review and then publish
-            //
-            // client
-            //      RFC 6749 4.1.1.  Authorization Request
-
-            basic_stream stream;
-            openssl_prng prng;
-            std::string state;
-            state = prng.nonce(16);
-            std::string auth_server = "https://localhost:9000";
-            std::string auth_uri = "/auth/authorize";
-            std::string client_id = "12345";
-            std::string redirect_uri = "https://localhost:9000/auth/cb";
-            stream << auth_server << auth_uri << "?response_type=code&client_id=" << client_id << "&redirect_uri=" << redirect_uri << "&state=" << state;
-            response->get_http_header().add("Location", stream.c_str());
-            response->compose(302);
-        };
         std::function<void(network_session*, http_request*, http_response*)> auth_handler = [&](network_session* session, http_request* request,
                                                                                                 http_response* response) -> void {
             // studying RFC 6749
-
-            // this uri authenticated
 
             // login
             //      RFC 6749 4.1.2.  Authorization Response
@@ -325,7 +298,7 @@ return_t echo_server(void*) {
             .add("/auth/bearer", default_handler)
             .add("/auth/bearer", new bearer_authentication_provider(bearer_realm))
             // studying RFC 6749
-            .add("/authorize", weblogin_handler)
+            .add("/authorize", auth_handler)
             .add("/auth/authorize", auth_handler)
             .add("/auth/authorize",
                  new digest_access_authentication_provider(digest_access_realm, digest_access_alg.c_str(), digest_access_qop.c_str(), digest_access_userhash))
