@@ -31,6 +31,7 @@ typedef struct _OPTION {
 t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 void test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, const byte_t* key_data, unsigned key_size, byte_t* data, size_t size) {
+    OPTION& option = _cmdline->value();
     _test_case.reset_time();
 
     return_t ret = errorcode_t::success;
@@ -59,11 +60,13 @@ void test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, const by
                     ret = hash_object->finalize(hash_handle, hashed);
                     digest_size = hashed.size();
                     if (errorcode_t::success == ret) {
-                        test_case_notimecheck notimecheck(_test_case);
+                        if (option.debug) {
+                            test_case_notimecheck notimecheck(_test_case);
 
-                        basic_stream dump;
-                        dump_memory(&hashed[0], hashed.size(), &dump, 16, 0);
-                        bs.printf("%s\n", dump.c_str());
+                            basic_stream dump;
+                            dump_memory(&hashed[0], hashed.size(), &dump, 16, 0);
+                            bs.printf("%s\n", dump.c_str());
+                        }
                     }
                 }
                 hash_object->close(hash_handle);
@@ -80,6 +83,7 @@ void test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, const by
 }
 
 return_t test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, binary_t key, binary_t data, binary_t expect, const char* text) {
+    OPTION& option = _cmdline->value();
     _test_case.reset_time();
 
     return_t ret = errorcode_t::success;
@@ -108,11 +112,13 @@ return_t test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, bina
                     ret = hash_object->finalize(hash_handle, hashed);
                     digest_size = hashed.size();
                     if (errorcode_t::success == ret) {
-                        test_case_notimecheck notimecheck(_test_case);
+                        if (option.debug) {
+                            test_case_notimecheck notimecheck(_test_case);
 
-                        basic_stream dump;
-                        dump_memory(&hashed[0], hashed.size(), &dump, 16, 0);
-                        bs.printf("%s\n", dump.c_str());
+                            basic_stream dump;
+                            dump_memory(&hashed[0], hashed.size(), &dump, 16, 0);
+                            printf("hmac\n%s\n", dump.c_str());
+                        }
 
                         if ((hashed.size() == expect.size()) && (0 == memcmp(&hashed[0], &expect[0], expect.size()))) {
                             // do nothing
@@ -145,6 +151,8 @@ void test_hash_loop(hash_t* hash_object, unsigned count_algorithms, hash_algorit
 
 void test_hmacsha_rfc4231() {
     _test_case.begin("openssl_hash RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005");
+    OPTION& option = _cmdline->value();
+
     // RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
     // 4.2 Test Case 1
     // 4.2. Test Case 1
@@ -231,6 +239,16 @@ void test_hmacsha_rfc4231() {
         base16_decode(item.expect_sha256, strlen(item.expect_sha256), bin_expect_sha256);
         base16_decode(item.expect_sha384, strlen(item.expect_sha384), bin_expect_sha384);
         base16_decode(item.expect_sha512, strlen(item.expect_sha512), bin_expect_sha512);
+
+        if (option.debug) {
+            test_case_notimecheck notimecheck(_test_case);
+
+            basic_stream dump;
+            dump_memory(&bin_key[0], bin_key.size(), &dump);
+            printf("key\n%s\n", dump.c_str());
+            dump_memory(&bin_data[0], bin_data.size(), &dump);
+            printf("data\n%s\n", dump.c_str());
+        }
 
         test_hash_routine(&openssl_hash, hash_algorithm_t::sha2_224, bin_key, bin_data, bin_expect_sha224, item.text);
         test_hash_routine(&openssl_hash, hash_algorithm_t::sha2_256, bin_key, bin_data, bin_expect_sha256, item.text);
@@ -639,6 +657,7 @@ int main(int argc, char** argv) {
         test_hash_algorithms();
 
         test_hmacsha_rfc4231();
+
         test_cmac_rfc4493();
 
         test_hotp_rfc4226();
