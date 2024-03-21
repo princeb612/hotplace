@@ -60,7 +60,7 @@ return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, 
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (0 == base16_flag_t::base16_notrunc & flags) {
+        if (0 == (base16_flag_t::base16_notrunc & flags)) {
             outpart.clear();
         }
 
@@ -97,7 +97,7 @@ return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint
             __leave2;
         }
 
-        if (0 == base16_flag_t::base16_notrunc & flags) {
+        if (0 == (base16_flag_t::base16_notrunc & flags)) {
             stream->clear();
         }
 
@@ -191,7 +191,7 @@ return_t base16_decode(const char* source, size_t size, binary_t& outpart, uint3
             __leave2;
         }
 
-        if (0 == base16_flag_t::base16_notrunc & flags) {
+        if (0 == (base16_flag_t::base16_notrunc & flags)) {
             outpart.clear();
         }
 
@@ -227,7 +227,7 @@ return_t base16_decode(const char* source, size_t size, stream_t* stream, uint32
             __leave2;
         }
 
-        if (0 == base16_flag_t::base16_notrunc & flags) {
+        if (0 == (base16_flag_t::base16_notrunc & flags)) {
             stream->clear();
         }
 

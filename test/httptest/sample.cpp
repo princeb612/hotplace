@@ -46,20 +46,23 @@ void cprint(const char* text, ...) {
 }
 
 void do_split_url(const char* url, url_info_t* url_info) {
+    OPTION& option = cmdline->value();
+
     split_url(url, url_info);
 
-    OPTION& option = cmdline->value();
     if (option.debug) {
         basic_stream bs;
-        bs << "> scheme : " << url_info->scheme << "\n"
-           << "> host : " << url_info->host << "\n"
-           << "> port : " << url_info->port << "\n"
-           << "> uri : " << url_info->uri << "\n"
-           << "> uri.path : " << url_info->uripath << "\n";
+        bs << "> url      : " << url << "\n"
+           << "> scheme   : " << url_info->scheme << "\n"
+           << "> host     : " << url_info->host << "\n"
+           << "> port     : " << url_info->port << "\n"
+           << "> uri      : " << url_info->uri << "\n"
+           << "> uripath  : " << url_info->uripath << "\n"
+           << "> query    : " << url_info->query << "\n";
 
         key_value kv;
         http_uri::to_keyvalue(url_info->query, kv);
-        kv.foreach ([&](std::string const& key, std::string const& value, void* param) -> void { bs << "> query : " << key << " : " << value << "\n"; });
+        kv.foreach ([&](std::string const& key, std::string const& value, void* param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
 
         std::cout << bs.c_str();
     }
@@ -97,6 +100,8 @@ void test_uri() {
 
 void test_request() {
     _test_case.begin("request");
+    OPTION& option = cmdline->value();
+
     // chrome browser request data https://127.0.0.1:9000/test
     const char* input =
         "GET /test HTTP/1.1\r\n"
@@ -120,7 +125,6 @@ void test_request() {
     http_request request;
     request.open(input);
 
-    OPTION& option = cmdline->value();
     if (option.debug) {
         test_case_notimecheck notimecheck(_test_case);
 
@@ -140,12 +144,12 @@ void test_request() {
 
 void test_response_compose() {
     _test_case.begin("response");
+    OPTION& option = cmdline->value();
 
     http_response response;
     response.get_http_header().add("Connection", "Keep-Alive");
     response.compose(200, "text/html", "<html><body>hello</body></html>");
 
-    OPTION& option = cmdline->value();
     if (option.debug) {
         test_case_notimecheck notimecheck(_test_case);
 
@@ -200,6 +204,8 @@ void test_response_parse() {
 
 void test_uri_form_encoded_body_parameter() {
     _test_case.begin("uri");
+    OPTION& option = cmdline->value();
+
     http_request request1;
     http_request request2;
     basic_stream request_stream1;
@@ -213,8 +219,6 @@ void test_uri_form_encoded_body_parameter() {
     request2.get_http_header().clear().add("Content-Type", "application/x-www-form-urlencoded").add("Accept-Encoding", "gzip, deflate");
     request2.compose(http_method_t::HTTP_GET, "/auth/bearer", "client_id=clientid");
     request2.get_request(request_stream2);
-
-    OPTION& option = cmdline->value();
 
     if (option.debug) {
         printf("%s\n", request_stream1.c_str());
@@ -261,6 +265,8 @@ void test_escape_url() {
 
 void test_basic_authentication() {
     _test_case.begin("Basic Authentication Scheme");
+    OPTION& option = cmdline->value();
+
     return_t ret = errorcode_t::success;
     server_socket socket;  // dummy
     network_session session(&socket);
@@ -269,8 +275,6 @@ void test_basic_authentication() {
     http_request request;
     http_response response;
     basic_stream bs;
-
-    OPTION& option = cmdline->value();
 
     resolver.get_basic_credentials().add("user", "password");
 
@@ -410,6 +414,8 @@ return_t calc_digest_digest_access(http_authenticate_provider* provider, network
 
 void test_digest_access_authentication(const char* alg = nullptr) {
     _test_case.begin("Digest Access Authentication Scheme");
+    OPTION& option = cmdline->value();
+
     return_t ret = errorcode_t::success;
     server_socket socket;  // dummy
     network_session session(&socket);
@@ -420,8 +426,6 @@ void test_digest_access_authentication(const char* alg = nullptr) {
     http_request request;
     http_response response;
     basic_stream bs;
-
-    OPTION& option = cmdline->value();
 
     resolver.get_digest_credentials().add(realm, alg ? alg : "", "user", "password");
 
@@ -503,8 +507,9 @@ void test_digest_access_authentication(const char* alg = nullptr) {
  */
 void test_get_tlsclient() {
     _test_case.begin("httpserver test");
-    return_t ret = errorcode_t::success;
     OPTION& option = cmdline->value();
+
+    return_t ret = errorcode_t::success;
 
     __try2 {
         url_info_t url_info;
