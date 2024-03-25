@@ -295,6 +295,31 @@ static inline return_t get_eai_error(int code) {
 }
 #endif
 
+typedef struct _error_description {
+    errorcode_t error;
+    const char* error_code;
+    const char* error_message;
+} error_description;
+
+class error_advisor {
+   public:
+    static error_advisor* get_instance();
+
+    bool error_code(return_t error, std::string& code);
+    bool error_message(return_t error, std::string& message);
+
+   protected:
+    error_advisor();
+    void build();
+    bool find(return_t error, const error_description** desc);
+
+   private:
+    static error_advisor _instance;
+
+    typedef std::map<return_t, const error_description*> error_description_map_t;
+    error_description_map_t _table;
+};
+
 }  // namespace hotplace
 
 #endif

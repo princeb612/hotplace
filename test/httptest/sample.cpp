@@ -676,6 +676,7 @@ void test_rfc6749_authorizationcode() {
     client.set_url(option.url);
     client.set_ttl(60000);  // 1 min
 
+    // 4.1.1.  Authorization Request
     request.compose(http_method_t::HTTP_GET, "/authorize?response_type=code&client_id=s6BhdRkqt3&state=xyz&redirect_uri=https%3A%2F%2Flocalhost%2Fcb");
 
     client.request(request, &response);

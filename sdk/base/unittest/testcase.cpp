@@ -325,21 +325,38 @@ constexpr char constexpr_message[] = "message";
     stream << concolor.set_fgcolor(color1) << msg;    \
     stream << concolor.set_fgcolor(color2);
 
-void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stream) {
+void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stream, uint32 flags) {
+    error_advisor* advisor = error_advisor::get_instance();
+
     console_color_t fgcolor = console_color_t::white;
 
     _concolor.set_style(console_style_t::bold);
 
     constexpr char constexpr_header[] = "%-5s|%-10s|%-20s|%-11s|%s\n";
+    constexpr char constexpr_header_err[] = "%-5s|%-10s|%-32s|%-20s|%-11s|%s\n";
     constexpr char constexpr_line[] = " %-4s |0x%08x|%-20s|%-11s|%s\n";
+    constexpr char constexpr_line_err[] = " %-4s |0x%08x|%-32s|%-20s|%-11s|%s\n";
     constexpr char constexpr_timefmt[] = "%lld.%09ld";
-    stream.printf(constexpr_header, "result", "errorcode", "test function", "time", "message");
+    if (testcase_dump_t::testcase_dump_error & flags) {
+        stream.printf(constexpr_header_err, "result", "errorcode", "desc", "test function", "time", "message");
+    } else {
+        stream.printf(constexpr_header, "result", "errorcode", "test function", "time", "message");
+    }
 
     for (unittest_list_t::iterator list_iterator = array.begin(); list_iterator != array.end(); list_iterator++) {
         unittest_item_t item = *list_iterator;
 
         basic_stream error_message;
         t_stream_binder<basic_stream, console_color> console_colored_stream(error_message);
+
+        std::string funcname;
+        if (item._test_function.size() > 20) {
+            funcname = item._test_function.substr(0, 18);
+            funcname += "..";
+        } else {
+            funcname = item._test_function;
+        }
+
         switch (item._result) {
             case errorcode_t::success:
                 cprint(console_colored_stream, _concolor, console_color_t::white, fgcolor, constexpr_pass);
@@ -355,15 +372,22 @@ void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stre
                 break;
         }
 
-        std::string funcname;
-        if (item._test_function.size() > 20) {
-            funcname = item._test_function.substr(0, 18);
-            funcname += "..";
+        std::string error_message_string;
+        std::string errormsg;
+        if (testcase_dump_t::testcase_dump_error & flags) {
+            advisor->error_message(item._result, error_message_string);
+            if (error_message_string.size() > 32) {
+                errormsg = error_message_string.substr(0, 30);
+                errormsg += "..";
+            } else {
+                errormsg = error_message_string;
+            }
+            stream.printf(constexpr_line_err, error_message.c_str(), item._result, errormsg.c_str(), funcname.c_str(),
+                          format(constexpr_timefmt, item._time.tv_sec, item._time.tv_nsec / 100).c_str(), item._message.c_str());
         } else {
-            funcname = item._test_function;
+            stream.printf(constexpr_line, error_message.c_str(), item._result, funcname.c_str(),
+                          format(constexpr_timefmt, item._time.tv_sec, item._time.tv_nsec / 100).c_str(), item._message.c_str());
         }
-        stream.printf(constexpr_line, error_message.c_str(), item._result, funcname.c_str(),
-                      format(constexpr_timefmt, item._time.tv_sec, item._time.tv_nsec / 100).c_str(), item._message.c_str());
     }
 }
 
@@ -373,6 +397,7 @@ void test_case::report(uint32 top_count) {
     _lock.enter();
 
     report_unittest(stream);
+    report_failed(stream);
     report_testtime(stream, top_count);
 
     _lock.leave();
@@ -464,6 +489,52 @@ void test_case::report_unittest(basic_stream& stream) {
     if (_total._count_fail) {
         constexpr char constexpr_testfail[] = "TEST FAILED";
         cprint(console_colored_stream, _concolor, console_color_t::red, fgcolor, constexpr_testfail);
+        stream << "\n";
+    }
+
+    console_colored_stream << _concolor.turnoff();
+
+    _lock.leave();
+}
+
+void test_case::report_failed(basic_stream& stream) {
+    t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
+
+    _lock.enter();
+
+    unittest_list_t array;
+    unittest_map_t::iterator it;
+
+    unsigned int field_nsec = (RTL_FIELD_SIZE(struct timespec, tv_nsec) << 3);
+    console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
+
+    for (it = _test_map.begin(); it != _test_map.end(); it++) {
+        unittest_list_t::iterator unittest_it;
+        for (unittest_it = it->second._test_list.begin(); unittest_it != it->second._test_list.end(); unittest_it++) {
+            unittest_item_t& item = *unittest_it;
+            switch (item._result) {
+                case errorcode_t::not_supported:
+                case errorcode_t::low_security:
+                case errorcode_t::success:
+                    break;
+                default:
+                    array.push_back(item);
+                    break;
+            }
+        }
+    }
+
+    // dump
+    if (array.size()) {
+        constexpr char constexpr_failed[] = "failed case(s)\n";
+        stream.printf(constexpr_failed, array.size());
+
+        stream.fill(80, '-');
+        stream << "\n";
+
+        dump_list_into_stream(array, stream, testcase_dump_t::testcase_dump_error);
+
+        stream.fill(80, '-');
         stream << "\n";
     }
 
