@@ -18,7 +18,7 @@ namespace hotplace {
 namespace io {
 
 //
-// part - mbs2wcs and vice versa
+// part - mbs2wcs and vice versa (Windows)
 //
 
 #if defined _WIN32 || defined _WIN64
@@ -160,14 +160,22 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
 //
 void regex_token(std::string const& input, std::string const& expr, size_t& pos, std::list<std::string>& tokens);
 
-// escape_url
-// https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb
-// https://client.example.com/cb
-enum escapeurl_t {
-    escape_reserved = (1 << 0),
-    escape_unreserved = (1 << 1),
-};
+/**
+ * @brief  escape_url
+ * @param  const char* url [in]
+ * @param  stream_t* s [out]
+ * @param  uint32 flags [inopt] reserved
+ */
 return_t escape_url(const char* url, stream_t* s, uint32 flags = 0);
+/**
+ * @brief unescape
+ * @param  const char* url [in]
+ * @param  stream_t* s [out]
+ * @example
+ *        basic_stream bs;
+ *        unescape("https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb", &bs);
+ *        std::cout << bs.c_str() << std::endl; // https://client.example.com/cb
+ */
 return_t unescape_url(const char* url, stream_t* s);
 
 //
@@ -196,7 +204,9 @@ typedef struct _url_info_t {
 } url_info_t;
 
 /**
- * split url
+ * @brief   split url
+ * @param   const char* url [in]
+ * @param   url_info_t* info [out]
  * @example
  *        url_info_t info;
  *        const char *url = "http://test.com/resource?client_id=12345#part1";

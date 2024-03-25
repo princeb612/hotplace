@@ -113,7 +113,7 @@ class test_case {
     return_t result();
 
     typedef struct _unittest_item_t {
-        uint32 _result;
+        return_t _result;
         std::string _test_function;
         std::string _message;
         struct timespec _time;
@@ -159,9 +159,13 @@ class test_case {
 
    protected:
     void report_unittest(basic_stream& stream);
+    void report_failed(basic_stream& stream);
     void report_testtime(basic_stream& stream, uint32 top_count = -1);
 
-    void dump_list_into_stream(unittest_list_t& array, basic_stream& stream);
+    enum testcase_dump_t {
+        testcase_dump_error = (1 << 0),
+    };
+    void dump_list_into_stream(unittest_list_t& array, basic_stream& stream, uint32 flags = 0);
 
     void check_time(struct timespec& time);
 

@@ -22,10 +22,10 @@ namespace io {
 void regex_token(std::string const& input, std::string const& expr, size_t& pos, std::list<std::string>& tokens) {
     tokens.clear();
 
-#if defined __GNUC__
 #if (((__GNUC__ == 4) && (__GNUC_MINOR__ >= 9)) || (__GNUC__ > 4))
     // Regular expressions library (since C++11) https://en.cppreference.com/w/cpp/regex
     // The GNU C++ standard library supports <regex>, but not until GCC version 4.9.0.
+    // undefined reference to re_expr/sregex_iterator/smatch in GCC 4.8.5 (fixed in GCC 4.9.0)
 
     std::regex re_expr(expr);
     auto re_begin = std::sregex_iterator(input.begin() + pos, input.end(), re_expr);
@@ -85,7 +85,6 @@ void regex_token(std::string const& input, std::string const& expr, size_t& pos,
         }
     }
 #endif
-#endif
 }
 
 return_t escape_url(const char* url, stream_t* s, uint32 flags) {
@@ -103,9 +102,9 @@ return_t escape_url(const char* url, stream_t* s, uint32 flags) {
         constexpr char lowalpha[] = "abcdefghijklmnopqrstuvwxyz";
         constexpr char upalpha[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         constexpr char digit[] = "0123456789";
-        constexpr char reserved[] = ";/?:@&=+$,";
-        constexpr char mark[] = "-_.!~*'()";
-        constexpr char delims[] = "<>#%%\"";
+        constexpr char reserved[] = ";/?:@&=+$,";  // 2.2. Reserved Characters
+        constexpr char mark[] = "-_.!~*'()";       // 2.3. Unreserved Characters
+        constexpr char delims[] = "<>#%%\"";       // 2.4.3. Excluded US-ASCII Characters
 
         for (auto elem : lowalpha) {
             charmap.insert(elem);
@@ -117,21 +116,13 @@ return_t escape_url(const char* url, stream_t* s, uint32 flags) {
             charmap.insert(elem);
         }
 
-        // 2.2. Reserved Characters
-        // If the data for a URI component would conflict with the reserved purpose, then ...
-        // if (escapeurl_t::escape_reserved & flags) {
         for (auto elem : reserved) {
             charmap.insert(elem);
         }
-        // }
-        // 2.3. Unreserved Characters
-        // if (escapeurl_t::escape_unreserved & flags) {
         for (auto elem : mark) {
             charmap.insert(elem);
         }
-        // }
 
-        // 2.4.3. Excluded US-ASCII Characters
         for (auto elem : delims) {
             charmap.insert(elem);
         }

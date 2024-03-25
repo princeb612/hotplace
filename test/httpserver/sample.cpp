@@ -39,6 +39,7 @@ t_shared_instance<cmdline_t<OPTION> > cmdline;
 void api_test_handler(network_session*, http_request* request, http_response* response) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
 }
+
 void api_v1_test_handler(network_session*, http_request* request, http_response* response) {
     response->compose(200, "application/json", "{\"result\":\"ok\"}");
 }
@@ -192,7 +193,6 @@ return_t echo_server(void*) {
             request->get_request(bs);
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
         };
-
         std::function<void(network_session*, http_request*, http_response*)> auth_handler = [&](network_session* session, http_request* request,
                                                                                                 http_response* response) -> void {
             // studying RFC 6749
