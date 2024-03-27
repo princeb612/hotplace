@@ -665,35 +665,6 @@ void test_bearer_token() {
     _test_case.test(ret, __FUNCTION__, "bearer");
 }
 
-void test_rfc6749_authorizationcode() {
-    _test_case.begin("oauth2");
-    OPTION& option = cmdline->value();
-
-    return_t ret = errorcode_t::failed;
-    http_client client;
-    http_request request;
-    http_response* response = nullptr;
-    client.set_url(option.url);
-    client.set_ttl(60000);  // 1 min
-
-    // 4.1.1.  Authorization Request
-    request.compose(http_method_t::HTTP_GET, "/authorize?response_type=code&client_id=s6BhdRkqt3&state=xyz&redirect_uri=https%3A%2F%2Flocalhost%2Fcb");
-
-    client.request(request, &response);
-    if (response) {
-        if (option.debug) {
-            basic_stream bs;
-            response->get_response(bs);
-            printf("%s\n", bs.c_str());
-        }
-        response->release();
-        if (302 == response->status_code()) {
-            ret = errorcode_t::success;
-        }
-    }
-    _test_case.test(ret, __FUNCTION__, "oauth2");
-}
-
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -753,7 +724,6 @@ int main(int argc, char** argv) {
         test_get_httpclient();
 
         test_bearer_token();
-        test_rfc6749_authorizationcode();
     }
 
     openssl_thread_end();

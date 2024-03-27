@@ -58,6 +58,7 @@ class digest_access_authentication_provider : public http_authenticate_provider 
      */
     digest_access_authentication_provider(std::string const& realm);
     digest_access_authentication_provider(std::string const& realm, const char* algorithm, const char* qop, bool userhash = false);
+    digest_access_authentication_provider(std::string const& realm, std::string const& algorithm, std::string const& qop, bool userhash = false);
     virtual ~digest_access_authentication_provider();
 
     /**

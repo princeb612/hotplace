@@ -25,7 +25,8 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-http_authentication_resolver::http_authentication_resolver() : _basic_resolver(nullptr) {}
+http_authentication_resolver::http_authentication_resolver()
+    : _basic_resolver(nullptr), _digest_resolver(nullptr), _bearer_resolver(nullptr), _custom_resolver(nullptr) {}
 
 bool http_authentication_resolver::resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) {
     return provider->try_auth(this, session, request, response);
@@ -118,14 +119,22 @@ bool http_authentication_resolver::bearer_authenticate(http_authenticate_provide
     return ret_value;
 }
 
-http_authentication_resolver& http_authentication_resolver::oauth2_resolver(authenticate_handler_t resolver) {
-    _oauth2_resolver = resolver;
+http_authentication_resolver& http_authentication_resolver::custom_resolver(authenticate_handler_t resolver) {
+    _custom_resolver = resolver;
     return *this;
 }
 
-bool http_authentication_resolver::oauth2_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
+bool http_authentication_resolver::custom_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
                                                        http_response* response) {
     bool ret_value = false;
+    if (_custom_resolver) {
+        ret_value = _custom_resolver(provider, session, request, response);
+    } else {
+        key_value kv = request->get_http_uri().get_query_keyvalue();
+        std::string username = kv.get("username");
+        std::string password = kv.get("password");
+        ret_value = get_custom_credentials().verify(provider, username, password);
+    }
     return ret_value;
 }
 
@@ -136,6 +145,8 @@ digest_credentials& http_authentication_resolver::get_digest_credentials() { ret
 bearer_credentials& http_authentication_resolver::get_bearer_credentials() { return _bearer_credentials; }
 
 oauth2_credentials& http_authentication_resolver::get_oauth2_credentials() { return _oauth2_credentials; }
+
+custom_credentials& http_authentication_resolver::get_custom_credentials() { return _custom_credentials; }
 
 }  // namespace net
 }  // namespace hotplace

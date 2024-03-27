@@ -77,13 +77,26 @@ class oauth2_credentials {
      */
     return_t add(std::string& client_id, std::string& client_secret, std::string const& userid, std::string const& appname, std::string const& redirect_uri,
                  std::list<std::string> scope);
-    return_t push(std::string const& client_id, std::string const& client_secret, std::string const& userid, std::string const& appname,
-                  std::string const& redirect_uri, std::list<std::string> scope);
+    /**
+     * @brief   add (load from db, ...)
+     * @param   std::string const& client_id [in]
+     * @param   std::string const& client_secret [in]
+     * @param   std::string const& userid [in]
+     * @param   std::string const& appname [in]
+     * @param   std::string const& redirect_uri [in]
+     * @param   std::list<std::string> scope [in]
+     */
+    return_t insert(std::string const& client_id, std::string const& client_secret, std::string const& userid, std::string const& appname,
+                    std::string const& redirect_uri, std::list<std::string> scope);
     /**
      * @brief   unregister an web application
      * @param   std::string const& client_id [in]
      */
     return_t remove(std::string const& client_id);
+    /**
+     * @brief   check
+     */
+    return_t check(std::string const& client_id, std::string const& redirect_uri);
 
     /**
      * @brief   list of client_id

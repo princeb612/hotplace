@@ -33,8 +33,9 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-typedef void (*http_request_handler_t)(network_session*, http_request*, http_response*);
-typedef std::function<void(network_session*, http_request*, http_response*)> http_request_function_t;
+class http_router;
+typedef void (*http_request_handler_t)(network_session*, http_request*, http_response*, http_router*);
+typedef std::function<void(network_session*, http_request*, http_response*, http_router*)> http_request_function_t;
 
 class http_router {
    public:
@@ -44,9 +45,8 @@ class http_router {
     /**
      * @brief   register a handler
      */
-    http_router& add(const char* uri, http_request_handler_t handler);
-    http_router& add(const char* uri, http_request_function_t handler);
-    http_router& add(const char* uri, http_authenticate_provider* handler);
+    http_router& add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider = nullptr);
+    http_router& add(const char* uri, http_request_function_t handler, http_authenticate_provider* auth_provider = nullptr);
     /**
      * @brief   register a handler
      * @sample
@@ -67,7 +67,7 @@ class http_router {
     /**
      * @brief   default handler (404 Not Found)
      */
-    static void status404_handler(network_session* session, http_request* request, http_response* response);
+    static void status404_handler(network_session* session, http_request* request, http_response* response, http_router* router);
     /**
      * @brief   resolver
      */

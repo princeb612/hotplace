@@ -42,7 +42,7 @@ const error_description error_descriptions[] = {
     errordef(timeout, "timeout"),
     errordef(expired, "expired"),
     errordef(canceled, "canceled"),
-    errordef(invalid_request, "invalid request"),
+    errordef(invalid_request, "invalid request"),  // RFC 6749 4.1.2.1. Error Response
     errordef(response, "response"),
     errordef(unexpected, "unexpected"),
     errordef(max_reached, "max reached"),
@@ -62,12 +62,12 @@ const error_description error_descriptions[] = {
     errordef(suspicious, "suspicious"),
     errordef(unknown, "unknown"),
     errordef(inaccurate, "inaccurate"),
-    errordef(unauthorized_client, "unauthorized client"),
-    errordef(access_denied, "access denied"),
-    errordef(unsupported_response_type, "unsupported response type"),
-    errordef(invalid_scope, "The requested scope is invalid, unknown, or malformed."),
-    errordef(server_error, "server error"),
-    errordef(temporarily_unavailable, "temporarily unavailable"),
+    errordef(unauthorized_client, "unauthorized client"),                               // RFC 6749 4.1.2.1. Error Response
+    errordef(access_denied, "access denied"),                                           // RFC 6749 4.1.2.1. Error Response
+    errordef(unsupported_response_type, "unsupported response type"),                   // RFC 6749 4.1.2.1. Error Response
+    errordef(invalid_scope, "The requested scope is invalid, unknown, or malformed."),  // RFC 6749 4.1.2.1. Error Response
+    errordef(server_error, "server error"),                                             // RFC 6749 4.1.2.1. Error Response
+    errordef(temporarily_unavailable, "temporarily unavailable"),                       // RFC 6749 4.1.2.1. Error Response
     errordef(not_supported, "not supported"),
     errordef(low_security, "low security"),
     errordef(debug, "debug"),

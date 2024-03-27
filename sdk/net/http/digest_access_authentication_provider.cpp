@@ -37,13 +37,17 @@ digest_access_authentication_provider::digest_access_authentication_provider(std
     set_userhash(userhash);
 }
 
+digest_access_authentication_provider::digest_access_authentication_provider(std::string const& realm, std::string const& algorithm, std::string const& qop,
+                                                                             bool userhash)
+    : http_authenticate_provider(realm), _algorithm(algorithm), _qop(qop), _userhash(userhash) {}
+
 digest_access_authentication_provider::~digest_access_authentication_provider() {}
 
 bool digest_access_authentication_provider::try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request,
                                                      http_response* response) {
     bool ret_value = false;
     __try2 {
-        if (nullptr == session || nullptr == request) {
+        if (nullptr == resolver || nullptr == session || nullptr == request) {
             __leave2;
         }
 

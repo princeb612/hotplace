@@ -57,17 +57,17 @@ class http_client {
     http_client();
     ~http_client();
 
-    http_client& set_url(std::string url);
+    http_client& set_url(std::string const& url);
+    http_client& set_url(url_info_t const& url_info);
     http_client& set_ttl(uint32 milliseconds);
     http_client& request(std::string const& url, http_response** response);
     http_client& request(http_request& request, http_response** response);
 
    protected:
-    client_socket* connect(std::string const& url);
-    client_socket* connect(url_info_t const& url_info);
+    client_socket* try_connect();
     http_client& close();
 
-    http_client& request_and_response(url_info_t const& url_info, http_request& request, http_response** response);
+    http_client& do_request_and_response(url_info_t const& url_info, http_request& request, http_response** response);
 
    private:
     socket_t _socket;
