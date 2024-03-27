@@ -37,30 +37,30 @@ void http_router::clear() {
     _authenticate_map.clear();
 }
 
-http_router& http_router::add(const char* uri, http_request_handler_t handler) {
+http_router& http_router::add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider) {
     critical_section_guard guard(_lock);
     if (uri) {
         http_router_t route;
         route.handler = handler;
         _handler_map.insert(std::make_pair(uri, route));
+
+        if (auth_provider) {
+            _authenticate_map.insert(std::make_pair(uri, auth_provider));
+        }
     }
     return *this;
 }
 
-http_router& http_router::add(const char* uri, http_request_function_t handler) {
+http_router& http_router::add(const char* uri, http_request_function_t handler, http_authenticate_provider* auth_provider) {
     critical_section_guard guard(_lock);
     if (uri) {
         http_router_t route;
         route.stdfunc = handler;
         _handler_map.insert(std::make_pair(uri, route));
-    }
-    return *this;
-}
 
-http_router& http_router::add(const char* uri, http_authenticate_provider* handler) {
-    critical_section_guard guard(_lock);
-    if (uri) {
-        _authenticate_map.insert(std::make_pair(uri, handler));
+        if (auth_provider) {
+            _authenticate_map.insert(std::make_pair(uri, auth_provider));
+        }
     }
     return *this;
 }
@@ -129,11 +129,11 @@ return_t http_router::route(network_session* session, http_request* request, htt
         }
 
         if (routing.handler) {
-            (*routing.handler)(session, request, response);
+            (*routing.handler)(session, request, response, this);
         } else if (routing.stdfunc) {
-            routing.stdfunc(session, request, response);
+            routing.stdfunc(session, request, response, this);
         } else {
-            status404_handler(session, request, response);
+            status404_handler(session, request, response, this);
         }
     }
     __finally2 {
@@ -145,7 +145,7 @@ return_t http_router::route(network_session* session, http_request* request, htt
     return ret;
 }
 
-void http_router::status404_handler(network_session* session, http_request* request, http_response* response) {
+void http_router::status404_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
     http_resource* resource = http_resource::get_instance();
     int status_code = 404;
     response->compose(status_code, "text/html", "<html><body>%i %s</body></html>", status_code, resource->load(status_code).c_str());

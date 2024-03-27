@@ -75,9 +75,10 @@ return_t oauth2_credentials::add(std::string& client_id, std::string& client_sec
                 break;
             }
         } while (1);
+
         client_secret = prng.rand(32, encoding_t::encoding_base64url, false);
 
-        ret = push(client_id, client_secret, userid, appname, redirect_uri, scope);
+        ret = insert(client_id, client_secret, userid, appname, redirect_uri, scope);
     }
     __finally2 {
         // do nothing
@@ -85,8 +86,8 @@ return_t oauth2_credentials::add(std::string& client_id, std::string& client_sec
     return ret;
 }
 
-return_t oauth2_credentials::push(std::string const& client_id, std::string const& client_secret, std::string const& userid, std::string const& appname,
-                                  std::string const& redirect_uri, std::list<std::string> scope) {
+return_t oauth2_credentials::insert(std::string const& client_id, std::string const& client_secret, std::string const& userid, std::string const& appname,
+                                    std::string const& redirect_uri, std::list<std::string> scope) {
     return_t ret = errorcode_t::success;
     __try2 {
         _lock.enter();
@@ -131,6 +132,31 @@ return_t oauth2_credentials::remove(std::string const& client_id) {
                     _user_clientid.erase(iter);
                     break;
                 }
+            }
+        }
+    }
+    __finally2 { _lock.leave(); }
+    return ret;
+}
+
+return_t oauth2_credentials::check(std::string const& client_id, std::string const& redirect_uri) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        _lock.enter();
+
+        if (client_id.empty() || redirect_uri.empty()) {
+            ret = errorcode_t::invalid_request;
+            __leave2;
+        }
+
+        webapps_t::iterator iter = _webapps.find(client_id);
+        if (_webapps.end() == iter) {
+            ret = errorcode_t::unauthorized_client;
+            __leave2;
+        } else {
+            if (redirect_uri != iter->second.redirect_uri) {
+                ret = errorcode_t::unauthorized_client;
+                __leave2;
             }
         }
     }

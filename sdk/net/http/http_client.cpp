@@ -35,35 +35,21 @@ http_client::~http_client() {
     SSL_CTX_free(_x509);
 }
 
-client_socket* http_client::connect(std::string const& url) {
-    url_info_t url_info;
-    split_url(url.c_str(), &url_info);
-
-    return connect(url_info);
-}
-
-client_socket* http_client::connect(url_info_t const& url_info) {
+client_socket* http_client::try_connect() {
     return_t ret = errorcode_t::success;
     client_socket* client = nullptr;
     __try2 {
-        if ((_url_info.scheme != url_info.scheme) || (_url_info.host != url_info.host) || (_url_info.port != url_info.port)) {
-            close();
-        }
-
-        _url_info = url_info;
-
-        if ("https" == url_info.scheme) {
+        if ("https" == _url_info.scheme) {
             client = _tls_client_socket;
-        } else if ("http" == url_info.scheme) {
+        } else if ("http" == _url_info.scheme) {
             client = _client_socket;
         } else {
             __leave2;
         }
 
         if (0 == _socket) {
-            ret = client->connect(&_socket, &_tls_context, url_info.host.c_str(), url_info.port, 5);
+            ret = client->connect(&_socket, &_tls_context, _url_info.host.c_str(), _url_info.port, 5);
             if (errorcode_t::success == ret) {
-                _url_info = url_info;
                 client->set_ttl(_ttl);
             }
         }
@@ -83,14 +69,15 @@ http_client& http_client::request(std::string const& url, http_response** respon
     request.get_http_header().add("Host", basic_stream("%s:%i", url_info.host.c_str(), url_info.port).c_str());
     request.compose(http_method_t::HTTP_GET, url_info.uri, "");
 
-    return request_and_response(url_info, request, response);
+    return do_request_and_response(url_info, request, response);
 }
 
-http_client& http_client::request(http_request& request, http_response** response) { return request_and_response(_url_info, request, response); }
+http_client& http_client::request(http_request& request, http_response** response) { return do_request_and_response(_url_info, request, response); }
 
-http_client& http_client::request_and_response(url_info_t const& url_info, http_request& request, http_response** response) {
+http_client& http_client::do_request_and_response(url_info_t const& url_info, http_request& request, http_response** response) {
     return_t ret = errorcode_t::success;
     client_socket* client = nullptr;
+    http_response* resp = nullptr;
 
     __try2 {
         if (nullptr == response) {
@@ -100,7 +87,7 @@ http_client& http_client::request_and_response(url_info_t const& url_info, http_
 
         *response = nullptr;
 
-        client = connect(url_info);
+        client = try_connect();
 
         // connected
         if (_socket) {
@@ -132,7 +119,7 @@ http_client& http_client::request_and_response(url_info_t const& url_info, http_
                 network_stream_data* data = nullptr;
                 stream_interpreted.consume(&data);
                 if (data) {
-                    http_response* resp = new http_response;
+                    resp = new http_response;
                     resp->open((char*)data->content(), data->size());
                     *response = resp;
 
@@ -157,8 +144,18 @@ http_client& http_client::close() {
     return *this;
 }
 
-http_client& http_client::set_url(std::string url) {
-    split_url(url.c_str(), &_url_info);
+http_client& http_client::set_url(std::string const& url) {
+    url_info_t url_info;
+    split_url(url.c_str(), &url_info);
+
+    return set_url(url_info);
+}
+
+http_client& http_client::set_url(url_info_t const& url_info) {
+    if ((_url_info.scheme != url_info.scheme) || (_url_info.host != url_info.host) || (_url_info.port != url_info.port)) {
+        close();
+    }
+    _url_info = url_info;
 
     return *this;
 }

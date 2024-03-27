@@ -33,7 +33,7 @@ basic_authentication_provider::~basic_authentication_provider() {}
 bool basic_authentication_provider::try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request, http_response* response) {
     bool ret_value = false;
     __try2 {
-        if (nullptr == session || nullptr == request) {
+        if (nullptr == resolver || nullptr == session || nullptr == request) {
             __leave2;
         }
 

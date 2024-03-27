@@ -34,7 +34,7 @@ bool bearer_authentication_provider::try_auth(http_authentication_resolver* reso
                                               http_response* response) {
     bool ret_value = false;
     __try2 {
-        if (nullptr == session || nullptr == request) {
+        if (nullptr == resolver || nullptr == session || nullptr == request) {
             __leave2;
         }
 
