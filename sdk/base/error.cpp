@@ -68,6 +68,9 @@ const error_description error_descriptions[] = {
     errordef(invalid_scope, "The requested scope is invalid, unknown, or malformed."),  // RFC 6749 4.1.2.1. Error Response
     errordef(server_error, "server error"),                                             // RFC 6749 4.1.2.1. Error Response
     errordef(temporarily_unavailable, "temporarily unavailable"),                       // RFC 6749 4.1.2.1. Error Response
+    errordef(invalid_client, "invalid_client"),                                         // RFC 6749 5.2. Error Response
+    errordef(invalid_grant, "invalid_grant"),                                           // RFC 6749 5.2. Error Response
+    errordef(unsupported_grant_type, "unsupported_grant_type"),                         // RFC 6749 5.2. Error Response
     errordef(not_supported, "not supported"),
     errordef(low_security, "low security"),
     errordef(debug, "debug"),

@@ -269,6 +269,15 @@ http_response& http_response::get_response(basic_stream& bs) {
 
 std::string http_response::get_version() { return "HTTP/1.1"; }
 
+http_response& http_response::operator=(http_response const& object) {
+    _header = object._header;
+    _request = object._request;
+    _content_type = object._content_type;
+    _content = object._content;
+    _statuscode = object._statuscode;
+    return *this;
+}
+
 void http_response::addref() { _shared.addref(); }
 
 void http_response::release() { _shared.delref(); }

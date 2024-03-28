@@ -110,8 +110,10 @@ return_t http_request::open(const char* request, size_t size_request, uint32 fla
                     // RFC 6750 2.2.  Form-Encoded Body Parameter
                     _header.add(constexpr_content_type, constexpr_url_encoded);
                     _content = _uri.get_query();
+
                     pos = 0;
-                    _uri.open(tokenize(uri, "?", pos));
+                    _uri.open(tokenize(uri, "?", pos));  // uri wo param
+                    _uri.set_query(_content);            // set param
                 }
             }
         } else {
