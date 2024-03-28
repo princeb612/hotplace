@@ -247,6 +247,8 @@ return_t echo_server(void*) {
                 resp << redirect_uri << "?code=" << code << "&state=" << state;
                 response->get_http_header().add("Location", resp.c_str());
                 response->compose(302);
+
+                session->get_session_data()->set("code", code);
             } else {
                 resp << redirect_uri << "?error=access_denied&state=" << state;
                 response->get_http_header().add("Location", resp.c_str());
@@ -258,13 +260,12 @@ return_t echo_server(void*) {
             key_value& kv = request->get_http_uri().get_query_keyvalue();
             std::string error = kv.get("error");
             if (error.empty()) {
-                key_value& kv = request->get_http_uri().get_query_keyvalue();
                 std::string code = kv.get("code");
                 http_request req;
                 basic_stream bs;
-                bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << session->get_session_data()->get("redirect_uri");
+                bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << cb_url;
 
-                req.compose(http_method_t::HTTP_GET, bs.c_str(), "");
+                req.compose(http_method_t::HTTP_POST, bs.c_str(), "");
                 req.get_http_header().add("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW");  // s6BhdRkqt3:gX1fBat3bV
 
                 router->route(session, &req, response);
@@ -274,29 +275,48 @@ return_t echo_server(void*) {
         };
         std::function<void(network_session*, http_request*, http_response*, http_router*)> token_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-            std::string client_id = session->get_session_data()->get("client_id");
-            std::string access_token;
-            std::string refresh_token;
+            std::string session_code = session->get_session_data()->get("code");
+            std::string session_client_id = session->get_session_data()->get("client_id");
+            key_value& kv = request->get_http_uri().get_query_keyvalue();
             basic_stream body;
-            uint16 expire = 60 * 60;
+            json_t* root = nullptr;
 
-            router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, client_id, expire);
-            response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
-
-            json_t* root = json_object();
-            if (root) {
-                json_object_set_new(root, "client_id", json_string(client_id.c_str()));
-                json_object_set_new(root, "access_token", json_string(access_token.c_str()));
-                json_object_set_new(root, "token_type", json_string("example"));
-                json_object_set_new(root, "expire_in", json_integer(expire));
-                json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
-                json_object_set_new(root, "example_parameter", json_string("example_value"));
-                char* contents = json_dumps(root, JOSE_JSON_FORMAT);
-                if (contents) {
-                    body = contents;
-                    free(contents);
+            __try2 {
+                root = json_object();
+                if (nullptr == root) {
+                    __leave2;
                 }
-                json_decref(root);
+
+                if (kv.get("grant_type") != "authorization_code") {
+                    json_object_set_new(root, "error", json_string("unsupported_grant_type"));
+                } else if (kv.get("code") == session_code) {
+                    std::string access_token;
+                    std::string refresh_token;
+                    uint16 expire = 60 * 60;
+
+                    router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, session_client_id, expire);
+                    response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
+
+                    json_object_set_new(root, "access_token", json_string(access_token.c_str()));
+                    json_object_set_new(root, "token_type", json_string("example"));
+                    json_object_set_new(root, "expire_in", json_integer(expire));
+                    json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
+                    json_object_set_new(root, "example_parameter", json_string("example_value"));
+                } else {
+                    json_object_set_new(root, "error", json_string("invalid_request"));
+                }
+            }
+            __finally2 {
+                if (root) {
+                    char* contents = json_dumps(root, JOSE_JSON_FORMAT);
+                    if (contents) {
+                        body = contents;
+                        free(contents);
+                    }
+                    json_decref(root);
+                } else {
+                    body << "{\"error\":\"server_error\"}";
+                }
             }
 
             response->compose(200, "application/json", body.c_str());
@@ -322,10 +342,13 @@ return_t echo_server(void*) {
                  new digest_access_authentication_provider(digest_access_realm, digest_access_alg, digest_access_qop, digest_access_userhash))
             // bearer authentication
             .add("/auth/bearer", default_handler, new bearer_authentication_provider(bearer_realm))
-            // studying RFC 6749
+            // studying RFC 6749 4.1. Authorization Code Grant
+            // authorization endpoint
             .add("/auth/authorize", auth_handler)
             .add("/auth/signin", signin_handler)
+            // callback
             .add("/client/cb", cb_handler)
+            // token endpoint
             .add("/auth/token", token_handler, new basic_authentication_provider(basic_realm));
 
         http_authentication_resolver& resolver = (*_http_router).get_authenticate_resolver();

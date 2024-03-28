@@ -225,7 +225,12 @@ void test_uri_form_encoded_body_parameter() {
         printf("%s\n", request_stream2.c_str());
     }
 
+    key_value& kv1 = request1.get_http_uri().get_query_keyvalue();
+    key_value& kv2 = request2.get_http_uri().get_query_keyvalue();
+
     _test_case.assert(request_stream1 == request_stream2, __FUNCTION__, "form encoded body parameter");
+    _test_case.assert(kv1.get("client_id") == "clientid", __FUNCTION__, "client_id");
+    _test_case.assert(kv2.get("client_id") == "clientid", __FUNCTION__, "client_id");
 }
 
 void test_uri2() {

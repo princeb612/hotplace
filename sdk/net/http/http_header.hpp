@@ -126,6 +126,8 @@ class http_header {
      */
     return_t get_headers(std::string& contents);
 
+    http_header& operator=(http_header const& object);
+
    protected:
     typedef std::map<std::string, std::string> http_header_map_t;
     typedef std::pair<http_header_map_t::iterator, bool> http_header_map_pib_t;

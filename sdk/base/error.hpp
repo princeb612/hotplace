@@ -246,6 +246,9 @@ enum errorcode_t {
     /* 0xef010030 4009820208 */ invalid_scope,
     /* 0xef010031 4009820209 */ server_error,
     /* 0xef010032 4009820210 */ temporarily_unavailable,
+    /* 0xef010033 4009820211 */ invalid_client,
+    /* 0xef010034 4009820212 */ invalid_grant,
+    /* 0xef010035 4009820213 */ unsupported_grant_type,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,

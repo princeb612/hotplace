@@ -102,6 +102,8 @@ class http_response {
 
     virtual std::string get_version();
 
+    http_response& operator=(http_response const& object);
+
     void addref();
     void release();
 
