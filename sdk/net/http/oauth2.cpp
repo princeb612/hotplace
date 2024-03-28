@@ -195,6 +195,11 @@ return_t oauth2_credentials::grant(std::string& accesstoken, std::string& refres
             __leave2;
         }
 
+        webapps_t::iterator iter = _webapps.find(client_id);
+        if (_webapps.end() == iter) {
+            __leave2;
+        }
+
         std::string atoken, rtoken;
         openssl_prng prng;
         do {
@@ -220,6 +225,9 @@ return_t oauth2_credentials::grant(std::string& accesstoken, std::string& refres
 
         token->addref();
         _expires.insert(std::make_pair(token->expire_time(), token));
+
+        accesstoken = atoken;
+        refreshtoken = rtoken;
     }
     __finally2 { _lock.leave(); }
     return ret;

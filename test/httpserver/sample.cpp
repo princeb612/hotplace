@@ -212,6 +212,7 @@ return_t echo_server(void*) {
                 response->get_http_header().add("Location", "/signin.html");
                 response->compose(302);
 
+                session->get_session_data()->set("client_id", client_id);
                 session->get_session_data()->set("redirect_uri", redirect_uri);
                 session->get_session_data()->set("state", state);
             } else {
@@ -242,7 +243,7 @@ return_t echo_server(void*) {
                 // Location: https://client.example.com/cb?code=SplxlOBeZQQYbYS6WxSbIA
                 openssl_prng prng;
                 std::string code;
-                code = prng.nonce(16);
+                code = prng.rand(16, encoding_t::encoding_base64url);
                 resp << redirect_uri << "?code=" << code << "&state=" << state;
                 response->get_http_header().add("Location", resp.c_str());
                 response->compose(302);
@@ -260,18 +261,45 @@ return_t echo_server(void*) {
                 key_value& kv = request->get_http_uri().get_query_keyvalue();
                 std::string code = kv.get("code");
                 http_request req;
-                http_response resp;
-                response->compose(200, "text/html", "<html><body>studying</body></html>");
+                basic_stream bs;
+                bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << session->get_session_data()->get("redirect_uri");
+
+                req.compose(http_method_t::HTTP_GET, bs.c_str(), "");
+                req.get_http_header().add("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW");  // s6BhdRkqt3:gX1fBat3bV
+
+                router->route(session, &req, response);
             } else {
                 response->compose(401, "text/html", "<html><body>Unauthorized</body></html>");
             }
         };
         std::function<void(network_session*, http_request*, http_response*, http_router*)> token_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-            basic_stream bs;
-            request->get_request(bs);
-            printf("token\n%s\n", bs.c_str());
-            response->compose(200, "text/plain", "token");
+            std::string client_id = session->get_session_data()->get("client_id");
+            std::string access_token;
+            std::string refresh_token;
+            basic_stream body;
+            uint16 expire = 60 * 60;
+
+            router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, client_id, expire);
+            response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
+
+            json_t* root = json_object();
+            if (root) {
+                json_object_set_new(root, "client_id", json_string(client_id.c_str()));
+                json_object_set_new(root, "access_token", json_string(access_token.c_str()));
+                json_object_set_new(root, "token_type", json_string("example"));
+                json_object_set_new(root, "expire_in", json_integer(expire));
+                json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
+                json_object_set_new(root, "example_parameter", json_string("example_value"));
+                char* contents = json_dumps(root, JOSE_JSON_FORMAT);
+                if (contents) {
+                    body = contents;
+                    free(contents);
+                }
+                json_decref(root);
+            }
+
+            response->compose(200, "application/json", body.c_str());
         };
 
         (*_http_router)
@@ -302,9 +330,10 @@ return_t echo_server(void*) {
 
         http_authentication_resolver& resolver = (*_http_router).get_authenticate_resolver();
         resolver.get_basic_credentials().add("user", "password");
+        resolver.get_basic_credentials().add("s6BhdRkqt3", "gX1fBat3bV");
         resolver.get_digest_credentials().add(digest_access_realm, digest_access_alg, "user", "password");
         resolver.get_bearer_credentials().add("clientid", "token");
-        resolver.get_oauth2_credentials().insert("s6BhdRkqt3", "secret", "user", "testapp", cb_url.c_str(), std::list<std::string>());
+        resolver.get_oauth2_credentials().insert("s6BhdRkqt3", "gX1fBat3bV", "user", "testapp", cb_url.c_str(), std::list<std::string>());
         resolver.get_custom_credentials().add("user", "password");
 
         /* server */
