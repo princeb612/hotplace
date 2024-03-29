@@ -22,7 +22,6 @@
 #include <sdk/net/http/bearer_authentication_provider.hpp>
 #include <sdk/net/http/digest_access_authentication_provider.hpp>
 #include <sdk/net/http/html_documents.hpp>
-#include <sdk/net/http/http.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/http/http_authentication_resolver.hpp>
 #include <sdk/net/http/http_client.hpp>
@@ -32,6 +31,7 @@
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/http/http_response.hpp>
 #include <sdk/net/http/http_router.hpp>
+#include <sdk/net/http/http_server.hpp>
 #include <sdk/net/http/http_uri.hpp>
 #include <sdk/net/http/oauth2.hpp>
 #include <sdk/net/http/types.hpp>

@@ -12,7 +12,6 @@
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
-#include <sdk/net/http/http.hpp>
 #include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
