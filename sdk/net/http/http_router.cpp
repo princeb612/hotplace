@@ -15,7 +15,6 @@
 #include <sdk/io/stream/file_stream.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
-#include <sdk/net/http/http.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/http/http_router.hpp>

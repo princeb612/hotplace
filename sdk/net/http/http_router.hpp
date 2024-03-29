@@ -24,7 +24,6 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/io/basic/keyvalue.hpp>
 #include <sdk/net/http/html_documents.hpp>
-#include <sdk/net/http/http.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/http/http_authentication_resolver.hpp>
 #include <sdk/net/server/network_protocol.hpp>

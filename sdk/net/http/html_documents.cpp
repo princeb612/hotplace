@@ -17,7 +17,6 @@
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/html_documents.hpp>
-#include <sdk/net/http/http.hpp>
 #include <sdk/net/http/http_router.hpp>
 #include <sdk/net/tls/tls.hpp>
 

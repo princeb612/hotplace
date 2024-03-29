@@ -4,7 +4,7 @@
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      simple https server implementation
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver, httpauth
  *
  * Revision History
  * Date         Name                Description
@@ -166,20 +166,6 @@ return_t echo_server(void*) {
         .set_verify(0);
 
     __try2 {
-        // Basic Authentication (realm)
-        std::string basic_realm = "Hello World";
-        // Digest Access Authentication (realm/algorithm/qop/userhash)
-        std::string digest_access_realm = "happiness";
-        std::string digest_access_alg = "SHA-256-sess";
-        std::string digest_access_qop = "auth";
-        bool digest_access_userhash = true;
-        // Bearer Authentication (realm)
-        std::string bearer_realm = "hotplace";
-        // OAuth 2.0 (realm)
-        std::string oauth2_realm = "somewhere over the rainbow";
-        basic_stream cb_url;
-        cb_url << "https://localhost:" << option.port_tls << "/client/cb";
-
         /* route */
         _http_router.make_share(new http_router);
 
@@ -195,132 +181,6 @@ return_t echo_server(void*) {
             request->get_request(bs);
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
         };
-        std::function<void(network_session*, http_request*, http_response*, http_router*)> auth_handler =
-            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-            // studying RFC 6749
-
-            key_value& kv = request->get_http_uri().get_query_keyvalue();
-
-            std::string response_type = kv.get("response_type");
-            std::string client_id = kv.get("client_id");
-            std::string redirect_uri = kv.get("redirect_uri");
-            std::string state = kv.get("state");
-            basic_stream resp;
-
-            return_t check = router->get_authenticate_resolver().get_oauth2_credentials().check(client_id, redirect_uri);
-            if (errorcode_t::success == check) {
-                response->get_http_header().add("Location", "/signin.html");
-                response->compose(302);
-
-                session->get_session_data()->set("client_id", client_id);
-                session->get_session_data()->set("redirect_uri", redirect_uri);
-                session->get_session_data()->set("state", state);
-            } else {
-                // 4.1.2.1.  Error Response
-                // HTTP/1.1 302 Found
-                // Location: https://client.example.com/cb?error=access_denied&state=xyz
-                std::string errorcode;
-                error_advisor* advisor = error_advisor::get_instance();
-                advisor->error_code(check, errorcode);
-                resp << redirect_uri << "?error=" << errorcode << "&state=" << state;
-                response->get_http_header().add("Location", resp.c_str());
-                response->compose(302);
-            }
-        };
-        std::function<void(network_session*, http_request*, http_response*, http_router*)> signin_handler =
-            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-            basic_stream resp;
-            key_value& kv = request->get_http_uri().get_query_keyvalue();
-            std::string username = kv.get("user");
-            std::string password = kv.get("pass");
-            std::string redirect_uri = session->get_session_data()->get("redirect_uri");
-            std::string state = session->get_session_data()->get("state");
-
-            bool test = router->get_authenticate_resolver().get_custom_credentials().verify(nullptr, username, password);
-            if (test) {
-                // RFC 6749 4.1.2.  Authorization Response
-                // HTTP/1.1 302 Found
-                // Location: https://client.example.com/cb?code=SplxlOBeZQQYbYS6WxSbIA
-                openssl_prng prng;
-                std::string code;
-                code = prng.rand(16, encoding_t::encoding_base64url);
-                resp << redirect_uri << "?code=" << code << "&state=" << state;
-                response->get_http_header().add("Location", resp.c_str());
-                response->compose(302);
-
-                session->get_session_data()->set("code", code);
-            } else {
-                resp << redirect_uri << "?error=access_denied&state=" << state;
-                response->get_http_header().add("Location", resp.c_str());
-                response->compose(302);
-            }
-        };
-        std::function<void(network_session*, http_request*, http_response*, http_router*)> cb_handler =
-            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-            key_value& kv = request->get_http_uri().get_query_keyvalue();
-            std::string error = kv.get("error");
-            if (error.empty()) {
-                std::string code = kv.get("code");
-                http_request req;
-                basic_stream bs;
-                bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << cb_url;
-
-                req.compose(http_method_t::HTTP_POST, bs.c_str(), "");
-                req.get_http_header().add("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW");  // s6BhdRkqt3:gX1fBat3bV
-
-                router->route(session, &req, response);
-            } else {
-                response->compose(401, "text/html", "<html><body>Unauthorized</body></html>");
-            }
-        };
-        std::function<void(network_session*, http_request*, http_response*, http_router*)> token_handler =
-            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-            std::string session_code = session->get_session_data()->get("code");
-            std::string session_client_id = session->get_session_data()->get("client_id");
-            key_value& kv = request->get_http_uri().get_query_keyvalue();
-            basic_stream body;
-            json_t* root = nullptr;
-
-            __try2 {
-                root = json_object();
-                if (nullptr == root) {
-                    __leave2;
-                }
-
-                if (kv.get("grant_type") != "authorization_code") {
-                    json_object_set_new(root, "error", json_string("unsupported_grant_type"));
-                } else if (kv.get("code") == session_code) {
-                    std::string access_token;
-                    std::string refresh_token;
-                    uint16 expire = 60 * 60;
-
-                    router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, session_client_id, expire);
-                    response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
-
-                    json_object_set_new(root, "access_token", json_string(access_token.c_str()));
-                    json_object_set_new(root, "token_type", json_string("example"));
-                    json_object_set_new(root, "expire_in", json_integer(expire));
-                    json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
-                    json_object_set_new(root, "example_parameter", json_string("example_value"));
-                } else {
-                    json_object_set_new(root, "error", json_string("invalid_request"));
-                }
-            }
-            __finally2 {
-                if (root) {
-                    char* contents = json_dumps(root, JOSE_JSON_FORMAT);
-                    if (contents) {
-                        body = contents;
-                        free(contents);
-                    }
-                    json_decref(root);
-                } else {
-                    body << "{\"error\":\"server_error\"}";
-                }
-            }
-
-            response->compose(200, "application/json", body.c_str());
-        };
 
         (*_http_router)
             .get_html_documents()
@@ -334,30 +194,7 @@ return_t echo_server(void*) {
             .add("/api/test", api_test_handler)
             .add("/api/v1/test", api_v1_test_handler)
             .add("/test", default_handler)
-            .add(404, error_handler)
-            // basic authentication
-            .add("/auth/basic", default_handler, new basic_authentication_provider(basic_realm))
-            // digest access authentication
-            .add("/auth/digest", default_handler,
-                 new digest_access_authentication_provider(digest_access_realm, digest_access_alg, digest_access_qop, digest_access_userhash))
-            // bearer authentication
-            .add("/auth/bearer", default_handler, new bearer_authentication_provider(bearer_realm))
-            // studying RFC 6749 4.1. Authorization Code Grant
-            // authorization endpoint
-            .add("/auth/authorize", auth_handler)
-            .add("/auth/signin", signin_handler)
-            // callback
-            .add("/client/cb", cb_handler)
-            // token endpoint
-            .add("/auth/token", token_handler, new basic_authentication_provider(basic_realm));
-
-        http_authentication_resolver& resolver = (*_http_router).get_authenticate_resolver();
-        resolver.get_basic_credentials().add("user", "password");
-        resolver.get_basic_credentials().add("s6BhdRkqt3", "gX1fBat3bV");
-        resolver.get_digest_credentials().add(digest_access_realm, digest_access_alg, "user", "password");
-        resolver.get_bearer_credentials().add("clientid", "token");
-        resolver.get_oauth2_credentials().insert("s6BhdRkqt3", "gX1fBat3bV", "user", "testapp", cb_url.c_str(), std::list<std::string>());
-        resolver.get_custom_credentials().add("user", "password");
+            .add(404, error_handler);
 
         /* server */
         __try_new_catch(tls, new transport_layer_security(cert.get()), ret, __leave2);

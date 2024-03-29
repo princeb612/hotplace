@@ -720,7 +720,7 @@ int main(int argc, char** argv) {
         // terminal 1
         //   cd hotplace
         //   ./make.sh debug pch
-        //   cd build/test/httpserver
+        //   cd build/test/authserver
         //   ./test-httpserver -d
         // terminal 2
         //   cd build/test/httpget
