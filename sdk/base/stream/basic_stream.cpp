@@ -43,6 +43,10 @@ const char* basic_stream::c_str() const {
     return data;
 }
 
+basic_stream::operator const char*() { return c_str(); }
+
+basic_stream::operator char*() const { return (char*)c_str(); }
+
 byte_t* basic_stream::data() const {
     byte_t* data = nullptr;
     size_t size = 0;

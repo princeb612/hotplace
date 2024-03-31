@@ -36,7 +36,7 @@ void http_router::clear() {
     _authenticate_map.clear();
 }
 
-http_router& http_router::add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider) {
+http_router& http_router::add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider, bool upref) {
     critical_section_guard guard(_lock);
     if (uri) {
         http_router_t route;
@@ -44,13 +44,18 @@ http_router& http_router::add(const char* uri, http_request_handler_t handler, h
         _handler_map.insert(std::make_pair(uri, route));
 
         if (auth_provider) {
-            _authenticate_map.insert(std::make_pair(uri, auth_provider));
+            authenticate_map_pib_t pib = _authenticate_map.insert(std::make_pair(uri, auth_provider));
+            if (upref) {
+                if (pib.second) {
+                    auth_provider->addref();
+                }
+            }
         }
     }
     return *this;
 }
 
-http_router& http_router::add(const char* uri, http_request_function_t handler, http_authenticate_provider* auth_provider) {
+http_router& http_router::add(const char* uri, http_request_function_t handler, http_authenticate_provider* auth_provider, bool upref) {
     critical_section_guard guard(_lock);
     if (uri) {
         http_router_t route;
@@ -58,7 +63,12 @@ http_router& http_router::add(const char* uri, http_request_function_t handler, 
         _handler_map.insert(std::make_pair(uri, route));
 
         if (auth_provider) {
-            _authenticate_map.insert(std::make_pair(uri, auth_provider));
+            authenticate_map_pib_t pib = _authenticate_map.insert(std::make_pair(uri, auth_provider));
+            if (upref) {
+                if (pib.second) {
+                    auth_provider->addref();
+                }
+            }
         }
     }
     return *this;
@@ -165,11 +175,11 @@ bool http_router::get_auth_provider(http_request* request, http_response* respon
         } else {
             critical_section_guard guard(_lock);
 
-            const char* uripath = request->get_http_uri().get_uripath();
+            std::string uri = request->get_http_uri().get_uripath();
 
             for (authenticate_map_t::iterator iter = _authenticate_map.begin(); iter != _authenticate_map.end(); iter++) {
                 std::string root_uri = iter->first;
-                if (0 == strncmp(uripath, root_uri.c_str(), root_uri.size())) {
+                if (root_uri == uri) {
                     auth_provider = iter->second;
                     break;
                 }

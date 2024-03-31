@@ -61,7 +61,7 @@ bool digest_credentials::verify(http_authenticate_provider* provider, key_value&
             if (_digest_access_userhash.end() == iter_userhash) {
                 __leave2;
             } else {
-                // kv.set("username", iter_userhash->second);
+                kv.set("username", iter_userhash->second);
                 password = _digest_access_credential[iter_userhash->second];
                 kv.set("password", password);
                 ret = true;

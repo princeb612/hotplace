@@ -99,9 +99,12 @@ class http_server {
     network_server& get_network_server();
     http_protocol* get_http_protocol();
     http_router& get_http_router();
+    ipaddr_acl& get_ipaddr_acl();
 
    protected:
     http_server();
+
+    static return_t accept_handler(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
 
     return_t set_concurrent(uint16 concurrent);
     return_t startup_tls(std::string const& server_cert, std::string const& server_key, std::string const& cipher_list, int verify_peer);
@@ -116,6 +119,7 @@ class http_server {
     http_protocol _protocol;
     http_router _router;
     uint16 _concurrent;
+    ipaddr_acl _acl;
 
     server_socket _server_socket;
 

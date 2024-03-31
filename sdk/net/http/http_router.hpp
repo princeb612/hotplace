@@ -44,8 +44,8 @@ class http_router {
     /**
      * @brief   register a handler
      */
-    http_router& add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider = nullptr);
-    http_router& add(const char* uri, http_request_function_t handler, http_authenticate_provider* auth_provider = nullptr);
+    http_router& add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider = nullptr, bool upref = false);
+    http_router& add(const char* uri, http_request_function_t handler, http_authenticate_provider* auth_provider = nullptr, bool upref = false);
     /**
      * @brief   register a handler
      * @sample

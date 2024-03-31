@@ -50,6 +50,8 @@ class basic_stream : public stream_t {
      * @brief   c-style string
      */
     const char* c_str() const;
+    operator const char*();
+    operator char*() const;
     /**
      * @brief   data
      */

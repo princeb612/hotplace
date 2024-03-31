@@ -71,6 +71,7 @@ const error_description error_descriptions[] = {
     errordef(invalid_client, "invalid_client"),                                         // RFC 6749 5.2. Error Response
     errordef(invalid_grant, "invalid_grant"),                                           // RFC 6749 5.2. Error Response
     errordef(unsupported_grant_type, "unsupported_grant_type"),                         // RFC 6749 5.2. Error Response
+    errordef(assert_failed, "assert_failed"),
     errordef(not_supported, "not supported"),
     errordef(low_security, "low security"),
     errordef(debug, "debug"),
