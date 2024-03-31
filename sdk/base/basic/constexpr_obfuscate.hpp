@@ -52,14 +52,9 @@ class constexpr_obf {
     std::string load_string() const {
         std::string temp;
 
-        temp.resize(N);
-        char* ptr = &temp[0];
-        for (unsigned int i = 0; i < N + 1; i++) {
+        for (unsigned int i = 0; i < N; i++) {
             char c = buf[i] - factor;
-            ptr[i] = c;
-            if (0 == c) {
-                break;
-            }
+            temp += c;
         }
         return temp;
     }

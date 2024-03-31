@@ -150,7 +150,10 @@ enum crypt_enc_t {
     rsa_oaep512 = 5,
 };
 
-// Elliptic Curve (use openssl nid definition for convenience)
+/**
+ * @brief   Elliptic Curve (use openssl nid definition for convenience)
+ * @sa      generate_nid::generate_nid
+ */
 enum ec_curve_t {
     ec_nistp192 = 409,   // P-192, NID_X9_62_prime192v1
     ec_nistp224 = 713,   // P-224, NID_secp224r1
@@ -172,6 +175,7 @@ enum ec_curve_t {
     ec_x448 = 1035,      // X448, NID_X448
     ec_ed25519 = 1087,   // Ed25519, NID_Ed25519
     ec_ed448 = 1088,     // Ed448, NID_Ed448
+    ec_p256k = 714,      // NID_secp256k1,
 
     ec_brainpoolP256r1 = 927,  // brainpoolP256r1, NID_brainpoolP256r1
     ec_brainpoolP256t1 = 928,  // brainpoolP256t1, NID_brainpoolP256t1
@@ -181,6 +185,17 @@ enum ec_curve_t {
     ec_brainpoolP384t1 = 932,  // brainpoolP384t1, NID_brainpoolP384t1
     ec_brainpoolP512r1 = 933,  // brainpoolP512r1, NID_brainpoolP512r1
     ec_brainpoolP512t1 = 934,  // brainpoolP512t1, NID_brainpoolP512t1
+};
+
+/**
+ * @sa  crypto_key::generate
+ */
+enum ec_keyparam_t {
+    ec_keyparam_p256 = 256,
+    ec_keyparam_p384 = 384,
+    ec_keyparam_p521 = 521,
+    ec_keyparam_okp25519 = 25519,
+    ec_keyparam_okp448 = 448,
 };
 
 enum crypt_sig_type_t {
@@ -511,6 +526,10 @@ enum cose_keyop_t {
     cose_keyop_mac_create = 9,
     cose_keyop_mac_verify = 10,
 };
+
+/**
+ * @sa  crypto_key::generate_cose
+ */
 enum cose_ec_curve_t {
     cose_ec_unknown = 0,
     // RFC 8152 Table 22: Elliptic Curves

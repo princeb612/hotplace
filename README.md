@@ -84,6 +84,7 @@
  * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
    * test/httpserver/
+   * test/httpauth/
 
  * RFC 7638 3.1.  Example JWK Thumbprint Computation
    * test/jose/
@@ -96,8 +97,8 @@
  * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
  * RFC 7616 HTTP Digest Access Authentication
    * sdk/net/http
-   * test/httpserver
-   * test/httpget
+   * test/httpauth
+   * test/httptest
 
 ## not applied
 

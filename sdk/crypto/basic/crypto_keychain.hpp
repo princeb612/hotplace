@@ -298,7 +298,7 @@ class crypto_keychain {
     /**
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
-     * @param int nid [in]
+     * @param int nid [in] see ec_curve_t
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
@@ -316,7 +316,7 @@ class crypto_keychain {
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
-     * @param int nid [in]
+     * @param int nid [in] see ec_curve_t
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
@@ -336,7 +336,7 @@ class crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param int nid [in]
+     * @param int nid [in] see ec_curve_t
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
@@ -356,7 +356,7 @@ class crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param int nid [in]
+     * @param int nid [in] see ec_curve_t
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
@@ -371,7 +371,7 @@ class crypto_keychain {
      * @brief   generate ec key
      * @param   crypto_key* cryptokey [in]
      * @param   const char* kid [inopt]
-     * @param   int nid [in]
+     * @param   int nid [in] see ec_curve_t
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
@@ -394,7 +394,7 @@ class crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param int nid [in]
+     * @param int nid [in] see ec_curve_t
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
@@ -410,7 +410,7 @@ class crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param int nid [in]
+     * @param int nid [in] see ec_curve_t
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
@@ -426,7 +426,7 @@ class crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param int nid [in]
+     * @param int nid [in] see ec_curve_t
      *    1034: NID_X25519
      *    1035: NID_X448
      *    1087: NID_ED25519
@@ -457,7 +457,7 @@ class crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
-     * @param int nid [in]
+     * @param int nid [in] see ec_curve_t
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
