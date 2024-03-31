@@ -661,15 +661,15 @@ void test_rfc7515_bykeygen() {
 
     key.generate(crypto_kty_t::kty_oct, 256, "sample");
     key.generate(crypto_kty_t::kty_rsa, 2048, "sample");
-    key.generate(crypto_kty_t::kty_ec, 256, "sample");
+    key.generate(crypto_kty_t::kty_ec, ec_keyparam_t::ec_keyparam_p256, "sample");
 
     key.generate(crypto_kty_t::kty_oct, 256, "HS256");
     key.generate(crypto_kty_t::kty_rsa, 2048, "RS256");
     key.generate(crypto_kty_t::kty_rsa, 2048, "RS384");
     key.generate(crypto_kty_t::kty_rsa, 2048, "RS512");
-    key.generate(crypto_kty_t::kty_ec, 256, "ES256");
-    key.generate(crypto_kty_t::kty_ec, 384, "ES384");
-    key.generate(crypto_kty_t::kty_ec, 521, "ES512");
+    key.generate(crypto_kty_t::kty_ec, ec_keyparam_t::ec_keyparam_p256, "ES256");
+    key.generate(crypto_kty_t::kty_ec, ec_keyparam_t::ec_keyparam_p384, "ES384");
+    key.generate(crypto_kty_t::kty_ec, ec_keyparam_t::ec_keyparam_p521, "ES512");
 
     json_web_signature jws;
     std::string signature;
@@ -1957,10 +1957,10 @@ void test_okp() {
     binary_t source;
     std::string signature;
 
-    key.generate(crypto_kty_t::kty_okp, 25519, "test1", crypto_use_t::use_enc);
-    key.generate(crypto_kty_t::kty_okp, 25519, "test2", crypto_use_t::use_sig);
-    key.generate(crypto_kty_t::kty_okp, 448, "test3", crypto_use_t::use_enc);
-    key.generate(crypto_kty_t::kty_okp, 448, "test4", crypto_use_t::use_sig);
+    key.generate(crypto_kty_t::kty_okp, ec_keyparam_t::ec_keyparam_okp25519, "test1", crypto_use_t::use_enc);
+    key.generate(crypto_kty_t::kty_okp, ec_keyparam_t::ec_keyparam_okp25519, "test2", crypto_use_t::use_sig);
+    key.generate(crypto_kty_t::kty_okp, ec_keyparam_t::ec_keyparam_okp448, "test3", crypto_use_t::use_enc);
+    key.generate(crypto_kty_t::kty_okp, ec_keyparam_t::ec_keyparam_okp448, "test4", crypto_use_t::use_sig);
     key.for_each(dump_crypto_key, nullptr);
 
     jose.open(&handle, &key);

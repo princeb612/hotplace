@@ -605,13 +605,13 @@ void test_rfc_example() {
     {
         digest_access_authentication_provider provider("happiness", "SHA-256-sess", "auth", false);
         request.get_http_header().clear().add("Authorization",
-                                              "Authorization: Digest username=\"9448db3978d7cbc5354221a5a84ba65db2e9a0fe625c62c52fb5171b974ee17d\", "
+                                              "Digest username=\"9448db3978d7cbc5354221a5a84ba65db2e9a0fe625c62c52fb5171b974ee17d\", "
                                               "realm=\"happiness\", nonce=\"9bfec7e309fbbd69eea202ed0d2b501e\", uri=\"/auth/digest\", algorithm=SHA-256-sess, "
                                               "response=\"3defcdd8bda2d9304af3145c93687c1929e8ad6361b564d738ad2ed5eaaedf6d\", "
                                               "opaque=\"2813b77014a6956fec12191120a3da08\", qop=auth, nc=00000001, cnonce=\"3232cbe68a1b16ef\", userhash=true");
         request.compose(http_method_t::HTTP_GET, "/dir/index.html", "");
 
-        test_rfc_example_routine("realm=happiness, algorithm=SHA-256-sess qop=auth (chrome generated)", &provider, request, "user", "password",
+        test_rfc_example_routine("realm=happiness, algorithm=SHA-256-sess, qop=auth, userhash=true (chrome generated)", &provider, request, "user", "password",
                                  "3defcdd8bda2d9304af3145c93687c1929e8ad6361b564d738ad2ed5eaaedf6d");
     }
 }

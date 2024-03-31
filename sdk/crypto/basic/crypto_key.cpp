@@ -328,12 +328,12 @@ return_t crypto_key::generate_nid(crypto_kty_t type, unsigned int param, const c
             ret = keyset.add_ec(this, kid, param, use);
         } else if (crypto_kty_t::kty_okp == type) {
             switch (param) {
-                case 1034:  // NID_X25519
-                case 1035:  // NID_X448
+                case ec_curve_t::ec_x25519:  // NID_X25519(1034)
+                case ec_curve_t::ec_x448:    // NID_X448(1035)
                     ret = keyset.add_ec(this, kid, param, crypto_use_t(use | crypto_use_t::use_enc & ~crypto_use_t::use_sig));
                     break;
-                case 1087:  // NID_ED25519
-                case 1088:  // NID_ED448
+                case ec_curve_t::ec_ed25519:  // NID_ED25519(1087)
+                case ec_curve_t::ec_ed448:    // NID_ED448(1088)
                     ret = keyset.add_ec(this, kid, param, crypto_use_t(use & ~crypto_use_t::use_enc | crypto_use_t::use_sig));
                     break;
             }
