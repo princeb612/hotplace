@@ -176,6 +176,17 @@ return_t http_server::stop() {
     return ret;
 }
 
+return_t http_server::accept_handler(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter) {
+    return_t ret = errorcode_t::success;
+    if (control) {
+        http_server* server = (http_server*)parameter;
+        bool result = false;
+        server->get_ipaddr_acl().determine(client_addr, result);
+        *control = result ? CONTINUE_CONTROL : STOP_CONTROL;
+    }
+    return ret;
+}
+
 return_t http_server::set_concurrent(uint16 concurrent) {
     return_t ret = errorcode_t::success;
     _concurrent = concurrent;
@@ -253,10 +264,11 @@ return_t http_server::startup_server(uint32 flags, uint16 port, http_server_hand
             __leave2;
         }
 
-        ret = get_network_server().open(&handle, family, IPPROTO_TCP, port, 32000, handler, nullptr, socket);
+        ret = get_network_server().open(&handle, family, IPPROTO_TCP, port, 32000, handler, this, socket);
         if (errorcode_t::success != ret) {
             __leave2;
         }
+        get_network_server().set_accept_control_handler(handle, accept_handler);
         get_network_server().add_protocol(handle, get_http_protocol());
 
         _http_handles.insert(std::make_pair(flags, handle));
@@ -285,6 +297,8 @@ network_server& http_server::get_network_server() { return _server; }
 http_protocol* http_server::get_http_protocol() { return &_protocol; }
 
 http_router& http_server::get_http_router() { return _router; }
+
+ipaddr_acl& http_server::get_ipaddr_acl() { return _acl; }
 
 }  // namespace net
 }  // namespace hotplace

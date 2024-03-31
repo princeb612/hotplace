@@ -109,9 +109,9 @@ class http_authentication_resolver {
      */
     bool custom_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
 
-    basic_credentials& get_basic_credentials();
-    digest_credentials& get_digest_credentials();
-    bearer_credentials& get_bearer_credentials();
+    basic_credentials& get_basic_credentials(std::string const& realm);
+    digest_credentials& get_digest_credentials(std::string const& realm);
+    bearer_credentials& get_bearer_credentials(std::string const& realm);
     oauth2_credentials& get_oauth2_credentials();
     custom_credentials& get_custom_credentials();
 
@@ -121,9 +121,16 @@ class http_authentication_resolver {
     authenticate_handler_t _bearer_resolver;
     authenticate_handler_t _custom_resolver;
 
-    basic_credentials _basic_credentials;
-    digest_credentials _digest_credentials;
-    bearer_credentials _bearer_credentials;
+    typedef std::map<std::string, basic_credentials> realm_basic_credentials_t;
+    typedef std::map<std::string, digest_credentials> realm_digest_credentials_t;
+    typedef std::map<std::string, bearer_credentials> realm_bearer_credentials_t;
+    typedef std::pair<realm_basic_credentials_t::iterator, bool> realm_basic_credentials_pib_t;
+    typedef std::pair<realm_digest_credentials_t::iterator, bool> realm_digest_credentials_pib_t;
+    typedef std::pair<realm_bearer_credentials_t::iterator, bool> realm_bearer_credentials_pib_t;
+
+    realm_basic_credentials_t _realm_basic_credentials;    // map<realm, credentials>
+    realm_digest_credentials_t _realm_digest_credentials;  // map<realm, credentials>
+    realm_bearer_credentials_t _realm_bearer_credentials;  // map<realm, credentials>
     oauth2_credentials _oauth2_credentials;
     custom_credentials _custom_credentials;
 };

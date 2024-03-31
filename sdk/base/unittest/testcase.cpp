@@ -210,7 +210,7 @@ void test_case::assert(bool expect, const char* test_function, const char* messa
     return_t ret = errorcode_t::success;
 
     if (false == expect) {
-        ret = errorcode_t::unexpected;
+        ret = errorcode_t::assert_failed;
     }
 
     basic_stream tltle;
@@ -526,8 +526,12 @@ void test_case::report_failed(basic_stream& stream) {
 
     // dump
     if (array.size()) {
-        constexpr char constexpr_failed[] = "failed case(s)\n";
-        stream.printf(constexpr_failed, array.size());
+        constexpr char constexpr_failed[] = " case";
+        stream << array.size() << constexpr_failed;
+        if (array.size() > 1) {
+            stream << "s";
+        }
+        stream << " failed\n";
 
         stream.fill(80, '-');
         stream << "\n";

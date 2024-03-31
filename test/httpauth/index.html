@@ -1,14 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>test</title>
+  <title>HTTP Authentication</title>
   <meta charset="UTF-8">
+  <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
-  <ul>
-    <li><a href="/auth/basic">Basic Authentication (RFC 2617)</a></li>
-    <li><a href="/auth/digest">Digest Authentication (RFC 2617)</a></li>
-    <li><a href="/auth/authorize?response_type=code&client_id=s6BhdRkqt3&state=xyz&redirect_uri=https%3A%2F%2Flocalhost:9000%2Fclient%2Fcb">Authorization Code Grant (RFC 6749 4.1.)</a></li>
-  </ul>
+  <table>
+    <tr>
+      <th>testcase</th>
+      <th>realm</th>
+      <th>username</th>
+      <th>password</th>
+    </tr>
+    <tr>
+      <td><a href="/auth/basic">Basic Authentication (RFC 2617)</a></td>
+      <td>Hello World</td>
+      <td>user</td>
+      <td>password</td>
+    </tr>
+    <tr>
+      <td><a href="/auth/digest">Digest Authentication (RFC 2617))</a></td>
+      <td>happiness</td>
+      <td>user</td>
+      <td>password</td>
+    </tr>
+    <tr>
+      <td><a href="/auth/digest2">Digest Authentication (RFC 7616, )</a></td>
+      <td>testrealm@host.com</td>
+      <td>Mufasa</td>
+      <td>Circle Of Life</td>
+    </tr>
+    <tr>
+      <td><a href="/auth/authorize?response_type=code&client_id=s6BhdRkqt3&state=xyz&redirect_uri=https%3A%2F%2Flocalhost:9000%2Fclient%2Fcb">Authorization Code Grant (RFC 6749 4.1.)</a></td>
+      <td/>
+      <td>user</td>
+      <td>password</td>
+    </tr>
+    <tr>
+      <td><a href="https://[::1]:9000/">IPv6</a></td>
+      <td/>
+      <td/>
+      <td/>
+    </tr>
+  </table>
 </body>
 </html>

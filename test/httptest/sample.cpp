@@ -337,7 +337,7 @@ return_t calc_digest_digest_access(http_authenticate_provider* provider, network
     return_t ret = errorcode_t::success;
     OPTION& option = cmdline->value();
     __try2 {
-        if (nullptr == session || nullptr == request) {
+        if (nullptr == provider || nullptr == request) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -504,6 +504,99 @@ void test_digest_access_authentication(const char* alg = nullptr) {
     _test_case.assert((errorcode_t::success != ret), __FUNCTION__, "Digest Access Authentication Scheme (negative case) algorithm=%s", alg ? alg : "");
     ret = test_resolver("user", "password");
     _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Digest Access Authentication Scheme (positive case) algorithm=%s", alg ? alg : "");
+}
+
+void test_rfc_example_routine(std::string const& text, digest_access_authentication_provider* provider, http_request& request, basic_stream const& username,
+                              std::string const& password, std::string const& expect) {
+    std::string response;
+    std::string challenge;
+    key_value kv;
+
+    // Authorization: Digest username="Mufasa",
+    //         realm="testrealm@host.com",
+    //         nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
+    //         uri="/dir/index.html",
+    //         qop=auth,
+    //         nc=00000001,
+    //         cnonce="0a4f113b",
+    //         response="6629fae49393a05397450978507c4ef1",
+    //         opaque="5ccc069c403ebaf9f0171e9517f40e41"
+    challenge = provider->get_challenge(&request);
+    // kv["username"]="Mufasa", kv["realm"]="testrealm@host.com", ..., kv["opaque"]="5ccc069c403ebaf9f0171e9517f40e41"
+    http_header::to_keyvalue(challenge, kv);
+    // external
+    kv.set("username", username);  // userhash
+    kv.set("password", password);
+    // computation
+    calc_digest_digest_access(provider, nullptr, &request, kv, response);
+    // compare expect and response
+    _test_case.assert((expect == response) && (expect == kv.get("response")), __FUNCTION__, "%s", text.c_str());
+}
+
+void test_rfc_example() {
+    _test_case.begin("RFC examples");
+    OPTION& option = cmdline->value();
+
+    http_request request;
+
+    // RFC 2617 "Circle Of Life"
+    {
+        digest_access_authentication_provider provider("testrealm@host.com");
+        request.get_http_header().clear().add(
+            "Authorization",
+            "Digest username=\"Mufasa\", realm=\"testrealm@host.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/dir/index.html\", qop=auth, "
+            "nc=00000001, cnonce=\"0a4f113b\", response=\"6629fae49393a05397450978507c4ef1\", opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"");
+        request.compose(http_method_t::HTTP_GET, "/dir/index.html", "");
+
+        test_rfc_example_routine("RFC 2617 3.5 Example", &provider, request, "Mufasa", "Circle Of Life", "6629fae49393a05397450978507c4ef1");
+    }
+
+    // RFC 7616 3.9.1.  Example with SHA-256 and MD5 "Circle of Life"
+    // part of MD5
+    {
+        digest_access_authentication_provider provider("http-auth@example.org", "MD5", "auth", false);
+        request.get_http_header().clear().add(
+            "Authorization",
+            "Digest username=\"Mufasa\", realm=\"http-auth@example.org\", uri=\"/dir/index.html\", algorithm=MD5, "
+            "nonce=\"7ypf/xlj9XXwfDPEoM4URrv/xwf94BcCAzFZH4GiTo0v\", nc=00000001, cnonce=\"f2/wE4q74E6zIJEtWaHKaf5wv/H5QzzpXusqGemxURZJ\", qop=auth, "
+            "response=\"8ca523f5e9506fed4657c9700eebdbec\", opaque=\"FQhe/qaU925kfnzjCev0ciny7QMkPqMAFRtzCUYo5tdS\"");
+        request.compose(http_method_t::HTTP_GET, "/dir/index.html", "");
+
+        test_rfc_example_routine("RFC 7616 3.9.1. Examples with MD5", &provider, request, "Mufasa", "Circle of Life", "8ca523f5e9506fed4657c9700eebdbec");
+    }
+    // part of SHA-256
+    {
+        digest_access_authentication_provider provider("http-auth@example.org", "SHA-256", "auth", false);
+        request.get_http_header().clear().add(
+            "Authorization",
+            "Digest username=\"Mufasa\", realm=\"http-auth@example.org\", uri=\"/dir/index.html\", algorithm=SHA-256, "
+            "nonce=\"7ypf/xlj9XXwfDPEoM4URrv/xwf94BcCAzFZH4GiTo0v\", nc=00000001, cnonce=\"f2/wE4q74E6zIJEtWaHKaf5wv/H5QzzpXusqGemxURZJ\", qop=auth, "
+            "response=\"753927fa0e85d155564e2e272a28d1802ca10daf4496794697cf8db5856cb6c1\", opaque=\"FQhe/qaU925kfnzjCev0ciny7QMkPqMAFRtzCUYo5tdS\"");
+        request.compose(http_method_t::HTTP_GET, "/dir/index.html", "");
+
+        test_rfc_example_routine("RFC 7616 3.9.1. Examples with SHA-256", &provider, request, "Mufasa", "Circle of Life",
+                                 "753927fa0e85d155564e2e272a28d1802ca10daf4496794697cf8db5856cb6c1");
+    }
+    // part of SHA-512-256
+    {
+        // J  U+00E4 s  U+00F8 n      D  o  e
+        // 4A C3A4   73 C3B8   6E 20 44  6F 65
+        const char* username_source = "J%C3%A4s%C3%B8n%20Doe";
+        basic_stream username;
+        unescape_url(username_source, &username);
+
+        digest_access_authentication_provider provider("api@example.org", "SHA-512-256", "auth", true);
+        request.get_http_header().clear().add(
+            "Authorization",
+            "Digest username=\"488869477bf257147b804c45308cd62ac4e25eb717b12b298c79e62dcea254ec\", realm=\"api@example.org\", uri=\"/doe.json\", "
+            "algorithm=SHA-512-256, nonce=\"5TsQWLVdgBdmrQ0XsxbDODV+57QdFR34I9HAbC/RVvkK\", nc=00000001, "
+            "cnonce=\"NTg6RKcb9boFIAS3KrFK9BGeh+iDa/sm6jUMp2wds69v\", qop=auth, response=\"ae66e67d6b427bd3f120414a82e4acff38e8ecd9101d6c861229025f607a79dd\", "
+            "opaque=\"HRPCssKJSGjCrkzDg8OhwpzCiGPChXYjwrI2QmXDnsOS\", userhash=true");
+        request.compose(http_method_t::HTTP_GET, "/doe.json", "");
+
+        test_rfc_example_routine("RFC 7616 3.9.2. Example with SHA-512-256 and Userhash", &provider, request, username, "Secret, or not?",
+                                 "ae66e67d6b427bd3f120414a82e4acff38e8ecd9101d6c861229025f607a79dd");
+    }
 }
 
 /*
@@ -713,6 +806,7 @@ int main(int argc, char** argv) {
     test_digest_access_authentication("SHA-256-sess");
     test_digest_access_authentication("SHA-512-256");
     test_digest_access_authentication("SHA-512-256-sess");
+    test_rfc_example();
 
     // network test
     if (option.connect) {
