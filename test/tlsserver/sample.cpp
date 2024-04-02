@@ -67,7 +67,7 @@ return_t echo_server(void*) {
     SSL_CTX* x509 = nullptr;
     // http_protocol* http_prot = nullptr;
     transport_layer_security* tls = nullptr;
-    transport_layer_security_server* tls_server = nullptr;
+    tls_server_socket* tls_server = nullptr;
 
     __try2 {
         // part of ssl certificate
@@ -82,7 +82,7 @@ return_t echo_server(void*) {
 
         __try_new_catch(tls, new transport_layer_security(x509), ret, __leave2);
         //__try_new_catch (http_prot, new http_protocol, ret, __leave2);
-        __try_new_catch(tls_server, new transport_layer_security_server(tls), ret, __leave2);
+        __try_new_catch(tls_server, new tls_server_socket(tls), ret, __leave2);
 
         // start server
         netserver.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);

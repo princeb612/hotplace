@@ -158,7 +158,7 @@ return_t echo_server(void*) {
     http_protocol* http_prot = nullptr;
     server_socket svr_sock;
     transport_layer_security* tls = nullptr;
-    transport_layer_security_server* tls_server = nullptr;
+    tls_server_socket* tls_server = nullptr;
 
     // part of ssl certificate
     x509cert cert("server.crt", "server.key");
@@ -199,7 +199,7 @@ return_t echo_server(void*) {
         /* server */
         __try_new_catch(tls, new transport_layer_security(cert.get()), ret, __leave2);
         __try_new_catch(http_prot, new http_protocol, ret, __leave2);
-        __try_new_catch(tls_server, new transport_layer_security_server(tls), ret, __leave2);
+        __try_new_catch(tls_server, new tls_server_socket(tls), ret, __leave2);
 
         http_prot->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 
