@@ -38,6 +38,7 @@ void http_router::clear() {
 
 http_router& http_router::add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider, bool upref) {
     critical_section_guard guard(_lock);
+
     if (uri) {
         http_router_t route;
         route.handler = handler;
@@ -168,6 +169,7 @@ bool http_router::get_auth_provider(http_request* request, http_response* respon
     bool ret_value = false;
     return_t ret = errorcode_t::success;
     http_authenticate_provider* auth_provider = nullptr;
+
     __try2 {
         if (nullptr == request || nullptr == response || nullptr == provider) {
             ret = errorcode_t::invalid_parameter;

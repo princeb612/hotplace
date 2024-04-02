@@ -1485,12 +1485,12 @@ void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& inpu
 void test_keygen(crypto_key* key) {
     key->generate_nid(crypto_kty_t::kty_oct, 32, "kid_symm", crypto_use_t::use_any);
     key->generate_nid(crypto_kty_t::kty_rsa, 2048, "kid_rsa", crypto_use_t::use_any);
-    key->generate_nid(crypto_kty_t::kty_ec, NID_X9_62_prime256v1, "kid_ec256", crypto_use_t::use_any);
-    key->generate_nid(crypto_kty_t::kty_ec, NID_secp256k1, "kid_ec256k", crypto_use_t::use_any);
-    key->generate_nid(crypto_kty_t::kty_ec, NID_secp384r1, "kid_ec384", crypto_use_t::use_any);
-    key->generate_nid(crypto_kty_t::kty_ec, NID_secp521r1, "kid_ec521", crypto_use_t::use_any);
-    key->generate_nid(crypto_kty_t::kty_okp, NID_X25519, "kid_x25519", crypto_use_t::use_enc);
-    key->generate_nid(crypto_kty_t::kty_okp, NID_ED25519, "kid_ed25519", crypto_use_t::use_sig);
+    key->generate_nid(crypto_kty_t::kty_ec, ec_curve_t::ec_p256, "kid_ec256", crypto_use_t::use_any);
+    key->generate_nid(crypto_kty_t::kty_ec, ec_curve_t::ec_p256k, "kid_ec256k", crypto_use_t::use_any);
+    key->generate_nid(crypto_kty_t::kty_ec, ec_curve_t::ec_p384, "kid_ec384", crypto_use_t::use_any);
+    key->generate_nid(crypto_kty_t::kty_ec, ec_curve_t::ec_p521, "kid_ec521", crypto_use_t::use_any);
+    key->generate_nid(crypto_kty_t::kty_okp, ec_curve_t::ec_x25519, "kid_x25519", crypto_use_t::use_enc);
+    key->generate_nid(crypto_kty_t::kty_okp, ec_curve_t::ec_ed25519, "kid_ed25519", crypto_use_t::use_sig);
     key->for_each(dump_crypto_key, nullptr);
     _test_case.assert(true, __FUNCTION__, "key generation");
 }

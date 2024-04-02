@@ -62,17 +62,17 @@ class http_client {
     http_client& set_ttl(uint32 milliseconds);
     http_client& request(std::string const& url, http_response** response);
     http_client& request(http_request& request, http_response** response);
+    http_client& close();
 
    protected:
     client_socket* try_connect();
-    http_client& close();
 
     http_client& do_request_and_response(url_info_t const& url_info, http_request& request, http_response** response);
 
    private:
     socket_t _socket;
     client_socket* _client_socket;
-    transport_layer_security_client* _tls_client_socket;
+    tls_client_socket* _tls_client_socket;
     tls_context_t* _tls_context;
     SSL_CTX* _x509;
     url_info_t _url_info;

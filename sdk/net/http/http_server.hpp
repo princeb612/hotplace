@@ -125,7 +125,7 @@ class http_server {
 
     x509cert* _cert;
     transport_layer_security* _tls;
-    transport_layer_security_server* _tls_server_socket;
+    tls_server_socket* _tls_server_socket;
 
     typedef std::map<uint32, network_multiplexer_context_t*> http_handles_t;
     typedef std::pair<http_handles_t::iterator, bool> http_handles_pib_t;

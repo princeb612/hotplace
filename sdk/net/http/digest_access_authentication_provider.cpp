@@ -116,6 +116,7 @@ return_t digest_access_authentication_provider::prepare_digest_access(network_se
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
         std::string opaque_session;
         session->get_session_data()->query("opaque", opaque_session);
 

@@ -155,21 +155,21 @@ enum crypt_enc_t {
  * @sa      generate_nid::generate_nid
  */
 enum ec_curve_t {
-    ec_nistp192 = 409,   // P-192, NID_X9_62_prime192v1
-    ec_nistp224 = 713,   // P-224, NID_secp224r1
-    ec_nistp256 = 415,   // P-256, NID_X9_62_prime256v1
-    ec_nistp384 = 715,   // P-384, NID_secp384r1
-    ec_nistp521 = 716,   // P-521, NID_secp521r1
-    ec_nistk163 = 721,   // K-163, NID_sect163k1
-    ec_nistk233 = 726,   // K-233, NID_sect233k1
-    ec_nistk283 = 729,   // K-283, NID_sect283k1
-    ec_nistk409 = 731,   // K-409, NID_sect409k1
-    ec_nistk571 = 733,   // K-571, NID_sect571k1
-    ec_nistb163 = 723,   // B-163, NID_sect163r2
-    ec_nistb233 = 727,   // B-233, NID_sect233r1
-    ec_nistb283 = 730,   // B-283, NID_sect283r1
-    ec_nistb409 = 732,   // B-409, NID_sect409r1
-    ec_nistb571 = 734,   // B-571, NID_sect571r1
+    ec_p192 = 409,       // P-192, NID_X9_62_prime192v1
+    ec_p224 = 713,       // P-224, NID_secp224r1
+    ec_p256 = 415,       // P-256, NID_X9_62_prime256v1
+    ec_p384 = 715,       // P-384, NID_secp384r1
+    ec_p521 = 716,       // P-521, NID_secp521r1
+    ec_k163 = 721,       // K-163, NID_sect163k1
+    ec_k233 = 726,       // K-233, NID_sect233k1
+    ec_k283 = 729,       // K-283, NID_sect283k1
+    ec_k409 = 731,       // K-409, NID_sect409k1
+    ec_k571 = 733,       // K-571, NID_sect571k1
+    ec_b163 = 723,       // B-163, NID_sect163r2
+    ec_b233 = 727,       // B-233, NID_sect233r1
+    ec_b283 = 730,       // B-283, NID_sect283r1
+    ec_b409 = 732,       // B-409, NID_sect409r1
+    ec_b571 = 734,       // B-571, NID_sect571r1
     ec_secp160r1 = 709,  // secp160r1, NID_secp160r1
     ec_x25519 = 1034,    // X25519, NID_X25519
     ec_x448 = 1035,      // X448, NID_X448

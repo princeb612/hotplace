@@ -15,7 +15,7 @@ namespace hotplace {
 using namespace crypto;
 namespace net {
 
-transport_layer_security_server::transport_layer_security_server(transport_layer_security* tls) : _tls(tls) {
+tls_server_socket::tls_server_socket(transport_layer_security* tls) : _tls(tls) {
     if (nullptr == tls) {
         throw errorcode_t::insufficiency;
     }
@@ -23,13 +23,13 @@ transport_layer_security_server::transport_layer_security_server(transport_layer
     _shared.make_share(this);
 }
 
-transport_layer_security_server::~transport_layer_security_server() { _tls->release(); }
+tls_server_socket::~tls_server_socket() { _tls->release(); }
 
-int transport_layer_security_server::addref() { return _shared.addref(); }
+int tls_server_socket::addref() { return _shared.addref(); }
 
-int transport_layer_security_server::release() { return _shared.delref(); }
+int tls_server_socket::release() { return _shared.delref(); }
 
-return_t transport_layer_security_server::close(socket_t sock, tls_context_t* tls_handle) {
+return_t tls_server_socket::close(socket_t sock, tls_context_t* tls_handle) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -44,7 +44,7 @@ return_t transport_layer_security_server::close(socket_t sock, tls_context_t* tl
     return ret;
 }
 
-return_t transport_layer_security_server::tls_accept(socket_t clisock, tls_context_t** tls_handle) {
+return_t tls_server_socket::tls_accept(socket_t clisock, tls_context_t** tls_handle) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -59,14 +59,14 @@ return_t transport_layer_security_server::tls_accept(socket_t clisock, tls_conte
     return ret;
 }
 
-return_t transport_layer_security_server::tls_stop_accept() {
+return_t tls_server_socket::tls_stop_accept() {
     return_t ret = errorcode_t::success;
 
     openssl_thread_end();  // ssl23_accept memory leak, call for each thread
     return ret;
 }
 
-return_t transport_layer_security_server::read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) {
+return_t tls_server_socket::read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
 
     __try2 { ret = _tls->read(tls_handle, mode, ptr_data, size_data, cbread); }
@@ -76,7 +76,7 @@ return_t transport_layer_security_server::read(socket_t sock, tls_context_t* tls
     return ret;
 }
 
-return_t transport_layer_security_server::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
+return_t tls_server_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
 
     __try2 { ret = _tls->send(tls_handle, tls_io_flag_t::send_all, ptr_data, size_data, cbsent); }
@@ -86,7 +86,7 @@ return_t transport_layer_security_server::send(socket_t sock, tls_context_t* tls
     return ret;
 }
 
-return_t transport_layer_security_server::query(int specid, arch_t* data_ptr) {
+return_t tls_server_socket::query(int specid, arch_t* data_ptr) {
     return_t ret = errorcode_t::success;
 
     __try2 {

@@ -18,10 +18,10 @@
 namespace hotplace {
 namespace net {
 
-class transport_layer_security_server : public server_socket {
+class tls_server_socket : public server_socket {
    public:
-    transport_layer_security_server(transport_layer_security* tls);
-    virtual ~transport_layer_security_server();
+    tls_server_socket(transport_layer_security* tls);
+    virtual ~tls_server_socket();
 
     /**
      * @brief   close
@@ -84,7 +84,7 @@ class transport_layer_security_server : public server_socket {
 
    protected:
     transport_layer_security* _tls;
-    t_shared_reference<transport_layer_security_server> _shared;
+    t_shared_reference<tls_server_socket> _shared;
 };
 
 }  // namespace net

@@ -48,7 +48,6 @@ namespace hotplace {
  *
  *      void test_sharedinstance1 ()
  *      {
- *
  *          simple_instance1* inst = new simple_instance1; // ++refcounter
  *          inst->addref ();                               // ++refcounter
  *          inst->dosomething ();
@@ -98,7 +97,7 @@ class t_shared_reference {
 };
 
 /**
- * @brief share_ptr like smart pointer (shared_ptr since c++11, however wanna support c++9x)
+ * @brief smart pointer like share_ptr (shared_ptr since c++11, however wanna support c++9x)
  * @example
  *      class simple_instance
  *      {

@@ -24,7 +24,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     // FIPS 186-4 https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/dss/186-4ecdsatestvectors.zip
     // FIPS 186-4 https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/dss/186-4ecdsatestvectors.zip
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "699325d6fc8fbbb4981a6ded3c3a54ad2e4e3db8a5669201912064c64e700c139248cdc19495df081c3fc60245b9f25fc9e301b845b3d703a694986e4641ae3c7e5a19e6d6edbf1d61"
         "e535f49a8fad5f4ac26397cfec682f161a5fcd32c5e780668b0181a91955157635536a22367308036e2070f544ad4fff3d5122c76fad5d",
@@ -36,7 +36,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8d9cc4c8ea93e0fd9d6431b9a1fd99b88f281793396321b11dac41eb",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "7de42b44db0aa8bfdcdac9add227e8f0cc7ad1d94693beb5e1d325e5f3f85b3bd033fc25e9469a89733a65d1fa641f7e67d668e7c71d736233c4cba20eb83c368c506affe77946b5e2"
         "ec693798aecd7ff943cd8fab90affddf5ad5b8d1af332e6c5fe4a2df16837700b2781e08821d4fbdd8373517f5b19f9e63b89cfeeeef6f",
@@ -48,7 +48,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "7302dff12545b069cf27df49b26e4781270585463656f2834917c3ca",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "af0da3adab82784909e2b3dadcecba21eced3c60d7572023dea171044d9a10e8ba67d31b04904541b87fff32a10ccc6580869055fec6216a00320a28899859a6b61faba58a0bc10c2b"
         "a07ea16f214c3ddcc9fc5622ad1253b63fe7e95227ae3c9caa9962cffc8b1c4e8260036469d25ab0c8e3643a820b8b3a4d8d43e4b728f9",
@@ -60,7 +60,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "a5d71bff02dce997305dd337128046f36714398f4ef6647599712fae",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "cfa56ae89727df6b7266f69d6636bf738f9e4f15f49c42a0123edac4b3743f32ea52389f919ceb90575c4184897773b2f2fc5b3fcb354880f15c93383215d3c2551fcc1b4180a1ac0f"
         "69c969bbc306acd115ce3976eff518540f43ad4076dbb5fbad9ce9b3234f1148b8f5e059192ff480fc4bcbd00d25f4d9f5ed4ba5693b6c",
@@ -72,7 +72,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "866fb8e505dea6c909c2c9143ec869d1bac2282cf12366130ff2146c",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "c223c8009018321b987a615c3414d2bb15954933569ca989de32d6bf11107bc47a330ab6d88d9b50d106cf5777d1b736b14bc48deda1bc573a9a7dd42cd061860645306dce7a5ba8c6"
         "0f135a6a21999421ce8c4670fe7287a7e9ea3aa1e0fa82721f33e6e823957fe86e2283c89ef92b13cd0333c4bb70865ae1919bf538ea34",
@@ -84,7 +84,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "26613d3b33c70e635d7a998f254a5b15d2a3642bf321e8cff08f1e84",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "1c27273d95182c74c100d85b5c08f4b26874c2abc87f127f304aedbf52ef6540eba16dd664ae1e9e30ea1e66ff9cc9ab5a80b5bcbd19dde88a29ff10b50a6abd73388e8071306c68d0"
         "c9f6caa26b7e68de29312be959b9f4a5481f5a2ad2070a396ed3de21096541cf58c4a13308e08867565bf2df9d649357a83cdcf18d2cd9",
@@ -96,7 +96,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "eb6cd58650cfb26dfdf21de32fa17464a6efc46830eedc16977342e6",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "069ae374971627f6b8503f3aa63ab52bcf4f3fcae65b98cdbbf917a5b08a10dc760056714db279806a8d43485320e6fee0f1e0562e077ee270ace8d3c478d79bcdff9cf8b92fdea684"
         "21d4a276f8e62ae379387ae06b60af9eb3c40bd7a768aeffccdc8a08bc78ca2eca18061058043a0e441209c5c594842838a4d9d778a053",
@@ -108,7 +108,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1e745e80948779a5cc8dc5cb193beebb550ec9c2647f4948bf58ba7d",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "d0d5ae3e33600aa21c1606caec449eee678c87cb593594be1fbb048cc7cfd076e5cc7132ebe290c4c014e7a517a0d5972759acfa1438d9d2e5d236d19ac92136f6252b7e5bea7588dc"
         "ba6522b6b18128f003ecab5cb4908832fb5a375cf820f8f0e9ee870653a73dc2282f2d45622a2f0e85cba05c567baf1b9862b79a4b244e",
@@ -120,7 +120,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "09490be77bc834c1efaa23410dcbf800e6fae40d62a737214c5a4418",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "79b7375ae7a4f2e4adad8765d14c1540cd9979db38076c157c1837c760ca6febbb18fd42152335929b735e1a08041bd38d315cd4c6b7dd2729de8752f531f07fe4ddc4f1899debc031"
         "1eef0019170b58e08895b439ddf09fbf0aeb1e2fd35c2ef7ae402308c3637733802601dd218fb14c22f57870835b10818369d57d318405",
@@ -132,7 +132,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "e3823699c355b61ab1894be3371765fae2b720405a7ce5e790ca8c00",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "8c7de96e6880d5b6efc19646b9d3d56490775cb3faab342e64db2e388c4bd9e94c4e69a63ccdb7e007a19711e69c06f106b71c983a6d97c4589045666c6ab5ea7b5b6d096ddf6fd35b"
         "819f1506a3c37ddd40929504f9f079c8d83820fc8493f97b2298aebe48fdb4ff472b29018fc2b1163a22bfbb1de413e8645e871291a9f6",
@@ -144,7 +144,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8c01f0162891e4b9536243cb86a6e5c177323cca09777366caf2693c",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "c89766374c5a5ccef5823e7a9b54af835ac56afbbb517bd77bfecf3fea876bd0cc9ea486e3d685cfe3fb05f25d9c67992cd7863c80a55c7a263249eb3996c4698ad7381131bf3700b7"
         "b24d7ca281a100cf2b750e7f0f933e662a08d9f9e47d779fb03754bd20931262ff381a2fe7d1dc94f4a0520de73fa72020494d3133ecf7",
@@ -156,7 +156,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "517a91b89c4859fcc10834242e710c5f0fed90ac938aa5ccdb7c66de",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "30f0e3b502eec5646929d48fd46aa73991d82079c7bd50a38b38ec0bd84167c8cf5ba39bec26999e70208af9b445046cd9d20c82b7629ca1e51bdd00daddbc35f9eb036a15ac578986"
         "42d9db09479a38cc80a2e41e380c8a766b2d623de2de798e1eabc02234b89b85d60154460c3bf12764f3fbf17fcccc82df516a2fbe4ecf",
@@ -168,7 +168,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "fdd81e5dca54158514f44ba2330271eff4c618330328451e2d93b9fb",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "6bbb4bf987c8e5069e47c1a541b48b8a3e6d14bfd9ac6dfaa7503b64ab5e1a55f63e91cf5c3e703ac27ad88756dd7fb2d73b909fc15302d0592b974d47e72e60ed339a40b34d39a49b"
         "69ea4a5d26ce86f3ca00a70f1cd416a6a5722e8f39d1f0e966981803d6f46dac34e4c7640204cd0d9f1e53fc3acf30096cd00fa80b3ae9",
@@ -180,7 +180,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "bf90f9305616020a0e34ef30803fc15fa97dffc0948452bbf6cb5f66",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "05b8f8e56214d4217323f2066f974f638f0b83689fc4ed1201848230efdc1fbca8f70359cecc921050141d3b02c2f17aa306fc2ce5fc06e7d0f4be162fcd985a0b687b4ba09b681cb5"
         "2ffe890bf5bb4a104cb2e770c04df433013605eb8c72a09902f4246d6c22b8c191ef1b0bece10d5ce2744fc7345307dd1b41b6eff0ca89",
@@ -192,7 +192,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "116cfcf0965b7bc63aecade71d189d7e98a0434b124f2afbe3ccf0a9",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "e5c979f0832242b143077bce6ef146a53bb4c53abfc033473c59f3c4095a68b7a504b609f2ab163b5f88f374f0f3bff8762278b1f1c37323b9ed448e3de33e6443796a9ecaa466aa75"
         "175375418186c352018a57ce874e44ae72401d5c0f401b5a51804724c10653fded9066e8994d36a137fdeb9364601daeef09fd174dde4a",
@@ -204,7 +204,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "6857e84418c1d1179333b4e5307e92abade0b74f7521ad78044bf597",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "2b49de971bb0f705a3fb5914eb7638d72884a6c3550667dbfdf301adf26bde02f387fd426a31be6c9ff8bfe8690c8113c88576427f1466508458349fc86036afcfb66448b947707e79"
         "1e71f558b2bf4e7e7507773aaf4e9af51eda95cbce0a0f752b216f8a54a045d47801ff410ee411a1b66a516f278327df2462fb5619470e",
@@ -216,7 +216,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "298f4fcae1fe271da1e0345d11d07a1fca43f58af4c113b909eedea0",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "1fa7201d96ad4d190415f2656d1387fa886afc38e5cd18b8c60da367acf32c627d2c9ea19ef3f030e559fc2a21695cdbb65ddf6ba36a70af0d3fa292a32de31da6acc6108ab2be8bd3"
         "7843338f0c37c2d62648d3d49013edeb9e179dadf78bf885f95e712fcdfcc8a172e47c09ab159f3a00ed7b930f628c3c48257e92fc7407",
@@ -228,7 +228,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "12fcb848adbd8b1b4c72b2b54a04d936e4a5f480ae2a3ea2e3c1baae",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "74715fe10748a5b98b138f390f7ca9629c584c5d6ad268fc455c8de2e800b73fa1ea9aaee85de58baa2ce9ce68d822fc31842c6b153baef3a12bf6b4541f74af65430ae931a64c8b49"
         "50ad1c76b31aea8c229b3623390e233c112586aa5907bbe419841f54f0a7d6d19c003b91dc84bbb59b14ec477a1e9d194c137e21c75bbb",
@@ -240,7 +240,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "cb6b237950e0f0369323055cd1f643528c7a64616f75b11c4ddd63c7",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "d10131982dd1a1d839aba383cd72855bf41061c0cb04dfa1acad3181f240341d744ca6002b52f25fb3c63f16d050c4a4ef2c0ebf5f16ce987558f4b9d4a5ad3c6b81b617de00e04ba3"
         "2282d8bf223bfedbb325b741dfdc8f56fa85c65d42f05f6a1330d8cc6664ad32050dd7b9e3993f4d6c91e5e12cbd9e82196e009ad22560",
@@ -252,7 +252,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "93d4cf110a37c5a6f15c4e6024822118539e860dee2f60b8c3f462f6",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "ef9dbd90ded96ad627a0a987ab90537a3e7acc1fdfa991088e9d999fd726e3ce1e1bd89a7df08d8c2bf51085254c89dc67bc21e8a1a93f33a38c18c0ce3880e958ac3e3dbe8aec49f9"
         "81821c4ac6812dd29fab3a9ebe7fbd799fb50f12021b48d1d9abca8842547b3b99befa612cc8b4ca5f9412e0352e72ab1344a0ac2913db",
@@ -264,7 +264,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "550b2f1efc312805a6ed8f252e692d8ee19eaa5bcd5d0cda63a1a3f0",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "4cc91f744ac858d3577e48813219aa3538dd813b186b42d1e6218376f07cc1cc448ddd6b37240e98bf953f49cf54d65c12878b33c0bf6eb1c60254f0b6fa974f847e53abc56773eef6"
         "f29885dfc619e6a48fc15a667ca94001a0c945b6357a53221b0f4b266181456b0d2d25e90708777f1a6f85971c00140c631c1991e0fd06",
@@ -276,7 +276,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "836aba9c63e1252c2b2d72a21e6a41b82241ebe32647e7f814652bcb",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "58f43cc1924de4bc5867664adbc9d26b4f096a43aca47c27c52851b006dc2a658919ef9ce5b5ac48372703be15ac51631c2bd84b88f479f113b0569a9a09e230ec1e8e573474c60752"
         "84d3e57d973829af35325d9e7dab4a5f9b065155bbcaff3642a82ef4c9b9e127d3575c050721653da3b087d3fa394192897a5519527d19",
@@ -288,7 +288,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "f250f18a51ba5f63e1584097841099fa6ae4e98ee458c061d1d5aed7",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "113a2806b052fde683ee09453098e402204155afb3776fd1cad3a9103421d327eab8f9ec0dd050ffcc83f93b34ea707705fabeccfe43ab1a71c95298fd3ec769d99ead1066950eee67"
         "7d225816e0faad19cf69e1b35d16771689e2092cafe16d7c0dd7b0db73fffb8d0f3eaed83004dd21e753530ec939c89ba25578fa5f785b",
@@ -300,7 +300,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "6029aa3990918e8cb8a388d53b0772e5cdfff49c3405fe0d3a95933a",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "64cbfc8f2e2149a31b3e8a80c4a552f6c62aaeb7990b6e0ee55500a9d17be04213406578caf315951086dff5c2af3b5ce17d425d185101ef26f86396ba3a129a4f3f8e2dd595f59efb"
         "6c0f5c2dcc394569d7268695e9ac7daa84203f1f1895f1f9e4b514a5c9cd23baa63454710144fe735ad9b8f42d8c43267aa434a26d7e5f",
@@ -312,7 +312,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "2f0f3dbd570727b14fbb29155538e62c930dd51c4035275c1365dc60",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "a10a11c8e30fff118d371daf824f16c08200b83ea059436466a4611ccac93b2dea2de8c1006f946196aef7fe9b0c251a391b0340f21797798278b412ff2b53842eec6450728e2bca06"
         "2f8337a2c204b9ea04ff660cd4d4db559f2f11c4d8ef199021339fcc82396f7a93926cf5f247e37d8067fe50692de54f102bd5ab51925c",
@@ -324,7 +324,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "63e8c119dfa51784decd864f6911f2210a80f8f02d472d88df10d119",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "b3f720bf566ffa369259f4361959ae0641d2755ec264a4c4349981df2b02563275b2b9adb5aee47f7a456760a971991ffed6b17809bb9694138d1677fa916123795239353158fc6b22"
         "d10f20d26f5d2dcd8c56c44373eea5b93067dba2d7c5318dac2e9e8714873cb1b37f58c011fd14fa1e535554efe05f468bfc8e11cd8b99",
@@ -336,7 +336,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "d9c425c9d5feb776ac8952e6c4eee0ecd68aef2f0e7bff2e49c9185e",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "0a398a46df7ccc48d1e7833f8bbc67100f1ef77a62dc78bbc115b2a662f9591fbaaa91ad3d788e2fdd1b3164e45293d4f5686c151296901768028ac80ded4bf89c647ad35f0c7c4cb3"
         "18c0c757c1d83c44d850e5fd4677281b3f13b1ee54de79c8c042813f9d3312dcc6111a68299cb7e829557d7f3d96e702f65aefc6499415",
@@ -348,7 +348,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "f4f70fd948c9a147f55317fdea7b8a84c33e721014552d5800d63edc",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "8c33616821a6038b448d8918668977fcf1ef5aa0cf7c341837b39bbcc9bca875a3757f4b392630e9995b9bbe4eb66978b877586adaa02f99d2344dae082a7603351d8ffcfca081ab40"
         "3cd0acb90d078dd1d0789c2eb3185c62bff2d9f04cd38e509e3b83c12ed0a5c6808fc42f7ba5b06acdc496c8ad9be648ee6a4505f8560f",
@@ -360,7 +360,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "3dc36746610271ef66e0aa52cc2ccadc5c9b08dc769e4dc4f6538c11",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "94d56535fd4edfe67a0daa6579f9d53bf6b7b8830ae2aeb62892ff59f18756ddf2811b449c7d20d65d54f8507de4e7c50eaa084830637812aa4b250a4d61ab67845be36e4a41cdc0a7"
         "0f8d6e3a63d4514f0dc197e6486015046a316153d5f3a3a4a0ae1ed7ea5fa55e12e73d333333685c02e0eb636234ea7e6d4b76b4b76b5a",
@@ -372,7 +372,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "a5a7a13d15b423dd17771f73cea98d89dbffa846cc209b45c0e29b76",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "5d8ebdf9eb28b47bdafaa36bf0b66a9eaf99b6c83959da4f2b1151b4f4ecd28fb115a64c0cb9491093a7e9b9c53ec423e4c72e7765bb9c818da0e8c428667e44474a71db4867130c77"
         "c40bfd8544b2d7b9d6464d2b8e6a48482153256a32437c3a747231f51134dd14c703407e31146a6fcde23bededcf16950486e90ca69ac0",
@@ -384,7 +384,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8ef1d7b326cabee7f7ab95b7b98d3c27a069c0fd95a1599c0ccb422b",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "25e4416695f77551fdce276355528ccf1ddc2483821c5d22d751d50111ca2fadc6593b52c74f4b5957494f1df25b0b2f86950d0d19229ec6506fee8581d2dd09d48418b146ff16bd84"
         "a17ca0dc83b1888eb407376da6c8a88fa1e60b8c2a2471dfde4b3996ef673d5bde3d70c434dc9f2488e9de16ae657d29e5e59ec922a1ec",
@@ -396,7 +396,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "10e5dd06aee6b8419a04aa33d9d5678b0039c3acc3c4b61fe106bfdc",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "9164d633a553deccf3cbd2effccf1387fa3177cd28c95d94a7d1a3e159c5e5c027758cc26493301b2f4d141d8d07a5fe5fead987ce5f30abeafcb48c302afc6c2309f0e93d9b6818cb"
         "b6972d222cb7b01302dfe202ae83b89f53150ae4a0e2b8fc0fd1091f19b4ab2e6ab213ab322d04f2c5f57113bfad3c5675227237abf773",
@@ -408,7 +408,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "743812c188a1dddf9fb34b90738f8b2e58760d6cd20ccceb1bb9c516",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "019df05929321ecea7ee1de4f412aba1c8d3c24437db04b194a68a0a59dd871be10bd3a4be6edf551350ea49fc7155a4d887e1221486291abe77a30633a4c4f7868fe2df24311cba0c"
         "73804883954460e122387ed414111ff96ff1aebac8b6a6491d8a0d16e48a63bf3d027c0f68ee4a4b234d73b412196706af8ea022b4dcef",
@@ -420,7 +420,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "cf54599a36ca064fae0aa936de5266f87704409d22a15d28c01b7f2a",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "5d09d2b1d3fa6e12c10d8b26dc9aabc8dc02bd06e63ff33f8bb91ede4b8694592a69e4ed4cdf6820069e2b9c7803658949e877ffe23bf90bcf5ce1409c06c71d86885a94048b05ac0e"
         "c9db193e489a5a2bfa367caf6aa8ecdb032be366174343f6875d2fe1785e8d77334f5f469cec64998e08d3303e5c9a1923b34fdc105d65",
@@ -432,7 +432,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "7c28e7619e2944ab4b7be022878c8052ebdf2cae5dff4f976c49686a",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "50f6dfc81c6cf189e0a310f992907fe93356cee9dea9a41c7671a8daf3f4cfe0c459ce6122c1e731dbf7593419d7114cb73b46956158a982c5d52c72f43f0f822046093c69aeff1f7e"
         "4cd8af00ba655c5baa2e7b6a400b4be1f6fd51b3e4cfb35a69c80a28c5cafb771b6c2e52e0aeef0e3fd045e8d40745f3f8b74fd969f816",
@@ -444,7 +444,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "67c68fe265c7e5aba4232deeafb88545a2aa266fb9f2c2bb3f3ae8d2",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "e90129ac6672c85bb7b6b18e9dc199c96c81fd65034b53c77818364d512366fb9cd1bc7c82404c451e561fc1ed916c0948f6ac561b33a1ccca093f07684b8c2bafa9e966377bd20855"
         "6018a5bafb9edcecf70498c7140fe9c8cf3ad8b8c3b0aa489df797944465047465415bb0e24333235fcdd59a98829a3941eaaf62033e82",
@@ -456,7 +456,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "6278c841a2d0a270791fe54b36c49d426d67907aa4e4f59c8638ad97",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "3c9a483c9bee33b601549c592a82e95b4319b1e74b777877f0971bcb4273716b268e8f99f876e42f942f4cf08284896bbc1ffbf094ac0956c3cedfc3580cffa8c74fc6db29a371f2da"
         "2d05edb9185ece741fe0d3fabfe9d5b4d373755ebed13dc6840cfa3283b9ea46ec8b95c434f253ae86998182e9cc0e95ee64f323fc74b0",
@@ -468,7 +468,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "a251fd9f136a3cb0dd0bc80659ae032e4a761ba7045da0034553fb8c",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "bfc073fdda63c5fccaa0ca8770c293e8154e7aec56128bbac4fdbd541d602216ebf7ca1e02b514d6e396f20683802ba3f334310a9226576926e3bb19ceee27738d13377cbafeb09d09"
         "1043501702a07aa31d1f29d50ddc55adcf16ffd40578e734a4e6cb6535f26ad48e0c62ad90e79720000e87d419e92dca3e11f943655b03",
@@ -480,7 +480,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "5eae9160ccf71fd1d359d89cecce72ef8afaeee2365f6ba828aa450a",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "08079955d1a1f33728128c73673ec9f21a6ce138dcab5adc4dc068e6ab57314b9fbd8b013123b2fdafa9524fbdd0288777a233de8055cccfad83046ada6a19f01c47817496667bba8f"
         "c8b9456fc0e044a562d931dab1adcb66af8b66325bdf28d83ded3e2937958ccd19da540d70ef2c189f55a506c9c0d63406394c5bd3823b",
@@ -492,7 +492,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "096d16bf8020c3d3c233894ad8eb81206010e62c6e692a215e088fd4",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "23900b768f6cd42b8a8df0dcbc9cb5daec8de36b9d5c619adcc1ba2b649103d5af123746cdf19c3fd0665a6fb9338156182aa06181e3c6e37ce56979612af2927440424f89cef43fc7"
         "54854b8a5c43370808cf5f9929cf47712512ce2f8a2a20d2e9f568c2848b27dfbe09142843c83905ffa5da3b15501761b03dbc2c5398b6",
@@ -504,7 +504,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "118a8f1ffe3cd556ce6345bd1a398dd9cc3729b7fd6d8af9bfd82f40",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "1eb28c0bcdd18f73e347f957ece15b4cc83a771b0877e1feaac38e24028fb38ccea8b54ee017dc7c3d5a1327bc6f40b294aa65d7dc487f278846cd101ee84202f14b38aa2c275046aa"
         "2577f65ebaea41cd383e8def2fd0b4444dcf426fa75c4082cd7fa035cdb1e0d34a3c79d42130f5b0273eae75bc701dda3aebe7358f41b5",
@@ -516,7 +516,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "3420cc38f058f41c31e71f4b1ad488f801111c73541de69fcee60695",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "efab51855407438fd5c250670366bca3c026ecec4a59394f00d8a4b51746d0c4564366656d507e3e13e62fe7abeb976b8859895848dbaecf6582f1898ea06f00d4247702ed9721bd37"
         "5aa83ae4c67c2eaa6e080777ea5ecf2cf787d785389560ac91cf63a52f0373c3185e18a3b8a466e21b61a239f1b77624eb1acacc76c4e1",
@@ -528,7 +528,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "eb1169cb5b1423dc0bfaffe565ae57f986e00de06405e3e7b605862e",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "31c29ca10279a417f0cc9b1382cf54dbfdfc89f2e6ef08c403c11f580cbf8674b141ed1a417563282d99a55fc616d836421cde9424815c95e7fb7668bf3f137b29937f14882d74e034"
         "b732d78d91af7721aac4950734f5fa5d4b4d35534974f8cab6d2e6dca75ddb57e99148c8a59df9fc5bcd723e546e8356f671cf2f65640a",
@@ -540,7 +540,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0df8828eb1ca85e46405b94e1a2972c34c5e620a54e2f640f04aecc5",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "8db476f92e332519c1a0ece5d8deded6efbd2d8e8784eea0a6b4c3b4296c35f5f8de4317e5c1627b91fb1973fee86c06e4992aa5a20cb7475c8808ff1da354d07a488dffa7838c6ec1"
         "e3f99e3acba831f27bee8434eeda3eb36d0c6df3658883cd40068b1bed841310f6eb38d4a3d07d85848770ff7933c054cd8b34662660b1",
@@ -552,7 +552,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "edf766a66973cfc33e4159966c07321a7f6549c3c60e8586ef41402b",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "fcb272c828fe8fd3c6f8de9410c7b6e2b36717c1b0e5e359e9109bd7fc378978aa98182a9d99961898ed88999b050d3b64d1457d7a899d6d273b9f4dde2aafa36d76329d62509043c3"
         "38f265fc4c7d938459b7fa3b230a9f6cb632b61489546bb4181a5ad7f0d7369b8caced48eb374b075b2b325bc86add0f3b680cd9e80acd",
@@ -564,7 +564,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "c107a8a508ff57c5d4f78f86cc37e129c864d1c44ed5e73909613b74",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "7522492bdb916a597b8121f3e5c273b1d2800ef8c1db4f7dcbae633b60d7da5193ba53a63d7a377b351897c3b24903ae1cd1994211b259be3e6ae2cbc8970e4957fdf782c7d1bc7a91"
         "c80c8ef65468d4ef35428f26e2940ae8b0bd9b8074236bf6c00d0ebe83f9ddb2ade0f835138d39f33b59f244e0037c171f1ba7045a96f5",
@@ -576,7 +576,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "4ff2dba9dba992c98a095b1144a539310e1a570e20c88b7d0aa1955c",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "61097114ff855c3e34a62d9b853f8982d35f29cfa4a89893badbca7849e5fb437a1a38d6451bf0ca5a0d528e352b8e4b57f2ea359a7fc8841d49dd3e570f9b016f14156b0bbc4be822"
         "e260bd147ec081454969e11cb0034b7450ef4deb7ed6edb977e2f4ed60121aa095fb0ab40240dc329ecc917f5c64b4410612af065ee9dd",
@@ -588,7 +588,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "58337d78b95a080bfcabb5809bee012501b4da84b8ef310a4628f11c",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "dd09ae6c982bb1440ca175a87766fefeacc49393ff797c446200662744f37a6e30c5d33ba70cbd8f12277fd6cc0704c17478bbab2a3047469e9618e3c340a9c8caaff5ce7c8a4d90ec"
         "ae6a9b84b813419dec14460298e7521c9b7fdb7a2089328005bd51d57f92a1bcbeecd34aa40482b549e006bbf6c4ce66d34a22dda4e0e0",
@@ -600,7 +600,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "b23700035349df25d839f0973bef78a7515287de6c83707907074fa6",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "37a73e2774d3b274db426c89b945696daa96035031f72cea01894b24508c7f81961ec254d36ed6a0f448e11cf7950af769dc6cd2c47e52c6caf0ea92c270974f0214b4db436c36a60f"
         "b722060a6bb544462a82e1714f5906ec32886f7d59ebf289541c3a00ec1e004892ef2b1286a0194f55d083c6ec92c64b8fd1452e1c68ba",
@@ -612,7 +612,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "36fd1193def34f12a960740fd79fb38bf2b480726ccad540eb42cdf8",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "9dc2046ffdc6804544db964481abe5d2d276a2a9eeec4c7ad40215b1de23561d402db69bd0f6eec2254711eea4487c64d9a6b62c3ebaf5ffa8db6e7e3a6e17154d126967a47a853a6f"
         "8339bdca9be306a13c7f992ded7619b0da59909a49b1e0930360e05b47f18628a36d69b2f87f2bfddd6a5d4a72f84dc76dbdd43f3a6a35",
@@ -624,7 +624,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "80a347bb49036522369339bd6485a967cdda818915d8eb947302fcf9",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "d9c6847fce688c5e7525a1098b545cb6c15dcd21a02761fc82fc664372a667390680135f91c01a2fa5430c634b1a6d1cd6002d8aa021e7bf5956a7901c2f81bc25d502ba5f55a55f30"
         "c0323dc68205cbefec0538e68654e7b327ac1743641896c3e740d8f66f400902b304eafaa4e0d8cffae140536f0922444cc3216a675697",
@@ -636,7 +636,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0ab58aa31e0bba5fbc76855e6549f1036fba0a589aeab978ab01b8fb",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "69df8a01b66f04930efd2012ff2243874f256ca8758145d2a9e4ecc84d0dbdbd0dc494ae06db0ccbe819918137c90957114558580d6623efbafdd342b38dad9f08708084d32f874fba"
         "04782ce26aaab78de2102ad171f8a8f2b30b5bd3d55fdac5fa3acd6f7def7e61c2533938572b331ba6d1c02bd74bfdbf7337ade8f4a190",
@@ -648,7 +648,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "792723bf87e315147cd4303de7f1dfe95cd7658ebb95c38c1a196140",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "927524982b8d60777c1105c86fac05f634abf58c73f84fb95d81ba0b86e1e43592c4fcad2e395a40fbe7005697d86088e2fb3bb7287eb3f917d4f2dc281f5cbe65d05b4f9623bca849"
         "b10a03beca6aa2056a12ebb91cf257ac448c5e9a78f8349a6a29b17c8978bef43a443cbb8a149eb23f794844fc41693f2dbb97181444be",
@@ -660,7 +660,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "58fd97050bfbca6f87e64e1458c4ad80bae26e280356da344ad3b25d",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "5f9042283561e7f19a436d01c7ef5a950a6d77ede5629cd7e43c0a5d58e8c5673c37945a453291d12938253c71dbe12c8b022ba7276eda6be034ef5ec1ec77dbd1e08f0d7b8e7725b7"
         "ec671c075e008a20f77f4ab266f97079b0aa6337df59a33b881954084057b21f294dd14bcb0869a4a6f1f597955ec7bf9d19bb3537a66a",
@@ -672,7 +672,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "e347a1c9d3670690e1d8d1d4cd9579848f442199c10526488da5cebf",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "c2ae5573d3bf396523bfb703db8502fd0760cd1be528f6ddbfb95aad399e0b19f3bd9e0fabdb05d49e3f893dffec5b627c9c2f7ad5f32e92e4e27a38cb5c28657657377fdfa1b66cd7"
         "ac3d15c6d49df92d284db99f69744f37dc7cb4e7d52920fdb200a7942623a7057ba82e467dcccaa5da416b48510d8364446a6a5e2a5aa8",
@@ -684,7 +684,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "2fffc0bf550bd2f650fed085a84501cacfa6a1bb984df1f9237eaa59",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "03c1a1cd30a039d0dcb22fee2450a7fa79495a0d0f4f43d2de4d75bce003c0334a8860f5c164dbd94888a9f751235a3e570d31070e3e1293a7be616af7176600585d36ac013600157d"
         "2569d491da4b8a3bf3630c26e0b9925412189f50b0ae6f04c86477932e2ecd8c3546106ae1ebc684cc3adb27ed665eddece886adea4ce3",
@@ -696,7 +696,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "d14198621650d985d270bc997da6e78588fd0ef843b874c66a3de3c3",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "888f6d9bc7c86c0079fbfd42d8c08d6958f40f6e570fb0b1f03d2f8f8a63df4fcc87b379a222cf835820a999d34996e08961f13b86b075e7fd1c303cd3baa44de42168561589012f7e"
         "5300da4f8bdf470c07119a5d9f7ba7293568cd7c6a1b7fc1e41cda40bed7d46e5a28af67ae2aabfefe67a86a1c601e6f5ee543e09bd7b6",
@@ -708,7 +708,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "e38c538d65a7e1a28fd3ec53f015a7e5beb60e9d309f1e3ba4b2c3d2",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "48453340f1317769e6ee6e103153714365731163dc18f84e9f2fa4b120f9c5a9645ee2f9b66c84c26d95912b422b009b64af96aa418b2427a4209f2e7513ba8e43ec8cf20b34e7529b"
         "22eb1199545afe9a9f7d9bcb320aec9ee0162f91c0d1dd9674c9c284f25199c5e109f6f84d7ed0d269cc6413edb81bc2c83e37d644d8b9",
@@ -720,7 +720,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "6ecaece6487d7920e398f7f951ab7c7aba5832dabf03704106ad1244",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "4bdfd3b91d83108409ad765b256e0c9b9937ecf647f8e6f9fc807e2e72af8246178b3fe046b4ea10170450d71a4eec790ecb05f03d7077341de26c4db7eeae24d55c9a9093e837dfdb"
         "38168fe8230cb9605825a1282fecd741989bfcdb34678fe077477927f66bd26d003e5dda22043341a14dd31841ba483ad5ce2701e0f68e",
@@ -732,7 +732,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "2685379624717ea28422e8d001c090405a130b4ef9f1ac726c3ca502",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "e6cdee8558bc1eacc24e82f0624ce8d02cc8d925b4dd3dec3a72f4a4e0fb76076bfa3ef2e2c33bdd7c27b322bdc09bbfee8fe46f75dbd7bbd2af09690b7137943efe21706e0a1b6d30"
         "89540fc58d85ddb55ea836616db573e36c521be008893f40a0a7c349602cc178ea43be59d31ec6449e7ff2c5379379f7d7645134df1bc3",
@@ -744,7 +744,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "af4908b41f8180b71a6ff10fd51f3d143147af6ddddf7534d3284ed9",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "ff624d0ba02c7b6370c1622eec3fa2186ea681d1659e0a845448e777b75a8e77a77bb26e5733179d58ef9bc8a4e8b6971aef2539f77ab0963a3415bbd6258339bd1bf55de65db520c6"
         "3f5b8eab3d55debd05e9494212170f5d65b3286b8b668705b1e2b2b5568610617abb51d2dd0cb450ef59df4b907da90cfa7b268de8c4c2",
@@ -756,7 +756,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "58982b79a65b7320f5b92d13bdaecdd1259e760f0f718ba933fd098f6f75d4b7",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "9155e91fd9155eeed15afd83487ea1a3af04c5998b77c0fe8c43dcc479440a8a9a89efe883d9385cb9edfde10b43bce61fb63669935ad39419cf29ef3a936931733bfc2378e253e73b"
         "7ae9a3ec7a6a7932ab10f1e5b94d05160c053988f3bdc9167155d069337d42c9a7056619efc031fa5ec7310d29bd28980b1e3559757578",
@@ -768,7 +768,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0de2cde610502b6e03c0b23602eafbcd3faf886c81d111d156b7aa550f5bcd51",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "b242a7586a1383368a33c88264889adfa3be45422fbef4a2df4e3c5325a9c7757017e0d5cf4bbf4de7f99d189f81f1fd2f0dd645574d1eb0d547eead9375677819297c1abe62526ae2"
         "9fc54cdd11bfe17714f2fbd2d0d0e8d297ff98535980482dd5c1ebdc5a7274aabf1382c9f2315ca61391e3943856e4c5e616c2f1f7be0d",
@@ -780,7 +780,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "a98bea42aec56a1fcecec00a1cc69b01fcbcf5de7ac1b2f2dcc09b6db064f92b",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "b64005da76b24715880af94dba379acc25a047b06066c9bedc8f17b8c74e74f4fc720d9f4ef0e2a659e0756931c080587ebdcd0f85e819aea6dacb327a9d96496da53ea21aef3b2e79"
         "3a9c0def5196acec99891f46ead78a85bc7ab644765781d3543da9fbf9fec916dca975ef3b4271e50ecc68bf79b2d8935e2b25fc063358",
@@ -792,7 +792,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "2ac48f7a930912131a8b4e3ab495307817c465d638c2a9ea5ae9e2808806e20a",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "fe6e1ea477640655eaa1f6e3352d4bce53eb3d95424df7f238e93d8531da8f36bc35fa6be4bf5a6a382e06e855139eb617a9cc9376b4dafacbd80876343b12628619d7cbe1bff6757e"
         "3706111ed53898c0219823adbc044eaf8c6ad449df8f6aab9d444dadb5c3380eec0d91694df5fc4b30280d4b87d27e67ae58a1df828963",
@@ -804,7 +804,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "d87592ceab773ae103daebbb56a04144aaccb1e14efc1024dc36c0e382df1f70",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "907c0c00dc080a688548957b5b8b1f33ba378de1368023dcad43242411f554eb7d392d3e5c1668fad3944ff9634105343d83b8c85d2a988da5f5dc60ee0518327caed6dd5cf4e9bc62"
         "22deb46d00abde745f9b71d6e7aee6c7fdfc9ed053f2c0b611d4c6863088bd012ea9810ee94f8e58905970ebd07353f1f409a371ed03e3",
@@ -816,7 +816,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "603924780439cc16ac4cf97c2c3065bc95353aa9179d0ab5f0322ca82f851cf2",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "771c4d7bce05610a3e71b272096b57f0d1efcce33a1cb4f714d6ebc0865b2773ec5eedc25fae81dee1d256474dbd9676623614c150916e6ed92ce4430b26037d28fa5252ef6b10c09d"
         "c2f7ee5a36a1ea7897b69f389d9f5075e271d92f4eb97b148f3abcb1e5be0b4feb8278613d18abf6da60bfe448238aa04d7f11b71f44c5",
@@ -828,7 +828,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "73bf3691260dddd9997c97313f2a70783eacf8d15bdfb34bb13025cdfae72f70",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "a3b2825235718fc679b942e8ac38fb4f54415a213c65875b5453d18ca012320ddfbbc58b991eaebadfc2d1a28d4f0cd82652b12e4d5bfda89eda3be12ac52188e38e8cce32a264a300"
         "c0e463631f525ae501348594f980392c76b4a12ddc88e5ca086cb8685d03895919a8627725a3e00c4728e2b7c6f6a14fc342b2937fc3dd",
@@ -840,7 +840,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "90ad62c179b0c9d61f521dde1cd762bfd224b5525c39c3706f2549313ddb4f39",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "3e6e2a9bffd729ee5d4807849cd4250021d8184cda723df6ab0e5c939d39237c8e58af9d869fe62d3c97b3298a99e891e5e11aa68b11a087573a40a3e83c7965e7910d72f81cad0f42"
         "accc5c25a4fd3cdd8cee63757bbbfbdae98be2bc867d3bcb1333c4632cb0a55dffeb77d8b119c466cd889ec468454fabe6fbee7102deaf",
@@ -852,7 +852,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "7ca049bad54feee101d6db807635ffb8bdb05a38e445c8c3d65d60df143514c5",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "52e5c308e70329a17c71eaedb66bbee303c8ec48a6f1a2efb235d308563cd58553d434e12f353227a9ea28608ec9c820ed83c95124e7a886f7e832a2de1032e78dc059208f9ec35417"
         "0b2b1cab992b52ac01e6c0e4e1b0112686962edc53ab226dafcc9fc7baed2cd9307160e8572edb125935db49289b178f35a8ad23f4f801",
@@ -864,7 +864,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "188ead1cdf7c1d21114ff56d0421ffd501ab978ef58337462c0fa736d86299af",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "d3e9e82051d4c84d699453c9ff44c7c09f6523bb92232bcf30bf3c380224249de2964e871d56a364d6955c81ef91d06482a6c7c61bc70f66ef22fad128d15416e7174312619134f968"
         "f1009f92cbf99248932efb533ff113fb6d949e21d6b80dfbbe69010c8d1ccb0f3808ea309bb0bac1a222168c95b088847e613749b19d04",
@@ -876,7 +876,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "5c87fe868fd4282fb114f5d70e9590a10a5d35cedf3ff6402ba5c4344738a32e",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "968951c2c1918436fe19fa2fe2152656a08f9a6b8aa6201920f1b424da98cee71928897ff087620cc5c551320b1e75a1e98d7d98a5bd5361c9393759614a6087cc0f7fb01fcb173783"
         "eb4c4c23961a8231ac4a07d72e683b0c1bd4c51ef1b031df875e7b8d5a6e0628949f5b8f157f43dccaea3b2a4fc11181e6b451e06ceb37",
@@ -888,7 +888,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "d70c5b1eeb29e016af9925798d24e166c23d58fedd2f1a3bbdb1ef78cdbfb63a",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "78048628932e1c1cdd1e70932bd7b76f704ba08d7e7d825d3de763bf1a062315f4af16eccefe0b6ebadccaf403d013f50833ce2c54e24eea8345e25f93b69bb048988d102240225cea"
         "cf5003e2abdcc90299f4bf2c101585d36ecdd7a155953c674789d070480d1ef47cc7858e97a6d87c41c6922a00ea12539f251826e141b4",
@@ -900,7 +900,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "23595ad1cb714559faaecaf946beb9a71e584616030ceaed8a8470f4bf62768f",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "9b0800c443e693067591737fdbcf0966fdfa50872d41d0c189d87cbc34c2771ee5e1255fd604f09fcf167fda16437c245d299147299c69046895d22482db29aba37ff57f756716cd3d"
         "6223077f747c4caffbecc0a7c9dfaaafd9a9817470ded8777e6355838ac54d11b2f0fc3f43668ff949cc31de0c2d15af5ef17884e4d66a",
@@ -912,7 +912,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "537c564da0d2dc5ac4376c5f0ca3b628d01d48df47a83d842c927e4d6db1e16d",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "fc3b8291c172dae635a6859f525beaf01cf683765d7c86f1a4d768df7cae055f639eccc08d7a0272394d949f82d5e12d69c08e2483e11a1d28a4c61f18193106e12e5de4a9d0b4bf34"
         "1e2acd6b715dc83ae5ff63328f8346f35521ca378b311299947f63ec593a5e32e6bd11ec4edb0e75302a9f54d21226d23314729e061016",
@@ -924,7 +924,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "db5d8a1e345f883e4fcb3871276f170b783c1a1e9da6b6615913368a8526f1c3",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "5905238877c77421f73e43ee3da6f2d9e2ccad5fc942dcec0cbd25482935faaf416983fe165b1a045ee2bcd2e6dca3bdf46c4310a7461f9a37960ca672d3feb5473e253605fb1ddfd2"
         "8065b53cb5858a8ad28175bf9bd386a5e471ea7a65c17cc934a9d791e91491eb3754d03799790fe2d308d16146d5c9b0d0debd97d79ce8",
@@ -936,7 +936,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8bf77819ca05a6b2786c76262bf7371cef97b218e96f175a3ccdda2acc058903",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "c35e2f092553c55772926bdbe87c9796827d17024dbb9233a545366e2e5987dd344deb72df987144b8c6c43bc41b654b94cc856e16b96d7a821c8ec039b503e3d86728c494a967d830"
         "11a0e090b5d54cd47f4e366c0912bc808fbb2ea96efac88fb3ebec9342738e225f7c7c2b011ce375b56621a20642b4d36e060db4524af1",
@@ -948,7 +948,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1b766e9ceb71ba6c01dcd46e0af462cd4cfa652ae5017d4555b8eeefe36e1932",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "3c054e333a94259c36af09ab5b4ff9beb3492f8d5b4282d16801daccb29f70fe61a0b37ffef5c04cd1b70e85b1f549a1c4dc672985e50f43ea037efa9964f096b5f62f7ffdf8d6bfb2"
         "cc859558f5a393cb949dbd48f269343b5263dcdb9c556eca074f2e98e6d94c2c29a677afaf806edf79b15a3fcd46e7067b7669f83188ee",
@@ -960,7 +960,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "ee59d81bc9db1055cc0ed97b159d8784af04e98511d0a9a407b99bb292572e96",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "0989122410d522af64ceb07da2c865219046b4c3d9d99b01278c07ff63eaf1039cb787ae9e2dd46436cc0415f280c562bebb83a23e639e476a02ec8cff7ea06cd12c86dcc3adefbf1a"
         "9e9a9b6646c7599ec631b0da9a60debeb9b3e19324977f3b4f36892c8a38671c8e1cc8e50fcd50f9e51deaf98272f9266fc702e4e57c30",
@@ -972,7 +972,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "b46d9f2d8c4bf83546ff178f1d78937c008d64e8ecc5cbb825cb21d94d670d89",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "dc66e39f9bbfd9865318531ffe9207f934fa615a5b285708a5e9c46b7775150e818d7f24d2a123df3672fff2094e3fd3df6fbe259e3989dd5edfcccbe7d45e26a775a5c4329a084f05"
         "7c42c13f3248e3fd6f0c76678f890f513c32292dd306eaa84a59abe34b16cb5e38d0e885525d10336ca443e1682aa04a7af832b0eee4e7",
@@ -984,7 +984,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "77c68928ac3b88d985fb43fb615fb7ff45c18ba5c81af796c613dfa98352d29c",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "600974e7d8c5508e2c1aab0783ad0d7c4494ab2b4da265c2fe496421c4df238b0be25f25659157c8a225fb03953607f7df996acfd402f147e37aee2f1693e3bf1c35eab3ae360a2bd9"
         "1d04622ea47f83d863d2dfecb618e8b8bdc39e17d15d672eee03bb4ce2cc5cf6b217e5faf3f336fdd87d972d3a8b8a593ba85955cc9d71",
@@ -996,7 +996,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "d18c2caf3b1072f87064ec5e8953f51301cada03469c640244760328eb5a05cb",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "dfa6cb9b39adda6c74cc8b2a8b53a12c499ab9dee01b4123642b4f11af336a91a5c9ce0520eb2395a6190ecbf6169c4cba81941de8e76c9c908eb843b98ce95e0da29c5d4388040264"
         "e05e07030a577cc5d176387154eabae2af52a83e85c61c7c61da930c9b19e45d7e34c8516dc3c238fddd6e450a77455d534c48a152010b",
@@ -1008,7 +1008,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "84a58f9e9d9e735344b316b1aa1ab5185665b85147dc82d92e969d7bee31ca30",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "51d2547cbff92431174aa7fc7302139519d98071c755ff1c92e4694b58587ea560f72f32fc6dd4dee7d22bb7387381d0256e2862d0644cdf2c277c5d740fa089830eb52bf79d1e75b8"
         "596ecf0ea58a0b9df61e0c9754bfcd62efab6ea1bd216bf181c5593da79f10135a9bc6e164f1854bc8859734341aad237ba29a81a3fc8b",
@@ -1020,7 +1020,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "d7f9ddd191f1f412869429209ee3814c75c72fa46a9cccf804a2f5cc0b7e739f",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "558c2ac13026402bad4a0a83ebc9468e50f7ffab06d6f981e5db1d082098065bcff6f21a7a74558b1e8612914b8b5a0aa28ed5b574c36ac4ea5868432a62bb8ef0695d27c1e3ceaf75"
         "c7b251c65ddb268696f07c16d2767973d85beb443f211e6445e7fe5d46f0dce70d58a4cd9fe70688c035688ea8c6baec65a5fc7e2c93e8",
@@ -1032,7 +1032,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "f5413bfd85949da8d83de83ab0d19b2986613e224d1901d76919de23ccd03199",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "4d55c99ef6bd54621662c3d110c3cb627c03d6311393b264ab97b90a4b15214a5593ba2510a53d63fb34be251facb697c973e11b665cb7920f1684b0031b4dd370cb927ca7168b0bf8"
         "ad285e05e9e31e34bc24024739fdc10b78586f29eff94412034e3b606ed850ec2c1900e8e68151fc4aee5adebb066eb6da4eaa5681378e",
@@ -1044,7 +1044,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "880e0bbf82a8cf818ed46ba03cf0fc6c898e36fca36cc7fdb1d2db7503634430",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "f8248ad47d97c18c984f1f5c10950dc1404713c56b6ea397e01e6dd925e903b4fadfe2c9e877169e71ce3c7fe5ce70ee4255d9cdc26f6943bf48687874de64f6cf30a012512e787b88"
         "059bbf561162bdcc23a3742c835ac144cc14167b1bd6727e940540a9c99f3cbb41fb1dcb00d76dda04995847c657f4c19d303eb09eb48a",
@@ -1056,7 +1056,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "2bf3a80bc04faa35ebecc0f4864ac02d349f6f126e0f988501b8d3075409a26c",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "3b6ee2425940b3d240d35b97b6dcd61ed3423d8e71a0ada35d47b322d17b35ea0472f35edd1d252f87b8b65ef4b716669fc9ac28b00d34a9d66ad118c9d94e7f46d0b4f6c2b2d339fd"
         "6bcd351241a387cc82609057048c12c4ec3d85c661975c45b300cb96930d89370a327c98b67defaa89497aa8ef994c77f1130f752f94a4",
@@ -1068,7 +1068,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "644300fc0da4d40fb8c6ead510d14f0bd4e1321a469e9c0a581464c7186b7aa7",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "c5204b81ec0a4df5b7e9fda3dc245f98082ae7f4efe81998dcaa286bd4507ca840a53d21b01e904f55e38f78c3757d5a5a4a44b1d5d4e480be3afb5b394a5d2840af42b1b4083d40af"
         "bfe22d702f370d32dbfd392e128ea4724d66a3701da41ae2f03bb4d91bb946c7969404cb544f71eb7a49eb4c4ec55799bda1eb545143a7",
@@ -1080,7 +1080,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "9ae6ba6d637706849a6a9fc388cf0232d85c26ea0d1fe7437adb48de58364333",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "72e81fe221fb402148d8b7ab03549f1180bcc03d41ca59d7653801f0ba853add1f6d29edd7f9abc621b2d548f8dbf8979bd16608d2d8fc3260b4ebc0dd42482481d548c7075711b575"
         "9649c41f439fad69954956c9326841ea6492956829f9e0dc789f73633b40f6ac77bcae6dfc7930cfe89e526d1684365c5b0be2437fdb01",
@@ -1092,7 +1092,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "d7c246dc7ad0e67700c373edcfdd1c0a0495fc954549ad579df6ed1438840851",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "21188c3edd5de088dacc1076b9e1bcecd79de1003c2414c3866173054dc82dde85169baa77993adb20c269f60a5226111828578bcc7c29e6e8d2dae81806152c8ba0c6ada1986a1983"
         "ebeec1473a73a04795b6319d48662d40881c1723a706f516fe75300f92408aa1dc6ae4288d2046f23c1aa2e54b7fb6448a0da922bd7f34",
@@ -1104,7 +1104,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "4f7f65305e24a6bbb5cff714ba8f5a2cee5bdc89ba8d75dcbf21966ce38eb66f",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "e0b8596b375f3306bbc6e77a0b42f7469d7e83635990e74aa6d713594a3a24498feff5006790742d9c2e9b47d714bee932435db747c6e733e3d8de41f2f91311f2e9fd8e025651631f"
         "fd84f66732d3473fbd1627e63dc7194048ebec93c95c159b5039ab5e79e42c80b484a943f125de3da1e04e5bf9c16671ad55a1117d3306",
@@ -1116,7 +1116,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "306b4c6c20213707982dffbb30fba99b96e792163dd59dbe606e734328dd7c8a",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "099a0131179fff4c6928e49886d2fdb3a9f239b7dd5fa828a52cbbe3fcfabecfbba3e192159b887b5d13aa1e14e6a07ccbb21f6ad8b7e88fee6bea9b86dea40ffb962f38554056fb7c"
         "5bb486418915f7e7e9b9033fe3baaf9a069db98bc02fa8af3d3d1859a11375d6f98aa2ce632606d0800dff7f55b40f971a8586ed6b39e9",
@@ -1128,7 +1128,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "cf89b12793ee1792eb26283b48fa0bdcb45ae6f6ad4b02564bf786bb97057d5a",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "0fbc07ea947c946bea26afa10c51511039b94ddbc4e2e4184ca3559260da24a14522d1497ca5e77a5d1a8e86583aeea1f5d4ff9b04a6aa0de79cd88fdb85e01f171143535f2f7c23b0"
         "50289d7e05cebccdd131888572534bae0061bdcc3015206b9270b0d5af9f1da2f9de91772d178a632c3261a1e7b3fb255608b3801962f9",
@@ -1140,7 +1140,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "7fb45d09e2172bec8d3e330aa06c43fbb5f625525485234e7714b7f6e92ba8f1",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "1e38d750d936d8522e9db1873fb4996bef97f8da3c6674a1223d29263f1234a90b751785316444e9ba698bc8ab6cd010638d182c9adad4e334b2bd7529f0ae8e9a52ad60f59804b2d7"
         "80ed52bdd33b0bf5400147c28b4304e5e3434505ae7ce30d4b239e7e6f0ecf058badd5b388eddbad64d24d2430dd04b4ddee98f972988f",
@@ -1152,7 +1152,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "7d3c014ca470a73cef1d1da86f2a541148ad542fbccaf9149d1b0b030441a7eb",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "abcf0e0f046b2e0672d1cc6c0a114905627cbbdefdf9752f0c31660aa95f2d0ede72d17919a9e9b1add3213164e0c9b5ae3c76f1a2f79d3eeb444e6741521019d8bd5ca391b28c1063"
         "347f07afcfbb705be4b52261c19ebaf1d6f054a74d86fb5d091fa7f229450996b76f0ada5f977b09b58488eebfb5f5e9539a8fd89662ab",
@@ -1164,7 +1164,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "00a34b00c20a8099df4b0a757cbef8fea1cb3ea7ced5fbf7e987f70b25ee6d4f",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "dc3d4884c741a4a687593c79fb4e35c5c13c781dca16db561d7e393577f7b62ca41a6e259fc1fb8d0c4e1e062517a0fdf95558b7799f20c211796167953e6372c11829beec64869d67"
         "bf3ee1f1455dd87acfbdbcc597056e7fb347a17688ad32fda7ccc3572da7677d7255c261738f07763cd45973c728c6e9adbeecadc3d961",
@@ -1176,7 +1176,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "5630f986b1c45e36e127dd7932221c4272a8cc6e255e89f0f0ca4ec3a9f76494",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "719bf1911ae5b5e08f1d97b92a5089c0ab9d6f1c175ac7199086aeeaa416a17e6d6f8486c711d386f284f096296689a54d330c8efb0f5fa1c5ba128d3234a3da856c2a94667ef71036"
         "16a64c913135f4e1dc50e38daa60610f732ad1bedfcc396f87169392520314a6b6b9af6793dbabad4599525228cc7c9c32c4d8e097ddf6",
@@ -1188,7 +1188,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "ac1f42f652eb1786e57be01d847c81f7efa072ba566d4583af4f1551a3f76c65",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "7cf19f4c851e97c5bca11a39f0074c3b7bd3274e7dd75d0447b7b84995dfc9f716bf08c25347f56fcc5e5149cb3f9cfb39d408ace5a5c47e75f7a827fa0bb9921bb5b23a6053dbe1fa"
         "2bba341ac874d9b1333fc4dc224854949f5c8d8a5fedd02fb26fdfcd3be351aec0fcbef18972956c6ec0effaf057eb4420b6d28e0c008c",
@@ -1200,7 +1200,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "a58d199b1deba7350616230d867b2747a3459421811c291836abee715b8f67b4",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "b892ffabb809e98a99b0a79895445fc734fa1b6159f9cddb6d21e510708bdab6076633ac30aaef43db566c0d21f4381db46711fe3812c5ce0fb4a40e3d5d8ab24e4e82d3560c6dc7c3"
         "7794ee17d4a144065ef99c8d1c88bc22ad8c4c27d85ad518fa5747ae35276fc104829d3f5c72fc2a9ea55a1c3a87007cd133263f79e405",
@@ -1212,7 +1212,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "637b54bbcfb7e7d8a41ea317fcfca8ad74eb3bb6b778bc7ef9dec009281976f7",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "8144e37014c95e13231cbd6fa64772771f93b44e37f7b02f592099cc146343edd4f4ec9fa1bc68d7f2e9ee78fc370443aa2803ff4ca52ee49a2f4daf2c8181ea7b8475b3a0f608fc32"
         "79d09e2d057fbe3f2ffbe5133796124781299c6da60cfe7ecea3abc30706ded2cdf18f9d788e59f2c31662df3abe01a9b12304fb8d5c8c",
@@ -1224,7 +1224,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "f7e665b88614d0c5cbb3007cafe713763d81831525971f1747d92e4d1ca263a7",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "a3683d120807f0a030feed679785326698c3702f1983eaba1b70ddfa7f0b3188060b845e2b67ed57ee68087746710450f7427cb34655d719c0acbc09ac696adb4b22aba1b9322b7111"
         "076e67053a55f62b501a4bca0ad9d50a868f51aeeb4ef27823236f5267e8da83e143047422ce140d66e05e44dc84fb3a4506b2a5d7caa8",
@@ -1236,7 +1236,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "708ac65ff2b0baaccc6dd954e2a93df46016bd04457636de06798fcc17f02be5",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "b1df8051b213fc5f636537e37e212eb20b2423e6467a9c7081336a870e6373fc835899d59e546c0ac668cc81ce4921e88f42e6da2a109a03b4f4e819a17c955b8d099ec6b282fb4952"
         "58dca13ec779c459da909475519a3477223c06b99afbd77f9922e7cbef844b93f3ce5f50db816b2e0d8b1575d2e17a6b8db9111d6da578",
@@ -1248,7 +1248,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "3005bd4ec63dbd04ce9ff0c6246ad65d27fcf62edb2b7e461589f9f0e7446ffd",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "0b918ede985b5c491797d0a81446b2933be312f419b212e3aae9ba5914c00af431747a9d287a7c7761e9bcbc8a12aaf9d4a76d13dad59fc742f8f218ef66eb67035220a07acc1a357c"
         "5b562ecb6b895cf725c4230412fefac72097f2c2b829ed58742d7c327cad0f1058df1bddd4ae9c6d2aba25480424308684cecd6517cdd8",
@@ -1260,7 +1260,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "f88eae2019bebbba62b453b8ee3472ca5c67c267964cffe0cf2d2933c1723dff",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "0fab26fde1a4467ca930dbe513ccc3452b70313cccde2994eead2fde85c8da1db84d7d06a024c9e88629d5344224a4eae01b21a2665d5f7f36d5524bf5367d7f8b6a71ea05d413d4af"
         "de33777f0a3be49c9e6aa29ea447746a9e77ce27232a550b31dd4e7c9bc8913485f2dc83a56298051c92461fd46b14cc895c300a4fb874",
@@ -1272,7 +1272,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "ca2c13574bf1b7d56e9dc18315036a31b8bceddf3e2c2902dcb40f0cc9e31b45",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "7843f157ef8566722a7d69da67de7599ee65cb3975508f70c612b3289190e364141781e0b832f2d9627122742f4b5871ceeafcd09ba5ec90cae6bcc01ae32b50f13f63918dfb5177df"
         "9797c6273b92d103c3f7a3fc2050d2b196cc872c57b77f9bdb1782d4195445fcc6236dd8bd14c8bcbc8223a6739f6a17c9a861e8c821a6",
@@ -1284,7 +1284,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "b0479cdb3df79923ec36a104a129534c5d59f622be7d613aa04530ad2507d3a2",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "6c8572b6a3a4a9e8e03dbeed99334d41661b8a8417074f335ab1845f6cc852adb8c01d9820fcf8e10699cc827a8fbdca2cbd46cc66e4e6b7ba41ec3efa733587e4a30ec552cd8ddab8"
         "163e148e50f4d090782897f3ddac84a41e1fcfe8c56b6152c0097b0d634b41011471ffd004f43eb4aafc038197ec6bae2b4470e869bded",
@@ -1296,7 +1296,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "699d906bb8435a05345af3b37e3b357786939e94caae257852f0503adb1e0f7e",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "7e3c8fe162d48cc8c5b11b5e5ebc05ebc45c439bdbc0b0902145921b8383037cb0812222031598cd1a56fa71694fbd304cc62938233465ec39c6e49f57dfe823983b6923c4e8656339"
         "49183e6b90e9e06d8275f3907d97967d47b6239fe2847b7d49cf16ba69d2862083cf1bccf7afe34fdc90e21998964107b64abe6b89d126",
@@ -1308,7 +1308,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "dfb40e406bfa074f0bf832771b2b9f186e2211f0bca279644a0ca8559acf39da",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "d5aa8ac9218ca661cd177756af6fbb5a40a3fecfd4eea6d5872fbb9a2884784aa9b5f0c023a6e0da5cf6364754ee6465b4ee2d0ddc745b02994c98427a213c849537da5a4477b3abfe"
         "02648be67f26e80b56a33150490d062aaac137aa47f11cfeddba855bab9e4e028532a563326d927f9e6e3292b1fb248ee90b6f429798db",
@@ -1320,7 +1320,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "64fe94968d18c5967c799e0349041b9e40e6c6c92ebb475e80dd82f51cf07320",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "790b06054afc9c3fc4dfe72df19dd5d68d108cfcfca6212804f6d534fd2fbe489bd8f64bf205ce04bcb50124a12ce5238fc3fe7dd76e6fa640206af52549f133d593a1bfd423ab737f"
         "3326fa79433cde293236f90d4238f0dd38ed69492ddbd9c3eae583b6325a95dec3166fe52b21658293d8c137830ef45297d67813b7a508",
@@ -1332,7 +1332,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "15c04a8bd6c13ed5e9961814b2f406f064670153e4d5465dcef63c1d9dd52a87",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "6d549aa87afdb8bfa60d22a68e2783b27e8db46041e4df04be0c261c4734b608a96f198d1cdb8d082ae48579ec9defcf21fbc72803764a58c31e5323d5452b9fb57c8991d31749140d"
         "a7ef067b18bf0d7dfbae6eefd0d8064f334bf7e9ec1e028daed4e86e17635ec2e409a3ed1238048a45882c5c57501b314e636b9bc81cbe",
@@ -1344,7 +1344,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8b2c09428e62c5109d17ed0cf8f9fd7c370d018a2a73f701effc9b17d04852c6",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "1906e48b7f889ee3ff7ab0807a7aa88f53f4018808870bfed6372a77330c737647961324c2b4d46f6ee8b01190474951a701b048ae86579ff8e3fc889fecf926b17f98958ac7534e6e"
         "781ca2db2baa380dec766cfb2a3eca2a9d5818967d64dfab84f768d24ec122eebacaab0a4dc3a75f37331bb1c43dd8966cc09ec4945bbd",
@@ -1356,7 +1356,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "a9e83e05f1d6e0fef782f186bedf43684c825ac480174d48b0e4d31505e27498",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "7b59fef13daf01afec35dea3276541be681c4916767f34d4e874464d20979863ee77ad0fd1635bcdf93e9f62ed69ae52ec90aab5bbf87f8951213747ccec9f38c775c1df1e9d7f735c"
         "2ce39b42edb3b0c5086247556cfea539995c5d9689765288ec600848ecf085c01ca738bbef11f5d12d4457db988b4add90be00781024ad",
@@ -1368,7 +1368,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "6c853b889e18b5a49ee54b54dd1aaedfdd642e30eba171c5cab677f0df9e7318",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "041a6767a935dc3d8985eb4e608b0cbfebe7f93789d4200bcfe595277ac2b0f402889b580b72def5da778a680fd380c955421f626d52dd9a83ea180187b850e1b72a4ec6dd63235e59"
         "8fd15a9b19f8ce9aec1d23f0bd6ea4d92360d50f951152bc9a01354732ba0cf90aaed33c307c1de8fa3d14f9489151b8377b57c7215f0b",
@@ -1380,7 +1380,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "f38b1c8306cf82ab76ee3a772b14416b49993fe11f986e9b0f0593c52ec91525",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "7905a9036e022c78b2c9efd40b77b0a194fbc1d45462779b0b76ad30dc52c564e48a493d8249a061e62f26f453ba566538a4d43c64fb9fdbd1f36409316433c6f074e1b47b544a847d"
         "e25fc67d81ac801ed9f7371a43da39001c90766f943e629d74d0436ba1240c3d7fab990d586a6d6ef1771786722df56448815f2feda48f",
@@ -1392,7 +1392,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "ed9a2ec043a1d578e8eba6f57217976310e8674385ad2da08d6146c629de1cd9",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "cf25e4642d4f39d15afb7aec79469d82fc9aedb8f89964e79b749a852d931d37436502804e39555f5a3c75dd958fd5291ada647c1a5e38fe7b1048f16f2b711fdd5d39acc0812ca65b"
         "d50d7f8119f2fd195ab16633503a78ee9102c1f9c4c22568e0b54bd4fa3f5ff7b49160bf23e7e2231b1ebebbdaf0e4a7d4484158a87e07",
@@ -1404,7 +1404,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "4e05c45adf41783e394a5312f86e66871c4be4896948c85966879d5c66d54b37",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "7562c445b35883cc937be6349b4cefc3556a80255d70f09e28c3f393daac19442a7eecedcdfbe8f7628e30cd8939537ec56d5c9645d43340eb4e78fc5dd4322de8a07966b262770d7f"
         "f13a071ff3dce560718e60ed3086b7e0003a6abafe91af90af86733ce8689440bf73d2aa0acfe9776036e877599acbabfcb03bb3b50faa",
@@ -1416,7 +1416,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "3f75dcf102008b2989f81683ae45e9f1d4b67a6ef6fd5c8af44828af80e1cfb5",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "051c2db8e71e44653ea1cb0afc9e0abdf12658e9e761bfb767c20c7ab4adfcb18ed9b5c372a3ac11d8a43c55f7f99b33355437891686d42362abd71db8b6d84dd694d6982f0612178a"
         "937aa934b9ac3c0794c39027bdd767841c4370666c80dbc0f8132ca27474f553d266deefd7c9dbad6d734f9006bb557567701bb7e6a7c9",
@@ -1428,7 +1428,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "10d9f206755cef70ab5143ac43f3f8d38aea2644f31d52eaf3b472ee816e11e5",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "4dcb7b62ba31b866fce7c1feedf0be1f67bf611dbc2e2e86f004422f67b3bc1839c6958eb1dc3ead137c3d7f88aa97244577a775c8021b1642a8647bba82871e3c15d0749ed343ea6c"
         "ad38f123835d8ef66b0719273105e924e8685b65fd5dc430efbc35b05a6097f17ebc5943cdcd9abcba752b7f8f37027409bd6e11cd158f",
@@ -1440,7 +1440,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "77df443c729b039aded5b516b1077fecdd9986402d2c4b01734ba91e055e87fc",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "efe55737771070d5ac79236b04e3fbaf4f2e9bed187d1930680fcf1aba769674bf426310f21245006f528779347d28b8aeacd2b1d5e3456dcbf188b2be8c07f19219e4067c1e7c9714"
         "784285d8bac79a76b56f2e2676ea93994f11eb573af1d03fc8ed1118eafc7f07a82f3263c33eb85e497e18f435d4076a774f42d276c323",
@@ -1452,7 +1452,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "86bbc2b6c63bad706ec0b093578e3f064736ec69c0dba59b9e3e7f73762a4dc3",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "ea95859cc13cccb37198d919803be89c2ee10befdcaf5d5afa09dcc529d333ae1e4ffd3bd8ba8642203badd7a80a3f77eeee9402eed365d53f05c1a995c536f8236ba6b6ff88973935"
         "06660cc8ea82b2163aa6a1855251c87d935e23857fe35b889427b449de7274d7754bdeace960b4303c5dd5f745a5cfd580293d6548c832",
@@ -1464,7 +1464,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "3dfac320b9c873318117da6bd856000a392b815659e5aa2a6a1852ccb2501df3",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "39f0b25d4c15b09a0692b22fbacbb5f8aee184cb75887e2ebe0cd3be5d3815d29f9b587e10b3168c939054a89df11068e5c3fac21af742bf4c3e9512f5569674e7ad8b39042bcd73e4"
         "b7ce3e64fbea1c434ed01ad4ad8b5b569f6a0b9a1144f94097925672e59ba97bc4d33be2fa21b46c3dadbfb3a1f89afa199d4b44189938",
@@ -1476,7 +1476,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0d4064399d58cd771ab9420d438757f5936c3808e97081e457bc862a0c905295dca60ee94f4537591c6c7d217453909b",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "5a3c80e608ed3ac75a6e45f6e94d374271a6d42b67a481860d5d309cc8b37c79cb61f1716dc8aa84cb309ef9d68eb7fc6cf4b42333f316a5c30e74198c8b340926e340c5de47674a70"
         "7293c4aa2a1a2274a602f01c26b156e895499c60b38ef53fc2032e7485c168d73700d6fa14232596a0e4997854a0b05d02e351b9d3de96",
@@ -1488,7 +1488,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "a58dd1ca18aa31277de66c30c3bb7a14b53705ce6c547ed2cb0e336f63c42809422efffcc722d1155f2254330a02b278",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "e7d974c5dbd3bfb8a2fb92fdd782f997d04be79e9713944ce13c5eb6f75dfdec811b7ee4b3859114b07f263846ae13f795eec8f3cb5b7565baff68e0fdd5e09ba8b176d5a71cb03fbc"
         "5546e6937fba560acb4db24bd42de1851432b96e8ca4078313cb849bce29c9d805258601d67cd0259e255f3048682e8fdbdda3398c3e31",
@@ -1500,7 +1500,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "f1c69e6d818ca7ae3a477049b46420cebd910c0a9a477fd1a67a38d628d6edaac123aebfca67c53a5c80fe454dba7a9d",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "a670fda4d1d56c70de1d8680328043b2b7029633caf0ee59ffe1421c914bb937133d5a0f9214846b2e0b350455a74c4ab434c56de65a17139bb8212bf1c76071a37536fa29348f871d"
         "bb26baa92eb93d97e923a6d2ffd9be25cbc33075e494e6db657bd8dc053fe4e17148d8cf6e2058164f2b5766750eb01bbe7b361cdb848c",
@@ -1512,7 +1512,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1422e1838a22496df93486bce1142961dbd8478ae844b8dda54e210afdae0d9e930d587c91bb600b0bde7237186d94e6",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "7843f918fe2588bcfe756e1f05b491d913523255aa006818be20b676c957f4edb8df863c6f5f8c15b3b80c7a2aa277b70d53f210bdfb856337980c406ea140e439dd321471407f374f"
         "69877b2d82367eed51e3c82c13948616dcb301d0c31f8f0352f2846abd9e72071f446a2f1bd3339a09ae41b84e150fd18f4ba5d3c6bfa0",
@@ -1524,7 +1524,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "9e256e8da8eff5a0c83baaa1ef4f7be798eba9543bf97adb0fff8719f5406ea1207a0cf703d99aa8f02169724b492273",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "caa83d5ab07febbd2e0fe2d63738b9b7b8752594bea7aaf50345b3d2f316653a8c9222f2b7877b64679e9573e81461a426029e45b8873a575094a1d572e0d32a9f0a9c6bcb9a286854"
         "3b7d8bbe4a69a09e7321f05f8366cced1b72df526f895b60aed2c39c249653c7839538770d4e5f47d3926ec0d168ab6a1af15bf1dca1f7",
@@ -1536,7 +1536,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "64329763a930ab5452afdb0557fef16ff71810d6343dfc9c6ae18905c3d274db6554cdc69d6078a1ca03284474a94f30",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "594603458d6534974aeeafba919c4d0f4cb6843a3af41204bbb88aeb2fca2772d305163dba863da050aabedbaf89db521955d1715de95bbcef979ecdc0c976181ece00355385f8a8f8"
         "cce127c9eac15ce3e958a3ed686184674ec9a50eb63271606ee7fdcb1323da3c3db8e89cad1fb42139a32d08abcfbf0d4ccfca18c89a86",
@@ -1548,7 +1548,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "07a1d890770daa949a17797dca7af3e8163da981ec330c03d63d1a8312c152be6a718163205ffa08da7dcc163ba261f4",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "733252d2bd35547838be22656cc7aa67eff0af0b13b428f77267a513c6824c3dbae533068b6817e82665f009560affcfe4b2ddb5b667a644fc1a42d24f24e0947e0dc50fb62c919bc1"
         "fe4e7ded5e28f2e6d80fcf66a081fb2763526f8def5a81a4ddd38be0b59ee839da1643eeeaee7b1927cec12cf3da67c02bc5465151e346",
@@ -1560,7 +1560,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "797d0344e49f9ba87a187c50f664e5015d449e346b1a7bd9427c5be559fc58173651880d5aadf053f81899d3368d6181",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "5a182bd174feb038dfae3346267156bf663167f713dea1ce936b0edb815cd9b8c8e4d411c786ba2494a81442617255db7158b142e720d86c9b56680fb9efd4298cdd69079a28153494"
         "c42a24251c7ad42ecf7e97eabc1b3997529b2a297cbad2474269b87a0b1e385f2d7f8b6eb8d1cd75eaf7e91d1acbecd45d7b2bfbbe3216",
@@ -1572,7 +1572,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "d812b05abab0e96de13291e1f0da6479444ed5cd9d959b76f6cb43d394769035364f7c831a104dc7b5bd9b4a8e64df64",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "aaa99fb1c71340d785a18f6f668e898c25cf7a0ac31d13c5b388b7233408493a5a109af6d07065376b96f4903df7aba2b2af671a18772bb0472490d1240cde28967680727dd4acd47e"
         "0308920a75da857a6eeedee5b6586d45dff3d8a680599665aa895c89dd7770b824b7dee477ac5e7602d409d3cc553090c970b50811dbab",
@@ -1584,7 +1584,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8e248bbf7d7028d63177e565c9d1666ee5be4d1ffbfffc9c7814b0cd38f74b98f3f2cd59be42b9f132bfe5ee789cd96c",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "1fadfa8254d3a0b82d137cfdd82043d5dc1fef195d5297b09cc5cfb061f59c933451c0dc2a11b4037f34f88dacb803251f8880c4b72585c3c196e6fb23484ca43a191f8e41b9b9a37e"
         "2e6fcaab6738c3c62d1c98e1c620bb788b7b51a04f998a510efdba0d3418622fe8ce203b3fcd553b9b4206365a39031797ad11e49745ec",
@@ -1596,7 +1596,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "f6292e599b22a76eda95393cf59f4745fa6c472effd1f781879ad9a4437a98080b0b07dadad0c249631c682d2836a977",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "9ecb6f5ed3ba666a8536a81ef65012c2cb8b433508798d84708abb06dfb75503886f78384fb8c7a4d2d49ef539d9b8a0b60938c7f07471dda91f258b0d99691b38a8403a2bb3f956bd"
         "fd09baba16d9b6877097a9b6213481b47a06e139d23ec7abad5668d21f912fdb70d31bb9adf9b3ce80e308252fa81a51674f88d02db72b",
@@ -1608,7 +1608,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "ae7f1271c89e0aaa238710d039ea73a69110cc28fcf426f2fe6754b63a59e417fa84f903cf7dccb5468b43ff083bbfd5",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "e55bfca78d98e68d1b63688db12485578f36c489766f4d0bfaa0088433ff12133aaca455805095f2e655940860958b3ead111d9070778ee3bbf3e47e43d9eba8b8d9b1fdf72f793fcd"
         "e2bcaa334f3e35fa2cca531ea7cf27fe9ccba741e38ac26129b2d612bf54a34e0ae6c166c0fef07fcd2b9ac253d7e041a500f7be7b8369",
@@ -1620,7 +1620,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8e6f82c4d3069b14f4c844b4ca133a9503493265c9f77a7d4775eda67de76798a23dd7ea48e0ac3c337dd62bf058319d",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "02c6b3c83bd34b288d96409162aa4ff114e9d134bf948046eb5ebcc0c7fe9dfceadda83ed69da2fac00c8840f6c702a3fc5e6959d70f7e8af923e99e4937232ae3b841ffefd2e62fab"
         "3671a7c94a0281b8ea5bc176add57c5c9b6893fe7f5d48ce7256b96510810c4e046168a3c5be9843b84d5268a50349b3444341aa5490dd",
@@ -1632,7 +1632,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8b89042fef2c04d4bd6c9d66a06a010514321d623a5f8d57ba5ac3686872eaabca9e0ba2d058ae7028e870acf03ca32d",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "94f8bfbb9dd6c9b6193e84c2023a27dea00fd48356909faec2161972439686c146184f80686bc09e1a698af7df9dea3d24d9e9fd6d7348a146339c839282cf8984345dc6a51096d74a"
         "d238c35233012ad729f262481ec7cd6488f13a6ebac3f3d23438c7ccb5a66e2bf820e92b71c730bb12fd64ea1770d1f892e5b1e14a9e5c",
@@ -1644,7 +1644,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "c43072f706c98126d06a82b04251e3ecb0ba66c4bb6cd7c025919b9cc6019cdc635256d2a7fa017b806b1e88649d2c0d",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "663b12ebf44b7ed3872b385477381f4b11adeb0aec9e0e2478776313d536376dc8fd5f3c715bb6ddf32c01ee1d6f8b731785732c0d8441df636d8145577e7b3138e43c32a61bc1242e"
         "0e73d62d624cdc924856076bdbbf1ec04ad4420732ef0c53d42479a08235fcfc4db4d869c4eb2828c73928cdc3e3758362d1b770809997",
@@ -1656,7 +1656,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "16007873c5b0604ce68112a8fee973e8e2b6e3319c683a762ff5065a076512d7c98b27e74b7887671048ac027df8cbf2",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "784d7f4686c01bea32cb6cab8c089fb25c341080d9832e04feac6ea63a341079cbd562a75365c63cf7e63e7e1dddc9e99db75ccee59c5295340c2bba36f457690a8f05c62ab001e3d6"
         "b333780117d1456a9c8b27d6c2504db9c1428dad8ba797a4419914fcc636f0f14ede3fba49b023b12a77a2176b0b8ff55a895dcaf8dbce",
@@ -1668,7 +1668,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "bc998c30e1491cd5d60dc7d1c38333165efe036b2a78db9b8f0e85ee68619cfba654e11ae5ca5ee5a87099c27cf22442",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "45e47fccc5bd6801f237cdbeac8f66ebc75f8b71a6da556d2e002352bd85bf269b6bc7c928d7bb1b0422601e4dd80b29d5906f8fcac212fe0eaaf52eda552303259cbcbe532e60abd3"
         "d38d786a45e39a2875bce675800a3eaeb9e42983d9fd9031180abd9adccc9ba30c6c198b4202c4dd70f241e969a3c412724b9b595bc28a",
@@ -1680,7 +1680,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "9cab0bbaffe91c7677ec3dd1f17060211a3cc0be574cbca064aa8c4b66ba6e64f3d80e83da895042ca32d311c388d950",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "c33ff63b4e6891e00b2349b3f2907c417ca355560544a91e24a7a0ee260d6850aeded29fc0176b6039ca6187e8333391047cceaf14b1077df8f147dad84d36b2dac5666dc2f69dc9b5"
         "8b88cc73956efdb3b47f91831d5875051c76b0c4e9fc087012a1f03eeee85d6745b46aa50bd9cb0110c2c94508765cec162ee1aa841d73",
@@ -1692,7 +1692,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "dd7ed67e480866d0474379ea4afff72870746f4feef2153be42f13bf472b1613d7faa5c0abb7f7464070f94d7cf3f234",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "f562f2b9d84b0e96a52532c3b43c39c8018c738bd8dc3797a7de7353971b2729d522d6961b1f2e4df3f6a4bd3653e6d72b74fc0dba92ab939c4b542e994e5db6dd8ed4f56f651e6990"
         "52e791237ae1f552f990ad156226ae8f7bf17fcbfa564f749604f97e9df0879d50985747d981422a23040fe52f5ec74caf1d4aaad8a710",
@@ -1704,7 +1704,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "69428cf101a7af5d08161a9fd7af212e02e33b6062aebdce4c96bf3a0684b5394cb902ca7c2dec6e2f01f40c4576009d",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "ace953ae851f571d71779aa120915f27450b236da23e9106f8d0756abdd25861937941228d225d5fb1aa1b1ebf759b1e326aeb3b6cd0cd87edd2ab9f6a7ad67b63d2c501d6a550edb2"
         "e7c9d216cc8af78dd33546af64d00abed4d0d2cfc5c9a7b5a055dbe8f7547902d185cf46937314832bc5c602419a82ab83dbd9d3bd5aff",
@@ -1716,7 +1716,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1e0e8718567d12d18558c57f9e87a755c309e4ffb497335a3adfc8d7475ce8fd882d5dc33a8f5a16274b7ad74bb7862a",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "9635ab832240be95301bedb94c5aec169eedc198cbbdfedcf41e9b586143d829b4597a6b2a81902828332825fd84a785f187a3894e21bd99d22c4f94dcf34453fc052f15ec64d1447c"
         "932cb38fcdd30b7be851963409c11881438cbaad7e96f9efbde317f2235d66af804477a5dfe9f0c51448383830050ecf228889f83631e1",
@@ -1728,7 +1728,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "d17d4c5ddbb9c27beebf526f113b416c8abfad53d11c4224813c7f351ba41a77dd4e77d6e4a65bef2c9f62cc37a469a5",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "d98b9a7d4fe9d0fd95de5056af164a8b7882cd34ab5bde83a2abb32dc361eb56a479a3a6119db3b91dcad26a42d2206749567f0d97c34a981a91fc734921821a429f6a53401743a5c4"
         "06ba9d560f956203abc9d1f32f1a13e7d7b290f75c95fdbf857ea597021461c06a3aacfa554ede3d69e4ff03bbbee5b7463ec77de2b3b2",
@@ -1740,7 +1740,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "a378c61802d9f1dd062b6e18f16416a954018f77df4df95ad1b983570377d5cfce4cc7861759e802c52f81abc4f49aac",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "1b4c754ac1c28dc415a71eac816bde68de7e8db66409af835838c5bb2c605111108a3bf13606ed5d8ade5ed72e50503e0de664416393d178ea4eec834d8d6f15039847b410080fd552"
         "9b426e5aadd8451c20ebd92d787921f33e147bcbeb327b104d4aab1157fc1df33e4d768404b5ccb7110055c2508c600f429fd0c21b5784",
@@ -1752,7 +1752,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "9aea13d487c3ea6917e16374caafcf0321c12a80d28902dd8cd81909bb04b8c439e2491e504756742d0d0bfb15a9c34c",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "3cd8c053741dd9f974c6c5dbf8a1e5728e9b5eafb1cbcfc3452f5fbbda32a8c7564dee157e8d902c52514361da6d972934a56b3276e2a9379e328e24282e0db697c5bc29090fc489ec"
         "46b7b188325dd4e96494c250de0f4a89fe2ccf919eaefcfb50c288113e6df92714feb7f46e0822478c796d0f4ff3447a32997e892693ce",
@@ -1764,7 +1764,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "2550cef8574bf17fb3d6b0c9d04ab266962bac3621bac233ff2e4989712d2a4a07171c0aebd3040cd6a32c3bd3efb8b5",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "ed955dda6d9650124804d3deb6aeef900e520faf98b1ef6f14efcada7ca2433f09329b70897305e59c89024d76e466b28fe02cb2a9b12e2478c66470259d7c282137a19e5a04ffadea"
         "55245c0f34a681593fedc42931d8b3321b3d82e9cc102cd00540ad311ec7bd8c9d06db21bea4ca3dc74d98931ae0d40494aefc2345132c",
@@ -1776,7 +1776,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "2c592240eabb8a1f9878e1b5c9d5d3ced7b3a7ae571f5a86494ed2ca567a36eb72e7bea8934bded29594bccf67ca84bd",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "ce395b001da2a58e49691605d44af4206306f62f561bf2394060d2a5591a350277166bed043819035f1e60b5b3fb5ae113ddd0473f8ef6b2b050c472c2a264e1d8b3ca82a4f158c40f"
         "2d78d9ce5e5ea6de243f2e1f13f47f6c6f403b270912c81c636be35b396ca58468b3fb60aa83911d61441a0528d973bc31f965d4059080",
@@ -1788,7 +1788,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "ce7309fc2d6e3438818a1a29a997410b025b0403de20795b97c86c46034a6b02afeed279aeb06522d4de941bfdf50469",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "ffefe316455ae4ffdb890bb804bf7d31424ea060ecacff419d0f7134ff76ad434063c0ec0f8bb7059584d3a03f3625bb9e9f66ace1a47ac4b8f3e76fc7c420c55edb1427d1fa15b387"
         "ad73d02b0595c4e74321be8822752230a0dcfb85d60bfa186da7623a8ec3eb1633f0a294b23ae87216b14ccee9ef56418dcfab9427371e",
@@ -1800,7 +1800,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "aef73bd590802b2fd2a65c4f7fec89f9b24ecc199a69254785925f334cd1977c5e1f858bd9830d7d7d243ea707b1af0b",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "304bccb718b3a9e12669913490cc5bcc1979287b56c628fad706c354241e88d10e81445a2853e3fc32ece094ba1abc3fdcab61da27f9a0fca739371049fed462ee6b08fa31cde12720"
         "f8144a6f00ce9b1a7a6eadd231f126717074b4efb5c72ce673ca5859000a436f67a338d698759f12c461247c45a361fb6cb661fdbe6714",
@@ -1812,7 +1812,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "28b1c4ef448a432f7c91b98b0c6471691e888211b6af907369a8930859b8cdb2e94f466a44f4e52f46df9b0d65e35de6",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "64f9f05c2805acf59c047b5f5d2e20c39277b6d6380f70f87b72327a76170b872bfe4b25c451602acfb6a631bb885e2655aee8abe44f69c90fb21ffde03cef2a452c468c6369867dfd"
         "8aa26ac24e16aa53b292375a8d8fbf988e302bf00088e4c061aa12c421d8fe3cbd7273b0e8993701df1c59431f436a08b8e15bd123d133",
@@ -1824,7 +1824,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "bbf6424a3b70166fa799f49e918439d515327039258ef9bd88435a59c9c19659f8ec3c8660720b0c08354ff60e0f5a76",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "6b45d88037392e1371d9fd1cd174e9c1838d11c3d6133dc17e65fa0c485dcca9f52d41b60161246039e42ec784d49400bffdb51459f5de654091301a09378f93464d52118b48d44b30"
         "d781eb1dbed09da11fb4c818dbd442d161aba4b9edc79f05e4b7e401651395b53bd8b5bd3f2aaa6a00877fa9b45cadb8e648550b4c6cbe",
@@ -1836,7 +1836,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0475f3d30c6463b646e8d3bf2455830314611cbde404be518b14464fdb195fdcc92eb222e61f426a4a592c00a6a89721",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "d768f41e6e8ec2125d6cf5786d1ba96668ac6566c5cdbbe407f7f2051f3ad6b1acdbfe13edf0d0a86fa110f405406b69085219b5a234ebdb93153241f785d45811b3540d1c37424cc7"
         "194424787a51b79679266484c787fb1ded6d1a26b9567d5ea68f04be416caf3be9bd2cafa208fe2a9e234d3ae557c65d3fe6da4cb48da4",
@@ -1848,7 +1848,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "588e3d7af5da03eae255ecb1813100d95edc243476b724b22db8e85377660d7645ddc1c2c2ee4eaea8b683dbe22f86ca",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "6af6652e92a17b7898e40b6776fabaf0d74cf88d8f0ebfa6088309cbe09fac472eeac2aa8ea96b8c12e993d14c93f8ef4e8b547afe7ae5e4f3973170b35deb3239898918c70c105633"
         "2c3f894cd643d2d9b93c2561aac069577bbab45803250a31cd62226cab94d8cba7261dce9fe88c210c212b54329d76a273522c8ba91ddf",
@@ -1860,7 +1860,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "4eb51db8004e46d438359abf060a9444616cb46b4f99c9a05b53ba6df02e914c9c0b6cc3a9791d804d2e4c0984dab1cc",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "b96d74b2265dd895d94e25092fb9262dc4f2f7a328a3c0c3da134b2d0a4e2058ca994e3445c5ff4f812738e1b0c0f7a126486942a12e674a21f22d0886d68df2375f41685d694d487a"
         "718024933a7c4306f33f1a4267d469c530b0fed4e7dea520a19dd68bf0203cc87cad652260ed43b7b23f6ed140d3085875190191a0381a",
@@ -1872,7 +1872,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8056c5bb57f41f73082888b234fcda320a33250b5da012ba1fdb4924355ae679012d81d2c08fc0f8634c708a4833232f",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "7cec7480a037ff40c232c1d2d6e8cd4c080bbeecdaf3886fccc9f129bb6d202c316eca76c8ad4e76079afe622f833a16f4907e817260c1fa68b10c7a151a37eb8c036b057ed4652c35"
         "3db4b4a34b37c9a2b300fb5f5fcfb8aa8adae13db359160f70a9241546140e550af0073468683377e6771b6508327408c245d78911c2cc",
@@ -1884,7 +1884,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "651b8c3d5c9d5b936d300802a06d82ad54f7b1ba4327b2f031c0c5b0cb215ad4354edc7f932d934e877dfa1cf51b13fe",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "00ce978603229710345c9ad7c1c2dba3596b196528eea25bd822d43ca8f76a024e29217703dd0652c8a615284fc3edcc1c5ad1c8d5a8521c8e104c016a24e50c2e25066dcb56596f91"
         "3b872767e3627aa3e55ec812e9fdac7c2f1beade83aef093e24c9c953982adf431a776880ae4583be158e11cdab1cbca3ad3a66900213d",
@@ -1896,7 +1896,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "11b783d879a6de054b316af7d56e526c3dce96c85289122e3ad927cfa77bfc50b4a96c97f85b1b8221be2df083ff58fb",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "54a255c18692c6162a46add176a0ae8361dcb8948f092d8d7bac83e160431794d3b9812849bf1994bcdcfba56e8540c8a9ee5b93414548f2a653191b6bb28bda8dc70d45cc1b92a489"
         "f58a2d54f85766cb3c90de7dd88e690d8ebc9a79987eee1989df35af5e35522f83d85c48dda89863171c8b0bf4853ae28c2ac45c764416",
@@ -1908,7 +1908,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "7c26be29569ef95480a6d0c1af49dc10a51a0a8931345e48c0c39498bfb94d62962980b56143a7b41a2fddc8794c1b7f",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "692a78f90d4f9d5aee5da536314a78d68c1feabbfe5d1ccea7f6059a66c4b310f8051c411c409ccf6e19a0cbd8b8e100c48317fe8c6d4f8a638b9551ce7ee178020f04f7da3001a0e6"
         "855225fb3c9b375e4ed964588a1a41a095f3f476c42d52ffd23ce1702c93b56d4425d3befcf75d0951b6fd5c05b05455bdaf205fe70ca2",
@@ -1920,7 +1920,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "a0d6b10ceffd0e1b29cf784476f9173ba6ecd2cfc7929725f2d6e24e0db5a4721683640eaa2bbe151fb57560f9ce594b",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "3b309bb912ab2a51681451ed18ad79e95d968abc35423a67036a02af92f575a0c89f1b668afe22c7037ad1199e757a8f06b281c33e9a40bab69c9874e0bb680b905d909b9dc24a9fe8"
         "9bb3d7f7d47082b25093c59754f8c19d1f81f30334a8cdd50a3cb72f96d4b3c305e60a439a7e93aeb640dd3c8de37d63c60fb469c2d3ed",
@@ -1932,7 +1932,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "4a9a38afda04c0a6b0058943b679bd02205b14d0f3d49b8f31aac289129780cdb1c555def8c3f9106b478729e0c7efaa",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "f072b72b8783289463da118613c43824d11441dba364c289de03ff5fab3a6f60e85957d8ff211f1cb62fa90216fb727106f692e5ae0844b11b710e5a12c69df3ed895b94e8769ecd15"
         "ff433762d6e8e94d8e6a72645b213b0231344e2c968056766c5dd6b5a5df41971858b85e99afbf859400f839b42cd129068efabeea4a26",
@@ -1944,7 +1944,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "2cc10023bf1bf8ccfd14b06b82cc2114449a352389c8ff9f6f78cdc4e32bde69f3869da0e17f691b329682ae7a36e1aa",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "cf4945350be8133b575c4ad6c9585e0b83ff1ed17989b6cd6c71b41b5264e828b4e115995b1ae77528e7e9002ac1b5669064442645929f9d7dd70927cb93f95edeb73e8624f4bc897e"
         "c4c2c7581cb626916f29b2d6e6c2fba8c59a71e30754b459d81b912a12798182bcff4019c7bdfe929cc769bcc2414befe7d2906add4271",
@@ -1956,7 +1956,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "e5c64ed98d7f3701193f25dd237d59c91c0da6e26215e0889d82e6d3e416693f8d58843cf30ab10ab8d0edd9170b53ad",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "d9b5cf0b50416573ff3c63133275a18394dd4326be2041e8d97e6e4e3855a4a177e9d26dfd223fe8aa74564edb49bd72de19916fb6f001f44530d5c18e2c332bce1b7415df5927ece5"
         "f3824f34d174b963136b53aef1fb78fb0c06a201a40b2db38e4d8216fc1e392a798c8ab4b3a314496b7f1087804ebfa89bf96e9cdb80c0",
@@ -1968,7 +1968,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "50ef923fb217c4cf65a48b94412fda430fac685f0da7bd574557c6c50f5b22e0c8354d99f2c2f2c2691f252f93c7d84a",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "9e4042d8438a405475b7dab1cd783eb6ce1d1bffa46ac9dfda622b23ac31057b922eced8e2ed7b3241efeafd7c9ab372bf16230f7134647f2956fb793989d3c885a5ae064e85ed971b"
         "64f5f561e7ddb79d49aa6ebe727c671c67879b794554c04de0e05d68264855745ef3c9567bd646d5c5f8728b797c181b6b6a876e167663",
@@ -1980,7 +1980,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "fcc504e0f00ef29587e4bc22faada4db30e2cb1ac552680a65785ae87beb666c792513f2be7a3180fc544296841a0e27",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "0b14a7484a40b68a3ce1273b8a48b8fdb65ba900d98541c4bbd07b97e31bcc4c85545a03e9deab3c563f47a036ff60d0361684ba241b5aa68bb46f440da22181ee328a011de98eff34"
         "ba235ec10612b07bdfa6b3dc4ccc5e82d3a8d057e1862fef3def5a1804696f84699fda2ec4175a54a4d08bcb4f0406fdac4eddadf5e29b",
@@ -1992,7 +1992,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "d40e09d3468b46699948007e8f59845766dbf694b9c62066890dd055c0cb9a0caf0aa611fb9f466ad0bbb00dbe29d7eb",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "0e646c6c3cc0f9fdedef934b7195fe3837836a9f6f263968af95ef84cd035750f3cdb649de745c874a6ef66b3dd83b66068b4335bc0a97184182e3965c722b3b1aee488c3620adb835"
         "a8140e199f4fc83a88b02881816b366a09316e25685217f9221157fc05b2d8d2bc855372183da7af3f0a14148a09def37a332f8eb40dc9",
@@ -2004,7 +2004,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "af10b90f203af23b7500e070536e64629ba19245d6ef39aab57fcdb1b73c4c6bf7070c6263544633d3d358c12a178138",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "67d9eb88f289454d61def4764d1573db49b875cfb11e139d7eacc4b7a79d3db3bf7208191b2b2078cbbcc974ec0da1ed5e0c10ec37f6181bf81c0f32972a125df64e3b3e1d838ec7da"
         "8dfe0b7fcc911e43159a79c73df5fa252b98790be511d8a732fcbf011aacc7d45d8027d50a347703d613ceda09f650c6104c9459537c8f",
@@ -2016,7 +2016,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "77ffed5c61665152d52161dc13ac3fbae5786928a3d736f42d34a9e4d6d4a70a02d5af90fa37a23a318902ae2656c071",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "45db86829c363c80160659e3c5c7d7971abb1f6f0d495709bba908d7aa99c9df64b3408a51bd69aba8870e2aaff488ef138f3123cf94391d081f357e21906a4e2f311defe527c55e02"
         "31579957c51def507f835cceb466eb2593a509dcbee2f09e0dde6693b2bfe17697c9e86dd672f5797339cbe9ea8a7c6309b061eca7aef5",
@@ -2028,7 +2028,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "abd383edaeda7d0b8de1b54fcd3c28874fed62ab266f1f84c8ba796a7b54e5e0695fdb43ce7fe90ed00fa468d87bca64",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "4672fce0721d37c5be166bffa4b30d753bcf104b9b414db994b3ed33f36af4935ea59a0bb92db66448b3f57dad4fc67cef10ce141bf82c536be604b89a0bc0e8bca605b867880049d9"
         "7142d30538fc543bd9d4fab7fdbe2f703815cdb6361beb66acff764bc275f910d1662445b07b92830db69a5994857f53657ed5ca282648",
@@ -2040,7 +2040,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "866181dbef5c147d391bed6adcee408c339982c307adc718c2b9ab9e5642d8dedc36dd6402559a3ab614c99c1e56b529",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "9ae48fdd9bfc5cb0f4d4761e28b2073bda05a3e3fe82c212e66701dc4573cc67a829b0f82d7520b1bf11db0c6d1743822bbe41bb0adbd7222aa5fae70fbd1a31f2d4453a01c81e064d"
         "775388468be96f6063f8673b7b8d4455fe1bd4c801ad5e625a015eaa4a1a18da490d2af8642201eaba3c611cbd65f861d8e19ca82a1ee6",
@@ -2052,7 +2052,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "876112bdca2c725eb2f6dbd76d07710a31f0c16d38430cb0817f320a25a9ecfec8a66137d0304612ae29a6a484fd3319",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "817d6a110a8fd0ca7b4d565558f68b59a156744d4c5aac5c6610c95451793de2a756f774558c61d21818d3ebeeeb71d132da1c23a02f4b305eccc5cd46bd21dfc173a8a91098354f10"
         "ffbb21bf63d9f4c3feb231c736504549a78fd76d39f3ad35c36178f5c233742d2917d5611d2073124845f1e3615b2ef25199a7a547e882",
@@ -2064,7 +2064,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "4ff10301f7b4168fae066361376007c1d7aa89a75c87719d0b54711ffef5ef3726f3eef84f7ebc025c110bde511b17f6",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "464f10ec6fb229a51db5fd0e122f2cb8a9a022117e2987f4007bf5565b2c16aba0714e2e3cdd0c100d55ac3017e36fc7501ad8309ab9572aa65424c9eb2e580a119c55777676ec498d"
         "f53ef6ae78fd8a988130ee0e6082bf1ef71cd4c946021018a8ca7154d13b174c638912613b0bdb9001c302bf7e443ad2124ab2c1cce212",
@@ -2076,7 +2076,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "56a561d647b62ccae1e6df818b1a6fbde66c82ef0ff69ee415f183e7daf76be22630c7e02cd3fd729dfa490f26824584",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "4e3e0fb96320ddccde8b463c273654c4f7164920b1d63430921d2e808dee403e6420eedda0a557b911d00736a4f8798dd4ef26673efd6d190988ad4929ec64f8685cfb76070a36cd6a"
         "3a4bf2f54fb08a349d44642b6f614043fef9b2813b63457c76537d23da7b37310334f7ba76edf1999dad86f72aa3446445a65952ac4e50",
@@ -2088,7 +2088,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "ba348eb40a2830ec5a1130264ac0a8675420b1ae243e808a778135809ece21f42c0c881166321102b4f02df4c5c7ed9d",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "c466b6b6baf7e6ffa876ec06105e2d43534e0517c07b1c4c9fb67ba81ce09525a7721ec3c290f2b1f65b6463d41598e7a25b2238501629953a5ca955b644354fb6856733a2e5bb8f5b"
         "c21a0c803493f5539f9fb83aab3dba2c982989c2270c61ab244b68bfe1b948d00c2ed975e09c29b5f8a7effcad8652a148cc880d503217",
@@ -2100,7 +2100,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "6dcfc0426bc148e67e91d4784e3d7e9bc3b7ce3676be62daa7f3f55dfdff6d9dc735b5e3e0bbd0785db1f76f7ac065f3",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "feac892b7720af80b3c9eede51e923f18d3d0c5de4c31f4aa75e36df7c7c2fd8f41778851a24b69e67dccb65e159dd5c383243bad7cfedcc5e85c8a01c34b0b94ba8e07e4c024c09d2"
         "79b3731e8b62f9562d3c4f5042567efe42a9d0eaaabab28bc6f11232fc8ceaaf4518d9f3b2bebf020294496b7f6b879e69503f75fecd3d",
@@ -2112,7 +2112,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "375d965753b9ed6c6c08576726f8308c2f8dbd2737824464e71265d47907e26f615bbeb8203ec617520d4ecd1851dc44",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "cf2982e3bf174ce547741b969403cd11e9553067e6af8177d89511a0eb040db924530bdba65d8b1ff714228db0737c1756f509e1506014a10736e65be2f91980a73891496e90ff2714"
         "a3601c7565cdcef5a395e2e0e1652f138d90d61eaa9cba993b823245647f6e07cec9b8b4449cd68a29741cd1579c66e548ca0d0acf33aa",
@@ -2124,7 +2124,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8183ae33a888e99aa76882da0a6705ad102f2bbd9572fad0d2e4d6d70151970469e00c5220e59c14724d771c1384b302",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "bf9fdd4107ef5a6070108771ac9eee4f0c8043bf0d04db772a47294f4137e2439d94b337114b074e57e0cb78d0ccf352a2833e9788ee2a1a9ffeacd34f38fcefb86653d70c7dadd4cf"
         "6548d608e70acdef6c7530974b92c813798add659752a8c72b05e1ad9c65c21834ce6fbe49d8a1426b5a54270794436d284364fac6ec1a",
@@ -2136,7 +2136,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "17c2b7a8e0fc93909762aa9f86f9561e759ecb88f02337b2018363be6095d9e4324a6d3296046686624b5efad6b52878",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "5d634fb39a2239256107dc68db19751540b4badac9ecf2fce644724401d6d632b3ae3b2e6d05746b77ddc0c899878032248c263eda08d3d004d35952ad7a9cfe19343d14b37f9f6322"
         "45e7b7b5fae3cb31c5231f82b9f1884f2de7578fbf156c430257031ba97bc6579843bc7f59fcb9a6449a4cd942dffa6adb929cf219f0ad",
@@ -2148,7 +2148,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "8151b681b6b6046d3c36f332d06d9ba7751e740631cdb759f88c50a25a8e950d5023df8a15c77243743733c4feaf21d5",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "c9b4ff721b3e886f0dc05856ffff0aabb64a8504b1746a47fdd73e6b7ebc068f06ac7ffa44c757e4de207fc3cbfaf0469d3ac6795d40630bcafe8c658627e4bc6b86fd6a2135afbc18"
         "ccc8e6d0e1e86016930ca92edc5aa3fbe2c57de136d0ea5f41642b6a5d0ddeb380f2454d76a16639d663687f2a2e29fb9304243900d26d",
@@ -2160,7 +2160,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0eab56457c4080400fa3af124761d5a01fef35f9649edba8b97d22116386f3b8b363e97ef3f82616d5d825df1cf865ef",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "db2ad659cf21bc9c1f7e6469c5f262b73261d49f7b1755fc137636e8ce0202f929dca4466c422284c10be8f351f36333ebc04b1888cba217c0fec872b2dfc3aa0d544e5e06a9518a8c"
         "fe3df5b20fbcb14a9bf218e3bf6a8e024530a17bab50906be34d9f9bba69af0b11d8ed426b9ec75c3bd1f2e5b8756e4a72ff846bc9e498",
@@ -2172,7 +2172,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "51cff592cbef75ef8321c8fa1e4229c4298b8180e427bee4e91d1e24fc28a729cf296beb728960d2a58cf26773d8e2e2",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "dbd8ddc02771a5ff7359d5216536b2e524a2d0b6ff180fa29a41a8847b6f45f1b1d52344d32aea62a23ea3d8584deaaea38ee92d1314fdb4fbbecdad27ac810f02de0452332939f644"
         "aa9fe526d313cea81b9c3f6a8dbbeafc899d0cdaeb1dca05160a8a039662c4c845a3dbb07be2bc8c9150e344103e404411668c48aa7792",
@@ -2184,7 +2184,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "e4d318391f7cbfe70da78908d42db85225c85f4f2ff413ecad50aad5833abe91bdd5f6d64b0cd281398eab19452087dd",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "58ec2b2ceb80207ff51b17688bd5850f9388ce0b4a4f7316f5af6f52cfc4dde4192b6dbd97b56f93d1e4073517ac6c6140429b5484e266d07127e28b8e613ddf65888cbd5242b2f0ee"
         "e4d5754eb11f25dfa5c3f87c790de371856c882731a157083a00d8eae29a57884dbbfcd98922c12cf5d73066daabe3bf3f42cfbdb9d853",
@@ -2196,7 +2196,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0b0a01eca07a3964dd27d9ba6f3750615ea36434979dc73e153cd8ed1dbcde2885ead5757ebcabba117a64fcff9b5085d848f107f0c9ecc83dfa2fa09ada3503028",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "2449a53e0581f1b56d1e463b1c1686d33b3491efe1f3cc0443ba05d65694597cc7a2595bda9cae939166eb03cec624a788c9bbab69a39fb6554649131a56b26295683d8ac1aea96904"
         "0413df405325425146c1e3a138d2f4f772ae2ed917cc36465acd66150058622440d7e77b3ad621e1c43a3f277da88d850d608079d9b911",
@@ -2208,7 +2208,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "11bc9713be88e3b9912a3e5f5d7b56f20573e979b1a75d04ce339f724bddffa4665d25995fe24d32507d8a07c5e10169f5338ef2827737f7b0291752b21237217e3",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "7ba05797b5b67e1adfafb7fae20c0c0abe1543c94cee92d5021e1abc57720a6107999c70eacf3d4a79702cd4e6885fa1b7155398ac729d1ed6b45e51fe114c46caf444b20b406ad9cd"
         "e6b9b2687aa645b46b51ab790b67047219e7290df1a797f35949aaf912a0a8556bb21018e7f70427c0fc018e461755378b981d0d9df3a9",
@@ -2220,7 +2220,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0b3621145b9866ab7809139795cc30cd0404127a7f0fafa793660491009f6c53724fdb0b1ffbf0fd51c131180b8a957fe66e76d2970247c024261c768dee9abbfb9",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "716dabdb22a1c854ec60420249905a1d7ca68dd573efaff7542e76f0eae54a1828db69a39a1206cd05e10e681f24881b131e042ed9e19f5995c253840e937b809dfb8027fed71d5418"
         "60f318691c13a2eb514daa5889410f256305f3b5b47cc16f7a7dad6359589b5f4568de4c4aae2357a8ea5e0ebaa5b89063eb3aa44eb952",
@@ -2232,7 +2232,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1f918fec69cd07d90f9d892b7117e7519c3224947f4262f1fd97077dd5386a6c78aeddff3ee97e59ea353f06029f1336f0d6ef5c0f4b17ca59343a55319b7bfc3db",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "9cc9c2f131fe3ac7ea91ae6d832c7788cbbf34f68e839269c336ceef7bef6f20c0a62ea8cc340a333a3002145d07eba4cf4026a0c4b26b0217a0046701de92d573d7c87a386a1ea68d"
         "c80525b7dcc9be41b451ad9f3d16819e2a0a0b5a0c56736da3709e64761f97cae2399de2a4022dc4c3d73c7a1735c36dbde86c4bc5b6f7",
@@ -2244,7 +2244,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1e92a7dd5fea29a666398e1df5775cbb5664fe6943fe4c1d2bba516b7543c84df584458e53919c4ffab579a26fb3c892a5d1a77b0a07428c89350f8b559e627b014",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "14c69f8d660f7a6b37b13a6d9788eff16311b67598ab8368039ea1d9146e54f55a83b3d13d7ac9652135933c68fafd993a582253be0deea282d86046c2fb6fd3a7b2c80874ced28d8b"
         "ed791bd4134c796bb7baf195bdd0dc6fa03fdb7f98755ca063fb1349e56fd0375cf94774df4203b34495404ebb86f1c7875b85174c574c",
@@ -2256,7 +2256,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "030370c1c5352c2b663ac1858b42f69545b2f58ed5b2c007f303726977d3c756b5d644ec6788f94c886f78269aa190a3d8d1ae10e4fd24d937c4556fb9e1953fd6d",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "8d8e75df200c177dbfe61be61567b82177ea5ec58e2781168d2277d2fd42668f01248ca3eb29ffa2689b12ae40f9c429532b6d2e1f15891322b825a0a072a1c68fa09e78cfdef3e95e"
         "d6fdf7233a43cb68236560d49a3278f0b3f47cb08f475bd9ab2f60755ea4a1767de9313b71a1b9ea87ef33f34682efbda263b0f8cc2f52",
@@ -2268,7 +2268,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1c727f34b6a378f3087721a54e9796499b597ecf6666b8f18312d67e1190a8a66e878efc2367b551267494e0245979ef4deed6d2cbf2c3711af6d82ccfeb101a377",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "10631c3d438870f311c905e569a58e56d20a2a560e857f0f9bac2bb7233ec40c79de145294da0937e6b5e5c34fff4e6270823e5c8553c07d4adf25f614845b2eac731c5773ebbd716a"
         "b45698d156d043859945de57473389954d223522fbafecf560b07ef9ba861bcc1df9a7a89cdd6debf4cd9bf2cf28c193393569ccbd0398",
@@ -2280,7 +2280,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0957b0ecdc3668f6efa5d0957615bcfffd6419c5e57579b74f960f65ae3fb9e8284322ff710b066f7e0959ac926d3cf9a594bdb70bbec756c96910b26a2486dee9e",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "80aad6d696cbe654faa0d0a24d2f50d46e4f00a1b488ea1a98ed06c44d1d0c568beb4ab3674fc2b1d2d3da1053f28940e89ba1244899e8515cabdd66e99a77df31e90d93e37a8a240e"
         "803a998209988fc829e239150da058a300489e33bf3dcdaf7d06069e74569fee77f4e3875d0a713ccd2b7e9d7be62b34b6e375e84209ef",
@@ -2292,7 +2292,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "00abc75fc154b93840579457820957e89d1260fee0a4b9bb1946f61ca1e71afd76bb5e1077b3e38ceb39d1fac5ef8b217c4110617b3ad118e02b3fcc2a39ef38613",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "8a7792a2870d2dd341cd9c4a2a9ec2da753dcb0f692b70b64cef2e22071389c70b3b188dea5f409fb435cbd09082f59de6bc2ff9e65f91b7acc51e6e7f8e513148cb3c7c4664f227d5"
         "c704626b0fda447aa87b9d47cd99789b88628eb642ed250312de5ba6b25f3d5342a3cbb7ebd69b0044ee2b4c9ba5e3f5195afb6bea823d",
@@ -2304,7 +2304,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0a399f9b9e21aeddf450429fec2dc5749e4a4c7e4f94cee736004dcc089c47635da22845992cd076a4f0a01d2cc1b0af6e17b81a802361699b862157ad6cad8bd1d",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "f971bcd396efb8392207b5ca72ac62649b47732fba8feaa8e84f7fb36b3edb5d7b5333fbfa39a4f882cb42fe57cd1ace43d06aaad33d0603741a18bc261caa14f29ead389f7c20536d"
         "406e9d39c34079812ba26b39baedf5feb1ef1f79990496dd019c87e38c38c486ec1c251da2a8a9a57854b80fcd513285e8dee8c43a9890",
@@ -2316,7 +2316,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "155c744a729f83b27d1f325a91e63a0d564fe96ff91eaa1bad3bff17d2abffa065d14a1d20a04dd993f6ed3260b60bcc6401e31f6bc75aaafe03e8c1a9cd14d2708",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "ec0d468447222506b4ead04ea1a17e2aa96eeb3e5f066367975dbaea426104f2111c45e206752896e5fa7594d74ed184493598783cb8079e0e915b638d5c317fa978d9011b44a76b28"
         "d752462adf305bde321431f7f34b017c9a35bae8786755a62e746480fa3524d398a6ff5fdc6cec54c07221cce61e46fd0a1af932fa8a33",
@@ -2328,7 +2328,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "129d4931ba457443012f6ffecd002f2abc3a4b65a58fee8457917ebcf24b29a1d3055b7fc62939a74ebb0c3582172ee7c3c75e0b2fa2367c6e04df63a7a91d593ad",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "d891da97d2b612fa6483ee7870e0f10fc12a89f9e33d636f587f72e0049f5888782ccde3ea737e2abca41492bac291e20de5b84157a43c5ea900aef761006a4471072ab6ae6d515ffe"
         "227695d3ff2341355b8398f72a723ae947f9618237c4b6642a36974860b452c0c6202688bc0814710cbbff4b8e0d1395e8671ae67ada01",
@@ -2340,7 +2340,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "16627e2614dbcd371693c10bbf579c90c31a46c8d88adf59912c0c529047b053a7c7715142f64dcf5945dbc69ff5b706c4b0f5448d04dd1f0b5a4c3765148bf253d",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "924e4afc979d1fd1ec8ab17e02b69964a1f025882611d9ba57c772175926944e42c68422d15f9326285538a348f9301e593e02c35a9817b160c05e21003d202473db69df695191be22"
         "db05615561951867f8425f88c29ba8997a41a2f96b5cee791307369671543373ea91d5ed9d6a34794d33305db8975b061864e6b0fe775f",
@@ -2352,7 +2352,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0ccb6463c4301ba5c043e47ed508d57dd908fd0d533af89fd3b11e76343a1cf2954ce90b0eb18cbc36acd6d76b3906612d8a0feec6ebed13d88650ed9c708b28a11",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "c64319c8aa1c1ae676630045ae488aedebca19d753704182c4bf3b306b75db98e9be438234233c2f14e3b97c2f55236950629885ac1e0bd015db0f912913ffb6f1361c4cc25c3cd434"
         "583b0f7a5a9e1a549aa523614268037973b65eb59c0c16a19a49bfaa13d507b29d5c7a146cd8da2917665100ac9de2d75fa48cb708ac79",
@@ -2364,7 +2364,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "143af360b7971095b3b50679a13cd49217189eaee4713f4201720175216573c68f7ac6f688bfe6eb940a2d971809bf36c0a77decc553b025ed41935a3898685183b",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "8ab8176b16278db54f84328ae0b75ef8f0cd18afdf40c04ad0927ed0f6d9e47470396c8e87cde7a9be2ffbfe6c9658c88b7de4d582111119c433b2e4a504493f0a1166e3a3ea0d7b93"
         "358f4a297d63f65a5e752f94e2ee7f49ebcc742fa3eb03a617d00c574245b77a20033854d82964b2949e2247637239ab00baf4d170d97c",
@@ -2376,7 +2376,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "02148e8428d70a72bc9fa986c38c2c97deda0420f222f9dc99d32c0acba699dc7ba0a2b79ce5999ff61bd0b233c744a893bc105bca5c235423e531612da65d72e62",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "c4bc2cec829036469e55acdd277745034e4e3cc4fcd2f50ec8bd89055c19795a1e051ccf9aa178e12f9beab6a016a7257e391faa536eaa5c969396d4e1ade36795a82ebc709d9422de"
         "8497e5b68e7292538d4ccdc6dd66d27a3ece6a2844962b77db073df9489c9710585ba03d53fa430dbc6626dc03b61d53fc180b9af5dea6",
@@ -2388,7 +2388,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "129a992a6ff66d41948d11fa680f732b1a74315b804c982805190ed9d2fae223f2b149980b9241998cdea0c5672595a8a49d5186a0ef7a46c0a376f925bdda81726",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "1c1b641d0511a0625a4b33e7639d7a057e27f3a7f818e67f593286c8a4c827bb1f3e4f399027e57f18a45403a310c785b50e5a03517c72b45ef8c242a57b162debf2e80c1cf6c7b902"
         "37aede5f4ab1fcaf8187be3beb524c223cc0ceff24429eb181a5eea364a748c713214880d976c2cd497fd65ab3854ad0d6c2c1913d3a06",
@@ -2400,7 +2400,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0e0d42e4ff11cf5be37a9fda348514d5097a662f214687cbfb28ff42d635b13029871ca4f464bb1fbce02d5da4d5fb61b2a071844259fc863d136197bec3a61e7c7",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "adb5f069b2b501a3ebb83d4f1808eb07710ac4a7b12532996855a20bcc54b2f76812915f632163c3654ff13d187d007152617cf859200194b59c5e81fc6cc9eb1ceb75d654050f260c"
         "aa79c265254089270ccd02607fdcf3246119738c496dc3a4bd5d3be15789fc3d29a08d6d921febe2f40aef286d5d4330b07198c7f4588e",
@@ -2412,7 +2412,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "060eb74236c189a28ed20bd0822eb22d75f7d97c9043a3c8e3f6d4c90bc8ca02ac4d37c1171c799a1c7dfd2fcbf83406b5e48c051e0fbf0fd937bfe6c3db4e18154",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "f253484d121d1ce8a88def6a3e9e78c47f4025ead6f73285bf90647102645b0c32d4d86742a50b8b7a42d5f6156a6faf588212b7dc72c3ffd13973bdba732b554d8bffc57d04f8167a"
         "ef21ee941ee6ffb6cce0f49445bd707da8deb35dca650aaf761c3aa66a5ebccddd15aee21293f63061a7f4bfc3787c2cd62c806a1a9985",
@@ -2424,7 +2424,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "02de4cfa908c73c1102d6fb7062baf54a056a9517701e036c9c51e09899d60051612d59348945f845dffebec5aa395b2fac7229929033615788777306ccad96d0a3",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "33bab1c369c495db1610965bc0b0546a216e8dd00cd0e602a605d40bc8812bbf1ffa67143f896c436b8f7cf0bed308054f1e1ff77f4d0a13c1e831efbd0e2fcfb3eadab9f755f070ba"
         "9aeaceb0a5110f2f8b0c1f7b1aa96a7f2d038a1b72e26400819b1f73d925ea4e34d6acaf59d0a461a34ce5d65c9c937a80e844e323a16d",
@@ -2436,7 +2436,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0f74236c7915d638708d17c9f10e39dda358faf9bbb821d8dcda0d151aac143bfb165ad0a23a65cd3de532e32cad928728f5ae1c16f58fc16577f3ca8e36f9e708b",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "08c8b7faaac8e1154042d162dca1df0f66e0001b3c5ecf49b6a4334ce4e8a754a1a8e4daf8ec09cf1e521c96547aed5172ef852e82c03cddd851a9f992183ac5199594f288dbcc53a9"
         "bb6128561ff3236a7b4b0dce8eaf7d45e64e782955ee1b690ce6a73ece47dc4409b690de6b7928cbe60c42fc6a5ddf1d729faf1cc3885e",
@@ -2448,7 +2448,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1301e1782559a38f1ca0eebe9bed0f5c7c33103d506a24f8a688f500ee1fe37f97b6685319279e82e6fe43cfd823ccbc123309974cffa76c4f8d41ec02a3cbc45f1",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "ba74eed74282811631bd2069e862381e4e2a1e4e9a357b1c159a9ce69786f864b60fe90eeb32d8b72b099986fc594965a33285f7185b415df58fead7b8b50fc60d073680881d743560"
         "9ad1d22fd21e789b6730e232b0d2e888889fb82d6ad0337ab909308676164d4f47df44b21190eca8ba0f94995e60ad9bb02938461eee61",
@@ -2460,7 +2460,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1b45f2066e583636215ae135afc202b8bf3f301eccff2e1c0198b9aeddf695fa8179488e7b622fc307f601e2f6551815117cc836bb09ef888f8e64a45d9c84ad30c",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "dc71f171a28bdc30968c39f08f999b88dc04c550e261ecf1124d67f05edeae7e87fe9b8135a96fe2bc3996a4f47213d9d191184a76bd6310e1ee5cb67ea7fc3ef6f641a0ba16519804"
         "0fa668192b75a4754fc02c224bd4a74aade5a8c814adf151c2bfeda65165a04ef359e39847c84e312afb66d4cd1db50d41ef3fe5f31296",
@@ -2472,7 +2472,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0a67368a305508ce6d25d29c84f552a4a513998990fef4936244f891a2909c30d5fdc9e8a267ecbf3c597138f4a08f7e92bee57d5420eadd700fee864bf78b2614b",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "b895788d7828aaeace4f6b61a072ffa344d8ea324962ba6dab5efda93f65bf64a0f2ac6d5721d03ee70e2aef21cdba69fd29040199160e3a293b772ffb961ed694a8dc82800dab7936"
         "7a4809a864e4aff6bc837aaa868e952b771b76591c0bb82249034e3208e593d85973d3fea753a95b16e221b2561644535c0131fe834ae7",
@@ -2484,7 +2484,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "018572bfad4f62e3694d1f2e6ffd432faed2e2b9d7e3611a07138212f1e79e6c394839f7cfae96bc368422630016fb9346681eadc5f9699e7331c3b5fde6d65e4c6",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "2c5bd848c476e34b427cfe5676692e588e1957957db7b5704492bd02104a38216535607f5d092dc40020130c04a3aaf0f1c52409834926d69a05d3f3188187a71d402a10ba34eac862"
         "9b4c6359b1095f30f710219298bf06b9f19bfc299981d7e251ca232a0a85338a7e02464731d1b25d4a1f68baf97064516590644820c998",
@@ -2496,7 +2496,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0fd71575837a43a4cf1c47d0485cfd503c2cf36ebcea0fdef946ad29acb7fb2e7c6daf6b4eb741eb211081aed6207d02569f1518988f275ad94c7fd4735cb18a92e",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "65a0b97048067a0c9040acbb5d7f6e2e6ac462e1e0064a8ce5b5bbf8e57059e25a3ef8c80fc9037ae08f63e63f5bdb9378c322ad9b2daf839fad7a75b1027abb6f70f110247da7e971"
         "c7c52914e5a4f7761854432fa16b2a521e7bcaee2c735a87cad20c535bf6d04a87340c229bf9af8647eedca9e2dc0b5aa90f7fea3cdc0a",
@@ -2508,7 +2508,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "06f07ea453cfa20ad604ba855332f62834657b0b795684d50c1562a675456e37f4dae45f0df47d8e27e47bc9ce9c9cbba1554c5b94b0b17401b73c8d0c0902c6cc4",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "d6e366a87808eea5d39fe77cac4b8c754e865a796062e2ec89f72165cd41fe04c48148068c570e0d29afe9011e7e7a2461f4d9897d8c1fa14b4ff88cab40059d17ab724f4039244e97"
         "fcecb07f9ffeec2fb9d6b1896700fe374104a8c44af01a10e93b268d25367bf2bef488b8abcc1ef0e14c3e6e1621b2d58753f21e28b86f",
@@ -2520,7 +2520,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1cc42a2dd97aa42b9df5ea430e0d4cb13106dd6da6e8c9315c96ed7b052db365bbde6960c9a965954a4398c18ea7db9593bbfc3c3b6b3466ff806fccac3de6424ab",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "f99e1d272d0f5fb9c4f986e873d070ec638422bc04b47c715595e2cf1a701cdf88bc6c4b20085b357bad12ccba67cac8a5ca07f31ba432f9154ff1fadefd487a83a9c37e49fb70a2f1"
         "70e58889cab0552e0a3806ccfa2a60d96e346851d84b7de6d1a4b8cf37567dc161a84f13421e3412457d4bc27f6213453c8519a2d7daa2",
@@ -2532,7 +2532,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "08e349eed6f1e28b0dbf0a8aeb1d67e59a95b54a699f083db885f50d702f3c6a4069591afaa5b80b3c75efb1674ebd32c7ead0040d115945f9a52ee3a51806cad45",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "91f1ca8ce6681f4e1f117b918ae787a888798a9df3afc9d0e922f51cdd6e7f7e55da996f7e3615f1d41e4292479859a44fa18a5a006662610f1aaa2884f843c2e73d441753e0ead51d"
         "ffc366250616c706f07128940dd6312ff3eda6f0e2b4e441b3d74c592b97d9cd910f979d7f39767b379e7f36a7519f2a4a251ef5e8aae1",
@@ -2544,7 +2544,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0306dc3c382af13c99d44db7a84ed813c8719c6ed3bbe751ead0d487b5a4aa018129862b7d282cce0bc2059a56d7722f4b226f9deb85da12d5b40648bf6ec568128",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "dbc094402c5b559d53168c6f0c550d827499c6fb2186ae2db15b89b4e6f46220386d6f01bebde91b6ceb3ec7b4696e2cbfd14894dd0b7d656d23396ce920044f9ca514bf115cf98eca"
         "a55b950a9e49365c2f3a05be5020e93db92c37437513044973e792af814d0ffad2c8ecc89ae4b35ccb19318f0b988a7d33ec5a4fe85dfe",
@@ -2556,7 +2556,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "008dc65a243700a84619dce14e44ea8557e36631db1a55de15865497dbfd66e76a7471f78e510c04e613ced332aa563432a1017da8b81c146059ccc7930153103a6",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "114187efd1f6d6c46473fed0c1922987c79be2144439c6f61183caf2045bfb419f8cddc82267d14540624975f27232117729ccfeacccc7ecd5b71473c69d128152931865a60e6a104b"
         "67afe5ed443bdbcdc45372f1a85012bbc4614d4c0c534aacd9ab78664dda9b1f1e255878e8ac59e23c56a686f567e4b15c66f0e7c0931e",
@@ -2568,7 +2568,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "08a73a5c9c24235e0d9cecaac653f68ce5a6fb186ce67fa058d6ddbbd4d0a8c4d194e571148e8ad6c8882b4e33d2f60fb23dd7d07a1ae60864e8277918f592b3dc6",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "6744b69fc2420fe00f2352399bd58719e4ecdd6d602e2c80f194d607e58b27a0854745bfd6d504de2eb30b04cee0f44af710dd77e2f816ac3ac5692fad2d1d417893bb0edba2707a4c"
         "146a486f8728ca696d35cc52e9c7187c82d4bdb92eb954794e5ad15133f6bfea1f025da32ada710a3014cf11095b3ff69a94d087f17753",
@@ -2580,7 +2580,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "146f1984ea879274dfd5e86ad92e564a4de081523ddbb1c397b8f9595911ef2e6501bc081584d5340f7aa47e1af036234ac6f27a5ac31f78dd3b0ff1a62693c630d",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "16001f4dcf9e76aa134b12b867f252735144e523e40fba9b4811b07448a24ef4ccf3e81fe9d7f8097ae1d216a51b6eefc83880885e5b14a5eeee025c4232319c4b8bce26807d1b386a"
         "d6a964deb3bdca30ee196cfdd717facfad5c77d9b1d05fdd96875e9675e85029ecbf4f94c524624746b7c42870c14a9a1454acf3354474",
@@ -2592,7 +2592,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1ffe23e8ab5a31668a81161a234ea14879771fe9866f8872eb6edb672e0fe91d2bb75c9767a2dfbac7c15c802211236b22ea41ecd055a0b8b311ffc4255f86d5c67",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "a9824a7b810aa16690083a00d422842971baf400c3563baa789c5653fc13416111c0236c67c68e95a13cec0df50324dcc9ae780ce4232607cb57dd9b2c61b382f0fa51fd4e283e2c55"
         "ffe272597651659fbd88cd03bfa9652cd54b01a7034c83a602709879e1325c77969bebfd93932ce09a23eae607374602201614ff84b141",
@@ -2604,7 +2604,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1645a7d0e11015256cfb034adca198695eea6aedd44d9fbf496850ccfed950f43fffd8dbf41e113f2d3837d8a5dd62b2ed580112ff05800b1f73196e5576810e15b",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "90d8bbf714fd2120d2144022bf29520842d9fbd2dc8bb734b3e892ba0285c6a342d6e1e37cc11a62083566e45b039cc65506d20a7d8b51d763d25f0d9eaf3d38601af612c5798a8a2c"
         "712d968592b6ed689b88bbab95259ad34da26af9dda80f2f8a02960370bdb7e7595c0a4fffb465d7ad0c4665b5ec0e7d50c6a8238c7f53",
@@ -2616,7 +2616,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "05b6ccdfd5c63c7db76d3a0478064a2a376e0e050cb093be795a72a549247c2e4adba9183145c63d46479dbbdcf09986a6f64c09c7e16abc4853f6376c9558b014a",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "09952b1e09995e95bf0022e911c6ab1a463b0a1fdd0eec69117b34af1103c720b57600217de7cd178fef92de5391e550af72a8dcf7badf25b06dd039417f9a7d0f5be88fcd4e965593"
         "1d5b605452a667c9d1bae91d3476e7d51cff4108f116a49966fb3a7cff8df1c09734ce5620faf2dccb3dc5d94e7e9ac812da31f6d07a38",
@@ -2628,7 +2628,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "10bb6652d6a624c40a7dd06828f15774130d02369ceb1a7d03b553e16e17b7fa5b5401f15885d5e4fc2e55c0c7a1b97871ab02f76386b93a16aa6e7eb65debac6dd",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "0bb0f80cff309c65ff7729c59c517d50fc0ed5be405ef70cb910c3f62c328c90853d4473530b654dda6156e149bc2222a8a7f9be665240e2fbe9d03f78a2356af0bacd1edb84c4801a"
         "dc8293a8a0bd6123d1cf6ba216aca807a7eb4dca76b493eb6e3dbb69d36f0f00f856222f24d9b93ec34c3b261be2fca0451c00571928e5",
@@ -2640,7 +2640,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "15a6c18c5c77f5470b27d061eafdc26b78561941a3b2ab0f5c81d40899fc053c3d9ed12d7d61e298abbae470009c7b2157731c58d7b16a66fa5abaf5e8a1b8ed394",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "7efacf213382ce30804e78b7256854d759147dba9729c51b2759465715bf2c421034c23dc651c13d6cce95f71fe6a84dfbee5768163ac5789ac0474c5ddf4115684683c5f7c204b33b"
         "8bcc0c03ac58f66cef2f53b721fe2fac91ad841126101a88f512a7c2ded38549d9f050d4b7961dda48a1489f026c5d111701762418cfe3",
@@ -2652,7 +2652,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0c3a1b0b000c3169984132add51d611e2cb7069a262a6983d2ae72b459c36e6469509bdb0f473600b8686700b08910779dee9ba83f82e755d4a4ef5f124eb09397f",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "28edff8b9d85f5f58499cc11f492abdfab25e8945975bbaeee910afa2b8fc1295ec61406309ce4e09f4ab4f462959fc2a2786802466eb26d3b01be6919893ae75d0fdc2dc8a82e6625"
         "50f9fce9627dd364188aaba5c6faa1b2d8a2235adfa5ad0dc140f88a2b2f103f5690e877d07fe8fd30d02d2b2729bd3d8eb5b23a21f54c",
@@ -2664,7 +2664,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1a0c038a51796158b42eb5b0dac37aff9ab93b903a47e06ebbdd15946e4bcc9a3b3875b18cf6294c33fc6c3693cef04ed1a43d08951e664c760e2cf3fb4e47490d2",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "bae2a8897c742fd99fbf813351cd009d3f2e18d825ca22e115276484bce8f82f8c7c0c21dd2af208404d8ef45bb5a6c41693912b630897d5246801bf0775aa9bbac8be98cb861d172c"
         "3563dc59e78a58ed13c66dea496471b3ad0eeae8995293e4ab97373edc1837ffc95ff1cc0c1e90e64ea8680b2ca5f1e09bf86b99b343b6",
@@ -2676,7 +2676,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0ae7f0a238daaddb7fb4a1707fe5132daf653f8e19f732347134c96f1dd798f867c479a4a4609a568a15b61afed70790adbde13ac5f68c468d0230852c1a2c22581",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "d57a26a9593e72bfc87322524639bcaae5f2252d18b99cdaa03b14445b0b8a4dd53928f66a2e4f202fb25b19cad0eb2f1bfda2ab9b0eb668cdcd0fe72f5d9ef2e45e0218590f7ab9d2"
         "c9342202610c698bc786cce108a7d4a6730a13e9ea1b470e781f1237d3f84f44abde808516975546bd89075ef9a9732bfd7ee33b6f4399",
@@ -2688,7 +2688,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "120b90e1cfb8a1b5e530df7b17d1128bc051ca4f1a65dd9c9d9d3c59d2f00c7c1e994c52b8671d40294b4d574d2c04475d5bebeacd3a0d3870a54dc7a4805614f40",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "8fdcf5084b12cfc043dd3416b46274e021bbed95d341d3c500c102a5609d3a34de29f8fa9f0adb611a1f47a97ad981f8129d718fc0d6c709eab1a3490db8d550f34eb905b9e0066354"
         "3afc5bc155e368e0bc919a8b8c9fa42093603537a5614927efa6be819ed42ececbf1a80a61e6e0a7f9b5bc43b9238e62d5df0571fea152",
@@ -2700,7 +2700,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "058044fc64b340604ffd02a5b2918d76fd6fb59ea895feab7aa218e6f1e8c8f226eb9ee345ef8140183a69272582005077b008006aab11597e808d7ff1e8382c924",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "00669f433934992257bed55861df679804107d7fa491672574a7624949c60049b0533383c88d6896c8de860704c3e6a6aefce83efa57c4d57e9ab253da5d15e1f53ab6dce218b59277"
         "2ab0bc01fee8e63368e85c0639301456fe2d44cd5396a7f2b22761cd03b80eba7883eede8249a2f5db2183bf00550c5c002f45a5e4fb31",
@@ -2712,7 +2712,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "005b679a33fdb7e04834f071cd0ac514c04add9f2614ab9bbd9b407b1420fed3f3e02a108e7e279899e43dcf64ae4083c289a87cd7d2103bdc036a95d36800ac7c6",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "4be81dcfab39a64d6f00c0d7fff94dabdf3473dc49f0e12900df328d6584b854fbaebaf3194c433e9e21743342e2dd056b445c8aa7d30a38504b366a8fa889dc8ecec35b3130070787"
         "e7bf0f22fab5bea54a07d3a75368605397ba74dbf2923ef20c37a0d9c64caebcc93157456b57b98d4becb13fecb7cc7f3740a6057af287",
@@ -2724,7 +2724,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1cf9acd9449c57589c950f287842f9e2487c5610955b2b5035f6aacfd2402f511998a1a942b39c307fc2bcab2c8d0dae94b5547ddccfb1012ca985b3edf42bbba8b",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "9ecd500c60e701404922e58ab20cc002651fdee7cbc9336adda33e4c1088fab1964ecb7904dc6856865d6c8e15041ccf2d5ac302e99d346ff2f686531d25521678d4fd3f76bbf2c893"
         "d246cb4d7693792fe18172108146853103a51f824acc621cb7311d2463c3361ea707254f2b052bc22cb8012873dcbb95bf1a5cc53ab89f",
@@ -2736,7 +2736,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "087488c859a96fea266ea13bf6d114c429b163be97a57559086edb64aed4a18594b46fb9efc7fd25d8b2de8f09ca0587f54bd287299f47b2ff124aac566e8ee3b43",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "b3c63e5f5a21c4bfe3dbc644354d9a949186d6a9e1dd873828782aa6a0f1df2f64114a430b1c13fe8a2e09099e1ed05ef70de698161039ded73bcb50b312673bb073f8a792ac140a78"
         "a8b7f3586dffb1fc8be4f54516d57418ccc9945025ce3acf1eb84f69ceee5e9bd10c18c251dbc481562cd3aae54b54ab618cb1eeda33cf",
@@ -2748,7 +2748,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "16a997f81aa0bea2e1469c8c1dab7df02a8b2086ba482c43af04f2174831f2b1761658795adfbdd44190a9b06fe10e578987369f3a2eced147cff89d8c2818f7471",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "6e0f96d56505ffd2d005d5677dbf926345f0ff0a5da456bbcbcfdc2d33c8d878b0bc8511401c73168d161c23a88b04d7a9629a7a6fbcff241071b0d212248fcc2c94fa5c086909adb8"
         "f4b9772b4293b4acf5215ea2fc72f8cec57b5a13792d7859b6d40348fc3ba3f5e7062a19075a9edb713ddcd391aefc90f46bbd81e2557b",
@@ -2760,7 +2760,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "08c3457fe1f93d635bb52df9218bf3b49a7a345b8a8a988ac0a254340546752cddf02e6ce47eee58ea398fdc9130e55a4c09f5ae548c715f5bcd539f07a34034d78",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "3f12ab17af3c3680aad22196337cedb0a9dba22387a7c555b46e84176a6f8418004552386ada4deec59fdabb0d25e1c6668a96f100b352f8dabd24b2262bd2a3d0f825602d54150bdc"
         "4bcbd5b8e0ca52bc8d2c70ff2af9b03e20730d6bd9ec1d091a3e5c877259bcff4fd2c17a12bfc4b08117ec39fe4762be128d0883a37e9d",
@@ -2772,7 +2772,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "12fed45cc874dc3ed3a11dd70f7d5c61451fbea497dd63e226e10364e0718d3722c27c7b4e5027051d54b8f2a57fc58bc070a55b1a5877b0f388d768837ef2e9cec",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "a1eed24b3b7c33296c2491d6ee092ec6124f85cf566bb5bc35bffb5c734e34547242e57593e962fb76aee9e800eed2d702cc301499060b76406b347f3d1c86456978950737703c8159"
         "001e6778f69c734a56e5ce5938bd0e0de0877d55adeee48b0d8dfa4ac65fd2d3ce3e12878bac5c7014f9284d161b2a3e7d5c88569a45f6",
@@ -2784,7 +2784,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "120be63bd97691f6258b5e78817f2dd6bf5a7bf79d01b8b1c3382860c4b00f89894c72f93a69f3119cb74c90b03e9ede27bd298b357b9616a7282d176f3899aaa24",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "9aace26837695e6596007a54e4bccdd5ffb16dc6844140e2eeeb584b15acb2bbffd203c74440b6ee8db676fd200b4186a8c3e957c19e74d4d865ada83f80655323dfa3570907ed3ce8"
         "53b6e8cc375ed2d758a2f5ad265dd3b47650517a49b3d02df9e0c60c21576378c2b3a08481eec129b2a75608e13e6420127a3a63c8a3f1",
@@ -2796,7 +2796,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0386a5a0fc55d36ca7231a9537fee6b9e51c2255363d9c9e7cb7185669b302660e23133eb21eb56d305d36e69a79f5b6fa25b46ec61b7f699e1e9e927fb0bceca06",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "ac2175940545d4fbab6e2e651c6830aba562e0c11c919e797c43eff9f187a68a9e5a128e3e2a330b955a3f4577d3f826529ad1b03d7b60f7ad678f005053b41dc0f8d267f3685c6abe"
         "1a0e9a733c44b2f3ca48b90806f935141c842e3a6c06a58f5343d75e3585971a734f4ae1074ce5b54f74bd9342f4bbca738d260393f43e",
@@ -2808,7 +2808,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0c6f1c7774caf198fc189beb7e21ca92ceccc3f9875f0e2d07dc1d15bcc8f210b6dd376bf65bb6a454bf563d7f563c1041d62d6078828a57538b25ba54723170665",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "6266f09710e2434cb3da3b15396556765db2ddcd221dce257eab7399c7c490135925112932716af1434053b8b9fe340563e57a0b9776f9ac92cbb5fba18b05c0a2fafbed7240b3f93c"
         "d1780c980ff5fe92610e36c0177cabe82367c84cee9020cf26c1d74ae3eb9b9b512cb8b3cb3d81b17cf20dc76591b2b394ef1c62ac12ee",
@@ -2820,7 +2820,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "05d1bcf2295240ce4415042306abd494b4bda7cf36f2ee2931518d2454faa01c606be120b057062f2f3a174cb09c14f57ab6ef41cb3802140da22074d0e46f908d4",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "3de9e617a6868dca1a1432d503f923535da3f9b34426b2a4822174399c73b1c1ee67311410a58c17202ac767844b2024d8aa21a205707d93865693ac25a24fc87034fa3a7a7e27c334"
         "4cb03b87602c15180a5fe6a9dd90cd11af4a0f150207bf2d83f55b12c088adae99aa8cfa659311b3a25beb99056643760d6a282126b9b2",
@@ -2832,7 +2832,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1bcc1d211ebc120a97d465b603a1bb1e470109e0a55d2f1b5c597803931bd6d7718f010d7d289b31533e9fcef3d141974e5955bc7f0ee342b9cad05e29a3dded30e",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "aa48851af7ef17abe233163b7185130f4646203c205e22bcc2a5a3697bcab998c73a9ffe1d3ea0b7978ce7df937a72586eb5ca60b0d939a7d1c115c820171c89c8116b7e2c7b98cf0f"
         "14e4c4df3cb2f319ad3ab0ea25ff14526ddc037469f000bf82100acd4cdf94feb4eba4ea1726f0569336604a473aee67d71afebb569209",
@@ -2844,7 +2844,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "134ac5e1ee339727df80c35ff5b2891596dd14d6cfd137bafd50ab98e2c1ab4008a0bd03552618d217912a9ec502a902f2353e757c3b5776309f7f2cfebf913e9cd",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "b0d5d52259af364eb2d1a5027e5f7d0afe4b999cc5dd2268cfe76f51d2f17b541bdd7867e23a1bb897705153d9432a24012108979c6a2c9e2567c9531d012f9e4be764419491a52eae"
         "2e127430b0ab58cb8e216515a821b3db206447c235bf44ee304201b483b2a88844abaa18bca0147dfff7e502397dd62e15524f67eb2df2",
@@ -2856,7 +2856,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0b79ffcdc33e028b1ab894cb751ec792a69e3011b201a76f3b878655bc31efd1c0bf3b98aea2b14f262c19d142e008b98e890ebbf464d3b025764dd2f73c4251b1a",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "9599788344976779383a7a0812a096943a1f771ee484d586af1a06207478e4c0be9c200d42460fe837e24b266c8852d80d3c53cc52ffb1913fc3261145fc6da575611efd16c026059a"
         "2e64f802517ffd1b6b34de10ad2909c65c2155e8d939b8115400c1d793d23955b15f5d1c13c962ff92b4a815cee0e10f8e14e1f6e6cd38",
@@ -2868,7 +2868,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0d05ee3e64bac4e56d9d8bd511c8a43941e953cba4e5d83c0553acb87091ff54f3aad4d69d9f15e520a2551cc14f2c86bb45513fef0295e381a7635486bd3917b50",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "fdde51acfd04eb0ad892ce9d6c0f90eb91ce765cbe3ce9d3f2defe8f691324d26b968b8b90e77706b068585f2a3ee7bf3e910528f7403c5af745a6f9d7ba6c53abd885c3b1be583415"
         "b128f4d3f224daf8563476bd9aa61e9c8518c144335f8f879c03696bddbe3ac37a8fbede29861611feaa87e325e2f60278b4893ed57fb0",
@@ -2880,7 +2880,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "161963a6237b8955a8a756d8df5dbd303140bb90143b1da5f07b32f9cb64733dc6316080924733f1e2c81ade9d0be71b5b95b55666026a035a93ab3004d0bc0b19f",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "beb34c997f905c77451ac392f7957a0ab8b23325bd5c63ca31c109ac8f655a1e3094240cb8a99284f8091de2ab9a7db2504d16251980b86be89ec3a3f41162698bab51848880633e0b"
         "71a38f8896335853d8e836a2454ecab2acdcc052c8f659be1d703b13ae1b090334ac50ab0137ddb5e8b924c0e3d2e5789daaef2fdd4a1e",
@@ -2892,7 +2892,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "072fd88bb1684c4ca9531748dfce4c161037fcd6ae5c2803b7117fb60d3db5df7df380591aaf3073a3031306b76f062dcc547ded23f6690293c34a710e7e9a226c3",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "543c374af90c34f50ee195006d5f9d8dd986d09ad182fcbefa085567275eee1e742bfe0af3d058675adeb5b9f87f248b00a9fbd2aa779129123a5b983f2f26fc3caf2ea34277550c22"
         "fe8c814c739b46972d50232993cddd63a3c99e20f5c5067d9b57e2d5db94317a5a16b5c12b5c4cafbc79cbc2f9940f074bbc7d0dc71e90",
@@ -2904,7 +2904,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0097ed9e005416fc944e26bcc3661a09b35c128fcccdc2742739c8a301a338dd77d9d13571612a3b9524a6164b09fe73643bbc31447ee31ef44a490843e4e7db23f",
     },
     {
-        ec_curve_t::ec_nistk233,
+        ec_curve_t::ec_k233,
         hash_algorithm_t::sha2_224,
         "f23f784fe136c9fc0d169503d361e9c6148b0f1fbdcae0a97fae1af7033ddef25cb7489c9963cfcb009a8cbfe44a8510a64a073eb1deae4c324ceb9302008c92c69b2dafcc9077fd3c"
         "c3c7c119edc3ced36d176ceaa55ac036bf7f07f6fa215e8bb8196e59a5e1c9af4f98b90ab4970885bd7015fa26a09e03c7cf6b4b23d929",
@@ -2916,7 +2916,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "03bcb84b8f1990cfc7b88f2b8cc817105cd8e150808e7c87b310cdc47e3",
     },
     {
-        ec_curve_t::ec_nistk233,
+        ec_curve_t::ec_k233,
         hash_algorithm_t::sha2_256,
         "c73e3dbac9513d0361dabe94071faf03a11cba18c06d131a172d5f0125b01a5eeb6055bf72c7106fe3f4be3bd2b1771cbe7f85366dccfbc3bac20538510c3f51179cc540ddafb2f3b0"
         "5a0d276899674ab1d7d8fb4f6838f04e4f9e26b8c6af31540f63f4953c85840af4c57dfa78c704f637dfc8dd750fe45e2c1e149986d127",
@@ -2928,7 +2928,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "004337ecfac57abb9271909aa43ff4e32851df7818dcd87216d051189c0",
     },
     {
-        ec_curve_t::ec_nistk233,
+        ec_curve_t::ec_k233,
         hash_algorithm_t::sha2_384,
         "986d9e5d636526f4deb7545c037fe81b09c74496ddb8e42e61650c74b6fe348593f0cf8f8eca5e839baf62f17bf6ad96ec0c71dc44fdf11259dbfe7499157e402f6bd5076972354150"
         "723afb632799a990c44cd0a4fa9609ec4db133e3b4700be3ea4a338e8ba1873d345e80163ed60d0de274d7617a8382980bc2138b0a2a01",
@@ -2940,7 +2940,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "01da3fd8c08d8e17692059c669da3c7c4c146df6d3cbeaf34598d28eaae",
     },
     {
-        ec_curve_t::ec_nistk233,
+        ec_curve_t::ec_k233,
         hash_algorithm_t::sha2_512,
         "72cdef5bdf710978e0aa334b86b8ff4a58630da314eabe98b4d611aab56f55c526983d54d19bbbf9ddba30a84b18aa0bae9f9503e9b222f842f084db83aa39625403213ca321cc0d9c"
         "8a136c826e6ea4ec108b913dd0a9ce9d5b8c7e3af53c3876e56a2037ebd6d99f037a097111c837647bedfe4c494e4288ed6427c15969e3",
@@ -2952,7 +2952,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0373e69da1fe35ce41ff344447fa7ffe6fc71e28dc68244372745739fc2",
     },
     {
-        ec_curve_t::ec_nistk283,
+        ec_curve_t::ec_k283,
         hash_algorithm_t::sha2_224,
         "ef90f85fbda05e693006e4c64e1dac56223becaf0890f73b5274e6e289a5a1de2c141b825c24d595b3fd18ca855b5c1aa60dac6b5356275b11be670692cdbe5f282f93ac7b2e410a96"
         "cb9e9f80defcde98f3449f99e192bfd62040421a0ab8f99acb85369f25e5efbf81439efa8a5e1d9cf781355a0f47b037b09fe4086389a0",
@@ -2964,7 +2964,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1aeef69983da1a535b10a47e66d890c4413c7a8cd6a2511a1a670a4c573d4808f46e23a",
     },
     {
-        ec_curve_t::ec_nistk283,
+        ec_curve_t::ec_k283,
         hash_algorithm_t::sha2_256,
         "f646e7334e191c2bf0056d3bfd23f03ef7f0777b923f962519a8399d311b8f68414c689ca34b96871fae99eb7ea534fcd83e788e56eeef817cbfe33677283c736b99bf6a626f951529"
         "1e842bf99f694e4e8aa7c9911c591a87d5f112b3d96b064594e2b368e6d1bf1a1cd343d54916a66da22c26355266aa2884120fffb8b94d",
@@ -2976,7 +2976,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0e5b08d410f2252f724dfcecaedb37b92a6c09cde646ff6237007f4199068f945ebebe2",
     },
     {
-        ec_curve_t::ec_nistk283,
+        ec_curve_t::ec_k283,
         hash_algorithm_t::sha2_384,
         "e4d8d49c9bc566261d9134d5e237d9cbd6b67d2619a9bd06b7c9c139e091aa10682cbede114e1d4777d9cd67a16b7d64278e99eed62bbf25ec5a5a8fabcb0a3468b0e73fd02ac6533e"
         "04b1110d29da3e34f33eaa228b78341b357a5d892a61beb2168c3bd5e66bffe3f2080a1e246f55a41ebf9d579e188d16991aa060460d6a",
@@ -2988,7 +2988,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1f516f8ed4372780380a798d2da04d691aec379483bc0d10560ca79edaab453d3e77585",
     },
     {
-        ec_curve_t::ec_nistk283,
+        ec_curve_t::ec_k283,
         hash_algorithm_t::sha2_512,
         "c406aa4295f85c854b4db2de5a7a2defae53a319866921a3673af5b48c85ef22f6eb4cef892c790d8e64530fc20c729b2821b5f5e515560b1ac764106560c3a6a05657e34cd6deadfe"
         "2884bd288cef4ca92e1f25adde7d68a30fb0a1b3678156ced62e466718e68e9d67099ad82613b8d06bdda1a7b867c2455422818ae9eeac",
@@ -3000,7 +3000,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0c5e0b2d1991718355be14bc57e2d6ff9fa63e0812b9adae69f64da610cc6cbe36fe4c5",
     },
     {
-        ec_curve_t::ec_nistk409,
+        ec_curve_t::ec_k409,
         hash_algorithm_t::sha2_224,
         "f153cc61981a46d8a47d17d29ec157fa93fcf644beb84558db7c99c57fb131dcbc5b65581ced5ff0b29bfdc66ff703ecdd4290f7c353c02a3e6d6867f33f3dccd1a0b6752b8a35fa14"
         "3f8921a5078af9c85b212564c5b795da9858c7955095938fcd10c21e35e1abe905e84c8b4bc05f2a06091ce876d9519b96951d08c7ac9e",
@@ -3012,7 +3012,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0741d27c0dddca3641b56ba1e9bacb0da1fcee46b9e33ecc6990b98cf0db74668ef1009a50e5d55f80e6642ea48689a529c8a08",
     },
     {
-        ec_curve_t::ec_nistk409,
+        ec_curve_t::ec_k409,
         hash_algorithm_t::sha2_256,
         "dbe04561ea8579672a2b3afa94426a3cbc274b55263989d41a778bcb082da797d84d930ca847a481789524940701cd5f1d11b460bdac0bffb0b3a3abe1ab689c519700de85a0a57149"
         "4ba0cfc3c865450eba7a9e916b7fa9df55e8a1c246c992e6a0b44b78274e008472bed8d8411633e6520e1a906c5d0c8aafd572fe6f1f64",
@@ -3024,7 +3024,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "03e81601d0c66b507a491c530075edc5b09d770633a4c2355b3b1c7df9b200ebc7dcb706be1696aab70d4c6e1c4a7e532284670",
     },
     {
-        ec_curve_t::ec_nistk409,
+        ec_curve_t::ec_k409,
         hash_algorithm_t::sha2_384,
         "ec69f2937ec793aaa3486d59d0c960ee50f640a9ce98a3becffc12d6a6c1c6c2f255d37d29f9b4d068373a96beadac98fd5203a9f229bfc70bcd449640165ae5128e3f8d057769e283"
         "56e73e35d8e9af7876f608390090892c67391ddfcc1c332aa61efbf72d54bc615998b3be8ab0a9d372784bea48c9fab244482c75cb2de3",
@@ -3036,7 +3036,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "026a01220a1166a4d0172428753e98caf0aaac5b0a09c5a3f11b2645d243991d141f59d6cc502ac44b70e7c48d6b0d7b6ec4869",
     },
     {
-        ec_curve_t::ec_nistk409,
+        ec_curve_t::ec_k409,
         hash_algorithm_t::sha2_512,
         "3583a3226e2dc463a462fefa97024e6e969c1b13bdc1d228e2d7823d9f7c09012390c2535baf086588000e908309090daac6e6d2b06d2ede6fae838ed47f30b5b481185f607a3586f6"
         "dea47c8f84e9d3b96d5b0ebae2462fde1e49d84d36658e87dccf5e30c0937feefd8862dcdb1a1ca373f6ae41641502ac54df6633a8cec1",
@@ -3048,7 +3048,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "078acfad2f2492f74b0281d53e4224c7544588ca9ceaeb16bf759b20c2f3d3ed69c64615c247213d51800569dc8b00078de68ef",
     },
     {
-        ec_curve_t::ec_nistk571,
+        ec_curve_t::ec_k571,
         hash_algorithm_t::sha2_224,
         "964ad0b5acc1c4db6674e86035139f179a9d5ec711b5bae57d2988456bb136d3aade7ac9ef10813e651ae4b9602308b071d75a934a6c012eb90c5eb9b2947b50fc97b1d36c5bf9eb13"
         "a7b06c94212c3dcdab402a563262298defff62b836ead1f78f9d20713710fb48115cc5045ba15140fbb4bdf516e4150d830d02cf30963d",
@@ -3060,7 +3060,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "16535b1af98a75b9bc0f122ca3ce23a01800fa33b43584a94fd8a8d6f40077eb739f07c9f0e179a157a28023735fc8da2e2ebbee5f7308925900e657fae7c3b321f14fc45346f89",
     },
     {
-        ec_curve_t::ec_nistk571,
+        ec_curve_t::ec_k571,
         hash_algorithm_t::sha2_256,
         "d9c99b8da92d3c2e40dea3c4025dc37770e867c4d2746c4d726b6de24250591a586c166c88acb8ed340e161d4c81b9d14c919a1b06f1feb22c5ce5fca2693bdaf4994ac72c8983c87f"
         "331473fd094eccb3d5f3528e69d487562fb5a65c150a8217192f8aabfa7adcfd0b6916d5000248fbbddf1ca2f38e3d9ed2b388998b7cfc",
@@ -3072,7 +3072,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0c64baaeed68178f5a1d8f095b0932fb73f9a02462df5e8378746ecf17d05971a0a287d5a8e0317db055b02d4f4b5864597d0f9a9cb1ae68577dcaf7db09c55bf3d3575197295c9",
     },
     {
-        ec_curve_t::ec_nistk571,
+        ec_curve_t::ec_k571,
         hash_algorithm_t::sha2_384,
         "1de4b642ec7220c64b91561caed7832044d6e811ac909f3b199cceb0d8a7db91bcdc801412044f5c34b355b95a2c6170fe497f6d5259bc20715a38cb0341c88e93029137e94d895bab"
         "464bca6568b852340a5c5d6a225475f6eefe2fc71ffa42f857d9bab768ccaf4793c80c4751a5583269ddcfccf8283c46a1b34d84463e61",
@@ -3084,7 +3084,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0e782ef47b250f40c56e3ac4de112347174bd59fd4cc991a2b538ca90cdb222d048fec62e2773492a1d327152d1d6591740706fe2f8e1d65de888d47fdf173b2645813ac0fc3078",
     },
     {
-        ec_curve_t::ec_nistk571,
+        ec_curve_t::ec_k571,
         hash_algorithm_t::sha2_512,
         "97b79c76d9c637f51294369e0bb52c4189f2fd3bd0607f91834aa71b3555605a89ff68e84fb5bda603f502f620e14e8b0c7affefafa2f0b303009ee99653ae4550a05315e551dd12a4"
         "d8328279b8150d030b03c5650ed4f8d3ba7c3a5361f472f436b200b321e7863c771e20ddd7bdf739c51de3676f953a5501e4477aed1bd8",
@@ -3096,7 +3096,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "140163edb5f3c4b49228e4614bfc6da9f73674eab82678ad9947b2a635f733dbce99ce3209f613e2a75e62ed84db4d7d13de6d789b7cfedc0cb6a028d8316db8831db66c91791c5",
     },
     {
-        ec_curve_t::ec_nistb233,
+        ec_curve_t::ec_b233,
         hash_algorithm_t::sha2_224,
         "f1b67fde01e60e4bb7904d906e9436a330c5cb5721fd4e0a3c75b83dade868736bb1d21cfb1b5c6407c373e386ee68ec2239b700e763728eb675a153b8ac44cf2a87be85fe8ed66834"
         "30cf4b7d718891cbf8d583d0a37cc952cc25fe803a7aa4fda80f05541a2f1f2601cdd0c095f7110f2a84f7d641b8531572269b21cbe77b",
@@ -3108,7 +3108,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "026d6f50f0508953657df5d753c595ffb8e1c19f8d092f8ce8db54f76d0",
     },
     {
-        ec_curve_t::ec_nistb233,
+        ec_curve_t::ec_b233,
         hash_algorithm_t::sha2_256,
         "d288768cbd066fad4bb2500b5683fa9e4eaedfb3dbb519b083f6b802efda0a022355565c5fc6babeccb22f3adbbda450ce5d633193d1431e40c0fe631a295cf85965cd3f5937b31866"
         "bd6a5300eaef9941daf54d49832acfceed90e572ef34ccc94eacd0fd6b903fee3c572b963d21e2881656a214d2a4c125778dbe3bbeebca",
@@ -3120,7 +3120,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "07de2deeb58d55d65fb37f600d916cfa49f889f02ef53dcce412703d1c9",
     },
     {
-        ec_curve_t::ec_nistb233,
+        ec_curve_t::ec_b233,
         hash_algorithm_t::sha2_384,
         "05a5d3a3b79f4e51b722e513620c88092a9bb02408f5f52a32e782fd4923f4fd3094fc5536caf4b645d830260eba91b5173f3833dd65600fb9e246aec968b1f6ebdfddb4059fb2de7e"
         "636ed60bb7affdb74aefd158e54485d5f26be373cf944c6570daf8fd7e4b77fad57300667d6decf5c65db99ab8763bb4ecbb09fdf47e3a",
@@ -3132,7 +3132,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0ef338e09dac0b12fa6109d15924efb694a0b672afb4ef05f4e6f2f7b88",
     },
     {
-        ec_curve_t::ec_nistb233,
+        ec_curve_t::ec_b233,
         hash_algorithm_t::sha2_512,
         "e95abeeb2c51a8cb75ab74253dbe130b5560cd52e2a63d501d26e1458aa568aca6694be91eee5fdfcf582c47c1c727084ee2b2c810281cf9b095808bf7e7c668eff00a6e48b06df3fe"
         "6a445e092c24d5687d7d89acc8063275caac186c441bc697b2f67aa71b03294e1adeb7e557c296dd91304ba0587cda3c984619f1eb4f2b",
@@ -3144,7 +3144,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "036d1debebaaef50243005e25c791b9674cd6fa986dc3d32e089fbfb2ec",
     },
     {
-        ec_curve_t::ec_nistb283,
+        ec_curve_t::ec_b283,
         hash_algorithm_t::sha2_224,
         "067f27bbcecbad85277fa3629da11a24b2f19ba1e65a69d827fad430346c9d102e1b4452d04147c8133acc1e268490cd342a54065a1bd6470aabbad42fbddc54a9a76c68aceba397cb"
         "350327c5e6f5a6df0b5b5560f04700d536b384dd4b412e74fd1b8f782611e9426bf8ca77b2448d9a9f415bcfee30dda1ccb49737994f2d",
@@ -3156,7 +3156,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "06e30c3406781f63d0fc5596331d476da0c038904a0aa181208052dc2ffbdb298568565",
     },
     {
-        ec_curve_t::ec_nistb283,
+        ec_curve_t::ec_b283,
         hash_algorithm_t::sha2_256,
         "f415d0adcd533dd8318b94560f86732c262ad2c6dff9dc83e2435543f429a2158cd2fbab0d96c027f71008c4895ecc644c2ceaefa80937f6cc6338d15d36e459a16bd9387a361a6d80"
         "0acfd834ad5aecf442e30b70f5bfa164747cf9f89325b80976052a83a5e896c00c54f81472b14329cf23bec10a8e693005de2a506ba83d",
@@ -3168,7 +3168,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "15c61ddf43386a2b8cf557760200ac06a480797e21c92e45e6a311e1a508b03c4d9632e",
     },
     {
-        ec_curve_t::ec_nistb283,
+        ec_curve_t::ec_b283,
         hash_algorithm_t::sha2_384,
         "eab0a37915c6b43b0d1e3ef92e6317b3afc8b8301b22f6059da8271fc5fe0e419ca6097daba213915855631af64e10d8382d70599d903d1535e25cbf74da3a12ba2f13c33a8562e0db"
         "03edce791f1d39af8850fd1feff0eb25f9ad0a86dfab627b96e65831bffc5f6d9693d20493bc9dd6eb3e9325dea50b055768e8aa30d49c",
@@ -3180,7 +3180,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "15d1c9f7302731f8fcdc363ed2285be492cc03dd642335139ba71fbf962991bc7e45369",
     },
     {
-        ec_curve_t::ec_nistb283,
+        ec_curve_t::ec_b283,
         hash_algorithm_t::sha2_512,
         "4736e59fe5812f63737eed57a570182c065538abd9fb0a1c9c2059199e7052ba57d84b5fa1cda2ad9f216610361ce1dfb9334816b6bea509283756a03aaae2e5b0597f492d078b6b01"
         "5a40c9785dcc5d2ae266176980db04f5cffef40e16661a50ef871c5f531d73fd5d114fa19bae9dd2da4267a131fc31849da38c2b78d1af",
@@ -3192,7 +3192,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "33fd50b214f402deed1e20bd22eba71b156305e4f5a41ab9374b481ee344ab3f27f4bcd",
     },
     {
-        ec_curve_t::ec_nistb409,
+        ec_curve_t::ec_b409,
         hash_algorithm_t::sha2_224,
         "f2380acb0d869d1cf2e25a6bd46ebe49d1c9270624c5507be4299fe773749596d07d10f7c2be1c0b27e86f27b4a6f8dff68cfe5c0b4c58dad1b4ebec7bd00ab195fdd635d9fa8a15ac"
         "f81816868d737b8922379648ed70022b98c388ede5355e4d50e6bc9ec57737d8843fabda78054e92777c4b90466a5af35dd79e5d7a81ce",
@@ -3204,7 +3204,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "05275de4157b32723366a0d63831e6512241e3e4416f3af02e22da8faeabbddd761160304927a71cfff4d6e8937347c9b78cd3b",
     },
     {
-        ec_curve_t::ec_nistb409,
+        ec_curve_t::ec_b409,
         hash_algorithm_t::sha2_256,
         "3e967cbc2bd936e0b6125dc5cf885735bdcd2d95b2f764de6931c4578ac8e0e87abdf96375481df67dbe1b6c43537e84ec62bfca6672cc5f3ea4125abd4a4119edffe04e42411d338e"
         "8b10abb1f1f818c50a9631a3f89feb5be5367bdcb0a8a82c96a427ba6ce99f9631d4411a2b7f5b14d32cb3901dc9d285e4cf5508940942",
@@ -3216,7 +3216,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0832f7674eea791b5f17db7cf9e2ab13253d870c6ab46ad01cdda30e78db8b8f51fd377dd55ec7786ccc92b17364a3c17ad5be4",
     },
     {
-        ec_curve_t::ec_nistb409,
+        ec_curve_t::ec_b409,
         hash_algorithm_t::sha2_384,
         "55053af9370901e38622734a5bc5589f6a20e258627f381fb0c366f3dbe58394e5997e978eb7ebbc530f6e6186f48294149b8594fb551c31c50521a8c4d67e5862921695604afb2397"
         "7b6a69b21abe75966fdd11bfbdb6b51ab0a474c5fa07c4de7872a3bd81acc417655090558dfcd5af449b3347e61fa9e839bb9457de64c1",
@@ -3228,7 +3228,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "043bb7a8db3d79938beedcd6ce02f375e26ce807a2afd4fc446f372fb09a69fb34734df5dc8f6393f86577a8d29014494379624",
     },
     {
-        ec_curve_t::ec_nistb409,
+        ec_curve_t::ec_b409,
         hash_algorithm_t::sha2_512,
         "ccd494ca005ad706db03a3df6d5c6e876ef859ec77a54de11fe20d104377df1900b6b192126c598944d19a2364b2ae87ad7fd32265d59e1f22be5833f20767793677b628f18e9619f8"
         "ca32f3af3b41c31e87a98d1527e5e781bff33c1a8be3a82ea503e76afec5768d7f7dd1f17dc98a9e7f92fd8c96fca0db518bd143d82e6d",
@@ -3240,7 +3240,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "0ff3ad5ca70aac94facd842fecdf6a28afbceab80b549507954b7dea6da06d1facd11e0a88e9c2a549e6971a08d1af75aba8363",
     },
     {
-        ec_curve_t::ec_nistb571,
+        ec_curve_t::ec_b571,
         hash_algorithm_t::sha2_224,
         "8e14f713a2c427b1f79491033994f76acbead614d12e73ac6f3f518f2052a10c1273aabe628ab38e0d3d5f8ff254802e9f44a51367bf80325b6fc39d907a37f731372864747b10749e"
         "a5cb3d3a83da39c21a7b02885a8c1770e4397cedc958e4baa21d5007569dc9dd1e45d2181709d900a394454090badbd0cd9c2cd2369aad",
@@ -3252,7 +3252,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "1b1e98db422fd48f1dfa049f38865f8bf9ec5618fdbfb50f21cc838051a1493e4b1e4f9ea81156481e5fd84124fbab740421173862c63920e3a833aebf0762e7b5b39a1591d27c8",
     },
     {
-        ec_curve_t::ec_nistb571,
+        ec_curve_t::ec_b571,
         hash_algorithm_t::sha2_256,
         "29acb0fca27e2a10d7b9e7e84a79af73e420abdb0f80dd2665696638951b52dd39ca028166b47a3b6a2eaeceb1a11c152383f0bec64e862db1c249672b3770909f775b794e0b9b28a5"
         "ec8635a996d912d837a5f22471b40ec2e84701a8804127a9f1a0b3c96ff654700bad3167240c2518fb5dedcc1be9f56a807083e587bc56",
@@ -3264,7 +3264,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "28f35e1aeae288122b043deff9ac87d39478607da60cc33d999b6add6209f452f631c6ce896afd92ab871387f5ea0eae5f6d5cf532e7a6ab44dcf44acb1fd1daafaf1ad5423d8e8",
     },
     {
-        ec_curve_t::ec_nistb571,
+        ec_curve_t::ec_b571,
         hash_algorithm_t::sha2_384,
         "e67cecedf35058b80787589514a9c81c6b9f4bced4260411d2af75bc46b8b2c962dc9d260dc99ebbf8ee64950766efc0e394184bdc8e2891d66bd3300ecc880e9d6a3d0eb615322378"
         "afc3dba89938704e9a8d0c949d4bae9838805c00377e3fe5ec6a1a98ad7eaaba6b500973dac48b26b7fb2e1b9889f8c387de535d4b2363",
@@ -3276,7 +3276,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
         "33d63693268f3762635373fc901fd72e525965ac17e2cc009177f03bd3524107b30e4c6d80bbc4f87fb1f288ed56812994541fe063f1d91afa7213bed8be5693dc6c17ec9a0714f",
     },
     {
-        ec_curve_t::ec_nistb571,
+        ec_curve_t::ec_b571,
         hash_algorithm_t::sha2_512,
         "10d2e00ae57176c79cdfc746c0c887abe799ee445b151b008e3d9f81eb69be40298ddf37b5c45a9b6e5ff83785d8c140cf11e6a4c3879a2845796872363da24b10f1f8d9cc48f8af20"
         "681dceb60dd62095d6d3b1779a4a805de3d74e38983b24c0748618e2f92ef7cac257ff4bd1f41113f2891eb13c47930e69ddbe91f270fb",
@@ -3289,7 +3289,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-224,SHA-512224]
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512_224,
         "dec6c226a325e24fc7153c059df1ce1b34da4758cf5a18329547cdd98aea9e77be6141b6c54203846681171397942e23aad44883c127c9d587dccf9322d6c34f63ed2e3f4091cef885"
         "b0ea7ac6dae26d98a40aaa014ab8fd2c989c29610a502d353230c6fe5a6c358a6b5c42110d1381671036d4760b0f31ec42dda631cd6e9a",
@@ -3302,7 +3302,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-224,SHA-512256]
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512_256,
         "657196794b15e717027b4e4d59c9b27b056b1a98e84d1311934d53d409f09ba7c553e2bfff65af8e2c54c7dcc4450819474895f2828b33220fcef38b1b1612856ba61d76a12b58a3bc"
         "376145dff011e0530aa3d0cef21824f64cd9b021a09f5e5f5090c5baceabfdbc0b65b13233947530978d5a55eb89c050b14e6ca3f50bdb",
@@ -3315,7 +3315,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-256,SHA-512224]
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512_224,
         "221f7924ea78a2568f156580ff3dbf36ca535b0d84a8110b6c93ae5b4ac4f3459ed5e05ef62232fca0db2aed8157906945abf844b97c446874116a83bdac77fda91bd42d848ac8cc72"
         "9b3faa56b9ca9ff3a9e6c5526181e4631eba2ee6b1e92d8c19dff95a576fae4f7e2d1d460a75c21e72aff71701d2667fe127c48f7950bd",
@@ -3328,7 +3328,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-256,SHA-512256]
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512_256,
         "cb492d9d676831a551e551c6a8ed4ecdd9cf8f951d6bc42043e6c9e6afa3cd6da36fb31abdfcb847c191579699ff6a849ad7914109dad7bfdeb19308c7df8dd670f3625d02022a6cea"
         "5457b4db5ee06716f0a006e9b0f97475c7bc4eb5da4d7fbc3c020e3e62cd3b52971bcb76f0fba0d483838cc4d46f6791900c5f807e5590",
@@ -3341,7 +3341,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-384,SHA-512224]
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512_224,
         "eb18845ea3c83061bf439109a91d782eea8bdb404023862ef1e20d86607305dddeae7371c260850dbc4a802d666cfa631c8349f90ed03bd8931b08a8c1f884393a4999224804f5a82d"
         "3600e1b44811190c81e174d6cd40d57dbd06ffc6ce4dfaa8eeddb95d3ce8f9b910f86cbb3b251762908bf8c1a3fbed56d0f1d1987fc6e8",
@@ -3354,7 +3354,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-384,SHA-512256]
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512_256,
         "e560ab0300eea6690e4367232472c67df0c0067def07ab69df588b8978e4282e571d3df43b1897437336261c97035412775e959651db407847659dab0f283f49edae94d6de47bac916"
         "af9448adeb1e349674fd65d0975b37e01cf1457e2665748f5ad7345343b702e0f5d931cff1cbeb35496673d505a3ac93c4b0df2ca743b9",
@@ -3367,7 +3367,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-521,SHA-512224]
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512_224,
         "14d3a434e8526e3ce17bfeae62af7c256f75a86e6e26c0de2feaa4e92be238f109a70a5c67f435e9d69f854426cedbd8e567d3e422c8a5d176b949c3469edf6e42f24d2b31f02a4af1"
         "93dbaab9c1fb88a2c3019566f91c4b67cc6280f3e32a3cc69ab6c8d0b01607393f4809a3f2a4deaf7278a8c221eff4090b374bba1ae203",
@@ -3380,7 +3380,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-521,SHA-512256]
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512_256,
         "3b4b534445f444eb203644dbbf4b7246df0726b632693143bd7066097e2f59d95324662f17c6f5640e5dfd258316c724af57f50ddd50c2bcccd38bad55658fb44d95f3eead8c09f7f0"
         "e6d15dbdc0c055c612c1adf0407a02b4ebd033c50dad15f34500694f6f060b9078c96cb570e641ece1927db360df7d3d613c8317503b66",
@@ -3394,7 +3394,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     // FIPS 186-2 https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/dss/186-2ecdsatestvectors.zip
     {
         // [P-192]
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha1,
         "66e98a165854cd07989b1ee0ec3f8dbe0ee3c2fb0051ef53a0be03457c4f21bce7dc50ef4df37486c3207dfee26bde4ed62340cbb2da784906b1b783b4d601bdff4ae1a7e5e85a85af"
         "a3208dc60f0990c823bedddb3db663426665152ed7b093d6bda506c93a694b83ac71553f31f5cc0d6ba2fa248090e8796573c4915d1586",
@@ -3407,7 +3407,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-256]
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha1,
         "5ff1fa17c2a67ce599a34688f6fb2d4a8af17532d15fa1868a598a8e6a0daf9b11edcc483d11ae003ed645c0aaccfb1e51cf448b737376d531a6dcf0429005f5e7be626b218011c621"
         "8ff32d00f30480b024ec9a3370d1d30a9c70c9f1ce6c61c9abe508d6bc4d3f2a167756613af1778f3a94e7771d5989fe856fa4df8f8ae5",
@@ -3420,7 +3420,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-384]
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha1,
         "4c06491c039e8a819bbcbd80152d0cedfe1a8cd6448ab81e48281f68344759368f233f520f695c6eaefa9e07ffec518fc3d24ecab83e7079b1844836ebc0129f9f1ae7b6d448348877"
         "556a0dada1f750682a76cf39092225654091e63ab29fcba373a80ffb42fa181f54895ac754e57916a76aad6ff4b66b8be46142c826e803",
@@ -3433,7 +3433,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [P-521]
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha1,
         "cc92ca36a76760752b5a45ca5d7235947122a6002f1d4e7d9c6be570d7bd2c2941fe2e16e02ac637066361d22d420568266b93e773644921f1a78a7dbaf5e2ed49ee4520dfdf97f826"
         "db723e140d2395134cf5ac5ff0b3b8afe4682217fd697c2d8a95ba6b2ddc9fd4e9fe75da7b950180ee56b6bc6a94291f4d05c5b77cc9c0",
@@ -3446,7 +3446,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [K-163]
-        ec_curve_t::ec_nistk163,
+        ec_curve_t::ec_k163,
         hash_algorithm_t::sha1,
         "a2c1a03fdd00521bb08fc88d20344321977aaf637ef9d5470dd7d2c8628fc8d0d1f1d3587c6b3fd02386f8c13db341b14748a9475cc63baf065df64054b27d5c2cdf0f98e3bbb81d0b"
         "5dc94f8cdb87acf75720f6163de394c8c6af360bc1acb85b923a493b7b27cc111a257e36337bd94eb0fab9d5e633befb1ae7f1b244bfaa",
@@ -3459,7 +3459,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [K-233]
-        ec_curve_t::ec_nistk233,
+        ec_curve_t::ec_k233,
         hash_algorithm_t::sha1,
         "f764f42d70cf6ecea626c3069ab027074bca9e9ce141c7b32b00f8184beb9083b00a89d545ea4d9fe840cbe41ed0c920058d7c888a025694dbf01fbb2039477d66fc7ba7db0276d341"
         "591a2e9d3ebf7e2f41cb63a7a382dc9603200e23392541ff83f12c9bdf907298b7d76c7fc3b029b22cb2b3a2edf594437f2499bdb5d3d6",
@@ -3472,7 +3472,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [K-283]
-        ec_curve_t::ec_nistk283,
+        ec_curve_t::ec_k283,
         hash_algorithm_t::sha1,
         "f06b642fdb211dada72eeaaea56cc793c7d750d3b24f79e5159a7f6139a91f62da1c052e3608871963f793a6e530e6f080397f484b9b542006e54328adf34bb64d70fc6b179a2c14b3"
         "45ecced723bb6e1742f91fffd69e4d5f392bc2e630e10ff270312ea76175653f21dd6da0ccacd434fba4a0f58abe35c79f1f790be74835",
@@ -3485,7 +3485,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [K-409]
-        ec_curve_t::ec_nistk409,
+        ec_curve_t::ec_k409,
         hash_algorithm_t::sha1,
         "b6ab513b9d084580ae7751950102647d235197bf0bcfbeaf4f083dee98551e3454bc604daa129162b3629f7ae793eb40d5449f0718fb420b867f89faaa8270b375838a4d30f3955bb5"
         "97526edf2d94dc3f5296c010a391426d238e19c2dd794e81ca784216f47bf21cdc137ad11987d8c74325f3dd0fd6dc6ebbf553c8ad618d",
@@ -3498,7 +3498,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [K-571]
-        ec_curve_t::ec_nistk571,
+        ec_curve_t::ec_k571,
         hash_algorithm_t::sha1,
         "c8ca3fa3a0e069226cdd8f9a87437cb9b651c1deae79572ad61487da4f5507d4327b667f184ba9d8e0be37c3acf7f29e2d77a71c2194a8511927b7098086265ed9b23d8a48d1dcf954"
         "de61a3eb9fcc98a6d722dc4fbe0f76a1aecec44e1f4e1147d58d69375848ac50a5d7e24b2353ceaad8f9c641ddd3c2f40f95b2c208c515",
@@ -3511,7 +3511,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [B-163]
-        ec_curve_t::ec_nistb163,
+        ec_curve_t::ec_b163,
         hash_algorithm_t::sha1,
         "c2d1afa40b3318016de5b64291fe1b45325e73157f870a5dc0af0e233d1395b25b8de1d80969e3525a75ff8573570f6fa823aadce22da6dd441cdb760e402a97c126bf4d8469923ac6"
         "ca34432583c8888ed94f99a6f12ae769e4d978111509df3ac3ce6c43da2da0f70fdde36d2b4e792ca7ebb3937a9d62792f9091103a3974",
@@ -3524,7 +3524,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [B-233]
-        ec_curve_t::ec_nistb233,
+        ec_curve_t::ec_b233,
         hash_algorithm_t::sha1,
         "c2d1afa40b3318016de5b64291fe1b45325e73157f870a5dc0af0e233d1395b25b8de1d80969e3525a75ff8573570f6fa823aadce22da6dd441cdb760e402a97c126bf4d8469923ac6"
         "ca34432583c8888ed94f99a6f12ae769e4d978111509df3ac3ce6c43da2da0f70fdde36d2b4e792ca7ebb3937a9d62792f9091103a3974",
@@ -3537,7 +3537,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [B-283]
-        ec_curve_t::ec_nistb283,
+        ec_curve_t::ec_b283,
         hash_algorithm_t::sha1,
         "9bfc4dac8c2232387216a532ce62d98c1aafa35c65dc388e3d4d37d6d186eae957f8c9edac1a3f2e3abcb1121f99bd4f8c2bbf5b6ac39a2544d8b502619f43ea30ddc8e4eafad8bf72"
         "56220380e0ae27fee46304b224cc8a1e2b1cb2a4de6fb3ee5452798de78653e08b01ec385f367c3982963f8428572793ed74cee369f5ae",
@@ -3550,7 +3550,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [B-409]
-        ec_curve_t::ec_nistb409,
+        ec_curve_t::ec_b409,
         hash_algorithm_t::sha1,
         "8416d3b182c31743f433b1fd72f20875ccdf941c408da8c0f0ea8f55931edbf46ab6fa2475020a59e8bbeebad9e9a2273b04cb7b0f5a930ed9b0b37f512cd1b05c730d113a0ed72201"
         "1203334a001f6e2aea041864d7ab14dc6942a94fbd7f854293350138af25a6287f16f02efd285381d7657ca5cd99d9e25b635bf4998d7b",
@@ -3563,7 +3563,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_nist_cavp_ecdsa[] = {
     },
     {
         // [B-571]
-        ec_curve_t::ec_nistb571,
+        ec_curve_t::ec_b571,
         hash_algorithm_t::sha1,
         "702b22b5c2ba25dff74b28f59124e7194008abc0b3b8bf58aeb9242f5d588590e8ec6d2f475bb8c658df48012e0af998ac08d6ba53258db2598e20c5fb5cde5914ce925dedd6fae457"
         "d87a13f7ae123ee2ef8e4e6a71fc66370c63c699a1b2ef1c5bf7075d35d1801dbd28f594171b5407443a429da5f6bb6fba55f9de30eb98",
@@ -3580,7 +3580,7 @@ const size_t sizeof_test_vector_nist_cavp_ecdsa = RTL_NUMBER_OF(test_vector_nist
 
 const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
     {
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha1,
         "sample",
         "6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4",
@@ -3591,7 +3591,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "57A22B07DEA9530F8DE9471B1DC6624472E8E2844BC25B64",
     },
     {
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha2_224,
         "sample",
         "6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4",
@@ -3602,7 +3602,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "E07EC1304C7C6C9DEBBE980B9692668F81D4DE7922A0F97A",
     },
     {
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha2_256,
         "sample",
         "6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4",
@@ -3613,7 +3613,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "CCDB006926EA9565CBADC840829D8C384E06DE1F1E381B85",
     },
     {
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha2_384,
         "sample",
         "6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4",
@@ -3624,7 +3624,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "C3AA2C960972BD7A2003A57E1C4C77F0578F8AE95E31EC5E",
     },
     {
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha2_512,
         "sample",
         "6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4",
@@ -3635,7 +3635,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "3F6E837448F027A1BF4B34E796E32A811CBB4050908D8F67",
     },
     {
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha1,
         "test",
         "6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4",
@@ -3646,7 +3646,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "EB18BC9E1F3D7387500CB99CF5F7C157070A8961E38700B7",
     },
     {
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha2_224,
         "test",
         "6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4",
@@ -3657,7 +3657,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "B7FB7FDFC339C0B9BD61A9F5A8EAF9BE58FC5CBA2CB15293",
     },
     {
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha2_256,
         "test",
         "6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4",
@@ -3668,7 +3668,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "5662E6848A4A19B1F1AE2F72ACD4B8BBE50F1EAC65D9124F",
     },
     {
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha2_384,
         "test",
         "6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4",
@@ -3679,7 +3679,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "7994090B2D59BB782BE57E74A44C9A1C700413F8ABEFE77A",
     },
     {
-        ec_curve_t::ec_nistp192,
+        ec_curve_t::ec_p192,
         hash_algorithm_t::sha2_512,
         "test",
         "6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4",
@@ -3690,7 +3690,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "74CF5605C98FBA0E1EF34D4B5A1577A7DCF59457CAE52290",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha1,
         "sample",
         "F220266E1105BFE3083E03EC7A3A654651F45E37167E88600BF257C1",
@@ -3701,7 +3701,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "66D1CDD83E3AF75605DD6E2FEFF196D30AA7ED7A2EDF7AF475403D69",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "sample",
         "F220266E1105BFE3083E03EC7A3A654651F45E37167E88600BF257C1",
@@ -3712,7 +3712,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "A6694FD7718A21053F225D3F46197CA699D45006C06F871808F43EBC",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "sample",
         "F220266E1105BFE3083E03EC7A3A654651F45E37167E88600BF257C1",
@@ -3723,7 +3723,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "BC814050DAB5D23770879494F9E0A680DC1AF7161991BDE692B10101",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "sample",
         "F220266E1105BFE3083E03EC7A3A654651F45E37167E88600BF257C1",
@@ -3734,7 +3734,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "830F34CCDFE826CCFDC81EB4129772E20E122348A2BBD889A1B1AF1D",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "sample",
         "F220266E1105BFE3083E03EC7A3A654651F45E37167E88600BF257C1",
@@ -3745,7 +3745,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "A4CECA196C3D5A1FF31027B33185DC8EE43F288B21AB342E5D8EB084",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha1,
         "test",
         "F220266E1105BFE3083E03EC7A3A654651F45E37167E88600BF257C1",
@@ -3756,7 +3756,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "95987796F6CF2062AB8135271DE56AE55366C045F6D9593F53787BD2",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_224,
         "test",
         "F220266E1105BFE3083E03EC7A3A654651F45E37167E88600BF257C1",
@@ -3767,7 +3767,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "902F42847A63BDC5F6046ADA114953120F99442D76510150F372A3F4",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_256,
         "test",
         "F220266E1105BFE3083E03EC7A3A654651F45E37167E88600BF257C1",
@@ -3778,7 +3778,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "178D49B1AE90E3D8B629BE3DB5683915F4E8C99FDF6E666CF37ADCFD",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_384,
         "test",
         "F220266E1105BFE3083E03EC7A3A654651F45E37167E88600BF257C1",
@@ -3789,7 +3789,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "414A718ED3249FF6DBC5B50C27F71F01F070944DA22AB1F78F559AAB",
     },
     {
-        ec_curve_t::ec_nistp224,
+        ec_curve_t::ec_p224,
         hash_algorithm_t::sha2_512,
         "test",
         "F220266E1105BFE3083E03EC7A3A654651F45E37167E88600BF257C1",
@@ -3800,7 +3800,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "077EB13E7005929CEFA3CD0403C7CDCC077ADF4E44F3C41B2F60ECFF",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha1,
         "sample",
         "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721",
@@ -3811,7 +3811,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "6D7F147DAC089441BB2E2FE8F7A3FA264B9C475098FDCF6E00D7C996E1B8B7EB",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "sample",
         "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721",
@@ -3822,7 +3822,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "B9AFB64FDC03DC1A131C7D2386D11E349F070AA432A4ACC918BEA988BF75C74C",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "sample",
         "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721",
@@ -3833,7 +3833,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "F7CB1C942D657C41D436C7A1B6E29F65F3E900DBB9AFF4064DC4AB2F843ACDA8",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "sample",
         "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721",
@@ -3844,7 +3844,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "4861F0491E6998B9455193E34E7B0D284DDD7149A74B95B9261F13ABDE940954",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "sample",
         "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721",
@@ -3855,7 +3855,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "2362AB1ADBE2B8ADF9CB9EDAB740EA6049C028114F2460F96554F61FAE3302FE",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha1,
         "test",
         "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721",
@@ -3866,7 +3866,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "01B9D7B73DFAA60D5651EC4591A0136F87653E0FD780C3B1BC872FFDEAE479B1",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_224,
         "test",
         "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721",
@@ -3877,7 +3877,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "C820053A05791E521FCAAD6042D40AEA1D6B1A540138558F47D0719800E18F2D",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_256,
         "test",
         "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721",
@@ -3888,7 +3888,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "019F4113742A2B14BD25926B49C649155F267E60D3814B4C0CC84250E46F0083",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_384,
         "test",
         "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721",
@@ -3899,7 +3899,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "8DDBEC54CF8CD5874883841D712142A56A8D0F218F5003CB0296B6B509619F2C",
     },
     {
-        ec_curve_t::ec_nistp256,
+        ec_curve_t::ec_p256,
         hash_algorithm_t::sha2_512,
         "test",
         "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721",
@@ -3910,7 +3910,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "39AF9F15DE0DB8D97E72719C74820D304CE5226E32DEDAE67519E840D1194E55",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha1,
         "sample",
         "6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5",
@@ -3921,7 +3921,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "A3BCFA947BEEF4732BF247AC17F71676CB31A847B9FF0CBC9C9ED4C1A5B3FACF26F49CA031D4857570CCB5CA4424A443",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "sample",
         "6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5",
@@ -3932,7 +3932,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "9DA0C81787064021E78DF658F2FBB0B042BF304665DB721F077A4298B095E4834C082C03D83028EFBF93A3C23940CA8D",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "sample",
         "6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5",
@@ -3943,7 +3943,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "F3AA443FB107745BF4BD77CB3891674632068A10CA67E3D45DB2266FA7D1FEEBEFDC63ECCD1AC42EC0CB8668A4FA0AB0",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "sample",
         "6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5",
@@ -3954,7 +3954,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "99EF4AEB15F178CEA1FE40DB2603138F130E740A19624526203B6351D0A3A94FA329C145786E679E7B82C71A38628AC8",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "sample",
         "6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5",
@@ -3965,7 +3965,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "512C8CCEEE3890A84058CE1E22DBC2198F42323CE8ACA9135329F03C068E5112DC7CC3EF3446DEFCEB01A45C2667FDD5",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha1,
         "test",
         "6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5",
@@ -3976,7 +3976,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "D5A6326C494ED3FF614703878961C0FDE7B2C278F9A65FD8C4B7186201A2991695BA1C84541327E966FA7B50F7382282",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_224,
         "test",
         "6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5",
@@ -3987,7 +3987,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "07041D4A7A0379AC7232FF72E6F77B6DDB8F09B16CCE0EC3286B2BD43FA8C6141C53EA5ABEF0D8231077A04540A96B66",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_256,
         "test",
         "6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5",
@@ -3998,7 +3998,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "2D46F3BECBCC523D5F1A1256BF0C9B024D879BA9E838144C8BA6BAEB4B53B47D51AB373F9845C0514EEFB14024787265",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_384,
         "test",
         "6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5",
@@ -4009,7 +4009,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "DDD0760448D42D8A43AF45AF836FCE4DE8BE06B485E9B61B827C2F13173923E06A739F040649A667BF3B828246BAA5A5",
     },
     {
-        ec_curve_t::ec_nistp384,
+        ec_curve_t::ec_p384,
         hash_algorithm_t::sha2_512,
         "test",
         "6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5",
@@ -4021,7 +4021,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
     },
 
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha1,
         "sample",
         "0FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538",
@@ -4032,7 +4032,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "0E7B0E675A9B24413D448B8CC119D2BF7B2D2DF032741C096634D6D65D0DBE3D5694625FB9E8104D3B842C1B0E2D0B98BEA19341E8676AEF66AE4EBA3D5475D5D16",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "sample",
         "0FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538",
@@ -4043,7 +4043,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "050CB5265417FE2320BBB5A122B8E1A32BD699089851128E360E620A30C7E17BA41A666AF126CE100E5799B153B60528D5300D08489CA9178FB610A2006C254B41F",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "sample",
         "0FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538",
@@ -4054,7 +4054,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "04A171143A83163D6DF460AAF61522695F207A58B95C0644D87E52AA1A347916E4F7A72930B1BC06DBE22CE3F58264AFD23704CBB63B29B931F7DE6C9D949A7ECFC",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "sample",
         "0FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538",
@@ -4065,7 +4065,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "1F21A3CEE066E1961025FB048BD5FE2B7924D0CD797BABE0A83B66F1E35EEAF5FDE143FA85DC394A7DEE766523393784484BDF3E00114A1C857CDE1AA203DB65D61",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "sample",
         "0FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538",
@@ -4076,7 +4076,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "0617CCE7CF5064806C467F678D3B4080D6F1CC50AF26CA209417308281B68AF282623EAA63E5B5C0723D8B8C37FF0777B1A20F8CCB1DCCC43997F1EE0E44DA4A67A",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha1,
         "test",
         "0FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538",
@@ -4087,7 +4087,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "1E9BB81FF7944CA409AD138DBBEE228E1AFCC0C890FC78EC8604639CB0DBDC90F717A99EAD9D272855D00162EE9527567DD6A92CBD629805C0445282BBC916797FF",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_224,
         "test",
         "0FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538",
@@ -4098,7 +4098,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "177336676304FCB343CE028B38E7B4FBA76C1C1B277DA18CAD2A8478B2A9A9F5BEC0F3BA04F35DB3E4263569EC6AADE8C92746E4C82F8299AE1B8F1739F8FD519A4",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_256,
         "test",
         "0FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538",
@@ -4109,7 +4109,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "0CD52DBAA33B063C3A6CD8058A1FB0A46A4754B034FCC644766CA14DA8CA5CA9FDE00E88C1AD60CCBA759025299079D7A427EC3CC5B619BFBC828E7769BCD694E86",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_384,
         "test",
         "0FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538",
@@ -4120,7 +4120,7 @@ const test_vector_nist_cavp_ecdsa_t test_vector_rfc6079[] = {
         "133330865C067A0EAF72362A65E2D7BC4E461E8C8995C3B6226A21BD1AA78F0ED94FE536A0DCA35534F0CD1510C41525D163FE9D74D134881E35141ED5E8E95B979",
     },
     {
-        ec_curve_t::ec_nistp521,
+        ec_curve_t::ec_p521,
         hash_algorithm_t::sha2_512,
         "test",
         "0FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538",
