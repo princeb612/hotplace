@@ -23,15 +23,19 @@ namespace net {
 
 http_client::http_client() : _socket(0), _client_socket(nullptr), _tls_context(nullptr), _x509(nullptr), _ttl(1000) {
     x509_open_simple(&_x509);
-    _tls_client_socket = new transport_layer_security_client(new transport_layer_security(_x509));
+    _tls_client_socket = new tls_client_socket(new transport_layer_security(_x509));
     _client_socket = new client_socket;
 }
 
 http_client::~http_client() {
     close();
 
-    delete _tls_client_socket;
-    delete _client_socket;
+    if (_tls_client_socket) {
+        _tls_client_socket->release();
+    }
+    if (_client_socket) {
+        delete _client_socket;
+    }
     SSL_CTX_free(_x509);
 }
 
@@ -109,9 +113,11 @@ http_client& http_client::do_request_and_response(url_info_t const& url_info, ht
                 buf.resize(bufsize);
 
                 ret = client->read(_socket, _tls_context, &buf[0], bufsize, &sizeread);
+
                 stream_read.produce(&buf[0], sizeread);
                 while (errorcode_t::more_data == ret) {
                     ret = client->more(_socket, _tls_context, &buf[0], bufsize, &sizeread);
+
                     stream_read.produce(&buf[0], sizeread);
                 }
 

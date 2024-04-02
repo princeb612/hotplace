@@ -34,7 +34,7 @@ namespace net {
  *      SSL_CTX* x509 = nullptr;
  *      x509_open_simple(&x509);
  *      transport_layer_security tls(x509);
- *      transport_layer_security_client cli(&tls);
+ *      tls_client_socket cli(&tls);
  *
  *      ret = cli.connect(&sock, &handle, url_info.host.c_str(), url_info.port, 3);
  *      if (errorcode_t::success == ret) {
@@ -91,10 +91,10 @@ namespace net {
  *      winsock_cleanup ();
  *  #endif
  */
-class transport_layer_security_client : public client_socket {
+class tls_client_socket : public client_socket {
    public:
-    transport_layer_security_client(transport_layer_security* tls);
-    virtual ~transport_layer_security_client();
+    tls_client_socket(transport_layer_security* tls);
+    virtual ~tls_client_socket();
 
     /**
      * @brief   connect
@@ -158,7 +158,7 @@ class transport_layer_security_client : public client_socket {
 
    protected:
     transport_layer_security* _tls;
-    t_shared_reference<transport_layer_security_client> _shared;
+    t_shared_reference<tls_client_socket> _shared;
 };
 
 }  // namespace net

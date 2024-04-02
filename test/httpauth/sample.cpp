@@ -35,6 +35,7 @@ typedef struct _OPTION {
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
+t_shared_instance<http_server> _http_server;
 
 void api_test_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
@@ -43,8 +44,6 @@ void api_test_handler(network_session*, http_request* request, http_response* re
 void api_v1_test_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "application/json", "{\"result\":\"ok\"}");
 }
-
-t_shared_instance<http_server> _http_server;
 
 void cprint(const char* text, ...) {
     console_color _concolor;
@@ -64,7 +63,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     char* buf = (char*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
 
-    t_shared_instance<http_server> server = _http_server;
+    // t_shared_instance<http_server> server = _http_server;
 
     basic_stream bs;
     std::string message;
@@ -110,7 +109,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
                 if (use_tls) {
                     // using http_router
-                    server->get_http_router().route(session, &request, &response);
+                    _http_server->get_http_router().route(session, &request, &response);
                 } else {
                     // handle wo http_router
                     response.get_http_header().add("Upgrade", "TLS/1.2, HTTP/1.1").add("Connection", "Upgrade");
@@ -147,7 +146,6 @@ return_t echo_server(void*) {
     http_server_builder builder;
 
     FILE* fp = fopen(FILENAME_RUN, "w");
-
     fclose(fp);
 
     __try2 {
@@ -178,8 +176,10 @@ return_t echo_server(void*) {
         std::string bearer_realm = "hotplace";
         // OAuth 2.0 (realm)
         std::string oauth2_realm = "somewhere over the rainbow";
+        basic_stream endpoint_url;
         basic_stream cb_url;
-        cb_url << "https://localhost:" << option.port_tls << "/client/cb";
+        endpoint_url << "https://localhost:" << option.port_tls;
+        cb_url << endpoint_url << "/client/cb";
 
         std::function<void(network_session*, http_request*, http_response*, http_router*)> default_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
@@ -259,22 +259,30 @@ return_t echo_server(void*) {
             std::string error = kv.get("error");
             if (error.empty()) {
                 std::string code = kv.get("code");
+                http_client client;
                 http_request req;
+                http_response* resp = nullptr;
                 basic_stream bs;
-                bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << cb_url;
+                bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << cb_url << "&client_id=s6BhdRkqt3";
 
-                req.compose(http_method_t::HTTP_POST, bs.c_str(), "");
+                req.compose(http_method_t::HTTP_POST, bs.c_str(), "");                             // token endpoint
                 req.get_http_header().add("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW");  // s6BhdRkqt3:gX1fBat3bV
 
-                router->route(session, &req, response);
+                client.set_url(endpoint_url.c_str());
+                client.set_ttl(10 * 1000);
+                client.request(req, &resp);
+                if (resp) {
+                    *response = *resp;
+                    resp->release();
+                }
             } else {
                 response->compose(401, "text/html", "<html><body>Unauthorized</body></html>");
             }
         };
         std::function<void(network_session*, http_request*, http_response*, http_router*)> token_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-            std::string session_code = session->get_session_data()->get("code");
-            std::string session_client_id = session->get_session_data()->get("client_id");
+            // std::string session_code = session->get_session_data()->get("code");
+            // std::string session_client_id = session->get_session_data()->get("client_id");
             key_value& kv = request->get_http_uri().get_query_keyvalue();
             basic_stream body;
             json_t* root = nullptr;
@@ -287,13 +295,13 @@ return_t echo_server(void*) {
 
                 if (kv.get("grant_type") != "authorization_code") {
                     json_object_set_new(root, "error", json_string("unsupported_grant_type"));
-                } else if (kv.get("code") == session_code) {
+                } else if (1) {
                     std::string access_token;
                     std::string refresh_token;
                     uint16 expire = 60 * 60;
 
-                    router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, session_client_id, expire);
-                    response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
+                    router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, kv.get("client_id"), expire);
+                    // response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
 
                     json_object_set_new(root, "access_token", json_string(access_token.c_str()));
                     json_object_set_new(root, "token_type", json_string("example"));

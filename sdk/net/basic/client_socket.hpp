@@ -18,7 +18,7 @@ namespace net {
 
 /**
  * @brief   client socket
- * @sa      class transport_layer_security_client : public client_socket
+ * @sa      class tls_client_socket : public client_socket
  */
 class client_socket {
    public:

@@ -22,9 +22,9 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-class access_token {
+class access_token_t {
    public:
-    access_token(std::string const& client_id, std::string const& accesstoken, std::string const& refreshtoken, uint16 expire);
+    access_token_t(std::string const& client_id, std::string const& accesstoken, std::string const& refreshtoken, uint16 expire);
 
     std::string atoken() const;
     std::string rtoken() const;
@@ -42,7 +42,7 @@ class access_token {
     datetime _time;
     uint16 _expire;
 
-    t_shared_reference<access_token> _shared;
+    t_shared_reference<access_token_t> _shared;
 };
 
 class oauth2_credentials {
@@ -165,11 +165,11 @@ class oauth2_credentials {
     user_clientid_t _user_clientid;
     webapps_t _webapps;
 
-    typedef std::map<std::string, access_token*> tokens_t;  // map<access_token, class access_token*>
+    typedef std::map<std::string, access_token_t*> tokens_t;  // map<access_token, class access_token_t*>
     tokens_t _access_tokens;
     tokens_t _refresh_tokens;
 
-    typedef std::multimap<time_t, access_token*> expire_t;
+    typedef std::multimap<time_t, access_token_t*> expire_t;
     expire_t _expires;
 };
 

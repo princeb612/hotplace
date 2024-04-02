@@ -640,7 +640,7 @@ void test_get_tlsclient() {
         SSL_CTX* x509 = nullptr;
         x509_open_simple(&x509);
         transport_layer_security tls(x509);
-        transport_layer_security_client cli(&tls);
+        tls_client_socket cli(&tls);
         basic_stream bs;
 
         ret = cli.connect(&sock, &handle, url_info.host.c_str(), url_info.port, 5);
@@ -714,7 +714,7 @@ void test_get_tlsclient() {
     __finally2 {
         // do nothing
     }
-    _test_case.assert(true, __FUNCTION__, "transport_layer_security_client");
+    _test_case.assert(true, __FUNCTION__, "tls_client_socket");
 }
 
 /*

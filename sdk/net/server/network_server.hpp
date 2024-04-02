@@ -129,10 +129,10 @@ class network_server {
      *              data_array[1] sockaddr_storage_t*
      *
      * @param   void*                           callback_param      [IN] callback parameter
-     * @param   server_socket*                  svr_socket          [IN] socket layer (see also server_socket, transport_layer_security_server)
+     * @param   server_socket*                  svr_socket          [IN] socket layer (see also server_socket, tls_server_socket)
      * @return  error code (see error.hpp)
      * @remarks
-     *          It'll be automatically created 1 tls_accept_thread, if server_socketis an instance of transport_layer_security_server class.
+     *          It'll be automatically created 1 tls_accept_thread, if server_socketis an instance of tls_server_socket class.
      *          see tls_accept_loop_run/tls_accept_loop_break
      */
     return_t open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent,

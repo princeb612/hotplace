@@ -107,6 +107,8 @@ http_server* http_server_builder::build() {
     __try2 {
         __try_new_catch(server, new http_server, ret, __leave2);
 
+        server->set_concurrent(_concurrent);
+
         mask1 = http_server_builder_flag_t::http_server_enable_https;
         if (_flags & mask1) {
             port = _port_https;
@@ -198,7 +200,7 @@ return_t http_server::startup_tls(std::string const& server_cert, std::string co
     __try2 {
         __try_new_catch(_cert, new x509cert(server_cert.c_str(), server_key.c_str()), ret, __leave2);
         __try_new_catch(_tls, new transport_layer_security(_cert->get()), ret, __leave2);
-        __try_new_catch(_tls_server_socket, new transport_layer_security_server(_tls), ret, __leave2);
+        __try_new_catch(_tls_server_socket, new tls_server_socket(_tls), ret, __leave2);
     }
     __finally2 {
         // do nothing
