@@ -203,25 +203,54 @@ return_t echo_server(void*) {
             std::string client_id = kv.get("client_id");
             std::string redirect_uri = kv.get("redirect_uri");
             std::string state = kv.get("state");
-            basic_stream resp;
+            basic_stream response_location;
 
-            return_t check = router->get_authenticate_resolver().get_oauth2_credentials().check(client_id, redirect_uri);
-            if (errorcode_t::success == check) {
-                response->get_http_header().add("Location", "/signin.html");
-                response->compose(302);
+            if ("code" == response_type) {  // Authorization Code Grant
+                return_t check = router->get_authenticate_resolver().get_oauth2_credentials().check(client_id, redirect_uri);
+                if (errorcode_t::success == check) {
+                    response->get_http_header().add("Location", "/signin.html");
+                    response->compose(302);
 
-                session->get_session_data()->set("client_id", client_id);
-                session->get_session_data()->set("redirect_uri", redirect_uri);
-                session->get_session_data()->set("state", state);
+                    session->get_session_data()->set("client_id", client_id);
+                    session->get_session_data()->set("redirect_uri", redirect_uri);
+                    session->get_session_data()->set("state", state);
+                } else {
+                    // 4.1.2.1.  Error Response
+                    // HTTP/1.1 302 Found
+                    // Location: https://client.example.com/cb?error=access_denied&state=xyz
+                    std::string errorcode;
+                    error_advisor* advisor = error_advisor::get_instance();
+                    advisor->error_code(check, errorcode);
+                    response_location << redirect_uri << "?error=" << errorcode << "&state=" << state;
+                    response->get_http_header().add("Location", response_location.c_str());
+                    response->compose(302);
+                }
+            } else if ("token" == response_type) {  // Implitcit Grant
+                return_t check = router->get_authenticate_resolver().get_oauth2_credentials().check(client_id, redirect_uri);
+                if (errorcode_t::success == check) {
+                    std::string access_token;
+                    std::string refresh_token;
+                    uint16 expire = 60 * 60;
+
+                    router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, client_id, expire);
+
+                    response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
+                    response_location << redirect_uri << "#access_token=" << access_token << "&state=" << state << "&expire_in=" << expire;
+                    response->get_http_header().add("Location", response_location.c_str());
+                    response->compose(302);
+                } else {
+                    std::string errorcode;
+                    error_advisor* advisor = error_advisor::get_instance();
+                    advisor->error_code(check, errorcode);
+                    response_location << redirect_uri << "?error=" << errorcode << "&state=" << state;
+                    response->get_http_header().add("Location", response_location.c_str());
+                    response->compose(302);
+                }
             } else {
-                // 4.1.2.1.  Error Response
-                // HTTP/1.1 302 Found
-                // Location: https://client.example.com/cb?error=access_denied&state=xyz
-                std::string errorcode;
-                error_advisor* advisor = error_advisor::get_instance();
-                advisor->error_code(check, errorcode);
-                resp << redirect_uri << "?error=" << errorcode << "&state=" << state;
-                response->get_http_header().add("Location", resp.c_str());
+                response_location << redirect_uri << "?error="
+                                  << "invalid_request"
+                                  << "&state=" << state;
+                response->get_http_header().add("Location", response_location.c_str());
                 response->compose(302);
             }
         };
@@ -256,24 +285,31 @@ return_t echo_server(void*) {
         std::function<void(network_session*, http_request*, http_response*, http_router*)> cb_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
             key_value& kv = request->get_http_uri().get_query_keyvalue();
+            std::string code = kv.get("code");
+            std::string access_token = kv.get("access_token");
             std::string error = kv.get("error");
             if (error.empty()) {
-                std::string code = kv.get("code");
-                http_client client;
-                http_request req;
-                http_response* resp = nullptr;
-                basic_stream bs;
-                bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << cb_url << "&client_id=s6BhdRkqt3";
+                if (code.size()) {
+                    // Authorization Code Grant
+                    http_client client;
+                    http_request req;
+                    http_response* resp = nullptr;
+                    basic_stream bs;
+                    bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << cb_url << "&client_id=s6BhdRkqt3";
 
-                req.compose(http_method_t::HTTP_POST, bs.c_str(), "");                             // token endpoint
-                req.get_http_header().add("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW");  // s6BhdRkqt3:gX1fBat3bV
+                    req.compose(http_method_t::HTTP_POST, bs.c_str(), "");                             // token endpoint
+                    req.get_http_header().add("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW");  // s6BhdRkqt3:gX1fBat3bV
 
-                client.set_url(endpoint_url.c_str());
-                client.set_ttl(10 * 1000);
-                client.request(req, &resp);
-                if (resp) {
-                    *response = *resp;
-                    resp->release();
+                    client.set_url(endpoint_url.c_str());
+                    client.set_ttl(10 * 1000);
+                    client.request(req, &resp);
+                    if (resp) {
+                        *response = *resp;
+                        resp->release();
+                    }
+                } else if (access_token.size()) {
+                    // Implitcit Grant
+                    response->compose(200, "text/plain", "");
                 }
             } else {
                 response->compose(401, "text/html", "<html><body>Unauthorized</body></html>");
@@ -281,11 +317,10 @@ return_t echo_server(void*) {
         };
         std::function<void(network_session*, http_request*, http_response*, http_router*)> token_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-            // std::string session_code = session->get_session_data()->get("code");
-            // std::string session_client_id = session->get_session_data()->get("client_id");
             key_value& kv = request->get_http_uri().get_query_keyvalue();
             basic_stream body;
             json_t* root = nullptr;
+            std::string grant_type = kv.get("grant_type");
 
             __try2 {
                 root = json_object();
@@ -293,15 +328,45 @@ return_t echo_server(void*) {
                     __leave2;
                 }
 
-                if (kv.get("grant_type") != "authorization_code") {
-                    json_object_set_new(root, "error", json_string("unsupported_grant_type"));
-                } else if (1) {
-                    std::string access_token;
-                    std::string refresh_token;
-                    uint16 expire = 60 * 60;
+                std::string access_token;
+                std::string refresh_token;
+                uint16 expire = 60 * 60;
+
+                if ("authorization_code" == grant_type) {
+                    // Authorization Code Grant
 
                     router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, kv.get("client_id"), expire);
-                    // response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
+                    response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
+
+                    json_object_set_new(root, "access_token", json_string(access_token.c_str()));
+                    json_object_set_new(root, "token_type", json_string("example"));
+                    json_object_set_new(root, "expire_in", json_integer(expire));
+                    json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
+                    json_object_set_new(root, "example_parameter", json_string("example_value"));
+                } else if ("password" == grant_type) {
+                    // Resource Owner Password Credentials Grant
+
+                    std::string username = kv.get("username");
+                    std::string password = kv.get("password");
+
+                    bool test = router->get_authenticate_resolver().get_custom_credentials().verify(nullptr, username, password);
+                    if (test) {
+                        router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, kv.get("client_id"), expire);
+                        response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
+
+                        json_object_set_new(root, "access_token", json_string(access_token.c_str()));
+                        json_object_set_new(root, "token_type", json_string("example"));
+                        json_object_set_new(root, "expire_in", json_integer(expire));
+                        json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
+                        json_object_set_new(root, "example_parameter", json_string("example_value"));
+                    } else {
+                        json_object_set_new(root, "error", json_string("access_denied"));
+                    }
+                } else if ("client_credentials" == grant_type) {
+                    // Client Credentials Grant
+
+                    router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, kv.get("client_id"), expire);
+                    response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
 
                     json_object_set_new(root, "access_token", json_string(access_token.c_str()));
                     json_object_set_new(root, "token_type", json_string("example"));
@@ -309,7 +374,7 @@ return_t echo_server(void*) {
                     json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
                     json_object_set_new(root, "example_parameter", json_string("example_value"));
                 } else {
-                    json_object_set_new(root, "error", json_string("invalid_request"));
+                    json_object_set_new(root, "error", json_string("unsupported_grant_type"));
                 }
             }
             __finally2 {
@@ -355,11 +420,12 @@ return_t echo_server(void*) {
             // callback
             .add("/client/cb", cb_handler)
             // token endpoint
-            .add("/auth/token", token_handler, new basic_authentication_provider(basic_realm));
+            .add("/auth/token", token_handler, new basic_authentication_provider(oauth2_realm));
 
         http_authentication_resolver& resolver = _http_server->get_http_router().get_authenticate_resolver();
 
-        resolver.get_basic_credentials(basic_realm).add("user", "password").add("s6BhdRkqt3", "gX1fBat3bV");
+        resolver.get_basic_credentials(basic_realm).add("user", "password");
+        resolver.get_basic_credentials(oauth2_realm).add("s6BhdRkqt3", "gX1fBat3bV");  // RFC 6749 Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
         resolver.get_digest_credentials(digest_access_realm).add(digest_access_realm, digest_access_alg, "user", "password");
         resolver.get_digest_credentials(digest_access_realm2).add(digest_access_realm2, digest_access_alg2, "Mufasa", "Circle Of Life");
         resolver.get_bearer_credentials(bearer_realm).add("clientid", "token");
