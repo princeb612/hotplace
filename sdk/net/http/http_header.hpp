@@ -55,7 +55,7 @@ class http_header {
      * @param   std::string     value       [IN]
      * @return  *this
      */
-    http_header& add(std::string header, std::string value);
+    http_header& add(std::string const& header, std::string const& value);
 
     /**
      * @brief   clear

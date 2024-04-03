@@ -47,7 +47,7 @@ http_header& http_header::add(const char* header, const char* value) {
     return *this;
 }
 
-http_header& http_header::add(std::string header, std::string value) {
+http_header& http_header::add(std::string const& header, std::string const& value) {
     critical_section_guard guard(_lock);
     http_header_map_pib_t pib = _headers.insert(std::make_pair(header, value));
     if (false == pib.second) {
