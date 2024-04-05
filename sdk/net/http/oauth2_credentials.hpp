@@ -131,7 +131,7 @@ class t_expirable {
         time_t now = ts.tv_sec;
 
         for (typename expires_t::iterator iter = _expires.begin(); iter != _expires.end();) {
-            if (now < iter->first) {
+            if (now > iter->first) {
                 // past
                 if (handler) {
                     handler(iter->second);
