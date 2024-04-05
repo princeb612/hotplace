@@ -127,14 +127,14 @@ class basic_stream : public stream_t {
      * @brief   operator <
      * @param   basic_stream obj [in]
      */
-    bool operator<(basic_stream& obj);
+    bool operator<(const basic_stream& obj) const;
     /**
      * @brief   operator <
      * @param   basic_stream obj [in]
      */
-    bool operator>(basic_stream& obj);
+    bool operator>(const basic_stream& obj) const;
 
-    bool operator==(basic_stream& obj);
+    bool operator==(const basic_stream& obj) const;
 
    protected:
     bufferio _bio;

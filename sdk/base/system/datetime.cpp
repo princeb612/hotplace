@@ -29,6 +29,8 @@ namespace hotplace {
 
 datetime::datetime() { update(); }
 
+datetime::datetime(const datetime& dt) { memcpy(&_timespec, &dt._timespec, sizeof(struct timespec)); }
+
 datetime::datetime(time_t t, long* nsec) {
     _timespec.tv_sec = t;
     _timespec.tv_nsec = (nsec) ? *nsec : 0;
@@ -226,7 +228,7 @@ datetime& datetime::operator>>(asn1time_t& at) {
     return *this;
 }
 
-bool datetime::operator==(datetime rh) {
+bool datetime::operator==(const datetime& rh) const {
     bool ret = false;
 
     if ((_timespec.tv_sec == rh._timespec.tv_sec) && (_timespec.tv_nsec == rh._timespec.tv_nsec)) {
@@ -235,7 +237,7 @@ bool datetime::operator==(datetime rh) {
     return ret;
 }
 
-bool datetime::operator!=(datetime rh) {
+bool datetime::operator!=(const datetime& rh) const {
     bool ret = false;
 
     if ((_timespec.tv_sec != rh._timespec.tv_sec) || (_timespec.tv_nsec != rh._timespec.tv_nsec)) {
@@ -244,7 +246,7 @@ bool datetime::operator!=(datetime rh) {
     return ret;
 }
 
-bool datetime::operator>=(datetime rhs) {
+bool datetime::operator>=(const datetime& rhs) const {
     bool ret = false;
 
     if (_timespec.tv_sec > rhs._timespec.tv_sec) {
@@ -256,7 +258,7 @@ bool datetime::operator>=(datetime rhs) {
     return ret;
 }
 
-bool datetime::operator>(datetime rhs) {
+bool datetime::operator>(const datetime& rhs) const {
     bool ret = false;
 
     if (_timespec.tv_sec > rhs._timespec.tv_sec) {
@@ -268,7 +270,7 @@ bool datetime::operator>(datetime rhs) {
     return ret;
 }
 
-bool datetime::operator<=(datetime rhs) {
+bool datetime::operator<=(const datetime& rhs) const {
     bool ret = false;
 
     if (_timespec.tv_sec < rhs._timespec.tv_sec) {
@@ -280,7 +282,7 @@ bool datetime::operator<=(datetime rhs) {
     return ret;
 }
 
-bool datetime::operator<(datetime rhs) {
+bool datetime::operator<(const datetime& rhs) const {
     bool ret = false;
 
     if (_timespec.tv_sec < rhs._timespec.tv_sec) {

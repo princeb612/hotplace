@@ -318,6 +318,47 @@ void test_stream_getline() {
     _test_case.assert(true, __FUNCTION__, "getline");
 }
 
+void test_stream_stdmap() {
+    _test_case.begin("std::map");
+
+    {
+        std::map<basic_stream, std::string> stdmap;
+        stdmap.insert(std::make_pair("key", "value"));
+        stdmap["key1"] = "value1";
+        std::string value = stdmap["key"];
+
+        std::cout << "key=" << value.c_str() << std::endl;
+
+        _test_case.assert("value" == value, __FUNCTION__, "basic_stream");
+    }
+
+    {
+        std::map<ansi_string, std::string> stdmap;
+        stdmap.insert(std::make_pair("key", "value"));
+        stdmap["key1"] = "value1";
+        std::string value = stdmap["key"];
+
+        std::cout << "key=" << value.c_str() << std::endl;
+
+        _test_case.assert("value" == value, __FUNCTION__, "ansi_string");
+    }
+
+#if defined _WIN32 || defined _WIN64
+    {
+        std::map<wide_string, wide_string> stdmap;
+        stdmap.insert(std::make_pair(L"key", L"value"));
+        stdmap[L"key1"] = L"value1";
+        wide_string value = stdmap[L"key"];
+
+        basic_stream bs;
+        dump_memory(value.data(), (size_t)value.size(), &bs);
+        std::cout << bs.c_str() << std::endl;
+
+        _test_case.assert(wide_string(L"value") == value, __FUNCTION__, "wide_string");
+    }
+#endif
+}
+
 void test_vtprintf() {
     _test_case.begin("tokenize");
 
@@ -347,6 +388,7 @@ int main() {
     test_vprintf();
     test_stream();
     test_stream_getline();
+    test_stream_stdmap();
     test_vtprintf();
 
     _test_case.report(5);

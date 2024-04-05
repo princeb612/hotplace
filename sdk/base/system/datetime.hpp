@@ -137,6 +137,7 @@ class datetime {
      * @brief constructor
      */
     datetime();
+    datetime(const datetime& dt);
     datetime(time_t t, long* nsec = nullptr);
     datetime(struct timespec ts);
     datetime(datetime_t& dt, long* nsec = nullptr);
@@ -170,6 +171,9 @@ class datetime {
     return_t getgmtime(datetime_t* dt, long* nsec = nullptr);
     return_t getgmtime(stream_t* stream);
     return_t getfiletime(filetime_t* ft);
+    /**
+     * @param   int mode    [in] 0 gmtime, 1 localtime
+     */
     return_t getsystemtime(int mode, systemtime_t* ft);
     return_t getasn1time(asn1time_t* at);
 
@@ -186,12 +190,12 @@ class datetime {
     /**
      * @brief compare
      */
-    bool operator==(datetime rhs);
-    bool operator!=(datetime rhs);
-    bool operator>=(datetime rhs);
-    bool operator>(datetime rhs);
-    bool operator<=(datetime rhs);
-    bool operator<(datetime rhs);
+    bool operator==(const datetime& rhs) const;
+    bool operator!=(const datetime& rhs) const;
+    bool operator>=(const datetime& rhs) const;
+    bool operator>(const datetime& rhs) const;
+    bool operator<=(const datetime& rhs) const;
+    bool operator<(const datetime& rhs) const;
 
     datetime& operator+=(timespan_t ts);
     datetime& operator-=(timespan_t ts);

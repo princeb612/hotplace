@@ -37,7 +37,7 @@ class ansi_string : public stream_t {
     return_t vprintf(const wchar_t* buf, va_list ap);
 #endif
 
-    const char* c_str();
+    const char* c_str() const;
     size_t find(char* data);
 
     /**
@@ -126,11 +126,11 @@ class ansi_string : public stream_t {
     int compare(ansi_string& buf);
     static int compare(ansi_string& lhs, ansi_string& rhs);
 
-    bool operator<(ansi_string& buf);
-    bool operator>(ansi_string& buf);
+    bool operator<(const ansi_string& buf) const;
+    bool operator>(const ansi_string& buf) const;
 
-    bool operator==(ansi_string& buf);
-    bool operator!=(ansi_string& buf);
+    bool operator==(const ansi_string& buf) const;
+    bool operator!=(const ansi_string& buf) const;
 
     bool operator==(const char* input);
     bool operator!=(const char* input);
@@ -159,7 +159,7 @@ class wide_string : public stream_t {
     return_t printf(const wchar_t* buf, ...);
     return_t vprintf(const wchar_t* buf, va_list ap);
 
-    const wchar_t* c_str();
+    const wchar_t* c_str() const;
     size_t find(wchar_t* data);
 
     /**
@@ -245,11 +245,11 @@ class wide_string : public stream_t {
     int compare(wide_string& buf);
     static int compare(wide_string& lhs, wide_string& rhs);
 
-    bool operator<(wide_string& buf);
-    bool operator>(wide_string& buf);
+    bool operator<(const wide_string& buf) const;
+    bool operator>(const wide_string& buf) const;
 
-    bool operator==(wide_string& buf);
-    bool operator!=(wide_string& buf);
+    bool operator==(const wide_string& buf) const;
+    bool operator!=(const wide_string& buf) const;
 
     bool operator==(const wchar_t* input);
     bool operator!=(const wchar_t* input);

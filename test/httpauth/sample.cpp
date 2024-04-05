@@ -268,9 +268,8 @@ return_t echo_server(void*) {
                 // RFC 6749 4.1.2.  Authorization Response
                 // HTTP/1.1 302 Found
                 // Location: https://client.example.com/cb?code=SplxlOBeZQQYbYS6WxSbIA
-                openssl_prng prng;
                 std::string code;
-                code = prng.rand(16, encoding_t::encoding_base64url);
+                router->get_authenticate_resolver().get_oauth2_credentials().grant_code(code);
                 resp << redirect_uri << "?code=" << code << "&state=" << state;
                 response->get_http_header().add("Location", resp.c_str());
                 response->compose(302);
@@ -334,15 +333,20 @@ return_t echo_server(void*) {
 
                 if ("authorization_code" == grant_type) {
                     // Authorization Code Grant
+                    std::string code = kv.get("code");
+                    return_t test = router->get_authenticate_resolver().get_oauth2_credentials().verify_grant_code(code);
+                    if (errorcode_t::success == test) {
+                        router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, kv.get("client_id"), expire);
+                        response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
 
-                    router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, kv.get("client_id"), expire);
-                    response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
-
-                    json_object_set_new(root, "access_token", json_string(access_token.c_str()));
-                    json_object_set_new(root, "token_type", json_string("example"));
-                    json_object_set_new(root, "expire_in", json_integer(expire));
-                    json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
-                    json_object_set_new(root, "example_parameter", json_string("example_value"));
+                        json_object_set_new(root, "access_token", json_string(access_token.c_str()));
+                        json_object_set_new(root, "token_type", json_string("example"));
+                        json_object_set_new(root, "expire_in", json_integer(expire));
+                        json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
+                        json_object_set_new(root, "example_parameter", json_string("example_value"));
+                    } else {
+                        json_object_set_new(root, "error", json_string("invalid_request"));
+                    }
                 } else if ("password" == grant_type) {
                     // Resource Owner Password Credentials Grant
 

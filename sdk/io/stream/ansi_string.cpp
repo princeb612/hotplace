@@ -102,7 +102,7 @@ return_t ansi_string::vprintf(const wchar_t* buf, va_list ap) {
 }
 #endif
 
-const char* ansi_string::c_str() {
+const char* ansi_string::c_str() const {
     char* data = nullptr;
     size_t size = 0;
 
@@ -399,15 +399,15 @@ ansi_string& ansi_string::operator<<(uint128 buf) {
 
 #endif
 
-int ansi_string::compare(ansi_string& buf) { return strcmp((*this).c_str(), buf.c_str()); }
+int ansi_string::compare(ansi_string& buf) { return strcmp(c_str(), buf.c_str()); }
 
 int ansi_string::compare(ansi_string& lhs, ansi_string& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 
-bool ansi_string::operator<(ansi_string& buf) { return 0 < strcmp((*this).c_str(), buf.c_str()); }
+bool ansi_string::operator<(const ansi_string& buf) const { return 0 < strcmp(c_str(), buf.c_str()); }
 
-bool ansi_string::operator>(ansi_string& buf) { return 0 > strcmp((*this).c_str(), buf.c_str()); }
+bool ansi_string::operator>(const ansi_string& buf) const { return 0 > strcmp(c_str(), buf.c_str()); }
 
-bool ansi_string::operator==(ansi_string& buf) {
+bool ansi_string::operator==(const ansi_string& buf) const {
     bool ret = false;
 
     if (size() == buf.size()) {
@@ -417,7 +417,7 @@ bool ansi_string::operator==(ansi_string& buf) {
     return ret;
 }
 
-bool ansi_string::operator!=(ansi_string& buf) {
+bool ansi_string::operator!=(const ansi_string& buf) const {
     bool ret = true;
 
     if (size() == buf.size()) {

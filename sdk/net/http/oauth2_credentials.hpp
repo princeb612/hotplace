@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_NET_HTTP_OAUTH2_CREDENTIALS__
 
 #include <sdk/base/system/critical_section.hpp>
+#include <sdk/base/system/datetime.hpp>
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
@@ -22,12 +23,210 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
+/**
+ * @brief   tokens (lock required)
+ */
+template <typename TYPE_T, typename OBJECT_T>
+class t_tokens {
+   public:
+    typedef typename std::map<TYPE_T, OBJECT_T> tokens_map_t;
+    typedef typename std::function<void(OBJECT_T)> token_handler_t;
+
+    t_tokens() {}
+
+    return_t insert(TYPE_T key, OBJECT_T object, token_handler_t handler = nullptr) {
+        return_t ret = errorcode_t::success;
+        if (handler) {
+            handler(object);
+        }
+        _tokens.insert(std::make_pair(key, object));
+        return ret;
+    }
+
+    return_t find(TYPE_T key, OBJECT_T* object = nullptr, token_handler_t handler = nullptr) {
+        return_t ret = errorcode_t::success;
+        __try2 {
+            typename tokens_map_t::iterator iter = _tokens.find(key);
+            if (_tokens.end() == iter) {
+                ret = errorcode_t::not_found;
+                __leave2;
+            } else {
+                OBJECT_T item = iter->second;
+                if (handler) {
+                    handler(item);
+                }
+                if (object) {
+                    *object = item;
+                }
+            }
+        }
+        __finally2 {
+            // do nothing
+        }
+        return ret;
+    }
+
+    return_t remove(TYPE_T key, token_handler_t handler = nullptr) {
+        return_t ret = errorcode_t::success;
+        __try2 {
+            typename tokens_map_t::iterator iter = _tokens.find(key);
+            if (_tokens.end() == iter) {
+                ret = errorcode_t::not_found;
+                __leave2;
+            } else {
+                OBJECT_T item = iter->second;
+                if (handler) {
+                    handler(item);
+                }
+                _tokens.erase(iter);
+            }
+        }
+        __finally2 {
+            // do nothing
+        }
+        return ret;
+    }
+
+    return_t clear(token_handler_t handler = nullptr) {
+        return_t ret = errorcode_t::success;
+        if (handler) {
+            for (auto item : _tokens) {
+                handler(item.second);
+            }
+        }
+        _tokens.clear();
+        return ret;
+    }
+
+   private:
+    tokens_map_t _tokens;
+};
+
+/**
+ * @brief   expirable (lock required)
+ */
+template <typename OBJECT_T>
+class t_expirable {
+   public:
+    typedef typename std::multimap<time_t, OBJECT_T> expires_t;
+    typedef typename std::function<void(OBJECT_T)> token_handler_t;
+
+    t_expirable() {}
+    virtual ~t_expirable() { clear(); }
+
+    virtual return_t insert(time_t time, OBJECT_T object, token_handler_t handler = nullptr) {
+        return_t ret = errorcode_t::success;
+        if (handler) {
+            handler(object);
+        }
+        _expires.insert(std::make_pair(time, object));
+        return ret;
+    }
+
+    virtual return_t expire(token_handler_t handler = nullptr) {
+        return_t ret = errorcode_t::success;
+        datetime dt;
+        struct timespec ts;
+        dt.gettimespec(&ts);
+        time_t now = ts.tv_sec;
+
+        for (typename expires_t::iterator iter = _expires.begin(); iter != _expires.end();) {
+            if (now < iter->first) {
+                // past
+                if (handler) {
+                    handler(iter->second);
+                }
+                _expires.erase(iter++);
+            } else {
+                // future
+                break;
+            }
+        }
+        return ret;
+    }
+
+    virtual return_t clear(token_handler_t handler = nullptr) {
+        return_t ret = errorcode_t::success;
+        if (handler) {
+            for (auto item : _expires) {
+                handler(item.second);
+            }
+        }
+        _expires.clear();
+        return ret;
+    }
+
+   protected:
+    expires_t _expires;
+};
+
+/**
+ * @brief   expirable tokens (lock required)
+ */
+template <typename OBJECT_T>
+class t_expirable_tokens : t_expirable<OBJECT_T> {
+   public:
+    typedef typename std::set<OBJECT_T> tokens_set_t;
+    typedef typename std::pair<typename tokens_set_t::iterator, bool> tokens_set_pib_t;
+    typedef typename std::function<void(OBJECT_T)> token_handler_t;
+
+    t_expirable_tokens() : t_expirable<OBJECT_T>() {}
+
+    virtual return_t insert(time_t time, OBJECT_T object, token_handler_t handler = nullptr) {
+        return_t ret = errorcode_t::success;
+        tokens_set_pib_t pib = _tokens.insert(object);
+        if (pib.second) {
+            t_expirable<OBJECT_T>::insert(time, object, handler);
+        } else {
+            ret = errorcode_t::already_exist;
+        }
+        return ret;
+    }
+
+    virtual return_t find(OBJECT_T object) {
+        return_t ret = errorcode_t::success;
+        expire();
+        typename tokens_set_t::iterator iter = _tokens.find(object);
+        if (_tokens.end() == iter) {
+            ret = errorcode_t::not_found;
+        }
+        return ret;
+    }
+
+    virtual return_t expire(token_handler_t handler = nullptr) {
+        return_t ret = errorcode_t::success;
+        t_expirable<OBJECT_T>::expire([&](OBJECT_T object) -> void {
+            typename tokens_set_t::iterator iter = _tokens.find(object);
+            if (_tokens.end() != iter) {
+                if (handler) {
+                    handler(*iter);
+                }
+                _tokens.erase(iter);
+            }
+        });
+        return ret;
+    }
+
+    virtual return_t clear(token_handler_t handler = nullptr) {
+        return_t ret = errorcode_t::success;
+        t_expirable<OBJECT_T>::clear(handler);
+        _tokens.clear();
+        return ret;
+    }
+
+   private:
+    tokens_set_t _tokens;
+};
+
+/**
+ * @brief   access token
+ */
 class access_token_t {
    public:
     access_token_t(std::string const& client_id, std::string const& accesstoken, std::string const& refreshtoken, uint16 expire);
 
-    std::string atoken() const;
-    std::string rtoken() const;
+    std::string access_token() const;
+    std::string refresh_token() const;
     std::string client_id() const;
     bool expired();
     time_t expire_time();
@@ -45,6 +244,9 @@ class access_token_t {
     t_shared_reference<access_token_t> _shared;
 };
 
+/**
+ * @brief   credentials
+ */
 class oauth2_credentials {
    public:
     oauth2_credentials();
@@ -86,6 +288,11 @@ class oauth2_credentials {
      * @brief   list of client_id
      */
     return_t list(std::string const& userid, std::list<std::string>& clientid);
+
+    return_t grant_code(std::string& code, uint16 expire = 10 * 60);
+    return_t verify_grant_code(std::string const& code);
+    return_t expire_grant_codes();
+    return_t clear_grant_codes();
 
     /**
      * @brief   access_token
@@ -165,12 +372,11 @@ class oauth2_credentials {
     user_clientid_t _user_clientid;
     webapps_t _webapps;
 
-    typedef std::map<std::string, access_token_t*> tokens_t;  // map<access_token, class access_token_t*>
-    tokens_t _access_tokens;
-    tokens_t _refresh_tokens;
+    t_expirable_tokens<std::string> _grant_codes;
 
-    typedef std::multimap<time_t, access_token_t*> expire_t;
-    expire_t _expires;
+    t_tokens<std::string, access_token_t*> _access_tokens;
+    t_tokens<std::string, access_token_t*> _refresh_tokens;
+    t_expirable<access_token_t*> _expirable;
 };
 
 }  // namespace net

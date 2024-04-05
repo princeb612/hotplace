@@ -33,9 +33,9 @@ access_token_t::access_token_t(std::string const& client_id, std::string const& 
     _shared.make_share(this);
 }
 
-std::string access_token_t::atoken() const { return _access_token; }
+std::string access_token_t::access_token() const { return _access_token; }
 
-std::string access_token_t::rtoken() const { return _refresh_token; }
+std::string access_token_t::refresh_token() const { return _refresh_token; }
 
 std::string access_token_t::client_id() const { return _client_id; }
 
@@ -184,6 +184,45 @@ return_t oauth2_credentials::list(std::string const& userid, std::list<std::stri
     return ret;
 }
 
+return_t oauth2_credentials::grant_code(std::string& code, uint16 expire) {
+    return_t ret = errorcode_t::success;
+
+    openssl_prng prng;
+    code = prng.rand(16, encoding_t::encoding_base64url);
+
+    _lock.enter();
+    _grant_codes.insert(time(nullptr), code);
+    _lock.leave();
+
+    return ret;
+}
+
+return_t oauth2_credentials::verify_grant_code(std::string const& code) {
+    return_t ret = errorcode_t::success;
+
+    _lock.enter();
+    ret = _grant_codes.find(code);
+    _lock.leave();
+
+    return ret;
+}
+
+return_t oauth2_credentials::expire_grant_codes() {
+    return_t ret = errorcode_t::success;
+    _lock.enter();
+    ret = _grant_codes.expire();
+    _lock.leave();
+    return ret;
+}
+
+return_t oauth2_credentials::clear_grant_codes() {
+    return_t ret = errorcode_t::success;
+    _lock.enter();
+    ret = _grant_codes.clear();
+    _lock.leave();
+    return ret;
+}
+
 return_t oauth2_credentials::grant(std::string& access_token, std::string& refresh_token, std::string const& client_id, uint16 expire) {
     return_t ret = errorcode_t::success;
     access_token_t* token = nullptr;
@@ -203,30 +242,27 @@ return_t oauth2_credentials::grant(std::string& access_token, std::string& refre
 
         std::string atoken, rtoken;
         openssl_prng prng;
-        do {
+        return_t test = errorcode_t::success;
+        while (1) {
             atoken = prng.rand(16, encoding_t::encoding_base64url, false);
-            tokens_t::iterator iter = _access_tokens.find(atoken);
-            if (_access_tokens.end() == iter) {
+            test = _access_tokens.find(atoken);
+            if (errorcode_t::not_found == test) {
                 break;
             }
-        } while (1);
-        do {
+        }
+        while (1) {
             rtoken = prng.rand(16, encoding_t::encoding_base64url, false);
-            tokens_t::iterator iter = _refresh_tokens.find(atoken);
-            if (_refresh_tokens.end() == iter) {
+            test = _refresh_tokens.find(rtoken);
+            if (errorcode_t::not_found == test) {
                 break;
             }
-        } while (1);
+        }
 
-        __try_new_catch(token, new access_token_t(client_id, atoken, rtoken, expire), ret, __leave2);
+        __try_new_catch(token, new access_token_t(client_id, atoken, rtoken, expire), ret, __leave2);  // refcounter = 1
 
-        _access_tokens.insert(std::make_pair(atoken, token));
-
-        token->addref();
-        _refresh_tokens.insert(std::make_pair(rtoken, token));
-
-        token->addref();
-        _expires.insert(std::make_pair(token->expire_time(), token));
+        _access_tokens.insert(atoken, token, [](access_token_t* object) -> void {});
+        _refresh_tokens.insert(atoken, token, [](access_token_t* object) -> void { object->addref(); });
+        _expirable.insert(token->expire_time(), token, [](access_token_t* object) -> void { object->addref(); });
 
         access_token = atoken;
         refresh_token = rtoken;
@@ -240,31 +276,22 @@ return_t oauth2_credentials::revoke(std::string const& access_token) {
     __try2 {
         _lock.enter();
 
-        access_token_t* token = nullptr;
-        std::string rtoken;
+        std::string refresh_token;
         {
-            tokens_t::iterator iter = _access_tokens.find(access_token);
-            if (_access_tokens.end() == iter) {
-                ret = errorcode_t::not_found;
+            ret = _access_tokens.remove(access_token, [&](access_token_t* object) -> void {
+                refresh_token = object->refresh_token();
+                object->release();
+            });
+            if (errorcode_t::success != ret) {
                 __leave2;
             }
-            token = iter->second;
-            rtoken = token->rtoken();
-
-            token->release();
-            _access_tokens.erase(iter);
         }
 
         {
-            tokens_t::iterator iter = _refresh_tokens.find(rtoken);
-            if (_refresh_tokens.end() == iter) {
-                ret = errorcode_t::not_found;
+            ret = _refresh_tokens.remove(refresh_token, [&](access_token_t* object) -> void { object->release(); });
+            if (errorcode_t::success != ret) {
                 __leave2;
             }
-
-            token = iter->second;
-            token->release();
-            _refresh_tokens.erase(iter);
         }
     }
     __finally2 { _lock.leave(); }
@@ -277,30 +304,27 @@ return_t oauth2_credentials::isvalid(std::string const& access_token) {
         _lock.enter();
 
         access_token_t* token = nullptr;
-        {
-            tokens_t::iterator iter = _access_tokens.find(access_token);
-            if (_access_tokens.end() == iter) {
-                ret = errorcode_t::not_found;
-                __leave2;
-            }
-            token = iter->second;
-
-            // client_id validation
-            std::string client_id = token->client_id();
-            webapps_t::iterator appiter = _webapps.find(client_id);
-            if (_webapps.end() == appiter) {
-                ret = errorcode_t::expired;
-                __leave2;
-            }
-
-            // token validation
-            bool test = token->expired();
-            if (test) {
-                ret = errorcode_t::expired;
-                __leave2;
-            }
-            ret = errorcode_t::success;
+        ret = _access_tokens.find(access_token, &token);
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
+
+        // client_id validation
+        std::string client_id = token->client_id();
+        webapps_t::iterator appiter = _webapps.find(client_id);
+        if (_webapps.end() == appiter) {
+            ret = errorcode_t::expired;
+            __leave2;
+        }
+
+        // token validation
+        bool test = token->expired();
+        if (test) {
+            ret = errorcode_t::expired;
+            __leave2;
+        }
+
+        ret = errorcode_t::success;
     }
     __finally2 { _lock.leave(); }
     return ret;
@@ -312,20 +336,15 @@ return_t oauth2_credentials::refresh(std::string& next_access_token, std::string
         _lock.enter();
 
         access_token_t* token = nullptr;
-        std::string atoken;
-        std::string clientid;
-        {
-            tokens_t::iterator iter = _refresh_tokens.find(refresh_token);
-            if (_refresh_tokens.end() == iter) {
-                ret = errorcode_t::not_found;
-                __leave2;
-            }
-            token = iter->second;
-            atoken = token->atoken();
-            clientid = token->client_id();
+        ret = _refresh_tokens.find(refresh_token, &token);
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
 
-        revoke(atoken);
+        std::string access_token = token->access_token();
+        std::string clientid = token->client_id();
+
+        revoke(access_token);
         ret = grant(next_access_token, next_refresh_token, clientid, expire);
     }
     __finally2 { _lock.leave(); }
@@ -333,47 +352,20 @@ return_t oauth2_credentials::refresh(std::string& next_access_token, std::string
 }
 
 void oauth2_credentials::revoke_if_expired() {
-    datetime dt;
-    struct timespec ts;
-    dt.gettimespec(&ts);
-    time_t now = ts.tv_sec;
-
     _lock.enter();
-    expire_t::iterator iter;
-    for (iter = _expires.begin(); iter != _expires.end(); iter++) {
-        if (iter->first < now) {
-            break;  // future
-        } else {
-            // past
-            access_token_t* token = iter->second;
-            revoke(token->atoken());
-            token->release();
-            _expires.erase(iter);
-        }
-    }
+    _expirable.expire([&](access_token_t* object) -> void {
+        revoke(object->access_token());
+        object->release();
+    });
     _lock.leave();
 }
 
 void oauth2_credentials::clear() {
     _lock.enter();
     {
-        for (tokens_t::iterator iter = _access_tokens.begin(); iter != _access_tokens.end(); iter++) {
-            access_token_t* token = iter->second;
-            token->release();
-        }
-        _access_tokens.clear();
-
-        for (tokens_t::iterator iter = _refresh_tokens.begin(); iter != _refresh_tokens.end(); iter++) {
-            access_token_t* token = iter->second;
-            token->release();
-        }
-        _refresh_tokens.clear();
-
-        for (expire_t::iterator exp_iter = _expires.begin(); exp_iter != _expires.end(); exp_iter++) {
-            access_token_t* token = exp_iter->second;
-            token->release();
-        }
-        _expires.clear();
+        _access_tokens.clear([](access_token_t* object) -> void { object->release(); });
+        _refresh_tokens.clear([](access_token_t* object) -> void { object->release(); });
+        _expirable.clear([](access_token_t* object) -> void { object->release(); });
     }
     _user_clientid.clear();
     _webapps.clear();
