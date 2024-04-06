@@ -888,6 +888,13 @@ typedef struct _hash_context_t hash_context_t;
 struct _otp_context_t {};
 typedef struct _otp_context_t otp_context_t;
 
+enum jose_serialization_t {
+    jose_compact = 0,
+    jose_json = 1,
+    jose_flatjson = 2,
+};
+#define JOSE_JSON_FORMAT jose_serialization_t::jose_flatjson
+
 }  // namespace crypto
 }  // namespace hotplace
 

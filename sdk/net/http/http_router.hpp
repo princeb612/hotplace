@@ -26,6 +26,7 @@
 #include <sdk/net/http/html_documents.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/http/http_authentication_resolver.hpp>
+#include <sdk/net/http/oauth2.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
@@ -46,6 +47,8 @@ class http_router {
      */
     http_router& add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider = nullptr, bool upref = false);
     http_router& add(const char* uri, http_request_function_t handler, http_authenticate_provider* auth_provider = nullptr, bool upref = false);
+    http_router& add(std::string const& uri, http_request_handler_t handler, http_authenticate_provider* auth_provider = nullptr, bool upref = false);
+    http_router& add(std::string const& uri, http_request_function_t handler, http_authenticate_provider* auth_provider = nullptr, bool upref = false);
     /**
      * @brief   register a handler
      * @sample
@@ -73,6 +76,8 @@ class http_router {
     http_authentication_resolver& get_authenticate_resolver();
 
     html_documents& get_html_documents();
+
+    oauth2_provider& get_oauth2_provider();
 
    protected:
     /**
@@ -103,6 +108,7 @@ class http_router {
     status_handler_map_t _status_handler_map;
     authenticate_map_t _authenticate_map;
     http_authentication_resolver _resolver;
+    oauth2_provider _oauth2;
     html_documents _http_documents;
 };
 

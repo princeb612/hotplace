@@ -20,13 +20,6 @@
 namespace hotplace {
 namespace crypto {
 
-enum jose_serialization_t {
-    jose_compact = 0,
-    jose_json = 1,
-    jose_flatjson = 2,
-};
-#define JOSE_JSON_FORMAT jose_serialization_t::jose_flatjson
-
 enum jose_compose_t {
     jose_enc_only = 1,
     jose_alg_only = 2,
