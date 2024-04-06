@@ -37,41 +37,54 @@ void http_router::clear() {
 }
 
 http_router& http_router::add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider, bool upref) {
-    critical_section_guard guard(_lock);
-
     if (uri) {
-        http_router_t route;
-        route.handler = handler;
-        _handler_map.insert(std::make_pair(uri, route));
-
-        if (auth_provider) {
-            authenticate_map_pib_t pib = _authenticate_map.insert(std::make_pair(uri, auth_provider));
-            if (upref) {
-                if (pib.second) {
-                    auth_provider->addref();
-                }
-            }
-        }
+        add(std::string(uri), handler, auth_provider, upref);
     }
     return *this;
 }
 
 http_router& http_router::add(const char* uri, http_request_function_t handler, http_authenticate_provider* auth_provider, bool upref) {
-    critical_section_guard guard(_lock);
     if (uri) {
-        http_router_t route;
-        route.stdfunc = handler;
-        _handler_map.insert(std::make_pair(uri, route));
+        add(std::string(uri), handler, auth_provider, upref);
+    }
+    return *this;
+}
 
-        if (auth_provider) {
-            authenticate_map_pib_t pib = _authenticate_map.insert(std::make_pair(uri, auth_provider));
-            if (upref) {
-                if (pib.second) {
-                    auth_provider->addref();
-                }
+http_router& http_router::add(std::string const& uri, http_request_handler_t handler, http_authenticate_provider* auth_provider, bool upref) {
+    critical_section_guard guard(_lock);
+
+    http_router_t route;
+    route.handler = handler;
+    _handler_map.insert(std::make_pair(uri, route));
+
+    if (auth_provider) {
+        authenticate_map_pib_t pib = _authenticate_map.insert(std::make_pair(uri, auth_provider));
+        if (upref) {
+            if (pib.second) {
+                auth_provider->addref();
             }
         }
     }
+
+    return *this;
+}
+
+http_router& http_router::add(std::string const& uri, http_request_function_t handler, http_authenticate_provider* auth_provider, bool upref) {
+    critical_section_guard guard(_lock);
+
+    http_router_t route;
+    route.stdfunc = handler;
+    _handler_map.insert(std::make_pair(uri, route));
+
+    if (auth_provider) {
+        authenticate_map_pib_t pib = _authenticate_map.insert(std::make_pair(uri, auth_provider));
+        if (upref) {
+            if (pib.second) {
+                auth_provider->addref();
+            }
+        }
+    }
+
     return *this;
 }
 
@@ -164,6 +177,8 @@ void http_router::status404_handler(network_session* session, http_request* requ
 http_authentication_resolver& http_router::get_authenticate_resolver() { return _resolver; }
 
 html_documents& http_router::get_html_documents() { return _http_documents; }
+
+oauth2_provider& http_router::get_oauth2_provider() { return _oauth2; }
 
 bool http_router::get_auth_provider(http_request* request, http_response* response, http_authenticate_provider** provider) {
     bool ret_value = false;

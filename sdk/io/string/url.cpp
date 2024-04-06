@@ -237,7 +237,7 @@ return_t split_url(const char* src, url_info_t* info) {
             info->uripath = *tokens.begin();
         }
 
-        regex_token(url, "[?][a-zA-Z0-9&%+./:=_]*", pos, tokens);
+        regex_token(url, "[?][a-zA-Z0-9&%+-./:=_]*", pos, tokens);
         if (tokens.size()) {
             info->query = *tokens.begin();
             info->query.erase(info->query.begin());  // "?" query

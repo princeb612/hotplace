@@ -191,7 +191,8 @@ return_t oauth2_credentials::grant_code(std::string& code, uint16 expire) {
     code = prng.rand(16, encoding_t::encoding_base64url);
 
     _lock.enter();
-    _grant_codes.insert(time(nullptr) + expire, code);
+    time_t t = time(nullptr) + expire;
+    _grant_codes.insert(t, code);
     _lock.leave();
 
     return ret;

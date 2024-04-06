@@ -72,30 +72,52 @@ void test_uri() {
     _test_case.begin("uri");
     url_info_t url_info;
 
-    do_split_url("https://test.com/resource?client_id=12345#part1", &url_info);
+    {
+        do_split_url("https://test.com/resource?client_id=12345#part1", &url_info);
 
-    _test_case.assert("https" == url_info.scheme, __FUNCTION__, "uri.scheme");
-    _test_case.assert("test.com" == url_info.host, __FUNCTION__, "uri.host");
-    _test_case.assert(443 == url_info.port, __FUNCTION__, "uri.port");
-    _test_case.assert("/resource?client_id=12345#part1" == url_info.uri, __FUNCTION__, "uri.uri");
-    _test_case.assert("/resource" == url_info.uripath, __FUNCTION__, "uri.uripath");
-    _test_case.assert("client_id=12345" == url_info.query, __FUNCTION__, "uri.query");
-    _test_case.assert("part1" == url_info.fragment, __FUNCTION__, "uri.fragment");
+        _test_case.assert("https" == url_info.scheme, __FUNCTION__, "uri.scheme");
+        _test_case.assert("test.com" == url_info.host, __FUNCTION__, "uri.host");
+        _test_case.assert(443 == url_info.port, __FUNCTION__, "uri.port");
+        _test_case.assert("/resource?client_id=12345#part1" == url_info.uri, __FUNCTION__, "uri.uri");
+        _test_case.assert("/resource" == url_info.uripath, __FUNCTION__, "uri.uripath");
+        _test_case.assert("client_id=12345" == url_info.query, __FUNCTION__, "uri.query.client_id");
+        _test_case.assert("part1" == url_info.fragment, __FUNCTION__, "uri.fragment");
+    }
 
-    key_value kv;
+    {
+        key_value kv;
 
-    do_split_url("/auth/v1/authorize?response_type=code&client_id=abcdefg&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb&state=xyz", &url_info);
-    http_uri::to_keyvalue(url_info.uri, kv);
+        do_split_url("/auth/v1/authorize?response_type=code&client_id=abcdefg&redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb&state=xyz", &url_info);
+        http_uri::to_keyvalue(url_info.uri, kv);
 
-    _test_case.assert("/auth/v1/authorize" == url_info.uripath, __FUNCTION__, "query.uripath");
-    _test_case.assert("code" == kv.get("response_type"), __FUNCTION__, "query.response_type");
-    _test_case.assert("xyz" == kv.get("state"), __FUNCTION__, "query.state");
-    _test_case.assert("https://client.example.com/cb" == kv.get("redirect_uri"), __FUNCTION__, "query.redirect_uri");
+        _test_case.assert("/auth/v1/authorize" == url_info.uripath, __FUNCTION__, "uri.query.uripath");
+        _test_case.assert("code" == kv.get("response_type"), __FUNCTION__, "uri.query.response_type");
+        _test_case.assert("xyz" == kv.get("state"), __FUNCTION__, "uri.query.state");
+        _test_case.assert("https://client.example.com/cb" == kv.get("redirect_uri"), __FUNCTION__, "uri.query.redirect_uri");
 
-    do_split_url("/auth/v1/authorize?response_type=code&client_id=abcdefg&redirect_uri=https://client.example.com/cb&state=xyz#part1", &url_info);
-    http_uri::to_keyvalue(url_info.uri, kv);
+        do_split_url("/auth/v1/authorize?response_type=code&client_id=abcdefg&redirect_uri=https://client.example.com/cb&state=xyz#part1", &url_info);
+        http_uri::to_keyvalue(url_info.uri, kv);
 
-    _test_case.assert("https://client.example.com/cb" == kv.get("redirect_uri"), __FUNCTION__, "query");
+        _test_case.assert("https://client.example.com/cb" == kv.get("redirect_uri"), __FUNCTION__, "uri.query.redirect_uri");
+    }
+
+    {
+        key_value kv;
+
+        do_split_url("/client/cb?code=5lkd8ApNal3fkg3S6fh-uw&state=xyz", &url_info);
+        http_uri::to_keyvalue(url_info.uri, kv);
+
+        _test_case.assert("5lkd8ApNal3fkg3S6fh-uw" == kv.get("code"), __FUNCTION__, "uri.query.code");
+    }
+
+    {
+        http_request request;
+        request.open("GET /client/cb?code=5lkd8ApNal3fkg3S6fh-uw&state=xyz");
+        key_value& kv = request.get_http_uri().get_query_keyvalue();
+        std::string code = kv.get("code");
+
+        _test_case.assert("5lkd8ApNal3fkg3S6fh-uw" == kv.get("code"), __FUNCTION__, "uri.get_query_keyvalue.code");
+    }
 }
 
 void test_request() {
