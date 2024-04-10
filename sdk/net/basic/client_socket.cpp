@@ -14,15 +14,15 @@
 namespace hotplace {
 namespace net {
 
-client_socket::client_socket() : _ttl(1000) {
+tcp_client_socket::tcp_client_socket() : _ttl(1000) {
     // do nothing
 }
 
-client_socket::~client_socket() {
+tcp_client_socket::~tcp_client_socket() {
     // do nothing
 }
 
-return_t client_socket::connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
+return_t tcp_client_socket::connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
     return_t ret = errorcode_t::success;
 
     __try2 { ret = connect_socket(sock, SOCK_STREAM, address, port, timeout); }
@@ -32,7 +32,7 @@ return_t client_socket::connect(socket_t* sock, tls_context_t** tls_handle, cons
     return ret;
 }
 
-return_t client_socket::close(socket_t sock, tls_context_t* tls_handle) {
+return_t tcp_client_socket::close(socket_t sock, tls_context_t* tls_handle) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -52,7 +52,7 @@ return_t client_socket::close(socket_t sock, tls_context_t* tls_handle) {
     return ret;
 }
 
-return_t client_socket::read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read) {
+return_t tcp_client_socket::read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read) {
     return_t ret = errorcode_t::success;
 
     ret = wait_socket(sock, _ttl, SOCK_WAIT_READABLE);
@@ -81,13 +81,13 @@ return_t client_socket::read(socket_t sock, tls_context_t* tls_handle, char* ptr
     return ret;
 }
 
-return_t client_socket::more(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread) {
+return_t tcp_client_socket::more(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
     ret = read(sock, tls_handle, ptr_data, size_data, cbread);
     return ret;
 }
 
-return_t client_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent) {
+return_t tcp_client_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -113,14 +113,14 @@ return_t client_socket::send(socket_t sock, tls_context_t* tls_handle, const cha
     return ret;
 }
 
-client_socket& client_socket::set_ttl(uint32 milliseconds) {
+tcp_client_socket& tcp_client_socket::set_ttl(uint32 milliseconds) {
     if (milliseconds) {
         _ttl = milliseconds;
     }
     return *this;
 }
 
-uint32 client_socket::get_ttl() { return _ttl; }
+uint32 tcp_client_socket::get_ttl() { return _ttl; }
 
 }  // namespace net
 }  // namespace hotplace

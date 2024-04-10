@@ -26,13 +26,6 @@
 namespace hotplace {
 namespace net {
 
-enum http_server_builder_flag_t {
-    http_server_enable_http = (1 << 0),
-    http_server_enable_https = (1 << 1),
-    http_server_enable_ip4 = (1 << 2),
-    http_server_enable_ip6 = (1 << 3),
-};
-
 typedef TYPE_CALLBACK_HANDLEREXV http_server_handler_t;
 
 class http_server;
@@ -45,9 +38,12 @@ class http_server;
  *                 .tls_certificate("server.crt", "server.key")
  *                 .tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
  *                 .tls_verify_peer(0)
- *                 .enable_ip4(true).enable_ip6(true)
- *                 .set_handler(network_handler)
- *                 .set_concurrent(2);
+ *                 .enable_ipv4(true).enable_ipv6(true)
+ *                 .set_handler(network_handler);
+ *          builder.get_server_conf()
+ *                 .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
+ *                 .set(netserver_config_t::serverconf_concurrent_network, 2)
+ *                 .set(netserver_config_t::serverconf_concurrent_consume, 4);
  *          http_server* server = builder.build();
  */
 class http_server_builder {
@@ -62,29 +58,25 @@ class http_server_builder {
     http_server_builder& set_port_https(uint16 port = 443);
     http_server_builder& set_tls_certificate(std::string const& server_cert, std::string const& server_key);
     http_server_builder& set_tls_cipher_list(std::string const& cipher_list);
-    http_server_builder& set_tls_verify_peer(int value);
+    http_server_builder& set_tls_verify_peer(uint16 value);
 
-    http_server_builder& enable_ip4(bool enable);
-    http_server_builder& enable_ip6(bool enable);
+    http_server_builder& enable_ipv4(bool enable);
+    http_server_builder& enable_ipv6(bool enable);
 
     http_server_builder& set_handler(http_server_handler_t handler);
-    http_server_builder& set_concurrent(uint16 concurrent);
 
     http_server* build();
+    server_conf& get_server_conf();
 
    protected:
-    uint32 _flags;
-
-    uint16 _port_http;
-
-    uint16 _port_https;
+   private:
     std::string _server_cert;
     std::string _server_key;
     std::string _tls_cipher_list;
-    int _tls_verify_peer;
+
+    server_conf _config;
 
     http_server_handler_t _handler;
-    uint16 _concurrent;
 };
 
 class http_server {
@@ -100,16 +92,16 @@ class http_server {
     http_protocol* get_http_protocol();
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();
+    server_conf& get_server_conf();
 
    protected:
     http_server();
 
     static return_t accept_handler(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
 
-    return_t set_concurrent(uint16 concurrent);
     return_t startup_tls(std::string const& server_cert, std::string const& server_key, std::string const& cipher_list, int verify_peer);
     return_t shutdown_tls();
-    return_t startup_server(uint32 flags, uint16 port, http_server_handler_t handler);
+    return_t startup_server(uint16 tls, uint16 family, uint16 port, http_server_handler_t handler);
     return_t shutdown_server();
 
     void shutdown();
@@ -118,17 +110,15 @@ class http_server {
     network_server _server;
     http_protocol _protocol;
     http_router _router;
-    uint16 _concurrent;
     ipaddr_acl _acl;
 
-    server_socket _server_socket;
+    tcp_server_socket _server_socket;
 
     x509cert* _cert;
     transport_layer_security* _tls;
     tls_server_socket* _tls_server_socket;
 
-    typedef std::map<uint32, network_multiplexer_context_t*> http_handles_t;
-    typedef std::pair<http_handles_t::iterator, bool> http_handles_pib_t;
+    typedef std::list<network_multiplexer_context_t*> http_handles_t;
     http_handles_t _http_handles;
 };
 

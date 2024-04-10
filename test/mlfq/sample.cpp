@@ -31,9 +31,8 @@ void valgrind_warning_printf(const char* msg, ...) {
     va_list arg;
 
     va_start(arg, msg);
-    lock.enter();
+    critical_section_guard guard(lock);
     vprintf(msg, arg);
-    lock.leave();
     va_end(arg);
 }
 

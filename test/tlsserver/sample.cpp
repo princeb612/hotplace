@@ -39,16 +39,16 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            std::cout << "connect " << session_socket->client_socket << std::endl;
+            std::cout << "connect " << session_socket->cli_socket << std::endl;
             break;
         case mux_read:
-            printf("read %i (%zi) %.*s\n", session_socket->client_socket, bufsize, (unsigned)bufsize, buf);
+            printf("read %i (%zi) %.*s\n", session_socket->cli_socket, bufsize, (unsigned)bufsize, buf);
             // dump_memory (buf, bufsize, &bs, 16, 4);
             // std::cout << bs.c_str () << std::endl;
             session->send((char*)buf, bufsize);
             break;
         case mux_disconnect:
-            std::cout << "disconnect " << session_socket->client_socket << std::endl;
+            std::cout << "disconnect " << session_socket->cli_socket << std::endl;
             break;
     }
     return ret;
@@ -85,8 +85,8 @@ return_t echo_server(void*) {
         __try_new_catch(tls_server, new tls_server_socket(tls), ret, __leave2);
 
         // start server
-        netserver.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
-        netserver.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, tls_server);
+        netserver.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 1024, network_routine, nullptr, tls_server);
+        netserver.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 1024, network_routine, nullptr, tls_server);
         // netserver.add_protocol(handle_ipv4, http_prot);
 
         netserver.consumer_loop_run(handle_ipv4, 2);

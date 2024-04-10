@@ -74,10 +74,10 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            cprint("connect %i", session_socket->client_socket);
+            cprint("connect %i", session_socket->cli_socket);
             break;
         case mux_read:
-            cprint("read %i", session_socket->client_socket);
+            cprint("read %i", session_socket->cli_socket);
             if (option.debug) {
                 printf("%.*s\n", (unsigned)bufsize, buf);
             }
@@ -121,7 +121,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 }
 
                 if (option.debug) {
-                    cprint("send %i", session_socket->client_socket);
+                    cprint("send %i", session_socket->cli_socket);
                     basic_stream resp;
                     response.get_response(resp);
                     basic_stream temp;
@@ -135,7 +135,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
             break;
         case mux_disconnect:
-            cprint("disconnect %i", session_socket->client_socket);
+            cprint("disconnect %i", session_socket->cli_socket);
             break;
     }
     return ret;
@@ -156,7 +156,7 @@ return_t echo_server(void*) {
     fclose(fp);
 
     http_protocol* http_prot = nullptr;
-    server_socket svr_sock;
+    tcp_server_socket svr_sock;
     transport_layer_security* tls = nullptr;
     tls_server_socket* tls_server = nullptr;
 
@@ -204,10 +204,10 @@ return_t echo_server(void*) {
         http_prot->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 
         // start server
-        netserver.open(&handle_http_ipv4, AF_INET, IPPROTO_TCP, option.port, 32000, network_routine, nullptr, &svr_sock);
-        netserver.open(&handle_http_ipv6, AF_INET6, IPPROTO_TCP, option.port, 32000, network_routine, nullptr, &svr_sock);
-        netserver.open(&handle_https_ipv4, AF_INET, IPPROTO_TCP, option.port_tls, 32000, network_routine, nullptr, tls_server);
-        netserver.open(&handle_https_ipv6, AF_INET6, IPPROTO_TCP, option.port_tls, 32000, network_routine, nullptr, tls_server);
+        netserver.open(&handle_http_ipv4, AF_INET, IPPROTO_TCP, option.port, 1024, network_routine, nullptr, &svr_sock);
+        netserver.open(&handle_http_ipv6, AF_INET6, IPPROTO_TCP, option.port, 1024, network_routine, nullptr, &svr_sock);
+        netserver.open(&handle_https_ipv4, AF_INET, IPPROTO_TCP, option.port_tls, 1024, network_routine, nullptr, tls_server);
+        netserver.open(&handle_https_ipv6, AF_INET6, IPPROTO_TCP, option.port_tls, 1024, network_routine, nullptr, tls_server);
         netserver.add_protocol(handle_http_ipv4, http_prot);
         netserver.add_protocol(handle_http_ipv6, http_prot);
         netserver.add_protocol(handle_https_ipv4, http_prot);

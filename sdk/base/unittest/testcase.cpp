@@ -240,7 +240,7 @@ void test_case::test(return_t result, const char* test_function, const char* mes
             va_end(ap);
         }
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         console_color_t color = console_color_t::yellow;
         if (errorcode_t::success == result) {
@@ -300,11 +300,7 @@ void test_case::test(return_t result, const char* test_function, const char* mes
 
         std::cout << stream.c_str() << std::endl;
     }
-    __finally2 {
-        _lock.leave();
-
-        reset_time();
-    }
+    __finally2 { reset_time(); }
 }
 
 constexpr char constexpr_success[] = "success";
@@ -394,13 +390,9 @@ void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stre
 void test_case::report(uint32 top_count) {
     basic_stream stream;
 
-    _lock.enter();
-
     report_unittest(stream);
     report_failed(stream);
     report_testtime(stream, top_count);
-
-    _lock.leave();
 
     //
     // print
@@ -425,7 +417,7 @@ void test_case::report_unittest(basic_stream& stream) {
     // compose
     //
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
     stream.fill(80, '=');
@@ -493,14 +485,12 @@ void test_case::report_unittest(basic_stream& stream) {
     }
 
     console_colored_stream << _concolor.turnoff();
-
-    _lock.leave();
 }
 
 void test_case::report_failed(basic_stream& stream) {
     t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     unittest_list_t array;
     unittest_map_t::iterator it;
@@ -543,14 +533,12 @@ void test_case::report_failed(basic_stream& stream) {
     }
 
     console_colored_stream << _concolor.turnoff();
-
-    _lock.leave();
 }
 
 void test_case::report_testtime(basic_stream& stream, uint32 top_count) {
     t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
 
     unittest_list_t array;
     typedef std::map<uint128, unittest_item_t*> temp_map_t;
@@ -604,8 +592,6 @@ void test_case::report_testtime(basic_stream& stream, uint32 top_count) {
     }
 
     console_colored_stream << _concolor.turnoff();
-
-    _lock.leave();
 }
 
 return_t test_case::result() { return _total._count_fail > 0 ? errorcode_t::internal_error : errorcode_t::success; }

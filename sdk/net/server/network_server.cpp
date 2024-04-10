@@ -22,16 +22,42 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
+server_conf::server_conf() {}
+
+server_conf::server_conf(const server_conf& conf) { _config_map = conf._config_map; }
+
+server_conf& server_conf::set(netserver_config_t type, uint16 value) {
+    return_t ret = errorcode_t::success;
+
+    config_map_pib_t pib = _config_map.insert(std::make_pair(type, value));
+    if (false == pib.second) {
+        pib.first->second = value;
+    }
+
+    return *this;
+}
+
+uint16 server_conf::get(netserver_config_t type) {
+    uint16 value = 0;
+
+    config_map_t::iterator iter = _config_map.find(type);
+    if (_config_map.end() != iter) {
+        value = iter->second;
+    }
+
+    return value;
+}
+
 #define NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE 0x20151127
 
 struct _network_multiplexer_context_t;
 typedef struct _accept_context_t {
     struct _network_multiplexer_context_t* mplexer_context;
-    socket_t client_socket;
+    socket_t cli_socket;
     sockaddr_storage_t client_addr;
     socklen_t client_addr_len;
 
-    _accept_context_t() : mplexer_context(nullptr), client_socket(INVALID_SOCKET) { client_addr_len = sizeof(client_addr); }
+    _accept_context_t() : mplexer_context(nullptr), cli_socket(INVALID_SOCKET) { client_addr_len = sizeof(client_addr); }
 
 } accept_context_t;
 
@@ -46,7 +72,7 @@ typedef struct _network_multiplexer_context_t {
     void* callback_param;
 
     socket_t listen_sock;
-    server_socket* svr_socket;
+    tcp_server_socket* svr_socket;
 
     semaphore tls_accept_mutex;
     semaphore cleanup_mutex;
@@ -67,12 +93,18 @@ typedef struct _network_multiplexer_context_t {
     critical_section accept_queue_lock;
 
     ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler;
-
 } network_multiplexer_context_t;
 
 network_server::network_server() {
     // openssl_startup ();
     // openssl_thread_setup ();
+
+    // default values
+    get_server_conf()
+        .set(netserver_config_t::serverconf_concurrent_event, 1024)
+        .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
+        .set(netserver_config_t::serverconf_concurrent_network, 1)
+        .set(netserver_config_t::serverconf_concurrent_consume, 2);
 }
 
 network_server::~network_server() {
@@ -81,7 +113,7 @@ network_server::~network_server() {
 }
 
 return_t network_server::open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent,
-                              TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param, server_socket* svr_socket) {
+                              TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param, tcp_server_socket* svr_socket) {
     return_t ret = errorcode_t::success;
 
     network_multiplexer_context_t* context = nullptr;
@@ -116,7 +148,12 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
 
 #if defined __linux__
 
+        // (epoll) bind server socket
         mplexer.bind(mplexer_handle, sock, nullptr);
+        // (epoll) and then (see multiplexer_epoll::event_loop_run)
+        //         if (fd == listen_socket) {
+        //           event_callback_routine(multiplexer_event_type_t::mux_connect(...);
+        //         }
 
 #endif
 
@@ -124,9 +161,10 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
         // use dummy signal handler ... just call CloseListener first, and signal_and_wait_all
         context->accept_threads.set(1, accept_thread, signalwait_threads::dummy_signal, context);
 #endif
-        context->tls_accept_threads.set(32, tls_accept_thread, tls_accept_signal, context);
-        context->network_threads.set(64, network_thread, network_signal, context);
-        context->consumer_threads.set(64, consumer_thread, consumer_signal, context);
+        context->tls_accept_threads.set(get_server_conf().get(netserver_config_t::serverconf_concurrent_tls_accept), tls_accept_thread, tls_accept_signal,
+                                        context);
+        context->network_threads.set(get_server_conf().get(netserver_config_t::serverconf_concurrent_network), network_thread, network_signal, context);
+        context->consumer_threads.set(get_server_conf().get(netserver_config_t::serverconf_concurrent_consume), consumer_thread, consumer_signal, context);
 
         context->mplexer_handle = mplexer_handle;
         context->concurent = concurent;
@@ -142,6 +180,7 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
 
 #if defined _WIN32 || defined _WIN64
         context->accept_threads.create();
+        // (iocp) and then bind client socket after accept
 #endif
         arch_t use_tls = 0;
         svr_socket->query(server_socket_query_t::query_support_tls, &use_tls);
@@ -271,7 +310,7 @@ return_t network_server::tls_accept_loop_run(network_multiplexer_context_t* hand
             __leave2;
         }
 
-        server_socket* svr_socket = handle->svr_socket;
+        tcp_server_socket* svr_socket = handle->svr_socket;
         arch_t use_tls = 0;
         svr_socket->query(server_socket_query_t::query_support_tls, &use_tls);
         if (1 == use_tls) {
@@ -441,7 +480,7 @@ return_t network_server::close(network_multiplexer_context_t* handle) {
             __leave2;
         }
 
-        server_socket* svr_socket = handle->svr_socket;
+        tcp_server_socket* svr_socket = handle->svr_socket;
         svr_socket->close(handle->listen_sock, nullptr);
 
         /* stop all threads */
@@ -512,13 +551,13 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
         }
 
         socket_t listen_sock = (socket_t)handle->listen_sock;
-        server_socket* svr_socket = handle->svr_socket;
+        tcp_server_socket* svr_socket = handle->svr_socket;
 
         accept_context_t accpt_ctx;
         accpt_ctx.mplexer_context = handle;
 
-        ret = svr_socket->accept(listen_sock, &accpt_ctx.client_socket, (struct sockaddr*)&accpt_ctx.client_addr, &accpt_ctx.client_addr_len);
-        if (INVALID_SOCKET == accpt_ctx.client_socket) {
+        ret = svr_socket->accept(listen_sock, &accpt_ctx.cli_socket, (struct sockaddr*)&accpt_ctx.client_addr, &accpt_ctx.client_addr_len);
+        if (INVALID_SOCKET == accpt_ctx.cli_socket) {
             /* mingw environments GetLastError () return 0 */
 #if defined __MINGW32__
             ret = errorcode_t::canceled;
@@ -535,9 +574,9 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
         /* if protocol upgrade needed, use accept_control_handler callback */
         if (nullptr != handle->accept_control_handler) {
             CALLBACK_CONTROL control = CONTINUE_CONTROL;
-            handle->accept_control_handler(accpt_ctx.client_socket, &accpt_ctx.client_addr, &control, handle->callback_param);
+            handle->accept_control_handler(accpt_ctx.cli_socket, &accpt_ctx.client_addr, &control, handle->callback_param);
             if (STOP_CONTROL == control) {
-                close_socket(accpt_ctx.client_socket, true, 0);
+                close_socket(accpt_ctx.cli_socket, true, 0);
                 __leave2;
             }
         }
@@ -545,8 +584,8 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
         /*
          * it can be accomplished by using follows...
          *
-         * svr_socket->tls_accept(client_socket, &tls_handle);
-         * ret = svr.session_accepted(handle, tls_handle, (handle_t)client_socket, &client_addr);
+         * svr_socket->tls_accept(cli_socket, &tls_handle);
+         * ret = svr.session_accepted(handle, tls_handle, (handle_t)cli_socket, &client_addr);
          *
          * sometimes it takes long time by calling ssl_accept
          * so, separate thread to improve accept performance
@@ -556,7 +595,7 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
         svr_socket->query(server_socket_query_t::query_support_tls, &use_tls);
         if (0 == use_tls) {
             /* wo thread overhead */
-            ret = svr.session_accepted(handle, nullptr, (handle_t)accpt_ctx.client_socket, &accpt_ctx.client_addr);
+            ret = svr.session_accepted(handle, nullptr, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
         } else {
             /* prepare for ssl_accept delay */
             {
@@ -564,7 +603,7 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
                 handle->accept_queue.push(accpt_ctx);
             }
 
-            svr.try_connect(handle, accpt_ctx.client_socket, &accpt_ctx.client_addr);
+            svr.try_connect(handle, accpt_ctx.cli_socket, &accpt_ctx.client_addr);
         }
     }
     __finally2 {
@@ -574,7 +613,7 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
     return ret;
 }
 
-return_t network_server::try_connect(network_multiplexer_context_t* handle, socket_t client_socket, sockaddr_storage_t* client_addr) {
+return_t network_server::try_connect(network_multiplexer_context_t* handle, socket_t cli_socket, sockaddr_storage_t* client_addr) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -590,7 +629,7 @@ return_t network_server::try_connect(network_multiplexer_context_t* handle, sock
         void* dispatch_data[4] = {
             nullptr,
         };
-        dispatch_data[0] = (void*)(arch_t)client_socket;
+        dispatch_data[0] = (void*)(arch_t)cli_socket;
         dispatch_data[1] = client_addr;
         handle->callback_routine(multiplexer_event_type_t::mux_tryconnect, 4, dispatch_data, nullptr, handle->callback_param);
     }
@@ -683,15 +722,15 @@ return_t network_server::tls_accept_routine(network_multiplexer_context_t* handl
         }
 
         network_server svr;
-        server_socket* svr_socket = handle->svr_socket;
+        tcp_server_socket* svr_socket = handle->svr_socket;
         tls_context_t* tls_handle = nullptr;
 
-        return_t dwResult = svr_socket->tls_accept(accpt_ctx.client_socket, &tls_handle);
+        return_t dwResult = svr_socket->tls_accept(accpt_ctx.cli_socket, &tls_handle);
         if (errorcode_t::success == dwResult) {
-            svr.session_accepted(handle, tls_handle, (handle_t)accpt_ctx.client_socket, &accpt_ctx.client_addr);
+            svr.session_accepted(handle, tls_handle, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
             /* tls_handle is release in session_closed member. */
         } else {
-            close_socket(accpt_ctx.client_socket, true, 0);
+            close_socket(accpt_ctx.cli_socket, true, 0);
         }
     }
     __finally2 {
@@ -739,7 +778,7 @@ return_t network_server::cleanup_tls_accept(network_multiplexer_context_t* handl
         if (false == handle->accept_queue.empty()) {
             accpt_ctx = handle->accept_queue.front();
             handle->accept_queue.pop();
-            close_socket(accpt_ctx.client_socket, true, 0);
+            close_socket(accpt_ctx.cli_socket, true, 0);
         }
     }
     __finally2 {
@@ -791,7 +830,7 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
 #elif defined _WIN32 || defined _WIN64
     multiplexer_iocp mplexer;
 #endif
-    // server_socket* serversocket = context->svr_socket;
+    // tcp_server_socket* serversocket = context->svr_socket;
 
 #if defined _WIN32 || defined _WIN64
 
@@ -806,7 +845,7 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
             session_object->ready_to_read();
         }
         if (multiplexer_event_type_t::mux_disconnect == type) {
-            svr.session_closed(context, session_object->socket_info()->client_socket);
+            svr.session_closed(context, session_object->socket_info()->cli_socket);
         }
     }
     __finally2 {
@@ -908,30 +947,23 @@ return_t network_server::consumer_routine(network_multiplexer_context_t* handle)
         ret = handle->priority_queue.pop(&priority, &session_object);
         if (errorcode_t::success == ret) {
             network_stream_data* buffer_object = nullptr;
-            network_stream_data* buffer_item = nullptr;
             session_object->consume(&handle->protocol_group, &buffer_object);
-            if (nullptr != buffer_object) {
-                while (true) {
-                    buffer_item = buffer_object;
-                    if (nullptr == buffer_item) {
-                        break;
-                    }
+            while (buffer_object) {
+                void* dispatch_data[4] = {
+                    nullptr,
+                };
+                dispatch_data[0] = session_object->socket_info(); /* netserver_callback_type_t::netserver_callback_type_socket */
+                dispatch_data[1] = buffer_object->content();      /* netserver_callback_type_t::netserver_callback_type_dataptr */
+                dispatch_data[2] = (void*)buffer_object->size();  /* netserver_callback_type_t::netserver_callback_type_datasize */
+                dispatch_data[3] = session_object;                /* netserver_callback_type_t::netserver_callback_type_session */
 
-                    void* dispatch_data[4] = {
-                        nullptr,
-                    };
-                    dispatch_data[0] = session_object->socket_info(); /* netserver_callback_type_t::netserver_callback_type_socket */
-                    dispatch_data[1] = buffer_item->content();        /* netserver_callback_type_t::netserver_callback_type_dataptr */
-                    dispatch_data[2] = (void*)buffer_item->size();    /* netserver_callback_type_t::netserver_callback_type_datasize */
-                    dispatch_data[3] = session_object;                /* netserver_callback_type_t::netserver_callback_type_session */
+                handle->callback_routine(multiplexer_event_type_t::mux_read, 4, dispatch_data, nullptr, handle->callback_param);
 
-                    handle->callback_routine(multiplexer_event_type_t::mux_read, 4, dispatch_data, nullptr, handle->callback_param);
-
-                    buffer_object = buffer_object->next();
-
-                    buffer_item->release();
-                }
+                network_stream_data* temp = buffer_object;
+                buffer_object = buffer_object->next();
+                temp->release();
             }
+
             session_object->release(); /* priority_queue::push increased reference counter */
         }
     } else {
@@ -959,7 +991,7 @@ return_t network_server::consumer_signal(void* user_context) {
     return ret;
 }
 
-return_t network_server::session_accepted(network_multiplexer_context_t* handle, tls_context_t* tls_handle, handle_t client_socket,
+return_t network_server::session_accepted(network_multiplexer_context_t* handle, tls_context_t* tls_handle, handle_t cli_socket,
                                           sockaddr_storage_t* client_addr) {
     return_t ret = errorcode_t::success;
 
@@ -972,7 +1004,7 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
 #endif
 
     __try2 {
-        if ((nullptr == handle) || (INVALID_SOCKET == (socket_t)client_socket) || (nullptr == client_addr)) {
+        if ((nullptr == handle) || (INVALID_SOCKET == (socket_t)cli_socket) || (nullptr == client_addr)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -982,12 +1014,12 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
         }
 
         network_session* session_object;
-        ret = handle->session_manager.connected(client_socket, client_addr, handle->svr_socket, tls_handle, &session_object);
+        ret = handle->session_manager.connected(cli_socket, client_addr, handle->svr_socket, tls_handle, &session_object);
         if (errorcode_t::success != ret) {
             __leave2;
         }
         /* associate with multiplex object (iocp, epoll) */
-        mplexer.bind(handle->mplexer_handle, client_socket, session_object);
+        mplexer.bind(handle->mplexer_handle, cli_socket, session_object);
 #if defined _WIN32 || defined _WIN64
         /* asynchronous */
         session_object->ready_to_read();
@@ -1006,7 +1038,7 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
     return ret;
 }
 
-return_t network_server::session_closed(network_multiplexer_context_t* handle, handle_t client_socket) {
+return_t network_server::session_closed(network_multiplexer_context_t* handle, handle_t cli_socket) {
     return_t ret = errorcode_t::success;
 
 #if defined __linux__
@@ -1018,7 +1050,7 @@ return_t network_server::session_closed(network_multiplexer_context_t* handle, h
 #endif
 
     __try2 {
-        if (nullptr == handle || INVALID_SOCKET == (socket_t)client_socket) {
+        if (nullptr == handle || INVALID_SOCKET == (socket_t)cli_socket) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -1029,10 +1061,10 @@ return_t network_server::session_closed(network_multiplexer_context_t* handle, h
 
         network_session* session_object = nullptr;
         /* remove from session manager, prevent double free(concurrent epoll_wait) */
-        ret = handle->session_manager.ready_to_close(client_socket, &session_object);
+        ret = handle->session_manager.ready_to_close(cli_socket, &session_object);
         if (errorcode_t::success == ret) {
             /* no more associated, control_delete */
-            mplexer.unbind(handle->mplexer_handle, session_object->socket_info()->client_socket, nullptr);
+            mplexer.unbind(handle->mplexer_handle, session_object->socket_info()->cli_socket, nullptr);
 
             void* dispatch_data[4] = {
                 nullptr,
@@ -1051,6 +1083,8 @@ return_t network_server::session_closed(network_multiplexer_context_t* handle, h
 
     return ret;
 }
+
+server_conf& network_server::get_server_conf() { return _config; }
 
 }  // namespace net
 }  // namespace hotplace

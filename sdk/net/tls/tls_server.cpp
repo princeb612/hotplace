@@ -36,7 +36,7 @@ return_t tls_server_socket::close(socket_t sock, tls_context_t* tls_handle) {
         if (nullptr != tls_handle) {
             _tls->close(tls_handle);
         }
-        server_socket::close(sock, tls_handle);
+        tcp_server_socket::close(sock, tls_handle);
     }
     __finally2 {
         // do nothing

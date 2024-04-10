@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base.hpp>
 #include <sdk/base/error.hpp>
 
 namespace hotplace {

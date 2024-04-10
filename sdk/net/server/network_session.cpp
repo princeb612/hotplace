@@ -17,13 +17,13 @@
 namespace hotplace {
 namespace net {
 
-network_session::network_session(server_socket* serversocket) {
+network_session::network_session(tcp_server_socket* serversocket) {
     _shared.make_share(this);
     _session.svr_socket = serversocket;
 }
 
 network_session::~network_session() {
-    get_server_socket()->close((socket_t)_session.netsock.client_socket, _session.tls_handle);
+    get_server_socket()->close((socket_t)_session.netsock.cli_socket, _session.tls_handle);
     //_session.netsock.client_socket = (handle_t)INVALID_SOCKET;
     //_session.tls_handle = nullptr;
     // do nothing
@@ -32,8 +32,8 @@ network_session::~network_session() {
 return_t network_session::connected(handle_t client_socket, sockaddr_storage_t* sockaddr, tls_context_t* tls_handle) {
     return_t ret = errorcode_t::success;
 
-    _session.netsock.client_socket = client_socket;
-    memcpy(&(_session.netsock.client_addr), sockaddr, sizeof(sockaddr_storage_t));
+    _session.netsock.cli_socket = client_socket;
+    memcpy(&(_session.netsock.cli_addr), sockaddr, sizeof(sockaddr_storage_t));
     _session.priority = 0;
     _session.tls_handle = tls_handle;
     return ret;
@@ -50,8 +50,7 @@ return_t network_session::ready_to_read() {
     _session.wsabuf_pair.r.wsabuf.len = RTL_FIELD_SIZE(net_session_wsabuf_t, buffer);
     _session.wsabuf_pair.r.wsabuf.buf = _session.wsabuf_pair.r.buffer;
 
-    WSARecv((socket_t)_session.netsock.client_socket, &(_session.wsabuf_pair.r.wsabuf), 1, &dwRecvBytes, &dwFlags, &(_session.wsabuf_pair.r.overlapped),
-            nullptr);
+    WSARecv((socket_t)_session.netsock.cli_socket, &(_session.wsabuf_pair.r.wsabuf), 1, &dwRecvBytes, &dwFlags, &(_session.wsabuf_pair.r.overlapped), nullptr);
 #endif
     return ret;
 }
@@ -65,7 +64,7 @@ return_t network_session::send(const char* data_ptr, size_t size_data) {
             __leave2;
         }
         size_t cbsent = 0;
-        ret = get_server_socket()->send((socket_t)_session.netsock.client_socket, _session.tls_handle, data_ptr, size_data, &cbsent);
+        ret = get_server_socket()->send((socket_t)_session.netsock.cli_socket, _session.tls_handle, data_ptr, size_data, &cbsent);
     }
     __finally2 {
         // do nothing
@@ -114,20 +113,20 @@ return_t network_session::produce(network_priority_queue* q, void* buf_read, siz
         if (_session.tls_handle) { /* TLS */
             size_t cbread = 0;
             bool data_ready = false;
-            server_socket* server_socket_intf = get_server_socket();
+            tcp_server_socket* server_socket_intf = get_server_socket();
             int mode = 0;
 #if defined __linux__
             mode = tls_io_flag_t::read_epoll;
 #elif defined _WIN32 || defined _WIN64
             mode = tls_io_flag_t::read_iocp;
 #endif
-            ret = server_socket_intf->read((socket_t)_session.netsock.client_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read, nullptr);
+            ret = server_socket_intf->read((socket_t)_session.netsock.cli_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read, nullptr);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
             while (true) {
-                result = server_socket_intf->read((socket_t)_session.netsock.client_socket, _session.tls_handle, tls_io_flag_t::read_ssl_read, (char*)buf_read,
+                result = server_socket_intf->read((socket_t)_session.netsock.cli_socket, _session.tls_handle, tls_io_flag_t::read_ssl_read, (char*)buf_read,
                                                   size_buf_read, &cbread); /*SSL_read */
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream()->produce(buf_read, cbread);
@@ -161,7 +160,7 @@ return_t network_session::consume(network_protocol_group* protocol_group, networ
     return ret;
 }
 
-server_socket* network_session::get_server_socket() { return _session.svr_socket; }
+tcp_server_socket* network_session::get_server_socket() { return _session.svr_socket; }
 
 network_session_data* network_session::get_session_data() { return &_session_data; }
 
@@ -173,7 +172,7 @@ network_session_manager::~network_session_manager() {
     // do nothing
 }
 
-return_t network_session_manager::connected(handle_t client_socket, sockaddr_storage_t* sockaddr, server_socket* svr_socket, tls_context_t* tls_handle,
+return_t network_session_manager::connected(handle_t client_socket, sockaddr_storage_t* sockaddr, tcp_server_socket* svr_socket, tls_context_t* tls_handle,
                                             network_session** ptr_session_object) {
     return_t ret = errorcode_t::success;
     network_session_map_pib_t pairib;

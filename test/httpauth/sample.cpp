@@ -72,10 +72,10 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            cprint("connect %i", session_socket->client_socket);
+            cprint("connect %i", session_socket->cli_socket);
             break;
         case mux_read:
-            cprint("read %i", session_socket->client_socket);
+            cprint("read %i", session_socket->cli_socket);
             if (option.debug) {
                 printf("%.*s\n", (unsigned)bufsize, buf);
             }
@@ -119,7 +119,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 }
 
                 if (option.debug) {
-                    cprint("send %i", session_socket->client_socket);
+                    cprint("send %i", session_socket->cli_socket);
                     basic_stream resp;
                     response.get_response(resp);
                     basic_stream temp;
@@ -133,7 +133,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
             break;
         case mux_disconnect:
-            cprint("disconnect %i", session_socket->client_socket);
+            cprint("disconnect %i", session_socket->cli_socket);
             break;
     }
     return ret;
@@ -156,10 +156,13 @@ return_t echo_server(void*) {
             .set_tls_certificate("server.crt", "server.key")
             .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
             .set_tls_verify_peer(0)
-            .enable_ip4(true)
-            .enable_ip6(true)
-            .set_handler(network_routine)
-            .set_concurrent(2);
+            .enable_ipv4(true)
+            .enable_ipv6(true)
+            .set_handler(network_routine);
+        builder.get_server_conf()
+            .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
+            .set(netserver_config_t::serverconf_concurrent_network, 4)
+            .set(netserver_config_t::serverconf_concurrent_consume, 4);
         _http_server.make_share(builder.build());
         // _http_server->get_ipaddr_acl().add_rule("10.10.10.10", false);  // deny
 

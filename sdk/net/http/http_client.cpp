@@ -24,7 +24,7 @@ namespace net {
 http_client::http_client() : _socket(0), _client_socket(nullptr), _tls_context(nullptr), _x509(nullptr), _ttl(1000) {
     x509_open_simple(&_x509);
     _tls_client_socket = new tls_client_socket(new transport_layer_security(_x509));
-    _client_socket = new client_socket;
+    _client_socket = new tcp_client_socket;
 }
 
 http_client::~http_client() {
@@ -39,9 +39,9 @@ http_client::~http_client() {
     SSL_CTX_free(_x509);
 }
 
-client_socket* http_client::try_connect() {
+tcp_client_socket* http_client::try_connect() {
     return_t ret = errorcode_t::success;
-    client_socket* client = nullptr;
+    tcp_client_socket* client = nullptr;
     __try2 {
         if ("https" == _url_info.scheme) {
             client = _tls_client_socket;
@@ -80,7 +80,7 @@ http_client& http_client::request(http_request& request, http_response** respons
 
 http_client& http_client::do_request_and_response(url_info_t const& url_info, http_request& request, http_response** response) {
     return_t ret = errorcode_t::success;
-    client_socket* client = nullptr;
+    tcp_client_socket* client = nullptr;
     http_response* resp = nullptr;
 
     __try2 {

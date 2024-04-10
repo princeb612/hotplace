@@ -295,7 +295,7 @@ void test_basic_authentication() {
     OPTION& option = cmdline->value();
 
     return_t ret = errorcode_t::success;
-    server_socket socket;  // dummy
+    tcp_server_socket socket;  // dummy
     network_session session(&socket);
     basic_authentication_provider provider("basic realm");
     http_authentication_resolver resolver;
@@ -444,7 +444,7 @@ void test_digest_access_authentication(const char* alg = nullptr) {
     OPTION& option = cmdline->value();
 
     return_t ret = errorcode_t::success;
-    server_socket socket;  // dummy
+    tcp_server_socket socket;  // dummy
     network_session session(&socket);
     std::string realm = "digest realm";
     std::string qop = "auth";

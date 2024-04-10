@@ -18,12 +18,12 @@ namespace net {
 
 /**
  * @brief   client socket
- * @sa      class tls_client_socket : public client_socket
+ * @sa      class tls_client_socket : public tcp_client_socket
  */
-class client_socket {
+class tcp_client_socket {
    public:
-    client_socket();
-    virtual ~client_socket();
+    tcp_client_socket();
+    virtual ~tcp_client_socket();
 
     /**
      * @brief   connect
@@ -65,7 +65,7 @@ class client_socket {
      */
     virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent);
 
-    client_socket& set_ttl(uint32 milliseconds);
+    tcp_client_socket& set_ttl(uint32 milliseconds);
     uint32 get_ttl();
 
    private:

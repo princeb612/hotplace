@@ -91,7 +91,7 @@ namespace net {
  *      winsock_cleanup ();
  *  #endif
  */
-class tls_client_socket : public client_socket {
+class tls_client_socket : public tcp_client_socket {
    public:
     tls_client_socket(transport_layer_security* tls);
     virtual ~tls_client_socket();

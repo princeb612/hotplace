@@ -24,11 +24,13 @@ using namespace io;
 namespace net {
 
 /**
- *  grant_type
- *          authorization_code  Authorization Code Grant
- *          -                   Implicit Grant
- *          password            Resource Owner Password Credentials Grant
- *          client_credentials  Client Credentials Grant
+ * @brief   OAuth2
+ * @comments
+ *          response_type   grant_type
+ *          code            authorization_code  Authorization Code Grant
+ *          token           -                   Implicit Grant
+ *          -               password            Resource Owner Password Credentials Grant
+ *          -               client_credentials  Client Credentials Grant
  */
 
 enum oauth2_grant_t {

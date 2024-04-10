@@ -21,13 +21,13 @@ enum server_socket_query_t {
 };
 
 /**
- * @brief   server_socket
- * @sa      class transport_layer_security_server : public server_socket
+ * @brief   tcp_server_socket
+ * @sa      class transport_layer_security_server : public tcp_server_socket
  */
-class server_socket {
+class tcp_server_socket {
    public:
-    server_socket();
-    virtual ~server_socket();
+    tcp_server_socket();
+    virtual ~tcp_server_socket();
 
     /**
      * @brief   listen
@@ -43,11 +43,11 @@ class server_socket {
      * @param   tls_context_t*  tls_handle      [IN]
      * @return  error code (see error.hpp)
      * @remarks
-     *          tls_svr_sock.accept (listen_socket, &client_socket, &tls_context, &sockaddr, &sockaddrlen);
+     *          tls_svr_sock.accept (listen_socket, &cli_socket, &tls_context, &sockaddr, &sockaddrlen);
      *          // client connection established...
      *          // ...
      *          // socket closed
-     *          tls_svr_sock.close (client_socket, tls_context);
+     *          tls_svr_sock.close (cli_socket, tls_context);
      */
     virtual return_t close(socket_t sock, tls_context_t* tls_handle);
 
@@ -99,7 +99,7 @@ class server_socket {
      * @param   arch_t*         data_ptr        [OUT]
      * @return  error code (see error.hpp)
      * @remarks
-     *          server_socket.query (server_socket_query_t::query_support_tls, &value);
+     *          tcp_server_socket.query (server_socket_query_t::query_support_tls, &value);
      */
     virtual return_t query(int specid, arch_t* data_ptr);
 
