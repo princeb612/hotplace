@@ -19,6 +19,39 @@
 namespace hotplace {
 namespace net {
 
+enum netserver_config_t {
+    /* network_server */
+    serverconf_concurrent_event = 1,       // epoll
+    serverconf_concurrent_tls_accept = 2,  // max number of tls_accept thread
+    serverconf_concurrent_network = 3,     // max number of network thread (producer)
+    serverconf_concurrent_consume = 4,     // max number of consume thread (consumer)
+
+    /* http_server */
+    serverconf_enable_ipv4 = 5,
+    serverconf_enable_ipv6 = 6,
+    serverconf_enable_tls = 7,
+    serverconf_verify_peer = 8,
+    serverconf_enable_http = 9,
+    serverconf_enable_https = 10,
+    serverconf_port_http = 11,
+    serverconf_port_https = 12,
+};
+
+class server_conf {
+   public:
+    typedef std::map<netserver_config_t, uint16> config_map_t;
+    typedef std::pair<config_map_t::iterator, bool> config_map_pib_t;
+
+    server_conf();
+    server_conf(const server_conf& conf);
+
+    server_conf& set(netserver_config_t type, uint16 value);
+    uint16 get(netserver_config_t type);
+
+   private:
+    config_map_t _config_map;
+};
+
 enum netserver_callback_type_t {
     netserver_callback_type_socket = 0,
     netserver_callback_type_dataptr = 1,
@@ -46,8 +79,12 @@ typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
  * @example
  *
  *  network_server netserver;
+ *  netserver.get_server_conf().
+ *      .set(netserver_config_t::serverconf_concurrent_tls_accept], 1)
+ *      .set(netserver_config_t::serverconf_concurrent_network], 2)
+ *      .set(netserver_config_t::serverconf_concurrent_consume], 2);
  *  network_multiplexer_context_t* handle = nullptr;
- *  netserver.open (&handle, AF_INET,  IPPROTO_TCP, PORT, 32000, NetworkRoutine, nullptr);
+ *  netserver.open (&handle, AF_INET,  IPPROTO_TCP, PORT, 1024, NetworkRoutine, nullptr);
  *  netserver.consumer_loop_run (handle, 2);
  *  netserver.event_loop_run (handle, 2);
  *
@@ -70,13 +107,13 @@ typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
  *     switch(type)
  *     {
  *     case multiplexer_event_type_t::mux_connect:
- *         _log(LOGHELPER_DEBUG, "connect %d", pSession->client_socket);
+ *         _log(LOGHELPER_DEBUG, "connect %d", pSession->cli_socket);
  *         break;
  *     case multiplexer_event_type_t::mux_read:
- *         _log(LOGHELPER_DEBUG, "read %d msg [\n%.*s]", pSession->client_socket, bufsize, buf);
+ *         _log(LOGHELPER_DEBUG, "read %d msg [\n%.*s]", pSession->cli_socket, bufsize, buf);
  *         break;
  *     case multiplexer_event_type_t::mux_disconnect:
- *         _log(LOGHELPER_DEBUG, "disconnect %d", pSession->client_socket);
+ *         _log(LOGHELPER_DEBUG, "disconnect %d", pSession->cli_socket);
  *         break;
  *     }
  *     return ret;
@@ -128,15 +165,15 @@ class network_server {
      *              data_array[0] socket
      *              data_array[1] sockaddr_storage_t*
      *
-     * @param   void*                           callback_param      [IN] callback parameter
-     * @param   server_socket*                  svr_socket          [IN] socket layer (see also server_socket, tls_server_socket)
+     * @param   void*               callback_param  [IN] callback parameter
+     * @param   tcp_server_socket*  svr_socket      [IN] socket layer (see also tcp_server_socket, tls_server_socket)
      * @return  error code (see error.hpp)
      * @remarks
      *          It'll be automatically created 1 tls_accept_thread, if server_socketis an instance of tls_server_socket class.
      *          see tls_accept_loop_run/tls_accept_loop_break
      */
     return_t open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent,
-                  TYPE_CALLBACK_HANDLEREXV lpfnEventHandler, void* lpParameter, server_socket* svr_socket);
+                  TYPE_CALLBACK_HANDLEREXV lpfnEventHandler, void* lpParameter, tcp_server_socket* svr_socket);
 
     /**
      * @brief   access control or handle tcp before tls upgrade
@@ -238,6 +275,8 @@ class network_server {
      */
     return_t close(network_multiplexer_context_t* handle);
 
+    server_conf& get_server_conf();
+
    protected:
     /**
      * @brief   tcp accept
@@ -248,10 +287,10 @@ class network_server {
     /**
      * @brief accepted, before tlsaccept
      * @param network_multiplexer_context_t* handle [in]
-     * @param socket_t client_socket [in]
+     * @param socket_t cli_socket [in]
      * @param sockaddr_storage_t* client_addr [in]
      */
-    return_t try_connect(network_multiplexer_context_t* handle, socket_t client_socket, sockaddr_storage_t* client_addr);
+    return_t try_connect(network_multiplexer_context_t* handle, socket_t cli_socket, sockaddr_storage_t* client_addr);
     return_t tls_accept_ready(network_multiplexer_context_t* handle, bool* ready);
     /**
      * @brief   Tls accept
@@ -313,19 +352,22 @@ class network_server {
      * @brief   accept
      * @param   network_multiplexer_context_t* handle [IN]
      * @param   tls_context_t* tls_handle      [IN]
-     * @param   handle_t client_socket   [IN]
+     * @param   handle_t cli_socket   [IN]
      * @param   sockaddr_storage_t* client_addr     [IN]
      * @return  error code (see error.hpp)
      * @remarks
      */
-    return_t session_accepted(network_multiplexer_context_t* handle, tls_context_t* tls_handle, handle_t client_socket, sockaddr_storage_t* client_addr);
+    return_t session_accepted(network_multiplexer_context_t* handle, tls_context_t* tls_handle, handle_t cli_socket, sockaddr_storage_t* client_addr);
     /**
      * @brief   connection-close detected
      * @param   network_multiplexer_context_t* handle [IN]
-     * @param   handle_t client_socket [IN]
+     * @param   handle_t cli_socket [IN]
      * @return  error code (see error.hpp)
      */
-    return_t session_closed(network_multiplexer_context_t* handle, handle_t client_socket);
+    return_t session_closed(network_multiplexer_context_t* handle, handle_t cli_socket);
+
+   private:
+    server_conf _config;
 };
 
 }  // namespace net

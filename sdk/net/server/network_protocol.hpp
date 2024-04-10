@@ -54,12 +54,12 @@ typedef struct _net_session_wsabuf_pair_t {
 #endif
 
 typedef struct _net_session_socket_t {
-    handle_t client_socket;
-    sockaddr_storage_t client_addr;  // both ipv4 and ipv6
+    handle_t cli_socket;
+    sockaddr_storage_t cli_addr;  // both ipv4 and ipv6
 
 } net_session_socket_t;
 
-class server_socket;
+class tcp_server_socket;
 typedef struct _net_session_t {
     net_session_socket_t netsock;
     void* mplexer_handle;
@@ -70,7 +70,7 @@ typedef struct _net_session_t {
     char buffer[1 << 10];
 #endif
 
-    server_socket* svr_socket;
+    tcp_server_socket* svr_socket;
     tls_context_t* tls_handle;
     int priority;
     reference_counter refcount;

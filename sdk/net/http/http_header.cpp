@@ -188,9 +188,8 @@ return_t http_header::to_keyvalue(std::string const& value, key_value& kv) {
 }
 
 http_header& http_header::operator=(http_header const& object) {
-    _lock.enter();
+    critical_section_guard guard(_lock);
     _headers = object._headers;
-    _lock.leave();
     return *this;
 }
 

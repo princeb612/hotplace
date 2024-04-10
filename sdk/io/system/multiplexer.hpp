@@ -40,16 +40,16 @@ typedef struct {
  * @example
  *
  *          // step.1 create a listen socket and handle
- *          server_socket = WSASocket (family, type, proto, nullptr, 0, WSA_FLAG_OVERLAPPED);
+ *          svr_socket = WSASocket (family, type, proto, nullptr, 0, WSA_FLAG_OVERLAPPED);
  *          mplexer.open (&handle, 0);
  *
  *          // step.2 create network thread and then
- *          mplexer.event_loop_run (handle, server_socket, NetworkRoutine, param);
+ *          mplexer.event_loop_run (handle, svr_socket, NetworkRoutine, param);
  *
  *          // step.3 accept and bind
- *          client_socket = accept (server_socket, ...)
- *          mplexer.bind (handle, client_socket, param);
- *          WSARecv (client_socket, ...);
+ *          cli_socket = accept (svr_socket, ...)
+ *          mplexer.bind (handle, cli_socket, param);
+ *          WSARecv (cli_socket, ...);
  *
  *          // step.4 network routine
  *          return_t NetworkRoutine (uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* user_context)
@@ -59,14 +59,14 @@ typedef struct {
  *              if (multiplexer_event_type_t::mux_read == type)
  *              {
  *                  ...
- *                  WSARecv (client_socket, ...);
+ *                  WSARecv (cli_socket, ...);
  *              }
  *              if (multiplexer_event_type_t::mux_disconnect == type) ...
  *              // ...
  *          }
  *
  *          // step.5 stop accepting and break a network loop
- *          closesocket (server_socket);
+ *          closesocket (svr_socket);
  *          mplexer.event_loop_break_concurrent (handle, 1);
  *          mplexer.close (handle);
  *
@@ -167,16 +167,16 @@ class multiplexer_iocp {
  * @example
  *
  *    // step.1 create a listen socket and make a binding
- *    server_socket = socket (family, type, proto);
- *    mplexer.open (&handle, 32000);
- *    mplexer.bind (handle, server_socket, nullptr);
+ *    svr_socket = socket (family, type, proto);
+ *    mplexer.open (&handle, 1024);
+ *    mplexer.bind (handle, svr_socket, nullptr);
  *
  *    // step.2 create network thread and then
- *    mplexer.event_loop_run (handle, server_socket, NetworkRoutine, param);
+ *    mplexer.event_loop_run (handle, svr_socket, NetworkRoutine, param);
  *
  *    // step.3 accept and bind
- *    client_socket = accept
- *    mplexer.bind (handle, client_socket, param);
+ *    cli_socket = accept
+ *    mplexer.bind (handle, cli_socket, param);
  *
  *    // step.4 network routine
  *    return_t NetworkRoutine (uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* user_context)
@@ -189,7 +189,7 @@ class multiplexer_iocp {
  *    }
  *
  *    // step.5 stop accepting and break a network loop
- *    closesocket (server_socket);
+ *    closesocket (svr_socket);
  *    mplexer.event_loop_break_concurrent (handle, 1);
  *    mplexer.close (handle);
  *

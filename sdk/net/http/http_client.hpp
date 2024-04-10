@@ -65,13 +65,13 @@ class http_client {
     http_client& close();
 
    protected:
-    client_socket* try_connect();
+    tcp_client_socket* try_connect();
 
     http_client& do_request_and_response(url_info_t const& url_info, http_request& request, http_response** response);
 
    private:
     socket_t _socket;
-    client_socket* _client_socket;
+    tcp_client_socket* _client_socket;
     tls_client_socket* _tls_client_socket;
     tls_context_t* _tls_context;
     SSL_CTX* _x509;

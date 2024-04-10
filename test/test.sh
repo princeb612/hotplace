@@ -37,7 +37,7 @@ for item in ${array[@]}; do
         for tool in ${tool[@]}; do
             option=
             if [ $tool = 'memcheck' ]; then
-                option='--leak-check=full --track-origins=yes'
+                option='--leak-check=full --show-leak-kinds=all --track-origins=yes'
             fi
             valgrind -v --tool=$tool $option --log-file=report-$tool $binary
             cat report-$tool

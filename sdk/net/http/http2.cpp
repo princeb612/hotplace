@@ -18,7 +18,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-// reserved
+// study
 
 }  // namespace net
 }  // namespace hotplace

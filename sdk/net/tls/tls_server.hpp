@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-class tls_server_socket : public server_socket {
+class tls_server_socket : public tcp_server_socket {
    public:
     tls_server_socket(transport_layer_security* tls);
     virtual ~tls_server_socket();
@@ -29,11 +29,11 @@ class tls_server_socket : public server_socket {
      * @param   tls_context_t*  tls_handle      [IN]
      * @return  error code (see error.hpp)
      * @remarks
-     *          tls_svr_sock.accept(listen_socket, &client_socket, &tls_context, &sockaddr, &sockaddrlen);
+     *          tls_svr_sock.accept(listen_socket, &cli_socket, &tls_context, &sockaddr, &sockaddrlen);
      *          // client connection established...
      *          // ...
      *          // socket closed
-     *          tls_svr_sock.close(client_socket, tls_context);
+     *          tls_svr_sock.close(cli_socket, tls_context);
      */
     virtual return_t close(socket_t sock, tls_context_t* tls_handle);
 
@@ -75,7 +75,7 @@ class tls_server_socket : public server_socket {
      * @param   arch_t*     data_ptr        [OUT]
      * @return  error code (see error.hpp)
      * @remarks
-     *          server_socket.query(server_socket_query_t::query_support_tls, &value);
+     *          tcp_server_socket.query(server_socket_query_t::query_support_tls, &value);
      */
     virtual return_t query(int specid, arch_t* data_ptr);
 

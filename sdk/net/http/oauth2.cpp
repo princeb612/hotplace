@@ -338,11 +338,11 @@ oauth2_provider::~oauth2_provider() { clear(); }
 
 oauth2_provider& oauth2_provider::add(oauth2_grant_provider* provider) {
     __try2 {
-        _lock.enter();
-
         if (nullptr == provider) {
             __leave2;
         }
+
+        critical_section_guard guard(_lock);
 
         oauth2_grant_provider_map_pib_t pib = _providers.insert(std::make_pair(provider->type(), provider));
         if (pib.second) {
@@ -357,7 +357,9 @@ oauth2_provider& oauth2_provider::add(oauth2_grant_provider* provider) {
             }
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return *this;
 }
 

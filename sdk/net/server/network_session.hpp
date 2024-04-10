@@ -19,7 +19,7 @@ using namespace io;
 namespace net {
 
 class network_priority_queue;
-class server_socket;
+class tcp_server_socket;
 
 /**
  * @brief session data
@@ -37,7 +37,7 @@ class network_session {
     friend class network_server;
 
    public:
-    network_session(server_socket* svr_socket);
+    network_session(tcp_server_socket* svr_socket);
     virtual ~network_session();
 
     /**
@@ -112,7 +112,7 @@ class network_session {
      */
     return_t consume(network_protocol_group* protocol_group, network_stream_data** ptr_network_stream_buffer);
 
-    server_socket* get_server_socket();
+    tcp_server_socket* get_server_socket();
     network_session_data* get_session_data();
 
    protected:
@@ -137,12 +137,12 @@ class network_session_manager {
      * @brief   new network_session
      * @param   handle_t            client_socket       [IN]
      * @param   sockaddr_storage_t* sockaddr            [IN]
-     * @param   server_socket*      svr_socket          [IN]
+     * @param   tcp_server_socket*  svr_socket          [IN]
      * @param   tls_context_t*      tls_handle          [IN]
      * @param   network_session**   ptr_session_object  [OUT] use release to free
      * @return  error code (see error.hpp)
      */
-    return_t connected(handle_t client_socket, sockaddr_storage_t* sockaddr, server_socket* svr_socket, tls_context_t* tls_handle,
+    return_t connected(handle_t client_socket, sockaddr_storage_t* sockaddr, tcp_server_socket* svr_socket, tls_context_t* tls_handle,
                        network_session** ptr_session_object);
     /**
      * @brief   find a network session

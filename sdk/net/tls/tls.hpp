@@ -87,8 +87,8 @@ class transport_layer_security {
      * @param   socket_t        clisock     [IN] socket
      * @remarks 연결된 소켓에 대해 handshake 를 진행한다.
      *
-     *          client_socket = accept (...);
-     *          ret = ssl->accept (handle, client_socket); // handshake
+     *          cli_socket = accept (...);
+     *          ret = ssl->accept (handle, cli_socket); // handshake
      */
     return_t accept(tls_context_t** handle, socket_t sock);
     /**

@@ -81,10 +81,16 @@
  * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
  * RFC 1952 GZIP file format specification version 4.3
  * RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0
+ * RFC 2069 An Extension to HTTP : Digest Access Authentication
  * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
+ * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+ * RFC 6749 OAuth 2.0
+ * RFC 7616 HTTP Digest Access Authentication
+   * sdk/net/http/
    * test/httpserver/
    * test/httpauth/
+   * test/httptest/
 
  * RFC 7638 3.1.  Example JWK Thumbprint Computation
    * test/jose/
@@ -92,13 +98,7 @@
  * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
  * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
    * sdk/net/tls/
-
- * RFC 2069 An Extension to HTTP : Digest Access Authentication
- * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
- * RFC 7616 HTTP Digest Access Authentication
-   * sdk/net/http
-   * test/httpauth
-   * test/httptest
+   * test/tlsserver/
 
 ## not applied
 
@@ -107,7 +107,6 @@
 
  * RFC 2817 Upgrading to TLS Within HTTP/1.1
  * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
- * RFC 6749 OAuth 2.0
  * RFC 9114 HTTP/3
 
 ## next time

@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-tls_client_socket::tls_client_socket(transport_layer_security* tls) : client_socket(), _tls(tls) {
+tls_client_socket::tls_client_socket(transport_layer_security* tls) : tcp_client_socket(), _tls(tls) {
     if (nullptr == tls) {
         throw errorcode_t::insufficiency;
     }
@@ -57,7 +57,7 @@ return_t tls_client_socket::close(socket_t sock, tls_context_t* tls_handle) {
         if (nullptr != tls_handle) {
             _tls->close(tls_handle);
         }
-        client_socket::close(sock, tls_handle);
+        tcp_client_socket::close(sock, tls_handle);
     }
     __finally2 {
         // do nothing

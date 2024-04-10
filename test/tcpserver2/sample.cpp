@@ -45,14 +45,14 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case multiplexer_event_type_t::mux_connect:
-            std::cout << "connect " << network_session->client_socket << std::endl;
+            std::cout << "connect " << network_session->cli_socket << std::endl;
             break;
         case multiplexer_event_type_t::mux_read:
-            std::cout << "read " << network_session->client_socket << " msg [" << std::string(buf, bufsize).c_str() << "]" << std::endl;
-            send((socket_t)network_session->client_socket, buf, bufsize, 0);
+            std::cout << "read " << network_session->cli_socket << " msg [" << std::string(buf, bufsize).c_str() << "]" << std::endl;
+            send((socket_t)network_session->cli_socket, buf, bufsize, 0);
             break;
         case multiplexer_event_type_t::mux_disconnect:
-            std::cout << "disconnect " << network_session->client_socket << std::endl;
+            std::cout << "disconnect " << network_session->cli_socket << std::endl;
             break;
     }
     return ret;
@@ -63,7 +63,7 @@ return_t echo_server(void* param) {
     network_server network_server;
     network_multiplexer_context_t* handle_ipv4 = nullptr;
     network_multiplexer_context_t* handle_ipv6 = nullptr;
-    server_socket svr_sock;
+    tcp_server_socket svr_sock;
 
     FILE* fp = fopen(FILENAME_RUN, "w");
 
@@ -74,8 +74,8 @@ return_t echo_server(void* param) {
         acl.add_rule("::1", true);
         acl.setmode(ipaddr_acl_t::whitelist);
 
-        network_server.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, &svr_sock);
-        network_server.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 32000, network_routine, nullptr, &svr_sock);
+        network_server.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 1024, network_routine, nullptr, &svr_sock);
+        network_server.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 1024, network_routine, nullptr, &svr_sock);
 
         network_server.set_accept_control_handler(handle_ipv4, accept_handler);
         network_server.set_accept_control_handler(handle_ipv6, accept_handler);

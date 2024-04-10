@@ -7,6 +7,7 @@
  *
  * Revision History
  * Date         Name                Description
+ *
  */
 
 #include <stdio.h>
@@ -26,7 +27,7 @@ test_case _test_case;
 
 typedef struct {
     multiplexer_context_t* mplex_handle;
-    socket_t server_socket;
+    socket_t tcp_server_socket;
 } accept_context_t;
 
 #if defined _WIN32 || defined _WIN64
@@ -39,7 +40,7 @@ typedef struct _wsa_buffer_t {
 
 /* windows */
 typedef struct _netsocket_event_t {
-    socket_t client_socket;
+    socket_t cli_socket;
     sockaddr_storage_t client_addr;  // both ipv4 and ipv6
 
 #if defined _WIN32 || defined _WIN64
@@ -61,7 +62,7 @@ return_t client_connected_handler(socket_t sockcli, netsocket_event_t** out_nets
     int sockaddr_len = sizeof(sockaddr_client);
 
     netsocket_context = (netsocket_event_t*)malloc(sizeof(netsocket_event_t));
-    netsocket_context->client_socket = sockcli;
+    netsocket_context->cli_socket = sockcli;
     memset(&sockaddr_client, 0, sockaddr_len);
     getpeername(sockcli, (struct sockaddr*)&sockaddr_client, (socklen_t*)&sockaddr_len);
     memcpy(&(netsocket_context->client_addr), &sockaddr_client, sockaddr_len);
@@ -79,7 +80,7 @@ return_t client_disconnected_handler(netsocket_event_t* netsocket_context, void*
     return_t ret = errorcode_t::success;
     accept_context_t* accept_context = (accept_context_t*)user_context;
 
-    printf("closed [%d]\n", (int)netsocket_context->client_socket);
+    printf("closed [%d]\n", (int)netsocket_context->cli_socket);
 
 #if defined __linux__
     multiplexer_epoll mplexer;
@@ -87,12 +88,12 @@ return_t client_disconnected_handler(netsocket_event_t* netsocket_context, void*
     multiplexer_iocp mplexer;
 #endif
 
-    mplexer.unbind(accept_context->mplex_handle, (handle_t)netsocket_context->client_socket, nullptr);
+    mplexer.unbind(accept_context->mplex_handle, (handle_t)netsocket_context->cli_socket, nullptr);
 
 #if defined __linux__
-    close(netsocket_context->client_socket);
+    close(netsocket_context->cli_socket);
 #elif defined _WIN32 || defined _WIN64
-    closesocket(netsocket_context->client_socket);
+    closesocket(netsocket_context->cli_socket);
 #endif
     free(netsocket_context);
 
@@ -111,7 +112,7 @@ return_t async_handler(netsocket_event_t* netsocket_context) {
     netsocket_context->netio_read.wsabuf.len = BUFSIZE;
     netsocket_context->netio_read.wsabuf.buf = netsocket_context->netio_read.buffer;
 
-    WSARecv(netsocket_context->client_socket, &(netsocket_context->netio_read.wsabuf), 1, &bytes_received, &flags, &(netsocket_context->netio_read.overlapped),
+    WSARecv(netsocket_context->cli_socket, &(netsocket_context->netio_read.wsabuf), 1, &bytes_received, &flags, &(netsocket_context->netio_read.overlapped),
             nullptr); /* asynchronus read */
 #endif
 
@@ -127,7 +128,7 @@ return_t accept_thread_routine(void* user_context) {
     multiplexer_iocp mplexer;
 #endif
     multiplexer_context_t* handle = context->mplex_handle;
-    socket_t hServSock = (socket_t)context->server_socket;
+    socket_t hServSock = (socket_t)context->tcp_server_socket;
 
     _test_case.test(errorcode_t::success, __FUNCTION__, "accepting");
 
@@ -172,7 +173,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
             /* echo */
             DWORD dwSentButes = 0;
-            WSASend(pnetsocket_context->client_socket, &(pnetsocket_context->netio_write.wsabuf), 1, &dwSentButes, 0, nullptr, nullptr);
+            WSASend(pnetsocket_context->cli_socket, &(pnetsocket_context->netio_write.wsabuf), 1, &dwSentButes, 0, nullptr, nullptr);
 
             async_handler(pnetsocket_context);
         }
@@ -244,7 +245,7 @@ return_t network_thread_routine(void* user_context) {
 #elif defined __linux__
     multiplexer_epoll mplexer;
 #endif
-    mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->server_socket, network_routine, user_context);
+    mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->tcp_server_socket, network_routine, user_context);
 
     return 0;
 }
@@ -288,11 +289,11 @@ return_t echo_server(void* param) {
     // int socketflags = 0;
 
     __try2 {
-        ret = mplexer.open(&handle_ipv4, 32000);
+        ret = mplexer.open(&handle_ipv4, 1024);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = mplexer.open(&handle_ipv6, 32000);
+        ret = mplexer.open(&handle_ipv6, 1024);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -306,9 +307,9 @@ return_t echo_server(void* param) {
         accept_context_t accept_context_ipv4;
         accept_context_t accept_context_ipv6;
         accept_context_ipv4.mplex_handle = handle_ipv4;
-        accept_context_ipv4.server_socket = socket_list[0];
+        accept_context_ipv4.tcp_server_socket = socket_list[0];
         accept_context_ipv6.mplex_handle = handle_ipv6;
-        accept_context_ipv6.server_socket = socket_list[1];
+        accept_context_ipv6.tcp_server_socket = socket_list[1];
 
         // acceptxxx_threads signal handler ... just call CloseListener
         acceptipv4_threads.set(1, accept_thread_routine, nullptr, &accept_context_ipv4);

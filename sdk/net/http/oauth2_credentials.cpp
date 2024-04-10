@@ -90,7 +90,7 @@ return_t oauth2_credentials::insert(std::string const& client_id, std::string co
                                     std::string const& redirect_uri, std::list<std::string> scope) {
     return_t ret = errorcode_t::success;
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         webapp_t webapp;
         webapp.userid = userid;
@@ -103,16 +103,18 @@ return_t oauth2_credentials::insert(std::string const& client_id, std::string co
         _user_clientid.insert(std::make_pair(userid, client_id));
         _webapps.insert(std::make_pair(client_id, webapp));
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t oauth2_credentials::remove(std::string const& client_id) {
     return_t ret = errorcode_t::success;
     __try2 {
-        std::string userid;
+        critical_section_guard guard(_lock);
 
-        _lock.enter();
+        std::string userid;
 
         {
             webapps_t::iterator iter = _webapps.find(client_id);
@@ -135,14 +137,16 @@ return_t oauth2_credentials::remove(std::string const& client_id) {
             }
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t oauth2_credentials::check(std::string const& client_id, std::string const& redirect_uri) {
     return_t ret = errorcode_t::success;
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         if (client_id.empty() || redirect_uri.empty()) {
             ret = errorcode_t::invalid_request;
@@ -160,7 +164,9 @@ return_t oauth2_credentials::check(std::string const& client_id, std::string con
             }
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -169,7 +175,7 @@ return_t oauth2_credentials::list(std::string const& userid, std::list<std::stri
     __try2 {
         clientids.clear();
 
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         {
             user_clientid_t::iterator liter = _user_clientid.lower_bound(userid);
@@ -180,7 +186,9 @@ return_t oauth2_credentials::list(std::string const& userid, std::list<std::stri
             }
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -190,10 +198,10 @@ return_t oauth2_credentials::grant_code(std::string& code, uint16 expire) {
     openssl_prng prng;
     code = prng.rand(16, encoding_t::encoding_base64url);
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
+
     time_t t = time(nullptr) + expire;
     _grant_codes.insert(t, code);
-    _lock.leave();
 
     return ret;
 }
@@ -201,26 +209,27 @@ return_t oauth2_credentials::grant_code(std::string& code, uint16 expire) {
 return_t oauth2_credentials::verify_grant_code(std::string const& code) {
     return_t ret = errorcode_t::success;
 
-    _lock.enter();
+    critical_section_guard guard(_lock);
     ret = _grant_codes.find(code);
-    _lock.leave();
 
     return ret;
 }
 
 return_t oauth2_credentials::expire_grant_codes() {
     return_t ret = errorcode_t::success;
-    _lock.enter();
+
+    critical_section_guard guard(_lock);
     ret = _grant_codes.expire();
-    _lock.leave();
+
     return ret;
 }
 
 return_t oauth2_credentials::clear_grant_codes() {
     return_t ret = errorcode_t::success;
-    _lock.enter();
+
+    critical_section_guard guard(_lock);
     ret = _grant_codes.clear();
-    _lock.leave();
+
     return ret;
 }
 
@@ -228,7 +237,7 @@ return_t oauth2_credentials::grant(std::string& access_token, std::string& refre
     return_t ret = errorcode_t::success;
     access_token_t* token = nullptr;
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         if (client_id.empty()) {
             ret = errorcode_t::invalid_parameter;
@@ -268,14 +277,16 @@ return_t oauth2_credentials::grant(std::string& access_token, std::string& refre
         access_token = atoken;
         refresh_token = rtoken;
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t oauth2_credentials::revoke(std::string const& access_token) {
     return_t ret = errorcode_t::success;
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         std::string refresh_token;
         {
@@ -295,14 +306,16 @@ return_t oauth2_credentials::revoke(std::string const& access_token) {
             }
         }
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t oauth2_credentials::isvalid(std::string const& access_token) {
     return_t ret = errorcode_t::failed;
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         access_token_t* token = nullptr;
         ret = _access_tokens.find(access_token, &token);
@@ -327,14 +340,16 @@ return_t oauth2_credentials::isvalid(std::string const& access_token) {
 
         ret = errorcode_t::success;
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t oauth2_credentials::refresh(std::string& next_access_token, std::string& next_refresh_token, std::string const& refresh_token, uint16 expire) {
     return_t ret = errorcode_t::success;
     __try2 {
-        _lock.enter();
+        critical_section_guard guard(_lock);
 
         access_token_t* token = nullptr;
         ret = _refresh_tokens.find(refresh_token, &token);
@@ -348,29 +363,30 @@ return_t oauth2_credentials::refresh(std::string& next_access_token, std::string
         revoke(access_token);
         ret = grant(next_access_token, next_refresh_token, clientid, expire);
     }
-    __finally2 { _lock.leave(); }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 void oauth2_credentials::revoke_if_expired() {
-    _lock.enter();
+    critical_section_guard guard(_lock);
+
     _expirable.expire([&](access_token_t* object) -> void {
         revoke(object->access_token());
         object->release();
     });
-    _lock.leave();
 }
 
 void oauth2_credentials::clear() {
-    _lock.enter();
-    {
-        _access_tokens.clear([](access_token_t* object) -> void { object->release(); });
-        _refresh_tokens.clear([](access_token_t* object) -> void { object->release(); });
-        _expirable.clear([](access_token_t* object) -> void { object->release(); });
-    }
+    critical_section_guard guard(_lock);
+
+    _access_tokens.clear([](access_token_t* object) -> void { object->release(); });
+    _refresh_tokens.clear([](access_token_t* object) -> void { object->release(); });
+    _expirable.clear([](access_token_t* object) -> void { object->release(); });
+
     _user_clientid.clear();
     _webapps.clear();
-    _lock.leave();
 }
 
 }  // namespace net

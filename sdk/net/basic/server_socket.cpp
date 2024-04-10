@@ -14,15 +14,15 @@
 namespace hotplace {
 namespace net {
 
-server_socket::server_socket() {
+tcp_server_socket::tcp_server_socket() {
     // do nothing
 }
 
-server_socket::~server_socket() {
+tcp_server_socket::~tcp_server_socket() {
     // do nothing
 }
 
-return_t server_socket::listen(socket_t* sock, unsigned int family, uint16 port) {
+return_t tcp_server_socket::listen(socket_t* sock, unsigned int family, uint16 port) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -42,7 +42,7 @@ return_t server_socket::listen(socket_t* sock, unsigned int family, uint16 port)
     return ret;
 }
 
-return_t server_socket::close(socket_t sock, tls_context_t* tls_handle) {
+return_t tcp_server_socket::close(socket_t sock, tls_context_t* tls_handle) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -62,7 +62,7 @@ return_t server_socket::close(socket_t sock, tls_context_t* tls_handle) {
     return ret;
 }
 
-return_t server_socket::accept(socket_t sock, socket_t* clisock, struct sockaddr* addr, socklen_t* addrlen) {
+return_t tcp_server_socket::accept(socket_t sock, socket_t* clisock, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -71,19 +71,19 @@ return_t server_socket::accept(socket_t sock, socket_t* clisock, struct sockaddr
             __leave2;
         }
 
-        socket_t client_socket = INVALID_SOCKET;
+        socket_t cli_socket = INVALID_SOCKET;
 
-        client_socket = ::accept(sock, addr, addrlen);
-        if (INVALID_SOCKET == client_socket) {
+        cli_socket = ::accept(sock, addr, addrlen);
+        if (INVALID_SOCKET == cli_socket) {
 #if defined __linux__
-            ret = get_errno(client_socket);
+            ret = get_errno(cli_socket);
 #elif defined _WIN32 || defined _WIN64
             ret = GetLastError();
 #endif
             __leave2;
         }
 
-        *clisock = client_socket;
+        *clisock = cli_socket;
     }
     __finally2 {
         // do nothing
@@ -91,21 +91,21 @@ return_t server_socket::accept(socket_t sock, socket_t* clisock, struct sockaddr
     return ret;
 }
 
-return_t server_socket::tls_accept(socket_t clisock, tls_context_t** tls_handle) {
+return_t tcp_server_socket::tls_accept(socket_t clisock, tls_context_t** tls_handle) {
     return_t ret = errorcode_t::success;
 
     // do nothing
     return ret;
 }
 
-return_t server_socket::tls_stop_accept() {
+return_t tcp_server_socket::tls_stop_accept() {
     return_t ret = errorcode_t::success;
 
     // do nothing
     return ret;
 }
 
-return_t server_socket::read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) {
+return_t tcp_server_socket::read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -133,7 +133,7 @@ return_t server_socket::read(socket_t sock, tls_context_t* tls_handle, int mode,
     return ret;
 }
 
-return_t server_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
+return_t tcp_server_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -162,7 +162,7 @@ return_t server_socket::send(socket_t sock, tls_context_t* tls_handle, const cha
     return ret;
 }
 
-return_t server_socket::query(int specid, arch_t* data_ptr) {
+return_t tcp_server_socket::query(int specid, arch_t* data_ptr) {
     return_t ret = errorcode_t::success;
 
     __try2 {

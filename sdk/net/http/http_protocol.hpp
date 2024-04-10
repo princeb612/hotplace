@@ -29,8 +29,7 @@ class http_protocol : public network_protocol {
      * @brief   check protocol
      * @param   void*           stream          [IN]
      * @param   size_t          stream_size     [IN]
-     * @return  errorcode_t::success
-     *          errorcode_t::not_supported (if error, do not return errorcode_t::success)
+     * @return  error code (see error.hpp)
      */
     virtual return_t is_kind_of(void* stream, size_t stream_size);
     /**
@@ -40,7 +39,7 @@ class http_protocol : public network_protocol {
      * @param   PROTOCOL_STATE* state           [OUT]
      *                                              PROTOCOL_STATE_COMPLETE
      *                                              PROTOCOL_STATE_CRASH : drop
-     * @return error code (see error.hpp)
+     * @return  error code (see error.hpp)
      * @remarks
      */
     virtual return_t read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state);
