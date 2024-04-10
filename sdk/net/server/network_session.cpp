@@ -113,21 +113,20 @@ return_t network_session::produce(network_priority_queue* q, void* buf_read, siz
         if (_session.tls_handle) { /* TLS */
             size_t cbread = 0;
             bool data_ready = false;
-            tcp_server_socket* server_socket_intf = get_server_socket();
             int mode = 0;
 #if defined __linux__
             mode = tls_io_flag_t::read_epoll;
 #elif defined _WIN32 || defined _WIN64
             mode = tls_io_flag_t::read_iocp;
 #endif
-            ret = server_socket_intf->read((socket_t)_session.netsock.cli_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read, nullptr);
+            ret = get_server_socket()->read((socket_t)_session.netsock.cli_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read, nullptr);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
             while (true) {
-                result = server_socket_intf->read((socket_t)_session.netsock.cli_socket, _session.tls_handle, tls_io_flag_t::read_ssl_read, (char*)buf_read,
-                                                  size_buf_read, &cbread); /*SSL_read */
+                result = get_server_socket()->read((socket_t)_session.netsock.cli_socket, _session.tls_handle, tls_io_flag_t::read_ssl_read, (char*)buf_read,
+                                                   size_buf_read, &cbread); /*SSL_read */
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream()->produce(buf_read, cbread);
 
@@ -141,14 +140,21 @@ return_t network_session::produce(network_priority_queue* q, void* buf_read, siz
                 q->push(get_priority(), this);
             }
         } else { /* wo TLS */
+#if defined __linux__
+            ret = get_server_socket()->read((socket_t)_session.netsock.cli_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, nullptr);
+            if (errorcode_t::success == ret) {
+                getstream()->produce(buf_read, size_buf_read);
+                q->push(get_priority(), this);
+            }
+#elif defined _WIN32 || defined _WIN64
             getstream()->produce(buf_read, size_buf_read);
             q->push(get_priority(), this);
+#endif
         }
     }
     __finally2 {
         // do nothing
     }
-
     return ret;
 }
 
