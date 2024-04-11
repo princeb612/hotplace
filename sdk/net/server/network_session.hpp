@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 
 #include <sdk/io/basic/keyvalue.hpp>
+#include <sdk/io/basic/mlfq.hpp>
 #include <sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
@@ -104,7 +105,7 @@ class network_session {
      * @param   size_t                  size_buf_read   [IN]
      * @remarks
      */
-    return_t produce(network_priority_queue* q, void* buf_read, size_t size_buf_read);
+    return_t produce(t_mlfq<network_session>* q, void* buf_read, size_t size_buf_read);
     /**
      * @brief consume from stream and put into request, then read stream buffer list from request
      * @param   network_protocol_group* protocol_group              [IN]

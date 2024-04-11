@@ -13,7 +13,6 @@
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/base/system/signalwait_threads.hpp>
 #include <sdk/io/system/multiplexer.hpp>
-#include <sdk/net/server/network_priority_queue.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/server/network_stream.hpp>
@@ -85,7 +84,7 @@ typedef struct _network_multiplexer_context_t {
     signalwait_threads consumer_threads;
 
     network_session_manager session_manager;
-    network_priority_queue priority_queue;
+    t_mlfq<network_session> event_queue;
 
     network_protocol_group protocol_group;
 
@@ -840,7 +839,7 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
     __try2 {
         if (multiplexer_event_type_t::mux_read == type) {
             /* consumer_routine (decrease), close_if_not_referenced (delete) */
-            session_object->produce(&context->priority_queue, session_object->wsabuf_read()->buf, transferred);
+            session_object->produce(&context->event_queue, session_object->wsabuf_read()->buf, transferred);
             /* asynchronous write */
             session_object->ready_to_read();
         }
@@ -865,7 +864,7 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
         ret = context->session_manager.find(sockcli, &session_object); /* reference increased, call release later */
         if (errorcode_t::success == ret) {
             /* consumer_routine (decrease), close_if_not_referenced (delete) */
-            ret = session_object->produce(&context->priority_queue, nullptr, 0);
+            ret = session_object->produce(&context->event_queue, nullptr, 0);
 
             session_object->release(); /* find, refcount-- */
 
@@ -940,15 +939,31 @@ return_t network_server::consumer_thread(void* user_context) {
 
 return_t network_server::consumer_routine(network_multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
+    t_mlfq<network_stream_data> pri_queue;
 
-    if (handle->priority_queue.size()) {
+    if (handle->event_queue.size()) {
         int priority = 0;
         network_session* session_object = nullptr;
-        ret = handle->priority_queue.pop(&priority, &session_object);
+        ret = handle->event_queue.pop(&priority, &session_object, 1);  // session priority
         if (errorcode_t::success == ret) {
+            // re-order by stream priority
             network_stream_data* buffer_object = nullptr;
-            session_object->consume(&handle->protocol_group, &buffer_object);
+            session_object->consume(&handle->protocol_group, &buffer_object);  // set stream priority while processing network_protocol::read_stream
             while (buffer_object) {
+                pri_queue.post(buffer_object->get_priority(), buffer_object);
+
+                network_stream_data* temp = buffer_object;
+                buffer_object = buffer_object->next();
+                temp->release();
+            }
+
+            // process by stream priority
+            while (true) {
+                return_t test = pri_queue.pop(&priority, &buffer_object, 1);
+                if (errorcode_t::success != test) {
+                    break;
+                }
+
                 void* dispatch_data[4] = {
                     nullptr,
                 };
@@ -959,12 +974,10 @@ return_t network_server::consumer_routine(network_multiplexer_context_t* handle)
 
                 handle->callback_routine(multiplexer_event_type_t::mux_read, 4, dispatch_data, nullptr, handle->callback_param);
 
-                network_stream_data* temp = buffer_object;
-                buffer_object = buffer_object->next();
-                temp->release();
+                buffer_object->release();
             }
 
-            session_object->release(); /* priority_queue::push increased reference counter */
+            session_object->release();
         }
     } else {
         msleep(10);

@@ -102,11 +102,12 @@ class network_protocol {
     virtual return_t is_kind_of(void* stream, size_t stream_size) { return errorcode_t::success; }
     /**
      * @brief read stream
-     * @param   IBufferStream*  stream          [IN]
-     * @param   size_t*         request_size    [IN]
-     * @param   protocol_state_t* state           [OUT]
+     * @param   IBufferStream*      stream          [IN]
+     * @param   size_t*             request_size    [IN]
+     * @param   protocol_state_t*   state           [OUT]
+     * @param   int*                priority        [OUTOPT]
      */
-    virtual return_t read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state) {
+    virtual return_t read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state, int* priority = nullptr) {
         *state = protocol_state_t::protocol_state_complete;
         return errorcode_t::success;
     }

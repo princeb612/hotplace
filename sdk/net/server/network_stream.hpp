@@ -16,6 +16,7 @@
 namespace hotplace {
 namespace net {
 
+class network_stream;
 /**
  * @brief stream data that produced and consumed by network_stream
  */
@@ -46,15 +47,21 @@ class network_stream_data {
      */
     network_stream_data* next();
 
+    int get_priority();
+    void set_priority(int priority);
+
+    int addref();
     /**
      * @brief destruct
      */
-    void release();
+    int release();
 
    protected:
+    t_shared_reference<network_stream_data> _instance;
     void* _ptr;
     size_t _size;
     network_stream_data* _next;
+    int _priority;
 };
 
 /**
@@ -125,6 +132,7 @@ class network_stream {
 
     typedef std::list<network_stream_data*> network_stream_list_t;
 
+   private:
     critical_section _lock;
     network_stream_list_t _queue;
 };

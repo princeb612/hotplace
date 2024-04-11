@@ -39,10 +39,11 @@ class http_protocol : public network_protocol {
      * @param   PROTOCOL_STATE* state           [OUT]
      *                                              PROTOCOL_STATE_COMPLETE
      *                                              PROTOCOL_STATE_CRASH : drop
+     * @param   int*            priority        [OUTOPT]
      * @return  error code (see error.hpp)
      * @remarks
      */
-    virtual return_t read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state);
+    virtual return_t read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state, int* priority = nullptr);
     /**
      * @brief   id
      * @remarks default port number

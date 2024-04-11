@@ -35,7 +35,6 @@
 #include <sdk/net/http/http_uri.hpp>
 #include <sdk/net/http/oauth2.hpp>
 #include <sdk/net/http/types.hpp>
-#include <sdk/net/server/network_priority_queue.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>

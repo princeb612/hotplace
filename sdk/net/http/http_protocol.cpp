@@ -68,11 +68,15 @@ return_t http_protocol::is_kind_of(void* stream, size_t stream_size) {
     return ret;
 }
 
-return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state) {
+return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state, int* priority) {
     const char* stream_data = (const char*)stream->data();
     uint32 stream_size = stream->size();
 
     __try2 {
+        if (priority) {
+            *priority = 0;
+        }
+
         size_t packet_size = get_constraints(protocol_constraints_t::protocol_packet_size);
         if (packet_size && stream_size > packet_size) {
             *state = protocol_state_t::protocol_state_crash;

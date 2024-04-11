@@ -24,13 +24,19 @@ network_stream::~network_stream() {
 
 return_t network_stream::produce(void* buf_read, size_t size_buf_read) {
     return_t ret = errorcode_t::success;
+    network_stream_data* buffer_object = nullptr;
 
-    if (size_buf_read > 0) {
-        network_stream_data* buffer_object = new network_stream_data;
-        buffer_object->assign(buf_read, size_buf_read);
+    __try2 {
+        if (size_buf_read > 0) {
+            __try_new_catch(buffer_object, new network_stream_data, ret, __leave2);
+            buffer_object->assign(buf_read, size_buf_read);
 
-        critical_section_guard guard(_lock);
-        _queue.push_back(buffer_object);
+            critical_section_guard guard(_lock);
+            _queue.push_back(buffer_object);
+        }
+    }
+    __finally2 {
+        // do nothing
     }
 
     return ret;
@@ -139,6 +145,8 @@ return_t network_stream::write_with_protocol(network_protocol_group* protocol_gr
 
     bool _run = true;
 
+    int priority = 0;
+
     __try2 {
         critical_section_guard guard(_lock);
 
@@ -152,7 +160,7 @@ return_t network_stream::write_with_protocol(network_protocol_group* protocol_gr
                 if (errorcode_t::more_data == dwResult) {
                     // do nothing
                 } else if (errorcode_t::success == dwResult) {
-                    protocol->read_stream(&bufstream, &request_size, &state);
+                    protocol->read_stream(&bufstream, &request_size, &state, &priority);
                     if (protocol_state_t::protocol_state_complete == state) {
                         target->produce(bufstream.data(), request_size);
 
@@ -168,6 +176,7 @@ return_t network_stream::write_with_protocol(network_protocol_group* protocol_gr
                                 size_t remain = content_size - request_size;
                                 void* ptr = bufstream.data() + request_size;
                                 buffer_object->assign(ptr, remain);
+                                buffer_object->set_priority(priority);  // set stream priority
 
                                 _run = false;
                                 break;
@@ -242,8 +251,8 @@ return_t network_stream::write(network_protocol_group* protocol_group, network_s
     return ret;
 }
 
-network_stream_data::network_stream_data() : _ptr(nullptr), _size(0), _next(nullptr) {
-    // do nothing
+network_stream_data::network_stream_data() : _ptr(nullptr), _size(0), _next(nullptr), _priority(0) {
+    _instance.make_share(this);
 }
 
 network_stream_data::~network_stream_data() {
@@ -278,7 +287,13 @@ void* network_stream_data::content() { return _ptr; }
 
 network_stream_data* network_stream_data::next() { return _next; }
 
-void network_stream_data::release() { delete this; }
+int network_stream_data::get_priority() { return _priority; }
+
+void network_stream_data::set_priority(int priority) { _priority = priority; }
+
+int network_stream_data::addref() { return _instance.addref(); }
+
+int network_stream_data::release() { return _instance.delref(); }
 
 }  // namespace net
 }  // namespace hotplace

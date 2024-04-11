@@ -10,7 +10,6 @@
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/net/basic/server_socket.hpp>
-#include <sdk/net/server/network_priority_queue.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/server/network_stream.hpp>
 
@@ -90,7 +89,7 @@ int network_session::addref() { return _shared.addref(); }
 
 int network_session::release() { return _shared.delref(); }
 
-return_t network_session::produce(network_priority_queue* q, void* buf_read, size_t size_buf_read) {
+return_t network_session::produce(t_mlfq<network_session>* q, void* buf_read, size_t size_buf_read) {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
 
