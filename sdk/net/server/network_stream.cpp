@@ -251,9 +251,7 @@ return_t network_stream::write(network_protocol_group* protocol_group, network_s
     return ret;
 }
 
-network_stream_data::network_stream_data() : _ptr(nullptr), _size(0), _next(nullptr), _priority(0) {
-    _instance.make_share(this);
-}
+network_stream_data::network_stream_data() : _ptr(nullptr), _size(0), _next(nullptr), _priority(0) { _instance.make_share(this); }
 
 network_stream_data::~network_stream_data() {
     if (nullptr != _ptr) {

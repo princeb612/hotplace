@@ -78,8 +78,8 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
         }
 
         size_t packet_size = get_constraints(protocol_constraints_t::protocol_packet_size);
-        if (packet_size && stream_size > packet_size) {
-            *state = protocol_state_t::protocol_state_crash;
+        if (packet_size && (stream_size > packet_size)) {
+            *state = protocol_state_t::protocol_state_large;
             __leave2;
         }
 
@@ -121,7 +121,7 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
     return errorcode_t::success;
 }
 
-uint32 http_protocol::protocol_id() { return 80; }
+uint32 http_protocol::protocol_id() { return protocol_id_t::proto_http; }
 
 }  // namespace net
 }  // namespace hotplace

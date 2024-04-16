@@ -8,11 +8,12 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_PROTOCOL__
-#define __HOTPLACE_SDK_NET_HTTP_PROTOCOL__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2__
 
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/net/http/http2_frame.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
@@ -21,10 +22,10 @@ namespace net {
 /**
  * @brief   protocol interpreter
  */
-class http_protocol : public network_protocol {
+class http2_protocol : public network_protocol {
    public:
-    http_protocol();
-    virtual ~http_protocol();
+    http2_protocol();
+    virtual ~http2_protocol();
     /**
      * @brief   check protocol
      * @param   void*           stream          [IN]

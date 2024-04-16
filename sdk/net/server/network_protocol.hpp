@@ -27,11 +27,17 @@ enum protocol_state_t {
     protocol_state_complete,    /* all data complete */
     protocol_state_forged,      /* forgery */
     protocol_state_crash,       /* reserved */
+    protocol_state_large,       /* constraints */
 };
 
 enum protocol_constraints_t {
     protocol_packet_size = 0,
     protocol_constraints_the_end,
+};
+
+enum protocol_id_t {
+    proto_http = 2068,   // RFC 2068, 2616
+    proto_http2 = 7540,  // RFC 7540
 };
 
 /**
@@ -135,7 +141,7 @@ class network_protocol {
      * @brief   id
      * @remarks default port number
      */
-    virtual uint32 protocol_id() { return 0; }
+    virtual uint32 protocol_id() = 0;
 
     int addref() { return _shared.addref(); }
     int release() { return _shared.delref(); }

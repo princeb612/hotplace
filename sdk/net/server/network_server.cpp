@@ -160,10 +160,13 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
         // use dummy signal handler ... just call CloseListener first, and signal_and_wait_all
         context->accept_threads.set(1, accept_thread, signalwait_threads::dummy_signal, context);
 #endif
-        context->tls_accept_threads.set(get_server_conf().get(netserver_config_t::serverconf_concurrent_tls_accept), tls_accept_thread, tls_accept_signal,
-                                        context);
-        context->network_threads.set(get_server_conf().get(netserver_config_t::serverconf_concurrent_network), network_thread, network_signal, context);
-        context->consumer_threads.set(get_server_conf().get(netserver_config_t::serverconf_concurrent_consume), consumer_thread, consumer_signal, context);
+        size_t concurrent_tls_accept = get_server_conf().get(netserver_config_t::serverconf_concurrent_tls_accept);
+        size_t concurrent_network = get_server_conf().get(netserver_config_t::serverconf_concurrent_network);
+        size_t concurrent_consume = get_server_conf().get(netserver_config_t::serverconf_concurrent_consume);
+
+        context->tls_accept_threads.set(concurrent_tls_accept, tls_accept_thread, tls_accept_signal, context);
+        context->network_threads.set(concurrent_network, network_thread, network_signal, context);
+        context->consumer_threads.set(concurrent_consume, consumer_thread, consumer_signal, context);
 
         context->mplexer_handle = mplexer_handle;
         context->concurent = concurent;
@@ -939,7 +942,6 @@ return_t network_server::consumer_thread(void* user_context) {
 
 return_t network_server::consumer_routine(network_multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
-    t_mlfq<network_stream_data> pri_queue;
 
     if (handle->event_queue.size()) {
         int priority = 0;
@@ -949,9 +951,12 @@ return_t network_server::consumer_routine(network_multiplexer_context_t* handle)
             // re-order by stream priority
             network_stream_data* buffer_object = nullptr;
             session_object->consume(&handle->protocol_group, &buffer_object);  // set stream priority while processing network_protocol::read_stream
+
+#if 0
+            t_mlfq<network_stream_data> pri_queue;
             while (buffer_object) {
                 pri_queue.post(buffer_object->get_priority(), buffer_object);
-
+            
                 network_stream_data* temp = buffer_object;
                 buffer_object = buffer_object->next();
                 temp->release();
@@ -963,7 +968,21 @@ return_t network_server::consumer_routine(network_multiplexer_context_t* handle)
                 if (errorcode_t::success != test) {
                     break;
                 }
-
+            
+                void* dispatch_data[4] = {
+                    nullptr,
+                };
+                dispatch_data[0] = session_object->socket_info(); /* netserver_callback_type_t::netserver_callback_type_socket */
+                dispatch_data[1] = buffer_object->content();      /* netserver_callback_type_t::netserver_callback_type_dataptr */
+                dispatch_data[2] = (void*)buffer_object->size();  /* netserver_callback_type_t::netserver_callback_type_datasize */
+                dispatch_data[3] = session_object;                /* netserver_callback_type_t::netserver_callback_type_session */
+            
+                handle->callback_routine(multiplexer_event_type_t::mux_read, 4, dispatch_data, nullptr, handle->callback_param);
+            
+                buffer_object->release();
+            }
+#else
+            while (buffer_object) {
                 void* dispatch_data[4] = {
                     nullptr,
                 };
@@ -974,8 +993,11 @@ return_t network_server::consumer_routine(network_multiplexer_context_t* handle)
 
                 handle->callback_routine(multiplexer_event_type_t::mux_read, 4, dispatch_data, nullptr, handle->callback_param);
 
-                buffer_object->release();
+                network_stream_data* temp = buffer_object;
+                buffer_object = buffer_object->next();
+                temp->release();
             }
+#endif
 
             session_object->release();
         }

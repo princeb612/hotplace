@@ -35,6 +35,7 @@ add_subdirectory (tlsserver)
 add_subdirectory (httpserver)
 add_subdirectory (httpauth)
 add_subdirectory (httptest)
+add_subdirectory (httpserver2)
 
 # odbc
 if (SUPPORT_ODBC)

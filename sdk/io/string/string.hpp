@@ -158,6 +158,15 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
 //
 // std::regex
 //
+
+/**
+ * @brief   regular expression
+ * @param   std::string const& input [in]
+ * @param   std::string const& expr [in]
+ * @param   size_t& pos [out]
+ * @param   std::list<std::string>& tokens [out]
+ * @sa      split_url
+ */
 void regex_token(std::string const& input, std::string const& expr, size_t& pos, std::list<std::string>& tokens);
 
 /**
