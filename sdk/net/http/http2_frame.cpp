@@ -56,13 +56,6 @@ return_t h2_set_payload_size(http2_frame_header_t* header, uint32 size) {
     return ret;
 }
 
-template <typename TYPE>
-void binsert(binary_t& bin, TYPE value, std::function<TYPE(TYPE)> func) {
-    TYPE t = func(value);
-    byte_t* b = (byte_t*)&t;
-    bin.insert(bin.end(), b, b + sizeof(TYPE));
-}
-
 http2_frame_header::http2_frame_header() : _payload_size(0), _type(0), _flags(0), _stream_id(0) {}
 
 http2_frame_header::http2_frame_header(h2_frame_t type) : _payload_size(0), _type(type), _flags(0), _stream_id(0) {}
@@ -79,6 +72,28 @@ http2_frame_header::http2_frame_header(http2_frame_header_t const& header) { rea
 uint32 http2_frame_header::get_frame_size() { return sizeof(http2_frame_header_t) + get_payload_size(); }
 
 uint32 http2_frame_header::get_payload_size() { return _payload_size; }
+
+uint8 http2_frame_header::get_type() { return _type; }
+
+uint8 http2_frame_header::get_flags() { return _flags; }
+
+uint32 http2_frame_header::get_stream_id() { return _stream_id; }
+
+return_t http2_frame_header::get_payload(http2_frame_header_t const* header, size_t size, byte_t** payload) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == header || nullptr == payload) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        *payload = (byte_t*)header + sizeof(http2_frame_header_t);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
 http2_frame_header& http2_frame_header::set_payload_size(uint32 size) {
     _payload_size = size;
@@ -100,6 +115,8 @@ http2_frame_header& http2_frame_header::set_stream_id(uint32 id) {
     return *this;
 }
 
+bool http2_frame_header::conditional_pad() { return false; }
+
 return_t http2_frame_header::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -113,7 +130,32 @@ return_t http2_frame_header::read(http2_frame_header_t const* header, size_t siz
             __leave2;
         }
 
-        _payload_size = h2_get_payload_size(header);
+        uint32 len = h2_get_payload_size(header);
+
+        // check payload
+        if (size < sizeof(http2_frame_header_t) + len) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        // check pad
+        if (conditional_pad()) {
+            if (header->flags & h2_flag_t::h2_flag_padded) {
+                if (len < 1) {
+                    ret = errorcode_t::bad_data;
+                    __leave2;
+                }
+
+                byte_t* payload = (byte_t*)header + sizeof(http2_frame_header_t);
+                uint8 padlen = payload[0];
+                if (padlen + 1 < len) {
+                    ret = errorcode_t::bad_data;
+                    __leave2;
+                }
+            }
+        }
+
+        _payload_size = len;
         _type = header->type;
         _flags = header->flags;
         _stream_id = ntohl(header->stream_id);
@@ -134,11 +176,18 @@ return_t http2_frame_header::write(binary_t& frame) {
     temp.flags = _flags;
     temp.stream_id = htonl(_stream_id);
 
-    // RFC 7540 Figure 1: Frame Layout
     byte_t* p = (byte_t*)&temp;
     frame.insert(frame.end(), p, p + sizeof(http2_frame_header_t));
 
     return ret;
+}
+
+void http2_frame_header::dump(stream_t* s) {
+    if (s) {
+        s->clear();
+        s->printf("- http/2 frame type %d\n", get_type());
+        s->printf("  len %u type %u flags 0x%02x stream identifier %u\n", get_payload_size(), get_type(), get_flags(), get_stream_id());
+    }
 }
 
 http2_data_frame::http2_data_frame() : http2_frame_header(h2_frame_t::h2_frame_data) {}
@@ -159,16 +208,43 @@ http2_data_frame& http2_data_frame::set_pad(byte_t* pad, size_t size) {
     return *this;
 }
 
+bool http2_data_frame::conditional_pad() { return true; }
+
 return_t http2_data_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
+
     __try2 {
         if (nullptr == header) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
+        // check size and then read header
         ret = http2_frame_header::read(header, size);
-        // TODO - studying
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        byte_t* payload = nullptr;
+        ret = get_payload(header, size, &payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // Pad Length?
+        // conditional (as signified by a "?" in the diagram) and is only present if the PADDED flag is set
+        if (get_flags() & h2_flag_t::h2_flag_padded) {
+            // padlen(1) + data(len-1-padlen) + pad(padlen)
+            uint8 padlen = payload[0];
+            uint32 datalen = get_payload_size() - (1 + padlen);
+            byte_t* data = payload + 1;
+            byte_t* pad = payload + (1 + datalen);
+
+            set_data(data, datalen);
+            set_pad(pad, padlen);
+        } else {
+            set_data(payload, get_payload_size());
+        }
     }
     __finally2 {
         // do nothing
@@ -179,52 +255,243 @@ return_t http2_data_frame::read(http2_frame_header_t const* header, size_t size)
 return_t http2_data_frame::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
 
-    // RFC 7540 Figure 1: Frame Layout
+    uint8 flags = 0;
+    uint8 padsize = 0;
+    if (_pad.size()) {
+        flags |= h2_flag_t::h2_flag_padded;
+        padsize = 1;
+    }
+
+    set_flags(flags);
+    set_payload_size(padsize + _data.size() + _pad.size());
+
     http2_frame_header::write(frame);
 
-    // RFC 7540 Figure 6: DATA Frame Payload
-    uint8 padlen = (uint8)_pad.size();
-    frame.insert(frame.end(), padlen);
+    if (flags & h2_flag_t::h2_flag_padded) {
+        frame.insert(frame.end(), (uint8)_pad.size());
+    }
     frame.insert(frame.end(), _data.begin(), _data.end());
-    frame.insert(frame.end(), _pad.begin(), _pad.end());
-
+    if (flags & h2_flag_t::h2_flag_padded) {
+        frame.insert(frame.end(), _pad.begin(), _pad.end());
+    }
     return ret;
 }
 
-http2_headers_frame::http2_headers_frame() : http2_frame_header(h2_frame_t::h2_frame_headers) {}
+void http2_data_frame::dump(stream_t* s) {
+    if (s) {
+        http2_frame_header::dump(s);
+
+        basic_stream bs;
+
+        dump_memory(_data, &bs);
+        s->printf("  data\n%s\n", bs.c_str());
+
+        if (get_flags() & h2_flag_t::h2_flag_padded) {
+            dump_memory(_pad, &bs, 16, 2);
+            s->printf("  pad\n%s\n", bs.c_str());
+        }
+    }
+}
+
+http2_headers_frame::http2_headers_frame() : http2_frame_header(h2_frame_t::h2_frame_headers), _dependency(0), _weight(0) {}
+
+bool http2_headers_frame::conditional_pad() { return true; }
 
 return_t http2_headers_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
-    //
+    __try2 {
+        if (nullptr == header) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // check size and then read header
+        ret = http2_frame_header::read(header, size);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        byte_t* payload = nullptr;
+        ret = get_payload(header, size, &payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // TODO
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 return_t http2_headers_frame::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
-    //
+    // TODO
     return ret;
 }
 
-http2_priority_frame::http2_priority_frame() : http2_frame_header(h2_frame_t::h2_frame_priority) {}
+void http2_headers_frame::dump(stream_t* s) {
+    if (s) {
+        http2_frame_header::dump(s);
+
+        // TODO
+    }
+}
+
+http2_priority_frame::http2_priority_frame() : http2_frame_header(h2_frame_t::h2_frame_priority), _exclusive(false), _dependency(0), _weight(0) {}
+
+uint8 http2_priority_frame::get_exclusive() { return _exclusive ? 1 : 0; }
+
+uint32 http2_priority_frame::get_dependency() { return _dependency; }
+
+uint8 http2_priority_frame::get_weight() { return _weight; }
+
+http2_priority_frame& http2_priority_frame::set_exclusive(bool exclusive) {
+    _exclusive = exclusive;
+    return *this;
+}
+
+http2_priority_frame& http2_priority_frame::set_dependency(uint32 dependency) {
+    _dependency = dependency;
+    return *this;
+}
+
+http2_priority_frame& http2_priority_frame::set_weight(uint8 weight) {
+    _weight = weight;
+    return *this;
+}
 
 return_t http2_priority_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == header) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // check size and then read header
+        ret = http2_frame_header::read(header, size);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        byte_t* payload = nullptr;
+        ret = get_payload(header, size, &payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // A PRIORITY frame with a length other than 5 octets MUST be treated as a stream error (Section 5.4.2) of type FRAME_SIZE_ERROR.
+        if (get_payload_size() != sizeof(http2_priority_t)) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        http2_priority_t priority;
+        http2_priority_t* temp = (http2_priority_t*)payload;
+        priority.dependency = ntohl(temp->dependency);
+        priority.weight = temp->weight;
+
+        _exclusive = (priority.dependency & 0x80000000);
+        _dependency = (priority.dependency & 0x7fffffff);
+        _weight = priority.weight;
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 return_t http2_priority_frame::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
+
+    set_payload_size(sizeof(http2_priority_t));
+
+    http2_frame_header::write(frame);
+
+    http2_priority_t priority;
+    priority.dependency = _dependency;
+    if (_exclusive) {
+        priority.dependency |= 0x80000000;
+    }
+    priority.weight = _weight;
+
+    binsert<uint32>(frame, priority.dependency, htonl);
+    frame.insert(frame.end(), priority.weight);
+
     return ret;
 }
 
-http2_rst_stream_frame::http2_rst_stream_frame() : http2_frame_header(h2_frame_t::h2_frame_rst_stream) {}
+void http2_priority_frame::dump(stream_t* s) {
+    if (s) {
+        http2_frame_header::dump(s);
+
+        s->printf("  exclusive %u dependency %u weight %u\n", get_exclusive(), get_dependency(), get_weight());
+    }
+}
+
+http2_rst_stream_frame::http2_rst_stream_frame() : http2_frame_header(h2_frame_t::h2_frame_rst_stream), _errorcode(0) {}
+
+uint32 http2_rst_stream_frame::get_errorcode() { return _errorcode; }
+
+http2_rst_stream_frame& http2_rst_stream_frame::set_errorcode(uint32 errorcode) {
+    _errorcode = errorcode;
+    return *this;
+}
 
 return_t http2_rst_stream_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == header) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // check size and then read header
+        ret = http2_frame_header::read(header, size);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        byte_t* payload = nullptr;
+        ret = get_payload(header, size, &payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // The RST_STREAM frame contains a single unsigned, 32-bit integer identifying the error code
+        if (get_payload_size() != sizeof(uint32)) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        uint32 temp = *(uint32*)payload;
+        _errorcode = ntohl(temp);
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t http2_rst_stream_frame::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
+
+    set_payload_size(sizeof(uint32));
+
+    http2_frame_header::write(frame);
+
+    binsert<uint32>(frame, _errorcode, htonl);
     return ret;
+}
+
+void http2_rst_stream_frame::dump(stream_t* s) {
+    if (s) {
+        http2_frame_header::dump(s);
+
+        s->printf("  errorcode %u\n", get_errorcode());
+    }
 }
 
 http2_settings_frame::http2_settings_frame() : http2_frame_header(h2_frame_t::h2_frame_settings) {}
@@ -256,10 +523,15 @@ return_t http2_settings_frame::read(http2_frame_header_t const* header, size_t s
             __leave2;
         }
 
-        byte_t* p = (byte_t*)header;
+        byte_t* payload = nullptr;
+        ret = get_payload(header, size, &payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
         uint32 pos = 0;
         while (pos < len) {
-            http2_setting_t* setting = (http2_setting_t*)(p + pos);
+            http2_setting_t* setting = (http2_setting_t*)(payload + pos);
 
             uint16 id = ntohs(setting->id);
             uint32 value = ntohl(setting->value);
@@ -290,64 +562,258 @@ return_t http2_settings_frame::write(binary_t& frame) {
     return ret;
 }
 
-http2_push_promise_frame::http2_push_promise_frame() : http2_frame_header(h2_frame_t::h2_frame_push_promise) {}
+void http2_settings_frame::dump(stream_t* s) {
+    if (s) {
+        http2_frame_header::dump(s);
+
+        h2_setting_map_t::iterator iter;
+        for (iter = _settings.begin(); iter != _settings.end(); iter++) {
+            s->printf("  > id %u value %u\n", iter->first, iter->second);
+        }
+    }
+}
+
+http2_push_promise_frame::http2_push_promise_frame() : http2_frame_header(h2_frame_t::h2_frame_push_promise), _promised_id(0) {}
+
+bool http2_push_promise_frame::conditional_pad() { return true; }
 
 return_t http2_push_promise_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == header) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // check size and then read header
+        ret = http2_frame_header::read(header, size);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        byte_t* payload = nullptr;
+        ret = get_payload(header, size, &payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // TODO
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t http2_push_promise_frame::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
+    // TODO
     return ret;
 }
 
-http2_ping_frame::http2_ping_frame() : http2_frame_header(h2_frame_t::h2_frame_ping) {}
+void http2_push_promise_frame::dump(stream_t* s) {
+    if (s) {
+        http2_frame_header::dump(s);
+
+        // TODO
+    }
+}
+
+http2_ping_frame::http2_ping_frame() : http2_frame_header(h2_frame_t::h2_frame_ping), _opaque(0) {}
+
+uint64 http2_ping_frame::get_opaque() { return _opaque; }
+
+http2_ping_frame& http2_ping_frame::set_opaque(uint64 opaque) {
+    _opaque = opaque;
+    return *this;
+}
 
 return_t http2_ping_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == header) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // check size and then read header
+        ret = http2_frame_header::read(header, size);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        byte_t* payload = nullptr;
+        ret = get_payload(header, size, &payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // TODO
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t http2_ping_frame::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
+    // TODO
     return ret;
 }
 
-http2_goaway_frame::http2_goaway_frame() : http2_frame_header(h2_frame_t::h2_frame_goaway) {}
+void http2_ping_frame::dump(stream_t* s) {
+    if (s) {
+        http2_frame_header::dump(s);
+
+        s->printf("  opaque %I64u\n", get_opaque());
+    }
+}
+
+http2_goaway_frame::http2_goaway_frame() : http2_frame_header(h2_frame_t::h2_frame_goaway), _last_id(0), _errorcode(0) {}
 
 return_t http2_goaway_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == header) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // check size and then read header
+        ret = http2_frame_header::read(header, size);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        byte_t* payload = nullptr;
+        ret = get_payload(header, size, &payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // TODO
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t http2_goaway_frame::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
+    // TODO
     return ret;
 }
 
-http2_window_update_frame::http2_window_update_frame() : http2_frame_header(h2_frame_t::h2_frame_window_update) {}
+void http2_goaway_frame::dump(stream_t* s) {
+    if (s) {
+        http2_frame_header::dump(s);
+
+        // TODO
+    }
+}
+
+http2_window_update_frame::http2_window_update_frame() : http2_frame_header(h2_frame_t::h2_frame_window_update), _increment(0) {}
+
+uint32 http2_window_update_frame::get_increment() { return _increment; }
+
+http2_window_update_frame& http2_window_update_frame::set_increment(uint32 increment) {
+    _increment;
+    return *this;
+}
 
 return_t http2_window_update_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == header) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // check size and then read header
+        ret = http2_frame_header::read(header, size);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        byte_t* payload = nullptr;
+        ret = get_payload(header, size, &payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        if (get_payload_size() != sizeof(uint32)) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        uint32 temp = *(uint32*)payload;
+        _increment = ntohl(temp);
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t http2_window_update_frame::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
+    // TODO
     return ret;
+}
+
+void http2_window_update_frame::dump(stream_t* s) {
+    if (s) {
+        http2_frame_header::dump(s);
+
+        s->printf("  increment %u\n", get_increment());
+    }
 }
 
 http2_continuation_frame::http2_continuation_frame() : http2_frame_header(h2_frame_t::h2_frame_continuation) {}
 
 return_t http2_continuation_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == header) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // check size and then read header
+        ret = http2_frame_header::read(header, size);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        byte_t* payload = nullptr;
+        ret = get_payload(header, size, &payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // TODO
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
 return_t http2_continuation_frame::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
+    // TODO
     return ret;
+}
+
+void http2_continuation_frame::dump(stream_t* s) {
+    if (s) {
+        http2_frame_header::dump(s);
+
+        // TODO
+    }
 }
 
 }  // namespace net

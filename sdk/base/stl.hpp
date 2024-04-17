@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_STL__
 #define __HOTPLACE_SDK_BASE_STL__
 
+#include <functional>
 #include <map>
 #include <sdk/base/error.hpp>
 #include <sdk/base/types.hpp>
@@ -83,6 +84,23 @@ class maphint_const {
    private:
     std::map<K, V> const& _source;
 };
+
+/**
+ * @brief   append
+ * @param   binary_t& bin [out]
+ * @param   TYPE value [in]
+ * @param   std::function<TYPE(TYPE)> func [in]
+ * @sample
+ *          binary_t bin;
+ *          uint32 data = 100;
+ *          binsert<uint32>(bin, data, htonl);
+ */
+template <typename TYPE>
+void binsert(binary_t& bin, TYPE value, std::function<TYPE(TYPE)> func) {
+    TYPE t = func(value);
+    byte_t* b = (byte_t*)&t;
+    bin.insert(bin.end(), b, b + sizeof(TYPE));
+}
 
 }  // namespace hotplace
 

@@ -90,6 +90,11 @@ typedef struct _http2_setting_t {
     uint32 value;
 } http2_setting_t;
 
+typedef struct _http2_priority_t {
+    uint32 dependency;
+    uint8 weight;
+} http2_priority_t;
+
 #pragma pack(pop)
 
 uint32 h2_get_payload_size(http2_frame_header_t const* header);
@@ -104,13 +109,19 @@ class http2_frame_header {
 
     uint32 get_frame_size();
     uint32 get_payload_size();
+    uint8 get_type();
+    uint8 get_flags();
+    uint32 get_stream_id();
+    return_t get_payload(http2_frame_header_t const* header, size_t size, byte_t** payload);
 
     http2_frame_header& set_type(h2_frame_t type);
     http2_frame_header& set_flags(uint8 flags);
     http2_frame_header& set_stream_id(uint32 id);
 
+    virtual bool conditional_pad();
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    protected:
     http2_frame_header& set_payload_size(uint32 size);
@@ -123,6 +134,7 @@ class http2_frame_header {
 };
 
 // RFC 7540 6.1. DATA
+// RFC 7540 Figure 6: DATA Frame Payload
 class http2_data_frame : public http2_frame_header {
    public:
     http2_data_frame();
@@ -130,8 +142,10 @@ class http2_data_frame : public http2_frame_header {
     http2_data_frame& set_data(byte_t* data, size_t size);
     http2_data_frame& set_pad(byte_t* pad, size_t size);
 
+    virtual bool conditional_pad();
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    private:
     binary_t _data;
@@ -146,8 +160,10 @@ class http2_headers_frame : public http2_frame_header {
     // http2_headers_frame& set_fragment(byte_t* frag, size_t size);
     // http2_headers_frame& set_pad(byte_t* pad, size_t size);
 
+    virtual bool conditional_pad();
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    private:
     uint32 _dependency;
@@ -157,28 +173,44 @@ class http2_headers_frame : public http2_frame_header {
 };
 
 // RFC 7540 6.3. PRIORITY
+// RFC 7540 Figure 8: PRIORITY Frame Payload
 class http2_priority_frame : public http2_frame_header {
    public:
     http2_priority_frame();
 
+    uint8 get_exclusive();
+    uint32 get_dependency();
+    uint8 get_weight();
+
+    http2_priority_frame& set_exclusive(bool exclusive);
+    http2_priority_frame& set_dependency(uint32 dependency);
+    http2_priority_frame& set_weight(uint8 weight);
+
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    private:
+    bool _exclusive;
     uint32 _dependency;
     uint8 _weight;
 };
 
 // RFC 7540 6.4. RST_STREAM
+// RFC 7540 Figure 9: RST_STREAM Frame Payload
 class http2_rst_stream_frame : public http2_frame_header {
    public:
     http2_rst_stream_frame();
 
+    uint32 get_errorcode();
+    http2_rst_stream_frame& set_errorcode(uint32 errorcode);
+
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    private:
-    uint32 errorcode;
+    uint32 _errorcode;
 };
 
 // RFC 7540 6.5. SETTINGS
@@ -190,6 +222,7 @@ class http2_settings_frame : public http2_frame_header {
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    private:
     typedef std::map<uint16, uint32> h2_setting_map_t;
@@ -202,8 +235,10 @@ class http2_push_promise_frame : public http2_frame_header {
    public:
     http2_push_promise_frame();
 
+    virtual bool conditional_pad();
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    private:
     uint32 _promised_id;
@@ -216,11 +251,15 @@ class http2_ping_frame : public http2_frame_header {
    public:
     http2_ping_frame();
 
+    uint64 get_opaque();
+    http2_ping_frame& set_opaque(uint64 opaque);
+
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    private:
-    uint64 opaque;
+    uint64 _opaque;
 };
 
 // RFC 7540 6.8. GOAWAY
@@ -230,6 +269,7 @@ class http2_goaway_frame : public http2_frame_header {
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    private:
     uint32 _last_id;
@@ -242,11 +282,15 @@ class http2_window_update_frame : public http2_frame_header {
    public:
     http2_window_update_frame();
 
+    uint32 get_increment();
+    http2_window_update_frame& set_increment(uint32 increment);
+
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    private:
-    uint32 increment;
+    uint32 _increment;
 };
 
 // RFC 7540 6.10. CONTINUATION
@@ -256,6 +300,7 @@ class http2_continuation_frame : public http2_frame_header {
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
 
    private:
     binary_t fragment;

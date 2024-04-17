@@ -38,6 +38,7 @@ typedef struct _OPTION {
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
+t_shared_instance<http_protocol> h1_protocol;
 t_shared_instance<http2_protocol> h2_protocol;
 critical_section print_lock;
 
@@ -59,6 +60,7 @@ void print(const char* text, ...) {
     va_start(ap, text);
     vprintf(text, ap);
     va_end(ap);
+    printf("\n");
     fflush(stdout);
 }
 
@@ -84,32 +86,37 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             cprint("read %i", session_socket->cli_socket);
             if (option.debug) {
                 dump_memory((byte_t*)buf, bufsize, &bs);
-                print("consume\n%s\n", bs.c_str());
+                print("consume\n%s", bs.c_str());
             }
 
             // studying .... debug frames ...
 
-            {
+            if (errorcode_t::success == h2_protocol->is_kind_of(buf, bufsize)) {
                 constexpr char preface[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
                 const uint16 sizeof_preface = 24;
                 bool stage_preface = false;
                 uint32 pos_frame = 0;
                 if (bufsize > sizeof_preface) {
                     if (0 == strncmp(buf, preface, sizeof_preface)) {
-                        print("- http/2 connecton preface\n");
+                        print("- http/2 connecton preface");
                         stage_preface = true;
                         pos_frame = sizeof_preface;
                     }
                 }
 
                 http2_frame_header_t* frame = (http2_frame_header_t*)(buf + pos_frame);
+                size_t checksize = bufsize - pos_frame;
                 uint32 payload_size = h2_get_payload_size(frame);
                 uint32 packet_size = sizeof(http2_frame_header_t) + payload_size;
 
-                print("- http/2 frame type %d\n", frame->type);
-
                 if (h2_frame_t::h2_frame_data == frame->type) {
-                    //
+                    http2_data_frame data;
+
+                    data.read(frame, checksize);
+                    if (option.debug) {
+                        data.dump(&bs);
+                        print("%s", bs.c_str());
+                    }
                 } else if (h2_frame_t::h2_frame_headers == frame->type) {
                     //
                 } else if (h2_frame_t::h2_frame_priority == frame->type) {
@@ -119,24 +126,32 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 } else if (h2_frame_t::h2_frame_settings == frame->type) {
                     http2_settings_frame settings;
 
-                    if (stage_preface) {
-                        settings.add(h2_settings_param_t::h2_settings_header_table_size, 1 << 12);
-                        settings.add(h2_settings_param_t::h2_settings_max_concurrent_streams, 100);
-                        settings.add(h2_settings_param_t::h2_settings_initial_window_size, 1 << 16);
-                        settings.add(h2_settings_param_t::h2_settings_max_frame_size, 1 << 14);
-                        settings.add(h2_settings_param_t::h2_settings_max_header_list_size, 1 << 14);
-                    }
-                    if (frame->flags & h2_flag_t::h2_flag_ack) {
-                        settings.set_flags(h2_flag_t::h2_flag_ack);
-                    }
-
-                    settings.write(bin);
+                    settings.read(frame, checksize);
                     if (option.debug) {
-                        dump_memory(bin, &bs);
-                        print("dump\n%s\n", bs.c_str());
+                        settings.dump(&bs);
+                        print("%s", bs.c_str());
                     }
 
-                    // session->send((char*)&bin[0], bin.size());
+                    // {
+                    //     if (stage_preface) {
+                    //         settings.add(h2_settings_param_t::h2_settings_header_table_size, 1 << 12);
+                    //         settings.add(h2_settings_param_t::h2_settings_max_concurrent_streams, 100);
+                    //         settings.add(h2_settings_param_t::h2_settings_initial_window_size, 1 << 16);
+                    //         settings.add(h2_settings_param_t::h2_settings_max_frame_size, 1 << 14);
+                    //         settings.add(h2_settings_param_t::h2_settings_max_header_list_size, 1 << 14);
+                    //     }
+                    //     if (frame->flags & h2_flag_t::h2_flag_ack) {
+                    //         settings.set_flags(h2_flag_t::h2_flag_ack);
+                    //     }
+                    //
+                    //     settings.write(bin);
+                    //     if (option.debug) {
+                    //         dump_memory(bin, &bs);
+                    //         print("dump\n%s\n", bs.c_str());
+                    //     }
+                    //
+                    //     // session->send((char*)&bin[0], bin.size());
+                    // }
                 } else if (h2_frame_t::h2_frame_push_promise == frame->type) {
                     //
                 } else if (h2_frame_t::h2_frame_ping == frame->type) {
@@ -144,10 +159,20 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 } else if (h2_frame_t::h2_frame_goaway == frame->type) {
                     //
                 } else if (h2_frame_t::h2_frame_window_update == frame->type) {
-                    //
+                    http2_window_update_frame window_update;
+
+                    window_update.read(frame, checksize);
+                    if (option.debug) {
+                        window_update.dump(&bs);
+                        print("%s", bs.c_str());
+                    }
                 } else if (h2_frame_t::h2_frame_continuation == frame->type) {
                     //
                 }
+            } else {
+                http_response resp;
+                resp.compose(200, "text/html", "<html><body><pre>hello</pre></body></html>");
+                resp.respond(session);
             }
             break;
         case mux_disconnect:
@@ -171,7 +196,7 @@ return_t echo_server(void*) {
 
     fclose(fp);
 
-    // http_protocol* http_prot = nullptr;
+    http_protocol* http1_prot = nullptr;
     http2_protocol* http2_prot = nullptr;
     tcp_server_socket svr_sock;
     transport_layer_security* tls = nullptr;
@@ -185,11 +210,13 @@ return_t echo_server(void*) {
     __try2 {
         /* server */
         __try_new_catch(tls, new transport_layer_security(cert.get()), ret, __leave2);
+        __try_new_catch(http1_prot, new http_protocol, ret, __leave2);
         __try_new_catch(http2_prot, new http2_protocol, ret, __leave2);
         __try_new_catch(tls_server, new tls_server_socket(tls), ret, __leave2);
 
         http2_prot->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
 
+        h1_protocol.make_share(http1_prot);
         h2_protocol.make_share(http2_prot);
 
         // start server
@@ -197,6 +224,10 @@ return_t echo_server(void*) {
         netserver.open(&handle_http_ipv6, AF_INET6, IPPROTO_TCP, option.port, 1024, network_routine, nullptr, &svr_sock);
         netserver.open(&handle_https_ipv4, AF_INET, IPPROTO_TCP, option.port_tls, 1024, network_routine, nullptr, tls_server);
         netserver.open(&handle_https_ipv6, AF_INET6, IPPROTO_TCP, option.port_tls, 1024, network_routine, nullptr, tls_server);
+        netserver.add_protocol(handle_http_ipv4, http1_prot);
+        netserver.add_protocol(handle_http_ipv6, http1_prot);
+        netserver.add_protocol(handle_https_ipv4, http1_prot);
+        netserver.add_protocol(handle_https_ipv6, http1_prot);
         netserver.add_protocol(handle_http_ipv4, http2_prot);
         netserver.add_protocol(handle_http_ipv6, http2_prot);
         netserver.add_protocol(handle_https_ipv4, http2_prot);

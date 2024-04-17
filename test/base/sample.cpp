@@ -93,37 +93,37 @@ void dump_data(const char* text, void* ptr, size_t size) {
     std::cout << (text ? text : "") << std::endl << bs.c_str() << std::endl;
 }
 
-void test_reverse() {
-    _test_case.begin("reverse");
+void test_convert_endian() {
+    _test_case.begin("endian");
 
     uint64 i64 = t_htoi<uint64>("0001020304050607");
     uint128 i128 = t_htoi<uint128>("000102030405060708090a0b0c0d0e0f");
 
     if (is_little_endian()) {
         uint32 i32 = 7;
-        _test_case.assert(ntohl(i32) == reverse(i32), __FUNCTION__, "32bits");
-        _test_case.assert(ntoh64(i64) == reverse(i64), __FUNCTION__, "64bits");
-        _test_case.assert(ntoh128(i128) == reverse(i128), __FUNCTION__, "128bits");
+        _test_case.assert(ntohl(i32) == convert_endian(i32), __FUNCTION__, "32bits");
+        _test_case.assert(ntoh64(i64) == convert_endian(i64), __FUNCTION__, "64bits");
+        _test_case.assert(ntoh128(i128) == convert_endian(i128), __FUNCTION__, "128bits");
     } else {
         // ntoh ... no effect
     }
 
-#define do_reverse_test(type, val)               \
+#define do_convert_endian_test(type, val)        \
     {                                            \
         type var = val;                          \
-        type temp = reverse(var);                \
+        type temp = convert_endian(var);         \
         dump_data("before", &var, sizeof(var));  \
         dump_data("after", &temp, sizeof(temp)); \
     }
 
-    do_reverse_test(uint32, 7);
-    do_reverse_test(uint32, -2);
-    do_reverse_test(uint64, 7);
-    do_reverse_test(uint64, -2);
-    do_reverse_test(uint128, 7);
-    do_reverse_test(uint128, -2);
-    do_reverse_test(uint64, i64);
-    do_reverse_test(uint128, i128);
+    do_convert_endian_test(uint32, 7);
+    do_convert_endian_test(uint32, -2);
+    do_convert_endian_test(uint64, 7);
+    do_convert_endian_test(uint64, -2);
+    do_convert_endian_test(uint128, 7);
+    do_convert_endian_test(uint128, -2);
+    do_convert_endian_test(uint64, i64);
+    do_convert_endian_test(uint128, i128);
 }
 
 void test_endian() {
@@ -144,6 +144,26 @@ void test_endian() {
     _test_case.assert((true == ret), __FUNCTION__, text.c_str());
 }
 
+void test_map() {
+    _test_case.begin("maphint");
+    return_t ret = errorcode_t::success;
+
+    std::map<int, std::string> source;
+    maphint<int, std::string> hint(source);
+    source[1] = "one";
+    source[2] = "two";
+    source[3] = "three";
+    std::string value;
+    hint.find(1, &value);
+    _test_case.assert("one" == value, __FUNCTION__, "maphint.find(1)");
+    ret = hint.find(10, &value);
+    _test_case.assert(errorcode_t::not_found == ret, __FUNCTION__, "maphint.find(10)");
+
+    maphint_const<int, std::string> hint_const(source);
+    hint_const.find(2, &value);
+    _test_case.assert("two" == value, __FUNCTION__, "maphint.find(2)");
+}
+
 int main() {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -152,7 +172,8 @@ int main() {
     test_sharedinstance1();
     test_sharedinstance2();
     test_endian();
-    test_reverse();
+    test_convert_endian();
+    test_map();
 
     _test_case.report(5);
     return _test_case.result();

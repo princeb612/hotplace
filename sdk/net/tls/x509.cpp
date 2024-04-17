@@ -186,7 +186,7 @@ x509cert& x509cert::set_cipher_list(const char* list) {
 }
 
 x509cert& x509cert::set_verify(int mode) {
-    SSL_CTX_set_verify(_x509, 0, nullptr);
+    SSL_CTX_set_verify(_x509, mode, nullptr);
     return *this;
 }
 

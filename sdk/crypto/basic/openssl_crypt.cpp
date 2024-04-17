@@ -1272,7 +1272,7 @@ return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, 
             constant = counter;
         } else {
             // ntohl do nothing, need reverse
-            constant = reverse(counter);
+            constant = convert_endian(counter);
         }
 
         if (nonce_size > 12) {
