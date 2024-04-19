@@ -258,7 +258,7 @@ void test_scan() {
     _test_case.assert(true, __FUNCTION__, "scan");
 
     basic_stream bs;
-    dump_memory((byte_t*)data, strlen(data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
+    dump_memory((byte_t*)data, strlen(data), &bs, 16, 0, 0x0, dump_memory_flag_t::dump_header);
     std::cout << bs.c_str() << std::endl;
 }
 
@@ -282,7 +282,7 @@ void test_scan2() {
     _test_case.assert(true, __FUNCTION__, "scan");
 
     basic_stream bs;
-    dump_memory((byte_t*)data, strlen(data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
+    dump_memory((byte_t*)data, strlen(data), &bs, 16, 0, 0x0, dump_memory_flag_t::dump_header);
     std::cout << bs.c_str() << std::endl;
 }
 

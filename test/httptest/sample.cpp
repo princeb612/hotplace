@@ -708,10 +708,10 @@ void test_get_tlsclient() {
                     group.add(&http);
 
                     ret = cli.read(sock, handle, buf, sizeof(buf), &sizeread);
-                    stream_read.produce(buf, sizeread);
+                    stream_read.produce((byte_t*)buf, sizeread);
                     while (errorcode_t::more_data == ret) {
                         ret = cli.more(sock, handle, buf, sizeof(buf), &sizeread);
-                        stream_read.produce(buf, sizeread);
+                        stream_read.produce((byte_t*)buf, sizeread);
                     }
 
                     stream_read.write(&group, &stream_interpreted);
