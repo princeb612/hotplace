@@ -19,8 +19,10 @@ return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* str
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (stream_object) {
-            stream_object->clear();
+        if (0 == (dump_memory_flag_t::dump_notrunc & flags)) {
+            if (stream_object) {
+                stream_object->clear();
+            }
         }
 
         if (0 == dump_size) {
@@ -40,7 +42,7 @@ return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* str
         constexpr char constexpr_dumpaddr[] = "%08X : ";
         constexpr char constexpr_dumpbyte[] = "%02X ";
 
-        if (dump_memory_flag_t::header & flags) {
+        if (dump_memory_flag_t::dump_header & flags) {
             stream_object->fill(11, ' ');
             for (size_t i = 0; i < hex_part; i++) {
                 stream_object->printf(constexpr_dumpbyte, i);

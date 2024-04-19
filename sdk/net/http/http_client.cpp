@@ -114,11 +114,11 @@ http_client& http_client::do_request_and_response(url_info_t const& url_info, ht
 
                 ret = client->read(_socket, _tls_context, &buf[0], bufsize, &sizeread);
 
-                stream_read.produce(&buf[0], sizeread);
+                stream_read.produce((byte_t*)&buf[0], sizeread);
                 while (errorcode_t::more_data == ret) {
                     ret = client->more(_socket, _tls_context, &buf[0], bufsize, &sizeread);
 
-                    stream_read.produce(&buf[0], sizeread);
+                    stream_read.produce((byte_t*)&buf[0], sizeread);
                 }
 
                 stream_read.write(&group, &stream_interpreted);

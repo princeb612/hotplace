@@ -64,7 +64,17 @@ void print(const char* text, ...) {
     fflush(stdout);
 }
 
-return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+template <typename H2_FRAME_TYPE>
+void dump_frame(http2_frame_header_t* frame, size_t size) {
+    H2_FRAME_TYPE fr;
+    fr.read(frame, size);
+
+    basic_stream bs;
+    fr.dump(&bs);
+    print("%s", bs.c_str());
+}
+
+return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
     net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
     network_session* session = (network_session*)data_array[3];
@@ -85,8 +95,9 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
         case mux_read:
             cprint("read %i", session_socket->cli_socket);
             if (option.debug) {
-                dump_memory((byte_t*)buf, bufsize, &bs);
+                dump_memory((byte_t*)buf, bufsize, &bs, 16, 2);
                 print("consume\n%s", bs.c_str());
+                bs.clear();
             }
 
             // studying .... debug frames ...
@@ -110,27 +121,15 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 uint32 packet_size = sizeof(http2_frame_header_t) + payload_size;
 
                 if (h2_frame_t::h2_frame_data == frame->type) {
-                    http2_data_frame data;
-
-                    data.read(frame, checksize);
-                    if (option.debug) {
-                        data.dump(&bs);
-                        print("%s", bs.c_str());
-                    }
+                    dump_frame<http2_data_frame>(frame, checksize);
                 } else if (h2_frame_t::h2_frame_headers == frame->type) {
-                    //
+                    dump_frame<http2_headers_frame>(frame, checksize);
                 } else if (h2_frame_t::h2_frame_priority == frame->type) {
-                    //
+                    dump_frame<http2_priority_frame>(frame, checksize);
                 } else if (h2_frame_t::h2_frame_rst_stream == frame->type) {
-                    //
+                    dump_frame<http2_rst_stream_frame>(frame, checksize);
                 } else if (h2_frame_t::h2_frame_settings == frame->type) {
-                    http2_settings_frame settings;
-
-                    settings.read(frame, checksize);
-                    if (option.debug) {
-                        settings.dump(&bs);
-                        print("%s", bs.c_str());
-                    }
+                    dump_frame<http2_settings_frame>(frame, checksize);
 
                     // {
                     //     if (stage_preface) {
@@ -153,21 +152,15 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     //     // session->send((char*)&bin[0], bin.size());
                     // }
                 } else if (h2_frame_t::h2_frame_push_promise == frame->type) {
-                    //
+                    dump_frame<http2_push_promise_frame>(frame, checksize);
                 } else if (h2_frame_t::h2_frame_ping == frame->type) {
-                    //
+                    dump_frame<http2_ping_frame>(frame, checksize);
                 } else if (h2_frame_t::h2_frame_goaway == frame->type) {
-                    //
+                    dump_frame<http2_goaway_frame>(frame, checksize);
                 } else if (h2_frame_t::h2_frame_window_update == frame->type) {
-                    http2_window_update_frame window_update;
-
-                    window_update.read(frame, checksize);
-                    if (option.debug) {
-                        window_update.dump(&bs);
-                        print("%s", bs.c_str());
-                    }
+                    dump_frame<http2_window_update_frame>(frame, checksize);
                 } else if (h2_frame_t::h2_frame_continuation == frame->type) {
-                    //
+                    dump_frame<http2_continuation_frame>(frame, checksize);
                 }
             } else {
                 http_response resp;
@@ -220,10 +213,10 @@ return_t echo_server(void*) {
         h2_protocol.make_share(http2_prot);
 
         // start server
-        netserver.open(&handle_http_ipv4, AF_INET, IPPROTO_TCP, option.port, 1024, network_routine, nullptr, &svr_sock);
-        netserver.open(&handle_http_ipv6, AF_INET6, IPPROTO_TCP, option.port, 1024, network_routine, nullptr, &svr_sock);
-        netserver.open(&handle_https_ipv4, AF_INET, IPPROTO_TCP, option.port_tls, 1024, network_routine, nullptr, tls_server);
-        netserver.open(&handle_https_ipv6, AF_INET6, IPPROTO_TCP, option.port_tls, 1024, network_routine, nullptr, tls_server);
+        netserver.open(&handle_http_ipv4, AF_INET, IPPROTO_TCP, option.port, 1024, consume_routine, nullptr, &svr_sock);
+        netserver.open(&handle_http_ipv6, AF_INET6, IPPROTO_TCP, option.port, 1024, consume_routine, nullptr, &svr_sock);
+        netserver.open(&handle_https_ipv4, AF_INET, IPPROTO_TCP, option.port_tls, 1024, consume_routine, nullptr, tls_server);
+        netserver.open(&handle_https_ipv6, AF_INET6, IPPROTO_TCP, option.port_tls, 1024, consume_routine, nullptr, tls_server);
         netserver.add_protocol(handle_http_ipv4, http1_prot);
         netserver.add_protocol(handle_http_ipv6, http1_prot);
         netserver.add_protocol(handle_https_ipv4, http1_prot);

@@ -842,7 +842,7 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
     __try2 {
         if (multiplexer_event_type_t::mux_read == type) {
             /* consumer_routine (decrease), close_if_not_referenced (delete) */
-            session_object->produce(&context->event_queue, session_object->wsabuf_read()->buf, transferred);
+            session_object->produce(&context->event_queue, (byte_t*)session_object->wsabuf_read()->buf, transferred);
             /* asynchronous write */
             session_object->ready_to_read();
         }

@@ -89,7 +89,7 @@ int network_session::addref() { return _shared.addref(); }
 
 int network_session::release() { return _shared.delref(); }
 
-return_t network_session::produce(t_mlfq<network_session>* q, void* buf_read, size_t size_buf_read) {
+return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read) {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
 

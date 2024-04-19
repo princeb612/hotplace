@@ -101,11 +101,11 @@ class network_session {
     /**
      * @brief produce, push into stream
      * @param   network_priority_queue* q               [IN]
-     * @param   void*                   buf_read        [IN]
+     * @param   byte_t*                 buf_read        [IN]
      * @param   size_t                  size_buf_read   [IN]
      * @remarks
      */
-    return_t produce(t_mlfq<network_session>* q, void* buf_read, size_t size_buf_read);
+    return_t produce(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read);
     /**
      * @brief consume from stream and put into request, then read stream buffer list from request
      * @param   network_protocol_group* protocol_group              [IN]

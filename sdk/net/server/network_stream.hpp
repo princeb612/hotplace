@@ -29,10 +29,10 @@ class network_stream_data {
 
     /**
      * @brief assign
-     * @param   void*   ptr     [IN]
+     * @param   byte_t* ptr     [IN]
      * @param   size_t  size    [IN]
      */
-    return_t assign(void* ptr, size_t size);
+    return_t assign(byte_t* ptr, size_t size);
     /**
      * @brief content size
      */
@@ -40,7 +40,7 @@ class network_stream_data {
     /**
      * @brief content
      */
-    void* content();
+    byte_t* content();
 
     /**
      * @brief next node
@@ -58,7 +58,7 @@ class network_stream_data {
 
    protected:
     t_shared_reference<network_stream_data> _instance;
-    void* _ptr;
+    byte_t* _ptr;
     size_t _size;
     network_stream_data* _next;
     int _priority;
@@ -75,10 +75,10 @@ class network_stream {
 
     /**
      * @brief produce
-     * @param   void*   buf_read        [IN]
+     * @param   byte_t* buf_read        [IN]
      * @param   size_t  size_buf_read   [IN]
      */
-    return_t produce(void* buf_read, size_t size_buf_read);
+    return_t produce(byte_t* buf_read, size_t size_buf_read);
     /**
      * @brief data ready
      */

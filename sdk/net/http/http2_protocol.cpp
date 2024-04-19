@@ -84,13 +84,6 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
             *priority = 0;
         }
 
-        {
-            basic_stream bs;
-            dump_memory(stream->data(), stream->size(), &bs);
-            printf("read_stream\n%s\n", bs.c_str());
-            fflush(stdout);
-        }
-
         byte_t* stream_data = stream->data();
         uint32 stream_size = stream->size();
 

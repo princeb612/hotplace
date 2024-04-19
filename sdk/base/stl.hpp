@@ -102,6 +102,33 @@ void binsert(binary_t& bin, TYPE value, std::function<TYPE(TYPE)> func) {
     bin.insert(bin.end(), b, b + sizeof(TYPE));
 }
 
+/**
+ * @brief   delete
+ * @example
+ *          char* text = new char[10];
+ *          delete [] text;
+ *
+ *          char* text = new char[10];
+ *          promise_on_destroy<char*>(text, [](char* p) -> void { delete [] p; });
+ *
+ *          FILE* fp = fopen(...);
+ *          promise_on_destroy<FILE*>(fp, [](FILE* file) -> void { fclose(file); });
+ */
+template <typename TYPE_PTR>
+class promise_on_destroy {
+   public:
+    promise_on_destroy(TYPE_PTR object, std::function<void(TYPE_PTR)> func) : _object(object), _function(func) {}
+    ~promise_on_destroy() {
+        if (_object && _function) {
+            _function(_object);
+        }
+    }
+
+   private:
+    TYPE_PTR _object;
+    std::function<void(TYPE_PTR)> _function;
+};
+
 }  // namespace hotplace
 
 #endif

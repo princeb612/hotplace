@@ -22,7 +22,7 @@ network_stream::~network_stream() {
     // do nothing
 }
 
-return_t network_stream::produce(void* buf_read, size_t size_buf_read) {
+return_t network_stream::produce(byte_t* buf_read, size_t size_buf_read) {
     return_t ret = errorcode_t::success;
     network_stream_data* buffer_object = nullptr;
 
@@ -130,9 +130,8 @@ return_t network_stream::write_wo_protocol(network_protocol_group* protocol_grou
 
 return_t network_stream::write_with_protocol(network_protocol_group* protocol_group, network_stream* target) {
     return_t ret = errorcode_t::success;
-    return_t dwResult = errorcode_t::success;
+    return_t test = errorcode_t::success;
     network_stream_data* buffer_object = nullptr;
-    network_protocol* protocol = nullptr;
 
     basic_stream bufstream;
 
@@ -140,86 +139,92 @@ return_t network_stream::write_with_protocol(network_protocol_group* protocol_gr
     size_t content_pos = 0;
     size_t content_size = 0;
     size_t request_size = 0;
-
     size_t roll_count = 0;
-
     bool _run = true;
-
     int priority = 0;
 
-    __try2 {
-        critical_section_guard guard(_lock);
+    critical_section_guard guard(_lock);
 
-        for (network_stream_list_t::iterator it = _queue.begin(); it != _queue.end(); it++) {
-            roll_count++;
-            buffer_object = *it;
+    for (network_stream_list_t::iterator it = _queue.begin(); it != _queue.end(); it++) {
+        roll_count++;
+        buffer_object = *it;
 
-            bufstream.write(buffer_object->content(), buffer_object->size()); /* append */
-            dwResult = protocol_group->is_kind_of(bufstream.data(), bufstream.size(), &protocol);
-            __try2 {
-                if (errorcode_t::more_data == dwResult) {
-                    // do nothing
-                } else if (errorcode_t::success == dwResult) {
-                    protocol->read_stream(&bufstream, &request_size, &state, &priority);
-                    if (protocol_state_t::protocol_state_complete == state) {
-                        target->produce(bufstream.data(), request_size);
+        network_protocol* protocol = nullptr;
+        bufstream.write(buffer_object->content(), buffer_object->size()); /* append */
+        test = protocol_group->is_kind_of(bufstream.data(), bufstream.size(), &protocol);
 
-                        network_stream_list_t::iterator iter_netstream;
-                        for (iter_netstream = _queue.begin(); iter_netstream != _queue.end();) {
-                            buffer_object = *iter_netstream;
-                            content_pos = content_size;
-                            content_size += buffer_object->size();
-                            if (request_size >= content_size) {
-                                buffer_object->release();
-                                _queue.erase(iter_netstream++);
-                            } else if ((content_pos <= request_size) && (request_size < content_size)) {
-                                size_t remain = content_size - request_size;
-                                void* ptr = bufstream.data() + request_size;
-                                buffer_object->assign(ptr, remain);
-                                buffer_object->set_priority(priority);  // set stream priority
-
-                                _run = false;
-                                break;
-                            }
-                        }
-
-                        _run = false;
-                    }
-                    if (protocol_state_t::protocol_state_crash == state) {
-                        network_stream_list_t::iterator iter_netstream;
-                        for (network_stream_list_t::iterator iter_netstream = _queue.begin(); iter_netstream != _queue.end(); iter_netstream++) {
-                            buffer_object = *iter_netstream;
-                            buffer_object->release();
-                        }
-                        _queue.clear();
-
-                        _run = false;
-                    }
-                } else {
-                    // not in (errorcode_t::success, errorcode_t::more_data)
-                    while (roll_count--) {
-                        buffer_object = _queue.front();
-                        buffer_object->release();
-                        _queue.pop_front();
-                    }
-
-                    _run = false;
-                }
+        promise_on_destroy<network_protocol*>(protocol, [](network_protocol* object) -> void {
+            if (object) {
+                object->release();
             }
-            __finally2 {
-                if (protocol) {
-                    protocol->release();
-                }
+        });
+
+        if (errorcode_t::more_data == test) {
+            // do nothing
+        } else if (errorcode_t::success == test) {
+            protocol->read_stream(&bufstream, &request_size, &state, &priority);
+            switch (state) {
+                case protocol_state_t::protocol_state_complete:
+                    target->produce(bufstream.data(), request_size);
+                    _run = false;
+                    break;
+                case protocol_state_t::protocol_state_forged:
+                case protocol_state_t::protocol_state_crash:
+                case protocol_state_t::protocol_state_large:
+                    _run = false;
+                    break;
+                default:
+                    break;
             }
 
             if (false == _run) {
                 break;
             }
-        }  // for-loop
+        } else {
+            // not in (errorcode_t::success, errorcode_t::more_data)
+            while (roll_count--) {
+                buffer_object = _queue.front();
+                buffer_object->release();
+                _queue.pop_front();
+            }
+
+            break;
+        }
+    }  // for-loop
+
+    network_stream_list_t::iterator iter_netstream;
+    switch (state) {
+        case protocol_state_t::protocol_state_complete:
+            for (iter_netstream = _queue.begin(); iter_netstream != _queue.end();) {
+                buffer_object = *iter_netstream;
+                content_pos = content_size;
+                content_size += buffer_object->size();
+                if (request_size >= content_size) {
+                    buffer_object->release();
+                    _queue.erase(iter_netstream++);
+                } else if ((content_pos <= request_size) && (request_size < content_size)) {
+                    size_t remain = content_size - request_size;
+                    byte_t* ptr = bufstream.data() + request_size;
+                    buffer_object->assign(ptr, remain);
+                    buffer_object->set_priority(priority);  // set stream priority
+                    ret = errorcode_t::more_data;           // while (more_data == write_with_protocol(...));
+                    break;
+                }
+            }
+            break;
+        case protocol_state_t::protocol_state_forged:
+        case protocol_state_t::protocol_state_crash:
+        case protocol_state_t::protocol_state_large:
+            for (network_stream_list_t::iterator iter_netstream = _queue.begin(); iter_netstream != _queue.end(); iter_netstream++) {
+                buffer_object = *iter_netstream;
+                buffer_object->release();
+            }
+            _queue.clear();
+            break;
+        default:
+            break;
     }
-    __finally2 {
-        // do nothing
-    }
+
     return ret;
 }
 
@@ -240,7 +245,18 @@ return_t network_stream::write(network_protocol_group* protocol_group, network_s
             if (true == protocol_group->empty()) {
                 write_wo_protocol(protocol_group, target);
             } else {
-                write_with_protocol(protocol_group, target);
+                /*
+                 * after processing one request, check remains
+                 * before write_with_protocol
+                 *      request packet 1 || request packet 2 || ...
+                 * after write_with_protocol
+                 *      request packet 1 in target
+                 *      equest packet 2 || ... remains
+                 * to resolve
+                 *      check more_data
+                 */
+                while (errorcode_t::more_data == write_with_protocol(protocol_group, target))
+                    ;
             }
         }
     }
@@ -259,7 +275,7 @@ network_stream_data::~network_stream_data() {
     }
 }
 
-return_t network_stream_data::assign(void* ptr, size_t size) {
+return_t network_stream_data::assign(byte_t* ptr, size_t size) {
     return_t ret = errorcode_t::success;
 
     void* p = malloc(size);
@@ -272,7 +288,7 @@ return_t network_stream_data::assign(void* ptr, size_t size) {
         if (nullptr != _ptr) {
             free(_ptr);
         }
-        _ptr = p;
+        _ptr = (byte_t*)p;
         _size = size;
     }
 
@@ -281,7 +297,7 @@ return_t network_stream_data::assign(void* ptr, size_t size) {
 
 size_t network_stream_data::size() { return _size; }
 
-void* network_stream_data::content() { return _ptr; }
+byte_t* network_stream_data::content() { return _ptr; }
 
 network_stream_data* network_stream_data::next() { return _next; }
 

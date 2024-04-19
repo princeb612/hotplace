@@ -95,6 +95,12 @@ typedef struct _http2_priority_t {
     uint8 weight;
 } http2_priority_t;
 
+typedef struct _http2_goaway_t {
+    uint32 last_id;
+    uint32 errorcode;
+    byte_t* debug;
+} http2_goaway_t;
+
 #pragma pack(pop)
 
 uint32 h2_get_payload_size(http2_frame_header_t const* header);
@@ -118,13 +124,12 @@ class http2_frame_header {
     http2_frame_header& set_flags(uint8 flags);
     http2_frame_header& set_stream_id(uint32 id);
 
-    virtual bool conditional_pad();
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
    protected:
-    http2_frame_header& set_payload_size(uint32 size);
+    return_t set_payload_size(uint32 size);
 
    private:
     uint32 _payload_size;
@@ -142,7 +147,6 @@ class http2_data_frame : public http2_frame_header {
     http2_data_frame& set_data(byte_t* data, size_t size);
     http2_data_frame& set_pad(byte_t* pad, size_t size);
 
-    virtual bool conditional_pad();
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
@@ -157,15 +161,18 @@ class http2_headers_frame : public http2_frame_header {
    public:
     http2_headers_frame();
 
-    // http2_headers_frame& set_fragment(byte_t* frag, size_t size);
-    // http2_headers_frame& set_pad(byte_t* pad, size_t size);
+    bool use_priority();
+    http2_headers_frame& set_priority(bool use, http2_priority_t const* pri = nullptr);
 
-    virtual bool conditional_pad();
+    http2_headers_frame& set_fragment(byte_t* frag, size_t size);
+    http2_headers_frame& set_pad(byte_t* pad, size_t size);
+
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
    private:
+    bool _use_priority;
     uint32 _dependency;
     uint8 _weight;
     binary_t _fragment;
@@ -235,7 +242,6 @@ class http2_push_promise_frame : public http2_frame_header {
    public:
     http2_push_promise_frame();
 
-    virtual bool conditional_pad();
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
@@ -266,6 +272,12 @@ class http2_ping_frame : public http2_frame_header {
 class http2_goaway_frame : public http2_frame_header {
    public:
     http2_goaway_frame();
+
+    uint32 get_last_id();
+    uint32 get_errorcode();
+    http2_goaway_frame& set_last_id(uint32 last_id);
+    http2_goaway_frame& set_errorcode(uint32 errorcode);
+    http2_goaway_frame& set_debug(byte_t* debug, size_t size);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
