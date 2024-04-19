@@ -104,7 +104,7 @@ return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, 
 #elif defined __linux__
         // read
         size_buf_read = RTL_NUMBER_OF(_session.buffer);
-        buf_read = _session.buffer;
+        buf_read = (byte_t*)_session.buffer;
 #endif
 
         return_t result = errorcode_t::success;
