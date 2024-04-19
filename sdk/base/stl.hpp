@@ -102,6 +102,12 @@ void binsert(binary_t& bin, TYPE value, std::function<TYPE(TYPE)> func) {
     bin.insert(bin.end(), b, b + sizeof(TYPE));
 }
 
+template <typename TYPE>
+void binsert(binary_t& bin, TYPE value) {
+    byte_t* b = (byte_t*)&value;
+    bin.insert(bin.end(), b, b + sizeof(TYPE));
+}
+
 /**
  * @brief   delete
  * @example

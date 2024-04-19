@@ -51,6 +51,7 @@
 #include <sdk/base/system/signalwait_threads.hpp>
 #include <sdk/base/system/thread.hpp>
 #include <sdk/base/system/trace.hpp>
+#include <sdk/base/system/types.hpp>
 
 #if defined _WIN32 || defined _WIN64
 #include <sdk/base/system/windows/sdk.hpp>

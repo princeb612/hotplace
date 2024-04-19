@@ -12,6 +12,7 @@
 
 #include <ostream>
 #include <sdk/base/basic/variant.hpp>
+#include <sdk/base/system/types.hpp>
 
 namespace hotplace {
 
@@ -65,7 +66,7 @@ variant& variant::unset_flag(uint8 flag) {
 variant& variant::set_pointer(const void* value) {
     _vt.type = TYPE_POINTER;
     _vt.data.p = (void*)value;
-    _vt.size = 0;
+    _vt.size = sizeof(void*);
     _vt.flag = flag_pointer;
     return *this;
 }
@@ -73,7 +74,7 @@ variant& variant::set_pointer(const void* value) {
 variant& variant::set_bool(bool value) {
     _vt.type = TYPE_BOOL;
     _vt.data.b = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(bool);
     _vt.flag = flag_bool;
     return *this;
 }
@@ -81,7 +82,7 @@ variant& variant::set_bool(bool value) {
 variant& variant::set_int8(int8 value) {
     _vt.type = TYPE_INT8;
     _vt.data.i8 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(int8);
     _vt.flag = flag_int;
     return *this;
 }
@@ -89,7 +90,7 @@ variant& variant::set_int8(int8 value) {
 variant& variant::set_uint8(uint8 value) {
     _vt.type = TYPE_UINT8;
     _vt.data.ui8 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(uint8);
     _vt.flag = flag_int;
     return *this;
 }
@@ -97,7 +98,7 @@ variant& variant::set_uint8(uint8 value) {
 variant& variant::set_int16(int16 value) {
     _vt.type = TYPE_INT16;
     _vt.data.i16 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(uint16);
     _vt.flag = flag_int;
     return *this;
 }
@@ -105,7 +106,23 @@ variant& variant::set_int16(int16 value) {
 variant& variant::set_uint16(uint16 value) {
     _vt.type = TYPE_UINT16;
     _vt.data.ui16 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(uint16);
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant& variant::set_int24(int32 value) {
+    _vt.type = TYPE_INT24;
+    _vt.data.i32 = (value & 0x00ffffff);
+    _vt.size = 3;
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant& variant::set_uint24(uint32 value) {
+    _vt.type = TYPE_UINT24;
+    _vt.data.ui32 = (value & 0x00ffffff);
+    _vt.size = 3;
     _vt.flag = flag_int;
     return *this;
 }
@@ -113,7 +130,7 @@ variant& variant::set_uint16(uint16 value) {
 variant& variant::set_int32(int32 value) {
     _vt.type = TYPE_INT32;
     _vt.data.i32 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(int32);
     _vt.flag = flag_int;
     return *this;
 }
@@ -121,7 +138,7 @@ variant& variant::set_int32(int32 value) {
 variant& variant::set_uint32(uint32 value) {
     _vt.type = TYPE_UINT32;
     _vt.data.ui32 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(uint32);
     _vt.flag = flag_int;
     return *this;
 }
@@ -129,7 +146,7 @@ variant& variant::set_uint32(uint32 value) {
 variant& variant::set_int64(int64 value) {
     _vt.type = TYPE_INT64;
     _vt.data.i64 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(int64);
     _vt.flag = flag_int;
     return *this;
 }
@@ -137,7 +154,7 @@ variant& variant::set_int64(int64 value) {
 variant& variant::set_uint64(uint64 value) {
     _vt.type = TYPE_UINT64;
     _vt.data.ui64 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(uint64);
     _vt.flag = flag_int;
     return *this;
 }
@@ -146,7 +163,7 @@ variant& variant::set_uint64(uint64 value) {
 variant& variant::set_int128(int128 value) {
     _vt.type = TYPE_INT128;
     _vt.data.i128 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(int128);
     _vt.flag = flag_int;
     return *this;
 }
@@ -154,7 +171,7 @@ variant& variant::set_int128(int128 value) {
 variant& variant::set_uint128(uint128 value) {
     _vt.type = TYPE_UINT128;
     _vt.data.ui128 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(uint128);
     _vt.flag = flag_int;
     return *this;
 }
@@ -163,7 +180,7 @@ variant& variant::set_uint128(uint128 value) {
 variant& variant::set_fp16(uint16 value) {
     _vt.type = TYPE_FP16;
     _vt.data.ui16 = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(uint16);
     _vt.flag = flag_float;
     return *this;
 }
@@ -171,7 +188,7 @@ variant& variant::set_fp16(uint16 value) {
 variant& variant::set_fp32(float value) {
     _vt.type = TYPE_FLOAT;
     _vt.data.f = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(float);
     _vt.flag = flag_float;
     return *this;
 }
@@ -181,7 +198,7 @@ variant& variant::set_float(float value) { return set_fp32(value); }
 variant& variant::set_fp64(double value) {
     _vt.type = TYPE_DOUBLE;
     _vt.data.d = (value);
-    _vt.size = 0;
+    _vt.size = sizeof(double);
     _vt.flag = flag_float;
     return *this;
 }
@@ -346,6 +363,63 @@ return_t variant::to_string(std::string& target) const {
         }
     } else {
         target.clear();
+    }
+    return ret;
+}
+
+return_t variant::dump(binary_t& target, bool change_endian) const {
+    return_t ret = errorcode_t::success;
+    byte_t* p = nullptr;
+    switch (_vt.type) {
+        case TYPE_INT8:
+        case TYPE_UINT8:
+            target.insert(target.end(), _vt.data.ui8);
+            break;
+        case TYPE_INT16:
+        case TYPE_UINT16:
+            if (change_endian) {
+                binsert<uint16>(target, _vt.data.ui16, htons);
+            } else {
+                binsert<uint16>(target, _vt.data.ui16);
+            }
+            break;
+        case TYPE_INT24:
+        case TYPE_UINT24: {
+            uint24_t temp;
+            uint32_24(temp, _vt.data.ui32);
+            target.insert(target.end(), temp.data, temp.data + RTL_FIELD_SIZE(uint24_t, data));
+        } break;
+        case TYPE_INT32:
+        case TYPE_UINT32:
+            if (change_endian) {
+                binsert<uint32>(target, _vt.data.ui32, htonl);
+            } else {
+                binsert<uint32>(target, _vt.data.ui32);
+            }
+            break;
+        case TYPE_INT64:
+        case TYPE_UINT64:
+            if (change_endian) {
+                binsert<uint64>(target, _vt.data.ui64, hton64);
+            } else {
+                binsert<uint64>(target, _vt.data.ui64);
+            }
+            break;
+        case TYPE_INT128:
+        case TYPE_UINT128:
+            if (change_endian) {
+                binsert<uint128>(target, _vt.data.ui128, hton128);
+            } else {
+                binsert<uint128>(target, _vt.data.ui128);
+            }
+            break;
+        case TYPE_STRING:
+        case TYPE_BINARY:
+            target.insert(target.end(), _vt.data.bstr, _vt.data.bstr + _vt.size);
+            break;
+        default:
+            // if necessary, ...
+            break;
     }
     return ret;
 }

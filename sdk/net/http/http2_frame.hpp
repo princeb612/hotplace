@@ -13,6 +13,7 @@
 
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/io/basic/payload.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
@@ -128,6 +129,20 @@ class http2_frame_header {
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
+    return_t set_uint8(uint8& target, uint8 source);
+    return_t set_uint16(uint16& target, uint16 source);
+    return_t set_uint32(uint32& target, uint32 source);
+    return_t set_uint64(uint64& target, uint64 source);
+    return_t set_uint128(uint128& target, uint128 source);
+    return_t set_binary(binary_t& target, byte_t* source, size_t size, size_t limit = 0);
+
+    return_t add(uint8 value);
+    return_t add(uint16 value);
+    return_t add(uint32 value);
+    return_t add(uint64 value);
+    return_t add(uint128 value);
+    return_t add(byte_t* value, size_t size);
+
    protected:
     return_t set_payload_size(uint32 size);
 
@@ -136,6 +151,7 @@ class http2_frame_header {
     uint8 _type;
     uint8 _flags;
     uint32 _stream_id;
+    binary_t _payload;
 };
 
 // RFC 7540 6.1. DATA
@@ -143,9 +159,6 @@ class http2_frame_header {
 class http2_data_frame : public http2_frame_header {
    public:
     http2_data_frame();
-
-    http2_data_frame& set_data(byte_t* data, size_t size);
-    http2_data_frame& set_pad(byte_t* pad, size_t size);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -160,12 +173,6 @@ class http2_data_frame : public http2_frame_header {
 class http2_headers_frame : public http2_frame_header {
    public:
     http2_headers_frame();
-
-    bool use_priority();
-    http2_headers_frame& set_priority(bool use, http2_priority_t const* pri = nullptr);
-
-    http2_headers_frame& set_fragment(byte_t* frag, size_t size);
-    http2_headers_frame& set_pad(byte_t* pad, size_t size);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -188,10 +195,6 @@ class http2_priority_frame : public http2_frame_header {
     uint8 get_exclusive();
     uint32 get_dependency();
     uint8 get_weight();
-
-    http2_priority_frame& set_exclusive(bool exclusive);
-    http2_priority_frame& set_dependency(uint32 dependency);
-    http2_priority_frame& set_weight(uint8 weight);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);

@@ -103,6 +103,9 @@ enum vartype_t {
     TYPE_JCHAR = 35,    /* unsigned short */
     TYPE_JSTRING = 36,  /* java/lang/String */
 
+    TYPE_INT24 = 37,
+    TYPE_UINT24 = 38,
+
     TYPE_RESERVED = 0x1000,
 
     TYPE_USER = 0x10000,
@@ -259,8 +262,10 @@ class variant {
     variant& set_uint8(uint8 value);
     variant& set_int16(int16 value);
     variant& set_uint16(uint16 value);
-    variant& set_int32(int32 value);
-    variant& set_uint32(uint32 value);
+    variant& set_int24(int32 value);    // 32/24 [0 .. 0x00ffffff]
+    variant& set_uint24(uint32 value);  // 32/24 [0 .. 0x00ffffff]
+    variant& set_int32(int32 value);    // 32/32 [0 .. 0xffffffff]
+    variant& set_uint32(uint32 value);  // 32/32 [0 .. 0xffffffff]
     variant& set_int64(int64 value);
     variant& set_uint64(uint64 value);
 #if defined __SIZEOF_INT128__
@@ -286,6 +291,7 @@ class variant {
     int to_int() const;
     return_t to_binary(binary_t& target) const;
     return_t to_string(std::string& target) const;
+    return_t dump(binary_t& target, bool change_endian) const;
 
     variant& copy(variant_t const& value);
     variant& move(variant_t& value);

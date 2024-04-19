@@ -16,12 +16,6 @@
 namespace hotplace {
 namespace io {
 
-/**
- * host order to network order (64bits)
- */
-uint64 hton64(uint64 value);
-uint64 ntoh64(uint64 value);
-
 #if defined __SIZEOF_INT128__
 
 /**
@@ -93,16 +87,6 @@ T t_htoi(const char* hex) {
 int128 atoi128(std::string const& in);
 uint128 atou128(std::string const& in);
 
-typedef union _ipaddr_byteorder {
-    uint128 t128;
-    uint32 t32[4];
-} ipaddr_byteorder;
-/**
- * host order to network order (128bits)
- */
-uint128 hton128(uint128 value);
-uint128 ntoh128(uint128 value);
-
 #endif
 
 template <typename T, typename function_hton>
@@ -111,6 +95,25 @@ void t_to_binary(T i, binary_t& bin) {
     byte_t* b = (byte_t*)&i;
     bin.insert(bin.end(), b, b + sizeof(i));
 }
+
+/**
+ * @brief   uint24 utility class (0 to 0x00ffffff)
+ * @see     RFC 7540 4. HTTP Frames, Figure 1: Frame Layout
+ */
+class uint32_24_t {
+   public:
+    uint32_24_t();
+    uint32_24_t(byte_t* p, size_t size);
+    uint32_24_t(uint32 value);
+
+    uint32 get();
+    return_t set(uint32 value);
+
+    uint32_24_t& operator=(uint32 value);
+
+   private:
+    uint24_t _value;
+};
 
 }  // namespace io
 }  // namespace hotplace

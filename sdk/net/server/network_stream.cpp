@@ -251,7 +251,7 @@ return_t network_stream::write(network_protocol_group* protocol_group, network_s
                  *      request packet 1 || request packet 2 || ...
                  * after write_with_protocol
                  *      request packet 1 in target
-                 *      equest packet 2 || ... remains
+                 *      request packet 2 || ... remains
                  * to resolve
                  *      check more_data
                  */

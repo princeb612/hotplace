@@ -6,18 +6,19 @@
 
 # base
 add_subdirectory (base)
+add_subdirectory (bufferio)
 add_subdirectory (cmdline)
+add_subdirectory (datetime)
+add_subdirectory (encode)
+add_subdirectory (thread)
+add_subdirectory (unittest)
 
 # io
-add_subdirectory (unittest)
-add_subdirectory (encode)
-add_subdirectory (string)
-add_subdirectory (stream)
-add_subdirectory (bufferio)
-add_subdirectory (datetime)
-add_subdirectory (thread)
-add_subdirectory (mlfq)
 add_subdirectory (cbor)
+add_subdirectory (io)
+add_subdirectory (mlfq)
+add_subdirectory (stream)
+add_subdirectory (string)
 
 # crypto
 add_subdirectory (crypto)
