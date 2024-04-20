@@ -112,7 +112,12 @@ class payload {
 
     payload& dump(binary_t& bin);
     payload& read(binary_t const& bin);
+    payload& read(byte_t* p, size_t size);
+
     payload& for_each(std::function<void(payload_member*)> func);
+    payload_member* select(std::string const& name);
+
+    payload& clear();
 
    private:
     // dump

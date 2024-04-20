@@ -63,6 +63,7 @@ typedef struct _net_session_socket_t {
     handle_t cli_socket;
     sockaddr_storage_t cli_addr;  // both ipv4 and ipv6
 
+    _net_session_socket_t() : cli_socket((handle_t)INVALID_SOCKET) {}
 } net_session_socket_t;
 
 class tcp_server_socket;
@@ -81,6 +82,7 @@ typedef struct _net_session_t {
     int priority;
     reference_counter refcount;
 
+    _net_session_t() : mplexer_handle(nullptr), svr_socket(nullptr), tls_handle(nullptr), priority(0) {}
 } net_session_t;
 
 class network_session;

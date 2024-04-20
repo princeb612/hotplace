@@ -51,16 +51,18 @@ uint128 ntoh128(uint128 value);
 /**
  * @brief   uint24 utility function (0 to 0x00ffffff)
  * @see     RFC 7540 4. HTTP Frames, Figure 1: Frame Layout
+ *          b24_i32 - from 24bits byte stream to 32 bit integer
+ *          i32_b24 - from 32 bit integer to 24bits byte stream
  */
-return_t uint24_32(byte_t const* p, uint8 len, uint32& value);
-return_t uint32_24(byte_t* p, uint8 len, uint32 value);
+return_t b24_i32(byte_t const* p, uint8 len, uint32& value);
+return_t i32_b24(byte_t* p, uint8 len, uint32 value);
 
 typedef struct _uint24_t {
     byte_t data[3];
 } uint24_t;
 
-return_t uint24_32(uint24_t const& u, uint32& value);
-return_t uint32_24(uint24_t& u, uint32 value);
+return_t b24_i32(uint24_t const& u, uint32& value);
+return_t i32_b24(uint24_t& u, uint32 value);
 
 }  // namespace hotplace
 

@@ -124,7 +124,8 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
             http2_frame_header_t* frame = (http2_frame_header_t*)(stream_data + pos);
             uint32 max_frame_size = get_constraints(protocol_constraints_t::protocol_packet_size);
             const uint32 frame_header_size = sizeof(http2_frame_header_t);
-            uint32 len = h2_get_payload_size(frame);  // the length of the frame payload
+            uint32 len = 0;  // the length of the frame payload
+            b24_i32(stream_data + pos, RTL_FIELD_SIZE(http2_frame_header_t, len), len);
 
             if (max_frame_size && (len > max_frame_size)) {
                 *state = protocol_state_t::protocol_state_large;

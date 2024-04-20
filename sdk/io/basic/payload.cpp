@@ -129,9 +129,10 @@ payload_member& payload_member::read(byte_t* ptr, size_t size_ptr, size_t* size_
                     } break;
                     case TYPE_INT24:
                     case TYPE_UINT24: {
-                        uint32_24_t temp(ptr, size_ptr);
-                        v.set_uint32(temp.get());
-                        *size_read = 3;
+                        uint32 temp = 0;
+                        b24_i32(ptr, size_ptr, temp);
+                        v.set_uint24(temp);
+                        *size_read = size;
                     } break;
                     case TYPE_INT32:
                     case TYPE_UINT32: {
@@ -201,11 +202,7 @@ payload_member& payload_member::reserve(uint16 size) {
 
 payload::payload() {}
 
-payload::~payload() {
-    for (auto item : _members) {
-        delete item;
-    }
-}
+payload::~payload() { clear(); }
 
 payload& payload::operator<<(payload_member* member) {
     if (member) {
@@ -259,14 +256,15 @@ payload& payload::dump(binary_t& bin) {
     return *this;
 }
 
-payload& payload::read(binary_t const& bin) {
-    size_t size_input = bin.size();
+payload& payload::read(binary_t const& bin) { return read((byte_t*)&bin[0], bin.size()); }
+
+payload& payload::read(byte_t* base, size_t size) {
     size_t size_sum = 0;
     std::list<payload_member*> _size_unknown;
 
     {
-        byte_t* p = (byte_t*)&bin[0];
-        size_t len = size_input;
+        byte_t* p = base;
+        size_t len = size;
         size_t pos = 0;
         size_t size_read = 0;
         bool check = true;
@@ -288,9 +286,9 @@ payload& payload::read(binary_t const& bin) {
         }
     }
 
-    if (size_input > size_sum) {
+    if (size > size_sum) {
         if (1 == _size_unknown.size()) {
-            size_t remain = size_input - size_sum;
+            size_t remain = size - size_sum;
             payload_member* item = *(_size_unknown.begin());
             item->reserve(remain);
             _size_unknown.clear();
@@ -298,8 +296,8 @@ payload& payload::read(binary_t const& bin) {
     }
 
     if (_size_unknown.empty()) {
-        byte_t* p = (byte_t*)&bin[0];
-        size_t len = size_input;
+        byte_t* p = base;
+        size_t len = size;
         size_t pos = 0;
         size_t size_read = 0;
         bool check = true;
@@ -321,6 +319,20 @@ payload& payload::for_each(std::function<void(payload_member*)> func) {
         for (auto item : _members) {
             func(item);
         }
+    }
+    return *this;
+}
+
+payload_member* payload::select(std::string const& name) {
+    payload_member* item = nullptr;
+    maphint<std::string, payload_member*> hint(_members_map);
+    hint.find(name, &item);
+    return item;
+}
+
+payload& payload::clear() {
+    for (auto item : _members) {
+        delete item;
     }
     return *this;
 }

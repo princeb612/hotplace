@@ -26,12 +26,14 @@ semaphore _test_sleep;
 typedef std::multimap<int, int> SAMPLE_MAP;
 SAMPLE_MAP _data_map;
 
-void valgrind_warning_printf(const char* msg, ...) {
-    static critical_section lock;
+critical_section lock;
+
+// warning
+void valgrind_safe_printf(const char* msg, ...) {
+    critical_section_guard guard(lock);
     va_list arg;
 
     va_start(arg, msg);
-    critical_section_guard guard(lock);
     vprintf(msg, arg);
     va_end(arg);
 }
@@ -86,7 +88,7 @@ return_t test_scenario::producer_scenario(void* parameter) {
 
         int pri = (uint32)rand() % _bucket;
         obj->__mfq.post(pri, new int(i));
-        valgrind_warning_printf("post %d %d\n", pri, i);
+        valgrind_safe_printf("post %d %d\n", pri, i);
         fflush(stdout);
 
         _data_map.insert(std::make_pair(pri, i));
@@ -110,7 +112,7 @@ return_t test_scenario::consumer_scenario(void* parameter) {
         int* data = nullptr;
         ret = obj->__mfq.get(&pri, &data, 1);
         if (errorcode_t::success == ret) {
-            valgrind_warning_printf("get  %d %d\n", pri, *data);
+            valgrind_safe_printf("get  %d %d\n", pri, *data);
             fflush(stdout);
 
             if (_test_loop == ++_test_count) {
@@ -162,11 +164,11 @@ void confirm() {
         SAMPLE_MAP::iterator iter;
         iter_lower = _data_map.lower_bound(i);
         iter_upper = _data_map.upper_bound(i);
-        valgrind_warning_printf("[%d] =>", i);
+        valgrind_safe_printf("[%d] =>", i);
         for (iter = iter_lower; iter != iter_upper; iter++) {
-            valgrind_warning_printf("%3d ", iter->second);
+            valgrind_safe_printf("%3d ", iter->second);
         }
-        valgrind_warning_printf("\n");
+        valgrind_safe_printf("\n");
     }
     fflush(stdout);
 }
@@ -180,9 +182,9 @@ int main() {
 
     thread1.start();
 
-    valgrind_warning_printf("waiting\n");
+    valgrind_safe_printf("waiting\n");
     thread1.wait(-1);
-    valgrind_warning_printf("terminating\n");
+    valgrind_safe_printf("terminating\n");
 
     confirm();
 

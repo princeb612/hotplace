@@ -114,7 +114,7 @@ variant& variant::set_uint16(uint16 value) {
 variant& variant::set_int24(int32 value) {
     _vt.type = TYPE_INT24;
     _vt.data.i32 = (value & 0x00ffffff);
-    _vt.size = 3;
+    _vt.size = RTL_FIELD_SIZE(uint24_t, data);  // 3
     _vt.flag = flag_int;
     return *this;
 }
@@ -122,7 +122,7 @@ variant& variant::set_int24(int32 value) {
 variant& variant::set_uint24(uint32 value) {
     _vt.type = TYPE_UINT24;
     _vt.data.ui32 = (value & 0x00ffffff);
-    _vt.size = 3;
+    _vt.size = RTL_FIELD_SIZE(uint24_t, data);  // 3
     _vt.flag = flag_int;
     return *this;
 }
@@ -386,7 +386,7 @@ return_t variant::dump(binary_t& target, bool change_endian) const {
         case TYPE_INT24:
         case TYPE_UINT24: {
             uint24_t temp;
-            uint32_24(temp, _vt.data.ui32);
+            i32_b24(temp, _vt.data.ui32);
             target.insert(target.end(), temp.data, temp.data + RTL_FIELD_SIZE(uint24_t, data));
         } break;
         case TYPE_INT32:

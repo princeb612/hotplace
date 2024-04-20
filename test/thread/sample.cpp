@@ -18,28 +18,29 @@ using namespace hotplace::io;
 
 test_case _test_case;
 t_shared_instance<semaphore> _mutex;
-t_shared_instance<critical_section> _lock;
 
-void thread_printfln(const char* msg, ...) {
+void valgrind_safe_printf(const char* msg, ...) {
+    // try to avoid valgrind warnings, share lock (printf and test_case)
+    _test_case.lock();
+
     va_list arg;
-
-    _lock->enter();
     printf("[%08lx] ", get_thread_id());
     va_start(arg, msg);
     vprintf(msg, arg);
     va_end(arg);
     printf("\n");
-    _lock->leave();
+
+    _test_case.unlock();
 }
 
 return_t thread_routine(void* param) {
     t_shared_instance<semaphore> mtx(_mutex);
 
-    thread_printfln("thread startedn");
+    valgrind_safe_printf("thread startedn");
 
-    thread_printfln("wait for signal");
+    valgrind_safe_printf("wait for signal");
     mtx->wait(-1);
-    thread_printfln("caught signal");
+    valgrind_safe_printf("caught signal");
 
     return errorcode_t::success;
 }
@@ -57,7 +58,6 @@ void test_signalwait_threads() {
     signalwait_threads threads;
 
     _mutex.make_share(new semaphore);
-    _lock.make_share(new critical_section);
 
     int count = 4;
     threads.set(count, thread_routine, thread_signal, nullptr);
@@ -70,15 +70,15 @@ void test_signalwait_threads() {
     _test_case.assert(errorcode_t::max_reached == test, __FUNCTION__, "test max concurrent threads reached");
 
     int countdown = 3;
-    thread_printfln("counting %d", countdown);
+    valgrind_safe_printf("counting %d", countdown);
     msleep(1000 * countdown);
 
     _test_case.assert(true, __FUNCTION__, "msleep");
 
-    thread_printfln("send signal");
+    valgrind_safe_printf("send signal");
     threads.signal();
 
-    thread_printfln("terminating all threads (running %zi)", threads.running());
+    valgrind_safe_printf("terminating all threads (running %zi)", threads.running());
     threads.signal_and_wait_all();
     _test_case.assert(0 == threads.running(), __FUNCTION__, "all thread terminated");
 }

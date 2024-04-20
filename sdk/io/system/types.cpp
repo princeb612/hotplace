@@ -39,11 +39,11 @@ uint32_24_t::uint32_24_t(uint32 value) { set(value); }
 
 uint32 uint32_24_t::get() {
     uint32 value = 0;
-    uint24_32(_value, value);
+    b24_i32(_value, value);
     return value;
 }
 
-return_t uint32_24_t::set(uint32 value) { return uint32_24(_value, value); }
+return_t uint32_24_t::set(uint32 value) { return i32_b24(_value, value); }
 
 uint32_24_t& uint32_24_t::operator=(uint32 value) {
     set(value);

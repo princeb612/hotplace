@@ -23,8 +23,6 @@ network_session::network_session(tcp_server_socket* serversocket) {
 
 network_session::~network_session() {
     get_server_socket()->close((socket_t)_session.netsock.cli_socket, _session.tls_handle);
-    //_session.netsock.client_socket = (handle_t)INVALID_SOCKET;
-    //_session.tls_handle = nullptr;
     // do nothing
 }
 

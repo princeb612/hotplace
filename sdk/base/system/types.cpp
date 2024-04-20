@@ -57,7 +57,7 @@ uint128 ntoh128(uint128 value) { return hton128(value); }
 
 #endif
 
-return_t uint24_32(byte_t const* p, uint8 len, uint32& value) {
+return_t b24_i32(byte_t const* p, uint8 len, uint32& value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -78,7 +78,7 @@ return_t uint24_32(byte_t const* p, uint8 len, uint32& value) {
     return ret;
 }
 
-return_t uint32_24(byte_t* p, uint8 len, uint32 value) {
+return_t i32_b24(byte_t* p, uint8 len, uint32 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -102,8 +102,8 @@ return_t uint32_24(byte_t* p, uint8 len, uint32 value) {
     return ret;
 }
 
-return_t uint24_32(uint24_t const& u, uint32& value) { return uint24_32(u.data, RTL_FIELD_SIZE(uint24_t, data), value); }
+return_t b24_i32(uint24_t const& u, uint32& value) { return b24_i32(u.data, RTL_FIELD_SIZE(uint24_t, data), value); }
 
-return_t uint32_24(uint24_t& u, uint32 value) { return uint32_24(u.data, RTL_FIELD_SIZE(uint24_t, data), value); }
+return_t i32_b24(uint24_t& u, uint32 value) { return i32_b24(u.data, RTL_FIELD_SIZE(uint24_t, data), value); }
 
 }  // namespace hotplace

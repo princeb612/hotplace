@@ -82,12 +82,14 @@ void test_payload_uint24() {
     OPTION& option = cmdline->value();
     _test_case.begin("payload");
 
+    binary_t pad = convert("pad");
+    binary_t bin_payload;
+    binary_t expect = base16_decode("0310000010000000706164");
+
     {
         payload pl;
-        binary_t pad = convert("pad");
         uint8 padlen = 3;  // "pad"
         basic_stream bs;
-        binary_t bin_payload;
         uint32_24_t i32_24(0x100000);  // 32/24 [0 .. 0x00ffffff]
         uint32 i32 = 0x10000000;       // 32/32 [0 .. 0xffffffff]
 
@@ -99,8 +101,31 @@ void test_payload_uint24() {
             dump_memory(bin_payload, &bs);
             printf("%s\n", bs.c_str());
         }
-        binary_t expect = base16_decode("0310000010000000706164");
-        _test_case.assert(expect == bin_payload, __FUNCTION__, "payload /w uint32_24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
+        _test_case.assert(expect == bin_payload, __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
+    }
+
+    {
+        payload pl;
+        uint32_24_t i32_24;
+        pl << new payload_member((uint8)0, "padlen") << new payload_member(i32_24, "int32_24") << new payload_member((uint32)0, true, "int32_32")
+           << new payload_member(pad, "pad");
+
+        pl.read(expect);
+
+        uint8 padlen = t_variant_to_int<uint8>(pl.select("padlen")->get_variant().content());
+        uint32_24_t i24 = t_variant_to_int<uint32>(pl.select("int32_24")->get_variant().content());
+        uint32 i32 = t_variant_to_int<uint32>(pl.select("int32_32")->get_variant().content());
+
+        if (option.debug) {
+            uint32 i24_value = i24.get();
+            printf("padlen %u i32_b24 %u (0x%08x) uint32_32 %u (0x%08x)\n", padlen, i24_value, i24_value, i32, i32);
+        }
+
+        _test_case.assert(0x100000 == i24.get(), __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
+
+        binary_t bin_dump;
+        pl.dump(bin_dump);
+        _test_case.assert(expect == bin_dump, __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
     }
 }
 

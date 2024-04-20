@@ -394,6 +394,8 @@ void test_case::report(uint32 top_count) {
     report_failed(stream);
     report_testtime(stream, top_count);
 
+    critical_section_guard guard(_lock);
+
     //
     // print
     //
@@ -595,5 +597,9 @@ void test_case::report_testtime(basic_stream& stream, uint32 top_count) {
 }
 
 return_t test_case::result() { return _total._count_fail > 0 ? errorcode_t::internal_error : errorcode_t::success; }
+
+void test_case::lock() { _lock.enter(); }
+
+void test_case::unlock() { _lock.leave(); }
 
 }  // namespace hotplace

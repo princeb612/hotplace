@@ -20,42 +20,10 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-uint32 h2_get_payload_size(http2_frame_header_t const* header) {
-    uint32 ret_value = 0;
-
-    if (header) {
-        uint32 uint32_len = 0;
-        byte_t* byte_ptr = (byte_t*)&uint32_len;
-        memcpy(byte_ptr + 1, header->len, 3);
-
-        ret_value = ntohl(uint32_len);
-    }
-
-    return ret_value;
-}
-
-return_t h2_set_payload_size(http2_frame_header_t* header, uint32 size) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        const uint32 max_size = (1 << 24) - 1;
-        if (nullptr == header) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (size > max_size) {
-            ret = errorcode_t::out_of_range;
-            __leave2;
-        }
-
-        uint32 uint32_len = htonl(size);
-        byte_t* byte_ptr = (byte_t*)&uint32_len;
-        memcpy(header->len, byte_ptr + 1, 3);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+constexpr char constexpr_frame_length[] = "length";
+constexpr char constexpr_frame_type[] = "type";
+constexpr char constexpr_frame_flags[] = "flags";
+constexpr char constexpr_frame_stream_identifier[] = "stream identifier";
 
 http2_frame_header::http2_frame_header() : _payload_size(0), _type(0), _flags(0), _stream_id(0) {}
 
@@ -134,58 +102,16 @@ return_t http2_frame_header::read(http2_frame_header_t const* header, size_t siz
             __leave2;
         }
 
-        uint32 len = h2_get_payload_size(header);
+        payload pl;
+        pl << new payload_member(uint32_24_t(0), constexpr_frame_length) << new payload_member((uint8)0, constexpr_frame_type)
+           << new payload_member((uint8)0, constexpr_frame_flags) << new payload_member((uint32)0, true, constexpr_frame_stream_identifier);
 
-        // check payload
-        if (size < sizeof(http2_frame_header_t) + len) {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        }
+        pl.read((byte_t*)header, size);
 
-        byte_t* payload = (byte_t*)header + sizeof(http2_frame_header_t);
-        uint8 padlen = 0;
-        uint32 pos = 0;
-
-        typedef std::set<uint8> h2_frame_set_t;
-
-        // check pad - DATA, HEADERS, PUSH_PROMISE (only present if the PADDED flag is set)
-        if (h2_flag_t::h2_flag_padded & header->flags) {
-            h2_frame_set_t conditional_pad;
-            conditional_pad.insert(h2_frame_data);
-            conditional_pad.insert(h2_frame_headers);
-            conditional_pad.insert(h2_frame_push_promise);
-            h2_frame_set_t::iterator iter = conditional_pad.find(header->type);
-            if (conditional_pad.end() != iter) {
-                if (len < 1) {
-                    ret = errorcode_t::bad_data;
-                    __leave2;
-                }
-
-                padlen = payload[0];
-                pos++;
-                if (padlen + 1 < len) {
-                    ret = errorcode_t::bad_data;
-                    __leave2;
-                }
-            } else {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
-        }
-        // check priority - HEADERS (only present if the PRIORITY flag is set)
-        if (h2_frame_t::h2_frame_headers == header->type) {
-            if (h2_flag_t::h2_flag_priority & header->flags) {
-                if (len < pos + sizeof(http2_priority_t) + padlen) {
-                    ret = errorcode_t::bad_data;
-                    __leave2;
-                }
-            }
-        }
-
-        _payload_size = len;
-        _type = header->type;
-        _flags = header->flags;
-        _stream_id = ntohl(header->stream_id);
+        _payload_size = t_variant_to_int<uint32>(pl.select(constexpr_frame_length)->get_variant().content());
+        _type = t_variant_to_int<uint8>(pl.select(constexpr_frame_type)->get_variant().content());
+        _flags = t_variant_to_int<uint8>(pl.select(constexpr_frame_flags)->get_variant().content());
+        _stream_id = t_variant_to_int<uint32>(pl.select(constexpr_frame_stream_identifier)->get_variant().content());
     }
     __finally2 {
         // do nothing
@@ -196,156 +122,31 @@ return_t http2_frame_header::read(http2_frame_header_t const* header, size_t siz
 return_t http2_frame_header::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
 
-    http2_frame_header_t temp;
+    payload pl;
+    pl << new payload_member(uint32_24_t(_payload_size), constexpr_frame_length) << new payload_member((uint8)_type, constexpr_frame_type)
+       << new payload_member((uint8)_flags, constexpr_frame_flags) << new payload_member((uint32)_stream_id, true, constexpr_frame_stream_identifier);
 
-    h2_set_payload_size(&temp, _payload_size);
-    temp.type = _type;
-    temp.flags = _flags;
-    temp.stream_id = htonl(_stream_id);
-
-    byte_t* p = (byte_t*)&temp;
-    frame.insert(frame.end(), p, p + sizeof(http2_frame_header_t));
+    pl.dump(frame);
 
     return ret;
 }
 
 void http2_frame_header::dump(stream_t* s) {
     if (s) {
-        typedef struct _http_frame_typename_t {
-            uint8 type;
-            const char* name;
-        } http_frame_typename_t;
-        typedef struct _http_frame_flags_t {
-            uint8 flag;
-            const char* name;
-        } http_frame_flags_t;
+        http_resource* resource = http_resource::get_instance();
+        std::string frame_name = resource->get_frame_name(get_type());
 
-        http_frame_typename_t frame_names[] = {
-            {
-                h2_frame_t::h2_frame_data,
-                "DATA",
-            },
-            {
-                h2_frame_t::h2_frame_headers,
-                "HEADERS",
-            },
-            {
-                h2_frame_t::h2_frame_priority,
-                "PRIORITY",
-            },
-            {
-                h2_frame_t::h2_frame_rst_stream,
-                "RST_STREAM",
-            },
-            {
-                h2_frame_t::h2_frame_settings,
-                "SETTINGS",
-            },
-            {
-                h2_frame_t::h2_frame_push_promise,
-                "PUSH_PROMISE",
-            },
-            {
-                h2_frame_t::h2_frame_ping,
-                "PING",
-            },
-            {
-                h2_frame_t::h2_frame_goaway,
-                "GOAWAY",
-            },
-            {
-                h2_frame_t::h2_frame_window_update,
-                "WINDOW_UPDATE",
-            },
-            {
-                h2_frame_t::h2_frame_continuation,
-                "CONTINUATION",
-            },
-        };
-        http_frame_flags_t frame_flags[] = {
-            {
-                h2_flag_t::h2_flag_end_stream,
-                "END_STREAM",
-            },
-            {
-                h2_flag_t::h2_flag_end_headers,
-                "END_HEADERS",
-            },
-            {
-                h2_flag_t::h2_flag_padded,
-                "PADDED",
-            },
-            {
-                h2_flag_t::h2_flag_priority,
-                "PRIORITY",
-            },
-        };
-
-        s->printf("- http/2 frame type %d %s\n", get_type(), frame_names[get_type()].name);
+        s->printf("- http/2 frame type %d %s\n", get_type(), frame_name.c_str());
         s->printf("> len %u type %u flags 0x%02x stream identifier %u\n", get_payload_size(), get_type(), get_flags(), get_stream_id());
         s->printf("> flags [ ");
-        for (uint32 i = 0; i < RTL_NUMBER_OF(frame_flags); i++) {
-            http_frame_flags_t* item = frame_flags + i;
-            if (item->flag & get_flags()) {
-                s->printf("%s ", item->name);
-            }
-        }
+
+        resource->for_each_flags(get_flags(), s,
+                                 [](uint8 flag, stream_t* s) -> void { s->printf("%s ", http_resource::get_instance()->get_frame_flag(flag).c_str()); });
+
         s->printf("]\n");
         // dump_memory(bin, s, 16, 2, 0x0, dump_memory_flag_t::dump_notrunc);
         // s->printf("\n");
     }
-}
-
-return_t http2_frame_header::set_uint8(uint8& target, uint8 source) {
-    return_t ret = errorcode_t::success;
-    target = source;
-    return ret;
-}
-
-return_t http2_frame_header::set_uint16(uint16& target, uint16 source) {
-    return_t ret = errorcode_t::success;
-    target = source;
-    return ret;
-}
-
-return_t http2_frame_header::set_uint32(uint32& target, uint32 source) {
-    return_t ret = errorcode_t::success;
-    target = source;
-    return ret;
-}
-
-return_t http2_frame_header::set_uint64(uint64& target, uint64 source) {
-    return_t ret = errorcode_t::success;
-    target = source;
-    return ret;
-}
-
-return_t http2_frame_header::set_uint128(uint128& target, uint128 source) {
-    return_t ret = errorcode_t::success;
-    target = source;
-    return ret;
-}
-
-return_t http2_frame_header::set_binary(binary_t& target, byte_t* source, size_t size, size_t limit) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (limit && (size > limit)) {
-            ret = errorcode_t::out_of_range;
-            __leave2;
-        }
-
-        target.clear();
-        target.insert(target.end(), source, source + size);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
 }
 
 http2_data_frame::http2_data_frame() : http2_frame_header(h2_frame_t::h2_frame_data) {}

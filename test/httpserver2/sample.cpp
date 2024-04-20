@@ -117,7 +117,8 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
                 http2_frame_header_t* frame = (http2_frame_header_t*)(buf + pos_frame);
                 size_t checksize = bufsize - pos_frame;
-                uint32 payload_size = h2_get_payload_size(frame);
+                uint32_24_t i32_24((byte_t*)frame, checksize);
+                uint32 payload_size = i32_24.get();
                 uint32 packet_size = sizeof(http2_frame_header_t) + payload_size;
 
                 if (h2_frame_t::h2_frame_data == frame->type) {

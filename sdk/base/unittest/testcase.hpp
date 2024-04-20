@@ -112,6 +112,9 @@ class test_case {
      */
     return_t result();
 
+    void lock();
+    void unlock();
+
     typedef struct _unittest_item_t {
         return_t _result;
         std::string _test_function;

@@ -104,9 +104,6 @@ typedef struct _http2_goaway_t {
 
 #pragma pack(pop)
 
-uint32 h2_get_payload_size(http2_frame_header_t const* header);
-return_t h2_set_payload_size(http2_frame_header_t* header, uint32 size);
-
 class http2_frame_header {
    public:
     http2_frame_header();
@@ -129,19 +126,13 @@ class http2_frame_header {
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
-    return_t set_uint8(uint8& target, uint8 source);
-    return_t set_uint16(uint16& target, uint16 source);
-    return_t set_uint32(uint32& target, uint32 source);
-    return_t set_uint64(uint64& target, uint64 source);
-    return_t set_uint128(uint128& target, uint128 source);
-    return_t set_binary(binary_t& target, byte_t* source, size_t size, size_t limit = 0);
-
-    return_t add(uint8 value);
-    return_t add(uint16 value);
-    return_t add(uint32 value);
-    return_t add(uint64 value);
-    return_t add(uint128 value);
-    return_t add(byte_t* value, size_t size);
+    void set_uint8(uint8& target, uint8 data) { target = data; }
+    void set_binary(binary_t& target, byte_t* data, size_t size) {
+        if (data) {
+            target.clear();
+            target.insert(target.end(), data, data + size);
+        }
+    }
 
    protected:
     return_t set_payload_size(uint32 size);
@@ -151,7 +142,6 @@ class http2_frame_header {
     uint8 _type;
     uint8 _flags;
     uint32 _stream_id;
-    binary_t _payload;
 };
 
 // RFC 7540 6.1. DATA

@@ -193,6 +193,12 @@ T t_variant_to_int(variant_t const& vt) {
         case TYPE_UINT16:
             i = vt.data.ui16;
             break;
+        case TYPE_INT24:
+            i = vt.data.i32;
+            break;
+        case TYPE_UINT24:
+            i = vt.data.ui32;
+            break;
         case TYPE_INT32:
             i = vt.data.i32;
             break;
