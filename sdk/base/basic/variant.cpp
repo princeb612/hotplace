@@ -12,6 +12,7 @@
 
 #include <ostream>
 #include <sdk/base/basic/variant.hpp>
+#include <sdk/base/stl.hpp>
 #include <sdk/base/system/types.hpp>
 
 namespace hotplace {
@@ -339,6 +340,7 @@ return_t variant::to_binary(binary_t& target) const {
     }
     return ret;
 }
+
 return_t variant::to_string(std::string& target) const {
     return_t ret = errorcode_t::success;
 

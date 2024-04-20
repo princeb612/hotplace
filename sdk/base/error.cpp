@@ -58,7 +58,7 @@ const error_description error_descriptions[] = {
     errordef(busy, "busy"),
     errordef(query, "query"),
     errordef(fetch, "fetch"),
-    errordef(insufficiency, "insufficiency"),
+    errordef(insufficient, "insufficient"),
     errordef(reserved, "reserved"),
     errordef(suspicious, "suspicious"),
     errordef(unknown, "unknown"),

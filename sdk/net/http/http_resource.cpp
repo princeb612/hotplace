@@ -12,6 +12,7 @@
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/basic/sdk.hpp>
+#include <sdk/net/http/http2_protocol.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/tls/tls.hpp>
 
@@ -140,7 +141,7 @@ std::string http_resource::get_frame_flag(uint8 flag) {
     return flag_name;
 }
 
-void http_resource::for_each_flags(uint8 flags, std::string& flag_string, std::function<void(uint8, std::string&)> func) {
+void http_resource::for_each_frame_flags(uint8 flags, std::string& flag_string, std::function<void(uint8, std::string&)> func) {
     if (func) {
         for (auto item : _frame_flags) {
             uint8 flag = item.first;
@@ -151,7 +152,7 @@ void http_resource::for_each_flags(uint8 flags, std::string& flag_string, std::f
     }
 }
 
-void http_resource::for_each_flags(uint8 flags, stream_t* flag_string, std::function<void(uint8, stream_t*)> func) {
+void http_resource::for_each_frame_flags(uint8 flags, stream_t* flag_string, std::function<void(uint8, stream_t*)> func) {
     if (flag_string && func) {
         for (auto item : _frame_flags) {
             uint8 flag = item.first;

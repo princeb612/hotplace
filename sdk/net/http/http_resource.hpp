@@ -57,8 +57,8 @@ class http_resource {
      * @brief   frame flag
      */
     std::string get_frame_flag(uint8 flag);
-    void for_each_flags(uint8 flags, std::string& flag_string, std::function<void(uint8, std::string&)> func);
-    void for_each_flags(uint8 flags, stream_t* flag_string, std::function<void(uint8, stream_t*)> func);
+    void for_each_frame_flags(uint8 flags, std::string& flag_string, std::function<void(uint8, std::string&)> func);
+    void for_each_frame_flags(uint8 flags, stream_t* flag_string, std::function<void(uint8, stream_t*)> func);
 
    protected:
     http_resource();

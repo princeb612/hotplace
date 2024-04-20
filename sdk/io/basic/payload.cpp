@@ -18,6 +18,17 @@ payload_member::payload_member(uint8 value, const char* name, const char* group)
     get_variant().set_uint8(value);
 }
 
+payload_member::payload_member(uint8 value, uint16 repeat, const char* name, const char* group)
+    : _change_endian(false), _member_value_of(nullptr), _reserve(repeat) {
+    set_name(name).set_group(group);
+    binary_t bin;
+    uint16 temp = repeat;
+    while (temp--) {
+        bin.insert(bin.end(), value);
+    }
+    get_variant().set_binary_new(bin);
+}
+
 payload_member::payload_member(uint16 value, bool change_endian, const char* name, const char* group)
     : _change_endian(change_endian), _member_value_of(nullptr), _reserve(0) {
     set_name(name).set_group(group);
@@ -82,12 +93,25 @@ variant& payload_member::get_variant() { return _vt; }
 size_t payload_member::get_space() {
     size_t space = 0;
     payload_member* ref = get_value_of();
-    if (variant_flag_t::flag_int == get_variant().flag()) {
+    if (_reserve) {
+        space = _reserve;
+    } else if (variant_flag_t::flag_int == get_variant().flag()) {
         space = get_variant().size();
     } else if (ref) {
         space = t_variant_to_int<size_t>(ref->get_variant().content());
-    } else if (_reserve) {
+    }
+    return space;
+}
+
+size_t payload_member::get_capacity() {
+    size_t space = 0;
+    payload_member* ref = get_value_of();
+    if (_reserve) {
         space = _reserve;
+    } else if (ref) {
+        space = t_variant_to_int<size_t>(ref->get_variant().content());
+    } else {
+        space = get_variant().size();
     }
     return space;
 }
@@ -168,10 +192,10 @@ payload_member& payload_member::read(byte_t* ptr, size_t size_ptr, size_t* size_
         } else {
             size_t size = 0;
             payload_member* ref = get_value_of();
-            if (ref) {
-                size = t_variant_to_int<size_t>(ref->get_variant().content());
-            } else if (_reserve) {
+            if (_reserve) {
                 size = _reserve;
+            } else if (ref) {
+                size = t_variant_to_int<size_t>(ref->get_variant().content());
             }
 
             if (size_ptr >= size) {
@@ -246,72 +270,105 @@ payload& payload::set_reference_value(std::string const& name, std::string const
     return *this;
 }
 
-payload& payload::dump(binary_t& bin) {
+return_t payload::dump(binary_t& bin) {
+    return_t ret = errorcode_t::success;
     for (auto item : _members) {
         bool condition = get_group_condition(item->get_group());
         if (condition) {
             item->dump(bin);
         }
     }
-    return *this;
+    return ret;
 }
 
-payload& payload::read(binary_t const& bin) { return read((byte_t*)&bin[0], bin.size()); }
+return_t payload::read(binary_t const& bin) { return read((byte_t*)&bin[0], bin.size()); }
 
-payload& payload::read(byte_t* base, size_t size) {
-    size_t size_sum = 0;
-    std::list<payload_member*> _size_unknown;
+return_t payload::read(byte_t* base, size_t size) {
+    return_t ret = errorcode_t::success;
 
-    {
-        byte_t* p = base;
-        size_t len = size;
-        size_t pos = 0;
-        size_t size_read = 0;
-        bool check = true;
-        for (auto item : _members) {
-            uint16 space = item->get_space();
-            size_sum += space;
-            if (0 == space) {
-                if (nullptr == item->get_value_of()) {
-                    _size_unknown.push_back(item);
+    __try2 {
+        if (nullptr == base) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        size_t size_sum = 0;
+        std::list<payload_member*> _size_unknown;
+
+        {
+            byte_t* p = base;
+            size_t len = size;
+            size_t pos = 0;
+            size_t size_read = 0;
+            bool check = true;
+            for (auto item : _members) {
+                bool condition = get_group_condition(item->get_group());
+                if (false == condition) {
+                    continue;
                 }
-                check = false;
-            } else {
-                if (check) {
-                    item->read(p + pos, len, &size_read);
-                    p += size_read;
-                    len -= size_read;
+
+                uint16 space = item->get_space();
+                size_sum += space;
+                if (0 == space) {
+                    if (nullptr == item->get_value_of()) {
+                        _size_unknown.push_back(item);
+                    }
+                    check = false;
+                } else {
+                    if (check) {
+                        item->read(p + pos, len, &size_read);
+                        p += size_read;
+                        len -= size_read;
+                    }
                 }
             }
         }
-    }
 
-    if (size > size_sum) {
-        if (1 == _size_unknown.size()) {
-            size_t remain = size - size_sum;
-            payload_member* item = *(_size_unknown.begin());
-            item->reserve(remain);
-            _size_unknown.clear();
+        if (_size_unknown.size() > 1) {
+            ret = errorcode_t::unknown;
+            __leave2;
+        }
+
+        if (size > size_sum) {
+            if (1 == _size_unknown.size()) {
+                size_t remain = size - size_sum;
+                payload_member* item = *(_size_unknown.begin());
+                item->reserve(remain);
+                _size_unknown.clear();
+            }
+        }
+
+        if (_size_unknown.empty()) {
+            byte_t* p = base;
+            size_t len = size;
+            size_t pos = 0;
+            size_t size_read = 0;
+            bool check = true;
+            for (auto item : _members) {
+                bool condition = get_group_condition(item->get_group());
+                if (false == condition) {
+                    continue;
+                }
+
+                uint16 space = item->get_space();
+                size_sum += space;
+
+                if (len < space) {
+                    ret = errorcode_t::insufficient;
+                    break;
+                }
+
+                item->read(p + pos, len, &size_read);
+                p += size_read;
+                len -= size_read;
+            }
         }
     }
-
-    if (_size_unknown.empty()) {
-        byte_t* p = base;
-        size_t len = size;
-        size_t pos = 0;
-        size_t size_read = 0;
-        bool check = true;
-        for (auto item : _members) {
-            uint16 space = item->get_space();
-            size_sum += space;
-
-            item->read(p + pos, len, &size_read);
-            p += size_read;
-            len -= size_read;
-        }
+    __finally2 {
+        // do nothing
     }
 
-    return *this;
+    return ret;
 }
 
 payload& payload::for_each(std::function<void(payload_member*)> func) {
@@ -328,6 +385,32 @@ payload_member* payload::select(std::string const& name) {
     maphint<std::string, payload_member*> hint(_members_map);
     hint.find(name, &item);
     return item;
+}
+
+size_t payload::size_estimated() {
+    size_t ret_value = 0;
+    for (auto item : _members) {
+        bool condition = get_group_condition(item->get_group());
+        if (false == condition) {
+            continue;
+        }
+
+        ret_value += item->get_space();
+    }
+    return ret_value;
+}
+
+size_t payload::size_occupied() {
+    size_t ret_value = 0;
+    for (auto item : _members) {
+        bool condition = get_group_condition(item->get_group());
+        if (false == condition) {
+            continue;
+        }
+
+        ret_value += item->get_capacity();
+    }
+    return ret_value;
 }
 
 payload& payload::clear() {

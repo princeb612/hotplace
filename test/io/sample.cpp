@@ -26,6 +26,15 @@ typedef struct _OPTION {
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
 
+//  test_payload_dump
+//  test_payload_parse
+//
+//  type        size    endian      name        group
+//  uint8       1       N/A         "padlen"    "pad"
+//  binary_t    *       N/A         "data"      N/A
+//  uint32      4       true        "value"     N/A
+//  binary_t    *       N/A         "pad"       "pad"
+
 void test_payload_dump() {
     OPTION& option = cmdline->value();
     _test_case.begin("payload");
@@ -71,12 +80,25 @@ void test_payload_parse() {
         pl << new payload_member((uint8)0, "padlen", "pad") << new payload_member(data, "data") << new payload_member((uint32)0, true, "value")
            << new payload_member(pad, "pad", "pad");
         binary_t decoded = base16_decode("036461746100001000706164");
-        pl.set_reference_value("pad", "padlen").read(decoded);
+        pl.set_reference_value("pad", "padlen");
+        pl.read(decoded);
         binary_t bin_dump;
         pl.dump(bin_dump);
         _test_case.assert(bin_dump == decoded, __FUNCTION__, "read/parse");
+
+        binary_t data2;
+        pl.select("data")->get_variant().dump(data2, true);
+        _test_case.assert(data2 == convert("data"), __FUNCTION__, "read binary");
     }
 }
+
+//  test_payload_uint24
+//
+//  type        size    endian      name        group
+//  uint8       1       N/A         "padlen"    N/A
+//  uint32_24_t 3       N/A         "data"      N/A
+//  uint32      4       true        "value"     N/A
+//  binary_t    *       N/A         "pad"       N/A
 
 void test_payload_uint24() {
     OPTION& option = cmdline->value();
@@ -118,7 +140,7 @@ void test_payload_uint24() {
 
         if (option.debug) {
             uint32 i24_value = i24.get();
-            printf("padlen %u i32_b24 %u (0x%08x) uint32_32 %u (0x%08x)\n", padlen, i24_value, i24_value, i32, i32);
+            printf("padlen %u uint32_24 %u (0x%08x) uint32_32 %u (0x%08x)\n", padlen, i24_value, i24_value, i32, i32);
         }
 
         _test_case.assert(0x100000 == i24.get(), __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)

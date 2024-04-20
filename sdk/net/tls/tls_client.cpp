@@ -16,7 +16,7 @@ namespace net {
 
 tls_client_socket::tls_client_socket(transport_layer_security* tls) : tcp_client_socket(), _tls(tls) {
     if (nullptr == tls) {
-        throw errorcode_t::insufficiency;
+        throw errorcode_t::insufficient;
     }
     tls->addref();
     _shared.make_share(this);

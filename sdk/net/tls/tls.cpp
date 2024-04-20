@@ -33,7 +33,7 @@ typedef struct _tls_context_t {
 
 transport_layer_security::transport_layer_security(SSL_CTX* x509) : _x509(x509) {
     if (nullptr == x509) {
-        throw errorcode_t::insufficiency;
+        throw errorcode_t::insufficient;
     }
     SSL_CTX_up_ref(x509);
     _shared.make_share(this);

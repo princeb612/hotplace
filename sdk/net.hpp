@@ -19,9 +19,14 @@
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/http/basic_authentication_provider.hpp>
+#include <sdk/net/http/basic_credentials.hpp>
 #include <sdk/net/http/bearer_authentication_provider.hpp>
+#include <sdk/net/http/bearer_credentials.hpp>
+#include <sdk/net/http/custom_credentials.hpp>
 #include <sdk/net/http/digest_access_authentication_provider.hpp>
+#include <sdk/net/http/digest_credentials.hpp>
 #include <sdk/net/http/html_documents.hpp>
+#include <sdk/net/http/http2_frame.hpp>
 #include <sdk/net/http/http2_protocol.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/http/http_authentication_resolver.hpp>
@@ -35,6 +40,8 @@
 #include <sdk/net/http/http_server.hpp>
 #include <sdk/net/http/http_uri.hpp>
 #include <sdk/net/http/oauth2.hpp>
+#include <sdk/net/http/oauth2_credentials.hpp>
+#include <sdk/net/http/rfc2617_digest.hpp>
 #include <sdk/net/http/types.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_server.hpp>

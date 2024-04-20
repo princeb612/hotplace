@@ -59,11 +59,13 @@ namespace io {
  *             << new payload_member((uint32)0, true, "value")
  *             << new payload_member(pad, "pad", "pad");
  *          binary_t decoded = base16_decode("036461746100001000706164");
- *          pl.set_reference_value("pad", "padlen").read(decoded); // sizeof "pad" refers "padlen" value
+ *          pl.set_reference_value("pad", "padlen");
+ *          pl.read(decoded); // sizeof "pad" refers "padlen" value
  */
 class payload_member {
    public:
     payload_member(uint8 value, const char* name = nullptr, const char* group = nullptr);
+    payload_member(uint8 value, uint16 repeat, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint16 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint32_24_t value, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint32 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
@@ -81,6 +83,7 @@ class payload_member {
     variant& get_variant();
 
     size_t get_space();
+    size_t get_capacity();
     payload_member* get_value_of();
     payload_member& set_value_of(payload_member* member);
 
@@ -110,13 +113,23 @@ class payload {
     bool get_group_condition(std::string const& name);
     payload& set_reference_value(std::string const& name, std::string const& ref);
 
-    payload& dump(binary_t& bin);
-    payload& read(binary_t const& bin);
-    payload& read(byte_t* p, size_t size);
+    return_t dump(binary_t& bin);
+    return_t read(binary_t const& bin);
+    return_t read(byte_t* p, size_t size);
 
     payload& for_each(std::function<void(payload_member*)> func);
     payload_member* select(std::string const& name);
 
+    /**
+     * @brief   size
+     * @return  size estimated
+     * @remarks
+     *          if (stream_size >= pl.size_estimated()) {
+     *              pl.read(stream, stream_size);
+     *          }
+     */
+    size_t size_estimated();
+    size_t size_occupied();
     payload& clear();
 
    private:

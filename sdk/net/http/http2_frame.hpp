@@ -126,7 +126,6 @@ class http2_frame_header {
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
-    void set_uint8(uint8& target, uint8 data) { target = data; }
     void set_binary(binary_t& target, byte_t* data, size_t size) {
         if (data) {
             target.clear();
@@ -155,8 +154,8 @@ class http2_data_frame : public http2_frame_header {
     virtual void dump(stream_t* s);
 
    private:
+    uint8 _padlen;
     binary_t _data;
-    binary_t _pad;
 };
 
 // RFC 7540 6.2 HEADERS
@@ -169,11 +168,11 @@ class http2_headers_frame : public http2_frame_header {
     virtual void dump(stream_t* s);
 
    private:
-    bool _use_priority;
+    uint8 _padlen;
+    bool _exclusive;
     uint32 _dependency;
     uint8 _weight;
     binary_t _fragment;
-    binary_t _pad;
 };
 
 // RFC 7540 6.3. PRIORITY
@@ -181,10 +180,6 @@ class http2_headers_frame : public http2_frame_header {
 class http2_priority_frame : public http2_frame_header {
    public:
     http2_priority_frame();
-
-    uint8 get_exclusive();
-    uint32 get_dependency();
-    uint8 get_weight();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -201,9 +196,6 @@ class http2_priority_frame : public http2_frame_header {
 class http2_rst_stream_frame : public http2_frame_header {
    public:
     http2_rst_stream_frame();
-
-    uint32 get_errorcode();
-    http2_rst_stream_frame& set_errorcode(uint32 errorcode);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -240,18 +232,15 @@ class http2_push_promise_frame : public http2_frame_header {
     virtual void dump(stream_t* s);
 
    private:
+    uint8 _padlen;
     uint32 _promised_id;
     binary_t _fragment;
-    binary_t _pad;
 };
 
 // RFC 7540 6.7. PING
 class http2_ping_frame : public http2_frame_header {
    public:
     http2_ping_frame();
-
-    uint64 get_opaque();
-    http2_ping_frame& set_opaque(uint64 opaque);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -265,12 +254,6 @@ class http2_ping_frame : public http2_frame_header {
 class http2_goaway_frame : public http2_frame_header {
    public:
     http2_goaway_frame();
-
-    uint32 get_last_id();
-    uint32 get_errorcode();
-    http2_goaway_frame& set_last_id(uint32 last_id);
-    http2_goaway_frame& set_errorcode(uint32 errorcode);
-    http2_goaway_frame& set_debug(byte_t* debug, size_t size);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -286,9 +269,6 @@ class http2_goaway_frame : public http2_frame_header {
 class http2_window_update_frame : public http2_frame_header {
    public:
     http2_window_update_frame();
-
-    uint32 get_increment();
-    http2_window_update_frame& set_increment(uint32 increment);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -308,7 +288,7 @@ class http2_continuation_frame : public http2_frame_header {
     virtual void dump(stream_t* s);
 
    private:
-    binary_t fragment;
+    binary_t _fragment;
 };
 
 }  // namespace net

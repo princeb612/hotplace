@@ -17,7 +17,7 @@ namespace odbc {
 
 odbc_sinker::odbc_sinker(odbc_query* dbquery, uint32 tmo_seconds) : _dbquery(dbquery), _tmo_seconds(tmo_seconds) {
     if (nullptr == dbquery) {
-        throw errorcode_t::insufficiency;
+        throw errorcode_t::insufficient;
     }
 
     time_monotonic(_timestamp);

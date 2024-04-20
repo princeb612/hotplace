@@ -18,7 +18,7 @@ namespace io {
 
 cbor_concise_visitor::cbor_concise_visitor(binary_t* concise) : _concise(concise) {
     if (nullptr == concise) {
-        throw errorcode_t::insufficiency;
+        throw errorcode_t::insufficient;
     }
 }
 
@@ -37,7 +37,7 @@ binary_t* cbor_concise_visitor::get_binary() { return _concise; }
 
 cbor_diagnostic_visitor::cbor_diagnostic_visitor(stream_t* stream) : _diagnostic(stream) {
     if (nullptr == stream) {
-        throw errorcode_t::insufficiency;
+        throw errorcode_t::insufficient;
     }
 }
 

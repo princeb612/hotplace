@@ -248,7 +248,7 @@ return_t cmdline_t<T>::parse(int argc, char** argv) {
     }
 
     if (_mandatory.size()) {
-        ret = errorcode_t::insufficiency;
+        ret = errorcode_t::insufficient;
     }
 
     return ret;
