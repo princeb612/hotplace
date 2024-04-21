@@ -162,11 +162,11 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
                     i++;
                 } else if (25 == lead_value) {
                     value = *(uint16*)(data + i + 1);
-                    value = ntohs(value);
+                    value = ntoh16(value);
                     i += 2;
                 } else if (26 == lead_value) {
                     value = *(uint32*)(data + i + 1);
-                    value = ntohl(value);
+                    value = ntoh32(value);
                     i += 4;
                 } else if (27 == lead_value) {
                     value = *(uint64*)(data + i + 1);

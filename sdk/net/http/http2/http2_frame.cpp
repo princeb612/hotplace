@@ -521,8 +521,8 @@ return_t http2_settings_frame::read(http2_frame_header_t const* header, size_t s
         while (pos < len) {
             http2_setting_t* setting = (http2_setting_t*)(payload + pos);
 
-            uint16 id = ntohs(setting->id);
-            uint32 value = ntohl(setting->value);
+            uint16 id = ntoh16(setting->id);
+            uint32 value = ntoh32(setting->value);
             add(id, value);
 
             pos += sizeof(http2_setting_t);

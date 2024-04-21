@@ -146,7 +146,7 @@ payload_member& payload_member::read(byte_t* ptr, size_t size_ptr, size_t* size_
                     case TYPE_UINT16: {
                         uint16 temp = *(uint16*)ptr;
                         if (get_change_endian()) {
-                            temp = ntohs(temp);
+                            temp = ntoh16(temp);
                         }
                         v.set_uint16(temp);
                         *size_read = size;
@@ -162,7 +162,7 @@ payload_member& payload_member::read(byte_t* ptr, size_t size_ptr, size_t* size_
                     case TYPE_UINT32: {
                         uint32 temp = *(uint32*)ptr;
                         if (get_change_endian()) {
-                            temp = ntohl(temp);
+                            temp = ntoh32(temp);
                         }
                         v.set_uint32(temp);
                         *size_read = size;

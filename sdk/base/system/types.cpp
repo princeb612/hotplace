@@ -19,8 +19,8 @@ uint64 hton64(uint64 value) {
     uint64 ret_value = 0;
 
     if (is_little_endian()) {
-        const uint32 high_part = htonl(static_cast<uint32>(value >> 32));
-        const uint32 low_part = htonl(static_cast<uint32>(value & 0xFFFFFFFF));
+        const uint32 high_part = hton32(static_cast<uint32>(value >> 32));
+        const uint32 low_part = hton32(static_cast<uint32>(value & 0xFFFFFFFF));
 
         ret_value = (static_cast<uint64>(low_part) << 32) | high_part;
     } else {
@@ -41,10 +41,10 @@ uint128 hton128(uint128 value) {
         ipaddr_byteorder lhs;
         ipaddr_byteorder rhs;
         rhs.t128 = value;
-        lhs.t32[0] = htonl(rhs.t32[3]);
-        lhs.t32[1] = htonl(rhs.t32[2]);
-        lhs.t32[2] = htonl(rhs.t32[1]);
-        lhs.t32[3] = htonl(rhs.t32[0]);
+        lhs.t32[0] = hton32(rhs.t32[3]);
+        lhs.t32[1] = hton32(rhs.t32[2]);
+        lhs.t32[2] = hton32(rhs.t32[1]);
+        lhs.t32[3] = hton32(rhs.t32[0]);
         ret_value = lhs.t128;
     } else {
         ret_value = value;

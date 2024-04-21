@@ -105,7 +105,7 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* peer, binary_t& 
 
 binary_t kdf_parameter_int(uint32 source) {
     binary_t value;
-    uint32 be_source = htonl(source);
+    uint32 be_source = hton32(source);
 
     value.insert(value.end(), (byte_t*)&be_source, (byte_t*)&be_source + sizeof(be_source));
     return value;
@@ -118,7 +118,7 @@ binary_t kdf_parameter_string(const char* source) {
     if (source) {
         len = strlen(source);
     }
-    uint32 be_len = htonl(len);
+    uint32 be_len = hton32(len);
 
     value.insert(value.end(), (byte_t*)&be_len, (byte_t*)&be_len + sizeof(be_len));
     value.insert(value.end(), (byte_t*)source, (byte_t*)source + len);
@@ -127,7 +127,7 @@ binary_t kdf_parameter_string(const char* source) {
 
 binary_t kdf_parameter_string(const byte_t* source, uint32 sourcelen) {
     binary_t value;
-    uint32 be_len = htonl(sourcelen);
+    uint32 be_len = hton32(sourcelen);
 
     value.insert(value.end(), (byte_t*)&be_len, (byte_t*)&be_len + sizeof(be_len));
     value.insert(value.end(), source, source + sourcelen);

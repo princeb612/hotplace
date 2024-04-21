@@ -1271,7 +1271,6 @@ return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, 
         if (is_little_endian()) {
             constant = counter;
         } else {
-            // ntohl do nothing, need reverse
             constant = convert_endian(counter);
         }
 

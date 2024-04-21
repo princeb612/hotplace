@@ -445,14 +445,14 @@ ipaddr_t ipaddr_acl::convert_addr(const char* addr, int& family) {
         if (nullptr == temp) {
             family = AF_INET;
             inet_pton(family, addr, (void*)&addr_buf);
-            ret_value = ntohl(*(uint32*)addr_buf);
+            ret_value = ntoh32(*(uint32*)addr_buf);
         } else {
             family = AF_INET6;
             inet_pton(family, addr, (void*)&addr_buf);
 #if defined __SIZEOF_INT128__
             ret_value = ntoh128(*(ipaddr_t*)addr_buf);
 #else
-            ret_value = ntohl(*(ipaddr_t*)addr_buf);
+            ret_value = ntoh32(*(ipaddr_t*)addr_buf);
 #endif
         }
     }
@@ -468,13 +468,13 @@ ipaddr_t ipaddr_acl::convert_sockaddr(const sockaddr_storage_t* addr, int& famil
         family = addr->ss_family;
         if (AF_INET == addr->ss_family) {
             ((struct sockaddr_in*)&ss)->sin_addr = ((struct sockaddr_in*)addr)->sin_addr;
-            ret_value = ntohl(*(uint*)&((struct sockaddr_in*)&ss)->sin_addr);
+            ret_value = ntoh32(*(uint*)&((struct sockaddr_in*)&ss)->sin_addr);
         } else if (AF_INET6 == addr->ss_family) {
             ((struct sockaddr_in6*)&ss)->sin6_addr = ((struct sockaddr_in6*)addr)->sin6_addr;
 #if defined __SIZEOF_INT128__
             ret_value = ntoh128(*(ipaddr_t*)&((struct sockaddr_in6*)&ss)->sin6_addr);
 #else
-            ret_value = ntohl(*(ipaddr_t*)&((struct sockaddr_in6*)&ss)->sin6_addr);
+            ret_value = ntoh32(*(ipaddr_t*)&((struct sockaddr_in6*)&ss)->sin6_addr);
 #endif
         }
     }

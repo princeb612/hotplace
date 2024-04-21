@@ -101,7 +101,7 @@ void test_convert_endian() {
 
     if (is_little_endian()) {
         uint32 i32 = 7;
-        _test_case.assert(ntohl(i32) == convert_endian(i32), __FUNCTION__, "32bits");
+        _test_case.assert(ntoh32(i32) == convert_endian(i32), __FUNCTION__, "32bits");
         _test_case.assert(ntoh64(i64) == convert_endian(i64), __FUNCTION__, "64bits");
         _test_case.assert(ntoh128(i128) == convert_endian(i128), __FUNCTION__, "128bits");
     } else {

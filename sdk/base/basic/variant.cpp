@@ -380,7 +380,7 @@ return_t variant::dump(binary_t& target, bool change_endian) const {
         case TYPE_INT16:
         case TYPE_UINT16:
             if (change_endian) {
-                binsert<uint16>(target, _vt.data.ui16, htons);
+                binsert<uint16>(target, _vt.data.ui16, hton16);
             } else {
                 binsert<uint16>(target, _vt.data.ui16);
             }
@@ -394,7 +394,7 @@ return_t variant::dump(binary_t& target, bool change_endian) const {
         case TYPE_INT32:
         case TYPE_UINT32:
             if (change_endian) {
-                binsert<uint32>(target, _vt.data.ui32, htonl);
+                binsert<uint32>(target, _vt.data.ui32, hton32);
             } else {
                 binsert<uint32>(target, _vt.data.ui32);
             }

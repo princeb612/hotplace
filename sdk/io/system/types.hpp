@@ -89,13 +89,6 @@ uint128 atou128(std::string const& in);
 
 #endif
 
-template <typename T, typename function_hton>
-void t_to_binary(T i, binary_t& bin) {
-    i = function_hton(i);
-    byte_t* b = (byte_t*)&i;
-    bin.insert(bin.end(), b, b + sizeof(i));
-}
-
 /**
  * @brief   uint24 utility class (0 to 0x00ffffff)
  * @see     RFC 7540 4. HTTP Frames, Figure 1: Frame Layout

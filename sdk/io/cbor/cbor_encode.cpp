@@ -172,7 +172,7 @@ return_t cbor_encode::encode(binary_t& bin, int16 value) {
             bin.push_back(value);
         } else {
             bin.push_back((major << 5) | 25);
-            uint16 be = htons(value);
+            uint16 be = hton16(value);
             bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
         }
     }
@@ -193,7 +193,7 @@ return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint16 value) {
             bin.push_back(value);
         } else {
             bin.push_back((major << 5) | 25);
-            uint16 be = htons(value);
+            uint16 be = hton16(value);
             bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
         }
     }
@@ -223,11 +223,11 @@ return_t cbor_encode::encode(binary_t& bin, int32 value) {
             bin.push_back(value);
         } else if (value < 0x10000) {
             bin.push_back((major << 5) | 25);
-            uint16 be = htons(value);
+            uint16 be = hton16(value);
             bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
         } else {
             bin.push_back((major << 5) | 26);
-            uint32 be = htonl(value);
+            uint32 be = hton32(value);
             bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
         }
     }
@@ -248,11 +248,11 @@ return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint32 value) {
             bin.push_back(value);
         } else if (value < 0x10000) {
             bin.push_back((major << 5) | 25);
-            uint16 be = htons(value);
+            uint16 be = hton16(value);
             bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
         } else {
             bin.push_back((major << 5) | 26);
-            uint32 be = htonl(value);
+            uint32 be = hton32(value);
             bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
         }
     }
@@ -282,11 +282,11 @@ return_t cbor_encode::encode(binary_t& bin, int64 value) {
             bin.push_back(value);
         } else if (value < 0x10000) {
             bin.push_back((major << 5) | 25);
-            uint16 be = htons(value);
+            uint16 be = hton16(value);
             bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
         } else if (value < 0x100000000) {
             bin.push_back((major << 5) | 26);
-            uint32 be = htonl(value);
+            uint32 be = hton32(value);
             bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
         } else {
             bin.push_back((major << 5) | 27);
@@ -311,11 +311,11 @@ return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint64 value) {
             bin.push_back(value);
         } else if (value < 0x10000) {
             bin.push_back((major << 5) | 25);
-            uint16 be = htons(value);
+            uint16 be = hton16(value);
             bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
         } else if (value < 0x100000000) {
             bin.push_back((major << 5) | 26);
-            uint32 be = htonl(value);
+            uint32 be = hton32(value);
             bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
         } else {
             bin.push_back((major << 5) | 27);
@@ -376,11 +376,11 @@ return_t cbor_encode::encode(binary_t& bin, int128 value) {
                 bin.push_back(value);
             } else if (value < 0x10000) {
                 bin.push_back((major << 5) | 25);
-                uint16 be = htons(value);
+                uint16 be = hton16(value);
                 bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
             } else if (value < 0x100000000) {
                 bin.push_back((major << 5) | 26);
-                uint32 be = htonl(value);
+                uint32 be = hton32(value);
                 bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
             } else {
                 bin.push_back((major << 5) | 27);
@@ -413,11 +413,11 @@ return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint128 value) {
                 bin.push_back(value);
             } else if (value < 0x10000) {
                 bin.push_back((major << 5) | 25);
-                uint16 be = htons(value);
+                uint16 be = hton16(value);
                 bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
             } else if (value < 0x100000000) {
                 bin.push_back((major << 5) | 26);
-                uint32 be = htonl(value);
+                uint32 be = hton32(value);
                 bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
             } else {
                 bin.push_back((major << 5) | 27);
@@ -441,7 +441,7 @@ return_t cbor_encode::encodefp16(binary_t& bin, uint16 value) {
         uint32 be = 0;
 
         bin.push_back((cbor_major_t::cbor_major_float << 5) | 25);
-        be = htons(*(uint16*)&value);
+        be = hton16(*(uint16*)&value);
         bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
     }
     __finally2 {
@@ -462,12 +462,12 @@ return_t cbor_encode::encode(binary_t& bin, float value) {
         switch (vt.type) {
             case vartype_t::TYPE_FP16:
                 bin.push_back((cbor_major_t::cbor_major_float << 5) | 25);
-                be = htons(*(uint16*)&vt.data.ui16);
+                be = hton16(*(uint16*)&vt.data.ui16);
                 bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
                 break;
             case vartype_t::TYPE_FLOAT:
                 bin.push_back((cbor_major_t::cbor_major_float << 5) | 26);
-                be = htonl(*(uint32*)&vt.data.f);
+                be = hton32(*(uint32*)&vt.data.f);
                 bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
                 break;
             default:
@@ -492,12 +492,12 @@ return_t cbor_encode::encode(binary_t& bin, double value) {
         switch (vt.type) {
             case vartype_t::TYPE_FP16:
                 bin.push_back((cbor_major_t::cbor_major_float << 5) | 25);
-                be = htons(*(uint16*)&vt.data.ui16);
+                be = hton16(*(uint16*)&vt.data.ui16);
                 bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
                 break;
             case vartype_t::TYPE_FLOAT:
                 bin.push_back((cbor_major_t::cbor_major_float << 5) | 26);
-                be = htonl(*(uint32*)&vt.data.f);
+                be = hton32(*(uint32*)&vt.data.f);
                 bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
                 break;
             case vartype_t::TYPE_DOUBLE:

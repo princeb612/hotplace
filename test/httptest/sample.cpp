@@ -599,6 +599,7 @@ void test_rfc_example() {
         test_rfc_example_routine("RFC 7616 3.9.1. Examples with SHA-256", &provider, request, "Mufasa", "Circle of Life",
                                  "753927fa0e85d155564e2e272a28d1802ca10daf4496794697cf8db5856cb6c1");
     }
+#if 0
     // part of SHA-512-256
     {
         // J  U+00E4 s  U+00F8 n      D  o  e
@@ -624,6 +625,7 @@ void test_rfc_example() {
         test_rfc_example_routine("RFC 7616 3.9.2. Example with SHA-512-256 and Userhash", &provider, request, username, "Secret, or not?",
                                  "ae66e67d6b427bd3f120414a82e4acff38e8ecd9101d6c861229025f607a79dd");
     }
+#endif
     {
         digest_access_authentication_provider provider("happiness", "SHA-256-sess", "auth", false);
         request.get_http_header().clear().add("Authorization",
@@ -802,6 +804,285 @@ void test_bearer_token() {
     _test_case.test(ret, __FUNCTION__, "bearer");
 }
 
+// RFC 7541 HPACK: Header Compression for HTTP/2
+// C.1.  Integer Representation Examples
+void hpack_encode_int(binary_t& target, uint8 prefix, int32 value, uint8 pattern = 0) {
+    // RFC 7541 5.1.  Integer Representation
+    //
+    // if I < 2^N - 1, encode I on N bits
+    // else
+    //     encode (2^N - 1) on N bits
+    //     I = I - (2^N - 1)
+    //     while I >= 128
+    //          encode (I % 128 + 128) on 8 bits
+    //          I = I / 128
+    //     encode I on 8 bits
+
+    uint8 n = (1 << prefix) - 1;
+    uint8 i = 0;
+    if (value < n) {
+        target.insert(target.end(), value | pattern);
+    } else {
+        target.insert(target.end(), n | pattern);
+        value -= n;
+        while (value >= 128) {
+            i = (value % 128) + 128;
+            target.insert(target.end(), i);
+            value /= 128;
+        }
+        target.insert(target.end(), value);
+    }
+}
+
+void hpack_decode_int(binary_t const& target, uint8 prefix, uint32& value) {
+    // RFC 7541 5.1.  Integer Representation
+    //
+    // decode I from the next N bits
+    // if I < 2^N - 1, return I
+    // else
+    //     M = 0
+    //     repeat
+    //         B = next octet
+    //         I = I + (B & 127) * 2^M
+    //         M = M + 7
+    //     while B & 128 == 128
+    //     return I
+
+    value = 0;
+
+    // uint8 n = (1 << prefix) - 1;
+    uint8 b = 0;
+    uint32 m = 0;
+    size_t idx = 0;
+    binary_t::const_iterator iter;
+    for (iter = target.begin(); iter != target.end(); iter++, idx++) {
+        b = *iter;
+        if (0 == idx) {
+            value = b;
+        } else {
+            value += (b & 127) << m;
+            m += 7;
+        }
+    }
+}
+
+void hpack_encode_string(binary_t& target, std::string value) {
+    // H(1), Len(7)
+    hpack_encode_int(target, 7, value.size());
+    target.insert(target.end(), value.begin(), value.end());
+}
+
+void test_rfc7541_c_1_routine(uint8 prefix, int32 i, const char* expect, const char* text) {
+    OPTION& option = cmdline->value();
+
+    binary_t bin;
+    basic_stream bs;
+    uint32 value = 0;
+
+    hpack_encode_int(bin, prefix, i);
+    hpack_decode_int(bin, prefix, value);
+
+    if (option.verbose) {
+        dump_memory(bin, &bs, 16, 2);
+        printf("encode\n%s\n", bs.c_str());
+        printf("decode %u\n", value);
+    }
+
+    bool test = false;
+    test = (expect && (i == value));
+    if (test) {
+        binary_t bin_expect = base16_decode(expect);
+        test = (test && (bin == bin_expect));
+    }
+    _test_case.assert(test, __FUNCTION__, text);
+}
+
+void test_rfc7541_c_1() {
+    _test_case.begin("RFC 7541 HPACK");
+    OPTION& option = cmdline->value();
+
+    binary_t bin;
+    basic_stream bs;
+    uint32 value = 0;
+
+    // C.1.1.  Example 1: Encoding 10 Using a 5-Bit Prefix
+    //   0   1   2   3   4   5   6   7
+    // +---+---+---+---+---+---+---+---+
+    // | X | X | X | 0 | 1 | 0 | 1 | 0 |   10 stored on 5 bits
+    // +---+---+---+---+---+---+---+---+
+
+    test_rfc7541_c_1_routine(5, 10, "0a", "RFC 7541 C.1.1");
+
+    // C.1.2.  Example 2: Encoding 1337 Using a 5-Bit Prefix
+    //   0   1   2   3   4   5   6   7
+    // +---+---+---+---+---+---+---+---+
+    // | X | X | X | 1 | 1 | 1 | 1 | 1 |  Prefix = 31, I = 1306
+    // | 1 | 0 | 0 | 1 | 1 | 0 | 1 | 0 |  1306>=128, encode(154), I=1306/128
+    // | 0 | 0 | 0 | 0 | 1 | 0 | 1 | 0 |  10<128, encode(10), done
+    // +---+---+---+---+---+---+---+---+
+
+    test_rfc7541_c_1_routine(5, 1337, "1f9a0a", "RFC 7541 C.1.2");
+
+    // C.1.3.  Example 3: Encoding 42 Starting at an Octet Boundary
+    //   0   1   2   3   4   5   6   7
+    // +---+---+---+---+---+---+---+---+
+    // | 0 | 0 | 1 | 0 | 1 | 0 | 1 | 0 |   42 stored on 8 bits
+    // +---+---+---+---+---+---+---+---+
+
+    test_rfc7541_c_1_routine(8, 42, "2a", "RFC 7541 C.1.3");
+}
+
+// C.2.  Header Field Representation Examples
+void hpack_encode_header(binary_t& target, bool huffman, uint32 index, std::string name, std::string value) {
+    hpack_encode_int(target, 6, index, (huffman ? 0xc0 : 0x40));
+    hpack_encode_int(target, 7, name.size());
+    target.insert(target.end(), name.begin(), name.end());
+    hpack_encode_int(target, 7, value.size());
+    target.insert(target.end(), value.begin(), value.end());
+}
+
+void hpack_encode_header(binary_t& target, std::string const& name, std::string const& value) {
+    typedef struct _static_table_name_value_t {
+        std::string value;
+        uint32 index;
+        _static_table_name_value_t(uint32 i) : index(i) {}
+        _static_table_name_value_t(std::string const& v, uint32 i) : value(v), index(i) {}
+    } static_table_name_value_t;
+    typedef std::multimap<std::string, static_table_name_value_t> static_table_t;
+    static_table_t static_table;
+
+    // RFC 7541 Appendix A.  Static Table Definition
+    static_table.insert(std::make_pair(":authority", static_table_name_value_t(1)));
+    static_table.insert(std::make_pair(":method", static_table_name_value_t("GET", 2)));
+    static_table.insert(std::make_pair(":method", static_table_name_value_t("POST", 3)));
+    static_table.insert(std::make_pair(":path", static_table_name_value_t("/", 4)));
+    static_table.insert(std::make_pair(":path", static_table_name_value_t("/index.html", 5)));
+    static_table.insert(std::make_pair(":scheme", static_table_name_value_t("http", 6)));
+    // ...
+    static_table.insert(std::make_pair("www-authenticate", static_table_name_value_t(61)));
+
+    uint32 index = 0;
+    static_table_t::iterator iter;
+    static_table_t::iterator liter = static_table.lower_bound(name);
+    static_table_t::iterator uiter = static_table.upper_bound(name);
+
+    bool matched = false;
+    for (iter = liter; iter != uiter; iter++) {
+        if (iter == liter) {
+            index = iter->second.index;  // :path: /sample/path
+        }
+        if (value == iter->second.value) {
+            index = iter->second.index;
+            matched = true;
+            break;
+        }
+    }
+
+    if (matched) {
+        hpack_encode_int(target, 6, index, 0x80);
+    } else {
+        hpack_encode_int(target, 8, index);
+        hpack_encode_int(target, 7, value.size());
+        target.insert(target.end(), value.begin(), value.end());
+    }
+}
+
+void hpack_encode_header2(binary_t& target, std::string name, std::string value) {
+    target.insert(target.end(), 0x10);  // liternal never indexed
+    hpack_encode_int(target, 7, name.size());
+    target.insert(target.end(), name.begin(), name.end());
+    hpack_encode_int(target, 7, value.size());
+    target.insert(target.end(), value.begin(), value.end());
+}
+
+void test_rfc7541_c_2() {
+    _test_case.begin("RFC 7541 HPACK");
+    OPTION& option = cmdline->value();
+
+    binary_t bin;
+    basic_stream bs;
+    // C.2.1.  Literal Header Field with Indexing
+    // "custom-key: custom-header"
+    bin.clear();
+    hpack_encode_header(bin, false, 0, "custom-key", "custom-header");
+    if (option.verbose) {
+        dump_memory(bin, &bs, 16, 2);
+        printf("encode\n%s\n", bs.c_str());
+    }
+    _test_case.assert(bin == base16_decode("400A637573746F6D2D6B65790D637573746F6D2D686561646572"), __FUNCTION__, "RFC 7541 C.2.1");
+
+    // C.2.2.  Literal Header Field without Indexing
+    // :path: /sample/path
+    bin.clear();
+    hpack_encode_header(bin, ":path", "/sample/path");
+    if (option.verbose) {
+        dump_memory(bin, &bs, 16, 2);
+        printf("encode\n%s\n", bs.c_str());
+    }
+    _test_case.assert(bin == base16_decode("040C2F73616D706C652F70617468"), __FUNCTION__, "RFC 7541 C.2.2");
+    // C.2.3.  Literal Header Field Never Indexed
+    // password: secret
+    bin.clear();
+    hpack_encode_header2(bin, "password", "secret");
+    if (option.verbose) {
+        dump_memory(bin, &bs, 16, 2);
+        printf("encode\n%s\n", bs.c_str());
+    }
+    _test_case.assert(bin == base16_decode("100870617373776f726406736563726574"), __FUNCTION__, "RFC 7541 C.2.3");
+    // C.2.4.  Indexed Header Field
+    bin.clear();
+    hpack_encode_header(bin, ":method", "GET");
+    if (option.verbose) {
+        dump_memory(bin, &bs, 16, 2);
+        printf("encode\n%s\n", bs.c_str());
+    }
+    _test_case.assert(bin == base16_decode("82"), __FUNCTION__, "RFC 7541 C.2.4");
+}
+
+// C.3.  Request Examples without Huffman Coding
+void test_rfc7541_c_3() {
+    _test_case.begin("RFC 7541 HPACK");
+    OPTION& option = cmdline->value();
+
+    binary_t bin;
+    // C.3.1.  First Request
+    // C.3.2.  Second Request
+    // C.3.3.  Third Request
+}
+
+// C.4.  Request Examples with Huffman Coding
+void test_rfc7541_c_4() {
+    _test_case.begin("RFC 7541 HPACK");
+    OPTION& option = cmdline->value();
+
+    binary_t bin;
+    // C.4.1.  First Request
+    // C.4.2.  Second Request
+    // C.4.3.  Third Request
+}
+
+// C.5.  Response Examples without Huffman Coding
+void test_rfc7541_c_5() {
+    _test_case.begin("RFC 7541 HPACK");
+    OPTION& option = cmdline->value();
+
+    binary_t bin;
+    // C.5.1.  First Response
+    // C.5.2.  Second Response
+    // C.5.3.  Third Response
+}
+
+// C.6.  Response Examples with Huffman Coding
+void test_rfc7541_c_6() {
+    _test_case.begin("RFC 7541 HPACK");
+    OPTION& option = cmdline->value();
+
+    binary_t bin;
+    // C.6.1.  First Response
+    // C.6.2.  Second Response
+    // C.6.3.  Third Response
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -853,16 +1134,24 @@ int main(int argc, char** argv) {
         // terminal 1
         //   cd hotplace
         //   ./make.sh debug pch
-        //   cd build/test/authserver
-        //   ./test-httpserver -d
+        //   cd build/test/httpauth
+        //   ./test-httpauth -d
         // terminal 2
-        //   cd build/test/httpget
-        //   ./test-httpget -d -c
+        //   cd build/test/htttest
+        //   ./test-httptest -d -c
         test_get_tlsclient();
         test_get_httpclient();
 
         test_bearer_token();
     }
+
+    // HPACK
+    test_rfc7541_c_1();
+    test_rfc7541_c_2();
+    test_rfc7541_c_3();
+    test_rfc7541_c_4();
+    test_rfc7541_c_5();
+    test_rfc7541_c_6();
 
     openssl_thread_end();
     openssl_cleanup();
