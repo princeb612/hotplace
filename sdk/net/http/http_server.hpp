@@ -19,9 +19,13 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 
+#include <sdk/net/basic/ipaddr_acl.hpp>
+#include <sdk/net/http/http_protocol.hpp>
 #include <sdk/net/http/http_router.hpp>
 #include <sdk/net/server/network_server.hpp>
+#include <sdk/net/tls/tls.hpp>
 #include <sdk/net/tls/tls_server.hpp>
+#include <sdk/net/types.hpp>  // ws2tcpip.h first
 
 namespace hotplace {
 namespace net {

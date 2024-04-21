@@ -11,13 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_OAUTH2_CREDENTIALS__
 #define __HOTPLACE_SDK_NET_HTTP_OAUTH2_CREDENTIALS__
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/datetime.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
-#include <sdk/net/basic/sdk.hpp>
-#include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/tls/tls.hpp>
+#include <sdk/base.hpp>
+#include <sdk/io.hpp>
 
 namespace hotplace {
 using namespace io;

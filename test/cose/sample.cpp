@@ -22,13 +22,13 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 typedef struct _OPTION {
-    bool debug;
+    bool verbose;
     bool dump_keys;
     bool skip_cbor_basic;
     bool skip_validate;
     bool skip_gen;
 
-    _OPTION() : debug(false), dump_keys(false), skip_cbor_basic(false), skip_validate(false), skip_gen(false) {
+    _OPTION() : verbose(false), dump_keys(false), skip_cbor_basic(false), skip_validate(false), skip_gen(false) {
         // do nothing
     }
 } OPTION;
@@ -56,7 +56,7 @@ return_t dump_test_data(const char* text, binary_t const& cbor) {
     basic_stream bs;
 
     OPTION& option = _cmdline->value();
-    if (option.debug) {
+    if (option.verbose) {
         dump_memory(cbor, &bs, 32, 4);
 
         if (text) {
@@ -101,7 +101,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
         binary_t bin;
         publisher.publish(root, &bin);
 
-        if (option.debug) {
+        if (option.verbose) {
             // cbor_object* to diagnostic
             basic_stream diagnostic;
             // publisher.publish(root, &diagnostic);
@@ -214,7 +214,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
         binary_t decrypted;
         bool result = false;
 
-        if (option.debug) {
+        if (option.verbose) {
             cose.set(cose_handle, cose_flag_t::cose_flag_allow_debug);
         }
 
@@ -229,7 +229,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                 case cbor_tag_t::cose_tag_encrypt0:
                     ret = cose.decrypt(cose_handle, cose_keys, bin, decrypted, result);
                     if (errorcode_t::success == ret) {
-                        if (option.debug) {
+                        if (option.verbose) {
                             basic_stream bs;
                             dump_memory(decrypted, &bs, 16, 4);
                             printf("%s\n", bs.c_str());
@@ -292,7 +292,7 @@ void test_cbor_file(const char* expect_file, const char* text) {
         reader.publish(handle, &root);
         reader.close(handle);
 
-        if (option.debug) {
+        if (option.verbose) {
             dump_test_data("diagnostic", bs_diagnostic);
             dump_test_data("cbor", bin_cbor);
         }
@@ -958,7 +958,7 @@ void test_cbor_key(const char* file, const char* text) {
         ret = cwk.write(&key, cbor_written);
         _test_case.test(ret, __FUNCTION__, "step.write %s", text ? text : "");
 
-        if (option.debug) {
+        if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
             basic_stream bs;
@@ -1036,16 +1036,16 @@ void test_jose_from_cwk() {
     size_t size = 0;
     basic_stream json;
     jwk.write(&privkey, &json, 1);
-    if (option.debug) {
+    if (option.verbose) {
         printf("JWK from CBOR key\n%s\n", json.c_str());
     }
     basic_stream pem;
     jwk.write_pem(&pubkey, &pem);
-    if (option.debug) {
+    if (option.verbose) {
         printf("PEM (public)\n%s\n", pem.c_str());
     }
     jwk.write_pem(&privkey, &pem);
-    if (option.debug) {
+    if (option.verbose) {
         printf("PEM (private)\n%s\n", pem.c_str());
     }
 
@@ -1073,7 +1073,7 @@ void test_jose_from_cwk() {
     algs.push_back(cose_alg_t::cose_es512);
     ret = cose.sign(handle, &privkey, algs, convert(input), signature);
     _test_case.test(ret, __FUNCTION__, "sign");
-    if (option.debug) {
+    if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
 
         dump_memory(signature, &bs);
@@ -1252,7 +1252,7 @@ void test_github_example() {
         reader.publish(reader_handle, &diagnostic);
         reader.publish(reader_handle, &bin_cbor);
         reader.close(reader_handle);
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(bin_cbor, &bs, 16, 2);
             printf("cbor\n%s\n", bs.c_str());
             printf("diagnostic\n  %s\n", diagnostic.c_str());
@@ -1285,7 +1285,7 @@ void test_github_example() {
         printf("\e[35m>%s %s\n%s\n\e[0m", b, f, bs.c_str()); \
     }
 
-        if (option.debug) {
+        if (option.verbose) {
             cose.set(handle, cose_flag_t::cose_flag_allow_debug);
 
             dumps("AAD", vector->enc.aad_hex);
@@ -1346,7 +1346,7 @@ void test_github_example() {
         binary_t output;
         ret = cose.process(handle, mapped_key, cbor, output);
 
-        if (option.debug) {
+        if (option.verbose) {
             uint32 flags = 0;
             uint32 debug_flags = 0;
             cose.get(handle, flags, debug_flags);
@@ -1405,18 +1405,18 @@ void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& inp
     binary_t cbor;
     binary_t dummy;
     cose.open(&handle);
-    if (option.debug) {
+    if (option.verbose) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
     ret = cose.sign(handle, key, algs, input, cbor);
-    if (option.debug) {
+    if (option.verbose) {
         printf("%s\n", base16_encode(cbor).c_str());
     }
     cose.close(handle);
     _test_case.test(ret, __FUNCTION__, "sign %s", text);
 
     cose.open(&handle);
-    if (option.debug) {
+    if (option.verbose) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
     ret = cose.process(handle, key, cbor, dummy);
@@ -1434,18 +1434,18 @@ void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& 
     binary_t cbor;
     binary_t dummy;
     cose.open(&handle);
-    if (option.debug) {
+    if (option.verbose) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
     ret = cose.encrypt(handle, key, algs, input, cbor);
-    if (option.debug) {
+    if (option.verbose) {
         printf("%s\n", base16_encode(cbor).c_str());
     }
     cose.close(handle);
     _test_case.test(ret, __FUNCTION__, "encrypt %s", text);
 
     cose.open(&handle);
-    if (option.debug) {
+    if (option.verbose) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
     ret = cose.process(handle, key, cbor, dummy);
@@ -1463,18 +1463,18 @@ void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& inpu
     binary_t cbor;
     binary_t dummy;
     cose.open(&handle);
-    if (option.debug) {
+    if (option.verbose) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
     ret = cose.mac(handle, key, algs, input, cbor);
-    if (option.debug) {
+    if (option.verbose) {
         printf("%s\n", base16_encode(cbor).c_str());
     }
     cose.close(handle);
     _test_case.test(ret, __FUNCTION__, "mac %s", text);
 
     cose.open(&handle);
-    if (option.debug) {
+    if (option.verbose) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
     ret = cose.process(handle, key, cbor, dummy);
@@ -1565,7 +1565,7 @@ void test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binar
     OPTION& option = _cmdline->value();
 
     cose.open(&handle);
-    if (option.debug) {
+    if (option.verbose) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
 
@@ -1577,7 +1577,7 @@ void test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binar
         recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
 
         // fill others and compose
-        ret = cose.encrypt2(handle, key, input, cbor);
+        ret = cose.encrypt(handle, key, input, cbor);
     }
 
     cose.close(handle);
@@ -1594,7 +1594,7 @@ void test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t
     OPTION& option = _cmdline->value();
 
     cose.open(&handle);
-    if (option.debug) {
+    if (option.verbose) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
 
@@ -1603,7 +1603,7 @@ void test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t
     body.get_protected().add(cose_key_t::cose_alg, alg);
 
     // fill others and compose
-    ret = cose.encrypt2(handle, key, input, cbor);
+    ret = cose.encrypt(handle, key, input, cbor);
 
     cose.close(handle);
 
@@ -1619,7 +1619,7 @@ void test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t 
     OPTION& option = _cmdline->value();
 
     cose.open(&handle);
-    if (option.debug) {
+    if (option.verbose) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
 
@@ -1631,7 +1631,7 @@ void test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t 
         recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
 
         // fill others and compose
-        ret = cose.encrypt2(handle, key, input, cbor);
+        ret = cose.encrypt(handle, key, input, cbor);
     }
 
     cose.close(handle);
@@ -1727,7 +1727,7 @@ void test_cwt_rfc8392() {
     binary_t output;
 
     cose.open(&handle);
-    if (option.debug) {
+    if (option.verbose) {
         cose.set(handle, cose_flag_t::cose_flag_allow_debug);
     }
     ret = cose.verify(handle, &key, base16_decode(cwt_signed), result);
@@ -1749,7 +1749,7 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = true; }).optional();
     *_cmdline << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
     *_cmdline << cmdarg_t<OPTION>("-b", "skip basic encoding", [&](OPTION& o, char* param) -> void { o.skip_cbor_basic = true; }).optional();
     *_cmdline << cmdarg_t<OPTION>("-s", "skip validation w/ test vector", [&](OPTION& o, char* param) -> void { o.skip_validate = true; }).optional();
@@ -1757,12 +1757,12 @@ int main(int argc, char** argv) {
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
-    std::cout << "option.debug " << (option.debug ? 1 : 0) << std::endl;
+    std::cout << "option.verbose " << (option.verbose ? 1 : 0) << std::endl;
     std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
     std::cout << "option.skip_validate " << (option.skip_validate ? 1 : 0) << std::endl;
     std::cout << "option.skip_gen " << (option.skip_gen ? 1 : 0) << std::endl;
 
-    if (option.debug) {
+    if (option.verbose) {
         set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
     }
 

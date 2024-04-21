@@ -13,7 +13,7 @@
 
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/net/http/http2_frame.hpp>
+#include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {

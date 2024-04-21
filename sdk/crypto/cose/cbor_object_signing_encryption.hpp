@@ -125,11 +125,11 @@ class cbor_object_signing_encryption {
      *              recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
      *
      *              // fill others and compose
-     *              ret = cose.encrypt2(handle, key, input, cbor);
+     *              ret = cose.encrypt(handle, key, input, cbor);
      *          }
      *          cose.close(handle);
      */
-    return_t encrypt2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
+    return_t encrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
     /**
      * @brief   decrypt
      * @param   cose_context_t* handle [in]
@@ -190,11 +190,11 @@ class cbor_object_signing_encryption {
      *          body.get_protected().add(cose_key_t::cose_alg, alg);
      *
      *          // fill others and compose
-     *          ret = cose.sign2(handle, key, input, cbor);
+     *          ret = cose.sign(handle, key, input, cbor);
      *
      *          cose.close(handle);
      */
-    return_t sign2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
+    return_t sign(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
     /**
      * @brief   mac
      * @param   cose_context_t* handle [in]
@@ -249,11 +249,11 @@ class cbor_object_signing_encryption {
      *              recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
      *
      *              // fill others and compose
-     *              ret = cose.mac2(handle, key, input, cbor);
+     *              ret = cose.mac(handle, key, input, cbor);
      *          }
      *          cose.close(handle);
      */
-    return_t mac2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
+    return_t mac(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
     /**
      * @brief   verify with kid
      * @param   cose_context_t* handle [in]

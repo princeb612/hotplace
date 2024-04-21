@@ -17,7 +17,6 @@
 #include <deque>
 #include <sdk/base.hpp>
 #include <sdk/io/cbor/concise_binary_object_representation.hpp>
-#include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 namespace io {

@@ -8,7 +8,8 @@ file (GLOB FILEGROUP_SDK_HEADER_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/basic/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/net/protocol/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/auth/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/http2/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.hpp
 )
@@ -17,7 +18,8 @@ file (GLOB FILEGROUP_SDK_SOURCE_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/net/protocol/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/auth/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/http2/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.cpp
 )

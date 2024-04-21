@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base.hpp>
 #include <sdk/io/stream/string.hpp>
 #include <sdk/io/string/string.hpp>
 

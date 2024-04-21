@@ -21,10 +21,10 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 typedef struct _OPTION {
-    bool debug;
+    bool verbose;
     bool dump_keys;
 
-    _OPTION() : debug(false), dump_keys(false) {
+    _OPTION() : verbose(false), dump_keys(false) {
         // do nothing
     }
 } OPTION;
@@ -60,7 +60,7 @@ void test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, const by
                     ret = hash_object->finalize(hash_handle, hashed);
                     digest_size = hashed.size();
                     if (errorcode_t::success == ret) {
-                        if (option.debug) {
+                        if (option.verbose) {
                             test_case_notimecheck notimecheck(_test_case);
 
                             basic_stream dump;
@@ -112,7 +112,7 @@ return_t test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, bina
                     ret = hash_object->finalize(hash_handle, hashed);
                     digest_size = hashed.size();
                     if (errorcode_t::success == ret) {
-                        if (option.debug) {
+                        if (option.verbose) {
                             test_case_notimecheck notimecheck(_test_case);
 
                             basic_stream dump;
@@ -240,7 +240,7 @@ void test_hmacsha_rfc4231() {
         base16_decode(item.expect_sha384, strlen(item.expect_sha384), bin_expect_sha384);
         base16_decode(item.expect_sha512, strlen(item.expect_sha512), bin_expect_sha512);
 
-        if (option.debug) {
+        if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
             basic_stream dump;
@@ -316,7 +316,7 @@ void test_aes128cbc_mac_routine(binary_t const& key, binary_t const& message, bi
         hash.finalize(handle, result);
         hash.close(handle);
 
-        if (option.debug) {
+        if (option.verbose) {
             basic_stream bs;
             dump_memory(result, &bs);
             std::cout << "result" << std::endl << bs.c_str() << std::endl;
@@ -368,7 +368,7 @@ uint32 test_hotp_rfc4226() {
             hotp.get(handle, code);
             output.push_back(code);
 
-            if (option.debug) {
+            if (option.verbose) {
                 test_case_notimecheck notimecheck(_test_case);
                 std::cout << "counter " << i << " code " << code << std::endl;
             }
@@ -462,7 +462,7 @@ uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
                 totp.get(handle, counter[i], code);
                 output.push_back(code);
 
-                if (option.debug) {
+                if (option.verbose) {
                     test_case_notimecheck notimecheck(_test_case);
                     std::cout << "counter " << counter[i] << " code " << code << std::endl;
                 }
@@ -500,7 +500,7 @@ void test_hash_hmac_sign() {
     openssl_hash hash;
     openssl_sign sign;
 
-    if (option.debug) {
+    if (option.verbose) {
         // source
         dump_memory(bin_in, &bs);
         std::cout << "source" << std::endl << bs.c_str() << std::endl;
@@ -512,7 +512,7 @@ void test_hash_hmac_sign() {
     hash.hash(hash_context, &bin_in[0], bin_in.size(), result);
     hash.close(hash_context);
 
-    if (option.debug) {
+    if (option.verbose) {
         dump_memory(result, &bs);
         std::cout << "hash" << std::endl << bs.c_str() << std::endl;
     }
@@ -524,7 +524,7 @@ void test_hash_hmac_sign() {
     result.resize(size);
     EVP_Digest(&bin_in[0], bin_in.size(), &result[0], &size, EVP_sha256(), nullptr);
 
-    if (option.debug) {
+    if (option.verbose) {
         dump_memory(result, &bs);
         std::cout << "Digest" << std::endl << bs.c_str() << std::endl;
     }
@@ -535,7 +535,7 @@ void test_hash_hmac_sign() {
     hash.hash(hmac_context, &bin_in[0], bin_in.size(), result);
     hash.close(hmac_context);
 
-    if (option.debug) {
+    if (option.verbose) {
         dump_memory(result, &bs);
         std::cout << "HMAC" << std::endl << bs.c_str() << std::endl;
     }
@@ -543,7 +543,7 @@ void test_hash_hmac_sign() {
     // openssl_sign
     sign.sign_digest(key.any(), hash_algorithm_t::sha2_256, bin_key, result);
 
-    if (option.debug) {
+    if (option.verbose) {
         dump_memory(result, &bs);
         std::cout << "Sign" << std::endl << bs.c_str() << std::endl;
     }
@@ -638,15 +638,15 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional()
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = true; }).optional()
               << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
-    std::cout << "option.debug " << (option.debug ? 1 : 0) << std::endl;
+    std::cout << "option.verbose " << (option.verbose ? 1 : 0) << std::endl;
     std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
 
-    if (option.debug) {
+    if (option.verbose) {
         set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
     }
 

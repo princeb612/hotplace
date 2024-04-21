@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/system/critical_section.hpp>
+#include <sdk/base.hpp>
 #include <sdk/io/basic/keyvalue.hpp>
 
 namespace hotplace {

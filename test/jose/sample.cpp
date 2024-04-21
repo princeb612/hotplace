@@ -20,10 +20,10 @@ using namespace hotplace::crypto;
 
 test_case _test_case;
 typedef struct _OPTION {
-    bool debug;
+    bool verbose;
     bool dump_keys;
 
-    _OPTION() : debug(false), dump_keys(false) {
+    _OPTION() : verbose(false), dump_keys(false) {
         // do nothing
     }
 } OPTION;
@@ -44,7 +44,7 @@ void print_text(const char* text, ...) {
 void dump(const char* text, std::string const& value) {
     if (text) {
         OPTION& option = _cmdline->value();
-        if (option.debug) {
+        if (option.verbose) {
             std::cout << text << std::endl << value.c_str() << std::endl;
         }
     }
@@ -53,7 +53,7 @@ void dump(const char* text, std::string const& value) {
 void dump_b64url(const char* text, const byte_t* addr, size_t size) {
     if (text && addr) {
         OPTION& option = _cmdline->value();
-        if (option.debug) {
+        if (option.verbose) {
             printf("%s\n  %s\n", text, base64_encode(addr, size, base64_encoding_t::base64url_encoding).c_str());
         }
     }
@@ -62,7 +62,7 @@ void dump_b64url(const char* text, const byte_t* addr, size_t size) {
 void dump_b64url(const char* text, binary_t const& bin) {
     if (text) {
         OPTION& option = _cmdline->value();
-        if (option.debug) {
+        if (option.verbose) {
             printf("%s\n  %s\n", text, base64_encode(bin, base64_encoding_t::base64url_encoding).c_str());
         }
     }
@@ -71,7 +71,7 @@ void dump_b64url(const char* text, binary_t const& bin) {
 void dump(const char* text, std::string const str, basic_stream& bs) {
     if (text) {
         OPTION& option = _cmdline->value();
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(str, &bs, 16, 2);
             printf("%s\n%s\n", text, bs.c_str());
         }
@@ -81,7 +81,7 @@ void dump(const char* text, std::string const str, basic_stream& bs) {
 void dump(const char* text, binary_t const bin, basic_stream& bs) {
     if (text) {
         OPTION& option = _cmdline->value();
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(bin, &bs, 16, 2);
             printf("%s\n%s\n", text, bs.c_str());
         }
@@ -91,7 +91,7 @@ void dump(const char* text, binary_t const bin, basic_stream& bs) {
 void dump(const char* text, const byte_t* addr, size_t size, basic_stream& bs) {
     if (text && addr) {
         OPTION& option = _cmdline->value();
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(addr, size, &bs, 16, 2);
             printf("%s\n%s\n", text, bs.c_str());
         }
@@ -100,7 +100,7 @@ void dump(const char* text, const byte_t* addr, size_t size, basic_stream& bs) {
 
 void dump_elem(binary_t const& source) {
     OPTION& option = _cmdline->value();
-    if (option.debug) {
+    if (option.verbose) {
         std::cout << "[";
 #if __cplusplus >= 201103L  // c++11
         for_each(source.begin(), source.end(), [](byte_t c) { printf("%i,", c); });
@@ -116,7 +116,7 @@ void dump_elem(binary_t const& source) {
 
 void dump_elem(std::string const& source) {
     OPTION& option = _cmdline->value();
-    if (option.debug) {
+    if (option.verbose) {
         std::cout << "[";
 #if __cplusplus >= 201103L  // c++11
         for_each(source.begin(), source.end(), [](byte_t c) { printf("%i,", c); });
@@ -211,7 +211,7 @@ void test_basic() {
 
     const EVP_PKEY* pkey = crypto_key_es521.any();
     if (pkey) {
-        if (option.debug) {
+        if (option.verbose) {
             basic_stream bs;
             dump_key(pkey, &bs);
             printf("%s\n", bs.c_str());
@@ -1375,7 +1375,7 @@ int test_ecdh() {
     EVP_PKEY_free((EVP_PKEY*)bobPublicKey);
 
     OPTION& option = _cmdline->value();
-    if (option.debug) {
+    if (option.verbose) {
         std::cout << "alice public key  x : " << base16_encode(x_alice).c_str() << std::endl
                   << "alice public key  y : " << base16_encode(y_alice).c_str() << std::endl
                   << "alice private key d : " << base16_encode(d_alice).c_str() << std::endl
@@ -1853,7 +1853,7 @@ void test_jwk_thumbprint() {
     thumbprint = base64_encode(hash_value, base64_encoding_t::base64url_encoding);
 
     OPTION& option = _cmdline->value();
-    if (option.debug) {
+    if (option.verbose) {
         std::cout << "in lexicographic order : " << std::endl
                   << buffer.c_str() << std::endl
                   << "hash : " << std::endl
@@ -1890,7 +1890,7 @@ void test_rfc8037() {
     const EVP_PKEY* pkey = key.any();
     key.get_key(pkey, pub1, pub2, priv);
 
-    if (option.debug) {
+    if (option.verbose) {
         std::cout << "x : " << base16_encode(pub1).c_str() << std::endl << "d : " << base16_encode(priv).c_str() << std::endl;
     }
 
@@ -2116,14 +2116,14 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = true; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = true; }).optional();
     *_cmdline << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
     std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
 
-    if (option.debug) {
+    if (option.verbose) {
         set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
     }
 

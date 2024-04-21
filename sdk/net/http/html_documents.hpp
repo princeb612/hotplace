@@ -21,10 +21,10 @@
 
 #include <map>
 #include <sdk/base.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/io/basic/keyvalue.hpp>
-#include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/server/network_protocol.hpp>
+#include <sdk/io.hpp>
+#include <sdk/net/http/http_request.hpp>
+#include <sdk/net/http/http_response.hpp>
+#include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
 using namespace io;

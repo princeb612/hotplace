@@ -27,15 +27,22 @@
 #include <sdk/base/basic/base64.hpp>
 #include <sdk/base/basic/cmdline.hpp>
 #include <sdk/base/basic/console_color.hpp>
+#include <sdk/base/basic/constexpr_obfuscate.hpp>
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/obfuscate_string.hpp>
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/basic/variant.hpp>
+
+/* stream */
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/bufferio.hpp>
 #include <sdk/base/stream/printf.hpp>
+
+/* string */
 #include <sdk/base/string/string.hpp>
+
+/* system */
 #include <sdk/base/system/atomic.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/datetime.hpp>
@@ -52,11 +59,12 @@
 #include <sdk/base/system/thread.hpp>
 #include <sdk/base/system/trace.hpp>
 #include <sdk/base/system/types.hpp>
-
 #if defined _WIN32 || defined _WIN64
 #include <sdk/base/system/windows/sdk.hpp>
 #include <sdk/base/system/windows/windows_version.hpp>
 #endif
+
+/* unittest */
 #include <sdk/base/unittest/testcase.hpp>
 
 #endif

@@ -11,8 +11,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <sdk/base/basic/ieee754.hpp>
-#include <sdk/base/basic/variant.hpp>
+#include <sdk/base.hpp>
 #include <sdk/io/cbor/cbor_encode.hpp>
 #include <sdk/io/system/types.hpp>
 

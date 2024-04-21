@@ -13,8 +13,8 @@
 #include <sdk/io/string/string.hpp>
 #include <sdk/io/system/types.hpp>
 #include <sdk/net/basic/sdk.hpp>
-#include <sdk/net/http/http2_frame.hpp>
-#include <sdk/net/http/http2_protocol.hpp>
+#include <sdk/net/http/http2/http2_frame.hpp>
+#include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/tls/tls.hpp>
 
@@ -157,10 +157,10 @@ void http2_frame_header::dump(stream_t* s) {
 
         s->printf("- http/2 frame type %d %s\n", get_type(), frame_name.c_str());
         s->printf("> ");
-        s->printf("%s %u", constexpr_frame_length, get_payload_size());
-        s->printf("%s %u", constexpr_frame_type, get_type());
-        s->printf("%s %02x", constexpr_frame_flags, get_flags());
-        s->printf("%s %u", constexpr_frame_stream_identifier, get_stream_id());
+        s->printf("%s %u ", constexpr_frame_length, get_payload_size());
+        s->printf("%s %u ", constexpr_frame_type, get_type());
+        s->printf("%s %02x ", constexpr_frame_flags, get_flags());
+        s->printf("%s %u ", constexpr_frame_stream_identifier, get_stream_id());
         s->printf("\n");
         s->printf("> %s [ ", constexpr_frame_flags);
 
@@ -560,8 +560,10 @@ void http2_settings_frame::dump(stream_t* s) {
 
         h2_setting_map_t::iterator iter;
         for (iter = _settings.begin(); iter != _settings.end(); iter++) {
-            s->printf("> %s %u\n", constexpr_frame_identifier, iter->first);
-            s->printf("> %s %u (0x%08x)\n", constexpr_frame_value, iter->second, iter->second);
+            s->printf("> ");
+            s->printf("%s %u ", constexpr_frame_identifier, iter->first);
+            s->printf("%s %u (0x%08x) ", constexpr_frame_value, iter->second, iter->second);
+            s->printf("\n");
         }
     }
 }

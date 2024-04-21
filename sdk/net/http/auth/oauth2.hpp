@@ -11,13 +11,13 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_OAUTH2__
 #define __HOTPLACE_SDK_NET_HTTP_OAUTH2__
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
-#include <sdk/net/basic/sdk.hpp>
+#include <sdk/base.hpp>
+#include <sdk/io.hpp>
+#include <sdk/net/http/auth/oauth2_credentials.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/http/oauth2_credentials.hpp>
-#include <sdk/net/tls/tls.hpp>
+#include <sdk/net/http/http_request.hpp>
+#include <sdk/net/http/http_response.hpp>
+#include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
 using namespace io;

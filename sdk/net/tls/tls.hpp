@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS__
 #define __HOTPLACE_SDK_NET_TLS_TLS__
 
-#include <sdk/crypto/basic/types.hpp>
+#include <sdk/crypto.hpp>
 #include <sdk/net/tls/x509.hpp>
 #include <sdk/net/types.hpp>
 

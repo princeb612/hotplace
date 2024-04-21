@@ -29,9 +29,9 @@ test_case _test_case;
 typedef struct _OPTION {
     int port;
     int port_tls;
-    int debug;
+    int verbose;
 
-    _OPTION() : port(8080), port_tls(9000), debug(0) {}
+    _OPTION() : port(8080), port_tls(9000), verbose(0) {}
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
@@ -78,7 +78,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             break;
         case mux_read:
             cprint("read %i", session_socket->cli_socket);
-            if (option.debug) {
+            if (option.verbose) {
                 printf("%.*s\n", (unsigned)bufsize, buf);
             }
 
@@ -120,7 +120,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                                      request.get_http_uri().get_uri(), status_code, http_resource::get_instance()->load(status_code).c_str());
                 }
 
-                if (option.debug) {
+                if (option.verbose) {
                     cprint("send %i", session_socket->cli_socket);
                     basic_stream resp;
                     response.get_response(resp);
@@ -281,7 +281,7 @@ int main(int argc, char** argv) {
     cmdline.make_share(new cmdline_t<OPTION>);
     *cmdline << cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
              << cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
-             << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = 1; }).optional();
+             << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
 

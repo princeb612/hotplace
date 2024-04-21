@@ -11,16 +11,15 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 
-#include <sdk/io/basic/keyvalue.hpp>
-#include <sdk/io/basic/mlfq.hpp>
+#include <sdk/io.hpp>
+#include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_stream.hpp>
+#include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
-
-class network_priority_queue;
-class tcp_server_socket;
 
 /**
  * @brief session data
@@ -100,9 +99,9 @@ class network_session {
     virtual int release();
     /**
      * @brief produce, push into stream
-     * @param   network_priority_queue* q               [IN]
-     * @param   byte_t*                 buf_read        [IN]
-     * @param   size_t                  size_buf_read   [IN]
+     * @param   t_mlfq<network_session>*    q               [IN]
+     * @param   byte_t*                     buf_read        [IN]
+     * @param   size_t                      size_buf_read   [IN]
      * @remarks
      */
     return_t produce(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read);

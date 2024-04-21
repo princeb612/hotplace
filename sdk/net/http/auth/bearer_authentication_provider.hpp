@@ -9,34 +9,27 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_BASIC_AUTHENTICATION_PROVIDER__
-#define __HOTPLACE_SDK_NET_HTTP_BASIC_AUTHENTICATION_PROVIDER__
+#ifndef __HOTPLACE_SDK_NET_HTTP_BEARER_AUTHENTICATION_PROVIDER__
+#define __HOTPLACE_SDK_NET_HTTP_BEARER_AUTHENTICATION_PROVIDER__
 
 #include <map>
 #include <sdk/base.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/io/basic/keyvalue.hpp>
-#include <sdk/net/http/basic_credentials.hpp>
+#include <sdk/io.hpp>
+#include <sdk/net/http/auth/bearer_credentials.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/server/network_protocol.hpp>
+#include <sdk/net/http/http_authentication_resolver.hpp>
+#include <sdk/net/http/http_request.hpp>
+#include <sdk/net/http/http_response.hpp>
+#include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
 
-/**
- * @brief   basic
- *          RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
- *
- *          Server
- *              WWW-Authenticate: Basic realm="basic realm"
- *          Client
- *              Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
- */
-class basic_authentication_provider : public http_authenticate_provider {
+class bearer_authentication_provider : public http_authenticate_provider {
    public:
-    basic_authentication_provider(std::string const& realm);
-    virtual ~basic_authentication_provider();
+    bearer_authentication_provider(std::string const& realm);
+    virtual ~bearer_authentication_provider();
 
     /**
      * @brief   try
@@ -48,13 +41,15 @@ class basic_authentication_provider : public http_authenticate_provider {
      */
     virtual bool try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request, http_response* response);
     /**
-     * @brief   401 Unauthorized
+     * @brief   200 OK / 401 Unauthorized
      * @param   network_session* session [in]
      * @param   http_request* request [in]
      * @param   http_response* response [in]
      * @return  error code (see error.hpp)
      */
     virtual return_t request_auth(network_session* session, http_request* request, http_response* response);
+
+    virtual std::string get_challenge(http_request* request);
 };
 
 }  // namespace net

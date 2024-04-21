@@ -8,18 +8,20 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_SDK__
-#define __HOTPLACE_SDK_IO_SYSTEM_SDK__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACK__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACK__
 
 #include <sdk/base.hpp>
-#include <sdk/io/system/types.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/net/http/http2/http2_frame.hpp>
+#include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
-namespace io {
+namespace net {
 
-// reserved
+// study
 
-}
+}  // namespace net
 }  // namespace hotplace
 
 #endif

@@ -21,17 +21,17 @@
 
 #include <map>
 #include <sdk/base.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/io/basic/keyvalue.hpp>
-#include <sdk/net/http/basic_authentication_provider.hpp>
-#include <sdk/net/http/basic_credentials.hpp>
-#include <sdk/net/http/bearer_authentication_provider.hpp>
-#include <sdk/net/http/bearer_credentials.hpp>
-#include <sdk/net/http/custom_credentials.hpp>
-#include <sdk/net/http/digest_access_authentication_provider.hpp>
-#include <sdk/net/http/digest_credentials.hpp>
+#include <sdk/io.hpp>
+#include <sdk/net/http/auth/basic_authentication_provider.hpp>
+#include <sdk/net/http/auth/basic_credentials.hpp>
+#include <sdk/net/http/auth/bearer_authentication_provider.hpp>
+#include <sdk/net/http/auth/bearer_credentials.hpp>
+#include <sdk/net/http/auth/custom_credentials.hpp>
+#include <sdk/net/http/auth/digest_access_authentication_provider.hpp>
+#include <sdk/net/http/auth/digest_credentials.hpp>
+#include <sdk/net/http/auth/oauth2.hpp>
+#include <sdk/net/http/auth/oauth2_credentials.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/http/oauth2.hpp>
 
 namespace hotplace {
 using namespace io;

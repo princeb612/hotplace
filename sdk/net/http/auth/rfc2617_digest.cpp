@@ -8,13 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
-#include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
-#include <sdk/net/http/rfc2617_digest.hpp>
+#include <sdk/base.hpp>
+#include <sdk/crypto.hpp>
+#include <sdk/io.hpp>
+#include <sdk/net/http/auth/rfc2617_digest.hpp>
 
 namespace hotplace {
 using namespace crypto;

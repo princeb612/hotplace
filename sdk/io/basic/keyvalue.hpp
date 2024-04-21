@@ -13,8 +13,6 @@
 
 #include <map>
 #include <sdk/base.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <unordered_map>
 
 namespace hotplace {
 namespace io {

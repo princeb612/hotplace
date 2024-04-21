@@ -9,7 +9,7 @@
  */
 
 #include <regex>
-#include <sdk/base/basic/base16.hpp>
+#include <sdk/base.hpp>
 #include <sdk/io/string/string.hpp>
 #if (((__GNUC__ == 4) && (__GNUC_MINOR__ >= 9)) || (__GNUC__ > 4))
 #else

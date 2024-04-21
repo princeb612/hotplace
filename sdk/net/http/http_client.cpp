@@ -8,14 +8,11 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
+#include <sdk/base.hpp>
+#include <sdk/io.hpp>
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http_client.hpp>
 #include <sdk/net/http/http_protocol.hpp>
-#include <sdk/net/server/network_stream.hpp>
-#include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 using namespace io;

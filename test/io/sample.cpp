@@ -19,9 +19,9 @@ using namespace hotplace::io;
 test_case _test_case;
 
 typedef struct _OPTION {
-    int debug;
+    int verbose;
 
-    _OPTION() : debug(0) {}
+    _OPTION() : verbose(0) {}
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
@@ -53,7 +53,7 @@ void test_payload_dump() {
 
         pl.set_group("pad", true);  // enable "pad" group
         pl.dump(bin_padded);
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(bin_padded, &bs);
             printf("%s\n", bs.c_str());
         }
@@ -61,7 +61,7 @@ void test_payload_dump() {
 
         pl.set_group("pad", false);  // disable "pad" group
         pl.dump(bin_notpadded);
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(bin_notpadded, &bs);
             printf("%s\n", bs.c_str());
         }
@@ -119,7 +119,7 @@ void test_payload_uint24() {
            << new payload_member(pad, "pad");
 
         pl.dump(bin_payload);
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(bin_payload, &bs);
             printf("%s\n", bs.c_str());
         }
@@ -138,7 +138,7 @@ void test_payload_uint24() {
         uint32_24_t i24 = t_variant_to_int<uint32>(pl.select("int32_24")->get_variant().content());
         uint32 i32 = t_variant_to_int<uint32>(pl.select("int32_32")->get_variant().content());
 
-        if (option.debug) {
+        if (option.verbose) {
             uint32 i24_value = i24.get();
             printf("padlen %u uint32_24 %u (0x%08x) uint32_32 %u (0x%08x)\n", padlen, i24_value, i24_value, i32, i32);
         }
@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
 #endif
     cmdline.make_share(new cmdline_t<OPTION>);
 
-    *cmdline << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = 1; }).optional();
+    *cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
     OPTION& option = cmdline->value();

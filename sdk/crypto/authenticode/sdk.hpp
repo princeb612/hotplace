@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_SDK__
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_SDK__
 
+#include <sdk/base.hpp>
 #include <sdk/crypto/basic/types.hpp>
 #include <set>
 #include <string>

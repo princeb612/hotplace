@@ -27,9 +27,9 @@ typedef struct _OPTION {
     std::string url;
     int mode;
     int connect;
-    int debug;
+    int verbose;
 
-    _OPTION() : url("https://localhost:9000/"), mode(0), connect(0), debug(0) {}
+    _OPTION() : url("https://localhost:9000/"), mode(0), connect(0), verbose(0) {}
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
@@ -50,7 +50,7 @@ void do_split_url(const char* url, url_info_t* url_info) {
 
     split_url(url, url_info);
 
-    if (option.debug) {
+    if (option.verbose) {
         basic_stream bs;
         bs << "> url      : " << url << "\n"
            << "> scheme   : " << url_info->scheme << "\n"
@@ -147,7 +147,7 @@ void test_request() {
     http_request request;
     request.open(input);
 
-    if (option.debug) {
+    if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
 
         printf("%s\n", input);
@@ -172,7 +172,7 @@ void test_response_compose() {
     response.get_http_header().add("Connection", "Keep-Alive");
     response.compose(200, "text/html", "<html><body>hello</body></html>");
 
-    if (option.debug) {
+    if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
 
         basic_stream bs;
@@ -208,7 +208,7 @@ void test_response_parse() {
     response.get_http_header().get("WWW-Authenticate", wwwauth);
     http_header::to_keyvalue(wwwauth, kv);
 
-    if (option.debug) {
+    if (option.verbose) {
         kv.foreach ([&](std::string const& k, std::string const& v, void* param) -> void { printf("> %s:=%s\n", k.c_str(), v.c_str()); });
     }
 
@@ -242,7 +242,7 @@ void test_uri_form_encoded_body_parameter() {
     request2.compose(http_method_t::HTTP_GET, "/auth/bearer", "client_id=clientid");
     request2.get_request(request_stream2);
 
-    if (option.debug) {
+    if (option.verbose) {
         printf("%s\n", request_stream1.c_str());
         printf("%s\n", request_stream2.c_str());
     }
@@ -265,7 +265,7 @@ void test_uri2() {
     http_uri::to_keyvalue(input, kv);
     std::string client_id = kv.get("client_id");
     std::string access_token = kv.get("access_token");
-    if (option.debug) {
+    if (option.verbose) {
         printf("client_id %s\n", client_id.c_str());
         printf("access_token %s\n", access_token.c_str());
     }
@@ -282,7 +282,7 @@ void test_escape_url() {
     basic_stream unescaped;
     unescape_url(input, &unescaped);
 
-    if (option.debug) {
+    if (option.verbose) {
         std::cout << "unescape : " << unescaped.c_str() << std::endl;
     }
 
@@ -312,7 +312,7 @@ void test_basic_authentication() {
         return_t ret = errorcode_t::failed;
 
         // server response
-        if (option.debug) {
+        if (option.verbose) {
             response.get_response(bs);
 
             cprint("server response");
@@ -327,7 +327,7 @@ void test_basic_authentication() {
         request.open("GET / HTTP/1.1");
         request.get_http_header().add("Authorization", format("Basic %s", base64_encode(cred.c_str()).c_str()));
 
-        if (option.debug) {
+        if (option.verbose) {
             request.get_request(bs);
 
             cprint("client request");
@@ -426,7 +426,7 @@ return_t calc_digest_digest_access(http_authenticate_provider* provider, network
         dgst_sequence.add(":").add(digest_ha2);
         digest_response = dgst_sequence.digest(hashalg).get();
 
-        if (option.debug) {
+        if (option.verbose) {
             printf("- a1 %s -> %s\n", dgst_a1.get_sequence().c_str(), digest_ha1.c_str());
             printf("- a2 %s -> %s\n", dgst_a2.get_sequence().c_str(), digest_ha2.c_str());
             printf("- resp %s -> %s\n", dgst_sequence.get_sequence().c_str(), digest_response.c_str());
@@ -463,7 +463,7 @@ void test_digest_access_authentication(const char* alg = nullptr) {
         return_t ret = errorcode_t::failed;
 
         // server response
-        if (option.debug) {
+        if (option.verbose) {
             response.get_response(bs);
 
             cprint("session nonce %s", session.get_session_data()->get("nonce").c_str());
@@ -504,7 +504,7 @@ void test_digest_access_authentication(const char* alg = nullptr) {
                    request.get_http_uri().get_uri(), response_calc.c_str(), kv.get("opaque").c_str(), kv.get("qop").c_str(), kv.get("nc").c_str(),
                    kv.get("cnonce").c_str()));  // set a response
 
-        if (option.debug) {
+        if (option.verbose) {
             request.get_request(bs);
 
             cprint("client request");
@@ -675,7 +675,7 @@ void test_get_tlsclient() {
             req.get_request(body);
 
             cprint("request");
-            if (option.debug) {
+            if (option.verbose) {
                 std::cout << body.c_str() << std::endl;
             }
 
@@ -688,14 +688,14 @@ void test_get_tlsclient() {
                 if (0 == option.mode) {
                     ret = cli.read(sock, handle, buf, sizeof(buf), &sizeread);
 
-                    if (option.debug) {
+                    if (option.verbose) {
                         dump_memory((byte_t*)buf, sizeread, &bs);
                         printf("%s\n", bs.c_str());
                     }
                     while (errorcode_t::more_data == ret) {
                         ret = cli.more(sock, handle, buf, sizeof(buf), &sizeread);
 
-                        if (option.debug) {
+                        if (option.verbose) {
                             dump_memory((byte_t*)buf, sizeread, &bs);
                             printf("%s\n", bs.c_str());
                         }
@@ -719,7 +719,7 @@ void test_get_tlsclient() {
                     stream_interpreted.consume(&data);
                     if (data) {
                         cprint("response");
-                        if (option.debug) {
+                        if (option.verbose) {
                             printf("%.*s\n", (unsigned)data->size(), (char*)data->content());
                         }
 
@@ -760,7 +760,7 @@ void test_get_httpclient() {
 
     client.request(request, &response);
     if (response) {
-        if (option.debug) {
+        if (option.verbose) {
             basic_stream bs;
             response->get_response(bs);
             printf("%s\n", bs.c_str());
@@ -789,7 +789,7 @@ void test_bearer_token() {
 
     client.request(request, &response);
     if (response) {
-        if (option.debug) {
+        if (option.verbose) {
             basic_stream bs;
             response->get_response(bs);
             printf("%s\n", bs.c_str());
@@ -817,7 +817,7 @@ int main(int argc, char** argv) {
 
     *cmdline << cmdarg_t<OPTION>("-c", "connect", [&](OPTION& o, char* param) -> void { o.connect = 1; }).optional()
              << cmdarg_t<OPTION>("-p", "read stream using http_protocol", [&](OPTION& o, char* param) -> void { o.mode = 1; }).optional()
-             << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+             << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
              << cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/)", [&](OPTION& o, char* param) -> void { o.url = param; }).preced().optional();
 
     cmdline->parse(argc, argv);

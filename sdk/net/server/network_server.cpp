@@ -9,13 +9,9 @@
  */
 
 #include <queue>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/datetime.hpp>
-#include <sdk/base/system/signalwait_threads.hpp>
-#include <sdk/io/system/multiplexer.hpp>
+#include <sdk/base.hpp>
+#include <sdk/io.hpp>
 #include <sdk/net/server/network_server.hpp>
-#include <sdk/net/server/network_session.hpp>
-#include <sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
 using namespace io;

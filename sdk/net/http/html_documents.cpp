@@ -9,16 +9,8 @@
  */
 
 #include <sdk/base.hpp>
-#include <sdk/base/inline.hpp>
-#include <sdk/base/string/string.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/stream/file_stream.hpp>
-#include <sdk/io/string/string.hpp>
-#include <sdk/net/basic/sdk.hpp>
+#include <sdk/io.hpp>
 #include <sdk/net/http/html_documents.hpp>
-#include <sdk/net/http/http_router.hpp>
-#include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 using namespace io;

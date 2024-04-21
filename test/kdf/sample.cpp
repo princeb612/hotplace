@@ -20,9 +20,9 @@ using namespace hotplace::crypto;
 test_case _test_case;
 
 typedef struct _OPTION {
-    int debug;
+    int verbose;
 
-    _OPTION() : debug(0) {}
+    _OPTION() : verbose(0) {}
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
@@ -49,7 +49,7 @@ void test_kdf_hkdf() {
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
         kdf.hmac_kdf(result, hash_algorithm_t::sha2_256, vector[i].dlen, convert(vector[i].password), convert(vector[i].salt), convert(vector[i].info));
 
-        if (option.debug) {
+        if (option.verbose) {
             basic_stream bs;
             dump_memory(result, &bs);
             std::cout << bs.c_str() << std::endl;
@@ -94,7 +94,7 @@ void test_kdf_pbkdf2_rfc6070() {
         salt.insert(salt.end(), vector[i].salt, vector[i].salt + vector[i].size_salt);
         kdf.pbkdf2(result, hash_algorithm_t::sha1, vector[i].dlen, password, salt, vector[i].c);
 
-        if (option.debug) {
+        if (option.verbose) {
             basic_stream bs;
             dump_memory(result, &bs);
             std::cout << bs.c_str() << std::endl;
@@ -128,7 +128,7 @@ void test_kdf_pbkdf2_rfc7914() {
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
         kdf.pbkdf2(result, hash_algorithm_t::sha2_256, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].c);
 
-        if (option.debug) {
+        if (option.verbose) {
             basic_stream bs;
             dump_memory(result, &bs);
             std::cout << bs.c_str() << std::endl;
@@ -170,7 +170,7 @@ void test_kdf_scrypt_rfc7914() {
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
         ret = kdf.scrypt(result, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
         if (errorcode_t::success == ret) {
-            if (option.debug) {
+            if (option.verbose) {
                 basic_stream bs;
                 dump_memory(result, &bs);
                 std::cout << bs.c_str() << std::endl;
@@ -212,7 +212,7 @@ void test_kdf_argon_rfc9106() {
         kdf.argon2(derived, vector[i].mode, 32, base16_decode(vector[i].password), base16_decode(vector[i].salt), base16_decode(vector[i].ad),
                    base16_decode(vector[i].secret));
 
-        if (option.debug) {
+        if (option.verbose) {
             basic_stream bs;
             dump_memory(derived, &bs);
             std::cout << bs.c_str() << std::endl;
@@ -339,7 +339,7 @@ void test_kdf_extract_expand_rfc5869() {
         binary_t okm;
         kdf.hkdf_expand(okm, expand_vector[i].alg, expand_vector[i].dlen, prk, base16_decode(expand_vector[i].info));
 
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(okm, &bs);
             printf("OKM\n%s\n", bs.c_str());
         }
@@ -348,7 +348,7 @@ void test_kdf_extract_expand_rfc5869() {
         kdf.hmac_kdf(derived, expand_vector[i].alg, expand_vector[i].dlen, base16_decode(expand_vector[i].ikm), base16_decode(expand_vector[i].salt),
                      base16_decode(expand_vector[i].info));
 
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(derived, &bs);
             printf("HKDF\n%s\n", bs.c_str());
         }
@@ -426,7 +426,7 @@ void test_ckdf_rfc4615() {
         // cmac_kdf_extract(output, crypt_algorithm_t::aes128, base16_decode(extract_vector[i].salt), base16_decode(extract_vector[i].ikm));
         kdf.cmac_kdf_extract(output, crypt_algorithm_t::aes128, salt, base16_decode(extract_vector[i].ikm));
 
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(output, &bs);
             printf("%s\n", bs.c_str());
         }
@@ -478,7 +478,7 @@ void test_ckdf_rfc4615() {
         kdf.cmac_kdf(ckdf_okm, crypt_algorithm_t::aes128, expand_vector[i].dlen, base16_decode(expand_vector[i].ikm), base16_decode(expand_vector[i].salt),
                      base16_decode(expand_vector[i].info));
 
-        if (option.debug) {
+        if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
             dump_memory(prk, &bs);
@@ -501,7 +501,7 @@ int main(int argc, char** argv) {
 #endif
 
     cmdline.make_share(new cmdline_t<OPTION>);
-    *cmdline << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = 1; }).optional();
+    *cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
 

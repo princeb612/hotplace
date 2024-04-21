@@ -8,10 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/datetime.hpp>
-#include <sdk/crypto/basic/types.hpp>
-#include <sdk/io/stream/file_stream.hpp>
+#include <sdk/base.hpp>
+#include <sdk/crypto.hpp>
+#include <sdk/io.hpp>
 #include <sdk/net/tls/x509.hpp>
 
 namespace hotplace {

@@ -11,10 +11,7 @@
 #ifndef __HOTPLACE_SDK_STREAM_STREAM__
 #define __HOTPLACE_SDK_STREAM_STREAM__
 
-#include <sdk/base/basic/valist.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/stream/bufferio.hpp>
+#include <sdk/base.hpp>
 
 namespace hotplace {
 namespace io {

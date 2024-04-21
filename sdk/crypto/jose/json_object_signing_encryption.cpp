@@ -16,8 +16,6 @@
 
 #include <iostream>
 #include <sdk/base.hpp>
-#include <sdk/base/basic/base64.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>

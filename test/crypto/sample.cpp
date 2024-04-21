@@ -22,9 +22,9 @@ using namespace hotplace::crypto;
 test_case _test_case;
 
 typedef struct _OPTION {
-    int debug;
+    int verbose;
 
-    _OPTION() : debug(0) {}
+    _OPTION() : verbose(0) {}
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
@@ -47,7 +47,7 @@ void validate_openssl_crypt() {
         crypt.decrypt(handle, base16_decode(vector->ciphertext), plaintext);
         crypt.close(handle);
 
-        if (option.debug) {
+        if (option.verbose) {
             dump_memory(ciphertext, &bs);
             printf("Ciphertext\n%s\n", bs.c_str());
             dump_memory(plaintext, &bs);
@@ -101,7 +101,7 @@ void test_crypt_routine(crypt_t* crypt_object, crypt_algorithm_t algorithm, cryp
                 } else {
                     aad.insert(aad.end(), aad_source, aad_source + aad_size);
 
-                    if (option.debug) {
+                    if (option.verbose) {
                         std::cout << "aad" << std::endl;
                         dump_memory(&aad[0], aad.size(), &bs);
                         std::cout << bs.c_str() << std::endl;
@@ -112,7 +112,7 @@ void test_crypt_routine(crypt_t* crypt_object, crypt_algorithm_t algorithm, cryp
                 if (errorcode_t::success == ret) {
                     ret = crypt_object->decrypt2(crypt_handle, &encrypted[0], encrypted.size(), decrypted, &aad, &tag);
                     if (errorcode_t::success == ret) {
-                        if (option.debug) {
+                        if (option.verbose) {
                             test_case_notimecheck notimecheck(_test_case);
 
                             std::cout << "encrypted" << std::endl;
@@ -235,7 +235,7 @@ void test_random() {
 
     for (i = 0; i < times; i++) {
         value = random.rand32();
-        if (option.debug) {
+        if (option.verbose) {
             printf("rand %08x\n", (int)value);
         }
     }
@@ -255,13 +255,13 @@ void test_nonce() {
 
     for (i = 0; i < times; i++) {
         nonce = random.nonce(16);
-        if (option.debug) {
+        if (option.verbose) {
             printf("nonce.1 %s\n", nonce.c_str());
         }
     }
     for (i = 0; i < times; i++) {
         nonce = random.rand(16, encoding_t::encoding_base16, true);
-        if (option.debug) {
+        if (option.verbose) {
             printf("nonce.2 %s\n", nonce.c_str());
         }
     }
@@ -281,13 +281,13 @@ void test_token() {
 
     for (i = 0; i < times; i++) {
         token = random.token(16);
-        if (option.debug) {
+        if (option.verbose) {
             printf("token.1 %s\n", token.c_str());
         }
     }
     for (i = 0; i < times; i++) {
         token = random.rand(16, encoding_t::encoding_base64url, true);
-        if (option.debug) {
+        if (option.verbose) {
             printf("token.2 %s\n", token.c_str());
         }
     }
@@ -322,7 +322,7 @@ void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
     if (errorcode_t::success == ret) {
         crypt.encrypt(handle, &key[0], key.size(), out_kw);
 
-        if (option.debug) {
+        if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
             crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -339,7 +339,7 @@ void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
 
         crypt.decrypt(handle, &out_kw[0], out_kw.size(), out_kuw);
 
-        if (option.debug) {
+        if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
             dump_memory(&out_kuw[0], out_kuw.size(), &bs);
@@ -392,7 +392,7 @@ void test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
         }
     }
 
-    if (option.debug) {
+    if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
 
         dump_memory(key, &bs, 16, 2);
@@ -530,7 +530,7 @@ return_t test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_
         /* S = IV || Q */
         s.insert(s.end(), iv.begin(), iv.end());
         s.insert(s.end(), q.begin(), q.end());
-        if (option.debug) {
+        if (option.verbose) {
             dump(s);
         }
 
@@ -554,7 +554,7 @@ return_t test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_
         c.insert(c.end(), s.begin(), s.end());
         c.insert(c.end(), t.begin(), t.end());
 
-        if (option.debug) {
+        if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
             dump(k);
@@ -588,7 +588,7 @@ void test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac
     binary_t t;
     ret = aead.aes_cbc_hmac_sha2_encrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a),
                                          base16_decode(vector->p), q, t);
-    if (option.debug) {
+    if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump_memory(q, &bs);
         printf("%s\n", bs.c_str());
@@ -597,7 +597,7 @@ void test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac
     binary_t p;
     ret = aead.aes_cbc_hmac_sha2_decrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a), q, p,
                                          t);
-    if (option.debug) {
+    if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump_memory(p, &bs);
         printf("%s\n", bs.c_str());
@@ -622,7 +622,7 @@ int main(int argc, char** argv) {
 #endif
 
     cmdline.make_share(new cmdline_t<OPTION>);
-    *cmdline << cmdarg_t<OPTION>("-d", "debug", [&](OPTION& o, char* param) -> void { o.debug = 1; }).optional();
+    *cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
 

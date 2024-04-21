@@ -14,13 +14,12 @@
 
 #include <map>
 #include <sdk/base.hpp>
-#include <sdk/io/basic/keyvalue.hpp>
+#include <sdk/net/http/http_authentication_provider.hpp>
 #include <string>
 
 namespace hotplace {
 namespace net {
 
-class http_authenticate_provider;
 class custom_credentials {
    public:
     custom_credentials();

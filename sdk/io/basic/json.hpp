@@ -13,7 +13,7 @@
 
 #include <jansson.h>
 
-#include <sdk/base/system/trace.hpp>
+#include <sdk/base.hpp>
 #include <sdk/io/system/sdk.hpp>
 
 namespace hotplace {

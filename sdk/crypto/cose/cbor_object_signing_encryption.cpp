@@ -180,7 +180,7 @@ return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_
     return ret;
 }
 
-return_t cbor_object_signing_encryption::encrypt2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -259,7 +259,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
     return ret;
 }
 
-return_t cbor_object_signing_encryption::sign2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -323,7 +323,7 @@ return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key*
     return ret;
 }
 
-return_t cbor_object_signing_encryption::mac2(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {

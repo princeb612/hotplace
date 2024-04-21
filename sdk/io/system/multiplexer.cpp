@@ -9,8 +9,7 @@
  */
 
 #include <map>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/thread.hpp>
+#include <sdk/base.hpp>
 #include <sdk/io/system/multiplexer.hpp>
 
 namespace hotplace {

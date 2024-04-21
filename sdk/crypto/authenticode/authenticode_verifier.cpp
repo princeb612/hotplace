@@ -10,22 +10,17 @@
  */
 
 #include <map>
-#include <sdk/base/stl.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/thread.hpp>
-#include <sdk/base/system/trace.hpp>
+#include <sdk/base.hpp>
 #include <sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
 #include <sdk/crypto/authenticode/authenticode_verifier.hpp>
 #include <sdk/crypto/authenticode/sdk.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/io/system/sdk.hpp>
-#include <sdk/net/basic/sdk.hpp>
 #include <set>
 
 namespace hotplace {
 using namespace io;
-using namespace net;
 namespace crypto {
 
 #define AUTHENTICODE_CONTEXT_SIGNATURE 0x20170710

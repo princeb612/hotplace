@@ -26,10 +26,8 @@
 #include <sdk/base.hpp>
 #include <sdk/crypto/authenticode/authenticode_plugin.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
-//#include <sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
-// using namespace io;
 namespace crypto {
 
 class authenticode_plugin;

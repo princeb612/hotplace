@@ -9,10 +9,7 @@
  */
 
 #include <map>
-#include <sdk/base/basic/base16.hpp>
-#include <sdk/base/basic/ieee754.hpp>
-#include <sdk/base/basic/valist.hpp>
-#include <sdk/base/stl.hpp>
+#include <sdk/base.hpp>
 #include <sdk/io/stream/stream.hpp>
 #include <sdk/io/stream/string.hpp>
 #include <sdk/io/string/string.hpp>

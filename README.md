@@ -105,13 +105,14 @@
 
 ## studying
 
+ * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2817 Upgrading to TLS Within HTTP/1.1
  * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
+ * RFC 7541 HPACK: Header Compression for HTTP/2
  * RFC 9114 HTTP/3
 
 ## next time
 
- * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 8778 Use of the HSS/LMS Hash-Based Signature Algorithm with CBOR Object Signing and Encryption (COSE)
  * RFC 9021 Use of the Walnut Digital Signature Algorithm with CBOR Object Signing and Encryption (COSE)
  * RFC 9054 CBOR Object Signing and Encryption (COSE): Hash Algorithms

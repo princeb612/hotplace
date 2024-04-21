@@ -44,7 +44,6 @@
 
 #include <deque>
 #include <sdk/base.hpp>
-#include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
 namespace io {

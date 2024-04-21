@@ -8,7 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/system/critical_section.hpp>
+#include <sdk/base.hpp>
+#include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
