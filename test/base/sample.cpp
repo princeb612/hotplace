@@ -167,35 +167,6 @@ void test_maphint() {
     _test_case.assert("two" == value, __FUNCTION__, "maphint.find(2)");
 }
 
-template <typename T>
-struct t_comparor_base {
-    friend bool operator<(const T& lhs, const T& rhs) { return lhs < rhs; }
-};
-
-template <typename T>
-struct t_type_comparor : t_comparor_base<T> {
-    bool operator()(const T& lhs, const T& rhs) { return lhs.code < rhs.code; }
-};
-
-template <typename T>
-struct t_huffmancoding_comparor : t_comparor_base<T> {
-    bool operator()(const T& lhs, const T& rhs) const {
-        bool ret = false;
-
-        if (lhs.weight < rhs.weight) {
-            ret = true;
-        } else if (lhs.weight == rhs.weight) {
-            if (lhs.flags < rhs.flags) {
-                ret = true;
-            } else {
-                ret = lhs.code < rhs.code;
-            }
-        }
-
-        return ret;
-    }
-};
-
 void test_btree() {
     _test_case.begin("binary tree");
     // case.1
@@ -313,19 +284,19 @@ void test_btree() {
         constexpr char sample[] = "still a man hears what he wants to hear and disregards the rest";
 
         struct testdata {
-            byte_t code;
+            byte_t symbol;
             size_t weight;
 
-            testdata() : code(0), weight(0) {}
-            testdata(byte_t b) : code(b), weight(0) {}
-            testdata(const testdata& rhs) : code(rhs.code), weight(rhs.weight) {}
+            testdata() : symbol(0), weight(0) {}
+            testdata(byte_t b) : symbol(b), weight(0) {}
+            testdata(const testdata& rhs) : symbol(rhs.symbol), weight(rhs.weight) {}
 
-            // bool operator<(const testdata& rhs) const { return code < rhs.code; }
+            // bool operator<(const testdata& rhs) const { return symbol < rhs.symbol; }
         };
 
         // case.5
         {
-            t_btree<testdata, t_type_comparor<testdata>> bt;
+            t_btree<testdata, t_type_comparator<testdata>> bt;
             for (auto b : sample) {
                 if (b) {
                     bt.insert(testdata((byte_t)b), [](testdata& code) -> void { code.weight++; });
@@ -334,7 +305,7 @@ void test_btree() {
             _test_case.assert(15 == bt.size(), __FUNCTION__, "t_btree<structure, custom_compararor> insert and update");
 
             printf("members in [\n");
-            bt.for_each([](testdata const& t) -> void { printf("%c %02x %u\n", isprint(t.code) ? t.code : '?', t.code, t.weight); });
+            bt.for_each([](testdata const& t) -> void { printf("%c %02x %u\n", isprint(t.symbol) ? t.symbol : '?', t.symbol, t.weight); });
             printf("]\n");
         }
     }
@@ -367,190 +338,44 @@ void test_avl_tree() {
     }
 }
 
-// check result https://asecuritysite.com/calculators/huff
-
-namespace hotplace {
-
-template <typename key_t, typename comparator_t = t_huffmancoding_comparor<key_t>>
-class huffman_coding {
-   public:
-    typedef typename std::function<void(key_t& t, const key_t& lhs, const key_t& rhs)> const_node_visitor;
-    typedef typename std::function<void(key_t const& t)> const_visitor;
-    typedef typename std::function<void(key_t const& t, bool& use, uint8& symbol, std::string const&)> const_hcode_visitor;
-    typedef t_btree<key_t> measure_tree_t;
-    typedef t_btree<key_t, comparator_t> btree_t;
-    typedef std::map<key_t, typename btree_t::node_t*, comparator_t> map_t;
-    typedef std::pair<typename map_t::iterator, bool> map_pib_t;
-    typedef typename btree_t::node_t node_t;
-    typedef std::map<uint8, std::string> table_t;
-    struct hcode {
-        size_t depth;
-        std::string code;
-
-        hcode() : depth(0) {}
-    };
-
-    huffman_coding() {}
-
-    void reset() { _measure.clear(); }
-
-    void operator<<(const char* s) {
-        // count
-        for (const char* p = s; *p; p++) {
-            _measure.insert(key_t((uint8)*p), [](key_t& code) -> void { code.weight++; });
-        }
-    }
-
-    void merge(const_node_visitor visit) {
-        _btree.clear();
-        _m.clear();
-        _table.clear();
-
-        _measure.for_each([&](key_t const& t) -> void { _btree.insert(key_t(t.code, t.weight)); });
-
-        while (_btree.size() > 1) {
-            key_t k;
-            key_t k_left;
-            key_t k_right;
-
-            typename btree_t::node_t* l = _btree.clone_nocascade(_btree.first());
-            k_left = l->_key;
-            _btree.remove(l->_key);
-
-            typename btree_t::node_t* r = _btree.clone_nocascade(_btree.first());
-            k_right = r->_key;
-            _btree.remove(r->_key);
-
-            visit(k, k_left, k_right);
-            typename btree_t::node_t* newone = _btree.insert(k, _btree._root);  // merged leaf
-
-            map_pib_t pib = _m.insert(std::make_pair(k, _btree.clone_nocascade(newone)));  // search
-            pib.first->second->_left = l;
-            pib.first->second->_right = r;
-        }
-    }
-
-    void build(node_t** root) {
-        if (_m.size()) {
-            typename btree_t::node_t* p = _m.rbegin()->second;
-            _m.erase(p->_key);
-
-            while (_m.size()) {
-                build(p);
-            }
-
-            *root = p;
-        }
-    }
-    void table(node_t* root, const_hcode_visitor visit) {
-        if (root && visit) {
-            hcode hc;
-            walk(hc, root, visit);
-        }
-    }
-    void clear(node_t*& root) { _btree.clear(root); }
-
-    void encode(byte_t* source, size_t size) {
-        byte_t* p = nullptr;
-        size_t i = 0;
-        maphint<uint8, std::string> hint(_table);
-        for (p = source, i = 0; i < size; i++) {
-            std::string code;
-            hint.find(p[i], &code);
-            printf("%s ", code.c_str());
-        }
-    }
-
-   protected:
-    void build(typename btree_t::node_t*& p) {
-        if (p) {
-            if (p->_left) {
-                build(p->_left);
-            }
-            if (p->_right) {
-                build(p->_right);
-            }
-            typename map_t::iterator iter = _m.find(p->_key);
-            if (_m.end() != iter) {
-                typename btree_t::node_t* t = iter->second;
-
-                _btree.clear(p);
-                p = t;
-                _m.erase(iter);
-            }
-        }
-    }
-    void walk(hcode& hc, typename btree_t::node_t* t, const_hcode_visitor visit) {
-        if (t) {
-            hc.depth++;
-
-            hc.code += "0";
-            walk(hc, t->_left, visit);
-            hc.code.pop_back();
-
-            bool use = false;
-            uint8 symbol = 0;
-            visit(t->_key, use, symbol, hc.code);
-            if (use) {
-                _table.insert(std::make_pair(symbol, hc.code));
-            }
-
-            hc.code += "1";
-            walk(hc, t->_right, visit);
-            hc.code.pop_back();
-
-            hc.depth--;
-        }
-    }
-
-   private:
-    measure_tree_t _measure;
-    btree_t _btree;
-    map_t _m;
-    table_t _table;
-};
-};  // namespace hotplace
-
 void test_huffman_codes() {
     constexpr char sample[] = "still a man hears what he wants to hear and disregards the rest";
 
-    struct testdata {
-        uint8 code;
-        size_t weight;
-        uint32 flags;
+    huffman_coding<huffmancoding_t> huff;
+    huffman_coding<huffmancoding_t>::node_t* root = nullptr;
 
-        testdata() : code(0), weight(0), flags(0) {}
-        testdata(uint8 b) : code(b), weight(0), flags(0) {}
-        testdata(uint8 b, size_t f) : code(b), weight(f), flags(0) {}
-        testdata(const testdata& rhs) : code(rhs.code), weight(rhs.weight), flags(rhs.flags) {}
-        bool operator<(const testdata& rhs) const { return code < rhs.code; }
-    };
+    huff.load(sample, [](huffmancoding_t& t) -> void { t.weight++; })
+        .learn([](huffmancoding_t& t, const huffmancoding_t& lhs, const huffmancoding_t& rhs) -> void {
+            t.symbol = lhs.symbol;
+            t.weight = lhs.weight + rhs.weight;
+            t.flags = 1;  // merged
+        });
 
-    huffman_coding<testdata> huff;
-
-    huff << sample;
-
-    huff.merge([](testdata& t, const testdata& lhs, const testdata& rhs) -> void {
-        t.code = lhs.code;
-        t.weight = lhs.weight + rhs.weight;
-        t.flags = 1;  // merged
-    });
-
-    huffman_coding<testdata>::node_t* root = nullptr;
-    huff.build(&root);
-    huff.table(root, [](testdata const& t, bool& use, uint8& symbol, std::string const& code) -> void {
+    root = huff.build();
+    huff.infer(root, [](huffmancoding_t const& t, bool& use, uint8& symbol, size_t& weight, std::string const& code) -> void {
         if (0 == t.flags) {
-            // printf("%c (%02x) weight %zi code %s\n", isprint(t.code) ? t.code : '?', t.code, t.weight, code.c_str());
+            printf("%c (0x%02x) weight %2zi code %s\n", isprint(t.symbol) ? t.symbol : '?', t.symbol, t.weight, code.c_str());
             use = true;
-            symbol = t.code;
+            symbol = t.symbol;
+            weight = t.weight;
         }
     });
     huff.clear(root);
 
+    // sample  (504 bits = 63 bytes)
+    // encoded (228 bits)
+    // efficiency = 228 / 504 = 0.45238095238095238095238095238095
+
     // 010 011 10100 10101 10101 111 100 111 001111 100 0010 111 1011 000 100 1100 010 111 11010 1011 100 011 111 1011 000 111 11010 100 0010 011 010 111 011
     // 00110 111 1011 000 100 1100 111 100 0010 11011 111 11011 10100 010 1100 000 001110 100 1100 11011 010 111 011 1011 000 111 1100 000 010 011
-    huff.encode((byte_t*)sample, strlen(sample));
-    printf("\n");
+    basic_stream bs;
+    huff.encode(&bs, (byte_t*)sample, strlen(sample));
+    printf("%s\n", bs.c_str());
+
+    binary_t bin;
+    huff.encode(bin, (byte_t*)sample, strlen(sample));
+    dump_memory(bin, &bs);
+    printf("%s\n", bs.c_str());
 }
 
 int main() {
