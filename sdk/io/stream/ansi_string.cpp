@@ -399,29 +399,29 @@ ansi_string& ansi_string::operator<<(uint128 buf) {
 
 #endif
 
-int ansi_string::compare(ansi_string& buf) { return strcmp(c_str(), buf.c_str()); }
+int ansi_string::compare(ansi_string& rhs) { return strcmp(c_str(), rhs.c_str()); }
 
 int ansi_string::compare(ansi_string& lhs, ansi_string& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 
-bool ansi_string::operator<(const ansi_string& buf) const { return 0 < strcmp(c_str(), buf.c_str()); }
+bool ansi_string::operator<(const ansi_string& rhs) const { return 0 > strcmp(c_str(), rhs.c_str()); }
 
-bool ansi_string::operator>(const ansi_string& buf) const { return 0 > strcmp(c_str(), buf.c_str()); }
+bool ansi_string::operator>(const ansi_string& rhs) const { return 0 < strcmp(c_str(), rhs.c_str()); }
 
-bool ansi_string::operator==(const ansi_string& buf) const {
+bool ansi_string::operator==(const ansi_string& rhs) const {
     bool ret = false;
 
-    if (size() == buf.size()) {
-        int cmp = memcmp(data(), buf.data(), size());
+    if (size() == rhs.size()) {
+        int cmp = memcmp(data(), rhs.data(), size());
         ret = (0 == cmp);
     }
     return ret;
 }
 
-bool ansi_string::operator!=(const ansi_string& buf) const {
+bool ansi_string::operator!=(const ansi_string& rhs) const {
     bool ret = true;
 
-    if (size() == buf.size()) {
-        int cmp = memcmp(data(), buf.data(), size());
+    if (size() == rhs.size()) {
+        int cmp = memcmp(data(), rhs.data(), size());
         ret = (0 != cmp);
     }
     return ret;

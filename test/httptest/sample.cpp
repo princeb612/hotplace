@@ -934,10 +934,11 @@ void test_rfc7541_c_1() {
 
 // C.2.  Header Field Representation Examples
 void hpack_encode_header(binary_t& target, bool huffman, uint32 index, std::string name, std::string value) {
-    hpack_encode_int(target, 6, index, (huffman ? 0xc0 : 0x40));
-    hpack_encode_int(target, 7, name.size());
+    uint8 prefix = 5;
+    hpack_encode_int(target, prefix, index, (huffman ? 0xc0 : 0x40));
+    hpack_encode_int(target, prefix, name.size());
     target.insert(target.end(), name.begin(), name.end());
-    hpack_encode_int(target, 7, value.size());
+    hpack_encode_int(target, prefix, value.size());
     target.insert(target.end(), value.begin(), value.end());
 }
 
@@ -978,20 +979,22 @@ void hpack_encode_header(binary_t& target, std::string const& name, std::string 
         }
     }
 
+    uint8 prefix = 5;
     if (matched) {
-        hpack_encode_int(target, 6, index, 0x80);
+        hpack_encode_int(target, prefix, index, 0x80);
     } else {
-        hpack_encode_int(target, 8, index);
-        hpack_encode_int(target, 7, value.size());
+        hpack_encode_int(target, prefix, index);
+        hpack_encode_int(target, prefix, value.size());
         target.insert(target.end(), value.begin(), value.end());
     }
 }
 
 void hpack_encode_header2(binary_t& target, std::string name, std::string value) {
-    target.insert(target.end(), 0x10);  // liternal never indexed
-    hpack_encode_int(target, 7, name.size());
+    uint8 prefix = 5;
+    hpack_encode_int(target, prefix, 0, 0x10);  // target.insert(target.end(), 0x10);  // liternal never indexed
+    hpack_encode_int(target, prefix, name.size());
     target.insert(target.end(), name.begin(), name.end());
-    hpack_encode_int(target, 7, value.size());
+    hpack_encode_int(target, prefix, value.size());
     target.insert(target.end(), value.begin(), value.end());
 }
 
@@ -1045,7 +1048,21 @@ void test_rfc7541_c_3() {
     OPTION& option = cmdline->value();
 
     binary_t bin;
+    basic_stream bs;
     // C.3.1.  First Request
+    // :method: GET
+    // :scheme: http
+    // :path: /
+    // :authority: www.example.com
+    hpack_encode_header(bin, ":method", "GET");
+    hpack_encode_header(bin, ":scheme", "http");
+    hpack_encode_header(bin, ":path", "/");
+    hpack_encode_header(bin, ":authority", "www.example.com");
+    if (option.verbose) {
+        dump_memory(bin, &bs, 16, 2);
+        printf("encode\n%s\n", bs.c_str());
+    }
+    _test_case.assert(bin == base16_decode("828684410f7777772e6578616d706c652e636f6d"), __FUNCTION__, "RFC 7541 C.3.1");
     // C.3.2.  Second Request
     // C.3.3.  Third Request
 }

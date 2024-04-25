@@ -398,29 +398,29 @@ wide_string& wide_string::operator<<(wide_string& buf) {
     return *this;
 }
 
-int wide_string::compare(wide_string& buf) { return wcscmp(c_str(), buf.c_str()); }
+int wide_string::compare(wide_string& rhs) { return wcscmp(c_str(), rhs.c_str()); }
 
 int wide_string::compare(wide_string& lhs, wide_string& rhs) { return wcscmp(lhs.c_str(), rhs.c_str()); }
 
-bool wide_string::operator<(const wide_string& buf) const { return 0 < wcscmp(c_str(), buf.c_str()); }
+bool wide_string::operator<(const wide_string& rhs) const { return 0 > wcscmp(c_str(), rhs.c_str()); }
 
-bool wide_string::operator>(const wide_string& buf) const { return 0 > wcscmp(c_str(), buf.c_str()); }
+bool wide_string::operator>(const wide_string& rhs) const { return 0 < wcscmp(c_str(), rhs.c_str()); }
 
-bool wide_string::operator==(const wide_string& buf) const {
+bool wide_string::operator==(const wide_string& rhs) const {
     bool ret = false;
 
-    if (size() == buf.size()) {
-        int cmp = memcmp(data(), buf.data(), size());
+    if (size() == rhs.size()) {
+        int cmp = memcmp(data(), rhs.data(), size());
         ret = (0 == cmp);
     }
     return ret;
 }
 
-bool wide_string::operator!=(const wide_string& buf) const {
+bool wide_string::operator!=(const wide_string& rhs) const {
     bool ret = true;
 
-    if (size() == buf.size()) {
-        int cmp = memcmp(data(), buf.data(), size());
+    if (size() == rhs.size()) {
+        int cmp = memcmp(data(), rhs.data(), size());
         ret = (0 != cmp);
     }
     return ret;

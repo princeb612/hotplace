@@ -193,14 +193,14 @@ basic_stream& basic_stream::operator<<(std::string const& value) {
     return *this;
 }
 
-int basic_stream::compare(basic_stream const& obj) { return strcmp((*this).c_str(), obj.c_str()); }
+int basic_stream::compare(basic_stream const& rhs) { return strcmp((*this).c_str(), rhs.c_str()); }
 
 int basic_stream::compare(basic_stream& lhs, basic_stream& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 
-bool basic_stream::operator<(const basic_stream& obj) const { return 0 < strcmp((*this).c_str(), obj.c_str()); }
+bool basic_stream::operator<(const basic_stream& rhs) const { return 0 > strcmp((*this).c_str(), rhs.c_str()); }
 
-bool basic_stream::operator>(const basic_stream& obj) const { return 0 > strcmp((*this).c_str(), obj.c_str()); }
+bool basic_stream::operator>(const basic_stream& rhs) const { return 0 < strcmp((*this).c_str(), rhs.c_str()); }
 
-bool basic_stream::operator==(const basic_stream& obj) const { return 0 == strcmp((*this).c_str(), obj.c_str()); }
+bool basic_stream::operator==(const basic_stream& rhs) const { return 0 == strcmp((*this).c_str(), rhs.c_str()); }
 
 }  // namespace hotplace
