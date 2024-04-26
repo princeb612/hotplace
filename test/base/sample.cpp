@@ -12,6 +12,7 @@
 
 #include <functional>
 #include <iostream>
+#include <sdk/base/basic/huffman_coding.hpp>
 #include <sdk/base/basic/tree.hpp>
 #include <sdk/sdk.hpp>
 #include <string>
@@ -341,30 +342,9 @@ void test_avl_tree() {
 void test_huffman_codes() {
     constexpr char sample[] = "still a man hears what he wants to hear and disregards the rest";
 
-    huffman_coding<huffmancoding_t> huff;
-    huffman_coding<huffmancoding_t>::node_t* root = nullptr;
+    huffman_coding huff;
 
-    huff.load(sample, [](huffmancoding_t& t) -> void { t.weight++; })
-        .learn([](huffmancoding_t& t, const huffmancoding_t& lhs, const huffmancoding_t& rhs) -> void {
-            t.symbol = lhs.symbol;
-            t.weight = lhs.weight + rhs.weight;
-            t.flags = 1;  // merged
-        });
-
-    root = huff.build();
-    huff.infer(root, [](huffmancoding_t const& t, bool& use, uint8& symbol, size_t& weight, std::string const& code) -> void {
-        if (0 == t.flags) {
-            printf("%c (0x%02x) weight %2zi code %s\n", isprint(t.symbol) ? t.symbol : '?', t.symbol, t.weight, code.c_str());
-            use = true;
-            symbol = t.symbol;
-            weight = t.weight;
-        }
-    });
-    huff.clear(root);
-
-    // sample  (504 bits = 63 bytes)
-    // encoded (228 bits)
-    // efficiency = 228 / 504 = 0.45238095238095238095238095238095
+    huff.load(sample).learn().infer();
 
     // 010 011 10100 10101 10101 111 100 111 001111 100 0010 111 1011 000 100 1100 010 111 11010 1011 100 011 111 1011 000 111 11010 100 0010 011 010 111 011
     // 00110 111 1011 000 100 1100 111 100 0010 11011 111 11011 10100 010 1100 000 001110 100 1100 11011 010 111 011 1011 000 111 1100 000 010 011
