@@ -31,7 +31,10 @@ namespace hotplace {
  *          https://asecuritysite.com/calculators/huff
  * @sample
  *          huffman_coding huff;
+ *          // method.1 - learn huffman codes from stream
  *          huff.load(sample).learn().infer();
+ *          // method.2 - load from pre-trained codes
+ *          huff.imports(_h2hcodes);
  */
 
 template <typename T>
@@ -80,250 +83,116 @@ class huffman_coding {
 
         hc_temp() : depth(0) {}
     };
+    struct hc_code {
+        uint8 sym;
+        const char *code;
+    };
+
     typedef t_btree<hc_t> measure_tree_t;
     typedef t_btree<hc_t, hc_comparator> btree_t;
     typedef std::map<hc_t, typename btree_t::node_t *, hc_comparator> map_t;
     typedef std::pair<typename map_t::iterator, bool> map_pib_t;
     typedef std::map<uint8, std::string> codetable_t;
-    typedef typename btree_t::node_t node_t;
+    typedef std::map<std::string, uint8> reverse_codetable_t;
 
-   public:
+    typedef typename btree_t::node_t node_t;
     typedef typename std::function<void(hc_t const &t)> const_visitor;
     typedef typename std::function<void(hc_t &t)> visitor;
     typedef typename std::function<void(hc_t &t, const hc_t &lhs, const hc_t &rhs)> learn_visitor;
 
-    huffman_coding() {}
-    ~huffman_coding() {
-        _measure.clear();
-        _btree.clear();
-        _m.clear();
-        _codetable.clear();
-    }
+   public:
+    typedef hc_code hc_code_t;
 
-    void reset() { _measure.clear(); }
+    huffman_coding();
+    ~huffman_coding();
 
-    huffman_coding &operator<<(const char *s) { return load(s); }
-    huffman_coding &load(const char *s) {
-        // count
-        if (s) {
-            for (const char *p = s; *p; p++) {
-                _measure.insert(hc_t((uint8)*p), [](hc_t &t) -> void { t.weight++; });
-            }
-        }
-        return *this;
-    }
+    void reset();
 
-    huffman_coding &learn() {
-        _btree.clear();
-        _m.clear();
-        _codetable.clear();
+    huffman_coding &operator<<(const char *s);
+    huffman_coding &load(const char *s);
+    huffman_coding &learn();
+    huffman_coding &infer();
 
-        _measure.for_each([&](hc_t const &t) -> void { _btree.insert(t); });
+    /**
+     * @brief   import pre-trained codes
+     * @sample
+     *          const huffman_coding::hc_code_t _h2hcodes[] = {
+     *              { 1, "11111111111111111011000" },
+     *              { 2, "1111111111111111111111100010" },
+     *              // ...
+     *          };
+     *
+     *          huffman_coding huff;
+     *          huff.imports(_h2hcodes);
+     */
+    huffman_coding &imports(const hc_code_t *table);
+    /**
+     * @brief   export hufman codes
+     * @sample
+     *          const huffman_coding::hc_code_t _h2hcodes[] = {
+     *              { 1, "11111111111111111011000" },
+     *              { 2, "1111111111111111111111100010" },
+     *              // ...
+     *          };
+     *
+     *          huffman_coding huff;
+     *          huff.imports(_h2hcodes).exports(
+     *              [](uint8 sym, const char* code) -> void { printf("sym %c (0x%02x) %s (%zi)\n", isprint(sym) ? sym : '?', sym, code, strlen(code)); });
+     */
+    huffman_coding &exports(std::function<void(uint8, const char *)> v);
 
-        while (_btree.size() > 1) {
-            hc_t k;
-            hc_t k_lhs;
-            hc_t k_rhs;
+    return_t expect(const char *source, size_t &size_expected);
+    return_t expect(const char *source, size_t size, size_t &size_expected);
+    return_t expect(byte_t *source, size_t size, size_t &size_expected);
 
-            typename btree_t::node_t *l = _btree.clone_nocascade(_btree.first());
-            k_lhs = l->_key;
-            _btree.remove(l->_key);
+    /*
+     * @brief   encode
+     * @sample
+     *          const char* sample = "www.example.com";
+     *          binary_t bin;
+     *          huff.encode(bin, (byte_t*)sample, strlen(sample));
+     *          // f1 e3 c2 e5 f2 3a 6b a0 ab 90 f4 ff
+     */
+    return_t encode(binary_t &bin, const char *source, size_t size, bool usepad = true);
+    return_t encode(binary_t &bin, byte_t *source, size_t size, bool usepad = true);
+    /*
+     * @brief   encode
+     * @sample
+     *          const char* sample = "www.example.com";
+     *          basic_stream bs;
+     *          huff.encode(&bs, (byte_t*)sample, strlen(sample));
+     *          printf("%s\n", bs.c_str());
+     *
+     */
+    return_t encode(stream_t *stream, const char *source, size_t size);
+    return_t encode(stream_t *stream, byte_t *source, size_t size);
+    /**
+     * @brief   decode
+     * @remarks constraints : min(code len in bits) >= 5
+     *
+     *          huff.imports(_h2hcodes);  // RFC 7541 Appendix B. Huffman Code
+     *          huff.encode(...);
+     *          huff.decode(...);
+     */
+    return_t decode(stream_t *stream, byte_t *source, size_t size);
 
-            typename btree_t::node_t *r = _btree.clone_nocascade(_btree.first());
-            k_rhs = r->_key;
-            _btree.remove(r->_key);
-
-            k.symbol = k_lhs.symbol;
-            k.weight = k_lhs.weight + k_rhs.weight;
-            k.flags = 1;  // merged
-
-            typename btree_t::node_t *newone = _btree.insert(k, _btree._root);  // merged
-
-            map_pib_t pib = _m.insert(std::make_pair(k, _btree.clone_nocascade(newone)));
-            pib.first->second->_left = l;
-            pib.first->second->_right = r;
-        }
-        return *this;
-    }
-
-    huffman_coding &infer() {
-        huffman_coding::node_t *root = nullptr;
-        build(&root);
-
-        if (root) {
-            hc_temp hc;
-            infer(hc, root);
-
-            clear(root);
-        }
-
-        return *this;
-    }
-
-    void encode(binary_t &bin, byte_t *source, size_t size) {
-        return_t ret = errorcode_t::success;
-        std::string buf;
-        std::string code;
-        size_t totalbits = 0;
-        byte_t *p = nullptr;
-        size_t i = 0;
-        maphint<uint8, std::string> hint(_codetable);
-
-#if 0
-        // align to LSB
-
-        for (p = source, i = 0; i < size; i++) {
-            ret = hint.find(p[i], &code);
-            if (errorcode_t::success != ret) {
-                ret = errorcode_t::bad_data;
-                break;
-            }
-            totalbits += code.size();
-        }
-
-        if (errorcode_t::success == ret) {
-            size_t remains = totalbits % 8;
-
-            for (p = source, i = 0; i < size; i++) {
-                hint.find(p[i], &code);
-
-                buf += code;
-
-                if (remains) {
-                    if (buf.size() > remains) {
-                        uint8 b = 0;
-                        for (size_t i = 0; i < remains; i++) {
-                            if ('1' == buf[i]) {
-                                b += (1 << (7 - i - remains));
-                            }
-                        }
-                        bin.insert(bin.end(), b);
-                        buf.erase(0, remains);
-
-                        remains = 0;
-                    }
-                }
-
-                while (buf.size() >= 8) {
-                    uint8 b = 0;
-                    for (size_t i = 0; i < 8; i++) {
-                        if ('1' == buf[i]) {
-                            b += (1 << (7 - i));
-                        }
-                    }
-                    bin.insert(bin.end(), b);
-                    buf.erase(0, 8);
-                }
-            }
-        }
-#else
-        // align to MSB
-        for (p = source, i = 0; i < size; i++) {
-            std::string code;
-            hint.find(p[i], &code);
-            buf += code;
-
-            while (buf.size() >= 8) {
-                uint8 b = 0;
-                for (int i = 0; i < 8; i++) {
-                    if ('1' == buf[i]) {
-                        b += (1 << (7 - i));
-                    }
-                }
-                bin.insert(bin.end(), b);
-                buf.erase(0, 8);
-            }
-        }
-        {
-            uint8 b = 0;
-            size_t remains = buf.size();
-            for (int i = 0; i < remains; i++) {
-                if ('1' == buf[i]) {
-                    b += (1 << (7 - i));
-                }
-            }
-            bin.insert(bin.end(), b);
-            buf.erase(0, remains);
-        }
-#endif
-    }
-    void encode(stream_t *s, byte_t *source, size_t size) {
-        // align to MSB
-        byte_t *p = nullptr;
-        size_t i = 0;
-        maphint<uint8, std::string> hint(_codetable);
-        for (p = source, i = 0; i < size; i++) {
-            std::string code;
-            hint.find(p[i], &code);
-            s->printf("%s ", code.c_str());
-        }
-    }
+    /**
+     * @brief   check min(code len in bits) >= 5
+     */
+    bool decodable();
 
    protected:
-    node_t *build(node_t **root = nullptr) {
-        typename btree_t::node_t *p = nullptr;
-        if (_m.size()) {
-            p = _m.rbegin()->second;
-            _m.erase(p->_key);
-
-            while (_m.size()) {
-                build(p);
-            }
-
-            if (root) {
-                *root = p;
-            }
-        }
-        return p;
-    }
-    void clear(node_t *&root) { _btree.clear(root); }
-
-    void build(typename btree_t::node_t *&p) {
-        if (p) {
-            if (p->_left) {
-                build(p->_left);
-            }
-            if (p->_right) {
-                build(p->_right);
-            }
-            typename map_t::iterator iter = _m.find(p->_key);
-            if (_m.end() != iter) {
-                typename btree_t::node_t *t = iter->second;
-
-                _btree.clear(p);
-                p = t;
-                _m.erase(iter);
-            }
-        }
-    }
-    void infer(hc_temp &hc, typename btree_t::node_t *t) {
-        if (t) {
-            hc.depth++;
-
-            hc.code += "0";
-            infer(hc, t->_left);
-            hc.code.pop_back();
-
-            bool use = false;
-            uint8 symbol = 0;
-
-            if (0 == t->_key.flags) {
-                _codetable.insert(std::make_pair(t->_key.symbol, hc.code));
-            }
-
-            hc.code += "1";
-            infer(hc, t->_right);
-            hc.code.pop_back();
-
-            hc.depth--;
-        }
-    }
+    node_t *build(node_t **root = nullptr);
+    void clear(node_t *&root);
+    void build(typename btree_t::node_t *&p);
+    void infer(hc_temp &hc, typename btree_t::node_t *t);
 
    private:
     measure_tree_t _measure;
     btree_t _btree;
     map_t _m;
     codetable_t _codetable;
+    reverse_codetable_t _reverse_codetable;
 };
 
 }  // namespace hotplace

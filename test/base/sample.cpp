@@ -12,8 +12,6 @@
 
 #include <functional>
 #include <iostream>
-#include <sdk/base/basic/huffman_coding.hpp>
-#include <sdk/base/basic/tree.hpp>
 #include <sdk/sdk.hpp>
 #include <string>
 
@@ -306,7 +304,7 @@ void test_btree() {
             _test_case.assert(15 == bt.size(), __FUNCTION__, "t_btree<structure, custom_compararor> insert and update");
 
             printf("members in [\n");
-            bt.for_each([](testdata const& t) -> void { printf("%c %02x %u\n", isprint(t.symbol) ? t.symbol : '?', t.symbol, t.weight); });
+            bt.for_each([](testdata const& t) -> void { printf("%c %02x %zi\n", isprint(t.symbol) ? t.symbol : '?', t.symbol, t.weight); });
             printf("]\n");
         }
     }
@@ -356,6 +354,8 @@ void test_huffman_codes() {
     huff.encode(bin, (byte_t*)sample, strlen(sample));
     dump_memory(bin, &bs);
     printf("%s\n", bs.c_str());
+
+    // to decode, min(code len in bits) MUST >= 5
 }
 
 int main() {

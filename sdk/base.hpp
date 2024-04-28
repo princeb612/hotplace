@@ -30,8 +30,10 @@
 #include <sdk/base/basic/console_color.hpp>
 #include <sdk/base/basic/constexpr_obfuscate.hpp>
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/basic/huffman_coding.hpp>
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/obfuscate_string.hpp>
+#include <sdk/base/basic/tree.hpp>
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/basic/variant.hpp>
 
