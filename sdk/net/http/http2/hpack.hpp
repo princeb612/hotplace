@@ -30,9 +30,39 @@ enum hpack_flag_t {
     hpack_never_indexed = 1 << 3,
 };
 
+class hpack_session;
+
+/**
+ * @brief   RFC 7541 HPACK
+ * @remarks
+ *          t_shared_instance<hpack> _hpack;
+ *          // RFC 7541 Appendix B. Huffman Code
+ *          // RFC 7541 Appendix A.  Static Table Definition
+ *          hpack_instance.make_share(new hpack); // load resources here
+ *
+ *              // thread #1 connection #1
+ *              hpack_session session;
+ *              (*hpack_instance).encode_header(&session, ...); // handle dynamic table #1
+ *
+ *              // thread #2 connection #2
+ *              hpack_session session;
+ *              (*hpack_instance).encode_header(&session, ...); // handle dynamic table #2
+ *
+ */
 class hpack {
+    friend class hpack_session;
+
    public:
     hpack();
+
+    /**
+     * @brief   encode (header compression)
+     */
+    hpack& encode_header(hpack_session* session, binary_t& target, std::string const& name, std::string const& value, uint32 flags = 0);
+    /**
+     * @brief   decode (header compression)
+     */
+    hpack& decode_header(hpack_session* session, byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
 
     hpack& encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value);
 
@@ -52,8 +82,6 @@ class hpack {
     hpack& encode_dyntablesize(binary_t& target, uint8 maxsize);
 
     return_t decode_int(byte_t* p, size_t& pos, uint8 prefix, size_t& value);
-
-    hpack& encode_header(binary_t& target, std::string const& name, std::string const& value, uint32 flags = 0);
 
     /*
      * @brief   safe mask
@@ -78,16 +106,36 @@ class hpack {
         }
         _http2_table_t(std::string const& v, size_t i) : value(v), index(i) {}
     } http2_table_t;
+
     typedef std::multimap<std::string, http2_table_t> static_table_t;
     typedef std::list<std::pair<std::string, http2_table_t>> dynamic_table_t;
 
     huffman_coding _hc;
     static_table_t _static_table;
-    dynamic_table_t _dynamic_table;
     bool _safe_mask;
 
+    match_result_t find_table(hpack_session* session, std::string const& name, std::string const& value, size_t& index);
+    return_t insert_table(hpack_session* session, std::string const& name, std::string const& value);
+};
+
+/**
+ * @brief   separate dynamic table per session
+ * @sa      hpack
+ */
+class hpack_session {
+    friend class hpack;
+
+   public:
+    hpack_session();
+
+   protected:
     match_result_t find_table(std::string const& name, std::string const& value, size_t& index);
     return_t insert_table(std::string const& name, std::string const& value);
+
+   private:
+    typedef hpack::http2_table_t http2_table_t;
+    typedef hpack::dynamic_table_t dynamic_table_t;
+    dynamic_table_t _dynamic_table;
 };
 
 // RFC 7541 Appendix B. Huffman Code

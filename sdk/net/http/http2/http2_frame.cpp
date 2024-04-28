@@ -164,8 +164,7 @@ void http2_frame_header::dump(stream_t* s) {
         s->printf("\n");
         s->printf("> %s [ ", constexpr_frame_flags);
 
-        resource->for_each_frame_flags(get_flags(), s,
-                                       [](uint8 flag, stream_t* s) -> void { s->printf("%s ", http_resource::get_instance()->get_frame_flag(flag).c_str()); });
+        resource->for_each_frame_flag_names(get_flags(), [&](uint8 flag, std::string const& name) -> void { s->printf("%s ", name.c_str()); });
 
         s->printf("]\n");
     }

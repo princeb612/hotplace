@@ -10,12 +10,19 @@
 
 #include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
+#include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {
 
 hpack::hpack() : _safe_mask(false) {
-    _hc.imports(_h2hcodes);  // RFC 7541 Appendix B. Huffman Code
+    // RFC 7541 Appendix B. Huffman Code
+    _hc.imports(_h2hcodes);
+
+    // RFC 7541 Appendix A.  Static Table Definition
+    // if (_static_table.empty()) ...
+    http_resource::get_instance()->for_each_hpack_static_table(
+        [&](uint32 index, const char* name, const char* value) -> void { _static_table.insert(std::make_pair(name, http2_table_t(value, index))); });
 }
 
 hpack& hpack::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value) {
@@ -285,18 +292,14 @@ return_t hpack::decode_int(byte_t* p, size_t& pos, uint8 prefix, size_t& value) 
     return ret;
 }
 
-match_result_t hpack::find_table(std::string const& name, std::string const& value, size_t& index) {
+match_result_t hpack::find_table(hpack_session* session, std::string const& name, std::string const& value, size_t& index) {
     match_result_t state = not_matched;
     index = 0;
 
-    {
-        size_t idx = 0;
-        for (dynamic_table_t::iterator iter = _dynamic_table.begin(); iter != _dynamic_table.end(); iter++, idx++) {
-            if ((name == iter->first) && (value == iter->second.value)) {
-                state = all_matched;
-                index = _static_table.size() + 1 + idx;
-                break;
-            }
+    if (session) {
+        state = session->find_table(name, value, index);
+        if (all_matched == state) {
+            index += _static_table.size() + 1;
         }
     }
     if (not_matched == state) {
@@ -322,7 +325,7 @@ match_result_t hpack::find_table(std::string const& name, std::string const& val
     return state;
 }
 
-return_t hpack::insert_table(std::string const& name, std::string const& value) {
+return_t hpack::insert_table(hpack_session* session, std::string const& name, std::string const& value) {
     //  RFC 7541 Figure 1: Index Address Space
     //
     //   <----------  Index Address Space ---------->
@@ -336,116 +339,75 @@ return_t hpack::insert_table(std::string const& name, std::string const& value) 
     //
     //               Figure 1: Index Address Space
     return_t ret = errorcode_t::success;
-    _dynamic_table.push_front(std::make_pair(name, http2_table_t(value, 0)));
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        session->insert_table(name, value);
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
-hpack& hpack::encode_header(binary_t& target, std::string const& name, std::string const& value, uint32 flags) {
-    // RFC 7541 Appendix A.  Static Table Definition
-    if (_static_table.empty()) {
-#define ENTRY(index, header_name, header_value) \
-    { index, header_name, header_value }
-        struct static_table_entry {
-            uint32 index;
-            const char* name;
-            const char* value;
-        } entries[] = {
-            ENTRY(1, ":authority", nullptr),
-            ENTRY(2, ":method", "GET"),
-            ENTRY(3, ":method", "POST"),
-            ENTRY(4, ":path", "/"),
-            ENTRY(5, ":path", "/index.html"),
-            ENTRY(6, ":scheme", "http"),
-            ENTRY(7, ":scheme", "https"),
-            ENTRY(8, ":status", "200"),
-            ENTRY(9, ":status", "204"),
-            ENTRY(10, ":status", "206"),
-            ENTRY(11, ":status", "304"),
-            ENTRY(12, ":status", "400"),
-            ENTRY(13, ":status", "404"),
-            ENTRY(14, ":status", "500"),
-            ENTRY(15, "accept-charset", nullptr),
-            ENTRY(16, "accept-encoding", "gzip,deflate"),
-            ENTRY(17, "accept-language", nullptr),
-            ENTRY(18, "accept-ranges", nullptr),
-            ENTRY(19, "accept", nullptr),
-            ENTRY(20, "access-control-allow-origin", nullptr),
-            ENTRY(21, "age", nullptr),
-            ENTRY(22, "allow", nullptr),
-            ENTRY(23, "authorization", nullptr),
-            ENTRY(24, "cache-control", nullptr),
-            ENTRY(25, "content-disposition", nullptr),
-            ENTRY(26, "content-encoding", nullptr),
-            ENTRY(27, "content-language", nullptr),
-            ENTRY(28, "content-length", nullptr),
-            ENTRY(29, "content-location", nullptr),
-            ENTRY(30, "content-range", nullptr),
-            ENTRY(31, "content-type", nullptr),
-            ENTRY(32, "cookie", nullptr),
-            ENTRY(33, "date", nullptr),
-            ENTRY(34, "etag", nullptr),
-            ENTRY(35, "expect", nullptr),
-            ENTRY(36, "expires", nullptr),
-            ENTRY(37, "from", nullptr),
-            ENTRY(38, "host", nullptr),
-            ENTRY(39, "if-match", nullptr),
-            ENTRY(40, "if-modified-since", nullptr),
-            ENTRY(41, "if-none-match", nullptr),
-            ENTRY(42, "if-range", nullptr),
-            ENTRY(43, "if-unmodified-since", nullptr),
-            ENTRY(44, "last-modified", nullptr),
-            ENTRY(45, "link", nullptr),
-            ENTRY(46, "location", nullptr),
-            ENTRY(47, "max-forwards", nullptr),
-            ENTRY(48, "proxy-authenticate", nullptr),
-            ENTRY(49, "proxy-authorization", nullptr),
-            ENTRY(50, "range", nullptr),
-            ENTRY(51, "referer", nullptr),
-            ENTRY(52, "refresh", nullptr),
-            ENTRY(53, "retry-after", nullptr),
-            ENTRY(54, "server", nullptr),
-            ENTRY(55, "set-cookie", nullptr),
-            ENTRY(56, "strict-transport-security", nullptr),
-            ENTRY(57, "transfer-encoding", nullptr),
-            ENTRY(58, "user-agent", nullptr),
-            ENTRY(59, "vary", nullptr),
-            ENTRY(60, "via", nullptr),
-            ENTRY(61, "www-authenticate", nullptr),
-        };
+hpack& hpack::encode_header(hpack_session* session, binary_t& target, std::string const& name, std::string const& value, uint32 flags) {
+    match_result_t state = not_matched;
+    if (session) {
+        size_t index = 0;
 
-        for (size_t i = 0; i < RTL_NUMBER_OF(entries); i++) {
-            static_table_entry* item = entries + i;
-            _static_table.insert(std::make_pair(item->name, http2_table_t(item->value, item->index)));
+        state = find_table(session, name, value, index);
+        switch (state) {
+            case all_matched:
+                encode_index(target, index);
+                break;
+            case key_matched:
+                encode_indexed_name(target, flags, index, value);
+                if (hpack_indexing & flags) {
+                    session->insert_table(name, value);
+                }
+                break;
+            default:
+                encode_name_value(target, flags, name, value);
+                if (hpack_indexing & flags) {
+                    session->insert_table(name, value);
+                }
+                break;
         }
     }
+    return *this;
+}
 
-    match_result_t state = not_matched;
-    size_t index = 0;
-
-    state = find_table(name, value, index);
-    switch (state) {
-        case all_matched:
-            encode_index(target, index);
-            break;
-        case key_matched:
-            encode_indexed_name(target, flags, index, value);
-            if (hpack_indexing & flags) {
-                insert_table(name, value);
-            }
-            break;
-        default:
-            encode_name_value(target, flags, name, value);
-            if (hpack_indexing & flags) {
-                insert_table(name, value);
-            }
-            break;
-    }
+hpack& hpack::decode_header(hpack_session* session, byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
+    //
     return *this;
 }
 
 hpack& hpack::safe_mask(bool enable) {
     _safe_mask = enable;
     return *this;
+}
+
+hpack_session::hpack_session() {}
+
+match_result_t hpack_session::find_table(std::string const& name, std::string const& value, size_t& index) {
+    match_result_t state = not_matched;
+    size_t idx = 0;
+    for (dynamic_table_t::iterator iter = _dynamic_table.begin(); iter != _dynamic_table.end(); iter++, idx++) {
+        if ((name == iter->first) && (value == iter->second.value)) {
+            state = all_matched;
+            index = idx;
+            break;
+        }
+    }
+    return state;
+}
+
+return_t hpack_session::insert_table(std::string const& name, std::string const& value) {
+    return_t ret = errorcode_t::success;
+    _dynamic_table.push_front(std::make_pair(name, http2_table_t(value, 0)));
+    return ret;
 }
 
 }  // namespace net

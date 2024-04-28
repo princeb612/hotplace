@@ -35,6 +35,7 @@
 #include <sdk/net/http/http_response.hpp>
 #include <sdk/net/http/http_router.hpp>
 #include <sdk/net/http/http_server.hpp>
+#include <sdk/net/http/http_server_builder.hpp>
 #include <sdk/net/http/http_uri.hpp>
 #include <sdk/net/http/types.hpp>
 

@@ -30,6 +30,7 @@ typedef struct _OPTION {
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
+t_shared_instance<hpack> hpack_instance;
 
 void cprint(const char* text, ...) {
     console_color _concolor;
@@ -45,14 +46,13 @@ void cprint(const char* text, ...) {
 void test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const char* text) {
     OPTION& option = cmdline->value();
 
-    hpack hp;
     binary_t bin;
     basic_stream bs;
     size_t value = 0;
     size_t pos = 0;
 
-    hp.encode_int(bin, 0x00, prefix, i);
-    hp.decode_int(&bin[0], pos, prefix, value);
+    (*hpack_instance).encode_int(bin, 0x00, prefix, i);
+    (*hpack_instance).decode_int(&bin[0], pos, prefix, value);
 
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
@@ -82,14 +82,14 @@ void test_rfc7541_c_2() {
     _test_case.begin("RFC 7541 HPACK C.2. Header Field Representation Examples");
     OPTION& option = cmdline->value();
 
-    hpack hp;
+    hpack_session session;  // dynamic table
 
     binary_t bin;
     basic_stream bs;
     // C.2.1.  Literal Header Field with Indexing
     // "custom-key: custom-header"
     bin.clear();
-    hp.encode_header(bin, "custom-key", "custom-header", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "custom-key", "custom-header", hpack_indexing);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -102,7 +102,7 @@ void test_rfc7541_c_2() {
     // C.2.2.  Literal Header Field without Indexing
     // :path: /sample/path
     bin.clear();
-    hp.encode_header(bin, ":path", "/sample/path", hpack_wo_indexing);
+    (*hpack_instance).encode_header(&session, bin, ":path", "/sample/path", hpack_wo_indexing);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -112,7 +112,7 @@ void test_rfc7541_c_2() {
     // C.2.3.  Literal Header Field Never Indexed
     // password: secret
     bin.clear();
-    hp.encode_header(bin, "password", "secret", hpack_never_indexed);
+    (*hpack_instance).encode_header(&session, bin, "password", "secret", hpack_never_indexed);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -123,7 +123,7 @@ void test_rfc7541_c_2() {
     _test_case.assert(bin == base16_decode_rfc(expect3), __FUNCTION__, "RFC 7541 C.2.3 Literal Header Field Never Indexed");
     // C.2.4.  Indexed Header Field
     bin.clear();
-    hp.encode_header(bin, ":method", "GET");
+    (*hpack_instance).encode_header(&session, bin, ":method", "GET");
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -137,7 +137,8 @@ void test_rfc7541_c_3() {
     _test_case.begin("RFC 7541 HPACK C.3. Request Examples without Huffman Coding");
     OPTION& option = cmdline->value();
 
-    hpack hp;
+    hpack_session session;  // dynamic table
+
     binary_t bin;
     basic_stream bs;
     // C.3.1.  First Request
@@ -145,10 +146,10 @@ void test_rfc7541_c_3() {
     // :scheme: http
     // :path: /
     // :authority: www.example.com
-    hp.encode_header(bin, ":method", "GET");
-    hp.encode_header(bin, ":scheme", "http");
-    hp.encode_header(bin, ":path", "/");
-    hp.encode_header(bin, ":authority", "www.example.com", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, ":method", "GET");
+    (*hpack_instance).encode_header(&session, bin, ":scheme", "http");
+    (*hpack_instance).encode_header(&session, bin, ":path", "/");
+    (*hpack_instance).encode_header(&session, bin, ":authority", "www.example.com", hpack_indexing);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -164,11 +165,11 @@ void test_rfc7541_c_3() {
     // C.3.2.  Second Request
 
     bin.clear();
-    hp.encode_header(bin, ":method", "GET");
-    hp.encode_header(bin, ":scheme", "http");
-    hp.encode_header(bin, ":path", "/");
-    hp.encode_header(bin, ":authority", "www.example.com", hpack_indexing);
-    hp.encode_header(bin, "cache-control", "no-cache", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, ":method", "GET");
+    (*hpack_instance).encode_header(&session, bin, ":scheme", "http");
+    (*hpack_instance).encode_header(&session, bin, ":path", "/");
+    (*hpack_instance).encode_header(&session, bin, ":authority", "www.example.com", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "cache-control", "no-cache", hpack_indexing);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -183,11 +184,11 @@ void test_rfc7541_c_3() {
     // C.3.3.  Third Request
 
     bin.clear();
-    hp.encode_header(bin, ":method", "GET");
-    hp.encode_header(bin, ":scheme", "https");
-    hp.encode_header(bin, ":path", "/index.html");
-    hp.encode_header(bin, ":authority", "www.example.com");
-    hp.encode_header(bin, "custom-key", "custom-value", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, ":method", "GET");
+    (*hpack_instance).encode_header(&session, bin, ":scheme", "https");
+    (*hpack_instance).encode_header(&session, bin, ":path", "/index.html");
+    (*hpack_instance).encode_header(&session, bin, ":authority", "www.example.com");
+    (*hpack_instance).encode_header(&session, bin, "custom-key", "custom-value", hpack_indexing);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -264,16 +265,16 @@ void test_rfc7541_c_4() {
     _test_case.begin("RFC 7541 HPACK C.4. Request Examples with Huffman Coding");
     OPTION& option = cmdline->value();
 
-    hpack hp;
+    hpack_session session;  // dynamic table
 
     binary_t bin;
     basic_stream bs;
 
     // C.4.1.  First Request
-    hp.encode_header(bin, ":method", "GET");
-    hp.encode_header(bin, ":scheme", "http");
-    hp.encode_header(bin, ":path", "/");
-    hp.encode_header(bin, ":authority", "www.example.com", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, ":method", "GET");
+    (*hpack_instance).encode_header(&session, bin, ":scheme", "http");
+    (*hpack_instance).encode_header(&session, bin, ":path", "/");
+    (*hpack_instance).encode_header(&session, bin, ":authority", "www.example.com", hpack_indexing | hpack_huffman);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -284,11 +285,11 @@ void test_rfc7541_c_4() {
     _test_case.assert(bin == base16_decode_rfc(expect1), __FUNCTION__, "RFC 7541 C.4.1 First Request");
     // C.4.2.  Second Request
     bin.clear();
-    hp.encode_header(bin, ":method", "GET");
-    hp.encode_header(bin, ":scheme", "http");
-    hp.encode_header(bin, ":path", "/");
-    hp.encode_header(bin, ":authority", "www.example.com", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "cache-control", "no-cache", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, ":method", "GET");
+    (*hpack_instance).encode_header(&session, bin, ":scheme", "http");
+    (*hpack_instance).encode_header(&session, bin, ":path", "/");
+    (*hpack_instance).encode_header(&session, bin, ":authority", "www.example.com", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "cache-control", "no-cache", hpack_indexing | hpack_huffman);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -297,11 +298,11 @@ void test_rfc7541_c_4() {
     _test_case.assert(bin == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.4.2 Second Request");
     // C.4.3.  Third Request
     bin.clear();
-    hp.encode_header(bin, ":method", "GET");
-    hp.encode_header(bin, ":scheme", "https");
-    hp.encode_header(bin, ":path", "/index.html");
-    hp.encode_header(bin, ":authority", "www.example.com", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "custom-key", "custom-value", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, ":method", "GET");
+    (*hpack_instance).encode_header(&session, bin, ":scheme", "https");
+    (*hpack_instance).encode_header(&session, bin, ":path", "/index.html");
+    (*hpack_instance).encode_header(&session, bin, ":authority", "www.example.com", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "custom-key", "custom-value", hpack_indexing | hpack_huffman);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -317,16 +318,16 @@ void test_rfc7541_c_5() {
     _test_case.begin("RFC 7541 HPACK C.5. Response Examples without Huffman Coding");
     OPTION& option = cmdline->value();
 
-    hpack hp;
+    hpack_session session;  // dynamic table
 
     binary_t bin;
     basic_stream bs;
 
     // C.5.1.  First Response
-    hp.encode_header(bin, ":status", "302", hpack_indexing);
-    hp.encode_header(bin, "cache-control", "private", hpack_indexing);
-    hp.encode_header(bin, "date", "Mon, 21 Oct 2013 20:13:21 GMT", hpack_indexing);
-    hp.encode_header(bin, "location", "https://www.example.com", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, ":status", "302", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "cache-control", "private", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "date", "Mon, 21 Oct 2013 20:13:21 GMT", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "location", "https://www.example.com", hpack_indexing);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -340,10 +341,10 @@ void test_rfc7541_c_5() {
     _test_case.assert(bin == base16_decode_rfc(expect1), __FUNCTION__, "RFC 7541 C.5.1 First Response");
     // C.5.2.  Second Response
     bin.clear();
-    hp.encode_header(bin, ":status", "307", hpack_indexing);
-    hp.encode_header(bin, "cache-control", "private", hpack_indexing);
-    hp.encode_header(bin, "date", "Mon, 21 Oct 2013 20:13:21 GMT", hpack_indexing);
-    hp.encode_header(bin, "location", "https://www.example.com", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, ":status", "307", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "cache-control", "private", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "date", "Mon, 21 Oct 2013 20:13:21 GMT", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "location", "https://www.example.com", hpack_indexing);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -352,12 +353,12 @@ void test_rfc7541_c_5() {
     _test_case.assert(bin == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.5.2 Second Response");
     // C.5.3.  Third Response
     bin.clear();
-    hp.encode_header(bin, ":status", "200", hpack_indexing);
-    hp.encode_header(bin, "cache-control", "private", hpack_indexing);
-    hp.encode_header(bin, "date", "Mon, 21 Oct 2013 20:13:22 GMT", hpack_indexing);
-    hp.encode_header(bin, "location", "https://www.example.com", hpack_indexing);
-    hp.encode_header(bin, "content-encoding", "gzip", hpack_indexing);
-    hp.encode_header(bin, "set-cookie", "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, ":status", "200", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "cache-control", "private", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "date", "Mon, 21 Oct 2013 20:13:22 GMT", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "location", "https://www.example.com", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "content-encoding", "gzip", hpack_indexing);
+    (*hpack_instance).encode_header(&session, bin, "set-cookie", "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1", hpack_indexing);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -378,16 +379,16 @@ void test_rfc7541_c_6() {
     _test_case.begin("RFC 7541 HPACK C.6. Response Examples with Huffman Coding");
     OPTION& option = cmdline->value();
 
-    hpack hp;
+    hpack_session session;  // dynamic table
 
     binary_t bin;
     basic_stream bs;
 
     // C.6.1.  First Response
-    hp.encode_header(bin, ":status", "302", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "cache-control", "private", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "date", "Mon, 21 Oct 2013 20:13:21 GMT", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "location", "https://www.example.com", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, ":status", "302", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "cache-control", "private", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "date", "Mon, 21 Oct 2013 20:13:21 GMT", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "location", "https://www.example.com", hpack_indexing | hpack_huffman);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -400,10 +401,10 @@ void test_rfc7541_c_6() {
     _test_case.assert(bin == base16_decode_rfc(expect1), __FUNCTION__, "RFC 7541 C.6.1 First Response");
     // C.6.2.  Second Response
     bin.clear();
-    hp.encode_header(bin, ":status", "307", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "cache-control", "private", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "date", "Mon, 21 Oct 2013 20:13:21 GMT", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "location", "https://www.example.com", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, ":status", "307", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "cache-control", "private", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "date", "Mon, 21 Oct 2013 20:13:21 GMT", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "location", "https://www.example.com", hpack_indexing | hpack_huffman);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -412,12 +413,12 @@ void test_rfc7541_c_6() {
     _test_case.assert(bin == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.6.2 Second Response");
     // C.6.3.  Third Response
     bin.clear();
-    hp.encode_header(bin, ":status", "200", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "cache-control", "private", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "date", "Mon, 21 Oct 2013 20:13:22 GMT", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "location", "https://www.example.com", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "content-encoding", "gzip", hpack_indexing | hpack_huffman);
-    hp.encode_header(bin, "set-cookie", "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, ":status", "200", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "cache-control", "private", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "date", "Mon, 21 Oct 2013 20:13:22 GMT", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "location", "https://www.example.com", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "content-encoding", "gzip", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(&session, bin, "set-cookie", "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1", hpack_indexing | hpack_huffman);
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
@@ -429,6 +430,69 @@ void test_rfc7541_c_6() {
         "3960 d5af 2708 7f36 72c1 ab27 0fb5 291f "
         "9587 3160 65c0 03ed 4ee5 b106 3d50 07   ";
     _test_case.assert(bin == base16_decode_rfc(expect3), __FUNCTION__, "RFC 7541 C.6.3 Third Response");
+}
+
+void test_dynamic_table_per_session_routine(hpack_session* session_ptr, const char* text) {
+    OPTION& option = cmdline->value();
+
+    binary_t bin;
+    basic_stream bs;
+
+    // C.6.1.  First Response
+    (*hpack_instance).encode_header(session_ptr, bin, ":status", "302", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "cache-control", "private", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "date", "Mon, 21 Oct 2013 20:13:21 GMT", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "location", "https://www.example.com", hpack_indexing | hpack_huffman);
+    // if (option.verbose) {
+    //     dump_memory(bin, &bs, 16, 2);
+    //     printf("encode\n%s\n", bs.c_str());
+    // }
+    // const char* expect1 =
+    //     "4882 6402 5885 aec3 771a 4b61 96d0 7abe "
+    //     "9410 54d4 44a8 2005 9504 0b81 66e0 82a6 "
+    //     "2d1b ff6e 919d 29ad 1718 63c7 8f0b 97c8 "
+    //     "e9ae 82ae 43d3                          ";
+    // _test_case.assert(bin == base16_decode_rfc(expect1), __FUNCTION__, "RFC 7541 C.6.1 First Response");
+    // C.6.2.  Second Response
+    bin.clear();
+    (*hpack_instance).encode_header(session_ptr, bin, ":status", "307", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "cache-control", "private", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "date", "Mon, 21 Oct 2013 20:13:21 GMT", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "location", "https://www.example.com", hpack_indexing | hpack_huffman);
+    // if (option.verbose) {
+    //     dump_memory(bin, &bs, 16, 2);
+    //     printf("encode\n%s\n", bs.c_str());
+    // }
+    // const char* expect2 = "4883 640e ffc1 c0bf";
+    // _test_case.assert(bin == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.6.2 Second Response");
+    // C.6.3.  Third Response
+    bin.clear();
+    (*hpack_instance).encode_header(session_ptr, bin, ":status", "200", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "cache-control", "private", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "date", "Mon, 21 Oct 2013 20:13:22 GMT", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "location", "https://www.example.com", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "content-encoding", "gzip", hpack_indexing | hpack_huffman);
+    (*hpack_instance).encode_header(session_ptr, bin, "set-cookie", "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1", hpack_indexing | hpack_huffman);
+    if (option.verbose) {
+        dump_memory(bin, &bs, 16, 2);
+        printf("encode\n%s\n", bs.c_str());
+    }
+    const char* expect3 =
+        "88c1 6196 d07a be94 1054 d444 a820 0595 "
+        "040b 8166 e084 a62d 1bff c05a 839b d9ab "
+        "77ad 94e7 821d d7f2 e6c7 b335 dfdf cd5b "
+        "3960 d5af 2708 7f36 72c1 ab27 0fb5 291f "
+        "9587 3160 65c0 03ed 4ee5 b106 3d50 07   ";
+    // _test_case.assert(bin == base16_decode_rfc(expect3), __FUNCTION__, "RFC 7541 C.6.3 Third Response");
+    _test_case.assert(bin == base16_decode_rfc(expect3), __FUNCTION__, "%s", text);
+}
+
+void test_dynamic_table_per_session() {
+    _test_case.begin("HPACK per session");
+    hpack_session session1;
+    hpack_session session2;
+    test_dynamic_table_per_session_routine(&session1, "session#1");
+    test_dynamic_table_per_session_routine(&session2, "session#2");
 }
 
 int main(int argc, char** argv) {
@@ -446,6 +510,10 @@ int main(int argc, char** argv) {
     cmdline->parse(argc, argv);
     OPTION& option = cmdline->value();
 
+    // RFC 7541 Appendix B. Huffman Code
+    // RFC 7541 Appendix A.  Static Table Definition
+    hpack_instance.make_share(new hpack);
+
     // HPACK
     test_rfc7541_c_1();
     test_rfc7541_c_2();
@@ -454,6 +522,7 @@ int main(int argc, char** argv) {
     test_rfc7541_c_4();
     test_rfc7541_c_5();
     test_rfc7541_c_6();
+    test_dynamic_table_per_session();
 
     openssl_thread_end();
     openssl_cleanup();

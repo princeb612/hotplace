@@ -37,11 +37,11 @@ typedef struct _OPTION {
 t_shared_instance<cmdline_t<OPTION> > cmdline;
 t_shared_instance<http_server> _http_server;
 
-void api_test_handler(network_session*, http_request* request, http_response* response, http_router* router) {
+void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
 }
 
-void api_v1_test_handler(network_session*, http_request* request, http_response* response, http_router* router) {
+void api_response_json_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "application/json", "{\"result\":\"ok\"}");
 }
 
@@ -62,8 +62,6 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     network_session* session = (network_session*)data_array[3];
     char* buf = (char*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
-
-    // t_shared_instance<http_server> server = _http_server;
 
     basic_stream bs;
     std::string message;
@@ -238,9 +236,9 @@ return_t echo_server(void*) {
             .set_default_document("index.html");
 
         _http_server->get_http_router()
-            .add("/api/test", api_test_handler)
-            .add("/api/v1/test", api_v1_test_handler)
-            .add("/test", default_handler)
+            .add("/api/html", api_response_html_handler)
+            .add("/api/json", api_response_json_handler)
+            .add("/api/test", default_handler)
             .add(404, error_handler)
             // basic authentication
             .add("/auth/basic", default_handler, new basic_authentication_provider(basic_realm))

@@ -52,13 +52,18 @@ class http_resource {
      * @brief   frame flag
      */
     std::string get_frame_flag(uint8 flag);
-    void for_each_frame_flags(uint8 flags, std::string& flag_string, std::function<void(uint8, std::string&)> func);
-    void for_each_frame_flags(uint8 flags, stream_t* flag_string, std::function<void(uint8, stream_t*)> func);
+    void for_each_frame_flag_names(uint8 flags, std::function<void(uint8, std::string const&)> func);
+
+    /**
+     * @brief   RFC 7541 Appendix A.  Static Table Definition
+     */
+    void for_each_hpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func);
 
    protected:
     http_resource();
     void load_resources();
 
+   private:
     static http_resource _instance;
     std::map<int, std::string> _status_codes;
     std::map<http_method_t, std::string> _methods;

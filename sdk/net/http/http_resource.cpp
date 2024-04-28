@@ -138,24 +138,93 @@ std::string http_resource::get_frame_flag(uint8 flag) {
     return flag_name;
 }
 
-void http_resource::for_each_frame_flags(uint8 flags, std::string& flag_string, std::function<void(uint8, std::string&)> func) {
+void http_resource::for_each_frame_flag_names(uint8 flags, std::function<void(uint8, std::string const&)> func) {
     if (func) {
         for (auto item : _frame_flags) {
             uint8 flag = item.first;
             if (flags & flag) {
-                func(flag, flag_string);
+                func(flag, item.second);
             }
         }
     }
 }
 
-void http_resource::for_each_frame_flags(uint8 flags, stream_t* flag_string, std::function<void(uint8, stream_t*)> func) {
-    if (flag_string && func) {
-        for (auto item : _frame_flags) {
-            uint8 flag = item.first;
-            if (flags & flag) {
-                func(flag, flag_string);
-            }
+void http_resource::for_each_hpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func) {
+#define HPACK_ENTRY(index, header_name, header_value) \
+    { index, header_name, header_value }
+
+    struct static_table_entry {
+        uint32 index;
+        const char* name;
+        const char* value;
+    } entries[] = {
+        HPACK_ENTRY(1, ":authority", nullptr),
+        HPACK_ENTRY(2, ":method", "GET"),
+        HPACK_ENTRY(3, ":method", "POST"),
+        HPACK_ENTRY(4, ":path", "/"),
+        HPACK_ENTRY(5, ":path", "/index.html"),
+        HPACK_ENTRY(6, ":scheme", "http"),
+        HPACK_ENTRY(7, ":scheme", "https"),
+        HPACK_ENTRY(8, ":status", "200"),
+        HPACK_ENTRY(9, ":status", "204"),
+        HPACK_ENTRY(10, ":status", "206"),
+        HPACK_ENTRY(11, ":status", "304"),
+        HPACK_ENTRY(12, ":status", "400"),
+        HPACK_ENTRY(13, ":status", "404"),
+        HPACK_ENTRY(14, ":status", "500"),
+        HPACK_ENTRY(15, "accept-charset", nullptr),
+        HPACK_ENTRY(16, "accept-encoding", "gzip,deflate"),
+        HPACK_ENTRY(17, "accept-language", nullptr),
+        HPACK_ENTRY(18, "accept-ranges", nullptr),
+        HPACK_ENTRY(19, "accept", nullptr),
+        HPACK_ENTRY(20, "access-control-allow-origin", nullptr),
+        HPACK_ENTRY(21, "age", nullptr),
+        HPACK_ENTRY(22, "allow", nullptr),
+        HPACK_ENTRY(23, "authorization", nullptr),
+        HPACK_ENTRY(24, "cache-control", nullptr),
+        HPACK_ENTRY(25, "content-disposition", nullptr),
+        HPACK_ENTRY(26, "content-encoding", nullptr),
+        HPACK_ENTRY(27, "content-language", nullptr),
+        HPACK_ENTRY(28, "content-length", nullptr),
+        HPACK_ENTRY(29, "content-location", nullptr),
+        HPACK_ENTRY(30, "content-range", nullptr),
+        HPACK_ENTRY(31, "content-type", nullptr),
+        HPACK_ENTRY(32, "cookie", nullptr),
+        HPACK_ENTRY(33, "date", nullptr),
+        HPACK_ENTRY(34, "etag", nullptr),
+        HPACK_ENTRY(35, "expect", nullptr),
+        HPACK_ENTRY(36, "expires", nullptr),
+        HPACK_ENTRY(37, "from", nullptr),
+        HPACK_ENTRY(38, "host", nullptr),
+        HPACK_ENTRY(39, "if-match", nullptr),
+        HPACK_ENTRY(40, "if-modified-since", nullptr),
+        HPACK_ENTRY(41, "if-none-match", nullptr),
+        HPACK_ENTRY(42, "if-range", nullptr),
+        HPACK_ENTRY(43, "if-unmodified-since", nullptr),
+        HPACK_ENTRY(44, "last-modified", nullptr),
+        HPACK_ENTRY(45, "link", nullptr),
+        HPACK_ENTRY(46, "location", nullptr),
+        HPACK_ENTRY(47, "max-forwards", nullptr),
+        HPACK_ENTRY(48, "proxy-authenticate", nullptr),
+        HPACK_ENTRY(49, "proxy-authorization", nullptr),
+        HPACK_ENTRY(50, "range", nullptr),
+        HPACK_ENTRY(51, "referer", nullptr),
+        HPACK_ENTRY(52, "refresh", nullptr),
+        HPACK_ENTRY(53, "retry-after", nullptr),
+        HPACK_ENTRY(54, "server", nullptr),
+        HPACK_ENTRY(55, "set-cookie", nullptr),
+        HPACK_ENTRY(56, "strict-transport-security", nullptr),
+        HPACK_ENTRY(57, "transfer-encoding", nullptr),
+        HPACK_ENTRY(58, "user-agent", nullptr),
+        HPACK_ENTRY(59, "vary", nullptr),
+        HPACK_ENTRY(60, "via", nullptr),
+        HPACK_ENTRY(61, "www-authenticate", nullptr),
+    };
+
+    if (func) {
+        for (size_t i = 0; i < RTL_NUMBER_OF(entries); i++) {
+            static_table_entry* item = entries + i;
+            func(item->index, item->name, item->value);
         }
     }
 }

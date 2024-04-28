@@ -32,57 +32,10 @@ namespace net {
 
 typedef TYPE_CALLBACK_HANDLEREXV http_server_handler_t;
 
-class http_server;
 /**
- * @example
- *          // sketch
- *          http_server_builder builder;
- *          builder.enable_http(false)
- *                 .enable_https(true).set_port_https(9000)
- *                 .tls_certificate("server.crt", "server.key")
- *                 .tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
- *                 .tls_verify_peer(0)
- *                 .enable_ipv4(true).enable_ipv6(true)
- *                 .set_handler(network_handler);
- *          builder.get_server_conf()
- *                 .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
- *                 .set(netserver_config_t::serverconf_concurrent_network, 2)
- *                 .set(netserver_config_t::serverconf_concurrent_consume, 4);
- *          http_server* server = builder.build();
+ * @brief   http server
+ * @sa      http_server_builder
  */
-class http_server_builder {
-   public:
-    http_server_builder();
-    ~http_server_builder();
-
-    http_server_builder& enable_http(bool enable);
-    http_server_builder& set_port_http(uint16 port = 80);
-
-    http_server_builder& enable_https(bool enable);
-    http_server_builder& set_port_https(uint16 port = 443);
-    http_server_builder& set_tls_certificate(std::string const& server_cert, std::string const& server_key);
-    http_server_builder& set_tls_cipher_list(std::string const& cipher_list);
-    http_server_builder& set_tls_verify_peer(uint16 value);
-
-    http_server_builder& enable_ipv4(bool enable);
-    http_server_builder& enable_ipv6(bool enable);
-
-    http_server_builder& set_handler(http_server_handler_t handler);
-
-    http_server* build();
-    server_conf& get_server_conf();
-
-   protected:
-   private:
-    std::string _server_cert;
-    std::string _server_key;
-    std::string _tls_cipher_list;
-
-    server_conf _config;
-
-    http_server_handler_t _handler;
-};
-
 class http_server {
     friend class http_server_builder;
 

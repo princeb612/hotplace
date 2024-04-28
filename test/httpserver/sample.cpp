@@ -35,16 +35,15 @@ typedef struct _OPTION {
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
+t_shared_instance<http_server> _http_server;
 
-void api_test_handler(network_session*, http_request* request, http_response* response, http_router* router) {
+void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
 }
 
-void api_v1_test_handler(network_session*, http_request* request, http_response* response, http_router* router) {
+void api_response_json_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "application/json", "{\"result\":\"ok\"}");
 }
-
-t_shared_instance<http_router> _http_router;
 
 void cprint(const char* text, ...) {
     console_color _concolor;
@@ -63,9 +62,6 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     network_session* session = (network_session*)data_array[3];
     char* buf = (char*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
-
-    /* route */
-    t_shared_instance<http_router> router = _http_router;
 
     basic_stream bs;
     std::string message;
@@ -111,7 +107,7 @@ return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
                 if (use_tls) {
                     // using http_router
-                    router->route(session, &request, &response);
+                    _http_server->get_http_router().route(session, &request, &response);
                 } else {
                     // handle wo http_router
                     response.get_http_header().add("Upgrade", "TLS/1.2, HTTP/1.1").add("Connection", "Upgrade");
@@ -145,29 +141,28 @@ return_t echo_server(void*) {
     OPTION& option = cmdline->value();
 
     return_t ret = errorcode_t::success;
-    network_server netserver;
-    network_multiplexer_context_t* handle_http_ipv4 = nullptr;
-    network_multiplexer_context_t* handle_http_ipv6 = nullptr;
-    network_multiplexer_context_t* handle_https_ipv4 = nullptr;
-    network_multiplexer_context_t* handle_https_ipv6 = nullptr;
+    http_server_builder builder;
 
     FILE* fp = fopen(FILENAME_RUN, "w");
 
     fclose(fp);
 
-    http_protocol* http_prot = nullptr;
-    tcp_server_socket svr_sock;
-    transport_layer_security* tls = nullptr;
-    tls_server_socket* tls_server = nullptr;
-
-    // part of ssl certificate
-    x509cert cert("server.crt", "server.key");
-    cert.set_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
-        .set_verify(0);
-
     __try2 {
-        /* route */
-        _http_router.make_share(new http_router);
+        builder.enable_http(true)
+            .set_port_http(option.port)
+            .enable_https(true)
+            .set_port_https(option.port_tls)
+            .set_tls_certificate("server.crt", "server.key")
+            .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
+            .set_tls_verify_peer(0)
+            .enable_ipv4(true)
+            .enable_ipv6(true)
+            .set_handler(network_routine);
+        builder.get_server_conf()
+            .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
+            .set(netserver_config_t::serverconf_concurrent_network, 4)
+            .set(netserver_config_t::serverconf_concurrent_consume, 4);
+        _http_server.make_share(builder.build());
 
         std::function<void(network_session*, http_request*, http_response*, http_router*)> default_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
@@ -182,45 +177,24 @@ return_t echo_server(void*) {
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
         };
 
-        (*_http_router)
+        _http_server->get_http_router()
             .get_html_documents()
             .add_documents_root("/", ".")
             .add_content_type(".html", "text/html")
             .add_content_type(".json", "text/json")
             .set_default_document("index.html");
 
-        (*_http_router)
+        _http_server
+            ->get_http_router()
             // http_router
-            .add("/api/test", api_test_handler)
-            .add("/api/v1/test", api_v1_test_handler)
-            .add("/test", default_handler)
+            .add("/api/html", api_response_html_handler)
+            .add("/api/json", api_response_json_handler)
+            .add("/api/test", default_handler)
             .add(404, error_handler);
 
-        /* server */
-        __try_new_catch(tls, new transport_layer_security(cert.get()), ret, __leave2);
-        __try_new_catch(http_prot, new http_protocol, ret, __leave2);
-        __try_new_catch(tls_server, new tls_server_socket(tls), ret, __leave2);
+        _http_server->get_http_protocol()->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 
-        http_prot->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
-
-        // start server
-        netserver.open(&handle_http_ipv4, AF_INET, IPPROTO_TCP, option.port, 1024, network_routine, nullptr, &svr_sock);
-        netserver.open(&handle_http_ipv6, AF_INET6, IPPROTO_TCP, option.port, 1024, network_routine, nullptr, &svr_sock);
-        netserver.open(&handle_https_ipv4, AF_INET, IPPROTO_TCP, option.port_tls, 1024, network_routine, nullptr, tls_server);
-        netserver.open(&handle_https_ipv6, AF_INET6, IPPROTO_TCP, option.port_tls, 1024, network_routine, nullptr, tls_server);
-        netserver.add_protocol(handle_http_ipv4, http_prot);
-        netserver.add_protocol(handle_http_ipv6, http_prot);
-        netserver.add_protocol(handle_https_ipv4, http_prot);
-        netserver.add_protocol(handle_https_ipv6, http_prot);
-
-        netserver.consumer_loop_run(handle_http_ipv4, 2);
-        netserver.consumer_loop_run(handle_http_ipv6, 2);
-        netserver.consumer_loop_run(handle_https_ipv4, 2);
-        netserver.consumer_loop_run(handle_https_ipv6, 2);
-        netserver.event_loop_run(handle_http_ipv4, 2);
-        netserver.event_loop_run(handle_http_ipv6, 2);
-        netserver.event_loop_run(handle_https_ipv4, 2);
-        netserver.event_loop_run(handle_https_ipv6, 2);
+        _http_server->start();
 
         while (true) {
             msleep(1000);
@@ -238,24 +212,10 @@ return_t echo_server(void*) {
 #endif
         }
 
-        netserver.event_loop_break(handle_http_ipv4, 2);
-        netserver.event_loop_break(handle_http_ipv6, 2);
-        netserver.event_loop_break(handle_https_ipv4, 2);
-        netserver.event_loop_break(handle_https_ipv6, 2);
-        netserver.consumer_loop_break(handle_http_ipv4, 2);
-        netserver.consumer_loop_break(handle_http_ipv6, 2);
-        netserver.consumer_loop_break(handle_https_ipv4, 2);
-        netserver.consumer_loop_break(handle_https_ipv6, 2);
+        _http_server->stop();
     }
     __finally2 {
-        netserver.close(handle_http_ipv4);
-        netserver.close(handle_http_ipv6);
-        netserver.close(handle_https_ipv4);
-        netserver.close(handle_https_ipv6);
-
-        http_prot->release();
-        tls_server->release();
-        tls->release();
+        // do nothing
     }
 
     return ret;
