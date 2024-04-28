@@ -39,6 +39,8 @@ enum netserver_config_t {
     serverconf_enable_https = 10,
     serverconf_port_http = 11,
     serverconf_port_https = 12,
+    serverconf_enable_h2 = 13,
+    serverconf_enable_h3 = 14,
 };
 
 class server_conf {

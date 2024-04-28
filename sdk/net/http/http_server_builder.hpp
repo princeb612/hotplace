@@ -34,6 +34,7 @@ namespace net {
  *                 .tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
  *                 .tls_verify_peer(0)
  *                 .enable_ipv4(true).enable_ipv6(true)
+ *                 .enable_h2(false)
  *                 .set_handler(network_handler);
  *          builder.get_server_conf()
  *                 .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
@@ -57,6 +58,8 @@ class http_server_builder {
 
     http_server_builder& enable_ipv4(bool enable);
     http_server_builder& enable_ipv6(bool enable);
+
+    http_server_builder& enable_h2(bool enable);
 
     http_server_builder& set_handler(http_server_handler_t handler);
 

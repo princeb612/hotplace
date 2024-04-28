@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2__
-#define __HOTPLACE_SDK_NET_HTTP_HTTP2__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_PROTOCOL__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2_PROTOCOL__
 
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>

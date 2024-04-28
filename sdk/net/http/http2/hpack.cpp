@@ -410,5 +410,40 @@ return_t hpack_session::insert_table(std::string const& name, std::string const&
     return ret;
 }
 
+hpack_helper::hpack_helper() : _session(nullptr), _flags(0) {}
+
+hpack_helper::~hpack_helper() {}
+
+hpack_helper& hpack_helper::set_encoder(t_shared_instance<hpack>& hp) {
+    _encoder = hp;
+    return *this;
+}
+
+hpack_helper& hpack_helper::set_session(hpack_session* session) {
+    _session = session;
+    return *this;
+}
+
+hpack_helper& hpack_helper::set_encode_flags(uint32 flags) {
+    _flags = flags;
+    return *this;
+}
+
+hpack_helper& hpack_helper::encode_header(std::string const& name, std::string const& value) {
+    if (_session) {
+        (*_encoder).encode_header(_session, _bin, name, value, _flags);
+    }
+    return *this;
+}
+
+hpack_helper& hpack_helper::decode_header(byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
+    if (_session) {
+        (*_encoder).decode_header(_session, source, size, pos, name, value);
+    }
+    return *this;
+}
+
+binary_t& hpack_helper::get_binary() { return _bin; }
+
 }  // namespace net
 }  // namespace hotplace

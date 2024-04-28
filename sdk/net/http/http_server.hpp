@@ -20,6 +20,7 @@
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 
 #include <sdk/net/basic/ipaddr_acl.hpp>
+#include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http_protocol.hpp>
 #include <sdk/net/http/http_router.hpp>
 #include <sdk/net/server/network_server.hpp>
@@ -47,6 +48,7 @@ class http_server {
 
     network_server& get_network_server();
     http_protocol* get_http_protocol();
+    http2_protocol* get_http2_protocol();
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();
     server_conf& get_server_conf();
@@ -66,6 +68,7 @@ class http_server {
    private:
     network_server _server;
     http_protocol _protocol;
+    http2_protocol _protocol2;
     http_router _router;
     ipaddr_acl _acl;
 

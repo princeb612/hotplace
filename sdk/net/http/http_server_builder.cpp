@@ -79,6 +79,11 @@ http_server_builder& http_server_builder::enable_ipv6(bool enable) {
     return *this;
 }
 
+http_server_builder& http_server_builder::enable_h2(bool enable) {
+    get_server_conf().set(netserver_config_t::serverconf_enable_h2, enable ? 1 : 0);
+    return *this;
+}
+
 http_server_builder& http_server_builder::set_handler(http_server_handler_t handler) {
     _handler = handler;
     return *this;

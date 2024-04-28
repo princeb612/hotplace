@@ -119,6 +119,9 @@ return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, htt
         }
         get_network_server().set_accept_control_handler(handle, accept_handler);
         get_network_server().add_protocol(handle, get_http_protocol());
+        if (get_server_conf().get(netserver_config_t::serverconf_enable_h2)) {
+            get_network_server().add_protocol(handle, get_http2_protocol());
+        }
 
         _http_handles.push_back(handle);
     }
@@ -147,6 +150,8 @@ void http_server::shutdown() {
 network_server& http_server::get_network_server() { return _server; }
 
 http_protocol* http_server::get_http_protocol() { return &_protocol; }
+
+http2_protocol* http_server::get_http2_protocol() { return &_protocol2; }
 
 http_router& http_server::get_http_router() { return _router; }
 

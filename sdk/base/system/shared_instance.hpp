@@ -135,9 +135,12 @@ class t_shared_instance {
         atomic_decrement(_counter);
         int ret = *_counter;
         if (0 == ret) {
-            delete _object;
+            if (_object) {
+                delete _object;
+            }
             delete _counter;
             _counter = nullptr;
+            _object = nullptr;
         }
         return ret;
     }
@@ -156,6 +159,14 @@ class t_shared_instance {
         } else {
             throw errorcode_t::already_assigned;
         }
+        return *this;
+    }
+    t_shared_instance& operator=(const t_shared_instance& rhs) {
+        delref();
+
+        _counter = rhs._counter;
+        _object = rhs._object;
+        atomic_increment(_counter);
         return *this;
     }
 

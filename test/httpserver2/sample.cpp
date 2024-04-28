@@ -77,8 +77,7 @@ typedef struct _OPTION {
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
-t_shared_instance<http_protocol> h1_protocol;
-t_shared_instance<http2_protocol> h2_protocol;
+t_shared_instance<http_server> _http_server;
 critical_section print_lock;
 
 void cprint(const char* text, ...) {
@@ -125,7 +124,6 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     std::string message;
 
     OPTION& option = cmdline->value();
-    t_shared_instance<http2_protocol> http2_prot = h2_protocol;
 
     switch (type) {
         case mux_connect:
@@ -141,7 +139,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
             // studying .... debug frames ...
 
-            if (errorcode_t::success == h2_protocol->is_kind_of(buf, bufsize)) {
+            if (errorcode_t::success == _http_server->get_http2_protocol()->is_kind_of(buf, bufsize)) {
                 constexpr char preface[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
                 const uint16 sizeof_preface = 24;
                 bool stage_preface = false;
@@ -170,27 +168,6 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     dump_frame<http2_rst_stream_frame>(frame, checksize);
                 } else if (h2_frame_t::h2_frame_settings == frame->type) {
                     dump_frame<http2_settings_frame>(frame, checksize);
-
-                    // {
-                    //     if (stage_preface) {
-                    //         settings.add(h2_settings_param_t::h2_settings_header_table_size, 1 << 12);
-                    //         settings.add(h2_settings_param_t::h2_settings_max_concurrent_streams, 100);
-                    //         settings.add(h2_settings_param_t::h2_settings_initial_window_size, 1 << 16);
-                    //         settings.add(h2_settings_param_t::h2_settings_max_frame_size, 1 << 14);
-                    //         settings.add(h2_settings_param_t::h2_settings_max_header_list_size, 1 << 14);
-                    //     }
-                    //     if (frame->flags & h2_flag_t::h2_flag_ack) {
-                    //         settings.set_flags(h2_flag_t::h2_flag_ack);
-                    //     }
-                    //
-                    //     settings.write(bin);
-                    //     if (option.verbose) {
-                    //         dump_memory(bin, &bs);
-                    //         print("dump\n%s\n", bs.c_str());
-                    //     }
-                    //
-                    //     // session->send((char*)&bin[0], bin.size());
-                    // }
                 } else if (h2_frame_t::h2_frame_push_promise == frame->type) {
                     dump_frame<http2_push_promise_frame>(frame, checksize);
                 } else if (h2_frame_t::h2_frame_ping == frame->type) {
@@ -219,61 +196,34 @@ return_t echo_server(void*) {
     OPTION& option = cmdline->value();
 
     return_t ret = errorcode_t::success;
-    network_server netserver;
-    network_multiplexer_context_t* handle_http_ipv4 = nullptr;
-    network_multiplexer_context_t* handle_http_ipv6 = nullptr;
-    network_multiplexer_context_t* handle_https_ipv4 = nullptr;
-    network_multiplexer_context_t* handle_https_ipv6 = nullptr;
+    http_server_builder builder;
 
     FILE* fp = fopen(FILENAME_RUN, "w");
 
     fclose(fp);
 
-    http_protocol* http1_prot = nullptr;
-    http2_protocol* http2_prot = nullptr;
-    tcp_server_socket svr_sock;
-    transport_layer_security* tls = nullptr;
-    tls_server_socket* tls_server = nullptr;
-
-    // part of ssl certificate
-    x509cert cert("server.crt", "server.key");
-    cert.set_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
-        .set_verify(0);
-
     __try2 {
-        /* server */
-        __try_new_catch(tls, new transport_layer_security(cert.get()), ret, __leave2);
-        __try_new_catch(http1_prot, new http_protocol, ret, __leave2);
-        __try_new_catch(http2_prot, new http2_protocol, ret, __leave2);
-        __try_new_catch(tls_server, new tls_server_socket(tls), ret, __leave2);
+        builder.enable_http(true)
+            .set_port_http(option.port)
+            .enable_https(true)
+            .set_port_https(option.port_tls)
+            .set_tls_certificate("server.crt", "server.key")
+            .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
+            .set_tls_verify_peer(0)
+            .enable_ipv4(true)
+            .enable_ipv6(true)
+            .enable_h2(true)
+            .set_handler(consume_routine);
+        builder.get_server_conf()
+            .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
+            .set(netserver_config_t::serverconf_concurrent_network, 4)
+            .set(netserver_config_t::serverconf_concurrent_consume, 4);
+        _http_server.make_share(builder.build());
 
-        http2_prot->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
+        _http_server->get_http_protocol()->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
+        _http_server->get_http2_protocol()->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
 
-        h1_protocol.make_share(http1_prot);
-        h2_protocol.make_share(http2_prot);
-
-        // start server
-        netserver.open(&handle_http_ipv4, AF_INET, IPPROTO_TCP, option.port, 1024, consume_routine, nullptr, &svr_sock);
-        netserver.open(&handle_http_ipv6, AF_INET6, IPPROTO_TCP, option.port, 1024, consume_routine, nullptr, &svr_sock);
-        netserver.open(&handle_https_ipv4, AF_INET, IPPROTO_TCP, option.port_tls, 1024, consume_routine, nullptr, tls_server);
-        netserver.open(&handle_https_ipv6, AF_INET6, IPPROTO_TCP, option.port_tls, 1024, consume_routine, nullptr, tls_server);
-        netserver.add_protocol(handle_http_ipv4, http1_prot);
-        netserver.add_protocol(handle_http_ipv6, http1_prot);
-        netserver.add_protocol(handle_https_ipv4, http1_prot);
-        netserver.add_protocol(handle_https_ipv6, http1_prot);
-        netserver.add_protocol(handle_http_ipv4, http2_prot);
-        netserver.add_protocol(handle_http_ipv6, http2_prot);
-        netserver.add_protocol(handle_https_ipv4, http2_prot);
-        netserver.add_protocol(handle_https_ipv6, http2_prot);
-
-        netserver.consumer_loop_run(handle_http_ipv4, 2);
-        netserver.consumer_loop_run(handle_http_ipv6, 2);
-        netserver.consumer_loop_run(handle_https_ipv4, 2);
-        netserver.consumer_loop_run(handle_https_ipv6, 2);
-        netserver.event_loop_run(handle_http_ipv4, 2);
-        netserver.event_loop_run(handle_http_ipv6, 2);
-        netserver.event_loop_run(handle_https_ipv4, 2);
-        netserver.event_loop_run(handle_https_ipv6, 2);
+        _http_server->start();
 
         while (true) {
             msleep(1000);
@@ -291,23 +241,10 @@ return_t echo_server(void*) {
 #endif
         }
 
-        netserver.event_loop_break(handle_http_ipv4, 2);
-        netserver.event_loop_break(handle_http_ipv6, 2);
-        netserver.event_loop_break(handle_https_ipv4, 2);
-        netserver.event_loop_break(handle_https_ipv6, 2);
-        netserver.consumer_loop_break(handle_http_ipv4, 2);
-        netserver.consumer_loop_break(handle_http_ipv6, 2);
-        netserver.consumer_loop_break(handle_https_ipv4, 2);
-        netserver.consumer_loop_break(handle_https_ipv6, 2);
+        _http_server->stop();
     }
     __finally2 {
-        netserver.close(handle_http_ipv4);
-        netserver.close(handle_http_ipv6);
-        netserver.close(handle_https_ipv4);
-        netserver.close(handle_https_ipv6);
-
-        tls_server->release();
-        tls->release();
+        // do nothing
     }
 
     return ret;

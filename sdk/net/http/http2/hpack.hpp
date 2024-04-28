@@ -138,6 +138,47 @@ class hpack_session {
     dynamic_table_t _dynamic_table;
 };
 
+/**
+ * @brief   HPACK
+ * @sample
+ *          hpack_helper hp;
+ *          hp
+ *              .set_session(&session)
+ *              .set_encode_flags(hpack_indexing | hpack_huffman)
+ *              .encode_header(name1, value1)
+ *              .encode_header(name2, value2);
+ *          // do something dump_memory(hp.get_binary(), &bs);
+ */
+class hpack_helper {
+   public:
+    hpack_helper();
+    ~hpack_helper();
+
+    /**
+     * @brief   set
+     */
+    hpack_helper& set_encoder(t_shared_instance<hpack>& hp);
+    hpack_helper& set_session(hpack_session* session);
+
+    /**
+     * @brief   encode
+     */
+    hpack_helper& set_encode_flags(uint32 flags);
+    hpack_helper& encode_header(std::string const& name, std::string const& value);
+    binary_t& get_binary();
+
+    /**
+     * @brief   decode
+     */
+    hpack_helper& decode_header(byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+
+   private:
+    t_shared_instance<hpack> _encoder;
+    hpack_session* _session;
+    uint32 _flags;
+    binary_t _bin;
+};
+
 // RFC 7541 Appendix B. Huffman Code
 extern const huffman_coding::hc_code_t _h2hcodes[];
 

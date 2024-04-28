@@ -79,11 +79,16 @@ void test_sharedinstance2() {
     {
         simple_instance2* object = new simple_instance2;
         t_shared_instance<simple_instance2> inst(object);  // ++refcounter
-        _test_case.assert(1 == inst.getref(), __FUNCTION__, "getref");
+        _test_case.assert(1 == inst.getref(), __FUNCTION__, "getref==1");
         inst->dosomething();
         t_shared_instance<simple_instance2> inst2(inst);  // ++refcounter
-        _test_case.assert(2 == inst.getref(), __FUNCTION__, "getref");
+        _test_case.assert(2 == inst.getref(), __FUNCTION__, "getref==2");
         inst2->dosomething();
+        {
+            t_shared_instance<simple_instance2> inst3;
+            inst3 = inst;
+            _test_case.assert(3 == inst3.getref(), __FUNCTION__, "getref==3");
+        }
         // delete here (2 times ~t_shared_instance)
     }  // curly brace for instance lifetime
     _test_case.assert(1 == simple_instance2_dtor, __FUNCTION__, "shared instance");
@@ -338,24 +343,35 @@ void test_avl_tree() {
 }
 
 void test_huffman_codes() {
+    _test_case.begin("huffman_coding");
     constexpr char sample[] = "still a man hears what he wants to hear and disregards the rest";
 
     huffman_coding huff;
 
     huff.load(sample).learn().infer();
+    _test_case.assert(true, __FUNCTION__, "check learning time");
 
     // 010 011 10100 10101 10101 111 100 111 001111 100 0010 111 1011 000 100 1100 010 111 11010 1011 100 011 111 1011 000 111 11010 100 0010 011 010 111 011
     // 00110 111 1011 000 100 1100 111 100 0010 11011 111 11011 10100 010 1100 000 001110 100 1100 11011 010 111 011 1011 000 111 1100 000 010 011
     basic_stream bs;
     huff.encode(&bs, (byte_t*)sample, strlen(sample));
-    printf("%s\n", bs.c_str());
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        printf("%s\n", bs.c_str());
+    }
+    _test_case.assert(true, __FUNCTION__, "check encoding time");
 
     binary_t bin;
     huff.encode(bin, (byte_t*)sample, strlen(sample));
-    dump_memory(bin, &bs);
-    printf("%s\n", bs.c_str());
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        dump_memory(bin, &bs);
+        printf("%s\n", bs.c_str());
+    }
+    _test_case.assert(true, __FUNCTION__, "check encoding time");
 
     // to decode, min(code len in bits) MUST >= 5
+    // if (huff.decodable()) huff.decode(...);
 }
 
 int main() {
