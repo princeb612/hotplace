@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-hpack::hpack() {
+hpack::hpack() : _safe_mask(false) {
     _hc.imports(_h2hcodes);  // RFC 7541 Appendix B. Huffman Code
 }
 
@@ -36,16 +36,15 @@ hpack& hpack::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t valu
         //   +---+---------------------------+
 
         uint8 n = (1 << prefix) - 1;
-#if 0
+
         // safety mask
-        if (mask) {
+        if (_safe_mask && mask) {
             uint8 temp = 0;
-            for (int t = 0; t < prefix; t++ {
+            for (int t = 0; t < prefix; t++) {
                 temp |= (1 << t);
             }
             mask &= ~temp;
         }
-#endif
 
         uint8 i = 0;
         if (value < n) {
@@ -286,8 +285,8 @@ return_t hpack::decode_int(byte_t* p, size_t& pos, uint8 prefix, size_t& value) 
     return ret;
 }
 
-int hpack::find_table(std::string const& name, std::string const& value, size_t& index) {
-    int state = not_matched;
+match_result_t hpack::find_table(std::string const& name, std::string const& value, size_t& index) {
+    match_result_t state = not_matched;
     index = 0;
 
     {
@@ -420,39 +419,32 @@ hpack& hpack::encode_header(binary_t& target, std::string const& name, std::stri
         }
     }
 
-    enum {
-        not_matched = 1,
-        key_matched = 2,
-        all_matched = 3,
-    };
-    int state = not_matched;
-
+    match_result_t state = not_matched;
     size_t index = 0;
-    state = find_table(name, value, index);
 
+    state = find_table(name, value, index);
     switch (state) {
         case all_matched:
             encode_index(target, index);
             break;
         case key_matched:
             encode_indexed_name(target, flags, index, value);
-            if ((hpack_wo_indexing | hpack_never_indexed) & flags) {
-                // do nothing
-            } else {
+            if (hpack_indexing & flags) {
                 insert_table(name, value);
             }
             break;
         default:
-            if (hpack_wo_indexing & flags) {
-                encode_indexed_name(target, flags, index, value);
-            } else if (hpack_wo_indexing & flags) {
-                encode_name_value(target, flags, name, value);
-            } else {
-                encode_name_value(target, flags, name, value);
+            encode_name_value(target, flags, name, value);
+            if (hpack_indexing & flags) {
                 insert_table(name, value);
             }
             break;
     }
+    return *this;
+}
+
+hpack& hpack::safe_mask(bool enable) {
+    _safe_mask = enable;
     return *this;
 }
 

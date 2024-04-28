@@ -57,10 +57,10 @@ void test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const 
     if (option.verbose) {
         dump_memory(bin, &bs, 16, 2);
         printf("encode\n%s\n", bs.c_str());
-        printf("decode %u\n", value);
+        printf("decode %zi\n", value);
     }
 
-    bool test = false;
+    uint8 test = 0;
     test = (expect && (i == value));
     if (test) {
         binary_t bin_expect = base16_decode_rfc(expect);
@@ -436,9 +436,6 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-#if defined _WIN32 || defined _WIN64
-    winsock_startup();
-#endif
     openssl_startup();
     openssl_thread_setup();
 
@@ -460,10 +457,6 @@ int main(int argc, char** argv) {
 
     openssl_thread_end();
     openssl_cleanup();
-
-#if defined _WIN32 || defined _WIN64
-    winsock_cleanup();
-#endif
 
     _test_case.report(5);
     cmdline->help();

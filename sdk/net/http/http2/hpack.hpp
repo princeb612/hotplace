@@ -18,6 +18,11 @@ namespace net {
 
 // RFC 7541 HPACK: Header Compression for HTTP/2
 
+enum match_result_t {
+    not_matched = 0,
+    key_matched = 1,
+    all_matched = 2,
+};
 enum hpack_flag_t {
     hpack_huffman = 1 << 0,
     hpack_indexing = 1 << 1,
@@ -50,13 +55,18 @@ class hpack {
 
     hpack& encode_header(binary_t& target, std::string const& name, std::string const& value, uint32 flags = 0);
 
+    /*
+     * @brief   safe mask
+     * @sample
+     *          hpack hp;
+     *          binary_t bin;
+     *          hp.encode(bin, 0x8f, 5, 32);                 // bad output
+     *          hp.safe_mask(true).encode(bin, 0x8f, 5, 32); // overwrite mask 1000 1111 to 1000 0000
+     */
+    hpack& safe_mask(bool enable);
+
    protected:
    private:
-    enum {
-        not_matched = 1,
-        key_matched = 2,
-        all_matched = 3,
-    };
     typedef struct _http2_table_t {
         std::string value;
         size_t index;
@@ -74,8 +84,9 @@ class hpack {
     huffman_coding _hc;
     static_table_t _static_table;
     dynamic_table_t _dynamic_table;
+    bool _safe_mask;
 
-    int find_table(std::string const& name, std::string const& value, size_t& index);
+    match_result_t find_table(std::string const& name, std::string const& value, size_t& index);
     return_t insert_table(std::string const& name, std::string const& value);
 };
 
