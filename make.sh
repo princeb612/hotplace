@@ -20,7 +20,7 @@ COMMENTS
     cmake    - makefile only (only clang-format possible)
     ctest    - build and run ctest
     debug    - debug build
-    format   - clang-format
+    format   - clang-format (syn. cf)
     opt      - optimize
     pch      - precompiled header
     prof     - gprof

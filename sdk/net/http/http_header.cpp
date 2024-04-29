@@ -33,6 +33,7 @@ http_header& http_header::add(const char* header, const char* value) {
         }
 
         critical_section_guard guard(_lock);
+        _names.push_back(header);
         http_header_map_pib_t pib = _headers.insert(std::make_pair(header, value));
         if (false == pib.second) {
             pib.first->second = value;
@@ -44,20 +45,12 @@ http_header& http_header::add(const char* header, const char* value) {
     return *this;
 }
 
-http_header& http_header::add(std::string const& header, std::string const& value) {
-    critical_section_guard guard(_lock);
-    http_header_map_pib_t pib = _headers.insert(std::make_pair(header, value));
-    if (false == pib.second) {
-        pib.first->second = value;
-    }
-
-    return *this;
-}
+http_header& http_header::add(std::string const& header, std::string const& value) { return add(header.c_str(), value.c_str()); }
 
 http_header& http_header::clear() {
     critical_section_guard guard(_lock);
+    _names.clear();
     _headers.clear();
-
     return *this;
 }
 
@@ -141,10 +134,11 @@ return_t http_header::get_headers(std::string& contents) {
         //_tclean(contents);
 
         critical_section_guard guard(_lock);
-        for (http_header_map_t::iterator it = _headers.begin(); it != _headers.end(); it++) {
-            std::string key = it->first;
-            std::string value = it->second;
-
+        maphint<std::string, std::string> hint(_headers);
+        for (http_header_list_t::iterator iter = _names.begin(); iter != _names.end(); iter++) {
+            std::string key = *iter;
+            std::string value;
+            hint.find(key, &value);
             contents.append(format("%s: %s\r\n", key.c_str(), value.c_str()));
         }
     }
@@ -186,6 +180,7 @@ return_t http_header::to_keyvalue(std::string const& value, key_value& kv) {
 
 http_header& http_header::operator=(http_header const& object) {
     critical_section_guard guard(_lock);
+    _names = object._names;
     _headers = object._headers;
     return *this;
 }

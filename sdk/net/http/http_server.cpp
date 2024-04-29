@@ -153,6 +153,8 @@ http_protocol* http_server::get_http_protocol() { return &_protocol; }
 
 http2_protocol* http_server::get_http2_protocol() { return &_protocol2; }
 
+hpack_encoder& http_server::get_hpack_encoder() { return _hpack_encoder; }
+
 http_router& http_server::get_http_router() { return _router; }
 
 ipaddr_acl& http_server::get_ipaddr_acl() { return _acl; }

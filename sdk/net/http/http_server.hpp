@@ -20,6 +20,7 @@
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 
 #include <sdk/net/basic/ipaddr_acl.hpp>
+#include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http_protocol.hpp>
 #include <sdk/net/http/http_router.hpp>
@@ -49,6 +50,7 @@ class http_server {
     network_server& get_network_server();
     http_protocol* get_http_protocol();
     http2_protocol* get_http2_protocol();
+    hpack_encoder& get_hpack_encoder();
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();
     server_conf& get_server_conf();
@@ -67,17 +69,27 @@ class http_server {
 
    private:
     network_server _server;
-    http_protocol _protocol;
-    http2_protocol _protocol2;
-    http_router _router;
-    ipaddr_acl _acl;
 
+    // TCP
     tcp_server_socket _server_socket;
 
+    // TLS
     x509cert* _cert;
     transport_layer_security* _tls;
     tls_server_socket* _tls_server_socket;
 
+    // ACL
+    ipaddr_acl _acl;
+
+    // HTTP/1.1
+    http_protocol _protocol;
+
+    // HTTP/2
+    http2_protocol _protocol2;
+    hpack_encoder _hpack_encoder;
+
+    // route
+    http_router _router;
     typedef std::list<network_multiplexer_context_t*> http_handles_t;
     http_handles_t _http_handles;
 };

@@ -15,17 +15,54 @@
 namespace hotplace {
 namespace net {
 
-hpack::hpack() : _safe_mask(false) {
+hpack::hpack() : _encoder(nullptr), _session(nullptr), _flags(0) {}
+
+hpack::~hpack() {}
+
+hpack& hpack::set_encoder(hpack_encoder* hp) {
+    _encoder = hp;
+    return *this;
+}
+
+hpack& hpack::set_session(hpack_session* session) {
+    _session = session;
+    return *this;
+}
+
+hpack& hpack::set_encode_flags(uint32 flags) {
+    _flags = flags;
+    return *this;
+}
+
+hpack& hpack::encode_header(std::string const& name, std::string const& value) {
+    if (_session) {
+        (*_encoder).encode_header(_session, _bin, name, value, _flags);
+    }
+    return *this;
+}
+
+hpack& hpack::decode_header(byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
+    if (_session) {
+        (*_encoder).decode_header(_session, source, size, pos, name, value);
+    }
+    return *this;
+}
+
+binary_t& hpack::get_binary() { return _bin; }
+
+hpack_encoder::hpack_encoder() : _safe_mask(false) {
     // RFC 7541 Appendix B. Huffman Code
     _hc.imports(_h2hcodes);
 
     // RFC 7541 Appendix A.  Static Table Definition
     // if (_static_table.empty()) ...
-    http_resource::get_instance()->for_each_hpack_static_table(
-        [&](uint32 index, const char* name, const char* value) -> void { _static_table.insert(std::make_pair(name, http2_table_t(value, index))); });
+    http_resource::get_instance()->for_each_hpack_static_table([&](uint32 index, const char* name, const char* value) -> void {
+        _static_table.insert(std::make_pair(name, std::make_pair(value ? value : "", index)));
+        _static_table_index.insert(std::make_pair(index, std::make_pair(name, value ? value : "")));
+    });
 }
 
-hpack& hpack::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value) {
+hpack_encoder& hpack_encoder::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value) {
     if ((1 <= prefix) && (prefix <= 8)) {
         // RFC 7541 5.1.  Integer Representation
         // RFC 7541 C.1.  Integer Representation Examples
@@ -74,7 +111,7 @@ hpack& hpack::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t valu
     return *this;
 }
 
-hpack& hpack::encode_string(binary_t& target, uint32 flags, const char* value) {
+hpack_encoder& hpack_encoder::encode_string(binary_t& target, uint32 flags, const char* value) {
     __try2 {
         if (nullptr == value) {
             __leave2;
@@ -87,7 +124,7 @@ hpack& hpack::encode_string(binary_t& target, uint32 flags, const char* value) {
     return *this;
 }
 
-hpack& hpack::encode_string(binary_t& target, uint32 flags, const char* value, size_t size) {
+hpack_encoder& hpack_encoder::encode_string(binary_t& target, uint32 flags, const char* value, size_t size) {
     __try2 {
         if (nullptr == value) {
             __leave2;
@@ -118,9 +155,11 @@ hpack& hpack::encode_string(binary_t& target, uint32 flags, const char* value, s
     return *this;
 }
 
-hpack& hpack::encode_string(binary_t& target, uint32 flags, std::string const& value) { return encode_string(target, flags, value.c_str(), value.size()); }
+hpack_encoder& hpack_encoder::encode_string(binary_t& target, uint32 flags, std::string const& value) {
+    return encode_string(target, flags, value.c_str(), value.size());
+}
 
-hpack& hpack::encode_index(binary_t& target, uint8 index) {
+hpack_encoder& hpack_encoder::encode_index(binary_t& target, uint8 index) {
     // RFC 7541 Figure 5: Indexed Header Field
     //
     //     0   1   2   3   4   5   6   7
@@ -132,7 +171,7 @@ hpack& hpack::encode_index(binary_t& target, uint8 index) {
     return *this;
 }
 
-hpack& hpack::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const char* value) {
+hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const char* value) {
     __try2 {
         if (nullptr == value) {
             __leave2;
@@ -145,7 +184,7 @@ hpack& hpack::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, c
     return *this;
 }
 
-hpack& hpack::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const char* value, size_t size) {
+hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const char* value, size_t size) {
     __try2 {
         if (nullptr == value) {
             __leave2;
@@ -192,11 +231,11 @@ hpack& hpack::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, c
     return *this;
 }
 
-hpack& hpack::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, std::string const& value) {
+hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, std::string const& value) {
     return encode_indexed_name(target, flags, index, value.c_str(), value.size());
 }
 
-hpack& hpack::encode_name_value(binary_t& target, uint32 flags, const char* name, const char* value) {
+hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, const char* name, const char* value) {
     __try2 {
         if (nullptr == name || nullptr == value) {
             __leave2;
@@ -248,17 +287,17 @@ hpack& hpack::encode_name_value(binary_t& target, uint32 flags, const char* name
     return *this;
 }
 
-hpack& hpack::encode_name_value(binary_t& target, uint32 flags, std::string const& name, std::string const& value) {
+hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, std::string const& name, std::string const& value) {
     return encode_name_value(target, flags, name.c_str(), value.c_str());
 }
 
-hpack& hpack::encode_dyntablesize(binary_t& target, uint8 maxsize) {
+hpack_encoder& hpack_encoder::encode_dyntablesize(binary_t& target, uint8 maxsize) {
     // RFC 7541 Figure 12: Maximum Dynamic Table Size Change
     encode_int(target, 0x20, 5, maxsize);
     return *this;
 }
 
-return_t hpack::decode_int(byte_t* p, size_t& pos, uint8 prefix, size_t& value) {
+return_t hpack_encoder::decode_int(byte_t* p, size_t& pos, uint8 mask, uint8 prefix, size_t& value) {
     // 5.1.  Integer Representation
     // C.1.  Integer Representation Examples
     return_t ret = errorcode_t::success;
@@ -272,6 +311,16 @@ return_t hpack::decode_int(byte_t* p, size_t& pos, uint8 prefix, size_t& value) 
         if ((1 <= prefix) && (prefix <= 8)) {
             uint8 n = (1 << prefix) - 1;
             uint8 b = p[pos++];
+
+            if (_safe_mask) {
+                uint8 temp = 0;
+                for (int t = 0; t < prefix; t++) {
+                    temp |= (1 << t);
+                }
+                mask &= ~temp;
+            }
+            b &= ~mask;
+
             if (b < n) {
                 value = b;
             } else {
@@ -292,17 +341,48 @@ return_t hpack::decode_int(byte_t* p, size_t& pos, uint8 prefix, size_t& value) 
     return ret;
 }
 
-match_result_t hpack::find_table(hpack_session* session, std::string const& name, std::string const& value, size_t& index) {
-    match_result_t state = not_matched;
+return_t hpack_encoder::decode_string(byte_t* p, size_t& pos, uint8 flags, std::string& value) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        value.clear();
+        if (nullptr == p) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        byte_t b = p[pos];
+
+        size_t len = 0;
+        if (0x80 & b) {
+            // huffman
+            decode_int(p, pos, 0x80, 7, len);
+            basic_stream bs;
+            _hc.decode(&bs, p + pos, len);
+            value = bs.c_str();
+        } else {
+            // string
+            decode_int(p, pos, 0x80, 7, len);
+            value.assign((char*)p + pos, len);
+        }
+        pos += len;
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+match_result_t hpack_encoder::match(hpack_session* session, std::string const& name, std::string const& value, size_t& index) {
+    match_result_t state = match_result_t::not_matched;
     index = 0;
 
     if (session) {
-        state = session->find_table(name, value, index);
-        if (all_matched == state) {
+        state = session->match(name, value, index);
+        if (match_result_t::all_matched == state) {
             index += _static_table.size() + 1;
         }
     }
-    if (not_matched == state) {
+    if (match_result_t::not_matched == state) {
         static_table_t::iterator iter;
         static_table_t::iterator liter;
         static_table_t::iterator uiter;
@@ -312,12 +392,12 @@ match_result_t hpack::find_table(hpack_session* session, std::string const& name
 
         for (iter = liter; iter != uiter; iter++) {
             if (iter == liter) {
-                index = iter->second.index;  // :path: /sample/path
-                state = key_matched;
+                index = iter->second.second;  // :path: /sample/path
+                state = match_result_t::key_matched;
             }
-            if (value == iter->second.value) {
-                index = iter->second.index;
-                state = all_matched;
+            if (value == iter->second.first) {
+                index = iter->second.second;
+                state = match_result_t::all_matched;
                 break;
             }
         }
@@ -325,7 +405,40 @@ match_result_t hpack::find_table(hpack_session* session, std::string const& name
     return state;
 }
 
-return_t hpack::insert_table(hpack_session* session, std::string const& name, std::string const& value) {
+return_t hpack_encoder::select(hpack_session* session, uint32 flags, size_t index, std::string& name, std::string& value) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        name.clear();
+        value.clear();
+
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (index > _static_table.size()) {
+            index -= _static_table.size();
+            ret = session->select(flags, index, name, value);
+        } else {
+            static_table_index_t::iterator iter = _static_table_index.find(index);
+            if (_static_table_index.end() == iter) {
+                ret = errorcode_t::not_found;
+                __leave2;
+            } else {
+                name = iter->second.first;
+                if ((hpack_index | hpack_name_value) & flags) {
+                    value = iter->second.second;
+                }
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t hpack_encoder::insert(hpack_session* session, std::string const& name, std::string const& value) {
     //  RFC 7541 Figure 1: Index Address Space
     //
     //   <----------  Index Address Space ---------->
@@ -344,7 +457,7 @@ return_t hpack::insert_table(hpack_session* session, std::string const& name, st
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        session->insert_table(name, value);
+        session->insert(name, value);
     }
     __finally2 {
         // do nothing
@@ -352,26 +465,26 @@ return_t hpack::insert_table(hpack_session* session, std::string const& name, st
     return ret;
 }
 
-hpack& hpack::encode_header(hpack_session* session, binary_t& target, std::string const& name, std::string const& value, uint32 flags) {
-    match_result_t state = not_matched;
+hpack_encoder& hpack_encoder::encode_header(hpack_session* session, binary_t& target, std::string const& name, std::string const& value, uint32 flags) {
+    match_result_t state = match_result_t::not_matched;
     if (session) {
         size_t index = 0;
 
-        state = find_table(session, name, value, index);
+        state = match(session, name, value, index);
         switch (state) {
-            case all_matched:
+            case match_result_t::all_matched:
                 encode_index(target, index);
                 break;
-            case key_matched:
+            case match_result_t::key_matched:
                 encode_indexed_name(target, flags, index, value);
                 if (hpack_indexing & flags) {
-                    session->insert_table(name, value);
+                    session->insert(name, value);
                 }
                 break;
             default:
                 encode_name_value(target, flags, name, value);
                 if (hpack_indexing & flags) {
-                    session->insert_table(name, value);
+                    session->insert(name, value);
                 }
                 break;
         }
@@ -379,24 +492,79 @@ hpack& hpack::encode_header(hpack_session* session, binary_t& target, std::strin
     return *this;
 }
 
-hpack& hpack::decode_header(hpack_session* session, byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
-    //
+hpack_encoder& hpack_encoder::decode_header(hpack_session* session, byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
+    if (session && source) {
+        byte_t b = source[pos];
+        uint8 mask = 0;
+        uint8 prefix = 0;
+        uint32 flags = 0;
+        if (0x80 & b) {
+            // index
+            mask = 0x80;
+            prefix = 7;
+            flags |= hpack_index;
+        } else if (0x40 & b) {
+            // indexing
+            mask = 0x40;
+            prefix = 6;
+            flags |= hpack_indexing;
+            if (0x3f & b) {
+                flags |= hpack_indexed_name;
+            } else {
+                flags |= hpack_name_value;
+            }
+        } else if (0xf0 & ~b) {
+            // without indexing
+            mask = 0x00;
+            prefix = 4;
+            flags |= hpack_wo_indexing;
+            if (0x0f & b) {
+                flags |= hpack_indexed_name;
+            } else {
+                flags |= hpack_name_value;
+            }
+        } else if (0x10 & b) {
+            // never indexed
+            mask = 0x10;
+            prefix = 4;
+            flags |= hpack_never_indexed;
+            if (0x0f & b) {
+                flags |= hpack_indexed_name;
+            } else {
+                flags |= hpack_name_value;
+            }
+        }
+
+        size_t i = 0;
+        if (hpack_index & flags) {
+            decode_int(source, pos, mask, prefix, i);
+            select(session, flags, i, name, value);
+        } else if (hpack_indexed_name & flags) {
+            decode_int(source, pos, mask, prefix, i);
+            select(session, flags, i, name, value);
+            decode_string(source, pos, flags, value);
+        } else if (hpack_name_value & flags) {
+            pos++;
+            decode_string(source, pos, flags, name);
+            decode_string(source, pos, flags, value);
+        }
+    }
     return *this;
 }
 
-hpack& hpack::safe_mask(bool enable) {
+hpack_encoder& hpack_encoder::safe_mask(bool enable) {
     _safe_mask = enable;
     return *this;
 }
 
 hpack_session::hpack_session() {}
 
-match_result_t hpack_session::find_table(std::string const& name, std::string const& value, size_t& index) {
-    match_result_t state = not_matched;
+match_result_t hpack_session::match(std::string const& name, std::string const& value, size_t& index) {
+    match_result_t state = match_result_t::not_matched;
     size_t idx = 0;
     for (dynamic_table_t::iterator iter = _dynamic_table.begin(); iter != _dynamic_table.end(); iter++, idx++) {
-        if ((name == iter->first) && (value == iter->second.value)) {
-            state = all_matched;
+        if ((name == iter->first) && (value == iter->second.first)) {
+            state = match_result_t::all_matched;
             index = idx;
             break;
         }
@@ -404,46 +572,28 @@ match_result_t hpack_session::find_table(std::string const& name, std::string co
     return state;
 }
 
-return_t hpack_session::insert_table(std::string const& name, std::string const& value) {
+return_t hpack_session::select(uint32 flags, size_t index, std::string& name, std::string& value) {
     return_t ret = errorcode_t::success;
-    _dynamic_table.push_front(std::make_pair(name, http2_table_t(value, 0)));
+    if ((hpack_indexing | hpack_indexed_name | hpack_name_value) & flags) {
+        size_t idx = 0;
+        for (dynamic_table_t::iterator iter = _dynamic_table.begin(); iter != _dynamic_table.end(); iter++, idx++) {
+            if (index == idx) {
+                name = iter->first;
+                value = iter->second.first;
+                break;
+            }
+        }
+    } else {
+        ret = errorcode_t::not_found;
+    }
     return ret;
 }
 
-hpack_helper::hpack_helper() : _session(nullptr), _flags(0) {}
-
-hpack_helper::~hpack_helper() {}
-
-hpack_helper& hpack_helper::set_encoder(t_shared_instance<hpack>& hp) {
-    _encoder = hp;
-    return *this;
+return_t hpack_session::insert(std::string const& name, std::string const& value) {
+    return_t ret = errorcode_t::success;
+    _dynamic_table.push_front(std::make_pair(name, std::make_pair(value, 0)));
+    return ret;
 }
-
-hpack_helper& hpack_helper::set_session(hpack_session* session) {
-    _session = session;
-    return *this;
-}
-
-hpack_helper& hpack_helper::set_encode_flags(uint32 flags) {
-    _flags = flags;
-    return *this;
-}
-
-hpack_helper& hpack_helper::encode_header(std::string const& name, std::string const& value) {
-    if (_session) {
-        (*_encoder).encode_header(_session, _bin, name, value, _flags);
-    }
-    return *this;
-}
-
-hpack_helper& hpack_helper::decode_header(byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
-    if (_session) {
-        (*_encoder).decode_header(_session, source, size, pos, name, value);
-    }
-    return *this;
-}
-
-binary_t& hpack_helper::get_binary() { return _bin; }
 
 }  // namespace net
 }  // namespace hotplace

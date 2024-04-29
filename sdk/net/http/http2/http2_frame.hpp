@@ -14,6 +14,7 @@
 #include <sdk/base.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
@@ -126,13 +127,6 @@ class http2_frame_header {
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
-    void set_binary(binary_t& target, byte_t* data, size_t size) {
-        if (data) {
-            target.clear();
-            target.insert(target.end(), data, data + size);
-        }
-    }
-
    protected:
     return_t set_payload_size(uint32 size);
 
@@ -141,13 +135,14 @@ class http2_frame_header {
     uint8 _type;
     uint8 _flags;
     uint32 _stream_id;
+    t_shared_instance<hpack_encoder> _hpack_encoder;
 };
 
 // RFC 7540 6.1. DATA
 // RFC 7540 Figure 6: DATA Frame Payload
-class http2_data_frame : public http2_frame_header {
+class http2_frame_data : public http2_frame_header {
    public:
-    http2_data_frame();
+    http2_frame_data();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -159,13 +154,15 @@ class http2_data_frame : public http2_frame_header {
 };
 
 // RFC 7540 6.2 HEADERS
-class http2_headers_frame : public http2_frame_header {
+class http2_frame_headers : public http2_frame_header {
    public:
-    http2_headers_frame();
+    http2_frame_headers();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
+
+    binary_t& get_fragment();
 
    private:
     uint8 _padlen;
@@ -177,9 +174,9 @@ class http2_headers_frame : public http2_frame_header {
 
 // RFC 7540 6.3. PRIORITY
 // RFC 7540 Figure 8: PRIORITY Frame Payload
-class http2_priority_frame : public http2_frame_header {
+class http2_frame_priority : public http2_frame_header {
    public:
-    http2_priority_frame();
+    http2_frame_priority();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -193,9 +190,9 @@ class http2_priority_frame : public http2_frame_header {
 
 // RFC 7540 6.4. RST_STREAM
 // RFC 7540 Figure 9: RST_STREAM Frame Payload
-class http2_rst_stream_frame : public http2_frame_header {
+class http2_frame_rst_stream : public http2_frame_header {
    public:
-    http2_rst_stream_frame();
+    http2_frame_rst_stream();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -206,11 +203,11 @@ class http2_rst_stream_frame : public http2_frame_header {
 };
 
 // RFC 7540 6.5. SETTINGS
-class http2_settings_frame : public http2_frame_header {
+class http2_frame_settings : public http2_frame_header {
    public:
-    http2_settings_frame();
+    http2_frame_settings();
 
-    http2_settings_frame& add(uint16 id, uint32 value);
+    http2_frame_settings& add(uint16 id, uint32 value);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -223,9 +220,9 @@ class http2_settings_frame : public http2_frame_header {
 };
 
 // RFC 7540 6.6. PUSH_PROMISE
-class http2_push_promise_frame : public http2_frame_header {
+class http2_frame_push_promise : public http2_frame_header {
    public:
-    http2_push_promise_frame();
+    http2_frame_push_promise();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -238,9 +235,9 @@ class http2_push_promise_frame : public http2_frame_header {
 };
 
 // RFC 7540 6.7. PING
-class http2_ping_frame : public http2_frame_header {
+class http2_frame_ping : public http2_frame_header {
    public:
-    http2_ping_frame();
+    http2_frame_ping();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -251,9 +248,9 @@ class http2_ping_frame : public http2_frame_header {
 };
 
 // RFC 7540 6.8. GOAWAY
-class http2_goaway_frame : public http2_frame_header {
+class http2_frame_goaway : public http2_frame_header {
    public:
-    http2_goaway_frame();
+    http2_frame_goaway();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -266,9 +263,9 @@ class http2_goaway_frame : public http2_frame_header {
 };
 
 // RFC 7540 6.9. WINDOW_UPDATE
-class http2_window_update_frame : public http2_frame_header {
+class http2_frame_window_update : public http2_frame_header {
    public:
-    http2_window_update_frame();
+    http2_frame_window_update();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -279,9 +276,9 @@ class http2_window_update_frame : public http2_frame_header {
 };
 
 // RFC 7540 6.10. CONTINUATION
-class http2_continuation_frame : public http2_frame_header {
+class http2_frame_continuation : public http2_frame_header {
    public:
-    http2_continuation_frame();
+    http2_frame_continuation();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);

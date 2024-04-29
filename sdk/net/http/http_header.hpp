@@ -124,8 +124,10 @@ class http_header {
     http_header& operator=(http_header const& object);
 
    protected:
+    typedef std::list<std::string> http_header_list_t;
     typedef std::map<std::string, std::string> http_header_map_t;
     typedef std::pair<http_header_map_t::iterator, bool> http_header_map_pib_t;
+    http_header_list_t _names;
     http_header_map_t _headers;
     critical_section _lock;
 };

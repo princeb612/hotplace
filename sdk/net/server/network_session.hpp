@@ -13,6 +13,7 @@
 
 #include <sdk/io.hpp>
 #include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_stream.hpp>
 #include <sdk/net/tls/tls.hpp>
@@ -114,12 +115,14 @@ class network_session {
 
     tcp_server_socket* get_server_socket();
     network_session_data* get_session_data();
+    hpack_session* get_hpack_session();
 
    protected:
     net_session_t _session;
     network_stream _stream;
     network_stream _request;
     network_session_data _session_data;
+    hpack_session _hpack_session;
 
     t_shared_reference<network_session> _shared;
     critical_section _lock;

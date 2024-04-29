@@ -102,14 +102,11 @@ void print(const char* text, ...) {
     fflush(stdout);
 }
 
-template <typename H2_FRAME_TYPE>
-void dump_frame(http2_frame_header_t* frame, size_t size) {
-    H2_FRAME_TYPE fr;
-    fr.read(frame, size);
-
+void dump_frame(http2_frame_header* base, http2_frame_header_t* frame, size_t size) {
     basic_stream bs;
-    fr.dump(&bs);
-    print("%s", bs.c_str());
+    base->read(frame, size);
+    base->dump(&bs);
+    printf("%s", bs.c_str());
 }
 
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
@@ -152,32 +149,53 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     }
                 }
 
-                http2_frame_header_t* frame = (http2_frame_header_t*)(buf + pos_frame);
+                http2_frame_header_t* hdr = (http2_frame_header_t*)(buf + pos_frame);
                 size_t checksize = bufsize - pos_frame;
-                uint32_24_t i32_24((byte_t*)frame, checksize);
+                uint32_24_t i32_24((byte_t*)hdr, checksize);
                 uint32 payload_size = i32_24.get();
                 uint32 packet_size = sizeof(http2_frame_header_t) + payload_size;
 
-                if (h2_frame_t::h2_frame_data == frame->type) {
-                    dump_frame<http2_data_frame>(frame, checksize);
-                } else if (h2_frame_t::h2_frame_headers == frame->type) {
-                    dump_frame<http2_headers_frame>(frame, checksize);
-                } else if (h2_frame_t::h2_frame_priority == frame->type) {
-                    dump_frame<http2_priority_frame>(frame, checksize);
-                } else if (h2_frame_t::h2_frame_rst_stream == frame->type) {
-                    dump_frame<http2_rst_stream_frame>(frame, checksize);
-                } else if (h2_frame_t::h2_frame_settings == frame->type) {
-                    dump_frame<http2_settings_frame>(frame, checksize);
-                } else if (h2_frame_t::h2_frame_push_promise == frame->type) {
-                    dump_frame<http2_push_promise_frame>(frame, checksize);
-                } else if (h2_frame_t::h2_frame_ping == frame->type) {
-                    dump_frame<http2_ping_frame>(frame, checksize);
-                } else if (h2_frame_t::h2_frame_goaway == frame->type) {
-                    dump_frame<http2_goaway_frame>(frame, checksize);
-                } else if (h2_frame_t::h2_frame_window_update == frame->type) {
-                    dump_frame<http2_window_update_frame>(frame, checksize);
-                } else if (h2_frame_t::h2_frame_continuation == frame->type) {
-                    dump_frame<http2_continuation_frame>(frame, checksize);
+                if (h2_frame_t::h2_frame_data == hdr->type) {
+                    http2_frame_data frame;
+                    dump_frame(&frame, hdr, checksize);
+                } else if (h2_frame_t::h2_frame_headers == hdr->type) {
+                    http2_frame_headers frame;
+                    dump_frame(&frame, hdr, checksize);
+                    binary_t& bin = frame.get_fragment();
+
+                    size_t pos = 0;
+                    std::string name;
+                    std::string value;
+
+                    while (pos < bin.size()) {
+                        _http_server->get_hpack_encoder().decode_header(session->get_hpack_session(), &bin[0], bin.size(), pos, name, value);
+                        printf("> %s: %s\n", name.c_str(), value.c_str());
+                    }
+                    fflush(stdout);
+                } else if (h2_frame_t::h2_frame_priority == hdr->type) {
+                    http2_frame_priority frame;
+                    dump_frame(&frame, hdr, checksize);
+                } else if (h2_frame_t::h2_frame_rst_stream == hdr->type) {
+                    http2_frame_rst_stream frame;
+                    dump_frame(&frame, hdr, checksize);
+                } else if (h2_frame_t::h2_frame_settings == hdr->type) {
+                    http2_frame_settings frame;
+                    dump_frame(&frame, hdr, checksize);
+                } else if (h2_frame_t::h2_frame_push_promise == hdr->type) {
+                    http2_frame_push_promise frame;
+                    dump_frame(&frame, hdr, checksize);
+                } else if (h2_frame_t::h2_frame_ping == hdr->type) {
+                    http2_frame_ping frame;
+                    dump_frame(&frame, hdr, checksize);
+                } else if (h2_frame_t::h2_frame_goaway == hdr->type) {
+                    http2_frame_goaway frame;
+                    dump_frame(&frame, hdr, checksize);
+                } else if (h2_frame_t::h2_frame_window_update == hdr->type) {
+                    http2_frame_window_update frame;
+                    dump_frame(&frame, hdr, checksize);
+                } else if (h2_frame_t::h2_frame_continuation == hdr->type) {
+                    http2_frame_continuation frame;
+                    dump_frame(&frame, hdr, checksize);
                 }
             } else {
                 http_response resp;
