@@ -33,9 +33,10 @@ http_header& http_header::add(const char* header, const char* value) {
         }
 
         critical_section_guard guard(_lock);
-        _names.push_back(header);
         http_header_map_pib_t pib = _headers.insert(std::make_pair(header, value));
-        if (false == pib.second) {
+        if (true == pib.second) {
+            _names.push_back(header);
+        } else {
             pib.first->second = value;
         }
     }
