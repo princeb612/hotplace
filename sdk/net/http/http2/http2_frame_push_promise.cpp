@@ -46,6 +46,11 @@ constexpr char constexpr_frame_value[] = "value";
 
 http2_frame_push_promise::http2_frame_push_promise() : http2_frame_header(h2_frame_t::h2_frame_push_promise), _padlen(0), _promised_id(0) {}
 
+http2_frame_push_promise::http2_frame_push_promise(const http2_frame_push_promise& rhs)
+    : http2_frame_header(rhs), _padlen(rhs._padlen), _promised_id(rhs._promised_id) {
+    _fragment = rhs._fragment;
+}
+
 return_t http2_frame_push_promise::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -102,12 +107,14 @@ return_t http2_frame_push_promise::write(binary_t& frame) {
     binary_t bin_payload;
     pl.dump(bin_payload);
 
-    uint8 flags = 0;
+    uint8 flags = get_flags();
     if (_padlen) {
         flags |= h2_flag_t::h2_flag_padded;
+    } else {
+        flags &= ~h2_flag_t::h2_flag_padded;
     }
-    set_payload_size(bin_payload.size());
     set_flags(flags);
+    set_payload_size(bin_payload.size());
 
     http2_frame_header::write(frame);
     frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());
@@ -122,8 +129,21 @@ void http2_frame_push_promise::dump(stream_t* s) {
         s->printf("> %s\n", constexpr_frame_fragment);
         dump_memory(_fragment, s, 16, 2, 0x0, dump_memory_flag_t::dump_notrunc);
         s->printf("\n");
+
+        if (get_hpack_encoder() && get_hpack_session()) {
+            size_t pos = 0;
+            std::string name;
+            std::string value;
+
+            while (pos < _fragment.size()) {
+                get_hpack_encoder()->decode_header(get_hpack_session(), &_fragment[0], _fragment.size(), pos, name, value);
+                s->printf("> %s: %s\n", name.c_str(), value.c_str());
+            }
+        }
     }
 }
+
+binary_t& http2_frame_push_promise::get_fragment() { return _fragment; }
 
 }  // namespace net
 }  // namespace hotplace

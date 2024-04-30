@@ -192,7 +192,7 @@ return_t echo_server(void*) {
             .add("/api/test", default_handler)
             .add(404, error_handler);
 
-        _http_server->get_http_protocol()->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
+        _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 
         _http_server->start();
 

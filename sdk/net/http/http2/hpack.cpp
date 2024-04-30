@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-hpack::hpack() : _encoder(nullptr), _session(nullptr), _flags(0) {}
+hpack::hpack() : _encoder(nullptr), _session(nullptr), _flags(hpack_indexing | hpack_huffman) {}
 
 hpack::~hpack() {}
 

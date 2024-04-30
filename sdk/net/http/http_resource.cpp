@@ -10,6 +10,7 @@
 
 #include <sdk/base.hpp>
 #include <sdk/io.hpp>
+#include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
@@ -100,6 +101,9 @@ void http_resource::load_resources() {
         _frame_flags.insert(std::make_pair(h2_flag_t::h2_flag_padded, "PADDED"));
         _frame_flags.insert(std::make_pair(h2_flag_t::h2_flag_priority, "PRIORITY"));
     }
+    if (_frame_flags2.empty()) {
+        _frame_flags2.insert(std::make_pair(h2_flag_t::h2_flag_ack, "ACK"));
+    }
 }
 
 std::string http_resource::load(int status) {
@@ -138,13 +142,26 @@ std::string http_resource::get_frame_flag(uint8 flag) {
     return flag_name;
 }
 
-void http_resource::for_each_frame_flag_names(uint8 flags, std::function<void(uint8, std::string const&)> func) {
-    if (func) {
-        for (auto item : _frame_flags) {
-            uint8 flag = item.first;
-            if (flags & flag) {
-                func(flag, item.second);
-            }
+void http_resource::for_each_frame_flag_names(uint8 type, uint8 flags, std::function<void(uint8, std::string const&)> func) {
+    if (flags && func) {
+        switch (type) {
+            case h2_frame_t::h2_frame_settings:
+            case h2_frame_t::h2_frame_ping:
+                for (auto item : _frame_flags2) {
+                    uint8 flag = item.first;
+                    if (flags & flag) {
+                        func(flag, item.second);
+                    }
+                }
+                break;
+            default:
+                for (auto item : _frame_flags) {
+                    uint8 flag = item.first;
+                    if (flags & flag) {
+                        func(flag, item.second);
+                    }
+                }
+                break;
         }
     }
 }

@@ -48,8 +48,8 @@ class http_server {
     return_t stop();
 
     network_server& get_network_server();
-    http_protocol* get_http_protocol();
-    http2_protocol* get_http2_protocol();
+    http_protocol& get_http_protocol();
+    http2_protocol& get_http2_protocol();
     hpack_encoder& get_hpack_encoder();
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();

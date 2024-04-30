@@ -52,7 +52,7 @@ class http_resource {
      * @brief   frame flag
      */
     std::string get_frame_flag(uint8 flag);
-    void for_each_frame_flag_names(uint8 flags, std::function<void(uint8, std::string const&)> func);
+    void for_each_frame_flag_names(uint8 type, uint8 flags, std::function<void(uint8, std::string const&)> func);
 
     /**
      * @brief   RFC 7541 Appendix A.  Static Table Definition
@@ -69,6 +69,7 @@ class http_resource {
     std::map<http_method_t, std::string> _methods;
     std::map<uint8, std::string> _frame_names;
     std::map<uint8, std::string> _frame_flags;
+    std::map<uint8, std::string> _frame_flags2;
 };
 
 }  // namespace net

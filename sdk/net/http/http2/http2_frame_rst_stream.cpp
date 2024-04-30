@@ -46,6 +46,8 @@ constexpr char constexpr_frame_value[] = "value";
 
 http2_frame_rst_stream::http2_frame_rst_stream() : http2_frame_header(h2_frame_t::h2_frame_rst_stream), _errorcode(0) {}
 
+http2_frame_rst_stream::http2_frame_rst_stream(const http2_frame_rst_stream& rhs) : http2_frame_header(rhs), _errorcode(rhs._errorcode) {}
+
 return_t http2_frame_rst_stream::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
 
@@ -89,9 +91,7 @@ return_t http2_frame_rst_stream::write(binary_t& frame) {
     binary_t bin_payload;
     pl.dump(bin_payload);
 
-    uint8 flags = 0;
     set_payload_size(bin_payload.size());
-    set_flags(flags);
 
     http2_frame_header::write(frame);
     frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());

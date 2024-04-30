@@ -46,6 +46,9 @@ constexpr char constexpr_frame_value[] = "value";
 
 http2_frame_priority::http2_frame_priority() : http2_frame_header(h2_frame_t::h2_frame_priority), _exclusive(false), _dependency(0), _weight(0) {}
 
+http2_frame_priority::http2_frame_priority(const http2_frame_priority& rhs)
+    : http2_frame_header(rhs), _exclusive(rhs._exclusive), _dependency(rhs._dependency), _weight(rhs._weight) {}
+
 return_t http2_frame_priority::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
 
@@ -99,9 +102,7 @@ return_t http2_frame_priority::write(binary_t& frame) {
     binary_t bin_payload;
     pl.dump(bin_payload);
 
-    uint8 flags = 0;
     set_payload_size(bin_payload.size());
-    set_flags(flags);
 
     http2_frame_header::write(frame);
     frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());

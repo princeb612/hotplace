@@ -46,6 +46,11 @@ constexpr char constexpr_frame_value[] = "value";
 
 http2_frame_headers::http2_frame_headers() : http2_frame_header(h2_frame_t::h2_frame_headers), _padlen(0), _exclusive(false), _dependency(0), _weight(0) {}
 
+http2_frame_headers::http2_frame_headers(const http2_frame_headers& rhs)
+    : http2_frame_header(rhs), _padlen(rhs._padlen), _exclusive(rhs._exclusive), _dependency(rhs._dependency), _weight(rhs._weight) {
+    _fragment = rhs._fragment;
+}
+
 return_t http2_frame_headers::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -115,15 +120,19 @@ return_t http2_frame_headers::write(binary_t& frame) {
     binary_t bin_payload;
     pl.dump(bin_payload);
 
-    uint8 flags = 0;
+    uint8 flags = get_flags();
     if (_padlen) {
         flags |= h2_flag_t::h2_flag_padded;
+    } else {
+        flags &= ~h2_flag_t::h2_flag_padded;
     }
     if (dependency) {
         flags |= h2_flag_t::h2_flag_priority;
+    } else {
+        flags &= ~h2_flag_t::h2_flag_priority;
     }
-    set_payload_size(bin_payload.size());
     set_flags(flags);
+    set_payload_size(bin_payload.size());
 
     http2_frame_header::write(frame);
     frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());
@@ -137,6 +146,17 @@ void http2_frame_headers::dump(stream_t* s) {
         s->printf("> %s\n", constexpr_frame_fragment);
         dump_memory(_fragment, s, 16, 2, 0x0, dump_memory_flag_t::dump_notrunc);
         s->printf("\n");
+
+        if (get_hpack_encoder() && get_hpack_session()) {
+            size_t pos = 0;
+            std::string name;
+            std::string value;
+
+            while (pos < _fragment.size()) {
+                get_hpack_encoder()->decode_header(get_hpack_session(), &_fragment[0], _fragment.size(), pos, name, value);
+                s->printf("> %s: %s\n", name.c_str(), value.c_str());
+            }
+        }
     }
 }
 

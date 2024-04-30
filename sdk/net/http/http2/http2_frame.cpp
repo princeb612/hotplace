@@ -44,18 +44,21 @@ constexpr char constexpr_frame_exclusive[] = "exclusive";
 constexpr char constexpr_frame_identifier[] = "identifier";
 constexpr char constexpr_frame_value[] = "value";
 
-http2_frame_header::http2_frame_header() : _payload_size(0), _type(0), _flags(0), _stream_id(0) {}
+http2_frame_header::http2_frame_header() : _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_encoder(nullptr), _hpack_session(nullptr) {}
 
-http2_frame_header::http2_frame_header(h2_frame_t type) : _payload_size(0), _type(type), _flags(0), _stream_id(0) {}
-
-http2_frame_header::http2_frame_header(const http2_frame_header& o) {
-    _payload_size = o._payload_size;
-    _type = o._type;
-    _flags = o._flags;
-    _stream_id = o._stream_id;
-}
+http2_frame_header::http2_frame_header(h2_frame_t type)
+    : _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_encoder(nullptr), _hpack_session(nullptr) {}
 
 http2_frame_header::http2_frame_header(http2_frame_header_t const& header) { read(&header, sizeof(http2_frame_header_t)); }
+
+http2_frame_header::http2_frame_header(const http2_frame_header& rhs) {
+    _payload_size = rhs._payload_size;
+    _type = rhs._type;
+    _flags = rhs._flags;
+    _stream_id = rhs._stream_id;
+    _hpack_encoder = rhs._hpack_encoder;
+    _hpack_session = rhs._hpack_session;
+}
 
 uint32 http2_frame_header::get_frame_size() { return sizeof(http2_frame_header_t) + get_payload_size(); }
 
@@ -107,6 +110,20 @@ http2_frame_header& http2_frame_header::set_stream_id(uint32 id) {
     _stream_id = id;
     return *this;
 }
+
+http2_frame_header& http2_frame_header::set_hpack_encoder(hpack_encoder* encoder) {
+    _hpack_encoder = encoder;
+    return *this;
+}
+
+http2_frame_header& http2_frame_header::set_hpack_session(hpack_session* session) {
+    _hpack_session = session;
+    return *this;
+}
+
+hpack_encoder* http2_frame_header::get_hpack_encoder() { return _hpack_encoder; }
+
+hpack_session* http2_frame_header::get_hpack_session() { return _hpack_session; }
 
 return_t http2_frame_header::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
@@ -164,7 +181,7 @@ void http2_frame_header::dump(stream_t* s) {
         s->printf("\n");
         s->printf("> %s [ ", constexpr_frame_flags);
 
-        resource->for_each_frame_flag_names(get_flags(), [&](uint8 flag, std::string const& name) -> void { s->printf("%s ", name.c_str()); });
+        resource->for_each_frame_flag_names(get_type(), get_flags(), [&](uint8 flag, std::string const& name) -> void { s->printf("%s ", name.c_str()); });
 
         s->printf("]\n");
     }

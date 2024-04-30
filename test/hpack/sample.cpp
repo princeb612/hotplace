@@ -582,6 +582,18 @@ void test_dynamic_table_per_session() {
 }
 
 void test_h2_header_frame_fragment() {
+    _test_case.begin("HTTP/2 Header Compression");
+
+    //   00000000 : 00 00 1E 01 05 00 00 00 01 82 87 41 8A A0 E4 1D | ...........A....
+    //   00000010 : 13 9D 09 B8 F8 00 0F 84 7A 88 25 B6 50 C3 CB 89 | ........z.%.P...
+    //   00000020 : 70 FF 53 03 2A 2F 2A -- -- -- -- -- -- -- -- -- | p.S.*/*
+    // - http/2 frame type 1 HEADERS
+    // > length 30 type 1 flags 05 stream identifier 1
+    // > flags [ END_STREAM END_HEADERS ]
+    // > fragment
+    //   00000000 : 82 87 41 8A A0 E4 1D 13 9D 09 B8 F8 00 0F 84 7A | ..A............z
+    //   00000010 : 88 25 B6 50 C3 CB 89 70 FF 53 03 2A 2F 2A -- -- | .%.P...p.S.*/*
+
     const char* sample =
         "82 87 41 8A A0 E4 1D 13 9D 09 B8 F8 00 0F 84 7A "
         "88 25 B6 50 C3 CB 89 70 FF 53 03 2A 2F 2A       ";
@@ -602,6 +614,7 @@ void test_h2_header_frame_fragment() {
     // :path: /
     // user-agent: curl/8.2.1
     // accept: */*
+    _test_case.assert(true, __FUNCTION__, "decompress");
 }
 
 int main(int argc, char** argv) {

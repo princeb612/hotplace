@@ -46,6 +46,10 @@ constexpr char constexpr_frame_value[] = "value";
 
 http2_frame_goaway::http2_frame_goaway() : http2_frame_header(h2_frame_t::h2_frame_goaway), _last_id(0), _errorcode(0) {}
 
+http2_frame_goaway::http2_frame_goaway(const http2_frame_goaway& rhs) : http2_frame_header(rhs), _last_id(rhs._last_id), _errorcode(rhs._errorcode) {
+    _debug = rhs._debug;
+}
+
 return_t http2_frame_goaway::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -74,7 +78,7 @@ return_t http2_frame_goaway::read(http2_frame_header_t const* header, size_t siz
 
         _last_id = t_variant_to_int<uint32>(pl.select(constexpr_frame_last_stream_id)->get_variant().content());
         _errorcode = t_variant_to_int<uint32>(pl.select(constexpr_frame_error_code)->get_variant().content());
-        pl.select(constexpr_frame_fragment)->get_variant().dump(_debug, true);
+        pl.select(constexpr_frame_debug_data)->get_variant().dump(_debug, true);
     }
     __finally2 {
         // do nothing
@@ -92,9 +96,7 @@ return_t http2_frame_goaway::write(binary_t& frame) {
     binary_t bin_payload;
     pl.dump(bin_payload);
 
-    uint8 flags = 0;
     set_payload_size(bin_payload.size());
-    set_flags(flags);
 
     http2_frame_header::write(frame);
     frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());

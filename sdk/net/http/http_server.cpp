@@ -17,7 +17,7 @@ using namespace io;
 namespace net {
 
 http_server::http_server() : _cert(nullptr), _tls(nullptr), _tls_server_socket(nullptr) {
-    get_http_protocol()->set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
+    get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 }
 
 http_server::~http_server() { shutdown(); }
@@ -118,9 +118,9 @@ return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, htt
             __leave2;
         }
         get_network_server().set_accept_control_handler(handle, accept_handler);
-        get_network_server().add_protocol(handle, get_http_protocol());
+        get_network_server().add_protocol(handle, &get_http_protocol());
         if (get_server_conf().get(netserver_config_t::serverconf_enable_h2)) {
-            get_network_server().add_protocol(handle, get_http2_protocol());
+            get_network_server().add_protocol(handle, &get_http2_protocol());
         }
 
         _http_handles.push_back(handle);
@@ -149,9 +149,9 @@ void http_server::shutdown() {
 
 network_server& http_server::get_network_server() { return _server; }
 
-http_protocol* http_server::get_http_protocol() { return &_protocol; }
+http_protocol& http_server::get_http_protocol() { return _protocol; }
 
-http2_protocol* http_server::get_http2_protocol() { return &_protocol2; }
+http2_protocol& http_server::get_http2_protocol() { return _protocol2; }
 
 hpack_encoder& http_server::get_hpack_encoder() { return _hpack_encoder; }
 
