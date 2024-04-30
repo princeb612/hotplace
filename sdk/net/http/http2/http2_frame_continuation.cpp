@@ -106,16 +106,7 @@ void http2_frame_continuation::dump(stream_t* s) {
         dump_memory(_fragment, s, 16, 2, 0x0, dump_memory_flag_t::dump_notrunc);
         s->printf("\n");
 
-        if (get_hpack_encoder() && get_hpack_session()) {
-            size_t pos = 0;
-            std::string name;
-            std::string value;
-
-            while (pos < _fragment.size()) {
-                get_hpack_encoder()->decode_header(get_hpack_session(), &_fragment[0], _fragment.size(), pos, name, value);
-                s->printf("> %s: %s\n", name.c_str(), value.c_str());
-            }
-        }
+        http2_frame_header::dump_hpack(s, _fragment);
     }
 }
 

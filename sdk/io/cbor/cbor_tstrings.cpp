@@ -115,13 +115,7 @@ void cbor_tstrings::represent(binary_t* b) {
         enc.encode(*b, cbor_major_t::cbor_major_tstr, cbor_control_t::cbor_control_begin, this);
 
         // for each member
-#if __cplusplus >= 201103L  // c++11
         for (auto item : _array) {
-#else
-        std::list<cbor_data*>::iterator iter;
-        for (iter = _array.begin(); iter != _array.end(); iter++) {
-            cbor_data* item = *iter;
-#endif
             item->represent(b);
         }
 

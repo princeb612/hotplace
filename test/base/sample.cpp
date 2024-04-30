@@ -342,38 +342,6 @@ void test_avl_tree() {
     }
 }
 
-void test_huffman_codes() {
-    _test_case.begin("huffman_coding");
-    constexpr char sample[] = "still a man hears what he wants to hear and disregards the rest";
-
-    huffman_coding huff;
-
-    huff.load(sample).learn().infer();
-    _test_case.assert(true, __FUNCTION__, "check learning time");
-
-    // 010 011 10100 10101 10101 111 100 111 001111 100 0010 111 1011 000 100 1100 010 111 11010 1011 100 011 111 1011 000 111 11010 100 0010 011 010 111 011
-    // 00110 111 1011 000 100 1100 111 100 0010 11011 111 11011 10100 010 1100 000 001110 100 1100 11011 010 111 011 1011 000 111 1100 000 010 011
-    basic_stream bs;
-    huff.encode(&bs, (byte_t*)sample, strlen(sample));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        printf("%s\n", bs.c_str());
-    }
-    _test_case.assert(true, __FUNCTION__, "check encoding time");
-
-    binary_t bin;
-    huff.encode(bin, (byte_t*)sample, strlen(sample));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        dump_memory(bin, &bs);
-        printf("%s\n", bs.c_str());
-    }
-    _test_case.assert(true, __FUNCTION__, "check encoding time");
-
-    // to decode, min(code len in bits) MUST >= 5
-    // if (huff.decodable()) huff.decode(...);
-}
-
 int main() {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -386,7 +354,6 @@ int main() {
     test_maphint();
     test_btree();
     test_avl_tree();
-    test_huffman_codes();
 
     _test_case.report(5);
     return _test_case.result();

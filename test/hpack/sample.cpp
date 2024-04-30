@@ -4,7 +4,7 @@
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      simple https server implementation
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver, httpauth, httpserver2
  *
  * Revision History
  * Date         Name                Description
@@ -42,6 +42,62 @@ void cprint(const char* text, ...) {
     vprintf(text, ap);
     va_end(ap);
     std::cout << _concolor.turnoff() << std::endl;
+}
+
+void test_huffman_codes_routine(const char* sample, const char* expect, const char* text) {
+    if (sample && expect && text) {
+        OPTION& option = cmdline->value();
+
+        return_t ret = errorcode_t::success;
+        basic_stream bs;
+        binary_t bin;
+
+        (*huffman_instance).encode(&bs, (byte_t*)sample, strlen(sample));
+        if (option.verbose) {
+            test_case_notimecheck notimecheck(_test_case);
+            printf("%s\n", bs.c_str());
+        }
+
+        (*huffman_instance).encode(bin, (byte_t*)sample, strlen(sample));
+        if (option.verbose) {
+            test_case_notimecheck notimecheck(_test_case);
+            dump_memory(bin, &bs);
+            printf("%s\n", bs.c_str());
+        }
+
+        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "%s encode", text);
+
+        bs.clear();
+        ret = (*huffman_instance).decode(&bs, &bin[0], bin.size());
+        if (option.verbose) {
+            test_case_notimecheck notimecheck(_test_case);
+            printf("%s\n", bs.c_str());
+        }
+
+        _test_case.assert(((errorcode_t::success == ret) && (bs == basic_stream(sample))), __FUNCTION__, "%s decode", text);
+    }
+}
+
+void test_huffman_codes() {
+    _test_case.begin("RFC 7541 Appendix B. Huffman Code");
+
+    struct huffman_coding_testvector {
+        const char* sample;
+        const char* expect;
+        const char* text;
+    } vector[] = {
+        {"www.example.com", "f1e3 c2e5 f23a 6ba0 ab90 f4ff", "data#1"},  // RFC 7541 C.4.1
+        {"no-cache", "a8eb 1064 9cbf", "data#2"},                        // RFC 7541 C.4.2
+        {"custom-key", "25a8 49e9 5ba9 7d7f", "data#3"},                 // RFC 7541 C.4.3
+        {"custom-value", "25a8 49e9 5bb8 e8b4 bf", "data#4"},            // RFC 7541 C.4.3
+
+        {"still a man hears what he wants to hear and disregards the rest",
+         "424d450a0d4a4752939476214f138d2a4e553c0ea4a1449d49ca3b141d5229219161661d922144ce552c2a13", "data#5"},
+    };
+    for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
+        huffman_coding_testvector* item = vector + i;
+        test_huffman_codes_routine(item->sample, item->expect, item->text);
+    }
 }
 
 void test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const char* text) {
@@ -250,62 +306,6 @@ void test_rfc7541_c_3() {
     // [  2] (s =  53) cache-control: no-cache
     // [  3] (s =  57) :authority: www.example.com
     //       Table size: 164
-}
-
-void test_huffman_codes_routine(const char* sample, const char* expect, const char* text) {
-    if (sample && expect && text) {
-        OPTION& option = cmdline->value();
-
-        return_t ret = errorcode_t::success;
-        basic_stream bs;
-        binary_t bin;
-
-        (*huffman_instance).encode(&bs, (byte_t*)sample, strlen(sample));
-        if (option.verbose) {
-            test_case_notimecheck notimecheck(_test_case);
-            printf("%s\n", bs.c_str());
-        }
-
-        (*huffman_instance).encode(bin, (byte_t*)sample, strlen(sample));
-        if (option.verbose) {
-            test_case_notimecheck notimecheck(_test_case);
-            dump_memory(bin, &bs);
-            printf("%s\n", bs.c_str());
-        }
-
-        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "%s encode", text);
-
-        bs.clear();
-        ret = (*huffman_instance).decode(&bs, &bin[0], bin.size());
-        if (option.verbose) {
-            test_case_notimecheck notimecheck(_test_case);
-            printf("%s\n", bs.c_str());
-        }
-
-        _test_case.assert(((errorcode_t::success == ret) && (bs == basic_stream(sample))), __FUNCTION__, "%s decode", text);
-    }
-}
-
-void test_huffman_codes() {
-    _test_case.begin("RFC 7541 Appendix B. Huffman Code");
-
-    struct huffman_coding_testvector {
-        const char* sample;
-        const char* expect;
-        const char* text;
-    } vector[] = {
-        {"www.example.com", "f1e3 c2e5 f23a 6ba0 ab90 f4ff", "data#1"},  // RFC 7541 C.4.1
-        {"no-cache", "a8eb 1064 9cbf", "data#2"},                        // RFC 7541 C.4.2
-        {"custom-key", "25a8 49e9 5ba9 7d7f", "data#3"},                 // RFC 7541 C.4.3
-        {"custom-value", "25a8 49e9 5bb8 e8b4 bf", "data#4"},            // RFC 7541 C.4.3
-
-        {"still a man hears what he wants to hear and disregards the rest",
-         "424d450a0d4a4752939476214f138d2a4e553c0ea4a1449d49ca3b141d5229219161661d922144ce552c2a13", "data#5"},
-    };
-    for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        huffman_coding_testvector* item = vector + i;
-        test_huffman_codes_routine(item->sample, item->expect, item->text);
-    }
 }
 
 // C.4.  Request Examples with Huffman Coding
@@ -635,21 +635,24 @@ int main(int argc, char** argv) {
     _test_case.reset_time();
 
     // RFC 7541 Appendix B. Huffman Code
+    huffman_instance.make_share(new huffman_coding);
+    (*huffman_instance).imports(_h2hcodes);
+    _test_case.assert(true, __FUNCTION__, "check loading time of HPACK Huffman Code");
+
+    // RFC 7541 Appendix B. Huffman Code
     // RFC 7541 Appendix A.  Static Table Definition
     encoder.make_share(new hpack_encoder);
     _test_case.assert(true, __FUNCTION__, "check loading time of HPACK");
 
-    huffman_instance.make_share(new huffman_coding);
-    (*huffman_instance).imports(_h2hcodes);  // RFC 7541 Appendix B. Huffman Code
-    _test_case.assert(true, __FUNCTION__, "check loading time of HPACK Huffman Code");
-
     // and now .. test_h2_header_frame_fragment wo loading time
+
+    // huffman codes
+    test_huffman_codes();
 
     // HPACK
     test_rfc7541_c_1();
     test_rfc7541_c_2();
     test_rfc7541_c_3();
-    test_huffman_codes();
     test_rfc7541_c_4();
     test_rfc7541_c_5();
     test_rfc7541_c_6();

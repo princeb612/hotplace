@@ -187,5 +187,18 @@ void http2_frame_header::dump(stream_t* s) {
     }
 }
 
+void http2_frame_header::dump_hpack(stream_t* s, const binary_t& b) {
+    if (s && get_hpack_encoder() && get_hpack_session()) {
+        size_t pos = 0;
+        std::string name;
+        std::string value;
+
+        while (pos < b.size()) {
+            get_hpack_encoder()->decode_header(get_hpack_session(), &b[0], b.size(), pos, name, value);
+            s->printf("> %s: %s\n", name.c_str(), value.c_str());
+        }
+    }
+}
+
 }  // namespace net
 }  // namespace hotplace

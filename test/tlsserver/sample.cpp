@@ -6,7 +6,7 @@
  *      how to test
  *          openssl s_client 127.0.0.1:9000
  *          ctrl + c
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver, httpauth, httpserver2
  *
  * Revision History
  * Date         Name                Description

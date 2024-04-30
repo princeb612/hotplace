@@ -42,6 +42,11 @@
    * sdk/crypto/cose/
    * test/cose/
 
+ * RFC 7541 HPACK: Header Compression for HTTP/2
+   * sdk/net/http/http2
+   * test/hpack
+   * test/httpserver2
+
 ## applied
 
  * RFC 4648 The Base16, Base32, and Base64 Data Encodings
@@ -81,8 +86,8 @@
  * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
  * RFC 1952 GZIP file format specification version 4.3
  * RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0
- * RFC 2069 An Extension to HTTP : Digest Access Authentication
  * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
+ * RFC 2069 An Extension to HTTP : Digest Access Authentication
  * RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
  * RFC 6749 OAuth 2.0
@@ -91,6 +96,12 @@
    * test/httpserver/
    * test/httpauth/
    * test/httptest/
+
+ * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
+   * sdk/net/http/http2/
+   * test/payload/
+   * test/hpack/
+   * test/httpserver2/
 
  * RFC 7638 3.1.  Example JWK Thumbprint Computation
    * test/jose/
@@ -105,10 +116,7 @@
 
 ## studying
 
- * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2817 Upgrading to TLS Within HTTP/1.1
- * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
- * RFC 7541 HPACK: Header Compression for HTTP/2
  * RFC 9114 HTTP/3
 
 ## next time

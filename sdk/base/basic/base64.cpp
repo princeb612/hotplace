@@ -15,6 +15,15 @@
 
 namespace hotplace {
 
+/*
+    BASE64
+        + /
+        = padding
+    BASE64URL
+        - _
+        no padding
+ */
+
 static const byte_t MIME_BASE64_ENCODE[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
                                             'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
                                             's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
@@ -23,6 +32,7 @@ static const byte_t MIME_BASE64URL_ENCODE[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G'
                                                'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
                                                's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'};
 
+/* +(0x2B) to 62, /(0x2F) to 63 */
 static const int MIME_BASE64_DECODE[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 00-0F */
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 10-1F */
@@ -42,6 +52,7 @@ static const int MIME_BASE64_DECODE[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1  /* F0-FF */
 };
 
+/* -(0x2D) to 62, _(0x5F) to 63 */
 static const int MIME_BASE64URL_DECODE[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 00-0F */
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 10-1F */
@@ -87,8 +98,8 @@ return_t base64_encode(const byte_t* source, size_t source_size, byte_t* buffer,
         }
 
         // #check.1 source 3bytes to encoded 4bytes
-        // 3bytes (8bits,8bits,8bits) : 2^8 = 1byte
-        // 4bytes (6bits,6bits,6bits,6bits) : 2^6 = 64
+        // 3bytes (8bits,8bits,8bits) : 2^8 (ASCII table)
+        // 4bytes (6bits,6bits,6bits,6bits) : 2^6 = 64 (BASE64 table)
         //
         // #check.2 switch source_size, n >= 0
         // pattern 3n+1 : enclen = (source_size/3 * 4) + 2; pad = "=="; (+2 + "==" -> 4)

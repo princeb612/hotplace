@@ -15,7 +15,7 @@ add_subdirectory (unittest)
 
 # io
 add_subdirectory (cbor)
-add_subdirectory (io)
+add_subdirectory (payload)
 add_subdirectory (mlfq)
 add_subdirectory (stream)
 add_subdirectory (string)

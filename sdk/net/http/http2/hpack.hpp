@@ -75,7 +75,7 @@ class hpack {
     /**
      * @brief   decode
      */
-    hpack& decode_header(byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    hpack& decode_header(const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
 
    private:
     hpack_encoder* _encoder;
@@ -114,7 +114,7 @@ class hpack_encoder {
     /**
      * @brief   decode (header compression)
      */
-    hpack_encoder& decode_header(hpack_session* session, byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    hpack_encoder& decode_header(hpack_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
 
     hpack_encoder& encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value);
 
@@ -133,8 +133,8 @@ class hpack_encoder {
 
     hpack_encoder& encode_dyntablesize(binary_t& target, uint8 maxsize);
 
-    return_t decode_int(byte_t* p, size_t& pos, uint8 mask, uint8 prefix, size_t& value);
-    return_t decode_string(byte_t* p, size_t& pos, uint8 flags, std::string& value);
+    return_t decode_int(const byte_t* p, size_t& pos, uint8 mask, uint8 prefix, size_t& value);
+    return_t decode_string(const byte_t* p, size_t& pos, uint8 flags, std::string& value);
 
     /*
      * @brief   safe mask

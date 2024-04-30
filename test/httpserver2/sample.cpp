@@ -14,45 +14,6 @@
  *      curl -v -k https://localhost:9000 --http2  --http2-prior-knowledge
  */
 
-#if 0
-connect 640
-read 640
-consume
-  00000000 : 50 52 49 20 2A 20 48 54 54 50 2F 32 2E 30 0D 0A | PRI * HTTP/2.0..
-  00000010 : 0D 0A 53 4D 0D 0A 0D 0A 00 00 12 04 00 00 00 00 | ..SM............
-  00000020 : 00 00 03 00 00 00 64 00 04 00 A0 00 00 00 02 00 | ......d.........
-  00000030 : 00 00 00 -- -- -- -- -- -- -- -- -- -- -- -- -- | ...
-- http/2 connecton preface
-- http/2 frame type 4 SETTINGS
-> length 18 type 4 flags 00 stream identifier 0
-> flags [ ]
-> identifier 2 value 0 (0x00000000)
-> identifier 3 value 100 (0x00000064)
-> identifier 4 value 10485760 (0x00a00000)
-
-read 640
-consume
-  00000000 : 00 00 04 08 00 00 00 00 00 3E 7F 00 01 -- -- -- | .........>...
-- http/2 frame type 8 WINDOW_UPDATE
-> length 4 type 8 flags 00 stream identifier 0
-> flags [ ]
-> window size increment 1048510465
-
-read 640
-consume
-  00000000 : 00 00 1E 01 05 00 00 00 01 82 87 41 8A A0 E4 1D | ...........A....
-  00000010 : 13 9D 09 B8 F8 00 0F 84 7A 88 25 B6 50 C3 CB 89 | ........z.%.P...
-  00000020 : 70 FF 53 03 2A 2F 2A -- -- -- -- -- -- -- -- -- | p.S.*/*
-- http/2 frame type 1 HEADERS
-> length 30 type 1 flags 05 stream identifier 1
-> flags [ END_STREAM END_HEADERS ]
-> fragment
-  00000000 : 82 87 41 8A A0 E4 1D 13 9D 09 B8 F8 00 0F 84 7A | ..A............z
-  00000010 : 88 25 B6 50 C3 CB 89 70 FF 53 03 2A 2F 2A -- -- | .%.P...p.S.*/*
-
-disconnect 640
-#endif
-
 #include <signal.h>
 #include <stdio.h>
 
@@ -93,6 +54,7 @@ void cprint(const char* text, ...) {
 }
 
 void print(const char* text, ...) {
+    // valgrind
     critical_section_guard guard(print_lock);
     va_list ap;
     va_start(ap, text);
@@ -177,7 +139,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                             .set_encode_flags(hpack_indexing | hpack_huffman)
                             .encode_header(":status", "200")
                             .encode_header("content-type", "text/html")
-                            .encode_header("content-length", format("%d", strlen(resp)).c_str());
+                            .encode_header("content-length", format("%zi", strlen(resp)).c_str());
                         if (option.verbose) {
                             dump_memory(hp.get_binary(), &bs, 16, 2);
                             printf("dump HPACK\n%s\n", bs.c_str());
@@ -301,7 +263,7 @@ return_t echo_server(void*) {
             .set_tls_verify_peer(0)
             .enable_ipv4(true)
             .enable_ipv6(true)
-            .enable_h2(true)
+            .enable_h2(true)  // enable HTTP/2
             .set_handler(consume_routine);
         builder.get_server_conf()
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)

@@ -41,7 +41,7 @@ hpack& hpack::encode_header(std::string const& name, std::string const& value) {
     return *this;
 }
 
-hpack& hpack::decode_header(byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
+hpack& hpack::decode_header(const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
     if (_session) {
         (*_encoder).decode_header(_session, source, size, pos, name, value);
     }
@@ -297,7 +297,7 @@ hpack_encoder& hpack_encoder::encode_dyntablesize(binary_t& target, uint8 maxsiz
     return *this;
 }
 
-return_t hpack_encoder::decode_int(byte_t* p, size_t& pos, uint8 mask, uint8 prefix, size_t& value) {
+return_t hpack_encoder::decode_int(const byte_t* p, size_t& pos, uint8 mask, uint8 prefix, size_t& value) {
     // 5.1.  Integer Representation
     // C.1.  Integer Representation Examples
     return_t ret = errorcode_t::success;
@@ -341,7 +341,7 @@ return_t hpack_encoder::decode_int(byte_t* p, size_t& pos, uint8 mask, uint8 pre
     return ret;
 }
 
-return_t hpack_encoder::decode_string(byte_t* p, size_t& pos, uint8 flags, std::string& value) {
+return_t hpack_encoder::decode_string(const byte_t* p, size_t& pos, uint8 flags, std::string& value) {
     return_t ret = errorcode_t::success;
     __try2 {
         value.clear();
@@ -492,7 +492,7 @@ hpack_encoder& hpack_encoder::encode_header(hpack_session* session, binary_t& ta
     return *this;
 }
 
-hpack_encoder& hpack_encoder::decode_header(hpack_session* session, byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
+hpack_encoder& hpack_encoder::decode_header(hpack_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
     if (session && source) {
         byte_t b = source[pos];
         uint8 mask = 0;

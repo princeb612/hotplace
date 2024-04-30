@@ -200,11 +200,13 @@ return_t base16_decode(const char* source, size_t size, binary_t& outpart, uint3
             cur = 2;
         }
 
-        if (size % 2) { /* support NIST CAVP test vector */
-            byte_t i = 0;
-            i += conv(source[cur++]);
+        /* case of an odd size - NIST CAVP test vector */
+        if (size % 2) {
+            byte_t i = conv(source[cur++]);
             outpart.push_back(i);
         }
+
+        /* octet */
         for (; cur < size; cur += 2) {
             byte_t i = 0;
             i = conv(source[cur]) << 4;
@@ -295,7 +297,6 @@ std::string base16_encode_rfc(std::string const& source) {
             replace(inpart, "\t", "");
             replace(inpart, "\r", "");
             replace(inpart, "\n", "");
-            replace(inpart, "\xa", "");
             split_context_t* handle = nullptr;
             size_t count = 0;
             std::string data;
@@ -319,7 +320,6 @@ std::string base16_encode_rfc(std::string const& source) {
             replace(inpart, "\t", "");
             replace(inpart, "\r", "");
             replace(inpart, "\n", "");
-            replace(inpart, "\xa", "");
             outpart = inpart;
         }
     }
@@ -341,7 +341,6 @@ binary_t base16_decode_rfc(std::string const& source) {
             replace(inpart, "\t", "");
             replace(inpart, "\r", "");
             replace(inpart, "\n", "");
-            replace(inpart, "\xa", "");
             split_context_t* handle = nullptr;
             size_t count = 0;
             std::string data;
@@ -357,13 +356,13 @@ binary_t base16_decode_rfc(std::string const& source) {
             split_end(handle);
         }
         // pattern 2 hex:hex:...:hex
+        // pattern 3 hex hex ... hex\nhex hex
         else {
             replace(inpart, ":", "");
             replace(inpart, " ", "");
             replace(inpart, "\t", "");
             replace(inpart, "\r", "");
             replace(inpart, "\n", "");
-            replace(inpart, "\xa", "");
             outpart = base16_decode(inpart);
         }
     }

@@ -142,7 +142,7 @@ return_t huffman_coding::expect(const char *source, size_t size, size_t &size_ex
     return ret;
 }
 
-return_t huffman_coding::expect(byte_t *source, size_t size, size_t &size_expected) {
+return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_expected) {
     return_t ret = errorcode_t::success;
     __try2 {
         size_expected = 0;
@@ -159,12 +159,15 @@ return_t huffman_coding::expect(byte_t *source, size_t size, size_t &size_expect
 
         maphint<uint8, std::string> hint(_codetable);
         size_t i = 0;
-        byte_t *p = source;
+        const byte_t *p = source;
         for (i = 0; i < size; i++) {
             std::string code;
             hint.find(p[i], &code);
             sum += code.size();
         }
+
+        // bits to bytes
+
         // align (2^n) | (x + (align-1)) & ~(align-1) | output                      |
         //      4      | (x + 3) & ~3                 | 1..4 -> 4, 5..8 -> 8, ...   |
         //      8      | (x + 7) & ~7                 | 1..8 -> 8, 9..16 -> 16, ... |
@@ -178,12 +181,12 @@ return_t huffman_coding::expect(byte_t *source, size_t size, size_t &size_expect
 
 return_t huffman_coding::encode(binary_t &bin, const char *source, size_t size, bool usepad) { return encode(bin, (byte_t *)source, size, usepad); }
 
-return_t huffman_coding::encode(binary_t &bin, byte_t *source, size_t size, bool usepad) {
+return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size, bool usepad) {
     return_t ret = errorcode_t::success;
     std::string buf;
     std::string code;
     size_t totalbits = 0;
-    byte_t *p = nullptr;
+    const byte_t *p = nullptr;
     size_t i = 0;
     maphint<uint8, std::string> hint(_codetable);
 
@@ -273,7 +276,7 @@ return_t huffman_coding::encode(binary_t &bin, byte_t *source, size_t size, bool
 
 return_t huffman_coding::encode(stream_t *stream, const char *source, size_t size) { return encode(stream, (byte_t *)source, size); }
 
-return_t huffman_coding::encode(stream_t *stream, byte_t *source, size_t size) {
+return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream || nullptr == source) {
@@ -281,7 +284,7 @@ return_t huffman_coding::encode(stream_t *stream, byte_t *source, size_t size) {
             __leave2;
         }
         // align to MSB
-        byte_t *p = nullptr;
+        const byte_t *p = nullptr;
         size_t i = 0;
         maphint<uint8, std::string> hint(_codetable);
         for (p = source, i = 0; i < size; i++) {
@@ -296,7 +299,7 @@ return_t huffman_coding::encode(stream_t *stream, byte_t *source, size_t size) {
     return ret;
 }
 
-return_t huffman_coding::decode(stream_t *stream, byte_t *source, size_t size) {
+return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == stream) || (nullptr == source)) {

@@ -177,7 +177,7 @@ binary_t base16_decode(const char* source, size_t size);
 binary_t base16_decode(std::string const& source);
 
 /**
- * @brief encode
+ * @brief encode (support various rfc-style)
  * @example
  *      // RFC 7516
  *      // Initialization Vector [227, 197, 117, 252, 2, 219, 233, 68, 180, 225, 77, 219]

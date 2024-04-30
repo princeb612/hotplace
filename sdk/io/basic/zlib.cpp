@@ -281,7 +281,7 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
     return dwRet;
 }
 
-return_t zlib_deflate(zlib_windowbits_t windowbits, stream_t* input, stream_t* output) {
+return_t zlib_deflate(zlib_windowbits_t windowbits, stream_t const* input, stream_t* output) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -299,7 +299,7 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, stream_t* input, stream_t* o
     return ret;
 }
 
-return_t zlib_inflate(zlib_windowbits_t windowbits, stream_t* input, stream_t* output) {
+return_t zlib_inflate(zlib_windowbits_t windowbits, stream_t const* input, stream_t* output) {
     return_t ret = errorcode_t::success;
 
     __try2 {

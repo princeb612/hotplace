@@ -131,6 +131,7 @@ class http2_frame_header {
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
+    virtual void dump_hpack(stream_t* s, const binary_t& b);
 
    protected:
     return_t set_payload_size(uint32 size);
