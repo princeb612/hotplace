@@ -417,7 +417,7 @@ return_t hpack_encoder::select(hpack_session* session, uint32 flags, size_t inde
         }
 
         if (index > _static_table.size()) {
-            index -= _static_table.size();
+            index -= (_static_table.size() + 1);
             ret = session->select(flags, index, name, value);
         } else {
             static_table_index_t::iterator iter = _static_table_index.find(index);
@@ -536,6 +536,7 @@ hpack_encoder& hpack_encoder::decode_header(hpack_session* session, const byte_t
         }
 
         size_t i = 0;
+        size_t idx = 0;
         if (hpack_index & flags) {
             decode_int(source, pos, mask, prefix, i);
             select(session, flags, i, name, value);
@@ -548,6 +549,12 @@ hpack_encoder& hpack_encoder::decode_header(hpack_session* session, const byte_t
             decode_string(source, pos, flags, name);
             decode_string(source, pos, flags, value);
         }
+
+        if (hpack_indexing & flags) {
+            if (all_matched != match(session, name, value, idx)) {
+                insert(session, name, value);
+            }
+        }
     }
     return *this;
 }
@@ -558,6 +565,20 @@ hpack_encoder& hpack_encoder::safe_mask(bool enable) {
 }
 
 hpack_session::hpack_session() {}
+
+hpack_session::hpack_session(const hpack_session& rhs) : _dynamic_table(rhs._dynamic_table) {}
+
+bool hpack_session::operator==(const hpack_session& rhs) { return _dynamic_table == rhs._dynamic_table; }
+
+bool hpack_session::operator!=(const hpack_session& rhs) { return _dynamic_table != rhs._dynamic_table; }
+
+void hpack_session::for_each(std::function<void(const std::string&, const std::string&)> v) {
+    if (v) {
+        for (auto item : _dynamic_table) {
+            v(item.first, item.second.first);
+        }
+    }
+}
 
 match_result_t hpack_session::match(std::string const& name, std::string const& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
@@ -573,18 +594,15 @@ match_result_t hpack_session::match(std::string const& name, std::string const& 
 }
 
 return_t hpack_session::select(uint32 flags, size_t index, std::string& name, std::string& value) {
-    return_t ret = errorcode_t::success;
-    if ((hpack_indexing | hpack_indexed_name | hpack_name_value) & flags) {
-        size_t idx = 0;
-        for (dynamic_table_t::iterator iter = _dynamic_table.begin(); iter != _dynamic_table.end(); iter++, idx++) {
-            if (index == idx) {
-                name = iter->first;
-                value = iter->second.first;
-                break;
-            }
+    return_t ret = errorcode_t::not_found;
+    size_t idx = 0;
+    for (dynamic_table_t::iterator iter = _dynamic_table.begin(); iter != _dynamic_table.end(); iter++, idx++) {
+        if (index == idx) {
+            name = iter->first;
+            value = iter->second.first;
+            ret = errorcode_t::success;
+            break;
         }
-    } else {
-        ret = errorcode_t::not_found;
     }
     return ret;
 }

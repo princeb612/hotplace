@@ -171,6 +171,11 @@ class hpack_session {
 
    public:
     hpack_session();
+    hpack_session(const hpack_session& rhs);
+
+    bool operator==(const hpack_session& rhs);
+    bool operator!=(const hpack_session& rhs);
+    void for_each(std::function<void(const std::string&, const std::string&)> v);
 
    protected:
     match_result_t match(std::string const& name, std::string const& value, size_t& index);
