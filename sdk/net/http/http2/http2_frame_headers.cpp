@@ -143,6 +143,10 @@ return_t http2_frame_headers::write(binary_t& frame) {
 void http2_frame_headers::dump(stream_t* s) {
     if (s) {
         http2_frame_header::dump(s);
+        if (get_flags() & h2_flag_t::h2_flag_priority) {
+            s->printf("> %s E:%u %08x\n", constexpr_frame_stream_dependency, _exclusive ? 1 : 0, _dependency);
+            s->printf("> %s %02x\n", constexpr_frame_weight, _weight);
+        }
         s->printf("> %s\n", constexpr_frame_fragment);
         dump_memory(_fragment, s, 16, 2, 0x0, dump_memory_flag_t::dump_notrunc);
         s->printf("\n");

@@ -297,6 +297,7 @@ std::string base16_encode_rfc(std::string const& source) {
             replace(inpart, "\t", "");
             replace(inpart, "\r", "");
             replace(inpart, "\n", "");
+            replace(inpart, "-", "");
             split_context_t* handle = nullptr;
             size_t count = 0;
             std::string data;
@@ -320,6 +321,7 @@ std::string base16_encode_rfc(std::string const& source) {
             replace(inpart, "\t", "");
             replace(inpart, "\r", "");
             replace(inpart, "\n", "");
+            replace(inpart, "-", "");
             outpart = inpart;
         }
     }
@@ -341,6 +343,7 @@ binary_t base16_decode_rfc(std::string const& source) {
             replace(inpart, "\t", "");
             replace(inpart, "\r", "");
             replace(inpart, "\n", "");
+            replace(inpart, "-", "");
             split_context_t* handle = nullptr;
             size_t count = 0;
             std::string data;
@@ -363,6 +366,7 @@ binary_t base16_decode_rfc(std::string const& source) {
             replace(inpart, "\t", "");
             replace(inpart, "\r", "");
             replace(inpart, "\n", "");
+            replace(inpart, "-", "");
             outpart = base16_decode(inpart);
         }
     }
