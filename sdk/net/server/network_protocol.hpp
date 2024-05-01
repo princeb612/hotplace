@@ -40,55 +40,6 @@ enum protocol_id_t {
 };
 
 /**
- * network_multiplexer_processor data structures
- */
-
-/* windows overlapped */
-#if defined _WIN32 || defined _WIN64
-typedef struct _net_session_wsabuf_t {
-    OVERLAPPED overlapped;
-    WSABUF wsabuf;
-    char buffer[1 << 10];
-} net_session_wsabuf_t;
-
-typedef struct _net_session_wsabuf_pair_t {
-    net_session_wsabuf_t r;
-    net_session_wsabuf_t w;
-} net_session_wsabuf_pair_t;
-
-#endif
-
-typedef struct _net_session_socket_t {
-    handle_t cli_socket;
-    sockaddr_storage_t cli_addr;  // both ipv4 and ipv6
-
-    _net_session_socket_t() : cli_socket((handle_t)INVALID_SOCKET) {}
-} net_session_socket_t;
-
-class tcp_server_socket;
-typedef struct _net_session_t {
-    net_session_socket_t netsock;
-    void* mplexer_handle;
-
-#if defined _WIN32 || defined _WIN64
-    net_session_wsabuf_pair_t wsabuf_pair;
-#elif defined __linux__
-    char buffer[1 << 10];
-#endif
-
-    tcp_server_socket* svr_socket;
-    tls_context_t* tls_handle;
-    int priority;
-    reference_counter refcount;
-
-    _net_session_t() : mplexer_handle(nullptr), svr_socket(nullptr), tls_handle(nullptr), priority(0) {}
-} net_session_t;
-
-class network_session;
-class network_session_manager;
-class network_stream;
-
-/**
  * @brief   protocol interpreter
  */
 class network_protocol {

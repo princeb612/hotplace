@@ -56,7 +56,7 @@ void cprint(const char* text, ...) {
     std::cout << _concolor.turnoff() << std::endl;
 }
 
-return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
     net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
     network_session* session = (network_session*)data_array[3];
@@ -157,7 +157,7 @@ return_t echo_server(void*) {
             .set_tls_verify_peer(0)
             .enable_ipv4(true)
             .enable_ipv6(true)
-            .set_handler(network_routine);
+            .set_handler(consume_routine);
         builder.get_server_conf()
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
             .set(netserver_config_t::serverconf_concurrent_network, 4)

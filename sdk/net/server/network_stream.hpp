@@ -85,7 +85,7 @@ class network_stream {
     bool ready();
     /**
      * @brief consume
-     * @param   network_stream_data**  ptr_buffer_object   [OUT] use release to free
+     * @param   network_stream_data**  ptr_buffer_object    [OUT] use release to free
      * @return error code (see error.hpp)
      * @remarks
      *          network_stream_data* buffer;
@@ -102,14 +102,14 @@ class network_stream {
     /**
      * @brief read from stream using protocol interpreter
      * @param   network_protocol_group* protocol_group  [IN]
-     * @param   network_stream*        from            [IN]
+     * @param   network_stream*        from             [IN]
      * @return error code (see error.hpp)
      */
     return_t read(network_protocol_group* protocol_group, network_stream* from);
     /**
      * @brief write into stream using protocol interpreter
      * @param   network_protocol_group* protocol_group  [IN]
-     * @param   network_stream*        target          [IN]
+     * @param   network_stream*        target           [IN]
      * @return error code (see error.hpp)
      */
     return_t write(network_protocol_group* protocol, network_stream* target);
@@ -117,18 +117,17 @@ class network_stream {
    protected:
     /**
      * @brief write if no protocol interpreter exist
-     * @param   network_protocol_group* protocol        [IN]
-     * @param   network_stream*        target          [OUT]
+     * @param   network_stream*        target           [OUT]
      * @return error code (see error.hpp)
      */
-    return_t write_wo_protocol(network_protocol_group* protocol, network_stream* target);
+    return_t do_write(network_stream* target);
     /**
      * @brief write using protocol interpreter
      * @param   network_protocol_group* protocol        [IN]
-     * @param   network_stream*        target          [OUT]
+     * @param   network_stream*        target           [OUT]
      * @return error code (see error.hpp)
      */
-    return_t write_with_protocol(network_protocol_group* protocol, network_stream* target);
+    return_t do_write(network_protocol_group* protocol, network_stream* target);
 
     typedef std::list<network_stream_data*> network_stream_list_t;
 

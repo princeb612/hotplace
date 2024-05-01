@@ -98,7 +98,9 @@
    * test/httptest/
 
  * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
+ * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
    * sdk/net/http/http2/
+   * sdk/net/tls/
    * test/payload/
    * test/hpack/
    * test/httpserver2/

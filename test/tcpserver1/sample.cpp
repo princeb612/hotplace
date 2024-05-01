@@ -52,7 +52,7 @@ typedef struct _netsocket_event_t {
 
 return_t accept_thread_routine(void* user_context);
 return_t network_thread_routine(void* user_context);
-return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
+return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
 
 return_t client_connected_handler(socket_t sockcli, netsocket_event_t** out_netsocket_context) {
     return_t ret = errorcode_t::success;
@@ -153,7 +153,7 @@ return_t accept_thread_routine(void* user_context) {
     return 0;
 }
 
-return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     //_test_case.test (errorcode_t::success, __FUNCTION__, "processing network events");
 
 #if defined _WIN32 || defined _WIN64
@@ -245,7 +245,7 @@ return_t network_thread_routine(void* user_context) {
 #elif defined __linux__
     multiplexer_epoll mplexer;
 #endif
-    mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->tcp_server_socket, network_routine, user_context);
+    mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->tcp_server_socket, consume_routine, user_context);
 
     return 0;
 }

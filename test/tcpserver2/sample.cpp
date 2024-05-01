@@ -37,7 +37,7 @@ return_t accept_handler(socket_t socket, sockaddr_storage_t* client_addr, CALLBA
     return ret;
 }
 
-return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
     net_session_socket_t* network_session = (net_session_socket_t*)data_array[0];
     char* buf = (char*)data_array[1];
@@ -74,8 +74,8 @@ return_t echo_server(void* param) {
         acl.add_rule("::1", true);
         acl.setmode(ipaddr_acl_t::whitelist);
 
-        network_server.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 1024, network_routine, nullptr, &svr_sock);
-        network_server.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 1024, network_routine, nullptr, &svr_sock);
+        network_server.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 1024, consume_routine, nullptr, &svr_sock);
+        network_server.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 1024, consume_routine, nullptr, &svr_sock);
 
         network_server.set_accept_control_handler(handle_ipv4, accept_handler);
         network_server.set_accept_control_handler(handle_ipv6, accept_handler);

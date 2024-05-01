@@ -27,7 +27,7 @@ test_case _test_case;
 #define FILENAME_RUN _T (".run")
 #define PORT 9000
 
-return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
     net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
     network_session* session = (network_session*)data_array[3];
@@ -85,8 +85,8 @@ return_t echo_server(void*) {
         __try_new_catch(tls_server, new tls_server_socket(tls), ret, __leave2);
 
         // start server
-        netserver.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 1024, network_routine, nullptr, tls_server);
-        netserver.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 1024, network_routine, nullptr, tls_server);
+        netserver.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 1024, consume_routine, nullptr, tls_server);
+        netserver.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 1024, consume_routine, nullptr, tls_server);
         // netserver.add_protocol(handle_ipv4, http_prot);
 
         netserver.consumer_loop_run(handle_ipv4, 2);
