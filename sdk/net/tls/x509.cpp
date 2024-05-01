@@ -69,7 +69,7 @@ static int set_default_passwd_callback_routine(char* buf, int num, int rwflag, v
     return len;
 }
 
-return_t x509_open(SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
+return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
     return_t ret = errorcode_t::success;
     SSL_CTX* ssl_ctx = nullptr;
     SSL* ssl = nullptr;
@@ -168,7 +168,7 @@ return_t x509_open(SSL_CTX** context, const char* cert_file, const char* key_fil
 x509cert::x509cert() : _x509(nullptr) { x509_open_simple(&_x509); }
 
 x509cert::x509cert(const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _x509(nullptr) {
-    x509_open(&_x509, cert_file, key_file, password, chain_file);
+    x509cert_open(&_x509, cert_file, key_file, password, chain_file);
 }
 
 x509cert::~x509cert() {
@@ -186,6 +186,48 @@ x509cert& x509cert::set_cipher_list(const char* list) {
 
 x509cert& x509cert::set_verify(int mode) {
     SSL_CTX_set_verify(_x509, mode, nullptr);
+    return *this;
+}
+
+static int set_alpn_select_cb(SSL* ssl, const unsigned char** out, unsigned char* outlen, const unsigned char* in, unsigned int inlen, void* arg) {
+    int ret = SSL_TLSEXT_ERR_NOACK;
+
+    // 00000000 : 02 68 32 08 68 74 74 70 2F 31 2E 31 -- -- -- -- | .h2.http/1.1
+
+    int pos_h2 = -1;
+    int pos_h1_1 = -1;
+
+    for (int pos = 0; pos < inlen;) {
+        uint8 len = in[pos];
+        if (0 == strncmp((char*)in + pos, "\x2h2", 3)) {
+            pos_h2 = pos;
+        } else if (0 == strncmp((char*)in + pos, "\x8http/1.1", 9)) {
+            pos_h1_1 = pos;
+        }
+        pos += (len + 1);
+    }
+
+    if (pos_h2 != -1) {
+        *out = in + pos_h2 + 1;
+        *outlen = in[pos_h2];
+        ret = SSL_TLSEXT_ERR_OK;
+    } else if (pos_h1_1 != -1) {
+        *out = in + pos_h1_1 + 1;
+        *outlen = in[pos_h1_1];
+        ret = SSL_TLSEXT_ERR_OK;
+    }
+
+    return ret;
+}
+
+x509cert& x509cert::enable_alpn_h2(bool enable) {
+    if (enable) {
+        // RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
+        // RFC 7540 3.1.  HTTP/2 Version Identification
+        SSL_CTX_set_alpn_select_cb(_x509, set_alpn_select_cb, nullptr);
+    } else {
+        SSL_CTX_set_alpn_select_cb(_x509, nullptr, nullptr);
+    }
     return *this;
 }
 

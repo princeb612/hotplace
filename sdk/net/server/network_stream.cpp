@@ -30,6 +30,7 @@ return_t network_stream::produce(byte_t* buf_read, size_t size_buf_read) {
     __try2 {
         if (size_buf_read > 0) {
             __try_new_catch(buffer_object, new network_stream_data, ret, __leave2);
+
             buffer_object->assign(buf_read, size_buf_read);
 
             critical_section_guard guard(_lock);
@@ -107,7 +108,7 @@ return_t network_stream::read(network_protocol_group* protocol_group, network_st
     return ret;
 }
 
-return_t network_stream::write_wo_protocol(network_protocol_group* protocol_group, network_stream* target) {
+return_t network_stream::do_write(network_stream* target) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -129,7 +130,7 @@ return_t network_stream::write_wo_protocol(network_protocol_group* protocol_grou
     return ret;
 }
 
-return_t network_stream::write_with_protocol(network_protocol_group* protocol_group, network_stream* target) {
+return_t network_stream::do_write(network_protocol_group* protocol_group, network_stream* target) {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
     network_stream_data* buffer_object = nullptr;
@@ -152,11 +153,12 @@ return_t network_stream::write_with_protocol(network_protocol_group* protocol_gr
 
         network_protocol* protocol = nullptr;
         bufstream.write(buffer_object->content(), buffer_object->size()); /* append */
-        test = protocol_group->is_kind_of(bufstream.data(), bufstream.size(), &protocol);
+
+        test = protocol_group->is_kind_of(bufstream.data(), bufstream.size(), &protocol);  // reference counter ++
 
         promise_on_destroy<network_protocol*>(protocol, [](network_protocol* object) -> void {
             if (object) {
-                object->release();
+                object->release();  // reference counter --
             }
         });
 
@@ -208,7 +210,7 @@ return_t network_stream::write_with_protocol(network_protocol_group* protocol_gr
                     byte_t* ptr = bufstream.data() + request_size;
                     buffer_object->assign(ptr, remain);
                     buffer_object->set_priority(priority);  // set stream priority
-                    ret = errorcode_t::more_data;           // while (more_data == write_with_protocol(...));
+                    ret = errorcode_t::more_data;           // while (more_data == do_write(...));
                     break;
                 }
             }
@@ -244,19 +246,19 @@ return_t network_stream::write(network_protocol_group* protocol_group, network_s
             ret = errorcode_t::empty;
         } else {
             if (true == protocol_group->empty()) {
-                write_wo_protocol(protocol_group, target);
+                do_write(target);
             } else {
                 /*
                  * after processing one request, check remains
-                 * before write_with_protocol
+                 * before do_write
                  *      request packet 1 || request packet 2 || ...
-                 * after write_with_protocol
+                 * after do_write
                  *      request packet 1 in target
                  *      request packet 2 || ... remains
                  * to resolve
                  *      check more_data
                  */
-                while (errorcode_t::more_data == write_with_protocol(protocol_group, target))
+                while (errorcode_t::more_data == do_write(protocol_group, target))
                     ;
             }
         }

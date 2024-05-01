@@ -11,6 +11,7 @@
  *
  * @comments
  *      debug w/ curl
+ *      curl -v -k https://localhost:9000 --http2
  *      curl -v -k https://localhost:9000 --http2  --http2-prior-knowledge
  */
 

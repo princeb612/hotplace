@@ -130,6 +130,12 @@ http_server* http_server_builder::build() {
                 }
             }
         }
+        uint16 enable_h2 = get_server_conf().get(netserver_config_t::serverconf_enable_h2);
+        if (enable_h2) {
+            if (server->_cert) {
+                server->_cert->enable_alpn_h2(true);
+            }
+        }
     }
     __finally2 {
         // do nothing

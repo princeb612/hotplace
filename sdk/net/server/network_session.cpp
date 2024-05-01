@@ -29,7 +29,6 @@ return_t network_session::connected(handle_t client_socket, sockaddr_storage_t* 
 
     _session.netsock.cli_socket = client_socket;
     memcpy(&(_session.netsock.cli_addr), sockaddr, sizeof(sockaddr_storage_t));
-    _session.priority = 0;
     _session.tls_handle = tls_handle;
     return ret;
 }
@@ -41,9 +40,6 @@ return_t network_session::ready_to_read() {
     /* asynchronous read */
     DWORD dwFlags = 0;
     DWORD dwRecvBytes = 0;
-    memset(&(_session.wsabuf_pair.r), 0, sizeof(OVERLAPPED));
-    _session.wsabuf_pair.r.wsabuf.len = RTL_FIELD_SIZE(net_session_wsabuf_t, buffer);
-    _session.wsabuf_pair.r.wsabuf.buf = _session.wsabuf_pair.r.buffer;
 
     WSARecv((socket_t)_session.netsock.cli_socket, &(_session.wsabuf_pair.r.wsabuf), 1, &dwRecvBytes, &dwFlags, &(_session.wsabuf_pair.r.overlapped), nullptr);
 #endif

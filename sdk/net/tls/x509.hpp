@@ -84,7 +84,7 @@ return_t x509_open_simple(SSL_CTX** context);
  *        unencrypted key (ex. -----BEGIN PRIVATE KEY-----)
  *          works good, password parameter useless
  */
-return_t x509_open(SSL_CTX** context, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
+return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
 
 class x509cert {
    public:
@@ -94,6 +94,7 @@ class x509cert {
 
     x509cert& set_cipher_list(const char* list);
     x509cert& set_verify(int mode);
+    x509cert& enable_alpn_h2(bool enable);
 
     SSL_CTX* get();
 
