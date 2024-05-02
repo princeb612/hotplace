@@ -122,6 +122,23 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 if (h2_frame_t::h2_frame_data == hdr->type) {
                     http2_frame_data frame;
                     dump_frame(&frame, hdr, checksize);
+
+                    if (0 == frame.get_stream_id()) {
+                        // DATA frames MUST be associated with a stream.  If a DATA frame is
+                        // received whose stream identifier field is 0x0, the recipient MUST
+                        // respond with a connection error (Section 5.4.1) of type
+                        // PROTOCOL_ERROR.
+
+                        http2_frame_goaway resp_goaway;
+                        resp_goaway.set_errorcode(h2_connect_error);
+                        resp_goaway.get_debug() = convert("connection error");
+
+                        binary_t bin_resp;
+                        resp_goaway.write(bin_resp);
+
+                        session->send((char*)&bin_resp[0], bin_resp.size());
+                    }
+
                 } else if (h2_frame_t::h2_frame_headers == hdr->type) {
                     http2_frame_headers frame;
                     frame.set_hpack_encoder(&_http_server->get_hpack_encoder()).set_hpack_session(session->get_hpack_session());

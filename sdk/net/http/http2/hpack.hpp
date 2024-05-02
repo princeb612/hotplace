@@ -188,7 +188,12 @@ class hpack_session {
     dynamic_table_t _dynamic_table;
 };
 
-// RFC 7541 Appendix B. Huffman Code
+/*
+ * @brief   RFC 7541 Appendix B. Huffman Code
+ * @sample
+ *          huffman_coding huff;
+ *          huff.imports(_h2hcodes);
+ */
 extern const huffman_coding::hc_code_t _h2hcodes[];
 
 }  // namespace net

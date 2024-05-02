@@ -86,29 +86,7 @@ return_t tls_server_socket::send(socket_t sock, tls_context_t* tls_handle, const
     return ret;
 }
 
-return_t tls_server_socket::query(int specid, arch_t* data_ptr) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == data_ptr) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        *data_ptr = 0;
-        switch (specid) {
-            case server_socket_query_t::query_support_tls:
-                *data_ptr = 1;
-                break;
-            default:
-                ret = errorcode_t::request;
-                break;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+bool tls_server_socket::support_tls() { return true; }
 
 }  // namespace net
 }  // namespace hotplace

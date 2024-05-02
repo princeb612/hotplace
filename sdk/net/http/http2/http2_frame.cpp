@@ -177,7 +177,7 @@ void http2_frame_header::dump(stream_t* s) {
         s->printf("%s %u ", constexpr_frame_length, get_payload_size());
         s->printf("%s %u ", constexpr_frame_type, get_type());
         s->printf("%s %02x ", constexpr_frame_flags, get_flags());
-        s->printf("%s %u ", constexpr_frame_stream_identifier, get_stream_id());
+        s->printf("%s %08x ", constexpr_frame_stream_identifier, get_stream_id());
         s->printf("\n");
         s->printf("> %s [ ", constexpr_frame_flags);
 

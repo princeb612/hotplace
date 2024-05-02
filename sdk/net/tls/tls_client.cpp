@@ -105,5 +105,7 @@ return_t tls_client_socket::send(socket_t sock, tls_context_t* tls_handle, const
     return ret;
 }
 
+bool tls_client_socket::support_tls() { return true; }
+
 }  // namespace net
 }  // namespace hotplace

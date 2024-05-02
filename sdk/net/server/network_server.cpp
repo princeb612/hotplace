@@ -180,9 +180,7 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
         context->accept_threads.create();
         // (iocp) and then bind client socket after accept
 #endif
-        arch_t use_tls = 0;
-        svr_socket->query(server_socket_query_t::query_support_tls, &use_tls);
-        if (1 == use_tls) {
+        if (svr_socket->support_tls()) {
             context->tls_accept_threads.create();
         }
 
@@ -309,9 +307,7 @@ return_t network_server::tls_accept_loop_run(network_multiplexer_context_t* hand
         }
 
         tcp_server_socket* svr_socket = handle->svr_socket;
-        arch_t use_tls = 0;
-        svr_socket->query(server_socket_query_t::query_support_tls, &use_tls);
-        if (1 == use_tls) {
+        if (svr_socket->support_tls()) {
             for (uint32 i = 0; i < concurrent_loop; i++) {
                 handle->tls_accept_threads.create();
             }
@@ -589,12 +585,7 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
          * so, separate thread to improve accept performance
          */
 
-        arch_t use_tls = 0;
-        svr_socket->query(server_socket_query_t::query_support_tls, &use_tls);
-        if (0 == use_tls) {
-            /* wo thread overhead */
-            ret = svr.session_accepted(handle, nullptr, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
-        } else {
+        if (svr_socket->support_tls()) {
             /* prepare for ssl_accept delay */
             {
                 critical_section_guard guard(handle->accept_queue_lock);
@@ -602,6 +593,8 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
             }
 
             svr.try_connect(handle, accpt_ctx.cli_socket, &accpt_ctx.client_addr);
+        } else {
+            ret = svr.session_accepted(handle, nullptr, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
         }
     }
     __finally2 {

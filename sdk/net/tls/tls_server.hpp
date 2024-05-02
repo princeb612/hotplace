@@ -69,15 +69,8 @@ class tls_server_socket : public tcp_server_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
-    /**
-     * @brief   query socket layer spec
-     * @param   int         specid          [IN] see SERVER_SOCKET_QUERY
-     * @param   arch_t*     data_ptr        [OUT]
-     * @return  error code (see error.hpp)
-     * @remarks
-     *          tcp_server_socket.query(server_socket_query_t::query_support_tls, &value);
-     */
-    virtual return_t query(int specid, arch_t* data_ptr);
+
+    virtual bool support_tls();
 
     int addref();
     int release();

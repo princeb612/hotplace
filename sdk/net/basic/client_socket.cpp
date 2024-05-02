@@ -113,6 +113,8 @@ return_t tcp_client_socket::send(socket_t sock, tls_context_t* tls_handle, const
     return ret;
 }
 
+bool tcp_client_socket::support_tls() { return false; }
+
 tcp_client_socket& tcp_client_socket::set_ttl(uint32 milliseconds) {
     if (milliseconds) {
         _ttl = milliseconds;

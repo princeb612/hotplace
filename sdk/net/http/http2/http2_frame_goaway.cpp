@@ -116,5 +116,12 @@ void http2_frame_goaway::dump(stream_t* s) {
     }
 }
 
+http2_frame_goaway& http2_frame_goaway::set_errorcode(uint32 errorcode) {
+    _errorcode = errorcode;
+    return *this;
+}
+
+binary_t& http2_frame_goaway::get_debug() { return _debug; }
+
 }  // namespace net
 }  // namespace hotplace

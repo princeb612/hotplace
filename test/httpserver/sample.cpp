@@ -79,31 +79,12 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             }
 
             {
-                arch_t use_tls = 0;
-                session->get_server_socket()->query(server_socket_query_t::query_support_tls, &use_tls);
+                bool use_tls = session->get_server_socket()->support_tls();
 
                 http_request request;
                 http_response response(&request);
                 basic_stream bs;
                 request.open(buf, bufsize);
-
-                if (0) {
-                    std::string encoding;
-
-                    std::cout << "uri : " << request.get_http_uri().get_uri() << std::endl;
-                    std::cout << "method : " << request.get_method() << std::endl;
-
-                    /* URI, URL, query */
-                    http_uri& uri = request.get_http_uri();
-                    uri.get_query_keyvalue().foreach (
-                        [&](std::string const& key, std::string const& value, void* param) -> void { std::cout << key << " : " << value << std::endl; });
-
-                    std::cout << "tls : " << use_tls << std::endl;
-
-                    /* header */
-                    request.get_http_header().get("Accept-Encoding", encoding);
-                    std::cout << "encoding : " << encoding.c_str() << std::endl << std::endl;
-                }
 
                 if (use_tls) {
                     // using http_router

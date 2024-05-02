@@ -65,6 +65,8 @@ class tcp_client_socket {
      */
     virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent);
 
+    bool support_tls();
+
     tcp_client_socket& set_ttl(uint32 milliseconds);
     uint32 get_ttl();
 

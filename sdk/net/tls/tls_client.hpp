@@ -153,6 +153,8 @@ class tls_client_socket : public tcp_client_socket {
      */
     virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
 
+    virtual bool support_tls();
+
     int addref();
     int release();
 
