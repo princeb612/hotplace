@@ -81,7 +81,7 @@ return_t http2_frame_data::read(http2_frame_header_t const* header, size_t size)
         pl.read(ptr_payload, get_payload_size());
 
         _padlen = t_variant_to_int<uint8>(pl.select(constexpr_frame_pad_length)->get_variant().content());
-        pl.select(constexpr_frame_length)->get_variant().dump(_data, true);
+        pl.select(constexpr_frame_data)->get_variant().dump(_data, true);
     }
     __finally2 {
         // do nothing
