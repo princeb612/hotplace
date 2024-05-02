@@ -226,7 +226,7 @@ void test_rfc7541_c_2() {
     _test_case.assert((":method" == name) && ("GET" == value), __FUNCTION__, "%s - decode", text4);
 }
 
-void decode(binary_t bin, hpack_session* session, hpack_session* session2) {
+void decode(const binary_t& bin, hpack_session* session, hpack_session* session2) {
     OPTION& option = cmdline->value();
 
     hpack hp;
@@ -234,7 +234,10 @@ void decode(binary_t bin, hpack_session* session, hpack_session* session2) {
     std::string value;
     size_t pos = 0;
 
-    printf("> decode\n");
+    if (option.verbose) {
+        printf("> decode\n");
+    }
+
     hp.set_encoder(&*encoder).set_session(session);
     while (pos < bin.size()) {
         hp.decode_header(&bin[0], bin.size(), pos, name, value);
@@ -593,6 +596,7 @@ void test_rfc7541_c_6() {
 
 void test_h2_header_frame_fragment() {
     _test_case.begin("HTTP/2 Header Compression");
+    OPTION& option = cmdline->value();
 
     // [test vector] chrome generated header
 
@@ -634,12 +638,18 @@ void test_h2_header_frame_fragment() {
         "FB 40 05 DD 40 86 AE C3 1E C3 27 D7 85 B6 00 7D "
         "28 6F -- -- -- -- -- -- -- -- -- -- -- -- -- -- ";
 
+    if (option.verbose) {
+        printf("decode HEADER\n");
+    }
+
     pos = 0;
     bin = base16_decode_rfc(sample1);
     while (pos < bin.size()) {
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
-        printf("%s: %s\n", name.c_str(), value.c_str());
-        fflush(stdout);
+        if (option.verbose) {
+            printf("> %s: %s\n", name.c_str(), value.c_str());
+            fflush(stdout);
+        }
     }
 
     const char* sample2 =
@@ -652,12 +662,18 @@ void test_h2_header_frame_fragment() {
         "90 9D 29 AD 17 18 62 83 90 74 4E 74 26 E3 E0 00 "
         "18 C5 C4 7F 04 85 B6 00 FD 28 6F -- -- -- -- -- ";
 
+    if (option.verbose) {
+        printf("decode HEADER\n");
+    }
+
     pos = 0;
     bin = base16_decode_rfc(sample2);
     while (pos < bin.size()) {
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
-        printf("%s: %s\n", name.c_str(), value.c_str());
-        fflush(stdout);
+        if (option.verbose) {
+            printf("> %s: %s\n", name.c_str(), value.c_str());
+            fflush(stdout);
+        }
     }
     _test_case.assert(true, __FUNCTION__, "decompress");
 }

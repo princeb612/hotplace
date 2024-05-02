@@ -139,8 +139,10 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                             .set_session(session->get_hpack_session())
                             .set_encode_flags(hpack_indexing | hpack_huffman)
                             .encode_header(":status", "200")
-                            .encode_header("content-type", "text/html")
-                            .encode_header("content-length", format("%zi", strlen(resp)).c_str());
+                            // HPACK_INVALID_INDEX
+                            //.encode_header("content-type", "text/html")
+                            //.encode_header("content-length", format("%zi", strlen(resp)).c_str())
+                            ;
                         if (option.verbose) {
                             dump_memory(hp.get_binary(), &bs, 16, 2);
                             printf("dump HPACK\n%s\n", bs.c_str());
