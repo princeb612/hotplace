@@ -174,7 +174,7 @@ typedef struct __variant_t {
 } variant_t;
 
 template <typename T>
-T t_variant_to_int(variant_t const& vt) {
+T t_variant_to_int(const variant_t& vt) {
     T i = 0;
 
     switch (vt.type) {
@@ -292,14 +292,14 @@ class variant {
     variant& set_strn_new(const char* value, size_t n);
     variant& set_bstr_new(const unsigned char* value, size_t n);
     variant& set_nstr_new(const char* value, size_t n);
-    variant& set_binary_new(binary_t const& bin);
+    variant& set_binary_new(const binary_t& bin);
 
     int to_int() const;
     return_t to_binary(binary_t& target) const;
     return_t to_string(std::string& target) const;
     return_t dump(binary_t& target, bool change_endian) const;
 
-    variant& copy(variant_t const& value);
+    variant& copy(const variant_t& value);
     variant& move(variant_t& value);
     variant& copy(const variant& source);
     variant& move(variant& source);

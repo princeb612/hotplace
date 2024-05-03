@@ -49,11 +49,11 @@ class cbor_data : public cbor_object {
     cbor_data(int128 value);
 #endif
     cbor_data(const byte_t* bstr, size_t size);
-    cbor_data(binary_t const& bin);
+    cbor_data(const binary_t& bin);
     cbor_data(const char* tstr);
     cbor_data(const char* tstr, size_t length);
-    cbor_data(std::string const& bin);
-    cbor_data(fp16_t const& value);
+    cbor_data(const std::string& bin);
+    cbor_data(const fp16_t& value);
     cbor_data(float value);
     cbor_data(double value);
     cbor_data(variant_t& vt);

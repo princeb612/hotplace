@@ -41,7 +41,7 @@ json_object_encryption::~json_object_encryption() {
     // do nothing
 }
 
-return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, std::string& output, jose_serialization_t type) {
+return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, std::string& output, jose_serialization_t type) {
     return_t ret = errorcode_t::success;
     json_object_encryption::composer composer;
 
@@ -77,7 +77,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
     return ret;
 }
 
-return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std::list<jwa_t> algs, binary_t const& input, std::string& output,
+return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std::list<jwa_t> algs, const binary_t& input, std::string& output,
                                          jose_serialization_t type) {
     return_t ret = errorcode_t::success;
     json_object_encryption::composer composer;
@@ -138,7 +138,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, std:
     return ret;
 }
 
-return_t json_object_encryption::decrypt(jose_context_t* handle, std::string const& input, binary_t& output, bool& result) {
+return_t json_object_encryption::decrypt(jose_context_t* handle, const std::string& input, binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
     json_object_encryption::composer composer;
 
@@ -211,7 +211,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, std::string con
     return ret;
 }
 
-return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output) {
+return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     json_object_encryption::composer composer;
     openssl_crypt crypt;
@@ -448,11 +448,11 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
     return ret;
 }
 
-return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, binary_t& output) {
+return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, binary_t& output) {
     return dodecrypt(handle, enc, alg, nullptr, input, output);
 }
 
-return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const char* kid, binary_t const& input, binary_t& output) {
+return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const char* kid, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     openssl_crypt crypt;
     openssl_hash hash;
@@ -909,7 +909,7 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t* ha
     return ret;
 }
 
-return_t json_object_encryption::composer::compose_encryption_aead_header(std::string const& source_encoded, binary_t const& tag, binary_t& aad,
+return_t json_object_encryption::composer::compose_encryption_aead_header(const std::string& source_encoded, const binary_t& tag, binary_t& aad,
                                                                           std::string& output_encoded) {
     return_t ret = errorcode_t::success;
     json_t* json_header = nullptr;
@@ -1058,7 +1058,7 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
     return ret;
 }
 
-return_t json_object_encryption::composer::docompose_protected_header(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, std::string const& kid,
+return_t json_object_encryption::composer::docompose_protected_header(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string& kid,
                                                                       uint32 flags) {
     return_t ret = errorcode_t::success;
     crypt_datamap_t datamap;
@@ -1069,7 +1069,7 @@ return_t json_object_encryption::composer::docompose_protected_header(binary_t& 
 }
 
 return_t json_object_encryption::composer::docompose_encryption_header_parameter(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag,
-                                                                                 std::string const& kid, crypt_datamap_t& datamap,
+                                                                                 const std::string& kid, crypt_datamap_t& datamap,
                                                                                  crypt_variantmap_t& variantmap, uint32 flags) {
     return_t ret = errorcode_t::success;
     json_t* json_header = nullptr;

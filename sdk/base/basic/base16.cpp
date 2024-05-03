@@ -116,18 +116,18 @@ return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint
     return ret;
 }
 
-return_t base16_encode(binary_t const& source, char* buf, size_t* buflen) { return base16_encode(&source[0], source.size(), buf, buflen); }
+return_t base16_encode(const binary_t& source, char* buf, size_t* buflen) { return base16_encode(&source[0], source.size(), buf, buflen); }
 
-return_t base16_encode(binary_t const& source, std::string& outpart, uint32 flags) { return base16_encode(&source[0], source.size(), outpart, flags); }
+return_t base16_encode(const binary_t& source, std::string& outpart, uint32 flags) { return base16_encode(&source[0], source.size(), outpart, flags); }
 
-std::string base16_encode(binary_t const& source) {
+std::string base16_encode(const binary_t& source) {
     std::string outpart;
 
     base16_encode(source, outpart);
     return outpart;
 }
 
-return_t base16_encode(binary_t const& source, stream_t* stream) { return base16_encode(&source[0], source.size(), stream); }
+return_t base16_encode(const binary_t& source, stream_t* stream) { return base16_encode(&source[0], source.size(), stream); }
 
 std::string base16_encode(const char* source) {
     std::string outpart;
@@ -165,7 +165,7 @@ return_t base16_encode(const char* source, binary_t& outpart) {
     return ret;
 }
 
-return_t base16_encode(std::string const& source, binary_t& outpart) { return base16_encode(source.c_str(), outpart); }
+return_t base16_encode(const std::string& source, binary_t& outpart) { return base16_encode(source.c_str(), outpart); }
 
 static byte_t conv(char c) {
     byte_t ret = 0;
@@ -256,9 +256,9 @@ return_t base16_decode(const char* source, size_t size, stream_t* stream, uint32
     return ret;
 }
 
-return_t base16_decode(std::string const& source, binary_t& outpart, uint32 flags) { return base16_decode(source.c_str(), source.size(), outpart, flags); }
+return_t base16_decode(const std::string& source, binary_t& outpart, uint32 flags) { return base16_decode(source.c_str(), source.size(), outpart, flags); }
 
-return_t base16_decode(std::string const& source, stream_t* stream, uint32 flags) { return base16_decode(source.c_str(), source.size(), stream, flags); }
+return_t base16_decode(const std::string& source, stream_t* stream, uint32 flags) { return base16_decode(source.c_str(), source.size(), stream, flags); }
 
 binary_t base16_decode(const char* source) {
     binary_t outpart;
@@ -275,14 +275,14 @@ binary_t base16_decode(const char* source, size_t size) {
     return outpart;
 }
 
-binary_t base16_decode(std::string const& source) {
+binary_t base16_decode(const std::string& source) {
     binary_t outpart;
 
     base16_decode(source, outpart);
     return outpart;
 }
 
-std::string base16_encode_rfc(std::string const& source) {
+std::string base16_encode_rfc(const std::string& source) {
     std::string inpart = source;
     std::string outpart;
 
@@ -328,7 +328,7 @@ std::string base16_encode_rfc(std::string const& source) {
     return outpart;
 }
 
-binary_t base16_decode_rfc(std::string const& source) {
+binary_t base16_decode_rfc(const std::string& source) {
     std::string inpart = source;
     binary_t outpart;
 

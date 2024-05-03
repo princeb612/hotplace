@@ -19,17 +19,17 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-digest_access_authentication_provider::digest_access_authentication_provider(std::string const& realm)
+digest_access_authentication_provider::digest_access_authentication_provider(const std::string& realm)
     : http_authenticate_provider(realm), _qop("auth, auth-int"), _userhash(false) {}
 
-digest_access_authentication_provider::digest_access_authentication_provider(std::string const& realm, const char* algorithm, const char* qop, bool userhash)
+digest_access_authentication_provider::digest_access_authentication_provider(const std::string& realm, const char* algorithm, const char* qop, bool userhash)
     : http_authenticate_provider(realm) {
     set_algorithm(algorithm);
     set_qop(qop);
     set_userhash(userhash);
 }
 
-digest_access_authentication_provider::digest_access_authentication_provider(std::string const& realm, std::string const& algorithm, std::string const& qop,
+digest_access_authentication_provider::digest_access_authentication_provider(const std::string& realm, const std::string& algorithm, const std::string& qop,
                                                                              bool userhash)
     : http_authenticate_provider(realm), _algorithm(algorithm), _qop(qop), _userhash(userhash) {}
 

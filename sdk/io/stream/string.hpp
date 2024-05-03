@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_IO_STREAM_STRING__
 #define __HOTPLACE_SDK_IO_STREAM_STRING__
 
+#include <ostream>
 #include <sdk/base.hpp>
 #include <sdk/io/stream/stream.hpp>
 
@@ -89,7 +90,7 @@ class ansi_string : public stream_t {
     ansi_string& operator=(uint64 buf);
     ansi_string& operator=(float buf);
     ansi_string& operator=(double buf);
-    ansi_string& operator=(ansi_string& buf);
+    ansi_string& operator=(const ansi_string& buf);
 
     ansi_string& operator+=(const char* buf);
 #if defined _WIN32 || defined _WIN64
@@ -102,7 +103,7 @@ class ansi_string : public stream_t {
     ansi_string& operator+=(uint64 buf);
     ansi_string& operator+=(float buf);
     ansi_string& operator+=(double buf);
-    ansi_string& operator+=(ansi_string& buf);
+    ansi_string& operator+=(const ansi_string& buf);
 
     ansi_string& operator<<(const char* buf);
 #if defined _WIN32 || defined _WIN64
@@ -115,7 +116,7 @@ class ansi_string : public stream_t {
     ansi_string& operator<<(uint64 buf);
     ansi_string& operator<<(float buf);
     ansi_string& operator<<(double buf);
-    ansi_string& operator<<(ansi_string& buf);
+    ansi_string& operator<<(const ansi_string& buf);
 
 #if defined __SIZEOF_INT128__
     ansi_string& operator=(uint128 buf);
@@ -123,8 +124,8 @@ class ansi_string : public stream_t {
     ansi_string& operator<<(uint128 buf);
 #endif
 
-    int compare(ansi_string& buf);
-    static int compare(ansi_string& lhs, ansi_string& rhs);
+    int compare(const ansi_string& buf);
+    static int compare(const ansi_string& lhs, const ansi_string& rhs);
 
     bool operator<(const ansi_string& buf) const;
     bool operator>(const ansi_string& buf) const;
@@ -134,6 +135,10 @@ class ansi_string : public stream_t {
 
     bool operator==(const char* input);
     bool operator!=(const char* input);
+
+    friend std::string& operator+=(std::string& lhs, const ansi_string& rhs);
+    friend std::string& operator<<(std::string& lhs, const ansi_string& rhs);
+    friend std::ostream& operator<<(std::ostream& lhs, const ansi_string& rhs);
 
    protected:
     bufferio _bio;
@@ -212,7 +217,7 @@ class wide_string : public stream_t {
     wide_string& operator=(uint64 buf);
     wide_string& operator=(float buf);
     wide_string& operator=(double buf);
-    wide_string& operator=(wide_string& buf);
+    wide_string& operator=(const wide_string& buf);
 
     wide_string& operator+=(const char* buf);
     wide_string& operator+=(const wchar_t* buf);
@@ -223,7 +228,7 @@ class wide_string : public stream_t {
     wide_string& operator+=(uint64 buf);
     wide_string& operator+=(float buf);
     wide_string& operator+=(double buf);
-    wide_string& operator+=(wide_string& buf);
+    wide_string& operator+=(const wide_string& buf);
 
     wide_string& operator<<(const char* buf);
     wide_string& operator<<(const wchar_t* buf);
@@ -234,7 +239,7 @@ class wide_string : public stream_t {
     wide_string& operator<<(uint64 buf);
     wide_string& operator<<(float buf);
     wide_string& operator<<(double buf);
-    wide_string& operator<<(wide_string& buf);
+    wide_string& operator<<(const wide_string& buf);
 
 #if defined __SIZEOF_INT128__
     wide_string& operator=(uint128 buf);
@@ -242,8 +247,8 @@ class wide_string : public stream_t {
     wide_string& operator<<(uint128 buf);
 #endif
 
-    int compare(wide_string& buf);
-    static int compare(wide_string& lhs, wide_string& rhs);
+    int compare(const wide_string& buf);
+    static int compare(const wide_string& lhs, const wide_string& rhs);
 
     bool operator<(const wide_string& buf) const;
     bool operator>(const wide_string& buf) const;
@@ -253,6 +258,10 @@ class wide_string : public stream_t {
 
     bool operator==(const wchar_t* input);
     bool operator!=(const wchar_t* input);
+
+    friend std::wstring& operator+=(std::wstring& lhs, const wide_string& rhs);
+    friend std::wstring& operator<<(std::wstring& lhs, const wide_string& rhs);
+    friend std::ostream& operator<<(std::ostream& lhs, const wide_string& rhs);
 
    protected:
     bufferio _bio;

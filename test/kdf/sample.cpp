@@ -52,7 +52,7 @@ void test_kdf_hkdf() {
         if (option.verbose) {
             basic_stream bs;
             dump_memory(result, &bs);
-            std::cout << bs.c_str() << std::endl;
+            std::cout << bs << std::endl;
         }
 
         _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "hkdf");
@@ -97,7 +97,7 @@ void test_kdf_pbkdf2_rfc6070() {
         if (option.verbose) {
             basic_stream bs;
             dump_memory(result, &bs);
-            std::cout << bs.c_str() << std::endl;
+            std::cout << bs << std::endl;
         }
 
         _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "RFC6070.pbkdf2 c = %i", vector[i].c);
@@ -131,7 +131,7 @@ void test_kdf_pbkdf2_rfc7914() {
         if (option.verbose) {
             basic_stream bs;
             dump_memory(result, &bs);
-            std::cout << bs.c_str() << std::endl;
+            std::cout << bs << std::endl;
         }
 
         _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "RFC7914.pbkdf2 c = %i", vector[i].c);
@@ -173,7 +173,7 @@ void test_kdf_scrypt_rfc7914() {
             if (option.verbose) {
                 basic_stream bs;
                 dump_memory(result, &bs);
-                std::cout << bs.c_str() << std::endl;
+                std::cout << bs << std::endl;
             }
         }
         _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "scrypt");
@@ -215,7 +215,7 @@ void test_kdf_argon_rfc9106() {
         if (option.verbose) {
             basic_stream bs;
             dump_memory(derived, &bs);
-            std::cout << bs.c_str() << std::endl;
+            std::cout << bs << std::endl;
         }
 
         _test_case.assert(derived == base16_decode(vector[i].expect), __FUNCTION__, "argon2id");

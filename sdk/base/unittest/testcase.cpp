@@ -51,7 +51,7 @@ void test_case::begin(const char* case_name, ...) {
 
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::magenta) << constexpr_testcase << topic.c_str();
     console_colored_stream << _concolor.turnoff();
-    std::cout << stream.c_str() << std::endl;
+    std::cout << stream << std::endl;
 
     reset_time();
 }
@@ -298,7 +298,7 @@ void test_case::test(return_t result, const char* test_function, const char* mes
                                << format("[%s] ", test_function ? test_function : "").c_str() << tltle.c_str();
         console_colored_stream << _concolor.turnoff();
 
-        std::cout << stream.c_str() << std::endl;
+        std::cout << stream << std::endl;
     }
     __finally2 { reset_time(); }
 }
@@ -400,7 +400,7 @@ void test_case::report(uint32 top_count) {
     // print
     //
 
-    std::cout << stream.c_str();
+    std::cout << stream;
 
     //
     // file

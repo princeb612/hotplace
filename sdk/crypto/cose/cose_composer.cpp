@@ -26,7 +26,7 @@ namespace crypto {
 
 cose_data::cose_key::cose_key() : _curve(0) {}
 
-void cose_data::cose_key::set(crypto_key* key, uint16 curve, binary_t const& x, binary_t const& y) {
+void cose_data::cose_key::set(crypto_key* key, uint16 curve, const binary_t& x, const binary_t& y) {
     _curve = curve;
     _x = x;
     _y = y;
@@ -39,7 +39,7 @@ void cose_data::cose_key::set(crypto_key* key, uint16 curve, binary_t const& x, 
     keychain.add_ec(key, nullptr, hint->nid, x, y, d);
 }
 
-void cose_data::cose_key::set(crypto_key* key, uint16 curve, binary_t const& x, bool ysign) {
+void cose_data::cose_key::set(crypto_key* key, uint16 curve, const binary_t& x, bool ysign) {
     _curve = curve;
     _x = x;
     _y.clear();
@@ -176,15 +176,15 @@ cose_data& cose_data::replace(int key, const unsigned char* value, size_t size) 
 
 cose_data& cose_data::add(int key, std::string& value) { return add(key, (unsigned char*)value.c_str(), value.size()); }
 
-cose_data& cose_data::add(int key, std::string const& value) { return add(key, (unsigned char*)value.c_str(), value.size()); }
+cose_data& cose_data::add(int key, const std::string& value) { return add(key, (unsigned char*)value.c_str(), value.size()); }
 
 cose_data& cose_data::add(int key, binary_t& value) { return add(key, &value[0], value.size()); }
 
-cose_data& cose_data::add(int key, binary_t const& value) { return add(key, &value[0], value.size()); }
+cose_data& cose_data::add(int key, const binary_t& value) { return add(key, &value[0], value.size()); }
 
-cose_data& cose_data::replace(int key, binary_t const& value) { return replace(key, &value[0], value.size()); }
+cose_data& cose_data::replace(int key, const binary_t& value) { return replace(key, &value[0], value.size()); }
 
-cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t const& y) {
+cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary_t& y) {
     cose_key* k = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
@@ -201,7 +201,7 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t con
     return *this;
 }
 
-cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t const& y, std::list<int>& order) {
+cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary_t& y, std::list<int>& order) {
     cose_key* k = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
@@ -219,7 +219,7 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, binary_t con
     return *this;
 }
 
-cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign) {
+cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign) {
     cose_key* k = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
@@ -236,7 +236,7 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign) 
     return *this;
 }
 
-cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign, std::list<int>& order) {
+cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign, std::list<int>& order) {
     cose_key* k = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
@@ -254,7 +254,7 @@ cose_data& cose_data::add(int key, uint16 curve, binary_t const& x, bool ysign, 
     return *this;
 }
 
-cose_data& cose_data::add(cose_alg_t alg, const char* kid, binary_t const& signature) {
+cose_data& cose_data::add(cose_alg_t alg, const char* kid, const binary_t& signature) {
     cose_countersign* countersign = nullptr;
     return_t ret = errorcode_t::success;
 
@@ -309,12 +309,12 @@ cose_data& cose_data::add(int key, variant& value) {
     return *this;
 }
 
-cose_data& cose_data::set(binary_t const& bin) {
+cose_data& cose_data::set(const binary_t& bin) {
     _payload = bin;
     return *this;
 }
 
-cose_data& cose_data::set(std::string const& value) {
+cose_data& cose_data::set(const std::string& value) {
     _payload = convert(value);
     return *this;
 }
@@ -849,7 +849,7 @@ cose_protected& cose_protected::add(cose_key_t key, uint32 value) {
     return *this;
 }
 
-cose_protected& cose_protected::set(binary_t const& bin) {
+cose_protected& cose_protected::set(const binary_t& bin) {
     _protected.set(bin);
     cbor_object* root = nullptr;
     cbor_parse(&root, bin);
@@ -897,7 +897,7 @@ cose_unprotected& cose_unprotected::add(cose_key_t key, std::string& value) {
     return *this;
 }
 
-cose_unprotected& cose_unprotected::add(cose_key_t key, std::string const& value) {
+cose_unprotected& cose_unprotected::add(cose_key_t key, const std::string& value) {
     _unprotected.add(key, value);
     return *this;
 }
@@ -907,22 +907,22 @@ cose_unprotected& cose_unprotected::add(cose_key_t key, binary_t& value) {
     return *this;
 }
 
-cose_unprotected& cose_unprotected::add(cose_key_t key, binary_t const& value) {
+cose_unprotected& cose_unprotected::add(cose_key_t key, const binary_t& value) {
     _unprotected.add(key, value);
     return *this;
 }
 
-cose_unprotected& cose_unprotected::add(cose_key_t key, uint16 curve, binary_t const& x, binary_t const& y) {
+cose_unprotected& cose_unprotected::add(cose_key_t key, uint16 curve, const binary_t& x, const binary_t& y) {
     _unprotected.add(key, curve, x, y);
     return *this;
 }
 
-cose_unprotected& cose_unprotected::add(cose_key_t key, uint16 curve, binary_t const& x, bool ysign) {
+cose_unprotected& cose_unprotected::add(cose_key_t key, uint16 curve, const binary_t& x, bool ysign) {
     _unprotected.add(key, curve, x, ysign);
     return *this;
 }
 
-cose_unprotected& cose_unprotected::add(cose_alg_t alg, const char* kid, binary_t const& signature) {
+cose_unprotected& cose_unprotected::add(cose_alg_t alg, const char* kid, const binary_t& signature) {
     _unprotected.add(alg, kid, signature);
     return *this;
 }
@@ -949,17 +949,17 @@ cose_binary& cose_binary::set_b16(const char* value) {
     return *this;
 }
 
-cose_binary& cose_binary::set_b16(std::string const& value) {
+cose_binary& cose_binary::set_b16(const std::string& value) {
     _payload.set_b16(value);
     return *this;
 }
 
-cose_binary& cose_binary::set(std::string const& value) {
+cose_binary& cose_binary::set(const std::string& value) {
     _payload.set(value);
     return *this;
 }
 
-cose_binary& cose_binary::set(binary_t const& value) {
+cose_binary& cose_binary::set(const binary_t& value) {
     _payload.set(value);
     return *this;
 }
@@ -1153,7 +1153,7 @@ return_t cose_recipient::finditem(int key, binary_t& value, int scope) {
     return ret;
 }
 
-return_t cose_recipient::setparam(cose_param_t id, binary_t const& bin) {
+return_t cose_recipient::setparam(cose_param_t id, const binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         switch (id) {
@@ -1621,7 +1621,7 @@ cose_unsent& cose_unsent::add(int key, binary_t& value) {
     return *this;
 }
 
-cose_unsent& cose_unsent::add(int key, binary_t const& value) {
+cose_unsent& cose_unsent::add(int key, const binary_t& value) {
     if (isvalid(key)) {
         _unsent.add(key, value);
     }
@@ -1751,7 +1751,7 @@ return_t cose_composer::diagnose(cbor_array** object, basic_stream& stream, bool
     return ret;
 }
 
-return_t cose_composer::parse(binary_t const& input) {
+return_t cose_composer::parse(const binary_t& input) {
     return_t ret = errorcode_t::success;
     cbor_object* root = nullptr;
     cbor_array* cbor_message = nullptr;

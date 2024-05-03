@@ -30,7 +30,7 @@ http_uri::~http_uri() {
     // do nothing
 }
 
-return_t http_uri::open(std::string const& uri) { return open(uri.c_str()); }
+return_t http_uri::open(const std::string& uri) { return open(uri.c_str()); }
 
 return_t http_uri::open(const char* uri) {
     return_t ret = errorcode_t::success;
@@ -81,7 +81,7 @@ return_t http_uri::set_query(const char* query) {
     return ret;
 }
 
-return_t http_uri::set_query(std::string const& query) {
+return_t http_uri::set_query(const std::string& query) {
     return_t ret = errorcode_t::success;
     ret = to_keyvalue(query, _query_kv);
     return ret;
@@ -108,7 +108,7 @@ const char* http_uri::get_query() {
     return ret_value;
 }
 
-return_t http_uri::query(std::string const& key, std::string& value) {
+return_t http_uri::query(const std::string& key, std::string& value) {
     return_t ret = errorcode_t::success;
     ret = _query_kv.query(key, value);
     return ret;
@@ -116,7 +116,7 @@ return_t http_uri::query(std::string const& key, std::string& value) {
 
 size_t http_uri::countof_query() { return _query_kv.size(); }
 
-return_t http_uri::to_keyvalue(std::string const& value, key_value& kv) {
+return_t http_uri::to_keyvalue(const std::string& value, key_value& kv) {
     return_t ret = errorcode_t::success;
 
     std::string input;

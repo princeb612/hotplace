@@ -21,8 +21,7 @@ test_case _test_case;
 void test_format() {
     _test_case.begin("format");
     _test_case.reset_time();
-    std::string text = format("%s %d %1.1f\n", "sample", 1, 1.1f);
-    std::cout << text.c_str() << std::endl;
+    std::cout << format("%s %d %1.1f\n", "sample", 1, 1.1f) << std::endl;
     _test_case.assert(true, __FUNCTION__, "format");
 }
 
@@ -85,7 +84,7 @@ void test_hexbin() {
 
     std::string hex;
     base16_encode(inpart, 5, hex);
-    std::cout << hex.c_str() << std::endl;
+    std::cout << hex << std::endl;
 
     binary_t bin;
     base16_decode(hex, bin);
@@ -114,7 +113,7 @@ void test_constexpr_hide() {
 
     basic_stream bs;
     dump_memory(temp1, &bs);
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
 
     _test_case.assert(true, __FUNCTION__, "hide a string at compile time");
 }
@@ -173,7 +172,7 @@ void test_obfuscate_string() {
     {
         test_case_notimecheck notimecheck(_test_case);
         dump_memory(bin, &bs);
-        std::cout << bs.c_str() << std::endl;
+        std::cout << bs << std::endl;
     }
 
     _test_case.assert((0 == memcmp(helloworld, &bin[0], bin.size())), __FUNCTION__, "binary_t << obfuscate");
@@ -183,7 +182,7 @@ void test_obfuscate_string() {
     {
         test_case_notimecheck notimecheck(_test_case);
         dump_memory(str, &bs);
-        std::cout << bs.c_str() << std::endl;
+        std::cout << bs << std::endl;
     }
 
     _test_case.assert((0 == memcmp(helloworld, str.c_str(), str.size())), __FUNCTION__, "std::string << obfuscate");
@@ -201,7 +200,7 @@ void test_obfuscate_string() {
         bin.clear();
         bin << obf;
         dump_memory(bin, &bs);
-        std::cout << bs.c_str() << std::endl;
+        std::cout << bs << std::endl;
     }
     _test_case.assert(obf == obf2, __FUNCTION__, "append and operator ==");
 }
@@ -223,7 +222,7 @@ void test_printf() {
 
     myprintf_context_t context;
     printf_runtime(&context, &callback_printf, "%s %i %1.1f", "sample", 1, 1.1);
-    std::cout << context.str.c_str() << std::endl;
+    std::cout << context.str << std::endl;
 
     _test_case.assert(true, __FUNCTION__, "printf");
 }
@@ -234,7 +233,7 @@ void test_replace() {
 
     std::string data("hello world");
     replace(data, "world", "neighbor");
-    std::cout << data.c_str() << std::endl;
+    std::cout << data << std::endl;
 
     _test_case.assert(true, __FUNCTION__, "replace");
 }
@@ -259,7 +258,7 @@ void test_scan() {
 
     basic_stream bs;
     dump_memory((byte_t*)data, strlen(data), &bs, 16, 0, 0x0, dump_memory_flag_t::dump_header);
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
 }
 
 void test_scan2() {
@@ -283,7 +282,7 @@ void test_scan2() {
 
     basic_stream bs;
     dump_memory((byte_t*)data, strlen(data), &bs, 16, 0, 0x0, dump_memory_flag_t::dump_header);
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
 }
 
 void test_split() {
@@ -314,7 +313,7 @@ void test_string() {
          << L"unicode "
 #endif
          << (uint16)1 << " " << 1.1f;
-    std::cout << astr.c_str() << std::endl;
+    std::cout << astr << std::endl;
 
     _test_case.assert(true, __FUNCTION__, "ansi_string");
 }

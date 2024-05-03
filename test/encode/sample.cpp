@@ -56,21 +56,21 @@ void test_base16_func() {
     buf.resize(size);
     ret = base16_encode(text, RTL_NUMBER_OF(text), &buf[0], &size);
     dump_memory((byte_t*)&buf[0], buf.size(), &bs);
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
     _test_case.test(ret, __FUNCTION__, "case1");
 
     /* return_t base16_encode (const byte_t* source, size_t size, std::string& outpart) */
     std::string strbuf;
     ret = base16_encode(text, RTL_NUMBER_OF(text), strbuf);
     dump_memory(strbuf, &bs);
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
     _test_case.test(ret, __FUNCTION__, "case2");
 
     /* return_t base16_encode (const byte_t* source, size_t size, stream_t* stream) */
     basic_stream streambuf;
     ret = base16_encode(text, RTL_NUMBER_OF(text), &streambuf);
     dump_memory(streambuf.data(), streambuf.size(), &bs);
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
     _test_case.test(ret, __FUNCTION__, "case3");
 }
 
@@ -299,9 +299,9 @@ void whatsthis(int argc, char** argv) {
             file.close();
         }
 
-        std::cout << "what u want to know" << std::endl << "< " << o.content << std::endl << bs.c_str() << std::endl;
+        std::cout << "what u want to know" << std::endl << "< " << o.content << std::endl << bs << std::endl;
         if (additional.size()) {
-            std::cout << additional.c_str() << std::endl;
+            std::cout << additional << std::endl;
         }
     } else {
         cmdline.help();

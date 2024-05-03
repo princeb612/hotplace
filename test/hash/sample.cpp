@@ -300,7 +300,7 @@ void test_hash_algorithms() {
     test_hash_loop(&openssl_hash, RTL_NUMBER_OF(hmac_table), hmac_table, (byte_t*)keydata, 32, (byte_t*)text, strlen(text));
 }
 
-void test_aes128cbc_mac_routine(binary_t const& key, binary_t const& message, binary_t const& expect) {
+void test_aes128cbc_mac_routine(const binary_t& key, const binary_t& message, const binary_t& expect) {
     return_t ret = errorcode_t::success;
     OPTION& option = _cmdline->value();
 
@@ -319,7 +319,7 @@ void test_aes128cbc_mac_routine(binary_t const& key, binary_t const& message, bi
         if (option.verbose) {
             basic_stream bs;
             dump_memory(result, &bs);
-            std::cout << "result" << std::endl << bs.c_str() << std::endl;
+            std::cout << "result" << std::endl << bs << std::endl;
         }
     }
     // Figure 2.4.  Algorithm Verify_MAC
@@ -503,7 +503,7 @@ void test_hash_hmac_sign() {
     if (option.verbose) {
         // source
         dump_memory(bin_in, &bs);
-        std::cout << "source" << std::endl << bs.c_str() << std::endl;
+        std::cout << "source" << std::endl << bs << std::endl;
     }
 
     // openssl_hash hash
@@ -514,7 +514,7 @@ void test_hash_hmac_sign() {
 
     if (option.verbose) {
         dump_memory(result, &bs);
-        std::cout << "hash" << std::endl << bs.c_str() << std::endl;
+        std::cout << "hash" << std::endl << bs << std::endl;
     }
 
     // EVP_Digest (hash)
@@ -526,7 +526,7 @@ void test_hash_hmac_sign() {
 
     if (option.verbose) {
         dump_memory(result, &bs);
-        std::cout << "Digest" << std::endl << bs.c_str() << std::endl;
+        std::cout << "Digest" << std::endl << bs << std::endl;
     }
 
     // openssl_hash hmac
@@ -537,7 +537,7 @@ void test_hash_hmac_sign() {
 
     if (option.verbose) {
         dump_memory(result, &bs);
-        std::cout << "HMAC" << std::endl << bs.c_str() << std::endl;
+        std::cout << "HMAC" << std::endl << bs << std::endl;
     }
 
     // openssl_sign
@@ -545,11 +545,11 @@ void test_hash_hmac_sign() {
 
     if (option.verbose) {
         dump_memory(result, &bs);
-        std::cout << "Sign" << std::endl << bs.c_str() << std::endl;
+        std::cout << "Sign" << std::endl << bs << std::endl;
     }
 }
 
-void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, binary_t const& input, binary_t const& signature) {
+void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_sign sign;
@@ -585,15 +585,19 @@ void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, binary_t cons
         ret = sign.verify_ecdsa(pkey, alg, input, signature);
         OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
 
-        if (option.dump_keys) {
+        if (option.dump_keys || option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             basic_stream bs;
-            dump_key(pkey, &bs);
-            printf("%s\n", bs.c_str());
-            dump_memory(input, &bs);
-            printf("input\n%s\n", bs.c_str());
-            dump_memory(signature, &bs);
-            printf("sig\n%s\n", bs.c_str());
+            if (option.dump_keys) {
+                dump_key(pkey, &bs);
+                printf("%s\n", bs.c_str());
+            }
+            if (option.verbose) {
+                dump_memory(input, &bs);
+                printf("input\n%s\n", bs.c_str());
+                dump_memory(signature, &bs);
+                printf("sig\n%s\n", bs.c_str());
+            }
         }
     }
 

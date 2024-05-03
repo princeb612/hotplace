@@ -72,32 +72,32 @@ class cose_data {
     cose_data& add(int key, const char* value);
     cose_data& add(int key, const unsigned char* value, size_t size);
     cose_data& add(int key, std::string& value);
-    cose_data& add(int key, std::string const& value);
+    cose_data& add(int key, const std::string& value);
     cose_data& add(int key, binary_t& value);
-    cose_data& add(int key, binary_t const& value);
+    cose_data& add(int key, const binary_t& value);
     cose_data& add(int key, variant& value);
 
     cose_data& replace(int key, const unsigned char* value, size_t size);
-    cose_data& replace(int key, binary_t const& value);
+    cose_data& replace(int key, const binary_t& value);
 
     /**
      * @brief ephemeral/static key
      */
-    cose_data& add(int key, uint16 curve, binary_t const& x, binary_t const& y);
-    cose_data& add(int key, uint16 curve, binary_t const& x, bool ysign);
-    cose_data& add(int key, uint16 curve, binary_t const& x, binary_t const& y, std::list<int>& order);
-    cose_data& add(int key, uint16 curve, binary_t const& x, bool ysign, std::list<int>& order);
+    cose_data& add(int key, uint16 curve, const binary_t& x, const binary_t& y);
+    cose_data& add(int key, uint16 curve, const binary_t& x, bool ysign);
+    cose_data& add(int key, uint16 curve, const binary_t& x, const binary_t& y, std::list<int>& order);
+    cose_data& add(int key, uint16 curve, const binary_t& x, bool ysign, std::list<int>& order);
     /**
      * @brief counter signature
      */
-    cose_data& add(cose_alg_t alg, const char* kid, binary_t const& signature);
+    cose_data& add(cose_alg_t alg, const char* kid, const binary_t& signature);
     cose_data& add(cose_recipient* countersig);
     cose_data& add(int key, vartype_t vty, void* p);
     /**
      * @brief payload (binary/base16)
      */
-    cose_data& set(binary_t const& value);
-    cose_data& set(std::string const& value);
+    cose_data& set(const binary_t& value);
+    cose_data& set(const std::string& value);
     cose_data& set_b16(std::string const value);
     cose_data& set_b16(const char* value);
     /**
@@ -167,8 +167,8 @@ class cose_data {
     class cose_key {
        public:
         cose_key();
-        void set(crypto_key* key, uint16 curve, binary_t const& x, binary_t const& y);
-        void set(crypto_key* key, uint16 curve, binary_t const& x, bool ysign);
+        void set(crypto_key* key, uint16 curve, const binary_t& x, const binary_t& y);
+        void set(crypto_key* key, uint16 curve, const binary_t& x, bool ysign);
         void set(cose_orderlist_t& order);
         cbor_map* cbor();
 
@@ -208,7 +208,7 @@ class cose_protected {
     /**
      * @brief set
      */
-    cose_protected& set(binary_t const& bin);
+    cose_protected& set(const binary_t& bin);
     /**
      * @brief data
      */
@@ -250,22 +250,22 @@ class cose_unprotected {
     cose_unprotected& add(cose_key_t key, int32 value);
     cose_unprotected& add(cose_key_t key, const char* value);
     cose_unprotected& add(cose_key_t key, std::string& value);
-    cose_unprotected& add(cose_key_t key, std::string const& value);
+    cose_unprotected& add(cose_key_t key, const std::string& value);
     cose_unprotected& add(cose_key_t key, binary_t& value);
-    cose_unprotected& add(cose_key_t key, binary_t const& value);
+    cose_unprotected& add(cose_key_t key, const binary_t& value);
     /**
      * @brief ephemeral key
      * @param cose_key_t key [in] cose_key_t::cose_ephemeral_key
      * @param uint16 curve [in]
-     * @param binary_t const& x [in]
-     * @param binary_t const& y [in]
+     * @param const binary_t& x [in]
+     * @param const binary_t& y [in]
      */
-    cose_unprotected& add(cose_key_t key, uint16 curve, binary_t const& x, binary_t const& y);
-    cose_unprotected& add(cose_key_t key, uint16 curve, binary_t const& x, bool ysign);
+    cose_unprotected& add(cose_key_t key, uint16 curve, const binary_t& x, const binary_t& y);
+    cose_unprotected& add(cose_key_t key, uint16 curve, const binary_t& x, bool ysign);
     /**
      * @brief counter signature
      */
-    cose_unprotected& add(cose_alg_t alg, const char* kid, binary_t const& signature);
+    cose_unprotected& add(cose_alg_t alg, const char* kid, const binary_t& signature);
     /**
      * @brief data
      */
@@ -304,9 +304,9 @@ class cose_binary {
      * @brief set
      */
     cose_binary& set_b16(const char* value);
-    cose_binary& set_b16(std::string const& value);
-    cose_binary& set(std::string const& value);
-    cose_binary& set(binary_t const& value);
+    cose_binary& set_b16(const std::string& value);
+    cose_binary& set(const std::string& value);
+    cose_binary& set(const binary_t& value);
     /**
      * @brief data
      */
@@ -429,7 +429,7 @@ class cose_recipient {
     return_t finditem(int key, std::string& value, int scope = cose_scope_layer);
     return_t finditem(int key, binary_t& value, int scope = cose_scope_layer);
 
-    return_t setparam(cose_param_t id, binary_t const& bin);
+    return_t setparam(cose_param_t id, const binary_t& bin);
     return_t getparam(cose_param_t id, binary_t& bin);
 
     cose_alg_t get_algorithm();
@@ -475,7 +475,7 @@ class cose_unsent {
     cose_unsent& add(int key, const char* value);
     cose_unsent& add(int key, const unsigned char* value, size_t size);
     cose_unsent& add(int key, binary_t& value);
-    cose_unsent& add(int key, binary_t const& value);
+    cose_unsent& add(int key, const binary_t& value);
 
     cose_data& data();
 
@@ -565,7 +565,7 @@ class cose_composer {
      *          composer.parse(cbor);
      *          composer.compose(&root);
      */
-    return_t parse(binary_t const& input);
+    return_t parse(const binary_t& input);
     /**
      * @brief get
      * @desc

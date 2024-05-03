@@ -106,54 +106,54 @@ return_t json_object_signing_encryption::setoption(jose_context_t* handle, uint3
     return ret;
 }
 
-return_t json_object_signing_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, binary_t const& input, std::string& output,
+return_t json_object_signing_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, std::string& output,
                                                  jose_serialization_t type) {
     json_object_encryption jwe;
 
     return jwe.encrypt(handle, enc, alg, input, output, type);
 }
 
-return_t json_object_signing_encryption::encrypt(jose_context_t* handle, jwe_t enc, std::list<jwa_t> algs, binary_t const& input, std::string& output,
+return_t json_object_signing_encryption::encrypt(jose_context_t* handle, jwe_t enc, std::list<jwa_t> algs, const binary_t& input, std::string& output,
                                                  jose_serialization_t type) {
     json_object_encryption jwe;
 
     return jwe.encrypt(handle, enc, algs, input, output, type);
 }
 
-return_t json_object_signing_encryption::decrypt(jose_context_t* handle, std::string const& input, binary_t& output, bool& result) {
+return_t json_object_signing_encryption::decrypt(jose_context_t* handle, const std::string& input, binary_t& output, bool& result) {
     json_object_encryption jwe;
 
     return jwe.decrypt(handle, input, output, result);
 }
 
-return_t json_object_signing_encryption::sign(jose_context_t* context, jws_t method, std::string const& input, std::string& output, jose_serialization_t type) {
+return_t json_object_signing_encryption::sign(jose_context_t* context, jws_t method, const std::string& input, std::string& output, jose_serialization_t type) {
     json_object_signing jws;
 
     return jws.sign(context, method, input, output, type);
 }
 
-return_t json_object_signing_encryption::sign(jose_context_t* context, std::list<jws_t> const& methods, std::string const& input, std::string& output,
+return_t json_object_signing_encryption::sign(jose_context_t* context, std::list<jws_t> const& methods, const std::string& input, std::string& output,
                                               jose_serialization_t type) {
     json_object_signing jws;
 
     return jws.sign(context, methods, input, output, type);
 }
 
-return_t json_object_signing_encryption::sign(jose_context_t* context, std::string const& protected_header, std::string const& input, std::string& output,
+return_t json_object_signing_encryption::sign(jose_context_t* context, const std::string& protected_header, const std::string& input, std::string& output,
                                               jose_serialization_t type) {
     json_object_signing jws;
 
     return jws.sign(context, protected_header, input, output, type);
 }
 
-return_t json_object_signing_encryption::sign(jose_context_t* context, std::list<std::string> const& headers, std::string const& input, std::string& output,
+return_t json_object_signing_encryption::sign(jose_context_t* context, std::list<std::string> const& headers, const std::string& input, std::string& output,
                                               jose_serialization_t type) {
     json_object_signing jws;
 
     return jws.sign(context, headers, input, output, type);
 }
 
-return_t json_object_signing_encryption::verify(jose_context_t* context, std::string const& input, bool& result) {
+return_t json_object_signing_encryption::verify(jose_context_t* context, const std::string& input, bool& result) {
     json_object_signing jws;
 
     return jws.verify(context, input, result);

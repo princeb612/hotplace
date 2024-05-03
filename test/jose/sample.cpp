@@ -37,15 +37,15 @@ void print_text(const char* text, ...) {
     ansi_string string;
     string.vprintf(text, ap);
     va_end(ap);
-    std::cout << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::green) << string.c_str() << std::endl;
+    std::cout << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::green) << string << std::endl;
     std::cout << concolor.turnoff();
 }
 
-void dump(const char* text, std::string const& value) {
+void dump(const char* text, const std::string& value) {
     if (text) {
         OPTION& option = _cmdline->value();
         if (option.verbose) {
-            std::cout << text << std::endl << value.c_str() << std::endl;
+            std::cout << text << std::endl << value << std::endl;
         }
     }
 }
@@ -59,7 +59,7 @@ void dump_b64url(const char* text, const byte_t* addr, size_t size) {
     }
 }
 
-void dump_b64url(const char* text, binary_t const& bin) {
+void dump_b64url(const char* text, const binary_t& bin) {
     if (text) {
         OPTION& option = _cmdline->value();
         if (option.verbose) {
@@ -98,7 +98,7 @@ void dump(const char* text, const byte_t* addr, size_t size, basic_stream& bs) {
     }
 }
 
-void dump_elem(binary_t const& source) {
+void dump_elem(const binary_t& source) {
     OPTION& option = _cmdline->value();
     if (option.verbose) {
         std::cout << "[";
@@ -114,7 +114,7 @@ void dump_elem(binary_t const& source) {
     }
 }
 
-void dump_elem(std::string const& source) {
+void dump_elem(const std::string& source) {
     OPTION& option = _cmdline->value();
     if (option.verbose) {
         std::cout << "[";
@@ -1376,15 +1376,15 @@ int test_ecdh() {
 
     OPTION& option = _cmdline->value();
     if (option.verbose) {
-        std::cout << "alice public key  x : " << base16_encode(x_alice).c_str() << std::endl
-                  << "alice public key  y : " << base16_encode(y_alice).c_str() << std::endl
-                  << "alice private key d : " << base16_encode(d_alice).c_str() << std::endl
-                  << "bob   public key  x : " << base16_encode(x_bob).c_str() << std::endl
-                  << "bob   public key  y : " << base16_encode(y_bob).c_str() << std::endl
-                  << "bob   private key d : " << base16_encode(d_bob).c_str() << std::endl
+        std::cout << "alice public key  x : " << base16_encode(x_alice) << std::endl
+                  << "alice public key  y : " << base16_encode(y_alice) << std::endl
+                  << "alice private key d : " << base16_encode(d_alice) << std::endl
+                  << "bob   public key  x : " << base16_encode(x_bob) << std::endl
+                  << "bob   public key  y : " << base16_encode(y_bob) << std::endl
+                  << "bob   private key d : " << base16_encode(d_bob) << std::endl
 
-                  << "secret computed by alice : " << base16_encode(secret_alice).c_str() << std::endl
-                  << "secret computed by bob   : " << base16_encode(secret_bob).c_str()
+                  << "secret computed by alice : " << base16_encode(secret_alice) << std::endl
+                  << "secret computed by bob   : " << base16_encode(secret_bob)
 
                   << std::endl;
     }
@@ -1414,7 +1414,7 @@ void test_rfc7518_C() {
     binary_t secret_bob;
     dh_key_agreement(pkey_bob, pkey_alice, secret_bob);
 
-    std::cout << "Z (ECDH-ES key agreement output) : " << std::endl << base16_encode(secret_bob).c_str() << std::endl;
+    std::cout << "Z (ECDH-ES key agreement output) : " << std::endl << base16_encode(secret_bob) << std::endl;
 #if __cplusplus >= 201103L  // c++11
     for_each(secret_bob.begin(), secret_bob.end(), [](byte_t c) { printf("%i,", c); });
 #else
@@ -1445,7 +1445,7 @@ void test_rfc7518_C() {
 
     std::string sample = "VqqN6vgjbSBcIijNcacQGg";
     std::string computation = base64_encode(derived, base64_encoding_t::base64url_encoding);
-    std::cout << computation.c_str() << std::endl;
+    std::cout << computation << std::endl;
 
     bool result = (sample == computation);
     _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__,
@@ -1832,7 +1832,7 @@ void test_jwk_thumbprint() {
     const EVP_PKEY* pkey = key.any();
     key.get_public_key(pkey, pub1, pub2);
 
-    std::cout << "x : " << base16_encode(pub1).c_str() << std::endl << "y : " << base16_encode(pub2).c_str() << std::endl;
+    std::cout << "x : " << base16_encode(pub1) << std::endl << "y : " << base16_encode(pub2) << std::endl;
 
     json_root = json_object();
     json_object_set_new(json_root, "e", json_string(base64_encode(pub2, base64_encoding_t::base64url_encoding).c_str()));
@@ -1855,11 +1855,11 @@ void test_jwk_thumbprint() {
     OPTION& option = _cmdline->value();
     if (option.verbose) {
         std::cout << "in lexicographic order : " << std::endl
-                  << buffer.c_str() << std::endl
+                  << buffer << std::endl
                   << "hash : " << std::endl
-                  << base16_encode(hash_value).c_str() << std::endl
+                  << base16_encode(hash_value) << std::endl
                   << "thumbprint :" << std::endl
-                  << thumbprint.c_str() << std::endl;
+                  << thumbprint << std::endl;
     }
 
     // crv, kty, x, y
@@ -1891,7 +1891,7 @@ void test_rfc8037() {
     key.get_key(pkey, pub1, pub2, priv);
 
     if (option.verbose) {
-        std::cout << "x : " << base16_encode(pub1).c_str() << std::endl << "d : " << base16_encode(priv).c_str() << std::endl;
+        std::cout << "x : " << base16_encode(pub1) << std::endl << "d : " << base16_encode(priv) << std::endl;
     }
 
     // {"alg":"EdDSA"}

@@ -27,7 +27,7 @@ return_t trace_openssl(return_t errorcode) {
         if (trace_option_t::trace_bt & option) {
             ansi_string stream;
             debug_trace_openssl(&stream);
-            std::cout << stream.c_str();
+            std::cout << stream;
         }
     }
     return ret;

@@ -102,7 +102,7 @@ return_t i32_b24(byte_t* p, uint8 len, uint32 value) {
     return ret;
 }
 
-return_t b24_i32(uint24_t const& u, uint32& value) { return b24_i32(u.data, RTL_FIELD_SIZE(uint24_t, data), value); }
+return_t b24_i32(const uint24_t& u, uint32& value) { return b24_i32(u.data, RTL_FIELD_SIZE(uint24_t, data), value); }
 
 return_t i32_b24(uint24_t& u, uint32 value) { return i32_b24(u.data, RTL_FIELD_SIZE(uint24_t, data), value); }
 

@@ -22,13 +22,13 @@ namespace net {
 
 digest_credentials::digest_credentials() {}
 
-digest_credentials& digest_credentials::add(std::string const& username, std::string const& password) {
+digest_credentials& digest_credentials::add(const std::string& username, const std::string& password) {
     critical_section_guard guard(_lock);
     _digest_access_credential.insert(std::make_pair(username, password));
     return *this;
 }
 
-digest_credentials& digest_credentials::add(std::string const& realm, std::string const& algorithm, std::string const& username, std::string const& password) {
+digest_credentials& digest_credentials::add(const std::string& realm, const std::string& algorithm, const std::string& username, const std::string& password) {
     rfc2617_digest dgst;
     dgst.add(username).add(":").add(realm).digest(algorithm);
 

@@ -35,15 +35,15 @@ class cbor_web_key : public crypto_keychain {
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
-     * @param   std::string const& buf [in]
+     * @param   const std::string& buf [in]
      * @param   int flags [inopt] reserved
      * @return  error code (see error.hpp)
      */
-    return_t load(crypto_key* crypto_key, std::string const& buf, int flags = 0);
+    return_t load(crypto_key* crypto_key, const std::string& buf, int flags = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
-     * @param   byte_t* const& buffer [in]
+     * @param   byte_t* const buffer [in]
      * @param   size_t size [in]
      * @param   int flags [inopt] reserved
      * @return  error code (see error.hpp)
@@ -52,11 +52,11 @@ class cbor_web_key : public crypto_keychain {
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
-     * @param   binary_t* const& buffer [in]
+     * @param   const binary_t& buffer [in]
      * @param   int flags [in] reserved
      * @return  error code (see error.hpp)
      */
-    return_t load(crypto_key* crypto_key, binary_t const& buffer, int flags = 0);
+    return_t load(crypto_key* crypto_key, const binary_t& buffer, int flags = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]

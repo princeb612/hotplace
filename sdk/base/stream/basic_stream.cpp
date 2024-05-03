@@ -126,13 +126,13 @@ return_t basic_stream::printf(const wchar_t* buf, ...) {
 return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return _bio.vprintf(_handle, buf, ap); }
 #endif
 
-basic_stream& basic_stream::operator=(basic_stream const& obj) {
+basic_stream& basic_stream::operator=(const basic_stream& obj) {
     clear();
     write(obj.data(), obj.size());
     return *this;
 }
 
-basic_stream& basic_stream::operator=(std::string const& str) {
+basic_stream& basic_stream::operator=(const std::string& str) {
     clear();
     printf(str.c_str());
     return *this;
@@ -183,24 +183,39 @@ basic_stream& basic_stream::operator<<(unsigned long long value) {
     return *this;
 }
 
-basic_stream& basic_stream::operator<<(basic_stream const& value) {
+basic_stream& basic_stream::operator<<(const basic_stream& value) {
     write(value.data(), value.size());
     return *this;
 }
 
-basic_stream& basic_stream::operator<<(std::string const& value) {
+basic_stream& basic_stream::operator<<(const std::string& value) {
     printf("%s", value.c_str());
     return *this;
 }
 
-int basic_stream::compare(basic_stream const& rhs) { return strcmp((*this).c_str(), rhs.c_str()); }
+int basic_stream::compare(const basic_stream& rhs) { return strcmp((*this).c_str(), rhs.c_str()); }
 
-int basic_stream::compare(basic_stream& lhs, basic_stream& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
+int basic_stream::compare(const basic_stream& lhs, const basic_stream& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 
 bool basic_stream::operator<(const basic_stream& rhs) const { return 0 > strcmp((*this).c_str(), rhs.c_str()); }
 
 bool basic_stream::operator>(const basic_stream& rhs) const { return 0 < strcmp((*this).c_str(), rhs.c_str()); }
 
 bool basic_stream::operator==(const basic_stream& rhs) const { return 0 == strcmp((*this).c_str(), rhs.c_str()); }
+
+std::string& operator+=(std::string& lhs, const basic_stream& rhs) {
+    lhs += rhs.c_str();
+    return lhs;
+}
+
+std::string& operator<<(std::string& lhs, const basic_stream& rhs) {
+    lhs += rhs.c_str();
+    return lhs;
+}
+
+std::ostream& operator<<(std::ostream& lhs, const basic_stream& rhs) {
+    lhs << rhs.c_str();
+    return lhs;
+}
 
 }  // namespace hotplace

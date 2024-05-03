@@ -25,14 +25,14 @@ json_object_signing::json_object_signing() { openssl_startup(); }
 
 json_object_signing::~json_object_signing() { openssl_cleanup(); }
 
-return_t json_object_signing::sign(jose_context_t* handle, jws_t sig, std::string const& input, std::string& output, jose_serialization_t type) {
+return_t json_object_signing::sign(jose_context_t* handle, jws_t sig, const std::string& input, std::string& output, jose_serialization_t type) {
     std::list<jws_t> methods;
 
     methods.push_back(sig);
     return sign(handle, methods, input, output, type);
 }
 
-return_t json_object_signing::sign(jose_context_t* handle, std::list<jws_t> const& methods, std::string const& input, std::string& output,
+return_t json_object_signing::sign(jose_context_t* handle, std::list<jws_t> const& methods, const std::string& input, std::string& output,
                                    jose_serialization_t type) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -64,7 +64,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<jws_t> cons
     return ret;
 }
 
-return_t json_object_signing::sign(jose_context_t* handle, std::string const& protected_header, std::string const& input, std::string& output,
+return_t json_object_signing::sign(jose_context_t* handle, const std::string& protected_header, const std::string& input, std::string& output,
                                    jose_serialization_t type) {
     std::list<std::string> headers;
 
@@ -72,7 +72,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::string const& pr
     return sign(handle, headers, input, output, type);
 }
 
-return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string> const& headers, std::string const& input, std::string& output,
+return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string> const& headers, const std::string& input, std::string& output,
                                    jose_serialization_t type) {
     return_t ret = errorcode_t::success;
     json_object_signing::composer composer;
@@ -140,7 +140,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
     return ret;
 }
 
-return_t json_object_signing::verify(jose_context_t* handle, std::string const& input, bool& result) {
+return_t json_object_signing::verify(jose_context_t* handle, const std::string& input, bool& result) {
     return_t ret = errorcode_t::success;
     json_object_signing::composer composer;
 
@@ -218,10 +218,10 @@ return_t json_object_signing::verify(jose_context_t* handle, std::string const& 
     return ret;
 }
 
-typedef return_t (openssl_sign::*sign_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, binary_t const& input, binary_t& output);
-typedef return_t (openssl_sign::*verify_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, binary_t const& input, binary_t const& output);
+typedef return_t (openssl_sign::*sign_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, const binary_t& input, binary_t& output);
+typedef return_t (openssl_sign::*verify_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, const binary_t& input, const binary_t& output);
 
-return_t json_object_signing::dosign(crypto_key* key, jws_t sig, binary_t const& input, binary_t& output) {
+return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     std::string kid;
 
@@ -229,7 +229,7 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, binary_t const&
     return ret;
 }
 
-return_t json_object_signing::dosign(crypto_key* key, jws_t sig, binary_t const& input, binary_t& output, std::string& kid) {
+return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t& input, binary_t& output, std::string& kid) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -324,11 +324,11 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, binary_t const&
     return ret;
 }
 
-return_t json_object_signing::doverify(crypto_key* key, jws_t sig, binary_t const& input, binary_t const& output, bool& result) {
+return_t json_object_signing::doverify(crypto_key* key, jws_t sig, const binary_t& input, const binary_t& output, bool& result) {
     return doverify(key, nullptr, sig, input, output, result);
 }
 
-return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t sig, binary_t const& input, binary_t const& output, bool& result) {
+return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t sig, const binary_t& input, const binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 

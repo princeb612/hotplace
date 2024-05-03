@@ -20,7 +20,7 @@ namespace net {
 
 custom_credentials::custom_credentials() {}
 
-custom_credentials& custom_credentials::add(std::string const& username, std::string const& password) {
+custom_credentials& custom_credentials::add(const std::string& username, const std::string& password) {
     critical_section_guard guard(_lock);
     openssl_digest dgst;
     std::string password_hash;
@@ -29,7 +29,7 @@ custom_credentials& custom_credentials::add(std::string const& username, std::st
     return *this;
 }
 
-bool custom_credentials::verify(http_authenticate_provider* provider, std::string const& username, std::string const& password) {
+bool custom_credentials::verify(http_authenticate_provider* provider, const std::string& username, const std::string& password) {
     bool ret = false;
     critical_section_guard guard(_lock);
     openssl_digest dgst;

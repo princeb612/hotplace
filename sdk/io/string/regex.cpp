@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace io {
 
-void regex_token(std::string const& input, std::string const& expr, size_t& pos, std::list<std::string>& tokens) {
+void regex_token(const std::string& input, const std::string& expr, size_t& pos, std::list<std::string>& tokens) {
     tokens.clear();
 
 #if (((__GNUC__ == 4) && (__GNUC_MINOR__ >= 9)) || (__GNUC__ > 4))

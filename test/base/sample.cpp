@@ -97,7 +97,7 @@ void test_sharedinstance2() {
 void dump_data(const char* text, void* ptr, size_t size) {
     basic_stream bs;
     dump_memory((byte_t*)ptr, size, &bs, 16, 2);
-    std::cout << (text ? text : "") << std::endl << bs.c_str() << std::endl;
+    std::cout << (text ? text : "") << std::endl << bs << std::endl;
 }
 
 void test_convert_endian() {
@@ -205,7 +205,7 @@ void test_btree() {
         bt.insert("t_btree");
 
         printf("members in [ ");
-        bt.for_each([](std::string const& s) -> void { printf("%s ", s.c_str()); });
+        bt.for_each([](const std::string& s) -> void { printf("%s ", s.c_str()); });
         printf("]\n");
 
         _test_case.assert(3 == bt.size(), __FUNCTION__, "t_btree<std::string>");
@@ -216,12 +216,12 @@ void test_btree() {
             uint32 key;
             std::string value;
 
-            basedata(uint32 k, std::string const& v) : key(k), value(v) {}
+            basedata(uint32 k, const std::string& v) : key(k), value(v) {}
             basedata(const basedata& rhs) : key(rhs.key), value(rhs.value) {}
         };
         // 1 2 3 ...
         struct testdata1 : basedata {
-            testdata1(uint32 k, std::string const& v) : basedata(k, v) {}
+            testdata1(uint32 k, const std::string& v) : basedata(k, v) {}
             testdata1(const testdata1& rhs) : basedata(rhs) {}
 
             bool operator<(const testdata1& rhs) const {
@@ -237,7 +237,7 @@ void test_btree() {
         };
         // a b c ...
         struct testdata2 : basedata {
-            testdata2(uint32 k, std::string const& v) : basedata(k, v) {}
+            testdata2(uint32 k, const std::string& v) : basedata(k, v) {}
             testdata2(const testdata2& rhs) : basedata(rhs) {}
 
             bool operator<(const testdata2& rhs) const {
@@ -262,7 +262,7 @@ void test_btree() {
             bt.insert(testdata1(5, "five"));
 
             printf("members in [ ");
-            bt.for_each([](struct testdata1 const& t) -> void { printf("%u %s ", t.key, t.value.c_str()); });
+            bt.for_each([](const struct testdata1& t) -> void { printf("%u %s ", t.key, t.value.c_str()); });
             printf("]\n");
 
             _test_case.assert(5 == bt.size(), __FUNCTION__, "t_btree<struct> #1");
@@ -277,7 +277,7 @@ void test_btree() {
             bt.insert(testdata2(5, "five"));
 
             printf("members in [ ");
-            bt.for_each([](struct testdata2 const& t) -> void { printf("%u %s ", t.key, t.value.c_str()); });
+            bt.for_each([](const struct testdata2& t) -> void { printf("%u %s ", t.key, t.value.c_str()); });
             printf("]\n");
 
             _test_case.assert(5 == bt.size(), __FUNCTION__, "t_btree<struct> #2");
@@ -309,7 +309,7 @@ void test_btree() {
             _test_case.assert(15 == bt.size(), __FUNCTION__, "t_btree<structure, custom_compararor> insert and update");
 
             printf("members in [\n");
-            bt.for_each([](testdata const& t) -> void { printf("%c %02x %zi\n", isprint(t.symbol) ? t.symbol : '?', t.symbol, t.weight); });
+            bt.for_each([](const testdata& t) -> void { printf("%c %02x %zi\n", isprint(t.symbol) ? t.symbol : '?', t.symbol, t.weight); });
             printf("]\n");
         }
     }

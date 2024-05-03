@@ -19,7 +19,7 @@ namespace crypto {
 
 openssl_mac::openssl_mac() : openssl_hash() {}
 
-return_t openssl_mac::hmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_mac::hmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -37,7 +37,7 @@ return_t openssl_mac::hmac(const char* alg, binary_t const& key, binary_t const&
     return ret;
 }
 
-return_t openssl_mac::hmac(hash_algorithm_t alg, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -55,7 +55,7 @@ return_t openssl_mac::hmac(hash_algorithm_t alg, binary_t const& key, binary_t c
     return ret;
 }
 
-return_t openssl_mac::cmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_mac::cmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -73,7 +73,7 @@ return_t openssl_mac::cmac(const char* alg, binary_t const& key, binary_t const&
     return ret;
 }
 
-return_t openssl_mac::cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input, binary_t& output) {
+return_t openssl_mac::cmac(crypt_algorithm_t alg, crypt_mode_t mode, const binary_t& key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -91,7 +91,7 @@ return_t openssl_mac::cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t co
     return ret;
 }
 
-return_t openssl_mac::cbc_mac(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& input, binary_t& tag, size_t tagsize) {
+return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize) {
     return_t ret = errorcode_t::success;
     EVP_CIPHER_CTX* context = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -143,7 +143,7 @@ return_t openssl_mac::cbc_mac(const char* alg, binary_t const& key, binary_t con
     return ret;
 }
 
-return_t openssl_mac::cbc_mac_rfc8152(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& input, binary_t& tag, size_t tagsize) {
+return_t openssl_mac::cbc_mac_rfc8152(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize) {
     return_t ret = errorcode_t::success;
     EVP_CIPHER_CTX* context = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();

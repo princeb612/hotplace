@@ -34,7 +34,7 @@ void test_trace() {
     return_t ret = errorcode_t::success;
     ansi_string stream;
     ret = debug_trace(&stream);
-    std::cout << stream.c_str() << std::endl;
+    std::cout << stream << std::endl;
     _test_case.test(ret, __FUNCTION__, "debug_trace");
 }
 

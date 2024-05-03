@@ -211,7 +211,7 @@ class json_object_signing_encryption {
      * @param jose_context_t* context [in]
      * @param jwe_t enc [in]
      * @param jwa_t alg [in] support all algorithms including jwa_t::jwa_dir, jwa_t::jwa_ecdh_es
-     * @param binary_t const& input [in]
+     * @param const binary_t& input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
@@ -232,7 +232,7 @@ class json_object_signing_encryption {
      *          jose.close (handle_encrypt);
      *          jose.close (handle_decrypt);
      */
-    return_t encrypt(jose_context_t* context, jwe_t enc, jwa_t alg, binary_t const& input, std::string& output,
+    return_t encrypt(jose_context_t* context, jwe_t enc, jwa_t alg, const binary_t& input, std::string& output,
                      jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief encrypt
@@ -247,7 +247,7 @@ class json_object_signing_encryption {
      *  case "ECDH-ES"
      *      read cek using ECDH-ES
      *      protected, iv, ciphertext, tag, recipients:[ header {alg:ECDH-ES, epk}, encrypted_key ]
-     * @param binary_t const& input [in]
+     * @param const binary_t& input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
@@ -278,12 +278,12 @@ class json_object_signing_encryption {
      *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, algs, convert (input), encrypted, jose_serialization_t::jose_json);
      *          jose.close (handle_encrypt);
      */
-    return_t encrypt(jose_context_t* context, jwe_t enc, std::list<jwa_t> algs, binary_t const& input, std::string& output,
+    return_t encrypt(jose_context_t* context, jwe_t enc, std::list<jwa_t> algs, const binary_t& input, std::string& output,
                      jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief decrypt
      * @param jose_context_t* context [in]
-     * @param std::string const& input [in]
+     * @param const std::string& input [in]
      * @param binary_t& output [out]
      * @param bool& result [out]
      * @return error code (see error.hpp)
@@ -298,12 +298,12 @@ class json_object_signing_encryption {
      *          ret = jose.decrypt (handle_decrypt, encrypted, output, result);
      *          jose.close (handle_decrypt);
      */
-    return_t decrypt(jose_context_t* context, std::string const& input, binary_t& output, bool& result);
+    return_t decrypt(jose_context_t* context, const std::string& input, binary_t& output, bool& result);
     /**
      * @brief sign
      * @param jose_context_t* context [in]
      * @param jws_t method [in]
-     * @param std::string const& input [in]
+     * @param const std::string& input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
@@ -321,13 +321,13 @@ class json_object_signing_encryption {
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign(jose_context_t* context, jws_t method, std::string const& input, std::string& output,
+    return_t sign(jose_context_t* context, jws_t method, const std::string& input, std::string& output,
                   jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param jose_context_t* context [in]
      * @param std::list <jws_t> const& methods [in]
-     * @param std::string const& input [in]
+     * @param const std::string& input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
@@ -349,13 +349,13 @@ class json_object_signing_encryption {
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign(jose_context_t* context, std::list<jws_t> const& methods, std::string const& input, std::string& output,
+    return_t sign(jose_context_t* context, std::list<jws_t> const& methods, const std::string& input, std::string& output,
                   jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param jose_context_t* context [in]
-     * @param std::string const& protected_header [in]
-     * @param std::string const& input [in]
+     * @param const std::string& protected_header [in]
+     * @param const std::string& input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
@@ -373,27 +373,27 @@ class json_object_signing_encryption {
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign(jose_context_t* context, std::string const& protected_header, std::string const& input, std::string& output,
+    return_t sign(jose_context_t* context, const std::string& protected_header, const std::string& input, std::string& output,
                   jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param jose_context_t* context [in]
      * @param std::list<std::string> const& headers [in]
-     * @param std::string const& input [in]
+     * @param const std::string& input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
      */
-    return_t sign(jose_context_t* context, std::list<std::string> const& headers, std::string const& input, std::string& output,
+    return_t sign(jose_context_t* context, std::list<std::string> const& headers, const std::string& input, std::string& output,
                   jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief verify
      * @param jose_context_t* context [in]
-     * @param std::string const& input [in]
+     * @param const std::string& input [in]
      * @param bool& result [out]
      * @return error code (see error.hpp)
      */
-    return_t verify(jose_context_t* context, std::string const& input, bool& result);
+    return_t verify(jose_context_t* context, const std::string& input, bool& result);
 
     /**
      * @brief clear/reset

@@ -26,8 +26,8 @@ class digest_credentials {
    public:
     digest_credentials();
 
-    digest_credentials& add(std::string const& userid, std::string const& password);
-    digest_credentials& add(std::string const& realm, std::string const& algorithm, std::string const& userid, std::string const& password);
+    digest_credentials& add(const std::string& userid, const std::string& password);
+    digest_credentials& add(const std::string& realm, const std::string& algorithm, const std::string& userid, const std::string& password);
     bool verify(http_authenticate_provider* provider, key_value& kv);
 
    private:

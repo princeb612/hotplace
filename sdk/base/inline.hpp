@@ -65,9 +65,9 @@ static inline std::string& rtrim(std::string& source) {
     return source;
 }
 
-static inline bool ends_with(std::string const& source, std::string const& suffix) { return source.rfind(suffix) == (source.size() - suffix.size()); }
+static inline bool ends_with(const std::string& source, const std::string& suffix) { return source.rfind(suffix) == (source.size() - suffix.size()); }
 
-static inline bool ends_with(std::wstring const& source, std::wstring const& suffix) { return source.rfind(suffix) == (source.size() - suffix.size()); }
+static inline bool ends_with(const std::wstring& source, const std::wstring& suffix) { return source.rfind(suffix) == (source.size() - suffix.size()); }
 
 /**
  * @brief tolower
@@ -109,7 +109,7 @@ static inline std::string uppername(const char* input) {
  * @brief tolower
  * @param std::string source [in]
  */
-static inline std::string lowername(std::string const& input) {
+static inline std::string lowername(const std::string& input) {
     std::string ret_value;
 
     __try2 {
@@ -122,7 +122,7 @@ static inline std::string lowername(std::string const& input) {
     return ret_value;
 }
 
-static inline std::string uppername(std::string const& input) {
+static inline std::string uppername(const std::string& input) {
     std::string ret_value;
 
     __try2 {
@@ -135,25 +135,25 @@ static inline std::string uppername(std::string const& input) {
     return ret_value;
 }
 
-static inline std::string base_name(std::string const& path) {
+static inline std::string base_name(const std::string& path) {
     std::string ret_value = path;
 
     return ret_value.substr(ret_value.find_last_of("/\\") + 1);
 }
 
-static inline std::wstring base_name(std::wstring const& path) {
+static inline std::wstring base_name(const std::wstring& path) {
     std::wstring ret_value = path;
 
     return ret_value.substr(ret_value.find_last_of(L"/\\") + 1);
 }
 
-static inline std::string dir_name(std::string const& path) {
+static inline std::string dir_name(const std::string& path) {
     std::string ret_value = path;
 
     return ret_value.substr(0, ret_value.find_last_of("/\\"));
 }
 
-static inline std::wstring dir_name(std::wstring const& path) {
+static inline std::wstring dir_name(const std::wstring& path) {
     std::wstring ret_value = path;
 
     return ret_value.substr(0, ret_value.find_last_of(L"/\\"));
@@ -176,7 +176,7 @@ static inline binary_t& operator<<(binary_t& lhs, char* rhs) {
  * @param binary_t& lhs [inout]
  * @param std::string rhs [in]
  */
-static inline binary_t& operator<<(binary_t& lhs, std::string const& rhs) {
+static inline binary_t& operator<<(binary_t& lhs, const std::string& rhs) {
     lhs.insert(lhs.end(), rhs.begin(), rhs.end());
     return lhs;
 }
@@ -186,19 +186,19 @@ static inline binary_t& operator<<(binary_t& lhs, std::string const& rhs) {
  * @param binary_t& lhs [inout]
  * @param binary_t rhs [in]
  */
-static inline binary_t& operator<<(binary_t& lhs, binary_t const& rhs) {
+static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
     lhs.insert(lhs.end(), rhs.begin(), rhs.end());
     return lhs;
 }
 
-static inline std::string convert(binary_t const& bin) {
+static inline std::string convert(const binary_t& bin) {
     std::string result;
 
     result.assign((char*)&bin[0], bin.size());
     return result;
 }
 
-static inline binary_t convert(std::string const& source) {
+static inline binary_t convert(const std::string& source) {
     binary_t result;
 
     result.insert(result.end(), source.begin(), source.end());
@@ -259,7 +259,7 @@ static inline std::wstring concat_filepath(const wchar_t* path, const wchar_t* f
     return result;
 }
 
-static inline std::string concat_filepath(std::string const& path, std::string const& file) {
+static inline std::string concat_filepath(const std::string& path, const std::string& file) {
     std::string result;
 
     if (file.size()) {
@@ -276,7 +276,7 @@ static inline std::string concat_filepath(std::string const& path, std::string c
     return result;
 }
 
-static inline std::wstring concat_filepath(std::wstring const& path, std::wstring const& file) {
+static inline std::wstring concat_filepath(const std::wstring& path, const std::wstring& file) {
     std::wstring result;
 
     if (file.size()) {

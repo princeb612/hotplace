@@ -160,7 +160,7 @@ bool obfuscate_string::operator==(obfuscate_string& o) { return true == compare(
 
 bool obfuscate_string::operator!=(obfuscate_string& o) { return false == compare(o); }
 
-std::string& operator<<(std::string& lhs, obfuscate_string const& rhs) {
+std::string& operator<<(std::string& lhs, const obfuscate_string& rhs) {
     binary_t::const_iterator it;
 
     for (it = rhs._contents.begin(); it != rhs._contents.end(); it++) {
@@ -169,7 +169,7 @@ std::string& operator<<(std::string& lhs, obfuscate_string const& rhs) {
     return lhs;
 }
 
-basic_stream& operator<<(basic_stream& lhs, obfuscate_string const& rhs) {
+basic_stream& operator<<(basic_stream& lhs, const obfuscate_string& rhs) {
     binary_t::const_iterator it;
 
     for (it = rhs._contents.begin(); it != rhs._contents.end(); it++) {
@@ -178,7 +178,7 @@ basic_stream& operator<<(basic_stream& lhs, obfuscate_string const& rhs) {
     return lhs;
 }
 
-binary_t& operator<<(binary_t& lhs, obfuscate_string const& rhs) {
+binary_t& operator<<(binary_t& lhs, const obfuscate_string& rhs) {
     binary_t::const_iterator it;
 
     for (it = rhs._contents.begin(); it != rhs._contents.end(); it++) {

@@ -20,10 +20,12 @@
 namespace hotplace {
 namespace net {
 
-// studying ...
-
-// RFC 7540 4. HTTP Frames
-// RFC 7540 11.2. Frame Type Registry
+/**
+ * @brief   frame type
+ * @see
+ *          RFC 7540 4. HTTP Frames
+ *          RFC 7540 11.2. Frame Type Registry
+ */
 enum h2_frame_t {
     h2_frame_data = 0x0,           // RFC 7540 6.1. DATA
     h2_frame_headers = 0x1,        // RFC 7540 6.2. HEADERS
@@ -37,7 +39,11 @@ enum h2_frame_t {
     h2_frame_continuation = 0x9,   // RFC 7540 6.10. CONTINUATION
 };
 
-// RFC 7540 6. Frame Definitions
+/**
+ * @brief   frame flag
+ * @see
+ *          RFC 7540 6. Frame Definitions
+ */
 enum h2_flag_t {
     h2_flag_end_stream = 0x1,   // DATA, HEADERS
     h2_flag_end_headers = 0x4,  // HEADERS, PUSH_PROMISE, CONTINUATION
@@ -47,19 +53,27 @@ enum h2_flag_t {
     h2_flag_ack = 0x1,  // SETTINGS, PING
 };
 
-// RFC 7540 6.5.2. Defined Settings Parameters
-// RFC 7540 11.3. Settings Registry
+/**
+ * @brief   settings frame parameters
+ * @see
+ *          RFC 7540 6.5.2. Defined Settings Parameters
+ *          RFC 7540 11.3. Settings Registry
+ */
 enum h2_settings_param_t {
-    h2_settings_header_table_size = 0x1,       // SETTINGS
-    h2_settings_enable_push = 0x2,             // SETTINGS
-    h2_settings_max_concurrent_streams = 0x3,  // SETTINGS
-    h2_settings_initial_window_size = 0x4,     // SETTINGS
-    h2_settings_max_frame_size = 0x5,          // SETTINGS
-    h2_settings_max_header_list_size = 0x6,    // SETTINGS
+    h2_settings_header_table_size = 0x1,
+    h2_settings_enable_push = 0x2,
+    h2_settings_max_concurrent_streams = 0x3,
+    h2_settings_initial_window_size = 0x4,
+    h2_settings_max_frame_size = 0x5,
+    h2_settings_max_header_list_size = 0x6,
 };
 
-// RFC 7540 7. Error Codes
-// RFC 7540 11.4. Error Code Registry
+/**
+ * @brief   error codes
+ * @see
+ *          RFC 7540 7. Error Codes
+ *          RFC 7540 11.4. Error Code Registry
+ */
 enum h2_errorcodes_t {
     h2_no_error = 0x0,
     h2_protocol_error = 0x1,
@@ -79,7 +93,11 @@ enum h2_errorcodes_t {
 
 #pragma pack(push, 1)
 
-// RFC 7540 6. Frame Definitionsz
+/**
+ * @brief   frame
+ * @see
+ *          RFC 7540 6. Frame Definitionsz
+ */
 typedef struct _http2_frame_header_t {
     byte_t len[3];     // length (24), 2^14, SETTINGS_MAX_FRAME_SIZE 2^24-1
     uint8 type;        // type (8)
@@ -92,24 +110,13 @@ typedef struct _http2_setting_t {
     uint32 value;
 } http2_setting_t;
 
-typedef struct _http2_priority_t {
-    uint32 dependency;
-    uint8 weight;
-} http2_priority_t;
-
-typedef struct _http2_goaway_t {
-    uint32 last_id;
-    uint32 errorcode;
-    byte_t* debug;
-} http2_goaway_t;
-
 #pragma pack(pop)
 
 class http2_frame_header {
    public:
     http2_frame_header();
     http2_frame_header(h2_frame_t type);
-    http2_frame_header(http2_frame_header_t const& header);
+    http2_frame_header(const http2_frame_header_t& header);
     http2_frame_header(const http2_frame_header& rhs);
 
     uint32 get_frame_size();
@@ -146,8 +153,12 @@ class http2_frame_header {
     hpack_session* _hpack_session;
 };
 
-// RFC 7540 6.1. DATA
-// RFC 7540 Figure 6: DATA Frame Payload
+/**
+ * @brief   data frame
+ * @see
+ *          RFC 7540 6.1. DATA
+ *          RFC 7540 Figure 6: DATA Frame Payload
+ */
 class http2_frame_data : public http2_frame_header {
    public:
     http2_frame_data();
@@ -164,7 +175,11 @@ class http2_frame_data : public http2_frame_header {
     binary_t _data;
 };
 
-// RFC 7540 6.2 HEADERS
+/**
+ * @brief   headers frame
+ * @see
+ *          RFC 7540 6.2 HEADERS
+ */
 class http2_frame_headers : public http2_frame_header {
    public:
     http2_frame_headers();
@@ -184,8 +199,12 @@ class http2_frame_headers : public http2_frame_header {
     binary_t _fragment;
 };
 
-// RFC 7540 6.3. PRIORITY
-// RFC 7540 Figure 8: PRIORITY Frame Payload
+/**
+ * @brief   priority frame
+ * @see
+ *          RFC 7540 6.3. PRIORITY
+ *          RFC 7540 Figure 8: PRIORITY Frame Payload
+ */
 class http2_frame_priority : public http2_frame_header {
    public:
     http2_frame_priority();
@@ -201,8 +220,12 @@ class http2_frame_priority : public http2_frame_header {
     uint8 _weight;
 };
 
-// RFC 7540 6.4. RST_STREAM
-// RFC 7540 Figure 9: RST_STREAM Frame Payload
+/**
+ * @brief   reset_stream (RS) frame
+ * @see
+ *          RFC 7540 6.4. RST_STREAM
+ *          RFC 7540 Figure 9: RST_STREAM Frame Payload
+ */
 class http2_frame_rst_stream : public http2_frame_header {
    public:
     http2_frame_rst_stream();
@@ -216,7 +239,11 @@ class http2_frame_rst_stream : public http2_frame_header {
     uint32 _errorcode;
 };
 
-// RFC 7540 6.5. SETTINGS
+/**
+ * @brief   settings frame
+ * @see
+ *          RFC 7540 6.5. SETTINGS
+ */
 class http2_frame_settings : public http2_frame_header {
    public:
     http2_frame_settings();
@@ -234,7 +261,11 @@ class http2_frame_settings : public http2_frame_header {
     h2_setting_map_t _settings;
 };
 
-// RFC 7540 6.6. PUSH_PROMISE
+/**
+ * @brief   push_promise (PP) frame
+ * @see
+ *          RFC 7540 6.6. PUSH_PROMISE
+ */
 class http2_frame_push_promise : public http2_frame_header {
    public:
     http2_frame_push_promise();
@@ -252,7 +283,11 @@ class http2_frame_push_promise : public http2_frame_header {
     binary_t _fragment;
 };
 
-// RFC 7540 6.7. PING
+/**
+ * @brief   ping frame
+ * @see
+ *          RFC 7540 6.7. PING
+ */
 class http2_frame_ping : public http2_frame_header {
    public:
     http2_frame_ping();
@@ -266,7 +301,11 @@ class http2_frame_ping : public http2_frame_header {
     uint64 _opaque;
 };
 
-// RFC 7540 6.8. GOAWAY
+/**
+ * @brief   goaway frame
+ * @see
+ *          RFC 7540 6.8. GOAWAY
+ */
 class http2_frame_goaway : public http2_frame_header {
    public:
     http2_frame_goaway();
@@ -285,7 +324,11 @@ class http2_frame_goaway : public http2_frame_header {
     binary_t _debug;
 };
 
-// RFC 7540 6.9. WINDOW_UPDATE
+/**
+ * @brief   window_update frame
+ * @see
+ *          RFC 7540 6.9. WINDOW_UPDATE
+ */
 class http2_frame_window_update : public http2_frame_header {
    public:
     http2_frame_window_update();
@@ -299,7 +342,11 @@ class http2_frame_window_update : public http2_frame_header {
     uint32 _increment;
 };
 
-// RFC 7540 6.10. CONTINUATION
+/**
+ * @brief   continuation frame
+ * @see
+ *          RFC 7540 6.10. CONTINUATION
+ */
 class http2_frame_continuation : public http2_frame_header {
    public:
     http2_frame_continuation();

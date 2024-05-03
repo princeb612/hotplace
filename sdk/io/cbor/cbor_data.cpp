@@ -35,15 +35,15 @@ cbor_data::cbor_data(int128 value) : cbor_object(cbor_type_t::cbor_type_data) { 
 
 cbor_data::cbor_data(const byte_t* bstr, size_t size) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_bstr_new(bstr, size); }
 
-cbor_data::cbor_data(binary_t const& data) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_binary_new(data); }
+cbor_data::cbor_data(const binary_t& data) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_binary_new(data); }
 
 cbor_data::cbor_data(const char* tstr) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_str_new(tstr); }
 
 cbor_data::cbor_data(const char* tstr, size_t length) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_strn_new(tstr, length); }
 
-cbor_data::cbor_data(std::string const& data) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_str_new(data.c_str()); }
+cbor_data::cbor_data(const std::string& data) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_str_new(data.c_str()); }
 
-cbor_data::cbor_data(fp16_t const& value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_fp16(value.storage); }
+cbor_data::cbor_data(const fp16_t& value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_fp16(value.storage); }
 
 cbor_data::cbor_data(float value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_float(value); }
 

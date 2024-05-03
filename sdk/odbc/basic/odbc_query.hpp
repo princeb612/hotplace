@@ -53,7 +53,7 @@ class odbc_query {
      *                      std::string f, d;
      *                      pField->get_field_name(f);
      *                      pField->as_string(d);
-     *                      std::cout << "  " << f.c_str() << " : " << d.c_str() << " " << std::endl;
+     *                      std::cout << "  " << f << " : " << d << " " << std::endl;
      *                  }
      *              }
      *              rs->release ();

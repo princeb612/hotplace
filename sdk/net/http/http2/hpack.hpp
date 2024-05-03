@@ -69,7 +69,7 @@ class hpack {
      * @brief   encode
      */
     hpack& set_encode_flags(uint32 flags);
-    hpack& encode_header(std::string const& name, std::string const& value);
+    hpack& encode_header(const std::string& name, const std::string& value);
     binary_t& get_binary();
 
     /**
@@ -110,7 +110,7 @@ class hpack_encoder {
     /**
      * @brief   encode (header compression)
      */
-    hpack_encoder& encode_header(hpack_session* session, binary_t& target, std::string const& name, std::string const& value, uint32 flags = 0);
+    hpack_encoder& encode_header(hpack_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
      */
@@ -120,16 +120,16 @@ class hpack_encoder {
 
     hpack_encoder& encode_string(binary_t& target, uint32 flags, const char* value);
     hpack_encoder& encode_string(binary_t& target, uint32 flags, const char* value, size_t size);
-    hpack_encoder& encode_string(binary_t& target, uint32 flags, std::string const& value);
+    hpack_encoder& encode_string(binary_t& target, uint32 flags, const std::string& value);
 
     hpack_encoder& encode_index(binary_t& target, uint8 index);
 
     hpack_encoder& encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const char* value);
     hpack_encoder& encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const char* value, size_t size);
-    hpack_encoder& encode_indexed_name(binary_t& target, uint32 flags, uint8 index, std::string const& value);
+    hpack_encoder& encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const std::string& value);
 
     hpack_encoder& encode_name_value(binary_t& target, uint32 flags, const char* name, const char* value);
-    hpack_encoder& encode_name_value(binary_t& target, uint32 flags, std::string const& name, std::string const& value);
+    hpack_encoder& encode_name_value(binary_t& target, uint32 flags, const std::string& name, const std::string& value);
 
     hpack_encoder& encode_dyntablesize(binary_t& target, uint8 maxsize);
 
@@ -157,8 +157,8 @@ class hpack_encoder {
     static_table_index_t _static_table_index;
     bool _safe_mask;
 
-    match_result_t match(hpack_session* session, std::string const& name, std::string const& value, size_t& index);
-    return_t insert(hpack_session* session, std::string const& name, std::string const& value);
+    match_result_t match(hpack_session* session, const std::string& name, const std::string& value, size_t& index);
+    return_t insert(hpack_session* session, const std::string& name, const std::string& value);
     return_t select(hpack_session* session, uint32 flags, size_t index, std::string& name, std::string& value);
 };
 
@@ -178,8 +178,8 @@ class hpack_session {
     void for_each(std::function<void(const std::string&, const std::string&)> v);
 
    protected:
-    match_result_t match(std::string const& name, std::string const& value, size_t& index);
-    return_t insert(std::string const& name, std::string const& value);
+    match_result_t match(const std::string& name, const std::string& value, size_t& index);
+    return_t insert(const std::string& name, const std::string& value);
     return_t select(uint32 flags, size_t index, std::string& name, std::string& value);
 
    private:

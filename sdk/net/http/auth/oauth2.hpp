@@ -153,7 +153,7 @@ class oauth2_provider {
     virtual ~oauth2_provider();
 
     oauth2_provider& add(oauth2_grant_provider* provider);
-    oauth2_provider& set(oauth2_provider_key_t key, std::string const& value);
+    oauth2_provider& set(oauth2_provider_key_t key, const std::string& value);
     std::string get(oauth2_provider_key_t key);
     oauth2_provider& set_token_endpoint_authentication(http_authenticate_provider* auth);
     oauth2_provider& apply(http_router& router);
@@ -165,7 +165,7 @@ class oauth2_provider {
     typedef std::pair<oauth2_grant_provider_ref_map_t::iterator, bool> oauth2_grant_provider_ref_map_pib_t;
 
     void clear();
-    return_t choose(oauth2_grant_provider_ref_map_t& object, std::string const& key, oauth2_grant_provider** provider_upref);
+    return_t choose(oauth2_grant_provider_ref_map_t& object, const std::string& key, oauth2_grant_provider** provider_upref);
 
     void authorization_handler(network_session* session, http_request* request, http_response* response, http_router* router);
     void token_handler(network_session* session, http_request* request, http_response* response, http_router* router);

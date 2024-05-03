@@ -17,9 +17,9 @@
 namespace hotplace {
 
 #if defined _MBCS || defined MBCS
-void replace(std::string& source, std::string const& a, std::string const& b)
+void replace(std::string& source, const std::string& a, const std::string& b)
 #elif defined _UNICODE || defined UNICODE
-void replace(std::wstring& source, std::wstring const& a, std::wstring const& b)
+void replace(std::wstring& source, const std::wstring& a, const std::wstring& b)
 #endif
 {
     size_t i = source.find(a);

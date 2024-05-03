@@ -30,7 +30,7 @@ valist& valist::assign(const valist& object) {
     return *this;
 }
 
-valist& valist::assign(std::vector<variant_t> const& args) {
+valist& valist::assign(const std::vector<variant_t>& args) {
     critical_section_guard guard(_lock);
 
     _args = args;  // copy vector
@@ -191,7 +191,7 @@ valist& valist::operator<<(const char* value) {
     return *this;
 }
 
-valist& valist::operator<<(variant_t const& v) {
+valist& valist::operator<<(const variant_t& v) {
     insert(v);
     return *this;
 }
@@ -512,7 +512,7 @@ void valist::build() {
     }
 }
 
-void valist::insert(variant_t const& v) {
+void valist::insert(const variant_t& v) {
     critical_section_guard guard(_lock);
 
     _args.push_back(v);

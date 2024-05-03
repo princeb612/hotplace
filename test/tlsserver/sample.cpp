@@ -44,7 +44,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
         case mux_read:
             printf("read %i (%zi) %.*s\n", session_socket->cli_socket, bufsize, (unsigned)bufsize, buf);
             // dump_memory (buf, bufsize, &bs, 16, 4);
-            // std::cout << bs.c_str () << std::endl;
+            // std::cout << bs << std::endl;
             session->send((char*)buf, bufsize);
             break;
         case mux_disconnect:

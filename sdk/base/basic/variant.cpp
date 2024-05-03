@@ -308,7 +308,7 @@ variant& variant::set_nstr_new(const char* value, size_t n) {
     return *this;
 }
 
-variant& variant::set_binary_new(binary_t const& bin) {
+variant& variant::set_binary_new(const binary_t& bin) {
     _vt.type = TYPE_BINARY;
     _vt.size = 0;
     _vt.flag = flag_binary;
@@ -426,7 +426,7 @@ return_t variant::dump(binary_t& target, bool change_endian) const {
     return ret;
 }
 
-variant& variant::copy(variant_t const& value) {
+variant& variant::copy(const variant_t& value) {
     __try2 {
         reset();
 

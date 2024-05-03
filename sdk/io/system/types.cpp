@@ -18,9 +18,9 @@ namespace io {
 
 #if defined __SIZEOF_INT128__
 
-int128 atoi128(std::string const& in) { return t_atoi<int128>(in); }
+int128 atoi128(const std::string& in) { return t_atoi<int128>(in); }
 
-uint128 atou128(std::string const& in) { return t_atoi<uint128>(in); }
+uint128 atou128(const std::string& in) { return t_atoi<uint128>(in); }
 
 #endif
 

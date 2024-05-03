@@ -20,13 +20,13 @@ namespace net {
 
 bearer_credentials::bearer_credentials() {}
 
-bearer_credentials& bearer_credentials::add(std::string const& client_id, std::string const& access_token) {
+bearer_credentials& bearer_credentials::add(const std::string& client_id, const std::string& access_token) {
     critical_section_guard guard(_lock);
     _bearer_credential.insert(std::make_pair(access_token, client_id));
     return *this;
 }
 
-bool bearer_credentials::verify(http_authenticate_provider* provider, std::string const& token) {
+bool bearer_credentials::verify(http_authenticate_provider* provider, const std::string& token) {
     bool ret = false;
 
     critical_section_guard guard(_lock);

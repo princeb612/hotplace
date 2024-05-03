@@ -46,12 +46,12 @@ return_t dump_test_data(const char* text, basic_stream& diagnostic) {
     } else {
         std::cout << "diagnostic";
     }
-    std::cout << std::endl << "  " << diagnostic.c_str() << std::endl;
+    std::cout << std::endl << "  " << diagnostic << std::endl;
 
     return ret;
 }
 
-return_t dump_test_data(const char* text, binary_t const& cbor) {
+return_t dump_test_data(const char* text, const binary_t& cbor) {
     return_t ret = errorcode_t::success;
     basic_stream bs;
 
@@ -64,7 +64,7 @@ return_t dump_test_data(const char* text, binary_t const& cbor) {
         } else {
             std::cout << "diagnostic";
         }
-        std::cout << std::endl << bs.c_str() << std::endl;
+        std::cout << std::endl << bs << std::endl;
     }
 
     return ret;
@@ -963,9 +963,9 @@ void test_cbor_key(const char* file, const char* text) {
 
             basic_stream bs;
             dump_memory(cbor, &bs, 32);
-            std::cout << "from file" << std::endl << bs.c_str() << std::endl;
+            std::cout << "from file" << std::endl << bs << std::endl;
             dump_memory(cbor_written, &bs, 32);
-            std::cout << "from cwk" << std::endl << bs.c_str() << std::endl;
+            std::cout << "from cwk" << std::endl << bs << std::endl;
 
             basic_stream diagnostic;
             cbor_reader reader;
@@ -974,11 +974,11 @@ void test_cbor_key(const char* file, const char* text) {
             reader.open(&handle);
             reader.parse(handle, cbor);
             reader.publish(handle, &diagnostic);
-            std::cout << "from file" << std::endl << diagnostic.c_str() << std::endl;
+            std::cout << "from file" << std::endl << diagnostic << std::endl;
 
             reader.parse(handle, cbor_written);
             reader.publish(handle, &diagnostic);
-            std::cout << "from cwk" << std::endl << diagnostic.c_str() << std::endl;
+            std::cout << "from cwk" << std::endl << diagnostic << std::endl;
 
             reader.close(handle);
         }
@@ -1395,7 +1395,7 @@ void test_eckey_compressed() {
     _test_case.assert(test, __FUNCTION__, "EC compressed");
 }
 
-void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, const char* text) {
+void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, const char* text) {
     _test_case.begin("sign");
 
     return_t ret = errorcode_t::success;
@@ -1424,7 +1424,7 @@ void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& inp
     _test_case.test(ret, __FUNCTION__, "verifysign %s", text);
 }
 
-void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, const char* text) {
+void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, const char* text) {
     _test_case.begin("encrypt");
 
     return_t ret = errorcode_t::success;
@@ -1453,7 +1453,7 @@ void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& 
     _test_case.test(ret, __FUNCTION__, "decrypt %s", text);
 }
 
-void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, const char* text) {
+void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, const char* text) {
     _test_case.begin("mac");
 
     return_t ret = errorcode_t::success;
@@ -1556,7 +1556,7 @@ void test_selfgen(crypto_key* key) {
     }
 }
 
-void test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t const& input, const char* text) {
+void test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
     return_t ret = errorcode_t::success;
     cbor_object_signing_encryption cose;
     binary_t cbor;
@@ -1585,7 +1585,7 @@ void test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binar
     _test_case.test(ret, __FUNCTION__, "cose %s", text);
 }
 
-void test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t const& input, const char* text) {
+void test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
     return_t ret = errorcode_t::success;
     cbor_object_signing_encryption cose;
     binary_t cbor;
@@ -1610,7 +1610,7 @@ void test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t
     _test_case.test(ret, __FUNCTION__, "cose %s", text);
 }
 
-void test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, binary_t const& input, const char* text) {
+void test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
     return_t ret = errorcode_t::success;
     cbor_object_signing_encryption cose;
     binary_t cbor;

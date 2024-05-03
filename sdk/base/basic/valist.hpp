@@ -93,7 +93,7 @@ class valist {
      * @return *this
      */
     valist& assign(const valist& object);
-    valist& assign(std::vector<variant_t> const& args);
+    valist& assign(const std::vector<variant_t>& args);
 
     valist& operator<<(bool value);
     valist& operator<<(char value);
@@ -110,7 +110,7 @@ class valist {
     valist& operator<<(double value);
     valist& operator<<(void* value);
     valist& operator<<(const char* value);
-    valist& operator<<(variant_t const& v);
+    valist& operator<<(const variant_t& v);
     valist& operator<<(const valist& object);
     /**
      * @brief clear
@@ -143,7 +143,7 @@ class valist {
      * @brief insert
      * @param variant_t& v [in]
      */
-    void insert(variant_t const& v);
+    void insert(const variant_t& v);
 
     typedef std::vector<variant_t> args_t;
 

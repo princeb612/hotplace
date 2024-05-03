@@ -69,9 +69,9 @@ class openssl_hash : public hash_t {
      * @brief open (HMAC, CMAC)
      * @param hash_context_t** handle [out]
      * @param const char* algorithm [in]
-     * @param binary_t const& key [in]
+     * @param const binary_t& key [in]
      */
-    virtual return_t open(hash_context_t** handle, const char* algorithm, binary_t const& key);
+    virtual return_t open(hash_context_t** handle, const char* algorithm, const binary_t& key);
 
     /**
      * @brief open (hash, HMAC)
@@ -85,7 +85,7 @@ class openssl_hash : public hash_t {
     /**
      * @brief open (HMAC)
      */
-    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, binary_t const& key);
+    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const binary_t& key);
     /**
      * @brief open (CMAC)
      * @param hash_context_t** handle [out]
@@ -99,7 +99,7 @@ class openssl_hash : public hash_t {
     /**
      * @brief open (CMAC)
      */
-    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key);
+    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, const binary_t& key);
     /**
      * @brief close
      * @param hash_context_t* handle [in]
@@ -130,7 +130,7 @@ class openssl_hash : public hash_t {
      *        hash.free_data(output_data);
      */
     virtual return_t update(hash_context_t* handle, const byte_t* data, size_t datasize);
-    virtual return_t update(hash_context_t* handle, binary_t const& input);
+    virtual return_t update(hash_context_t* handle, const binary_t& input);
     /**
      * @brief hash
      * @param hash_context_t* handle [in]
@@ -184,22 +184,22 @@ class openssl_digest : public openssl_hash {
    public:
     openssl_digest();
 
-    return_t digest(const char* alg, binary_t const& input, binary_t& output);
-    return_t digest(hash_algorithm_t alg, binary_t const& input, binary_t& output);
+    return_t digest(const char* alg, const binary_t& input, binary_t& output);
+    return_t digest(hash_algorithm_t alg, const binary_t& input, binary_t& output);
 
-    return_t digest(const char* alg, basic_stream const& input, binary_t& output);
-    return_t digest(const char* alg, basic_stream const& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16);
+    return_t digest(const char* alg, const basic_stream& input, binary_t& output);
+    return_t digest(const char* alg, const basic_stream& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16);
 
-    return_t digest(const char* alg, std::string const& input, binary_t& output);
-    return_t digest(const char* alg, std::string const& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16);
+    return_t digest(const char* alg, const std::string& input, binary_t& output);
+    return_t digest(const char* alg, const std::string& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16);
 };
 
 class openssl_mac : public openssl_hash {
    public:
     openssl_mac();
 
-    return_t hmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output);
-    return_t hmac(hash_algorithm_t alg, binary_t const& key, binary_t const& input, binary_t& output);
+    return_t hmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output);
+    return_t hmac(hash_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output);
     /**
      * @brief   AES Cipher-Based Message Authentication Code (AES-CMAC)
      * @desc    RFC 4493 The AES-CMAC Algorithm
@@ -207,8 +207,8 @@ class openssl_mac : public openssl_hash {
      * @remarks not the same algorithm AES-CBC-MAC
      *          see also RFC 8152 9.2.  AES Message Authentication Code (AES-CBC-MAC)
      */
-    return_t cmac(const char* alg, binary_t const& key, binary_t const& input, binary_t& output);
-    return_t cmac(crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key, binary_t const& input, binary_t& output);
+    return_t cmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output);
+    return_t cmac(crypt_algorithm_t alg, crypt_mode_t mode, const binary_t& key, const binary_t& input, binary_t& output);
 
     /**
      * @brief   CBC-MAC
@@ -231,14 +231,14 @@ class openssl_mac : public openssl_hash {
      *          OMAC is the first good CBC-MAC derivative that uses a single key.
      *          OMAC works the same way CBC-MAC does until the last block, where it XORs the state with an additional value before encrypting.
      */
-    return_t cbc_mac(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& input, binary_t& tag, size_t tagsize);
+    return_t cbc_mac(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize);
     /**
      * @brief   RFC 8152 9.2. AES Message Authentication Code (AES-CBC-MAC)
      * @desc
      *          reference https://travis-ci.org/cose-wg/
      *          difference ... encrypt final block w/ IV
      */
-    return_t cbc_mac_rfc8152(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& input, binary_t& tag, size_t tagsize);
+    return_t cbc_mac_rfc8152(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize);
 };
 
 }  // namespace crypto

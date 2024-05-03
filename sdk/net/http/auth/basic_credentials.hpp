@@ -25,9 +25,9 @@ class basic_credentials {
    public:
     basic_credentials();
 
-    basic_credentials& add(std::string const& username, std::string const& password);
-    basic_credentials& add(std::string const& challenge);
-    bool verify(http_authenticate_provider* provider, std::string const& credential);
+    basic_credentials& add(const std::string& username, const std::string& password);
+    basic_credentials& add(const std::string& challenge);
+    bool verify(http_authenticate_provider* provider, const std::string& credential);
 
    private:
     critical_section _lock;

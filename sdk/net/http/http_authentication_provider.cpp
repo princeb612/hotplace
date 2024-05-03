@@ -19,7 +19,7 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-http_authenticate_provider::http_authenticate_provider(std::string const& realm) : _realm(realm) { _shared.make_share(this); }
+http_authenticate_provider::http_authenticate_provider(const std::string& realm) : _realm(realm) { _shared.make_share(this); }
 
 std::string http_authenticate_provider::get_challenge(http_request* request) {
     std::string token_auth;

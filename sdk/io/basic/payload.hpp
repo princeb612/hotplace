@@ -71,7 +71,7 @@ class payload_member {
     payload_member(uint32 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint64 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint128 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
-    payload_member(binary_t const& value, const char* name = nullptr, const char* group = nullptr);
+    payload_member(const binary_t& value, const char* name = nullptr, const char* group = nullptr);
 
     bool get_change_endian();
     std::string get_name() const;
@@ -109,16 +109,16 @@ class payload {
 
     payload& operator<<(payload_member* member);
 
-    payload& set_group(std::string const& name, bool optional);
-    bool get_group_condition(std::string const& name);
-    payload& set_reference_value(std::string const& name, std::string const& ref);
+    payload& set_group(const std::string& name, bool optional);
+    bool get_group_condition(const std::string& name);
+    payload& set_reference_value(const std::string& name, const std::string& ref);
 
     return_t dump(binary_t& bin);
-    return_t read(binary_t const& bin);
+    return_t read(const binary_t& bin);
     return_t read(byte_t* p, size_t size);
 
     payload& for_each(std::function<void(payload_member*)> func);
-    payload_member* select(std::string const& name);
+    payload_member* select(const std::string& name);
 
     /**
      * @brief   size

@@ -32,7 +32,7 @@ return_t trace(return_t errorcode) {
             ret = dbg.trace(handle, &rtlcontext, &stream);
             dbg.close(handle);
 
-            std::cout << stream.c_str() << std::endl;
+            std::cout << stream << std::endl;
         }
     }
     fflush(stdout);

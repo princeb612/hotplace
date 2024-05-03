@@ -60,7 +60,7 @@ class http_server {
 
     static return_t accept_handler(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
 
-    return_t startup_tls(std::string const& server_cert, std::string const& server_key, std::string const& cipher_list, int verify_peer);
+    return_t startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
     return_t shutdown_tls();
     return_t startup_server(uint16 tls, uint16 family, uint16 port, http_server_handler_t handler);
     return_t shutdown_server();

@@ -66,17 +66,17 @@ class cbor_object_signing_encryption {
      * @brief   set
      * @param   cose_context_t* handle [in]
      * @param   cose_param_t id [in] cose_external, cose_public, cose_private
-     * @param   binary_t const& bin [in]
+     * @param   const binary_t& bin [in]
      * @return  error code (see error.hpp)
      */
-    return_t set(cose_context_t* handle, cose_param_t id, binary_t const& bin);
+    return_t set(cose_context_t* handle, cose_param_t id, const binary_t& bin);
 
     /**
      * @brief   encrypt
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   std::list<cose_alg_t>& algs [in]
-     * @param   binary_t const& input [in]
+     * @param   const binary_t& input [in]
      * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
      * @example
@@ -107,12 +107,12 @@ class cbor_object_signing_encryption {
      *              }
      *          }
      */
-    return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, binary_t& output);
+    return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, binary_t& output);
     /**
      * @brief   encrypt
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   binary_t const& input [in]
+     * @param   const binary_t& input [in]
      * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
      * @example
@@ -129,35 +129,35 @@ class cbor_object_signing_encryption {
      *          }
      *          cose.close(handle);
      */
-    return_t encrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
+    return_t encrypt(cose_context_t* handle, crypto_key* key, const binary_t& input, binary_t& output);
     /**
      * @brief   decrypt
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   binary_t const& input [in]
+     * @param   const binary_t& input [in]
      * @param   binary_t& output [out] decrypted
      * @param   bool& result [out]
      * @return  error code (see error.hpp)
      * @remarks see json_object_encryption::decrypt
      */
-    return_t decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, bool& result);
+    return_t decrypt(cose_context_t* handle, crypto_key* key, const binary_t& input, binary_t& output, bool& result);
     /**
      * @brief   sign
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   cose_alg_t method [in]
-     * @param   binary_t const& input [in]
+     * @param   const binary_t& input [in]
      * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing::sign
      */
-    return_t sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, binary_t const& input, binary_t& output);
+    return_t sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, const binary_t& input, binary_t& output);
     /**
      * @brief   sign
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   std::list<cose_alg_t>& methods [in]
-     * @param   binary_t const& input [in]
+     * @param   const binary_t& input [in]
      * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing::sign
@@ -175,12 +175,12 @@ class cbor_object_signing_encryption {
      *              cose.sign (handle, key, algs, input, output);
      *          }
      */
-    return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& methods, binary_t const& input, binary_t& output);
+    return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& methods, const binary_t& input, binary_t& output);
     /**
      * @brief   sign
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   binary_t const& input [in]
+     * @param   const binary_t& input [in]
      * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
      * @example
@@ -194,13 +194,13 @@ class cbor_object_signing_encryption {
      *
      *          cose.close(handle);
      */
-    return_t sign(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
+    return_t sign(cose_context_t* handle, crypto_key* key, const binary_t& input, binary_t& output);
     /**
      * @brief   mac
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
      * @param   std::list<cose_alg_t>& methods [in]
-     * @param   binary_t const& input [in]
+     * @param   const binary_t& input [in]
      * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
      * @example
@@ -231,12 +231,12 @@ class cbor_object_signing_encryption {
      *          }
      */
 
-    return_t mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& methods, binary_t const& input, binary_t& output);
+    return_t mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& methods, const binary_t& input, binary_t& output);
     /**
      * @brief   mac
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   binary_t const& input [in]
+     * @param   const binary_t& input [in]
      * @param   binary_t& output [out] CBOR
      * @return  error code (see error.hpp)
      * @example
@@ -253,23 +253,23 @@ class cbor_object_signing_encryption {
      *          }
      *          cose.close(handle);
      */
-    return_t mac(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output);
+    return_t mac(cose_context_t* handle, crypto_key* key, const binary_t& input, binary_t& output);
     /**
      * @brief   verify with kid
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   binary_t const& input [in]
+     * @param   const binary_t& input [in]
      * @param   bool& result [out]
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing::verify
      */
-    return_t verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result);
+    return_t verify(cose_context_t* handle, crypto_key* key, const binary_t& input, bool& result);
 
     /**
      * @brief process
      * @param cose_context_t* handle [in]
      * @param crypto_key* key [in]
-     * @param binary_t const& input [in]
+     * @param const binary_t& input [in]
      * @param binary_t& output [out]
      * @return  error code (see error.hpp)
      * @examples
@@ -278,14 +278,14 @@ class cbor_object_signing_encryption {
      *          cose.process(handle, key, cbor, output); // decrypt, verifysign, verifymac (tagged/untagged)
      *          cose.close(handle);
      */
-    return_t process(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, cose_mode_t mode = cose_mode_t::cose_mode_recv);
+    return_t process(cose_context_t* handle, crypto_key* key, const binary_t& input, binary_t& output, cose_mode_t mode = cose_mode_t::cose_mode_recv);
 
    protected:
     return_t subprocess(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
-    return_t preprocess(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category, binary_t const& input);
-    return_t preprocess(cose_context_t* handle, crypto_key* key, binary_t const& input);
+    return_t preprocess(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category, const binary_t& input);
+    return_t preprocess(cose_context_t* handle, crypto_key* key, const binary_t& input);
 
-    return_t preprocess_skeleton(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category, binary_t const& input);
+    return_t preprocess_skeleton(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category, const binary_t& input);
     return_t preprocess_random(cose_context_t* handle, crypto_key* key);
     return_t preprocess_dorandom(cose_context_t* handle, crypto_key* key, cose_layer* layer);
 

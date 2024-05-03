@@ -18,9 +18,9 @@ namespace hotplace {
 namespace io {
 
 #if defined _MBCS || defined MBCS
-std::string tokenize(std::string const& source, std::string const& tokens, size_t& pos, int mode)
+std::string tokenize(const std::string& source, const std::string& tokens, size_t& pos, int mode)
 #elif defined _UNICODE || defined UNICODE
-std::wstring tokenize(std::wstring const& source, std::wstring const& tokens, size_t& pos, int mode)
+std::wstring tokenize(const std::wstring& source, const std::wstring& tokens, size_t& pos, int mode)
 #endif
 {
 #if defined _MBCS || defined MBCS
@@ -87,9 +87,9 @@ std::wstring tokenize(std::wstring const& source, std::wstring const& tokens, si
 }
 
 #if defined _MBCS || defined MBCS
-bool gettoken(std::string const& source, std::string const& token, size_t index, std::string& value)
+bool gettoken(const std::string& source, const std::string& token, size_t index, std::string& value)
 #elif defined _UNICODE || defined UNICODE
-bool gettoken(std::wstring const& source, std::wstring const& token, size_t index, std::wstring& value)
+bool gettoken(const std::wstring& source, const std::wstring& token, size_t index, std::wstring& value)
 #endif
 {
     bool ret = false;

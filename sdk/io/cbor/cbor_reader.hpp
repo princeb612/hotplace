@@ -68,7 +68,7 @@ class cbor_reader {
     /*
      * @brief   parse
      * @param   cbor_reader_context_t* handle [in]
-     * @param   byte_t* const& data [in]
+     * @param   const byte_t* data [in]
      * @param   size_t size [in]
      * @return  error code (see error.hpp)
      */
@@ -79,7 +79,7 @@ class cbor_reader {
      * @param   const char* expr [in]
      * @return  error code (see error.hpp)
      */
-    return_t parse(cbor_reader_context_t* handle, binary_t const& bin);
+    return_t parse(cbor_reader_context_t* handle, const binary_t& bin);
 
     /*
      * @brief   publish
@@ -129,14 +129,14 @@ class cbor_reader {
 /**
  * @brief   parse
  * @param   cbor_object** object [out]
- * @param   binary_t const& cbor [in]
+ * @param   const binary_t& cbor [in]
  * @return  error code (see error.hpp)
  *          no_data if cbor is empty
  * @remarks
  *          1. if(0 == cbor.size()) return
  *          2. if(errorcode_t::no_data == cbor_parse()) return
  */
-return_t cbor_parse(cbor_object** object, binary_t const& cbor);
+return_t cbor_parse(cbor_object** object, const binary_t& cbor);
 
 }  // namespace io
 }  // namespace hotplace

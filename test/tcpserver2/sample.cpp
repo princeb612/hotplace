@@ -48,7 +48,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             std::cout << "connect " << network_session->cli_socket << std::endl;
             break;
         case multiplexer_event_type_t::mux_read:
-            std::cout << "read " << network_session->cli_socket << " msg [" << std::string(buf, bufsize).c_str() << "]" << std::endl;
+            std::cout << "read " << network_session->cli_socket << " msg [" << std::string(buf, bufsize) << "]" << std::endl;
             send((socket_t)network_session->cli_socket, buf, bufsize, 0);
             break;
         case multiplexer_event_type_t::mux_disconnect:

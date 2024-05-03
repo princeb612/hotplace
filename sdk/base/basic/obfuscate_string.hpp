@@ -152,24 +152,24 @@ class obfuscate_string {
     /**
      * @brief   append
      * @param   std::string& lhs [out]
-     * @param   obfuscate_string const& rhs [in]
+     * @param   const obfuscate_string& rhs [in]
      * @return  std::string&
      */
-    friend std::string& operator<<(std::string& lhs, obfuscate_string const& rhs);
+    friend std::string& operator<<(std::string& lhs, const obfuscate_string& rhs);
     /**
      * @brief   append
      * @param   std::string& lhs [out]
-     * @param   obfuscate_string const& rhs [in]
+     * @param   const obfuscate_string& rhs [in]
      * @return  basic_stream&
      */
-    friend basic_stream& operator<<(basic_stream& lhs, obfuscate_string const& rhs);
+    friend basic_stream& operator<<(basic_stream& lhs, const obfuscate_string& rhs);
     /**
      * @brief   append
      * @param   binary_t& lhs [out]
-     * @param   obfuscate_string const& rhs [in]
+     * @param   const obfuscate_string& rhs [in]
      * @return  binary_t&
      */
-    friend binary_t& operator<<(binary_t& lhs, obfuscate_string const& rhs);
+    friend binary_t& operator<<(binary_t& lhs, const obfuscate_string& rhs);
 
    protected:
     void startup();

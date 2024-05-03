@@ -26,7 +26,7 @@ namespace hotplace {
  *
  *  basic_stream bs;
  *  dump_memory ((byte_t*) data, strlen (data), &bs, 16, 0, 0x0, dump_memory_flag_t::header);
- *  std::cout << bs.c_str () << std::endl;
+ *  std::cout << bs << std::endl;
  */
 
 enum dump_memory_flag_t {

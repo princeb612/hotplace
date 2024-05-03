@@ -262,7 +262,7 @@ ansi_string& ansi_string::operator=(double buf) {
     return *this;
 }
 
-ansi_string& ansi_string::operator=(ansi_string& buf) {
+ansi_string& ansi_string::operator=(const ansi_string& buf) {
     clear();
     write(buf.data(), buf.size());
     return *this;
@@ -319,7 +319,7 @@ ansi_string& ansi_string::operator+=(double buf) {
     return *this;
 }
 
-ansi_string& ansi_string::operator+=(ansi_string& buf) {
+ansi_string& ansi_string::operator+=(const ansi_string& buf) {
     write(buf.data(), buf.size());
     return *this;
 }
@@ -375,7 +375,7 @@ ansi_string& ansi_string::operator<<(double buf) {
     return *this;
 }
 
-ansi_string& ansi_string::operator<<(ansi_string& buf) {
+ansi_string& ansi_string::operator<<(const ansi_string& buf) {
     write(buf.data(), buf.size());
     return *this;
 }
@@ -399,9 +399,9 @@ ansi_string& ansi_string::operator<<(uint128 buf) {
 
 #endif
 
-int ansi_string::compare(ansi_string& rhs) { return strcmp(c_str(), rhs.c_str()); }
+int ansi_string::compare(const ansi_string& rhs) { return strcmp(c_str(), rhs.c_str()); }
 
-int ansi_string::compare(ansi_string& lhs, ansi_string& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
+int ansi_string::compare(const ansi_string& lhs, const ansi_string& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 
 bool ansi_string::operator<(const ansi_string& rhs) const { return 0 > strcmp(c_str(), rhs.c_str()); }
 
@@ -451,6 +451,21 @@ bool ansi_string::operator!=(const char* input) {
         }
     }
     return ret;
+}
+
+std::string& operator+=(std::string& lhs, const ansi_string& rhs) {
+    lhs += rhs.c_str();
+    return lhs;
+}
+
+std::string& operator<<(std::string& lhs, const ansi_string& rhs) {
+    lhs += rhs.c_str();
+    return lhs;
+}
+
+std::ostream& operator<<(std::ostream& lhs, const ansi_string& rhs) {
+    lhs << rhs.c_str();
+    return lhs;
 }
 
 }  // namespace io

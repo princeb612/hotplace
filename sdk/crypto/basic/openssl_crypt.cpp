@@ -216,11 +216,11 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
     return ret;
 }
 
-return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv) {
+return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv) {
     return open(handle, algorithm, mode, &key[0], key.size(), &iv[0], iv.size());
 }
 
-return_t openssl_crypt::open(crypt_context_t** handle, const char* cipher, binary_t const& key, binary_t const& iv) {
+return_t openssl_crypt::open(crypt_context_t** handle, const char* cipher, const binary_t& key, const binary_t& iv) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -341,7 +341,7 @@ return_t openssl_crypt::encrypt(crypt_context_t* handle, const unsigned char* da
     return encrypt2(handle, data_plain, size_plain, out_encrypted);
 }
 
-return_t openssl_crypt::encrypt(crypt_context_t* handle, binary_t const& input, binary_t& out) { return encrypt(handle, &input[0], input.size(), out); }
+return_t openssl_crypt::encrypt(crypt_context_t* handle, const binary_t& input, binary_t& out) { return encrypt(handle, &input[0], input.size(), out); }
 
 return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted, const binary_t* aad,
                                  binary_t* tag) {
@@ -367,7 +367,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t* handle, const unsigned char* d
     return ret;
 }
 
-return_t openssl_crypt::encrypt2(crypt_context_t* handle, binary_t const& data_plain, binary_t& out_encrypted, const binary_t* aad, binary_t* tag) {
+return_t openssl_crypt::encrypt2(crypt_context_t* handle, const binary_t& data_plain, binary_t& out_encrypted, const binary_t* aad, binary_t* tag) {
     return encrypt2(handle, &data_plain[0], data_plain.size(), out_encrypted, aad, tag);
 }
 
@@ -578,7 +578,7 @@ return_t openssl_crypt::decrypt(crypt_context_t* handle, const unsigned char* da
     return decrypt2(handle, data_encrypted, size_encrypted, out_decrypted);
 }
 
-return_t openssl_crypt::decrypt(crypt_context_t* handle, binary_t const& input, binary_t& out_decrypted) {
+return_t openssl_crypt::decrypt(crypt_context_t* handle, const binary_t& input, binary_t& out_decrypted) {
     return decrypt2(handle, &input[0], input.size(), out_decrypted);
 }
 
@@ -606,7 +606,7 @@ return_t openssl_crypt::decrypt2(crypt_context_t* handle, const unsigned char* d
     return ret;
 }
 
-return_t openssl_crypt::decrypt2(crypt_context_t* handle, binary_t const& data_encrypted, binary_t& out_decrypted, const binary_t* aad, const binary_t* tag) {
+return_t openssl_crypt::decrypt2(crypt_context_t* handle, const binary_t& data_encrypted, binary_t& out_decrypted, const binary_t* aad, const binary_t* tag) {
     return decrypt2(handle, &data_encrypted[0], data_encrypted.size(), out_decrypted, aad, tag);
 }
 
@@ -754,7 +754,7 @@ return_t openssl_crypt::free_data(unsigned char* data) {
     return ret;
 }
 
-return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode) {
+return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const binary_t& input, binary_t& output, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -843,7 +843,7 @@ return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, binary_t const& input, bin
     return ret;
 }
 
-return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, binary_t const& input, binary_t& output, crypt_enc_t mode) {
+return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const binary_t& input, binary_t& output, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -979,7 +979,7 @@ return_t openssl_crypt::query(crypt_context_t* handle, size_t cmd, size_t& value
     return ret;
 }
 
-return_t openssl_crypt::encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext,
+return_t openssl_crypt::encrypt(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext,
                                 encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
@@ -1002,7 +1002,7 @@ return_t openssl_crypt::encrypt(const char* alg, binary_t const& key, binary_t c
     return ret;
 }
 
-return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& plaintext,
+return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const binary_t& plaintext,
                                 binary_t& ciphertext, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
@@ -1025,7 +1025,7 @@ return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
     return ret;
 }
 
-return_t openssl_crypt::encrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& plaintext, binary_t& ciphertext, binary_t const& aad,
+return_t openssl_crypt::encrypt(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad,
                                 binary_t& tag, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
@@ -1048,8 +1048,8 @@ return_t openssl_crypt::encrypt(const char* alg, binary_t const& key, binary_t c
     return ret;
 }
 
-return_t openssl_crypt::encrypt(const char* alg, binary_t const& key, binary_t const& iv, const unsigned char* plaintext, size_t size_plaintext,
-                                binary_t& ciphertext, binary_t const& aad, binary_t& tag, encrypt_option_t* options) {
+return_t openssl_crypt::encrypt(const char* alg, const binary_t& key, const binary_t& iv, const unsigned char* plaintext, size_t size_plaintext,
+                                binary_t& ciphertext, const binary_t& aad, binary_t& tag, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
 
@@ -1071,8 +1071,8 @@ return_t openssl_crypt::encrypt(const char* alg, binary_t const& key, binary_t c
     return ret;
 }
 
-return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& plaintext,
-                                binary_t& ciphertext, binary_t const& aad, binary_t& tag, encrypt_option_t* options) {
+return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const binary_t& plaintext,
+                                binary_t& ciphertext, const binary_t& aad, binary_t& tag, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
 
@@ -1093,8 +1093,8 @@ return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
     __finally2 { close(crypt_handle); }
     return ret;
 }
-return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, const unsigned char* plaintext,
-                                size_t size_plaintext, binary_t& ciphertext, binary_t const& aad, binary_t& tag, encrypt_option_t* options) {
+return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const unsigned char* plaintext,
+                                size_t size_plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
 
@@ -1116,7 +1116,7 @@ return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
     return ret;
 }
 
-return_t openssl_crypt::decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext,
+return_t openssl_crypt::decrypt(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext,
                                 encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
@@ -1139,7 +1139,7 @@ return_t openssl_crypt::decrypt(const char* alg, binary_t const& key, binary_t c
     return ret;
 }
 
-return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& ciphertext,
+return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const binary_t& ciphertext,
                                 binary_t& plaintext, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
@@ -1162,8 +1162,8 @@ return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
     return ret;
 }
 
-return_t openssl_crypt::decrypt(const char* alg, binary_t const& key, binary_t const& iv, binary_t const& ciphertext, binary_t& plaintext, binary_t const& aad,
-                                binary_t const& tag, encrypt_option_t* options) {
+return_t openssl_crypt::decrypt(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext, const binary_t& aad,
+                                const binary_t& tag, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
 
@@ -1185,8 +1185,8 @@ return_t openssl_crypt::decrypt(const char* alg, binary_t const& key, binary_t c
     return ret;
 }
 
-return_t openssl_crypt::decrypt(const char* alg, binary_t const& key, binary_t const& iv, const unsigned char* ciphertext, size_t size_ciphertext,
-                                binary_t& plaintext, binary_t const& aad, binary_t const& tag, encrypt_option_t* options) {
+return_t openssl_crypt::decrypt(const char* alg, const binary_t& key, const binary_t& iv, const unsigned char* ciphertext, size_t size_ciphertext,
+                                binary_t& plaintext, const binary_t& aad, const binary_t& tag, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
 
@@ -1208,8 +1208,8 @@ return_t openssl_crypt::decrypt(const char* alg, binary_t const& key, binary_t c
     return ret;
 }
 
-return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, binary_t const& ciphertext,
-                                binary_t& plaintext, binary_t const& aad, binary_t const& tag, encrypt_option_t* options) {
+return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const binary_t& ciphertext,
+                                binary_t& plaintext, const binary_t& aad, const binary_t& tag, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
 
@@ -1231,8 +1231,8 @@ return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
     return ret;
 }
 
-return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv, const unsigned char* ciphertext,
-                                size_t size_ciphertext, binary_t& plaintext, binary_t const& aad, binary_t const& tag, encrypt_option_t* options) {
+return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const unsigned char* ciphertext,
+                                size_t size_ciphertext, binary_t& plaintext, const binary_t& aad, const binary_t& tag, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;
     crypt_context_t* crypt_handle = nullptr;
 
@@ -1254,7 +1254,7 @@ return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
     return ret;
 }
 
-return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, binary_t const& nonce) { return openssl_chacha20_iv(iv, counter, &nonce[0], nonce.size()); }
+return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const binary_t& nonce) { return openssl_chacha20_iv(iv, counter, &nonce[0], nonce.size()); }
 
 return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, size_t nonce_size) {
     return_t ret = errorcode_t::success;

@@ -218,7 +218,7 @@ class t_expirable_tokens : t_expirable<OBJECT_T> {
  */
 class access_token_t {
    public:
-    access_token_t(std::string const& client_id, std::string const& accesstoken, std::string const& refreshtoken, uint16 expire);
+    access_token_t(const std::string& client_id, const std::string& accesstoken, const std::string& refreshtoken, uint16 expire);
 
     std::string access_token() const;
     std::string refresh_token() const;
@@ -251,41 +251,41 @@ class oauth2_credentials {
      * @brief   register an web application
      * @param   std::string& client_id [out]
      * @param   std::string& client_secret [out]
-     * @param   std::string const& userid [in]
-     * @param   std::string const& appname [in]
-     * @param   std::string const& redirect_uri [in]
+     * @param   const std::string& userid [in]
+     * @param   const std::string& appname [in]
+     * @param   const std::string& redirect_uri [in]
      * @param   std::list<std::string> scope [in]
      */
-    return_t add(std::string& client_id, std::string& client_secret, std::string const& userid, std::string const& appname, std::string const& redirect_uri,
+    return_t add(std::string& client_id, std::string& client_secret, const std::string& userid, const std::string& appname, const std::string& redirect_uri,
                  std::list<std::string> scope);
     /**
      * @brief   add (load from db, ...)
-     * @param   std::string const& client_id [in]
-     * @param   std::string const& client_secret [in]
-     * @param   std::string const& userid [in]
-     * @param   std::string const& appname [in]
-     * @param   std::string const& redirect_uri [in]
+     * @param   const std::string& client_id [in]
+     * @param   const std::string& client_secret [in]
+     * @param   const std::string& userid [in]
+     * @param   const std::string& appname [in]
+     * @param   const std::string& redirect_uri [in]
      * @param   std::list<std::string> scope [in]
      */
-    return_t insert(std::string const& client_id, std::string const& client_secret, std::string const& userid, std::string const& appname,
-                    std::string const& redirect_uri, std::list<std::string> scope);
+    return_t insert(const std::string& client_id, const std::string& client_secret, const std::string& userid, const std::string& appname,
+                    const std::string& redirect_uri, std::list<std::string> scope);
     /**
      * @brief   unregister an web application
-     * @param   std::string const& client_id [in]
+     * @param   const std::string& client_id [in]
      */
-    return_t remove(std::string const& client_id);
+    return_t remove(const std::string& client_id);
     /**
      * @brief   check
      */
-    return_t check(std::string const& client_id, std::string const& redirect_uri);
+    return_t check(const std::string& client_id, const std::string& redirect_uri);
 
     /**
      * @brief   list of client_id
      */
-    return_t list(std::string const& userid, std::list<std::string>& clientid);
+    return_t list(const std::string& userid, std::list<std::string>& clientid);
 
     return_t grant_code(std::string& code, uint16 expire = 10 * 60);
-    return_t verify_grant_code(std::string const& code);
+    return_t verify_grant_code(const std::string& code);
     return_t expire_grant_codes();
     return_t clear_grant_codes();
 
@@ -293,28 +293,28 @@ class oauth2_credentials {
      * @brief   access_token
      * @param   std::string& access_token [out]
      * @param   std::string& refresh_token [out]
-     * @param   std::string const& client_id [in]
+     * @param   const std::string& client_id [in]
      * @param   uint16 expire [inopt]
      */
-    return_t grant(std::string& access_token, std::string& refresh_token, std::string const& client_id, uint16 expire = 60 * 60);
+    return_t grant(std::string& access_token, std::string& refresh_token, const std::string& client_id, uint16 expire = 60 * 60);
     /**
      * @brief   revoke an access_token
-     * @param   std::string const& access_token [in]
+     * @param   const std::string& access_token [in]
      */
-    return_t revoke(std::string const& access_token);
+    return_t revoke(const std::string& access_token);
     /**
      * @brief   validate
-     * @param   std::string const& access_token [in]
+     * @param   const std::string& access_token [in]
      */
-    return_t isvalid(std::string const& access_token);
+    return_t isvalid(const std::string& access_token);
     /**
      * @brief   refresh
      * @param   std::string& next_access_token [out]
      * @param   std::string& next_refresh_token [out]
-     * @param   std::string const& refresh_token [in]
+     * @param   const std::string& refresh_token [in]
      * @param   uint16 expire [inopt]
      */
-    return_t refresh(std::string& next_access_token, std::string& next_refresh_token, std::string const& refresh_token, uint16 expire = 60 * 60);
+    return_t refresh(std::string& next_access_token, std::string& next_refresh_token, const std::string& refresh_token, uint16 expire = 60 * 60);
 
     void revoke_if_expired();
 

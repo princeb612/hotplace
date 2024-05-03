@@ -48,9 +48,9 @@ return_t W2A(std::string& target, const wchar_t* source, uint32 codepage = 0);
  *  gettoken (data, token, 1, value);  // "item1"
  *  _test_case.assert (value == "item1", __FUNCTION__, "gettoken");
  */
-bool gettoken(std::string const& source, std::string const& token, size_t index, std::string& value);
+bool gettoken(const std::string& source, const std::string& token, size_t index, std::string& value);
 #if defined _WIN32 || defined _WIN64
-bool gettoken(std::wstring const& source, std::wstring const& token, size_t index, std::wstring& value);
+bool gettoken(const std::wstring& source, const std::wstring& token, size_t index, std::wstring& value);
 #endif
 
 /**
@@ -70,9 +70,9 @@ bool gettoken(std::wstring const& source, std::wstring const& token, size_t inde
 enum tokenize_mode_t {
     token_quoted = 1,
 };
-std::string tokenize(std::string const& source, std::string const& tokens, size_t& pos, int mode = 0);
+std::string tokenize(const std::string& source, const std::string& tokens, size_t& pos, int mode = 0);
 #if defined _WIN32 || defined _WIN64
-std::wstring tokenize(std::wstring const& source, std::wstring const& tokens, size_t& pos, int mode = 0);
+std::wstring tokenize(const std::wstring& source, const std::wstring& tokens, size_t& pos, int mode = 0);
 #endif
 
 /**
@@ -161,13 +161,13 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
 
 /**
  * @brief   regular expression
- * @param   std::string const& input [in]
- * @param   std::string const& expr [in]
+ * @param   const std::string& input [in]
+ * @param   const std::string& expr [in]
  * @param   size_t& pos [out]
  * @param   std::list<std::string>& tokens [out]
  * @sa      split_url
  */
-void regex_token(std::string const& input, std::string const& expr, size_t& pos, std::list<std::string>& tokens);
+void regex_token(const std::string& input, const std::string& expr, size_t& pos, std::list<std::string>& tokens);
 
 /**
  * @brief  escape_url
@@ -183,7 +183,7 @@ return_t escape_url(const char* url, stream_t* s, uint32 flags = 0);
  * @example
  *        basic_stream bs;
  *        unescape("https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb", &bs);
- *        std::cout << bs.c_str() << std::endl; // https://client.example.com/cb
+ *        std::cout << bs << std::endl; // https://client.example.com/cb
  */
 return_t unescape_url(const char* url, stream_t* s);
 

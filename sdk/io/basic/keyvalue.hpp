@@ -63,7 +63,7 @@ class key_value {
      *          set (key1, value2, key_value_mode_t::update); // update, return errorcode_t::success
      */
     return_t set(const char* name, const char* value, int mode = key_value_mode_t::update);
-    return_t set(std::string const& name, std::string const& value, int mode = key_value_mode_t::update);
+    return_t set(const std::string& name, const std::string& value, int mode = key_value_mode_t::update);
     /**
      * @brief   update
      * @param   const char* name [in]
@@ -73,7 +73,7 @@ class key_value {
      *          set(name, value, key_value_mode_t::update);
      */
     return_t update(const char* name, const char* value);
-    return_t update(std::string const& name, std::string const& value);
+    return_t update(const std::string& name, const std::string& value);
     /**
      * @brief   remove
      * @param   const char*     name    [IN]
@@ -113,8 +113,8 @@ class key_value {
      *          kv.query ("value", value); // ""
      */
     return_t query(const char* name, std::string& value);
-    return_t query(std::string const& name, std::string& value);
-    std::string get(std::string const& name);
+    return_t query(const std::string& name, std::string& value);
+    std::string get(const std::string& name);
 
     /**
      * @brief   copy
@@ -141,10 +141,10 @@ class key_value {
 
     /**
      * @brief   foreach
-     * @param   std::function<void(std::string const&, std::string const&, void*)> func [in]
+     * @param   std::function<void(const std::string&, const std::string&, void*)> func [in]
      * @param   void* param [inopt]
      */
-    void foreach (std::function<void(std::string const&, std::string const&, void*)> func, void* param = nullptr);
+    void foreach (std::function<void(const std::string&, const std::string&, void*)> func, void* param = nullptr);
 
     /**
      * @brief   operator <<

@@ -61,7 +61,7 @@ return_t http_server::accept_handler(socket_t socket, sockaddr_storage_t* client
     return ret;
 }
 
-return_t http_server::startup_tls(std::string const& server_cert, std::string const& server_key, std::string const& cipher_list, int verify_peer) {
+return_t http_server::startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
     return_t ret = errorcode_t::success;
     __try2 {
         __try_new_catch(_cert, new x509cert(server_cert.c_str(), server_key.c_str()), ret, __leave2);

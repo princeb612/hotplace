@@ -25,11 +25,11 @@
 namespace hotplace {
 namespace io {
 
-return_t zlib_deflate(zlib_windowbits_t windowbits, binary_t const& input, binary_t& output) {
+return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output) {
     return zlib_deflate(windowbits, &input[0], input.size(), output);
 }
 
-return_t zlib_inflate(zlib_windowbits_t windowbits, binary_t const& input, binary_t& output) {
+return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output) {
     return zlib_inflate(windowbits, &input[0], input.size(), output);
 }
 
@@ -153,11 +153,11 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
     return dwRet;
 }
 
-return_t zlib_deflate(zlib_windowbits_t windowbits, binary_t const& input, stream_t* output) {
+return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output) {
     return zlib_deflate(windowbits, &input[0], input.size(), output);
 }
 
-return_t zlib_inflate(zlib_windowbits_t windowbits, binary_t const& input, stream_t* output) {
+return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output) {
     return zlib_inflate(windowbits, &input[0], input.size(), output);
 }
 

@@ -62,9 +62,9 @@ void do_split_url(const char* url, url_info_t* url_info) {
 
         key_value kv;
         http_uri::to_keyvalue(url_info->query, kv);
-        kv.foreach ([&](std::string const& key, std::string const& value, void* param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
+        kv.foreach ([&](const std::string& key, const std::string& value, void* param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
 
-        std::cout << bs.c_str();
+        std::cout << bs;
     }
 }
 
@@ -209,7 +209,7 @@ void test_response_parse() {
     http_header::to_keyvalue(wwwauth, kv);
 
     if (option.verbose) {
-        kv.foreach ([&](std::string const& k, std::string const& v, void* param) -> void { printf("> %s:=%s\n", k.c_str(), v.c_str()); });
+        kv.foreach ([&](const std::string& k, const std::string& v, void* param) -> void { printf("> %s:=%s\n", k.c_str(), v.c_str()); });
     }
 
     _test_case.assert(401 == response.status_code(), __FUNCTION__, "status");
@@ -283,7 +283,7 @@ void test_escape_url() {
     unescape_url(input, &unescaped);
 
     if (option.verbose) {
-        std::cout << "unescape : " << unescaped.c_str() << std::endl;
+        std::cout << "unescape : " << unescaped << std::endl;
     }
 
     constexpr char expect[] = "https://test.com:8080/~b612/test.html";
@@ -307,8 +307,8 @@ void test_basic_authentication() {
 
     provider.request_auth(&session, &request, &response);
 
-    std::function<return_t(std::string const& user, std::string const& password)> test_resolver = [&](std::string const& user,
-                                                                                                      std::string const& password) -> return_t {
+    std::function<return_t(const std::string& user, const std::string& password)> test_resolver = [&](const std::string& user,
+                                                                                                      const std::string& password) -> return_t {
         return_t ret = errorcode_t::failed;
 
         // server response
@@ -458,8 +458,8 @@ void test_digest_access_authentication(const char* alg = nullptr) {
 
     provider.request_auth(&session, &request, &response);
 
-    std::function<return_t(std::string const& user, std::string const& password)> test_resolver = [&](std::string const& user,
-                                                                                                      std::string const& password) -> return_t {
+    std::function<return_t(const std::string& user, const std::string& password)> test_resolver = [&](const std::string& user,
+                                                                                                      const std::string& password) -> return_t {
         return_t ret = errorcode_t::failed;
 
         // server response
@@ -528,8 +528,8 @@ void test_digest_access_authentication(const char* alg = nullptr) {
     _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Digest Access Authentication Scheme (positive case) algorithm=%s", alg ? alg : "");
 }
 
-void test_rfc_example_routine(std::string const& text, digest_access_authentication_provider* provider, http_request& request, basic_stream const& username,
-                              std::string const& password, std::string const& expect) {
+void test_rfc_example_routine(const std::string& text, digest_access_authentication_provider* provider, http_request& request, const basic_stream& username,
+                              const std::string& password, const std::string& expect) {
     std::string response;
     std::string challenge;
     key_value kv;
@@ -678,7 +678,7 @@ void test_get_tlsclient() {
 
             cprint("request");
             if (option.verbose) {
-                std::cout << body.c_str() << std::endl;
+                std::cout << body << std::endl;
             }
 
             size_t cbsent = 0;

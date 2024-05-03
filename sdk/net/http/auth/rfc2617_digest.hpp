@@ -24,12 +24,12 @@ class rfc2617_digest {
    public:
     rfc2617_digest();
     rfc2617_digest& add(const char* data);
-    rfc2617_digest& add(std::string const& data);
-    rfc2617_digest& add(basic_stream const& data);
+    rfc2617_digest& add(const std::string& data);
+    rfc2617_digest& add(const basic_stream& data);
     rfc2617_digest& operator<<(const char* data);
-    rfc2617_digest& operator<<(std::string const& data);
-    rfc2617_digest& operator<<(basic_stream const& data);
-    rfc2617_digest& digest(std::string const& algorithm);
+    rfc2617_digest& operator<<(const std::string& data);
+    rfc2617_digest& operator<<(const basic_stream& data);
+    rfc2617_digest& digest(const std::string& algorithm);
     std::string get();
     std::string get_sequence();
     rfc2617_digest& clear();

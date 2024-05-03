@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include <iostream>
+#include <ostream>
 #include <sdk/base/stream.hpp>
 #include <sdk/base/stream/bufferio.hpp>
 
@@ -101,28 +102,28 @@ class basic_stream : public stream_t {
     basic_stream& operator<<(long value);
     basic_stream& operator<<(unsigned long value);
     basic_stream& operator<<(unsigned long long value);
-    basic_stream& operator<<(basic_stream const& value);
-    basic_stream& operator<<(std::string const& value);
+    basic_stream& operator<<(const basic_stream& value);
+    basic_stream& operator<<(const std::string& value);
 
     /**
      * @brief   operator =
      * @param   basic_stream obj [in]
      */
-    basic_stream& operator=(basic_stream const& obj);
-    basic_stream& operator=(std::string const& str);
+    basic_stream& operator=(const basic_stream& obj);
+    basic_stream& operator=(const std::string& str);
     basic_stream& operator=(const char* str);
 
     /**
      * @brief   compare
      * @param   basic_stream obj [in]
      */
-    int compare(basic_stream const& obj);
+    int compare(const basic_stream& obj);
     /**
      * @brief   compare
      * @param   basic_stream lhs [in]
      * @param   basic_stream rhs [in]
      */
-    static int compare(basic_stream& lhs, basic_stream& rhs);
+    static int compare(const basic_stream& lhs, const basic_stream& rhs);
     /**
      * @brief   operator <
      * @param   basic_stream obj [in]
@@ -135,6 +136,10 @@ class basic_stream : public stream_t {
     bool operator>(const basic_stream& obj) const;
 
     bool operator==(const basic_stream& obj) const;
+
+    friend std::string& operator+=(std::string& lhs, const basic_stream& rhs);
+    friend std::string& operator<<(std::string& lhs, const basic_stream& rhs);
+    friend std::ostream& operator<<(std::ostream& lhs, const basic_stream& rhs);
 
    protected:
     bufferio _bio;

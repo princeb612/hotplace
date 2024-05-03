@@ -22,7 +22,7 @@ namespace net {
 
 basic_credentials::basic_credentials() {}
 
-basic_credentials& basic_credentials::add(std::string const& username, std::string const& password) {
+basic_credentials& basic_credentials::add(const std::string& username, const std::string& password) {
     basic_stream bs;
     bs << username << ":" << password;
 
@@ -30,13 +30,13 @@ basic_credentials& basic_credentials::add(std::string const& username, std::stri
     return add(challenge);
 }
 
-basic_credentials& basic_credentials::add(std::string const& challenge) {
+basic_credentials& basic_credentials::add(const std::string& challenge) {
     critical_section_guard guard(_lock);
     _basic_credential.insert(challenge);
     return *this;
 }
 
-bool basic_credentials::verify(http_authenticate_provider* provider, std::string const& credential) {
+bool basic_credentials::verify(http_authenticate_provider* provider, const std::string& credential) {
     bool ret = false;
 
     critical_section_guard guard(_lock);

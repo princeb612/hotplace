@@ -44,8 +44,8 @@ void test1(int argc, char** argv) {
     }
 
     OPTION opt = cmdline.value();
-    std::cout << "infile " << opt.infile.c_str() << std::endl;
-    std::cout << "outfile " << opt.outfile.c_str() << std::endl;
+    std::cout << "infile " << opt.infile << std::endl;
+    std::cout << "outfile " << opt.outfile << std::endl;
     std::cout << "keygen " << opt.keygen << std::endl;
 }
 
@@ -70,8 +70,8 @@ void test_cmdline(cmdline_t<OPTION>& cmdline, bool expect, int argc, char** argv
     }
 
     // OPTION opt = cmdline.value ();
-    std::cout << "infile " << opt.infile.c_str() << std::endl;
-    std::cout << "outfile " << opt.outfile.c_str() << std::endl;
+    std::cout << "infile " << opt.infile << std::endl;
+    std::cout << "outfile " << opt.outfile << std::endl;
     std::cout << "keygen " << opt.keygen << std::endl;
 
     bool test = (errorcode_t::success == ret);

@@ -46,7 +46,7 @@ http_header& http_header::add(const char* header, const char* value) {
     return *this;
 }
 
-http_header& http_header::add(std::string const& header, std::string const& value) { return add(header.c_str(), value.c_str()); }
+http_header& http_header::add(const std::string& header, const std::string& value) { return add(header.c_str(), value.c_str()); }
 
 http_header& http_header::clear() {
     critical_section_guard guard(_lock);
@@ -149,7 +149,7 @@ return_t http_header::get_headers(std::string& contents) {
     return ret;
 }
 
-return_t http_header::to_keyvalue(std::string const& value, key_value& kv) {
+return_t http_header::to_keyvalue(const std::string& value, key_value& kv) {
     return_t ret = errorcode_t::success;
 
     std::string token;
@@ -179,7 +179,7 @@ return_t http_header::to_keyvalue(std::string const& value, key_value& kv) {
     return ret;
 }
 
-http_header& http_header::operator=(http_header const& object) {
+http_header& http_header::operator=(const http_header& object) {
     critical_section_guard guard(_lock);
     _names = object._names;
     _headers = object._headers;

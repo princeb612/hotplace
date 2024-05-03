@@ -19,7 +19,7 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-basic_authentication_provider::basic_authentication_provider(std::string const& realm) : http_authenticate_provider(realm) {}
+basic_authentication_provider::basic_authentication_provider(const std::string& realm) : http_authenticate_provider(realm) {}
 
 basic_authentication_provider::~basic_authentication_provider() {}
 

@@ -67,7 +67,7 @@ void test_trace() {
     {
         test_case_notimecheck notimecheck(_test_case);
 
-        std::cout << stream.c_str() << std::endl;
+        std::cout << stream << std::endl;
     }
 
     _test_case.test(ret, __FUNCTION__, "debug_trace");

@@ -36,10 +36,10 @@ class http_uri {
 
     /**
      * @brief open
-     * @param std::string const& uri [in]
+     * @param const std::string& uri [in]
      * @return error code (see error.hpp)
      */
-    return_t open(std::string const& uri);
+    return_t open(const std::string& uri);
     return_t open(const char* uri);
     /**
      * @brief close
@@ -47,7 +47,7 @@ class http_uri {
     void close();
 
     return_t set_query(const char* query);
-    return_t set_query(std::string const& query);
+    return_t set_query(const std::string& query);
 
     /**
      * @brief URI
@@ -57,11 +57,11 @@ class http_uri {
     const char* get_query();
     /**
      * @brief   read a param
-     * @param   std::string const& key [in]
+     * @param   const std::string& key [in]
      * @param   std::string& value [out]
      * @return  error code (see error.hpp)
      */
-    return_t query(std::string const& key, std::string& value);
+    return_t query(const std::string& key, std::string& value);
     /**
      * @brief count of query
      * @remarks
@@ -70,7 +70,7 @@ class http_uri {
 
     /*
      * @brief   conversion
-     * @param   std::string const& value [in]
+     * @param   const std::string& value [in]
      * @param   key_value& kv [out]
      * @return  error code (see error.hpp)
      * @sample
@@ -78,13 +78,13 @@ class http_uri {
      *          http_uri::to_keyvalue(input, kv);
      *          std::string client_id = kv.get("client_id");
      */
-    static return_t to_keyvalue(std::string const& value, key_value& kv);
+    static return_t to_keyvalue(const std::string& value, key_value& kv);
 
     /**
      * @brief   keyvalue of query
      * @example
      *          uri.get_query_keyvalue().foreach(
-     *              [&](std::string const& key, std::string const& value, void* param) -> void {
+     *              [&](const std::string& key, const std::string& value, void* param) -> void {
      *                  std::cout << key << " : " << value << std::endl;
      *              }
      *          );

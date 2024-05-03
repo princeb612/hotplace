@@ -48,8 +48,8 @@ class http_request {
      */
     return_t open(const char* request, size_t size_request, uint32 flags = 0);
     return_t open(const char* request, uint32 flags = 0);
-    return_t open(basic_stream const& request, uint32 flags = 0);
-    return_t open(std::string const& request, uint32 flags = 0);
+    return_t open(const basic_stream& request, uint32 flags = 0);
+    return_t open(const std::string& request, uint32 flags = 0);
     /**
      * @brief   close
      * @return  error code (see error.hpp)
@@ -76,15 +76,15 @@ class http_request {
     /**
      * @brief   compose
      * @param   http_method_t method [in]
-     * @param   std::string const& uri [in]
-     * @param   std::string const& body [inopt]
+     * @param   const std::string& uri [in]
+     * @param   const std::string& body [inopt]
      * @example
      *          request.get_http_header()
      *                  .clear()
      *                  .add("User-Agent", "client");
      *          request.compose(200, "text/plain", "hello world");
      */
-    http_request& compose(http_method_t method, std::string const& uri, std::string const& body = std::string(""));
+    http_request& compose(http_method_t method, const std::string& uri, const std::string& body = std::string(""));
     /**
      * @brief   load
      * @param   basic_stream& stream [out]

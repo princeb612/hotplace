@@ -46,8 +46,8 @@ class http_response {
      */
     return_t open(const char* response, size_t size_response);
     return_t open(const char* response);
-    return_t open(basic_stream const& response);
-    return_t open(std::string const& response);
+    return_t open(const basic_stream& response);
+    return_t open(const std::string& response);
     /* *
      * @brief  close
      * @return error code (see error.hpp)
@@ -59,7 +59,7 @@ class http_response {
      */
     http_response& compose(int status_code);
     http_response& compose(int status_code, const char* content_type, const char* content, ...);
-    http_response& compose(int status_code, std::string const& content_type, const char* content, ...);
+    http_response& compose(int status_code, const std::string& content_type, const char* content, ...);
     /**
      * @brief   respond
      * @example
@@ -98,7 +98,7 @@ class http_response {
 
     virtual std::string get_version();
 
-    http_response& operator=(http_response const& object);
+    http_response& operator=(const http_response& object);
 
     void addref();
     void release();

@@ -33,7 +33,7 @@ namespace net {
 class html_documents {
    public:
     html_documents();
-    html_documents(std::string const& root_uri, std::string const& directory);
+    html_documents(const std::string& root_uri, const std::string& directory);
 
     bool test();
 
@@ -44,19 +44,19 @@ class html_documents {
      *                   .add_content_type(".html", "text/html")
      *                   .set_default_document("index.html);
      */
-    html_documents& add_documents_root(std::string const& root_uri, std::string const& directory);
-    html_documents& add_content_type(std::string const& dot_ext, std::string const& content_type);
-    html_documents& set_default_document(std::string const& document);
+    html_documents& add_documents_root(const std::string& root_uri, const std::string& directory);
+    html_documents& add_content_type(const std::string& dot_ext, const std::string& content_type);
+    html_documents& set_default_document(const std::string& document);
 
-    return_t load(std::string const& uri, std::string& content_type, binary_t& content);
-    return_t handler(std::string const& uri, network_session* session, http_request* request, http_response* response);
+    return_t load(const std::string& uri, std::string& content_type, binary_t& content);
+    return_t handler(const std::string& uri, network_session* session, http_request* request, http_response* response);
 
    protected:
-    bool map(std::string const& uri, std::string& local);
-    return_t search_cache(std::string const& uri, binary_t& content);
-    return_t insert_cache(std::string const& uri, binary_t& content);
-    return_t loadfile(std::string const& uri, binary_t& content);
-    return_t get_content_type(std::string const& uri, std::string& content_type);
+    bool map(const std::string& uri, std::string& local);
+    return_t search_cache(const std::string& uri, binary_t& content);
+    return_t insert_cache(const std::string& uri, binary_t& content);
+    return_t loadfile(const std::string& uri, binary_t& content);
+    return_t get_content_type(const std::string& uri, std::string& content_type);
 
    private:
     critical_section _lock;

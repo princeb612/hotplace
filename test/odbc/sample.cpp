@@ -85,7 +85,7 @@ void test() {
                         ansi_string f, d;
                         field->get_field_name(f);
                         field->as_string(d);
-                        std::cout << f.c_str() << " : " << d.c_str() << std::endl;
+                        std::cout << f << " : " << d << std::endl;
                     }
                 }
                 bool more = rs->more();

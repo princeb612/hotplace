@@ -351,7 +351,7 @@ oauth2_provider& oauth2_provider::add(oauth2_grant_provider* provider) {
     return *this;
 }
 
-oauth2_provider& oauth2_provider::set(oauth2_provider_key_t key, std::string const& value) {
+oauth2_provider& oauth2_provider::set(oauth2_provider_key_t key, const std::string& value) {
     _values[key] = value;
     return *this;
 }
@@ -402,7 +402,7 @@ void oauth2_provider::clear() {
     _providers.clear();
 }
 
-return_t oauth2_provider::choose(oauth2_grant_provider_ref_map_t& object, std::string const& key, oauth2_grant_provider** provider_upref) {
+return_t oauth2_provider::choose(oauth2_grant_provider_ref_map_t& object, const std::string& key, oauth2_grant_provider** provider_upref) {
     return_t ret = errorcode_t::success;
     oauth2_grant_provider* provider = nullptr;
     __try2 {

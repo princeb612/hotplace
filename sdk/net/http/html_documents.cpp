@@ -18,11 +18,11 @@ namespace net {
 
 html_documents::html_documents() : _use(false) {}
 
-html_documents::html_documents(std::string const& root_uri, std::string const& directory) : _use(false) { add_documents_root(root_uri, directory); }
+html_documents::html_documents(const std::string& root_uri, const std::string& directory) : _use(false) { add_documents_root(root_uri, directory); }
 
 bool html_documents::test() { return _use; }
 
-html_documents& html_documents::add_documents_root(std::string const& root_uri, std::string const& directory) {
+html_documents& html_documents::add_documents_root(const std::string& root_uri, const std::string& directory) {
     critical_section_guard guard(_lock);
 
     // concat /
@@ -42,18 +42,18 @@ html_documents& html_documents::add_documents_root(std::string const& root_uri, 
     return *this;
 }
 
-html_documents& html_documents::add_content_type(std::string const& dot_ext, std::string const& content_type) {
+html_documents& html_documents::add_content_type(const std::string& dot_ext, const std::string& content_type) {
     critical_section_guard guard(_lock);
     _content_types.insert(std::make_pair(dot_ext, content_type));
     return *this;
 }
 
-html_documents& html_documents::set_default_document(std::string const& document) {
+html_documents& html_documents::set_default_document(const std::string& document) {
     _document = document;
     return *this;
 }
 
-bool html_documents::map(std::string const& uri, std::string& local) {
+bool html_documents::map(const std::string& uri, std::string& local) {
     bool ret_value = false;
 
     local.clear();
@@ -75,7 +75,7 @@ bool html_documents::map(std::string const& uri, std::string& local) {
     return ret_value;
 }
 
-return_t html_documents::load(std::string const& uri, std::string& content_type, binary_t& content) {
+return_t html_documents::load(const std::string& uri, std::string& content_type, binary_t& content) {
     return_t ret = errorcode_t::success;
     __try2 {
         // todo compare timestamp
@@ -100,7 +100,7 @@ return_t html_documents::load(std::string const& uri, std::string& content_type,
     return ret;
 }
 
-return_t html_documents::handler(std::string const& uri, network_session* session, http_request* request, http_response* response) {
+return_t html_documents::handler(const std::string& uri, network_session* session, http_request* request, http_response* response) {
     return_t ret = errorcode_t::success;
     if (test()) {
         std::string content_type;
@@ -115,7 +115,7 @@ return_t html_documents::handler(std::string const& uri, network_session* sessio
     return ret;
 }
 
-return_t html_documents::search_cache(std::string const& uri, binary_t& content) {
+return_t html_documents::search_cache(const std::string& uri, binary_t& content) {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
     std::map<std::string, binary_t>::iterator iter = _cache_map.find(uri);
@@ -127,14 +127,14 @@ return_t html_documents::search_cache(std::string const& uri, binary_t& content)
     return ret;
 }
 
-return_t html_documents::insert_cache(std::string const& uri, binary_t& content) {
+return_t html_documents::insert_cache(const std::string& uri, binary_t& content) {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
     _cache_map.insert(std::make_pair(uri, content));
     return ret;
 }
 
-return_t html_documents::loadfile(std::string const& uri, binary_t& content) {
+return_t html_documents::loadfile(const std::string& uri, binary_t& content) {
     return_t ret = errorcode_t::success;
 
     content.clear();
@@ -154,7 +154,7 @@ return_t html_documents::loadfile(std::string const& uri, binary_t& content) {
     return ret;
 }
 
-return_t html_documents::get_content_type(std::string const& uri, std::string& content_type) {
+return_t html_documents::get_content_type(const std::string& uri, std::string& content_type) {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
 

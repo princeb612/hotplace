@@ -49,7 +49,7 @@ http2_frame_header::http2_frame_header() : _payload_size(0), _type(0), _flags(0)
 http2_frame_header::http2_frame_header(h2_frame_t type)
     : _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_encoder(nullptr), _hpack_session(nullptr) {}
 
-http2_frame_header::http2_frame_header(http2_frame_header_t const& header) { read(&header, sizeof(http2_frame_header_t)); }
+http2_frame_header::http2_frame_header(const http2_frame_header_t& header) { read(&header, sizeof(http2_frame_header_t)); }
 
 http2_frame_header::http2_frame_header(const http2_frame_header& rhs) {
     _payload_size = rhs._payload_size;
@@ -181,7 +181,7 @@ void http2_frame_header::dump(stream_t* s) {
         s->printf("\n");
         s->printf("> %s [ ", constexpr_frame_flags);
 
-        resource->for_each_frame_flag_names(get_type(), get_flags(), [&](uint8 flag, std::string const& name) -> void { s->printf("%s ", name.c_str()); });
+        resource->for_each_frame_flag_names(get_type(), get_flags(), [&](uint8 flag, const std::string& name) -> void { s->printf("%s ", name.c_str()); });
 
         s->printf("]\n");
     }

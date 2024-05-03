@@ -58,7 +58,7 @@ payload_member::payload_member(uint128 value, bool change_endian, const char* na
     get_variant().set_uint128(value);
 }
 
-payload_member::payload_member(binary_t const& value, const char* name, const char* group) : _change_endian(false), _member_value_of(nullptr), _reserve(0) {
+payload_member::payload_member(const binary_t& value, const char* name, const char* group) : _change_endian(false), _member_value_of(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_binary_new(value);
 }
@@ -241,19 +241,19 @@ payload& payload::operator<<(payload_member* member) {
     return *this;
 }
 
-payload& payload::set_group(std::string const& name, bool optional) {
+payload& payload::set_group(const std::string& name, bool optional) {
     _option[name] = optional;
     return *this;
 }
 
-bool payload::get_group_condition(std::string const& name) {
+bool payload::get_group_condition(const std::string& name) {
     bool ret = true;
     maphint<std::string, bool> hint(_option);
     hint.find(name, &ret);
     return ret;
 }
 
-payload& payload::set_reference_value(std::string const& name, std::string const& ref) {
+payload& payload::set_reference_value(const std::string& name, const std::string& ref) {
     size_t space = 0;
     if (name.size() && ref.size()) {
         payload_member* member_ref = nullptr;
@@ -281,7 +281,7 @@ return_t payload::dump(binary_t& bin) {
     return ret;
 }
 
-return_t payload::read(binary_t const& bin) { return read((byte_t*)&bin[0], bin.size()); }
+return_t payload::read(const binary_t& bin) { return read((byte_t*)&bin[0], bin.size()); }
 
 return_t payload::read(byte_t* base, size_t size) {
     return_t ret = errorcode_t::success;
@@ -380,7 +380,7 @@ payload& payload::for_each(std::function<void(payload_member*)> func) {
     return *this;
 }
 
-payload_member* payload::select(std::string const& name) {
+payload_member* payload::select(const std::string& name) {
     payload_member* item = nullptr;
     maphint<std::string, payload_member*> hint(_members_map);
     hint.find(name, &item);

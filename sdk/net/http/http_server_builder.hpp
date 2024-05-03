@@ -52,8 +52,8 @@ class http_server_builder {
 
     http_server_builder& enable_https(bool enable);
     http_server_builder& set_port_https(uint16 port = 443);
-    http_server_builder& set_tls_certificate(std::string const& server_cert, std::string const& server_key);
-    http_server_builder& set_tls_cipher_list(std::string const& cipher_list);
+    http_server_builder& set_tls_certificate(const std::string& server_cert, const std::string& server_key);
+    http_server_builder& set_tls_cipher_list(const std::string& cipher_list);
     http_server_builder& set_tls_verify_peer(uint16 value);
 
     http_server_builder& enable_ipv4(bool enable);

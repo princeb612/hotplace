@@ -28,7 +28,7 @@ namespace net {
 
 class bearer_authentication_provider : public http_authenticate_provider {
    public:
-    bearer_authentication_provider(std::string const& realm);
+    bearer_authentication_provider(const std::string& realm);
     virtual ~bearer_authentication_provider();
 
     /**

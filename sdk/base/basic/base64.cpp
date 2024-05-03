@@ -287,9 +287,9 @@ std::string base64_encode(const byte_t* source, size_t source_size, int encoding
     return encoded;
 }
 
-std::string base64_encode(binary_t const& source, int encoding) { return base64_encode(&source[0], source.size(), encoding); }
+std::string base64_encode(const binary_t& source, int encoding) { return base64_encode(&source[0], source.size(), encoding); }
 
-std::string base64_encode(std::string const& source, int encoding) { return base64_encode((byte_t*)source.c_str(), source.size(), encoding); }
+std::string base64_encode(const std::string& source, int encoding) { return base64_encode((byte_t*)source.c_str(), source.size(), encoding); }
 
 return_t base64_decode(const char* source, size_t source_size, binary_t& decoded, int encoding) {
     return_t ret = errorcode_t::success;
@@ -304,7 +304,7 @@ return_t base64_decode(const char* source, size_t source_size, binary_t& decoded
     return ret;
 }
 
-return_t base64_decode(std::string const& source, binary_t& decoded, int encoding) {
+return_t base64_decode(const std::string& source, binary_t& decoded, int encoding) {
     return_t ret = errorcode_t::success;
 
     size_t size = 0;
@@ -324,11 +324,11 @@ binary_t base64_decode(const char* source, size_t source_size, int encoding) {
     return decoded;
 }
 
-binary_t base64_decode(binary_t const& source, int encoding) { return base64_decode((char*)&source[0], source.size(), encoding); }
+binary_t base64_decode(const binary_t& source, int encoding) { return base64_decode((char*)&source[0], source.size(), encoding); }
 
-binary_t base64_decode(std::string const& source, int encoding) { return base64_decode(source.c_str(), source.size(), encoding); }
+binary_t base64_decode(const std::string& source, int encoding) { return base64_decode(source.c_str(), source.size(), encoding); }
 
-std::string base64_decode_careful(std::string const& source, int encoding) { return base64_decode_careful(source.c_str(), source.size(), encoding); }
+std::string base64_decode_careful(const std::string& source, int encoding) { return base64_decode_careful(source.c_str(), source.size(), encoding); }
 
 std::string base64_decode_careful(const char* source, size_t source_size, int encoding) {
     std::string decoded;

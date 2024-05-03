@@ -42,7 +42,7 @@ void encode_test(variant& vt, binary_t& bin, std::string expect) {
 
         base16_encode(bin, hex);
 
-        if (0 == stricmp(hex.c_str(), expect.c_str())) {
+        if (hex == expect) {
             // match
         } else {
             ret = errorcode_t::mismatch;
@@ -51,8 +51,8 @@ void encode_test(variant& vt, binary_t& bin, std::string expect) {
         basic_stream bs;
 
         dump_memory(bin, &bs);
-        std::cout << "encoded " << hex.c_str() << std::endl;
-        std::cout << bs.c_str() << std::endl;
+        std::cout << "encoded " << hex << std::endl;
+        std::cout << bs << std::endl;
     }
 
     _test_case.test(ret, __FUNCTION__, "encoded %s expect %s", hex.c_str(), expect.c_str());
@@ -80,8 +80,8 @@ void cbor_test(cbor_object* root, const char* expected) {
 
             base16_encode(bin, concise);
 
-            std::cout << "diagnostic " << diagnostic.c_str() << std::endl;
-            std::cout << "concise    " << concise.c_str() << std::endl;
+            std::cout << "diagnostic " << diagnostic << std::endl;
+            std::cout << "concise    " << concise << std::endl;
 
             if (stricmp(concise.c_str(), expected)) {
                 ret = errorcode_t::mismatch;
@@ -217,7 +217,7 @@ void test_cbor_tstr(const char* value, const char* expect) {
     encode_test(vt, bin, expect);
 }
 
-void test_cbor_bstr(binary_t const& value, const char* expect) {
+void test_cbor_bstr(const binary_t& value, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor_test(cbor, expect);
@@ -232,7 +232,7 @@ void test_cbor_tstr_tag(const char* value, cbor_tag_t tag, const char* expect) {
     cbor->release();
 }
 
-void test_cbor_bstr_tag(binary_t const& value, cbor_tag_t tag, const char* expect) {
+void test_cbor_bstr_tag(const binary_t& value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
@@ -728,7 +728,7 @@ void whatsthis(int argc, char** argv) {
         dump_memory(what, &bs, 16, 2);
         std::cout << "what u want to know" << std::endl
                   << "< " << option.content << std::endl
-                  << "> " << diagnostic.c_str() << std::endl
+                  << "> " << diagnostic << std::endl
                   << "> dump" << std::endl
                   << bs.c_str() << std::endl;
     }

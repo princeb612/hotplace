@@ -205,6 +205,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     }
 
                     session->send((char*)&bin_resp[0], bin_resp.size());
+                    fflush(stdout);
 
                 } else if (h2_frame_t::h2_frame_priority == hdr->type) {
                     http2_frame_priority frame;
@@ -221,16 +222,17 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
                     if (frame.get_flags()) {
                         resp_settings.set_flags(h2_flag_ack);
+
+                        resp_settings.write(bin_resp);
+
+                        dump_memory(bin_resp, &bs, 16, 2);
+                        printf("dump (settings)\n%s\n", bs.c_str());
+
+                        session->send((char*)&bin_resp[0], bin_resp.size());
+
                     } else {
-                        resp_settings.add(h2_settings_enable_push, 0).add(h2_settings_max_concurrent_streams, 100);
+                        // resp_settings.add(h2_settings_enable_push, 0).add(h2_settings_max_concurrent_streams, 100);
                     }
-
-                    resp_settings.write(bin_resp);
-
-                    dump_memory(bin_resp, &bs, 16, 2);
-                    printf("dump (sessings)\n%s\n", bs.c_str());
-
-                    session->send((char*)&bin_resp[0], bin_resp.size());
 
                 } else if (h2_frame_t::h2_frame_push_promise == hdr->type) {
                     http2_frame_push_promise frame;

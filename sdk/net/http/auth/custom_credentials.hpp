@@ -24,8 +24,8 @@ class custom_credentials {
    public:
     custom_credentials();
 
-    custom_credentials& add(std::string const& username, std::string const& password);
-    bool verify(http_authenticate_provider* provider, std::string const& username, std::string const& password);
+    custom_credentials& add(const std::string& username, const std::string& password);
+    bool verify(http_authenticate_provider* provider, const std::string& username, const std::string& password);
 
    private:
     critical_section _lock;

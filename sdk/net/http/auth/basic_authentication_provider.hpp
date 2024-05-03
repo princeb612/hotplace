@@ -37,7 +37,7 @@ namespace net {
  */
 class basic_authentication_provider : public http_authenticate_provider {
    public:
-    basic_authentication_provider(std::string const& realm);
+    basic_authentication_provider(const std::string& realm);
     virtual ~basic_authentication_provider();
 
     /**

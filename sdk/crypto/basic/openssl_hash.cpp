@@ -80,7 +80,7 @@ return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, cons
     return ret;
 }
 
-return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, binary_t const& key) { return open(handle, algorithm, &key[0], key.size()); }
+return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, const binary_t& key) { return open(handle, algorithm, &key[0], key.size()); }
 
 return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const unsigned char* key_data, unsigned key_size) {
     return_t ret = errorcode_t::success;
@@ -156,7 +156,7 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
     return ret;
 }
 
-return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, binary_t const& key) { return open(handle, algorithm, &key[0], key.size()); }
+return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const binary_t& key) { return open(handle, algorithm, &key[0], key.size()); }
 
 return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key_data, unsigned key_size) {
     return_t ret = errorcode_t::success;
@@ -217,7 +217,7 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
     return ret;
 }
 
-return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key) {
+return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key) {
     return open(handle, algorithm, mode, &key[0], key.size());
 }
 
@@ -321,7 +321,7 @@ return_t openssl_hash::update(hash_context_t* handle, const byte_t* source_data,
     return ret;
 }
 
-return_t openssl_hash::update(hash_context_t* handle, binary_t const& input) { return update(handle, &input[0], input.size()); }
+return_t openssl_hash::update(hash_context_t* handle, const binary_t& input) { return update(handle, &input[0], input.size()); }
 
 return_t openssl_hash::finalize(hash_context_t* handle, byte_t** hash_data, size_t* hash_size) {
     return_t ret = errorcode_t::success;
@@ -489,7 +489,7 @@ crypt_poweredby_t openssl_hash::get_type() { return crypt_poweredby_t::openssl; 
 
 openssl_digest::openssl_digest() : openssl_hash() {}
 
-return_t openssl_digest::digest(const char* alg, binary_t const& input, binary_t& output) {
+return_t openssl_digest::digest(const char* alg, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -507,7 +507,7 @@ return_t openssl_digest::digest(const char* alg, binary_t const& input, binary_t
     return ret;
 }
 
-return_t openssl_digest::digest(hash_algorithm_t alg, binary_t const& input, binary_t& output) {
+return_t openssl_digest::digest(hash_algorithm_t alg, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -525,7 +525,7 @@ return_t openssl_digest::digest(hash_algorithm_t alg, binary_t const& input, bin
     return ret;
 }
 
-return_t openssl_digest::digest(const char* alg, basic_stream const& input, binary_t& output) {
+return_t openssl_digest::digest(const char* alg, const basic_stream& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -542,7 +542,7 @@ return_t openssl_digest::digest(const char* alg, basic_stream const& input, bina
     return ret;
 }
 
-return_t openssl_digest::digest(const char* alg, basic_stream const& input, std::string& hashstring, encoding_t encoding) {
+return_t openssl_digest::digest(const char* alg, const basic_stream& input, std::string& hashstring, encoding_t encoding) {
     return_t ret = errorcode_t::success;
     binary_t output;
     ret = digest(alg, input, output);
@@ -556,7 +556,7 @@ return_t openssl_digest::digest(const char* alg, basic_stream const& input, std:
     return ret;
 }
 
-return_t openssl_digest::digest(const char* alg, std::string const& input, binary_t& output) {
+return_t openssl_digest::digest(const char* alg, const std::string& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
 
@@ -573,7 +573,7 @@ return_t openssl_digest::digest(const char* alg, std::string const& input, binar
     return ret;
 }
 
-return_t openssl_digest::digest(const char* alg, std::string const& input, std::string& hashstring, encoding_t encoding) {
+return_t openssl_digest::digest(const char* alg, const std::string& input, std::string& hashstring, encoding_t encoding) {
     return_t ret = errorcode_t::success;
     binary_t output;
     ret = digest(alg, input, output);

@@ -142,7 +142,7 @@ std::string http_resource::get_frame_flag(uint8 flag) {
     return flag_name;
 }
 
-void http_resource::for_each_frame_flag_names(uint8 type, uint8 flags, std::function<void(uint8, std::string const&)> func) {
+void http_resource::for_each_frame_flag_names(uint8 type, uint8 flags, std::function<void(uint8, const std::string&)> func) {
     if (flags && func) {
         switch (type) {
             case h2_frame_t::h2_frame_settings:

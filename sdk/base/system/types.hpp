@@ -61,7 +61,7 @@ typedef struct _uint24_t {
     byte_t data[3];
 } uint24_t;
 
-return_t b24_i32(uint24_t const& u, uint32& value);
+return_t b24_i32(const uint24_t& u, uint32& value);
 return_t i32_b24(uint24_t& u, uint32 value);
 
 }  // namespace hotplace

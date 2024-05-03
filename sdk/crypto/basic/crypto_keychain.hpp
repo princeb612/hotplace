@@ -144,54 +144,54 @@ class crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param binary_t const& n [in]
-     * @param binary_t const& e [in]
-     * @param binary_t const& d [inopt]
+     * @param const binary_t& n [in]
+     * @param const binary_t& e [in]
+     * @param const binary_t& d [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& n, binary_t const& e, binary_t const& d,
+    return_t add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, const binary_t& n, const binary_t& e, const binary_t& d,
                      crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [inopt]
-     * @param binary_t const& n [in]
-     * @param binary_t const& e [in]
-     * @param binary_t const& d [inopt]
+     * @param const binary_t& n [in]
+     * @param const binary_t& e [in]
+     * @param const binary_t& d [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& n, binary_t const& e, binary_t const& d,
+    return_t add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d,
                      crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param binary_t const& n [in]
-     * @param binary_t const& e [in]
-     * @param binary_t const& d [inopt]
+     * @param const binary_t& n [in]
+     * @param const binary_t& e [in]
+     * @param const binary_t& d [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& n, binary_t const& e, binary_t const& d, binary_t const& p,
-                     binary_t const& q, binary_t const& dp, binary_t const& dq, binary_t const& qi, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p,
+                     const binary_t& q, const binary_t& dp, const binary_t& dq, const binary_t& qi, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
-     * @param binary_t const& n [in]
-     * @param binary_t const& e [in]
-     * @param binary_t const& d [inopt]
-     * @param binary_t const& p [inopt]
-     * @param binary_t const& q [inopt]
-     * @param binary_t const& dp [inopt]
-     * @param binary_t const& dq [inopt]
-     * @param binary_t const& qi [inopt]
+     * @param const binary_t& n [in]
+     * @param const binary_t& e [in]
+     * @param const binary_t& d [inopt]
+     * @param const binary_t& p [inopt]
+     * @param const binary_t& q [inopt]
+     * @param const binary_t& dp [inopt]
+     * @param const binary_t& dq [inopt]
+     * @param const binary_t& qi [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& n, binary_t const& e, binary_t const& d, binary_t const& p,
-                     binary_t const& q, binary_t const& dp, binary_t const& dq, binary_t const& qi, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p,
+                     const binary_t& q, const binary_t& dp, const binary_t& dq, const binary_t& qi, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief add
      * @param crypto_key* crypto_key
@@ -306,12 +306,12 @@ class crypto_keychain {
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @param binary_t const& x [in]
-     * @param binary_t const& y [in]
-     * @param binary_t const& d [inopt] private key
+     * @param const binary_t& x [in]
+     * @param const binary_t& y [in]
+     * @param const binary_t& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec(crypto_key* cryptokey, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_ec(crypto_key* cryptokey, int nid, const binary_t& x, const binary_t& y, const binary_t& d, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
      * @param crypto_key* cryptokey [in]
@@ -324,12 +324,12 @@ class crypto_keychain {
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @param binary_t const& x [in]
-     * @param binary_t const& y [in]
-     * @param binary_t const& d [inopt] private key
+     * @param const binary_t& x [in]
+     * @param const binary_t& y [in]
+     * @param const binary_t& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec(crypto_key* cryptokey, const char* kid, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
+    return_t add_ec(crypto_key* cryptokey, const char* kid, int nid, const binary_t& x, const binary_t& y, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
@@ -344,12 +344,12 @@ class crypto_keychain {
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @param binary_t const& x [in]
-     * @param binary_t const& y [in]
-     * @param binary_t const& d [inopt] private key
+     * @param const binary_t& x [in]
+     * @param const binary_t& y [in]
+     * @param const binary_t& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
+    return_t add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, const binary_t& y, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
@@ -360,12 +360,12 @@ class crypto_keychain {
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
-     * @param binary_t const& x [in]
+     * @param const binary_t& x [in]
      * @param uint8 ybit [in]
-     * @param binary_t const& d [inopt] private key
+     * @param const binary_t& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d,
+    return_t add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, uint8 ybit, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief   generate ec key
@@ -375,9 +375,9 @@ class crypto_keychain {
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
-     * @param   binary_t const& x [in]
+     * @param   const binary_t& x [in]
      * @param   uint8 ybit [in]
-     * @param   binary_t const& d [inopt] private key
+     * @param   const binary_t& d [inopt] private key
      * @return  error code (see error.hpp)
      * @sa      crypto_key::generate
      *
@@ -387,7 +387,7 @@ class crypto_keychain {
      *          keychain.add_ec (key, "kid", NID_ED448, crypto_use_t::use_sig); // ok
      *
      */
-    return_t add_ec(crypto_key* cryptokey, const char* kid, int nid, binary_t const& x, uint8 ybit, binary_t const& d,
+    return_t add_ec(crypto_key* cryptokey, const char* kid, int nid, const binary_t& x, uint8 ybit, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
@@ -398,12 +398,12 @@ class crypto_keychain {
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
-     * @param binary_t const& x [in]
-     * @param binary_t const& y [in]
-     * @param binary_t const& d [inopt] private key
+     * @param const binary_t& x [in]
+     * @param const binary_t& y [in]
+     * @param const binary_t& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
+    return_t add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, const binary_t& y, const binary_t& d,
                            crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
@@ -414,12 +414,12 @@ class crypto_keychain {
      *    415 : NID_X9_62_prime256v1 (prime256v1)
      *    715 : NID_secp384r1 (secp384r1)
      *    716 : NID_secp521r1 (secp521r1)
-     * @param binary_t const& x [in]
+     * @param const binary_t& x [in]
      * @param uint8 ybit [in]
-     * @param binary_t const& d [inopt] private key
+     * @param const binary_t& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d,
+    return_t add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, uint8 ybit, const binary_t& d,
                            crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate Ed25519, Ed448
@@ -431,9 +431,9 @@ class crypto_keychain {
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @param binary_t const& x [in]
-     * @param binary_t const& y [in]
-     * @param binary_t const& d [inopt] private key
+     * @param const binary_t& x [in]
+     * @param const binary_t& y [in]
+     * @param const binary_t& d [inopt] private key
      * @return error code (see error.hpp)
      * @remarks
      *      1 EdDSA provides high performance on a variety of platforms;
@@ -450,7 +450,7 @@ class crypto_keychain {
      *      Ed25519 and Ed448 use small private keys (32 or 57 bytes respectively), small public keys (32 or 57 bytes)
      *      and small signatures (64 or 114 bytes) with high security level at the same time (128-bit or 224-bit respectively).
      */
-    return_t add_ec_nid_OKP(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& d,
+    return_t add_ec_nid_OKP(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, const binary_t& d,
                             crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate ec key
@@ -465,12 +465,12 @@ class crypto_keychain {
      *    1035: NID_X448
      *    1087: NID_ED25519
      *    1088: NID_ED448
-     * @param binary_t const& x [in]
-     * @param binary_t const& y [in]
-     * @param binary_t const& d [inopt] private key
+     * @param const binary_t& x [in]
+     * @param const binary_t& y [in]
+     * @param const binary_t& d [inopt] private key
      * @return error code (see error.hpp)
      */
-    return_t add_ec(crypto_key* cryptokey, const char* kid, jwa_t alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
+    return_t add_ec(crypto_key* cryptokey, const char* kid, jwa_t alg, int nid, const binary_t& x, const binary_t& y, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief add
@@ -518,7 +518,7 @@ class crypto_keychain {
                     const byte_t* d, size_t size_d, crypto_use_t use = crypto_use_t::use_any);
     return_t add_ec(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const byte_t* x, size_t size_x, const byte_t* y, size_t size_y,
                     const byte_t* d, size_t size_d, crypto_use_t use = crypto_use_t::use_any);
-    return_t add_ec(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, binary_t const& x, binary_t const& y, binary_t const& d,
+    return_t add_ec(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const binary_t& x, const binary_t& y, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
 
     /**
@@ -558,36 +558,36 @@ class crypto_keychain {
     /**
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
-     * @param binary_t const& k [in]
+     * @param const binary_t& k [in]
      * @return error code (see error.hpp)
      */
-    return_t add_oct(crypto_key* cryptokey, binary_t const& k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct(crypto_key* cryptokey, const binary_t& k, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
-     * @param binary_t const& k [in]
+     * @param const binary_t& k [in]
      * @return error code (see error.hpp)
      */
-    return_t add_oct(crypto_key* cryptokey, const char* kid, binary_t const& k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct(crypto_key* cryptokey, const char* kid, const binary_t& k, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param binary_t const& k [in]
+     * @param const binary_t& k [in]
      * @return error code (see error.hpp)
      */
-    return_t add_oct(crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct(crypto_key* cryptokey, const char* kid, const char* alg, const binary_t& k, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
-     * @param binary_t const& k [in]
+     * @param const binary_t& k [in]
      * @return error code (see error.hpp)
      */
-    return_t add_oct(crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct(crypto_key* cryptokey, const char* kid, jwa_t alg, const binary_t& k, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief generate hmac key
      * @param crypto_key* cryptokey [in]
@@ -645,7 +645,7 @@ class crypto_keychain {
     /**
      * @brief   return key
      * @param   crypto_key* key [in]
-     * @param   std::string const& kid [in]
+     * @param   const std::string& kid [in]
      * @param   crypto_kty_t kty [in]
      * @param   return_t& code [out]
      * @remarks
@@ -653,7 +653,7 @@ class crypto_keychain {
      *          return key, errorcode_t::inaccurate    : not found kid, but kty exists
      *          return nullptr, errorcode_t::not_exist : not exist kid nor kty
      */
-    const EVP_PKEY* choose(crypto_key* key, std::string const& kid, crypto_kty_t kty, return_t& code);
+    const EVP_PKEY* choose(crypto_key* key, const std::string& kid, crypto_kty_t kty, return_t& code);
 
    protected:
 };

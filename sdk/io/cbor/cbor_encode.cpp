@@ -528,7 +528,7 @@ return_t cbor_encode::encode(binary_t& bin, byte_t const* value, size_t size) {
     return ret;
 }
 
-return_t cbor_encode::encode(binary_t& bin, binary_t const& value) { return encode(bin, &value[0], value.size()); }
+return_t cbor_encode::encode(binary_t& bin, const binary_t& value) { return encode(bin, &value[0], value.size()); }
 
 return_t cbor_encode::encode(binary_t& bin, char* value) {
     return_t ret = errorcode_t::success;

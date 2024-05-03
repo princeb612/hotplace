@@ -27,7 +27,7 @@ openssl_sign::~openssl_sign() {
     // do nothing
 }
 
-return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& input, binary_t& signature) {
+return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t mode, const binary_t& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -84,7 +84,7 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t mode, binary_t con
     return ret;
 }
 
-return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t mode, binary_t const& input, binary_t const& signature) {
+return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t mode, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -143,7 +143,7 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t mode, binary_t c
     return ret;
 }
 
-return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
+return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     EVP_MD_CTX* md_context = nullptr;
@@ -197,7 +197,7 @@ return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t mode, 
     return ret;
 }
 
-return_t openssl_sign::sign_hmac(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
+return_t openssl_sign::sign_hmac(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -213,7 +213,7 @@ return_t openssl_sign::sign_hmac(const EVP_PKEY* pkey, hash_algorithm_t mode, bi
     return ret;
 }
 
-return_t openssl_sign::sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
+return_t openssl_sign::sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -229,7 +229,7 @@ return_t openssl_sign::sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t
     return ret;
 }
 
-return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
+return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;
@@ -321,7 +321,7 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode, b
     return ret;
 }
 
-return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
+return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
 
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -369,7 +369,7 @@ return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t mo
     return ret;
 }
 
-return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t& signature) {
+return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
     EVP_MD_CTX* ctx = nullptr;
     int ret_test = 0;
@@ -404,7 +404,7 @@ return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t mode, b
     return ret;
 }
 
-return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
+return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     EVP_MD_CTX* md_context = nullptr;
@@ -460,7 +460,7 @@ return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t mode
     return ret;
 }
 
-return_t openssl_sign::verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
+return_t openssl_sign::verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -480,7 +480,7 @@ return_t openssl_sign::verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t mode, 
     return ret;
 }
 
-return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
+return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -496,7 +496,7 @@ return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm
     return ret;
 }
 
-return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
+return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;
@@ -555,7 +555,7 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode,
     return ret;
 }
 
-return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
+return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;
@@ -598,7 +598,7 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
     return ret;
 }
 
-return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t mode, binary_t const& input, binary_t const& signature) {
+return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t mode, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     EVP_MD_CTX* ctx = nullptr;
     int ret_test = 0;

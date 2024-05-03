@@ -20,7 +20,7 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-access_token_t::access_token_t(std::string const& client_id, std::string const& access_token, std::string const& refresh_token, uint16 expire)
+access_token_t::access_token_t(const std::string& client_id, const std::string& access_token, const std::string& refresh_token, uint16 expire)
     : _client_id(client_id), _access_token(access_token), _refresh_token(refresh_token) {
     _shared.make_share(this);
 }
@@ -55,8 +55,8 @@ oauth2_credentials::oauth2_credentials() {}
 
 oauth2_credentials::~oauth2_credentials() { clear(); }
 
-return_t oauth2_credentials::add(std::string& client_id, std::string& client_secret, std::string const& userid, std::string const& appname,
-                                 std::string const& redirect_uri, std::list<std::string> scope) {
+return_t oauth2_credentials::add(std::string& client_id, std::string& client_secret, const std::string& userid, const std::string& appname,
+                                 const std::string& redirect_uri, std::list<std::string> scope) {
     return_t ret = errorcode_t::success;
     __try2 {
         openssl_prng prng;
@@ -78,8 +78,8 @@ return_t oauth2_credentials::add(std::string& client_id, std::string& client_sec
     return ret;
 }
 
-return_t oauth2_credentials::insert(std::string const& client_id, std::string const& client_secret, std::string const& userid, std::string const& appname,
-                                    std::string const& redirect_uri, std::list<std::string> scope) {
+return_t oauth2_credentials::insert(const std::string& client_id, const std::string& client_secret, const std::string& userid, const std::string& appname,
+                                    const std::string& redirect_uri, std::list<std::string> scope) {
     return_t ret = errorcode_t::success;
     __try2 {
         critical_section_guard guard(_lock);
@@ -101,7 +101,7 @@ return_t oauth2_credentials::insert(std::string const& client_id, std::string co
     return ret;
 }
 
-return_t oauth2_credentials::remove(std::string const& client_id) {
+return_t oauth2_credentials::remove(const std::string& client_id) {
     return_t ret = errorcode_t::success;
     __try2 {
         critical_section_guard guard(_lock);
@@ -135,7 +135,7 @@ return_t oauth2_credentials::remove(std::string const& client_id) {
     return ret;
 }
 
-return_t oauth2_credentials::check(std::string const& client_id, std::string const& redirect_uri) {
+return_t oauth2_credentials::check(const std::string& client_id, const std::string& redirect_uri) {
     return_t ret = errorcode_t::success;
     __try2 {
         critical_section_guard guard(_lock);
@@ -162,7 +162,7 @@ return_t oauth2_credentials::check(std::string const& client_id, std::string con
     return ret;
 }
 
-return_t oauth2_credentials::list(std::string const& userid, std::list<std::string>& clientids) {
+return_t oauth2_credentials::list(const std::string& userid, std::list<std::string>& clientids) {
     return_t ret = errorcode_t::success;
     __try2 {
         clientids.clear();
@@ -198,7 +198,7 @@ return_t oauth2_credentials::grant_code(std::string& code, uint16 expire) {
     return ret;
 }
 
-return_t oauth2_credentials::verify_grant_code(std::string const& code) {
+return_t oauth2_credentials::verify_grant_code(const std::string& code) {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);
@@ -225,7 +225,7 @@ return_t oauth2_credentials::clear_grant_codes() {
     return ret;
 }
 
-return_t oauth2_credentials::grant(std::string& access_token, std::string& refresh_token, std::string const& client_id, uint16 expire) {
+return_t oauth2_credentials::grant(std::string& access_token, std::string& refresh_token, const std::string& client_id, uint16 expire) {
     return_t ret = errorcode_t::success;
     access_token_t* token = nullptr;
     __try2 {
@@ -275,7 +275,7 @@ return_t oauth2_credentials::grant(std::string& access_token, std::string& refre
     return ret;
 }
 
-return_t oauth2_credentials::revoke(std::string const& access_token) {
+return_t oauth2_credentials::revoke(const std::string& access_token) {
     return_t ret = errorcode_t::success;
     __try2 {
         critical_section_guard guard(_lock);
@@ -304,7 +304,7 @@ return_t oauth2_credentials::revoke(std::string const& access_token) {
     return ret;
 }
 
-return_t oauth2_credentials::isvalid(std::string const& access_token) {
+return_t oauth2_credentials::isvalid(const std::string& access_token) {
     return_t ret = errorcode_t::failed;
     __try2 {
         critical_section_guard guard(_lock);
@@ -338,7 +338,7 @@ return_t oauth2_credentials::isvalid(std::string const& access_token) {
     return ret;
 }
 
-return_t oauth2_credentials::refresh(std::string& next_access_token, std::string& next_refresh_token, std::string const& refresh_token, uint16 expire) {
+return_t oauth2_credentials::refresh(std::string& next_access_token, std::string& next_refresh_token, const std::string& refresh_token, uint16 expire) {
     return_t ret = errorcode_t::success;
     __try2 {
         critical_section_guard guard(_lock);

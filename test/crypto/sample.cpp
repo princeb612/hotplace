@@ -104,7 +104,7 @@ void test_crypt_routine(crypt_t* crypt_object, crypt_algorithm_t algorithm, cryp
                     if (option.verbose) {
                         std::cout << "aad" << std::endl;
                         dump_memory(&aad[0], aad.size(), &bs);
-                        std::cout << bs.c_str() << std::endl;
+                        std::cout << bs << std::endl;
                     }
                 }
 
@@ -117,11 +117,11 @@ void test_crypt_routine(crypt_t* crypt_object, crypt_algorithm_t algorithm, cryp
 
                             std::cout << "encrypted" << std::endl;
                             dump_memory(&encrypted[0], encrypted.size(), &bs);
-                            std::cout << bs.c_str() << std::endl;
+                            std::cout << bs << std::endl;
 
                             std::cout << "decrypted" << std::endl;
                             dump_memory(&decrypted[0], decrypted.size(), &bs);
-                            std::cout << bs.c_str() << std::endl;
+                            std::cout << bs << std::endl;
                         }
 
                         if (size != decrypted.size()) {
@@ -302,9 +302,9 @@ void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
     _test_case.reset_time();
 
     crypt_algorithm_t alg = vector->alg;
-    binary_t const& kek = base16_decode(vector->kek);
-    binary_t const& key = base16_decode(vector->key);
-    binary_t const& expect = base16_decode(vector->expect);
+    const binary_t& kek = base16_decode(vector->kek);
+    const binary_t& key = base16_decode(vector->key);
+    const binary_t& expect = base16_decode(vector->expect);
     const char* msg = vector->message;
 
     openssl_crypt crypt;
@@ -365,13 +365,13 @@ void test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
 
     const char* text = vector->text;
     const char* alg = vector->alg;
-    binary_t const& key = base16_decode_rfc(vector->key);
+    const binary_t& key = base16_decode_rfc(vector->key);
     uint32 counter = vector->counter;
-    binary_t const& iv = base16_decode_rfc(vector->iv);
-    binary_t const& input = convert(vector->msg);
-    binary_t const& aad = base16_decode_rfc(vector->aad);
-    binary_t const& expect = base16_decode_rfc(vector->expect);
-    binary_t const& tag1 = base16_decode_rfc(vector->tag);
+    const binary_t& iv = base16_decode_rfc(vector->iv);
+    const binary_t& input = convert(vector->msg);
+    const binary_t& aad = base16_decode_rfc(vector->aad);
+    const binary_t& expect = base16_decode_rfc(vector->expect);
+    const binary_t& tag1 = base16_decode_rfc(vector->tag);
 
     openssl_crypt crypt;
     binary_t encrypted;

@@ -53,13 +53,13 @@ http_server_builder& http_server_builder::set_port_https(uint16 port) {
     return *this;
 }
 
-http_server_builder& http_server_builder::set_tls_certificate(std::string const& server_cert, std::string const& server_key) {
+http_server_builder& http_server_builder::set_tls_certificate(const std::string& server_cert, const std::string& server_key) {
     _server_cert = server_cert;
     _server_key = server_key;
     return *this;
 }
 
-http_server_builder& http_server_builder::set_tls_cipher_list(std::string const& cipher_list) {
+http_server_builder& http_server_builder::set_tls_cipher_list(const std::string& cipher_list) {
     _tls_cipher_list = cipher_list;
     return *this;
 }

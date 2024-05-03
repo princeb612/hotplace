@@ -117,7 +117,7 @@ return_t cbor_object_signing_encryption::get(cose_context_t* handle, uint32& fla
     return ret;
 }
 
-return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_param_t id, binary_t const& bin) {
+return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_param_t id, const binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -149,7 +149,7 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_param_
     return ret;
 }
 
-return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input,
+return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input,
                                                  binary_t& output) {
     return_t ret = errorcode_t::success;
 
@@ -180,7 +180,7 @@ return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_
     return ret;
 }
 
-return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_key* key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -215,13 +215,13 @@ return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_
     return ret;
 }
 
-return_t cbor_object_signing_encryption::decrypt(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output, bool& result) {
+return_t cbor_object_signing_encryption::decrypt(cose_context_t* handle, crypto_key* key, const binary_t& input, binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
     ret = process(handle, key, input, output, cose_mode_t::cose_mode_recv);
     return ret;
 }
 
-return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, cose_alg_t alg, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, cose_alg_t alg, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     std::list<cose_alg_t> algs;
     algs.push_back(alg);
@@ -229,7 +229,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
     return ret;
 }
 
-return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -259,7 +259,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
     return ret;
 }
 
-return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key* key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -294,7 +294,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
     return ret;
 }
 
-return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle || nullptr == key) {
@@ -323,7 +323,7 @@ return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key*
     return ret;
 }
 
-return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key* key, binary_t const& input, binary_t& output) {
+return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key* key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -358,14 +358,14 @@ return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key*
     return ret;
 }
 
-return_t cbor_object_signing_encryption::verify(cose_context_t* handle, crypto_key* key, binary_t const& input, bool& result) {
+return_t cbor_object_signing_encryption::verify(cose_context_t* handle, crypto_key* key, const binary_t& input, bool& result) {
     return_t ret = errorcode_t::success;
     binary_t dummy;
     ret = process(handle, key, input, dummy, cose_mode_t::cose_mode_recv);
     return ret;
 }
 
-return_t cbor_object_signing_encryption::process(cose_context_t* handle, crypto_key* key, binary_t const& cbor, binary_t& output, cose_mode_t mode) {
+return_t cbor_object_signing_encryption::process(cose_context_t* handle, crypto_key* key, const binary_t& cbor, binary_t& output, cose_mode_t mode) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -508,7 +508,7 @@ return_t cbor_object_signing_encryption::subprocess(cose_context_t* handle, cryp
 }
 
 return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category,
-                                                    binary_t const& input) {
+                                                    const binary_t& input) {
     return_t ret = errorcode_t::success;
     __try2 {
         ret = preprocess_skeleton(handle, key, algs, category, input);
@@ -526,7 +526,7 @@ return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, cryp
     return ret;
 }
 
-return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, crypto_key* key, binary_t const& input) {
+return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, crypto_key* key, const binary_t& input) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -550,7 +550,7 @@ return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, cryp
 }
 
 return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category,
-                                                             binary_t const& input) {
+                                                             const binary_t& input) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -1385,7 +1385,7 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
     return ret;
 }
 
-return_t split(binary_t const& source, size_t& sizeof_ciphertext, binary_t& tag, size_t tagsize) {
+return_t split(const binary_t& source, size_t& sizeof_ciphertext, binary_t& tag, size_t tagsize) {
     // RFC 8152 Combine the authentication tag for encryption algorithms with the ciphertext.
     return_t ret = errorcode_t::success;
     tag.clear();

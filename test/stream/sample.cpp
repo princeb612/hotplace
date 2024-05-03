@@ -77,7 +77,7 @@ void test_dumpmxx_routine(const byte_t* dump_address, size_t dump_size, stream_t
     ansi_string bs;
 
     ret = dump_memory(dump_address, dump_size, &bs, hex_part, indent, rebase);
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
 
     _test_case.test(ret, __FUNCTION__, "dump addr %p size %zi hex %i indent %i rebase %zi", dump_address, dump_size, hex_part, indent, rebase);
 }
@@ -95,17 +95,17 @@ void test_dumpmemory() {
 
     std::string str(text);
     ret = dump_memory(str, &bs);
-    std::cout << "dump " << std::endl << bs.c_str() << std::endl;
+    std::cout << "dump " << std::endl << bs << std::endl;
     _test_case.test(ret, __FUNCTION__, "dump std::string");
 
     binary_t bin = convert(str);
     ret = dump_memory(bin, &bs);
-    std::cout << "dump " << std::endl << bs.c_str() << std::endl;
+    std::cout << "dump " << std::endl << bs << std::endl;
     _test_case.test(ret, __FUNCTION__, "dump std::vector<byte_t>");
 
     binary_t bin2;
     ret = dump_memory(bin2, &bs);
-    std::cout << "dump " << std::endl << bs.c_str() << std::endl;
+    std::cout << "dump " << std::endl << bs << std::endl;
     _test_case.test(ret, __FUNCTION__, "dump blank");
 }
 
@@ -132,7 +132,7 @@ void test_i128() {
     _test_case.assert(stream == "9223372036854775807", __FUNCTION__, "signed int64 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream.c_str() << std::endl;
+        std::cout << stream << std::endl;
         stream.clear();
     }
 
@@ -140,7 +140,7 @@ void test_i128() {
     _test_case.assert(stream == "170141183460469231731687303715884105727", __FUNCTION__, "signed int128 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream.c_str() << std::endl;
+        std::cout << stream << std::endl;
         stream.clear();
     }
 
@@ -148,7 +148,7 @@ void test_i128() {
     _test_case.assert(stream == "170141183460469231731687303715884105727", __FUNCTION__, "signed int128 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream.c_str() << std::endl;
+        std::cout << stream << std::endl;
         stream.clear();
     }
 
@@ -156,7 +156,7 @@ void test_i128() {
     _test_case.assert(stream == "340282366920938463463374607431768211455", __FUNCTION__, "unsigned int128 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream.c_str() << std::endl;
+        std::cout << stream << std::endl;
         stream.clear();
     }
 
@@ -164,7 +164,7 @@ void test_i128() {
     _test_case.assert(stream == "340282366920938463463374607431768211455", __FUNCTION__, "unsigned int128 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream.c_str() << std::endl;
+        std::cout << stream << std::endl;
         stream.clear();
     }
 
@@ -172,7 +172,7 @@ void test_i128() {
     _test_case.assert(stream == "340282366920938463463374607431768211455", __FUNCTION__, "unsigned int128 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream.c_str() << std::endl;
+        std::cout << stream << std::endl;
         stream.clear();
     }
 
@@ -180,7 +180,7 @@ void test_i128() {
     _test_case.assert(stream == "-170141183460469231731687303715884105728", __FUNCTION__, "signed int128 min %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream.c_str() << std::endl;
+        std::cout << stream << std::endl;
         stream.clear();
     }
 
@@ -188,7 +188,7 @@ void test_i128() {
     _test_case.assert(stream == "-170141183460469231731687303715884105728", __FUNCTION__, "signed int128 min %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream.c_str() << std::endl;
+        std::cout << stream << std::endl;
         stream.clear();
     }
 }
@@ -237,7 +237,7 @@ void test_vprintf() {
 
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << str.c_str() << std::endl;
+        std::cout << str << std::endl;
         str.clear();
     }
 
@@ -248,7 +248,7 @@ void test_vprintf() {
 
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << str.c_str() << std::endl;
+        std::cout << str << std::endl;
         str.clear();
     }
 
@@ -258,7 +258,7 @@ void test_vprintf() {
 
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << str.c_str() << std::endl;
+        std::cout << str << std::endl;
         str.clear();
     }
 
@@ -277,15 +277,15 @@ void test_stream() {
     va << 1 << "test string";  // argc 2
 
     sprintf(&bs, "value1={1} value2={2}", va);  // value1=1 value2=test string
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
     bs.clear();
 
     sprintf(&bs, "value1={2} value2={1}", va);  // value1=test string value2=1
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
     bs.clear();
 
     sprintf(&bs, "value1={2} value2={1} value3={3}", va);  // value1=test string value2=1 value3={3}
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
 
     _test_case.assert(true, __FUNCTION__, "stream");
 }
@@ -327,7 +327,7 @@ void test_stream_stdmap() {
         stdmap["key1"] = "value1";
         std::string value = stdmap["key"];
 
-        std::cout << "key=" << value.c_str() << std::endl;
+        std::cout << "key=" << value << std::endl;
 
         _test_case.assert("value" == value, __FUNCTION__, "basic_stream");
     }
@@ -338,7 +338,7 @@ void test_stream_stdmap() {
         stdmap["key1"] = "value1";
         std::string value = stdmap["key"];
 
-        std::cout << "key=" << value.c_str() << std::endl;
+        std::cout << "key=" << value << std::endl;
 
         _test_case.assert("value" == value, __FUNCTION__, "ansi_string");
     }
@@ -352,7 +352,7 @@ void test_stream_stdmap() {
 
         basic_stream bs;
         dump_memory(value.data(), (size_t)value.size(), &bs);
-        std::cout << bs.c_str() << std::endl;
+        std::cout << bs << std::endl;
 
         _test_case.assert(wide_string(L"value") == value, __FUNCTION__, "wide_string");
     }
@@ -371,7 +371,7 @@ void test_vtprintf() {
     v.set_str_new("sample");
     vtprintf(&bs, v.content());
 
-    std::cout << bs.c_str() << std::endl;
+    std::cout << bs << std::endl;
 
     _test_case.assert(true, __FUNCTION__, "vtprintf");
 }

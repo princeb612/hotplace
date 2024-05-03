@@ -132,22 +132,22 @@ return_t vprintf(stream_t* stream, const char* fmt, Args... args) {
  *  vtprintf (&bs, v);
  *  variant_free (v);
  *
- *  std::cout << bs.c_str () << std::endl;
+ *  std::cout << bs << std::endl;
  */
 enum vtprintf_style_t {
     vtprintf_style_normal = 0,
     vtprintf_style_cbor = 1,
 };
-return_t vtprintf(stream_t* stream, variant_t const& vt, vtprintf_style_t style = vtprintf_style_normal);
+return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style = vtprintf_style_normal);
 
 //
 // part - dump
 //
 
 return_t dump_memory(const char* data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
-return_t dump_memory(std::string const& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
-return_t dump_memory(binary_t const& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
-return_t dump_memory(basic_stream const& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+return_t dump_memory(const std::string& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+return_t dump_memory(const binary_t& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+return_t dump_memory(const basic_stream& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
 return_t dump_memory(bufferio_context_t* context, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
 return_t dump_memory(variant_t vt, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
 

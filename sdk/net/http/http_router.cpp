@@ -43,7 +43,7 @@ http_router& http_router::add(const char* uri, http_request_function_t handler, 
     return *this;
 }
 
-http_router& http_router::add(std::string const& uri, http_request_handler_t handler, http_authenticate_provider* auth_provider, bool upref) {
+http_router& http_router::add(const std::string& uri, http_request_handler_t handler, http_authenticate_provider* auth_provider, bool upref) {
     critical_section_guard guard(_lock);
 
     http_router_t route;
@@ -62,7 +62,7 @@ http_router& http_router::add(std::string const& uri, http_request_handler_t han
     return *this;
 }
 
-http_router& http_router::add(std::string const& uri, http_request_function_t handler, http_authenticate_provider* auth_provider, bool upref) {
+http_router& http_router::add(const std::string& uri, http_request_function_t handler, http_authenticate_provider* auth_provider, bool upref) {
     critical_section_guard guard(_lock);
 
     http_router_t route;

@@ -69,7 +69,7 @@ return_t key_value::set(const char* name, const char* value, int mode) {
     return ret;
 }
 
-return_t key_value::set(std::string const& key, std::string const& value, int mode) {
+return_t key_value::set(const std::string& key, const std::string& value, int mode) {
     return_t ret = errorcode_t::success;
     ret = set(key.c_str(), value.c_str(), mode);
     return ret;
@@ -77,7 +77,7 @@ return_t key_value::set(std::string const& key, std::string const& value, int mo
 
 return_t key_value::update(const char* name, const char* value) { return set(name, value, key_value_mode_t::update); }
 
-return_t key_value::update(std::string const& name, std::string const& value) { return update(name.c_str(), value.c_str()); }
+return_t key_value::update(const std::string& name, const std::string& value) { return update(name.c_str(), value.c_str()); }
 
 return_t key_value::remove(const char* name) {
     return_t ret = errorcode_t::success;
@@ -191,7 +191,7 @@ return_t key_value::query(const char* name, std::string& value) {
     return ret;
 }
 
-return_t key_value::query(std::string const& name, std::string& value) {
+return_t key_value::query(const std::string& name, std::string& value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -214,7 +214,7 @@ return_t key_value::query(std::string const& name, std::string& value) {
     return ret;
 }
 
-std::string key_value::get(std::string const& name) {
+std::string key_value::get(const std::string& name) {
     std::string ret_value;
     query(name.c_str(), ret_value);
     return ret_value;
@@ -261,7 +261,7 @@ key_value& key_value::operator<<(key_value& rhs) {
     return *this;
 }
 
-void key_value::foreach (std::function<void(std::string const&, std::string const&, void*)> func, void* param) {
+void key_value::foreach (std::function<void(const std::string&, const std::string&, void*)> func, void* param) {
     critical_section_guard guard(_lock);
     key_order_map_t::iterator order_iter;
     for (order_iter = _order_map.begin(); order_iter != _order_map.end(); order_iter++) {

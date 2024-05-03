@@ -46,20 +46,20 @@ class crypt_t {
      * @param crypt_context_t** handle [out]
      * @param crypt_algorithm_t algorithm [in]
      * @param crypt_mode_t mode [in]
-     * @param binary_t const& key [in]
-     * @param binary_t const& iv [in]
+     * @param const binary_t& key [in]
+     * @param const binary_t& iv [in]
      * @return error code (see error.hpp)
      */
-    virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, binary_t const& key, binary_t const& iv) = 0;
+    virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv) = 0;
     /**
      * @brief create a context handle (symmetric)
      * @param crypt_context_t** handle [out]
      * @param const char* cipher [in] ex. "aes-128-cbc"
-     * @param binary_t const& key [in]
-     * @param binary_t const& iv [in]
+     * @param const binary_t& key [in]
+     * @param const binary_t& iv [in]
      * @return error code (see error.hpp)
      */
-    virtual return_t open(crypt_context_t** handle, const char* cipher, binary_t const& key, binary_t const& iv) = 0;
+    virtual return_t open(crypt_context_t** handle, const char* cipher, const binary_t& key, const binary_t& iv) = 0;
     /**
      * @brief destroy a context handle
      * @param crypt_context_t* handle [in]
@@ -100,12 +100,12 @@ class crypt_t {
     /**
      * @brief encrypt
      * @param crypt_context_t* handle [in]
-     * @param binary_t const& input [in]
+     * @param const binary_t& input [in]
      * @param binary_t& out [out]
      * @return error code (see error.hpp)
      * @example
      */
-    virtual return_t encrypt(crypt_context_t* handle, binary_t const& input, binary_t& out) = 0;
+    virtual return_t encrypt(crypt_context_t* handle, const binary_t& input, binary_t& out) = 0;
 
     /**
      * @brief encrypt (GCM)
@@ -145,11 +145,11 @@ class crypt_t {
     /**
      * @brief decrypt
      * @param crypt_context_t* handle [in]
-     * @param binary_t const& input [in]
+     * @param const binary_t& input [in]
      * @param binary_t& out [out]
      * @return error code (see error.hpp)
      */
-    virtual return_t decrypt(crypt_context_t* handle, binary_t const& input, binary_t& out) = 0;
+    virtual return_t decrypt(crypt_context_t* handle, const binary_t& input, binary_t& out) = 0;
 
     /**
      * @brief decrypt (GCM)
@@ -227,13 +227,13 @@ class hash_t {
     /**
      * @brief open (HMAC, CMAC)
      */
-    virtual return_t open(hash_context_t** handle, const char* algorithm, binary_t const& key) = 0;
+    virtual return_t open(hash_context_t** handle, const char* algorithm, const binary_t& key) = 0;
 
     virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const unsigned char* key = nullptr, unsigned keysize = 0) = 0;
     /**
      * @brief open (HMAC)
      */
-    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, binary_t const& key) = 0;
+    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const binary_t& key) = 0;
     /**
      * @brief open (CMAC)
      * @param hash_context_t** handle [out]
@@ -247,7 +247,7 @@ class hash_t {
     /**
      * @brief open (CMAC)
      */
-    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, binary_t const& key) = 0;
+    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, const binary_t& key) = 0;
     /**
      * @brief close
      * @param hash_context_t* handle [in]
@@ -278,7 +278,7 @@ class hash_t {
      *        hash.free_data(output_data);
      */
     virtual return_t update(hash_context_t* handle, const byte_t* data, size_t datasize) = 0;
-    virtual return_t update(hash_context_t* handle, binary_t const& input) = 0;
+    virtual return_t update(hash_context_t* handle, const binary_t& input) = 0;
     /**
      * @brief get
      * @param hash_context_t* handle [in]

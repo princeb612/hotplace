@@ -54,7 +54,7 @@ namespace hotplace {
  *  {
  *      myprintf_context_t context;
  *      printf_runtime (&context, &callback_printf, "%s %i %1.1f", "sample", 1, 1.1);
- *      std::cout << context.str.c_str () << std::endl;
+ *      std::cout << context.str << std::endl;
  *  }
  */
 

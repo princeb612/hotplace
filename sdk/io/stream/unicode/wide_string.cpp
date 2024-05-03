@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/io/stream/stream.hpp>
 #include <sdk/io/stream/string.hpp>
 #include <sdk/io/string/string.hpp>
 
@@ -270,7 +271,7 @@ wide_string& wide_string::operator=(double buf) {
     return *this;
 }
 
-wide_string& wide_string::operator=(wide_string& buf) {
+wide_string& wide_string::operator=(const wide_string& buf) {
     clear();
     write(buf.data(), buf.size());
     return *this;
@@ -332,7 +333,7 @@ wide_string& wide_string::operator+=(double buf) {
     return *this;
 }
 
-wide_string& wide_string::operator+=(wide_string& buf) {
+wide_string& wide_string::operator+=(const wide_string& buf) {
     write(buf.data(), buf.size());
     return *this;
 }
@@ -393,14 +394,14 @@ wide_string& wide_string::operator<<(double buf) {
     return *this;
 }
 
-wide_string& wide_string::operator<<(wide_string& buf) {
+wide_string& wide_string::operator<<(const wide_string& buf) {
     write(buf.data(), buf.size());
     return *this;
 }
 
-int wide_string::compare(wide_string& rhs) { return wcscmp(c_str(), rhs.c_str()); }
+int wide_string::compare(const wide_string& rhs) { return wcscmp(c_str(), rhs.c_str()); }
 
-int wide_string::compare(wide_string& lhs, wide_string& rhs) { return wcscmp(lhs.c_str(), rhs.c_str()); }
+int wide_string::compare(const wide_string& lhs, const wide_string& rhs) { return wcscmp(lhs.c_str(), rhs.c_str()); }
 
 bool wide_string::operator<(const wide_string& rhs) const { return 0 > wcscmp(c_str(), rhs.c_str()); }
 
@@ -450,6 +451,23 @@ bool wide_string::operator!=(const wchar_t* input) {
         }
     }
     return ret;
+}
+
+std::wstring& operator+=(std::wstring& lhs, const wide_string& rhs) {
+    lhs += rhs.c_str();
+    return lhs;
+}
+
+std::wstring& operator<<(std::wstring& lhs, const wide_string& rhs) {
+    lhs += rhs.c_str();
+    return lhs;
+}
+
+std::ostream& operator<<(std::ostream& lhs, const wide_string& rhs) {
+    basic_stream bs;
+    W2A(&bs, rhs.c_str());
+    lhs << bs.c_str();
+    return lhs;
 }
 
 }  // namespace io

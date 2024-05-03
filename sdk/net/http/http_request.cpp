@@ -142,9 +142,9 @@ return_t http_request::open(const char* request, uint32 flags) {
     return ret;
 }
 
-return_t http_request::open(basic_stream const& request, uint32 flags) { return open(request.c_str(), request.size(), flags); }
+return_t http_request::open(const basic_stream& request, uint32 flags) { return open(request.c_str(), request.size(), flags); }
 
-return_t http_request::open(std::string const& request, uint32 flags) { return open(request.c_str(), request.size(), flags); }
+return_t http_request::open(const std::string& request, uint32 flags) { return open(request.c_str(), request.size(), flags); }
 
 return_t http_request::close() {
     return_t ret = errorcode_t::success;
@@ -161,7 +161,7 @@ http_uri& http_request::get_http_uri() { return _uri; }
 
 const char* http_request::get_method() { return _method.c_str(); }
 
-http_request& http_request::compose(http_method_t method, std::string const& uri, std::string const& body) {
+http_request& http_request::compose(http_method_t method, const std::string& uri, const std::string& body) {
     http_resource* resource = http_resource::get_instance();
     basic_stream stream;
 

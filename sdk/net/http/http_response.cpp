@@ -137,9 +137,9 @@ return_t http_response::open(const char* response) {
     return ret;
 }
 
-return_t http_response::open(basic_stream const& response) { return open(response.c_str(), response.size()); }
+return_t http_response::open(const basic_stream& response) { return open(response.c_str(), response.size()); }
 
-return_t http_response::open(std::string const& response) { return open(response.c_str(), response.size()); }
+return_t http_response::open(const std::string& response) { return open(response.c_str(), response.size()); }
 
 return_t http_response::close() {
     return_t ret = errorcode_t::success;
@@ -172,7 +172,7 @@ http_response& http_response::compose(int status_code, const char* content_type,
     return *this;
 }
 
-http_response& http_response::compose(int status_code, std::string const& content_type, const char* content, ...) {
+http_response& http_response::compose(int status_code, const std::string& content_type, const char* content, ...) {
     close();
 
     _content_type = content_type;
@@ -265,7 +265,7 @@ http_response& http_response::get_response(basic_stream& bs) {
 
 std::string http_response::get_version() { return "HTTP/1.1"; }
 
-http_response& http_response::operator=(http_response const& object) {
+http_response& http_response::operator=(const http_response& object) {
     _header = object._header;
     _request = object._request;
     _content_type = object._content_type;

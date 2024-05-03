@@ -50,7 +50,7 @@ class http_header {
      * @param   std::string     value       [IN]
      * @return  *this
      */
-    http_header& add(std::string const& header, std::string const& value);
+    http_header& add(const std::string& header, const std::string& value);
 
     /**
      * @brief   clear
@@ -60,7 +60,7 @@ class http_header {
 
     /**
      * @brief   conversion
-     * @param   std::string const& value [in]
+     * @param   const std::string& value [in]
      * @param   key_value& kv [out]
      * @return  error code (see error.hpp)
      * @sample
@@ -78,7 +78,7 @@ class http_header {
      *          std::string nc = kv.get("nc");
      *          std::string cnonce = kv.get("cnonce");
      */
-    static return_t to_keyvalue(std::string const& value, key_value& kv);
+    static return_t to_keyvalue(const std::string& value, key_value& kv);
 
     /**
      * @brief   read a header
@@ -121,7 +121,7 @@ class http_header {
      */
     return_t get_headers(std::string& contents);
 
-    http_header& operator=(http_header const& object);
+    http_header& operator=(const http_header& object);
 
    protected:
     typedef std::list<std::string> http_header_list_t;

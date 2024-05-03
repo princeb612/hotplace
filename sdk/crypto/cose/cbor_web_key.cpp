@@ -58,7 +58,7 @@ return_t cbor_web_key::load(crypto_key* crypto_key, const char* buffer, int flag
     return ret;
 }
 
-return_t cbor_web_key::load(crypto_key* crypto_key, std::string const& buf, int flags) { return load(crypto_key, buf.c_str(), flags); }
+return_t cbor_web_key::load(crypto_key* crypto_key, const std::string& buf, int flags) { return load(crypto_key, buf.c_str(), flags); }
 
 typedef struct _cose_object_key {
     int type;
@@ -99,7 +99,7 @@ return_t cbor_web_key::load(crypto_key* crypto_key, const byte_t* buffer, size_t
     return ret;
 }
 
-return_t cbor_web_key::load(crypto_key* crypto_key, binary_t const& buffer, int flags) {
+return_t cbor_web_key::load(crypto_key* crypto_key, const binary_t& buffer, int flags) {
     return_t ret = errorcode_t::success;
 
     __try2 {

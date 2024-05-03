@@ -26,13 +26,13 @@ rfc2617_digest& rfc2617_digest::add(const char* data) {
     return *this;
 }
 
-rfc2617_digest& rfc2617_digest::add(std::string const& data) {
+rfc2617_digest& rfc2617_digest::add(const std::string& data) {
     _stream << data;
     _sequence << data;
     return *this;
 }
 
-rfc2617_digest& rfc2617_digest::add(basic_stream const& data) {
+rfc2617_digest& rfc2617_digest::add(const basic_stream& data) {
     _stream << data;
     _sequence << data;
     return *this;
@@ -44,19 +44,19 @@ rfc2617_digest& rfc2617_digest::operator<<(const char* data) {
     return *this;
 }
 
-rfc2617_digest& rfc2617_digest::operator<<(std::string const& data) {
+rfc2617_digest& rfc2617_digest::operator<<(const std::string& data) {
     _stream << data;
     _sequence << data;
     return *this;
 }
 
-rfc2617_digest& rfc2617_digest::operator<<(basic_stream const& data) {
+rfc2617_digest& rfc2617_digest::operator<<(const basic_stream& data) {
     _stream << data;
     _sequence << data;
     return *this;
 }
 
-rfc2617_digest& rfc2617_digest::digest(std::string const& algorithm) {
+rfc2617_digest& rfc2617_digest::digest(const std::string& algorithm) {
     openssl_digest dgst;
     std::string digest_value;
 

@@ -22,7 +22,7 @@ namespace io {
  * atoi (int128)
  */
 template <typename TYPE>
-TYPE t_atoi(std::string const& in) {
+TYPE t_atoi(const std::string& in) {
     return_t ret = errorcode_t::success;
     TYPE res = 0;
 
@@ -84,8 +84,8 @@ T t_htoi(const char* hex) {
     return value;
 }
 
-int128 atoi128(std::string const& in);
-uint128 atou128(std::string const& in);
+int128 atoi128(const std::string& in);
+uint128 atou128(const std::string& in);
 
 #endif
 

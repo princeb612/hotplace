@@ -33,7 +33,7 @@ class crypto_key_object {
             alg = _alg;
         }
     }
-    crypto_key_object(crypto_key_object const& key) {
+    crypto_key_object(const crypto_key_object& key) {
         pkey = key.pkey;
         use = key.use;
         kid = key.kid;

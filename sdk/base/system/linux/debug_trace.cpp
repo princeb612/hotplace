@@ -27,7 +27,7 @@ return_t trace(return_t errorcode) {
         if (trace_option_t::trace_bt & option) {
             basic_stream stream;
             debug_trace(&stream);
-            std::cout << stream.c_str() << std::endl;
+            std::cout << stream << std::endl;
         }
     }
     return ret;

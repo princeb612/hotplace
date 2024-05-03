@@ -169,7 +169,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t 
     return add_rsa(cryptokey, kid, hint ? hint->alg_name : nullptr, bits, use);
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& n, binary_t const& e, binary_t const& d,
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, const binary_t& n, const binary_t& e, const binary_t& d,
                                   crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
@@ -226,7 +226,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
     return ret;
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& n, binary_t const& e, binary_t const& d,
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d,
                                   crypto_use_t use) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
@@ -234,8 +234,8 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t 
     return add_rsa(cryptokey, kid, hint ? hint->alg_name : nullptr, n, e, d, use);
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& n, binary_t const& e, binary_t const& d,
-                                  binary_t const& p, binary_t const& q, binary_t const& dp, binary_t const& dq, binary_t const& qi, crypto_use_t use) {
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, const binary_t& n, const binary_t& e, const binary_t& d,
+                                  const binary_t& p, const binary_t& q, const binary_t& dp, const binary_t& dq, const binary_t& qi, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     RSA* rsa = nullptr;
@@ -320,8 +320,8 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
     return ret;
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& n, binary_t const& e, binary_t const& d, binary_t const& p,
-                                  binary_t const& q, binary_t const& dp, binary_t const& dq, binary_t const& qi, crypto_use_t use) {
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p,
+                                  const binary_t& q, const binary_t& dp, const binary_t& dq, const binary_t& qi, crypto_use_t use) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
 
@@ -566,15 +566,15 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const c
     return ret;
 }
 
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use) {
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, int nid, const binary_t& x, const binary_t& y, const binary_t& d, crypto_use_t use) {
     return add_ec(cryptokey, nullptr, nullptr, nid, x, y, d, use);
 }
 
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, int nid, binary_t const& x, binary_t const& y, binary_t const& d, crypto_use_t use) {
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, int nid, const binary_t& x, const binary_t& y, const binary_t& d, crypto_use_t use) {
     return add_ec(cryptokey, kid, nullptr, nid, x, y, d, use);
 }
 
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, const binary_t& y, const binary_t& d,
                                  crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
@@ -595,7 +595,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const c
     return ret;
 }
 
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d,
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, uint8 ybit, const binary_t& d,
                                  crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
@@ -616,12 +616,12 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, const c
     return ret;
 }
 
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, int nid, binary_t const& x, uint8 ybit, binary_t const& d, crypto_use_t use) {
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, int nid, const binary_t& x, uint8 ybit, const binary_t& d, crypto_use_t use) {
     return add_ec(cryptokey, kid, nullptr, nid, x, ybit, d, use);
 }
 
-return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& y,
-                                        binary_t const& d, crypto_use_t use) {
+return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, const binary_t& y,
+                                        const binary_t& d, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     EC_KEY* ec = nullptr;
@@ -754,7 +754,7 @@ return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, 
     return ret;
 }
 
-return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, uint8 ybit, binary_t const& d,
+return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, uint8 ybit, const binary_t& d,
                                         crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
@@ -872,7 +872,7 @@ return_t crypto_keychain::add_ec_nid_EC(crypto_key* cryptokey, const char* kid, 
     return ret;
 }
 
-return_t crypto_keychain::add_ec_nid_OKP(crypto_key* cryptokey, const char* kid, const char* alg, int nid, binary_t const& x, binary_t const& d,
+return_t crypto_keychain::add_ec_nid_OKP(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, const binary_t& d,
                                          crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
@@ -905,7 +905,7 @@ return_t crypto_keychain::add_ec_nid_OKP(crypto_key* cryptokey, const char* kid,
     return ret;
 }
 
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, jwa_t alg, int nid, binary_t const& x, binary_t const& y, binary_t const& d,
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* kid, jwa_t alg, int nid, const binary_t& x, const binary_t& y, const binary_t& d,
                                  crypto_use_t use) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
@@ -1250,8 +1250,8 @@ return_t crypto_keychain::add_ec(crypto_key* crypto_key, const char* kid, const 
     return ret;
 }
 
-return_t crypto_keychain::add_ec(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, binary_t const& x, binary_t const& y,
-                                 binary_t const& d, crypto_use_t use) {
+return_t crypto_keychain::add_ec(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const binary_t& x, const binary_t& y,
+                                 const binary_t& d, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -1292,13 +1292,13 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, jwa_t 
     return add_oct(cryptokey, kid, hint ? hint->alg_name : nullptr, size, use);
 }
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, binary_t const& k, crypto_use_t use) { return add_oct(cryptokey, nullptr, nullptr, k, use); }
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const binary_t& k, crypto_use_t use) { return add_oct(cryptokey, nullptr, nullptr, k, use); }
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, binary_t const& k, crypto_use_t use) {
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, const binary_t& k, crypto_use_t use) {
     return add_oct(cryptokey, kid, nullptr, k, use);
 }
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, const char* alg, binary_t const& k, crypto_use_t use) {
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, const char* alg, const binary_t& k, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
 
@@ -1328,7 +1328,7 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, const 
     return ret;
 }
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, jwa_t alg, binary_t const& k, crypto_use_t use) {
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const char* kid, jwa_t alg, const binary_t& k, crypto_use_t use) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
 
@@ -1435,7 +1435,7 @@ return_t crypto_keychain::add_oct_b16(crypto_key* crypto_key, const char* kid, c
     return add_oct(crypto_key, kid, alg, base16_decode(k), use);
 }
 
-const EVP_PKEY* crypto_keychain::choose(crypto_key* key, std::string const& kid, crypto_kty_t kty, return_t& code) {
+const EVP_PKEY* crypto_keychain::choose(crypto_key* key, const std::string& kid, crypto_kty_t kty, return_t& code) {
     const EVP_PKEY* pkey = nullptr;
     code = errorcode_t::not_exist;
     if (key) {

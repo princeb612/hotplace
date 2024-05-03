@@ -223,7 +223,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
     return ret;
 }
 
-return_t cbor_reader::parse(cbor_reader_context_t* handle, binary_t const& expression) {
+return_t cbor_reader::parse(cbor_reader_context_t* handle, const binary_t& expression) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -578,7 +578,7 @@ return_t cbor_reader::cbor_foreach(cbor_reader_context_t* handle, void (*functio
     return cbor_foreach_t<stream_t>(handle, function, param);
 }
 
-return_t cbor_parse(cbor_object** object, binary_t const& cbor) {
+return_t cbor_parse(cbor_object** object, const binary_t& cbor) {
     return_t ret = errorcode_t::success;
     cbor_reader reader;
     cbor_reader_context_t* reader_context = nullptr;

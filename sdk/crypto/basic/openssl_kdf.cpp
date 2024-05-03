@@ -24,7 +24,7 @@ openssl_kdf::openssl_kdf() {}
 
 openssl_kdf::~openssl_kdf() {}
 
-return_t openssl_kdf::hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info) {
+return_t openssl_kdf::hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, const binary_t& key, const binary_t& salt, const binary_t& info) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* ctx = nullptr;
     int ret_openssl = 0;
@@ -65,7 +65,7 @@ return_t openssl_kdf::hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t d
     return ret;
 }
 
-return_t openssl_kdf::hmac_kdf(binary_t& derived, const char* alg, size_t dlen, binary_t const& key, binary_t const& salt, binary_t const& info) {
+return_t openssl_kdf::hmac_kdf(binary_t& derived, const char* alg, size_t dlen, const binary_t& key, const binary_t& salt, const binary_t& info) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -89,7 +89,7 @@ return_t openssl_kdf::hmac_kdf(binary_t& derived, const char* alg, size_t dlen, 
     return ret;
 }
 
-return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, const char* alg, binary_t const& salt, binary_t const& ikm) {
+return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, const char* alg, const binary_t& salt, const binary_t& ikm) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_mac mac;
@@ -128,7 +128,7 @@ return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, const char* alg, binary_t 
     return ret;
 }
 
-return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info) {
+return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, const binary_t& prk, const binary_t& info) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -175,7 +175,7 @@ return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, b
     return ret;
 }
 
-return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, size_t dlen, binary_t const& prk, binary_t const& info) {
+return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, size_t dlen, const binary_t& prk, const binary_t& info) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     EVP_CIPHER_CTX* context = nullptr;
@@ -338,7 +338,7 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
 // Likewise, the CKDF-Expand(PRK, info, L) function takes the PRK result from CKDF-Extract, an arbitrary "info" argument and a requested number of bytes
 // to produce. It calculates the L-byte result, called the "output keying material" (OKM)
 
-return_t openssl_kdf::cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& ikm, binary_t const& salt, binary_t const& info) {
+return_t openssl_kdf::cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info) {
     return_t ret = errorcode_t::success;
     binary_t prk;
     __try2 {
@@ -357,7 +357,7 @@ return_t openssl_kdf::cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen
 // the CKDF-Extract(salt, IKM) function takes an optional, 16-byte salt and an arbitrary-length "input keying material" (IKM) message.
 // If no salt is given, the 16-byte, all-zero value is used.
 // It returns the result of AES-CMAC(key = salt, input = IKM), called the "pseudorandom key" (PRK), which will be 16 bytes long.
-return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, binary_t const& salt, binary_t const& ikm) {
+return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, const binary_t& salt, const binary_t& ikm) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_mac mac;
@@ -411,7 +411,7 @@ return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, bin
     return ret;
 }
 
-return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size_t dlen, binary_t const& prk, binary_t const& info) {
+return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& prk, const binary_t& info) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_mac mac;
@@ -446,19 +446,19 @@ return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size
     return ret;
 }
 
-return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, std::string const& password, binary_t const& salt, int iter) {
+return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const std::string& password, const binary_t& salt, int iter) {
     return pbkdf2(derived, alg, dlen, password.c_str(), password.size(), &salt[0], salt.size(), iter);
 }
 
-return_t openssl_kdf::pbkdf2(binary_t& derived, const char* alg, size_t dlen, std::string const& password, binary_t const& salt, int iter) {
+return_t openssl_kdf::pbkdf2(binary_t& derived, const char* alg, size_t dlen, const std::string& password, const binary_t& salt, int iter) {
     return pbkdf2(derived, alg, dlen, password.c_str(), password.size(), &salt[0], salt.size(), iter);
 }
 
-return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, binary_t const& password, binary_t const& salt, int iter) {
+return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const binary_t& password, const binary_t& salt, int iter) {
     return pbkdf2(derived, alg, dlen, (char*)&password[0], password.size(), &salt[0], salt.size(), iter);
 }
 
-return_t openssl_kdf::pbkdf2(binary_t& derived, const char* alg, size_t dlen, binary_t const& password, binary_t const& salt, int iter) {
+return_t openssl_kdf::pbkdf2(binary_t& derived, const char* alg, size_t dlen, const binary_t& password, const binary_t& salt, int iter) {
     return pbkdf2(derived, alg, dlen, (char*)&password[0], password.size(), &salt[0], salt.size(), iter);
 }
 
@@ -514,7 +514,7 @@ return_t openssl_kdf::pbkdf2(binary_t& derived, const char* alg, size_t dlen, co
     return ret;
 }
 
-return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, std::string const& password, binary_t const& salt, int n, int r, int p) {
+return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, const std::string& password, const binary_t& salt, int n, int r, int p) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* ctx = nullptr;
     int ret_openssl = 0;
@@ -554,8 +554,8 @@ return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, std::string const& 
     return ret;
 }
 
-return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, binary_t const& password, binary_t const& salt, binary_t const& ad,
-                             binary_t const& secret, uint32 iteration_cost, uint32 parallel_cost, uint32 memory_cost) {
+return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, const binary_t& password, const binary_t& salt, const binary_t& ad,
+                             const binary_t& secret, uint32 iteration_cost, uint32 parallel_cost, uint32 memory_cost) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30200000L
     int ret_openssl = 0;
@@ -651,17 +651,17 @@ return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, bina
     return ret;
 }
 
-return_t openssl_kdf::argon2d(binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, binary_t const& ad, binary_t const& secret,
+return_t openssl_kdf::argon2d(binary_t& derived, size_t dlen, const binary_t& password, const binary_t& salt, const binary_t& ad, const binary_t& secret,
                               uint32 iteration_cost, uint32 parallel_cost, uint32 memory_cost) {
     return argon2(derived, argon2_t::argon2d, dlen, password, salt, ad, secret, iteration_cost, parallel_cost, memory_cost);
 }
 
-return_t openssl_kdf::argon2i(binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, binary_t const& ad, binary_t const& secret,
+return_t openssl_kdf::argon2i(binary_t& derived, size_t dlen, const binary_t& password, const binary_t& salt, const binary_t& ad, const binary_t& secret,
                               uint32 iteration_cost, uint32 parallel_cost, uint32 memory_cost) {
     return argon2(derived, argon2_t::argon2i, dlen, password, salt, ad, secret, iteration_cost, parallel_cost, memory_cost);
 }
 
-return_t openssl_kdf::argon2id(binary_t& derived, size_t dlen, binary_t const& password, binary_t const& salt, binary_t const& ad, binary_t const& secret,
+return_t openssl_kdf::argon2id(binary_t& derived, size_t dlen, const binary_t& password, const binary_t& salt, const binary_t& ad, const binary_t& secret,
                                uint32 iteration_cost, uint32 parallel_cost, uint32 memory_cost) {
     return argon2(derived, argon2_t::argon2id, dlen, password, salt, ad, secret, iteration_cost, parallel_cost, memory_cost);
 }

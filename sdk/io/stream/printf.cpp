@@ -135,7 +135,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
     return ret;
 }
 
-return_t vtprintf(stream_t* stream, variant_t const& vt, vtprintf_style_t style) {
+return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style) {
     return_t ret = errorcode_t::success;
 
     __try2 {

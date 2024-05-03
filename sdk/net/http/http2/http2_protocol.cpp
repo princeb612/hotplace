@@ -19,7 +19,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http2_protocol::http2_protocol() {}
+http2_protocol::http2_protocol() : network_protocol() {}
 
 http2_protocol::~http2_protocol() {}
 

@@ -25,8 +25,8 @@ class bearer_credentials {
    public:
     bearer_credentials();
 
-    bearer_credentials& add(std::string const& client_id, std::string const& access_token);
-    bool verify(http_authenticate_provider* provider, std::string const& token);
+    bearer_credentials& add(const std::string& client_id, const std::string& access_token);
+    bool verify(http_authenticate_provider* provider, const std::string& token);
 
    private:
     critical_section _lock;

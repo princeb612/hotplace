@@ -36,7 +36,7 @@ enum protocol_constraints_t {
 
 enum protocol_id_t {
     proto_http = 2068,   // RFC 2068, 2616
-    proto_http2 = 7540,  // RFC 7540
+    proto_http2 = 7540,  // RFC 7540, 9113
 };
 
 /**

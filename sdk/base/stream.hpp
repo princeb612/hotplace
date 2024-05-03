@@ -49,7 +49,7 @@ class stream_t {
  *          console_colored_stream << concolor.turnon ().set_fgcolor (console_color_t::yellow)
  *                                 << "hello"
  *                                 << concolor.turnoff ();
- *          std::cout << bs.c_str () << std::endl;
+ *          std::cout << bs << std::endl;
  */
 template <typename STREAM_T, typename BINDER>
 class t_stream_binder {

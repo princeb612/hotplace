@@ -109,9 +109,9 @@ class http_authentication_resolver {
      */
     bool custom_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
 
-    basic_credentials& get_basic_credentials(std::string const& realm);
-    digest_credentials& get_digest_credentials(std::string const& realm);
-    bearer_credentials& get_bearer_credentials(std::string const& realm);
+    basic_credentials& get_basic_credentials(const std::string& realm);
+    digest_credentials& get_digest_credentials(const std::string& realm);
+    bearer_credentials& get_bearer_credentials(const std::string& realm);
     oauth2_credentials& get_oauth2_credentials();
     custom_credentials& get_custom_credentials();
 

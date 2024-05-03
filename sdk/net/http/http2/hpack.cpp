@@ -34,7 +34,7 @@ hpack& hpack::set_encode_flags(uint32 flags) {
     return *this;
 }
 
-hpack& hpack::encode_header(std::string const& name, std::string const& value) {
+hpack& hpack::encode_header(const std::string& name, const std::string& value) {
     if (_session) {
         (*_encoder).encode_header(_session, _bin, name, value, _flags);
     }
@@ -155,7 +155,7 @@ hpack_encoder& hpack_encoder::encode_string(binary_t& target, uint32 flags, cons
     return *this;
 }
 
-hpack_encoder& hpack_encoder::encode_string(binary_t& target, uint32 flags, std::string const& value) {
+hpack_encoder& hpack_encoder::encode_string(binary_t& target, uint32 flags, const std::string& value) {
     return encode_string(target, flags, value.c_str(), value.size());
 }
 
@@ -231,7 +231,7 @@ hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags
     return *this;
 }
 
-hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, std::string const& value) {
+hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const std::string& value) {
     return encode_indexed_name(target, flags, index, value.c_str(), value.size());
 }
 
@@ -287,7 +287,7 @@ hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, 
     return *this;
 }
 
-hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, std::string const& name, std::string const& value) {
+hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, const std::string& name, const std::string& value) {
     return encode_name_value(target, flags, name.c_str(), value.c_str());
 }
 
@@ -372,7 +372,7 @@ return_t hpack_encoder::decode_string(const byte_t* p, size_t& pos, uint8 flags,
     return ret;
 }
 
-match_result_t hpack_encoder::match(hpack_session* session, std::string const& name, std::string const& value, size_t& index) {
+match_result_t hpack_encoder::match(hpack_session* session, const std::string& name, const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
     index = 0;
 
@@ -438,7 +438,7 @@ return_t hpack_encoder::select(hpack_session* session, uint32 flags, size_t inde
     return ret;
 }
 
-return_t hpack_encoder::insert(hpack_session* session, std::string const& name, std::string const& value) {
+return_t hpack_encoder::insert(hpack_session* session, const std::string& name, const std::string& value) {
     //  RFC 7541 Figure 1: Index Address Space
     //
     //   <----------  Index Address Space ---------->
@@ -465,7 +465,7 @@ return_t hpack_encoder::insert(hpack_session* session, std::string const& name, 
     return ret;
 }
 
-hpack_encoder& hpack_encoder::encode_header(hpack_session* session, binary_t& target, std::string const& name, std::string const& value, uint32 flags) {
+hpack_encoder& hpack_encoder::encode_header(hpack_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
     match_result_t state = match_result_t::not_matched;
     if (session) {
         size_t index = 0;
@@ -580,7 +580,7 @@ void hpack_session::for_each(std::function<void(const std::string&, const std::s
     }
 }
 
-match_result_t hpack_session::match(std::string const& name, std::string const& value, size_t& index) {
+match_result_t hpack_session::match(const std::string& name, const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
     size_t idx = 0;
     for (dynamic_table_t::iterator iter = _dynamic_table.begin(); iter != _dynamic_table.end(); iter++, idx++) {
@@ -607,7 +607,7 @@ return_t hpack_session::select(uint32 flags, size_t index, std::string& name, st
     return ret;
 }
 
-return_t hpack_session::insert(std::string const& name, std::string const& value) {
+return_t hpack_session::insert(const std::string& name, const std::string& value) {
     return_t ret = errorcode_t::success;
     _dynamic_table.push_front(std::make_pair(name, std::make_pair(value, 0)));
     return ret;

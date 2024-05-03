@@ -47,7 +47,7 @@ class http_authentication_resolver;
  */
 class http_authenticate_provider {
    public:
-    http_authenticate_provider(std::string const& realm);
+    http_authenticate_provider(const std::string& realm);
 
     /**
      * @brief   try

@@ -21,7 +21,7 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-static void pkey_param_printf(crypt_item_t type, binary_t const& key, stream_t* stream, uint8 hex_part, uint8 indent) {
+static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* stream, uint8 hex_part, uint8 indent) {
     constexpr char constexpr_hmac[] = "k";
 
     constexpr char constexpr_rsa_n[] = "modulus (00:n)";

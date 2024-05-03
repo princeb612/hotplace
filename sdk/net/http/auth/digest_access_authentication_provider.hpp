@@ -55,9 +55,9 @@ class digest_access_authentication_provider : public http_authenticate_provider 
      * @brief   constructor
      * @param   const char* realm [in]
      */
-    digest_access_authentication_provider(std::string const& realm);
-    digest_access_authentication_provider(std::string const& realm, const char* algorithm, const char* qop, bool userhash = false);
-    digest_access_authentication_provider(std::string const& realm, std::string const& algorithm, std::string const& qop, bool userhash = false);
+    digest_access_authentication_provider(const std::string& realm);
+    digest_access_authentication_provider(const std::string& realm, const char* algorithm, const char* qop, bool userhash = false);
+    digest_access_authentication_provider(const std::string& realm, const std::string& algorithm, const std::string& qop, bool userhash = false);
     virtual ~digest_access_authentication_provider();
 
     /**
