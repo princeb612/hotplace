@@ -103,11 +103,13 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
 
         if (0 == strncmp(preface, (char*)stream_data, sampling_size)) {
             if ((stream_size >= sizeof_preface) && (0 == strncmp(preface, (char*)stream_data, sizeof_preface))) {
+                // connection preface
                 http2_frame_header_t* frame = (http2_frame_header_t*)(stream_data + sizeof_preface);
                 if (stream_size >= sizeof_preface + RTL_FIELD_SIZE(http2_frame_header_t, len)) {
                     if (h2_frame_t::h2_frame_settings == frame->type) {
                         pos = sizeof_preface;
                     } else {
+                        // This sequence MUST be followed by a SETTINGS frame (Section 6.5), which MAY be empty.
                         *state = protocol_state_t::protocol_state_crash;
                         __leave2;
                     }
@@ -149,7 +151,7 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
     return ret;
 }
 
-uint32 http2_protocol::protocol_id() { return protocol_id_t::proto_http2; }
+const char* http2_protocol::protocol_id() { return "h2"; }
 
 }  // namespace net
 }  // namespace hotplace

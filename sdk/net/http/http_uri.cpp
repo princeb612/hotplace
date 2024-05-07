@@ -153,6 +153,14 @@ return_t http_uri::to_keyvalue(const std::string& value, key_value& kv) {
 
 key_value& http_uri::get_query_keyvalue() { return _query_kv; }
 
+http_uri& http_uri::operator=(const http_uri& rhs) {
+    _uri = rhs._uri;
+    _uripath = rhs._uripath;
+    _query = rhs._query;
+    _query_kv = rhs._query_kv;
+    return *this;
+}
+
 void http_uri::addref() { _shared.addref(); }
 
 void http_uri::release() { _shared.delref(); }

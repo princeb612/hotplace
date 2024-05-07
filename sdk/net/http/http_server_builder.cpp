@@ -16,7 +16,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_server_builder::http_server_builder() : _handler(nullptr) {
+http_server_builder::http_server_builder() : _handler(nullptr), _user_context(nullptr) {
     get_server_conf()
         .set(netserver_config_t::serverconf_enable_ipv4, 0)
         .set(netserver_config_t::serverconf_enable_ipv6, 0)
@@ -84,8 +84,9 @@ http_server_builder& http_server_builder::enable_h2(bool enable) {
     return *this;
 }
 
-http_server_builder& http_server_builder::set_handler(http_server_handler_t handler) {
+http_server_builder& http_server_builder::set_handler(http_server_handler_t handler, void* user_context) {
     _handler = handler;
+    _user_context = user_context;
     return *this;
 }
 

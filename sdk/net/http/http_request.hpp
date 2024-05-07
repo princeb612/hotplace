@@ -91,7 +91,22 @@ class http_request {
      */
     http_request& get_request(basic_stream& stream);
 
-    virtual std::string get_version();
+    virtual std::string get_version_str();
+
+    http_request& operator=(const http_request& rhs);
+
+    http_request& add_content(const char* buf, size_t bufsize);
+    http_request& add_content(const binary_t& bin);
+    http_request& clear_content();
+
+    /*
+     * @brief   version
+     * @param   uint8 version [in] 1 HTTP/1.1, 2 HTTP/2
+     */
+    http_request& set_version(uint8 version);
+    http_request& set_stream_id(uint32 stream_id);
+    uint8 get_version();
+    uint32 get_stream_id();
 
     void addref();
     void release();
@@ -100,6 +115,8 @@ class http_request {
     t_shared_reference<http_request> _shared;
 
    private:
+    uint8 _version;
+    uint32 _stream_id;
     std::string _method;
     std::string _content;
 

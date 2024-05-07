@@ -22,31 +22,9 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-constexpr char constexpr_frame_length[] = "length";
-constexpr char constexpr_frame_type[] = "type";
-constexpr char constexpr_frame_flags[] = "flags";
-constexpr char constexpr_frame_stream_identifier[] = "stream identifier";
-constexpr char constexpr_frame_pad_length[] = "pad length";
-constexpr char constexpr_frame_data[] = "data";
-constexpr char constexpr_frame_padding[] = "padding";
-constexpr char constexpr_frame_stream_dependency[] = "stream dependency";
-constexpr char constexpr_frame_weight[] = "weight";
-constexpr char constexpr_frame_fragment[] = "fragment";
-constexpr char constexpr_frame_priority[] = "priority";
-constexpr char constexpr_frame_error_code[] = "error code";
-constexpr char constexpr_frame_promised_stream_id[] = "promised stream id";
-constexpr char constexpr_frame_opaque[] = "opaque";
-constexpr char constexpr_frame_last_stream_id[] = "last stream id";
-constexpr char constexpr_frame_debug_data[] = "debug data";
-constexpr char constexpr_frame_window_size_increment[] = "window size increment";
+http2_frame_settings::http2_frame_settings() : http2_frame(h2_frame_t::h2_frame_settings) {}
 
-constexpr char constexpr_frame_exclusive[] = "exclusive";
-constexpr char constexpr_frame_identifier[] = "identifier";
-constexpr char constexpr_frame_value[] = "value";
-
-http2_frame_settings::http2_frame_settings() : http2_frame_header(h2_frame_t::h2_frame_settings) {}
-
-http2_frame_settings::http2_frame_settings(const http2_frame_settings& rhs) : http2_frame_header(rhs) { _settings = rhs._settings; }
+http2_frame_settings::http2_frame_settings(const http2_frame_settings& rhs) : http2_frame(rhs) { _settings = rhs._settings; }
 
 http2_frame_settings& http2_frame_settings::add(uint16 id, uint32 value) {
     h2_setting_map_pib_t pib = _settings.insert(std::make_pair(id, value));
@@ -64,7 +42,7 @@ return_t http2_frame_settings::read(http2_frame_header_t const* header, size_t s
             __leave2;
         }
 
-        ret = http2_frame_header::read(header, size);
+        ret = http2_frame::read(header, size);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -105,7 +83,7 @@ return_t http2_frame_settings::write(binary_t& frame) {
     ret = set_payload_size(len);
 
     if (errorcode_t::success == ret) {
-        http2_frame_header::write(frame);
+        http2_frame::write(frame);
 
         // RFC 7540 Figure 10: Setting Format
         h2_setting_map_t::iterator iter;
@@ -120,11 +98,11 @@ return_t http2_frame_settings::write(binary_t& frame) {
 
 void http2_frame_settings::dump(stream_t* s) {
     if (s) {
-        http2_frame_header::dump(s);
+        http2_frame::dump(s);
 
         h2_setting_map_t::iterator iter;
         for (iter = _settings.begin(); iter != _settings.end(); iter++) {
-            s->printf("> ");
+            s->printf(" > ");
             s->printf("%s %u ", constexpr_frame_identifier, iter->first);
             s->printf("%s %u (0x%08x) ", constexpr_frame_value, iter->second, iter->second);
             s->printf("\n");

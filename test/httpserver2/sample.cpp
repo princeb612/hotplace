@@ -61,11 +61,10 @@ void print(const char* text, ...) {
     va_start(ap, text);
     vprintf(text, ap);
     va_end(ap);
-    printf("\n");
     fflush(stdout);
 }
 
-void dump_frame(http2_frame_header* base, http2_frame_header_t* hdr, size_t size, hpack_encoder* encoder = nullptr, hpack_session* session = nullptr) {
+void dump_frame(http2_frame* base, http2_frame_header_t* hdr, size_t size, hpack_encoder* encoder = nullptr, hpack_session* session = nullptr) {
     basic_stream bs;
     base->read(hdr, size);
     base->dump(&bs);
@@ -76,9 +75,10 @@ void dump_frame(http2_frame_header* base, http2_frame_header_t* hdr, size_t size
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
     net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
-    network_session* session = (network_session*)data_array[3];
     char* buf = (char*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
+    network_session* session = (network_session*)data_array[3];
+    http_request* request = (http_request*)data_array[4];
 
     binary_t bin;
     basic_stream bs;
@@ -86,182 +86,86 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     OPTION& option = cmdline->value();
 
-    switch (type) {
-        case mux_connect:
-            cprint("connect %i", session_socket->cli_socket);
-            break;
-        case mux_read:
-            cprint("read %i", session_socket->cli_socket);
+    // switch (type) {
+    //     case mux_connect:
+    //         // cprint("connect %i", session_socket->cli_socket);
+    //         break;
+    //     case mux_read:
+    //         // cprint("read %i", session_socket->cli_socket);
+    //         break;
+    //     case mux_disconnect:
+    //         // cprint("disconnect %i", session_socket->cli_socket);
+    //         break;
+    // }
+
+    if (request) {                          // in case of mux_read
+        if (2 == request->get_version()) {  // HTTP/2, END_HEADERS and END_HEADERS
+            uint32 stream_id = request->get_stream_id();
+
+            hpack_encoder* encoder = &_http_server->get_hpack_encoder();
+            hpack_session* hpsess = &session->get_http2_session().get_hpack_session();
+
+            hpack hp;
+            binary_t bin_resp;
+            const char* resp = "<html><body>hello</body></html>";
+
+            // header compression
+            {
+                hp.set_encoder(encoder)
+                    .set_session(hpsess)
+                    .set_encode_flags(hpack_indexing | hpack_huffman)
+                    .encode_header(":status", "200")
+                    .encode_header("content-type", "text/html")
+                    .encode_header("content-length", format("%zi", strlen(resp)).c_str(), hpack_wo_indexing | hpack_huffman);
+                if (option.verbose) {
+                    dump_memory(hp.get_binary(), &bs, 16, 2);
+                    print("dump HPACK\n%s\n", bs.c_str());
+                }
+            }
+
+            // response headers
+            {
+                // - END_STREAM
+                // + END_HEADERS
+                http2_frame_headers resp_headers;
+                resp_headers.set_hpack_encoder(encoder).set_hpack_session(hpsess).set_flags(h2_flag_end_headers).set_stream_id(stream_id);
+                resp_headers.get_fragment() = hp.get_binary();
+                resp_headers.write(bin_resp);
+            }
+
+            // response data
+            {
+                // + END_STREAM
+                http2_frame_data resp_data;
+                resp_data.set_flags(h2_flag_end_stream).set_stream_id(stream_id);
+
+                resp_data.get_data() = convert(resp);
+                resp_data.write(bin_resp);
+            }
+
+            // response
+            {
+                // + END_STREAM
+                // + END_HEADERS
+                http2_frame_headers resp_headers2;
+                resp_headers2.set_flags(h2_flag_end_stream | h2_flag_end_headers).set_stream_id(stream_id);
+                resp_headers2.write(bin_resp);
+            }
+
+            // dump response
             if (option.verbose) {
-                dump_memory((byte_t*)buf, bufsize, &bs, 16, 2);
-                print("consume\n%s", bs.c_str());
-                bs.clear();
+                dump_memory(bin_resp, &bs, 16, 2);
+                print("dump (headers+data)\n%s\n", bs.c_str());
             }
 
-            // studying .... debug frames ...
-
-            if (errorcode_t::success == _http_server->get_http2_protocol().is_kind_of(buf, bufsize)) {
-                constexpr char preface[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
-                const uint16 sizeof_preface = 24;
-                bool stage_preface = false;
-                uint32 pos_frame = 0;
-                if (bufsize > sizeof_preface) {
-                    if (0 == strncmp(buf, preface, sizeof_preface)) {
-                        print("- http/2 connecton preface");
-                        stage_preface = true;
-                        pos_frame = sizeof_preface;
-                    }
-                }
-
-                http2_frame_header_t* hdr = (http2_frame_header_t*)(buf + pos_frame);
-                size_t checksize = bufsize - pos_frame;
-                uint32_24_t i32_24((byte_t*)hdr, checksize);
-                uint32 payload_size = i32_24.get();
-                uint32 packet_size = sizeof(http2_frame_header_t) + payload_size;
-
-                if (h2_frame_t::h2_frame_data == hdr->type) {
-                    http2_frame_data frame;
-                    dump_frame(&frame, hdr, checksize);
-
-                    if (0 == frame.get_stream_id()) {
-                        // DATA frames MUST be associated with a stream.  If a DATA frame is
-                        // received whose stream identifier field is 0x0, the recipient MUST
-                        // respond with a connection error (Section 5.4.1) of type
-                        // PROTOCOL_ERROR.
-
-                        http2_frame_goaway resp_goaway;
-                        resp_goaway.set_errorcode(h2_connect_error);
-                        resp_goaway.get_debug() = convert("connection error");
-
-                        binary_t bin_resp;
-                        resp_goaway.write(bin_resp);
-
-                        session->send((char*)&bin_resp[0], bin_resp.size());
-                    }
-
-                } else if (h2_frame_t::h2_frame_headers == hdr->type) {
-                    http2_frame_headers frame;
-                    frame.set_hpack_encoder(&_http_server->get_hpack_encoder()).set_hpack_session(session->get_hpack_session());
-                    dump_frame(&frame, hdr, checksize);
-
-                    uint32 stream_id = frame.get_stream_id();
-
-                    hpack hp;
-                    binary_t bin_resp;
-                    const char* resp = "<html><body>hello</body></html>";
-
-                    // header compression
-                    {
-                        hp.set_encoder(&_http_server->get_hpack_encoder())
-                            .set_session(session->get_hpack_session())
-                            .set_encode_flags(hpack_indexing | hpack_huffman)
-                            .encode_header(":status", "200")
-                            // HPACK_INVALID_INDEX
-                            //.encode_header("content-type", "text/html")
-                            //.encode_header("content-length", format("%zi", strlen(resp)).c_str())
-                            ;
-                        if (option.verbose) {
-                            dump_memory(hp.get_binary(), &bs, 16, 2);
-                            printf("dump HPACK\n%s\n", bs.c_str());
-                        }
-                    }
-
-                    // response headers
-                    {
-                        // - END_STREAM
-                        // + END_HEADERS
-                        http2_frame_headers resp_headers;
-                        resp_headers.set_hpack_encoder(&_http_server->get_hpack_encoder())
-                            .set_hpack_session(session->get_hpack_session())
-                            .set_flags(h2_flag_end_headers)
-                            .set_stream_id(stream_id);
-                        resp_headers.get_fragment() = hp.get_binary();
-                        resp_headers.write(bin_resp);
-                    }
-
-                    // response data
-                    {
-                        // + END_STREAM
-                        http2_frame_data resp_data;
-                        resp_data.set_flags(h2_flag_end_stream).set_stream_id(stream_id);
-
-                        resp_data.get_data() = convert(resp);
-                        resp_data.write(bin_resp);
-                    }
-
-                    // response
-                    {
-                        // + END_STREAM
-                        // + END_HEADERS
-                        http2_frame_headers resp_headers2;
-                        resp_headers2.set_flags(h2_flag_end_stream | h2_flag_end_headers).set_stream_id(stream_id);
-                        resp_headers2.write(bin_resp);
-                    }
-
-                    // dump response
-                    if (option.verbose) {
-                        dump_memory(bin_resp, &bs, 16, 2);
-                        printf("dump (headers+data)\n%s\n", bs.c_str());
-                    }
-
-                    session->send((char*)&bin_resp[0], bin_resp.size());
-                    fflush(stdout);
-
-                } else if (h2_frame_t::h2_frame_priority == hdr->type) {
-                    http2_frame_priority frame;
-                    dump_frame(&frame, hdr, checksize);
-                } else if (h2_frame_t::h2_frame_rst_stream == hdr->type) {
-                    http2_frame_rst_stream frame;
-                    dump_frame(&frame, hdr, checksize);
-                } else if (h2_frame_t::h2_frame_settings == hdr->type) {
-                    http2_frame_settings frame;
-                    dump_frame(&frame, hdr, checksize);
-
-                    binary_t bin_resp;
-                    http2_frame_settings resp_settings;
-
-                    if (frame.get_flags()) {
-                        resp_settings.set_flags(h2_flag_ack);
-
-                        resp_settings.write(bin_resp);
-
-                        dump_memory(bin_resp, &bs, 16, 2);
-                        printf("dump (settings)\n%s\n", bs.c_str());
-
-                        session->send((char*)&bin_resp[0], bin_resp.size());
-
-                    } else {
-                        // resp_settings.add(h2_settings_enable_push, 0).add(h2_settings_max_concurrent_streams, 100);
-                    }
-
-                } else if (h2_frame_t::h2_frame_push_promise == hdr->type) {
-                    http2_frame_push_promise frame;
-                    frame.set_hpack_encoder(&_http_server->get_hpack_encoder()).set_hpack_session(session->get_hpack_session());
-                    dump_frame(&frame, hdr, checksize);
-                } else if (h2_frame_t::h2_frame_ping == hdr->type) {
-                    http2_frame_ping frame;
-                    dump_frame(&frame, hdr, checksize);
-                } else if (h2_frame_t::h2_frame_goaway == hdr->type) {
-                    http2_frame_goaway frame;
-                    dump_frame(&frame, hdr, checksize);
-                } else if (h2_frame_t::h2_frame_window_update == hdr->type) {
-                    http2_frame_window_update frame;
-                    dump_frame(&frame, hdr, checksize);
-                } else if (h2_frame_t::h2_frame_continuation == hdr->type) {
-                    http2_frame_continuation frame;
-                    frame.set_hpack_encoder(&_http_server->get_hpack_encoder()).set_hpack_session(session->get_hpack_session());
-                    dump_frame(&frame, hdr, checksize);
-                }
-            } else {
-                http_response resp;
-                resp.compose(200, "text/html", "<html><body><pre>hello</pre></body></html>");
-                resp.respond(session);
-            }
-            break;
-        case mux_disconnect:
-            cprint("disconnect %i", session_socket->cli_socket);
-            break;
+            session->send((char*)&bin_resp[0], bin_resp.size());
+        } else {  // HTTP/1.1
+            http_response resp;
+            resp.compose(200, "text/html", "<html><body><pre>hello</pre></body></html>");
+            resp.respond(session);
+        }
     }
+
     return ret;
 }
 
@@ -288,13 +192,18 @@ return_t echo_server(void*) {
             .enable_h2(true)  // enable HTTP/2
             .set_handler(consume_routine);
         builder.get_server_conf()
-            .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
-            .set(netserver_config_t::serverconf_concurrent_network, 4)
-            .set(netserver_config_t::serverconf_concurrent_consume, 4);
+            .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
+            .set(netserver_config_t::serverconf_concurrent_network, 2)
+            .set(netserver_config_t::serverconf_concurrent_consume, 2);
         _http_server.make_share(builder.build());
 
         _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
         _http_server->get_http2_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
+
+        if (option.verbose) {
+            _http_server->get_server_conf().set(netserver_config_t::serverconf_debug_h2, 1);
+            _http_server->set_debug([](stream_t* s) -> void { print("%.*s", s->size(), s->data()); });
+        }
 
         _http_server->start();
 

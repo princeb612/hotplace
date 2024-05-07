@@ -34,11 +34,6 @@ enum protocol_constraints_t {
     protocol_constraints_the_end,
 };
 
-enum protocol_id_t {
-    proto_http = 2068,   // RFC 2068, 2616
-    proto_http2 = 7540,  // RFC 7540, 9113
-};
-
 /**
  * @brief   protocol interpreter
  */
@@ -91,9 +86,8 @@ class network_protocol {
 
     /**
      * @brief   id
-     * @remarks default port number
      */
-    virtual uint32 protocol_id() = 0;
+    virtual const char* protocol_id() = 0;
 
     int addref() { return _shared.addref(); }
     int release() { return _shared.delref(); }
@@ -109,45 +103,45 @@ class network_protocol_group {
     virtual ~network_protocol_group();
 
     /**
-     * @brief add protocol
+     * @brief   add protocol
      * @param   network_protocol*    protocol        [IN] add protocol and increase reference counter
-     * @return error code (see error.hpp)
+     * @return  error code (see error.hpp)
      */
     virtual return_t add(network_protocol* protocol);
     /**
-     * @brief operator <<
+     * @brief   operator <<
      * @param   network_protocol*    protocol        [IN]
      * @remarks
      *          add method replacement wo checking return code
      */
     virtual network_protocol_group& operator<<(network_protocol* protocol);
     /**
-     * @brief find
-     * @param   uint32                   protocol_id     [IN]
+     * @brief   find
+     * @param   const std::string&   protocol_id     [IN]
      * @param   network_protocol**   ptr_protocol    [OUT] referenced, call release
-     * @return error code (see error.hpp)
+     * @return  error code (see error.hpp)
      */
-    virtual return_t find(uint32 protocol_id, network_protocol** ptr_protocol);
+    virtual return_t find(const std::string& protocol_id, network_protocol** ptr_protocol);
     /**
-     * @brief operator[protocol_id]
+     * @brief   operator[protocol_id]
      * @example
-     *          network_protocol* protocol = protocol_group[80];
+     *          network_protocol* protocol = protocol_group["http"];
      *          if (nullptr != protocol)
      *          {
      *              //...
      *              prtotocol->release (); // decrease reference counter
      *          }
      */
-    virtual network_protocol* operator[](uint32 protocol_id);
+    virtual network_protocol* operator[](const std::string& protocol_id);
     /**
-     * @brief remove protocol
-     * @param   network_protocol*    protocol        [IN] remove protocol and decrease reference counter
-     * @return error code (see error.hpp)
+     * @brief   remove protocol
+     * @param   network_protocol*   protocol        [IN] remove protocol and decrease reference counter
+     * @return  error code (see error.hpp)
      */
     virtual return_t remove(network_protocol* protocol);
     /**
-     * @brief remove all protocol
-     * @return error code (see error.hpp)
+     * @brief   remove all protocols
+     * @return  error code (see error.hpp)
      */
     virtual return_t clear();
     /**
@@ -156,29 +150,29 @@ class network_protocol_group {
     virtual bool empty();
 
     /**
-     * @brief find appropriate protocol
-     * @param   void*                   stream          [IN]
-     * @param   size_t                  stream_size     [IN]
-     * @param   network_protocol**   ptr_protocol    [OUT] referenced, use release to free (important)
-     * @return error code (see error.hpp)
+     * @brief   find appropriate protocol
+     * @param   void*               stream          [IN]
+     * @param   size_t              stream_size     [IN]
+     * @param   network_protocol**  ptr_protocol    [OUT] referenced, use release to free (important)
+     * @return  error code (see error.hpp)
      * @remarks
      *          if input stream is too short, return errorcode_t::more_data
      */
     virtual return_t is_kind_of(void* stream, size_t stream_size, network_protocol** ptr_protocol);
 
     /**
-     * @brief increase reference counter
+     * @brief   increase reference counter
      */
     int addref();
     /**
-     * @brief decrease reference counter. if reference counter 0, delete object.
+     * @brief   decrease reference counter. if reference counter 0, delete object.
      */
     int release();
 
    protected:
     t_shared_reference<network_protocol_group> _shared;
 
-    typedef std::map<uint32, network_protocol*> protocol_map_t;
+    typedef std::map<std::string, network_protocol*> protocol_map_t;
     typedef std::pair<protocol_map_t::iterator, bool> protocol_map_pib_t;
 
     critical_section _lock;

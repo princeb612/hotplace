@@ -22,31 +22,9 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-constexpr char constexpr_frame_length[] = "length";
-constexpr char constexpr_frame_type[] = "type";
-constexpr char constexpr_frame_flags[] = "flags";
-constexpr char constexpr_frame_stream_identifier[] = "stream identifier";
-constexpr char constexpr_frame_pad_length[] = "pad length";
-constexpr char constexpr_frame_data[] = "data";
-constexpr char constexpr_frame_padding[] = "padding";
-constexpr char constexpr_frame_stream_dependency[] = "stream dependency";
-constexpr char constexpr_frame_weight[] = "weight";
-constexpr char constexpr_frame_fragment[] = "fragment";
-constexpr char constexpr_frame_priority[] = "priority";
-constexpr char constexpr_frame_error_code[] = "error code";
-constexpr char constexpr_frame_promised_stream_id[] = "promised stream id";
-constexpr char constexpr_frame_opaque[] = "opaque";
-constexpr char constexpr_frame_last_stream_id[] = "last stream id";
-constexpr char constexpr_frame_debug_data[] = "debug data";
-constexpr char constexpr_frame_window_size_increment[] = "window size increment";
+http2_frame_data::http2_frame_data() : http2_frame(h2_frame_t::h2_frame_data), _padlen(0) {}
 
-constexpr char constexpr_frame_exclusive[] = "exclusive";
-constexpr char constexpr_frame_identifier[] = "identifier";
-constexpr char constexpr_frame_value[] = "value";
-
-http2_frame_data::http2_frame_data() : http2_frame_header(h2_frame_t::h2_frame_data), _padlen(0) {}
-
-http2_frame_data::http2_frame_data(const http2_frame_data& rhs) : http2_frame_header(rhs), _padlen(rhs._padlen) { _data = rhs._data; }
+http2_frame_data::http2_frame_data(const http2_frame_data& rhs) : http2_frame(rhs), _padlen(rhs._padlen) { _data = rhs._data; }
 
 return_t http2_frame_data::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
@@ -58,7 +36,7 @@ return_t http2_frame_data::read(http2_frame_header_t const* header, size_t size)
         }
 
         // check size and then read header
-        ret = http2_frame_header::read(header, size);
+        ret = http2_frame::read(header, size);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -80,7 +58,7 @@ return_t http2_frame_data::read(http2_frame_header_t const* header, size_t size)
 
         pl.read(ptr_payload, get_payload_size());
 
-        _padlen = t_variant_to_int<uint8>(pl.select(constexpr_frame_pad_length)->get_variant().content());
+        _padlen = t_to_int<uint8>(pl.select(constexpr_frame_pad_length));
         pl.select(constexpr_frame_data)->get_variant().dump(_data, true);
     }
     __finally2 {
@@ -110,7 +88,7 @@ return_t http2_frame_data::write(binary_t& frame) {
     set_flags(flags);
     set_payload_size(bin_payload.size());
 
-    http2_frame_header::write(frame);
+    http2_frame::write(frame);
     frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());
 
     return ret;
@@ -118,9 +96,9 @@ return_t http2_frame_data::write(binary_t& frame) {
 
 void http2_frame_data::dump(stream_t* s) {
     if (s) {
-        http2_frame_header::dump(s);
-        s->printf("> %s\n", constexpr_frame_data);
-        dump_memory(_data, s, 16, 2, 0x0, dump_memory_flag_t::dump_notrunc);
+        http2_frame::dump(s);
+        s->printf(" > %s\n", constexpr_frame_data);
+        dump_memory(_data, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
         s->printf("\n");
     }
 }

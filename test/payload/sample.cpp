@@ -134,9 +134,9 @@ void test_payload_uint24() {
 
         pl.read(expect);
 
-        uint8 padlen = t_variant_to_int<uint8>(pl.select("padlen")->get_variant().content());
-        uint32_24_t i24 = t_variant_to_int<uint32>(pl.select("int32_24")->get_variant().content());
-        uint32 i32 = t_variant_to_int<uint32>(pl.select("int32_32")->get_variant().content());
+        uint8 padlen = t_to_int<uint8>(pl.select("padlen"));
+        uint32_24_t i24 = t_to_int<uint32>(pl.select("int32_24"));
+        uint32 i32 = t_to_int<uint32>(pl.select("int32_32"));
 
         if (option.verbose) {
             uint32 i24_value = i24.get();

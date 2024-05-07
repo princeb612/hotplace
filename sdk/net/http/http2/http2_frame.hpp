@@ -112,12 +112,12 @@ typedef struct _http2_setting_t {
 
 #pragma pack(pop)
 
-class http2_frame_header {
+class http2_frame {
    public:
-    http2_frame_header();
-    http2_frame_header(h2_frame_t type);
-    http2_frame_header(const http2_frame_header_t& header);
-    http2_frame_header(const http2_frame_header& rhs);
+    http2_frame();
+    http2_frame(h2_frame_t type);
+    http2_frame(const http2_frame_header_t& header);
+    http2_frame(const http2_frame& rhs);
 
     uint32 get_frame_size();
     uint32 get_payload_size();
@@ -126,19 +126,20 @@ class http2_frame_header {
     uint32 get_stream_id();
     return_t get_payload(http2_frame_header_t const* header, size_t size, byte_t** payload);
 
-    http2_frame_header& set_type(h2_frame_t type);
-    http2_frame_header& set_flags(uint8 flags);
-    http2_frame_header& set_stream_id(uint32 id);
+    http2_frame& set_type(h2_frame_t type);
+    http2_frame& set_flags(uint8 flags);
+    http2_frame& set_stream_id(uint32 id);
 
-    http2_frame_header& set_hpack_encoder(hpack_encoder* encoder);
-    http2_frame_header& set_hpack_session(hpack_session* session);
+    http2_frame& set_hpack_encoder(hpack_encoder* encoder);
+    http2_frame& set_hpack_session(hpack_session* session);
     hpack_encoder* get_hpack_encoder();
     hpack_session* get_hpack_session();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
-    virtual void dump_hpack(stream_t* s, const binary_t& b);
+    virtual void read_compressed_header(const byte_t* buf, size_t size, std::function<void(const std::string&, const std::string&)> v);
+    virtual void read_compressed_header(const binary_t& b, std::function<void(const std::string&, const std::string&)> v);
 
    protected:
     return_t set_payload_size(uint32 size);
@@ -159,7 +160,7 @@ class http2_frame_header {
  *          RFC 7540 6.1. DATA
  *          RFC 7540 Figure 6: DATA Frame Payload
  */
-class http2_frame_data : public http2_frame_header {
+class http2_frame_data : public http2_frame {
    public:
     http2_frame_data();
     http2_frame_data(const http2_frame_data& rhs);
@@ -180,7 +181,7 @@ class http2_frame_data : public http2_frame_header {
  * @see
  *          RFC 7540 6.2 HEADERS
  */
-class http2_frame_headers : public http2_frame_header {
+class http2_frame_headers : public http2_frame {
    public:
     http2_frame_headers();
     http2_frame_headers(const http2_frame_headers& rhs);
@@ -205,7 +206,7 @@ class http2_frame_headers : public http2_frame_header {
  *          RFC 7540 6.3. PRIORITY
  *          RFC 7540 Figure 8: PRIORITY Frame Payload
  */
-class http2_frame_priority : public http2_frame_header {
+class http2_frame_priority : public http2_frame {
    public:
     http2_frame_priority();
     http2_frame_priority(const http2_frame_priority& rhs);
@@ -226,7 +227,7 @@ class http2_frame_priority : public http2_frame_header {
  *          RFC 7540 6.4. RST_STREAM
  *          RFC 7540 Figure 9: RST_STREAM Frame Payload
  */
-class http2_frame_rst_stream : public http2_frame_header {
+class http2_frame_rst_stream : public http2_frame {
    public:
     http2_frame_rst_stream();
     http2_frame_rst_stream(const http2_frame_rst_stream& rhs);
@@ -244,7 +245,7 @@ class http2_frame_rst_stream : public http2_frame_header {
  * @see
  *          RFC 7540 6.5. SETTINGS
  */
-class http2_frame_settings : public http2_frame_header {
+class http2_frame_settings : public http2_frame {
    public:
     http2_frame_settings();
     http2_frame_settings(const http2_frame_settings& rhs);
@@ -266,7 +267,7 @@ class http2_frame_settings : public http2_frame_header {
  * @see
  *          RFC 7540 6.6. PUSH_PROMISE
  */
-class http2_frame_push_promise : public http2_frame_header {
+class http2_frame_push_promise : public http2_frame {
    public:
     http2_frame_push_promise();
     http2_frame_push_promise(const http2_frame_push_promise& rhs);
@@ -288,7 +289,7 @@ class http2_frame_push_promise : public http2_frame_header {
  * @see
  *          RFC 7540 6.7. PING
  */
-class http2_frame_ping : public http2_frame_header {
+class http2_frame_ping : public http2_frame {
    public:
     http2_frame_ping();
     http2_frame_ping(const http2_frame_ping& rhs);
@@ -306,7 +307,7 @@ class http2_frame_ping : public http2_frame_header {
  * @see
  *          RFC 7540 6.8. GOAWAY
  */
-class http2_frame_goaway : public http2_frame_header {
+class http2_frame_goaway : public http2_frame {
    public:
     http2_frame_goaway();
     http2_frame_goaway(const http2_frame_goaway& rhs);
@@ -329,7 +330,7 @@ class http2_frame_goaway : public http2_frame_header {
  * @see
  *          RFC 7540 6.9. WINDOW_UPDATE
  */
-class http2_frame_window_update : public http2_frame_header {
+class http2_frame_window_update : public http2_frame {
    public:
     http2_frame_window_update();
     http2_frame_window_update(const http2_frame_window_update& rhs);
@@ -347,7 +348,7 @@ class http2_frame_window_update : public http2_frame_header {
  * @see
  *          RFC 7540 6.10. CONTINUATION
  */
-class http2_frame_continuation : public http2_frame_header {
+class http2_frame_continuation : public http2_frame {
    public:
     http2_frame_continuation();
     http2_frame_continuation(const http2_frame_continuation& rhs);
@@ -361,6 +362,27 @@ class http2_frame_continuation : public http2_frame_header {
    private:
     binary_t _fragment;
 };
+
+extern const char constexpr_frame_length[];
+extern const char constexpr_frame_type[];
+extern const char constexpr_frame_flags[];
+extern const char constexpr_frame_stream_identifier[];
+extern const char constexpr_frame_pad_length[];
+extern const char constexpr_frame_data[];
+extern const char constexpr_frame_padding[];
+extern const char constexpr_frame_stream_dependency[];
+extern const char constexpr_frame_weight[];
+extern const char constexpr_frame_fragment[];
+extern const char constexpr_frame_priority[];
+extern const char constexpr_frame_error_code[];
+extern const char constexpr_frame_promised_stream_id[];
+extern const char constexpr_frame_opaque[];
+extern const char constexpr_frame_last_stream_id[];
+extern const char constexpr_frame_debug_data[];
+extern const char constexpr_frame_window_size_increment[];
+extern const char constexpr_frame_exclusive[];
+extern const char constexpr_frame_identifier[];
+extern const char constexpr_frame_value[];
 
 }  // namespace net
 }  // namespace hotplace

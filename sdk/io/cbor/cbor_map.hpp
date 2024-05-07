@@ -131,7 +131,7 @@ class cbor_map : public cbor_object {
 
 template <typename KTY>
 struct cbor_map_int_binder {
-    KTY bind(variant vt) { return t_variant_to_int<KTY>(vt.content()); }
+    KTY bind(variant vt) { return t_to_int<KTY>(vt.content()); }
 };
 
 template <typename KTY>

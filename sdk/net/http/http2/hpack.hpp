@@ -66,10 +66,29 @@ class hpack {
     hpack& set_session(hpack_session* session);
 
     /**
-     * @brief   encode
+     * @brief   set flags for encoding
      */
     hpack& set_encode_flags(uint32 flags);
-    hpack& encode_header(const std::string& name, const std::string& value);
+    /**
+     * @brief   encode
+     * @param   const std::string& name [in]
+     * @param   const std::string& value [in]
+     * @param   uint32 flags [inopt] if zero, follows set_encode_flags
+     * @sample
+     *          hpack hp;
+     *          hpack_session session;
+     *          hp
+     *              .set_encoder(encoder)
+     *              .set_session(&session)
+     *              .set_encode_flags(hpack_indexing | hpack_huffman)
+     *              .encode_header(name1, value1)
+     *              .encode_header(name2, value2);
+     *              .encode_header("content-length", "123", hpack_wo_indexing | hpack_huffman);
+     */
+    hpack& encode_header(const std::string& name, const std::string& value, uint32 flags = 0);
+    /**
+     * @brief   encoded data
+     */
     binary_t& get_binary();
 
     /**

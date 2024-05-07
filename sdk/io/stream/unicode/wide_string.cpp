@@ -16,15 +16,22 @@
 namespace hotplace {
 namespace io {
 
-wide_string::wide_string(size_t allocsize, uint32 flags) { _bio.open(&_handle, allocsize, sizeof(wchar_t), flags | bufferio_context_flag_t::memzero_free); }
+wide_string::wide_string() {
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+    _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
+}
 
 wide_string::wide_string(const wchar_t* data) {
-    _bio.open(&_handle, 1 << 10, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+
+    _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
     _bio.write(_handle, data, wcslen(data) * sizeof(wchar_t));
 }
 
 wide_string::wide_string(const wide_string& stream) {
-    _bio.open(&_handle, 1 << 10, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+
+    _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
     byte_t* data = nullptr;
     size_t size = 0;
 

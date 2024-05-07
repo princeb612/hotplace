@@ -91,6 +91,8 @@ class http_uri {
      */
     key_value& get_query_keyvalue();
 
+    http_uri& operator=(const http_uri& rhs);
+
     void addref();
     void release();
 

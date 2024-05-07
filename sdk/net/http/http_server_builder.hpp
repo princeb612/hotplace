@@ -61,7 +61,7 @@ class http_server_builder {
 
     http_server_builder& enable_h2(bool enable);
 
-    http_server_builder& set_handler(http_server_handler_t handler);
+    http_server_builder& set_handler(http_server_handler_t handler, void* user_context = nullptr);
 
     http_server* build();
     server_conf& get_server_conf();
@@ -75,6 +75,7 @@ class http_server_builder {
     server_conf _config;
 
     http_server_handler_t _handler;
+    void* _user_context;
 };
 
 }  // namespace net

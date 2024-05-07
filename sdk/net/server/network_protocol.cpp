@@ -45,7 +45,7 @@ network_protocol_group& network_protocol_group::operator<<(network_protocol* pro
     return *this;
 }
 
-return_t network_protocol_group::find(uint32 protocol_id, network_protocol** ptr_protocol) {
+return_t network_protocol_group::find(const std::string& protocol_id, network_protocol** ptr_protocol) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -71,7 +71,7 @@ return_t network_protocol_group::find(uint32 protocol_id, network_protocol** ptr
     return ret;
 }
 
-network_protocol* network_protocol_group::operator[](uint32 protocol_id) {
+network_protocol* network_protocol_group::operator[](const std::string& protocol_id) {
     network_protocol* protocol = nullptr;
 
     find(protocol_id, &protocol);

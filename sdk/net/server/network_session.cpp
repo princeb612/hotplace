@@ -161,7 +161,7 @@ tcp_server_socket* network_session::get_server_socket() { return _session.svr_so
 
 network_session_data* network_session::get_session_data() { return &_session_data; }
 
-hpack_session* network_session::get_hpack_session() { return &_hpack_session; }
+http2_session& network_session::get_http2_session() { return _http2_session; }
 
 network_session_manager::network_session_manager() {
     // do nothing

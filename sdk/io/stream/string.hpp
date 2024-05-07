@@ -20,7 +20,7 @@ namespace io {
 
 class ansi_string : public stream_t {
    public:
-    ansi_string(size_t allocsize = (1 << 12), uint32 flags = 0);
+    ansi_string();
     ansi_string(const char* data);
     ansi_string(const ansi_string& stream);
     virtual ~ansi_string();
@@ -148,7 +148,7 @@ class ansi_string : public stream_t {
 #if defined _WIN32 || defined _WIN64
 class wide_string : public stream_t {
    public:
-    wide_string(size_t allocsize = (1 << 12), uint32 flags = 0);
+    wide_string();
     wide_string(const wchar_t* data);
     wide_string(const wide_string& stream);
     virtual ~wide_string();

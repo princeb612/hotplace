@@ -17,10 +17,12 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_request::http_request() { _shared.make_share(this); }
+http_request::http_request() : _version(1), _stream_id(0) { _shared.make_share(this); }
 
 http_request::http_request(const http_request& object) {
     _shared.make_share(this);
+    _version = object._version;
+    _stream_id = object._stream_id;
     _method = object._method;
     _content = object._content;
     _header = object._header;
@@ -34,6 +36,11 @@ return_t http_request::open(const char* request, size_t size_request, uint32 fla
     return_t ret_getline = errorcode_t::success;
 
     __try2 {
+        if (1 != _version) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
         if (nullptr == request) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -159,36 +166,98 @@ http_header& http_request::get_http_header() { return _header; }
 
 http_uri& http_request::get_http_uri() { return _uri; }
 
-const char* http_request::get_method() { return _method.c_str(); }
+const char* http_request::get_method() {
+    const char* m = nullptr;
+    if (1 == _version) {
+        m = _method.c_str();
+    } else if (2 == _version) {
+        m = get_http_header().get(":method").c_str();  // HTTP/2
+    }
+    return m;
+}
 
 http_request& http_request::compose(http_method_t method, const std::string& uri, const std::string& body) {
-    http_resource* resource = http_resource::get_instance();
-    basic_stream stream;
+    if (1 == _version) {
+        http_resource* resource = http_resource::get_instance();
+        basic_stream stream;
 
-    stream << resource->get_method(method) << " " << uri << " " << get_version() << "\r\n";
-    if (body.size()) {
-        stream << "Content-Length: " << body.size() << "\r\n";
+        stream << resource->get_method(method) << " " << uri << " " << get_version() << "\r\n";
+        if (body.size()) {
+            stream << "Content-Length: " << body.size() << "\r\n";
+        }
+        stream << "\r\n" << body;
+
+        open(stream, http_request_flag_t::http_request_compose);  // reform if body is empty
+    } else {
+        // TODO
     }
-    stream << "\r\n" << body;
-
-    open(stream, http_request_flag_t::http_request_compose);  // reform if body is empty
-
     return *this;
 }
 
 std::string http_request::get_content() { return _content; }
 
 http_request& http_request::get_request(basic_stream& bs) {
-    std::string headers;
-    bs.clear();
-    get_http_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
+    if (1 == _version) {
+        std::string headers;
+        bs.clear();
+        get_http_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
 
-    bs << get_method() << " " << get_http_uri().get_uri() << " " << get_version() << "\r\n" << headers << "\r\n" << get_content();
+        bs << get_method() << " " << get_http_uri().get_uri() << " " << get_version() << "\r\n" << headers << "\r\n" << get_content();
+    }
+    return *this;
+}
+
+std::string http_request::get_version_str() {
+    constexpr char ver1[] = "HTTP/1.1";
+    constexpr char ver2[] = "HTTP/2";
+
+    return (1 == _version) ? ver1 : ver2;
+}
+
+http_request& http_request::operator=(const http_request& rhs) {
+    _method = rhs._method;
+    _content = rhs._content;
+
+    _header = rhs._header;
+    _uri = rhs._uri;
 
     return *this;
 }
 
-std::string http_request::get_version() { return "HTTP/1.1"; }
+http_request& http_request::add_content(const char* buf, size_t bufsize) {
+    for (size_t i = 0; buf && (i < bufsize); i++) {
+        _content += buf[i];
+    }
+    return *this;
+}
+
+http_request& http_request::add_content(const binary_t& bin) { return add_content((char*)&bin[0], bin.size()); }
+
+http_request& http_request::clear_content() {
+    _content.clear();
+    return *this;
+}
+
+http_request& http_request::set_version(uint8 version) {
+    switch (version) {
+        case 2:
+        case 1:
+            _version = version;
+            break;
+        default:
+            break;
+    }
+    return *this;
+}
+
+http_request& http_request::set_stream_id(uint32 stream_id) {
+    _stream_id = stream_id;
+    return *this;
+}
+
+uint8 http_request::get_version() { return _version; }
+
+uint32 http_request::get_stream_id() { return _stream_id; }
 
 void http_request::addref() { _shared.addref(); }
 

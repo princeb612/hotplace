@@ -50,7 +50,7 @@ class http_response {
     return_t open(const std::string& response);
     /* *
      * @brief  close
-     * @return error code (see error.hpp)
+     * @return  error code (see error.hpp)
      */
     return_t close();
 

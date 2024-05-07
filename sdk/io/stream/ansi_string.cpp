@@ -15,15 +15,22 @@
 namespace hotplace {
 namespace io {
 
-ansi_string::ansi_string(size_t allocsize, uint32 flags) { _bio.open(&_handle, allocsize, sizeof(char), flags | bufferio_context_flag_t::memzero_free); }
+ansi_string::ansi_string() {
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+    _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
+}
 
 ansi_string::ansi_string(const char* data) {
-    _bio.open(&_handle, 1 << 10, sizeof(char), bufferio_context_flag_t::memzero_free);
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+
+    _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
     _bio.write(_handle, data, strlen(data));
 }
 
 ansi_string::ansi_string(const ansi_string& stream) {
-    _bio.open(&_handle, 1 << 10, sizeof(char), bufferio_context_flag_t::memzero_free);
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+
+    _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
     byte_t* data = nullptr;
     size_t size = 0;
 

@@ -327,7 +327,7 @@ variant& variant::set_binary_new(const binary_t& bin) {
     return *this;
 }
 
-int variant::to_int() const { return t_variant_to_int<int>(_vt); }
+int variant::to_int() const { return t_to_int<int>(_vt); }
 
 return_t variant::to_binary(binary_t& target) const {
     return_t ret = errorcode_t::success;

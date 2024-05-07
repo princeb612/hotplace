@@ -26,12 +26,7 @@ namespace hotplace {
  */
 class basic_stream : public stream_t {
    public:
-    /**
-     * @brief   constructor
-     * @param   size_t allocsize [inopt] default 4K
-     * @param   uint32 flags [inopt] default 0
-     */
-    basic_stream(size_t allocsize = (1 << 12), uint32 flags = 0);
+    basic_stream();
     /**
      * @brief   constructor
      * @param   const char* data [in]
@@ -144,6 +139,28 @@ class basic_stream : public stream_t {
    protected:
     bufferio _bio;
     bufferio_context_t* _handle;
+};
+
+/**
+ * @remarks
+ *          stream_policy* pol = stream_policy::get_instance();
+ *          pol->set_allocsize(1 << 5);
+ *
+ *          basic_stream bs;
+ *          bs << "hello world";
+ */
+class stream_policy {
+   public:
+    static stream_policy* get_instance();
+    stream_policy& set_allocsize(size_t allocsize);
+    size_t get_allocsize();
+
+   private:
+    static stream_policy _instance;
+    stream_policy();
+
+    typedef std::map<std::string, uint32> basic_stream_policy_map_t;
+    basic_stream_policy_map_t _config;
 };
 
 }  // namespace hotplace

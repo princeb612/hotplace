@@ -59,9 +59,10 @@ void cprint(const char* text, ...) {
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
     net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
-    network_session* session = (network_session*)data_array[3];
     char* buf = (char*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
+    network_session* session = (network_session*)data_array[3];
+    http_request* request = (http_request*)data_array[4];
 
     basic_stream bs;
     std::string message;
@@ -81,20 +82,18 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             {
                 bool use_tls = session->get_server_socket()->support_tls();
 
-                http_request request;
-                http_response response(&request);
+                http_response response(request);
                 basic_stream bs;
-                request.open(buf, bufsize);
 
                 if (use_tls) {
                     // using http_router
-                    _http_server->get_http_router().route(session, &request, &response);
+                    _http_server->get_http_router().route(session, request, &response);
                 } else {
                     // handle wo http_router
                     response.get_http_header().add("Upgrade", "TLS/1.2, HTTP/1.1").add("Connection", "Upgrade");
                     int status_code = 426;
                     response.compose(status_code, "text/html", "<html><body><a href='https://localhost:%d%s'>%d %s</a><br></body></html>", option.port_tls,
-                                     request.get_http_uri().get_uri(), status_code, http_resource::get_instance()->load(status_code).c_str());
+                                     request->get_http_uri().get_uri(), status_code, http_resource::get_instance()->load(status_code).c_str());
                 }
 
                 if (option.verbose) {

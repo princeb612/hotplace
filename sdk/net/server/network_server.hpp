@@ -41,6 +41,10 @@ enum netserver_config_t {
     serverconf_port_https = 12,
     serverconf_enable_h2 = 13,
     serverconf_enable_h3 = 14,
+
+    serverconf_debug_ns = 1000,
+    serverconf_debug_h1 = 1001,
+    serverconf_debug_h2 = 1002,
 };
 
 class server_conf {
@@ -58,11 +62,12 @@ class server_conf {
     config_map_t _config_map;
 };
 
-enum netserver_callback_type_t {
-    netserver_callback_type_socket = 0,
-    netserver_callback_type_dataptr = 1,
-    netserver_callback_type_datasize = 2,
-    netserver_callback_type_session = 3,
+enum netserver_cb_type_t {
+    netserver_cb_socket = 0,        // net_session_socket_t*
+    netserver_cb_dataptr = 1,       // char*, byte_t*
+    netserver_cb_datasize = 2,      // size_t
+    netserver_cb_session = 3,       // network_session*
+    netserver_cb_http_request = 4,  // http_request*
 };
 
 typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
@@ -106,9 +111,9 @@ typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
  *  uint16 NetworkRoutine (uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context)
  *  {
  *     uint32 ret = errorcode_t::success;
- *     net_session_socket_t* pSession = (net_session_socket_t*)data_array[netserver_callback_type_t::netserver_callback_type_socket]; // [0]
- *     char* buf = (char*)data_array[netserver_callback_type_t::netserver_callback_type_dataptr]; // [1]
- *     size_t bufsize = (size_t)data_array[netserver_callback_type_t::netserver_callback_type_datasize]; // [2]
+ *     net_session_socket_t* pSession = (net_session_socket_t*)data_array[netserver_cb_type_t::netserver_cb_socket]; // [0]
+ *     char* buf = (char*)data_array[netserver_cb_type_t::netserver_cb_dataptr]; // [1]
+ *     size_t bufsize = (size_t)data_array[netserver_cb_type_t::netserver_cb_datasize]; // [2]
  *
  *     switch(type)
  *     {
@@ -151,13 +156,13 @@ class network_server {
      *              RTL_NUMBER_OF(third parameter)
      *            parameter 3
      *              data_array[0] net_session_socket_t*
-     *                equivalant data_array[netserver_callback_type_t::netserver_callback_type_socket]
+     *                equivalant data_array[netserver_cb_type_t::netserver_cb_socket]
      *              data_array[1] transfered buffer
-     *                equivalant data_array[netserver_callback_type_t::netserver_callback_type_dataptr]
+     *                equivalant data_array[netserver_cb_type_t::netserver_cb_dataptr]
      *              data_array[2] transfered size
-     *                equivalant data_array[netserver_callback_type_t::netserver_callback_type_datasize]
+     *                equivalant data_array[netserver_cb_type_t::netserver_cb_datasize]
      *              data_array[3] network_session*
-     *                equivalant data_array[netserver_callback_type_t::netserver_callback_type_session]
+     *                equivalant data_array[netserver_cb_type_t::netserver_cb_session]
      *            parameter 4
      *              CALLBACK_CONTROL* is always null
      *            parameter 5
@@ -179,7 +184,7 @@ class network_server {
      *          see tls_accept_loop_run/tls_accept_loop_break
      */
     return_t open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent,
-                  TYPE_CALLBACK_HANDLEREXV lpfnEventHandler, void* lpParameter, tcp_server_socket* svr_socket);
+                  TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param, tcp_server_socket* svr_socket);
 
     /**
      * @brief   access control or handle tcp before tls upgrade

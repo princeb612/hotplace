@@ -14,18 +14,24 @@
 
 namespace hotplace {
 
-basic_stream::basic_stream(size_t allocsize, uint32 flags) : _handle(nullptr) { _bio.open(&_handle, allocsize, 1, flags); }
+basic_stream::basic_stream() : _handle(nullptr) {
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+    _bio.open(&_handle, allocsize, 1);
+}
 
 basic_stream::basic_stream(const char* data, ...) : _handle(nullptr) {
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
     va_list ap;
     va_start(ap, data);
-    _bio.open(&_handle, 1 << 10, 1);
+    _bio.open(&_handle, allocsize, 1);
     _bio.vprintf(_handle, data, ap);
     va_end(ap);
 }
 
 basic_stream::basic_stream(const basic_stream& stream) : _handle(nullptr) {
-    _bio.open(&_handle, 1 << 10, 1);
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+
+    _bio.open(&_handle, allocsize, 1);
     byte_t* data = nullptr;
     size_t size = 0;
 

@@ -45,9 +45,8 @@ class http_protocol : public network_protocol {
     virtual return_t read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state, int* priority = nullptr);
     /**
      * @brief   id
-     * @remarks default port number
      */
-    virtual uint32 protocol_id();
+    virtual const char* protocol_id();
 };
 
 }  // namespace net

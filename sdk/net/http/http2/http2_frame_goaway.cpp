@@ -22,31 +22,9 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-constexpr char constexpr_frame_length[] = "length";
-constexpr char constexpr_frame_type[] = "type";
-constexpr char constexpr_frame_flags[] = "flags";
-constexpr char constexpr_frame_stream_identifier[] = "stream identifier";
-constexpr char constexpr_frame_pad_length[] = "pad length";
-constexpr char constexpr_frame_data[] = "data";
-constexpr char constexpr_frame_padding[] = "padding";
-constexpr char constexpr_frame_stream_dependency[] = "stream dependency";
-constexpr char constexpr_frame_weight[] = "weight";
-constexpr char constexpr_frame_fragment[] = "fragment";
-constexpr char constexpr_frame_priority[] = "priority";
-constexpr char constexpr_frame_error_code[] = "error code";
-constexpr char constexpr_frame_promised_stream_id[] = "promised stream id";
-constexpr char constexpr_frame_opaque[] = "opaque";
-constexpr char constexpr_frame_last_stream_id[] = "last stream id";
-constexpr char constexpr_frame_debug_data[] = "debug data";
-constexpr char constexpr_frame_window_size_increment[] = "window size increment";
+http2_frame_goaway::http2_frame_goaway() : http2_frame(h2_frame_t::h2_frame_goaway), _last_id(0), _errorcode(0) {}
 
-constexpr char constexpr_frame_exclusive[] = "exclusive";
-constexpr char constexpr_frame_identifier[] = "identifier";
-constexpr char constexpr_frame_value[] = "value";
-
-http2_frame_goaway::http2_frame_goaway() : http2_frame_header(h2_frame_t::h2_frame_goaway), _last_id(0), _errorcode(0) {}
-
-http2_frame_goaway::http2_frame_goaway(const http2_frame_goaway& rhs) : http2_frame_header(rhs), _last_id(rhs._last_id), _errorcode(rhs._errorcode) {
+http2_frame_goaway::http2_frame_goaway(const http2_frame_goaway& rhs) : http2_frame(rhs), _last_id(rhs._last_id), _errorcode(rhs._errorcode) {
     _debug = rhs._debug;
 }
 
@@ -59,7 +37,7 @@ return_t http2_frame_goaway::read(http2_frame_header_t const* header, size_t siz
         }
 
         // check size and then read header
-        ret = http2_frame_header::read(header, size);
+        ret = http2_frame::read(header, size);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -76,8 +54,8 @@ return_t http2_frame_goaway::read(http2_frame_header_t const* header, size_t siz
 
         pl.read(ptr_payload, get_payload_size());
 
-        _last_id = t_variant_to_int<uint32>(pl.select(constexpr_frame_last_stream_id)->get_variant().content());
-        _errorcode = t_variant_to_int<uint32>(pl.select(constexpr_frame_error_code)->get_variant().content());
+        _last_id = t_to_int<uint32>(pl.select(constexpr_frame_last_stream_id));
+        _errorcode = t_to_int<uint32>(pl.select(constexpr_frame_error_code));
         pl.select(constexpr_frame_debug_data)->get_variant().dump(_debug, true);
     }
     __finally2 {
@@ -98,7 +76,7 @@ return_t http2_frame_goaway::write(binary_t& frame) {
 
     set_payload_size(bin_payload.size());
 
-    http2_frame_header::write(frame);
+    http2_frame::write(frame);
     frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());
 
     return ret;
@@ -106,12 +84,12 @@ return_t http2_frame_goaway::write(binary_t& frame) {
 
 void http2_frame_goaway::dump(stream_t* s) {
     if (s) {
-        http2_frame_header::dump(s);
+        http2_frame::dump(s);
 
-        s->printf("> %s %u\n", constexpr_frame_last_stream_id, _last_id);
-        s->printf("> %s %u\n", constexpr_frame_error_code, _errorcode);
-        s->printf("> %s\n", constexpr_frame_debug_data);
-        dump_memory(_debug, s, 16, 2, 0x0, dump_memory_flag_t::dump_notrunc);
+        s->printf(" > %s %u\n", constexpr_frame_last_stream_id, _last_id);
+        s->printf(" > %s %u\n", constexpr_frame_error_code, _errorcode);
+        s->printf(" > %s\n", constexpr_frame_debug_data);
+        dump_memory(_debug, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
         s->printf("\n");
     }
 }

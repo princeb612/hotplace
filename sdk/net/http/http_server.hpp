@@ -55,6 +55,8 @@ class http_server {
     ipaddr_acl& get_ipaddr_acl();
     server_conf& get_server_conf();
 
+    http_server& set_debug(std::function<void(stream_t*)> f);
+
    protected:
     http_server();
 
@@ -62,10 +64,26 @@ class http_server {
 
     return_t startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
     return_t shutdown_tls();
-    return_t startup_server(uint16 tls, uint16 family, uint16 port, http_server_handler_t handler);
+    return_t startup_server(uint16 tls, uint16 family, uint16 port, http_server_handler_t handler, void* user_context = nullptr);
     return_t shutdown_server();
 
     void shutdown();
+
+    /**
+     * @brief   server handler
+     * @param   uint32 type [in] multiplexer_event_type_t
+     * @param   uint32 data_count [in] 5
+     * @param   void* data_array[] [in]
+     *              data_array[0] net_session_socket_t*
+     *              data_array[1] transfered buffer
+     *              data_array[2] transfered size
+     *              data_array[3] network_session*
+     *              data_array[4] http_server*
+     * @param   CALLBACK_CONTROL* callback_control [in] nullptr
+     * @param   void* server_context [in] http_server*
+     */
+    static return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* server_context);
+    return_t consume(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
 
    private:
     network_server _server;
@@ -88,10 +106,17 @@ class http_server {
     http2_protocol _protocol2;
     hpack_encoder _hpack_encoder;
 
+    // consume handler
+    http_server_handler_t _consumer;
+    void* _user_context;
+
     // route
     http_router _router;
     typedef std::list<network_multiplexer_context_t*> http_handles_t;
     http_handles_t _http_handles;
+
+    // debug
+    std::function<void(stream_t*)> _df;
 };
 
 }  // namespace net

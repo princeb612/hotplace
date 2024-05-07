@@ -127,7 +127,7 @@ class network_stream {
      * @param   network_stream*        target           [OUT]
      * @return error code (see error.hpp)
      */
-    return_t do_write(network_protocol_group* protocol, network_stream* target);
+    return_t do_writep(network_protocol_group* protocol, network_stream* target);
 
     typedef std::list<network_stream_data*> network_stream_list_t;
 

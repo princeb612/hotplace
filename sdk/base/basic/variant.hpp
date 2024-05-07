@@ -174,7 +174,7 @@ typedef struct __variant_t {
 } variant_t;
 
 template <typename T>
-T t_variant_to_int(const variant_t& vt) {
+T t_to_int(const variant_t& vt) {
     T i = 0;
 
     switch (vt.type) {

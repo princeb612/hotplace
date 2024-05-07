@@ -14,6 +14,7 @@
 #include <sdk/io.hpp>
 #include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
+#include <sdk/net/http/http2/http2_session.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_stream.hpp>
 #include <sdk/net/tls/tls.hpp>
@@ -99,7 +100,7 @@ class network_session {
     return_t connected(handle_t client_socket, sockaddr_storage_t* sockaddr, tls_context_t* tls_handle);
     /**
      * @brief in windows call wsarecv to read asynchronously
-     * @return error code (see error.hpp)
+     * @return  error code (see error.hpp)
      */
     return_t ready_to_read();
 
@@ -107,7 +108,7 @@ class network_session {
      * @brief send
      * @param const char*         data_ptr        [IN]
      * @param size_t              size_data       [IN]
-     * @return error code (see error.hpp)
+     * @return  error code (see error.hpp)
      */
     return_t send(const char* data_ptr, size_t size_data);
 
@@ -162,14 +163,15 @@ class network_session {
 
     tcp_server_socket* get_server_socket();
     network_session_data* get_session_data();
-    hpack_session* get_hpack_session();
+    http2_session& get_http2_session();
 
    protected:
     net_session_t _session;
     network_stream _stream;
     network_stream _request;
     network_session_data _session_data;
-    hpack_session _hpack_session;
+
+    http2_session _http2_session;
 
     t_shared_reference<network_session> _shared;
     critical_section _lock;

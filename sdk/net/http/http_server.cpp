@@ -96,7 +96,7 @@ return_t http_server::shutdown_tls() {
     return ret;
 }
 
-return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, http_server_handler_t handler) {
+return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, http_server_handler_t handler, void* user_context) {
     return_t ret = errorcode_t::success;
     network_multiplexer_context_t* handle = nullptr;
     tcp_server_socket* socket = nullptr;
@@ -106,6 +106,8 @@ return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, htt
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        _consumer = handler;
+        _user_context = user_context;
 
         if (tls) {
             socket = _tls_server_socket;
@@ -113,7 +115,8 @@ return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, htt
             socket = &_server_socket;
         }
 
-        ret = get_network_server().open(&handle, family, IPPROTO_TCP, port, 1024, handler, this, socket);
+        uint16 epoll_concurrent_event = get_server_conf().get(netserver_config_t::serverconf_concurrent_event);  // 1024
+        ret = get_network_server().open(&handle, family, IPPROTO_TCP, port, epoll_concurrent_event, &consume_routine, this, socket);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -145,6 +148,74 @@ return_t http_server::shutdown_server() {
 void http_server::shutdown() {
     shutdown_server();
     shutdown_tls();
+}
+
+return_t http_server::consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* server_context) {
+    http_server* server = (http_server*)server_context;
+    return server->consume(type, data_count, data_array, callback_control, server->_user_context);
+}
+
+return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+    return_t ret = errorcode_t::success;
+    http_request request;
+    http_request* h2request = nullptr;
+
+    void* dispatch_data[5] = {data_array[0], data_array[1], data_array[2], data_array[3], nullptr};
+    char* buf = (char*)data_array[1];
+    size_t bufsize = (size_t)data_array[2];
+
+#if 0
+    if (_df) {
+        net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
+        basic_stream bs;
+
+        switch (type) {
+            case mux_connect:
+                bs.printf("connect %i\n", session_socket->cli_socket);
+                break;
+            case mux_read: {
+                bs.printf("read %i\n", session_socket->cli_socket);
+                byte_t* buf = (byte_t*)data_array[1];
+                size_t bufsize = (size_t)data_array[2];
+                dump_memory((byte_t*)buf, bufsize, &bs, 16, 2, 0, dump_memory_flag_t::dump_notrunc);
+                bs.printf("\n");
+            } break;
+            case mux_disconnect:
+                bs.printf("disconnect %i\n", session_socket->cli_socket);
+                break;
+            default:
+                break;
+        }
+        _df(&bs);
+    }
+#endif
+
+    if (errorcode_t::success == get_http_protocol().is_kind_of(buf, bufsize)) {  // HTTP/1.1
+        request.open(buf, bufsize);
+        dispatch_data[4] = &request;
+    } else if (get_server_conf().get(netserver_config_t::serverconf_enable_h2)) {
+        network_session* session = (network_session*)data_array[3];
+        if (session) {
+            if (get_server_conf().get(netserver_config_t::serverconf_debug_h2)) {
+                session->get_http2_session().set_debug(_df);
+            }
+            session->get_http2_session().consume(type, data_count, data_array, this, &h2request);
+        }
+        dispatch_data[4] = h2request;
+    }
+
+    ret = _consumer(type, RTL_NUMBER_OF(dispatch_data), dispatch_data, callback_control, user_context);
+
+    if (h2request) {
+        h2request->release();
+    }
+
+    return ret;
+}
+
+http_server& http_server::set_debug(std::function<void(stream_t*)> f) {
+    _df = f;
+    return *this;
 }
 
 network_server& http_server::get_network_server() { return _server; }
