@@ -131,8 +131,19 @@ const char* http_header::get_token(const char* header, unsigned index, std::stri
 return_t http_header::get_headers(std::string& contents) {
     return_t ret = errorcode_t::success;
 
+    get_headers([&](const std::string& name, const std::string& value) -> void { contents += format("%s: %s\r\n", name.c_str(), value.c_str()); });
+
+    return ret;
+}
+
+return_t http_header::get_headers(std::function<void(const std::string& name, const std::string& value)> f) {
+    return_t ret = errorcode_t::success;
+
     __try2 {
-        //_tclean(contents);
+        if (nullptr == f) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
         critical_section_guard guard(_lock);
         maphint<std::string, std::string> hint(_headers);
@@ -140,7 +151,7 @@ return_t http_header::get_headers(std::string& contents) {
             std::string key = *iter;
             std::string value;
             hint.find(key, &value);
-            contents.append(format("%s: %s\r\n", key.c_str(), value.c_str()));
+            f(key, value);
         }
     }
     __finally2 {

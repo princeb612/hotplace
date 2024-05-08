@@ -120,6 +120,7 @@ class http_header {
      * @return error code (see error.hpp)
      */
     return_t get_headers(std::string& contents);
+    return_t get_headers(std::function<void(const std::string& name, const std::string& value)> f);
 
     http_header& operator=(const http_header& object);
 

@@ -158,9 +158,12 @@ return_t html_documents::get_content_type(const std::string& uri, std::string& c
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
 
-    size_t pos = uri.find_last_of(".");
+    std::string local;
+    map(uri, local);
+
+    size_t pos = local.find_last_of(".");
     if (std::string::npos != pos) {
-        std::string dot_ext = uri.substr(pos);
+        std::string dot_ext = local.substr(pos);
 
         std::map<std::string, std::string>::iterator iter = _content_types.find(dot_ext);
         if (_content_types.end() != iter) {

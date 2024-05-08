@@ -62,7 +62,7 @@ typedef struct _network_multiplexer_context_t {
     uint32 signature;
 
     multiplexer_context_t* mplexer_handle;
-    uint32 concurent;
+    uint32 concurrent;
     TYPE_CALLBACK_HANDLEREXV callback_routine;
     void* callback_param;
 
@@ -107,7 +107,7 @@ network_server::~network_server() {
     // openssl_cleanup ();
 }
 
-return_t network_server::open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent,
+return_t network_server::open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurrent,
                               TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param, tcp_server_socket* svr_socket) {
     return_t ret = errorcode_t::success;
 
@@ -134,7 +134,7 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
             __leave2;
         }
 
-        ret = mplexer.open(&mplexer_handle, concurent);
+        ret = mplexer.open(&mplexer_handle, concurrent);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -165,7 +165,7 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
         context->consumer_threads.set(concurrent_consume, consumer_thread, consumer_signal, context);
 
         context->mplexer_handle = mplexer_handle;
-        context->concurent = concurent;
+        context->concurrent = concurrent;
         context->callback_routine = callback_routine;
         context->callback_param = callback_param;
 

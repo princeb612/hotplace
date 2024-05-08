@@ -63,6 +63,8 @@ return_t network_session::send(const char* data_ptr, size_t size_data) {
     return ret;
 }
 
+return_t network_session::send(const byte_t* data_ptr, size_t size_data) { return send((char*)data_ptr, size_data); }
+
 net_session_socket_t* network_session::socket_info() { return &_session.netsock; }
 
 #if defined _WIN32 || defined _WIN64
@@ -132,9 +134,10 @@ return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, 
             }
         } else { /* wo TLS */
 #if defined __linux__
-            ret = get_server_socket()->read((socket_t)_session.netsock.cli_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, nullptr);
+            size_t cbread = 0;
+            ret = get_server_socket()->read((socket_t)_session.netsock.cli_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, &cbread);
             if (errorcode_t::success == ret) {
-                getstream()->produce(buf_read, size_buf_read);
+                getstream()->produce(buf_read, cbread);
                 q->push(get_priority(), this);
             }
 #elif defined _WIN32 || defined _WIN64

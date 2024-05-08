@@ -65,6 +65,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
 
         network_session* session = (network_session*)data_array[3];
         hpack_encoder* encoder = &server->get_hpack_encoder();
+        hpack_session* hpsess = &session->get_http2_session().get_hpack_session();
 
         constexpr char preface[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
         const uint16 sizeof_preface = 24;
@@ -97,9 +98,11 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             req = &iter->second;
         } else {
             req = &_headers[stream_id];  // insert
-            req->set_stream_id(stream_id);
+            (*req).set_hpack_encoder(encoder).set_hpack_session(hpsess).set_stream_id(stream_id).set_version(2);
         }
+
         bool completion = (mask == (mask & flags)) ? true : false;
+        bool reset = false;
 
         if (h2_frame_t::h2_frame_data == hdr->type) {
             http2_frame_data frame;
@@ -113,12 +116,12 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         } else if (h2_frame_t::h2_frame_headers == hdr->type) {
             http2_frame_headers frame;
             frame.read(hdr, frame_size);
+            frame.set_hpack_encoder(encoder).set_hpack_session(&get_hpack_session());
             if (_df) {
                 frame.dump(&bs);
                 _df(&bs);
             }
 
-            frame.set_hpack_encoder(encoder).set_hpack_session(&get_hpack_session());
             frame.read_compressed_header(frame.get_fragment(),
                                          [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); });
 
@@ -136,6 +139,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
                 frame.dump(&bs);
                 _df(&bs);
             }
+            reset = true;
         } else if (h2_frame_t::h2_frame_settings == hdr->type) {
             http2_frame_settings frame;
             frame.read(hdr, frame_size);
@@ -160,17 +164,26 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         } else if (h2_frame_t::h2_frame_push_promise == hdr->type) {
             http2_frame_push_promise frame;
             frame.read(hdr, frame_size);
+            frame.set_hpack_encoder(encoder).set_hpack_session(&get_hpack_session());
             if (_df) {
                 frame.dump(&bs);
                 _df(&bs);
             }
+
+            frame.read_compressed_header(frame.get_fragment(),
+                                         [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); });
+
         } else if (h2_frame_t::h2_frame_ping == hdr->type) {
             http2_frame_ping frame;
+            binary_t bin_resp;
             frame.read(hdr, frame_size);
             if (_df) {
                 frame.dump(&bs);
                 _df(&bs);
             }
+            frame.set_flags(h2_flag_ack);
+            frame.write(bin_resp);
+            session->send(&bin_resp[0], bin_resp.size());
         } else if (h2_frame_t::h2_frame_goaway == hdr->type) {
             http2_frame_goaway frame;
             frame.read(hdr, frame_size);
@@ -188,12 +201,12 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         } else if (h2_frame_t::h2_frame_continuation == hdr->type) {
             http2_frame_continuation frame;
             frame.read(hdr, frame_size);
+            frame.set_hpack_encoder(encoder).set_hpack_session(&get_hpack_session());
             if (_df) {
                 frame.dump(&bs);
                 _df(&bs);
             }
 
-            frame.set_hpack_encoder(encoder).set_hpack_session(&get_hpack_session());
             frame.read_compressed_header(frame.get_fragment(),
                                          [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); });
         }
@@ -205,7 +218,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             // get_http_header().get(":path")
             r->get_http_uri().open(r->get_http_header().get(":path"));
             *request = r;
-
+        }
+        if (completion || reset) {
             _flags.erase(stream_id);
             _headers.erase(stream_id);
         }

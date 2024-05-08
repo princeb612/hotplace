@@ -111,6 +111,7 @@ class network_session {
      * @return  error code (see error.hpp)
      */
     return_t send(const char* data_ptr, size_t size_data);
+    return_t send(const byte_t* data_ptr, size_t size_data);
 
     /**
      * @brief return socket information

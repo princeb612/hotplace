@@ -183,7 +183,7 @@ class network_server {
      *          It'll be automatically created 1 tls_accept_thread, if server_socketis an instance of tls_server_socket class.
      *          see tls_accept_loop_run/tls_accept_loop_break
      */
-    return_t open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurent,
+    return_t open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurrent,
                   TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param, tcp_server_socket* svr_socket);
 
     /**

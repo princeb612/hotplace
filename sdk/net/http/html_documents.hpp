@@ -48,6 +48,8 @@ class html_documents {
     html_documents& add_content_type(const std::string& dot_ext, const std::string& content_type);
     html_documents& set_default_document(const std::string& document);
 
+    return_t get_content_type(const std::string& uri, std::string& content_type);
+
     return_t load(const std::string& uri, std::string& content_type, binary_t& content);
     return_t handler(const std::string& uri, network_session* session, http_request* request, http_response* response);
 
@@ -56,7 +58,6 @@ class html_documents {
     return_t search_cache(const std::string& uri, binary_t& content);
     return_t insert_cache(const std::string& uri, binary_t& content);
     return_t loadfile(const std::string& uri, binary_t& content);
-    return_t get_content_type(const std::string& uri, std::string& content_type);
 
    private:
     critical_section _lock;

@@ -22,6 +22,7 @@
 #include <map>
 #include <sdk/base.hpp>
 #include <sdk/io.hpp>
+#include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http_header.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_uri.hpp>
@@ -94,11 +95,21 @@ class http_response {
     /**
      * @brief   response
      */
-    http_response& get_response(basic_stream& bs);
+    http_response& get_response(basic_stream& bs);  // HTTP/1.1
+    http_response& get_response2(binary_t& bin);    // HTTP/2
 
-    virtual std::string get_version();
+    virtual std::string get_version_str();
 
     http_response& operator=(const http_response& object);
+
+    http_response& set_hpack_encoder(hpack_encoder* encoder);
+    http_response& set_hpack_session(hpack_session* session);
+    http_response& set_version(uint8 version);
+    http_response& set_stream_id(uint32 stream_id);
+    hpack_encoder* get_hpack_encoder();
+    hpack_session* get_hpack_session();
+    uint8 get_version();
+    uint32 get_stream_id();
 
     void addref();
     void release();
@@ -110,8 +121,13 @@ class http_response {
     http_request* _request;
     http_header _header;
     std::string _content_type;
-    std::string _content;
+    basic_stream _content;
     int _statuscode;
+
+    hpack_encoder* _encoder;
+    hpack_session* _hpsess;
+    uint8 _version;
+    uint32 _stream_id;
 };
 
 }  // namespace net

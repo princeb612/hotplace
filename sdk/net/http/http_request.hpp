@@ -22,6 +22,7 @@
 #include <map>
 #include <sdk/base.hpp>
 #include <sdk/io.hpp>
+#include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http_header.hpp>
 #include <sdk/net/http/http_uri.hpp>
 #include <sdk/net/http/types.hpp>
@@ -67,7 +68,7 @@ class http_request {
     /**
      * @brief   return the method (GET, POST, ...)
      */
-    const char* get_method();
+    std::string get_method();
     /**
      * @brief   content
      */
@@ -99,12 +100,12 @@ class http_request {
     http_request& add_content(const binary_t& bin);
     http_request& clear_content();
 
-    /*
-     * @brief   version
-     * @param   uint8 version [in] 1 HTTP/1.1, 2 HTTP/2
-     */
+    http_request& set_hpack_encoder(hpack_encoder* encoder);
+    http_request& set_hpack_session(hpack_session* session);
     http_request& set_version(uint8 version);
     http_request& set_stream_id(uint32 stream_id);
+    hpack_encoder* get_hpack_encoder();
+    hpack_session* get_hpack_session();
     uint8 get_version();
     uint32 get_stream_id();
 
@@ -115,13 +116,16 @@ class http_request {
     t_shared_reference<http_request> _shared;
 
    private:
-    uint8 _version;
-    uint32 _stream_id;
     std::string _method;
     std::string _content;
 
     http_header _header;
     http_uri _uri;
+
+    hpack_encoder* _encoder;
+    hpack_session* _hpsess;
+    uint8 _version;
+    uint32 _stream_id;
 };
 
 }  // namespace net

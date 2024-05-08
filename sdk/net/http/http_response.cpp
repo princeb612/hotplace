@@ -10,6 +10,7 @@
 
 #include <sdk/base.hpp>
 #include <sdk/io.hpp>
+#include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/http/http_response.hpp>
 
@@ -17,12 +18,18 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_response::http_response() : _request(nullptr), _statuscode(0) { _shared.make_share(this); }
-
-http_response::http_response(http_request* request) : _request(request), _statuscode(0) {
+http_response::http_response() : _request(nullptr), _statuscode(0), _encoder(nullptr), _hpsess(nullptr), _version(1), _stream_id(0) {
     _shared.make_share(this);
-    if (_request) {
-        _request->addref();
+}
+
+http_response::http_response(http_request* request) : _request(request), _statuscode(0), _encoder(nullptr), _hpsess(nullptr), _version(1), _stream_id(0) {
+    _shared.make_share(this);
+    if (request) {
+        request->addref();
+        _encoder = request->get_hpack_encoder();
+        _hpsess = request->get_hpack_session();
+        _version = request->get_version();
+        _stream_id = request->get_stream_id();
     }
 }
 
@@ -32,6 +39,10 @@ http_response::http_response(const http_response& object) {
     if (_request) {
         _request->addref();
     }
+    _encoder = object._encoder;
+    _hpsess = object._hpsess;
+    _version = object._version;
+    _stream_id = object._stream_id;
     _header = object._header;
     _content_type = object._content_type;
     _content = object._content;
@@ -57,6 +68,11 @@ return_t http_response::open(const char* response, size_t size_response) {
         }
 
         close();
+
+        if (1 != _version) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
 
         size_t line = 1;
         size_t pos = 0, epos = 0;
@@ -102,13 +118,13 @@ return_t http_response::open(const char* response, size_t size_response) {
             if ("deflate" == encoding) {
                 basic_stream inflated;
                 zlib_inflate(zlib_windowbits_t::windowbits_deflate, content, content_size, &inflated);
-                _content.assign(inflated.c_str(), inflated.size());
+                _content = inflated;
             } else if ("gzip" == encoding) {
                 basic_stream inflated;
                 zlib_inflate(zlib_windowbits_t::windowbits_gzip, content, content_size, &inflated);
-                _content.assign(inflated.c_str(), inflated.size());
+                _content = inflated;
             } else {
-                _content.assign((char*)content, content_size);
+                _content.write(content, content_size);
             }
         }
 
@@ -165,7 +181,7 @@ http_response& http_response::compose(int status_code, const char* content_type,
     if (nullptr != content) {
         va_list ap;
         va_start(ap, content);
-        _content = format(content, ap);
+        _content.vprintf(content, ap);
         va_end(ap);
     }
     _statuscode = status_code;
@@ -179,7 +195,7 @@ http_response& http_response::compose(int status_code, const std::string& conten
     if (nullptr != content) {
         va_list ap;
         va_start(ap, content);
-        _content = format(content, ap);
+        _content.vprintf(content, ap);
         va_end(ap);
     }
     _statuscode = status_code;
@@ -194,9 +210,15 @@ return_t http_response::respond(network_session* session) {
             __leave2;
         }
 
-        basic_stream bs;
-        get_response(bs);
-        session->send((const char*)bs.data(), bs.size());
+        if (1 == _version) {
+            basic_stream bs;
+            get_response(bs);
+            session->send((const char*)bs.data(), bs.size());
+        } else if (2 == _version) {
+            binary_t bin;
+            get_response2(bin);
+            session->send((const char*)&bin[0], bin.size());
+        }
     }
     __finally2 {
         // do nothing
@@ -219,51 +241,122 @@ http_request* http_response::get_http_request() { return _request; }
 http_response& http_response::get_response(basic_stream& bs) {
     bs.clear();
 
-    std::string accept_encoding;
-    basic_stream method;
-    if (_request) {
-        _request->get_http_header().get("Accept-Encoding", accept_encoding);
-        method = _request->get_method();
-    }
+    if (1 == _version) {
+        std::string accept_encoding;
+        basic_stream method;
+        if (_request) {
+            _request->get_http_header().get("Accept-Encoding", accept_encoding);
+            method = _request->get_method();
+        }
 
-    http_resource* resource = http_resource::get_instance();
+        http_resource* resource = http_resource::get_instance();
 
-    std::string headers;
-    if (_content_type.size() && content_size()) {
-        get_http_header().add("Content-Type", content_type());
-    }
-    get_http_header().add("Connection", "Keep-Alive");
+        std::string headers;
+        if (_content_type.size() && content_size()) {
+            get_http_header().add("Content-Type", content_type());
+        }
+        get_http_header().add("Connection", "Keep-Alive");
 
-    if (0 == strcmp("HEAD", method.c_str())) {
-        get_http_header().add("Content-Length", "0").get_headers(headers);
-        bs << get_version() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
-    } else {
-        if (std::string::npos != accept_encoding.find("deflate")) {
-            basic_stream encoded;
-            zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), &encoded);
+        if (0 == strcmp("HEAD", method.c_str())) {
+            get_http_header().add("Content-Length", "0").get_headers(headers);
+            bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
+        } else {
+            if (std::string::npos != accept_encoding.find("deflate")) {
+                basic_stream encoded;
+                zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), &encoded);
 
-            get_http_header().add("Content-Encoding", "deflate").add("Content-Length", format("%zi", encoded.size())).get_headers(headers);
-            bs << get_version() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
-            bs.write(encoded.data(), encoded.size());
-        } else if (std::string::npos != accept_encoding.find("gzip")) {
-            basic_stream encoded;
-            zlib_deflate(zlib_windowbits_t::windowbits_gzip, (byte_t*)content(), content_size(), &encoded);
+                get_http_header().add("Content-Encoding", "deflate").add("Content-Length", format("%zi", encoded.size())).get_headers(headers);
+                bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
+                bs.write(encoded.data(), encoded.size());
+            } else if (std::string::npos != accept_encoding.find("gzip")) {
+                basic_stream encoded;
+                zlib_deflate(zlib_windowbits_t::windowbits_gzip, (byte_t*)content(), content_size(), &encoded);
 
-            get_http_header().add("Content-Encoding", "gzip").add("Content-Length", format("%zi", encoded.size())).get_headers(headers);
-            bs << get_version() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
-            bs.write(encoded.data(), encoded.size());
-        } else /* "identity" */ {
-            get_http_header().add("Content-Length", format("%zi", content_size())).get_headers(headers);
+                get_http_header().add("Content-Encoding", "gzip").add("Content-Length", format("%zi", encoded.size())).get_headers(headers);
+                bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
+                bs.write(encoded.data(), encoded.size());
+            } else /* "identity" */ {
+                get_http_header().add("Content-Length", format("%zi", content_size())).get_headers(headers);
 
-            bs << get_version() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
-            bs.write(content(), content_size());
+                bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
+                bs.write(content(), content_size());
+            }
         }
     }
-
     return *this;
 }
 
-std::string http_response::get_version() { return "HTTP/1.1"; }
+http_response& http_response::get_response2(binary_t& bin) {
+    bin.clear();
+    if ((2 == _version) && get_hpack_encoder() && get_hpack_session()) {
+        std::string accept_encoding;
+        std::string method;
+        if (_request) {
+            _request->get_http_header().get("accept-encoding", accept_encoding);
+            _request->get_http_header().get(":method", method);
+        }
+
+        std::string encoding;
+        binary_t encoded;
+        bool header_only = false;
+
+        if (0 == strcmp("HEAD", method.c_str())) {
+            header_only = true;
+        } else {
+            if (std::string::npos != accept_encoding.find("deflate")) {
+                encoding = "deflate";
+            } else if (std::string::npos != accept_encoding.find("gzip")) {
+                encoding = "gzip";
+            } else /* "identity" */ {
+                // do nothing
+            }
+        }
+
+        hpack hp;
+        hp.set_encoder(get_hpack_encoder())
+            .set_session(get_hpack_session())
+            .encode_header(":status", format("%i", status_code()).c_str())
+            .encode_header("content-type", content_type(), hpack_wo_indexing | hpack_huffman);
+        get_http_header().get_headers([&](const std::string& name, const std::string& value) -> void { hp.encode_header(name, value); });
+        if (encoding.size()) {
+            hp.encode_header("content-encoding", encoding);
+        } else {
+            // do nothing
+        }
+
+        http2_frame_headers headers;
+        uint8 flags = h2_flag_end_headers;
+        if (true == header_only) {
+            flags |= h2_flag_end_stream;
+        }
+        headers.set_flags(flags).set_stream_id(get_stream_id());
+        headers.get_fragment() = hp.get_binary();
+        headers.write(bin);
+
+        if (false == header_only) {
+            http2_frame_data data;
+            data.set_flags(h2_flag_end_stream).set_stream_id(get_stream_id());
+            if (encoding.empty()) {
+                data.get_data().insert(data.get_data().end(), content(), content() + content_size());
+            } else {
+                if ("deflate" == encoding) {
+                    zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), data.get_data());
+                } else if ("gzip" == encoding) {
+                    zlib_deflate(zlib_windowbits_t::windowbits_gzip, (byte_t*)content(), content_size(), data.get_data());
+                }
+            }
+            data.write(bin);
+        }
+    }
+    return *this;
+}
+
+std::string http_response::get_version_str() {
+    constexpr char ver1[] = "HTTP/1.1";
+    constexpr char ver2[] = "HTTP/2";
+
+    return (1 == _version) ? ver1 : ver2;
+}
 
 http_response& http_response::operator=(const http_response& object) {
     _header = object._header;
@@ -273,6 +366,34 @@ http_response& http_response::operator=(const http_response& object) {
     _statuscode = object._statuscode;
     return *this;
 }
+
+http_response& http_response::set_hpack_encoder(hpack_encoder* encoder) {
+    _encoder = encoder;
+    return *this;
+}
+
+http_response& http_response::set_hpack_session(hpack_session* session) {
+    _hpsess = session;
+    return *this;
+}
+
+http_response& http_response::set_version(uint8 version) {
+    _version = version;
+    return *this;
+}
+
+http_response& http_response::set_stream_id(uint32 stream_id) {
+    _stream_id = stream_id;
+    return *this;
+}
+
+hpack_encoder* http_response::get_hpack_encoder() { return _encoder; }
+
+hpack_session* http_response::get_hpack_session() { return _hpsess; }
+
+uint8 http_response::get_version() { return _version; }
+
+uint32 http_response::get_stream_id() { return _stream_id; }
 
 void http_response::addref() { _shared.addref(); }
 

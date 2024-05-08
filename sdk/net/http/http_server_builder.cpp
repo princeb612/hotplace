@@ -26,6 +26,7 @@ http_server_builder::http_server_builder() : _handler(nullptr), _user_context(nu
         .set(netserver_config_t::serverconf_enable_https, 0)
         .set(netserver_config_t::serverconf_port_http, 80)
         .set(netserver_config_t::serverconf_port_https, 443)
+        .set(netserver_config_t::serverconf_concurrent_event, 1024)
         .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
         .set(netserver_config_t::serverconf_concurrent_network, 2)
         .set(netserver_config_t::serverconf_concurrent_consume, 2);

@@ -64,14 +64,6 @@ void print(const char* text, ...) {
     fflush(stdout);
 }
 
-void dump_frame(http2_frame* base, http2_frame_header_t* hdr, size_t size, hpack_encoder* encoder = nullptr, hpack_session* session = nullptr) {
-    basic_stream bs;
-    base->read(hdr, size);
-    base->dump(&bs);
-    printf("%s", bs.c_str());
-    fflush(stdout);
-}
-
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
     net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
@@ -86,84 +78,26 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     OPTION& option = cmdline->value();
 
-    // switch (type) {
-    //     case mux_connect:
-    //         // cprint("connect %i", session_socket->cli_socket);
-    //         break;
-    //     case mux_read:
-    //         // cprint("read %i", session_socket->cli_socket);
-    //         break;
-    //     case mux_disconnect:
-    //         // cprint("disconnect %i", session_socket->cli_socket);
-    //         break;
-    // }
-
-    if (request) {                          // in case of mux_read
-        if (2 == request->get_version()) {  // HTTP/2, END_HEADERS and END_HEADERS
-            uint32 stream_id = request->get_stream_id();
-
-            hpack_encoder* encoder = &_http_server->get_hpack_encoder();
-            hpack_session* hpsess = &session->get_http2_session().get_hpack_session();
-
-            hpack hp;
-            binary_t bin_resp;
-            const char* resp = "<html><body>hello</body></html>";
-
-            // header compression
-            {
-                hp.set_encoder(encoder)
-                    .set_session(hpsess)
-                    .set_encode_flags(hpack_indexing | hpack_huffman)
-                    .encode_header(":status", "200")
-                    .encode_header("content-type", "text/html")
-                    .encode_header("content-length", format("%zi", strlen(resp)).c_str(), hpack_wo_indexing | hpack_huffman);
-                if (option.verbose) {
-                    dump_memory(hp.get_binary(), &bs, 16, 2);
-                    print("dump HPACK\n%s\n", bs.c_str());
-                }
+    switch (type) {
+        case mux_connect:
+            // cprint("connect %i", session_socket->cli_socket);
+            break;
+        case mux_read:
+            // cprint("read %i", session_socket->cli_socket);
+            if (request) {
+                http_response response(request);
+#if 0
+                const char* text = "<html><body>hello</body></html>";
+                response.compose(200, "text/html", text);
+#else
+                _http_server->get_http_router().route(session, request, &response);
+#endif
+                response.respond(session);
             }
-
-            // response headers
-            {
-                // - END_STREAM
-                // + END_HEADERS
-                http2_frame_headers resp_headers;
-                resp_headers.set_hpack_encoder(encoder).set_hpack_session(hpsess).set_flags(h2_flag_end_headers).set_stream_id(stream_id);
-                resp_headers.get_fragment() = hp.get_binary();
-                resp_headers.write(bin_resp);
-            }
-
-            // response data
-            {
-                // + END_STREAM
-                http2_frame_data resp_data;
-                resp_data.set_flags(h2_flag_end_stream).set_stream_id(stream_id);
-
-                resp_data.get_data() = convert(resp);
-                resp_data.write(bin_resp);
-            }
-
-            // response
-            {
-                // + END_STREAM
-                // + END_HEADERS
-                http2_frame_headers resp_headers2;
-                resp_headers2.set_flags(h2_flag_end_stream | h2_flag_end_headers).set_stream_id(stream_id);
-                resp_headers2.write(bin_resp);
-            }
-
-            // dump response
-            if (option.verbose) {
-                dump_memory(bin_resp, &bs, 16, 2);
-                print("dump (headers+data)\n%s\n", bs.c_str());
-            }
-
-            session->send((char*)&bin_resp[0], bin_resp.size());
-        } else {  // HTTP/1.1
-            http_response resp;
-            resp.compose(200, "text/html", "<html><body><pre>hello</pre></body></html>");
-            resp.respond(session);
-        }
+            break;
+        case mux_disconnect:
+            // cprint("disconnect %i", session_socket->cli_socket);
+            break;
     }
 
     return ret;
@@ -202,8 +136,123 @@ return_t echo_server(void*) {
 
         if (option.verbose) {
             _http_server->get_server_conf().set(netserver_config_t::serverconf_debug_h2, 1);
-            _http_server->set_debug([](stream_t* s) -> void { print("%.*s", s->size(), s->data()); });
+            _http_server->set_debug([](stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); });
         }
+
+        // Basic Authentication (realm)
+        std::string basic_realm = "Hello World";
+        // Digest Access Authentication (realm/algorithm/qop/userhash)
+        std::string digest_access_realm = "happiness";
+        std::string digest_access_realm2 = "testrealm@host.com";
+        std::string digest_access_alg = "SHA-256-sess";
+        std::string digest_access_alg2 = "SHA-512-256-sess";
+        std::string digest_access_qop = "auth";
+        bool digest_access_userhash = true;
+        // Bearer Authentication (realm)
+        std::string bearer_realm = "hotplace";
+        // OAuth 2.0 (realm)
+        std::string oauth2_realm = "somewhere over the rainbow";
+        basic_stream endpoint_url;
+        basic_stream cb_url;
+        endpoint_url << "https://localhost:" << option.port_tls;
+        cb_url << endpoint_url << "/client/cb";
+
+        std::function<void(network_session*, http_request*, http_response*, http_router*)> default_handler =
+            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
+            basic_stream bs;
+            request->get_request(bs);
+            response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
+        };
+        std::function<void(network_session*, http_request*, http_response*, http_router*)> error_handler =
+            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
+            basic_stream bs;
+            request->get_request(bs);
+            response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
+        };
+        std::function<void(network_session*, http_request*, http_response*, http_router*)> cb_handler =
+            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
+            key_value& kv = request->get_http_uri().get_query_keyvalue();
+            std::string code = kv.get("code");
+            std::string access_token = kv.get("access_token");
+            std::string error = kv.get("error");
+            if (error.empty()) {
+                if (code.size()) {
+                    // Authorization Code Grant
+                    http_client client;
+                    http_request req;
+                    http_response* resp = nullptr;
+                    basic_stream bs;
+                    bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << cb_url << "&client_id=s6BhdRkqt3";
+
+                    req.compose(http_method_t::HTTP_POST, bs.c_str(), "");                             // token endpoint
+                    req.get_http_header().add("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW");  // s6BhdRkqt3:gX1fBat3bV
+
+                    client.set_url(endpoint_url.c_str());
+                    client.set_ttl(10 * 1000);
+                    client.request(req, &resp);
+                    if (resp) {
+                        *response = *resp;
+                        resp->release();
+                    }
+                } else if (access_token.size()) {
+                    // Implitcit Grant
+                    response->compose(200, "text/plain", "");
+                }
+            } else {
+                response->compose(401, "text/html", "<html><body>Unauthorized</body></html>");
+            }
+        };
+
+        _http_server->get_http_router()
+            .get_html_documents()
+            .add_documents_root("/", ".")
+            .add_content_type(".css", "text/css")
+            .add_content_type(".html", "text/html")
+            .add_content_type(".jpeg", "image/jpeg")
+            .add_content_type(".json", "text/json")
+            .set_default_document("index.html");
+
+        _http_server
+            ->get_http_router()
+            // .add("/api/html", api_response_html_handler)
+            // .add("/api/json", api_response_json_handler)
+            // .add("/api/test", default_handler)
+            // .add(404, error_handler)
+            // basic authentication
+            .add("/auth/basic", default_handler, new basic_authentication_provider(basic_realm))
+            // digest access authentication
+            .add("/auth/digest", default_handler,
+                 new digest_access_authentication_provider(digest_access_realm, digest_access_alg, digest_access_qop, digest_access_userhash))
+            .add("/auth/digest2", default_handler, new digest_access_authentication_provider(digest_access_realm2, "", digest_access_qop))
+            // bearer authentication
+            .add("/auth/bearer", default_handler, new bearer_authentication_provider(bearer_realm))
+            // callback
+            .add("/client/cb", cb_handler);
+
+        _http_server->get_http_router()
+            .get_oauth2_provider()
+            .add(new oauth2_authorization_code_grant_provider)
+            .add(new oauth2_implicit_grant_provider)
+            .add(new oauth2_resource_owner_password_credentials_grant_provider)
+            .add(new oauth2_client_credentials_grant_provider)
+            .add(new oauth2_unsupported_provider)
+            .set(oauth2_authorization_endpoint, "/auth/authorize")
+            .set(oauth2_token_endpoint, "/auth/token")
+            .set(oauth2_signpage, "/auth/sign")
+            .set(oauth2_signin, "/auth/signin")
+            .set_token_endpoint_authentication(new basic_authentication_provider(oauth2_realm))
+            .apply(_http_server->get_http_router());
+
+        http_authentication_resolver& resolver = _http_server->get_http_router().get_authenticate_resolver();
+
+        resolver.get_basic_credentials(basic_realm).add("user", "password");
+        resolver.get_basic_credentials(oauth2_realm).add("s6BhdRkqt3", "gX1fBat3bV");  // RFC 6749 Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+        resolver.get_digest_credentials(digest_access_realm).add(digest_access_realm, digest_access_alg, "user", "password");
+        resolver.get_digest_credentials(digest_access_realm2).add(digest_access_realm2, digest_access_alg2, "Mufasa", "Circle Of Life");
+        resolver.get_bearer_credentials(bearer_realm).add("clientid", "token");
+
+        resolver.get_oauth2_credentials().insert("s6BhdRkqt3", "gX1fBat3bV", "user", "testapp", cb_url.c_str(), std::list<std::string>());
+        resolver.get_custom_credentials().add("user", "password");
 
         _http_server->start();
 
