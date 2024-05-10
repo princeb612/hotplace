@@ -30,6 +30,8 @@ http_response::http_response(http_request* request) : _request(request), _status
         _hpsess = request->get_hpack_session();
         _version = request->get_version();
         _stream_id = request->get_stream_id();
+
+        get_http_header().set_version(_version);
     }
 }
 
@@ -213,11 +215,9 @@ return_t http_response::respond(network_session* session) {
         if (1 == _version) {
             basic_stream bs;
             get_response(bs);
-            session->send((const char*)bs.data(), bs.size());
+            session->send(bs.data(), bs.size());
         } else if (2 == _version) {
-            binary_t bin;
-            get_response2(bin);
-            session->send((const char*)&bin[0], bin.size());
+            response_h2(session);
         }
     }
     __finally2 {
@@ -286,8 +286,10 @@ http_response& http_response::get_response(basic_stream& bs) {
     return *this;
 }
 
-http_response& http_response::get_response2(binary_t& bin) {
-    bin.clear();
+http_response& http_response::response_h2(network_session* session) {
+    binary_t bin;
+    basic_stream dbs;
+
     if ((2 == _version) && get_hpack_encoder() && get_hpack_session()) {
         std::string accept_encoding;
         std::string method;
@@ -300,23 +302,28 @@ http_response& http_response::get_response2(binary_t& bin) {
         binary_t encoded;
         bool header_only = false;
 
-        if (0 == strcmp("HEAD", method.c_str())) {
-            header_only = true;
-        } else {
-            if (std::string::npos != accept_encoding.find("deflate")) {
-                encoding = "deflate";
-            } else if (std::string::npos != accept_encoding.find("gzip")) {
-                encoding = "gzip";
-            } else /* "identity" */ {
-                // do nothing
+        if (content_size()) {
+            if (0 == strcmp("HEAD", method.c_str())) {
+                header_only = true;
+            } else {
+                if (std::string::npos != accept_encoding.find("deflate")) {
+                    encoding = "deflate";
+                } else if (std::string::npos != accept_encoding.find("gzip")) {
+                    encoding = "gzip";
+                } else /* "identity" */ {
+                    // do nothing
+                }
             }
+        } else {
+            header_only = true;
         }
 
         hpack hp;
         hp.set_encoder(get_hpack_encoder())
             .set_session(get_hpack_session())
+            .set_encode_flags(hpack_wo_indexing | hpack_huffman)  // chrome test
             .encode_header(":status", format("%i", status_code()).c_str())
-            .encode_header("content-type", content_type(), hpack_wo_indexing | hpack_huffman);
+            .encode_header("content-type", content_type());
         get_http_header().get_headers([&](const std::string& name, const std::string& value) -> void { hp.encode_header(name, value); });
         if (encoding.size()) {
             hp.encode_header("content-encoding", encoding);
@@ -325,17 +332,17 @@ http_response& http_response::get_response2(binary_t& bin) {
         }
 
         http2_frame_headers headers;
+        http2_frame_data data;
+
         uint8 flags = h2_flag_end_headers;
         if (true == header_only) {
             flags |= h2_flag_end_stream;
         }
-        headers.set_flags(flags).set_stream_id(get_stream_id());
-        headers.get_fragment() = hp.get_binary();
-        headers.write(bin);
+
+        headers.set_flags(flags).set_stream_id(get_stream_id()).load_hpack(hp);
+        data.set_flags(h2_flag_end_stream).set_stream_id(get_stream_id()).load_hpack(hp);
 
         if (false == header_only) {
-            http2_frame_data data;
-            data.set_flags(h2_flag_end_stream).set_stream_id(get_stream_id());
             if (encoding.empty()) {
                 data.get_data().insert(data.get_data().end(), content(), content() + content_size());
             } else {
@@ -345,7 +352,47 @@ http_response& http_response::get_response2(binary_t& bin) {
                     zlib_deflate(zlib_windowbits_t::windowbits_gzip, (byte_t*)content(), content_size(), data.get_data());
                 }
             }
+        }
+
+        {
+            hp.encode_header("content-length", format("%zi", data.get_data().size()), hpack_wo_indexing | hpack_huffman);
+            headers.get_fragment() = hp.get_binary();
+
+            bin.clear();
+            headers.write(bin);
+            session->send(&bin[0], bin.size());
+
+            if (_df) {
+                dbs.clear();
+                datetime dt;
+                datetime_t t;
+                dt.getlocaltime(&t);
+
+                dbs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d\n", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
+                headers.dump(&dbs);
+                dbs.printf("\n");
+
+                _df(&dbs);
+            }
+        }
+
+        if (false == header_only) {
+            bin.clear();
             data.write(bin);
+            session->send(&bin[0], bin.size());
+
+            if (_df) {
+                dbs.clear();
+                datetime dt;
+                datetime_t t;
+                dt.getlocaltime(&t);
+
+                dbs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d\n", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
+                data.dump(&dbs);
+                dbs.printf("\n");
+
+                _df(&dbs);
+            }
         }
     }
     return *this;
@@ -378,7 +425,15 @@ http_response& http_response::set_hpack_session(hpack_session* session) {
 }
 
 http_response& http_response::set_version(uint8 version) {
-    _version = version;
+    switch (version) {
+        case 2:
+        case 1:
+            _version = version;
+            get_http_header().set_version(version);
+            break;
+        default:
+            break;
+    }
     return *this;
 }
 
@@ -394,6 +449,11 @@ hpack_session* http_response::get_hpack_session() { return _hpsess; }
 uint8 http_response::get_version() { return _version; }
 
 uint32 http_response::get_stream_id() { return _stream_id; }
+
+http_response& http_response::set_debug(std::function<void(stream_t*)> f) {
+    _df = f;
+    return *this;
+}
 
 void http_response::addref() { _shared.addref(); }
 

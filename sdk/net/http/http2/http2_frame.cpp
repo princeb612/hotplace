@@ -110,6 +110,12 @@ http2_frame& http2_frame::set_stream_id(uint32 id) {
     return *this;
 }
 
+http2_frame& http2_frame::load_hpack(hpack& hp) {
+    _hpack_encoder = hp.get_encoder();
+    _hpack_session = hp.get_session();
+    return *this;
+}
+
 http2_frame& http2_frame::set_hpack_encoder(hpack_encoder* encoder) {
     _hpack_encoder = encoder;
     return *this;

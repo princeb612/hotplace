@@ -124,6 +124,20 @@ return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, 
                     getstream()->produce(buf_read, cbread);
 
                     data_ready = true;
+
+                    if (_df) {
+                        basic_stream bs;
+                        datetime dt;
+                        datetime_t t;
+                        dt.getlocaltime(&t);
+
+                        bs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d ", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
+                        bs << "[ns] read " << (socket_t)_session.netsock.cli_socket << "\n";
+                        dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
+                        bs << "\n";
+                        _df(&bs);
+                    }
+
                 } else {
                     break;
                 }
@@ -133,17 +147,31 @@ return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, 
                 q->push(get_priority(), this);
             }
         } else { /* wo TLS */
-#if defined __linux__
             size_t cbread = 0;
+#if defined __linux__
             ret = get_server_socket()->read((socket_t)_session.netsock.cli_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, &cbread);
             if (errorcode_t::success == ret) {
                 getstream()->produce(buf_read, cbread);
                 q->push(get_priority(), this);
             }
 #elif defined _WIN32 || defined _WIN64
+            cbread = size_buf_read;
             getstream()->produce(buf_read, size_buf_read);
             q->push(get_priority(), this);
 #endif
+
+            if (_df && (errorcode_t::success == ret)) {
+                basic_stream bs;
+                datetime dt;
+                datetime_t t;
+                dt.getlocaltime(&t);
+
+                bs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d ", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
+                bs << "[ns] read " << (socket_t)_session.netsock.cli_socket << "\n";
+                dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
+                bs << "\n";
+                _df(&bs);
+            }
         }
     }
     __finally2 {
@@ -165,6 +193,11 @@ tcp_server_socket* network_session::get_server_socket() { return _session.svr_so
 network_session_data* network_session::get_session_data() { return &_session_data; }
 
 http2_session& network_session::get_http2_session() { return _http2_session; }
+
+network_session& network_session::set_debug(std::function<void(stream_t*)> f) {
+    _df = f;
+    return *this;
+}
 
 network_session_manager::network_session_manager() {
     // do nothing

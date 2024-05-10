@@ -91,14 +91,18 @@ http_server_builder& http_server_builder::set_handler(http_server_handler_t hand
     return *this;
 }
 
+http_server_builder& http_server_builder::set_debug(std::function<void(stream_t*)> f) {
+    _df = f;
+    return *this;
+}
+
 http_server* http_server_builder::build() {
     http_server* server = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
         __try_new_catch(server, new http_server, ret, __leave2);
 
-        server_conf& config = server->get_server_conf();
-        config = get_server_conf();
+        server->get_server_conf() = get_server_conf();
 
         uint16 ipv4 = get_server_conf().get(netserver_config_t::serverconf_enable_ipv4);
         uint16 ipv6 = get_server_conf().get(netserver_config_t::serverconf_enable_ipv6);
@@ -138,6 +142,8 @@ http_server* http_server_builder::build() {
                 server->_cert->enable_alpn_h2(true);
             }
         }
+
+        server->set_debug(_df);
     }
     __finally2 {
         // do nothing

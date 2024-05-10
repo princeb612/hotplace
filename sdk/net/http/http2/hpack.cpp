@@ -29,6 +29,10 @@ hpack& hpack::set_session(hpack_session* session) {
     return *this;
 }
 
+hpack_encoder* hpack::get_encoder() { return _encoder; }
+
+hpack_session* hpack::get_session() { return _session; }
+
 hpack& hpack::set_encode_flags(uint32 flags) {
     _flags = flags;
     return *this;

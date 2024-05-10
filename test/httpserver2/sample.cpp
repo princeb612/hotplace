@@ -86,12 +86,13 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             // cprint("read %i", session_socket->cli_socket);
             if (request) {
                 http_response response(request);
-#if 0
-                const char* text = "<html><body>hello</body></html>";
-                response.compose(200, "text/html", text);
-#else
+                if (option.verbose) {
+                    response.set_debug([](stream_t* s) -> void {
+                        print("\e[1;37m%.*s\e[0m", (unsigned int)s->size(), s->data());
+                        fflush(stdout);
+                    });
+                }
                 _http_server->get_http_router().route(session, request, &response);
-#endif
                 response.respond(session);
             }
             break;
@@ -114,30 +115,33 @@ return_t echo_server(void*) {
     fclose(fp);
 
     __try2 {
-        builder.enable_http(true)
+        builder
+            .enable_http(false)  // disable http
             .set_port_http(option.port)
-            .enable_https(true)
+            .enable_https(true)  // enable https
             .set_port_https(option.port_tls)
             .set_tls_certificate("server.crt", "server.key")
             .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
-            .set_tls_verify_peer(0)
-            .enable_ipv4(true)
-            .enable_ipv6(true)
-            .enable_h2(true)  // enable HTTP/2
-            .set_handler(consume_routine);
+            .set_tls_verify_peer(0)  // self-signed certificate
+            .enable_ipv4(true)       // enable IPv4
+            .enable_ipv6(false)      // disable IPv6
+            .enable_h2(true)         // enable HTTP/2
+            .set_handler(consume_routine)
+            .set_debug([](stream_t* s) -> void {
+                print("%.*s", (unsigned int)s->size(), s->data());
+                fflush(stdout);
+            });
         builder.get_server_conf()
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
             .set(netserver_config_t::serverconf_concurrent_network, 2)
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
+        if (option.verbose) {
+            builder.get_server_conf().set(netserver_config_t::serverconf_debug_ns, 1).set(netserver_config_t::serverconf_debug_h2, 1);
+        }
         _http_server.make_share(builder.build());
 
         _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
         _http_server->get_http2_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
-
-        if (option.verbose) {
-            _http_server->get_server_conf().set(netserver_config_t::serverconf_debug_h2, 1);
-            _http_server->set_debug([](stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); });
-        }
 
         // Basic Authentication (realm)
         std::string basic_realm = "Hello World";
@@ -160,13 +164,13 @@ return_t echo_server(void*) {
         std::function<void(network_session*, http_request*, http_response*, http_router*)> default_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
             basic_stream bs;
-            request->get_request(bs);
+            bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
         };
         std::function<void(network_session*, http_request*, http_response*, http_router*)> error_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
             basic_stream bs;
-            request->get_request(bs);
+            bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
         };
         std::function<void(network_session*, http_request*, http_response*, http_router*)> cb_handler =
@@ -208,6 +212,7 @@ return_t echo_server(void*) {
             .add_documents_root("/", ".")
             .add_content_type(".css", "text/css")
             .add_content_type(".html", "text/html")
+            .add_content_type(".ico", "image/image/vnd.microsoft.icon")
             .add_content_type(".jpeg", "image/jpeg")
             .add_content_type(".json", "text/json")
             .set_default_document("index.html");

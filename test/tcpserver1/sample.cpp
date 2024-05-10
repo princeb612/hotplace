@@ -317,7 +317,7 @@ return_t echo_server(void* param) {
         networkipv4_threads.set(64, network_thread_routine, network_signal_routine, &accept_context_ipv4);
         networkipv6_threads.set(64, network_thread_routine, network_signal_routine, &accept_context_ipv6);
 
-        int network_thread_count = 1;
+        int network_thread_count = 2;
 #if defined __linux__
 
         /* epoll 은 listen socket 바인딩 */

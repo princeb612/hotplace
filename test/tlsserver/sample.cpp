@@ -84,9 +84,15 @@ return_t echo_server(void*) {
         //__try_new_catch (http_prot, new http_protocol, ret, __leave2);
         __try_new_catch(tls_server, new tls_server_socket(tls), ret, __leave2);
 
+        server_conf conf;
+        conf.set(netserver_config_t::serverconf_concurrent_event, 1024)  // concurrent (linux epoll concerns, windows ignore)
+            .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
+            .set(netserver_config_t::serverconf_concurrent_network, 2)
+            .set(netserver_config_t::serverconf_concurrent_consume, 2);
+
         // start server
-        netserver.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 1024, consume_routine, nullptr, tls_server);
-        netserver.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 1024, consume_routine, nullptr, tls_server);
+        netserver.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, &conf, consume_routine, nullptr, tls_server);
+        netserver.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, &conf, consume_routine, nullptr, tls_server);
         // netserver.add_protocol(handle_ipv4, http_prot);
 
         netserver.consumer_loop_run(handle_ipv4, 2);

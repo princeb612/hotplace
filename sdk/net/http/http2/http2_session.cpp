@@ -38,19 +38,24 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
             basic_stream bs;
 
+            datetime dt;
+            datetime_t t;
+            dt.getlocaltime(&t);
+            bs.printf("\e[1;37m%04d-%02d-%02d %02d:%02d:%02d.%03d\e[0m ", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
+
             switch (type) {
                 case mux_connect:
-                    bs.printf("connect %i\n", session_socket->cli_socket);
+                    bs.printf("[h2] connect %i\n", session_socket->cli_socket);
                     break;
                 case mux_read: {
-                    bs.printf("read %i\n", session_socket->cli_socket);
+                    bs.printf("[h2] read %i\n", session_socket->cli_socket);
                     byte_t* buf = (byte_t*)data_array[1];
                     size_t bufsize = (size_t)data_array[2];
                     dump_memory((byte_t*)buf, bufsize, &bs, 16, 2, 0, dump_memory_flag_t::dump_notrunc);
                     bs.printf("\n");
                 } break;
                 case mux_disconnect:
-                    bs.printf("disconnect %i\n", session_socket->cli_socket);
+                    bs.printf("[h2] disconnect %i\n", session_socket->cli_socket);
                     break;
                 default:
                     break;

@@ -115,8 +115,7 @@ return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, htt
             socket = &_server_socket;
         }
 
-        uint16 epoll_concurrent_event = get_server_conf().get(netserver_config_t::serverconf_concurrent_event);  // 1024
-        ret = get_network_server().open(&handle, family, IPPROTO_TCP, port, epoll_concurrent_event, &consume_routine, this, socket);
+        ret = get_network_server().open(&handle, family, IPPROTO_TCP, port, &get_server_conf(), &consume_routine, this, socket);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -215,10 +214,17 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
 
 http_server& http_server::set_debug(std::function<void(stream_t*)> f) {
     _df = f;
+    if (get_server_conf().get(netserver_config_t::serverconf_debug_ns)) {
+        for (auto item : _http_handles) {
+            network_server::set_debug(item, f);
+        }
+    }
     return *this;
 }
 
 network_server& http_server::get_network_server() { return _server; }
+
+server_conf& http_server::get_server_conf() { return _conf; }
 
 http_protocol& http_server::get_http_protocol() { return _protocol; }
 
@@ -229,8 +235,6 @@ hpack_encoder& http_server::get_hpack_encoder() { return _hpack_encoder; }
 http_router& http_server::get_http_router() { return _router; }
 
 ipaddr_acl& http_server::get_ipaddr_acl() { return _acl; }
-
-server_conf& http_server::get_server_conf() { return _server.get_server_conf(); }
 
 }  // namespace net
 }  // namespace hotplace

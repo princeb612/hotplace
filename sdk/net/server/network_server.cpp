@@ -17,32 +17,6 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-server_conf::server_conf() {}
-
-server_conf::server_conf(const server_conf& conf) { _config_map = conf._config_map; }
-
-server_conf& server_conf::set(netserver_config_t type, uint16 value) {
-    return_t ret = errorcode_t::success;
-
-    config_map_pib_t pib = _config_map.insert(std::make_pair(type, value));
-    if (false == pib.second) {
-        pib.first->second = value;
-    }
-
-    return *this;
-}
-
-uint16 server_conf::get(netserver_config_t type) {
-    uint16 value = 0;
-
-    config_map_t::iterator iter = _config_map.find(type);
-    if (_config_map.end() != iter) {
-        value = iter->second;
-    }
-
-    return value;
-}
-
 #define NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE 0x20151127
 
 struct _network_multiplexer_context_t;
@@ -88,26 +62,15 @@ typedef struct _network_multiplexer_context_t {
     critical_section accept_queue_lock;
 
     ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler;
+
+    std::function<void(stream_t*)> df;
 } network_multiplexer_context_t;
 
-network_server::network_server() {
-    // openssl_startup ();
-    // openssl_thread_setup ();
+network_server::network_server() {}
 
-    // default values
-    get_server_conf()
-        .set(netserver_config_t::serverconf_concurrent_event, 1024)
-        .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
-        .set(netserver_config_t::serverconf_concurrent_network, 1)
-        .set(netserver_config_t::serverconf_concurrent_consume, 2);
-}
+network_server::~network_server() {}
 
-network_server::~network_server() {
-    // openssl_thread_cleanup ();
-    // openssl_cleanup ();
-}
-
-return_t network_server::open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurrent,
+return_t network_server::open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, server_conf* conf,
                               TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param, tcp_server_socket* svr_socket) {
     return_t ret = errorcode_t::success;
 
@@ -134,6 +97,11 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
             __leave2;
         }
 
+        uint16 concurrent = conf ? conf->get(netserver_config_t::serverconf_concurrent_event) : 1024;
+        uint16 concurrent_tls_accept = conf ? conf->get(netserver_config_t::serverconf_concurrent_tls_accept) : 1;
+        uint16 concurrent_network = conf ? conf->get(netserver_config_t::serverconf_concurrent_network) : 1;
+        uint16 concurrent_consume = conf ? conf->get(netserver_config_t::serverconf_concurrent_consume) : 2;
+
         ret = mplexer.open(&mplexer_handle, concurrent);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -156,9 +124,6 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
         // use dummy signal handler ... just call CloseListener first, and signal_and_wait_all
         context->accept_threads.set(1, accept_thread, signalwait_threads::dummy_signal, context);
 #endif
-        size_t concurrent_tls_accept = get_server_conf().get(netserver_config_t::serverconf_concurrent_tls_accept);
-        size_t concurrent_network = get_server_conf().get(netserver_config_t::serverconf_concurrent_network);
-        size_t concurrent_consume = get_server_conf().get(netserver_config_t::serverconf_concurrent_consume);
 
         context->tls_accept_threads.set(concurrent_tls_accept, tls_accept_thread, tls_accept_signal, context);
         context->network_threads.set(concurrent_network, network_thread, network_signal, context);
@@ -1042,6 +1007,11 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
         if (errorcode_t::success != ret) {
             __leave2;
         }
+
+        if (handle->df) {
+            session_object->set_debug(handle->df);
+        }
+
         /* associate with multiplex object (iocp, epoll) */
         mplexer.bind(handle->mplexer_handle, cli_socket, session_object);
 #if defined _WIN32 || defined _WIN64
@@ -1108,7 +1078,20 @@ return_t network_server::session_closed(network_multiplexer_context_t* handle, h
     return ret;
 }
 
-server_conf& network_server::get_server_conf() { return _config; }
+return_t network_server::set_debug(network_multiplexer_context_t* handle, std::function<void(stream_t*)> f) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        handle->df = f;
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

@@ -90,12 +90,13 @@ typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
  * @example
  *
  *  network_server netserver;
- *  netserver.get_server_conf().
- *      .set(netserver_config_t::serverconf_concurrent_tls_accept], 1)
- *      .set(netserver_config_t::serverconf_concurrent_network], 2)
- *      .set(netserver_config_t::serverconf_concurrent_consume], 2);
+ *  server_conf conf;
+ *  conf.set(netserver_config_t::serverconf_concurrent_event, 1024) // concurrent (linux epoll concerns, windows ignore)
+ *      .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
+ *      .set(netserver_config_t::serverconf_concurrent_network, 2)
+ *      .set(netserver_config_t::serverconf_concurrent_consume, 2);
  *  network_multiplexer_context_t* handle = nullptr;
- *  netserver.open (&handle, AF_INET,  IPPROTO_TCP, PORT, 1024, NetworkRoutine, nullptr);
+ *  netserver.open (&handle, AF_INET,  IPPROTO_TCP, PORT, &conf, NetworkRoutine, nullptr);
  *  netserver.consumer_loop_run (handle, 2);
  *  netserver.event_loop_run (handle, 2);
  *
@@ -142,8 +143,12 @@ class network_server {
      * @param   unsigned int                    family              [IN] AF_INET for ipv4, AF_INET6 for ipv6
      * @param   unsigned int                    type                [IN] ip protocol, IPPROTO_TCP(or IPPROTO_TCP)
      * @param   uint16                          port                [IN] port
-     * @param   uint32                          concurrent          [IN] concurrent (linux epoll concerns, windows ignore)
-     *                                                               see epoll_wait
+     * @param   server_conf*                    conf                [inopt]
+     *
+     *          serverconf_concurrent_event         default 1024
+     *          serverconf_concurrent_tls_accept    default 1
+     *          serverconf_concurrent_network       default 1
+     *          serverconf_concurrent_consume       default 2
      * @param   TYPE_CALLBACK_HANDLEREXV    callback_routine    [IN] callback
      *            return_t (*TYPE_CALLBACK_HANDLEREXV)
      *                         (uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* parameter);
@@ -183,7 +188,7 @@ class network_server {
      *          It'll be automatically created 1 tls_accept_thread, if server_socketis an instance of tls_server_socket class.
      *          see tls_accept_loop_run/tls_accept_loop_break
      */
-    return_t open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, uint32 concurrent,
+    return_t open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, server_conf* conf,
                   TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param, tcp_server_socket* svr_socket);
 
     /**
@@ -286,7 +291,7 @@ class network_server {
      */
     return_t close(network_multiplexer_context_t* handle);
 
-    server_conf& get_server_conf();
+    static return_t set_debug(network_multiplexer_context_t* handle, std::function<void(stream_t*)> f);
 
    protected:
     /**
@@ -376,9 +381,6 @@ class network_server {
      * @return  error code (see error.hpp)
      */
     return_t session_closed(network_multiplexer_context_t* handle, handle_t cli_socket);
-
-   private:
-    server_conf _config;
 };
 
 }  // namespace net

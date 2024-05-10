@@ -63,6 +63,8 @@ class http_server_builder {
 
     http_server_builder& set_handler(http_server_handler_t handler, void* user_context = nullptr);
 
+    http_server_builder& set_debug(std::function<void(stream_t*)> f);
+
     http_server* build();
     server_conf& get_server_conf();
 
@@ -76,6 +78,8 @@ class http_server_builder {
 
     http_server_handler_t _handler;
     void* _user_context;
+
+    std::function<void(stream_t*)> _df;
 };
 
 }  // namespace net

@@ -48,12 +48,13 @@ class http_server {
     return_t stop();
 
     network_server& get_network_server();
+    server_conf& get_server_conf();
+
     http_protocol& get_http_protocol();
     http2_protocol& get_http2_protocol();
     hpack_encoder& get_hpack_encoder();
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();
-    server_conf& get_server_conf();
 
     http_server& set_debug(std::function<void(stream_t*)> f);
 
@@ -87,6 +88,7 @@ class http_server {
 
    private:
     network_server _server;
+    server_conf _conf;
 
     // TCP
     tcp_server_socket _server_socket;

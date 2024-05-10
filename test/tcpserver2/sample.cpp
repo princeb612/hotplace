@@ -74,8 +74,14 @@ return_t echo_server(void* param) {
         acl.add_rule("::1", true);
         acl.setmode(ipaddr_acl_t::whitelist);
 
-        network_server.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, 1024, consume_routine, nullptr, &svr_sock);
-        network_server.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, 1024, consume_routine, nullptr, &svr_sock);
+        server_conf conf;
+        conf.set(netserver_config_t::serverconf_concurrent_event, 1024)  // concurrent (linux epoll concerns, windows ignore)
+            .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
+            .set(netserver_config_t::serverconf_concurrent_network, 2)
+            .set(netserver_config_t::serverconf_concurrent_consume, 2);
+
+        network_server.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, &conf, consume_routine, nullptr, &svr_sock);
+        network_server.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, &conf, consume_routine, nullptr, &svr_sock);
 
         network_server.set_accept_control_handler(handle_ipv4, accept_handler);
         network_server.set_accept_control_handler(handle_ipv6, accept_handler);

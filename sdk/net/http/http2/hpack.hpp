@@ -66,6 +66,12 @@ class hpack {
     hpack& set_session(hpack_session* session);
 
     /**
+     * @brief   get
+     */
+    hpack_encoder* get_encoder();
+    hpack_session* get_session();
+
+    /**
      * @brief   set flags for encoding
      */
     hpack& set_encode_flags(uint32 flags);

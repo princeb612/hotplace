@@ -16,26 +16,29 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_header::http_header() {
+http_header::http_header() : _version(1) {
     // do nothing
 }
 
-http_header::http_header(const http_header& object) { _headers = object._headers; }
+http_header::http_header(const http_header& object) {
+    _names = object._names;
+    _headers = object._headers;
+    _version = object._version;
+}
 
 http_header::~http_header() {
     // do nothing
 }
 
-http_header& http_header::add(const char* header, const char* value) {
+http_header& http_header::add(const std::string& name, const std::string& value) {
     __try2 {
-        if (nullptr == header || nullptr == value) {
-            __leave2;
-        }
-
         critical_section_guard guard(_lock);
-        http_header_map_pib_t pib = _headers.insert(std::make_pair(header, value));
+
+        std::string key = (1 == get_version()) ? name : lowername(name);
+
+        http_header_map_pib_t pib = _headers.insert(std::make_pair(key, value));
         if (true == pib.second) {
-            _names.push_back(header);
+            _names.push_back(key);
         } else {
             pib.first->second = value;
         }
@@ -46,8 +49,6 @@ http_header& http_header::add(const char* header, const char* value) {
     return *this;
 }
 
-http_header& http_header::add(const std::string& header, const std::string& value) { return add(header.c_str(), value.c_str()); }
-
 http_header& http_header::clear() {
     critical_section_guard guard(_lock);
     _names.clear();
@@ -55,48 +56,51 @@ http_header& http_header::clear() {
     return *this;
 }
 
-const char* http_header::get(const char* header, std::string& value) {
-    const char* ret_value = nullptr;
+std::string http_header::get(const std::string& name, std::string& value) {
+    std::string ret_value;
 
     value.clear();
-    if (nullptr != header) {
-        http_header_map_t::iterator iter = _headers.find(std::string(header));
-        if (_headers.end() != iter) {
-            value = iter->second;
-            ret_value = value.c_str();
-        }
+
+    std::string key = (1 == get_version()) ? name : lowername(name);
+
+    http_header_map_t::iterator iter = _headers.find(key);
+    if (_headers.end() != iter) {
+        value = iter->second;
+        ret_value = value.c_str();
     }
 
     return ret_value;
 }
 
-std::string http_header::get(const char* header) {
+std::string http_header::get(const std::string& name) {
     std::string ret_value;
-    if (nullptr != header) {
-        http_header_map_t::iterator iter = _headers.find(std::string(header));
-        if (_headers.end() != iter) {
-            ret_value = iter->second;
-        }
+
+    std::string key = (1 == get_version()) ? name : lowername(name);
+
+    http_header_map_t::iterator iter = _headers.find(key);
+    if (_headers.end() != iter) {
+        ret_value = iter->second;
     }
     return ret_value;
 }
 
-bool http_header::contains(const char* header, const char* value) {
+bool http_header::contains(const std::string& name, const std::string& value) {
     bool ret_value = false;
-    if (header && value) {
-        http_header_map_t::iterator iter = _headers.find(std::string(header));
-        if (_headers.end() != iter) {
-            std::string body = iter->second;
-            size_t pos = body.find(value);
-            if (std::string::npos != pos) {
-                ret_value = true;
-            }
+
+    std::string key = (1 == get_version()) ? name : lowername(name);
+
+    http_header_map_t::iterator iter = _headers.find(key);
+    if (_headers.end() != iter) {
+        std::string body = iter->second;
+        size_t pos = body.find(value);
+        if (std::string::npos != pos) {
+            ret_value = true;
         }
     }
     return ret_value;
 }
 
-const char* http_header::get_token(const char* header, unsigned index, std::string& token) {
+const char* http_header::get_token(const std::string& name, unsigned index, std::string& token) {
     const char* ret_value = nullptr;
 
     token.clear();
@@ -104,24 +108,24 @@ const char* http_header::get_token(const char* header, unsigned index, std::stri
     std::string content;
     std::string temp;
 
-    if (nullptr != header) {
-        http_header_map_t::iterator iter = _headers.find(std::string(header));
-        if (_headers.end() != iter) {
-            content = iter->second;
+    std::string key = (1 == get_version()) ? name : lowername(name);
 
-            size_t pos = 0;
-            size_t current = 0;
-            while (current <= index) {
-                temp = tokenize(content, _T (" "), pos);
-                if (true == temp.empty()) {
-                    break;
-                }
-                if (current == index) {
-                    token = temp;
-                    ret_value = token.c_str();
-                }
-                current++;
+    http_header_map_t::iterator iter = _headers.find(key);
+    if (_headers.end() != iter) {
+        content = iter->second;
+
+        size_t pos = 0;
+        size_t current = 0;
+        while (current <= index) {
+            temp = tokenize(content, _T (" "), pos);
+            if (true == temp.empty()) {
+                break;
             }
+            if (current == index) {
+                token = temp;
+                ret_value = token.c_str();
+            }
+            current++;
         }
     }
 
@@ -136,7 +140,7 @@ return_t http_header::get_headers(std::string& contents) {
     return ret;
 }
 
-return_t http_header::get_headers(std::function<void(const std::string& name, const std::string& value)> f) {
+return_t http_header::get_headers(std::function<void(const std::string&, const std::string&)> f) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -196,6 +200,20 @@ http_header& http_header::operator=(const http_header& object) {
     _headers = object._headers;
     return *this;
 }
+
+http_header& http_header::set_version(uint8 version) {
+    switch (version) {
+        case 2:
+        case 1:
+            _version = version;
+            break;
+        default:
+            break;
+    }
+    return *this;
+}
+
+uint8 http_header::get_version() { return _version; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -166,6 +166,8 @@ class network_session {
     network_session_data* get_session_data();
     http2_session& get_http2_session();
 
+    network_session& set_debug(std::function<void(stream_t*)> f);
+
    protected:
     net_session_t _session;
     network_stream _stream;
@@ -173,6 +175,8 @@ class network_session {
     network_session_data _session_data;
 
     http2_session _http2_session;
+
+    std::function<void(stream_t*)> _df;
 
     t_shared_reference<network_session> _shared;
     critical_section _lock;

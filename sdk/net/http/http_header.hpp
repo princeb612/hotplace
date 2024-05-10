@@ -36,21 +36,13 @@ class http_header {
 
     /**
      * @brief   add a header
-     * @param   const char*     header      [IN]
-     * @param   const char*     value       [IN]
+     * @param   const std::string&  name    [IN]
+     * @param   const std::string&  value   [IN]
      * @return  *this
      * @remarks
      *          header.add ("WWW-Authenticate", "Basic realm=\"protected\"");
      */
-    http_header& add(const char* header, const char* value);
-
-    /**
-     * @brief   add a header
-     * @param   std::string     header      [IN]
-     * @param   std::string     value       [IN]
-     * @return  *this
-     */
-    http_header& add(const std::string& header, const std::string& value);
+    http_header& add(const std::string& name, const std::string& value);
 
     /**
      * @brief   clear
@@ -82,26 +74,26 @@ class http_header {
 
     /**
      * @brief   read a header
-     * @param   const char* header [in]
+     * @param   const std::string& name [in]
      * @param   std::string& value [out]
      * @return  value
      * @sample
      *          header.get ("Content-Length", conent_length);
      */
-    const char* get(const char* header, std::string& value);
-    std::string get(const char* header);
+    std::string get(const std::string& name, std::string& value);
+    std::string get(const std::string& name);
     /**
      * @brief   contains
-     * @param   const char* header [in]
-     * @param   const char* value [in]
+     * @param   const std::string& name [in]
+     * @param   const std::string& value [in]
      * @sample
      *          header.add("Content-Type", "text/html;charset=UTF-8");
      *          test = header.contains("Content-Type", "text/html");
      */
-    bool contains(const char* header, const char* value);
+    bool contains(const std::string& name, const std::string& value);
     /**
      * @brief   read a header token
-     * @param   const char* header [in]
+     * @param   const std::string& name [in]
      * @param   unsigned index [in]
      * @param   std::string& token [out]
      * @return  token
@@ -112,7 +104,7 @@ class http_header {
      *          if (auth_type == "Basic") ...
      *          else if (auth_type == "Digest") ...
      */
-    const char* get_token(const char* header, unsigned index, std::string& token);
+    const char* get_token(const std::string& name, unsigned index, std::string& token);
 
     /**
      * @brief read all headers
@@ -120,9 +112,12 @@ class http_header {
      * @return error code (see error.hpp)
      */
     return_t get_headers(std::string& contents);
-    return_t get_headers(std::function<void(const std::string& name, const std::string& value)> f);
+    return_t get_headers(std::function<void(const std::string&, const std::string&)> f);
 
     http_header& operator=(const http_header& object);
+
+    http_header& set_version(uint8 version);
+    uint8 get_version();
 
    protected:
     typedef std::list<std::string> http_header_list_t;
@@ -130,6 +125,7 @@ class http_header {
     typedef std::pair<http_header_map_t::iterator, bool> http_header_map_pib_t;
     http_header_list_t _names;
     http_header_map_t _headers;
+    uint8 _version;
     critical_section _lock;
 };
 

@@ -30,6 +30,8 @@ http_request::http_request(const http_request& object) {
     _content = object._content;
     _header = object._header;
     _uri = object._uri;
+
+    get_http_header().set_version(_version);
 }
 
 http_request::~http_request() { close(); }
@@ -39,11 +41,6 @@ return_t http_request::open(const char* request, size_t size_request, uint32 fla
     return_t ret_getline = errorcode_t::success;
 
     __try2 {
-        if (1 != _version) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
         if (nullptr == request) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -51,62 +48,69 @@ return_t http_request::open(const char* request, size_t size_request, uint32 fla
 
         close();
 
-        /*
-         * 1. request format
-         *  GET /resource?a=1&b=2\r\n
-         *  Content-Type: application/json\r\n
-         *  \r\n
-         *
-         * 2. loop
-         * while getline and tokenize(space or colon) do insert into map
-         * line 1 -> GET /resource?a=1&b=2
-         *           first token GET -> method
-         *           next token /resource?a=1&b=2 -> uri
-         * line 2 -> Content-Type: application/json
-         *           insert(make_pair("Content-Type", "application/json"))
-         * line 3 -> break loop if no space nor colon
-         */
-
         std::string uri;
-        size_t line = 1;
-        size_t pos = 0, epos = 0;
-        while (true) {
-            ret_getline = getline(request, size_request, pos, &epos);
-            if (errorcode_t::success != ret_getline) {
-                break;
-            }
+        size_t pos = 0;
 
-            std::string token, str(request + pos, epos - pos);
-            size_t tpos = 0;
-            token = tokenize(str, ": ", tpos);
-            token = rtrim(token);
+        if (1 == get_version()) {
+            /*
+             * 1. request format
+             *  GET /resource?a=1&b=2\r\n
+             *  Content-Type: application/json\r\n
+             *  \r\n
+             *
+             * 2. loop
+             * while getline and tokenize(space or colon) do insert into map
+             * line 1 -> GET /resource?a=1&b=2
+             *           first token GET -> method
+             *           next token /resource?a=1&b=2 -> uri
+             * line 2 -> Content-Type: application/json
+             *           insert(make_pair("Content-Type", "application/json"))
+             * line 3 -> break loop if no space nor colon
+             */
 
-            if (0 == token.size()) {
-                break;
-            }
-
-            if ((epos <= size_request) && (tpos < size_request)) { /* if token (space, colon) not found */
-                while (isspace(str[tpos])) {
-                    tpos++; /* swallow trailing spaces */
+            size_t line = 1;
+            size_t epos = 0;
+            while (true) {
+                ret_getline = getline(request, size_request, pos, &epos);
+                if (errorcode_t::success != ret_getline) {
+                    break;
                 }
-                if (1 == line) {
-                    _method = token; /* first token aka GET, POST, ... */
 
-                    size_t zpos = tpos;
-                    uri = tokenize(str, " ", zpos);
-                    _uri.open(uri);
-                } else {
-                    std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
-                    _header.add(token, remain);
+                std::string token, str(request + pos, epos - pos);
+                size_t tpos = 0;
+                token = tokenize(str, ": ", tpos);
+                token = rtrim(token);
+
+                if (0 == token.size()) {
+                    break;
                 }
+
+                if ((epos <= size_request) && (tpos < size_request)) { /* if token (space, colon) not found */
+                    while (isspace(str[tpos])) {
+                        tpos++; /* swallow trailing spaces */
+                    }
+                    if (1 == line) {
+                        _method = token; /* first token aka GET, POST, ... */
+
+                        size_t zpos = tpos;
+                        uri = tokenize(str, " ", zpos);
+                        _uri.open(uri);
+                    } else {
+                        std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
+                        _header.add(token, remain);
+                    }
+                }
+
+                pos = epos;
+                line++;
             }
 
-            pos = epos;
-            line++;
-        }
-
-        if (size_request > epos) {
-            _content.assign(request + epos, size_request - epos);
+            if (size_request > epos) {
+                _content.assign(request + epos, size_request - epos);
+            }
+        } else if (2 == get_version()) {
+            _method = get_http_header().get(":method");
+            _uri.open(get_http_header().get(":path"));
         }
 
         constexpr char constexpr_content_type[] = "Content-Type";
@@ -256,6 +260,7 @@ http_request& http_request::set_version(uint8 version) {
         case 2:
         case 1:
             _version = version;
+            get_http_header().set_version(version);
             break;
         default:
             break;

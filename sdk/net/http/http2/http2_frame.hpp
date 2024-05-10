@@ -130,6 +130,7 @@ class http2_frame {
     http2_frame& set_flags(uint8 flags);
     http2_frame& set_stream_id(uint32 id);
 
+    http2_frame& load_hpack(hpack& hp);
     http2_frame& set_hpack_encoder(hpack_encoder* encoder);
     http2_frame& set_hpack_session(hpack_session* session);
     hpack_encoder* get_hpack_encoder();

@@ -236,15 +236,18 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
         case protocol_state_t::protocol_state_complete: {
             size_t content_pos = 0;
             size_t content_size = 0;
-            for (network_stream_list_t::iterator iter = _queue.begin(); iter != _queue.end();) {
+            network_stream_list_t::iterator iter;
+            for (iter = _queue.begin(); iter != _queue.end();) {
                 buffer_object = *iter;
                 content_pos = content_size;
                 content_size += buffer_object->size();
                 if (message_size >= content_size) {
                     buffer_object->release();
                     _queue.erase(iter++);
-
                     if (message_size == content_size) {
+                        if (iter != _queue.end()) {
+                            ret = errorcode_t::more_data;
+                        }
                         break;
                     }
                 } else if ((content_pos <= message_size) && (message_size < content_size)) {
