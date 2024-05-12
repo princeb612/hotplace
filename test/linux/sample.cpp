@@ -40,11 +40,11 @@ void test_trace() {
 }
 
 int main(int argc, char** argv) {
-    test_trace();
-
     logger_builder builder;
     builder.set(logger_t::logger_stdout, 1).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
+
+    test_trace();
 
     _logger->flush();
 

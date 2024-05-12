@@ -127,11 +127,11 @@ class logger {
 
     logger& do_console(std::function<void(logger_item*)> f);
     logger& do_console(const char* fmt, bool lf = false);
-    logger& do_vconsole(const char* fmt, const va_list& ap, bool lf = false);
+    logger& do_vconsole(const char* fmt, va_list ap, bool lf = false);
 
     logger& do_write(std::function<void(logger_item*)> f);
     logger& do_write(const char* fmt, bool lf = false);
-    logger& do_vwrite(const char* fmt, const va_list& ap, bool lf = false);
+    logger& do_vwrite(const char* fmt, va_list ap, bool lf = false);
 
     logger& do_dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0, bool lf = false);
     logger& do_hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0, bool lf = false);

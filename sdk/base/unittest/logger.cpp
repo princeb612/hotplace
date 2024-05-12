@@ -231,7 +231,7 @@ logger& logger::do_console(const char* fmt, bool lf) {
     });
 }
 
-logger& logger::do_vconsole(const char* fmt, const va_list& ap, bool lf) {
+logger& logger::do_vconsole(const char* fmt, va_list ap, bool lf) {
     return do_console([&](logger_item* item) -> void {
         item->bs.vprintf(fmt, ap);
         if (lf) {
@@ -273,7 +273,7 @@ logger& logger::do_write(const char* fmt, bool lf) {
     });
 }
 
-logger& logger::do_vwrite(const char* fmt, const va_list& ap, bool lf) {
+logger& logger::do_vwrite(const char* fmt, va_list ap, bool lf) {
     return do_write([&](logger_item* item) -> void {
         item->bs.vprintf(fmt, ap);
         if (lf) {
