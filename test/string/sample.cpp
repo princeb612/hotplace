@@ -17,11 +17,12 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 void test_format() {
     _test_case.begin("format");
     _test_case.reset_time();
-    std::cout << format("%s %d %1.1f\n", "sample", 1, 1.1f) << std::endl;
+    _logger->writeln(format("%s %d %1.1f\n", "sample", 1, 1.1f));
     _test_case.assert(true, __FUNCTION__, "format");
 }
 
@@ -84,13 +85,11 @@ void test_hexbin() {
 
     std::string hex;
     base16_encode(inpart, 5, hex);
-    std::cout << hex << std::endl;
+    _logger->writeln(hex);
 
     binary_t bin;
     base16_decode(hex, bin);
-    basic_stream bs;
-    dump_memory(&bin[0], bin.size(), &bs);
-    printf("%s\n", bs.c_str());
+    _logger->dump(bin);
 
     _test_case.assert(true, __FUNCTION__, "base16");
 }
@@ -107,13 +106,11 @@ void test_constexpr_hide() {
     constexpr char temp3[] =
         "Wake up, my love, beneath the midday sun, / Alone, once more alone, / This travelin' boy was only passing through, / But he will always think of you.";
 
-    std::cout << temp1 << std::endl;
-    std::cout << temp2 << std::endl;
-    std::cout << temp3 << std::endl;
+    _logger->writeln(temp1);
+    _logger->writeln(temp2);
+    _logger->writeln(temp3);
 
-    basic_stream bs;
-    dump_memory(temp1, &bs);
-    std::cout << bs << std::endl;
+    _logger->dump(temp1, strlen(temp1));
 
     _test_case.assert(true, __FUNCTION__, "hide a string at compile time");
 }
@@ -140,9 +137,9 @@ void test_constexpr_obf() {
     constexpr auto temp2 = CONSTEXPR_OBF("wild wild world");
     define_constexpr_obf(temp3, "still a man hears what he wants to hear and disregards the rest");
 
-    std::cout << CONSTEXPR_OBF_CSTR(temp1) << std::endl;
-    std::cout << CONSTEXPR_OBF_CSTR(temp2) << std::endl;
-    std::cout << CONSTEXPR_OBF_CSTR(temp3) << std::endl;
+    _logger->writeln(CONSTEXPR_OBF_CSTR(temp1));
+    _logger->writeln(CONSTEXPR_OBF_CSTR(temp2));
+    _logger->writeln(CONSTEXPR_OBF_CSTR(temp3));
 
     _test_case.assert(true, __FUNCTION__, "obfuscate a string at compile time");
 #else
@@ -171,8 +168,7 @@ void test_obfuscate_string() {
 
     {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(bin, &bs);
-        std::cout << bs << std::endl;
+        _logger->dump(bin);
     }
 
     _test_case.assert((0 == memcmp(helloworld, &bin[0], bin.size())), __FUNCTION__, "binary_t << obfuscate");
@@ -181,8 +177,7 @@ void test_obfuscate_string() {
 
     {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(str, &bs);
-        std::cout << bs << std::endl;
+        _logger->dump(str.c_str(), str.size());
     }
 
     _test_case.assert((0 == memcmp(helloworld, str.c_str(), str.size())), __FUNCTION__, "std::string << obfuscate");
@@ -199,8 +194,7 @@ void test_obfuscate_string() {
 
         bin.clear();
         bin << obf;
-        dump_memory(bin, &bs);
-        std::cout << bs << std::endl;
+        _logger->dump(bin);
     }
     _test_case.assert(obf == obf2, __FUNCTION__, "append and operator ==");
 }
@@ -222,7 +216,7 @@ void test_printf() {
 
     myprintf_context_t context;
     printf_runtime(&context, &callback_printf, "%s %i %1.1f", "sample", 1, 1.1);
-    std::cout << context.str << std::endl;
+    _logger->writeln(context.str);
 
     _test_case.assert(true, __FUNCTION__, "printf");
 }
@@ -233,7 +227,7 @@ void test_replace() {
 
     std::string data("hello world");
     replace(data, "world", "neighbor");
-    std::cout << data << std::endl;
+    _logger->writeln(data);
 
     _test_case.assert(true, __FUNCTION__, "replace");
 }
@@ -256,9 +250,7 @@ void test_scan() {
     }
     _test_case.assert(true, __FUNCTION__, "scan");
 
-    basic_stream bs;
-    dump_memory((byte_t*)data, strlen(data), &bs, 16, 0, 0x0, dump_memory_flag_t::dump_header);
-    std::cout << bs << std::endl;
+    _logger->dump(data, strlen(data), 16);
 }
 
 void test_scan2() {
@@ -280,9 +272,7 @@ void test_scan2() {
     }
     _test_case.assert(true, __FUNCTION__, "scan");
 
-    basic_stream bs;
-    dump_memory((byte_t*)data, strlen(data), &bs, 16, 0, 0x0, dump_memory_flag_t::dump_header);
-    std::cout << bs << std::endl;
+    _logger->dump(data, strlen(data), 16);
 }
 
 void test_split() {
@@ -313,7 +303,8 @@ void test_string() {
          << L"unicode "
 #endif
          << (uint16)1 << " " << 1.1f;
-    std::cout << astr << std::endl;
+
+    _logger->writeln(astr.c_str());
 
     _test_case.assert(true, __FUNCTION__, "ansi_string");
 }
@@ -341,6 +332,10 @@ int main() {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, 1).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
     test_format();
     test_getline();
     test_gettoken();
@@ -355,6 +350,8 @@ int main() {
     test_split();
     test_string();
     test_tokenize();
+
+    _logger->flush();
 
     _test_case.report(5);
     return _test_case.result();

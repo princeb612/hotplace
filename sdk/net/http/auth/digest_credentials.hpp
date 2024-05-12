@@ -28,7 +28,7 @@ class digest_credentials {
 
     digest_credentials& add(const std::string& userid, const std::string& password);
     digest_credentials& add(const std::string& realm, const std::string& algorithm, const std::string& userid, const std::string& password);
-    bool verify(http_authenticate_provider* provider, key_value& kv);
+    bool verify(http_authenticate_provider* provider, skey_value& kv);
 
    private:
     critical_section _lock;

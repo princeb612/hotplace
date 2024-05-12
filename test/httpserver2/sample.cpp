@@ -27,6 +27,7 @@ using namespace hotplace::crypto;
 using namespace hotplace::net;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 #define FILENAME_RUN _T (".run")
 
@@ -38,20 +39,23 @@ typedef struct _OPTION {
     _OPTION() : port(8080), port_tls(9000), verbose(0) {}
 } OPTION;
 
-t_shared_instance<cmdline_t<OPTION> > cmdline;
+t_shared_instance<cmdline_t<OPTION> > _cmdline;
 t_shared_instance<http_server> _http_server;
 critical_section print_lock;
 
 void cprint(const char* text, ...) {
+    basic_stream bs;
     critical_section_guard guard(print_lock);
     console_color _concolor;
 
-    std::cout << _concolor.turnon().set_fgcolor(console_color_t::cyan);
+    bs << _concolor.turnon().set_fgcolor(console_color_t::cyan);
     va_list ap;
     va_start(ap, text);
-    vprintf(text, ap);
+    bs.vprintf(text, ap);
     va_end(ap);
-    std::cout << _concolor.turnoff() << std::endl;
+    bs << _concolor.turnoff();
+
+    _logger->writeln(bs);
 }
 
 void print(const char* text, ...) {
@@ -62,6 +66,14 @@ void print(const char* text, ...) {
     vprintf(text, ap);
     va_end(ap);
     fflush(stdout);
+}
+
+void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
+    response->compose(200, "text/html", "<html><body>page - ok<body></html>");
+}
+
+void api_response_json_handler(network_session*, http_request* request, http_response* response, http_router* router) {
+    response->compose(200, "application/json", "{\"result\":\"ok\"}");
 }
 
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
@@ -76,7 +88,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     basic_stream bs;
     std::string message;
 
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     switch (type) {
         case mux_connect:
@@ -87,10 +99,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             if (request) {
                 http_response response(request);
                 if (option.verbose) {
-                    response.set_debug([](stream_t* s) -> void {
-                        print("\e[1;37m%.*s\e[0m", (unsigned int)s->size(), s->data());
-                        fflush(stdout);
-                    });
+                    response.trace([](stream_t* s) -> void { print("\e[1;37m%.*s\e[0m", (unsigned int)s->size(), s->data()); });
                 }
                 _http_server->get_http_router().route(session, request, &response);
                 response.respond(session);
@@ -105,7 +114,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 }
 
 return_t echo_server(void*) {
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     http_server_builder builder;
@@ -116,9 +125,9 @@ return_t echo_server(void*) {
 
     __try2 {
         builder
-            .enable_http(false)  // disable http
+            .enable_http(false)  // disable http scheme
             .set_port_http(option.port)
-            .enable_https(true)  // enable https
+            .enable_https(true)  // enable https scheme
             .set_port_https(option.port_tls)
             .set_tls_certificate("server.crt", "server.key")
             .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
@@ -127,16 +136,13 @@ return_t echo_server(void*) {
             .enable_ipv6(false)      // disable IPv6
             .enable_h2(true)         // enable HTTP/2
             .set_handler(consume_routine)
-            .set_debug([](stream_t* s) -> void {
-                print("%.*s", (unsigned int)s->size(), s->data());
-                fflush(stdout);
-            });
+            .trace([](stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); });
         builder.get_server_conf()
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
             .set(netserver_config_t::serverconf_concurrent_network, 2)
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
         if (option.verbose) {
-            builder.get_server_conf().set(netserver_config_t::serverconf_debug_ns, 1).set(netserver_config_t::serverconf_debug_h2, 1);
+            builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
         }
         _http_server.make_share(builder.build());
 
@@ -175,7 +181,7 @@ return_t echo_server(void*) {
         };
         std::function<void(network_session*, http_request*, http_response*, http_router*)> cb_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-            key_value& kv = request->get_http_uri().get_query_keyvalue();
+            skey_value& kv = request->get_http_uri().get_query_keyvalue();
             std::string code = kv.get("code");
             std::string access_token = kv.get("access_token");
             std::string error = kv.get("error");
@@ -217,11 +223,10 @@ return_t echo_server(void*) {
             .add_content_type(".json", "text/json")
             .set_default_document("index.html");
 
-        _http_server
-            ->get_http_router()
-            // .add("/api/html", api_response_html_handler)
-            // .add("/api/json", api_response_json_handler)
-            // .add("/api/test", default_handler)
+        _http_server->get_http_router()
+            .add("/api/html", api_response_html_handler)
+            .add("/api/json", api_response_json_handler)
+            .add("/api/test", default_handler)
             // .add(404, error_handler)
             // basic authentication
             .add("/auth/basic", default_handler, new basic_authentication_provider(basic_realm))
@@ -303,12 +308,18 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    cmdline.make_share(new cmdline_t<OPTION>);
-    *cmdline << cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
-             << cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
-             << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
+              << cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
+              << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
-    cmdline->parse(argc, argv);
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
 #if defined _WIN32 || defined _WIN64
     winsock_startup();
@@ -325,7 +336,9 @@ int main(int argc, char** argv) {
     winsock_cleanup();
 #endif
 
+    _logger->flush();
+
     _test_case.report();
-    cmdline->help();
+    _cmdline->help();
     return _test_case.result();
 }

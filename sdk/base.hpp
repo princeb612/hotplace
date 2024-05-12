@@ -32,6 +32,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/basic/huffman_coding.hpp>
 #include <sdk/base/basic/ieee754.hpp>
+#include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/basic/obfuscate_string.hpp>
 #include <sdk/base/basic/tree.hpp>
 #include <sdk/base/basic/valist.hpp>
@@ -41,6 +42,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/bufferio.hpp>
 #include <sdk/base/stream/printf.hpp>
+#include <sdk/base/stream/tstring.hpp>
 
 /* string */
 #include <sdk/base/string/string.hpp>
@@ -68,6 +70,7 @@
 #endif
 
 /* unittest */
+#include <sdk/base/unittest/logger.hpp>
 #include <sdk/base/unittest/testcase.hpp>
 
 #endif

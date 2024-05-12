@@ -18,29 +18,25 @@ using namespace hotplace::io;
 
 test_case _test_case;
 t_shared_instance<semaphore> _mutex;
+t_shared_instance<logger> _logger;
 
-void valgrind_safe_printf(const char* msg, ...) {
-    // try to avoid valgrind warnings, share lock (printf and test_case)
-    _test_case.lock();
+typedef struct _OPTION {
+    int verbose;
 
-    va_list arg;
-    printf("[%08lx] ", get_thread_id());
-    va_start(arg, msg);
-    vprintf(msg, arg);
-    va_end(arg);
-    printf("\n");
-
-    _test_case.unlock();
-}
+    _OPTION() : verbose(0) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 return_t thread_routine(void* param) {
     t_shared_instance<semaphore> mtx(_mutex);
 
-    valgrind_safe_printf("thread startedn");
+    _logger->writeln("thread started");
 
-    valgrind_safe_printf("wait for signal");
+    _logger->writeln("wait for signal");
     mtx->wait(-1);
-    valgrind_safe_printf("caught signal");
+    _logger->writeln("caught signal");
 
     return errorcode_t::success;
 }
@@ -70,27 +66,40 @@ void test_signalwait_threads() {
     _test_case.assert(errorcode_t::max_reached == test, __FUNCTION__, "test max concurrent threads reached");
 
     int countdown = 3;
-    valgrind_safe_printf("counting %d", countdown);
+    _logger->writeln("counting %d", countdown);
     msleep(1000 * countdown);
 
     _test_case.assert(true, __FUNCTION__, "msleep");
 
-    valgrind_safe_printf("send signal");
+    _logger->writeln("send signal");
     threads.signal();
 
-    valgrind_safe_printf("terminating all threads (running %zi)", threads.running());
+    _logger->writeln("terminating all threads (running %zi)", threads.running());
     threads.signal_and_wait_all();
     _test_case.assert(0 == threads.running(), __FUNCTION__, "all thread terminated");
 }
 
-int main() {
+int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
     _test_case.begin("thread");
     test_signalwait_threads();
 
+    _logger->flush();
+
     _test_case.report(5);
+    _cmdline->help();
     return _test_case.result();
 }

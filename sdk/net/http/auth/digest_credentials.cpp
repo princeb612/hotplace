@@ -38,7 +38,7 @@ digest_credentials& digest_credentials::add(const std::string& realm, const std:
     return *this;
 }
 
-bool digest_credentials::verify(http_authenticate_provider* provider, key_value& kv) {
+bool digest_credentials::verify(http_authenticate_provider* provider, skey_value& kv) {
     bool ret = false;
     __try2 {
         digest_access_authentication_provider* digest_provider = dynamic_cast<digest_access_authentication_provider*>(provider);

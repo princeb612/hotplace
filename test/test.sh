@@ -11,7 +11,7 @@ valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 
 if [ $# -eq 0 ]; then
     array=(base bufferio cmdline datetime encode thread unittest) # base
-    array+=(cbor mlfq payload stream string) # io
+    array+=(cbor mlfq payload stream string asn1) # io
     array+=(crypto kdf hash jose cose authenticode) # crypto
     array+=(ipaddr httptest) # net
     if [ $OSTYPE = "msys" ]; then
@@ -48,3 +48,6 @@ done
 #echo --------------------------------------------------------------------------------
 #cd $cwd
 #grep fail `find . -name report`
+for item in ${array[@]}; do
+    grep fail `find $cwd/$item -name report`
+done

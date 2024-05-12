@@ -21,6 +21,7 @@ using namespace hotplace::crypto;
 using namespace hotplace::net;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 #define BUFSIZE 1024
 #define FILENAME_RUN _T (".run")
@@ -69,7 +70,7 @@ return_t client_connected_handler(socket_t sockcli, netsocket_event_t** out_nets
 
     *out_netsocket_context = netsocket_context;
 
-    printf("accept %d\n", (int)sockcli);
+    _logger->writeln("accept %d", (int)sockcli);
 
     _test_case.test(ret, __FUNCTION__, "accepted");
 
@@ -80,7 +81,7 @@ return_t client_disconnected_handler(netsocket_event_t* netsocket_context, void*
     return_t ret = errorcode_t::success;
     accept_context_t* accept_context = (accept_context_t*)user_context;
 
-    printf("closed [%d]\n", (int)netsocket_context->cli_socket);
+    _logger->writeln("closed [%d]", (int)netsocket_context->cli_socket);
 
 #if defined __linux__
     multiplexer_epoll mplexer;
@@ -168,7 +169,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             pnetsocket_context->netio_write.wsabuf.len = bytes_transfered;
 
             if (0 != strnicmp("\r\n", pnetsocket_context->netio_write.wsabuf.buf, 2)) {
-                printf("[%d] %.*s\n", (int)bytes_transfered, (int)bytes_transfered, pnetsocket_context->netio_write.wsabuf.buf);
+                _logger->writeln("[%d] %.*s", (int)bytes_transfered, (int)bytes_transfered, pnetsocket_context->netio_write.wsabuf.buf);
             }
 
             /* echo */
@@ -208,7 +209,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             };
             inet_ntop(sockaddr.ss_family, &((struct sockaddr_in*)&sockaddr)->sin_addr.s_addr, ipaddr, sizeof(ipaddr));
 
-            printf("accept [%d][%s]\n", sockcli, ipaddr);
+            _logger->writeln("accept [%d][%s]", sockcli, ipaddr);
         }
     }
     if (mux_read == type) {
@@ -217,17 +218,17 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
         char buf[1024];
         int ret_recv = recv(sockcli, buf, 1024, 0);
         if (ret_recv <= 0) {
-            printf("connection closed [%d]\n", sockcli);
+            _logger->writeln("connection closed [%d]", sockcli);
             mplexer.unbind(handle, sockcli, nullptr);
             close(sockcli);
         } else {
-            printf("[%d] %.*s\n", ret_recv, ret_recv, buf);
+            _logger->writeln("[%d] %.*s", ret_recv, ret_recv, buf);
             send(sockcli, buf, ret_recv, 0);
         }
     }
     if (mux_disconnect == type) {
         int sockcli = (int)(long)data_array[1];
-        printf("closed [%d]\n", sockcli);
+        _logger->writeln("closed [%d]", sockcli);
         mplexer.unbind(handle, sockcli, nullptr);
         close(sockcli);
     }
@@ -302,7 +303,7 @@ return_t echo_server(void* param) {
         socket_t socket_list[2] = {INVALID_SOCKET, INVALID_SOCKET};
 
         create_listener(2, family, socket_list, IPPROTO_TCP, 9000);
-        printf("socket ipv4[%d], ipv6[%d] created\n", (int)socket_list[0], (int)socket_list[1]);
+        _logger->writeln("socket ipv4[%d], ipv6[%d] created", (int)socket_list[0], (int)socket_list[1]);
 
         accept_context_t accept_context_ipv4;
         accept_context_t accept_context_ipv6;
@@ -392,6 +393,10 @@ int main() {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, 1).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
 #if defined _WIN32 || defined _WIN64
     winsock_startup();
 #endif
@@ -406,6 +411,8 @@ int main() {
 #if defined _WIN32 || defined _WIN64
     winsock_cleanup();
 #endif
+
+    _logger->flush();
 
     _test_case.report();
     return _test_case.result();

@@ -40,7 +40,7 @@ oauth2_authorization_code_grant_provider::~oauth2_authorization_code_grant_provi
 
 void oauth2_authorization_code_grant_provider::authorization_handler(network_session* session, http_request* request, http_response* response,
                                                                      http_router* router) {
-    key_value& kv = request->get_http_uri().get_query_keyvalue();
+    skey_value& kv = request->get_http_uri().get_query_keyvalue();
 
     std::string client_id = kv.get("client_id");
     std::string redirect_uri = kv.get("redirect_uri");
@@ -70,7 +70,7 @@ void oauth2_authorization_code_grant_provider::authorization_handler(network_ses
 }
 
 void oauth2_authorization_code_grant_provider::token_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
-    key_value& kv = request->get_http_uri().get_query_keyvalue();
+    skey_value& kv = request->get_http_uri().get_query_keyvalue();
     basic_stream body;
     json_t* root = nullptr;
     std::string grant_type = kv.get("grant_type");
@@ -127,7 +127,7 @@ oauth2_implicit_grant_provider::oauth2_implicit_grant_provider() : oauth2_grant_
 oauth2_implicit_grant_provider::~oauth2_implicit_grant_provider() {}
 
 void oauth2_implicit_grant_provider::authorization_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
-    key_value& kv = request->get_http_uri().get_query_keyvalue();
+    skey_value& kv = request->get_http_uri().get_query_keyvalue();
 
     std::string client_id = kv.get("client_id");
     std::string redirect_uri = kv.get("redirect_uri");
@@ -166,7 +166,7 @@ oauth2_resource_owner_password_credentials_grant_provider::~oauth2_resource_owne
 
 void oauth2_resource_owner_password_credentials_grant_provider::token_handler(network_session* session, http_request* request, http_response* response,
                                                                               http_router* router) {
-    key_value& kv = request->get_http_uri().get_query_keyvalue();
+    skey_value& kv = request->get_http_uri().get_query_keyvalue();
     basic_stream body;
     json_t* root = nullptr;
     std::string grant_type = kv.get("grant_type");
@@ -223,7 +223,7 @@ oauth2_client_credentials_grant_provider::oauth2_client_credentials_grant_provid
 oauth2_client_credentials_grant_provider::~oauth2_client_credentials_grant_provider() {}
 
 void oauth2_client_credentials_grant_provider::token_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
-    key_value& kv = request->get_http_uri().get_query_keyvalue();
+    skey_value& kv = request->get_http_uri().get_query_keyvalue();
     basic_stream body;
     json_t* root = nullptr;
     std::string grant_type = kv.get("grant_type");
@@ -274,7 +274,7 @@ oauth2_unsupported_provider::~oauth2_unsupported_provider() {}
 oauth2_grant_t oauth2_unsupported_provider::type() { return oauth2_grant_t::oauth2_unsupported; }
 
 void oauth2_unsupported_provider::authorization_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
-    key_value& kv = request->get_http_uri().get_query_keyvalue();
+    skey_value& kv = request->get_http_uri().get_query_keyvalue();
 
     std::string redirect_uri = kv.get("redirect_uri");
     std::string state = kv.get("state");
@@ -287,7 +287,7 @@ void oauth2_unsupported_provider::authorization_handler(network_session* session
 }
 
 void oauth2_unsupported_provider::token_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
-    key_value& kv = request->get_http_uri().get_query_keyvalue();
+    skey_value& kv = request->get_http_uri().get_query_keyvalue();
     basic_stream body;
     json_t* root = nullptr;
 
@@ -437,7 +437,7 @@ return_t oauth2_provider::choose(oauth2_grant_provider_ref_map_t& object, const 
 
 void oauth2_provider::authorization_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
     return_t ret = errorcode_t::success;
-    key_value& kv = request->get_http_uri().get_query_keyvalue();
+    skey_value& kv = request->get_http_uri().get_query_keyvalue();
     std::string response_type = kv.get("response_type");
 
     oauth2_grant_provider* provider = nullptr;
@@ -458,7 +458,7 @@ void oauth2_provider::authorization_handler(network_session* session, http_reque
 
 void oauth2_provider::token_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
     return_t ret = errorcode_t::success;
-    key_value& kv = request->get_http_uri().get_query_keyvalue();
+    skey_value& kv = request->get_http_uri().get_query_keyvalue();
     std::string grant_type = kv.get("grant_type");
 
     oauth2_grant_provider* provider = nullptr;
@@ -489,7 +489,7 @@ void oauth2_provider::signpage_handler(network_session* session, http_request* r
 
 void oauth2_provider::signin_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
     basic_stream resp;
-    key_value& kv = request->get_http_uri().get_query_keyvalue();
+    skey_value& kv = request->get_http_uri().get_query_keyvalue();
     std::string username = kv.get("user");
     std::string password = kv.get("pass");
     std::string redirect_uri = session->get_session_data()->get("redirect_uri");

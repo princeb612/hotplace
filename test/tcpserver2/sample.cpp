@@ -20,6 +20,16 @@ using namespace hotplace::crypto;
 using namespace hotplace::net;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
+typedef struct _OPTION {
+    int verbose;
+
+    _OPTION() : verbose(0) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 #define FILENAME_RUN _T (".run")
 #define PORT 9000
@@ -45,14 +55,14 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case multiplexer_event_type_t::mux_connect:
-            std::cout << "connect " << network_session->cli_socket << std::endl;
+            _logger->writeln("connect %d", network_session->cli_socket);
             break;
         case multiplexer_event_type_t::mux_read:
-            std::cout << "read " << network_session->cli_socket << " msg [" << std::string(buf, bufsize) << "]" << std::endl;
+            _logger->writeln("read %d msg [%.*s]", network_session->cli_socket, (unsigned)bufsize, buf);
             send((socket_t)network_session->cli_socket, buf, bufsize, 0);
             break;
         case multiplexer_event_type_t::mux_disconnect:
-            std::cout << "disconnect " << network_session->cli_socket << std::endl;
+            _logger->writeln("disconnect %d", network_session->cli_socket);
             break;
     }
     return ret;
@@ -130,10 +140,20 @@ void test1() {
     __finally2 { thread1.wait(-1); }
 }
 
-int main() {
+int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
+
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
 #if defined _WIN32 || defined _WIN64
     winsock_startup();
@@ -150,6 +170,9 @@ int main() {
     winsock_cleanup();
 #endif
 
+    _logger->flush();
+
     _test_case.report();
+    _cmdline->help();
     return _test_case.result();
 }

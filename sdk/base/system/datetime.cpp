@@ -10,7 +10,9 @@
  * 2023.08.15   Soo Han, Kin        added : stopwatch
  */
 
+#include <sdk/base/basic/valist.hpp>
 #include <sdk/base/stl.hpp>
+#include <sdk/base/stream/printf.hpp>
 #include <sdk/base/system/datetime.hpp>
 #if defined __linux__
 #include <dlfcn.h>
@@ -29,27 +31,23 @@ namespace hotplace {
 
 datetime::datetime() { update(); }
 
-datetime::datetime(const datetime& dt) { memcpy(&_timespec, &dt._timespec, sizeof(struct timespec)); }
+datetime::datetime(const datetime& rhs) { memcpy(&_timespec, &rhs._timespec, sizeof(struct timespec)); }
 
-datetime::datetime(time_t t, long* nsec) {
+datetime::datetime(const time_t& t, long* nsec) {
     _timespec.tv_sec = t;
     _timespec.tv_nsec = (nsec) ? *nsec : 0;
 }
 
-datetime::datetime(struct timespec ts) { memcpy(&_timespec, &ts, sizeof(struct timespec)); }
+datetime::datetime(const struct timespec& ts) { memcpy(&_timespec, &ts, sizeof(struct timespec)); }
 
-datetime::datetime(datetime_t& dt, long* nsec) {
+datetime::datetime(const datetime_t& dt, long* nsec) {
     datetime_to_timespec(dt, _timespec);
     _timespec.tv_nsec = (nsec) ? *nsec : 0;
 }
 
-datetime::datetime(filetime_t& ft) { filetime_to_timespec(ft, _timespec); }
+datetime::datetime(const filetime_t& ft) { filetime_to_timespec(ft, _timespec); }
 
-datetime::datetime(systemtime_t& st) { systemtime_to_timespec(st, _timespec); }
-
-datetime::datetime(asn1time_t& at) { asn1time_to_timespec(at, _timespec); }
-
-datetime::datetime(datetime& dt) { memcpy(&_timespec, &dt._timespec, sizeof(struct timespec)); }
+datetime::datetime(const systemtime_t& st) { systemtime_to_timespec(st, _timespec); }
 
 datetime::~datetime() {
     // do nothing
@@ -175,36 +173,24 @@ return_t datetime::getsystemtime(int mode, systemtime_t* ft) {
     return ret;
 }
 
-return_t datetime::getasn1time(asn1time_t* at) {
-    return_t ret = errorcode_t::success;
-
-    ret = timespec_to_asn1time(_timespec, at);
-    return ret;
-}
-
-datetime& datetime::operator=(time_t timestamp) {
+datetime& datetime::operator=(const time_t& timestamp) {
     _timespec.tv_sec = timestamp;
     _timespec.tv_nsec = 0;
     return *this;
 }
 
-datetime& datetime::operator=(struct timespec& ts) {
+datetime& datetime::operator=(const struct timespec& ts) {
     memcpy(&_timespec, &ts, sizeof(struct timespec));
     return *this;
 }
 
-datetime& datetime::operator=(filetime_t& ft) {
+datetime& datetime::operator=(const filetime_t& ft) {
     filetime_to_timespec(ft, _timespec);
     return *this;
 }
 
-datetime& datetime::operator=(systemtime_t& st) {
+datetime& datetime::operator=(const systemtime_t& st) {
     systemtime_to_timespec(st, _timespec);
-    return *this;
-}
-
-datetime& datetime::operator=(asn1time_t& at) {
-    asn1time_to_timespec(at, _timespec);
     return *this;
 }
 
@@ -220,11 +206,6 @@ datetime& datetime::operator>>(filetime_t& ft) {
 
 datetime& datetime::operator>>(systemtime_t& st) {
     getsystemtime(1, &st);
-    return *this;
-}
-
-datetime& datetime::operator>>(asn1time_t& at) {
-    getasn1time(&at);
     return *this;
 }
 
@@ -299,7 +280,7 @@ bool datetime::operator<(const datetime& rhs) const {
 #define EXP7 10000000
 #define EXP9 1000000000
 
-datetime& datetime::operator+=(timespan_t ts) {
+datetime& datetime::operator+=(const timespan_t& ts) {
     _timespec.tv_sec += ts.days * 60 * 60 * 24;
     _timespec.tv_sec += ts.seconds;
     long nsec = (_timespec.tv_nsec) + (ts.milliseconds * EXP6);
@@ -311,7 +292,7 @@ datetime& datetime::operator+=(timespan_t ts) {
     return *this;
 }
 
-datetime& datetime::operator-=(timespan_t ts) {
+datetime& datetime::operator-=(const timespan_t& ts) {
     _timespec.tv_sec -= ts.days * 60 * 60 * 24;
     _timespec.tv_sec -= ts.seconds;
     long nsec = (_timespec.tv_nsec) - (ts.milliseconds * EXP6);
@@ -331,7 +312,7 @@ datetime& datetime::operator-=(timespan_t ts) {
 #define localtime_r(a, b) localtime_s(b, a)
 #endif
 
-return_t datetime::timespec_to_tm(int mode, struct timespec ts, struct tm* tm_ptr, long* nsec) {
+return_t datetime::timespec_to_tm(int mode, const struct timespec& ts, struct tm* tm_ptr, long* nsec) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -362,7 +343,7 @@ return_t datetime::timespec_to_tm(int mode, struct timespec ts, struct tm* tm_pt
     return ret;
 }
 
-return_t datetime::timespec_to_datetime(int mode, struct timespec ts, datetime_t* dt, long* nsec) {
+return_t datetime::timespec_to_datetime(int mode, const struct timespec& ts, datetime_t* dt, long* nsec) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -399,7 +380,7 @@ return_t datetime::timespec_to_datetime(int mode, struct timespec ts, datetime_t
     return ret;
 }
 
-return_t datetime::timespec_to_systemtime(int mode, struct timespec ts, systemtime_t* st) {
+return_t datetime::timespec_to_systemtime(int mode, const struct timespec& ts, systemtime_t* st) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -432,7 +413,7 @@ return_t datetime::timespec_to_systemtime(int mode, struct timespec ts, systemti
     return ret;
 }
 
-return_t datetime::datetime_to_timespec(datetime_t dt, struct timespec& ts) {
+return_t datetime::datetime_to_timespec(const datetime_t& dt, struct timespec& ts) {
     return_t ret = errorcode_t::success;
 
     struct tm tm;
@@ -452,7 +433,7 @@ return_t datetime::datetime_to_timespec(datetime_t dt, struct timespec& ts) {
     return ret;
 }
 
-return_t datetime::filetime_to_timespec(filetime_t ft, struct timespec& ts) {
+return_t datetime::filetime_to_timespec(const filetime_t& ft, struct timespec& ts) {
     return_t ret = errorcode_t::success;
     int64 i64 = *(int64*)&ft;
 
@@ -462,7 +443,7 @@ return_t datetime::filetime_to_timespec(filetime_t ft, struct timespec& ts) {
     return ret;
 }
 
-return_t datetime::systemtime_to_timespec(systemtime_t st, struct timespec& ts) {
+return_t datetime::systemtime_to_timespec(const systemtime_t& st, struct timespec& ts) {
     return_t ret = errorcode_t::success;
 
     struct tm tm;
@@ -482,307 +463,49 @@ return_t datetime::systemtime_to_timespec(systemtime_t st, struct timespec& ts) 
     return ret;
 }
 
-return_t datetime::timespec_to_asn1time(struct timespec ts, asn1time_t* at) {
-    return_t ret = errorcode_t::success;
+void datetime::format(int mode, basic_stream& bs, const std::string& fmt) {
+    datetime_t dt;
+    basic_stream fmtbs;
+    valist va;
 
-    if (at) {
-        systemtime_t st;
-        ret = timespec_to_systemtime(1, ts, &st);
-
-        constexpr char constexpr_fmt[] = "04d%02d%02d%02d%02d%02d.%d";
-        at->set(V_ASN1_GENERALIZEDTIME, format(constexpr_fmt, st.year, st.month, st.day, st.hour, st.minute, st.second, st.milliseconds).c_str());
-    } else {
-        ret = errorcode_t::invalid_parameter;
-    }
-    return ret;
-}
-
-static int is_utc(const int year) {
-    if (50 <= year && year <= 149) {
-        return 1;
-    }
-    return 0;
-}
-
-static int leap_year(const int year) {
-    if (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0)) {
-        return 1;
-    }
-    return 0;
-}
-
-static void determine_days(struct tm* tm) {
-    static const int ydays[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
-    int y = tm->tm_year + 1900;
-    int m = tm->tm_mon;
-    int d = tm->tm_mday;
-    int c;
-
-    tm->tm_yday = ydays[m] + d - 1;
-    if (m >= 2) {
-        /* March and onwards can be one day further into the year */
-        tm->tm_yday += leap_year(y);
-        m += 2;
-    } else {
-        /* Treat January and February as part of the previous year */
-        m += 14;
-        y--;
-    }
-    c = y / 100;
-    y %= 100;
-    /* Zeller's congruence */
-    tm->tm_wday = (d + (13 * m) / 5 + y + y / 4 + c / 4 + 5 * c + 6) % 7;
-}
-
-return_t datetime::asn1time_to_timespec(asn1time_t at, struct timespec& ts) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        static const int min[9] = {0, 0, 1, 1, 0, 0, 0, 0, 0};
-        static const int max[9] = {99, 99, 12, 31, 23, 59, 59, 12, 59};
-        static const int mdays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-        char* a;
-        int n = 0, i = 0, i2 = 0, l = 0, o = 0, min_l = 11, strict = 0, end = 6, btz = 5, md = 0;
-        struct tm tmp;
-#if defined(CHARSET_EBCDIC)
-        const char upper_z = 0x5A, num_zero = 0x30, period = 0x2E, minus = 0x2D, plus = 0x2B;
-#else
-        const char upper_z = 'Z', num_zero = '0', period = '.', minus = '-', plus = '+';
-#endif
-        int f = 0;
-        int offsign = 1;
-        int offset = 0;
-        int utc = 0;
-        /*
-         * ASN1_STRING_FLAG_X509_TIME is used to enforce RFC 5280
-         * time string format, in which:
-         *
-         * 1. "seconds" is a 'MUST'
-         * 2. "Zulu" timezone is a 'MUST'
-         * 3. "+|-" is not allowed to indicate a time zone
-         */
-        if (at.type == V_ASN1_UTCTIME) {
-            if (at.flags & V_ASN1_STRING_FLAG_X509_TIME) {
-                min_l = 13;
-                strict = 1;
-            }
-        } else if (at.type == V_ASN1_GENERALIZEDTIME) {
-            end = 7;
-            btz = 6;
-            if (at.flags & V_ASN1_STRING_FLAG_X509_TIME) {
-                min_l = 15;
-                strict = 1;
-            } else {
-                min_l = 13;
-            }
-        } else {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        }
-
-        l = at.length;
-        a = (char*)at.data;
-        o = 0;
-        memset(&tmp, 0, sizeof(tmp));
-
-        /*
-         * GENERALIZEDTIME is similar to UTCTIME except the year is represented
-         * as YYYY. This stuff treats everything as a two digit field so make
-         * first two fields 00 to 99
-         */
-
-        if (l < min_l) {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        }
-        for (i = 0; i < end; i++) {
-            if (!strict && (i == btz) && ((a[o] == upper_z) || (a[o] == plus) || (a[o] == minus))) {
-                i++;
+    timespec_to_datetime(mode, _timespec, &dt);
+    for (auto item : fmt) {
+        switch (item) {
+            case 'Y':
+                fmtbs << "%%04d";
+                va << dt.year;
                 break;
-            }
-            if (!isdigit(a[o])) {
-                ret = errorcode_t::bad_data;
+            case 'M':
+                fmtbs << "%%02d";
+                va << dt.month;
                 break;
-            }
-            n = a[o] - num_zero;
-            /* incomplete 2-digital number */
-            if (++o == l) {
-                ret = errorcode_t::bad_data;
+            case 'D':
+                fmtbs << "%%02d";
+                va << dt.day;
                 break;
-            }
-
-            if (!isdigit(a[o])) {
-                ret = errorcode_t::bad_data;
+            case 'h':
+                fmtbs << "%%02d";
+                va << dt.hour;
                 break;
-            }
-            n = (n * 10) + a[o] - num_zero;
-            /* no more bytes to read, but we haven't seen time-zone yet */
-            if (++o == l) {
-                ret = errorcode_t::bad_data;
+            case 'm':
+                fmtbs << "%%02d";
+                va << dt.minute;
                 break;
-            }
-
-            i2 = (at.type == V_ASN1_UTCTIME) ? i + 1 : i;
-
-            if ((n < min[i2]) || (n > max[i2])) {
-                ret = errorcode_t::bad_data;
+            case 's':
+                fmtbs << "%%02d";
+                va << dt.second;
                 break;
-            }
-            switch (i2) {
-                case 0:
-                    /* UTC will never be here */
-                    tmp.tm_year = n * 100 - 1900;
-                    break;
-                case 1:
-                    if (at.type == V_ASN1_UTCTIME) {
-                        tmp.tm_year = n < 50 ? n + 100 : n;
-                    } else {
-                        tmp.tm_year += n;
-                    }
-                    break;
-                case 2:
-                    tmp.tm_mon = n - 1;
-                    break;
-                case 3:
-                    /* check if tm_mday is valid in tm_mon */
-                    if (tmp.tm_mon == 1) {
-                        /* it's February */
-                        md = mdays[1] + leap_year(tmp.tm_year + 1900);
-                    } else {
-                        md = mdays[tmp.tm_mon];
-                    }
-                    if (n > md) {
-                        ret = errorcode_t::bad_data;
-                        break;
-                    }
-                    tmp.tm_mday = n;
-                    determine_days(&tmp);
-                    break;
-                case 4:
-                    tmp.tm_hour = n;
-                    break;
-                case 5:
-                    tmp.tm_min = n;
-                    break;
-                case 6:
-                    tmp.tm_sec = n;
-                    break;
-            }
+            case 'f':
+                fmtbs << "%%03d";
+                va << dt.milliseconds;
+                break;
+            default:
+                fmtbs << item;
+                break;
         }
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        /*
-         * Optional fractional seconds: decimal point followed by one or more
-         * digits.
-         */
-        if (at.type == V_ASN1_GENERALIZEDTIME && a[o] == period) {
-            if (strict) {
-                /* RFC 5280 forbids fractional seconds */
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
-            if (++o == l) {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
-            i = o;
-            while ((o < l) && isdigit(a[o])) {
-                f *= 10;
-                f += (a[o] - num_zero);
-                o++;
-            }
-            /* Must have at least one digit after decimal point */
-            if (i == o) {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
-            /* no more bytes to read, but we haven't seen time-zone yet */
-            if (o == l) {
-                // do nothing
-            }
-        }
-
-        /*
-         * 'o' will never point to '\0' at this point, the only chance
-         * 'o' can point to '\0' is either the subsequent if or the first
-         * else if is true.
-         */
-        if (a[o] == upper_z) {
-            utc = 1; /* UTC */
-            o++;
-        } else if (!strict && ((a[o] == plus) || (a[o] == minus))) {
-            offsign = ((a[o] == plus) ? 1 : -1);
-            offset = 0;
-
-            o++;
-            /*
-             * if not equal, no need to do subsequent checks
-             * since the following for-loop will add 'o' by 4
-             * and the final return statement will check if 'l'
-             * and 'o' are equal.
-             */
-            if (o + 4 != l) {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
-            for (i = end; i < end + 2; i++) {
-                if (!isdigit(a[o])) {
-                    ret = errorcode_t::bad_data;
-                    break;
-                }
-                n = a[o] - num_zero;
-                o++;
-                if (!isdigit(a[o])) {
-                    ret = errorcode_t::bad_data;
-                    break;
-                }
-                n = (n * 10) + a[o] - num_zero;
-                i2 = (at.type == V_ASN1_UTCTIME) ? i + 1 : i;
-                if ((n < min[i2]) || (n > max[i2])) {
-                    break;
-                }
-
-                if (i == end) {
-                    offset = n * 3600;
-                } else if (i == end + 1) {
-                    offset += n * 60;
-                }
-                o++;
-            }
-        } else {
-            /* not Z, or not +/- in non-strict mode */
-            // do nothing
-        }
-
-        if (o == l) {
-            /* success, check if tm should be filled */
-        } else {
-            // ret = errorcode_t::bad_data;
-        }
-
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        if (utc) {
-#if defined __linux__
-            ts.tv_sec = timegm(&tmp);
-#elif defined _WIN32 || defined _WIN64
-            ts.tv_sec = _mkgmtime(&tmp);
-#endif
-        } else {
-            ts.tv_sec = mktime(&tmp);
-        }
-        ts.tv_sec += (offset * offsign);
-        ts.tv_nsec = f;
-    }
-    __finally2 {
-        // do nothing
     }
 
-    return ret;
+    bs.vprintf(fmtbs.c_str(), va.get());
 }
 
 void time_monotonic(struct timespec& ts) { system_gettime(CLOCK_MONOTONIC, ts); }

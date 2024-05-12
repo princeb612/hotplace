@@ -17,6 +17,7 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 void test_consolecolor() {
     _test_case.begin("console_color");
@@ -34,6 +35,8 @@ void test_consolecolor() {
         console_color_t::black,
         console_color_t::white,
     };
+
+    basic_stream bs;
     uint32 loop = 0;
     for (auto bgcolor : bgcolors) {
         concolor.set_bgcolor(bgcolor);
@@ -43,42 +46,41 @@ void test_consolecolor() {
                 concolor.set_fgcolor(fgcolor);
 
                 if (fgcolor != bgcolor) {
-                    std::cout << concolor.turnon() << "test";
-                    std::cout << concolor.turnoff();
+                    bs << concolor.turnon() << "test" << concolor.turnoff();
                     if (15 == (loop % 16)) {
-                        std::cout << std::endl;
+                        bs << "\n";
                     }
                     ++loop;
                 }
             }
         }
     }
-    std::cout << std::endl;
+    bs << "\n";
+    _logger->consoleln(bs);
+    bs.clear();
     _test_case.assert(true, __FUNCTION__, "console color.1 loop %i times", loop);
 
     concolor.set_style(console_style_t::normal);
     concolor.set_fgcolor(console_color_t::yellow);
     concolor.set_bgcolor(console_color_t::black);
 
-    std::cout << concolor.turnon() << "color";
-    std::cout << concolor.turnoff() << "default" << std::endl;
+    bs << concolor.turnon() << "color";
+    bs << concolor.turnoff() << "default";
+    _logger->writeln(bs);
+    bs.clear();
     _test_case.assert(true, __FUNCTION__, "console color.2");
 
-    std::cout << concolor.turnon() << concolor.set_style(console_style_t::bold).set_fgcolor(console_color_t::yellow).set_bgcolor(console_color_t::black)
-              << "color";
-    std::cout << concolor.turnoff() << "default" << std::endl;
-
+    bs << concolor.turnon() << concolor.set_style(console_style_t::bold).set_fgcolor(console_color_t::yellow).set_bgcolor(console_color_t::black) << "color"
+       << concolor.turnoff() << "default";
+    _logger->writeln(bs);
+    bs.clear();
     _test_case.assert(true, __FUNCTION__, "console color.3");
 }
 
 void test_dumpmxx_routine(const byte_t* dump_address, size_t dump_size, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0,
                           size_t rebase = 0x0) {
     return_t ret = errorcode_t::success;
-    ansi_string bs;
-
-    ret = dump_memory(dump_address, dump_size, &bs, hex_part, indent, rebase);
-    std::cout << bs << std::endl;
-
+    _logger->dump(dump_address, dump_size, hex_part, indent);
     _test_case.test(ret, __FUNCTION__, "dump addr %p size %zi hex %i indent %i rebase %zi", dump_address, dump_size, hex_part, indent, rebase);
 }
 
@@ -95,17 +97,17 @@ void test_dumpmemory() {
 
     std::string str(text);
     ret = dump_memory(str, &bs);
-    std::cout << "dump " << std::endl << bs << std::endl;
+    _logger->writeln("dump\n%s", bs.c_str());
     _test_case.test(ret, __FUNCTION__, "dump std::string");
 
     binary_t bin = convert(str);
     ret = dump_memory(bin, &bs);
-    std::cout << "dump " << std::endl << bs << std::endl;
+    _logger->writeln("dump\n%s", bs.c_str());
     _test_case.test(ret, __FUNCTION__, "dump std::vector<byte_t>");
 
     binary_t bin2;
     ret = dump_memory(bin2, &bs);
-    std::cout << "dump " << std::endl << bs << std::endl;
+    _logger->writeln("dump\n%s", bs.c_str());
     _test_case.test(ret, __FUNCTION__, "dump blank");
 }
 
@@ -132,7 +134,7 @@ void test_i128() {
     _test_case.assert(stream == "9223372036854775807", __FUNCTION__, "signed int64 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream << std::endl;
+        _logger->writeln(stream.c_str());
         stream.clear();
     }
 
@@ -140,7 +142,7 @@ void test_i128() {
     _test_case.assert(stream == "170141183460469231731687303715884105727", __FUNCTION__, "signed int128 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream << std::endl;
+        _logger->writeln(stream.c_str());
         stream.clear();
     }
 
@@ -148,7 +150,7 @@ void test_i128() {
     _test_case.assert(stream == "170141183460469231731687303715884105727", __FUNCTION__, "signed int128 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream << std::endl;
+        _logger->writeln(stream.c_str());
         stream.clear();
     }
 
@@ -156,7 +158,7 @@ void test_i128() {
     _test_case.assert(stream == "340282366920938463463374607431768211455", __FUNCTION__, "unsigned int128 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream << std::endl;
+        _logger->writeln(stream.c_str());
         stream.clear();
     }
 
@@ -164,7 +166,7 @@ void test_i128() {
     _test_case.assert(stream == "340282366920938463463374607431768211455", __FUNCTION__, "unsigned int128 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream << std::endl;
+        _logger->writeln(stream.c_str());
         stream.clear();
     }
 
@@ -172,7 +174,7 @@ void test_i128() {
     _test_case.assert(stream == "340282366920938463463374607431768211455", __FUNCTION__, "unsigned int128 max %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream << std::endl;
+        _logger->writeln(stream.c_str());
         stream.clear();
     }
 
@@ -180,7 +182,7 @@ void test_i128() {
     _test_case.assert(stream == "-170141183460469231731687303715884105728", __FUNCTION__, "signed int128 min %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream << std::endl;
+        _logger->writeln(stream.c_str());
         stream.clear();
     }
 
@@ -188,7 +190,7 @@ void test_i128() {
     _test_case.assert(stream == "-170141183460469231731687303715884105728", __FUNCTION__, "signed int128 min %s", stream.c_str());
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << stream << std::endl;
+        _logger->writeln(stream.c_str());
         stream.clear();
     }
 }
@@ -197,8 +199,8 @@ void test_sprintf_routine(const valist& va, const char* fmt, const char* expect)
     basic_stream bs;
 
     sprintf(&bs, fmt, va);
-    printf("formatter %s\n", fmt);
-    printf("result    %s\n", bs.c_str());
+    _logger->writeln("formatter %s", fmt);
+    _logger->writeln("result    %s", bs.c_str());
     if (expect) {
         _test_case.assert(0 == strcmp(expect, bs.c_str()), __FUNCTION__, "sprintf");
     }
@@ -211,7 +213,7 @@ void test_sprintf() {
     valist va;
     va << 3.141592 << "phi" << 123;
 
-    printf("{1} 3.141592 {2} phi {3} 123\n");
+    _logger->writeln("{1} 3.141592 {2} phi {3} 123");
 
     _test_case.reset_time();
     test_sprintf_routine(va, "value={1} value={2} value={3}", "value=3.141592 value=phi value=123");
@@ -237,7 +239,7 @@ void test_vprintf() {
 
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << str << std::endl;
+        _logger->writeln(str.c_str());
         str.clear();
     }
 
@@ -248,7 +250,7 @@ void test_vprintf() {
 
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << str << std::endl;
+        _logger->writeln(str.c_str());
         str.clear();
     }
 
@@ -258,7 +260,7 @@ void test_vprintf() {
 
     {
         test_case_notimecheck notimecheck(_test_case);
-        std::cout << str << std::endl;
+        _logger->writeln(str.c_str());
         str.clear();
     }
 
@@ -277,15 +279,15 @@ void test_stream() {
     va << 1 << "test string";  // argc 2
 
     sprintf(&bs, "value1={1} value2={2}", va);  // value1=1 value2=test string
-    std::cout << bs << std::endl;
+    _logger->writeln(bs.c_str());
     bs.clear();
 
     sprintf(&bs, "value1={2} value2={1}", va);  // value1=test string value2=1
-    std::cout << bs << std::endl;
+    _logger->writeln(bs.c_str());
     bs.clear();
 
     sprintf(&bs, "value1={2} value2={1} value3={3}", va);  // value1=test string value2=1 value3={3}
-    std::cout << bs << std::endl;
+    _logger->writeln(bs.c_str());
 
     _test_case.assert(true, __FUNCTION__, "stream");
 }
@@ -310,7 +312,7 @@ void test_stream_getline() {
 
         {
             test_case_notimecheck notimecheck(_test_case);
-            printf("%.*s\n", (unsigned)line.size(), line.c_str());
+            _logger->writeln("%.*s", (unsigned)line.size(), line.c_str());
         }
 
         pos = brk;
@@ -327,7 +329,7 @@ void test_stream_stdmap() {
         stdmap["key1"] = "value1";
         std::string value = stdmap["key"];
 
-        std::cout << "key=" << value << std::endl;
+        _logger->writeln("key=%s", value.c_str());
 
         _test_case.assert("value" == value, __FUNCTION__, "basic_stream");
     }
@@ -338,7 +340,7 @@ void test_stream_stdmap() {
         stdmap["key1"] = "value1";
         std::string value = stdmap["key"];
 
-        std::cout << "key=" << value << std::endl;
+        _logger->writeln("key=%s", value.c_str());
 
         _test_case.assert("value" == value, __FUNCTION__, "ansi_string");
     }
@@ -350,9 +352,7 @@ void test_stream_stdmap() {
         stdmap[L"key1"] = L"value1";
         wide_string value = stdmap[L"key"];
 
-        basic_stream bs;
-        dump_memory(value.data(), (size_t)value.size(), &bs);
-        std::cout << bs << std::endl;
+        _logger->dump(value.data(), value.size());
 
         _test_case.assert(wide_string(L"value") == value, __FUNCTION__, "wide_string");
     }
@@ -371,7 +371,7 @@ void test_vtprintf() {
     v.set_str_new("sample");
     vtprintf(&bs, v.content());
 
-    std::cout << bs << std::endl;
+    _logger->writeln(bs.c_str());
 
     _test_case.assert(true, __FUNCTION__, "vtprintf");
 }
@@ -380,6 +380,10 @@ int main() {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, 1).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
     test_consolecolor();
     test_dumpmemory();
@@ -390,6 +394,8 @@ int main() {
     test_stream_getline();
     test_stream_stdmap();
     test_vtprintf();
+
+    _logger->flush();
 
     _test_case.report(5);
     return _test_case.result();

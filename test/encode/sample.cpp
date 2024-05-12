@@ -18,6 +18,36 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
+enum {
+    decode_b64u = 1,
+    decode_b64 = 2,
+    decode_b16 = 3,
+    encode_plaintext = 4,
+    encode_b16_rfc = 5,
+};
+typedef struct _OPTION {
+    int verbose;
+    int mode;
+    std::string content;
+    std::string filename;
+    return_t ret;
+
+    _OPTION() : verbose(0), mode(0), ret(success) {}
+    void set(int m, char* param) {
+        mode = m;
+        if (param) {
+            content = param;
+        }
+    }
+    void setfile(char* param) {
+        if (param) {
+            filename = param;
+        }
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 void test_base16() {
     return_t ret = errorcode_t::success;
@@ -31,11 +61,11 @@ void test_base16() {
     {
         test_case_notimecheck notimecheck(_test_case);
 
-        printf("input : %s\n", text);
-        printf("encode: %s\n", encoded.c_str());
+        _logger->writeln("input : %s", text);
+        _logger->writeln("encode: %s", encoded.c_str());
         basic_stream bs;
         dump_memory(&decoded[0], decoded.size(), &bs);
-        printf("dump decoded\n%s\n", bs.c_str());
+        _logger->writeln("dump decoded\n%s", bs.c_str());
     }
 
     bool test = false;
@@ -46,31 +76,26 @@ void test_base16() {
 void test_base16_func() {
     return_t ret = errorcode_t::success;
     constexpr byte_t text[] = "still a man hears what he wants to hear and disregards the rest";
-    basic_stream bs;
 
     /* return_t base16_encode (const byte_t* source, size_t size, char* buf, size_t* buflen) */
     size_t size = 0;
     std::vector<char> buf;
-
     base16_encode(text, RTL_NUMBER_OF(text), nullptr, &size);
     buf.resize(size);
     ret = base16_encode(text, RTL_NUMBER_OF(text), &buf[0], &size);
-    dump_memory((byte_t*)&buf[0], buf.size(), &bs);
-    std::cout << bs << std::endl;
+    _logger->dump(&buf[0], buf.size());
     _test_case.test(ret, __FUNCTION__, "case1");
 
     /* return_t base16_encode (const byte_t* source, size_t size, std::string& outpart) */
     std::string strbuf;
     ret = base16_encode(text, RTL_NUMBER_OF(text), strbuf);
-    dump_memory(strbuf, &bs);
-    std::cout << bs << std::endl;
+    _logger->dump(&strbuf[0], strbuf.size());
     _test_case.test(ret, __FUNCTION__, "case2");
 
     /* return_t base16_encode (const byte_t* source, size_t size, stream_t* stream) */
     basic_stream streambuf;
     ret = base16_encode(text, RTL_NUMBER_OF(text), &streambuf);
-    dump_memory(streambuf.data(), streambuf.size(), &bs);
-    std::cout << bs << std::endl;
+    _logger->dump(streambuf.data(), streambuf.size());
     _test_case.test(ret, __FUNCTION__, "case3");
 }
 
@@ -87,7 +112,7 @@ void test_base16_decode() {
 
         basic_stream bs;
         dump_memory(&decoded[0], decoded.size(), &bs);
-        printf("%s\n", bs.c_str());
+        _logger->writeln("%s", bs.c_str());
     }
 
     bool test = false;
@@ -104,7 +129,7 @@ void test_base16_oddsize() {
 
         basic_stream bs;
         dump_memory(bin_test, &bs);
-        printf("%s\n", bs.c_str());
+        _logger->writeln("%s", bs.c_str());
     }
 
     _test_case.assert(66 == bin_test.size(), __FUNCTION__, "odd size");
@@ -116,7 +141,7 @@ void dump_base16_rfc(const char* text, const char* input) {
     std::string encoded = base16_encode_rfc(input);
     binary_t decoded = base16_decode(encoded);
     dump_memory(decoded, &bs, 16, 4);
-    printf("%s\n  input   %s\n  encoded %s\n  decoded\n%s\n", text, input, encoded.c_str(), bs.c_str());
+    _logger->writeln("%s\n  input   %s\n  encoded %s\n  decoded\n%s", text, input, encoded.c_str(), bs.c_str());
 }
 
 void test_base16_rfc() {
@@ -148,11 +173,11 @@ void test_base64_routine(const char* source, size_t source_size, int encoding) {
         test_case_notimecheck notimecheck(_test_case);
 
         dump_memory((byte_t*)source, source_size, &bs);
-        printf("input\n%s\n", bs.c_str());
+        _logger->writeln("input\n%s", bs.c_str());
         dump_memory((byte_t*)&encoded_b64[0], encoded_b64.size(), &bs);
-        printf("encoded\n%.*s\n", (int)bs.size(), bs.c_str());
+        _logger->writeln("encoded\n%.*s", (int)bs.size(), bs.c_str());
         dump_memory(&decoded_b64[0], decoded_b64.size(), &bs);
-        printf("decoded\n%.*s\n", (int)bs.size(), bs.c_str());
+        _logger->writeln("decoded\n%.*s", (int)bs.size(), bs.c_str());
     }
 }
 
@@ -164,35 +189,8 @@ void test_base64() {
     test_base64_routine(lyrics, len, base64_encoding_t::base64url_encoding);
 }
 
-enum {
-    decode_b64u = 1,
-    decode_b64 = 2,
-    decode_b16 = 3,
-    encode_plaintext = 4,
-    encode_b16_rfc = 5,
-};
-typedef struct _OPTION {
-    int mode;
-    std::string content;
-    std::string filename;
-
-    _OPTION() : mode(0) {}
-    void set(int m, char* param) {
-        mode = m;
-        if (param) {
-            content = param;
-        }
-    }
-    void setfile(char* param) {
-        if (param) {
-            filename = param;
-        }
-    }
-} OPTION;
-
-void whatsthis(int argc, char** argv) {
+void whatsthis() {
     return_t ret = errorcode_t::success;
-    cmdline_t<OPTION> cmdline;
 
     // $ ./test-encode -b64u AQIDBAU
     //  what u want to know
@@ -238,18 +236,8 @@ void whatsthis(int argc, char** argv) {
     //  $ echo AQIDBAU= | base64 -d | xxd
     //  00000000: 0102 0304 05                             .....
 
-    constexpr char constexpr_helpmsg_rfc[] = "encode base16 from rfc style expression ex. \"[1,2,3,4,5]\" or \"01:02:03:04:05\" or \"01 02 03 04 05\"";
-
-    cmdline << cmdarg_t<OPTION>("-b64u", "decode base64url", [&](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
-            << cmdarg_t<OPTION>("-b64", "decode base64", [&](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()
-            << cmdarg_t<OPTION>("-b16", "decode base16", [&](OPTION& o, char* param) -> void { o.set(decode_b16, param); }).preced().optional()
-            << cmdarg_t<OPTION>("-t", "plaintext", [&](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
-            << cmdarg_t<OPTION>("-rfc", constexpr_helpmsg_rfc, [&](OPTION& o, char* param) -> void { o.set(encode_b16_rfc, param); }).preced().optional()
-            << cmdarg_t<OPTION>("-out", "write to file", [&](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional();
-    ret = cmdline.parse(argc, argv);
-
-    OPTION o = cmdline.value();
-    if (o.mode && errorcode_t::success == ret) {
+    OPTION o = _cmdline->value();
+    if (o.mode && errorcode_t::success == o.ret) {
         basic_stream bs;
         basic_stream additional;
         binary_t what;
@@ -299,12 +287,18 @@ void whatsthis(int argc, char** argv) {
             file.close();
         }
 
-        std::cout << "what u want to know" << std::endl << "< " << o.content << std::endl << bs << std::endl;
+        basic_stream dbs;
+        dbs << "what u want to know"
+            << "\n"
+            << "< " << o.content << "\n"
+            << bs;
+        _logger->consoleln(dbs);
+
         if (additional.size()) {
-            std::cout << additional << std::endl;
+            _logger->consoleln(additional);
         }
     } else {
-        cmdline.help();
+        _cmdline->help();
     }
 }
 
@@ -312,6 +306,27 @@ int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
+
+    _cmdline.make_share(new cmdline_t<OPTION>);
+
+    constexpr char constexpr_helpmsg_rfc[] = "encode base16 from rfc style expression ex. \"[1,2,3,4,5]\" or \"01:02:03:04:05\" or \"01 02 03 04 05\"";
+
+    (*_cmdline) << cmdarg_t<OPTION>("-b64u", "decode base64url", [&](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
+                << cmdarg_t<OPTION>("-b64", "decode base64", [&](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()
+                << cmdarg_t<OPTION>("-b16", "decode base16", [&](OPTION& o, char* param) -> void { o.set(decode_b16, param); }).preced().optional()
+                << cmdarg_t<OPTION>("-t", "plaintext", [&](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
+                << cmdarg_t<OPTION>("-rfc", constexpr_helpmsg_rfc, [&](OPTION& o, char* param) -> void { o.set(encode_b16_rfc, param); }).preced().optional()
+                << cmdarg_t<OPTION>("-out", "write to file", [&](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional()
+                << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+
+    return_t test = _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+    option.ret = test;
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
     _test_case.begin("b16 encoding");
     test_base16();
@@ -323,7 +338,9 @@ int main(int argc, char** argv) {
     _test_case.begin("b64 encoding");
     test_base64();
 
+    _logger->flush();
+
     _test_case.report(5);
-    whatsthis(argc, argv);
+    whatsthis();
     return _test_case.result();
 }

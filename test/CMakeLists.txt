@@ -19,6 +19,7 @@ add_subdirectory (payload)
 add_subdirectory (mlfq)
 add_subdirectory (stream)
 add_subdirectory (string)
+add_subdirectory (asn1)
 
 # crypto
 add_subdirectory (crypto)

@@ -83,17 +83,17 @@ class digest_access_authentication_provider : public http_authenticate_provider 
      * @param   network_session* session [in]
      * @param   http_request* request [in]
      * @param   http_response* response [in]
-     * @param   key_value& kv [inout]
+     * @param   skey_value& kv [inout]
      */
-    return_t prepare_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv);
+    return_t prepare_digest_access(network_session* session, http_request* request, http_response* response, skey_value& kv);
     /**
      * @brief   digest
      * @param   network_session* session [in]
      * @param   http_request* request [in]
      * @param   http_response* response [in]
-     * @param   key_value& kv [inout]
+     * @param   skey_value& kv [inout]
      */
-    return_t auth_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv);
+    return_t auth_digest_access(network_session* session, http_request* request, http_response* response, skey_value& kv);
 
     /**
      * @brief   algorithm

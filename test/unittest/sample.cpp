@@ -17,6 +17,16 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
+typedef struct _OPTION {
+    int verbose;
+
+    _OPTION() : verbose(0) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 void test_unittest() {
     _test_case.begin("");
@@ -30,7 +40,7 @@ void test_unittest() {
 
     {
         test_case_notimecheck notimecheck(_test_case);
-        printf("pause, resume and estimate time\n");
+        _logger->consoleln("pause, resume and estimate time");
         msleep(1000);
     }
 
@@ -91,10 +101,20 @@ void test_except() {
     *pointer = 1;
 }
 
-int main() {
+int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
+
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
     test_unittest();
     test_fail();
@@ -104,6 +124,9 @@ int main() {
     test_try_leave();
     // test_except ();
 
+    _logger->flush();
+
     _test_case.report(5);
+    _cmdline->help();
     return errorcode_t::success;  // return _test_case.result ();
 }

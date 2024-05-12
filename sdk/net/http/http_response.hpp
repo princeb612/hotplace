@@ -111,7 +111,7 @@ class http_response {
     uint8 get_version();
     uint32 get_stream_id();
 
-    http_response& set_debug(std::function<void(stream_t*)> f);
+    http_response& trace(std::function<void(stream_t*)> f);
 
     void addref();
     void release();

@@ -194,7 +194,7 @@ network_session_data* network_session::get_session_data() { return &_session_dat
 
 http2_session& network_session::get_http2_session() { return _http2_session; }
 
-network_session& network_session::set_debug(std::function<void(stream_t*)> f) {
+network_session& network_session::trace(std::function<void(stream_t*)> f) {
     _df = f;
     return *this;
 }

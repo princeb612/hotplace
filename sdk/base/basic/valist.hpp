@@ -14,6 +14,7 @@
 #include <stdarg.h>
 
 #include <sdk/base/basic/variant.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <vector>
 

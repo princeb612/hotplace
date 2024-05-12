@@ -184,8 +184,22 @@ basic_stream& basic_stream::operator<<(unsigned long value) {
     return *this;
 }
 
+basic_stream& basic_stream::operator<<(long long value) {
+    printf("%lli", value);
+    return *this;
+}
+
 basic_stream& basic_stream::operator<<(unsigned long long value) {
     printf("%llu", value);
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(int128 value) {
+    printf("%I128i", value);
+    return *this;
+}
+basic_stream& basic_stream::operator<<(uint128 value) {
+    printf("%I128u", value);
     return *this;
 }
 

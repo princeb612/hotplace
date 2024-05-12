@@ -20,6 +20,8 @@ using namespace hotplace::io;
 using namespace hotplace::crypto;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
 typedef struct _OPTION {
     bool verbose;
     bool dump_keys;
@@ -63,9 +65,7 @@ void test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, const by
                         if (option.verbose) {
                             test_case_notimecheck notimecheck(_test_case);
 
-                            basic_stream dump;
-                            dump_memory(&hashed[0], hashed.size(), &dump, 16, 0);
-                            bs.printf("%s\n", dump.c_str());
+                            _logger->dump(hashed);
                         }
                     }
                 }
@@ -117,7 +117,7 @@ return_t test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, bina
 
                             basic_stream dump;
                             dump_memory(&hashed[0], hashed.size(), &dump, 16, 0);
-                            printf("hmac\n%s\n", dump.c_str());
+                            _logger->writeln("hmac\n%s", dump.c_str());
                         }
 
                         if ((hashed.size() == expect.size()) && (0 == memcmp(&hashed[0], &expect[0], expect.size()))) {
@@ -245,9 +245,9 @@ void test_hmacsha_rfc4231() {
 
             basic_stream dump;
             dump_memory(&bin_key[0], bin_key.size(), &dump);
-            printf("key\n%s\n", dump.c_str());
+            _logger->writeln("key\n%s", dump.c_str());
             dump_memory(&bin_data[0], bin_data.size(), &dump);
-            printf("data\n%s\n", dump.c_str());
+            _logger->writeln("data\n%s", dump.c_str());
         }
 
         test_hash_routine(&openssl_hash, hash_algorithm_t::sha2_224, bin_key, bin_data, bin_expect_sha224, item.text);
@@ -317,9 +317,7 @@ void test_aes128cbc_mac_routine(const binary_t& key, const binary_t& message, co
         hash.close(handle);
 
         if (option.verbose) {
-            basic_stream bs;
-            dump_memory(result, &bs);
-            std::cout << "result" << std::endl << bs << std::endl;
+            _logger->hdump("result", result);
         }
     }
     // Figure 2.4.  Algorithm Verify_MAC
@@ -370,7 +368,7 @@ uint32 test_hotp_rfc4226() {
 
             if (option.verbose) {
                 test_case_notimecheck notimecheck(_test_case);
-                std::cout << "counter " << i << " code " << code << std::endl;
+                _logger->writeln("counter %i code %u", i, code);
             }
         }
 
@@ -464,7 +462,7 @@ uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
 
                 if (option.verbose) {
                     test_case_notimecheck notimecheck(_test_case);
-                    std::cout << "counter " << counter[i] << " code " << code << std::endl;
+                    _logger->writeln("counter %I64u code %u", counter[i], code);
                 }
             }
             totp.close(handle);
@@ -495,15 +493,13 @@ void test_hash_hmac_sign() {
 
     keychain.add_oct(&key, base16_decode(key_source));
     binary_t result;
-    basic_stream bs;
 
     openssl_hash hash;
     openssl_sign sign;
 
     if (option.verbose) {
         // source
-        dump_memory(bin_in, &bs);
-        std::cout << "source" << std::endl << bs << std::endl;
+        _logger->hdump("source", bin_in);
     }
 
     // openssl_hash hash
@@ -513,8 +509,7 @@ void test_hash_hmac_sign() {
     hash.close(hash_context);
 
     if (option.verbose) {
-        dump_memory(result, &bs);
-        std::cout << "hash" << std::endl << bs << std::endl;
+        _logger->hdump("hash", result);
     }
 
     // EVP_Digest (hash)
@@ -525,8 +520,7 @@ void test_hash_hmac_sign() {
     EVP_Digest(&bin_in[0], bin_in.size(), &result[0], &size, EVP_sha256(), nullptr);
 
     if (option.verbose) {
-        dump_memory(result, &bs);
-        std::cout << "Digest" << std::endl << bs << std::endl;
+        _logger->hdump("Digest", result);
     }
 
     // openssl_hash hmac
@@ -536,16 +530,14 @@ void test_hash_hmac_sign() {
     hash.close(hmac_context);
 
     if (option.verbose) {
-        dump_memory(result, &bs);
-        std::cout << "HMAC" << std::endl << bs << std::endl;
+        _logger->hdump("HMAC", result);
     }
 
     // openssl_sign
     sign.sign_digest(key.any(), hash_algorithm_t::sha2_256, bin_key, result);
 
     if (option.verbose) {
-        dump_memory(result, &bs);
-        std::cout << "Sign" << std::endl << bs << std::endl;
+        _logger->hdump("Sign", result);
     }
 }
 
@@ -590,13 +582,13 @@ void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const binary_
             basic_stream bs;
             if (option.dump_keys) {
                 dump_key(pkey, &bs);
-                printf("%s\n", bs.c_str());
+                _logger->writeln("%s", bs.c_str());
             }
             if (option.verbose) {
                 dump_memory(input, &bs);
-                printf("input\n%s\n", bs.c_str());
+                _logger->writeln("input\n%s", bs.c_str());
                 dump_memory(signature, &bs);
-                printf("sig\n%s\n", bs.c_str());
+                _logger->writeln("sig\n%s", bs.c_str());
             }
         }
     }
@@ -647,8 +639,13 @@ int main(int argc, char** argv) {
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
-    std::cout << "option.verbose " << (option.verbose ? 1 : 0) << std::endl;
-    std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
+    _logger->consoleln("option.verbose %i", option.verbose ? 1 : 0);
+    _logger->consoleln("option.dump_keys %i", option.dump_keys ? 1 : 0);
 
     if (option.verbose) {
         set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
@@ -679,6 +676,8 @@ int main(int argc, char** argv) {
         openssl_thread_cleanup();
         openssl_cleanup();
     }
+
+    _logger->flush();
 
     _test_case.report(5);
     _cmdline->help();

@@ -101,7 +101,8 @@ return_t digest_access_authentication_provider::request_auth(network_session* se
     return ret;
 }
 
-return_t digest_access_authentication_provider::prepare_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv) {
+return_t digest_access_authentication_provider::prepare_digest_access(network_session* session, http_request* request, http_response* response,
+                                                                      skey_value& kv) {
     return_t ret = errorcode_t::mismatch;
     __try2 {
         if (nullptr == session || nullptr == request || nullptr == response) {
@@ -137,7 +138,7 @@ return_t digest_access_authentication_provider::prepare_digest_access(network_se
     return ret;
 }
 
-return_t digest_access_authentication_provider::auth_digest_access(network_session* session, http_request* request, http_response* response, key_value& kv) {
+return_t digest_access_authentication_provider::auth_digest_access(network_session* session, http_request* request, http_response* response, skey_value& kv) {
     return_t ret = errorcode_t::mismatch;
     __try2 {
         if (nullptr == session || nullptr == request || nullptr == response) {

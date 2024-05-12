@@ -18,6 +18,7 @@ using namespace hotplace::io;
 using namespace hotplace::odbc;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 // connection strings
 // DRIVER={%s};SERVER=%s,%ld;UID=%s;PWD=%s;DATABASE=%s;PROTOCOL=TCPIP;
@@ -46,7 +47,7 @@ test_case _test_case;
 return_t dbdiag_handler(DWORD native_error, const char* state, const char* message, bool* control, void* context) {
     return_t ret = errorcode_t::success;
 
-    printf("[native_error %i][sqlstate %s]%s\n", native_error, state, message);
+    _logger->writeln("[native_error %i][sqlstate %s]%s", native_error, state, message);
 
     return ret;
 }
@@ -78,14 +79,14 @@ void test() {
             odbc_record record;
             while (true) {
                 while (errorcode_t::success == rs->fetch(&record)) {
-                    std::cout << "---" << std::endl;
+                    _logger->writeln("---");
                     int n = record.count();
                     for (int i = 0; i < n; i++) {
                         odbc_field* field = record.get_field(i);
                         ansi_string f, d;
                         field->get_field_name(f);
                         field->as_string(d);
-                        std::cout << f << " : " << d << std::endl;
+                        _logger->writeln("%s : %s", f.c_str(), d.c_str());
                     }
                 }
                 bool more = rs->more();
@@ -103,7 +104,13 @@ int main() {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, 1).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
     test();
+
+    _logger->flush();
 
     _test_case.report(5);
     return _test_case.result();

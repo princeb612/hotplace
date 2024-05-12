@@ -73,7 +73,7 @@ typedef struct _net_session_t {
 /**
  * @brief session data
  */
-class network_session_data : public key_value {
+class network_session_data : public t_skey_value<std::string> {
    public:
     network_session_data() {}
     virtual ~network_session_data() {}
@@ -166,7 +166,7 @@ class network_session {
     network_session_data* get_session_data();
     http2_session& get_http2_session();
 
-    network_session& set_debug(std::function<void(stream_t*)> f);
+    network_session& trace(std::function<void(stream_t*)> f);
 
    protected:
     net_session_t _session;

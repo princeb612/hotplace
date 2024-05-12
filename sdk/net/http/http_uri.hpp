@@ -71,14 +71,14 @@ class http_uri {
     /*
      * @brief   conversion
      * @param   const std::string& value [in]
-     * @param   key_value& kv [out]
+     * @param   skey_value& kv [out]
      * @return  error code (see error.hpp)
      * @sample
      *          const char* input = "/resource?client_id=s6BhdRkqt3";
      *          http_uri::to_keyvalue(input, kv);
      *          std::string client_id = kv.get("client_id");
      */
-    static return_t to_keyvalue(const std::string& value, key_value& kv);
+    static return_t to_keyvalue(const std::string& value, skey_value& kv);
 
     /**
      * @brief   keyvalue of query
@@ -89,7 +89,7 @@ class http_uri {
      *              }
      *          );
      */
-    key_value& get_query_keyvalue();
+    skey_value& get_query_keyvalue();
 
     http_uri& operator=(const http_uri& rhs);
 
@@ -100,7 +100,7 @@ class http_uri {
     std::string _uri;
     std::string _uripath;
     std::string _query;
-    key_value _query_kv;
+    skey_value _query_kv;
 
     t_shared_reference<http_uri> _shared;
 };

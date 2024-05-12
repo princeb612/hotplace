@@ -91,7 +91,7 @@ http_server_builder& http_server_builder::set_handler(http_server_handler_t hand
     return *this;
 }
 
-http_server_builder& http_server_builder::set_debug(std::function<void(stream_t*)> f) {
+http_server_builder& http_server_builder::trace(std::function<void(stream_t*)> f) {
     _df = f;
     return *this;
 }
@@ -143,7 +143,7 @@ http_server* http_server_builder::build() {
             }
         }
 
-        server->set_debug(_df);
+        server->trace(_df);
     }
     __finally2 {
         // do nothing

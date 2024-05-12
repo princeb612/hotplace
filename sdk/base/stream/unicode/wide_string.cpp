@@ -8,13 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/io/stream/stream.hpp>
-#include <sdk/io/stream/string.hpp>
-#include <sdk/io/string/string.hpp>
+#include <sdk/base/stream/tstring.hpp>
+#include <sdk/base/string/string.hpp>
 
 namespace hotplace {
-namespace io {
 
 wide_string::wide_string() {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
@@ -477,5 +474,4 @@ std::ostream& operator<<(std::ostream& lhs, const wide_string& rhs) {
     return lhs;
 }
 
-}  // namespace io
 }  // namespace hotplace

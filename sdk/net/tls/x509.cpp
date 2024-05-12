@@ -134,6 +134,7 @@ return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key
                 __leave2;
             }
 
+#if 0  // ASN.1 studying ...
             ASN1_TIME* time_not_before = X509_get_notBefore(x509);
             ASN1_TIME* time_not_after = X509_get_notAfter(x509);
             if (time_not_before && time_not_after) {
@@ -150,6 +151,7 @@ return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key
                     __leave2;
                 }
             }
+#endif
         }
 
         *context = ssl_ctx;

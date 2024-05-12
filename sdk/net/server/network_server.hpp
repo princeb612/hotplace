@@ -42,24 +42,15 @@ enum netserver_config_t {
     serverconf_enable_h2 = 13,
     serverconf_enable_h3 = 14,
 
-    serverconf_debug_ns = 1000,
-    serverconf_debug_h1 = 1001,
-    serverconf_debug_h2 = 1002,
+    serverconf_trace_ns = 1000,
+    serverconf_trace_h1 = 1001,
+    serverconf_trace_h2 = 1002,
 };
 
-class server_conf {
+class server_conf : public t_key_value<netserver_config_t, uint16> {
    public:
-    typedef std::map<netserver_config_t, uint16> config_map_t;
-    typedef std::pair<config_map_t::iterator, bool> config_map_pib_t;
-
     server_conf();
-    server_conf(const server_conf& conf);
-
-    server_conf& set(netserver_config_t type, uint16 value);
-    uint16 get(netserver_config_t type);
-
-   private:
-    config_map_t _config_map;
+    server_conf(const server_conf& rhs);
 };
 
 enum netserver_cb_type_t {
@@ -291,7 +282,7 @@ class network_server {
      */
     return_t close(network_multiplexer_context_t* handle);
 
-    static return_t set_debug(network_multiplexer_context_t* handle, std::function<void(stream_t*)> f);
+    static return_t trace(network_multiplexer_context_t* handle, std::function<void(stream_t*)> f);
 
    protected:
     /**

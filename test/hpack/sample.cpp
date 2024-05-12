@@ -22,6 +22,7 @@ using namespace hotplace::crypto;
 using namespace hotplace::net;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
@@ -34,14 +35,17 @@ t_shared_instance<hpack_encoder> encoder;
 t_shared_instance<huffman_coding> huffman_instance;
 
 void cprint(const char* text, ...) {
+    basic_stream bs;
     console_color _concolor;
 
-    std::cout << _concolor.turnon().set_fgcolor(console_color_t::cyan);
+    bs << _concolor.turnon().set_fgcolor(console_color_t::cyan);
     va_list ap;
     va_start(ap, text);
-    vprintf(text, ap);
+    bs.vprintf(text, ap);
     va_end(ap);
-    std::cout << _concolor.turnoff() << std::endl;
+    bs << _concolor.turnoff();
+
+    _logger->writeln(bs);
 }
 
 void test_huffman_codes_routine(const char* sample, const char* expect, const char* text) {
@@ -55,14 +59,13 @@ void test_huffman_codes_routine(const char* sample, const char* expect, const ch
         (*huffman_instance).encode(&bs, (byte_t*)sample, strlen(sample));
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
-            printf("%s\n", bs.c_str());
+            _logger->writeln("%s", bs.c_str());
         }
 
         (*huffman_instance).encode(bin, (byte_t*)sample, strlen(sample));
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
-            dump_memory(bin, &bs);
-            printf("%s\n", bs.c_str());
+            _logger->dump(bin);
         }
 
         _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "%s encode", text);
@@ -71,7 +74,7 @@ void test_huffman_codes_routine(const char* sample, const char* expect, const ch
         ret = (*huffman_instance).decode(&bs, &bin[0], bin.size());
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
-            printf("%s\n", bs.c_str());
+            _logger->writeln("%s", bs.c_str());
         }
 
         _test_case.assert(((errorcode_t::success == ret) && (bs == basic_stream(sample))), __FUNCTION__, "%s decode", text);
@@ -91,8 +94,14 @@ void test_huffman_codes() {
         {"custom-key", "25a8 49e9 5ba9 7d7f", "data#3"},                 // RFC 7541 C.4.3
         {"custom-value", "25a8 49e9 5bb8 e8b4 bf", "data#4"},            // RFC 7541 C.4.3
 
-        {"still a man hears what he wants to hear and disregards the rest",
+        {"still a man hears what he wants to hear and disregards the rest",  // The boxer, Simon and Garfunkel
          "424d450a0d4a4752939476214f138d2a4e553c0ea4a1449d49ca3b141d5229219161661d922144ce552c2a13", "data#5"},
+        {"We don't playing because we grow old; we grow old because we stop playing.",  // George Bernard Shaw
+         "E4 55 24 3D 5F E9 2A 57 40 FD 1A A9 94 8C A4 1D "
+         "A8 2A 9E 0A A4 D6 1F C2 87 A2 4F B5 3C 15 49 AC "
+         "3F 85 0F 44 8A 46 52 0E D4 15 4F 05 51 09 3D 6A "
+         "57 40 FD 1A A9 97 -- -- -- -- -- -- -- -- -- -- ",
+         "data#6"},
     };
     for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
         huffman_coding_testvector* item = vector + i;
@@ -113,9 +122,8 @@ void test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const 
 
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(bin, &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
-        printf("decode %zi\n", value);
+        _logger->hdump("encode", bin, 16, 2);
+        _logger->writeln("decode %zi", value);
     }
 
     uint8 test_h2_header_frame_fragment = 0;
@@ -155,8 +163,7 @@ void test_rfc7541_c_2() {
     encoder->encode_header(&session, bin, "custom-key", "custom-header", hpack_indexing);
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(bin, &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", bin, 16, 2);
     }
     const char* expect1 =
         "400a 6375 7374 6f6d 2d6b 6579 0d63 7573 "
@@ -176,8 +183,7 @@ void test_rfc7541_c_2() {
     encoder->encode_header(&session, bin, ":path", "/sample/path", hpack_wo_indexing);
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(bin, &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", bin, 16, 2);
     }
     const char* expect2 = "040c 2f73 616d 706c 652f 7061 7468";
     _test_case.assert(bin == base16_decode_rfc(expect2), __FUNCTION__, "%s - encode", text2);
@@ -195,7 +201,7 @@ void test_rfc7541_c_2() {
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump_memory(bin, &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", bin, 16, 2);
     }
     const char* expect3 =
         "1008 7061 7373 776f 7264 0673 6563 7265 "
@@ -214,8 +220,7 @@ void test_rfc7541_c_2() {
     encoder->encode_header(&session, bin, ":method", "GET");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(bin, &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", bin, 16, 2);
     }
     const char* expect4 = "82";
     _test_case.assert(bin == base16_decode_rfc(expect4), __FUNCTION__, "%s - encode", text4);
@@ -235,7 +240,7 @@ void decode(const binary_t& bin, hpack_session* session, hpack_session* session2
     size_t pos = 0;
 
     if (option.verbose) {
-        printf("> decode\n");
+        _logger->writeln("> decode");
     }
 
     hp.set_encoder(&*encoder).set_session(session);
@@ -243,16 +248,16 @@ void decode(const binary_t& bin, hpack_session* session, hpack_session* session2
         hp.decode_header(&bin[0], bin.size(), pos, name, value);
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
-            printf("  > %s: %s\n", name.c_str(), value.c_str());
-            fflush(stdout);
+            _logger->writeln("  > %s: %s", name.c_str(), value.c_str());
         }
     }
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        printf("> dynamic table (receiver)\n");
-        session->for_each([](const std::string& name, const std::string& value) -> void { printf("  - %s: %s\n", name.c_str(), value.c_str()); });
-        printf("> dynamic table (sender)\n");
-        session2->for_each([](const std::string& name, const std::string& value) -> void { printf("  - %s: %s\n", name.c_str(), value.c_str()); });
+        _logger->writeln("> dynamic table (receiver)");
+        session->for_each([](const std::string& name, const std::string& value) -> void { _logger->writeln("  - %s: %s", name.c_str(), value.c_str()); });
+        _logger->writeln("> dynamic table (sender)");
+        session2->for_each([](const std::string& name, const std::string& value) -> void { _logger->writeln("  - %s: %s", name.c_str(), value.c_str()); });
+        fflush(stdout);
     }
 }
 
@@ -282,7 +287,7 @@ void test_rfc7541_c_3() {
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->writeln("encode\n%s", bs.c_str());
     }
     const char* expect1 =
         "8286 8441 0f77 7777 2e65 7861 6d70 6c65 "
@@ -308,7 +313,7 @@ void test_rfc7541_c_3() {
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->writeln("encode\n%s", bs.c_str());
     }
     const char* expect2 = "8286 84be 5808 6e6f 2d63 6163 6865";
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.3.2 Second Request");
@@ -332,8 +337,7 @@ void test_rfc7541_c_3() {
         .encode_header("custom-key", "custom-value");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
     const char* expect3 =
         "8287 85bf 400a 6375 7374 6f6d 2d6b 6579 "
@@ -370,8 +374,7 @@ void test_rfc7541_c_4() {
         .encode_header(":authority", "www.example.com");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
     const char* expect1 =
         "8286 8441 8cf1 e3c2 e5f2 3a6b a0ab 90f4 "
@@ -393,8 +396,7 @@ void test_rfc7541_c_4() {
         .encode_header("cache-control", "no-cache");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
     const char* expect2 = "8286 84be 5886 a8eb 1064 9cbf";
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.4.2 Second Request");
@@ -414,8 +416,7 @@ void test_rfc7541_c_4() {
         .encode_header("custom-key", "custom-value");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
     const char* expect3 =
         "8287 85bf 4088 25a8 49e9 5ba9 7d7f 8925 "
@@ -447,8 +448,7 @@ void test_rfc7541_c_5() {
         .encode_header("location", "https://www.example.com");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
     const char* expect1 =
         "4803 3330 3258 0770 7269 7661 7465 611d "
@@ -472,8 +472,7 @@ void test_rfc7541_c_5() {
         .encode_header("location", "https://www.example.com");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
     const char* expect2 = "4803 3330 37c1 c0bf";
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.5.2 Second Response");
@@ -494,8 +493,7 @@ void test_rfc7541_c_5() {
         .encode_header("set-cookie", "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
     const char* expect3 =
         "88c1 611d 4d6f 6e2c 2032 3120 4f63 7420 "
@@ -533,8 +531,7 @@ void test_rfc7541_c_6() {
         .encode_header("location", "https://www.example.com");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
     const char* expect1 =
         "4882 6402 5885 aec3 771a 4b61 96d0 7abe "
@@ -557,8 +554,7 @@ void test_rfc7541_c_6() {
         .encode_header("location", "https://www.example.com");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
     const char* expect2 = "4883 640e ffc1 c0bf";
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.6.2 Second Response");
@@ -579,8 +575,7 @@ void test_rfc7541_c_6() {
         .encode_header("set-cookie", "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(hp.get_binary(), &bs, 16, 2);
-        printf("encode\n%s\n", bs.c_str());
+        _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
     const char* expect3 =
         "88c1 6196 d07a be94 1054 d444 a820 0595 "
@@ -639,7 +634,7 @@ void test_h2_header_frame_fragment() {
         "28 6F -- -- -- -- -- -- -- -- -- -- -- -- -- -- ";
 
     if (option.verbose) {
-        printf("decode HEADER\n");
+        _logger->writeln("decode HEADER");
     }
 
     pos = 0;
@@ -647,7 +642,7 @@ void test_h2_header_frame_fragment() {
     while (pos < bin.size()) {
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
         if (option.verbose) {
-            printf("> %s: %s\n", name.c_str(), value.c_str());
+            _logger->writeln("> %s: %s", name.c_str(), value.c_str());
             fflush(stdout);
         }
     }
@@ -663,7 +658,7 @@ void test_h2_header_frame_fragment() {
         "18 C5 C4 7F 04 85 B6 00 FD 28 6F -- -- -- -- -- ";
 
     if (option.verbose) {
-        printf("decode HEADER\n");
+        _logger->writeln("decode HEADER");
     }
 
     pos = 0;
@@ -671,7 +666,7 @@ void test_h2_header_frame_fragment() {
     while (pos < bin.size()) {
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
         if (option.verbose) {
-            printf("> %s: %s\n", name.c_str(), value.c_str());
+            _logger->writeln("> %s: %s", name.c_str(), value.c_str());
             fflush(stdout);
         }
     }
@@ -682,6 +677,10 @@ int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
+
+    logger_builder builder;
+    builder.set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
     openssl_startup();
     openssl_thread_setup();
@@ -721,6 +720,8 @@ int main(int argc, char** argv) {
 
     openssl_thread_end();
     openssl_cleanup();
+
+    _logger->flush();
 
     _test_case.report(5);
     cmdline->help();

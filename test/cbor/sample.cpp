@@ -20,10 +20,13 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
 typedef struct _OPTION {
     std::string content;
+    int verbose;
 
-    _OPTION() {
+    _OPTION() : verbose(0) {
         // do nothing
     }
 } OPTION;
@@ -31,6 +34,8 @@ t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 void encode_test(variant& vt, binary_t& bin, std::string expect) {
     return_t ret = errorcode_t::success;
+    OPTION& option = _cmdline->value();
+
     cbor_encode enc;
     std::string hex;
 
@@ -48,11 +53,11 @@ void encode_test(variant& vt, binary_t& bin, std::string expect) {
             ret = errorcode_t::mismatch;
         }
 
-        basic_stream bs;
-
-        dump_memory(bin, &bs);
-        std::cout << "encoded " << hex << std::endl;
-        std::cout << bs << std::endl;
+        if (option.verbose) {
+            basic_stream bs;
+            dump_memory(bin, &bs);
+            _logger->writeln("encoded %s\n%s", hex.c_str(), bs.c_str());
+        }
     }
 
     _test_case.test(ret, __FUNCTION__, "encoded %s expect %s", hex.c_str(), expect.c_str());
@@ -80,8 +85,7 @@ void cbor_test(cbor_object* root, const char* expected) {
 
             base16_encode(bin, concise);
 
-            std::cout << "diagnostic " << diagnostic << std::endl;
-            std::cout << "concise    " << concise << std::endl;
+            _logger->writeln("diagnostic %s\nconcise    %s", diagnostic.c_str(), concise.c_str());
 
             if (stricmp(concise.c_str(), expected)) {
                 ret = errorcode_t::mismatch;
@@ -584,10 +588,10 @@ void test_parse(const char* input, const char* diagnostic, const char* diagnosti
     {
         test_case_notimecheck notimecheck(_test_case);
 
-        printf("diagnostic %s\n", bs.c_str());
         std::string b16;
         base16_encode(bin, b16);
-        printf("cbor       %s\n", b16.c_str());
+        _logger->writeln("diagnostic %s", bs.c_str());
+        _logger->writeln("cbor       %s", b16.c_str());
 
         test = (0 == stricmp(input, b16.c_str()));
     }
@@ -725,12 +729,14 @@ void whatsthis(int argc, char** argv) {
         reader.close(handle);
 
         basic_stream bs;
-        dump_memory(what, &bs, 16, 2);
-        std::cout << "what u want to know" << std::endl
-                  << "< " << option.content << std::endl
-                  << "> " << diagnostic << std::endl
-                  << "> dump" << std::endl
-                  << bs.c_str() << std::endl;
+        bs << "what u want to know"
+           << "\n"
+           << "< " << option.content << "\n"
+           << "> " << diagnostic << "\n"
+           << "> dump"
+           << "\n";
+        dump_memory(what, &bs, 16, 2, 0, dump_notrunc);
+        _logger->consoleln(bs);
     }
 }
 
@@ -740,13 +746,24 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-d", "decode CBOR", [&](OPTION& o, char* param) -> void { o.content = param; }).preced().optional();
+    *_cmdline << cmdarg_t<OPTION>("-d", "decode CBOR", [&](OPTION& o, char* param) -> void { o.content = param; }).preced().optional()
+              << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
     test1();
     test2();
     test3();
 
+    _logger->flush();
+
     _test_case.report(5);
     whatsthis(argc, argv);
+
     return _test_case.result();
 }

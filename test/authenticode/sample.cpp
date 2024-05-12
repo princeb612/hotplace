@@ -23,9 +23,22 @@ using namespace hotplace::io;
 using namespace hotplace::crypto;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
-return_t test1(int argc, char** argv) {
+typedef struct _OPTION {
+    int verbose;
+    std::string infile;
+
+    _OPTION() : verbose(0) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION> > _cmdline;
+
+return_t test1() {
     return_t ret = errorcode_t::success;
+    OPTION& option = _cmdline->value();
+
     authenticode_verifier verifier;
     authenticode_context_t* handle = nullptr;
     uint32 result = 0;
@@ -33,11 +46,11 @@ return_t test1(int argc, char** argv) {
     __try2 {
         _test_case.begin("authenticode verification test - file");
         verifier.open(&handle);
-        int option = 0;
-        verifier.set(handle, authenticode_ctrl_t::set_crl, &option, sizeof(option));
+        int opt = 0;
+        verifier.set(handle, authenticode_ctrl_t::set_crl, &opt, sizeof(opt));
         verifier.add_trusted_rootcert(handle, "trust.crt", nullptr);
-        ret = verifier.verify(handle, argv[1], authenticode_flag_t::flag_separated, result);
-        printf("file verification : %08x\n", ret);
+        ret = verifier.verify(handle, option.infile.c_str(), authenticode_flag_t::flag_separated, result);
+        _logger->writeln("file verification : %08x", ret);
     }
     __finally2 {
         verifier.close(handle);
@@ -51,15 +64,33 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    return_t ret = errorcode_t::success;
+
     openssl_startup();
 
     __try2 {
-        if (argc < 2) {
-            printf("[help] %s file\n", argv[0]);
+        _cmdline.make_share(new cmdline_t<OPTION>);
+        *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+                  << cmdarg_t<OPTION>("-i", "file", [](OPTION& o, char* param) -> void { o.infile = param; }).preced().optional();
+        ret = _cmdline->parse(argc, argv);
+        if (errorcode_t::success != ret) {
+            _cmdline->help();
             __leave2;
         }
 
-        test1(argc, argv);
+        OPTION& option = _cmdline->value();
+
+        logger_builder builder;
+        builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+        _logger.make_share(builder.build());
+
+        if (option.infile.empty()) {
+            __leave2;
+        }
+
+        test1();
+
+        _logger->flush();
     }
     __finally2 {
         // do nothing
@@ -68,5 +99,6 @@ int main(int argc, char** argv) {
     openssl_cleanup();
 
     _test_case.report(5);
+    _cmdline->help();
     return _test_case.result();
 }

@@ -15,6 +15,7 @@
 
 #include <ostream>
 #include <sdk/base.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {
 
@@ -99,6 +100,14 @@ class console_color {
         return *this;
     }
     friend std::ostream& operator<<(std::ostream& os, console_color& color) {
+        if (color.get_status()) {
+            os << "\e[" << color.get_style() << ";" << color.get_fgcolor() << ";" << color.get_bgcolor() << "m";
+        } else {
+            os << "\e[0m";
+        }
+        return os;
+    }
+    friend basic_stream& operator<<(basic_stream& os, console_color& color) {
         if (color.get_status()) {
             os << "\e[" << color.get_style() << ";" << color.get_fgcolor() << ";" << color.get_bgcolor() << "m";
         } else {

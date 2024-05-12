@@ -53,7 +53,7 @@ class http_header {
     /**
      * @brief   conversion
      * @param   const std::string& value [in]
-     * @param   key_value& kv [out]
+     * @param   skey_value& kv [out]
      * @return  error code (see error.hpp)
      * @sample
      *          const char* auth =
@@ -70,7 +70,7 @@ class http_header {
      *          std::string nc = kv.get("nc");
      *          std::string cnonce = kv.get("cnonce");
      */
-    static return_t to_keyvalue(const std::string& value, key_value& kv);
+    static return_t to_keyvalue(const std::string& value, skey_value& kv);
 
     /**
      * @brief   read a header

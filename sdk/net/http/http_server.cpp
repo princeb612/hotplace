@@ -195,8 +195,8 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
     } else if (get_server_conf().get(netserver_config_t::serverconf_enable_h2)) {
         network_session* session = (network_session*)data_array[3];
         if (session) {
-            if (get_server_conf().get(netserver_config_t::serverconf_debug_h2)) {
-                session->get_http2_session().set_debug(_df);
+            if (get_server_conf().get(netserver_config_t::serverconf_trace_h2)) {
+                session->get_http2_session().trace(_df);
             }
             session->get_http2_session().consume(type, data_count, data_array, this, &h2request);
         }
@@ -212,11 +212,11 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
     return ret;
 }
 
-http_server& http_server::set_debug(std::function<void(stream_t*)> f) {
+http_server& http_server::trace(std::function<void(stream_t*)> f) {
     _df = f;
-    if (get_server_conf().get(netserver_config_t::serverconf_debug_ns)) {
+    if (get_server_conf().get(netserver_config_t::serverconf_trace_ns)) {
         for (auto item : _http_handles) {
-            network_server::set_debug(item, f);
+            network_server::trace(item, f);
         }
     }
     return *this;

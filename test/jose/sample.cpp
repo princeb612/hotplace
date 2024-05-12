@@ -19,6 +19,8 @@ using namespace hotplace::io;
 using namespace hotplace::crypto;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
 typedef struct _OPTION {
     bool verbose;
     bool dump_keys;
@@ -33,19 +35,24 @@ void print_text(const char* text, ...) {
     console_color concolor;
     va_list ap;
 
+    basic_stream bs;
+
+    bs << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::green);
+
     va_start(ap, text);
-    ansi_string string;
-    string.vprintf(text, ap);
+    bs.vprintf(text, ap);
     va_end(ap);
-    std::cout << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::green) << string << std::endl;
-    std::cout << concolor.turnoff();
+
+    bs << concolor.turnoff();
+
+    _logger->writeln(bs);
 }
 
 void dump(const char* text, const std::string& value) {
     if (text) {
         OPTION& option = _cmdline->value();
         if (option.verbose) {
-            std::cout << text << std::endl << value << std::endl;
+            _logger->writeln("%s\n%s", text, value.c_str());
         }
     }
 }
@@ -54,7 +61,7 @@ void dump_b64url(const char* text, const byte_t* addr, size_t size) {
     if (text && addr) {
         OPTION& option = _cmdline->value();
         if (option.verbose) {
-            printf("%s\n  %s\n", text, base64_encode(addr, size, base64_encoding_t::base64url_encoding).c_str());
+            _logger->writeln("%s\n  %s", text, base64_encode(addr, size, base64_encoding_t::base64url_encoding).c_str());
         }
     }
 }
@@ -63,37 +70,34 @@ void dump_b64url(const char* text, const binary_t& bin) {
     if (text) {
         OPTION& option = _cmdline->value();
         if (option.verbose) {
-            printf("%s\n  %s\n", text, base64_encode(bin, base64_encoding_t::base64url_encoding).c_str());
+            _logger->writeln("%s\n  %s", text, base64_encode(bin, base64_encoding_t::base64url_encoding).c_str());
         }
     }
 }
 
-void dump(const char* text, std::string const str, basic_stream& bs) {
+void dump2(const char* text, std::string const str) {
     if (text) {
         OPTION& option = _cmdline->value();
         if (option.verbose) {
-            dump_memory(str, &bs, 16, 2);
-            printf("%s\n%s\n", text, bs.c_str());
+            _logger->dump(str.c_str(), str.size(), 16, 2);
         }
     }
 }
 
-void dump(const char* text, binary_t const bin, basic_stream& bs) {
+void dump2(const char* text, binary_t const bin) {
     if (text) {
         OPTION& option = _cmdline->value();
         if (option.verbose) {
-            dump_memory(bin, &bs, 16, 2);
-            printf("%s\n%s\n", text, bs.c_str());
+            _logger->dump(bin, 16, 2);
         }
     }
 }
 
-void dump(const char* text, const byte_t* addr, size_t size, basic_stream& bs) {
+void dump2(const char* text, const byte_t* addr, size_t size) {
     if (text && addr) {
         OPTION& option = _cmdline->value();
         if (option.verbose) {
-            dump_memory(addr, size, &bs, 16, 2);
-            printf("%s\n%s\n", text, bs.c_str());
+            _logger->dump(addr, size, 16, 2);
         }
     }
 }
@@ -101,32 +105,36 @@ void dump(const char* text, const byte_t* addr, size_t size, basic_stream& bs) {
 void dump_elem(const binary_t& source) {
     OPTION& option = _cmdline->value();
     if (option.verbose) {
-        std::cout << "[";
+        basic_stream bs;
+        bs << "[";
 #if __cplusplus >= 201103L  // c++11
-        for_each(source.begin(), source.end(), [](byte_t c) { printf("%i,", c); });
+        for_each(source.begin(), source.end(), [&](byte_t c) { bs.printf("%i,", c); });
 #else
         for (binary_t::iterator iter = source.begin(); iter != source.end(); iter++) {
             byte_t c = *iter;
-            printf("%i,", c);
+            bs.printf("%i,", c);
         }
 #endif
-        std::cout << "]" << std::endl;
+        bs << "]";
+        _logger->writeln(bs);
     }
 }
 
 void dump_elem(const std::string& source) {
     OPTION& option = _cmdline->value();
     if (option.verbose) {
-        std::cout << "[";
+        basic_stream bs;
+        bs << "[";
 #if __cplusplus >= 201103L  // c++11
-        for_each(source.begin(), source.end(), [](byte_t c) { printf("%i,", c); });
+        for_each(source.begin(), source.end(), [&](byte_t c) { bs.printf("%i,", c); });
 #else
         for (std::string::iterator iter = source.begin(); iter != source.end(); iter++) {
             byte_t c = *iter;
-            printf("%i,", c);
+            bs.printf("%i,", c);
         }
 #endif
-        std::cout << "]" << std::endl;
+        bs << "]";
+        _logger->writeln(bs);
     }
 }
 
@@ -176,50 +184,64 @@ void test_basic() {
         },
     };
 
-    for (size_t i = 0; i < RTL_NUMBER_OF(table); i++) {
-        int key_len = EVP_CIPHER_key_length(table[i].evp);
-        int iv_len = EVP_CIPHER_iv_length(table[i].evp);
+    {
+        basic_stream bs;
+        for (size_t i = 0; i < RTL_NUMBER_OF(table); i++) {
+            int key_len = EVP_CIPHER_key_length(table[i].evp);
+            int iv_len = EVP_CIPHER_iv_length(table[i].evp);
 
-        std::cout << table[i].name << " key " << key_len << " iv " << iv_len << std::endl;
+            bs << table[i].name << " key " << key_len << " iv " << iv_len << "\n";
+        }
+        _logger->write(bs);
     }
 
 #if __cplusplus >= 201103L  // c++11
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    {
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        basic_stream bs;
 
-    std::function<void(const hint_jose_encryption_t*, void*)> lambda1 = [](const hint_jose_encryption_t* item, void* user) -> void {
-        printf("    %s\n", item->alg_name);
-    };
-    std::function<void(const hint_signature_t*, void*)> lambda2 = [](const hint_signature_t* item, void* user) -> void { printf("    %s\n", item->jws_name); };
+        std::function<void(const hint_jose_encryption_t*, void*)> lambda1 = [&](const hint_jose_encryption_t* item, void* user) -> void {
+            bs.printf("    %s\n", item->alg_name);
+        };
+        std::function<void(const hint_signature_t*, void*)> lambda2 = [&](const hint_signature_t* item, void* user) -> void {
+            bs.printf("    %s\n", item->jws_name);
+        };
+        _logger->write(bs);
 
-    printf("JWA\n");
-    advisor->jose_for_each_algorithm(lambda1, nullptr);
+        _logger->writeln("JWA");
+        advisor->jose_for_each_algorithm(lambda1, nullptr);
 
-    printf("JWE\n");
-    advisor->jose_for_each_encryption(lambda1, nullptr);
+        _logger->writeln("JWE");
+        advisor->jose_for_each_encryption(lambda1, nullptr);
 
-    printf("JWS\n");
-    advisor->jose_for_each_signature(lambda2, nullptr);
+        _logger->writeln("JWS");
+        advisor->jose_for_each_signature(lambda2, nullptr);
+    }
 #endif
 
-    std::cout << "jwk test" << std::endl;
+    {
+        _logger->writeln("jwk test");
 
-    json_web_key jwk;
-    json_web_signature jws;
+        basic_stream bs;
+        json_web_key jwk;
+        json_web_signature jws;
 
-    crypto_key crypto_key_es521;
-    jwk.load_file(&crypto_key_es521, "rfc7516_A4.jwk");
+        crypto_key crypto_key_es521;
+        jwk.load_file(&crypto_key_es521, "rfc7516_A4.jwk");
 
-    const EVP_PKEY* pkey = crypto_key_es521.any();
-    if (pkey) {
-        if (option.verbose) {
-            basic_stream bs;
-            dump_key(pkey, &bs);
-            printf("%s\n", bs.c_str());
+        const EVP_PKEY* pkey = crypto_key_es521.any();
+        if (pkey) {
+            if (option.verbose) {
+                basic_stream bs;
+                dump_key(pkey, &bs);
+                bs.printf("%s\n", bs.c_str());
+            }
         }
-    }
+        _logger->write(bs);
 
-    _test_case.assert(true, __FUNCTION__, "baseic informations");
-    _test_case.assert(nullptr != pkey, __FUNCTION__, "jwk");
+        _test_case.assert(true, __FUNCTION__, "baseic informations");
+        _test_case.assert(nullptr != pkey, __FUNCTION__, "jwk");
+    }
 }
 
 void dump_crypto_key(crypto_key_object* key, void*) {
@@ -229,11 +251,11 @@ void dump_crypto_key(crypto_key_object* key, void*) {
         uint32 nid = 0;
 
         nidof_evp_pkey(key->get_pkey(), nid);
-        printf("nid %i kid %s alg %s use %i\n", nid, key->get_kid(), key->get_alg(), key->get_use());
+        _logger->writeln("nid %i kid %s alg %s use %i", nid, key->get_kid(), key->get_alg(), key->get_use());
 
         basic_stream bs;
         dump_key(key->get_pkey(), &bs);
-        printf("%s\n", bs.c_str());
+        _logger->writeln("%s", bs.c_str());
     }
 }
 
@@ -867,14 +889,14 @@ void test_rfc7516_A1_test() {
     jwk.load_file(&key, "rfc7516_A1.jwk");
     key.for_each(dump_crypto_key, nullptr);
 
-    dump("input", input, bs);
-    dump("jose_header", jose_header, bs);
-    dump("cek", cek, RTL_NUMBER_OF(cek), bs);
-    dump("encrypted_key", encrypted_key, RTL_NUMBER_OF(encrypted_key), bs);
-    dump("iv", iv, RTL_NUMBER_OF(iv), bs);
-    dump("aad", aad, RTL_NUMBER_OF(aad), bs);
-    dump("ciphertext", ciphertext, RTL_NUMBER_OF(ciphertext), bs);
-    dump("tag", tag, RTL_NUMBER_OF(tag), bs);
+    dump2("input", input);
+    dump2("jose_header", jose_header);
+    dump2("cek", cek, RTL_NUMBER_OF(cek));
+    dump2("encrypted_key", encrypted_key, RTL_NUMBER_OF(encrypted_key));
+    dump2("iv", iv, RTL_NUMBER_OF(iv));
+    dump2("aad", aad, RTL_NUMBER_OF(aad));
+    dump2("ciphertext", ciphertext, RTL_NUMBER_OF(ciphertext));
+    dump2("tag", tag, RTL_NUMBER_OF(tag));
 
     // A.1.1
     jose_header_encoded = base64_encode((byte_t*)jose_header.c_str(), jose_header.size(), base64_encoding_t::base64url_encoding);
@@ -887,7 +909,7 @@ void test_rfc7516_A1_test() {
     pkey = key.select(kid, crypto_use_t::use_enc);
     json_object_signing_encryption jose;
     crypt.decrypt(pkey, encrypted_key_data, decrypted_key_data, crypt_enc_t::rsa_oaep);
-    dump("decrypted_key", decrypted_key_data, bs);
+    dump2("decrypted_key", decrypted_key_data);
 
     if ((decrypted_key_data.size() == RTL_NUMBER_OF(cek)) && (0 == memcmp(&decrypted_key_data[0], cek, RTL_NUMBER_OF(cek)))) {
         result = true;
@@ -914,8 +936,8 @@ void test_rfc7516_A1_test() {
     crypt.open(&crypt_handle, crypt_algorithm_t::aes256, crypt_mode_t::gcm, cek, RTL_NUMBER_OF(cek), iv, RTL_NUMBER_OF(iv));
     // tag from plain, aad
     crypt.encrypt2(crypt_handle, (byte_t*)input.c_str(), input.size(), data, &aad_data, &tag_gen);
-    dump("data", data, bs);
-    dump("tag", tag_gen, bs);
+    dump2("data", data);
+    dump2("tag", tag_gen);
     if ((tag_gen.size() == RTL_NUMBER_OF(tag)) && (0 == memcmp(&tag_gen[0], tag, RTL_NUMBER_OF(tag)))) {
         result = true;
     } else {
@@ -933,7 +955,7 @@ void test_rfc7516_A1_test() {
 
     // plain from ciphertext, aad, tag
     crypt.decrypt2(crypt_handle, ciphertext, RTL_NUMBER_OF(ciphertext), plain, &aad_data, &tag_data);
-    dump("plain", plain, bs);
+    dump2("plain", plain);
 
     dump_b64url("ciphertext_encoded", data);
     dump_b64url("ta_encoded", tag_gen);
@@ -1213,41 +1235,41 @@ void test_rfc7516_B() {
 
     // compute
     __try2 {
-        dump("key", key, RTL_NUMBER_OF(key), bs);
-        dump("plain", plain, RTL_NUMBER_OF(plain), bs);
-        dump("iv", iv, RTL_NUMBER_OF(iv), bs);
+        dump2("key", key, RTL_NUMBER_OF(key));
+        dump2("plain", plain, RTL_NUMBER_OF(plain));
+        dump2("iv", iv, RTL_NUMBER_OF(iv));
 
         // B.2
         crypt.open(&crypt_handle, crypt_algorithm_t::aes128, crypt_mode_t::cbc, key + 16, 16, iv, 16);
         crypt.encrypt(crypt_handle, plain, RTL_NUMBER_OF(plain), enc_value);
-        dump("encryption result (computed)", enc_value, bs);
+        dump2("encryption result (computed)", enc_value);
         // if (encryption result = encrypted_data) then success
         // test vice versa now
-        dump("encryption result (rfc sample)", encrypted_data, RTL_NUMBER_OF(encrypted_data), bs);
+        dump2("encryption result (rfc sample)", encrypted_data, RTL_NUMBER_OF(encrypted_data));
         crypt.decrypt(crypt_handle, encrypted_data, RTL_NUMBER_OF(encrypted_data), test);
-        dump("decrypt the encryption result (rfc sample)", test, bs);
+        dump2("decrypt the encryption result (rfc sample)", test);
         // B.5
         binary_t concat;  // concatenate AAD, IV, CT, AL
         concat.insert(concat.end(), aad, aad + RTL_NUMBER_OF(aad));
         concat.insert(concat.end(), iv, iv + RTL_NUMBER_OF(iv));
         concat.insert(concat.end(), enc_value.begin(), enc_value.end());
         concat.insert(concat.end(), (byte_t*)&al, (byte_t*)&al + sizeof(int64));
-        dump("concat", concat, bs);
-        dump("concat (rfc sample)", concat_sample, RTL_NUMBER_OF(concat_sample), bs);
+        dump2("concat", concat);
+        dump2("concat (rfc sample)", concat_sample, RTL_NUMBER_OF(concat_sample));
         // B.6
         hash.open(&hash_handle, hash_algorithm_t::sha2_256, key, 16);
         hash.hash(hash_handle, &concat[0], concat.size(), hmac_value);
 
-        dump("hmac_value", hmac_value, bs);
+        dump2("hmac_value", hmac_value);
 
         constexpr byte_t hmac_sample[] = {83, 73, 191, 98,  104, 205, 211, 128, 201, 189, 199, 133, 32,  38, 194, 85,
                                           9,  84, 229, 201, 219, 135, 44,  252, 145, 102, 179, 140, 105, 86, 229, 116};
-        dump("hmac (rfc sample)", hmac_sample, RTL_NUMBER_OF(hmac_sample), bs);
+        dump2("hmac (rfc sample)", hmac_sample, RTL_NUMBER_OF(hmac_sample));
 
         // B.7
         binary_t trunc;
         trunc.insert(trunc.end(), &hmac_value[0], &hmac_value[0] + 16);
-        dump("trunc", trunc, bs);
+        dump2("trunc", trunc);
 
         if ((RTL_NUMBER_OF(tag) == trunc.size()) && (0 == memcmp(&trunc[0], tag, trunc.size()))) {
             // do nothing
@@ -1376,17 +1398,18 @@ int test_ecdh() {
 
     OPTION& option = _cmdline->value();
     if (option.verbose) {
-        std::cout << "alice public key  x : " << base16_encode(x_alice) << std::endl
-                  << "alice public key  y : " << base16_encode(y_alice) << std::endl
-                  << "alice private key d : " << base16_encode(d_alice) << std::endl
-                  << "bob   public key  x : " << base16_encode(x_bob) << std::endl
-                  << "bob   public key  y : " << base16_encode(y_bob) << std::endl
-                  << "bob   private key d : " << base16_encode(d_bob) << std::endl
+        basic_stream bs;
+        bs << "alice public key  x : " << base16_encode(x_alice) << "\n"
+           << "alice public key  y : " << base16_encode(y_alice) << "\n"
+           << "alice private key d : " << base16_encode(d_alice) << "\n"
+           << "bob   public key  x : " << base16_encode(x_bob) << "\n"
+           << "bob   public key  y : " << base16_encode(y_bob) << "\n"
+           << "bob   private key d : " << base16_encode(d_bob) << "\n"
 
-                  << "secret computed by alice : " << base16_encode(secret_alice) << std::endl
-                  << "secret computed by bob   : " << base16_encode(secret_bob)
+           << "secret computed by alice : " << base16_encode(secret_alice) << "\n"
+           << "secret computed by bob   : " << base16_encode(secret_bob);
 
-                  << std::endl;
+        _logger->writeln(bs);
     }
 
     bool result = (secret_alice == secret_bob);
@@ -1414,16 +1437,16 @@ void test_rfc7518_C() {
     binary_t secret_bob;
     dh_key_agreement(pkey_bob, pkey_alice, secret_bob);
 
-    std::cout << "Z (ECDH-ES key agreement output) : " << std::endl << base16_encode(secret_bob) << std::endl;
+    bs << "Z (ECDH-ES key agreement output) : \n" << base16_encode(secret_bob) << "\n";
 #if __cplusplus >= 201103L  // c++11
-    for_each(secret_bob.begin(), secret_bob.end(), [](byte_t c) { printf("%i,", c); });
+    for_each(secret_bob.begin(), secret_bob.end(), [&](byte_t c) { bs.printf("%i,", c); });
 #else
     for (binary_t::iterator iter = secret_bob.begin(); iter != secret_bob.end(); iter++) {
         byte_t c = *iter;
-        printf("%i,", c);
+        bs.printf("%i,", c);
     }
 #endif
-    std::cout << std::endl;
+    _logger->writeln(bs);
 
     // apu Alice
     // apv Bob
@@ -1434,18 +1457,18 @@ void test_rfc7518_C() {
 
     compose_otherinfo(alg, apu, apv, 16 << 3, otherinfo);
 
-    dump("otherinfo", otherinfo, bs);
+    dump2("otherinfo", otherinfo);
     dump_elem(otherinfo);
 
     binary_t derived;
     concat_kdf(secret_bob, otherinfo, 16, derived);
 
-    dump("derived", derived, bs);
+    dump2("derived", derived);
     dump_elem(derived);
 
     std::string sample = "VqqN6vgjbSBcIijNcacQGg";
     std::string computation = base64_encode(derived, base64_encoding_t::base64url_encoding);
-    std::cout << computation << std::endl;
+    _logger->writeln(computation);
 
     bool result = (sample == computation);
     _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__,
@@ -1453,7 +1476,7 @@ void test_rfc7518_C() {
 
     ecdh_es(pkey_bob, pkey_alice, alg, apu, apv, 16, derived);
 
-    dump("derived", derived, bs);
+    dump2("derived", derived);
     dump_elem(derived);
 }
 
@@ -1482,7 +1505,8 @@ return_t test_rfc7520_signature(crypto_key* key, const char* filename, const cha
 }
 
 return_t test_rfc7520_jwe(crypto_key* key, const char* filename, const char* testcase_name) {
-    printf("%s\n", testcase_name);
+    _logger->writeln("%s", testcase_name);
+
     json_object_signing_encryption jose;
     jose_context_t* handle = nullptr;
     file_stream fs;
@@ -1501,8 +1525,8 @@ return_t test_rfc7520_jwe(crypto_key* key, const char* filename, const char* tes
             jose.open(&handle, key);
             ret = jose.decrypt(handle, std::string((char*)data, datasize), output, result);
             if (errorcode_t::success == ret) {
-                dump("plain", data, datasize, bs);
-                dump("decrypted", output, bs);
+                dump2("plain", data, datasize);
+                dump2("decrypted", output);
             }
             jose.close(handle);
         }
@@ -1699,7 +1723,7 @@ void test_jwe_flattened() {
                         dump("encrypted", encrypted);
 
                         ret = jose.decrypt(handle_decrypt, encrypted, output, result);
-                        dump("decrypted", output, bs);
+                        dump2("decrypted", output);
                     }
                     _test_case.test(ret, __FUNCTION__, "RFC 7520 JWE enc %s alg %s", nameof_enc, nameof_alg);
                 }
@@ -1827,12 +1851,11 @@ void test_jwk_thumbprint() {
     jwk.load_file(&key, "rfc7638_3.jwk");
     key.for_each(dump_crypto_key, nullptr);
 
-    std::cout << "key item : " << key.size() << std::endl;
-
     const EVP_PKEY* pkey = key.any();
     key.get_public_key(pkey, pub1, pub2);
 
-    std::cout << "x : " << base16_encode(pub1) << std::endl << "y : " << base16_encode(pub2) << std::endl;
+    _logger->writeln("x : %s", base16_encode(pub1).c_str());
+    _logger->writeln("y : %s", base16_encode(pub2).c_str());
 
     json_root = json_object();
     json_object_set_new(json_root, "e", json_string(base64_encode(pub2, base64_encoding_t::base64url_encoding).c_str()));
@@ -1846,7 +1869,7 @@ void test_jwk_thumbprint() {
     json_decref(json_root);
 
     // replace (buffer, " ", "");
-    dump("dump", buffer, bs);
+    dump2("dump", buffer);
     dump_elem(buffer);
 
     hash_stream("sha256", (byte_t*)buffer.c_str(), buffer.size(), hash_value);
@@ -1854,12 +1877,16 @@ void test_jwk_thumbprint() {
 
     OPTION& option = _cmdline->value();
     if (option.verbose) {
-        std::cout << "in lexicographic order : " << std::endl
-                  << buffer << std::endl
-                  << "hash : " << std::endl
-                  << base16_encode(hash_value) << std::endl
-                  << "thumbprint :" << std::endl
-                  << thumbprint << std::endl;
+        bs << "in lexicographic order : "
+           << "\n"
+           << buffer << "\n"
+           << "hash : "
+           << "\n"
+           << base16_encode(hash_value) << "\n"
+           << "thumbprint :"
+           << "\n"
+           << thumbprint;
+        _logger->writeln(bs);
     }
 
     // crv, kty, x, y
@@ -1891,7 +1918,8 @@ void test_rfc8037() {
     key.get_key(pkey, pub1, pub2, priv);
 
     if (option.verbose) {
-        std::cout << "x : " << base16_encode(pub1) << std::endl << "d : " << base16_encode(priv) << std::endl;
+        _logger->writeln("x : %s", base16_encode(pub1).c_str());
+        _logger->writeln("d : %s", base16_encode(priv).c_str());
     }
 
     // {"alg":"EdDSA"}
@@ -1989,7 +2017,7 @@ void test_okp() {
                 dump("encrypted", encrypted);
                 ret = jose.decrypt(handle, encrypted, source, result);
                 if (errorcode_t::success == ret) {
-                    dump("decrypted", source, bs);
+                    dump2("decrypted", source);
                 }
             }
             _test_case.test(ret, __FUNCTION__, "RFC 8037 JWE with OKP enc %s alg %s", nameof_enc, nameof_alg);
@@ -2018,19 +2046,19 @@ void key_match(crypto_key* key, jwa_t alg, crypto_use_t use) {
 
     print_text("try kt %d alg %s", alg_info->kty, alg_info->alg_name);
     pkey = key->select(kid, alg, use);
+    basic_stream bs;
     if (pkey) {
         OPTION& option = _cmdline->value();
         if (option.dump_keys) {
-            printf("> kid %s\n", kid.c_str());
+            bs.printf("> kid %s\n", kid.c_str());
             key->get_key(pkey, pub1, pub2, priv);
 
-            basic_stream bs;
             dump_key(pkey, &bs);
-            printf("%s\n", bs.c_str());
+            bs.printf("\n");
         }
     }
-    printf(pkey ? "found" : "not found");
-    printf("\n");
+    bs.printf(pkey ? "found" : "not found");
+    _logger->writeln(bs);
 }
 
 void key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
@@ -2046,19 +2074,19 @@ void key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
 
     print_text("try kt %d alg %s", alg_info->kty, alg_info->jws_name);
     pkey = key->select(kid, sig, use);
+    basic_stream bs;
     if (pkey) {
         OPTION& option = _cmdline->value();
         if (option.dump_keys) {
-            printf("> kid %s\n", kid.c_str());
+            bs.printf("> kid %s\n", kid.c_str());
             key->get_key(pkey, pub1, pub2, priv);
 
-            basic_stream bs;
             dump_key(pkey, &bs);
-            printf("%s\n", bs.c_str());
+            bs.printf("%s");
         }
     }
-    printf(pkey ? "found" : "not found");
-    printf("\n");
+    bs.printf(pkey ? "found" : "not found");
+    _logger->writeln(bs);
 }
 
 void key_match_test() {
@@ -2121,7 +2149,12 @@ int main(int argc, char** argv) {
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
-    std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
+    _logger->writeln("option.dump_keys %i", option.dump_keys ? 1 : 0);
 
     if (option.verbose) {
         set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
@@ -2195,6 +2228,8 @@ int main(int argc, char** argv) {
 
     openssl_thread_cleanup();
     openssl_cleanup();
+
+    _logger->flush();
 
     _test_case.report(20);
     _cmdline->help();

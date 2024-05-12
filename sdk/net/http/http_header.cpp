@@ -164,7 +164,7 @@ return_t http_header::get_headers(std::function<void(const std::string&, const s
     return ret;
 }
 
-return_t http_header::to_keyvalue(const std::string& value, key_value& kv) {
+return_t http_header::to_keyvalue(const std::string& value, skey_value& kv) {
     return_t ret = errorcode_t::success;
 
     std::string token;

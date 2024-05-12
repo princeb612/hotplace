@@ -56,7 +56,7 @@ class http_server {
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();
 
-    http_server& set_debug(std::function<void(stream_t*)> f);
+    http_server& trace(std::function<void(stream_t*)> f);
 
    protected:
     http_server();

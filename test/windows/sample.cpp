@@ -27,12 +27,22 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
+typedef struct _OPTION {
+    int verbose;
+
+    _OPTION() : verbose(0) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 return_t enum_modules_handler(uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* parameter) {
     switch (type) {
         case enum_modules_t::enum_toolhelp: {
             MODULEENTRY32* entry = (MODULEENTRY32*)data[0];
-            printf(_T ("module [%s]\n"), entry->szExePath);
+            _logger->writeln("module [%s]", entry->szExePath);
         } break;
         case enum_modules_t::enum_psapi: {
             HMODULE module_handle = (HMODULE)data[0];
@@ -67,7 +77,7 @@ void test_trace() {
     {
         test_case_notimecheck notimecheck(_test_case);
 
-        std::cout << stream << std::endl;
+        _logger->writeln(stream.c_str());
     }
 
     _test_case.test(ret, __FUNCTION__, "debug_trace");
@@ -78,9 +88,22 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
     test_enum_modules();
     test_trace();
 
+    _logger->flush();
+
     _test_case.report(5);
+    _cmdline->help();
     return _test_case.result();
 }

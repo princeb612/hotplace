@@ -66,7 +66,7 @@ bool http_authentication_resolver::digest_authenticate(http_authenticate_provide
         } else {
             return_t ret = errorcode_t::success;
             digest_access_authentication_provider* digest_provider = (digest_access_authentication_provider*)provider;
-            key_value kv;
+            skey_value kv;
 
             ret = digest_provider->prepare_digest_access(session, request, response, kv);
             if (errorcode_t::success == ret) {
@@ -124,7 +124,7 @@ bool http_authentication_resolver::custom_authenticate(http_authenticate_provide
     if (_custom_resolver) {
         ret_value = _custom_resolver(provider, session, request, response);
     } else {
-        key_value kv = request->get_http_uri().get_query_keyvalue();
+        skey_value kv = request->get_http_uri().get_query_keyvalue();
         std::string username = kv.get("username");
         std::string password = kv.get("password");
         ret_value = get_custom_credentials().verify(provider, username, password);

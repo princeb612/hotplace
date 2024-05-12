@@ -8,12 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base.hpp>
-#include <sdk/io/stream/string.hpp>
-#include <sdk/io/string/string.hpp>
+#include <sdk/base/stream/tstring.hpp>
+#include <sdk/base/string/string.hpp>
 
 namespace hotplace {
-namespace io {
 
 ansi_string::ansi_string() {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
@@ -475,5 +473,4 @@ std::ostream& operator<<(std::ostream& lhs, const ansi_string& rhs) {
     return lhs;
 }
 
-}  // namespace io
 }  // namespace hotplace

@@ -23,6 +23,7 @@ using namespace hotplace::crypto;
 using namespace hotplace::net;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 #define FILENAME_RUN _T (".run")
 
@@ -34,7 +35,7 @@ typedef struct _OPTION {
     _OPTION() : port(8080), port_tls(9000), verbose(0) {}
 } OPTION;
 
-t_shared_instance<cmdline_t<OPTION> > cmdline;
+t_shared_instance<cmdline_t<OPTION> > _cmdline;
 t_shared_instance<http_server> _http_server;
 
 void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
@@ -46,14 +47,17 @@ void api_response_json_handler(network_session*, http_request* request, http_res
 }
 
 void cprint(const char* text, ...) {
+    basic_stream bs;
     console_color _concolor;
 
-    std::cout << _concolor.turnon().set_fgcolor(console_color_t::cyan);
+    bs << _concolor.turnon().set_fgcolor(console_color_t::cyan);
     va_list ap;
     va_start(ap, text);
-    vprintf(text, ap);
+    bs.vprintf(text, ap);
     va_end(ap);
-    std::cout << _concolor.turnoff() << std::endl;
+    bs << _concolor.turnoff();
+
+    _logger->writeln(bs);
 }
 
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
@@ -67,7 +71,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     basic_stream bs;
     std::string message;
 
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     switch (type) {
         case mux_connect:
@@ -76,7 +80,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
         case mux_read:
             cprint("read %i", session_socket->cli_socket);
             if (option.verbose) {
-                printf("%.*s\n", (unsigned)bufsize, buf);
+                _logger->writeln("%.*s", (unsigned)bufsize, buf);
             }
 
             {
@@ -100,9 +104,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     cprint("send %i", session_socket->cli_socket);
                     basic_stream resp;
                     response.get_response(resp);
-                    basic_stream temp;
-                    dump_memory(resp, &temp);
-                    printf("%s\n", temp.c_str());
+                    _logger->dump(resp.data(), resp.size());
                 }
 
                 response.respond(session);
@@ -118,7 +120,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 }
 
 return_t echo_server(void*) {
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     http_server_builder builder;
@@ -218,12 +220,16 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    cmdline.make_share(new cmdline_t<OPTION>);
-    *cmdline << cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
-             << cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
-             << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    logger_builder builder;
+    builder.set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
-    cmdline->parse(argc, argv);
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
+              << cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
+              << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+
+    _cmdline->parse(argc, argv);
 
 #if defined _WIN32 || defined _WIN64
     winsock_startup();
@@ -240,7 +246,9 @@ int main(int argc, char** argv) {
     winsock_cleanup();
 #endif
 
+    _logger->flush();
+
     _test_case.report();
-    cmdline->help();
+    _cmdline->help();
     return _test_case.result();
 }

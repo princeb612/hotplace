@@ -302,20 +302,18 @@ http_response& http_response::response_h2(network_session* session) {
         binary_t encoded;
         bool header_only = false;
 
-        if (content_size()) {
-            if (0 == strcmp("HEAD", method.c_str())) {
-                header_only = true;
-            } else {
-                if (std::string::npos != accept_encoding.find("deflate")) {
-                    encoding = "deflate";
-                } else if (std::string::npos != accept_encoding.find("gzip")) {
-                    encoding = "gzip";
-                } else /* "identity" */ {
-                    // do nothing
-                }
-            }
-        } else {
+        if (0 == strcmp("HEAD", method.c_str())) {
             header_only = true;
+        } else if (content_size()) {
+            header_only = false;
+
+            if (std::string::npos != accept_encoding.find("deflate")) {
+                encoding = "deflate";
+            } else if (std::string::npos != accept_encoding.find("gzip")) {
+                encoding = "gzip";
+            } else /* "identity" */ {
+                // do nothing
+            }
         }
 
         hpack hp;
@@ -355,7 +353,7 @@ http_response& http_response::response_h2(network_session* session) {
         }
 
         {
-            hp.encode_header("content-length", format("%zi", data.get_data().size()), hpack_wo_indexing | hpack_huffman);
+            hp.encode_header("content-length", format("%zi", data.get_data().size()));
             headers.get_fragment() = hp.get_binary();
 
             bin.clear();
@@ -450,7 +448,7 @@ uint8 http_response::get_version() { return _version; }
 
 uint32 http_response::get_stream_id() { return _stream_id; }
 
-http_response& http_response::set_debug(std::function<void(stream_t*)> f) {
+http_response& http_response::trace(std::function<void(stream_t*)> f) {
     _df = f;
     return *this;
 }

@@ -18,6 +18,7 @@ using namespace hotplace::io;
 using namespace hotplace::crypto;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
@@ -25,11 +26,11 @@ typedef struct _OPTION {
     _OPTION() : verbose(0) {}
 } OPTION;
 
-t_shared_instance<cmdline_t<OPTION> > cmdline;
+t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 void test_kdf_hkdf() {
     _test_case.begin("hkdf");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
     openssl_kdf kdf;
 
     return_t ret = errorcode_t::success;
@@ -50,9 +51,7 @@ void test_kdf_hkdf() {
         kdf.hmac_kdf(result, hash_algorithm_t::sha2_256, vector[i].dlen, convert(vector[i].password), convert(vector[i].salt), convert(vector[i].info));
 
         if (option.verbose) {
-            basic_stream bs;
-            dump_memory(result, &bs);
-            std::cout << bs << std::endl;
+            _logger->dump(result);
         }
 
         _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "hkdf");
@@ -61,7 +60,7 @@ void test_kdf_hkdf() {
 
 void test_kdf_pbkdf2_rfc6070() {
     _test_case.begin("pbkdf2");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     openssl_kdf kdf;
@@ -95,9 +94,7 @@ void test_kdf_pbkdf2_rfc6070() {
         kdf.pbkdf2(result, hash_algorithm_t::sha1, vector[i].dlen, password, salt, vector[i].c);
 
         if (option.verbose) {
-            basic_stream bs;
-            dump_memory(result, &bs);
-            std::cout << bs << std::endl;
+            _logger->dump(result);
         }
 
         _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "RFC6070.pbkdf2 c = %i", vector[i].c);
@@ -107,7 +104,7 @@ void test_kdf_pbkdf2_rfc6070() {
 void test_kdf_pbkdf2_rfc7914() {
     // RFC 7914 11.  Test Vectors for PBKDF2 with HMAC-SHA-256
     _test_case.begin("pbkdf2");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     openssl_kdf kdf;
@@ -129,9 +126,7 @@ void test_kdf_pbkdf2_rfc7914() {
         kdf.pbkdf2(result, hash_algorithm_t::sha2_256, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].c);
 
         if (option.verbose) {
-            basic_stream bs;
-            dump_memory(result, &bs);
-            std::cout << bs << std::endl;
+            _logger->dump(result);
         }
 
         _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "RFC7914.pbkdf2 c = %i", vector[i].c);
@@ -141,7 +136,7 @@ void test_kdf_pbkdf2_rfc7914() {
 void test_kdf_scrypt_rfc7914() {
     // RFC 7914 12.  Test Vectors for scrypt
     _test_case.begin("scrypt (salt zero-length openssl 3.0 required)");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     openssl_kdf kdf;
@@ -171,9 +166,7 @@ void test_kdf_scrypt_rfc7914() {
         ret = kdf.scrypt(result, vector[i].dlen, vector[i].password, convert(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
         if (errorcode_t::success == ret) {
             if (option.verbose) {
-                basic_stream bs;
-                dump_memory(result, &bs);
-                std::cout << bs << std::endl;
+                _logger->dump(result);
             }
         }
         _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "scrypt");
@@ -182,7 +175,7 @@ void test_kdf_scrypt_rfc7914() {
 
 void test_kdf_argon_rfc9106() {
     _test_case.begin("argon2d,argon2i,argon2id");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
     openssl_kdf kdf;
 
 #if OPENSSL_VERSION_NUMBER >= 0x30200000L
@@ -213,9 +206,7 @@ void test_kdf_argon_rfc9106() {
                    base16_decode(vector[i].secret));
 
         if (option.verbose) {
-            basic_stream bs;
-            dump_memory(derived, &bs);
-            std::cout << bs << std::endl;
+            _logger->dump(derived);
         }
 
         _test_case.assert(derived == base16_decode(vector[i].expect), __FUNCTION__, "argon2id");
@@ -227,7 +218,7 @@ void test_kdf_argon_rfc9106() {
 
 void test_kdf_extract_expand_rfc5869() {
     _test_case.begin("KDF-Extract/Expand");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
     openssl_kdf kdf;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -340,8 +331,7 @@ void test_kdf_extract_expand_rfc5869() {
         kdf.hkdf_expand(okm, expand_vector[i].alg, expand_vector[i].dlen, prk, base16_decode(expand_vector[i].info));
 
         if (option.verbose) {
-            dump_memory(okm, &bs);
-            printf("OKM\n%s\n", bs.c_str());
+            _logger->hdump("OKM", okm);
         }
 
         binary_t derived;
@@ -349,8 +339,7 @@ void test_kdf_extract_expand_rfc5869() {
                      base16_decode(expand_vector[i].info));
 
         if (option.verbose) {
-            dump_memory(derived, &bs);
-            printf("HKDF\n%s\n", bs.c_str());
+            _logger->hdump("HKDF", derived);
         }
 
         _test_case.assert((okm == base16_decode(expand_vector[i].okm)), __FUNCTION__, "%s - RFC 5869 KDF_Extract, KDF_Expand", expand_vector[i].desc);
@@ -360,7 +349,7 @@ void test_kdf_extract_expand_rfc5869() {
 
 void test_ckdf_rfc4615() {
     _test_case.begin("CMAC-based Extract-and-Expand Key Derivation Function (CKDF)");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
     openssl_kdf kdf;
 
     // RFC 4615 AES-CMAC-PRF-128
@@ -427,8 +416,7 @@ void test_ckdf_rfc4615() {
         kdf.cmac_kdf_extract(output, crypt_algorithm_t::aes128, salt, base16_decode(extract_vector[i].ikm));
 
         if (option.verbose) {
-            dump_memory(output, &bs);
-            printf("%s\n", bs.c_str());
+            _logger->dump(output);
         }
 
         _test_case.assert(output == base16_decode(extract_vector[i].prk), __FUNCTION__, "CKDF_Extract %s - RFC 4615 AES-CMAC-PRF-128", extract_vector[i].desc);
@@ -481,12 +469,9 @@ void test_ckdf_rfc4615() {
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
-            dump_memory(prk, &bs);
-            printf("CKDF_Extract PRK\n%s\n", bs.c_str());
-            dump_memory(okm, &bs);
-            printf("CKDF_Expand OKM\n%s\n", bs.c_str());
-            dump_memory(ckdf_okm, &bs);
-            printf("CKDF OKM\n%s\n", bs.c_str());
+            _logger->hdump("CKDF_Extract PRK", prk);
+            _logger->hdump("CKDF_Expand OKM", okm);
+            _logger->hdump("CKDF OKM", ckdf_okm);
         }
 
         _test_case.assert(okm == base16_decode(expand_vector[i].okm), __FUNCTION__, "CKDF-Expand %s", expand_vector[i].desc);
@@ -500,10 +485,16 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    cmdline.make_share(new cmdline_t<OPTION>);
-    *cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
-    cmdline->parse(argc, argv);
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
     __try2 {
         openssl_startup();
@@ -524,8 +515,10 @@ int main(int argc, char** argv) {
         openssl_cleanup();
     }
 
+    _logger->flush();
+
     _test_case.report(5);
-    cmdline->help();
-    std::cout << "openssl 3 deprected bf, idea, seed" << std::endl;
+    _cmdline->help();
+    _logger->consoleln("openssl 3 deprected bf, idea, seed");
     return _test_case.result();
 }

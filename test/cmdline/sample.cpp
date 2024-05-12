@@ -17,43 +17,35 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
+    int verbose;
+
+    _OPTION() : verbose(0) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION>> _cmdline;
+
+typedef struct _CMDOPTION {
     std::string infile;
     std::string outfile;
     bool keygen;
 
-    _OPTION() : keygen(false){};
+    _CMDOPTION() : keygen(false){};
     void reset() {
         keygen = false;
         infile.clear();
         outfile.clear();
     }
-} OPTION;
+} CMDOPTION;
 
-void test1(int argc, char** argv) {
+void test_cmdline(cmdline_t<CMDOPTION>& cmdline, bool expect, int argc, char** argv) {
     return_t ret = errorcode_t::success;
-    cmdline_t<OPTION> cmdline;
+    CMDOPTION& suboption = cmdline.value();
 
-    cmdline << cmdarg_t<OPTION>("-in", "input", [&](OPTION& o, char* param) -> void { o.infile = param; }).preced()
-            << cmdarg_t<OPTION>("-out", "output", [&](OPTION& o, char* param) -> void { o.outfile = param; }).preced()
-            << cmdarg_t<OPTION>("-keygen", "keygen", [&](OPTION& o, char* param) -> void { o.keygen = true; }).optional();
-    ret = cmdline.parse(argc, argv);
-    if (errorcode_t::success != ret) {
-        cmdline.help();
-    }
-
-    OPTION opt = cmdline.value();
-    std::cout << "infile " << opt.infile << std::endl;
-    std::cout << "outfile " << opt.outfile << std::endl;
-    std::cout << "keygen " << opt.keygen << std::endl;
-}
-
-void test_cmdline(cmdline_t<OPTION>& cmdline, bool expect, int argc, char** argv) {
-    return_t ret = errorcode_t::success;
-    OPTION& opt = cmdline.value();
-
-    opt.reset();
+    suboption.reset();
 
     std::string args;
     for (int i = 0; i < argc; i++) {
@@ -62,32 +54,34 @@ void test_cmdline(cmdline_t<OPTION>& cmdline, bool expect, int argc, char** argv
             args += " ";
         }
     }
-    printf("condition argc %i argv '%s'\n", argc, args.c_str());
+    _logger->writeln("condition argc %i argv '%s'", argc, args.c_str());
 
     ret = cmdline.parse(argc, argv);
     if (errorcode_t::success != ret) {
         cmdline.help();
     }
 
-    // OPTION opt = cmdline.value ();
-    std::cout << "infile " << opt.infile << std::endl;
-    std::cout << "outfile " << opt.outfile << std::endl;
-    std::cout << "keygen " << opt.keygen << std::endl;
+    // CMDOPTION suboption = cmdline.value ();
+    basic_stream bs;
+    bs << "infile " << suboption.infile << "\n"
+       << "outfile " << suboption.outfile << "\n"
+       << "keygen " << suboption.keygen;
+    _logger->writeln(bs);
 
     bool test = (errorcode_t::success == ret);
     _test_case.assert(expect ? test : !test, __FUNCTION__, "cmdline %s (%s)", args.c_str(), expect ? "positive test" : "negative test");
 }
 
-void test2() {
+void test1() {
     _test_case.begin("commandline");
 
-    OPTION option;
+    CMDOPTION option;
 
-    cmdline_t<OPTION> cmdline;
+    cmdline_t<CMDOPTION> cmdline;
 
-    cmdline << cmdarg_t<OPTION>("-in", "input", [&](OPTION& o, char* param) -> void { o.infile = param; }).preced()
-            << cmdarg_t<OPTION>("-out", "output", [&](OPTION& o, char* param) -> void { o.outfile = param; }).preced()
-            << cmdarg_t<OPTION>("-keygen", "keygen", [&](OPTION& o, char* param) -> void { o.keygen = true; }).optional();
+    cmdline << cmdarg_t<CMDOPTION>("-in", "input", [&](CMDOPTION& o, char* param) -> void { o.infile = param; }).preced()
+            << cmdarg_t<CMDOPTION>("-out", "output", [&](CMDOPTION& o, char* param) -> void { o.outfile = param; }).preced()
+            << cmdarg_t<CMDOPTION>("-keygen", "keygen", [&](CMDOPTION& o, char* param) -> void { o.keygen = true; }).optional();
 
     int argc = 0;
     argc = 0;
@@ -160,9 +154,21 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    test1(argc, argv);
-    test2();
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
+    test1();
+
+    _logger->flush();
 
     _test_case.report(5);
+    _cmdline->help();
     return _test_case.result();
 }

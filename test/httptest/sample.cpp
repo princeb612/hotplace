@@ -23,6 +23,7 @@ using namespace hotplace::crypto;
 using namespace hotplace::net;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     std::string url;
@@ -38,12 +39,15 @@ t_shared_instance<cmdline_t<OPTION>> cmdline;
 void cprint(const char *text, ...) {
     console_color _concolor;
 
-    std::cout << _concolor.turnon().set_fgcolor(console_color_t::cyan);
+    basic_stream bs;
+    bs << _concolor.turnon().set_fgcolor(console_color_t::cyan);
     va_list ap;
     va_start(ap, text);
     vprintf(text, ap);
     va_end(ap);
-    std::cout << _concolor.turnoff() << std::endl;
+    bs << _concolor.turnoff();
+
+    _logger->writeln(bs);
 }
 
 void do_split_url(const char *url, url_info_t *url_info) {
@@ -61,11 +65,11 @@ void do_split_url(const char *url, url_info_t *url_info) {
            << "> uripath  : " << url_info->uripath << "\n"
            << "> query    : " << url_info->query << "\n";
 
-        key_value kv;
+        skey_value kv;
         http_uri::to_keyvalue(url_info->query, kv);
         kv.foreach ([&](const std::string &key, const std::string &value, void *param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
 
-        std::cout << bs;
+        _logger->writeln(bs);
     }
 }
 
@@ -86,7 +90,7 @@ void test_uri() {
     }
 
     {
-        key_value kv;
+        skey_value kv;
 
         do_split_url(
             "/auth/v1/"
@@ -111,7 +115,7 @@ void test_uri() {
     }
 
     {
-        key_value kv;
+        skey_value kv;
 
         do_split_url("/client/cb?code=5lkd8ApNal3fkg3S6fh-uw&state=xyz", &url_info);
         http_uri::to_keyvalue(url_info.uri, kv);
@@ -122,7 +126,7 @@ void test_uri() {
     {
         http_request request;
         request.open("GET /client/cb?code=5lkd8ApNal3fkg3S6fh-uw&state=xyz");
-        key_value &kv = request.get_http_uri().get_query_keyvalue();
+        skey_value &kv = request.get_http_uri().get_query_keyvalue();
         std::string code = kv.get("code");
 
         _test_case.assert("5lkd8ApNal3fkg3S6fh-uw" == kv.get("code"), __FUNCTION__, "uri.get_query_keyvalue.code");
@@ -164,7 +168,7 @@ void test_request() {
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
 
-        printf("%s\n", input);
+        _logger->writeln("%s", input);
     }
 
     const char *uri = request.get_http_uri().get_uri();
@@ -190,7 +194,7 @@ void test_response_compose() {
 
         basic_stream bs;
         response.get_response(bs);
-        printf("%s\n", bs.c_str());
+        _logger->writeln("%s", bs.c_str());
     }
 
     _test_case.assert(200 == response.status_code(), __FUNCTION__, "status");
@@ -204,7 +208,7 @@ void test_response_parse() {
 
     http_response response;
     std::string wwwauth;
-    key_value kv;
+    skey_value kv;
 
     const char *input =
         "HTTP/1.1 401 Unauthorized\r\n"
@@ -223,7 +227,7 @@ void test_response_parse() {
     http_header::to_keyvalue(wwwauth, kv);
 
     if (option.verbose) {
-        kv.foreach ([&](const std::string &k, const std::string &v, void *param) -> void { printf("> %s:=%s\n", k.c_str(), v.c_str()); });
+        kv.foreach ([&](const std::string &k, const std::string &v, void *param) -> void { _logger->writeln("> %s:=%s", k.c_str(), v.c_str()); });
     }
 
     _test_case.assert(401 == response.status_code(), __FUNCTION__, "status");
@@ -232,10 +236,10 @@ void test_response_parse() {
     _test_case.assert("42" == content_length, __FUNCTION__, "Content-Length");
     _test_case.assert(42 == response.content_size(), __FUNCTION__, "size of content");
     _test_case.assert(0 == strcmp(response.content_type(), "text/html"), __FUNCTION__, "Content-Type");
-    _test_case.assert(0 == strcmp("helloworld", kv["realm"]), __FUNCTION__, "realm from WWW-Authenticate");
-    _test_case.assert(0 == strcmp("auth, auth-int", kv["qop"]), __FUNCTION__, "qop from WWW-Authenticate");
-    _test_case.assert(0 == strcmp("40dc29366886273821be1fcc5e23e9d7e9", kv["nonce"]), __FUNCTION__, "nonce from WWW-Authenticate");
-    _test_case.assert(0 == strcmp("8be41306f5b9bb30019350c33b182858", kv["opaque"]), __FUNCTION__, "opaque from WWW-Authenticate");
+    _test_case.assert("helloworld" == kv["realm"], __FUNCTION__, "realm from WWW-Authenticate");
+    _test_case.assert("auth, auth-int" == kv["qop"], __FUNCTION__, "qop from WWW-Authenticate");
+    _test_case.assert("40dc29366886273821be1fcc5e23e9d7e9" == kv["nonce"], __FUNCTION__, "nonce from WWW-Authenticate");
+    _test_case.assert("8be41306f5b9bb30019350c33b182858" == kv["opaque"], __FUNCTION__, "opaque from WWW-Authenticate");
 }
 
 void test_uri_form_encoded_body_parameter() {
@@ -258,12 +262,12 @@ void test_uri_form_encoded_body_parameter() {
     request2.get_request(request_stream2);
 
     if (option.verbose) {
-        printf("%s\n", request_stream1.c_str());
-        printf("%s\n", request_stream2.c_str());
+        _logger->writeln("%s", request_stream1.c_str());
+        _logger->writeln("%s", request_stream2.c_str());
     }
 
-    key_value &kv1 = request1.get_http_uri().get_query_keyvalue();
-    key_value &kv2 = request2.get_http_uri().get_query_keyvalue();
+    skey_value &kv1 = request1.get_http_uri().get_query_keyvalue();
+    skey_value &kv2 = request2.get_http_uri().get_query_keyvalue();
 
     _test_case.assert(request_stream1 == request_stream2, __FUNCTION__, "form encoded body parameter");
     _test_case.assert(kv1.get("client_id") == "clientid", __FUNCTION__, "client_id");
@@ -276,13 +280,13 @@ void test_uri2() {
 
     const char *input = "/resource?client_id=clientid&access_token=token";
 
-    key_value kv;
+    skey_value kv;
     http_uri::to_keyvalue(input, kv);
     std::string client_id = kv.get("client_id");
     std::string access_token = kv.get("access_token");
     if (option.verbose) {
-        printf("client_id %s\n", client_id.c_str());
-        printf("access_token %s\n", access_token.c_str());
+        _logger->writeln("client_id %s", client_id.c_str());
+        _logger->writeln("access_token %s", access_token.c_str());
     }
     _test_case.assert("clientid" == client_id, __FUNCTION__, "client_id");
     _test_case.assert("token" == access_token, __FUNCTION__, "access_token");
@@ -298,7 +302,7 @@ void test_escape_url() {
     unescape_url(input, &unescaped);
 
     if (option.verbose) {
-        std::cout << "unescape : " << unescaped << std::endl;
+        _logger->writeln("unescape : ", unescaped.c_str());
     }
 
     constexpr char expect[] = "https://test.com:8080/~b612/test.html";
@@ -331,7 +335,7 @@ void test_basic_authentication() {
             response.get_response(bs);
 
             cprint("server response");
-            printf("%s\n", bs.c_str());
+            _logger->writeln("%s", bs.c_str());
         }
 
         basic_stream cred;
@@ -346,7 +350,7 @@ void test_basic_authentication() {
             request.get_request(bs);
 
             cprint("client request");
-            printf("%s\n", bs.c_str());
+            _logger->writeln("%s", bs.c_str());
         }
 
         response.close();
@@ -370,7 +374,7 @@ void test_basic_authentication() {
  * cf. see digest_access_authentication_provider::auth_digest_access (slightly
  * diffrent)
  */
-return_t calc_digest_digest_access(http_authenticate_provider *provider, network_session *session, http_request *request, key_value &kv,
+return_t calc_digest_digest_access(http_authenticate_provider *provider, network_session *session, http_request *request, skey_value &kv,
                                    std::string &digest_response) {
     return_t ret = errorcode_t::success;
     OPTION &option = cmdline->value();
@@ -443,9 +447,9 @@ return_t calc_digest_digest_access(http_authenticate_provider *provider, network
         digest_response = dgst_sequence.digest(hashalg).get();
 
         if (option.verbose) {
-            printf("- a1 %s -> %s\n", dgst_a1.get_sequence().c_str(), digest_ha1.c_str());
-            printf("- a2 %s -> %s\n", dgst_a2.get_sequence().c_str(), digest_ha2.c_str());
-            printf("- resp %s -> %s\n", dgst_sequence.get_sequence().c_str(), digest_response.c_str());
+            _logger->writeln("- a1 %s -> %s", dgst_a1.get_sequence().c_str(), digest_ha1.c_str());
+            _logger->writeln("- a2 %s -> %s", dgst_a2.get_sequence().c_str(), digest_ha2.c_str());
+            _logger->writeln("- resp %s -> %s", dgst_sequence.get_sequence().c_str(), digest_response.c_str());
         }
     }
     __finally2 {
@@ -486,13 +490,13 @@ void test_digest_access_authentication(const char *alg = nullptr) {
             cprint("session opaque %s", session.get_session_data()->get("opaque").c_str());
 
             cprint("server response");
-            printf("%s\n", bs.c_str());
+            _logger->writeln("%s", bs.c_str());
         }
 
         // calcuration
         std::string auth;
         std::string cred;
-        key_value kv;
+        skey_value kv;
         size_t pos = 0;
         response.get_http_header().get("WWW-Authenticate", auth);
         http_header::to_keyvalue(auth, kv);
@@ -526,7 +530,7 @@ void test_digest_access_authentication(const char *alg = nullptr) {
             request.get_request(bs);
 
             cprint("client request");
-            printf("%s\n", bs.c_str());
+            _logger->writeln("%s", bs.c_str());
         }
 
         response.close();
@@ -546,11 +550,11 @@ void test_digest_access_authentication(const char *alg = nullptr) {
     _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Digest Access Authentication Scheme (positive case) algorithm=%s", alg ? alg : "");
 }
 
-void test_rfc_example_routine(const std::string &text, digest_access_authentication_provider *provider, http_request &request, const basic_stream &username,
+void test_rfc_example_routine(const std::string &text, digest_access_authentication_provider *provider, http_request &request, const std::string &username,
                               const std::string &password, const std::string &expect) {
     std::string response;
     std::string challenge;
-    key_value kv;
+    skey_value kv;
 
     // Authorization: Digest username="Mufasa",
     //         realm="testrealm@host.com",
@@ -730,7 +734,7 @@ void test_get_tlsclient() {
 
             cprint("request");
             if (option.verbose) {
-                std::cout << body << std::endl;
+                _logger->writeln(body);
             }
 
             size_t cbsent = 0;
@@ -744,14 +748,14 @@ void test_get_tlsclient() {
 
                     if (option.verbose) {
                         dump_memory((byte_t *)buf, sizeread, &bs);
-                        printf("%s\n", bs.c_str());
+                        _logger->writeln("%s", bs.c_str());
                     }
                     while (errorcode_t::more_data == ret) {
                         ret = cli.more(sock, handle, buf, sizeof(buf), &sizeread);
 
                         if (option.verbose) {
                             dump_memory((byte_t *)buf, sizeread, &bs);
-                            printf("%s\n", bs.c_str());
+                            _logger->writeln("%s", bs.c_str());
                         }
                     }
                 } else {
@@ -774,7 +778,7 @@ void test_get_tlsclient() {
                     if (data) {
                         cprint("response");
                         if (option.verbose) {
-                            printf("%.*s\n", (unsigned)data->size(), (char *)data->content());
+                            _logger->writeln("%.*s", (unsigned)data->size(), (char *)data->content());
                         }
 
                         data->release();
@@ -817,7 +821,7 @@ void test_get_httpclient() {
         if (option.verbose) {
             basic_stream bs;
             response->get_response(bs);
-            printf("%s\n", bs.c_str());
+            _logger->writeln("%s", bs.c_str());
         }
         response->release();
         if (200 == response->status_code()) {
@@ -846,7 +850,7 @@ void test_bearer_token() {
         if (option.verbose) {
             basic_stream bs;
             response->get_response(bs);
-            printf("%s\n", bs.c_str());
+            _logger->writeln("%s", bs.c_str());
         }
         response->release();
         if (200 == response->status_code()) {
@@ -877,6 +881,10 @@ int main(int argc, char **argv) {
     cmdline->parse(argc, argv);
     OPTION &option = cmdline->value();
 
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
     // uri
     test_uri();
     test_uri_form_encoded_body_parameter();
@@ -897,8 +905,8 @@ int main(int argc, char **argv) {
     test_digest_access_authentication("MD5-sess");
     test_digest_access_authentication("SHA-256");
     test_digest_access_authentication("SHA-256-sess");
-    test_digest_access_authentication("SHA-512-256");
-    test_digest_access_authentication("SHA-512-256-sess");
+    test_digest_access_authentication("SHA-512-256");       // openssl-3.0
+    test_digest_access_authentication("SHA-512-256-sess");  // openssl-3.0
     test_rfc_example();
 
     // documents
@@ -927,6 +935,8 @@ int main(int argc, char **argv) {
 #if defined _WIN32 || defined _WIN64
     winsock_cleanup();
 #endif
+
+    _logger->flush();
 
     _test_case.report(5);
     cmdline->help();

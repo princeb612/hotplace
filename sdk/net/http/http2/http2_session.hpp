@@ -30,7 +30,7 @@ class http2_session {
 
     hpack_session& get_hpack_session();
 
-    http2_session& set_debug(std::function<void(stream_t*)> f);
+    http2_session& trace(std::function<void(stream_t*)> f);
 
    protected:
    private:

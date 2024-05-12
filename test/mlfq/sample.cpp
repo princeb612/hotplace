@@ -17,6 +17,7 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 const int _test_loop = 100;
 const int _bucket = 10;
@@ -27,16 +28,6 @@ typedef std::multimap<int, int> SAMPLE_MAP;
 SAMPLE_MAP _data_map;
 
 critical_section lock;
-
-// warning
-void valgrind_safe_printf(const char* msg, ...) {
-    critical_section_guard guard(lock);
-    va_list arg;
-
-    va_start(arg, msg);
-    vprintf(msg, arg);
-    va_end(arg);
-}
 
 class test_scenario {
    public:
@@ -88,7 +79,7 @@ return_t test_scenario::producer_scenario(void* parameter) {
 
         int pri = (uint32)rand() % _bucket;
         obj->__mfq.post(pri, new int(i));
-        valgrind_safe_printf("post %d %d\n", pri, i);
+        _logger->writeln("post %d %d", pri, i);
         fflush(stdout);
 
         _data_map.insert(std::make_pair(pri, i));
@@ -112,7 +103,7 @@ return_t test_scenario::consumer_scenario(void* parameter) {
         int* data = nullptr;
         ret = obj->__mfq.get(&pri, &data, 1);
         if (errorcode_t::success == ret) {
-            valgrind_safe_printf("get  %d %d\n", pri, *data);
+            _logger->writeln("get  %d %d", pri, *data);
             fflush(stdout);
 
             if (_test_loop == ++_test_count) {
@@ -164,11 +155,11 @@ void confirm() {
         SAMPLE_MAP::iterator iter;
         iter_lower = _data_map.lower_bound(i);
         iter_upper = _data_map.upper_bound(i);
-        valgrind_safe_printf("[%d] =>", i);
+        _logger->write("[%d] =>", i);
         for (iter = iter_lower; iter != iter_upper; iter++) {
-            valgrind_safe_printf("%3d ", iter->second);
+            _logger->write("%3d ", iter->second);
         }
-        valgrind_safe_printf("\n");
+        _logger->writeln("");
     }
     fflush(stdout);
 }
@@ -178,15 +169,21 @@ int main() {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, 1).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
     thread thread1(scenario, nullptr);
 
     thread1.start();
 
-    valgrind_safe_printf("waiting\n");
+    _logger->writeln("waiting");
     thread1.wait(-1);
-    valgrind_safe_printf("terminating\n");
+    _logger->writeln("terminating");
 
     confirm();
+
+    _logger->flush();
 
     _test_case.report(5);
     return _test_case.result();

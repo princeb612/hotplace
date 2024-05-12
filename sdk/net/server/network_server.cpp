@@ -1009,7 +1009,7 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
         }
 
         if (handle->df) {
-            session_object->set_debug(handle->df);
+            session_object->trace(handle->df);
         }
 
         /* associate with multiplex object (iocp, epoll) */
@@ -1078,7 +1078,7 @@ return_t network_server::session_closed(network_multiplexer_context_t* handle, h
     return ret;
 }
 
-return_t network_server::set_debug(network_multiplexer_context_t* handle, std::function<void(stream_t*)> f) {
+return_t network_server::trace(network_multiplexer_context_t* handle, std::function<void(stream_t*)> f) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {

@@ -41,7 +41,8 @@ class cmdarg_t {
     friend class cmdline_t;
 
    public:
-    cmdarg_t(std::string token, std::string desc, std::function<void(T&, char*)> f);
+    cmdarg_t(const std::string& token, const std::string& desc, std::function<void(T&, char*)> f);
+    cmdarg_t(const cmdarg_t& rhs);
     ~cmdarg_t();
 
     /*
@@ -62,9 +63,9 @@ class cmdarg_t {
      */
     cmdarg_t& optional();
 
-    const char* token();
-    const char* desc();
-    uint32 flag();
+    const char* token() const;
+    const char* desc() const;
+    uint32 flag() const;
 
    protected:
     return_t bind(T& source, char* param);
@@ -77,8 +78,16 @@ class cmdarg_t {
 };
 
 template <typename T>
-cmdarg_t<T>::cmdarg_t(std::string token, std::string desc, std::function<void(T&, char*)> f) : _token(token), _desc(desc), _func(f), _flag(0) {
+cmdarg_t<T>::cmdarg_t(const std::string& token, const std::string& desc, std::function<void(T&, char*)> f) : _token(token), _desc(desc), _func(f), _flag(0) {
     // do nothing
+}
+
+template <typename T>
+cmdarg_t<T>::cmdarg_t(const cmdarg_t& rhs) {
+    _token = rhs._token;
+    _desc = rhs._desc;
+    _func = rhs._func;
+    _flag = rhs._flag;
 }
 
 template <typename T>
@@ -99,17 +108,17 @@ cmdarg_t<T>& cmdarg_t<T>::optional() {
 }
 
 template <typename T>
-const char* cmdarg_t<T>::token() {
+const char* cmdarg_t<T>::token() const {
     return _token.c_str();
 }
 
 template <typename T>
-const char* cmdarg_t<T>::desc() {
+const char* cmdarg_t<T>::desc() const {
     return _desc.c_str();
 }
 
 template <typename T>
-uint32 cmdarg_t<T>::flag() {
+uint32 cmdarg_t<T>::flag() const {
     return _flag;
 }
 
@@ -158,7 +167,7 @@ class cmdline_t {
      * @brief add handler
      * @param cmdarg_t<T> cmd [in]
      */
-    cmdline_t& operator<<(cmdarg_t<T> cmd);
+    cmdline_t& operator<<(const cmdarg_t<T>& cmd);
     /*
      * @brief parse
      * @param int argc [in]
@@ -194,7 +203,7 @@ cmdline_t<T>::~cmdline_t() {
 }
 
 template <typename T>
-cmdline_t<T>& cmdline_t<T>::operator<<(cmdarg_t<T> cmd) {
+cmdline_t<T>& cmdline_t<T>::operator<<(const cmdarg_t<T>& cmd) {
     int idx = _args.size();
 
     const char* token = cmd.token();

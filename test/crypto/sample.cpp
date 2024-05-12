@@ -20,6 +20,7 @@ using namespace hotplace::io;
 using namespace hotplace::crypto;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
@@ -27,13 +28,12 @@ typedef struct _OPTION {
     _OPTION() : verbose(0) {}
 } OPTION;
 
-t_shared_instance<cmdline_t<OPTION> > cmdline;
+t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 void validate_openssl_crypt() {
     _test_case.begin("CAVP block cipher - AES");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
-    basic_stream bs;
     openssl_crypt crypt;
     crypt_context_t* handle = nullptr;
     for (int i = 0; i < sizeof_test_vector_nist_cavp_blockcipher; i++) {
@@ -48,10 +48,8 @@ void validate_openssl_crypt() {
         crypt.close(handle);
 
         if (option.verbose) {
-            dump_memory(ciphertext, &bs);
-            printf("Ciphertext\n%s\n", bs.c_str());
-            dump_memory(plaintext, &bs);
-            printf("Plaintext\n%s\n", bs.c_str());
+            _logger->hdump("Ciphertext", ciphertext);
+            _logger->hdump("Plaintext", plaintext);
         }
 
         _test_case.assert(base16_decode(vector->ciphertext) == ciphertext, __FUNCTION__, "%s - encrypt", vector->desc);
@@ -65,14 +63,12 @@ void test_crypt_routine(crypt_t* crypt_object, crypt_algorithm_t algorithm, cryp
 
     return_t ret = errorcode_t::success;
 
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
     crypto_advisor* advisor = crypto_advisor::get_instance();
     crypt_context_t* crypt_handle = nullptr;
 
     binary_t encrypted;
     binary_t decrypted;
-
-    basic_stream bs;
 
     binary_t aad;
     binary_t tag;
@@ -102,9 +98,7 @@ void test_crypt_routine(crypt_t* crypt_object, crypt_algorithm_t algorithm, cryp
                     aad.insert(aad.end(), aad_source, aad_source + aad_size);
 
                     if (option.verbose) {
-                        std::cout << "aad" << std::endl;
-                        dump_memory(&aad[0], aad.size(), &bs);
-                        std::cout << bs << std::endl;
+                        _logger->hdump("aad", aad);
                     }
                 }
 
@@ -115,13 +109,8 @@ void test_crypt_routine(crypt_t* crypt_object, crypt_algorithm_t algorithm, cryp
                         if (option.verbose) {
                             test_case_notimecheck notimecheck(_test_case);
 
-                            std::cout << "encrypted" << std::endl;
-                            dump_memory(&encrypted[0], encrypted.size(), &bs);
-                            std::cout << bs << std::endl;
-
-                            std::cout << "decrypted" << std::endl;
-                            dump_memory(&decrypted[0], decrypted.size(), &bs);
-                            std::cout << bs << std::endl;
+                            _logger->hdump("encrypted", encrypted);
+                            _logger->hdump("decrypted", decrypted);
                         }
 
                         if (size != decrypted.size()) {
@@ -155,9 +144,10 @@ void test_crypt_algorithms(uint32 cooltime, uint32 unitsize) {
     ossl_set_cooltime(cooltime);
     ossl_set_unitsize(unitsize);
 
-    std::cout << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::white) << "cooltime " << ossl_get_cooltime() << " unitsize "
-              << ossl_get_unitsize() << std::endl;
-    std::cout << concolor.turnoff();
+    basic_stream bs;
+    bs << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::white) << "cooltime " << ossl_get_cooltime() << " unitsize "
+       << ossl_get_unitsize() << concolor.turnoff();
+    _logger->writeln(bs);
 
     crypt_algorithm_t algorithm_table[] = {
         crypt_algorithm_t::aes128,      crypt_algorithm_t::aes192,      crypt_algorithm_t::aes256,   crypt_algorithm_t::aria128,
@@ -225,7 +215,7 @@ void test_crypt_algorithms(uint32 cooltime, uint32 unitsize) {
 
 void test_random() {
     _test_case.begin("random");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     uint32 value = 0;
@@ -236,7 +226,7 @@ void test_random() {
     for (i = 0; i < times; i++) {
         value = random.rand32();
         if (option.verbose) {
-            printf("rand %08x\n", (int)value);
+            _logger->writeln("rand %08x", (int)value);
         }
     }
 
@@ -245,7 +235,7 @@ void test_random() {
 
 void test_nonce() {
     _test_case.begin("random");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     std::string nonce;
@@ -256,13 +246,13 @@ void test_nonce() {
     for (i = 0; i < times; i++) {
         nonce = random.nonce(16);
         if (option.verbose) {
-            printf("nonce.1 %s\n", nonce.c_str());
+            _logger->writeln("nonce.1 %s", nonce.c_str());
         }
     }
     for (i = 0; i < times; i++) {
         nonce = random.rand(16, encoding_t::encoding_base16, true);
         if (option.verbose) {
-            printf("nonce.2 %s\n", nonce.c_str());
+            _logger->writeln("nonce.2 %s", nonce.c_str());
         }
     }
 
@@ -271,7 +261,7 @@ void test_nonce() {
 
 void test_token() {
     _test_case.begin("random");
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     std::string token;
@@ -282,13 +272,13 @@ void test_token() {
     for (i = 0; i < times; i++) {
         token = random.token(16);
         if (option.verbose) {
-            printf("token.1 %s\n", token.c_str());
+            _logger->writeln("token.1 %s", token.c_str());
         }
     }
     for (i = 0; i < times; i++) {
         token = random.rand(16, encoding_t::encoding_base64url, true);
         if (option.verbose) {
-            printf("token.2 %s\n", token.c_str());
+            _logger->writeln("token.2 %s", token.c_str());
         }
     }
 
@@ -297,7 +287,7 @@ void test_token() {
 
 void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
     return_t ret = errorcode_t::success;
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     _test_case.reset_time();
 
@@ -316,7 +306,6 @@ void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
         iv[i] = 0xa6;
     }
     binary_t out_kw, out_kuw;
-    basic_stream bs;
 
     ret = crypt.open(&handle, alg, crypt_mode_t::wrap, &kek[0], kek.size(), iv, RTL_NUMBER_OF(iv));
     if (errorcode_t::success == ret) {
@@ -327,14 +316,11 @@ void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
 
             crypto_advisor* advisor = crypto_advisor::get_instance();
             const char* nameof_alg = advisor->nameof_cipher(alg, crypt_mode_t::wrap);
-            printf("alg %s\n", nameof_alg);
+            _logger->writeln("alg %s", nameof_alg);
 
-            dump_memory(kek, &bs);
-            printf("kek\n%.*s\n", (int)bs.size(), bs.c_str());
-            dump_memory(key, &bs);
-            printf("key\n%.*s\n", (int)bs.size(), bs.c_str());
-            dump_memory(out_kw, &bs);
-            printf("keywrap\n%.*s\n", (int)bs.size(), bs.c_str());
+            _logger->hdump("kek", kek);
+            _logger->hdump("key", key);
+            _logger->hdump("keywrap", out_kw);
         }
 
         crypt.decrypt(handle, &out_kw[0], out_kw.size(), out_kuw);
@@ -342,8 +328,7 @@ void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
-            dump_memory(&out_kuw[0], out_kuw.size(), &bs);
-            printf("key\n%.*s\n", (int)bs.size(), bs.c_str());
+            _logger->hdump("key", out_kuw);
         }
 
         crypt.close(handle);
@@ -361,7 +346,7 @@ void test_keywrap_rfc3394() {
 
 void test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
     return_t ret = errorcode_t::success;
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     const char* text = vector->text;
     const char* alg = vector->alg;
@@ -395,27 +380,20 @@ void test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
 
-        dump_memory(key, &bs, 16, 2);
-        printf("key\n%s\n", bs.c_str());
-        dump_memory(iv, &bs, 16, 2);
-        printf("iv\n%s\n", bs.c_str());
-        dump_memory(nonce, &bs, 16, 2);
-        printf("nonce w/ counter %i\n%s\n", counter, bs.c_str());
+        _logger->hdump("key", key, 16, 2);
+        _logger->hdump("iv", iv, 16, 2);
+        _logger->writeln("nonce w/ counter %i", counter);
+        _logger->dump(nonce);
         if (aad.size()) {
-            dump_memory(aad, &bs, 16, 2);
-            printf("aad\n%s\n", bs.c_str());
+            _logger->hdump("aad", aad, 16, 2);
         }
         if (tag.size()) {
-            dump_memory(tag, &bs, 16, 2);
-            printf("tag\n%s\n", bs.c_str());
+            _logger->hdump("tag", tag, 16, 2);
         }
-        dump_memory(input, &bs, 16, 2);
-        printf("input\n%s\n", bs.c_str());
-        dump_memory(encrypted, &bs, 16, 2);
-        printf("encrypted\n%s\n", bs.c_str());
+        _logger->hdump("input", input, 16, 2);
+        _logger->hdump("encrypted", encrypted, 16, 2);
         if (expect.size()) {
-            dump_memory(expect, &bs, 16, 2);
-            printf("expect\n%s\n", bs.c_str());
+            _logger->hdump("expect", expect, 16, 2);
         }
     }
 
@@ -441,10 +419,10 @@ void test_chacha20_rfc7539() {
 // AEAD_AES_256_CBC_HMAC_SHA_384
 // AEAD_AES_256_CBC_HMAC_SHA_512
 
-#define dump(var)                                                             \
-    {                                                                         \
-        dump_memory(var, &bs);                                                \
-        printf("%s\n%s\n%s\n", #var, bs.c_str(), base16_encode(var).c_str()); \
+#define dump(var)                             \
+    {                                         \
+        _logger->hdump(#var, var);            \
+        _logger->writeln(base16_encode(var)); \
     }
 
 // https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
@@ -453,7 +431,7 @@ void test_chacha20_rfc7539() {
 return_t test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    OPTION& option = cmdline->value();
+    OPTION& option = _cmdline->value();
 
     __try2 {
         if (nullptr == vector) {
@@ -580,8 +558,7 @@ return_t test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_
 
 void test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
     return_t ret = errorcode_t::success;
-    OPTION& option = cmdline->value();
-    basic_stream bs;
+    OPTION& option = _cmdline->value();
     openssl_aead aead;
 
     binary_t q;
@@ -590,8 +567,7 @@ void test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac
                                          base16_decode(vector->p), q, t);
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(q, &bs);
-        printf("%s\n", bs.c_str());
+        dump(q);
     }
     _test_case.assert(base16_decode(vector->q) == q, __FUNCTION__, "encrypt %s", vector->text);
     binary_t p;
@@ -599,8 +575,7 @@ void test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac
                                          t);
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        dump_memory(p, &bs);
-        printf("%s\n", bs.c_str());
+        dump(p);
     }
     _test_case.assert(base16_decode(vector->p) == p, __FUNCTION__, "decrypt %s", vector->text);
 }
@@ -621,10 +596,15 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    cmdline.make_share(new cmdline_t<OPTION>);
-    *cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline->parse(argc, argv);
 
-    cmdline->parse(argc, argv);
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
     __try2 {
         openssl_startup();
@@ -650,8 +630,10 @@ int main(int argc, char** argv) {
         openssl_cleanup();
     }
 
+    _logger->flush();
+
     _test_case.report(5);
-    cmdline->help();
-    std::cout << "openssl 3 deprected bf, idea, seed" << std::endl;
+    _cmdline->help();
+    _logger->consoleln("openssl 3 deprected bf, idea, seed");
     return _test_case.result();
 }

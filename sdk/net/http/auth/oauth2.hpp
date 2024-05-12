@@ -59,6 +59,7 @@ class oauth2_grant_provider {
     void addref();
     void release();
 
+   protected:
    private:
     t_shared_reference<oauth2_grant_provider> _instance;
 };

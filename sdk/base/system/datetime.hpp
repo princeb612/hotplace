@@ -17,6 +17,7 @@
 #include <list>
 #include <sdk/base/error.hpp>
 #include <sdk/base/stream.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 
@@ -71,56 +72,6 @@ typedef struct _timespan_t {
 
 #pragma pack(pop)
 
-/* asn1time_t - openssl ASN1_TIME compatible */
-#define V_ASN1_UTCTIME 23 /* "YYMMDDhhmm[ss]Z" (UTC) or "YYMMDDhhmm[ss](+|-)hhmm" (difference) */
-#define V_ASN1_GENERALIZEDTIME 24 /* "YYYYMMDDHHMM[SS[.fff]]Z" (UTC) or "YYYYMMDDHHMM[SS[.fff]]" (local) or "YYYYMMDDHHMM[SS[.fff]]+-HHMM" (difference) */
-/* RFC 5280 time format */
-#define V_ASN1_STRING_FLAG_X509_TIME 0x100
-
-typedef struct _asn1time_t {
-    int length;
-    int type;
-    unsigned char* data;
-    /* The value of the following field depends on the type being
-     * held.  It is mostly being used for BIT_STRING so if the
-     * input data has a non-zero 'unused bits' value, it will be
-     * handled correctly */
-    long flags;
-    binary_t internal;
-
-    _asn1time_t() : length(0), type(0), data(nullptr), flags(0) {
-        // do nothing
-    }
-    _asn1time_t(int typ, const char* dat) {
-        type = typ;
-        if (dat) {
-            length = strlen(dat);
-            internal.resize(length + 1);
-            memcpy(&internal[0], dat, length + 1);
-            data = &internal[0];
-        } else {
-            length = 0;
-            data = nullptr;
-            internal.clear();
-        }
-        flags = 0;
-    }
-    void set(int typ, const char* dat) {
-        type = typ;
-        if (dat) {
-            length = strlen(dat);
-            internal.resize(length + 1);
-            memcpy(&internal[0], dat, length + 1);
-            data = &internal[0];
-        } else {
-            length = 0;
-            data = nullptr;
-            internal.clear();
-        }
-        flags = 0;
-    }
-} asn1time_t;
-
 enum DAYOFWEEK {
     SUN = 0,
     MON = 1,
@@ -137,14 +88,12 @@ class datetime {
      * @brief constructor
      */
     datetime();
-    datetime(const datetime& dt);
-    datetime(time_t t, long* nsec = nullptr);
-    datetime(struct timespec ts);
-    datetime(datetime_t& dt, long* nsec = nullptr);
-    datetime(filetime_t& ft);
-    datetime(systemtime_t& st);
-    datetime(asn1time_t& at);
-    datetime(datetime& rhs);
+    datetime(const datetime& rhs);
+    datetime(const time_t& t, long* nsec = nullptr);
+    datetime(const struct timespec& ts);
+    datetime(const datetime_t& dt, long* nsec = nullptr);
+    datetime(const filetime_t& ft);
+    datetime(const systemtime_t& st);
 
     /**
      * @brief destructor
@@ -175,17 +124,14 @@ class datetime {
      * @param   int mode    [in] 0 gmtime, 1 localtime
      */
     return_t getsystemtime(int mode, systemtime_t* ft);
-    return_t getasn1time(asn1time_t* at);
 
-    datetime& operator=(time_t timestamp);
-    datetime& operator=(struct timespec& ts);
-    datetime& operator=(filetime_t& ft);
-    datetime& operator=(systemtime_t& st);
-    datetime& operator=(asn1time_t& at);
+    datetime& operator=(const time_t& timestamp);
+    datetime& operator=(const struct timespec& ts);
+    datetime& operator=(const filetime_t& ft);
+    datetime& operator=(const systemtime_t& st);
     datetime& operator>>(struct timespec& ts);
     datetime& operator>>(filetime_t& ft);
     datetime& operator>>(systemtime_t& st);  // localtime
-    datetime& operator>>(asn1time_t& at);
 
     /**
      * @brief compare
@@ -197,70 +143,64 @@ class datetime {
     bool operator<=(const datetime& rhs) const;
     bool operator<(const datetime& rhs) const;
 
-    datetime& operator+=(timespan_t ts);
-    datetime& operator-=(timespan_t ts);
+    datetime& operator+=(const timespan_t& ts);
+    datetime& operator-=(const timespan_t& ts);
 
     /**
      * @brief timespec to tm
      * @param int mode [in] 0 gmtime 1 localtime
-     * @param struct timespec ts [in]
+     * @param const struct timespec& ts [in]
      * @param struct tm* target [out]
      * @param long* nsec [outopt]
      * @return error code (see error.hpp)
      */
-    static return_t timespec_to_tm(int mode, struct timespec ts, struct tm* target, long* nsec = nullptr);
+    static return_t timespec_to_tm(int mode, const struct timespec& ts, struct tm* target, long* nsec = nullptr);
     /**
      * @brief timespec to datetime
      * @param int mode [in] 0 gmtime 1 localtime
-     * @param struct timespec ts [in]
+     * @param const struct timespec& ts [in]
      * @param datetime_t* dt [out]
      * @param long* nsec [outopt]
      * @return error code (see error.hpp)
      */
-    static return_t timespec_to_datetime(int mode, struct timespec ts, datetime_t* dt, long* nsec = nullptr);
+    static return_t timespec_to_datetime(int mode, const struct timespec& ts, datetime_t* dt, long* nsec = nullptr);
     /**
      * @brief timespec to systemtime
      * @param int mode [in] 0 gmtime 1 localtime
-     * @param struct timespec ts [in]
+     * @param const struct timespec& ts [in]
      * @param systemtime_t* st [out]
      * @return error code (see error.hpp)
      */
-    static return_t timespec_to_systemtime(int mode, struct timespec ts, systemtime_t* st);
+    static return_t timespec_to_systemtime(int mode, const struct timespec& ts, systemtime_t* st);
     /**
      * @brief datetime to timespec
-     * @param datetime_t ft [in]
+     * @param const datetime_t& ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t datetime_to_timespec(datetime_t ft, struct timespec& ts);
+    static return_t datetime_to_timespec(const datetime_t& ft, struct timespec& ts);
     /**
      * @brief filetime to timespec
-     * @param filetime_t ft [in]
+     * @param const filetime_t& ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t filetime_to_timespec(filetime_t ft, struct timespec& ts);
+    static return_t filetime_to_timespec(const filetime_t& ft, struct timespec& ts);
     /**
      * @brief systemtime to timespec
-     * @param systemtime_t ft [in]
+     * @param const systemtime_t& ft [in]
      * @param struct timespec& ts [out]
      * @return error code (see error.hpp)
      */
-    static return_t systemtime_to_timespec(systemtime_t ft, struct timespec& ts);
+    static return_t systemtime_to_timespec(const systemtime_t& ft, struct timespec& ts);
+
     /**
-     * @brief timespec to asn1time
-     * @param struct timespec ts [in]
-     * @param asn1time_t* at [out]
-     * @return error code (see error.hpp)
+     * @brief   formatted-print
+     * @param   int mode [in] 0 gmtime 1 localtime
+     * @param   basic_stream& bs [out]
+     * @param   const std::string& fmt [in] "Y-M-D h:m:s.f" (2024-05-11 12:00:00.000)
      */
-    static return_t timespec_to_asn1time(struct timespec ts, asn1time_t* at);
-    /**
-     * @brief asn1time to timespec
-     * @param asn1time_t at [in]
-     * @param struct timespec& ts [out]
-     * @return error code (see error.hpp)
-     */
-    static return_t asn1time_to_timespec(asn1time_t at, struct timespec& ts);
+    void format(int mode, basic_stream& bs, const std::string& fmt = "Y-M-D h:m:s.f");
 
    protected:
    private:

@@ -18,13 +18,23 @@ using namespace hotplace::io;
 using namespace hotplace::net;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
+typedef struct _OPTION {
+    int verbose;
+
+    _OPTION() : verbose(0) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 static bool determine(ipaddr_acl* acl, const char* ip, bool expect) {
     return_t ret = errorcode_t::success;
     bool check = false;
 
     ret = acl->determine(ip, check);
-    printf("check ip %s [%d]\n", ip, check ? 1 : 0);
+    _logger->writeln("check ip %s [%d]", ip, check ? 1 : 0);
     if (expect != check) {
         ret = errorcode_t::internal_error;
     }
@@ -49,7 +59,7 @@ void test1() {
     acl.add_rule("10.20.1.25", "10.20.2.10", false);
 
     acl.setmode(ipaddr_acl_t::whitelist);
-    printf("white list mode\n");
+    _logger->writeln("white list mode");
 
     determine(&acl, "127.0.0.1", true);
     determine(&acl, "10.20.15.24", false);
@@ -66,7 +76,7 @@ void test1() {
 #endif
 
     acl.setmode(ipaddr_acl_t::blacklist);
-    printf("black list mode\n");
+    _logger->writeln("black list mode");
 
     determine(&acl, "127.0.0.1", true);
     determine(&acl, "10.20.15.24", true);
@@ -93,7 +103,7 @@ int pad_bytes(int i) {
 }
 
 void test2() {
-    printf("%s\n", __FUNCTION__);
+    _logger->writeln("%s", __FUNCTION__);
 
     ipaddr_acl acl;
     ansi_string stream;
@@ -103,8 +113,8 @@ void test2() {
 
     ipv4 = acl.convert_addr(address, family);
 
-    stream.printf("%08x\n", ipv4);
-    printf("%s", stream.c_str());
+    stream.printf("%08x", ipv4);
+    _logger->writeln("%s", stream.c_str());
     stream.clear();
 
     uint32 mask = 0;
@@ -114,12 +124,12 @@ void test2() {
         std::string pad("   ", pad_bytes(i));
         stream.printf("%s/%d%s %08x & %08x => %08x ~ %08x\n", address, i, pad.c_str(), (ipv4), (mask), (ipv4 & mask), ((ipv4 & mask) | ~mask));
     }
-    printf("%s", stream.c_str());
+    _logger->write("%s", stream.c_str());
 }
 
 void test3() {
 #if defined SUPPORT_IPV6
-    printf("%s\n", __FUNCTION__);
+    _logger->writeln("%s", __FUNCTION__);
 
     ipaddr_acl acl;
     ansi_string stream;
@@ -128,8 +138,8 @@ void test3() {
 
     ipaddr_t ipv6 = acl.convert_addr(address, family);
 
-    stream.printf("%I128x\n", ipv6);
-    printf("%s", stream.c_str());
+    stream.printf("%I128x", ipv6);
+    _logger->writeln("%s", stream.c_str());
     stream.clear();
 
     ipaddr_t mask = 0;
@@ -141,7 +151,7 @@ void test3() {
         stream.printf("%s/%d%s %032I128x & %032I128x => %032I128x ~ %032I128x\n", address, i, pad.c_str(), (ipv6), (mask), (ipv6 & mask),
                       ((ipv6 & mask) | ~mask));
     }
-    printf("%s", stream.c_str());
+    _logger->write("%s", stream.c_str());
 
     _test_case.assert(true, __FUNCTION__, "IPv6 supported");
 #else
@@ -149,10 +159,20 @@ void test3() {
 #endif
 }
 
-int main() {
+int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
+
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
     _test_case.begin("smart pointer");
 
@@ -160,6 +180,9 @@ int main() {
     test2();
     test3();
 
+    _logger->flush();
+
     _test_case.report(5);
+    _cmdline->help();
     return _test_case.result();
 }

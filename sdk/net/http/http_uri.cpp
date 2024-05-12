@@ -116,7 +116,7 @@ return_t http_uri::query(const std::string& key, std::string& value) {
 
 size_t http_uri::countof_query() { return _query_kv.size(); }
 
-return_t http_uri::to_keyvalue(const std::string& value, key_value& kv) {
+return_t http_uri::to_keyvalue(const std::string& value, skey_value& kv) {
     return_t ret = errorcode_t::success;
 
     std::string input;
@@ -151,7 +151,7 @@ return_t http_uri::to_keyvalue(const std::string& value, key_value& kv) {
     return ret;
 }
 
-key_value& http_uri::get_query_keyvalue() { return _query_kv; }
+skey_value& http_uri::get_query_keyvalue() { return _query_kv; }
 
 http_uri& http_uri::operator=(const http_uri& rhs) {
     _uri = rhs._uri;

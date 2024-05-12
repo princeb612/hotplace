@@ -21,6 +21,8 @@ using namespace hotplace::io;
 using namespace hotplace::crypto;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
 typedef struct _OPTION {
     bool verbose;
     bool dump_keys;
@@ -40,48 +42,28 @@ crypto_key rfc8152_privkeys_c4;
 
 return_t dump_test_data(const char* text, basic_stream& diagnostic) {
     return_t ret = errorcode_t::success;
-
-    if (text) {
-        std::cout << text;
-    } else {
-        std::cout << "diagnostic";
-    }
-    std::cout << std::endl << "  " << diagnostic << std::endl;
-
+    _logger->writeln("%s %s", text ? text : "diagnostic", diagnostic.c_str());
     return ret;
 }
 
 return_t dump_test_data(const char* text, const binary_t& cbor) {
     return_t ret = errorcode_t::success;
     basic_stream bs;
-
-    OPTION& option = _cmdline->value();
-    if (option.verbose) {
-        dump_memory(cbor, &bs, 32, 4);
-
-        if (text) {
-            std::cout << text;
-        } else {
-            std::cout << "diagnostic";
-        }
-        std::cout << std::endl << bs << std::endl;
-    }
-
+    _logger->hdump(text ? text : "diagnostic", cbor, 32, 4);
     return ret;
 }
 
 void dump_crypto_key(crypto_key_object* key, void*) {
     OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
-
     if (option.dump_keys) {
         uint32 nid = 0;
 
         nidof_evp_pkey(key->get_pkey(), nid);
-        printf("nid %i kid %s alg %s use %08x\n", nid, key->get_kid(), key->get_alg(), key->get_use());
+        _logger->writeln("nid %i kid %s alg %s use %08x", nid, key->get_kid(), key->get_alg(), key->get_use());
 
         basic_stream bs;
         dump_key(key->get_pkey(), &bs);
-        printf("%s\n", bs.c_str());
+        _logger->writeln("%s", bs.c_str());
     }
 }
 
@@ -230,9 +212,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                     ret = cose.decrypt(cose_handle, cose_keys, bin, decrypted, result);
                     if (errorcode_t::success == ret) {
                         if (option.verbose) {
-                            basic_stream bs;
-                            dump_memory(decrypted, &bs, 16, 4);
-                            printf("%s\n", bs.c_str());
+                            _logger->dump(decrypted, 16, 4);
                         }
                     }
                     _test_case.test(ret, __FUNCTION__, "check4.decrypt %s", text ? text : "");
@@ -259,8 +239,9 @@ void test_cbor_file(const char* expect_file, const char* text) {
 
     console_color concolor;
 
-    std::cout << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::cyan) << expect_file << std::endl;
-    std::cout << concolor.turnoff();
+    basic_stream bs;
+    bs << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::cyan) << expect_file << concolor.turnoff();
+    _logger->writeln(bs);
 
     return_t ret = errorcode_t::success;
 
@@ -961,11 +942,8 @@ void test_cbor_key(const char* file, const char* text) {
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
-            basic_stream bs;
-            dump_memory(cbor, &bs, 32);
-            std::cout << "from file" << std::endl << bs << std::endl;
-            dump_memory(cbor_written, &bs, 32);
-            std::cout << "from cwk" << std::endl << bs << std::endl;
+            _logger->hdump("from file", cbor, 32);
+            _logger->hdump("from cwk", cbor_written, 32);
 
             basic_stream diagnostic;
             cbor_reader reader;
@@ -974,11 +952,13 @@ void test_cbor_key(const char* file, const char* text) {
             reader.open(&handle);
             reader.parse(handle, cbor);
             reader.publish(handle, &diagnostic);
-            std::cout << "from file" << std::endl << diagnostic << std::endl;
+
+            _logger->writeln("from file\n%s", diagnostic.c_str());
 
             reader.parse(handle, cbor_written);
             reader.publish(handle, &diagnostic);
-            std::cout << "from cwk" << std::endl << diagnostic << std::endl;
+
+            _logger->writeln("from cwk\n%s", diagnostic.c_str());
 
             reader.close(handle);
         }
@@ -1037,16 +1017,16 @@ void test_jose_from_cwk() {
     basic_stream json;
     jwk.write(&privkey, &json, 1);
     if (option.verbose) {
-        printf("JWK from CBOR key\n%s\n", json.c_str());
+        _logger->writeln("JWK from CBOR key\n%s", json.c_str());
     }
     basic_stream pem;
     jwk.write_pem(&pubkey, &pem);
     if (option.verbose) {
-        printf("PEM (public)\n%s\n", pem.c_str());
+        _logger->writeln("PEM (public)\n%s", pem.c_str());
     }
     jwk.write_pem(&privkey, &pem);
     if (option.verbose) {
-        printf("PEM (private)\n%s\n", pem.c_str());
+        _logger->writeln("PEM (private)\n%s", pem.c_str());
     }
 
     const EVP_PKEY* pkey = nullptr;
@@ -1077,8 +1057,8 @@ void test_jose_from_cwk() {
         test_case_notimecheck notimecheck(_test_case);
 
         dump_memory(signature, &bs);
-        printf("signature\n%s\n", bs.c_str());
-        printf("cbor\n%s\n", base16_encode(signature).c_str());
+        _logger->writeln("signature\n%s", bs.c_str());
+        _logger->writeln("cbor\n%s", base16_encode(signature).c_str());
 
         basic_stream diagnostic;
         cbor_reader reader;
@@ -1087,7 +1067,7 @@ void test_jose_from_cwk() {
         reader.parse(reader_handle, signature);
         reader.publish(reader_handle, &diagnostic);
         reader.close(reader_handle);
-        printf("diagnostic\n%s\n", diagnostic.c_str());
+        _logger->writeln("diagnostic\n%s", diagnostic.c_str());
     }
     ret = cose.verify(handle, &pubkey, signature, result);
     _test_case.test(ret, __FUNCTION__, "verify");
@@ -1219,7 +1199,7 @@ void test_github_example() {
         e.encode(bin, cbor_major_t::cbor_major_tag, table[i]);
         std::string keyword = uppername(base16_encode(bin));
         dictionary.insert(std::make_pair(keyword, table[i]));
-        printf("%s => %i\n", keyword.c_str(), table[i]);
+        _logger->writeln("%s => %i", keyword.c_str(), table[i]);
     }
 
     _test_case.reset_time();
@@ -1236,7 +1216,7 @@ void test_github_example() {
             int break_point_here = 1;
         }
 
-        printf("\e[33m%s\e[0m\n", vector->file);
+        _logger->writeln("\e[33m%s\e[0m", vector->file);
         binary_t cbor = base16_decode(vector->cbor);
         crypto_key* mapped_key = keymapper[vector->keysetname];
 
@@ -1254,8 +1234,8 @@ void test_github_example() {
         reader.close(reader_handle);
         if (option.verbose) {
             dump_memory(bin_cbor, &bs, 16, 2);
-            printf("cbor\n%s\n", bs.c_str());
-            printf("diagnostic\n  %s\n", diagnostic.c_str());
+            _logger->writeln("cbor\n%s", bs.c_str());
+            _logger->writeln("diagnostic\n  %s", diagnostic.c_str());
 
             cbor_publisher publisher;
             cose_composer composer;
@@ -1279,10 +1259,10 @@ void test_github_example() {
         cose_context_t* handle = nullptr;
         cose.open(&handle);
 
-#define dumps(b, f)                                          \
-    if (f) {                                                 \
-        dump_memory(base16_decode(f), &bs, 16, 2);           \
-        printf("\e[35m>%s %s\n%s\n\e[0m", b, f, bs.c_str()); \
+#define dumps(b, f)                                                  \
+    if (f) {                                                         \
+        dump_memory(base16_decode(f), &bs, 16, 2);                   \
+        _logger->writeln("\e[35m>%s %s\n%s\e[0m", b, f, bs.c_str()); \
     }
 
         if (option.verbose) {
@@ -1362,7 +1342,7 @@ void test_github_example() {
             debug_stream = handle->debug_stream;
             if (output.size()) {
                 dump_memory(output, &bs, 16, 4);
-                printf("decrypted\n%s\n%s\n", bs.c_str(), base16_encode(output).c_str());
+                _logger->writeln("decrypted\n%s\n%s", bs.c_str(), base16_encode(output).c_str());
             }
         }
 
@@ -1410,7 +1390,7 @@ void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& inp
     }
     ret = cose.sign(handle, key, algs, input, cbor);
     if (option.verbose) {
-        printf("%s\n", base16_encode(cbor).c_str());
+        _logger->writeln("%s", base16_encode(cbor).c_str());
     }
     cose.close(handle);
     _test_case.test(ret, __FUNCTION__, "sign %s", text);
@@ -1439,7 +1419,7 @@ void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& 
     }
     ret = cose.encrypt(handle, key, algs, input, cbor);
     if (option.verbose) {
-        printf("%s\n", base16_encode(cbor).c_str());
+        _logger->writeln("%s", base16_encode(cbor).c_str());
     }
     cose.close(handle);
     _test_case.test(ret, __FUNCTION__, "encrypt %s", text);
@@ -1468,7 +1448,7 @@ void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& inpu
     }
     ret = cose.mac(handle, key, algs, input, cbor);
     if (option.verbose) {
-        printf("%s\n", base16_encode(cbor).c_str());
+        _logger->writeln("%s", base16_encode(cbor).c_str());
     }
     cose.close(handle);
     _test_case.test(ret, __FUNCTION__, "mac %s", text);
@@ -1757,10 +1737,15 @@ int main(int argc, char** argv) {
     (*_cmdline).parse(argc, argv);
 
     OPTION& option = _cmdline->value();
-    std::cout << "option.verbose " << (option.verbose ? 1 : 0) << std::endl;
-    std::cout << "option.dump_keys " << (option.dump_keys ? 1 : 0) << std::endl;
-    std::cout << "option.skip_validate " << (option.skip_validate ? 1 : 0) << std::endl;
-    std::cout << "option.skip_gen " << (option.skip_gen ? 1 : 0) << std::endl;
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
+    _logger->writeln("option.verbose %i", option.verbose ? 1 : 0);
+    _logger->writeln("option.dump_keys %i", option.dump_keys ? 1 : 0);
+    _logger->writeln("option.skip_validate %i", option.skip_validate ? 1 : 0);
+    _logger->writeln("option.skip_gen %i", option.skip_gen ? 1 : 0);
 
     if (option.verbose) {
         set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
@@ -1863,6 +1848,8 @@ int main(int argc, char** argv) {
 
     openssl_thread_cleanup();
     openssl_cleanup();
+
+    _logger->flush();
 
     _test_case.report(5);
     _cmdline->help();

@@ -17,6 +17,7 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
@@ -54,16 +55,14 @@ void test_payload_dump() {
         pl.set_group("pad", true);  // enable "pad" group
         pl.dump(bin_padded);
         if (option.verbose) {
-            dump_memory(bin_padded, &bs);
-            printf("%s\n", bs.c_str());
+            _logger->dump(bin_padded);
         }
         _test_case.assert(12 == bin_padded.size(), __FUNCTION__, "payload padded");  // 3 || "data" || 0x1000 || "pad"
 
         pl.set_group("pad", false);  // disable "pad" group
         pl.dump(bin_notpadded);
         if (option.verbose) {
-            dump_memory(bin_notpadded, &bs);
-            printf("%s\n", bs.c_str());
+            _logger->dump(bin_notpadded);
         }
         _test_case.assert(8 == bin_notpadded.size(), __FUNCTION__, "payload not padded");  // "data" || 0x1000
     }
@@ -120,8 +119,7 @@ void test_payload_uint24() {
 
         pl.dump(bin_payload);
         if (option.verbose) {
-            dump_memory(bin_payload, &bs);
-            printf("%s\n", bs.c_str());
+            _logger->dump(bin_payload);
         }
         _test_case.assert(expect == bin_payload, __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
     }
@@ -140,7 +138,7 @@ void test_payload_uint24() {
 
         if (option.verbose) {
             uint32 i24_value = i24.get();
-            printf("padlen %u uint32_24 %u (0x%08x) uint32_32 %u (0x%08x)\n", padlen, i24_value, i24_value, i32, i32);
+            _logger->writeln("padlen %u uint32_24 %u (0x%08x) uint32_32 %u (0x%08x)", padlen, i24_value, i24_value, i32, i32);
         }
 
         _test_case.assert(0x100000 == i24.get(), __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
@@ -162,9 +160,15 @@ int main(int argc, char** argv) {
     cmdline->parse(argc, argv);
     OPTION& option = cmdline->value();
 
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
     test_payload_dump();
     test_payload_parse();
     test_payload_uint24();
+
+    _logger->flush();
 
     _test_case.report(5);
     cmdline->help();

@@ -17,27 +17,37 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
+typedef struct _OPTION {
+    int verbose;
+
+    _OPTION() : verbose(0) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 void print_datetime(datetime* d) {
     datetime_t t;
     long nsec = 0;
 
     d->getlocaltime(&t, &nsec);
-    printf("time %04d-%02d-%02d %02d:%02d:%02d.%ld\n", t.year, t.month, t.day, t.hour, t.minute, t.second, nsec);
+    _logger->writeln("time %04d-%02d-%02d %02d:%02d:%02d.%ld", t.year, t.month, t.day, t.hour, t.minute, t.second, nsec);
 }
 
 void apply_timespan(datetime* dt, timespan_t ts) {
     return_t ret = errorcode_t::success;
 
-    printf("class datetime\n");
+    _logger->writeln("class datetime");
     print_datetime(dt);
 
-    printf("class datetime += timespan (%dd, %ds, %dms)\n", ts.days, ts.seconds, ts.milliseconds);
+    _logger->writeln("class datetime += timespan (%dd, %ds, %dms)", ts.days, ts.seconds, ts.milliseconds);
     datetime dt1(*dt);
     dt1 += ts;
     print_datetime(&dt1);
 
-    printf("class datetime -= timespan (%dd, %ds, %dms)\n", ts.days, ts.seconds, ts.milliseconds);
+    _logger->writeln("class datetime -= timespan (%dd, %ds, %dms)", ts.days, ts.seconds, ts.milliseconds);
     datetime dt2(dt1);
     dt2 -= ts;
     print_datetime(&dt2);
@@ -83,32 +93,6 @@ void test_time() {
     time_t timestamp = time(nullptr);
     datetime dt5(timestamp);
     print_datetime(&dt5);
-
-    _test_case.begin("struct asn1 time");
-    asn1time_t asn1sample1(V_ASN1_GENERALIZEDTIME, "19851106210627.3");
-    asn1time_t asn1sample2(V_ASN1_GENERALIZEDTIME, "19851106210627.3Z");
-    asn1time_t asn1sample3(V_ASN1_GENERALIZEDTIME, "19851106210627.3+0900");
-    asn1time_t asn1sample4(V_ASN1_GENERALIZEDTIME, "19851106210627.3000+0900");
-    asn1time_t asn1sample5(V_ASN1_UTCTIME, "9901020700Z");
-    asn1time_t asn1sample6(V_ASN1_UTCTIME, "9901020700+0900");
-
-    datetime dt6(asn1sample1);
-    print_datetime(&dt6);
-
-    dt6 = asn1sample2;
-    print_datetime(&dt6);
-
-    dt6 = asn1sample3;
-    print_datetime(&dt6);
-
-    dt6 = asn1sample4;
-    print_datetime(&dt6);
-
-    dt6 = asn1sample5;
-    print_datetime(&dt6);
-
-    dt6 = asn1sample6;
-    print_datetime(&dt6);
 }
 
 void test_timespec() {
@@ -136,22 +120,35 @@ void test_timespec() {
     slices.push_back(ts4);
 
     time_diff(diff, ts1, ts2);
-    printf("diff %zi.%ld\n", diff.tv_sec, diff.tv_nsec);
+    _logger->writeln("diff %zi.%ld", diff.tv_sec, diff.tv_nsec);
     _test_case.assert((0 == diff.tv_sec) && (900000000 == diff.tv_nsec), __FUNCTION__, "time_diff");
 
     time_sum(result, slices);
-    printf("sum  %zi.%ld\n", result.tv_sec, result.tv_nsec);
+    _logger->writeln("sum  %zi.%ld", result.tv_sec, result.tv_nsec);
     _test_case.assert((7 == result.tv_sec) && (777777777 == result.tv_nsec), __FUNCTION__, "time_sum");
 }
 
-int main() {
+int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
     test_time();
     test_timespec();
 
+    _logger->flush();
+
     _test_case.report(5);
+    _cmdline->help();
     return _test_case.result();
 }

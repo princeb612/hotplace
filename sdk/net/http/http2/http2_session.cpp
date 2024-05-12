@@ -237,7 +237,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
 
 hpack_session& http2_session::get_hpack_session() { return _hpack_session; }
 
-http2_session& http2_session::set_debug(std::function<void(stream_t*)> f) {
+http2_session& http2_session::trace(std::function<void(stream_t*)> f) {
     _df = f;
     return *this;
 }

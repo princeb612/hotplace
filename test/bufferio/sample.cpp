@@ -17,6 +17,16 @@ using namespace hotplace;
 using namespace hotplace::io;
 
 test_case _test_case;
+t_shared_instance<logger> _logger;
+
+typedef struct _OPTION {
+    int verbose;
+
+    _OPTION() : verbose(0) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 void dump(bufferio_context_t* handle) {
     test_case_notimecheck notimecheck(_test_case);
@@ -24,11 +34,8 @@ void dump(bufferio_context_t* handle) {
     bufferio bio;
     byte_t* data = nullptr;
     size_t size_data = 0;
-    basic_stream bs;
-
     bio.get(handle, &data, &size_data);
-    dump_memory(data, size_data, &bs);
-    printf("dump\n%.*s\n", (unsigned)bs.size(), bs.c_str());
+    _logger->dump(data, size_data, 16, 2);
 }
 
 void test_vprintf(bufferio_context_t* handle, const char* fmt, ...) {
@@ -131,7 +138,7 @@ void test_bufferio() {
 
     bio.printf(handle, "\n ");
     pos = bio.find_not_last_of(handle, isspace);
-    printf("find_not_last_of %zi\n", pos);
+    _logger->writeln("find_not_last_of %zi", pos);
     _test_case.assert((10 == pos), __FUNCTION__, "find_not_last_of -> %i", pos);
 
     ret = bio.clear(handle);
@@ -183,14 +190,27 @@ void test_bufferio2() {
     bio.close(handle);
 }
 
-int main() {
+int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline->parse(argc, argv);
+
+    OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
     test_bufferio();
     test_bufferio2();
 
+    _logger->flush();
+
     _test_case.report(5);
+    _cmdline->help();
     return _test_case.result();
 }

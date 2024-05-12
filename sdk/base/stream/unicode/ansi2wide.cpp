@@ -8,10 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/stream/string.hpp>
+#include <sdk/base/stream/tstring.hpp>
 
 namespace hotplace {
-namespace io {
 
 return_t A2W(wide_string& target, const char* source, uint32 codepage) {
     return_t ret = errorcode_t::success;
@@ -30,5 +29,4 @@ return_t A2W(wide_string& target, const char* source, uint32 codepage) {
     return ret;
 }
 
-}  // namespace io
 }  // namespace hotplace
