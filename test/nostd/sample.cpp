@@ -8,8 +8,7 @@
  * Date         Name                Description
  */
 
-#include <algorithm>
-#include <functional>
+#include <sdk/nostd.hpp>
 #include <sdk/sdk.hpp>
 
 using namespace hotplace;
@@ -18,30 +17,6 @@ using namespace hotplace::net;
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
-
-// ISO/IEC 8824-1
-// ITU-T X.680
-// 8 Tags
-// Table 1 - Universal class tag assignment
-
-// ISO/IEC 8825-1
-// X.690
-// Specificaton of basic notation
-// 8 Basic encoding rules
-// 8.1 General rules for encoding
-// 8.1.1 structure of an encoding
-//  Table 1 - Encoding of class of tag
-//  Figure 2 - An alternative constructed encoding
-// 8.1.2 identifier octets
-//  Figure 3 - Identifier octet (low tag number)
-//  Figure 4 - Identifier octets (high tag number)
-// 8.1.3 length octets
-// 8.1.4 contents octets
-// 8.1.5 end-of-contents octets
-// 8.2 Encoding of a boolean value
-// 8.3 Encoding of an integer value
-// 8.4 Encoding of an enumerated value
-// 8.5 Encoding of a real value
 
 typedef struct _OPTION {
     int verbose;
@@ -52,12 +27,28 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
-void test1() {
-    //
-}
+void test_vector() {
+    t_vector<int> v;
+    v.push_back(1);
+    v.push_back(2);
+    v.push_back(3);
 
-// 216 page
-// hash table
+    basic_stream bs;
+    for_each<t_vector<int>>(v, [&](t_vector<int>::const_iterator iter, int where) -> void {
+        switch (where) {
+            case 0:
+                bs << "[" << *iter;
+                break;
+            case 1:
+                bs << ", " << *iter;
+                break;
+            case 2:
+                bs << "]";
+                break;
+        }
+    });
+    _logger->writeln(bs);
+}
 
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
@@ -74,9 +65,7 @@ int main(int argc, char** argv) {
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
 
-    // studying ...
-    test1();
-    // test2();
+    test_vector();
 
     _logger->flush();
 

@@ -19,6 +19,7 @@ using namespace hotplace::io;
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
+return_t _cmdret = errorcode_t::success;
 
 enum {
     decode_b64u = 1,
@@ -32,9 +33,8 @@ typedef struct _OPTION {
     int mode;
     std::string content;
     std::string filename;
-    return_t ret;
 
-    _OPTION() : verbose(0), mode(0), ret(success) {}
+    _OPTION() : verbose(0), mode(0) {}
     void set(int m, char* param) {
         mode = m;
         if (param) {
@@ -236,8 +236,8 @@ void whatsthis() {
     //  $ echo AQIDBAU= | base64 -d | xxd
     //  00000000: 0102 0304 05                             .....
 
-    OPTION o = _cmdline->value();
-    if (o.mode && errorcode_t::success == o.ret) {
+    const OPTION o = _cmdline->value();
+    if (o.mode && errorcode_t::success == _cmdret) {
         basic_stream bs;
         basic_stream additional;
         binary_t what;
@@ -319,10 +319,9 @@ int main(int argc, char** argv) {
                 << cmdarg_t<OPTION>("-out", "write to file", [&](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional()
                 << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
-    return_t test = _cmdline->parse(argc, argv);
+    _cmdret = _cmdline->parse(argc, argv);
 
-    OPTION& option = _cmdline->value();
-    option.ret = test;
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
     _cmdline->parse(argc, argv);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

@@ -28,15 +28,22 @@ basic_stream::basic_stream(const char* data, ...) : _handle(nullptr) {
     va_end(ap);
 }
 
-basic_stream::basic_stream(const basic_stream& stream) : _handle(nullptr) {
+basic_stream::basic_stream(const basic_stream& rhs) : _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
 
     _bio.open(&_handle, allocsize, 1);
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(stream._handle, &data, &size);
+    _bio.get(rhs._handle, &data, &size);
     write((void*)data, size);
+}
+
+basic_stream::basic_stream(basic_stream&& rhs) : _handle(nullptr) {
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+    _bio.open(&_handle, allocsize, 1);
+
+    std::swap(_handle, rhs._handle);
 }
 
 basic_stream::~basic_stream() { _bio.close(_handle); }
@@ -132,29 +139,35 @@ return_t basic_stream::printf(const wchar_t* buf, ...) {
 return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return _bio.vprintf(_handle, buf, ap); }
 #endif
 
-basic_stream& basic_stream::operator=(const basic_stream& obj) {
+basic_stream& basic_stream::operator=(const basic_stream& rhs) {
     clear();
-    write(obj.data(), obj.size());
+    write(rhs.data(), rhs.size());
     return *this;
 }
 
-basic_stream& basic_stream::operator=(const std::string& str) {
+basic_stream& basic_stream::operator=(basic_stream&& rhs) {
     clear();
-    printf(str.c_str());
+    std::swap(_handle, rhs._handle);
     return *this;
 }
 
-basic_stream& basic_stream::operator=(const char* str) {
+basic_stream& basic_stream::operator=(const std::string& rhs) {
     clear();
-    if (str) {
-        printf(str);
+    printf(rhs.c_str());
+    return *this;
+}
+
+basic_stream& basic_stream::operator=(const char* rhs) {
+    clear();
+    if (rhs) {
+        printf(rhs);
     }
     return *this;
 }
 
-basic_stream& basic_stream::operator<<(const char* str) {
-    if (str) {
-        printf(str);
+basic_stream& basic_stream::operator<<(const char* rhs) {
+    if (rhs) {
+        printf(rhs);
     }
     return *this;
 }

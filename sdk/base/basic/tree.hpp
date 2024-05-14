@@ -50,21 +50,21 @@ class t_btree {
     t_btree() : _root(nullptr), _size(0) {}
     t_btree(const t_btree &rhs) : _root(nullptr), _size(0) { _root = clone(rhs._root); }
     t_btree(t_btree &&rhs) : _root(nullptr), _size(0) {
-        if (rhs._root) {
-            insert(rhs._root->_key);
-        }
+        _root = rhs._root;
+        _size = rhs._size;
+        rhs._root = nullptr;
+        rhs._size = 0;
     }
     ~t_btree() { clear(); }
 
     bool contains(const key_t &x) const { return contains(x, _root); }
     bool empty() const { return (nullptr == _root); }
     size_t size() const { return _size; }
-    // void printTree(ostream &out = cout) const;
     void for_each(const_visitor visit) { walk(_root, visit); }
 
     void clear() { clear(_root); }
     void insert(const key_t &x, visitor visit = nullptr) { insert(x, _root, visit); }
-    void insert(key_t &&x, visitor visit = nullptr) { insert(x, _root, visit); }
+    void insert(key_t &&x, visitor visit = nullptr) { insert(std::move(x), _root, visit); }
     void remove(const key_t &x) { remove(x, _root); }
 
     t_btree &operator=(const t_btree &rhs) {
@@ -73,9 +73,10 @@ class t_btree {
     }
     t_btree &operator=(t_btree &&rhs) {
         clear();
-        if (rhs._root) {
-            insert(rhs._root->_key);
-        }
+        _root = rhs._root;
+        _size = rhs._size;
+        rhs._root = nullptr;
+        rhs._size = 0;
     }
 
    private:
@@ -233,16 +234,16 @@ class t_avltree {
     t_avltree() : _root(nullptr), _size(0) {}
     t_avltree(const t_avltree &rhs) : _root(nullptr), _size(0) { _root = clone(rhs._root); }
     t_avltree(t_avltree &&rhs) : _root(nullptr), _size(0) {
-        if (rhs._root) {
-            insert(rhs._root->_key);
-        }
+        _root = rhs._root;
+        _size = rhs._size;
+        rhs._root = nullptr;
+        rhs._size = 0;
     }
     ~t_avltree() { clear(); }
 
     bool contains(const key_t &x) const { return contains(x, _root); }
     bool empty() const { return (nullptr == _root); }
     size_t size() const { return _size; }
-    // void printTree(ostream &out = cout) const;
     void for_each(const_visitor visit) { walk(_root, visit); }
 
     void clear() { clear(_root); }
@@ -256,9 +257,10 @@ class t_avltree {
     }
     t_avltree &operator=(t_avltree &&rhs) {
         clear();
-        if (rhs._root) {
-            insert(rhs._root->_key);
-        }
+        _root = rhs._root;
+        _size = rhs._size;
+        rhs._root = nullptr;
+        rhs._size = 0;
     }
 
    private:

@@ -22,27 +22,37 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-constexpr char constexpr_frame_length[] = "length";
-constexpr char constexpr_frame_type[] = "type";
-constexpr char constexpr_frame_flags[] = "flags";
-constexpr char constexpr_frame_stream_identifier[] = "stream identifier";
-constexpr char constexpr_frame_pad_length[] = "pad length";
-constexpr char constexpr_frame_data[] = "data";
-constexpr char constexpr_frame_padding[] = "padding";
-constexpr char constexpr_frame_stream_dependency[] = "stream dependency";
-constexpr char constexpr_frame_weight[] = "weight";
-constexpr char constexpr_frame_fragment[] = "fragment";
-constexpr char constexpr_frame_priority[] = "priority";
-constexpr char constexpr_frame_error_code[] = "error code";
-constexpr char constexpr_frame_promised_stream_id[] = "promised stream id";
-constexpr char constexpr_frame_opaque[] = "opaque";
-constexpr char constexpr_frame_last_stream_id[] = "last stream id";
-constexpr char constexpr_frame_debug_data[] = "debug data";
-constexpr char constexpr_frame_window_size_increment[] = "window size increment";
+// error: redeclaration in gcc [4.8.5, ? ]
+// extern const char var[]
+// constexpr char var[]
 
-constexpr char constexpr_frame_exclusive[] = "exclusive";
-constexpr char constexpr_frame_identifier[] = "identifier";
-constexpr char constexpr_frame_value[] = "value";
+#if __GNUC__ >= 5
+#define CONSTEXPR constexpr
+#else
+#define CONSTEXPR const
+#endif
+
+CONSTEXPR char constexpr_frame_length[] = "length";
+CONSTEXPR char constexpr_frame_type[] = "type";
+CONSTEXPR char constexpr_frame_flags[] = "flags";
+CONSTEXPR char constexpr_frame_stream_identifier[] = "stream identifier";
+CONSTEXPR char constexpr_frame_pad_length[] = "pad length";
+CONSTEXPR char constexpr_frame_data[] = "data";
+CONSTEXPR char constexpr_frame_padding[] = "padding";
+CONSTEXPR char constexpr_frame_stream_dependency[] = "stream dependency";
+CONSTEXPR char constexpr_frame_weight[] = "weight";
+CONSTEXPR char constexpr_frame_fragment[] = "fragment";
+CONSTEXPR char constexpr_frame_priority[] = "priority";
+CONSTEXPR char constexpr_frame_error_code[] = "error code";
+CONSTEXPR char constexpr_frame_promised_stream_id[] = "promised stream id";
+CONSTEXPR char constexpr_frame_opaque[] = "opaque";
+CONSTEXPR char constexpr_frame_last_stream_id[] = "last stream id";
+CONSTEXPR char constexpr_frame_debug_data[] = "debug data";
+CONSTEXPR char constexpr_frame_window_size_increment[] = "window size increment";
+
+CONSTEXPR char constexpr_frame_exclusive[] = "exclusive";
+CONSTEXPR char constexpr_frame_identifier[] = "identifier";
+CONSTEXPR char constexpr_frame_value[] = "value";
 
 http2_frame::http2_frame() : _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_encoder(nullptr), _hpack_session(nullptr) {}
 

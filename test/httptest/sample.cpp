@@ -51,7 +51,7 @@ void cprint(const char *text, ...) {
 }
 
 void do_split_url(const char *url, url_info_t *url_info) {
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     split_url(url, url_info);
 
@@ -135,7 +135,7 @@ void test_uri() {
 
 void test_request() {
     _test_case.begin("request");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     // chrome browser request data https://127.0.0.1:9000/test
     const char *input =
@@ -183,7 +183,7 @@ void test_request() {
 
 void test_response_compose() {
     _test_case.begin("response");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     http_response response;
     response.get_http_header().add("Connection", "Keep-Alive");
@@ -204,7 +204,7 @@ void test_response_compose() {
 
 void test_response_parse() {
     _test_case.begin("response");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     http_response response;
     std::string wwwauth;
@@ -244,7 +244,7 @@ void test_response_parse() {
 
 void test_uri_form_encoded_body_parameter() {
     _test_case.begin("uri");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     http_request request1;
     http_request request2;
@@ -276,7 +276,7 @@ void test_uri_form_encoded_body_parameter() {
 
 void test_uri2() {
     _test_case.begin("uri");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     const char *input = "/resource?client_id=clientid&access_token=token";
 
@@ -294,7 +294,7 @@ void test_uri2() {
 
 void test_escape_url() {
     _test_case.begin("uri");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     constexpr char input[] = "https://test.com:8080/%7Eb612%2Ftest%2Ehtml";
 
@@ -311,7 +311,7 @@ void test_escape_url() {
 
 void test_basic_authentication() {
     _test_case.begin("Basic Authentication Scheme");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     return_t ret = errorcode_t::success;
     tcp_server_socket socket;  // dummy
@@ -377,7 +377,7 @@ void test_basic_authentication() {
 return_t calc_digest_digest_access(http_authenticate_provider *provider, network_session *session, http_request *request, skey_value &kv,
                                    std::string &digest_response) {
     return_t ret = errorcode_t::success;
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
     __try2 {
         if (nullptr == provider || nullptr == request) {
             ret = errorcode_t::invalid_parameter;
@@ -461,7 +461,7 @@ return_t calc_digest_digest_access(http_authenticate_provider *provider, network
 
 void test_digest_access_authentication(const char *alg = nullptr) {
     _test_case.begin("Digest Access Authentication Scheme");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     return_t ret = errorcode_t::success;
     tcp_server_socket socket;  // dummy
@@ -580,7 +580,7 @@ void test_rfc_example_routine(const std::string &text, digest_access_authenticat
 
 void test_rfc_example() {
     _test_case.begin("RFC examples");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     http_request request;
 
@@ -702,7 +702,7 @@ void test_documents() {
  */
 void test_get_tlsclient() {
     _test_case.begin("httpserver test");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     return_t ret = errorcode_t::success;
 
@@ -803,7 +803,7 @@ void test_get_tlsclient() {
  */
 void test_get_httpclient() {
     _test_case.begin("httpserver test");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     return_t ret = errorcode_t::failed;
     http_client client;
@@ -833,7 +833,7 @@ void test_get_httpclient() {
 
 void test_bearer_token() {
     _test_case.begin("httpserver test");
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     return_t ret = errorcode_t::failed;
     http_client client;
@@ -879,7 +879,7 @@ int main(int argc, char **argv) {
              << cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/)", [&](OPTION &o, char *param) -> void { o.url = param; }).preced().optional();
 
     cmdline->parse(argc, argv);
-    OPTION &option = cmdline->value();
+    const OPTION &option = cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

@@ -88,7 +88,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     basic_stream bs;
     std::string message;
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     switch (type) {
         case mux_connect:
@@ -114,7 +114,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 }
 
 return_t echo_server(void*) {
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     http_server_builder builder;
@@ -315,7 +315,7 @@ int main(int argc, char** argv) {
 
     _cmdline->parse(argc, argv);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

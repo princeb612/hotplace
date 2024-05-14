@@ -37,7 +37,7 @@ t_shared_instance<cmdline_t<OPTION> > cmdline;
 //  binary_t    *       N/A         "pad"       "pad"
 
 void test_payload_dump() {
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
     _test_case.begin("payload");
 
     {
@@ -69,7 +69,7 @@ void test_payload_dump() {
 }
 
 void test_payload_parse() {
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
     _test_case.begin("payload");
 
     {
@@ -100,7 +100,7 @@ void test_payload_parse() {
 //  binary_t    *       N/A         "pad"       N/A
 
 void test_payload_uint24() {
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
     _test_case.begin("payload");
 
     binary_t pad = convert("pad");
@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
     *cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

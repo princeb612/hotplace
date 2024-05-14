@@ -34,7 +34,7 @@ t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 void encode_test(variant& vt, binary_t& bin, std::string expect) {
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     cbor_encode enc;
     std::string hex;
@@ -714,7 +714,7 @@ void test3() {
 
 void whatsthis(int argc, char** argv) {
     _cmdline->parse(argc, argv);
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     if (option.content.empty()) {
         _cmdline->help();
@@ -750,7 +750,7 @@ int main(int argc, char** argv) {
               << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
     _cmdline->parse(argc, argv);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

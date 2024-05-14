@@ -32,7 +32,7 @@ t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 void validate_openssl_crypt() {
     _test_case.begin("CAVP block cipher - AES");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     openssl_crypt crypt;
     crypt_context_t* handle = nullptr;
@@ -63,7 +63,7 @@ void test_crypt_routine(crypt_t* crypt_object, crypt_algorithm_t algorithm, cryp
 
     return_t ret = errorcode_t::success;
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     crypto_advisor* advisor = crypto_advisor::get_instance();
     crypt_context_t* crypt_handle = nullptr;
 
@@ -215,7 +215,7 @@ void test_crypt_algorithms(uint32 cooltime, uint32 unitsize) {
 
 void test_random() {
     _test_case.begin("random");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     uint32 value = 0;
@@ -235,7 +235,7 @@ void test_random() {
 
 void test_nonce() {
     _test_case.begin("random");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     std::string nonce;
@@ -261,7 +261,7 @@ void test_nonce() {
 
 void test_token() {
     _test_case.begin("random");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     std::string token;
@@ -287,7 +287,7 @@ void test_token() {
 
 void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     _test_case.reset_time();
 
@@ -346,7 +346,7 @@ void test_keywrap_rfc3394() {
 
 void test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     const char* text = vector->text;
     const char* alg = vector->alg;
@@ -431,7 +431,7 @@ void test_chacha20_rfc7539() {
 return_t test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     __try2 {
         if (nullptr == vector) {
@@ -558,7 +558,7 @@ return_t test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_
 
 void test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     openssl_aead aead;
 
     binary_t q;
@@ -600,7 +600,7 @@ int main(int argc, char** argv) {
     *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
     _cmdline->parse(argc, argv);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

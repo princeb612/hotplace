@@ -135,7 +135,7 @@ enum variant_flag_t {
     flag_user_type = 1 << 7,
 };
 
-typedef struct __variant_t {
+struct variant_t {
     vartype_t type;
     union {
         bool b;
@@ -170,8 +170,69 @@ typedef struct __variant_t {
     uint16 size;
     uint16 flag;
 
-    __variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
-} variant_t;
+    variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
+    variant_t(const variant_t& rhs) : type(TYPE_NULL), size(0), flag(0) { *this = rhs; }
+    variant_t(variant_t&& rhs) : type(TYPE_NULL), size(0), flag(0) { *this = std::move(rhs); }
+    ~variant_t() { clear(); }
+
+    variant_t& operator=(const variant_t& rhs) {
+        clear();
+
+        type = rhs.type;
+        if (variant_flag_t::flag_free & rhs.flag) {
+            switch (rhs.type) {
+                case TYPE_BINARY:
+                case TYPE_NSTRING:
+                    data.bstr = (unsigned char*)malloc(rhs.size + 1);
+                    memcpy(data.bstr, rhs.data.bstr, rhs.size);
+                    break;
+                case TYPE_STRING:
+                    data.str = strdup(rhs.data.str);
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            memcpy(&data, &rhs.data, sizeof(data));
+        }
+        size = rhs.size;
+        flag = rhs.flag;
+
+        return *this;
+    }
+    variant_t& operator=(variant_t&& rhs) {
+        clear();
+
+        type = rhs.type;
+        memcpy(&data, &rhs.data, sizeof(data));
+        size = rhs.size;
+        flag = rhs.flag;
+        rhs.reset();
+
+        return *this;
+    }
+
+    variant_t& reset() {
+        type = TYPE_NULL;
+        memset(&data, 0, sizeof(data));
+        size = 0;
+        flag = 0;
+
+        return *this;
+    }
+    variant_t& clear() {
+        if (variant_flag_t::flag_free & flag) {
+            free(data.p);
+        }
+
+        type = TYPE_NULL;
+        memset(&data, 0, sizeof(data));
+        size = 0;
+        flag = 0;
+
+        return *this;
+    }
+};
 
 template <typename T>
 T t_to_int(const variant_t& vt) {
@@ -243,8 +304,10 @@ T t_to_int(const variant_t& vt) {
 class variant {
    public:
     variant();
-    variant(const variant& source);
-    variant(variant&& source);
+    variant(const variant_t& rhs);
+    variant(variant_t&& rhs);
+    variant(const variant& rhs);
+    variant(variant&& rhs);
     ~variant();
 
     variant_t& content();
@@ -299,11 +362,8 @@ class variant {
     return_t to_string(std::string& target) const;
     return_t dump(binary_t& target, bool change_endian) const;
 
-    variant& copy(const variant_t& value);
-    variant& move(variant_t& value);
-    variant& copy(const variant& source);
-    variant& move(variant& source);
     variant& operator=(const variant& source);
+    variant& operator=(variant&& source);
 
    protected:
     variant_t _vt;

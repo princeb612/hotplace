@@ -37,7 +37,7 @@ t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 return_t test1() {
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     authenticode_verifier verifier;
     authenticode_context_t* handle = nullptr;
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
             __leave2;
         }
 
-        OPTION& option = _cmdline->value();
+        const OPTION& option = _cmdline->value();
 
         logger_builder builder;
         builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_KEYVALUE__
 #define __HOTPLACE_SDK_BASE_BASIC_KEYVALUE__
 
+#include <algorithm>
 #include <deque>
 #include <functional>
 #include <map>
@@ -28,11 +29,11 @@ enum key_value_flag_t {
 };
 
 /**
- * move    clear and assign
- * update  drop older data
- * key     keep older data
+ * kv_move      clear and assign
+ * kv_update    drop older data
+ * kv_keep      older data
  */
-enum key_value_mode_t { move = 0, update, keep };
+enum key_value_mode_t { kv_move = 0, kv_update, kv_keep };
 
 /**
  * @brief key-value configuation
@@ -69,17 +70,17 @@ class t_skey_value {
     }
 
     /**
-     * @brief   add, update
+     * @brief   add, kv_update
      * @param   const std::string&  name    [IN]
      * @param   const value_t&      value   [IN]
      * @param   uint32              mode    [INOPT] see key_value_mode_t
      * @return  error code (see error.hpp)
      * @remarks
-     *          set (key1, value1, key_value_mode_t::keep); // return errorcode_t::success
-     *          set (key1, value2, key_value_mode_t::keep); // return errorcode_t::already_exist
-     *          set (key1, value2, key_value_mode_t::update); // update, return errorcode_t::success
+     *          set (key1, value1, key_value_mode_t::kv_keep); // return errorcode_t::success
+     *          set (key1, value2, key_value_mode_t::kv_keep); // return errorcode_t::already_exist
+     *          set (key1, value2, key_value_mode_t::kv_update); // kv_update, return errorcode_t::success
      */
-    return_t set(const std::string& name, const value_t& value, int mode = key_value_mode_t::update) {
+    return_t set(const std::string& name, const value_t& value, int mode = key_value_mode_t::kv_update) {
         return_t ret = errorcode_t::success;
 
         __try2 {
@@ -92,7 +93,7 @@ class t_skey_value {
 
             keyvalue_map_pib_t pib = _keyvalues.insert(std::make_pair(key, value));
             if (false == pib.second) {
-                if (key_value_mode_t::update == mode) {
+                if (key_value_mode_t::kv_update == mode) {
                     pib.first->second = value;
                 } else {
                     ret = errorcode_t::already_exist;
@@ -109,14 +110,14 @@ class t_skey_value {
         return ret;
     }
     /**
-     * @brief   update
+     * @brief   kv_update
      * @param   const std::string&  name    [in]
      * @param   const value_t&      value   [in]
      * @return  error code (see error.hpp)
      * @remarks
-     *          set(name, value, key_value_mode_t::update);
+     *          set(name, value, key_value_mode_t::kv_update);
      */
-    return_t update(const std::string& name, const value_t& value) { return set(name, value, key_value_mode_t::update); }
+    return_t kv_update(const std::string& name, const value_t& value) { return set(name, value, key_value_mode_t::kv_update); }
     /**
      * @brief   remove
      * @param   const std::string&  name    [IN]
@@ -169,7 +170,7 @@ class t_skey_value {
     /**
      * @brief   exist
      * @remarks
-     *          kv.update ("key", "value");
+     *          kv.kv_update ("key", "value");
      *          result = exist ("key"); // true
      *          result = exist ("value"); // false
      */
@@ -197,7 +198,7 @@ class t_skey_value {
      * @brief   return value by key
      * @param   const std::string& name
      * @remarks
-     *          kv.update ("key", "value");
+     *          kv.kv_update ("key", "value");
      *          value = kv ["key"]; // "value"
      *          value = kv ["value"]; // nullptr
      */
@@ -227,7 +228,7 @@ class t_skey_value {
      * @param   value_t&            value   [OUT]
      * @return  error code (see error.hpp)
      * @remarks
-     *          kv.update ("key", "value");
+     *          kv.kv_update ("key", "value");
      *          kv.query ("key", value); // "value"
      *          kv.query ("value", value); // ""
      */
@@ -268,11 +269,11 @@ class t_skey_value {
      *          kv1 [ ("key1", "value1"), ("key2", "value2") ]
      *          kv2 [ ("key2", "item2"), ("key3", "item3") ]
      *
-     *          result of kv1.copy (kv2, key_value_mode_t::move)   is kv1 [ ("key2", "item2"), ("key3", "item3") ]
-     *          result of kv1.copy (kv2, key_value_mode_t::update) is kv1 [ ("key1", "value1"), ("key2", "item2"), ("key3", "item3") ]
-     *          result of kv1.copy (kv2, key_value_mode_t::keep)   is kv1 [ ("key1", "value1"), ("key2", "value2"), ("key3", "item3") ]
+     *          result of kv1.copy (kv2, key_value_mode_t::kv_move)   is kv1 [ ("key2", "item2"), ("key3", "item3") ]
+     *          result of kv1.copy (kv2, key_value_mode_t::kv_update) is kv1 [ ("key1", "value1"), ("key2", "item2"), ("key3", "item3") ]
+     *          result of kv1.copy (kv2, key_value_mode_t::kv_keep)   is kv1 [ ("key1", "value1"), ("key2", "value2"), ("key3", "item3") ]
      */
-    return_t copy(t_skey_value<value_t>& rhs, int mode = key_value_mode_t::update) {
+    return_t copy(t_skey_value<value_t>& rhs, int mode = key_value_mode_t::kv_update) {
         return_t ret = errorcode_t::success;
 
         critical_section_guard guard(rhs._lock);
@@ -292,7 +293,7 @@ class t_skey_value {
 
         critical_section_guard guard(_lock);
 
-        if (key_value_mode_t::move == mode) {
+        if (key_value_mode_t::kv_move == mode) {
             clear();
         }
 
@@ -328,10 +329,10 @@ class t_skey_value {
      * @brief   operator <<
      * @param   t_skey_value& rhs [in]
      * @return  t_skey_value&
-     * @remarks copy with key_value_mode_t::update
+     * @remarks copy with key_value_mode_t::kv_update
      */
     t_skey_value<value_t>& operator<<(t_skey_value<value_t>& rhs) {
-        copy(rhs, key_value_mode_t::update);
+        copy(rhs, key_value_mode_t::kv_update);
         return *this;
     }
 

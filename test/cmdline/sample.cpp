@@ -34,18 +34,16 @@ typedef struct _CMDOPTION {
     bool keygen;
 
     _CMDOPTION() : keygen(false){};
-    void reset() {
-        keygen = false;
-        infile.clear();
-        outfile.clear();
-    }
 } CMDOPTION;
 
-void test_cmdline(cmdline_t<CMDOPTION>& cmdline, bool expect, int argc, char** argv) {
+void test_cmdline(bool expect, int argc, char** argv) {
     return_t ret = errorcode_t::success;
-    CMDOPTION& suboption = cmdline.value();
 
-    suboption.reset();
+    cmdline_t<CMDOPTION> cmdline;
+
+    cmdline << cmdarg_t<CMDOPTION>("-in", "input", [&](CMDOPTION& o, char* param) -> void { o.infile = param; }).preced()
+            << cmdarg_t<CMDOPTION>("-out", "output", [&](CMDOPTION& o, char* param) -> void { o.outfile = param; }).preced()
+            << cmdarg_t<CMDOPTION>("-keygen", "keygen", [&](CMDOPTION& o, char* param) -> void { o.keygen = true; }).optional();
 
     std::string args;
     for (int i = 0; i < argc; i++) {
@@ -61,11 +59,13 @@ void test_cmdline(cmdline_t<CMDOPTION>& cmdline, bool expect, int argc, char** a
         cmdline.help();
     }
 
-    // CMDOPTION suboption = cmdline.value ();
+    const CMDOPTION& cmdoption = cmdline.value();
+
+    // CMDOPTION cmdoption = cmdline.value ();
     basic_stream bs;
-    bs << "infile " << suboption.infile << "\n"
-       << "outfile " << suboption.outfile << "\n"
-       << "keygen " << suboption.keygen;
+    bs << "infile " << cmdoption.infile << "\n"
+       << "outfile " << cmdoption.outfile << "\n"
+       << "keygen " << cmdoption.keygen;
     _logger->writeln(bs);
 
     bool test = (errorcode_t::success == ret);
@@ -74,14 +74,6 @@ void test_cmdline(cmdline_t<CMDOPTION>& cmdline, bool expect, int argc, char** a
 
 void test1() {
     _test_case.begin("commandline");
-
-    CMDOPTION option;
-
-    cmdline_t<CMDOPTION> cmdline;
-
-    cmdline << cmdarg_t<CMDOPTION>("-in", "input", [&](CMDOPTION& o, char* param) -> void { o.infile = param; }).preced()
-            << cmdarg_t<CMDOPTION>("-out", "output", [&](CMDOPTION& o, char* param) -> void { o.outfile = param; }).preced()
-            << cmdarg_t<CMDOPTION>("-keygen", "keygen", [&](CMDOPTION& o, char* param) -> void { o.keygen = true; }).optional();
 
     int argc = 0;
     argc = 0;
@@ -94,33 +86,33 @@ void test1() {
     argc = 2;
     argv[0] = (char*)"-in";
     argv[1] = (char*)"test.in";
-    test_cmdline(cmdline, false, argc, argv);  // wo -out
+    test_cmdline(false, argc, argv);  // wo -out
 
     argc = 3;
     argv[0] = (char*)"-keygen";
     argv[1] = (char*)"-in";
     argv[2] = (char*)"test.in";
-    test_cmdline(cmdline, false, argc, argv);  // wo -out
+    test_cmdline(false, argc, argv);  // wo -out
 
     argc = 3;
     argv[0] = (char*)"-keygen";
     argv[1] = (char*)"test.in";
     argv[2] = (char*)"-in";
-    test_cmdline(cmdline, false, argc, argv);  // wo -in and -out
+    test_cmdline(false, argc, argv);  // wo -in and -out
 
     argc = 4;
     argv[0] = (char*)"-keygen";
     argv[1] = (char*)"test.in";
     argv[2] = (char*)"-in";
     argv[3] = (char*)"test.out";
-    test_cmdline(cmdline, false, argc, argv);  // wo -out
+    test_cmdline(false, argc, argv);  // wo -out
 
     argc = 4;
     argv[0] = (char*)"-in-";
     argv[1] = (char*)"test.in";
     argv[2] = (char*)"-out";
     argv[3] = (char*)"test.out";
-    test_cmdline(cmdline, false, argc, argv);  // wo -in
+    test_cmdline(false, argc, argv);  // wo -in
 
     // wo -in (expect value not token)
     argc = 5;
@@ -129,7 +121,7 @@ void test1() {
     argv[2] = (char*)"test.in";
     argv[3] = (char*)"-out";
     argv[4] = (char*)"test.out";
-    test_cmdline(cmdline, false, argc, argv);
+    test_cmdline(false, argc, argv);
 
     _test_case.begin("case - valid parameter");
 
@@ -138,7 +130,7 @@ void test1() {
     argv[1] = (char*)"test.in";
     argv[2] = (char*)"-out";
     argv[3] = (char*)"test.out";
-    test_cmdline(cmdline, true, argc, argv);  // -token.preced value
+    test_cmdline(true, argc, argv);  // -token.preced value
 
     argc = 5;
     argv[0] = (char*)"-keygen";
@@ -146,7 +138,7 @@ void test1() {
     argv[2] = (char*)"test.in";
     argv[3] = (char*)"-out";
     argv[4] = (char*)"test.out";
-    test_cmdline(cmdline, true, argc, argv);  // -token.preced value -token.optional
+    test_cmdline(true, argc, argv);  // -token.preced value -token.optional
 }
 
 int main(int argc, char** argv) {
@@ -158,7 +150,7 @@ int main(int argc, char** argv) {
     *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
     _cmdline->parse(argc, argv);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

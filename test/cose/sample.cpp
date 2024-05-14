@@ -54,7 +54,7 @@ return_t dump_test_data(const char* text, const binary_t& cbor) {
 }
 
 void dump_crypto_key(crypto_key_object* key, void*) {
-    OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
+    const OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
     if (option.dump_keys) {
         uint32 nid = 0;
 
@@ -70,7 +70,7 @@ void dump_crypto_key(crypto_key_object* key, void*) {
 return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, cbor_object* root, const char* expect_file, const char* text) {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     __try2 {
         if (nullptr == cose_handle || nullptr == cose_keys || nullptr == root || nullptr == expect_file) {
@@ -235,7 +235,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
 
 void test_cbor_file(const char* expect_file, const char* text) {
     _test_case.begin("parse and generate diagnostic from RFC examples");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     console_color concolor;
 
@@ -916,7 +916,7 @@ void test_rfc8152_c_7_2() {
 void test_cbor_key(const char* file, const char* text) {
     _test_case.begin("CBOR encoded keys - order not guaranteed");
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     crypto_key key;
     cbor_web_key cwk;
 
@@ -1000,7 +1000,7 @@ void test_rfc8152_read_cbor() {
 
 void test_jose_from_cwk() {
     _test_case.begin("crypto_key");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     // load keys from CBOR
     cbor_web_key cwk;
@@ -1077,7 +1077,7 @@ void test_jose_from_cwk() {
 void test_github_example() {
     _test_case.begin("https://github.com/cose-wg/Examples");
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     cbor_web_key cwk;
     crypto_key key;
@@ -1379,7 +1379,7 @@ void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& inp
     _test_case.begin("sign");
 
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     cose_context_t* handle = nullptr;
     cbor_object_signing_encryption cose;
     binary_t cbor;
@@ -1408,7 +1408,7 @@ void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& 
     _test_case.begin("encrypt");
 
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     cose_context_t* handle = nullptr;
     cbor_object_signing_encryption cose;
     binary_t cbor;
@@ -1437,7 +1437,7 @@ void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& inpu
     _test_case.begin("mac");
 
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     cose_context_t* handle = nullptr;
     cbor_object_signing_encryption cose;
     binary_t cbor;
@@ -1542,7 +1542,7 @@ void test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const
     binary_t cbor;
 
     cose_context_t* handle = nullptr;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     cose.open(&handle);
     if (option.verbose) {
@@ -1571,7 +1571,7 @@ void test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const bi
     binary_t cbor;
 
     cose_context_t* handle = nullptr;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     cose.open(&handle);
     if (option.verbose) {
@@ -1596,7 +1596,7 @@ void test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const bin
     binary_t cbor;
 
     cose_context_t* handle = nullptr;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     cose.open(&handle);
     if (option.verbose) {
@@ -1692,7 +1692,7 @@ void test_cwt_rfc8392() {
     constexpr char cwt_maced_fp[] = "d18443a10104a1044c53796d6d65747269633235364ba106fb41d584367c20000048b8816f34c0542892";
 
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     crypto_key key;
     cbor_web_key cwk;
     cwk.load(&key, symm128);
@@ -1736,7 +1736,7 @@ int main(int argc, char** argv) {
     *_cmdline << cmdarg_t<OPTION>("-g", "skip self-generated message", [&](OPTION& o, char* param) -> void { o.skip_gen = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

@@ -25,15 +25,22 @@ ansi_string::ansi_string(const char* data) {
     _bio.write(_handle, data, strlen(data));
 }
 
-ansi_string::ansi_string(const ansi_string& stream) {
+ansi_string::ansi_string(const ansi_string& rhs) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
 
     _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(stream._handle, &data, &size);
+    _bio.get(rhs._handle, &data, &size);
     write((void*)data, size);
+}
+
+ansi_string::ansi_string(ansi_string&& rhs) {
+    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+    _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
+
+    std::swap(_handle, rhs._handle);
 }
 
 ansi_string::~ansi_string() { _bio.close(_handle); }
@@ -267,9 +274,15 @@ ansi_string& ansi_string::operator=(double buf) {
     return *this;
 }
 
-ansi_string& ansi_string::operator=(const ansi_string& buf) {
+ansi_string& ansi_string::operator=(const ansi_string& rhs) {
     clear();
-    write(buf.data(), buf.size());
+    write(rhs.data(), rhs.size());
+    return *this;
+}
+
+ansi_string& ansi_string::operator=(ansi_string&& rhs) {
+    clear();
+    std::swap(_handle, rhs._handle);
     return *this;
 }
 

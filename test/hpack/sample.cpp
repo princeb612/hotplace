@@ -50,7 +50,7 @@ void cprint(const char* text, ...) {
 
 void test_huffman_codes_routine(const char* sample, const char* expect, const char* text) {
     if (sample && expect && text) {
-        OPTION& option = cmdline->value();
+        const OPTION& option = cmdline->value();
 
         return_t ret = errorcode_t::success;
         basic_stream bs;
@@ -110,7 +110,7 @@ void test_huffman_codes() {
 }
 
 void test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const char* text) {
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     binary_t bin;
     basic_stream bs;
@@ -137,7 +137,7 @@ void test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const 
 
 void test_rfc7541_c_1() {
     _test_case.begin("RFC 7541 HPACK C.1. Integer Representation Examples");
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     test_rfc7541_c_1_routine(5, 10, "0a", "RFC 7541 C.1.1. Example 1: Encoding 10 Using a 5-Bit Prefix");
     test_rfc7541_c_1_routine(5, 1337, "1f9a0a", "RFC 7541 C.1.2. Example 2: Encoding 1337 Using a 5-Bit Prefix");
@@ -146,7 +146,7 @@ void test_rfc7541_c_1() {
 
 void test_rfc7541_c_2() {
     _test_case.begin("RFC 7541 HPACK C.2. Header Field Representation Examples");
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     hpack_session session;  // dynamic table
     binary_t bin;
@@ -232,7 +232,7 @@ void test_rfc7541_c_2() {
 }
 
 void decode(const binary_t& bin, hpack_session* session, hpack_session* session2) {
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     hpack hp;
     std::string name;
@@ -264,7 +264,7 @@ void decode(const binary_t& bin, hpack_session* session, hpack_session* session2
 // C.3.  Request Examples without Huffman Coding
 void test_rfc7541_c_3() {
     _test_case.begin("RFC 7541 HPACK C.3. Request Examples without Huffman Coding");
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     hpack hp;
     hpack_session session;  // dynamic table
@@ -356,7 +356,7 @@ void test_rfc7541_c_3() {
 // C.4.  Request Examples with Huffman Coding
 void test_rfc7541_c_4() {
     _test_case.begin("RFC 7541 HPACK C.4. Request Examples with Huffman Coding");
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     hpack hp;
     hpack_session session;  // dynamic table
@@ -430,7 +430,7 @@ void test_rfc7541_c_4() {
 // C.5.  Response Examples without Huffman Coding
 void test_rfc7541_c_5() {
     _test_case.begin("RFC 7541 HPACK C.5. Response Examples without Huffman Coding");
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     hpack hp;
     hpack_session session;  // dynamic table
@@ -512,7 +512,7 @@ void test_rfc7541_c_5() {
 // C.6.  Response Examples with Huffman Coding
 void test_rfc7541_c_6() {
     _test_case.begin("RFC 7541 HPACK C.6. Response Examples with Huffman Coding");
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     hpack hp;
     hpack_session session;  // dynamic table
@@ -591,7 +591,7 @@ void test_rfc7541_c_6() {
 
 void test_h2_header_frame_fragment() {
     _test_case.begin("HTTP/2 Header Compression");
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     // [test vector] chrome generated header
 
@@ -690,7 +690,7 @@ int main(int argc, char** argv) {
     *cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
-    OPTION& option = cmdline->value();
+    const OPTION& option = cmdline->value();
 
     _test_case.reset_time();
 

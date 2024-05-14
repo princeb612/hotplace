@@ -50,7 +50,7 @@ void print_text(const char* text, ...) {
 
 void dump(const char* text, const std::string& value) {
     if (text) {
-        OPTION& option = _cmdline->value();
+        const OPTION& option = _cmdline->value();
         if (option.verbose) {
             _logger->writeln("%s\n%s", text, value.c_str());
         }
@@ -59,7 +59,7 @@ void dump(const char* text, const std::string& value) {
 
 void dump_b64url(const char* text, const byte_t* addr, size_t size) {
     if (text && addr) {
-        OPTION& option = _cmdline->value();
+        const OPTION& option = _cmdline->value();
         if (option.verbose) {
             _logger->writeln("%s\n  %s", text, base64_encode(addr, size, base64_encoding_t::base64url_encoding).c_str());
         }
@@ -68,7 +68,7 @@ void dump_b64url(const char* text, const byte_t* addr, size_t size) {
 
 void dump_b64url(const char* text, const binary_t& bin) {
     if (text) {
-        OPTION& option = _cmdline->value();
+        const OPTION& option = _cmdline->value();
         if (option.verbose) {
             _logger->writeln("%s\n  %s", text, base64_encode(bin, base64_encoding_t::base64url_encoding).c_str());
         }
@@ -77,7 +77,7 @@ void dump_b64url(const char* text, const binary_t& bin) {
 
 void dump2(const char* text, std::string const str) {
     if (text) {
-        OPTION& option = _cmdline->value();
+        const OPTION& option = _cmdline->value();
         if (option.verbose) {
             _logger->dump(str.c_str(), str.size(), 16, 2);
         }
@@ -86,7 +86,7 @@ void dump2(const char* text, std::string const str) {
 
 void dump2(const char* text, binary_t const bin) {
     if (text) {
-        OPTION& option = _cmdline->value();
+        const OPTION& option = _cmdline->value();
         if (option.verbose) {
             _logger->dump(bin, 16, 2);
         }
@@ -95,7 +95,7 @@ void dump2(const char* text, binary_t const bin) {
 
 void dump2(const char* text, const byte_t* addr, size_t size) {
     if (text && addr) {
-        OPTION& option = _cmdline->value();
+        const OPTION& option = _cmdline->value();
         if (option.verbose) {
             _logger->dump(addr, size, 16, 2);
         }
@@ -103,7 +103,7 @@ void dump2(const char* text, const byte_t* addr, size_t size) {
 }
 
 void dump_elem(const binary_t& source) {
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     if (option.verbose) {
         basic_stream bs;
         bs << "[";
@@ -121,7 +121,7 @@ void dump_elem(const binary_t& source) {
 }
 
 void dump_elem(const std::string& source) {
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     if (option.verbose) {
         basic_stream bs;
         bs << "[";
@@ -140,7 +140,7 @@ void dump_elem(const std::string& source) {
 
 void test_basic() {
     print_text("basic informations");
-    OPTION option = _cmdline->value();
+    const OPTION option = _cmdline->value();
 
     struct {
         const char* name;
@@ -245,7 +245,7 @@ void test_basic() {
 }
 
 void dump_crypto_key(crypto_key_object* key, void*) {
-    OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
+    const OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
 
     if (option.dump_keys) {
         uint32 nid = 0;
@@ -1396,7 +1396,7 @@ int test_ecdh() {
     EVP_PKEY_free((EVP_PKEY*)alicePublicKey);
     EVP_PKEY_free((EVP_PKEY*)bobPublicKey);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     if (option.verbose) {
         basic_stream bs;
         bs << "alice public key  x : " << base16_encode(x_alice) << "\n"
@@ -1875,7 +1875,7 @@ void test_jwk_thumbprint() {
     hash_stream("sha256", (byte_t*)buffer.c_str(), buffer.size(), hash_value);
     thumbprint = base64_encode(hash_value, base64_encoding_t::base64url_encoding);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     if (option.verbose) {
         bs << "in lexicographic order : "
            << "\n"
@@ -1901,7 +1901,7 @@ void test_jwk_thumbprint() {
 void test_rfc8037() {
     print_text("RFC 8037");
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     json_web_key jwk;
     json_web_signature jws;
@@ -2048,7 +2048,7 @@ void key_match(crypto_key* key, jwa_t alg, crypto_use_t use) {
     pkey = key->select(kid, alg, use);
     basic_stream bs;
     if (pkey) {
-        OPTION& option = _cmdline->value();
+        const OPTION& option = _cmdline->value();
         if (option.dump_keys) {
             bs.printf("> kid %s\n", kid.c_str());
             key->get_key(pkey, pub1, pub2, priv);
@@ -2076,7 +2076,7 @@ void key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
     pkey = key->select(kid, sig, use);
     basic_stream bs;
     if (pkey) {
-        OPTION& option = _cmdline->value();
+        const OPTION& option = _cmdline->value();
         if (option.dump_keys) {
             bs.printf("> kid %s\n", kid.c_str());
             key->get_key(pkey, pub1, pub2, priv);
@@ -2091,7 +2091,7 @@ void key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
 
 void key_match_test() {
     json_web_key jwk;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     // crypto_advisor* advisor = crypto_advisor::get_instance ();
 
@@ -2148,7 +2148,7 @@ int main(int argc, char** argv) {
     *_cmdline << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

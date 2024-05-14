@@ -71,7 +71,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     basic_stream bs;
     std::string message;
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     switch (type) {
         case mux_connect:
@@ -120,7 +120,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 }
 
 return_t echo_server(void*) {
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     http_server_builder builder;
@@ -220,16 +220,18 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    logger_builder builder;
-    builder.set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
-    _logger.make_share(builder.build());
-
     _cmdline.make_share(new cmdline_t<OPTION>);
     *_cmdline << cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
               << cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
               << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     _cmdline->parse(argc, argv);
+
+    const OPTION& option = _cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
 
 #if defined _WIN32 || defined _WIN64
     winsock_startup();

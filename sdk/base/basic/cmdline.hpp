@@ -43,6 +43,7 @@ class cmdarg_t {
    public:
     cmdarg_t(const std::string& token, const std::string& desc, std::function<void(T&, char*)> f);
     cmdarg_t(const cmdarg_t& rhs);
+    cmdarg_t(cmdarg_t&& rhs);
     ~cmdarg_t();
 
     /*
@@ -83,12 +84,10 @@ cmdarg_t<T>::cmdarg_t(const std::string& token, const std::string& desc, std::fu
 }
 
 template <typename T>
-cmdarg_t<T>::cmdarg_t(const cmdarg_t& rhs) {
-    _token = rhs._token;
-    _desc = rhs._desc;
-    _func = rhs._func;
-    _flag = rhs._flag;
-}
+cmdarg_t<T>::cmdarg_t(const cmdarg_t& rhs) : _token(rhs._token), _desc(rhs._desc), _func(rhs._func), _flag(rhs._flag) {}
+
+template <typename T>
+cmdarg_t<T>::cmdarg_t(cmdarg_t&& rhs) : _token(std::move(rhs._token)), _desc(std::move(rhs._desc)), _func(std::move(rhs._func)), _flag(rhs._flag) {}
 
 template <typename T>
 cmdarg_t<T>::~cmdarg_t() {
@@ -168,6 +167,7 @@ class cmdline_t {
      * @param cmdarg_t<T> cmd [in]
      */
     cmdline_t& operator<<(const cmdarg_t<T>& cmd);
+    cmdline_t& operator<<(cmdarg_t<T>&& cmd);
     /*
      * @brief parse
      * @param int argc [in]
@@ -177,7 +177,7 @@ class cmdline_t {
     /*
      * @brief return T
      */
-    T& value();
+    const T& value() const;
     void help();
 
    protected:
@@ -204,6 +204,20 @@ cmdline_t<T>::~cmdline_t() {
 
 template <typename T>
 cmdline_t<T>& cmdline_t<T>::operator<<(const cmdarg_t<T>& cmd) {
+    int idx = _args.size();
+
+    const char* token = cmd.token();
+    cmdline_args_map_pib_t pib = _args.insert(std::make_pair(token, cmd));
+
+    if (pib.second) {
+        _list.push_back(token);
+    }
+
+    return *this;
+}
+
+template <typename T>
+cmdline_t<T>& cmdline_t<T>::operator<<(cmdarg_t<T>&& cmd) {
     int idx = _args.size();
 
     const char* token = cmd.token();
@@ -264,7 +278,7 @@ return_t cmdline_t<T>::parse(int argc, char** argv) {
 }
 
 template <typename T>
-T& cmdline_t<T>::value() {
+const T& cmdline_t<T>::value() const {
     return _source;
 }
 

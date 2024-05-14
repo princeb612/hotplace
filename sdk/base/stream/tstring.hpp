@@ -21,7 +21,8 @@ class ansi_string : public stream_t {
    public:
     ansi_string();
     ansi_string(const char* data);
-    ansi_string(const ansi_string& stream);
+    ansi_string(const ansi_string& rhs);
+    ansi_string(ansi_string&& rhs);
     virtual ~ansi_string();
 
     byte_t* data() const;
@@ -89,7 +90,8 @@ class ansi_string : public stream_t {
     ansi_string& operator=(uint64 buf);
     ansi_string& operator=(float buf);
     ansi_string& operator=(double buf);
-    ansi_string& operator=(const ansi_string& buf);
+    ansi_string& operator=(const ansi_string& rhs);
+    ansi_string& operator=(ansi_string&& rhs);
 
     ansi_string& operator+=(const char* buf);
 #if defined _WIN32 || defined _WIN64
@@ -149,7 +151,8 @@ class wide_string : public stream_t {
    public:
     wide_string();
     wide_string(const wchar_t* data);
-    wide_string(const wide_string& stream);
+    wide_string(const wide_string& rhs);
+    wide_string(wide_string&& rhs);
     virtual ~wide_string();
 
     byte_t* data() const;
@@ -217,6 +220,7 @@ class wide_string : public stream_t {
     wide_string& operator=(float buf);
     wide_string& operator=(double buf);
     wide_string& operator=(const wide_string& buf);
+    wide_string& operator=(wide_string&& buf);
 
     wide_string& operator+=(const char* buf);
     wide_string& operator+=(const wchar_t* buf);

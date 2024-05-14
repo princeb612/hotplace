@@ -30,7 +30,7 @@ t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 void test_kdf_hkdf() {
     _test_case.begin("hkdf");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     openssl_kdf kdf;
 
     return_t ret = errorcode_t::success;
@@ -60,7 +60,7 @@ void test_kdf_hkdf() {
 
 void test_kdf_pbkdf2_rfc6070() {
     _test_case.begin("pbkdf2");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     openssl_kdf kdf;
@@ -104,7 +104,7 @@ void test_kdf_pbkdf2_rfc6070() {
 void test_kdf_pbkdf2_rfc7914() {
     // RFC 7914 11.  Test Vectors for PBKDF2 with HMAC-SHA-256
     _test_case.begin("pbkdf2");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     openssl_kdf kdf;
@@ -136,7 +136,7 @@ void test_kdf_pbkdf2_rfc7914() {
 void test_kdf_scrypt_rfc7914() {
     // RFC 7914 12.  Test Vectors for scrypt
     _test_case.begin("scrypt (salt zero-length openssl 3.0 required)");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     openssl_kdf kdf;
@@ -175,7 +175,7 @@ void test_kdf_scrypt_rfc7914() {
 
 void test_kdf_argon_rfc9106() {
     _test_case.begin("argon2d,argon2i,argon2id");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     openssl_kdf kdf;
 
 #if OPENSSL_VERSION_NUMBER >= 0x30200000L
@@ -218,7 +218,7 @@ void test_kdf_argon_rfc9106() {
 
 void test_kdf_extract_expand_rfc5869() {
     _test_case.begin("KDF-Extract/Expand");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     openssl_kdf kdf;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -349,7 +349,7 @@ void test_kdf_extract_expand_rfc5869() {
 
 void test_ckdf_rfc4615() {
     _test_case.begin("CMAC-based Extract-and-Expand Key Derivation Function (CKDF)");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     openssl_kdf kdf;
 
     // RFC 4615 AES-CMAC-PRF-128
@@ -490,7 +490,7 @@ int main(int argc, char** argv) {
 
     _cmdline->parse(argc, argv);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

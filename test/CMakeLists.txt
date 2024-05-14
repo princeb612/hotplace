@@ -46,6 +46,7 @@ add_subdirectory (odbc)
 endif ()
 
 # etc
+add_subdirectory (nostd)
 add_subdirectory (varstring)
 
 # platform

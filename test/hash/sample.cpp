@@ -33,7 +33,7 @@ typedef struct _OPTION {
 t_shared_instance<cmdline_t<OPTION> > _cmdline;
 
 void test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, const byte_t* key_data, unsigned key_size, byte_t* data, size_t size) {
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     _test_case.reset_time();
 
     return_t ret = errorcode_t::success;
@@ -83,7 +83,7 @@ void test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, const by
 }
 
 return_t test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, binary_t key, binary_t data, binary_t expect, const char* text) {
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     _test_case.reset_time();
 
     return_t ret = errorcode_t::success;
@@ -151,7 +151,7 @@ void test_hash_loop(hash_t* hash_object, unsigned count_algorithms, hash_algorit
 
 void test_hmacsha_rfc4231() {
     _test_case.begin("openssl_hash RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     // RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
     // 4.2 Test Case 1
@@ -302,7 +302,7 @@ void test_hash_algorithms() {
 
 void test_aes128cbc_mac_routine(const binary_t& key, const binary_t& message, const binary_t& expect) {
     return_t ret = errorcode_t::success;
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     openssl_hash hash;
     hash_context_t* handle = nullptr;
@@ -351,7 +351,7 @@ void test_cmac_rfc4493() {
 
 uint32 test_hotp_rfc4226() {
     _test_case.begin("HOTP (RFC 4226)");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     uint32 ret = errorcode_t::success;
     otp_context_t* handle = nullptr;
@@ -431,7 +431,7 @@ TOTP_TEST_DATA _totp_test_data[] = {
 
 uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
     _test_case.begin("TOTP/SHA1 (RFC6238)");
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     uint32 ret = errorcode_t::success;
     otp_context_t* handle = nullptr;
@@ -481,7 +481,7 @@ uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
 }
 
 void test_hash_hmac_sign() {
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     crypto_key key;
     crypto_keychain keychain;
@@ -575,7 +575,7 @@ void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const binary_
 
     if (errorcode_t::success == ret) {
         ret = sign.verify_ecdsa(pkey, alg, input, signature);
-        OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
+        const OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
 
         if (option.dump_keys || option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
@@ -638,7 +638,7 @@ int main(int argc, char** argv) {
               << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
-    OPTION& option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

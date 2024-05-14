@@ -19,15 +19,15 @@ namespace hotplace {
 
 variant::variant() {}
 
-variant::variant(const variant& source) { copy(source); }
+variant::variant(const variant_t& rhs) : _vt(rhs) {}
 
-variant::variant(variant&& source) { move(source); }
+variant::variant(variant_t&& rhs) : _vt(std::move(rhs)) {}
 
-variant::~variant() {
-    if (variant_flag_t::flag_free & _vt.flag) {
-        free(_vt.data.p);
-    }
-}
+variant::variant(const variant& rhs) : _vt(rhs._vt) {}
+
+variant::variant(variant&& rhs) : _vt(std::move(rhs._vt)) {}
+
+variant::~variant() { _vt.clear(); }
 
 variant_t& variant::content() { return _vt; }
 
@@ -426,48 +426,14 @@ return_t variant::dump(binary_t& target, bool change_endian) const {
     return ret;
 }
 
-variant& variant::copy(const variant_t& value) {
-    __try2 {
-        reset();
-
-        if (variant_flag_t::flag_free & value.flag) {
-            switch (value.type) {
-                case TYPE_BINARY:
-                    set_bstr_new(value.data.bstr, value.size);
-                    break;
-                case TYPE_NSTRING:
-                    set_nstr_new(value.data.str, value.size);
-                    break;
-                case TYPE_STRING:
-                    set_str_new(value.data.str);
-                    break;
-                default:
-                    throw;
-                    break;
-            }
-        } else {
-            memcpy(&_vt, &value, sizeof(variant_t));
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
+variant& variant::operator=(const variant& rhs) {
+    _vt = rhs._vt;
     return *this;
 }
 
-variant& variant::move(variant_t& value) {
-    reset();
-
-    memcpy(&_vt, &value, sizeof(variant_t));  // copy including type and flag
-    memset(&value, 0, sizeof(variant_t));
-
+variant& variant::operator=(variant&& rhs) {
+    _vt = std::move(rhs._vt);
     return *this;
 }
-
-variant& variant::copy(const variant& source) { return copy(source._vt); }
-
-variant& variant::move(variant& source) { return move(source._vt); }
-
-variant& variant::operator=(const variant& source) { return copy(source); }
 
 }  // namespace hotplace
