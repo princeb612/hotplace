@@ -15,7 +15,7 @@
 #include <deque>
 #include <functional>
 #include <map>
-#include <sdk/base/basic/tree.hpp>
+#include <sdk/base/basic/nostd/tree.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/stl.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
@@ -120,6 +120,7 @@ class huffman_coding {
      *              { 1, "11111111111111111011000" },
      *              { 2, "1111111111111111111111100010" },
      *              // ...
+     *              { 0, nullptr },
      *          };
      *
      *          huffman_coding huff;
@@ -133,6 +134,7 @@ class huffman_coding {
      *              { 1, "11111111111111111011000" },
      *              { 2, "1111111111111111111111100010" },
      *              // ...
+     *              { 0, nullptr },
      *          };
      *
      *          huffman_coding huff;
@@ -183,7 +185,6 @@ class huffman_coding {
 
    protected:
     node_t *build(node_t **root = nullptr);
-    void clear(node_t *&root);
     void build(typename btree_t::node_t *&p);
     void infer(hc_temp &hc, typename btree_t::node_t *t);
 

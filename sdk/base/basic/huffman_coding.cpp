@@ -43,6 +43,9 @@ huffman_coding &huffman_coding::learn() {
     _codetable.clear();
     _reverse_codetable.clear();
 
+    // _measure .. count(weight) by symbol, see hc_t::operator
+    // _btree   .. merge by weight until (1 == size()), see hc_comparator::operator
+
     _measure.for_each([&](hc_t const &t) -> void { _btree.insert(t); });
 
     while (_btree.size() > 1) {
@@ -62,7 +65,7 @@ huffman_coding &huffman_coding::learn() {
         k.weight = k_lhs.weight + k_rhs.weight;
         k.flags = 1;  // merged
 
-        typename btree_t::node_t *newone = _btree.insert(k, _btree._root);  // merged
+        typename btree_t::node_t *newone = _btree.add(k);  // merged
 
         map_pib_t pib = _m.insert(std::make_pair(k, _btree.clone_nocascade(newone)));
         pib.first->second->_left = l;
@@ -77,9 +80,10 @@ huffman_coding &huffman_coding::infer() {
 
     if (root) {
         hc_temp hc;
+        // generate code .. left '0', right '1'
         infer(hc, root);
 
-        clear(root);
+        _btree.clean(root);
     }
 
     return *this;
@@ -377,8 +381,6 @@ huffman_coding::node_t *huffman_coding::build(node_t **root) {
     return p;
 }
 
-void huffman_coding::clear(node_t *&root) { _btree.clear(root); }
-
 void huffman_coding::build(typename btree_t::node_t *&p) {
     if (p) {
         if (p->_left) {
@@ -391,7 +393,7 @@ void huffman_coding::build(typename btree_t::node_t *&p) {
         if (_m.end() != iter) {
             typename btree_t::node_t *t = iter->second;
 
-            _btree.clear(p);
+            _btree.clean(p);
             p = t;
             _m.erase(iter);
         }

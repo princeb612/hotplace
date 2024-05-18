@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_TREE__
-#define __HOTPLACE_SDK_BASE_BASIC_TREE__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_NOSTD_TREE__
+#define __HOTPLACE_SDK_BASE_BASIC_NOSTD_TREE__
 
 #include <deque>
 #include <functional>
@@ -23,14 +23,14 @@
 
 namespace hotplace {
 
-class huffman_coding;
+// class huffman_coding;
 /**
  * @brief   t_btree
  * @refer   Data Structures and Algorithm Analysis in C++ - 4.3 The Search Tree ADT - Binary Search Trees
  */
 template <typename key_t, typename comparator_t = std::less<key_t>>
 class t_btree {
-    friend class huffman_coding;
+    // friend class huffman_coding;
 
    private:
     struct bnode {
@@ -41,9 +41,9 @@ class t_btree {
         bnode(const key_t &key, bnode *lt = nullptr, bnode *rt = nullptr) : _key(key), _left(lt), _right(rt) {}
         bnode(key_t &&key, bnode *lt = nullptr, bnode *rt = nullptr) : _key{std::move(key)}, _left(lt), _right(rt) {}
     };
-    typedef bnode node_t;
 
    public:
+    typedef bnode node_t;
     typedef typename std::function<void(key_t const &t)> const_visitor;
     typedef typename std::function<void(key_t &t)> visitor;
 
@@ -183,7 +183,6 @@ class t_btree {
         }
         t = nullptr;
     }
-    // void printTree(node_t *t, ostream &out) const;
     void walk(node_t *t, const_visitor visit) {
         if (t) {
             // in-order traverse
@@ -200,9 +199,13 @@ class t_btree {
         return item;
     }
 
+   public:
     // added
+    node_t *root() const { return _root; }
     node_t *first() const { return find_min(_root); }
     node_t *clone_nocascade(node_t *p) { return p ? new node_t(p->_key) : nullptr; }
+    node_t *add(const key_t &x, visitor visit = nullptr) { return insert(x, _root, visit); }
+    void clean(node_t *&t) { clear(t); }
 };
 
 /**
@@ -225,9 +228,9 @@ class t_avltree {
         avlnode(const key_t &key, avlnode *lt = nullptr, avlnode *rt = nullptr, int height = 0) : _key(key), _left(lt), _right(rt), _height(height) {}
         avlnode(key_t &&key, avlnode *lt = nullptr, avlnode *rt = nullptr, int height = 0) : _key{std::move(key)}, _left(lt), _right(rt), _height(height) {}
     };
-    typedef avlnode node_t;
 
    public:
+    typedef avlnode node_t;
     typedef typename std::function<void(key_t const &t)> const_visitor;
     typedef typename std::function<void(key_t &t)> visitor;
 
@@ -372,7 +375,6 @@ class t_avltree {
         }
         t = nullptr;
     }
-    // void printTree(node_t *t, ostream &out) const;
     void walk(node_t *t, const_visitor visit) {
         if (t) {
             // in-order traverse
@@ -439,6 +441,7 @@ class t_avltree {
         rotate_right(k3);
     }
 
+   public:
     // added
     node_t *first() const { return find_min(_root); }
 };

@@ -34,7 +34,6 @@
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/basic/obfuscate_string.hpp>
-#include <sdk/base/basic/tree.hpp>
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/basic/variant.hpp>
 

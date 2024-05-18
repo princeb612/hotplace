@@ -46,6 +46,7 @@ class network_stream_data {
      * @brief next node
      */
     network_stream_data* next();
+    void set_next(network_stream_data* next);
 
     int get_priority();
     void set_priority(int priority);

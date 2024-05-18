@@ -70,7 +70,7 @@ class t_skey_value {
     }
 
     /**
-     * @brief   add, kv_update
+     * @brief   add, update
      * @param   const std::string&  name    [IN]
      * @param   const value_t&      value   [IN]
      * @param   uint32              mode    [INOPT] see key_value_mode_t
@@ -110,14 +110,14 @@ class t_skey_value {
         return ret;
     }
     /**
-     * @brief   kv_update
+     * @brief   update
      * @param   const std::string&  name    [in]
      * @param   const value_t&      value   [in]
      * @return  error code (see error.hpp)
      * @remarks
      *          set(name, value, key_value_mode_t::kv_update);
      */
-    return_t kv_update(const std::string& name, const value_t& value) { return set(name, value, key_value_mode_t::kv_update); }
+    return_t update(const std::string& name, const value_t& value) { return set(name, value, key_value_mode_t::kv_update); }
     /**
      * @brief   remove
      * @param   const std::string&  name    [IN]
@@ -170,7 +170,7 @@ class t_skey_value {
     /**
      * @brief   exist
      * @remarks
-     *          kv.kv_update ("key", "value");
+     *          kv.update ("key", "value");
      *          result = exist ("key"); // true
      *          result = exist ("value"); // false
      */
@@ -198,7 +198,7 @@ class t_skey_value {
      * @brief   return value by key
      * @param   const std::string& name
      * @remarks
-     *          kv.kv_update ("key", "value");
+     *          kv.update ("key", "value");
      *          value = kv ["key"]; // "value"
      *          value = kv ["value"]; // nullptr
      */
@@ -228,7 +228,7 @@ class t_skey_value {
      * @param   value_t&            value   [OUT]
      * @return  error code (see error.hpp)
      * @remarks
-     *          kv.kv_update ("key", "value");
+     *          kv.update ("key", "value");
      *          kv.query ("key", value); // "value"
      *          kv.query ("value", value); // ""
      */

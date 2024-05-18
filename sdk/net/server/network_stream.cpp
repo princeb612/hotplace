@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base.hpp>
+#include <sdk/base/basic/nostd/list.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_stream.hpp>
 
@@ -62,8 +63,8 @@ return_t network_stream::consume(network_stream_data** ptr_buffer_object) {
         *ptr_buffer_object = nullptr;
 
         network_stream_data* buffer_object = nullptr;
-        network_stream_data* first = nullptr;
-        network_stream_data* prev = nullptr;
+
+        t_single_linkable<network_stream_data> single_link;
 
         critical_section_guard guard(_lock);
 
@@ -71,20 +72,12 @@ return_t network_stream::consume(network_stream_data** ptr_buffer_object) {
             ret = errorcode_t::empty;
         } else {
             while (false == _queue.empty()) {
-                buffer_object = _queue.front();
-                buffer_object->_next = nullptr;
-                if (nullptr == first) {
-                    first = buffer_object;
-                }
-                if (nullptr != prev) {
-                    prev->_next = buffer_object;
-                }
-                prev = buffer_object;
+                single_link.add(_queue.front());
                 _queue.pop_front();
             }
         }
 
-        *ptr_buffer_object = first;
+        *ptr_buffer_object = single_link.get_head();
     }
 
     return ret;
@@ -309,6 +302,8 @@ size_t network_stream_data::size() { return _size; }
 byte_t* network_stream_data::content() { return _ptr; }
 
 network_stream_data* network_stream_data::next() { return _next; }
+
+void network_stream_data::set_next(network_stream_data* next) { _next = next; }
 
 int network_stream_data::get_priority() { return _priority; }
 
