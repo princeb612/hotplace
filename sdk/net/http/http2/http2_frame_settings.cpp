@@ -12,7 +12,6 @@
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/io/system/types.hpp>
-#include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http_resource.hpp>
@@ -88,8 +87,8 @@ return_t http2_frame_settings::write(binary_t& frame) {
         // RFC 7540 Figure 10: Setting Format
         h2_setting_map_t::iterator iter;
         for (iter = _settings.begin(); iter != _settings.end(); iter++) {
-            binsert<uint16>(frame, iter->first, hton16);
-            binsert<uint32>(frame, iter->second, hton32);
+            binary_append(frame, iter->first, hton16);
+            binary_append(frame, iter->second, hton32);
         }
     }
 

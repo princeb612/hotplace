@@ -186,7 +186,7 @@ return_t cbor_web_key::do_load(crypto_key* crypto_key, cbor_object* object, int 
                     }
                 }
             }
-            maphint<int, binary_t> hint_key(keyobj.attrib);
+            t_maphint<int, binary_t> hint_key(keyobj.attrib);
             if (cose_kty_t::cose_kty_okp == keyobj.type || cose_kty_t::cose_kty_ec2 == keyobj.type) {  // 1, 2
                 uint32 nid = advisor->curveof((cose_ec_curve_t)keyobj.curve);
                 binary_t x;

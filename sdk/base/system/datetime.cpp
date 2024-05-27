@@ -517,7 +517,7 @@ return_t time_diff(struct timespec& ts, struct timespec begin, struct timespec e
         memset(&ts, 0, sizeof(ts));
 
         if (begin.tv_sec > end.tv_sec) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
@@ -526,7 +526,7 @@ return_t time_diff(struct timespec& ts, struct timespec begin, struct timespec e
             ts.tv_nsec = end.tv_nsec - begin.tv_nsec;
         } else {
             if (begin.tv_sec == end.tv_sec) {
-                ret = errorcode_t::request;
+                ret = errorcode_t::bad_request;
                 __leave2;
             }
 

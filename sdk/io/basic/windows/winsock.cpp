@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/sdk.hpp>
+#include <sdk/io/basic/sdk.hpp>
 
 namespace hotplace {
-namespace net {
+namespace io {
 
 return_t winsock_startup() {
     WSADATA wsaData;
@@ -25,5 +25,5 @@ return_t winsock_startup() {
 
 void winsock_cleanup() { WSACleanup(); }
 
-}  // namespace net
+}  // namespace io
 }  // namespace hotplace

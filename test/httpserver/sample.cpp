@@ -4,7 +4,8 @@
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      simple https server implementation
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver, httpauth, httpserver2
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver,
+ * httpserver, httpauth, httpserver2
  *
  * Revision History
  * Date         Name                Description
@@ -35,18 +36,18 @@ typedef struct _OPTION {
     _OPTION() : port(8080), port_tls(9000), verbose(0) {}
 } OPTION;
 
-t_shared_instance<cmdline_t<OPTION> > _cmdline;
+t_shared_instance<cmdline_t<OPTION>> _cmdline;
 t_shared_instance<http_server> _http_server;
 
-void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
+void api_response_html_handler(network_session *, http_request *request, http_response *response, http_router *router) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
 }
 
-void api_response_json_handler(network_session*, http_request* request, http_response* response, http_router* router) {
-    response->compose(200, "application/json", "{\"result\":\"ok\"}");
+void api_response_json_handler(network_session *, http_request *request, http_response *response, http_router *router) {
+    response->compose(200, "application/json", R"({"result":"ok"})");
 }
 
-void cprint(const char* text, ...) {
+void cprint(const char *text, ...) {
     basic_stream bs;
     console_color _concolor;
 
@@ -60,18 +61,18 @@ void cprint(const char* text, ...) {
     _logger->writeln(bs);
 }
 
-return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CALLBACK_CONTROL *callback_control, void *user_context) {
     return_t ret = errorcode_t::success;
-    net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
-    char* buf = (char*)data_array[1];
+    net_session_socket_t *session_socket = (net_session_socket_t *)data_array[0];
+    char *buf = (char *)data_array[1];
     size_t bufsize = (size_t)data_array[2];
-    network_session* session = (network_session*)data_array[3];
-    http_request* request = (http_request*)data_array[4];
+    network_session *session = (network_session *)data_array[3];
+    http_request *request = (http_request *)data_array[4];
 
     basic_stream bs;
     std::string message;
 
-    const OPTION& option = _cmdline->value();
+    const OPTION &option = _cmdline->value();
 
     switch (type) {
         case mux_connect:
@@ -96,8 +97,10 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     // handle wo http_router
                     response.get_http_header().add("Upgrade", "TLS/1.2, HTTP/1.1").add("Connection", "Upgrade");
                     int status_code = 426;
-                    response.compose(status_code, "text/html", "<html><body><a href='https://localhost:%d%s'>%d %s</a><br></body></html>", option.port_tls,
-                                     request->get_http_uri().get_uri(), status_code, http_resource::get_instance()->load(status_code).c_str());
+                    response.compose(status_code, "text/html",
+                                     "<html><body><a href='https://localhost:%d%s'>%d "
+                                     "%s</a><br></body></html>",
+                                     option.port_tls, request->get_http_uri().get_uri(), status_code, http_resource::get_instance()->load(status_code).c_str());
                 }
 
                 if (option.verbose) {
@@ -119,13 +122,13 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     return ret;
 }
 
-return_t echo_server(void*) {
-    const OPTION& option = _cmdline->value();
+return_t echo_server(void *) {
+    const OPTION &option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     http_server_builder builder;
 
-    FILE* fp = fopen(FILENAME_RUN, "w");
+    FILE *fp = fopen(FILENAME_RUN, "w");
 
     fclose(fp);
 
@@ -135,7 +138,9 @@ return_t echo_server(void*) {
             .enable_https(true)
             .set_port_https(option.port_tls)
             .set_tls_certificate("server.crt", "server.key")
-            .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
+            .set_tls_cipher_list(
+                "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_"
+                "GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
             .set_tls_verify_peer(0)
             .enable_ipv4(true)
             .enable_ipv6(true)
@@ -146,14 +151,14 @@ return_t echo_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_consume, 4);
         _http_server.make_share(builder.build());
 
-        std::function<void(network_session*, http_request*, http_response*, http_router*)> default_handler =
-            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
+        std::function<void(network_session *, http_request *, http_response *, http_router *)> default_handler =
+            [&](network_session *session, http_request *request, http_response *response, http_router *router) -> void {
             basic_stream bs;
             request->get_request(bs);
             response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
         };
-        std::function<void(network_session*, http_request*, http_response*, http_router*)> error_handler =
-            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
+        std::function<void(network_session *, http_request *, http_response *, http_router *)> error_handler =
+            [&](network_session *session, http_request *request, http_response *response, http_router *router) -> void {
             basic_stream bs;
             request->get_request(bs);
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
@@ -174,7 +179,8 @@ return_t echo_server(void*) {
             .add("/api/test", default_handler)
             .add(404, error_handler);
 
-        _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
+        _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size,
+                                                          1 << 12);  // constraints maximum packet size to 4KB
 
         _http_server->start();
 
@@ -215,19 +221,19 @@ void test_tlsserver() {
     __finally2 { thread1.wait(-1); }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
     _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
-              << cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
-              << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION &o, char *param) -> void { o.port = atoi(param); }).preced().optional()
+              << cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION &o, char *param) -> void { o.port_tls = atoi(param); }).preced().optional()
+              << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION &o, char *param) -> void { o.verbose = 1; }).optional();
 
     _cmdline->parse(argc, argv);
 
-    const OPTION& option = _cmdline->value();
+    const OPTION &option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);

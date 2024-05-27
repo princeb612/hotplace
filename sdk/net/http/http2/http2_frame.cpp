@@ -12,7 +12,6 @@
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/io/system/types.hpp>
-#include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http_resource.hpp>
@@ -116,7 +115,22 @@ http2_frame& http2_frame::set_flags(uint8 flags) {
 }
 
 http2_frame& http2_frame::set_stream_id(uint32 id) {
-    _stream_id = id;
+    switch (_type) {
+        case h2_frame_data:           // 6.1 DATA
+        case h2_frame_headers:        // 6.2 HEADERS
+        case h2_frame_priority:       // 6.3 PRIORITY
+        case h2_frame_rst_stream:     // 6.4 RST_STREAM
+        case h2_frame_push_promise:   // 6.6 PUSH_PROMISE
+        case h2_frame_goaway:         // 6.8 GOAWAY
+        case h2_frame_window_update:  // 6.9 WINDOW_UPDATE affected stream, entire connection (0)
+        case h2_frame_continuation:   // 6.10 CONTINUATION
+            _stream_id = id;
+            break;
+        case h2_frame_settings:  // 6.5 SETTINGS
+        case h2_frame_ping:      // 6.7 PING
+        default:
+            break;
+    }
     return *this;
 }
 

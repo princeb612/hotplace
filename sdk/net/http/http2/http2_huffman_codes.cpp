@@ -3,6 +3,8 @@
 namespace hotplace {
 namespace net {
 
+// RFC 7541 Appendix B. Huffman Code
+
 #define H2HC_ENTRY(s, c) \
     { s, c, }
 

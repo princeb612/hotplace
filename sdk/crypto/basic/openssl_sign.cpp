@@ -39,7 +39,7 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t mode, const binary
         int type = EVP_PKEY_id(pkey);
         const hint_signature_t* hint = advisor->hintof_signature(mode);
         if (nullptr == hint) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
         int group = hint->group;
@@ -64,7 +64,7 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t mode, const binary
                         ret = sign_rsassa_pss(pkey, hash_alg, input, signature);
                         break;
                     default:
-                        ret = errorcode_t::request;
+                        ret = errorcode_t::bad_request;
                         break;
                 }
                 break;
@@ -96,7 +96,7 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t mode, const bina
         int type = EVP_PKEY_id(pkey);
         const hint_signature_t* hint = advisor->hintof_signature(mode);
         if (nullptr == hint) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
         int group = hint->group;
@@ -121,7 +121,7 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t mode, const bina
                         ret = verify_rsassa_pss(pkey, hash_alg, input, signature);
                         break;
                     default:
-                        ret = errorcode_t::request;
+                        ret = errorcode_t::bad_request;
                         break;
                 }
                 break;

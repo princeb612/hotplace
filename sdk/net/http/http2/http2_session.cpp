@@ -12,7 +12,6 @@
  *      priority
  */
 
-#include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>

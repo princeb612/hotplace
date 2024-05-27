@@ -247,7 +247,7 @@ return_t crypto_advisor::cleanup() {
 
 const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(crypt_algorithm_t alg) {
     const hint_blockcipher_t* item = nullptr;
-    maphint<uint32, const hint_blockcipher_t*> hint(_blockcipher_map);
+    t_maphint<uint32, const hint_blockcipher_t*> hint(_blockcipher_map);
 
     hint.find(alg, &item);
     return item;
@@ -256,7 +256,7 @@ const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(crypt_algorithm_t a
 const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(const char* alg) {
     const hint_blockcipher_t* ret_value = nullptr;
     if (alg) {
-        maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
+        t_maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
         const hint_cipher_t* item = nullptr;
         hint.find(alg, &item);
         if (item) {
@@ -272,13 +272,13 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher(const EVP_CIPHER* ciph
 
     __try2 {
         const hint_cipher_t* hint = nullptr;
-        maphint<const EVP_CIPHER*, const hint_cipher_t*> hint_cipher(_evp_cipher_map);
+        t_maphint<const EVP_CIPHER*, const hint_cipher_t*> hint_cipher(_evp_cipher_map);
         ret = hint_cipher.find(cipher, &hint);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        maphint<uint32, const hint_blockcipher_t*> hint_blockcipher(_blockcipher_map);
+        t_maphint<uint32, const hint_blockcipher_t*> hint_blockcipher(_blockcipher_map);
         hint_blockcipher.find(typeof_alg(hint), &blockcipher);
     }
     __finally2 {
@@ -290,7 +290,7 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher(const EVP_CIPHER* ciph
 const EVP_CIPHER* crypto_advisor::find_evp_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
     EVP_CIPHER* ret_value = nullptr;
     uint32 key = CRYPT_CIPHER_VALUE(algorithm, mode);
-    maphint<uint32, EVP_CIPHER*> hint(_cipher_map);
+    t_maphint<uint32, EVP_CIPHER*> hint(_cipher_map);
 
     hint.find(key, &ret_value);
     return ret_value;
@@ -300,7 +300,7 @@ const EVP_CIPHER* crypto_advisor::find_evp_cipher(const char* name) {
     const EVP_CIPHER* ret_value = nullptr;
 
     if (name) {
-        maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
+        t_maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
         const hint_cipher_t* item = nullptr;
         hint.find(name, &item);
         if (item) {
@@ -317,7 +317,7 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(const char* name) {
             __leave2;
         }
 
-        maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
+        t_maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
         hint.find(name, &ret_value);
     }
     __finally2 {
@@ -334,7 +334,7 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(const EVP_CIPHER* cipher) {
             __leave2;
         }
 
-        maphint<const EVP_CIPHER*, const hint_cipher_t*> hint(_evp_cipher_map);
+        t_maphint<const EVP_CIPHER*, const hint_cipher_t*> hint(_evp_cipher_map);
         hint.find(cipher, &ret_value);
     }
     __finally2 {
@@ -350,7 +350,7 @@ const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mod
     __try2 {
         uint32 key = CRYPT_CIPHER_VALUE(algorithm, mode);
         const hint_cipher_t* item = nullptr;
-        maphint<uint32, const hint_cipher_t*> hint(_cipher_fetch_map);
+        t_maphint<uint32, const hint_cipher_t*> hint(_cipher_fetch_map);
 
         ret = hint.find(key, &item);
         ret_value = nameof_alg(item);
@@ -363,7 +363,7 @@ const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mod
 
 const EVP_MD* crypto_advisor::find_evp_md(hash_algorithm_t algorithm) {
     EVP_MD* ret_value = nullptr;
-    maphint<uint32, EVP_MD*> hint(_md_map);
+    t_maphint<uint32, EVP_MD*> hint(_md_map);
 
     hint.find(algorithm, &ret_value);
     return ret_value;
@@ -372,7 +372,7 @@ const EVP_MD* crypto_advisor::find_evp_md(hash_algorithm_t algorithm) {
 const EVP_MD* crypto_advisor::find_evp_md(crypt_sig_t sig) {
     const EVP_MD* ret_value = nullptr;
     const hint_signature_t* item = nullptr;
-    maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
+    t_maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
 
     hint.find(sig, &item);
     if (item) {
@@ -384,7 +384,7 @@ const EVP_MD* crypto_advisor::find_evp_md(crypt_sig_t sig) {
 const EVP_MD* crypto_advisor::find_evp_md(jws_t sig) {
     const EVP_MD* ret_value = nullptr;
     const hint_signature_t* item = nullptr;
-    maphint<uint32, const hint_signature_t*> hint(_jose_sig_map);
+    t_maphint<uint32, const hint_signature_t*> hint(_jose_sig_map);
 
     hint.find(sig, &item);
     if (item) {
@@ -397,7 +397,7 @@ const EVP_MD* crypto_advisor::find_evp_md(const char* name) {
     const EVP_MD* ret_value = nullptr;
 
     if (name) {
-        maphint<std::string, const hint_digest_t*> hint(_md_byname_map);
+        t_maphint<std::string, const hint_digest_t*> hint(_md_byname_map);
         const hint_digest_t* item = nullptr;
         hint.find(name, &item);
         if (item) {
@@ -409,7 +409,7 @@ const EVP_MD* crypto_advisor::find_evp_md(const char* name) {
 
 const hint_digest_t* crypto_advisor::hintof_digest(hash_algorithm_t algorithm) {
     const hint_digest_t* ret_value = nullptr;
-    maphint<uint32, const hint_digest_t*> hint(_md_fetch_map);
+    t_maphint<uint32, const hint_digest_t*> hint(_md_fetch_map);
 
     hint.find(algorithm, &ret_value);
     return ret_value;
@@ -423,7 +423,7 @@ const hint_digest_t* crypto_advisor::hintof_digest(const char* name) {
             __leave2;
         }
 
-        maphint<std::string, const hint_digest_t*> hint(_md_byname_map);
+        t_maphint<std::string, const hint_digest_t*> hint(_md_byname_map);
         hint.find(name, &ret_value);
     }
     __finally2 {
@@ -435,7 +435,7 @@ const hint_digest_t* crypto_advisor::hintof_digest(const char* name) {
 hash_algorithm_t crypto_advisor::get_algorithm(crypt_sig_t sig) {
     hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
     const hint_signature_t* item = nullptr;
-    maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
+    t_maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
 
     hint.find(sig, &item);
     if (item) {
@@ -447,7 +447,7 @@ hash_algorithm_t crypto_advisor::get_algorithm(crypt_sig_t sig) {
 hash_algorithm_t crypto_advisor::get_algorithm(jws_t sig) {
     hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
     const hint_signature_t* item = nullptr;
-    maphint<uint32, const hint_signature_t*> hint(_jose_sig_map);
+    t_maphint<uint32, const hint_signature_t*> hint(_jose_sig_map);
 
     hint.find(sig, &item);
     if (item) {
@@ -459,7 +459,7 @@ hash_algorithm_t crypto_advisor::get_algorithm(jws_t sig) {
 const char* crypto_advisor::nameof_md(hash_algorithm_t algorithm) {
     const char* ret_value = nullptr;
     const hint_digest_t* item = nullptr;
-    maphint<uint32, const hint_digest_t*> hint(_md_fetch_map);
+    t_maphint<uint32, const hint_digest_t*> hint(_md_fetch_map);
 
     hint.find(algorithm, &item);
     ret_value = nameof_alg(item);
@@ -492,7 +492,7 @@ return_t crypto_advisor::jose_for_each_signature(std::function<void(const hint_s
 
 const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm(jwa_t alg) {
     const hint_jose_encryption_t* item = nullptr;
-    maphint<uint32, const hint_jose_encryption_t*> hint(_alg_map);
+    t_maphint<uint32, const hint_jose_encryption_t*> hint(_alg_map);
 
     hint.find(alg, &item);
     return item;
@@ -500,7 +500,7 @@ const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm(jwa_t alg) {
 
 const hint_jose_encryption_t* crypto_advisor::hintof_jose_encryption(jwe_t enc) {
     const hint_jose_encryption_t* item = nullptr;
-    maphint<uint32, const hint_jose_encryption_t*> hint(_enc_map);
+    t_maphint<uint32, const hint_jose_encryption_t*> hint(_enc_map);
 
     hint.find(enc, &item);
     return item;
@@ -508,7 +508,7 @@ const hint_jose_encryption_t* crypto_advisor::hintof_jose_encryption(jwe_t enc) 
 
 const hint_signature_t* crypto_advisor::hintof_signature(crypt_sig_t sig) {
     const hint_signature_t* item = nullptr;
-    maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
+    t_maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
 
     hint.find(sig, &item);
     return item;
@@ -516,7 +516,7 @@ const hint_signature_t* crypto_advisor::hintof_signature(crypt_sig_t sig) {
 
 const hint_signature_t* crypto_advisor::hintof_jose_signature(jws_t sig) {
     const hint_signature_t* item = nullptr;
-    maphint<uint32, const hint_signature_t*> hint(_jose_sig_map);
+    t_maphint<uint32, const hint_signature_t*> hint(_jose_sig_map);
 
     hint.find(sig, &item);
     return item;
@@ -524,7 +524,7 @@ const hint_signature_t* crypto_advisor::hintof_jose_signature(jws_t sig) {
 
 const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(cose_alg_t alg) {
     const hint_cose_algorithm_t* item = nullptr;
-    maphint<uint32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
+    t_maphint<uint32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
 
     hint.find(alg, &item);
     return item;
@@ -532,7 +532,7 @@ const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(cose_alg_t al
 
 const hint_curve_t* crypto_advisor::hintof_curve_nid(uint32 nid) {
     const hint_curve_t* item = nullptr;
-    maphint<uint32, const hint_curve_t*> hint(_curve_bynid_map);
+    t_maphint<uint32, const hint_curve_t*> hint(_curve_bynid_map);
 
     hint.find(nid, &item);
     return item;
@@ -540,7 +540,7 @@ const hint_curve_t* crypto_advisor::hintof_curve_nid(uint32 nid) {
 
 const hint_curve_t* crypto_advisor::hintof_curve(cose_ec_curve_t curve) {
     const hint_curve_t* item = nullptr;
-    maphint<cose_ec_curve_t, const hint_curve_t*> hint(_cose_curve_map);
+    t_maphint<cose_ec_curve_t, const hint_curve_t*> hint(_cose_curve_map);
 
     hint.find(curve, &item);
     return item;
@@ -550,7 +550,7 @@ const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm(const char* 
     const hint_jose_encryption_t* item = nullptr;
 
     if (alg) {
-        maphint<std::string, const hint_jose_encryption_t*> hint(_alg_byname_map);
+        t_maphint<std::string, const hint_jose_encryption_t*> hint(_alg_byname_map);
         hint.find(alg, &item);
     }
 
@@ -561,7 +561,7 @@ const hint_jose_encryption_t* crypto_advisor::hintof_jose_encryption(const char*
     const hint_jose_encryption_t* item = nullptr;
 
     if (enc) {
-        maphint<std::string, const hint_jose_encryption_t*> hint(_enc_byname_map);
+        t_maphint<std::string, const hint_jose_encryption_t*> hint(_enc_byname_map);
         hint.find(enc, &item);
     }
 
@@ -572,7 +572,7 @@ const hint_signature_t* crypto_advisor::hintof_jose_signature(const char* sig) {
     const hint_signature_t* item = nullptr;
 
     if (sig) {
-        maphint<std::string, const hint_signature_t*> hint(_sig_byname_map);
+        t_maphint<std::string, const hint_signature_t*> hint(_sig_byname_map);
         hint.find(sig, &item);
     }
     return item;
@@ -582,7 +582,7 @@ const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(const char* a
     const hint_cose_algorithm_t* item = nullptr;
 
     if (alg) {
-        maphint<std::string, const hint_cose_algorithm_t*> hint(_cose_algorithm_byname_map);
+        t_maphint<std::string, const hint_cose_algorithm_t*> hint(_cose_algorithm_byname_map);
         hint.find(alg, &item);
     }
 
@@ -593,7 +593,7 @@ const hint_curve_t* crypto_advisor::hintof_curve(const char* curve) {
     const hint_curve_t* item = nullptr;
 
     if (curve) {
-        maphint<std::string, const hint_curve_t*> hint(_nid_bycurve_map);
+        t_maphint<std::string, const hint_curve_t*> hint(_nid_bycurve_map);
         hint.find(curve, &item);
     }
 
@@ -775,7 +775,7 @@ return_t crypto_advisor::nameof_ec_curve(const EVP_PKEY* pkey, std::string& name
         nidof_evp_pkey(pkey, nid);
 
         const hint_curve_t* item = nullptr;
-        maphint<uint32, const hint_curve_t*> hint(_curve_bynid_map);
+        t_maphint<uint32, const hint_curve_t*> hint(_curve_bynid_map);
         ret = hint.find(nid, &item);
         if (errorcode_t::success == ret) {
             name = item->name;
@@ -931,7 +931,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, cose_alg_t alg) {
 
 cose_kty_t crypto_advisor::ktyof(crypto_kty_t kty) {
     cose_kty_t cose_kty = cose_kty_t::cose_kty_unknown;
-    maphint<crypto_kty_t, cose_kty_t> hint(_kty2cose_map);
+    t_maphint<crypto_kty_t, cose_kty_t> hint(_kty2cose_map);
 
     hint.find(kty, &cose_kty);
     return cose_kty;
@@ -939,7 +939,7 @@ cose_kty_t crypto_advisor::ktyof(crypto_kty_t kty) {
 
 crypto_kty_t crypto_advisor::ktyof(cose_kty_t kty) {
     crypto_kty_t crypto_kty = crypto_kty_t::kty_unknown;
-    maphint<cose_kty_t, crypto_kty_t> hint(_cose2kty_map);
+    t_maphint<cose_kty_t, crypto_kty_t> hint(_cose2kty_map);
 
     hint.find(kty, &crypto_kty);
     return crypto_kty;
@@ -947,7 +947,7 @@ crypto_kty_t crypto_advisor::ktyof(cose_kty_t kty) {
 
 jws_t crypto_advisor::sigof(crypt_sig_t sig) {
     jws_t type = jws_t::jws_unknown;
-    maphint<crypt_sig_t, jws_t> hint(_sig2jws_map);
+    t_maphint<crypt_sig_t, jws_t> hint(_sig2jws_map);
 
     hint.find(sig, &type);
     return type;
@@ -955,7 +955,7 @@ jws_t crypto_advisor::sigof(crypt_sig_t sig) {
 
 crypt_category_t crypto_advisor::categoryof(cose_alg_t alg) {
     crypt_category_t category = crypt_category_t::crypt_category_not_classified;
-    maphint<uint32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
+    t_maphint<uint32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
 
     const hint_cose_algorithm_t* item = nullptr;
     hint.find(alg, &item);
@@ -967,7 +967,7 @@ crypt_category_t crypto_advisor::categoryof(cose_alg_t alg) {
 
 crypt_sig_t crypto_advisor::sigof(cose_alg_t sig) {
     crypt_sig_t type = crypt_sig_t::sig_unknown;
-    maphint<cose_alg_t, crypt_sig_t> hint(_cose2sig_map);
+    t_maphint<cose_alg_t, crypt_sig_t> hint(_cose2sig_map);
 
     hint.find(sig, &type);
     return type;
@@ -975,7 +975,7 @@ crypt_sig_t crypto_advisor::sigof(cose_alg_t sig) {
 
 crypt_sig_t crypto_advisor::sigof(jws_t sig) {
     crypt_sig_t type = crypt_sig_t::sig_unknown;
-    maphint<jws_t, crypt_sig_t> hint(_jws2sig_map);
+    t_maphint<jws_t, crypt_sig_t> hint(_jws2sig_map);
 
     hint.find(sig, &type);
     return type;
@@ -983,7 +983,7 @@ crypt_sig_t crypto_advisor::sigof(jws_t sig) {
 
 cose_ec_curve_t crypto_advisor::curveof(uint32 nid) {
     cose_ec_curve_t curve = cose_ec_curve_t::cose_ec_unknown;
-    maphint<uint32, cose_ec_curve_t> hint(_nid2curve_map);
+    t_maphint<uint32, cose_ec_curve_t> hint(_nid2curve_map);
 
     hint.find(nid, &curve);
     return curve;
@@ -991,7 +991,7 @@ cose_ec_curve_t crypto_advisor::curveof(uint32 nid) {
 
 uint32 crypto_advisor::curveof(cose_ec_curve_t curve) {
     uint32 nid = 0;
-    maphint<cose_ec_curve_t, uint32> hint(_curve2nid_map);
+    t_maphint<cose_ec_curve_t, uint32> hint(_curve2nid_map);
 
     hint.find(curve, &nid);
     return nid;

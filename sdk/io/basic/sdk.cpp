@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/sdk.hpp>
+#include <sdk/io/basic/sdk.hpp>
 
 namespace hotplace {
-namespace net {
+namespace io {
 
 enum address_t {
     addr_host = 0,  // aa.bb.cc
@@ -552,5 +552,5 @@ return_t set_sock_nbio(socket_t sock, uint32 nbio_mode) {
     return ret;
 }
 
-}  // namespace net
+}  // namespace io
 }  // namespace hotplace

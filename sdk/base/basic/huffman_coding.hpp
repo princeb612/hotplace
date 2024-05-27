@@ -130,13 +130,6 @@ class huffman_coding {
     /**
      * @brief   export hufman codes
      * @sample
-     *          const huffman_coding::hc_code_t _h2hcodes[] = {
-     *              { 1, "11111111111111111011000" },
-     *              { 2, "1111111111111111111111100010" },
-     *              // ...
-     *              { 0, nullptr },
-     *          };
-     *
      *          huffman_coding huff;
      *          huff.imports(_h2hcodes).exports(
      *              [](uint8 sym, const char* code) -> void { printf("sym %c (0x%02x) %s (%zi)\n", isprint(sym) ? sym : '?', sym, code, strlen(code)); });

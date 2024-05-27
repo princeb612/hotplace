@@ -13,6 +13,7 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_NOSTD_GRAPH__
 #define __HOTPLACE_SDK_BASE_BASIC_NOSTD_GRAPH__
 
+#include <algorithm>
 #include <list>
 #include <map>
 #include <queue>
@@ -76,6 +77,18 @@ class t_graph {
 
         vertex(const vertex& rhs) : _data(rhs._data) {}
         vertex(vertex&& rhs) : _data(std::move(rhs._data)) {}
+
+        vertex& operator=(const vertex& rhs) {
+            _data = rhs._data;
+            return *this;
+        }
+        vertex& operator=(vertex&& rhs) {
+            _data = std::move(rhs._data);
+            return *this;
+        }
+
+        operator T() const { return _data; }
+        operator T() { return _data; }
     };
     struct edge {
         vertex _from;
@@ -83,14 +96,22 @@ class t_graph {
         int _weight;
         graph_direction_t _direction;
 
-        edge(const T& from, const T& to, int weight = 0, graph_direction_t d = graph_directed) : _from(from), _to(to), _direction(d), _weight(weight) {}
-        edge(T&& from, T&& to, int weight = 0, graph_direction_t d = graph_directed)
-            : _from(std::move(from)), _to(std::move(to)), _weight(weight), _direction(d) {}
+        edge(const T& from, const T& to, int weight = 1, graph_direction_t d = graph_directed) : _from(from), _to(to), _direction(d), _weight(weight) {
+            adjust();
+        }
+        edge(T&& from, T&& to, int weight = 1, graph_direction_t d = graph_directed)
+            : _from(std::move(from)), _to(std::move(to)), _weight(weight), _direction(d) {
+            adjust();
+        }
 
-        edge(const vertex& from, const vertex& to, int weight = 0, graph_direction_t d = graph_directed)
-            : _from(from), _to(to), _weight(weight), _direction(d) {}
-        edge(vertex&& from, vertex&& to, graph_direction_t d = graph_directed, int weight = 0)
-            : _from(std::move(from)), _to(std::move(to)), _weight(weight), _direction(d) {}
+        edge(const vertex& from, const vertex& to, int weight = 1, graph_direction_t d = graph_directed)
+            : _from(from), _to(to), _weight(weight), _direction(d) {
+            adjust();
+        }
+        edge(vertex&& from, vertex&& to, graph_direction_t d = graph_directed, int weight = 1)
+            : _from(std::move(from)), _to(std::move(to)), _weight(weight), _direction(d) {
+            adjust();
+        }
 
         edge(const edge& rhs) : _from(rhs._from), _to(rhs._to), _weight(rhs._weight), _direction(rhs._direction) {}
         edge(edge&& rhs) : _from(std::move(rhs._from)), _to(std::move(rhs._to)), _weight(rhs._weight), _direction(rhs._direction) {}
@@ -99,19 +120,28 @@ class t_graph {
         int get_weight() { return _weight; }
         void set_direction(graph_direction_t d) { _direction = d; }
         graph_direction_t get_direction() { return _direction; }
+
+        void adjust() {
+            if (_from == _to) {
+                _weight = 0;
+            }
+        }
+        void change_vertex() { std::swap(_from, _to); }
     };
     /**
      * @brief   tag
      * @comments
-     *          weight, direction - unchangable
-     *          label, distance - changable
+     *          std::map<edge, tag>
+     *              edge::weight, direction - unchangable
+     *              tag::label, distance - changable
      */
     struct tag {
         label_t _label;
+        int _weight;
         int _distance;
 
-        tag() : _label(label_unvisited), _distance(-1) {}
-        tag(const tag& rhs) : _label(rhs._label), _distance(rhs._distance) {}
+        tag() : _label(label_unvisited), _weight(0), _distance(0) {}
+        tag(const tag& rhs) : _label(rhs._label), _weight(rhs._weight), _distance(rhs._distance) {}
 
         void set_label(label_t tag) { _label = tag; }
         label_t get_label() { return _label; }
@@ -121,9 +151,6 @@ class t_graph {
 
         bool is_unvisited() { return label_unvisited == get_label(); }
         bool is_visited() { return label_visited == get_label(); }
-
-        void set_distance(int distance) { _distance = distance; }
-        int get_distance() { return _distance; }
     };
 
     friend bool operator<(const vertex& lhs, const vertex& rhs) { return lhs._data < rhs._data; }
@@ -144,8 +171,6 @@ class t_graph {
     typedef std::set<edge> unordered_edges_t;
     typedef std::list<vertex> ordered_vertices_t;
     typedef std::list<edge> ordered_edges_t;
-    typedef std::map<vertex, ordered_vertices_t> adjacent_t;
-    typedef std::map<vertex, tag> vertices_tags_t;
 
    public:
     t_graph() {}
@@ -174,32 +199,47 @@ class t_graph {
         return *this;
     }
 
-    t_graph& add_edge(const T& from, const T& to, int weight = 0, graph_direction_t d = graph_directed) {
+    t_graph& add_edge(const T& from, const T& to, int weight = 1, graph_direction_t d = graph_directed) {
         edge e(from, to, weight, d);
         add_edge(std::move(e));
         return *this;
     }
-    t_graph& add_edge(const vertex& from, const vertex& to, int weight = 0, graph_direction_t d = graph_directed) {
+    t_graph& add_edge(const vertex& from, const vertex& to, int weight = 1, graph_direction_t d = graph_directed) {
         edge e(from, to, weight, d);
         add_edge(std::move(e));
         return *this;
     }
 
-    t_graph& add_directed_edge(const T& from, const T& to, int weight = 0) { return add_edge(from, to, weight, graph_direction_t::graph_directed); }
-    t_graph& add_directed_edge(const vertex& from, const vertex& to, int weight = 0) { return add_edge(from, to, weight, graph_direction_t::graph_directed); }
-    t_graph& add_undirected_edge(const T& from, const T& to, int weight = 0) { return add_edge(from, to, weight, graph_direction_t::graph_undirected); }
-    t_graph& add_undirected_edge(const vertex& from, const vertex& to, int weight = 0) {
+    t_graph& add_directed_edge(const T& from, const T& to, int weight = 1) { return add_edge(from, to, weight, graph_direction_t::graph_directed); }
+    t_graph& add_directed_edge(const vertex& from, const vertex& to, int weight = 1) { return add_edge(from, to, weight, graph_direction_t::graph_directed); }
+    t_graph& add_undirected_edge(const T& from, const T& to, int weight = 1) { return add_edge(from, to, weight, graph_direction_t::graph_undirected); }
+    t_graph& add_undirected_edge(const vertex& from, const vertex& to, int weight = 1) {
         return add_edge(from, to, weight, graph_direction_t::graph_undirected);
     }
 
     t_graph& add_edge(const edge& e) {
-        std::pair<typename unordered_edges_t::iterator, bool> pib = _unordered_edges.insert(e);
-        if (pib.second) {
-            add_vertex(e._from).add_vertex(e._to);
+        __try2 {
+            if (graph_undirected == e._direction) {
+                edge r(e._to, e._from);
+                auto item = _unordered_edges.find(std::move(r));
+                if (_unordered_edges.end() != item) {
+                    __leave2;
+                }
+            }
+            std::pair<typename unordered_edges_t::iterator, bool> pib = _unordered_edges.insert(e);
+            if (pib.second) {
+                add_vertex(e._from).add_vertex(e._to);
 
-            _ordered_edges.push_back(e);
+                _ordered_edges.push_back(e);
+
+                if (graph_undirected == e._direction) {
+                    _unordered_edges.insert(edge(e._to, e._from, e._weight, e._direction));
+                }
+            }
         }
-
+        __finally2 {
+            // do nothing
+        }
         return *this;
     }
     t_graph& add_edge(edge&& e) {
@@ -220,129 +260,140 @@ class t_graph {
 
    public:
     class graph_search {
+       protected:
+        typedef std::set<T> neighbour_t;
+
        public:
-        typedef std::vector<T> result_t;
-        typedef std::map<T, result_t> results_map_t;
-        typedef std::function<void(const T&, const std::vector<T>&)> visitor_t;
+        static const int graph_infinite = 0x10000000;
+        typedef std::function<void(const T&, const T&, int, const std::list<T>&)> visitor_t;  // from, to,wight, path
 
         graph_search(const t_graph<T>& g) : _g(g) {}
 
         virtual graph_search& learn() {
-            build_tags();
-            build_adjacent_list(_adjacent);
-
-            do_learn();
+            do_setup();
+            do_preview();
+            for (auto n : _neighbours) {
+                unvisit();
+                do_learn(n.first);
+            }
             return *this;
         }
 
         virtual graph_search& infer() {
-            _results.clear();
-            for (auto v : _vertices_tags) {
-                do_infer(v.first._data);
+            for (auto n : _neighbours) {
+                unvisit();
+                do_infer(n.first);
             }
-            return *this;
-        }
-        virtual graph_search& infer(const T& u) {
-            _results.clear();
-            do_infer(u);
             return *this;
         }
 
         virtual void traverse(visitor_t f) {
-            for (auto v : _vertices_tags) {
-                do_traverse(v.first._data, f);
+            for (auto n : _neighbours) {
+                do_traverse(n.first, f);
             }
         }
         virtual void traverse(const T& u, visitor_t f) { do_traverse(u, f); }
+        virtual void traverse(const T& from, const T& to, visitor_t f) { do_traverse(from, to, f); }
 
-        bool touch_tag(std::function<bool(tag&)> f) {
-            for (auto& item : _vertices_tags) {
-                f(item.second);
+       protected:
+        virtual void do_setup() {}
+        virtual void do_preview() {
+            for (auto item : _g._unordered_vertices) {
+                _visit.insert({item, false});
+                neighbour_t n;
+                _neighbours.insert({item, std::move(n)});
             }
-            return true;
+            for (auto item : _g._unordered_edges) {
+                _neighbours[item._from].insert(item._to);
+
+                if (graph_undirected == item._direction) {
+                    _neighbours[item._to].insert(item._from);
+                }
+            }
         }
-        bool touch_tag(const vertex& u, std::function<bool(tag&)> f) {
+        virtual void do_learn(const T& u) {}
+        virtual void do_infer(const T& u) {}
+        virtual void do_traverse(const T& u, visitor_t f) {}
+        virtual void do_traverse(const T& from, const T& to, visitor_t f) {}
+
+        void unvisit() {
+            for (auto& item : _visit) {
+                item.second = false;
+            }
+        }
+        bool visit(const T& t) {
             bool ret = false;
-            typename vertices_tags_t::iterator iter = _vertices_tags.find(u);
-            if (_vertices_tags.end() != iter) {
-                ret = f(iter->second);
+            if (false == _visit[t]) {
+                _visit[t] = true;
+                ret = true;
             }
             return ret;
         }
-
-       protected:
-        virtual void do_learn() {}
-        virtual void do_infer(const T& u) {}
-        virtual void do_traverse(const T& u, visitor_t f) { f(u, _results[u]); }
-
-        graph_search& build_tags() {
-            for (auto v : _g._ordered_vertices) {
-                _vertices_tags.insert(std::make_pair(v, tag()));
-            }
-            return *this;
-        }
-
-        void build_adjacent_list(adjacent_t& target) {
-            target.clear();
-            for (auto v : _g._ordered_vertices) {
-                ordered_vertices_t ovl;
-                target.insert(std::make_pair(v, std::move(ovl)));
-            }
-            for (auto e : _g._ordered_edges) {
-                target.find(e._from)->second.push_back(e._to);
-                if (graph_undirected == e.get_direction()) {
-                    target.find(e._to)->second.push_back(e._from);
+        /*
+         * @brief   adjacent edges
+         */
+        bool visit(const T& v, std::set<edge>& connected) {
+            bool ret = false;
+            auto& neighbour = _neighbours.find(v)->second;
+            for (auto item : neighbour) {
+                auto iter = _unordered_edges.find(edge(v, item));
+                if (_unordered_edges.end() != iter) {
+                    connected.insert(*iter);  // directed
+                } else {
+                    iter = _unordered_edges.find(edge(item, v));
+                    if (_unordered_edges.end() != iter) {
+                        if (graph_undirected == iter->_direction) {
+                            connected.insert(*iter);  // undirected
+                        }
+                    }
                 }
             }
+            return ret;
         }
-
-        void reset_visit() {
-            auto handler = [](tag& t) -> bool {
-                t.unvisit();
-                return true;
-            };
-            touch_tag(handler);
-        }
-
-        bool mark_visited(const T& v) { return mark_visited(vertex(v)); }
-
-        bool mark_visited(const vertex& v) {
-            auto handler = [](tag& t) -> bool {
-                bool ret = false;
-                if (t.is_unvisited()) {
-                    t.visit();
-                    ret = true;
+        int get_weight(const T& from, const T& to) {
+            int weight = -1;
+            if (from == to) {
+                weight = 0;
+            } else {
+                auto& edges = _g._unordered_edges;
+                auto item = edges.find(edge(from, to));
+                if (edges.end() != item) {
+                    weight = item->_weight;
                 }
-                return ret;
-            };
-            return touch_tag(v, handler);
-        };
+            }
+            return weight;
+        }
 
         const t_graph<T>& _g;
-        vertices_tags_t _vertices_tags;  // visited, unvisited
-        adjacent_t _adjacent;
-        results_map_t _results;
+
+        std::map<T, neighbour_t> _neighbours;
+        std::map<T, bool> _visit;
     };
 
     class graph_adjacent_list : public graph_search {
        public:
-        typedef typename graph_search::visitor_t visitor_t;
-
         graph_adjacent_list(const t_graph<T>& g) : graph_search(g) {}
 
        protected:
-        virtual void do_infer(const T& u) {
-            auto it = this->_adjacent.find(u);
-            if (this->_adjacent.end() != it) {
-                auto& result = this->_results[u];
-                result.insert(result.end(), u);
-                for (auto lit : it->second) {
-                    result.insert(result.end(), lit._data);
-                }
+        typedef std::list<T> result_t;
+        typedef std::map<T, result_t> results_map_t;
+        typedef typename graph_search::visitor_t visitor_t;
+
+        virtual void do_setup() { _results.clear(); }
+
+        virtual void do_learn(const T& u) {
+            auto& result = this->_results[u];
+            auto& neighbours = this->_neighbours;
+
+            for (const auto& neighbour : neighbours.find(u)->second) {
+                result.push_back(neighbour);
             }
         }
 
+        virtual void do_traverse(const T& u, visitor_t f) { f(u, u, 0, _results[u]); }
+
        private:
+        std::map<T, result_t> _results;
     };
 
     /*
@@ -363,32 +414,37 @@ class t_graph {
      */
     class graph_dfs : public graph_search {
        public:
-        typedef typename graph_search::result_t result_t;
-        typedef typename graph_search::visitor_t visitor_t;
-
         graph_dfs(const t_graph<T>& g) : graph_search(g) {}
 
        protected:
-        virtual void do_infer(const T& u) {
-            this->reset_visit();
-            result_t& result = this->_results[u];
-            result.insert(result.end(), u);
-            infer_recursive(u, result);
-        }
-        void infer_recursive(const T& u, result_t& result) {
-            this->mark_visited(u);
+        typedef std::list<T> result_t;
+        typedef std::map<T, result_t> results_map_t;
+        typedef typename graph_search::visitor_t visitor_t;
 
-            auto& l = this->_adjacent.find(u)->second;
-            for (auto opposite : l) {
-                if (this->mark_visited(opposite)) {
-                    const T& o = opposite._data;
-                    result.insert(result.end(), o);
-                    infer_recursive(o, result);
+        virtual void do_setup() { _results.clear(); }
+
+        virtual void do_learn(const T& u) {
+            auto& result = this->_results[u];
+            result.push_back(u);
+            learn_recursive(u, u, result);
+        }
+        void learn_recursive(const T& v, const T& u, result_t& result) {
+            auto& neighbours = this->_neighbours;
+
+            this->visit(u);
+
+            for (const auto& neighbour : neighbours.find(u)->second) {
+                if (this->visit(neighbour)) {
+                    result.push_back(neighbour);
+                    learn_recursive(v, neighbour, result);
                 }
             }
         }
 
+        virtual void do_traverse(const T& u, visitor_t f) { f(u, u, 0, _results[u]); }
+
        private:
+        std::map<T, result_t> _results;
     };
 
     /*
@@ -402,70 +458,217 @@ class t_graph {
      */
     class graph_bfs : public graph_search {
        public:
-        typedef typename graph_search::visitor_t visitor_t;
-
         graph_bfs(const t_graph<T>& g) : graph_search(g) {}
 
        protected:
-        virtual void do_infer(const T& u) {
-            this->reset_visit();
-            std::list<T> _queue;
-            _queue.push_front(u);
+        typedef std::list<T> result_t;
+        typedef std::map<T, result_t> results_map_t;
+        typedef typename graph_search::visitor_t visitor_t;
 
-            this->mark_visited(u);
+        virtual void do_setup() { _results.clear(); }
+
+        virtual void do_learn(const T& u) {
             auto& result = this->_results[u];
-            result.insert(result.end(), u);
+            auto& neighbours = this->_neighbours;
 
-            while (_queue.size()) {
-                T v = _queue.front();
-                _queue.pop_front();  // remove the head
+            this->visit(u);
+            result.push_back(u);
+
+            std::list<T> q;
+            q.push_front(u);
+
+            while (false == q.empty()) {
+                T v = q.front();
+                q.pop_front();  // remove the head
 
                 // mark and enqueue all (unvisited) neighbours
-                auto& l = this->_adjacent.find(v)->second;
-                for (auto opposite : l) {
-                    if (this->mark_visited(opposite)) {
-                        const T& o = opposite._data;
-                        result.insert(result.end(), o);
-                        _queue.push_back(o);
+                for (const auto& neighbour : neighbours.find(v)->second) {
+                    if (this->visit(neighbour)) {
+                        result.push_back(neighbour);
+                        q.push_back(neighbour);
                     }
                 }
             }
         }
 
+        virtual void do_traverse(const T& u, visitor_t f) { f(u, u, 0, _results[u]); }
+
        private:
+        std::map<T, result_t> _results;
     };
 
     /*
-     * @brief   Dijkstra
-     *          dijkstra(G, S)
-     *              for each vertex V in G
-     *                  distance[V] <- infinite
-     *                  previous[V] <- NULL
-     *                  If V != S, add V to Priority Queue Q
-     *              distance[S] <- 0
-     *
-     *              while Q IS NOT EMPTY
-     *                  U <- Extract MIN from Q
-     *                  for each unvisited neighbour V of U
-     *                      tempDistance <- distance[U] + edge_weight(U, V)
-     *                      if tempDistance < distance[V]
-     *                          distance[V] <- tempDistance
-     *                          previous[V] <- U
-     *              return distance[], previous[]
+     * @brief   shortest path
      */
     class graph_dijkstra : public graph_search {
        public:
-        typedef typename graph_search::visitor_t visitor_t;
-
         graph_dijkstra(const t_graph<T>& g) : graph_search(g) {}
 
        protected:
+        typedef std::pair<int, T> pair_t;
+
+        /*
+         * @brief   distance
+         * @sa      learn, _dist
+         *
+         * (gdb) p _dist
+         * $1 = std::map with 1 element = {[0] = std::map with 9 elements =
+         *       {[0] = 0, [1] = 4, [2] = 12, [3] = 19, [4] = 21, [5] = 11, [6] = 9, [7] = 8, [8] = 14}}
+         *
+         * it can be interpreted as from->to(weight)
+         *      0->0(0), 0->1(4), 0->2(12), ..., 0->8(14)
+         */
+        typedef std::map<T, int> distance_t;
+
+        /**
+         * @brief   shortest path
+         * @sa      learn, _path
+         *
+         * (gdb) p _path
+         * $2 = std::map with 1 element = {[0] = std::map with 8 elements = {
+         *       [1] = std::multimap with 1 element = {[4] = 0},
+         *       [2] = std::multimap with 1 element = {[12] = 1},
+         *       [3] = std::multimap with 1 element = {[19] = 2},
+         *       [4] = std::multimap with 1 element = {[21] = 5},
+         *       [5] = std::multimap with 1 element = {[11] = 6},
+         *       [6] = std::multimap with 1 element = {[9] = 7},
+         *       [7] = std::multimap with 1 element = {[8] = 0},
+         *       [8] = std::multimap with 1 element = {[14] = 2}}}
+         *
+         *  it can be interpreted as from->to(weight) and prev->to
+         *      0->1( 4) and 0->1, 0->2(12) and 1->2, ..., 0->8(14) and 2->8
+         */
+        typedef std::multimap<int, T> section_t;  // <distance, from>
+        typedef std::map<T, section_t> path_t;    // map<to, section_t>
+
+        /*
+         * @brief   edge(from, to, distance) and list<T>
+         * @sa      infer, _route
+         *
+         * gdb) p route
+         * $3 = std::multimap with 8 elements = {
+         *        [{_from = {_data = 0}, _to = {_data = 1}, _weight = 4,
+         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1},
+         *        [{_from = {_data = 0}, _to = {_data = 2}, _weight = 12,
+         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1, [2] = 2},
+         *        [{_from = {_data = 0}, _to = {_data = 3}, _weight = 19,
+         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1, [2] = 2, [3] = 3},
+         *        [{_from = {_data = 0}, _to = {_data = 4}, _weight = 21,
+         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7, [2] = 6, [3] = 5, [4] = 4},
+         *        [{_from = {_data = 0}, _to = {_data = 5}, _weight = 11,
+         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7, [2] = 6, [3] = 5},
+         *        [{_from = {_data = 0}, _to = {_data = 6}, _weight = 9,
+         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7, [2] = 6},
+         *        [{_from = {_data = 0}, _to = {_data = 7}, _weight = 8,
+         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7},
+         *        [{_from = {_data = 0}, _to = {_data = 8}, _weight = 14,
+         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1, [2] = 2, [3] = 8}}
+         */
+        typedef std::multimap<edge, std::list<T>> route_t;
+
+        typedef typename graph_search::visitor_t visitor_t;
+
+        virtual void do_setup() {
+            _path.clear();
+            _route.clear();
+        }
+
+        virtual void do_learn(const T& u) {
+            auto& neighbours = this->_neighbours;
+            std::priority_queue<pair_t, std::vector<pair_t>, std::greater<pair_t>> pq;
+            path_t path;
+            distance_t dist;
+
+            for (auto& temp : this->_g._unordered_vertices) {
+                dist[temp] = graph_search::graph_infinite;
+            }
+
+            this->visit(u);
+
+            pq.push({0, u});
+            dist[u] = 0;
+
+            while (false == pq.empty()) {
+                T v = pq.top().second;
+                int d = pq.top().first;
+                pq.pop();
+
+                if (d > dist[v]) {
+                    continue;
+                }
+
+                // from = v
+                // for (neighbour : adjacent vertices) {
+                //     to = neighbour
+                //     weight = directed(from -> to).weight, or weight = undirected(from <-> to).weight
+                // }
+
+                for (const auto& neighbour : neighbours.find(v)->second) {
+                    int weight = this->get_weight(v, neighbour);
+                    int distance = dist[v] + weight;
+                    if (dist[neighbour] > distance) {
+                        dist[neighbour] = distance;
+                        pq.push({distance, neighbour});
+
+                        path[neighbour].clear();  // clear longer one
+                        path[neighbour].insert({distance, v});
+                    } else if (dist[neighbour] == distance) {
+                        path[neighbour].insert({distance, v});  // same distance
+                    }
+                }
+            }
+
+            _dist.insert({u, dist});
+            _path.insert({u, path});
+        }
+
         virtual void do_infer(const T& u) {
-            this->reset_visit();
-            //
+            route_t route;
+            for (auto path : _path[u]) {
+                const T& to = path.first;
+                for (auto section : path.second) {
+                    int distance = section.first;
+                    const T& from = section.second;
+                    auto iter = route.insert({edge(u, to, distance), std::list<T>()});
+                    std::list<T>& l = iter->second;
+                    l.push_back(from);
+                    l.push_back(to);
+                }
+            }
+            for (auto& item : route) {
+                auto& l = item.second;
+                T head = *l.begin();
+                while (u != head) {
+                    auto& section = _path[u].find(head)->second;
+                    auto iter = section.begin();
+                    head = iter->second;
+                    l.push_front(head);
+                }
+            }
+
+            _route.insert({u, route});
+        }
+
+        virtual void do_traverse(const T& u, visitor_t f) {
+            for (auto route : _route[u]) {
+                const edge& e = route.first;
+                f(e._from, e._to, e._weight, route.second);
+            }
+        }
+        virtual void do_traverse(const T& from, const T& to, visitor_t f) {
+            route_t route = _route[from];
+            edge e(from, to);
+            auto lbound = route.lower_bound(e);
+            auto ubound = route.upper_bound(e);
+            for (auto iter = lbound; iter != ubound; iter++) {
+                f(from, to, iter->first._weight, iter->second);
+            }
         }
 
        private:
+        std::map<T, distance_t> _dist;
+        std::map<T, path_t> _path;
+        std::map<T, route_t> _route;
     };
 
     graph_adjacent_list* build_adjacent() { return new graph_adjacent_list(*this); }

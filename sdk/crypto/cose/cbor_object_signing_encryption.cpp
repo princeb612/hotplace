@@ -139,7 +139,7 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_param_
                 handle->composer->get_unsent().data().replace(id, bin);
                 break;
             default:
-                ret = errorcode_t::request;
+                ret = errorcode_t::bad_request;
                 break;
         }
     }
@@ -589,7 +589,7 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
         }
 
         if (mask != (flags & mask)) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
@@ -711,7 +711,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
         // fail if cose_key_t::cose_alg not exist
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
         if (nullptr == hint) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
@@ -1430,7 +1430,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
 
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
         if (nullptr == hint) {
-            ret = errorcode_t::request;  // study
+            ret = errorcode_t::bad_request;  // study
             __leave2;
         }
 
@@ -1547,7 +1547,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
 
             ret = errorcode_t::not_supported;
         } else {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
         }
 
         if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
@@ -1597,7 +1597,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
         crypt_sig_t sig = advisor->sigof(alg);
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
         if (nullptr == hint) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
@@ -1648,7 +1648,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
                 }
                 break;
             default:
-                ret = errorcode_t::request;
+                ret = errorcode_t::bad_request;
                 break;
         }
 
@@ -1694,7 +1694,7 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
 
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
         if (nullptr == hint) {
-            ret = errorcode_t::request;  // study
+            ret = errorcode_t::bad_request;  // study
             __leave2;
         }
 
@@ -1756,7 +1756,7 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
             openssl_mac mac;
             ret = mac.cbc_mac_rfc8152(hint->enc.algname, cek, iv, tomac, tag, hint->enc.tsize);
         } else {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 

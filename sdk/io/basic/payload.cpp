@@ -248,7 +248,7 @@ payload& payload::set_group(const std::string& name, bool optional) {
 
 bool payload::get_group_condition(const std::string& name) {
     bool ret = true;
-    maphint<std::string, bool> hint(_option);
+    t_maphint<std::string, bool> hint(_option);
     hint.find(name, &ret);
     return ret;
 }
@@ -258,7 +258,7 @@ payload& payload::set_reference_value(const std::string& name, const std::string
     if (name.size() && ref.size()) {
         payload_member* member_ref = nullptr;
         payload_member* member = nullptr;
-        maphint<std::string, payload_member*> hint(_members_map);
+        t_maphint<std::string, payload_member*> hint(_members_map);
         hint.find(ref, &member_ref);
         hint.find(name, &member);
         if (member && member_ref) {
@@ -382,7 +382,7 @@ payload& payload::for_each(std::function<void(payload_member*)> func) {
 
 payload_member* payload::select(const std::string& name) {
     payload_member* item = nullptr;
-    maphint<std::string, payload_member*> hint(_members_map);
+    t_maphint<std::string, payload_member*> hint(_members_map);
     hint.find(name, &item);
     return item;
 }

@@ -191,6 +191,7 @@ enum vtprintf_style_t {
     vtprintf_style_cbor = 1,
 };
 return_t vtprintf(stream_t *stream, const variant_t &vt, vtprintf_style_t style = vtprintf_style_normal);
+return_t vtprintf(stream_t *stream, const variant &vt, vtprintf_style_t style = vtprintf_style_normal);
 
 }  // namespace hotplace
 

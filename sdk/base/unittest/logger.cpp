@@ -129,35 +129,48 @@ logger::logger_item* logger::get_context(bool upref) {
     return item;
 }
 
-logger& logger::consoleln(const char* fmt, ...) { return do_console(fmt, true); }
+// after dump_memory(..., &bs);
+//      p bs.c_str()
+//      "00000000 : FF 40 88 25 A8 49 E9 5B A9 7D 7F 89 25 A8 49 E9 | .@.%.I.[.}..%.I."
+// but, after vprintf, output is as follows
+//      "00000000 : FF 40 88 25 A8 49 E9 5B A9 7D 7F 89 25 A8 49 E9 | .@.6290232.[.}..6290128."
+// for std::string and basic_stream, use write, not printf nor vprintf
 
-logger& logger::consoleln(const std::string& msg) { return do_console(msg.c_str(), true); }
+logger& logger::consoleln(const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    do_console_vprintf(fmt, ap);
+    va_end(ap);
+    return *this;
+}
 
-logger& logger::consoleln(const basic_stream& msg) { return do_console(msg.c_str(), true); }
+logger& logger::consoleln(const std::string& msg) { return do_console_raw(msg.c_str(), msg.size(), true); }
+
+logger& logger::consoleln(const basic_stream& msg) { return do_console_raw(msg.c_str(), msg.size(), true); }
 
 logger& logger::writeln(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    do_vwrite(fmt, ap, true);
+    do_write_vprintf(fmt, ap, true);
     va_end(ap);
     return *this;
 }
 
-logger& logger::writeln(const std::string& msg) { return do_write(msg.c_str(), true); }
+logger& logger::writeln(const std::string& msg) { return do_write_raw(msg.c_str(), msg.size(), true); }
 
-logger& logger::writeln(const basic_stream& msg) { return do_write(msg.c_str(), true); }
+logger& logger::writeln(const basic_stream& msg) { return do_write_raw(msg.c_str(), msg.size(), true); }
 
 logger& logger::write(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    do_vwrite(fmt, ap);
+    do_write_vprintf(fmt, ap);
     va_end(ap);
     return *this;
 }
 
-logger& logger::write(const std::string& msg) { return do_write(msg.c_str(), false); }
+logger& logger::write(const std::string& msg) { return do_write_raw(msg.c_str(), msg.size(), false); }
 
-logger& logger::write(const basic_stream& msg) { return do_write(msg.c_str(), false); }
+logger& logger::write(const basic_stream& msg) { return do_write_raw(msg.c_str(), msg.size(), false); }
 
 logger& logger::dump(const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) { return do_dump(addr, size, hexpart, indent, true); }
 
@@ -177,9 +190,9 @@ logger& logger::hdump(const std::string& header, const binary_t& msg, unsigned h
     return do_hdump(header, &msg[0], msg.size(), hexpart, indent, true);
 }
 
-logger& logger::operator<<(const std::string& msg) { return do_write(msg.c_str(), false); }
+logger& logger::operator<<(const std::string& msg) { return do_write_raw(msg.c_str(), msg.size(), false); }
 
-logger& logger::operator<<(const basic_stream& msg) { return do_write(msg.c_str(), false); }
+logger& logger::operator<<(const basic_stream& msg) { return do_write_raw(msg.c_str(), msg.size(), false); }
 
 bool logger::test_logging_stdout() {
     critical_section_guard guard(_lock);
@@ -222,18 +235,18 @@ logger& logger::do_console(std::function<void(logger_item*)> f) {
     return *this;
 }
 
-logger& logger::do_console(const char* fmt, bool lf) {
+logger& logger::do_console_vprintf(const char* fmt, va_list ap, bool lf) {
     return do_console([&](logger_item* item) -> void {
-        item->bs.printf(fmt);
+        item->bs.vprintf(fmt, ap);
         if (lf) {
             item->bs.printf("\n");
         }
     });
 }
 
-logger& logger::do_vconsole(const char* fmt, va_list ap, bool lf) {
+logger& logger::do_console_raw(const char* buf, size_t bufsize, bool lf) {
     return do_console([&](logger_item* item) -> void {
-        item->bs.vprintf(fmt, ap);
+        item->bs.write(buf, bufsize);
         if (lf) {
             item->bs.printf("\n");
         }
@@ -264,18 +277,18 @@ logger& logger::do_write(std::function<void(logger_item*)> f) {
     return *this;
 }
 
-logger& logger::do_write(const char* fmt, bool lf) {
+logger& logger::do_write_vprintf(const char* fmt, va_list ap, bool lf) {
     return do_write([&](logger_item* item) -> void {
-        item->bs.printf(fmt);
+        item->bs.vprintf(fmt, ap);
         if (lf) {
             item->bs.printf("\n");
         }
     });
 }
 
-logger& logger::do_vwrite(const char* fmt, va_list ap, bool lf) {
+logger& logger::do_write_raw(const char* buf, size_t bufsize, bool lf) {
     return do_write([&](logger_item* item) -> void {
-        item->bs.vprintf(fmt, ap);
+        item->bs.write(buf, bufsize);
         if (lf) {
             item->bs.printf("\n");
         }

@@ -10,7 +10,6 @@
 
 #include <sdk/base.hpp>
 #include <sdk/io.hpp>
-#include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http_client.hpp>
 #include <sdk/net/http/http_protocol.hpp>
 

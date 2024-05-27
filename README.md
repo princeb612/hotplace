@@ -129,6 +129,9 @@
 
  * ITU-T X.680-X.699
 
+ * Neural Networks
+ * Machine Learning
+
 ## next time
 
  * RFC 8778 Use of the HSS/LMS Hash-Based Signature Algorithm with CBOR Object Signing and Encryption (COSE)

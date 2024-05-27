@@ -162,23 +162,23 @@ void test_endian() {
 }
 
 void test_maphint() {
-    _test_case.begin("maphint");
+    _test_case.begin("t_maphint");
     return_t ret = errorcode_t::success;
 
     std::map<int, std::string> source;
-    maphint<int, std::string> hint(source);
+    t_maphint<int, std::string> hint(source);
     source[1] = "one";
     source[2] = "two";
     source[3] = "three";
     std::string value;
     hint.find(1, &value);
-    _test_case.assert("one" == value, __FUNCTION__, "maphint.find(1)");
+    _test_case.assert("one" == value, __FUNCTION__, "t_maphint.find(1)");
     ret = hint.find(10, &value);
-    _test_case.assert(errorcode_t::not_found == ret, __FUNCTION__, "maphint.find(10)");
+    _test_case.assert(errorcode_t::not_found == ret, __FUNCTION__, "t_maphint.find(10)");
 
-    maphint_const<int, std::string> hint_const(source);
+    t_maphint_const<int, std::string> hint_const(source);
     hint_const.find(2, &value);
-    _test_case.assert("two" == value, __FUNCTION__, "maphint.find(2)");
+    _test_case.assert("two" == value, __FUNCTION__, "t_maphint.find(2)");
 }
 
 void test_btree() {

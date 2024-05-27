@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_BASE__
 
 /* top-most */
+#include <sdk/base/binary.hpp>
 #include <sdk/base/c++14.hpp>
 #include <sdk/base/callback.hpp>
 #include <sdk/base/charset.hpp>

@@ -73,7 +73,7 @@ void api_response_html_handler(network_session*, http_request* request, http_res
 }
 
 void api_response_json_handler(network_session*, http_request* request, http_response* response, http_router* router) {
-    response->compose(200, "application/json", "{\"result\":\"ok\"}");
+    response->compose(200, "application/json", R"({"result":"ok"})");
 }
 
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {

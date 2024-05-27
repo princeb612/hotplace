@@ -105,7 +105,7 @@ class cbor_encode {
     return_t encodefp16(binary_t& bin, uint16 value);
     return_t encode(binary_t& bin, float value);
     return_t encode(binary_t& bin, double value);
-    return_t encode(binary_t& bin, byte_t const* value, size_t size);
+    return_t encode(binary_t& bin, const byte_t* value, size_t size);
     return_t encode(binary_t& bin, const binary_t& value);
     return_t encode(binary_t& bin, char* value);
     return_t encode(binary_t& bin, char* value, size_t size);

@@ -88,6 +88,11 @@ void test_uri() {
         _test_case.assert("client_id=12345" == url_info.query, __FUNCTION__, "uri.query.client_id");
         _test_case.assert("part1" == url_info.fragment, __FUNCTION__, "uri.fragment");
     }
+    {
+        do_split_url("https://test.com/~hush/simple_chart.html", &url_info);
+
+        _test_case.assert("/~hush/simple_chart.html" == url_info.uripath, __FUNCTION__, "uri.uripath");
+    }
 
     {
         skey_value kv;

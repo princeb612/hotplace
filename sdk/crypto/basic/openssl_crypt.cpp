@@ -184,12 +184,12 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
         /* encrypt and decrypt re-initialize iv */
         ret_init = EVP_CipherInit_ex(context->encrypt_context, cipher, nullptr, &temp_key[0], nullptr, 1);
         if (1 != ret_init) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2_trace_openssl(ret);
         }
         ret_init = EVP_CipherInit_ex(context->decrypt_context, cipher, nullptr, &temp_key[0], nullptr, 0);
         if (1 != ret_init) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2_trace_openssl(ret);
         }
 
@@ -970,7 +970,7 @@ return_t openssl_crypt::query(crypt_context_t* handle, size_t cmd, size_t& value
 #endif
             constraint_range(value, 0, EVP_MAX_IV_LENGTH);
         } else {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
         }
     }
     __finally2 {

@@ -68,6 +68,25 @@ void print(const container_t& c, stream_type& s, const std::string& mark_prologu
     for_each_const<container_t>(c, func);
 }
 
+template <typename container_t, typename stream_type>
+void print_pair(const container_t& c, stream_type& s, const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ",
+                const std::string& mark_epilogue = "]") {
+    auto func = [&](typename container_t::const_iterator iter, int where) -> void {
+        switch (where) {
+            case 0:
+                s << mark_prologue << "{" << iter->first << "," << iter->second << "}";
+                break;
+            case 1:
+                s << mark_delimiter << "{" << iter->first << "," << iter->second << "}";
+                break;
+            case 2:
+                s << mark_epilogue;
+                break;
+        }
+    };
+    for_each_const<container_t>(c, func);
+}
+
 }  // namespace hotplace
 
 #endif

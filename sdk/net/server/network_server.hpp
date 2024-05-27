@@ -13,7 +13,6 @@
 
 #include <sdk/base.hpp>
 #include <sdk/io.hpp>
-#include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_session.hpp>

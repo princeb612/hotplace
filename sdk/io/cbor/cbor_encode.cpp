@@ -153,7 +153,7 @@ return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint8 value) {
     return ret;
 }
 
-return_t cbor_encode::encode(binary_t& bin, int16 value) {
+return_t cbor_encode::encode(binary_t& target, int16 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -166,14 +166,13 @@ return_t cbor_encode::encode(binary_t& bin, int16 value) {
             value = -value;
         }
         if (value < 24) {
-            bin.push_back((major << 5) | value);
+            binary_push(target, (major << 5) | value);
         } else if (value < 0x100) {
-            bin.push_back((major << 5) | 24);
-            bin.push_back(value);
+            binary_push(target, (major << 5) | 24);
+            binary_push(target, value);
         } else {
-            bin.push_back((major << 5) | 25);
-            uint16 be = hton16(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
+            binary_push(target, (major << 5) | 25);
+            binary_append(target, value, hton16);
         }
     }
     __finally2 {
@@ -182,19 +181,18 @@ return_t cbor_encode::encode(binary_t& bin, int16 value) {
     return ret;
 }
 
-return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint16 value) {
+return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint16 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
         if (value < 24) {
-            bin.push_back((major << 5) | value);
+            binary_push(target, (major << 5) | value);
         } else if (value < 0x100) {
-            bin.push_back((major << 5) | 24);
-            bin.push_back(value);
+            binary_push(target, (major << 5) | 24);
+            binary_push(target, value);
         } else {
-            bin.push_back((major << 5) | 25);
-            uint16 be = hton16(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
+            binary_push(target, (major << 5) | 25);
+            binary_append(target, value, hton16);
         }
     }
     __finally2 {
@@ -203,66 +201,7 @@ return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint16 value) {
     return ret;
 }
 
-return_t cbor_encode::encode(binary_t& bin, int32 value) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        uint8 major = 0;
-        if (value >= 0) {
-            major = cbor_major_t::cbor_major_uint;
-        } else {
-            major = cbor_major_t::cbor_major_nint;
-            value += 1;
-            value = -value;
-        }
-
-        if (value < 24) {
-            bin.push_back((major << 5) | value);
-        } else if (value < 0x100) {
-            bin.push_back((major << 5) | 24);
-            bin.push_back(value);
-        } else if (value < 0x10000) {
-            bin.push_back((major << 5) | 25);
-            uint16 be = hton16(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
-        } else {
-            bin.push_back((major << 5) | 26);
-            uint32 be = hton32(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint32 value) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (value < 24) {
-            bin.push_back((major << 5) | value);
-        } else if (value < 0x100) {
-            bin.push_back((major << 5) | 24);
-            bin.push_back(value);
-        } else if (value < 0x10000) {
-            bin.push_back((major << 5) | 25);
-            uint16 be = hton16(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
-        } else {
-            bin.push_back((major << 5) | 26);
-            uint32 be = hton32(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t cbor_encode::encode(binary_t& bin, int64 value) {
+return_t cbor_encode::encode(binary_t& target, int32 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -276,22 +215,74 @@ return_t cbor_encode::encode(binary_t& bin, int64 value) {
         }
 
         if (value < 24) {
-            bin.push_back((major << 5) | value);
+            binary_push(target, (major << 5) | value);
         } else if (value < 0x100) {
-            bin.push_back((major << 5) | 24);
-            bin.push_back(value);
+            binary_push(target, (major << 5) | 24);
+            binary_push(target, value);
         } else if (value < 0x10000) {
-            bin.push_back((major << 5) | 25);
-            uint16 be = hton16(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
+            binary_push(target, (major << 5) | 25);
+            binary_append(target, (uint16)value, hton16);
+        } else {
+            binary_push(target, (major << 5) | 26);
+            binary_append(target, value, hton32);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint32 value) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (value < 24) {
+            binary_push(target, (major << 5) | value);
+        } else if (value < 0x100) {
+            binary_push(target, (major << 5) | 24);
+            binary_push(target, value);
+        } else if (value < 0x10000) {
+            binary_push(target, (major << 5) | 25);
+            binary_append(target, (uint16)value, hton16);
+        } else {
+            binary_push(target, (major << 5) | 26);
+            binary_append(target, value, hton32);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_encode::encode(binary_t& target, int64 value) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        uint8 major = 0;
+        if (value >= 0) {
+            major = cbor_major_t::cbor_major_uint;
+        } else {
+            major = cbor_major_t::cbor_major_nint;
+            value += 1;
+            value = -value;
+        }
+
+        if (value < 24) {
+            binary_push(target, (major << 5) | value);
+        } else if (value < 0x100) {
+            binary_push(target, (major << 5) | 24);
+            binary_push(target, value);
+        } else if (value < 0x10000) {
+            binary_push(target, (major << 5) | 25);
+            binary_append(target, (uint16)value, hton16);
         } else if (value < 0x100000000) {
-            bin.push_back((major << 5) | 26);
-            uint32 be = hton32(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
+            binary_push(target, (major << 5) | 26);
+            binary_append(target, (uint32)value, hton32);
         } else {
-            bin.push_back((major << 5) | 27);
-            uint64 be = hton64(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 8);
+            binary_push(target, (major << 5) | 27);
+            binary_append(target, value, hton64);
         }
     }
     __finally2 {
@@ -300,27 +291,24 @@ return_t cbor_encode::encode(binary_t& bin, int64 value) {
     return ret;
 }
 
-return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint64 value) {
+return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint64 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
         if (value < 24) {
-            bin.push_back((major << 5) | value);
+            binary_push(target, (major << 5) | value);
         } else if (value < 0x100) {
-            bin.push_back((major << 5) | 24);
-            bin.push_back(value);
+            binary_push(target, (major << 5) | 24);
+            binary_push(target, value);
         } else if (value < 0x10000) {
-            bin.push_back((major << 5) | 25);
-            uint16 be = hton16(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
+            binary_push(target, (major << 5) | 25);
+            binary_append(target, (uint16)value, hton16);
         } else if (value < 0x100000000) {
-            bin.push_back((major << 5) | 26);
-            uint32 be = hton32(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
+            binary_push(target, (major << 5) | 26);
+            binary_append(target, (uint32)value, hton32);
         } else {
-            bin.push_back((major << 5) | 27);
-            uint64 be = hton64(value);
-            bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 8);
+            binary_push(target, (major << 5) | 27);
+            binary_append(target, value, hton64);
         }
     }
     __finally2 {
@@ -341,7 +329,7 @@ static uint8 contents_byte_length(uint128 data) {
     return i;
 }
 
-return_t cbor_encode::encode(binary_t& bin, int128 value) {
+return_t cbor_encode::encode(binary_t& target, int128 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -364,28 +352,24 @@ return_t cbor_encode::encode(binary_t& bin, int128 value) {
 
         if (bignum) {
             uint8 len = contents_byte_length(value);  // 128 / 8 = 16 always less than 24
-            bin.push_back((cbor_major_t::cbor_major_tag << 5) | valueoftag);
-            bin.push_back((cbor_major_t::cbor_major_bstr << 5) | len);
-            uint128 be = hton128(value);
-            bin.insert(bin.end(), (byte_t*)&be + (16 - len), (byte_t*)&be + 16);
+            binary_push(target, (cbor_major_t::cbor_major_tag << 5) | valueoftag);
+            binary_push(target, (cbor_major_t::cbor_major_bstr << 5) | len);
+            binary_append(target, value, hton128, len);
         } else {
             if (value < 24) {
-                bin.push_back((major << 5) | value);
+                binary_push(target, (major << 5) | value);
             } else if (value < 0x100) {
-                bin.push_back((major << 5) | 24);
-                bin.push_back(value);
+                binary_push(target, (major << 5) | 24);
+                binary_push(target, value);
             } else if (value < 0x10000) {
-                bin.push_back((major << 5) | 25);
-                uint16 be = hton16(value);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
+                binary_push(target, (major << 5) | 25);
+                binary_append(target, (uint16)value, hton16);
             } else if (value < 0x100000000) {
-                bin.push_back((major << 5) | 26);
-                uint32 be = hton32(value);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
+                binary_push(target, (major << 5) | 26);
+                binary_append(target, (uint32)value, hton32);
             } else {
-                bin.push_back((major << 5) | 27);
-                uint64 be = hton64(value);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 8);
+                binary_push(target, (major << 5) | 27);
+                binary_append(target, (uint64)value, hton64);
             }
         }
     }
@@ -395,34 +379,30 @@ return_t cbor_encode::encode(binary_t& bin, int128 value) {
     return ret;
 }
 
-return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint128 value) {
+return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint128 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
         if (value >> 64) {
             uint8 len = contents_byte_length(value);  // 128 / 8 = 16 always less than 24
-            bin.push_back((cbor_major_t::cbor_major_tag << 5) | cbor_tag_t::cbor_tag_positive_bignum);
-            bin.push_back((cbor_major_t::cbor_major_bstr << 5) | len);
-            uint128 be = hton128(value);
-            bin.insert(bin.end(), (byte_t*)&be + (16 - len), (byte_t*)&be + 16);
+            binary_push(target, (cbor_major_t::cbor_major_tag << 5) | cbor_tag_t::cbor_tag_positive_bignum);
+            binary_push(target, (cbor_major_t::cbor_major_bstr << 5) | len);
+            binary_append(target, value, hton128, len);
         } else {
             if (value < 24) {
-                bin.push_back((major << 5) | value);
+                binary_push(target, (major << 5) | value);
             } else if (value < 0x100) {
-                bin.push_back((major << 5) | 24);
-                bin.push_back(value);
+                binary_push(target, (major << 5) | 24);
+                binary_push(target, value);
             } else if (value < 0x10000) {
-                bin.push_back((major << 5) | 25);
-                uint16 be = hton16(value);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
+                binary_push(target, (major << 5) | 25);
+                binary_append(target, (uint16)value, hton16);
             } else if (value < 0x100000000) {
-                bin.push_back((major << 5) | 26);
-                uint32 be = hton32(value);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
+                binary_push(target, (major << 5) | 26);
+                binary_append(target, (uint32)value, hton32);
             } else {
-                bin.push_back((major << 5) | 27);
-                uint64 be = hton64(value);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 8);
+                binary_push(target, (major << 5) | 27);
+                binary_append(target, (uint64)value, hton64);
             }
         }
     }
@@ -433,16 +413,14 @@ return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint128 value) {
 }
 #endif
 
-return_t cbor_encode::encodefp16(binary_t& bin, uint16 value) {
+return_t cbor_encode::encodefp16(binary_t& target, uint16 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        variant_t vt;
         uint32 be = 0;
 
-        bin.push_back((cbor_major_t::cbor_major_float << 5) | 25);
-        be = hton16(*(uint16*)&value);
-        bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
+        binary_push(target, (cbor_major_t::cbor_major_float << 5) | 25);
+        binary_append(target, value, hton16);
     }
     __finally2 {
         // do nothing
@@ -450,7 +428,7 @@ return_t cbor_encode::encodefp16(binary_t& bin, uint16 value) {
     return ret;
 }
 
-return_t cbor_encode::encode(binary_t& bin, float value) {
+return_t cbor_encode::encode(binary_t& target, float value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -458,17 +436,15 @@ return_t cbor_encode::encode(binary_t& bin, float value) {
         uint32 be = 0;
         ieee754_as_small_as_possible(var, value);
 
-        variant_t& vt = var.content();
+        const variant_t& vt = var.content();
         switch (vt.type) {
             case vartype_t::TYPE_FP16:
-                bin.push_back((cbor_major_t::cbor_major_float << 5) | 25);
-                be = hton16(*(uint16*)&vt.data.ui16);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
+                binary_push(target, (cbor_major_t::cbor_major_float << 5) | 25);
+                binary_append(target, vt.data.ui16, hton16);
                 break;
             case vartype_t::TYPE_FLOAT:
-                bin.push_back((cbor_major_t::cbor_major_float << 5) | 26);
-                be = hton32(*(uint32*)&vt.data.f);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
+                binary_push(target, (cbor_major_t::cbor_major_float << 5) | 26);
+                binary_append(target, vt.data.f, hton32);
                 break;
             default:
                 break;
@@ -480,7 +456,7 @@ return_t cbor_encode::encode(binary_t& bin, float value) {
     return ret;
 }
 
-return_t cbor_encode::encode(binary_t& bin, double value) {
+return_t cbor_encode::encode(binary_t& target, double value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -488,22 +464,19 @@ return_t cbor_encode::encode(binary_t& bin, double value) {
         uint64 be = 0;
         ieee754_as_small_as_possible(var, value);
 
-        variant_t& vt = var.content();
+        const variant_t& vt = var.content();
         switch (vt.type) {
             case vartype_t::TYPE_FP16:
-                bin.push_back((cbor_major_t::cbor_major_float << 5) | 25);
-                be = hton16(*(uint16*)&vt.data.ui16);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 2);
+                binary_push(target, (cbor_major_t::cbor_major_float << 5) | 25);
+                binary_append(target, vt.data.ui16, hton16);
                 break;
             case vartype_t::TYPE_FLOAT:
-                bin.push_back((cbor_major_t::cbor_major_float << 5) | 26);
-                be = hton32(*(uint32*)&vt.data.f);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 4);
+                binary_push(target, (cbor_major_t::cbor_major_float << 5) | 26);
+                binary_append(target, vt.data.f, hton32);
                 break;
             case vartype_t::TYPE_DOUBLE:
-                bin.push_back((cbor_major_t::cbor_major_float << 5) | 27);
-                be = hton64(*(uint64*)&vt.data.d);
-                bin.insert(bin.end(), (byte_t*)&be, (byte_t*)&be + 8);
+                binary_push(target, (cbor_major_t::cbor_major_float << 5) | 27);
+                binary_append(target, vt.data.d, hton64);
                 break;
             default:
                 break;
@@ -515,12 +488,12 @@ return_t cbor_encode::encode(binary_t& bin, double value) {
     return ret;
 }
 
-return_t cbor_encode::encode(binary_t& bin, byte_t const* value, size_t size) {
+return_t cbor_encode::encode(binary_t& bin, const byte_t* value, size_t size) {
     return_t ret = errorcode_t::success;
 
     __try2 {
         encode(bin, cbor_major_t::cbor_major_bstr, size);
-        bin.insert(bin.end(), value, value + size);
+        binary_append(bin, value, size);
     }
     __finally2 {
         // do nothing
@@ -547,10 +520,10 @@ return_t cbor_encode::encode(binary_t& bin, char* value, size_t size) {
     __try2 {
         if (nullptr == value) {
             uint8 major = cbor_major_t::cbor_major_simple;
-            bin.push_back((major << 5) | 22);
+            binary_push(bin, (major << 5) | 22);
         } else {
             encode(bin, cbor_major_t::cbor_major_tstr, size);
-            bin.insert(bin.end(), value, value + size);
+            binary_append(bin, value, size);
         }
     }
     __finally2 {
@@ -571,14 +544,14 @@ return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, cbor_control_t c
         uint32 indefinite = (cbor_flag_t::cbor_indef & object->get_flags());
         if (cbor_control_t::cbor_control_begin == control) {
             if (indefinite) {
-                bin.push_back((major << 5) | 31);  // infinite-length
+                binary_push(bin, (major << 5) | 31);  // infinite-length
             } else {
                 // 0xa0..0xb7 map
                 encode(bin, major, object->size());
             }
         } else if (cbor_control_t::cbor_control_end == control) {
             if (indefinite) {
-                bin.push_back(0xff);  // break
+                binary_push(bin, 0xff);  // break
             }
         }
     }
@@ -593,14 +566,14 @@ return_t cbor_encode::encode(binary_t& bin, cbor_simple_t type, uint8 value) {
         case cbor_simple_t::cbor_simple_half_fp:
         case cbor_simple_t::cbor_simple_single_fp:
         case cbor_simple_t::cbor_simple_double_fp:
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             break;
         default:
             if (value < 32) {
-                bin.push_back((cbor_major_t::cbor_major_simple << 5) | value);
+                binary_push(bin, (cbor_major_t::cbor_major_simple << 5) | value);
             } else if (value < 0x100) {
-                bin.push_back((cbor_major_t::cbor_major_simple << 5) | 24);
-                bin.push_back(value);
+                binary_push(bin, (cbor_major_t::cbor_major_simple << 5) | 24);
+                binary_push(bin, value);
             }
             break;
     }

@@ -12,7 +12,6 @@
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/io/system/types.hpp>
-#include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http_resource.hpp>
@@ -71,7 +70,7 @@ return_t http2_frame_continuation::write(binary_t& frame) {
     set_payload_size(bin_payload.size());
 
     http2_frame::write(frame);
-    frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());
+    frame << bin_payload;
 
     return ret;
 }

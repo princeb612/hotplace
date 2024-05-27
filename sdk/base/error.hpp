@@ -219,9 +219,9 @@ enum errorcode_t {
     /* 0xef010016 4009820182 */ timeout,
     /* 0xef010017 4009820183 */ expired,
     /* 0xef010018 4009820184 */ canceled,
-    /* 0xef010019 4009820185 */ request,
-    /*                       */ invalid_request = request,
-    /* 0xef01001a 4009820186 */ response,
+    /* 0xef010019 4009820185 */ bad_request,
+    /*                       */ invalid_request = bad_request,
+    /* 0xef01001a 4009820186 */ bad_response,
     /* 0xef01001b 4009820187 */ unexpected,
     /* 0xef01001c 4009820188 */ max_reached,
     /* 0xef01001d 4009820189 */ failed,
@@ -233,8 +233,8 @@ enum errorcode_t {
     /* 0xef010023 4009820195 */ error_digest,
     /* 0xef010024 4009820196 */ error_verify,
     /* 0xef010025 4009820197 */ busy,
-    /* 0xef010026 4009820198 */ query,
-    /* 0xef010027 4009820199 */ fetch,
+    /* 0xef010026 4009820198 */ error_query,
+    /* 0xef010027 4009820199 */ error_fetch,
     /* 0xef010028 4009820200 */ insufficient,
     /* 0xef010029 4009820201 */ reserved,
     /* 0xef01002a 4009820202 */ suspicious,
@@ -250,6 +250,10 @@ enum errorcode_t {
     /* 0xef010034 4009820212 */ invalid_grant,
     /* 0xef010035 4009820213 */ unsupported_grant_type,
     /* 0xef010036 4009820214 */ assert_failed,
+    /* 0xef010037 4009820215 */ error_socket,
+    /* 0xef010038 4009820216 */ error_bind,
+    /* 0xef010039 4009820217 */ error_send,
+    /* 0xef01003a 4009820218 */ error_recv,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,
@@ -274,11 +278,17 @@ enum errorcode_t {
 };
 
 #if defined __linux__
+/*
+ * @sample
+ *      errorcode_t ret = errorcode_t::success;
+ *      int test = function(...);
+ *      ret = get_errno(test);
+ */
 static inline return_t get_errno(int code) {
     return_t ret = errorcode_t::success;
 
     // errno.h 1~133
-    if (ret < 0) {
+    if (code < 0) {
         ret = errno;
     }
     return ret;
@@ -288,7 +298,7 @@ static inline return_t get_eai_error(int code) {
     return_t ret = errorcode_t::success;
 
     // netdb.h -1~-105 to errorcode_t
-    if (ret < 0) {
+    if (code < 0) {
         if (EAI_SYSTEM == code) {
             ret = errno;
         } else {

@@ -19,6 +19,7 @@
 #include <sdk/io/basic/json.hpp>
 #include <sdk/io/basic/mlfq.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/io/basic/sdk.hpp>
 #include <sdk/io/basic/zlib.hpp>
 
 /* CBOR */
@@ -44,8 +45,9 @@
 #include <sdk/io/system/multiplexer.hpp>
 #include <sdk/io/system/sdk.hpp>
 #include <sdk/io/system/types.hpp>
-#include <sdk/io/system/windows_pe.hpp>
+#include <sdk/io/system/winpe.hpp>
 #if defined __linux__
+#include <sdk/io/system/linux/netlink.hpp>
 #elif defined _WIN32 || defined _WIN64
 #include <sdk/io/system/windows/windows_registry.hpp>
 #endif

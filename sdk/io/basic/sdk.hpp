@@ -8,13 +8,13 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_BASIC_SDK__
-#define __HOTPLACE_SDK_NET_BASIC_SDK__
+#ifndef __HOTPLACE_SDK_IO_BASIC_SDK__
+#define __HOTPLACE_SDK_IO_BASIC_SDK__
 
-#include <sdk/net/types.hpp>
+#include <sdk/io/types.hpp>
 
 namespace hotplace {
-namespace net {
+namespace io {
 
 /**
  * @brief   create a socket, see alse close_socket to free
@@ -105,7 +105,7 @@ return_t winsock_startup();
 void winsock_cleanup();
 #endif
 
-}  // namespace net
+}  // namespace io
 }  // namespace hotplace
 
 #endif

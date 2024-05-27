@@ -280,4 +280,6 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
     return ret;
 }
 
+return_t vtprintf(stream_t* stream, const variant& vt, vtprintf_style_t style) { return vtprintf(stream, vt.content(), style); }
+
 }  // namespace hotplace

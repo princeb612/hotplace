@@ -51,7 +51,7 @@ t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 void test_base16() {
     return_t ret = errorcode_t::success;
-    constexpr char text[] = "0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[{]}\\|;:'\",<.>/\?";
+    constexpr char text[] = R"(0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[{]}\\|;:'",<.>/\?)";
     std::string encoded;
 
     base16_encode((byte_t*)text, strlen(text), encoded);
@@ -309,7 +309,7 @@ int main(int argc, char** argv) {
 
     _cmdline.make_share(new cmdline_t<OPTION>);
 
-    constexpr char constexpr_helpmsg_rfc[] = "encode base16 from rfc style expression ex. \"[1,2,3,4,5]\" or \"01:02:03:04:05\" or \"01 02 03 04 05\"";
+    constexpr char constexpr_helpmsg_rfc[] = R"(encode base16 from rfc style expression ex. "[1,2,3,4,5]" or "01:02:03:04:05" or "01 02 03 04 05")";
 
     (*_cmdline) << cmdarg_t<OPTION>("-b64u", "decode base64url", [&](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
                 << cmdarg_t<OPTION>("-b64", "decode base64", [&](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()

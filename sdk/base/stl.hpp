@@ -13,6 +13,7 @@
 
 #include <functional>
 #include <map>
+#include <sdk/base/binary.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/types.hpp>
 
@@ -32,9 +33,9 @@ std::string format(const char* fmt, va_list ap);
  * @brief   util
  */
 template <typename K, typename V>
-class maphint {
+class t_maphint {
    public:
-    maphint(std::map<K, V>& source) : _source(source) {
+    t_maphint(std::map<K, V>& source) : _source(source) {
         // do nothing
     }
 
@@ -59,9 +60,9 @@ class maphint {
 };
 
 template <typename K, typename V>
-class maphint_const {
+class t_maphint_const {
    public:
-    maphint_const(std::map<K, V> const& source) : _source(source) {
+    t_maphint_const(std::map<K, V> const& source) : _source(source) {
         // do nothing
     }
 
@@ -86,45 +87,22 @@ class maphint_const {
 };
 
 /**
- * @brief   append
- * @param   binary_t& bin [out]
- * @param   TYPE value [in]
- * @param   std::function<TYPE(TYPE)> func [in]
- * @sample
- *          binary_t bin;
- *          uint32 data = 100;
- *          binsert<uint32>(bin, data, htonl);
- */
-template <typename TYPE>
-void binsert(binary_t& bin, TYPE value, std::function<TYPE(TYPE)> func) {
-    TYPE t = func(value);
-    byte_t* b = (byte_t*)&t;
-    bin.insert(bin.end(), b, b + sizeof(TYPE));
-}
-
-template <typename TYPE>
-void binsert(binary_t& bin, TYPE value) {
-    byte_t* b = (byte_t*)&value;
-    bin.insert(bin.end(), b, b + sizeof(TYPE));
-}
-
-/**
  * @brief   delete
  * @example
  *          char* text = new char[10];
  *          delete [] text;
  *
  *          char* text = new char[10];
- *          promise_on_destroy<char*>(text, [](char* p) -> void { delete [] p; });
+ *          t_promise_on_destroy<char*>(text, [](char* p) -> void { delete [] p; });
  *
  *          FILE* fp = fopen(...);
- *          promise_on_destroy<FILE*>(fp, [](FILE* file) -> void { fclose(file); });
+ *          t_promise_on_destroy<FILE*>(fp, [](FILE* file) -> void { fclose(file); });
  */
 template <typename TYPE_PTR>
-class promise_on_destroy {
+class t_promise_on_destroy {
    public:
-    promise_on_destroy(TYPE_PTR object, std::function<void(TYPE_PTR)> func) : _object(object), _function(func) {}
-    ~promise_on_destroy() {
+    t_promise_on_destroy(TYPE_PTR object, std::function<void(TYPE_PTR)> func) : _object(object), _function(func) {}
+    ~t_promise_on_destroy() {
         if (_object && _function) {
             _function(_object);
         }

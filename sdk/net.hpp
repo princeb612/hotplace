@@ -20,7 +20,6 @@
 /* basic */
 #include <sdk/net/basic/client_socket.hpp>
 #include <sdk/net/basic/ipaddr_acl.hpp>
-#include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/basic/server_socket.hpp>
 
 /* http */

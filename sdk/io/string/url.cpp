@@ -34,9 +34,9 @@ return_t escape_url(const char* url, stream_t* s, uint32 flags) {
         constexpr char lowalpha[] = "abcdefghijklmnopqrstuvwxyz";
         constexpr char upalpha[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         constexpr char digit[] = "0123456789";
-        constexpr char reserved[] = ";/?:@&=+$,";  // 2.2. Reserved Characters
-        constexpr char mark[] = "-_.!~*'()";       // 2.3. Unreserved Characters
-        constexpr char delims[] = "<>#%%\"";       // 2.4.3. Excluded US-ASCII Characters
+        constexpr char reserved[] = ";/?:@&=+$,";  // RFC 2396 2.2. Reserved Characters
+        constexpr char mark[] = "-_.!~*'()";       // RFC 2396 2.3. Unreserved Characters
+        constexpr char delims[] = "<>#%%\"";       // RFC 2396 2.4.3. Excluded US-ASCII Characters
 
         for (auto elem : lowalpha) {
             charmap.insert(elem);
@@ -164,7 +164,11 @@ return_t split_url(const char* src, url_info_t* info) {
 
         info->uri = url + pos;
 
-        regex_token(url, "^/[a-zA-Z0-9./]*", pos, tokens);
+        // constexpr char reserved[] = ";/?:@&=+$,";  // RFC 2396 2.2. Reserved Characters
+        // constexpr char mark[] = "-_.!~*'()";       // RFC 2396 2.3. Unreserved Characters
+        // constexpr char delims[] = "<>#%%\"";       // RFC 2396 2.4.3. Excluded US-ASCII Characters
+
+        regex_token(url, "^/[a-zA-Z0-9-_.!~*'()/]*", pos, tokens);  // unreserved characters
         if (tokens.size()) {
             info->uripath = *tokens.begin();
         }

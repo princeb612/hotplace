@@ -186,7 +186,7 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
 
         test = protocol_group->is_kind_of(bufstream.data(), bufstream.size(), &protocol);  // reference counter ++
 
-        promise_on_destroy<network_protocol*>(protocol, [](network_protocol* object) -> void {
+        t_promise_on_destroy<network_protocol*>(protocol, [](network_protocol* object) -> void {
             if (object) {
                 object->release();  // reference counter --
             }

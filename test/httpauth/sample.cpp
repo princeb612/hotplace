@@ -43,7 +43,7 @@ void api_response_html_handler(network_session*, http_request* request, http_res
 }
 
 void api_response_json_handler(network_session*, http_request* request, http_response* response, http_router* router) {
-    response->compose(200, "application/json", "{\"result\":\"ok\"}");
+    response->compose(200, "application/json", R"({"result":"ok"})");
 }
 
 void cprint(const char* text, ...) {

@@ -200,7 +200,7 @@ return_t cose_recipient::setparam(cose_param_t id, const binary_t& bin) {
                 get_params().replace(id, bin);
                 break;
             default:
-                ret = errorcode_t::request;
+                ret = errorcode_t::bad_request;
                 break;
         }
     }
@@ -221,7 +221,7 @@ return_t cose_recipient::getparam(cose_param_t id, binary_t& bin) {
                 get_params().replace(id, bin);
                 break;
             default:
-                ret = errorcode_t::request;
+                ret = errorcode_t::bad_request;
                 break;
         }
     }

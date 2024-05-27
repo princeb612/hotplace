@@ -430,17 +430,7 @@ return_t crypto_keychain::add_rsa(crypto_key* crypto_key, const char* kid, const
             __leave2;
         }
 
-        binary_t bin_n;
-        binary_t bin_e;
-        binary_t bin_d;
-
-        bin_n.insert(bin_n.end(), n, n + size_n);
-        bin_e.insert(bin_e.end(), e, e + size_e);
-        if (d) {
-            bin_d.insert(bin_d.end(), d, d + size_d);
-        }
-
-        ret = add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
+        ret = add_rsa(crypto_key, kid, alg, binary(n, size_n), binary(e, size_e), binary(d, size_d), use);
     }
     __finally2 {
         // do nothing
@@ -888,7 +878,7 @@ return_t crypto_keychain::add_ec_nid_OKP(crypto_key* cryptokey, const char* kid,
             pkey = EVP_PKEY_new_raw_public_key(nid, nullptr, &x[0], x.size());
         }
         if (nullptr == pkey) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2_trace_openssl(ret);
         }
 
@@ -1230,19 +1220,7 @@ return_t crypto_keychain::add_ec(crypto_key* crypto_key, const char* kid, const 
             __leave2;
         }
 
-        binary_t bin_x;
-        binary_t bin_y;
-        binary_t bin_d;
-
-        bin_x.insert(bin_x.end(), x, x + size_x);
-        if (y) {
-            bin_y.insert(bin_y.end(), y, y + size_y);
-        }
-        if (d) {
-            bin_d.insert(bin_d.end(), d, d + size_d);
-        }
-
-        ret = add_ec(crypto_key, kid, alg, nid, bin_x, bin_y, bin_d, use);
+        ret = add_ec(crypto_key, kid, alg, nid, binary(x, size_x), binary(y, size_y), binary(d, size_d), use);
     }
     __finally2 {
         // do nothing
@@ -1398,10 +1376,7 @@ return_t crypto_keychain::add_oct_b64u(crypto_key* crypto_key, const char* kid, 
 
         binary_t k_decoded = base64_decode(k_value, strlen(k_value), base64_encoding_t::base64url_encoding);
 
-        binary_t bin_k;
-        bin_k.insert(bin_k.end(), k_decoded.begin(), k_decoded.end());
-
-        add_oct(crypto_key, kid, alg, bin_k, use);
+        add_oct(crypto_key, kid, alg, k_decoded, use);
     }
     __finally2 {
         // do nothing
@@ -1420,10 +1395,7 @@ return_t crypto_keychain::add_oct_b64(crypto_key* crypto_key, const char* kid, c
 
         binary_t k_decoded = base64_decode(k, strlen(k), base64_encoding_t::base64_encoding);
 
-        binary_t bin_k;
-        bin_k.insert(bin_k.end(), k_decoded.begin(), k_decoded.end());
-
-        add_oct(crypto_key, kid, alg, bin_k, use);
+        add_oct(crypto_key, kid, alg, k_decoded, use);
     }
     __finally2 {
         // do nothing

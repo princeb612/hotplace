@@ -27,6 +27,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_IO_LINUX
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_IO_WIN32
+    ${PROJECT_SOURCE_DIR}/sdk/io/basic/windows/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/windows/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/windows/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/system/windows/*.cpp

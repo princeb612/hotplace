@@ -8,10 +8,11 @@
  * Date         Name                Description
  */
 
+#include <sdk/io/basic/sdk.hpp>
 #include <sdk/net/basic/client_socket.hpp>
-#include <sdk/net/basic/sdk.hpp>
 
 namespace hotplace {
+using namespace io;
 namespace net {
 
 tcp_client_socket::tcp_client_socket() : _ttl(1000) {

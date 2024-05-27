@@ -366,10 +366,10 @@ void test_vtprintf() {
     variant v;
 
     v.set_int32(10);
-    vtprintf(&bs, v.content());
+    vtprintf(&bs, v);
 
     v.set_str_new("sample");
-    vtprintf(&bs, v.content());
+    vtprintf(&bs, v);
 
     _logger->writeln(bs.c_str());
 

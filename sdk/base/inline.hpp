@@ -159,52 +159,6 @@ static inline std::wstring dir_name(const std::wstring& path) {
     return ret_value.substr(0, ret_value.find_last_of(L"/\\"));
 }
 
-/**
- * @brief append
- * @param binary_t& lhs [inout]
- * @param char* rhs [in]
- */
-static inline binary_t& operator<<(binary_t& lhs, char* rhs) {
-    if (rhs) {
-        lhs.insert(lhs.end(), rhs, rhs + strlen(rhs));
-    }
-    return lhs;
-}
-
-/**
- * @brief append
- * @param binary_t& lhs [inout]
- * @param std::string rhs [in]
- */
-static inline binary_t& operator<<(binary_t& lhs, const std::string& rhs) {
-    lhs.insert(lhs.end(), rhs.begin(), rhs.end());
-    return lhs;
-}
-
-/**
- * @brief append
- * @param binary_t& lhs [inout]
- * @param binary_t rhs [in]
- */
-static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
-    lhs.insert(lhs.end(), rhs.begin(), rhs.end());
-    return lhs;
-}
-
-static inline std::string convert(const binary_t& bin) {
-    std::string result;
-
-    result.assign((char*)&bin[0], bin.size());
-    return result;
-}
-
-static inline binary_t convert(const std::string& source) {
-    binary_t result;
-
-    result.insert(result.end(), source.begin(), source.end());
-    return result;
-}
-
 #if defined _WIN32
 #define DIR_SEP_CA '\\'
 #define DIR_SEP_TA "\\"
@@ -294,6 +248,7 @@ static inline std::wstring concat_filepath(const std::wstring& path, const std::
 }
 
 static inline uint16 convert_endian(uint16 value) { return (((((uint16)(value)&0xFF)) << 8) | (((uint16)(value)&0xFF00) >> 8)); }
+static inline uint16 convert_endian(int16 value) { return (((((int16)(value)&0xFF)) << 8) | (((int16)(value)&0xFF00) >> 8)); }
 
 #define static_inline_convert_endian(T1, T2)    \
     static inline T1 convert_endian(T1 value) { \
@@ -311,12 +266,12 @@ static inline uint16 convert_endian(uint16 value) { return (((((uint16)(value)&0
         return y.value;                         \
     }
 
-// static inline uint32 convert_endian(uint32);
 static_inline_convert_endian(uint32, uint16);
-// static inline uint64 convert_endian(uint64);
 static_inline_convert_endian(uint64, uint32);
-// static inline uint128 convert_endian(uint128);
 static_inline_convert_endian(uint128, uint64);
+static_inline_convert_endian(int32, int16);
+static_inline_convert_endian(int64, int32);
+static_inline_convert_endian(int128, int64);
 
 }  // namespace hotplace
 

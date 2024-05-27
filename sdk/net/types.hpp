@@ -38,16 +38,6 @@
 namespace hotplace {
 namespace net {
 
-#if defined __linux__
-typedef int socket_t;
-#elif defined _WIN32 || defined _WIN64
-typedef SOCKET socket_t;
-
-#endif
-typedef struct sockaddr sockaddr_t;
-typedef struct sockaddr_storage sockaddr_storage_t;
-typedef struct linger linger_t;
-
 enum tls_io_flag_t {
     read_ssl_read = (1 << 0),                                        // 0000 0001
     read_bio_write = (1 << 1),                                       // 0000 0010
@@ -59,9 +49,6 @@ enum tls_io_flag_t {
     read_epoll = (read_bio_write | read_socket_recv),                // 0000 0110
     send_all = (send_ssl_write | send_bio_read | send_socket_send),  // 0011 1000
 };
-
-#define NET_DEFAULT_TIMEOUT 10
-typedef struct linger linger_t;
 
 struct _tls_context_t;
 typedef struct _tls_context_t tls_context_t;

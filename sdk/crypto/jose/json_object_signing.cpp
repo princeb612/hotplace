@@ -270,7 +270,7 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
         sign_function_t signer = nullptr;
         const hint_signature_t* hint = advisor->hintof_jose_signature(sig);
         if (nullptr == hint) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
         int group = hint->group;
@@ -371,7 +371,7 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
         verify_function_t verifier = nullptr;
         const hint_signature_t* hint = advisor->hintof_jose_signature(sig);
         if (nullptr == hint) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
         int group = hint->group;
@@ -441,7 +441,7 @@ return_t json_object_signing::check_constraints(jws_t sig, const EVP_PKEY* pkey)
          */
         const hint_signature_t* hint = advisor->hintof_jose_signature(sig);
         if (nullptr == hint) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
         int group = hint->group;

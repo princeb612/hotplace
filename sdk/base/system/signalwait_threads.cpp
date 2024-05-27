@@ -44,7 +44,7 @@ return_t signalwait_threads::create() {
 
     __try2 {
         if (nullptr == _thread_callback_routine) {
-            ret = errorcode_t::request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 

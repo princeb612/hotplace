@@ -10,7 +10,7 @@
 
 #include <sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
-#include <sdk/io/system/windows_pe.hpp>
+#include <sdk/io/system/winpe.hpp>
 
 namespace hotplace {
 namespace crypto {

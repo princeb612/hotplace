@@ -12,7 +12,6 @@
 #include <sdk/base.hpp>
 #include <sdk/crypto.hpp>
 #include <sdk/io.hpp>
-#include <sdk/net/basic/sdk.hpp>
 #include <sdk/net/http/auth/oauth2.hpp>
 
 namespace hotplace {

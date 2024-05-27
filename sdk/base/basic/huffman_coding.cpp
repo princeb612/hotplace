@@ -161,7 +161,7 @@ return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_
             __leave2;
         }
 
-        maphint<uint8, std::string> hint(_codetable);
+        t_maphint<uint8, std::string> hint(_codetable);
         size_t i = 0;
         const byte_t *p = source;
         for (i = 0; i < size; i++) {
@@ -192,7 +192,7 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
     size_t totalbits = 0;
     const byte_t *p = nullptr;
     size_t i = 0;
-    maphint<uint8, std::string> hint(_codetable);
+    t_maphint<uint8, std::string> hint(_codetable);
 
     // RFC 7541 Appendix B.  Huffman Code
     // As the Huffman-encoded data doesn't always end at an octet boundary,
@@ -290,7 +290,7 @@ return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t s
         // align to MSB
         const byte_t *p = nullptr;
         size_t i = 0;
-        maphint<uint8, std::string> hint(_codetable);
+        t_maphint<uint8, std::string> hint(_codetable);
         for (p = source, i = 0; i < size; i++) {
             std::string code;
             hint.find(p[i], &code);

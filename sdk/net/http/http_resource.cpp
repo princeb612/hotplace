@@ -110,7 +110,7 @@ std::string http_resource::load(int status) {
     load_resources();
 
     std::string message;
-    maphint<int, std::string> hint(_status_codes);
+    t_maphint<int, std::string> hint(_status_codes);
     hint.find(status, &message);
     return message;
 }
@@ -119,7 +119,7 @@ std::string http_resource::get_method(http_method_t method) {
     load_resources();
 
     std::string resource;
-    maphint<http_method_t, std::string> hint(_methods);
+    t_maphint<http_method_t, std::string> hint(_methods);
     hint.find(method, &resource);
     return resource;
 }
@@ -128,7 +128,7 @@ std::string http_resource::get_frame_name(uint8 type) {
     load_resources();
 
     std::string name;
-    maphint<uint8, std::string> hint(_frame_names);
+    t_maphint<uint8, std::string> hint(_frame_names);
     hint.find(type, &name);
     return name;
 }
@@ -137,7 +137,7 @@ std::string http_resource::get_frame_flag(uint8 flag) {
     load_resources();
 
     std::string flag_name;
-    maphint<uint8, std::string> hint(_frame_flags);
+    t_maphint<uint8, std::string> hint(_frame_flags);
     hint.find(flag, &flag_name);
     return flag_name;
 }

@@ -310,10 +310,10 @@ class variant {
     variant(variant&& rhs);
     ~variant();
 
-    variant_t& content();
-    vartype_t type();
-    uint16 size();
-    uint16 flag();
+    const variant_t& content() const;
+    vartype_t type() const;
+    uint16 size() const;
+    uint16 flag() const;
 
     /**
      * @brief reset

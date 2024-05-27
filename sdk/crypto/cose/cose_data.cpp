@@ -403,7 +403,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
 
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
             variant value = map_iter->second;
-            variant_t& vt = value.content();
+            const variant_t& vt = value.content();
 
             if (TYPE_STATIC_KEY == vt.type) {
                 cose_key* k = (cose_key*)vt.data.p;
@@ -447,7 +447,7 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
 
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
             variant value = map_iter->second;
-            variant_t& vt = value.content();
+            const variant_t& vt = value.content();
 
             if (TYPE_STATIC_KEY == vt.type) {
                 cose_key* k = (cose_key*)vt.data.p;
