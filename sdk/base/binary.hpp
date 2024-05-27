@@ -15,6 +15,7 @@
 #include <map>
 #include <sdk/base/error.hpp>
 #include <sdk/base/types.hpp>
+#include <string.h>
 
 namespace hotplace {
 
