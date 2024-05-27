@@ -11,11 +11,12 @@
 #ifndef __HOTPLACE_SDK_BASE_BINARY__
 #define __HOTPLACE_SDK_BASE_BINARY__
 
+#include <string.h>
+
 #include <functional>
 #include <map>
 #include <sdk/base/error.hpp>
 #include <sdk/base/types.hpp>
-#include <string.h>
 
 namespace hotplace {
 

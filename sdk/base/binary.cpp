@@ -9,13 +9,13 @@
  */
 
 #include <stdarg.h>
+#include <string.h>
 
 #include <ostream>
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/binary.hpp>
 #include <sdk/base/inline.hpp>
 #include <sdk/base/stl.hpp>
-#include <string.h>
 
 namespace hotplace {
 

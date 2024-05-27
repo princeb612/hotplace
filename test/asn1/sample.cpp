@@ -288,7 +288,7 @@ void x690_8_5_real() {
         var.dump(bin, true);
         _logger->dump(bin);
 
-        _test_case.test(errorcode_t::not_supported, __FUNCTION__, "X.690 8.5 real 0x%08x expect %s", var.content().data.d, expect.c_str());
+        _test_case.test(errorcode_t::not_supported, __FUNCTION__, "X.690 8.5 real %lf expect %s", d, expect.c_str());
     };
 
     for (auto entry : _table) {
