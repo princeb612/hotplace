@@ -30,6 +30,190 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
+void test_btree() {
+    _test_case.begin("binary tree");
+    // case.1
+    {
+        t_btree<int> bt;
+        basic_stream bs;
+
+        int i = 0;
+        for (i = 0; i < 20; i++) {
+            bt.insert(i);
+        }
+        for (i = 0; i < 20; i++) {
+            bt.insert(i);
+        }
+
+        bs.printf("members in [ ");
+        bt.for_each([&](int const& i) -> void { bs.printf("%d ", i); });
+        bs.printf("]");
+        _logger->writeln(bs);
+
+        _test_case.assert(20 == bt.size(), __FUNCTION__, "t_btree.insert");
+
+        for (i = 0; i < 20; i++) {
+            bt.remove(i);
+        }
+        _test_case.assert(0 == bt.size(), __FUNCTION__, "t_btree.remove");
+        _test_case.assert(true == bt.empty(), __FUNCTION__, "t_btree.empty");
+    }
+    // case.2
+    {
+        t_btree<std::string> bt;
+        basic_stream bs;
+        bt.insert("hello");
+        bt.insert("world");
+        bt.insert("t_btree");
+
+        bs.printf("members in [ ");
+        bt.for_each([&](const std::string& s) -> void { bs.printf("%s ", s.c_str()); });
+        bs.printf("]");
+        _logger->writeln(bs);
+
+        _test_case.assert(3 == bt.size(), __FUNCTION__, "t_btree<std::string>");
+    }
+    // case.3~
+    {
+        struct basedata {
+            uint32 key;
+            std::string value;
+
+            basedata(uint32 k, const std::string& v) : key(k), value(v) {}
+            basedata(const basedata& rhs) : key(rhs.key), value(rhs.value) {}
+        };
+        // 1 2 3 ...
+        struct testdata1 : basedata {
+            testdata1(uint32 k, const std::string& v) : basedata(k, v) {}
+            testdata1(const testdata1& rhs) : basedata(rhs) {}
+
+            bool operator<(const testdata1& rhs) const {
+                bool test = false;
+                if (key < rhs.key) {
+                    return true;
+                } else if (key == rhs.key) {
+                    return value < rhs.value;
+                } else {
+                    return false;
+                }
+            }
+        };
+        // a b c ...
+        struct testdata2 : basedata {
+            testdata2(uint32 k, const std::string& v) : basedata(k, v) {}
+            testdata2(const testdata2& rhs) : basedata(rhs) {}
+
+            bool operator<(const testdata2& rhs) const {
+                bool test = false;
+                if (value < rhs.value) {
+                    return true;
+                } else if (value == rhs.value) {
+                    return key < rhs.key;
+                } else {
+                    return false;
+                }
+            }
+        };
+
+        // case.3
+        {
+            t_btree<struct testdata1> bt;
+            basic_stream bs;
+            bt.insert(testdata1(1, "one"));
+            bt.insert(testdata1(2, "two"));
+            bt.insert(testdata1(3, "three"));
+            bt.insert(testdata1(4, "four"));
+            bt.insert(testdata1(5, "five"));
+
+            bs.printf("members in [ ");
+            bt.for_each([&](const struct testdata1& t) -> void { bs.printf("%u %s ", t.key, t.value.c_str()); });
+            bs.printf("]");
+            _logger->writeln(bs);
+
+            _test_case.assert(5 == bt.size(), __FUNCTION__, "t_btree<struct> #1");
+        }
+        // case.4
+        {
+            t_btree<struct testdata2> bt;
+            basic_stream bs;
+            bt.insert(testdata2(1, "one"));
+            bt.insert(testdata2(2, "two"));
+            bt.insert(testdata2(3, "three"));
+            bt.insert(testdata2(4, "four"));
+            bt.insert(testdata2(5, "five"));
+
+            bs.printf("members in [ ");
+            bt.for_each([&](const struct testdata2& t) -> void { bs.printf("%u %s ", t.key, t.value.c_str()); });
+            bs.printf("]");
+            _logger->writeln(bs);
+
+            _test_case.assert(5 == bt.size(), __FUNCTION__, "t_btree<struct> #2");
+        }
+    }
+    // case.5~
+    {
+        basic_stream bs;
+        constexpr char sample[] = "still a man hears what he wants to hear and disregards the rest";
+
+        struct testdata {
+            byte_t symbol;
+            size_t weight;
+
+            testdata() : symbol(0), weight(0) {}
+            testdata(byte_t b) : symbol(b), weight(0) {}
+            testdata(const testdata& rhs) : symbol(rhs.symbol), weight(rhs.weight) {}
+
+            // bool operator<(const testdata& rhs) const { return symbol < rhs.symbol;
+            // }
+        };
+
+        // case.5
+        {
+            t_btree<testdata, t_type_comparator<testdata>> bt;
+            for (auto b : sample) {
+                if (b) {
+                    bt.insert(testdata((byte_t)b), [](testdata& code) -> void { code.weight++; });
+                }
+            }
+            _test_case.assert(15 == bt.size(), __FUNCTION__, "t_btree<structure, custom_compararor> insert and update");
+
+            bs.printf("members in [\n");
+            bt.for_each([&](const testdata& t) -> void { bs.printf("%c %02x %zi\n", isprint(t.symbol) ? t.symbol : '?', t.symbol, t.weight); });
+            bs.printf("]");
+            _logger->writeln(bs);
+        }
+    }
+}
+
+void test_avl_tree() {
+    _test_case.begin("AVL tree");
+    {
+        t_avltree<int> bt;
+        basic_stream bs;
+
+        int i = 0;
+        for (i = 0; i < 20; i++) {
+            bt.insert(i);
+        }
+        for (i = 0; i < 20; i++) {
+            bt.insert(i);
+        }
+
+        bs.printf("members in [ ");
+        bt.for_each([&](int const& i) -> void { bs.printf("%d ", i); });
+        bs.printf("]");
+        _logger->writeln(bs);
+
+        _test_case.assert(20 == bt.size(), __FUNCTION__, "t_avltree.insert");
+
+        for (i = 0; i < 20; i++) {
+            bt.remove(i);
+        }
+        _test_case.assert(0 == bt.size(), __FUNCTION__, "t_avltree.remove");
+        _test_case.assert(true == bt.empty(), __FUNCTION__, "t_avltree.empty");
+    }
+}
+
 void test_vector() {
     _test_case.begin("vector");
 
@@ -269,6 +453,42 @@ void test_graph2() {
     do_test_graph_shortest_path<std::string>(g, "get up", "dream");
 }
 
+void test_pattern_searching() {
+    _test_case.begin("pattern searching");
+
+    // 0123456789abcdef0123
+    // abacaabaccabacabaabb
+    //           abacab
+
+    binary data("abacaabaccabacabaabb");
+    binary pattern("abacab");
+
+    {
+        t_kmp_pattern<byte_t> kmp;
+        int idx = kmp.match(&data.get()[0], data.get().size(), &pattern.get()[0], pattern.get().size());
+        _logger->hdump("data", data);
+        _logger->hdump("pattern", pattern);
+        _test_case.assert(0xa == idx, __FUNCTION__, "The Knuth-Morris-Pratt Algorithm match %i", idx);
+    }
+
+    {
+        auto append = [](std::vector<int>& target, int i) -> void { target.insert(target.end(), i); };
+
+        std::vector<int> data2;
+        std::vector<int> pattern2;
+        for (auto temp : data.get()) {
+            append(data2, temp);
+        }
+        for (auto temp : pattern.get()) {
+            append(pattern2, temp);
+        }
+
+        t_kmp_pattern<int> kmp;
+        int idx = kmp.match(&data2[0], data2.size(), &pattern2[0], pattern2.size());
+        _test_case.assert(0xa == idx, __FUNCTION__, "The Knuth-Morris-Pratt Algorithm match %i", idx);
+    }
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -284,11 +504,14 @@ int main(int argc, char** argv) {
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
 
+    test_btree();
+    test_avl_tree();
     test_vector();
     test_list();
     test_pq();
     test_graph();
     test_graph2();
+    test_pattern_searching();
 
     _logger->flush();
 

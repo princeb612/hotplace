@@ -100,7 +100,7 @@ void test_dumpmemory() {
     _logger->writeln("dump\n%s", bs.c_str());
     _test_case.test(ret, __FUNCTION__, "dump std::string");
 
-    binary_t bin = convert(str);
+    binary_t bin = tobin(str);
     ret = dump_memory(bin, &bs);
     _logger->writeln("dump\n%s", bs.c_str());
     _test_case.test(ret, __FUNCTION__, "dump std::vector<byte_t>");

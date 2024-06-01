@@ -18,36 +18,6 @@
 
 namespace hotplace {
 
-/*
- * readability
- */
-#define hton16 htons
-#define ntoh16 ntohs
-
-#define hton32 htonl
-#define ntoh32 ntohl
-
-/**
- * host order to network order (64bits)
- */
-uint64 hton64(uint64 value);
-uint64 ntoh64(uint64 value);
-
-#if defined __SIZEOF_INT128__
-
-typedef union _ipaddr_byteorder {
-    uint128 t128;
-    uint32 t32[4];
-} ipaddr_byteorder;
-
-/**
- * host order to network order (128bits)
- */
-uint128 hton128(uint128 value);
-uint128 ntoh128(uint128 value);
-
-#endif
-
 /**
  * @brief   uint24 utility function (0 to 0x00ffffff)
  * @see     RFC 7540 4. HTTP Frames, Figure 1: Frame Layout

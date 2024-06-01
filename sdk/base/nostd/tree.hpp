@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_NOSTD_TREE__
-#define __HOTPLACE_SDK_BASE_BASIC_NOSTD_TREE__
+#ifndef __HOTPLACE_SDK_BASE_NOSTD_TREE__
+#define __HOTPLACE_SDK_BASE_NOSTD_TREE__
 
 #include <deque>
 #include <functional>

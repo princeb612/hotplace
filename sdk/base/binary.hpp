@@ -118,6 +118,34 @@ class binary {
     binary_t _bin;
 };
 
+/**
+ * @sample
+ *          binary_t bin;
+ *          binary_push(bin, 0xff);
+ *          uint16 ui16 = 0x1234;
+ *          binary_append(bin, ui16, hton16);
+ *          uint32 ui32 = 0x1234;
+ *          binary_append(bin, ui32, hton32);
+ *          // 00000000 : FF 12 34 00 00 12 34 -- -- -- -- -- -- -- -- -- | ..4...4
+ *
+ *          bin.clear();
+ *          binary_append(bin, "We don't playing because we grow old; we grow old because we stop playing.");
+ *          // 00000000 : 57 65 20 64 6F 6E 27 74 20 70 6C 61 79 69 6E 67 | We don't playing
+ *          // 00000010 : 20 62 65 63 61 75 73 65 20 77 65 20 67 72 6F 77 |  because we grow
+ *          // 00000020 : 20 6F 6C 64 3B 20 77 65 20 67 72 6F 77 20 6F 6C |  old; we grow ol
+ *          // 00000030 : 64 20 62 65 63 61 75 73 65 20 77 65 20 73 74 6F | d because we sto
+ *          // 00000040 : 70 20 70 6C 61 79 69 6E 67 2E -- -- -- -- -- -- | p playing.
+ *
+ *          bin.clear();
+ *          uint128 ui128 = t_htoi<uint128>("0123456789abcdef");
+ *          binary_append(bin, ui128, hton128);
+ *          // 00000000 : 00 00 00 00 00 00 00 00 01 23 45 67 89 AB CD EF | .........#Eg....
+ *
+ *          bin.clear();
+ *          uint128 ui128 = t_htoi<uint128>("0123456789abcdef");
+ *          binary_append(bin, ui128, hton128, 8);
+ *          // 00000000 : 01 23 45 67 89 AB CD EF -- -- -- -- -- -- -- -- | .#Eg....
+ */
 return_t binary_push(binary_t& target, byte_t rhs);
 return_t binary_append(binary_t& target, int16 rhs, std::function<int16(int16)> func = nullptr);
 return_t binary_append(binary_t& target, uint16 rhs, std::function<uint16(uint16)> func = nullptr);
@@ -136,6 +164,7 @@ return_t binary_append(binary_t& target, const char* rhs);
 return_t binary_append(binary_t& target, const char* buf, size_t size);
 return_t binary_append(binary_t& target, const byte_t* buf, size_t size);
 return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t to);
+return_t binary_load(binary_t& bn, uint32 bnlen, byte_t* data, uint32 len);
 
 /**
  * @brief append
@@ -169,14 +198,20 @@ static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
     return lhs;
 }
 
-static inline std::string convert(const binary_t& bin) {
+/**
+ * @brief   util
+ */
+static inline std::string tostring(const binary_t& bin) {
     std::string result;
 
     result.assign((char*)&bin[0], bin.size());
     return result;
 }
 
-static inline binary_t convert(const std::string& source) {
+/**
+ * @brief   util
+ */
+static inline binary_t tobin(const std::string& source) {
     binary_t result;
 
     result.insert(result.end(), source.begin(), source.end());

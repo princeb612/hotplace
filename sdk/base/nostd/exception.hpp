@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_EXCEPTION__
-#define __HOTPLACE_SDK_BASE_BASIC_EXCEPTION__
+#ifndef __HOTPLACE_SDK_BASE_NOSTD_EXCEPTION__
+#define __HOTPLACE_SDK_BASE_NOSTD_EXCEPTION__
 
 #include <sdk/base/error.hpp>
 #include <sdk/base/stl.hpp>

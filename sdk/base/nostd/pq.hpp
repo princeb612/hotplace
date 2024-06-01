@@ -9,10 +9,10 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_NOSTD_PRIORITYQUEUE__
-#define __HOTPLACE_SDK_BASE_BASIC_NOSTD_PRIORITYQUEUE__
+#ifndef __HOTPLACE_SDK_BASE_NOSTD_PRIORITYQUEUE__
+#define __HOTPLACE_SDK_BASE_NOSTD_PRIORITYQUEUE__
 
-#include <sdk/base/basic/nostd/vector.hpp>
+#include <sdk/base/nostd/vector.hpp>
 #include <sdk/base/stl.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>

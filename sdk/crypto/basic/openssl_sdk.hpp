@@ -19,14 +19,6 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-#define __min(a, b) (((a) < (b)) ? (a) : (b))
-#define __max(a, b) (((a) > (b)) ? (a) : (b))
-#define constraint_range(var, minimum, maximum) \
-    {                                           \
-        var = __max(var, minimum);              \
-        var = __min(var, maximum);              \
-    }
-
 /**
  * @brief strings, algorithms
  * @remarks call in main function

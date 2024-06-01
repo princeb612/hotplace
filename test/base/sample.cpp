@@ -104,43 +104,48 @@ void test_sharedinstance2() {
     _test_case.assert(1 == simple_instance2_dtor, __FUNCTION__, "shared instance");
 }
 
-void dump_data(const char *text, void *ptr, size_t size) {
-    basic_stream bs;
-    dump_memory((byte_t *)ptr, size, &bs, 16, 2);
-    _logger->writeln("%s\n%s", text ? text : "", bs.c_str());
-}
-
 void test_convert_endian() {
     _test_case.begin("endian");
 
-    uint64 i64 = t_htoi<uint64>("0001020304050607");
-    uint128 i128 = t_htoi<uint128>("000102030405060708090a0b0c0d0e0f");
+    struct testvector_64 {
+        uint64 h;
+        uint64 n;
+    } _table_64[] = {
+        {
+            t_htoi<uint64>("0123456789ABCDEF"),
+            t_htoi<uint64>("EFCDAB8967452301"),
+        },
+        {
+            t_htoi<uint64>("1122334455667788"),
+            t_htoi<uint64>("8877665544332211"),
+        },
+    };
 
-    if (is_little_endian()) {
-        uint32 i32 = 7;
-        _test_case.assert(ntoh32(i32) == convert_endian(i32), __FUNCTION__, "32bits");
-        _test_case.assert(ntoh64(i64) == convert_endian(i64), __FUNCTION__, "64bits");
-        _test_case.assert(ntoh128(i128) == convert_endian(i128), __FUNCTION__, "128bits");
-    } else {
-        // ntoh ... no effect
+    for (auto item : _table_64) {
+        _logger->dump((byte_t *)&item.h, sizeof(uint64));
+        _logger->dump((byte_t *)&item.n, sizeof(uint64));
+        _test_case.assert(hton64(item.h) == item.n, __FUNCTION__, "hton64 %x %x", item.h, item.n);
     }
 
-#define do_convert_endian_test(type, val)        \
-    {                                            \
-        type var = val;                          \
-        type temp = convert_endian(var);         \
-        dump_data("before", &var, sizeof(var));  \
-        dump_data("after", &temp, sizeof(temp)); \
-    }
+    struct testvector_128 {
+        uint128 h;
+        uint128 n;
+    } _table_128[] = {
+        {
+            t_htoi<uint128>("0123456789ABCDEFFEDCBA9876543210"),
+            t_htoi<uint128>("1032547698BADCFEEFCDAB8967452301"),
+        },
+        {
+            t_htoi<uint128>("00112233445566778899AABBCCDDEEFF"),
+            t_htoi<uint128>("FFEEDDCCBBAA99887766554433221100"),
+        },
+    };
 
-    do_convert_endian_test(uint32, 7);
-    do_convert_endian_test(uint32, -2);
-    do_convert_endian_test(uint64, 7);
-    do_convert_endian_test(uint64, -2);
-    do_convert_endian_test(uint128, 7);
-    do_convert_endian_test(uint128, -2);
-    do_convert_endian_test(uint64, i64);
-    do_convert_endian_test(uint128, i128);
+    for (auto item : _table_128) {
+        _logger->dump((byte_t *)&item.h, sizeof(uint128));
+        _logger->dump((byte_t *)&item.n, sizeof(uint128));
+        _test_case.assert(hton128(item.h) == item.n, __FUNCTION__, "hton128 %x %x", item.h, item.n);
+    }
 }
 
 void test_endian() {
@@ -181,190 +186,6 @@ void test_maphint() {
     _test_case.assert("two" == value, __FUNCTION__, "t_maphint.find(2)");
 }
 
-void test_btree() {
-    _test_case.begin("binary tree");
-    // case.1
-    {
-        t_btree<int> bt;
-        basic_stream bs;
-
-        int i = 0;
-        for (i = 0; i < 20; i++) {
-            bt.insert(i);
-        }
-        for (i = 0; i < 20; i++) {
-            bt.insert(i);
-        }
-
-        bs.printf("members in [ ");
-        bt.for_each([&](int const &i) -> void { bs.printf("%d ", i); });
-        bs.printf("]");
-        _logger->writeln(bs);
-
-        _test_case.assert(20 == bt.size(), __FUNCTION__, "t_btree.insert");
-
-        for (i = 0; i < 20; i++) {
-            bt.remove(i);
-        }
-        _test_case.assert(0 == bt.size(), __FUNCTION__, "t_btree.remove");
-        _test_case.assert(true == bt.empty(), __FUNCTION__, "t_btree.empty");
-    }
-    // case.2
-    {
-        t_btree<std::string> bt;
-        basic_stream bs;
-        bt.insert("hello");
-        bt.insert("world");
-        bt.insert("t_btree");
-
-        bs.printf("members in [ ");
-        bt.for_each([&](const std::string &s) -> void { bs.printf("%s ", s.c_str()); });
-        bs.printf("]");
-        _logger->writeln(bs);
-
-        _test_case.assert(3 == bt.size(), __FUNCTION__, "t_btree<std::string>");
-    }
-    // case.3~
-    {
-        struct basedata {
-            uint32 key;
-            std::string value;
-
-            basedata(uint32 k, const std::string &v) : key(k), value(v) {}
-            basedata(const basedata &rhs) : key(rhs.key), value(rhs.value) {}
-        };
-        // 1 2 3 ...
-        struct testdata1 : basedata {
-            testdata1(uint32 k, const std::string &v) : basedata(k, v) {}
-            testdata1(const testdata1 &rhs) : basedata(rhs) {}
-
-            bool operator<(const testdata1 &rhs) const {
-                bool test = false;
-                if (key < rhs.key) {
-                    return true;
-                } else if (key == rhs.key) {
-                    return value < rhs.value;
-                } else {
-                    return false;
-                }
-            }
-        };
-        // a b c ...
-        struct testdata2 : basedata {
-            testdata2(uint32 k, const std::string &v) : basedata(k, v) {}
-            testdata2(const testdata2 &rhs) : basedata(rhs) {}
-
-            bool operator<(const testdata2 &rhs) const {
-                bool test = false;
-                if (value < rhs.value) {
-                    return true;
-                } else if (value == rhs.value) {
-                    return key < rhs.key;
-                } else {
-                    return false;
-                }
-            }
-        };
-
-        // case.3
-        {
-            t_btree<struct testdata1> bt;
-            basic_stream bs;
-            bt.insert(testdata1(1, "one"));
-            bt.insert(testdata1(2, "two"));
-            bt.insert(testdata1(3, "three"));
-            bt.insert(testdata1(4, "four"));
-            bt.insert(testdata1(5, "five"));
-
-            bs.printf("members in [ ");
-            bt.for_each([&](const struct testdata1 &t) -> void { bs.printf("%u %s ", t.key, t.value.c_str()); });
-            bs.printf("]");
-            _logger->writeln(bs);
-
-            _test_case.assert(5 == bt.size(), __FUNCTION__, "t_btree<struct> #1");
-        }
-        // case.4
-        {
-            t_btree<struct testdata2> bt;
-            basic_stream bs;
-            bt.insert(testdata2(1, "one"));
-            bt.insert(testdata2(2, "two"));
-            bt.insert(testdata2(3, "three"));
-            bt.insert(testdata2(4, "four"));
-            bt.insert(testdata2(5, "five"));
-
-            bs.printf("members in [ ");
-            bt.for_each([&](const struct testdata2 &t) -> void { bs.printf("%u %s ", t.key, t.value.c_str()); });
-            bs.printf("]");
-            _logger->writeln(bs);
-
-            _test_case.assert(5 == bt.size(), __FUNCTION__, "t_btree<struct> #2");
-        }
-    }
-    // case.5~
-    {
-        basic_stream bs;
-        constexpr char sample[] = "still a man hears what he wants to hear and disregards the rest";
-
-        struct testdata {
-            byte_t symbol;
-            size_t weight;
-
-            testdata() : symbol(0), weight(0) {}
-            testdata(byte_t b) : symbol(b), weight(0) {}
-            testdata(const testdata &rhs) : symbol(rhs.symbol), weight(rhs.weight) {}
-
-            // bool operator<(const testdata& rhs) const { return symbol < rhs.symbol;
-            // }
-        };
-
-        // case.5
-        {
-            t_btree<testdata, t_type_comparator<testdata>> bt;
-            for (auto b : sample) {
-                if (b) {
-                    bt.insert(testdata((byte_t)b), [](testdata &code) -> void { code.weight++; });
-                }
-            }
-            _test_case.assert(15 == bt.size(), __FUNCTION__, "t_btree<structure, custom_compararor> insert and update");
-
-            bs.printf("members in [\n");
-            bt.for_each([&](const testdata &t) -> void { bs.printf("%c %02x %zi\n", isprint(t.symbol) ? t.symbol : '?', t.symbol, t.weight); });
-            bs.printf("]");
-            _logger->writeln(bs);
-        }
-    }
-}
-
-void test_avl_tree() {
-    _test_case.begin("AVL tree");
-    {
-        t_avltree<int> bt;
-        basic_stream bs;
-
-        int i = 0;
-        for (i = 0; i < 20; i++) {
-            bt.insert(i);
-        }
-        for (i = 0; i < 20; i++) {
-            bt.insert(i);
-        }
-
-        bs.printf("members in [ ");
-        bt.for_each([&](int const &i) -> void { bs.printf("%d ", i); });
-        bs.printf("]");
-        _logger->writeln(bs);
-
-        _test_case.assert(20 == bt.size(), __FUNCTION__, "t_avltree.insert");
-
-        for (i = 0; i < 20; i++) {
-            bt.remove(i);
-        }
-        _test_case.assert(0 == bt.size(), __FUNCTION__, "t_avltree.remove");
-        _test_case.assert(true == bt.empty(), __FUNCTION__, "t_avltree.empty");
-    }
-}
-
 int main(int argc, char **argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -377,16 +198,17 @@ int main(int argc, char **argv) {
     const OPTION &option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0).set_format("Y-M-D h:m:s.f ");
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0).set_format("[Y-M-D h:m:s.f] ")
+        //.set_logfile("log")
+        ;
     _logger.make_share(builder.build());
+    _test_case.attach(&*_logger);
 
     test_sharedinstance1();
     test_sharedinstance2();
     test_endian();
     test_convert_endian();
     test_maphint();
-    test_btree();
-    test_avl_tree();
 
     _logger->flush();
 

@@ -131,6 +131,7 @@
 
  * Neural Networks
  * Machine Learning
+   * sketch repository (private, spin off, in progress)
 
 ## next time
 

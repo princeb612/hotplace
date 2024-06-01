@@ -20,6 +20,7 @@ add_subdirectory (mlfq)
 add_subdirectory (stream)
 add_subdirectory (string)
 add_subdirectory (asn1)
+add_subdirectory (parser)
 add_subdirectory (sysmon)
 
 # crypto

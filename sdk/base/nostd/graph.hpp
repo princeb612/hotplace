@@ -10,14 +10,14 @@
  * graph online https://graphonline.ru/en/
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_NOSTD_GRAPH__
-#define __HOTPLACE_SDK_BASE_BASIC_NOSTD_GRAPH__
+#ifndef __HOTPLACE_SDK_BASE_NOSTD_GRAPH__
+#define __HOTPLACE_SDK_BASE_NOSTD_GRAPH__
 
 #include <algorithm>
 #include <list>
 #include <map>
 #include <queue>
-#include <sdk/base/basic/nostd/container.hpp>
+#include <sdk/base/nostd/container.hpp>
 #include <sdk/base/stl.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/syntax.hpp>
@@ -48,7 +48,7 @@ namespace hotplace {
  *          // g.add_edge(7, 8, 2, graph_direction_t::graph_undirected);
  *          auto dfs = graph.build_dfs()
  *          dfs->learn().infer();
- *          auto infer_handler = [](const int& i, const std::vector<int>& v) -> void {
+ *          auto handler = [](const int& i, const std::vector<int>& v) -> void {
  *              basic_stream bs;
  *              print<std::vector<int>, basic_stream>(v, bs, "(", ", ", ")");
  *              std::cout << bs << std::endl;

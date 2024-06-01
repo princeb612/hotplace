@@ -113,8 +113,13 @@ int main(int argc, char** argv) {
     const OPTION& option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose)
+        .set(logger_t::logger_flush_time, 0)
+        .set(logger_t::logger_flush_size, 0)
+        .set_format("[Y-M-D h:m:s.f] ")
+        .set_logfile("log");
     _logger.make_share(builder.build());
+    _test_case.attach(&*_logger);
 
     test_unittest();
     test_fail();

@@ -11,6 +11,8 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_ENDIAN__
 #define __HOTPLACE_SDK_BASE_SYSTEM_ENDIAN__
 
+#include <sdk/base/types.hpp>
+
 namespace hotplace {
 
 #if defined __GNUC__
@@ -21,10 +23,12 @@ namespace hotplace {
 #define __BIG_ENDIAN__
 #define __BIG_ENDIAN
 #define BIG_ENDIAN
-#else
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define __LITTLE_ENDIAN__
 #define __LITTLE_ENDIAN
 #define LITTLE_ENDIAN
+#else
+//
 #endif
 
 #else
@@ -74,6 +78,74 @@ static inline bool is_little_endian(void) {
 
     return bint.c[0] != 1;
 }
+
+/*
+ * readability
+ */
+#define hton16 htons
+#define ntoh16 ntohs
+
+#define hton32 htonl
+#define ntoh32 ntohl
+
+/**
+ * host order to network order (64bits)
+ */
+uint64 hton64(uint64 value);
+uint64 ntoh64(uint64 value);
+
+#if defined __SIZEOF_INT128__
+
+/**
+ * host order to network order (128bits)
+ */
+uint128 hton128(uint128 value);
+uint128 ntoh128(uint128 value);
+
+#endif
+
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+
+#define static_inline_convert_endian(T) \
+    static inline T convert_endian(T value) { return value; }
+static_inline_convert_endian(uint32);
+static_inline_convert_endian(uint64);
+static_inline_convert_endian(uint128);
+static_inline_convert_endian(int32);
+static_inline_convert_endian(int64);
+static_inline_convert_endian(int128);
+
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+
+static inline uint16 convert_endian(uint16 value) { return (((((uint16)(value)&0xFF)) << 8) | (((uint16)(value)&0xFF00) >> 8)); }
+static inline uint16 convert_endian(int16 value) { return (((((int16)(value)&0xFF)) << 8) | (((int16)(value)&0xFF00) >> 8)); }
+
+#define static_inline_convert_endian(T1, T2)    \
+    static inline T1 convert_endian(T1 value) { \
+        union temp {                            \
+            T1 value;                           \
+            struct {                            \
+                T2 high;                        \
+                T2 low;                         \
+            } p;                                \
+        };                                      \
+        union temp x, y;                        \
+        x.value = value;                        \
+        y.p.high = convert_endian(x.p.low);     \
+        y.p.low = convert_endian(x.p.high);     \
+        return y.value;                         \
+    }
+
+static_inline_convert_endian(uint32, uint16);
+static_inline_convert_endian(uint64, uint32);
+static_inline_convert_endian(uint128, uint64);
+static_inline_convert_endian(int32, int16);
+static_inline_convert_endian(int64, int32);
+static_inline_convert_endian(int128, int64);
+
+#else
+//
+#endif
 
 }  // namespace hotplace
 

@@ -45,6 +45,7 @@ logger_builder& logger_builder::set_format(const std::string& fmt) {
 }
 
 logger_builder& logger_builder::set_logfile(const std::string& filename) {
+    _keyvalue.set(logger_t::logger_file, 1);
     _skeyvalue.set("logfile", filename);
     return *this;
 }
@@ -115,6 +116,7 @@ logger::logger_item* logger::get_context(bool upref) {
 
     critical_section_guard guard(_lock);
 
+    // stream per thread
     logger_stream_map_t::iterator iter = _logger_stream_map.find(tid);
     if (_logger_stream_map.end() == iter) {
         _logger_stream_map.insert(std::make_pair(tid, item = new logger_item));
@@ -139,7 +141,7 @@ logger::logger_item* logger::get_context(bool upref) {
 logger& logger::consoleln(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    do_console_vprintf(fmt, ap);
+    do_console_vprintf(fmt, ap, true);
     va_end(ap);
     return *this;
 }
@@ -221,7 +223,6 @@ logger& logger::do_console(std::function<void(logger_item*)> f) {
         if (false == datefmt.empty()) {
             datetime dt;
             dt.format(1, item->bs, datefmt);
-            item->bs << "\n";
         }
 
         f(item);
@@ -265,7 +266,6 @@ logger& logger::do_write(std::function<void(logger_item*)> f) {
             if (false == datefmt.empty()) {
                 datetime dt;
                 dt.format(1, item->bs, datefmt);
-                item->bs << "\n";
             }
 
             f(item);
@@ -332,12 +332,6 @@ logger& logger::touch(logger_item* item) {
     uint16 flush_time = 0;
     uint16 flush_size = 0;
 
-    {
-        critical_section_guard guard(_lock);
-        flush_time = _keyvalue.get(logger_t::logger_flush_time);
-        flush_size = _keyvalue.get(logger_t::logger_flush_size);
-    }
-
     basic_stream& bs = item->bs;
 
     if (bs.size()) {
@@ -372,7 +366,7 @@ logger& logger::flush(bool check) {
                 cond = (bs.size() >= flush_size) && (now - item->timestamp >= flush_time);
             }
             if (cond) {
-                std::ofstream file(logfile.c_str(), std::ios::out | std::ios::ate);
+                std::ofstream file(logfile.c_str(), std::ios::out | std::ios::app);
                 file << bs.c_str();
                 file.close();
 

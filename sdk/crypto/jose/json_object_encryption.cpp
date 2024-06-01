@@ -416,7 +416,7 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                 // &salt[0], salt.size (), p2c, alg_evp_md,
                 //                    pbkdf2_derived_key.size (),
                 //                    &pbkdf2_derived_key[0]);
-                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, convert(oct), salt, p2c);
+                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, tostring(oct), salt, p2c);
 
                 // crypt_context_t* crypt_handle = nullptr;
                 // crypt.open(&crypt_handle, alg_crypt_alg, alg_crypt_mode,
@@ -665,7 +665,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
                 // &salt[0], salt.size (), p2c, alg_evp_md,
                 //                    pbkdf2_derived_key.size (),
                 //                    &pbkdf2_derived_key[0]);
-                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, convert(oct), salt, p2c);
+                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, tostring(oct), salt, p2c);
 
                 // crypt_context_t* crypt_handle = nullptr;
                 // crypt.open(&crypt_handle, alg_crypt_alg, alg_crypt_mode,
@@ -1487,7 +1487,7 @@ return_t json_object_encryption::composer::doparse_decryption(jose_context_t *ha
         // do not update if crypt_item_t::item_aad already exists
         // see RFC 7520 5.10.  Including Additional Authenticated Data
         if (protected_header) {
-            item.datamap.insert(std::make_pair(crypt_item_t::item_aad, convert(protected_header)));
+            item.datamap.insert(std::make_pair(crypt_item_t::item_aad, tobin(protected_header)));
         }
 
         item.header = protected_header_decoded;
@@ -1499,7 +1499,7 @@ return_t json_object_encryption::composer::doparse_decryption(jose_context_t *ha
         json_unpack_helper(pool, "zip", &zip);
         if (zip) {
             // RFC 7520 5.9.  Compressed Content
-            item.datamap[crypt_item_t::item_zip] = convert(zip);
+            item.datamap[crypt_item_t::item_zip] = tobin(zip);
         }
     }
     __finally2 {

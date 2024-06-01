@@ -8,7 +8,8 @@
  * Date         Name                Description
  *
  * studying
- *
+ *  ITU-T X.690 ... real not yet
+ *  parser ... in progress
  */
 
 #include <algorithm>
@@ -105,18 +106,6 @@ void encode_asn1_length(type v, binary_t& bin) {
 
     uint8 octets = sizeof(type);
 
-    if (sizeof(int128) == octets) {
-        conv = hton128;
-    } else if (sizeof(int64) == octets) {
-        conv = hton64;
-    } else if (sizeof(int32) == octets) {
-        conv = hton32;
-    } else if (sizeof(int16) == octets) {
-        conv = hton16;
-    } else {
-        conv = [](type v) -> type { return v; };
-    }
-
     uint128 m = 0;
     for (uint8 i = 1; i <= octets; i++) {
         m <<= 8;
@@ -125,11 +114,9 @@ void encode_asn1_length(type v, binary_t& bin) {
             if ((1 == i) && (v <= 0x7f)) {
                 bin.insert(bin.end(), (uint8)v);
             } else {
-                type be;
-                if (is_big_endian()) {
-                    be = v;
-                } else {
-                    be = conv(v);
+                type be = v;
+                if (sizeof(type) > 1) {
+                    be = convert_endian(v);
                 }
 
                 uint8 leading = 0x80 | i;
@@ -221,7 +208,7 @@ void encode_asn1_integer(type v, binary_t& bin) {
         if (mask & p) {  // check occupied bytes
             len = i;
             type msb = (1 << ((len * 8) - 1));
-            if (msb & p) {  // msb set
+            if (msb & p) {  // check msb is set
                 len += 1;
             }
             break;
@@ -269,13 +256,20 @@ void x690_8_5_real() {
         TESTVECTOR_ENTRY(1.23, "09 03 80 00 3F 9D 70"),
         TESTVECTOR_ENTRY(-1.23, "09 03 C0 00 3F 9D 70"),
         TESTVECTOR_ENTRY(0.0, "09 00"),                                // X.690 8.5.2
-        TESTVECTOR_ENTRY(fp32_from_binary32(0x7f800000), "09 01 40"),  // inf
-        TESTVECTOR_ENTRY(fp32_from_binary32(0xff800000), "09 01 41"),  // -inf
+        TESTVECTOR_ENTRY(fp32_from_binary32(0x7f800000), "09 01 40"),  // Inf
+        TESTVECTOR_ENTRY(fp32_from_binary32(0xff800000), "09 01 41"),  // -Inf
         TESTVECTOR_ENTRY(fp32_from_binary32(0x7fc00000), "09 01 42"),  // NaN
         TESTVECTOR_ENTRY(123.45, "09 05 80 02 3F F6 E6 66"),
         TESTVECTOR_ENTRY(12345.6789, "09 09 80 00 00 03 40 E6 B7 27 0A 14 7A E1"),
         TESTVECTOR_ENTRY(-0.000012345, "09 09 C0 FF FF FC 3D CC CC CC CC CC CC CD"),
     };
+
+    // M * B^E (each of the values mantissa, base, exponent must be encoded)
+    // real ::= {10, 2, 0}
+    // value = 10 * 2^0
+    // M = 10, B = 2, E = 0
+    // M = 1 * 10 * 2^0, S = 1, N = 10, F = 0
+    // 09 03 80 00 0A
 
     binary_t bin;
 
@@ -294,8 +288,6 @@ void x690_8_5_real() {
     for (auto entry : _table) {
         encode_float_routine(entry.f, entry.expect);
     }
-
-    _logger->dump(bin);
 
     // _test_case.test(errorcode_t::not_supported, __FUNCTION__, "X.690 8.5 real");
 }
@@ -425,23 +417,114 @@ void x690_8_14_tagged() {
     }
 }
 
+void encode_variable_length(uint32 v, binary_t& bin) {
+    binary_t b;
+    uint8 m = 0;
+    while (v >= 0x80) {
+        b.insert(b.begin(), (v & 0x7f) | m);
+        v >>= 7;
+        m = 0x80;
+    }
+    b.insert(b.begin(), v | m);
+    bin << b;
+}
+
 // X.690 8.19 encoding of an object identifier value
 void x690_8_19_objid() {
-    // {joint-iso-itu-t 100 3}
-    // {2 100 3}
+    struct oid_t {
+        // ITU-T X.660 ISO/IEC 9834-1, ISO/IEC 6523 Structure for the identification of organizations and organization parts
+        uint8 node1;      // 0, 1, 2
+        uint8 node2;      // 0..39
+        uint32 node[16];  // positive
+    };
+    struct table {
+        std::pair<oid_t, std::string> couple;
+    } _table[] = {
+        std::make_pair(oid_t{1, 3, 6, 1, 4, 1}, "06 05 2b 06 01 04 01"),
+        std::make_pair(oid_t{1, 2, 840, 113549}, "06 06 2A 86 48 86 F7 0d"),
+        std::make_pair(oid_t{1, 3, 6, 1, 4, 1, 311, 21, 20}, "06 09 2b 06 01 04 01 82 37 15 14"),
+        std::make_pair(oid_t{1, 3, 6, 1, 4, 1, 311, 60, 2, 1, 1}, "06 0B 2B 06 01 04 01 82 37 3C 02 01 01"),
+        std::make_pair(oid_t{1, 2, 840, 10045, 3, 1, 7}, "06 08 2a 86 48 ce 3d 03 01 07"),
+        std::make_pair(oid_t{2, 100, 3}, "06 03 81 34 03"),  // 0..39 < 100 ??
+    };
+
     binary_t bin;
-    binary_push(bin, asn1_tag_objid);
-    encode_asn1_length<uint32>(3, bin);
-    // 0x813403
-    _logger->dump(bin);
-    // 1.3.6.1.4.1 (0x2b 0x06 0x01 0x04 0x01 0x00)
-    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "X.690 8.19 object identifier");
+
+    auto encode_oid_routine = [&](const oid_t& oid, const std::string& expect) -> void {
+        bin.clear();
+
+        binary_t b;
+
+        binary_t n;
+        encode_variable_length(oid.node1 * 40 + oid.node2, n);
+
+        for (int i = 0; i < 10; i++) {
+            uint32 node = oid.node[i];
+            if (0 == node) {
+                break;
+            } else if (node <= 127) {
+                binary_push(b, node);
+            } else {
+                encode_variable_length(node, b);
+            }
+        }
+
+        binary_push(bin, asn1_tag_objid);
+        binary_push(bin, n.size() + b.size());
+        bin << n;
+        bin << b;
+
+        _logger->dump(bin);
+
+        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.19 object identifier expect %s", expect.c_str());
+    };
+
+    for (auto entry : _table) {
+        encode_oid_routine(entry.couple.first, entry.couple.second);
+    }
 }
 
 // X.690 8.20 encoding of a relative object identifier value
 void x690_8_20_relobjid() {
-    //
-    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "X.690 8.20 relative object identifier");
+    struct reloid_t {
+        uint32 node[16];  // positive
+    };
+    struct table {
+        std::pair<reloid_t, std::string> couple;
+    } _table[] = {
+        std::make_pair(reloid_t{8571, 3, 2}, "0D 04 C27B0302"),
+    };
+
+    binary_t bin;
+
+    auto encode_oid_routine = [&](const reloid_t& oid, const std::string& expect) -> void {
+        bin.clear();
+
+        binary_t b;
+
+        for (int i = 0; i < 10; i++) {
+            uint32 node = oid.node[i];
+            if (0 == node) {
+                break;
+            } else if (node <= 127) {
+                binary_push(b, node);
+            } else {
+                encode_variable_length(node, b);
+            }
+        }
+
+        binary_push(bin, asn1_tag_relobjid);
+        binary_push(bin, b.size());
+        bin << b;
+
+        _logger->dump(bin);
+
+        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.20 relative object identifier expect %s", expect.c_str());
+    };
+
+    for (auto entry : _table) {
+        encode_oid_routine(entry.couple.first, entry.couple.second);
+    }
 }
 
 // X.690 8.21.5.4 Example Name ::= VisibleString
@@ -454,6 +537,42 @@ void x690_8_21_visiblestring() {
     binary_append(bin, value);
     _logger->dump(bin);
     _test_case.assert(bin == base16_decode_rfc("1a 05 4a6f6e6573"), __FUNCTION__, "X.690 8.21 VisibleString");
+}
+
+void x690_11_7_generallizedtime() {
+    struct table {
+        std::pair<datetime_t, basic_stream> couple;
+    } _table[] = {
+        std::make_pair(datetime_t(1992, 5, 21, 0, 0, 0), "19920521000000Z"),
+        std::make_pair(datetime_t(1992, 6, 22, 12, 34, 21), "19920622123421Z"),
+        std::make_pair(datetime_t(1992, 7, 22, 13, 21, 00, 3), "19920722132100.3Z"),
+    };
+
+    binary_t bin;
+
+    auto encode_generalizedtime_routine = [&](const datetime_t& d, const basic_stream& expect) -> void {
+        bin.clear();
+
+        basic_stream bs;
+        if (d.milliseconds) {
+            bs.printf("%04d%02d%02d%02d%02d%02d.%dZ", d.year, d.month, d.day, d.hour, d.minute, d.second, d.milliseconds);
+        } else {
+            bs.printf("%04d%02d%02d%02d%02d%02dZ", d.year, d.month, d.day, d.hour, d.minute, d.second);
+        }
+        bin << bs;
+
+        _logger->dump(bin);
+
+        _test_case.assert(bs == expect, __FUNCTION__, "X.690 11.7 generalized time expect %s", expect.c_str());
+    };
+
+    for (auto entry : _table) {
+        encode_generalizedtime_routine(entry.couple.first, entry.couple.second);
+    }
+}
+
+void x690_annex_a() {
+    //
 }
 
 int main(int argc, char** argv) {
@@ -484,6 +603,8 @@ int main(int argc, char** argv) {
     x690_8_19_objid();
     x690_8_20_relobjid();
     x690_8_21_visiblestring();
+    x690_11_7_generallizedtime();
+    x690_annex_a();
 
     _logger->flush();
 

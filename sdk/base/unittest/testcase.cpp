@@ -19,7 +19,7 @@
 
 namespace hotplace {
 
-test_case::test_case() { reset_time(); }
+test_case::test_case() : _logger(nullptr) { reset_time(); }
 
 void test_case::begin(const char* case_name, ...) {
     arch_t tid = get_thread_id();
@@ -51,7 +51,11 @@ void test_case::begin(const char* case_name, ...) {
 
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::magenta) << constexpr_testcase << topic.c_str();
     console_colored_stream << _concolor.turnoff();
-    std::cout << stream << std::endl;
+    if (_logger) {
+        _logger->writeln(stream);
+    } else {
+        std::cout << stream << std::endl;
+    }
 
     reset_time();
 }
@@ -298,7 +302,11 @@ void test_case::test(return_t result, const char* test_function, const char* mes
                                << format("[%s] ", test_function ? test_function : "").c_str() << tltle.c_str();
         console_colored_stream << _concolor.turnoff();
 
-        std::cout << stream << std::endl;
+        if (_logger) {
+            _logger->writeln(stream);
+        } else {
+            std::cout << stream << std::endl;
+        }
     }
     __finally2 { reset_time(); }
 }
@@ -400,7 +408,11 @@ void test_case::report(uint32 top_count) {
     // print
     //
 
-    std::cout << stream;
+    if (_logger) {
+        _logger->write(stream);
+    } else {
+        std::cout << stream;
+    }
 
     //
     // file
@@ -601,5 +613,7 @@ return_t test_case::result() { return _total._count_fail > 0 ? errorcode_t::inte
 void test_case::lock() { _lock.enter(); }
 
 void test_case::unlock() { _lock.leave(); }
+
+void test_case::attach(logger* log) { _logger = log; }
 
 }  // namespace hotplace

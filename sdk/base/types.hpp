@@ -78,12 +78,10 @@ enum encoding_t {
 #define FIELD_OFFSET(type, field) ((int32)(arch_t) & (((type *)0)->field))
 #endif
 
-#define __min(a, b) (((a) < (b)) ? (a) : (b))
-#define __max(a, b) (((a) > (b)) ? (a) : (b))
-#define adjust_range(var, minimum, maximum) \
-    {                                       \
-        var = __max(var, minimum);          \
-        var = __min(var, maximum);          \
+#define adjust_range(var, minimum, maximum)    \
+    {                                          \
+        var = (var > minimum) ? var : minimum; \
+        var = (var < maximum) ? var : maximum; \
     }
 
 }  // namespace hotplace

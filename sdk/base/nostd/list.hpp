@@ -9,10 +9,10 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_NOSTD_LIST__
-#define __HOTPLACE_SDK_BASE_BASIC_NOSTD_LIST__
+#ifndef __HOTPLACE_SDK_BASE_NOSTD_LIST__
+#define __HOTPLACE_SDK_BASE_NOSTD_LIST__
 
-#include <sdk/base/basic/nostd/exception.hpp>
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/stl.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>

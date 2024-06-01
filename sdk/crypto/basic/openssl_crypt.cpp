@@ -167,13 +167,13 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
          */
 
         internal_size_key = EVP_CIPHER_CTX_key_length(context->encrypt_context);
-        constraint_range(internal_size_key, 0, EVP_MAX_KEY_LENGTH);
+        adjust_range(internal_size_key, 0, EVP_MAX_KEY_LENGTH);
         temp_key.resize(internal_size_key);
         memcpy(&temp_key[0], key, (size_key > internal_size_key ? internal_size_key : size_key));
 
         // EVP_CIPHER_get_iv_length { return cipher(nullptr)->iv_len; }
         internal_size_iv = EVP_MAX_IV_LENGTH;
-        constraint_range(internal_size_iv, 0, EVP_MAX_IV_LENGTH);
+        adjust_range(internal_size_iv, 0, EVP_MAX_IV_LENGTH);
         temp_iv.resize(internal_size_iv);
         memcpy(&temp_iv[0], iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
 
@@ -961,14 +961,14 @@ return_t openssl_crypt::query(crypt_context_t* handle, size_t cmd, size_t& value
          */
         if (1 == cmd) {
             value = EVP_CIPHER_CTX_key_length(context->encrypt_context);
-            constraint_range(value, 0, EVP_MAX_KEY_LENGTH);
+            adjust_range(value, 0, EVP_MAX_KEY_LENGTH);
         } else if (2 == cmd) {
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
             value = EVP_MAX_IV_LENGTH;
 #else
             value = EVP_CIPHER_CTX_iv_length(context->encrypt_context);
 #endif
-            constraint_range(value, 0, EVP_MAX_IV_LENGTH);
+            adjust_range(value, 0, EVP_MAX_IV_LENGTH);
         } else {
             ret = errorcode_t::bad_request;
         }

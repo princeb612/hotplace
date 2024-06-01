@@ -353,7 +353,7 @@ void test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
     const binary_t& key = base16_decode_rfc(vector->key);
     uint32 counter = vector->counter;
     const binary_t& iv = base16_decode_rfc(vector->iv);
-    const binary_t& input = convert(vector->msg);
+    const binary_t& input = tobin(vector->msg);
     const binary_t& aad = base16_decode_rfc(vector->aad);
     const binary_t& expect = base16_decode_rfc(vector->expect);
     const binary_t& tag1 = base16_decode_rfc(vector->tag);

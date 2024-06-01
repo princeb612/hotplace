@@ -15,48 +15,6 @@
 
 namespace hotplace {
 
-uint64 hton64(uint64 value) {
-    uint64 ret_value = 0;
-
-    if (is_little_endian()) {
-        const uint32 high_part = hton32(static_cast<uint32>(value >> 32));
-        const uint32 low_part = hton32(static_cast<uint32>(value & 0xFFFFFFFF));
-
-        ret_value = (static_cast<uint64>(low_part) << 32) | high_part;
-    } else {
-        ret_value = value;
-    }
-
-    return ret_value;
-}
-
-uint64 ntoh64(uint64 value) { return hton64(value); /* wo htonl operations */ }
-
-#if defined __SIZEOF_INT128__
-
-uint128 hton128(uint128 value) {
-    uint128 ret_value = 0;
-
-    if (is_little_endian()) {
-        ipaddr_byteorder lhs;
-        ipaddr_byteorder rhs;
-        rhs.t128 = value;
-        lhs.t32[0] = hton32(rhs.t32[3]);
-        lhs.t32[1] = hton32(rhs.t32[2]);
-        lhs.t32[2] = hton32(rhs.t32[1]);
-        lhs.t32[3] = hton32(rhs.t32[0]);
-        ret_value = lhs.t128;
-    } else {
-        ret_value = value;
-    }
-
-    return ret_value;
-}
-
-uint128 ntoh128(uint128 value) { return hton128(value); }
-
-#endif
-
 return_t b24_i32(byte_t const* p, uint8 len, uint32& value) {
     return_t ret = errorcode_t::success;
 

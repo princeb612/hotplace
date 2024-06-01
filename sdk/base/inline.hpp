@@ -247,32 +247,6 @@ static inline std::wstring concat_filepath(const std::wstring& path, const std::
     return result;
 }
 
-static inline uint16 convert_endian(uint16 value) { return (((((uint16)(value)&0xFF)) << 8) | (((uint16)(value)&0xFF00) >> 8)); }
-static inline uint16 convert_endian(int16 value) { return (((((int16)(value)&0xFF)) << 8) | (((int16)(value)&0xFF00) >> 8)); }
-
-#define static_inline_convert_endian(T1, T2)    \
-    static inline T1 convert_endian(T1 value) { \
-        union temp {                            \
-            T1 value;                           \
-            struct {                            \
-                T2 high;                        \
-                T2 low;                         \
-            } p;                                \
-        };                                      \
-        union temp x, y;                        \
-        x.value = value;                        \
-        y.p.high = convert_endian(x.p.low);     \
-        y.p.low = convert_endian(x.p.high);     \
-        return y.value;                         \
-    }
-
-static_inline_convert_endian(uint32, uint16);
-static_inline_convert_endian(uint64, uint32);
-static_inline_convert_endian(uint128, uint64);
-static_inline_convert_endian(int32, int16);
-static_inline_convert_endian(int64, int32);
-static_inline_convert_endian(int128, int64);
-
 }  // namespace hotplace
 
 #endif

@@ -18,6 +18,7 @@
 #include <map>
 #include <sdk/base/basic/console_color.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/logger.hpp>
 #include <string>
 
 namespace hotplace {
@@ -64,6 +65,7 @@ namespace hotplace {
 class test_case {
    public:
     test_case();
+
     /**
      * @brief   test group
      * @param   const char* case_name [in]
@@ -115,6 +117,9 @@ class test_case {
     void lock();
     void unlock();
 
+    void attach(logger* log);
+
+   private:
     typedef struct _unittest_item_t {
         return_t _result;
         std::string _test_function;
@@ -183,6 +188,8 @@ class test_case {
     time_flag_per_thread_t _time_flag_per_threads;
     timestamp_per_thread_t _timestamp_per_threads;
     time_slice_per_thread_t _time_slice_per_threads;
+
+    logger* _logger;
 };
 
 /**
