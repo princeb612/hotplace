@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_BASE_LOGGER__
 
 #include <sdk/base/basic/keyvalue.hpp>
+#include <sdk/base/binary.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/critical_section.hpp>
@@ -111,12 +112,14 @@ class logger {
     logger& dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& dump(const binary& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
 
     logger& hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& hdump(const std::string& header, const binary& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
 

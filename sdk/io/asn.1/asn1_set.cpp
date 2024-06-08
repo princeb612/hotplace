@@ -8,7 +8,6 @@
  * Date         Name                Description
  *
  * comments
- *  concept rule-based parser
  *
  */
 

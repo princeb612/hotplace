@@ -350,6 +350,9 @@ class t_graph {
             }
             return ret;
         }
+        /*
+         * @brief   weight = directed(from -> to).weight, or weight = undirected(from <-> to).weight
+         */
         int get_weight(const T& from, const T& to) {
             int weight = -1;
             if (from == to) {
@@ -499,12 +502,151 @@ class t_graph {
 
     /*
      * @brief   shortest path
+     * @refer   https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+     *          using a priority queue
+     *
+     *               function Dijkstra(Graph, source):
+     *                   create vertex priority queue Q
+     *
+     *                   dist[source] ← 0                          // Initialization
+     *                   Q.add_with_priority(source, 0)            // associated priority equals dist[·]
+     *
+     *                   for each vertex v in Graph.Vertices:
+     *                       if v ≠ source
+     *                           prev[v] ← UNDEFINED               // Predecessor of v
+     *                           dist[v] ← INFINITY                // Unknown distance from source to v
+     *                           Q.add_with_priority(v, INFINITY)
+     *
+     *
+     *                   while Q is not empty:                     // The main loop
+     *                       u ← Q.extract_min()                   // Remove and return best vertex
+     *                       for each neighbor v of u:             // Go through all v neighbors of u
+     *                           alt ← dist[u] + Graph.Edges(u, v)
+     *                           if alt < dist[v]:
+     *                               prev[v] ← u
+     *                               dist[v] ← alt
+     *                               Q.decrease_priority(v, alt)
+     *
+     *                   return dist, prev
      */
     class graph_dijkstra : public graph_search {
        public:
         graph_dijkstra(const t_graph<T>& g) : graph_search(g) {}
 
        protected:
+        typedef typename graph_search::visitor_t visitor_t;
+
+        virtual void do_setup() {
+            _path.clear();
+            _route.clear();
+        }
+
+        virtual void do_learn(const T& u) {
+            auto& neighbours = this->_neighbours;
+            std::priority_queue<pair_t, std::vector<pair_t>, std::greater<pair_t>> pq;
+            path_t path;
+            distance_t dist;
+
+            for (auto& temp : this->_g._unordered_vertices) {
+                dist[temp] = graph_search::graph_infinite;
+            }
+
+            // this->visit(u);
+
+            pq.push({0, u});
+            dist[u] = 0;
+
+            while (false == pq.empty()) {
+                T v = pq.top().second;
+                int d = pq.top().first;
+                pq.pop();
+
+                if (d > dist[v]) {
+                    continue;
+                }
+
+                for (const auto& neighbour : neighbours.find(v)->second) {
+                    int weight = this->get_weight(v, neighbour);
+                    int distance = dist[v] + weight;
+                    if (dist[neighbour] > distance) {
+                        dist[neighbour] = distance;
+                        pq.push({distance, neighbour});
+
+                        path[neighbour].clear();  // clear longer one
+                        path[neighbour].insert({distance, v});
+                    } else if (dist[neighbour] == distance) {
+                        path[neighbour].insert({distance, v});  // same distance
+                    }
+                }
+            }
+
+            _dist.insert({u, dist});
+            _path.insert({u, path});
+        }
+
+        virtual void do_infer(const T& u) {
+            route_t route;
+            for (auto path : _path[u]) {
+                const T& to = path.first;
+                for (auto section : path.second) {
+                    int distance = section.first;
+                    const T& from = section.second;
+                    auto iter = route.insert({edge(u, to, distance), std::list<T>()});
+                    std::list<T>& l = iter->second;
+                    l.push_back(from);
+                    l.push_back(to);
+                }
+            }
+
+            route_t route_branch;
+            std::function<void(const edge& e, std::list<T>&)> filler;
+            filler = [&](const edge& e, std::list<T>& lst) -> void {
+                T head = *lst.begin();
+                while (u != head) {
+                    auto& section = _path[u].find(head)->second;
+                    auto iter = section.begin();
+                    head = iter->second;  // update head -- while (u != head)
+
+                    for (iter++; iter != section.end(); iter++) {  // alternative section
+                        std::list<T> list_branch = lst;            // branch list
+                        const T& head_branch = iter->second;       // select alternative neighbour
+                        list_branch.push_front(head_branch);       // into branch list
+                        filler(e, list_branch);                    // fill
+                        route_branch.insert({e, list_branch});     // insert branch list into branch route
+                    }
+
+                    lst.push_front(head);  // into origin list
+                }
+            };
+
+            for (auto& item : route) {
+                const edge& e = item.first;
+                auto& lst_origin = item.second;  // origin list
+                filler(e, lst_origin);           // handle origin list or branch list if alternative available
+            }
+            for (auto& item : route_branch) {  // merge info route
+                route.insert({item.first, item.second});
+            }
+            _route.insert({u, route});
+        }
+
+        virtual void do_traverse(const T& u, visitor_t f) {
+            for (auto route : _route[u]) {
+                const edge& e = route.first;
+                f(e._from, e._to, e._weight, route.second);
+            }
+        }
+        virtual void do_traverse(const T& from, const T& to, visitor_t f) {
+            route_t route = _route[from];
+            edge e(from, to);
+            auto lbound = route.lower_bound(e);
+            auto ubound = route.upper_bound(e);
+            for (auto iter = lbound; iter != ubound; iter++) {
+                f(from, to, iter->first._weight, iter->second);
+            }
+        }
+
+       private:
         typedef std::pair<int, T> pair_t;
 
         /*
@@ -566,106 +708,6 @@ class t_graph {
          */
         typedef std::multimap<edge, std::list<T>> route_t;
 
-        typedef typename graph_search::visitor_t visitor_t;
-
-        virtual void do_setup() {
-            _path.clear();
-            _route.clear();
-        }
-
-        virtual void do_learn(const T& u) {
-            auto& neighbours = this->_neighbours;
-            std::priority_queue<pair_t, std::vector<pair_t>, std::greater<pair_t>> pq;
-            path_t path;
-            distance_t dist;
-
-            for (auto& temp : this->_g._unordered_vertices) {
-                dist[temp] = graph_search::graph_infinite;
-            }
-
-            this->visit(u);
-
-            pq.push({0, u});
-            dist[u] = 0;
-
-            while (false == pq.empty()) {
-                T v = pq.top().second;
-                int d = pq.top().first;
-                pq.pop();
-
-                if (d > dist[v]) {
-                    continue;
-                }
-
-                // from = v
-                // for (neighbour : adjacent vertices) {
-                //     to = neighbour
-                //     weight = directed(from -> to).weight, or weight = undirected(from <-> to).weight
-                // }
-
-                for (const auto& neighbour : neighbours.find(v)->second) {
-                    int weight = this->get_weight(v, neighbour);
-                    int distance = dist[v] + weight;
-                    if (dist[neighbour] > distance) {
-                        dist[neighbour] = distance;
-                        pq.push({distance, neighbour});
-
-                        path[neighbour].clear();  // clear longer one
-                        path[neighbour].insert({distance, v});
-                    } else if (dist[neighbour] == distance) {
-                        path[neighbour].insert({distance, v});  // same distance
-                    }
-                }
-            }
-
-            _dist.insert({u, dist});
-            _path.insert({u, path});
-        }
-
-        virtual void do_infer(const T& u) {
-            route_t route;
-            for (auto path : _path[u]) {
-                const T& to = path.first;
-                for (auto section : path.second) {
-                    int distance = section.first;
-                    const T& from = section.second;
-                    auto iter = route.insert({edge(u, to, distance), std::list<T>()});
-                    std::list<T>& l = iter->second;
-                    l.push_back(from);
-                    l.push_back(to);
-                }
-            }
-            for (auto& item : route) {
-                auto& l = item.second;
-                T head = *l.begin();
-                while (u != head) {
-                    auto& section = _path[u].find(head)->second;
-                    auto iter = section.begin();
-                    head = iter->second;
-                    l.push_front(head);
-                }
-            }
-
-            _route.insert({u, route});
-        }
-
-        virtual void do_traverse(const T& u, visitor_t f) {
-            for (auto route : _route[u]) {
-                const edge& e = route.first;
-                f(e._from, e._to, e._weight, route.second);
-            }
-        }
-        virtual void do_traverse(const T& from, const T& to, visitor_t f) {
-            route_t route = _route[from];
-            edge e(from, to);
-            auto lbound = route.lower_bound(e);
-            auto ubound = route.upper_bound(e);
-            for (auto iter = lbound; iter != ubound; iter++) {
-                f(from, to, iter->first._weight, iter->second);
-            }
-        }
-
-       private:
         std::map<T, distance_t> _dist;
         std::map<T, path_t> _path;
         std::map<T, route_t> _route;

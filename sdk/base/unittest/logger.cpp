@@ -180,6 +180,8 @@ logger& logger::dump(const char* addr, size_t size, unsigned hexpart, unsigned i
 
 logger& logger::dump(const binary_t& msg, unsigned hexpart, unsigned indent) { return do_dump(&msg[0], msg.size(), hexpart, indent, true); }
 
+logger& logger::dump(const binary& msg, unsigned hexpart, unsigned indent) { return do_dump(&msg.get()[0], msg.get().size(), hexpart, indent, true); }
+
 logger& logger::dump(const std::string& msg, unsigned hexpart, unsigned indent) { return do_dump((byte_t*)msg.c_str(), msg.size(), hexpart, indent, true); }
 
 logger& logger::dump(const basic_stream& msg, unsigned hexpart, unsigned indent) { return do_dump(msg.data(), msg.size(), hexpart, indent, true); }
@@ -194,6 +196,10 @@ logger& logger::hdump(const std::string& header, const char* addr, size_t size, 
 
 logger& logger::hdump(const std::string& header, const binary_t& msg, unsigned hexpart, unsigned indent) {
     return do_hdump(header, &msg[0], msg.size(), hexpart, indent, true);
+}
+
+logger& logger::hdump(const std::string& header, const binary& msg, unsigned hexpart, unsigned indent) {
+    return do_hdump(header, &msg.get()[0], msg.get().size(), hexpart, indent, true);
 }
 
 logger& logger::hdump(const std::string& header, const std::string& msg, unsigned hexpart, unsigned indent) {

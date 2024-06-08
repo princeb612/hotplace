@@ -54,12 +54,12 @@
 
       cf.
           fulltext.pattern_search("IntegerType ::= INTEGER")
-              full-text 74 bytes, patter 23 bytes
+              full-text 74 bytes, pattern 23 bytes
               Knuth-Morris-Pratt Algorithm O(74+23)=O(97)
 
           parser.parse(fulltext)                          ... pre-process : scan(1-phase) and build up(dictionary)
           parser.pattern_search(array(4, 2, 5))
-              full-text 9 words, patter 3
+              full-text 9 words, pattern 3
               Knuth-Morris-Pratt Algorithm O(9+3)=O(12)   ... process search
 
     c. directed graph

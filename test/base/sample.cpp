@@ -167,25 +167,25 @@ void test_endian() {
 }
 
 void test_ieee754() {
-    ieee754_typeof_t type = ieee754_typeof_t::is_finite;
+    ieee754_typeof_t type = ieee754_typeof_t::ieee754_finite;
 
     type = is_typeof(fp32_from_binary32(fp32_pinf));
-    _test_case.assert(ieee754_typeof_t::is_pinf == type, __FUNCTION__, "inf");
+    _test_case.assert(ieee754_typeof_t::ieee754_pinf == type, __FUNCTION__, "inf");
 
     type = is_typeof(fp32_from_binary32(fp32_ninf));
-    _test_case.assert(ieee754_typeof_t::is_ninf == type, __FUNCTION__, "-inf");
+    _test_case.assert(ieee754_typeof_t::ieee754_ninf == type, __FUNCTION__, "-inf");
 
     type = is_typeof(fp32_from_binary32(fp32_nan));
-    _test_case.assert(ieee754_typeof_t::is_nan == type, __FUNCTION__, "nan");
+    _test_case.assert(ieee754_typeof_t::ieee754_nan == type, __FUNCTION__, "nan");
 
     type = is_typeof(fp64_from_binary64(fp64_pinf));
-    _test_case.assert(ieee754_typeof_t::is_pinf == type, __FUNCTION__, "inf");
+    _test_case.assert(ieee754_typeof_t::ieee754_pinf == type, __FUNCTION__, "inf");
 
     type = is_typeof(fp64_from_binary64(fp64_ninf));
-    _test_case.assert(ieee754_typeof_t::is_ninf == type, __FUNCTION__, "-inf");
+    _test_case.assert(ieee754_typeof_t::ieee754_ninf == type, __FUNCTION__, "-inf");
 
     type = is_typeof(fp64_from_binary64(fp64_nan));
-    _test_case.assert(ieee754_typeof_t::is_nan == type, __FUNCTION__, "nan");
+    _test_case.assert(ieee754_typeof_t::ieee754_nan == type, __FUNCTION__, "nan");
 }
 
 void test_maphint() {

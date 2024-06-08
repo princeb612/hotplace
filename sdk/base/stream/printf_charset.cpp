@@ -424,7 +424,7 @@ int vprintf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar
         0,
     }; /* space for 0x hex-prefix */
 
-    ieee754_typeof_t ieee754_type = ieee754_typeof_t::is_finite;
+    ieee754_typeof_t ieee754_type = ieee754_typeof_t::ieee754_finite;
 
     if (!runtime_printf) {
         goto error;
@@ -601,11 +601,11 @@ int vprintf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar
             case _T('G'):
                 _double = va_arg(ap, double);
                 ieee754_type = is_typeof(_double);
-                if (ieee754_typeof_t::is_pinf == ieee754_type) {
+                if (ieee754_typeof_t::ieee754_pinf == ieee754_type) {
                     PRINT(_T("inf"), (sizeof(TCHAR) * 3));
-                } else if (ieee754_typeof_t::is_ninf == ieee754_type) {
+                } else if (ieee754_typeof_t::ieee754_ninf == ieee754_type) {
                     PRINT(_T("-inf"), (sizeof(TCHAR) * 4));
-                } else if (ieee754_typeof_t::is_nan == ieee754_type) {
+                } else if (ieee754_typeof_t::ieee754_nan == ieee754_type) {
                     PRINT(_T("nan"), (sizeof(TCHAR) * 3));
                 } else {
                     /*

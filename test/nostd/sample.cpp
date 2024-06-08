@@ -401,23 +401,29 @@ void test_graph() {
         .add_undirected_edge(5, 4, 10);
 
     do_test_graph<int>(g, 1);
-    do_test_graph_shortest_path<int>(g, 1);
-    do_test_graph_shortest_path<int>(g, 2);
-    do_test_graph_shortest_path<int>(g, 3);
-    do_test_graph_shortest_path<int>(g, 4);
-    do_test_graph_shortest_path<int>(g, 5);
-    do_test_graph_shortest_path<int>(g, 6);
-    do_test_graph_shortest_path<int>(g, 7);
+    for (auto i = 1; i <= 7; i++) {
+        do_test_graph_shortest_path<int>(g, i);
+    }
     do_test_graph<int>(g2, 1);
-    do_test_graph_shortest_path<int>(g2, 0);
-    do_test_graph_shortest_path<int>(g2, 1);
-    do_test_graph_shortest_path<int>(g2, 2);
-    do_test_graph_shortest_path<int>(g2, 3);
-    do_test_graph_shortest_path<int>(g2, 4);
-    do_test_graph_shortest_path<int>(g2, 5);
-    do_test_graph_shortest_path<int>(g2, 6);
-    do_test_graph_shortest_path<int>(g2, 7);
-    do_test_graph_shortest_path<int>(g2, 8);
+    for (auto i = 0; i <= 8; i++) {
+        do_test_graph_shortest_path<int>(g2, i);
+    }
+
+    _test_case.begin("multi-path");
+    t_graph<int> g3;
+    g3.add_undirected_edge(1, 2)
+        .add_undirected_edge(2, 3)
+        .add_undirected_edge(3, 4)
+        .add_undirected_edge(4, 5)
+        .add_undirected_edge(5, 6)
+        .add_undirected_edge(6, 3)
+        .add_undirected_edge(3, 7)
+        .add_undirected_edge(7, 1);
+    do_test_graph<int>(g3, 1);
+    for (auto i = 1; i <= 7; i++) {
+        do_test_graph_shortest_path<int>(g3, i);
+    }
+    do_test_graph_shortest_path<int>(g3, 1, 5);
 }
 
 /*
