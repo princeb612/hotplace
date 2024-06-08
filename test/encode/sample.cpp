@@ -63,9 +63,7 @@ void test_base16() {
 
         _logger->writeln("input : %s", text);
         _logger->writeln("encode: %s", encoded.c_str());
-        basic_stream bs;
-        dump_memory(&decoded[0], decoded.size(), &bs);
-        _logger->writeln("dump decoded\n%s", bs.c_str());
+        _logger->hdump("dump decoded", decoded);
     }
 
     bool test = false;
@@ -89,13 +87,13 @@ void test_base16_func() {
     /* return_t base16_encode (const byte_t* source, size_t size, std::string& outpart) */
     std::string strbuf;
     ret = base16_encode(text, RTL_NUMBER_OF(text), strbuf);
-    _logger->dump(&strbuf[0], strbuf.size());
+    _logger->dump(strbuf);
     _test_case.test(ret, __FUNCTION__, "case2");
 
     /* return_t base16_encode (const byte_t* source, size_t size, stream_t* stream) */
     basic_stream streambuf;
     ret = base16_encode(text, RTL_NUMBER_OF(text), &streambuf);
-    _logger->dump(streambuf.data(), streambuf.size());
+    _logger->dump(streambuf);
     _test_case.test(ret, __FUNCTION__, "case3");
 }
 

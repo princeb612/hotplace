@@ -5,6 +5,8 @@
 #
 
 file (GLOB FILEGROUP_SDK_HEADER_IO
+    ${PROJECT_SOURCE_DIR}/sdk/io/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/basic/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/cbor/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/*.hpp
@@ -14,6 +16,7 @@ file (GLOB FILEGROUP_SDK_HEADER_IO
 
 file (GLOB FILEGROUP_SDK_SOURCE_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/cbor/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/*.cpp

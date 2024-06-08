@@ -87,41 +87,88 @@ namespace hotplace {
 template <typename T = char>
 class t_kmp_pattern {
    public:
+    /**
+     * comparator for pointer type - t_kmp_pattern<object*>
+     *
+     * struct object {
+     *      int value;
+     *      friend bool operator==(const object& lhs, const object& rhs) { return lhs.value == rhs.value; }
+     * }
+     * auto comparator = [](const object* lhs, const object* rhs) -> bool {
+     *      return (lhs->value == rhs->value);
+     * };
+     *
+     * std::vector<objec*> data1; // 1 2 3 4 5 by new object
+     * std::vector<objec*> data2; // 3 4 by new object
+     *
+     * t_kmp_pattern<object*> search;
+     * search.match(data1, data2);
+     *      // if (pattern[j] == data[i]) - incorrect
+     *      // return -1
+     *
+     * search.match(data1, data2, 0, comparator);
+     *      // if (comparator(pattern[j], data[i])) - correct
+     *      // return 2
+     */
+    typedef typename std::function<bool(const T&, const T&)> comparator_t;
+
     t_kmp_pattern() {}
 
-    int match(const T* data, size_t data_size, const T* pattern, size_t pattern_size, int pos = 0) {
+    int match(const std::vector<T>& data, const std::vector<T>& pattern, unsigned int pos = 0, comparator_t comparator = nullptr) {
+        return match(&data[0], data.size(), &pattern[0], pattern.size(), pos, comparator);
+    }
+
+    /**
+     * @brief   match
+     * @return  index, -1 (not found)
+     */
+    int match(const T* data, size_t size_data, const T* pattern, size_t size_pattern, unsigned int pos = 0, comparator_t comparator = nullptr) {
         int ret = -1;
-        int n = data_size;
-        int m = pattern_size;
-        std::vector<int> fail = failure(pattern, pattern_size);
-        int i = pos;
-        int j = 0;
-        while (i < n) {
-            if (pattern[j] == data[i]) {
-                if (j == m - 1) {
-                    ret = i - m + 1;
-                    break;
+        if (data && pattern && size_pattern) {
+            unsigned int n = size_data;
+            unsigned int m = size_pattern;
+            std::vector<int> fail = failure(pattern, m, comparator);
+            unsigned int i = pos;
+            unsigned int j = 0;
+            while (i < n) {
+                bool test = false;
+                if (comparator) {
+                    test = comparator(pattern[j], data[i]);
+                } else {
+                    test = (pattern[j] == data[i]);
                 }
-                i++;
-                j++;
-            } else if (j > 0) {
-                j = fail[j - 1];
-            } else {
-                i++;
+                if (test) {
+                    if (j == m - 1) {
+                        ret = i - m + 1;
+                        break;
+                    }
+                    i++;
+                    j++;
+                } else if (j > 0) {
+                    j = fail[j - 1];
+                } else {
+                    i++;
+                }
             }
         }
         return ret;
     }
 
    protected:
-    std::vector<int> failure(const T* pattern, size_t size) {
+    std::vector<int> failure(const T* pattern, size_t size, comparator_t comparator = nullptr) {
         std::vector<int> fail(size);
         fail[0] = 0;
         size_t m = size;
         size_t j = 0;
         size_t i = 1;
         while (i < m) {
-            if (pattern[j] == pattern[i]) {
+            bool test = false;
+            if (comparator) {
+                test = comparator(pattern[j], pattern[i]);
+            } else {
+                test = (pattern[j] == pattern[i]);
+            }
+            if (test) {
                 fail[i] = j + 1;
                 i++;
                 j++;

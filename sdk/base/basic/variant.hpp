@@ -304,6 +304,25 @@ T t_to_int(const variant_t& vt) {
 class variant {
    public:
     variant();
+    variant(const void* value);
+    variant(const char* value);
+    variant(const char* value, size_t n);
+    variant(const unsigned char* value, size_t n);
+    variant(const std::string& rhs);
+    variant(const binary_t& rhs);
+    variant(bool value);
+    variant(int8 value);
+    variant(uint8 value);
+    variant(int16 value);
+    variant(uint16 value);
+    variant(int32 value);
+    variant(uint32 value);
+    variant(int64 value);
+    variant(uint64 value);
+    variant(int128 value);
+    variant(uint128 value);
+    variant(float value);
+    variant(double value);
     variant(const variant_t& rhs);
     variant(variant_t&& rhs);
     variant(const variant& rhs);

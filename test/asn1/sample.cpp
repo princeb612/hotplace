@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <sdk/io/asn.1/asn1.hpp>
 #include <sdk/sdk.hpp>
 
 using namespace hotplace;
@@ -22,30 +23,6 @@ using namespace hotplace::net;
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
-
-// ISO/IEC 8824-1
-// ITU-T X.680
-// 8 Tags
-// Table 1 - Universal class tag assignment
-
-// ISO/IEC 8825-1
-// X.690
-// Specificaton of basic notation
-// 8 Basic encoding rules
-// 8.1 General rules for encoding
-// 8.1.1 structure of an encoding
-//  Table 1 - Encoding of class of tag
-//  Figure 2 - An alternative constructed encoding
-// 8.1.2 identifier octets
-//  Figure 3 - Identifier octet (low tag number)
-//  Figure 4 - Identifier octets (high tag number)
-// 8.1.3 length octets
-// 8.1.4 contents octets
-// 8.1.5 end-of-contents octets
-// 8.2 Encoding of a boolean value
-// 8.3 Encoding of an integer value
-// 8.4 Encoding of an enumerated value
-// 8.5 Encoding of a real value
 
 typedef struct _OPTION {
     int verbose;
@@ -56,85 +33,14 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
-// X.680 8.4 Table 1 – Universal class tag assignments
-enum asn1_universal_class_tag {
-    asn1_tag_boolean = 1,
-    asn1_tag_integer = 2,
-    asn1_tag_bitstring = 3,
-    asn1_tag_octstring = 4,
-    asn1_tag_null = 5,
-    asn1_tag_objid = 6,
-    asn1_tag_objdesc = 7,
-    asn1_tag_extern = 8,
-    asn1_tag_real = 9,
-    asn1_tag_enum = 10,
-    asn1_tag_embedpdv = 11,
-    asn1_tag_utf8string = 12,
-    asn1_tag_relobjid = 13,
-    // asn1_tag_sequence = 16,
-    asn1_tag_set = 17,
-    asn1_tag_string = 18,
-    asn1_tag_ia5string = 0x16,  // IA5String
-    asn1_tag_time = 23,
-    asn1_tag_visiblestring = 0x1a,  // ISO646String)
-    asn1_tag_sequence = 0x30,
-
-    // X.680 8.1.2.2 Table 1 - encoding of class of tag
-    // class            bit8 bit7
-    // universal        0    0
-    // application      0    1
-    // context-specific 1    0
-    // private          1    1
-    asn1_tag_universal = 0x00,
-    asn1_tag_application = 0x40,
-    asn1_tag_context = 0x80,
-    asn1_tag_private = 0xc0,
-
-    // X.680 8.1.2.3 Figure 3 - identifier octet
-    // identifier       bit6
-    // primitive        0
-    // constructed      1
-    asn1_tag_primitive = 0x00,
-    asn1_tag_constructed = 0x20,
-};
-
-// X.680 8.1.3 Length octets
-// X.690 8.1.3 Length octets
-template <typename type>
-void encode_asn1_length(type v, binary_t& bin) {
-    std::function<type(type)> conv;
-
-    uint8 octets = sizeof(type);
-
-    uint128 m = 0;
-    for (uint8 i = 1; i <= octets; i++) {
-        m <<= 8;
-        m |= 0xff;
-        if (v <= m) {
-            if ((1 == i) && (v <= 0x7f)) {
-                bin.insert(bin.end(), (uint8)v);
-            } else {
-                type be = v;
-                if (sizeof(type) > 1) {
-                    be = convert_endian(v);
-                }
-
-                uint8 leading = 0x80 | i;
-                bin.insert(bin.end(), leading);
-                bin.insert(bin.end(), (byte_t*)&be + (octets - i), (byte_t*)&be + octets);
-            }
-            break;
-        }
-    }
-}
-
-// X.680 8.1.2.4 Figure 4 identifier octets
+#define TESTVECTOR_ENTRY(e1, e2) \
+    { e1, e2 }
+#define TESTVECTOR_ENTRY3(e1, e2, e3) \
+    { e1, e2, e3 }
 
 // X.690 8.1.3 Length octets
 void x690_8_1_3_length_octets() {
-#define TESTVECTOR_ENTRY(ei, et) \
-    { ei, et }
-    struct table {
+    struct testvector {
         uint32 i;
         const char* expect;
     } _table[] = {
@@ -146,150 +52,73 @@ void x690_8_1_3_length_octets() {
 
     binary_t bin;
 
-    auto encode_length_octet_routine = [&](int i, const std::string& expect) -> void {
-        bin.clear();
-        encode_asn1_length<uint32>(i, bin);
-        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.1.3 length octets %i", i);
-    };
+    auto encode_length_octet_routine = [&](const testvector& entry, binary_t& bin) -> void { t_asn1_encode_length<uint32>(bin, entry.i); };
 
     for (auto entry : _table) {
-        encode_length_octet_routine(entry.i, entry.expect);
+        encode_length_octet_routine(entry, bin);
+        bool test = (bin == base16_decode_rfc(entry.expect));
+        _test_case.assert(test, __FUNCTION__, "X.690 8.1.3 length octets %i", entry.i);
+        bin.clear();
     }
 }
 
 // X.690 8.1.5 end-of-contents octets
 void x690_8_1_5_end_of_contents() {
-    // 8.1.3.6 For the indefinite form, the length octets indicate that the contents octets are terminated by end-of-contents octets (see 8.1.5),
-    // and shall consist of a single octet.
-
-    // 8.1.3.6.1 The single octet shall have bit 8 set to one, and bits 7 to 1 set to zero.
-
-    // X.690 8.1.3.6 For the indefinite form, the length octets indicate that the contents octets are terminated by end-of-contents octets (see 8.1.5),
-    // and shall consist of a single octet.
-
-    // 0x80 infinite length
-    // ...
-    // 0x00 0x00 (EOC)
-
+    asn1_encode enc;
     binary_t bin;
-    bin.insert(bin.end(), 0x00);
-    encode_asn1_length<uint32>(0, bin);
+    enc.end_contents(bin);
     _logger->dump(bin);
     _test_case.assert(bin == base16_decode("0000"), __FUNCTION__, "X.690 8.1.5 end-of-contents octets");
 }
 
-// X.690 8.2 encoding of a boolean value
-void x690_8_2_boolean() {
-    binary_t bin;
-    bin.insert(bin.end(), asn1_tag_boolean);
-    encode_asn1_length<uint32>(1, bin);
-    bin.insert(bin.end(), 0xff);
-    _logger->dump(bin);
-    _test_case.assert(bin == base16_decode("0101ff"), __FUNCTION__, "X.690 8.2.2 true");
-
-    bin.clear();
-    bin.insert(bin.end(), asn1_tag_boolean);
-    encode_asn1_length<uint32>(1, bin);
-    bin.insert(bin.end(), 0x00);
-    _logger->dump(bin);
-    _test_case.assert(bin == base16_decode("010100"), __FUNCTION__, "X.690 8.2.2 false");
-}
-
-template <typename type>
-void encode_asn1_integer(type v, binary_t& bin) {
-    uint32 tsize = sizeof(type);
-    type i = convert_endian(v);
-    type p = v >= 0 ? v : ~v;
-    type mask = 0;
-    uint32 len = 1;
-
-    for (uint32 i = tsize; i > 0; i--) {
-        mask = (0xff << ((i - 1) * 8));
-        if (mask & p) {  // check occupied bytes
-            len = i;
-            type msb = (1 << ((len * 8) - 1));
-            if (msb & p) {  // check msb is set
-                len += 1;
-            }
-            break;
-        }
-    }
-
-    bin.insert(bin.end(), asn1_tag_integer);
-    encode_asn1_length<uint32>(len, bin);
-    bin.insert(bin.end(), (byte_t*)&i + (tsize - len), (byte_t*)&i + tsize);
-}
-
-void x690_8_3_integer() {
-    // test vector ChatGPT provided
-    struct table {
-        int32 i;
-        const char* expect;
-    } _table[] = {
-        TESTVECTOR_ENTRY(0, "02 01 00"),         TESTVECTOR_ENTRY(127, "02 01 7F"),          TESTVECTOR_ENTRY(128, "02 02 00 80"),
-        TESTVECTOR_ENTRY(256, "02 02 01 00"),    TESTVECTOR_ENTRY(300, "02 02 01 2C"),       TESTVECTOR_ENTRY(65535, "02 03 00 FF FF"),
-        TESTVECTOR_ENTRY(-1, "02 01 FF"),        TESTVECTOR_ENTRY(-128, "02 01 80"),         TESTVECTOR_ENTRY(-129, "02 02 FF 7F"),
-        TESTVECTOR_ENTRY(-256, "02 02 FF 00"),   TESTVECTOR_ENTRY(-257, "02 02 FE FF"),      TESTVECTOR_ENTRY(-300, "02 02 FE D4"),
-        TESTVECTOR_ENTRY(-32768, "02 02 80 00"), TESTVECTOR_ENTRY(-32769, "02 03 FF 7F FF"),
-    };
-
-    binary_t bin;
-
-    auto encode_integer_routine = [&](int i, const std::string& expect) -> void {
-        bin.clear();
-        encode_asn1_integer<int32>(i, bin);
-        _logger->dump(bin);
-        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.3 integer %i expect %s", i, expect.c_str());
-    };
-
-    for (auto entry : _table) {
-        encode_integer_routine(entry.i, entry.expect);
-    }
-}
-
-void x690_8_5_real() {
-    // test vector ChatGPT provided
-    struct table {
-        double f;
-        const char* expect;
-    } _table[] = {
-        TESTVECTOR_ENTRY(1.23, "09 03 80 00 3F 9D 70"),
-        TESTVECTOR_ENTRY(-1.23, "09 03 C0 00 3F 9D 70"),
-        TESTVECTOR_ENTRY(0.0, "09 00"),                                // X.690 8.5.2
-        TESTVECTOR_ENTRY(fp32_from_binary32(0x7f800000), "09 01 40"),  // Inf
-        TESTVECTOR_ENTRY(fp32_from_binary32(0xff800000), "09 01 41"),  // -Inf
-        TESTVECTOR_ENTRY(fp32_from_binary32(0x7fc00000), "09 01 42"),  // NaN
-        TESTVECTOR_ENTRY(123.45, "09 05 80 02 3F F6 E6 66"),
-        TESTVECTOR_ENTRY(12345.6789, "09 09 80 00 00 03 40 E6 B7 27 0A 14 7A E1"),
-        TESTVECTOR_ENTRY(-0.000012345, "09 09 C0 FF FF FC 3D CC CC CC CC CC CC CD"),
-    };
-
-    // M * B^E (each of the values mantissa, base, exponent must be encoded)
-    // real ::= {10, 2, 0}
-    // value = 10 * 2^0
-    // M = 10, B = 2, E = 0
-    // M = 1 * 10 * 2^0, S = 1, N = 10, F = 0
-    // 09 03 80 00 0A
-
-    binary_t bin;
-
-    auto encode_float_routine = [&](double d, const std::string& expect) -> void {
-        bin.clear();
-
+void test_x690_encoding() {
+    struct testvector {
         variant var;
-        var.set_double(d);
-        ieee754_as_small_as_possible(var, d);
-        var.dump(bin, true);
-        _logger->dump(bin);
+        const char* expect;
+        const char* text;
+    } _table[] = {
+        TESTVECTOR_ENTRY3(variant(), "05 00", "X.690 8.8 encoding of a null value"),
+        TESTVECTOR_ENTRY3(variant(true), "0101ff", "X.690 8.2 encoding of a boolean value (true)"),
+        TESTVECTOR_ENTRY3(variant(false), "010100", "X.690 8.2 encoding of a boolean value (false)"),
+        TESTVECTOR_ENTRY3(variant(0), "02 01 00", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(127), "02 01 7F", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(128), "02 02 00 80", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(256), "02 02 01 00", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(300), "02 02 01 2C", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(65535), "02 03 00 FF FF", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-1), "02 01 FF", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-128), "02 01 80", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-129), "02 02 FF 7F", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-256), "02 02 FF 00", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-257), "02 02 FE FF", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-300), "02 02 FE D4", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-32768), "02 02 80 00", "X.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-32769), "02 03 FF 7F FF", "X.690 8.3"),
 
-        _test_case.test(errorcode_t::not_supported, __FUNCTION__, "X.690 8.5 real %lf expect %s", d, expect.c_str());
+        // not yet
+        // TESTVECTOR_ENTRY3(variant(1.23), "09 03 80 00 3F 9D 70", "X.690 8.5"),
+        // TESTVECTOR_ENTRY3(variant(-1.23), "09 03 C0 00 3F 9D 70", "X.690 8.5"),
+        // TESTVECTOR_ENTRY3(variant(0.0), "09 00", "X.690 8.5"),
+        // TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0x7f800000)), "09 01 40", "X.690 8.5 Inf"),
+        // TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0xff800000)), "09 01 41", "X.690 8.5 -Inf"),
+        // TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0x7fc00000)), "09 01 42", "X.690 8.5 NaN"),
+        // TESTVECTOR_ENTRY3(variant(123.45), "09 05 80 02 3F F6 E6 66", "X.690 8.5"),
+        // TESTVECTOR_ENTRY3(variant(12345.6789), "09 09 80 00 00 03 40 E6 B7 27 0A 14 7A E1", "X.690 8.5"),
+        // TESTVECTOR_ENTRY3(variant(-0.000012345), "09 09 C0 FF FF FC 3D CC CC CC CC CC CC CD", "X.690 8.5"),
+
     };
 
-    for (auto entry : _table) {
-        encode_float_routine(entry.f, entry.expect);
-    }
+    binary_t bin;
+    asn1_encode enc;
 
-    // _test_case.test(errorcode_t::not_supported, __FUNCTION__, "X.690 8.5 real");
+    auto encode_routine = [&](binary_t& bin, const variant& v) -> void { enc.encode(bin, v); };
+
+    for (auto entry : _table) {
+        encode_routine(bin, entry.var);
+        _logger->dump(bin);
+        _test_case.assert(bin == base16_decode_rfc(entry.expect), __FUNCTION__, "X.690 expect [%s] %s", entry.expect, entry.text);
+        bin.clear();
+    }
 }
 
 // X.690 8.6 encoding of a bitstring value
@@ -301,15 +130,11 @@ void x690_8_6_bitstring() {
 
     // primitive
     {
-        binary bin;
-        bin.push_back(asn1_tag_bitstring);
-        encode_asn1_length<uint32>(7, bin.get());  // '0A3B5F291CD'h || 0
-        // X.690 8.6.2.2 The initial octet shall encode, as an unsigned binary integer with bit 1 as the least significant bit,
-        // the number of unused bits in the final subsequent octet. The number shall be in the range zero to seven.
-        bin.push_back(4);
-        bin.append(base16_decode("0A3B5F291CD0"));
-        _logger->dump(bin.get());
-        _test_case.assert(bin.get() == base16_decode("0307040A3B5F291CD0"), __FUNCTION__, "X.690 8.6.4 BitString");
+        binary_t bin;
+        asn1_encode enc;
+        enc.bitstring(bin, "0A3B5F291CD");
+        _logger->dump(bin);
+        _test_case.assert(bin == base16_decode("0307040A3B5F291CD0"), __FUNCTION__, "X.690 8.6.4 BitString");
     }
 
     // constructed
@@ -318,10 +143,10 @@ void x690_8_6_bitstring() {
         bin.push_back(asn1_tag_bitstring | asn1_tag_constructed);
         bin.push_back(0x80);
         bin.push_back(asn1_tag_bitstring);
-        encode_asn1_length<uint32>(3, bin.get());
+        t_asn1_encode_length<uint32>(bin.get(), 3);
         bin.append(base16_decode("000a3b"));
         bin.push_back(asn1_tag_bitstring);
-        encode_asn1_length<uint32>(5, bin.get());
+        t_asn1_encode_length<uint32>(bin.get(), 5);
         bin.append(base16_decode("045f291cd0"));
         bin.push_back(0x00);  // EOC
         bin.push_back(0x00);  // EOC
@@ -332,31 +157,27 @@ void x690_8_6_bitstring() {
 }
 
 // X.690 8.8 encoding of a null value
-void x690_8_8_null() {
-    binary_t bin;
-    bin.insert(bin.end(), asn1_tag_null);
-    encode_asn1_length<uint32>(0, bin);
-    _logger->dump(bin);
-    _test_case.assert(bin == base16_decode("0500"), __FUNCTION__, "X.690 8.8 null");
-}
+// void x690_8_8_null() {
+//     binary_t bin;
+//     asn1_encode enc;
+//     enc.null(bin);
+//
+//     _logger->dump(bin);
+//     _test_case.assert(bin == base16_decode("0500"), __FUNCTION__, "X.690 8.8 null");
+// }
 
 // X.690 8.9 encoding of a sequence value
 void x690_8_9_sequence() {
     // SEQUENCE {name IA5String, ok BOOLEAN}
     // {name "Smith", ok TRUE}
     binary_t bin;
-    bin.insert(bin.end(), asn1_tag_ia5string);
-    const char* name = "Smith";
-    encode_asn1_length<uint32>(5, bin);
-    bin << name;
-
-    bin.insert(bin.end(), asn1_tag_boolean);
-    encode_asn1_length<uint32>(1, bin);
-    bin.insert(bin.end(), 0xff);
+    asn1_encode enc;
+    enc.ia5string(bin, "Smith");
+    enc.primitive(bin, true);
 
     size_t size = bin.size();
-    bin.insert(bin.begin(), size);  // 0xa
-    bin.insert(bin.begin(), asn1_tag_sequence);
+    bin.insert(bin.begin(), size);                         // 0xa
+    bin.insert(bin.begin(), asn1_tag_constructed | 0x10);  // asn1_tag_sequence
 
     // Sequence Length  Contents
     // 30_16    0A_16
@@ -364,12 +185,16 @@ void x690_8_9_sequence() {
     //                  16_16      05_16   "Smith"
     //                  Boolean    Length  Contents
     //                  01_16      01_16   FF_16
+
+    // 30 = 0011 0000 primitive, constructed
+
     _logger->dump(bin);
     _test_case.assert(bin == base16_decode_rfc("30 0A 16 05 53 6D 69 74 68 01 01 FF"), __FUNCTION__, "X.690 8.9 Sequence");
 }
 
 // X.690 8.14 encoding of a tagged value
 void x690_8_14_tagged() {
+    asn1_encode enc;
     binary_t bin_type1;
     binary_t bin_type2;
     binary_t bin_type3;
@@ -377,24 +202,21 @@ void x690_8_14_tagged() {
     binary_t bin_type5;
     // Type1 ::= VisibleString
     {
-        binary_push(bin_type1, asn1_tag_visiblestring);
-        encode_asn1_length<uint32>(5, bin_type1);
-        binary_append(bin_type1, "Jones");
+        enc.visiblestring(bin_type1, "Jones");
         _logger->dump(bin_type1);
         _test_case.assert(bin_type1 == base16_decode_rfc("1A 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type1");
     }
     // Type2 ::= [Application 3] implicit Type1
     {
-        binary_push(bin_type2, asn1_tag_application | 3);
-        encode_asn1_length<uint32>(5, bin_type2);
-        binary_append(bin_type2, "Jones");
+        enc.encode(bin_type2, asn1_tag_application, 3, "Jones");
         _logger->dump(bin_type2);
         _test_case.assert(bin_type2 == base16_decode_rfc("43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type2");
     }
     // Type3 ::= [2] Type2
     {
+        // enc.encode(bin_type3, asn1_tag_context | asn1_tag_constructed, 2);
         binary_push(bin_type3, asn1_tag_context | asn1_tag_constructed | 2);
-        encode_asn1_length<uint32>(bin_type2.size(), bin_type3);
+        t_asn1_encode_length<uint32>(bin_type3, bin_type2.size());
         binary_append(bin_type3, bin_type2);
         _logger->dump(bin_type3);
         _test_case.assert(bin_type3 == base16_decode_rfc("a2 07 43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type3");
@@ -402,7 +224,7 @@ void x690_8_14_tagged() {
     // Type4 ::= [Application 7] implicit Type3
     {
         binary_push(bin_type4, asn1_tag_application | asn1_tag_constructed | 7);
-        encode_asn1_length<uint32>(bin_type2.size(), bin_type4);
+        t_asn1_encode_length<uint32>(bin_type4, bin_type2.size());
         binary_append(bin_type4, bin_type2);  // ?? not bin_type3
         _logger->dump(bin_type4);
         _test_case.assert(bin_type4 == base16_decode_rfc("67 07 43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type4");
@@ -410,34 +232,16 @@ void x690_8_14_tagged() {
     // Type5 ::= [2] implicit Type2
     {
         binary_push(bin_type5, asn1_tag_context | 2);
-        encode_asn1_length<uint32>(5, bin_type5);
+        t_asn1_encode_length<uint32>(bin_type5, 5);
         binary_append(bin_type5, "Jones");
         _logger->dump(bin_type5);
         _test_case.assert(bin_type5 == base16_decode_rfc("82 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # Type5");
     }
 }
 
-void encode_variable_length(uint32 v, binary_t& bin) {
-    binary_t b;
-    uint8 m = 0;
-    while (v >= 0x80) {
-        b.insert(b.begin(), (v & 0x7f) | m);
-        v >>= 7;
-        m = 0x80;
-    }
-    b.insert(b.begin(), v | m);
-    bin << b;
-}
-
 // X.690 8.19 encoding of an object identifier value
 void x690_8_19_objid() {
-    struct oid_t {
-        // ITU-T X.660 ISO/IEC 9834-1, ISO/IEC 6523 Structure for the identification of organizations and organization parts
-        uint8 node1;      // 0, 1, 2
-        uint8 node2;      // 0..39
-        uint32 node[16];  // positive
-    };
-    struct table {
+    struct testvector {
         std::pair<oid_t, std::string> couple;
     } _table[] = {
         std::make_pair(oid_t{1, 3, 6, 1, 4, 1}, "06 05 2b 06 01 04 01"),
@@ -449,98 +253,51 @@ void x690_8_19_objid() {
     };
 
     binary_t bin;
+    asn1_encode enc;
 
-    auto encode_oid_routine = [&](const oid_t& oid, const std::string& expect) -> void {
-        bin.clear();
-
-        binary_t b;
-
-        binary_t n;
-        encode_variable_length(oid.node1 * 40 + oid.node2, n);
-
-        for (int i = 0; i < 10; i++) {
-            uint32 node = oid.node[i];
-            if (0 == node) {
-                break;
-            } else if (node <= 127) {
-                binary_push(b, node);
-            } else {
-                encode_variable_length(node, b);
-            }
-        }
-
-        binary_push(bin, asn1_tag_objid);
-        binary_push(bin, n.size() + b.size());
-        bin << n;
-        bin << b;
-
-        _logger->dump(bin);
-
-        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.19 object identifier expect %s", expect.c_str());
-    };
+    auto encode_oid_routine = [&](const oid_t& oid, binary_t& bin) -> void { enc.primitive(bin, oid); };
 
     for (auto entry : _table) {
-        encode_oid_routine(entry.couple.first, entry.couple.second);
+        const std::string& expect = entry.couple.second;
+        encode_oid_routine(entry.couple.first, bin);
+        _logger->dump(bin);
+        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.19 object identifier expect %s", expect.c_str());
+        bin.clear();
     }
 }
 
 // X.690 8.20 encoding of a relative object identifier value
 void x690_8_20_relobjid() {
-    struct reloid_t {
-        uint32 node[16];  // positive
-    };
-    struct table {
+    struct testvector {
         std::pair<reloid_t, std::string> couple;
     } _table[] = {
         std::make_pair(reloid_t{8571, 3, 2}, "0D 04 C27B0302"),
     };
 
     binary_t bin;
-
-    auto encode_oid_routine = [&](const reloid_t& oid, const std::string& expect) -> void {
-        bin.clear();
-
-        binary_t b;
-
-        for (int i = 0; i < 10; i++) {
-            uint32 node = oid.node[i];
-            if (0 == node) {
-                break;
-            } else if (node <= 127) {
-                binary_push(b, node);
-            } else {
-                encode_variable_length(node, b);
-            }
-        }
-
-        binary_push(bin, asn1_tag_relobjid);
-        binary_push(bin, b.size());
-        bin << b;
-
-        _logger->dump(bin);
-
-        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.20 relative object identifier expect %s", expect.c_str());
-    };
+    asn1_encode enc;
+    auto encode_reloid_routine = [&](const reloid_t& reloid, binary_t& bin) -> void { enc.primitive(bin, reloid); };
 
     for (auto entry : _table) {
-        encode_oid_routine(entry.couple.first, entry.couple.second);
+        const std::string& expect = entry.couple.second;
+        encode_reloid_routine(entry.couple.first, bin);
+        _logger->dump(bin);
+        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.20 relative object identifier expect %s", expect.c_str());
+        bin.clear();
     }
 }
 
 // X.690 8.21.5.4 Example Name ::= VisibleString
 void x690_8_21_visiblestring() {
     binary_t bin;
-    const char* value = "Jones";
-    size_t len = strlen(value);
-    binary_push(bin, asn1_tag_visiblestring);
-    encode_asn1_length<size_t>(len, bin);
-    binary_append(bin, value);
+    asn1_encode enc;
+    enc.visiblestring(bin, "Jones");
     _logger->dump(bin);
     _test_case.assert(bin == base16_decode_rfc("1a 05 4a6f6e6573"), __FUNCTION__, "X.690 8.21 VisibleString");
 }
 
 void x690_11_7_generallizedtime() {
-    struct table {
+    struct testvector {
         std::pair<datetime_t, basic_stream> couple;
     } _table[] = {
         std::make_pair(datetime_t(1992, 5, 21, 0, 0, 0), "19920521000000Z"),
@@ -548,31 +305,318 @@ void x690_11_7_generallizedtime() {
         std::make_pair(datetime_t(1992, 7, 22, 13, 21, 00, 3), "19920722132100.3Z"),
     };
 
-    binary_t bin;
+    asn1_encode enc;
+    basic_stream bs;
 
-    auto encode_generalizedtime_routine = [&](const datetime_t& d, const basic_stream& expect) -> void {
-        bin.clear();
-
-        basic_stream bs;
-        if (d.milliseconds) {
-            bs.printf("%04d%02d%02d%02d%02d%02d.%dZ", d.year, d.month, d.day, d.hour, d.minute, d.second, d.milliseconds);
-        } else {
-            bs.printf("%04d%02d%02d%02d%02d%02dZ", d.year, d.month, d.day, d.hour, d.minute, d.second);
-        }
-        bin << bs;
-
-        _logger->dump(bin);
-
-        _test_case.assert(bs == expect, __FUNCTION__, "X.690 11.7 generalized time expect %s", expect.c_str());
-    };
+    auto encode_generalizedtime_routine = [&](const datetime_t& d, basic_stream& bs) -> void { enc.generalized_time(bs, d); };
 
     for (auto entry : _table) {
-        encode_generalizedtime_routine(entry.couple.first, entry.couple.second);
+        const basic_stream& expect = entry.couple.second;
+        encode_generalizedtime_routine(entry.couple.first, bs);
+        _logger->dump(bs);
+        _test_case.assert(bs == expect, __FUNCTION__, "X.690 11.7 generalized time expect %s", expect.c_str());
+        bs.clear();
     }
 }
 
 void x690_annex_a() {
     //
+}
+
+void test_asn1_typedef_value() {
+    // skeleton .. o
+    // implement members .. o
+    asn1 notation;
+    auto node_personal = new asn1_set("PersonnelRecord", new asn1_tagged(asn1_class_application, 0, asn1_implicit));
+    *node_personal << new asn1_namedtype("name", new asn1_type_defined("Name"))
+                   << new asn1_namedtype("title", new asn1_type(asn1_type_visiblestring, new asn1_tagged(asn1_class_empty, 0)))
+                   << new asn1_namedtype("number", new asn1_type_defined("EmployeeNumber"))
+                   << new asn1_namedtype("dateOfHire", new asn1_type_defined("Date", new asn1_tagged(asn1_class_empty, 1)))
+                   << new asn1_namedtype("nameOfSpouse", new asn1_type_defined("Name", new asn1_tagged(asn1_class_empty, 2)))
+                   << new asn1_namedtype("children",
+                                         &(new asn1_sequence_of("ChildInformation", new asn1_tagged(asn1_class_empty, 3, asn1_implicit)))->set_default());
+    notation << node_personal;
+
+    auto node_childinfo = new asn1_set("ChildInformation");
+    *node_childinfo << new asn1_namedtype("name", new asn1_type_defined("Name"))
+                    << new asn1_namedtype("dateOfBirth", new asn1_type_defined("Date", new asn1_tagged(asn1_class_empty, 0)));
+    notation << node_childinfo;
+
+    auto node_name = new asn1_sequence("Name", new asn1_tagged(asn1_class_application, 1, asn1_implicit));
+    *node_name << new asn1_namedtype("givenName", new asn1_type(asn1_type_visiblestring))
+               << new asn1_namedtype("initial", new asn1_type(asn1_type_visiblestring))
+               << new asn1_namedtype("familyName", new asn1_type(asn1_type_visiblestring));
+    notation << node_name;
+
+    auto node_employeenumber = new asn1_namedobject("EmployeeNumber", asn1_type_integer, new asn1_tagged(asn1_class_application, 2, asn1_implicit));
+    notation << node_employeenumber;
+
+    auto node_date = new asn1_namedobject("Date", asn1_type_visiblestring, new asn1_tagged(asn1_class_application, 3, asn1_implicit));
+    notation << node_date;
+
+    basic_stream bs;
+    notation.publish(&bs);
+    _logger->write(bs);
+    _test_case.assert(true, __FUNCTION__, "publish definition");
+
+    binary_t bin;
+    auto data_personal = notation.clone("PersonnelRecord");
+    // data_personal->get_namedvalue("name") << "John" << "P" << "Smith";
+    // data_personal->get_namedvalue("title") << "Director";
+    // data_personal->get_namedvalue("number") << 51;
+    // data_personal->get_namedvalue("dateOfHire") << "19710917";
+    // data_personal->get_namedvalue("nameOfSpouse") << "Mary" << "T" << "Smith";
+    // data_personal->get_namedvalue("children").spawn() << "Ralph" << "T" << "Smith";
+    // data_personal->get_namedvalue("children").spawn() << "Susan" << "B" << "Jones";
+    notation.publish(&bin);
+    data_personal->release();
+    _test_case.assert(true, __FUNCTION__, "publish value");
+}
+
+void test_asn1_parse() {
+    _test_case.begin("rule");
+    asn1 a1;
+    // ITU-T X.680
+    a1.add_rule(R"a(
+        -- 16 Definition of types and values
+        Type ::= BuiltinType | ReferencedType | ConstrainedType
+        BuiltinType ::= BitStringType
+            | BooleanType
+            | CharacterStringType
+            | ChoiceType
+            | EmbeddedPDVType
+            | EnumeratedType
+            | ExternalType
+            | InstanceOfType
+            | IntegerType
+            | NullType
+            | ObjectClassFieldType
+            | ObjectIdentifierType
+            | OctetStringType
+            | RealType
+            | RelativeOIDType
+            | SequenceType
+            | SequenceOfType
+            | SetType
+            | SetOfType
+            | TaggedType
+        ReferencedType ::= DefinedType | UsefulType | SelectionType | TypeFromObject | ValueSetFromObjects
+        NamedType ::= identifier Type
+        Value ::= BuiltinValue | ReferencedValue | ObjectClassFieldValue
+        BuiltinValue ::= BitStringValue | BooleanValue | CharacterStringValue | ChoiceValue | EmbeddedPDVValue | EnumeratedValue | ExternalValue
+            | InstanceOfValue | IntegerValue | NullValue | ObjectIdentifierValue | OctetStringValue | RealValue | RelativeOIDValue | SequenceValue
+            | SequenceOfValue | SetValue | SetOfValue | TaggedValue
+        ReferencedValue ::= DefinedValue | ValueFromObject
+        NamedValue ::= identifier Value
+        -- ITU-T X.680 17
+        BooleanType ::= BOOLEAN
+        BooleanValue ::= TRUE | FALSE
+        -- ITU-T X.680 18
+        IntegerType ::= INTEGER | INTEGER "{" NamedNumberList "}"
+        NamedNumberList ::= NamedNumber | NamedNumberList "," NamedNumber
+        NamedNumber ::= identifier "(" SignedNumber ")" | identifier "(" DefinedValue ")"
+        SignedNumber ::= number | "-" number
+        IntegerValue ::= SignedNumber | identifier
+        -- ITU-T X.680 19
+        EnumeratedType ::= ENUMERATED "{" Enumerations "}"
+        Enumerations ::=
+            RootEnumeration
+            | RootEnumeration "," "..." ExceptionSpec
+            | RootEnumeration "," "..." ExceptionSpec "," AdditionalEnumeration
+        RootEnumeration ::= Enumeration
+        AdditionalEnumeration ::= Enumeration
+        Enumeration ::= EnumerationItem | EnumerationItem "," Enumeration
+        EnumerationItem ::= identifier | NamedNumber
+        -- ITU-T X.680 20
+        RealType ::= REAL
+        -- 20.5 SEQUENCE { mantissa INTEGER, base INTEGER (2|10), exponent INTEGER }
+        RealValue ::= NumericRealValue | SpecialRealValue
+        NumericRealValue ::=
+            realnumber
+            | "-" realnumber
+            | SequenceValue -- Value of the associated sequence type
+        SpecialRealValue ::= PLUS-INFINITY | MINUS-INFINITY
+        -- ITU-T X.680 21
+        BitStringType ::= BIT STRING | BIT STRING "{" NamedBitList "}"
+        NamedBitList ::= NamedBit | NamedBitList "," NamedBit
+        NamedBit ::= identifier "(" number ")" | identifier "(" DefinedValue ")"
+        BitStringValue ::=
+            bstring
+            | hstring
+            | "{" IdentifierList "}"
+            | "{" "}"
+            | CONTAINING Value
+        IdentifierList ::= identifier | IdentifierList "," identifier
+        -- ITU-T X.680 22
+        OctetStringType ::= OCTET STRING
+        OctetStringValue ::= bstring | hstring | CONTAINING Value
+        -- ITU-T X.680 23
+        NullType ::= NULL
+        NullValue ::= NULL
+        -- ITU-T X.680 24
+        SequenceType ::=
+            SEQUENCE "{" "}"
+            | SEQUENCE "{" ExtensionAndException OptionalExtensionMarker "}"
+            | SEQUENCE "{" ComponentTypeLists "}"
+        ExtensionAndException ::= "..." | "..." ExceptionSpec
+        OptionalExtensionMarker ::= "," "..." | empty
+        ComponentTypeLists ::=
+            RootComponentTypeList
+            | RootComponentTypeList "," ExtensionAndException ExtensionAdditions OptionalExtensionMarker
+            | RootComponentTypeList "," ExtensionAndException ExtensionAdditions ExtensionEndMarker "," RootComponentTypeList
+            | ExtensionAndException ExtensionAdditions ExtensionEndMarker "," RootComponentTypeList
+            | ExtensionAndException ExtensionAdditions OptionalExtensionMarker
+        RootComponentTypeList ::= ComponentTypeList
+        ExtensionEndMarker ::= "," "..."
+        ExtensionAdditions ::= "," ExtensionAdditionList | empty
+        ExtensionAdditionList ::=
+            ExtensionAddition
+            | ExtensionAdditionList "," ExtensionAddition
+        ExtensionAddition ::=
+            ComponentType
+            | ExtensionAdditionGroup
+        ExtensionAdditionGroup ::= "[[" VersionNumber ComponentTypeList "]]"
+        VersionNumber ::= empty | number ":"
+        ComponentTypeList ::=
+            ComponentType
+            | ComponentTypeList "," ComponentType
+        ComponentType ::=
+            NamedType
+            | NamedType OPTIONAL
+            | NamedType DEFAULT Value
+            | COMPONENTS OF Type
+        SequenceValue ::=
+            "{" ComponentValueList "}"
+            | "{" "}"
+        ComponentValueList ::=
+            NamedValue
+            | ComponentValueList "," NamedValue
+        -- ITU-T X.680 25
+        SequenceOfType ::= SEQUENCE OF Type | SEQUENCE OF NamedType
+        SequenceOfValue ::=
+            "{" ValueList "}"
+            | "{" NamedValueList "}"
+            | "{" "}"
+        ValueList ::= Value | ValueList "," Value
+        NamedValueList ::= NamedValue | NamedValueList "," NamedValue
+        -- ITU-T X.680 26
+        SetType ::=
+            SET "{" "}"
+            | SET "{" ExtensionAndException OptionalExtensionMarker "}"
+            | SET "{" ComponentTypeLists "}"
+        SetValue ::=
+            "{" ComponentValueList "}"
+            | "{" "}"
+        -- ITU-T X.680 27
+        SetOfType ::= SET OF Type | SET OF NamedType
+        SetOfValue ::=
+            "{" ValueList "}"
+            | "{" NamedValueList "}"
+            | "{" "}"
+        -- ITU-T X.680 28
+        ChoiceType ::= CHOICE "{" AlternativeTypeLists "}"
+        AlternativeTypeLists ::=
+            RootAlternativeTypeList
+            | RootAlternativeTypeList "," ExtensionAndException ExtensionAdditionAlternatives OptionalExtensionMarker
+        RootAlternativeTypeList ::= AlternativeTypeList
+        ExtensionAdditionAlternatives ::= "," ExtensionAdditionAlternativesList | empty
+        ExtensionAdditionAlternativesList ::=
+            ExtensionAdditionAlternative
+            | ExtensionAdditionAlternativesList "," ExtensionAdditionAlternative
+        ExtensionAdditionAlternative ::= ExtensionAdditionAlternativesGroup | NamedType
+        ExtensionAdditionAlternativesGroup ::= "[[" VersionNumber AlternativeTypeList "]]"
+        AlternativeTypeList ::= NamedType | AlternativeTypeList "," NamedType
+        -- ITU-T X.680 29
+        SelectionType ::= identifier "<" Type
+        -- ITU-T X.680 30
+        TaggedType ::=
+            Tag Type
+            | Tag IMPLICIT Type
+            | Tag EXPLICIT Type
+        Tag ::= "[" Class ClassNumber "]"
+        ClassNumber ::= number | DefinedValue
+        Class ::=
+            UNIVERSAL
+            | APPLICATION
+            | PRIVATE
+            | empty
+        TaggedValue ::= Value
+        -- ITU-T X.680 31
+        ObjectIdentifierType ::= OBJECT IDENTIFIER
+        ObjectIdentifierValue ::=
+            "{" ObjIdComponentsList "}"
+            | "{" DefinedValue ObjIdComponentsList "}"
+        ObjIdComponentsList ::= ObjIdComponents | ObjIdComponents ObjIdComponentsList
+        ObjIdComponents ::= NameForm | NumberForm | NameAndNumberForm | DefinedValue
+        NameForm ::= identifier
+        NumberForm ::= number | DefinedValue
+        NameAndNumberForm ::= identifier "(" NumberForm ")"
+        -- ITU-T X.680 32
+        RelativeOIDValue ::= "{" RelativeOIDComponentsList "}"
+        RelativeOIDComponentsList ::= RelativeOIDComponents | RelativeOIDComponents RelativeOIDComponentsList
+        RelativeOIDComponents ::= NumberForm | NameAndNumberForm | DefinedValue
+        -- ITU-T X.680 33
+        EmbeddedPDVType ::= EMBEDDED PDV
+        EmbeddedPdvValue ::= SequenceValue -- value of associated type defined in 33.5
+        -- ITU-T X.680 36
+        CharacterStringType ::= RestrictedCharacterStringType | UnrestrictedCharacterStringType
+        CharacterStringValue ::= RestrictedCharacterStringValue | UnrestrictedCharacterStringValue
+        -- ITU-T X.680 37
+        RestrictedCharacterStringType ::=
+            BMPString
+            | GeneralString
+            | GraphicString
+            | IA5String
+            | ISO646String
+            | NumericString
+            | PrintableString
+            | TeletexString
+            | T61String
+            | UniversalString
+            | UTF8String
+            | VideotexString
+            | VisibleString
+        -- Table 6 List of restricted character string types
+        -- Table 7 NumericString
+        -- Table 8 PrintableString
+        RestrictedCharacterStringValue ::= cstring | CharacterStringList | Quadruple | Tuple
+        CharacterStringList ::= "{" CharSyms "}"
+        CharSyms ::= CharsDefn | CharSyms "," CharsDefn
+        CharsDefn ::= cstring | Quadruple | Tuple | DefinedValue
+        Quadruple ::= "{" Group "," Plane "," Row "," Cell "}"
+        Group ::= number
+        Plane ::= number
+        Row ::= number
+        Cell ::= number
+        Tuple ::= "{" TableColumn "," TableRow "}"
+        TableColumn ::= number
+        TableRow ::= number
+        -- ITU-T X.680 42
+        GeneralizedTime ::= [UNIVERSAL 24] IMPLICIT VisibleString
+        -- ITU-T X.680 43
+        UTCTime ::= [UNIVERSAL 23] IMPLICIT VisibleString
+        -- ITU-T X.680 45
+        ConstrainedType ::= Type Constraint | TypeWithConstraint
+        TypeWithConstraint ::=
+            SET Constraint OF Type
+            | SET SizeConstraint OF Type
+            | SEQUENCE Constraint OF Type
+            | SEQUENCE SizeConstraint OF Type
+            | SET Constraint OF NamedType
+            | SET SizeConstraint OF NamedType
+            | SEQUENCE Constraint OF NamedType
+            | SEQUENCE SizeConstraint OF NamedType
+        Constraint ::= "(" ConstraintSpec ExceptionSpec ")"
+        ConstraintSpec ::= SubtypeConstraint | GeneralConstraint)a");
+
+    basic_stream bs;
+    a1.learn();
+    a1.get_parser().dump(a1.get_rule_context(), bs);
+    _logger->write(bs);
+
+    // TODO
+
+    _test_case.assert(true, __FUNCTION__, "rule");
 }
 
 int main(int argc, char** argv) {
@@ -593,11 +637,12 @@ int main(int argc, char** argv) {
     // studying ...
     x690_8_1_3_length_octets();
     x690_8_1_5_end_of_contents();
-    x690_8_2_boolean();
-    x690_8_3_integer();
-    x690_8_5_real();
+    test_x690_encoding();
+    // x690_8_2_boolean();
+    // x690_8_3_integer();
+    // x690_8_5_real();
     x690_8_6_bitstring();
-    x690_8_8_null();
+    // x690_8_8_null();
     x690_8_9_sequence();
     x690_8_14_tagged();
     x690_8_19_objid();
@@ -605,6 +650,8 @@ int main(int argc, char** argv) {
     x690_8_21_visiblestring();
     x690_11_7_generallizedtime();
     x690_annex_a();
+    test_asn1_typedef_value();
+    test_asn1_parse();
 
     _logger->flush();
 

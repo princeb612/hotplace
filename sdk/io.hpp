@@ -18,6 +18,7 @@
 /* basic */
 #include <sdk/io/basic/json.hpp>
 #include <sdk/io/basic/mlfq.hpp>
+#include <sdk/io/basic/parser.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/io/basic/sdk.hpp>
 #include <sdk/io/basic/zlib.hpp>

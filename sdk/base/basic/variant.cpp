@@ -21,6 +21,44 @@ namespace hotplace {
 
 variant::variant() {}
 
+variant::variant(const void *value) { set_pointer(value); }
+
+variant::variant(const char *value) { set_str_new(value); }
+
+variant::variant(const char *value, size_t n) { set_strn_new(value, n); }
+
+variant::variant(const unsigned char *value, size_t n) { set_bstr_new(value, n); }
+
+variant::variant(const std::string &rhs) { set_strn_new(rhs.c_str(), rhs.size()); }
+
+variant::variant(const binary_t &rhs) { set_bstr_new(&rhs[0], rhs.size()); }
+
+variant::variant(bool value) { set_bool(value); }
+
+variant::variant(int8 value) { set_int8(value); }
+
+variant::variant(uint8 value) { set_uint8(value); }
+
+variant::variant(int16 value) { set_int16(value); }
+
+variant::variant(uint16 value) { set_uint16(value); }
+
+variant::variant(int32 value) { set_int32(value); }
+
+variant::variant(uint32 value) { set_uint32(value); }
+
+variant::variant(int64 value) { set_int64(value); }
+
+variant::variant(uint64 value) { set_uint64(value); }
+
+variant::variant(int128 value) { set_int128(value); }
+
+variant::variant(uint128 value) { set_uint128(value); }
+
+variant::variant(float value) { set_float(value); }
+
+variant::variant(double value) { set_double(value); }
+
 variant::variant(const variant_t &rhs) : _vt(rhs) {}
 
 variant::variant(variant_t &&rhs) : _vt(std::move(rhs)) {}

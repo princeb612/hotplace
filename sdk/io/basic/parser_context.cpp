@@ -7,12 +7,12 @@
  * Revision History
  * Date         Name                Description
  *
- * lexical ... done
- * syntax  ... in progress
+ * comments
  *
  */
 
-#include "parser.hpp"
+#include <sdk/io/basic/parser.hpp>
+#include <sdk/nostd.hpp>
 
 namespace hotplace {
 namespace io {
@@ -37,9 +37,9 @@ struct ascii_token_table {
     TOKEN_ENTRY(0x1B, "ESC", token_unknown), TOKEN_ENTRY(0x1C, "FS", token_unknown),   TOKEN_ENTRY(0x1D, "GS", token_unknown),
     TOKEN_ENTRY(0x1E, "RS", token_unknown),  TOKEN_ENTRY(0x1F, "US", token_unknown),   TOKEN_ENTRY(0x20, "SP", token_space),
     TOKEN_ENTRY(0x21, "!", token_unknown),   TOKEN_ENTRY(0x22, "\"", token_dquote),    TOKEN_ENTRY(0x23, "#", token_unknown),
-    TOKEN_ENTRY(0x24, "$", token_unknown),   TOKEN_ENTRY(0x25, "%", token_unknown),    TOKEN_ENTRY(0x26, "&", token_unknown),
+    TOKEN_ENTRY(0x24, "$", token_unknown),   TOKEN_ENTRY(0x25, "%", token_unknown),    TOKEN_ENTRY(0x26, "&", token_and),
     TOKEN_ENTRY(0x27, "'", token_squote),    TOKEN_ENTRY(0x28, "(", token_lparen),     TOKEN_ENTRY(0x29, ")", token_rparen),
-    TOKEN_ENTRY(0x2A, "*", token_multi),     TOKEN_ENTRY(0x2B, "+", token_plus),       TOKEN_ENTRY(0x2C, ",", token_unknown),
+    TOKEN_ENTRY(0x2A, "*", token_multi),     TOKEN_ENTRY(0x2B, "+", token_plus),       TOKEN_ENTRY(0x2C, ",", token_comma),
     TOKEN_ENTRY(0x2D, "-", token_minus),     TOKEN_ENTRY(0x2E, ".", token_dot),        TOKEN_ENTRY(0x2F, "/", token_divide),
     TOKEN_ENTRY(0x30, "0", token_number),    TOKEN_ENTRY(0x31, "1", token_number),     TOKEN_ENTRY(0x32, "2", token_number),
     TOKEN_ENTRY(0x33, "3", token_number),    TOKEN_ENTRY(0x34, "4", token_number),     TOKEN_ENTRY(0x35, "5", token_number),
@@ -66,7 +66,7 @@ struct ascii_token_table {
     TOKEN_ENTRY(0x72, "r", token_alpha),     TOKEN_ENTRY(0x73, "s", token_alpha),      TOKEN_ENTRY(0x74, "t", token_alpha),
     TOKEN_ENTRY(0x75, "u", token_alpha),     TOKEN_ENTRY(0x76, "v", token_alpha),      TOKEN_ENTRY(0x77, "w", token_alpha),
     TOKEN_ENTRY(0x78, "x", token_alpha),     TOKEN_ENTRY(0x79, "y", token_alpha),      TOKEN_ENTRY(0x7A, "z", token_alpha),
-    TOKEN_ENTRY(0x7B, "{", token_lbrace),    TOKEN_ENTRY(0x7C, "|", token_unknown),    TOKEN_ENTRY(0x7D, "}", token_rbrace),
+    TOKEN_ENTRY(0x7B, "{", token_lbrace),    TOKEN_ENTRY(0x7C, "|", token_or),         TOKEN_ENTRY(0x7D, "}", token_rbrace),
     TOKEN_ENTRY(0x7E, "~", token_unknown),   TOKEN_ENTRY(0x7F, "DEL", token_unknown),  TOKEN_ENTRY(0x80, "€", token_unknown),
     TOKEN_ENTRY(0x81, "", token_unknown),    TOKEN_ENTRY(0x82, "‚", token_unknown),    TOKEN_ENTRY(0x83, "ƒ", token_unknown),
     TOKEN_ENTRY(0x84, "„", token_unknown),   TOKEN_ENTRY(0x85, "…", token_unknown),    TOKEN_ENTRY(0x86, "†", token_unknown),
@@ -113,92 +113,13 @@ struct ascii_token_table {
     TOKEN_ENTRY(0xFF, "ÿ", token_unknown),
 };
 
-parser_context::token::token() : _type(0), _pos(0), _size(0), _line(1), _id(-1) {}
+parser::context::context() : _p(nullptr), _size(0) {}
 
-parser_context::token::token(const token& rhs) : _type(rhs._type), _pos(rhs._pos), _size(rhs._size), _line(rhs._line), _id(rhs._id) {}
+parser::context::~context() { clear(); }
 
-parser_context::token& parser_context::token::init() {
-    _type = 0;
-    _pos = 0;
-    _size = 0;
-    _line = 1;
-    _id = -1;
-    return *this;
-}
-
-parser_context::token& parser_context::token::increase() {
-    _size++;
-    return *this;
-}
-
-parser_context::token& parser_context::token::set_type(uint32 type) {
-    _type = type;
-    return *this;
-}
-
-parser_context::token& parser_context::token::update_pos(size_t pos) {
-    _pos = pos;
-    return *this;
-}
-
-parser_context::token& parser_context::token::update_size(size_t size) {
-    _size = size;
-    return *this;
-}
-
-parser_context::token& parser_context::token::newline() {
-    _line++;
-    return *this;
-}
-
-parser_context::token& parser_context::token::set_index(uint32 id) {
-    _id = id;
-    return *this;
-}
-
-uint32 parser_context::token::get_index() const { return _id; }
-
-uint32 parser_context::token::get_type() const { return _type; }
-
-size_t parser_context::token::get_pos() const { return _pos; }
-
-size_t parser_context::token::get_size() const { return _size; }
-
-size_t parser_context::token::get_line() const { return _line; }
-
-bool parser_context::token::empty() { return 0 == _size; }
-
-size_t parser_context::token::size() { return _size; }
-
-std::string parser_context::token::as_string(const char* p) {
-    std::string obj;
-    if (p) {
-        obj.insert(obj.end(), p + _pos, p + _pos + _size);
-    }
-    return obj;
-}
-
-void parser_context::learn() {
-    //
-}
-
-void parser_context::token::visit(const char* p, std::function<void(const token* t)> f) {
-    if (p && f) {
-        f(this);
-    }
-}
-
-parser_context::token* parser_context::token::clone() {
-    token* p = new token(*this);
-    return p;
-}
-
-parser_context::parser_context() : _p(nullptr), _size(0) {}
-
-parser_context::~parser_context() { clear(); }
-
-return_t parser_context::init(const char* p, size_t size) {
+return_t parser::context::init(parser* obj, const char* p, size_t size) {
     return_t ret = errorcode_t::success;
+    _parser = obj;
     _p = p;
     _size = size;
     get_token().init();
@@ -206,82 +127,49 @@ return_t parser_context::init(const char* p, size_t size) {
     return ret;
 }
 
-return_t parser_context::add_token_if(std::function<void(token*)> hook) {
-    return_t ret = errorcode_t::success;
-    if (get_token().size()) {
-        token* newone = get_token().clone();
-        _tokens.push_back(newone);
-        if (hook) {
-            hook(newone);
-        }
-    } else {
-        ret = errorcode_t::empty;
-    }
-    return ret;
-}
-
-void parser_context::clear() {
-    for (auto item : _tokens) {
-        delete item;
-    }
-    _tokens.clear();
-}
-
-parser_context::token& parser_context::get_token() { return _token; }
-
-void parser_context::for_each(std::function<void(const token_description* desc)> f) {
-    if (_p && f) {
-        auto handler = [&](const token* t) -> void {
-            // compact parameter
-            token_description desc;
-            desc.type = t->get_type();
-            desc.pos = t->get_pos();
-            desc.size = t->get_size();
-            desc.line = t->get_line();
-            desc.index = t->get_index();
-            desc.p = _p + t->get_pos();
-            f(&desc);
-        };
-
-        for (auto item : _tokens) {
-            item->visit(_p, handler);
-        }
-    }
-}
-
-parser::parser() {
-    get_config().set("handle_comments", 1);
-    get_config().set("handle_quoted", 1);
-    get_config().set("handle_token", 1);
-}
-
-return_t parser::parse(parser_context& context, const char* p, size_t size) {
+return_t parser::context::parse(parser* obj, const char* p, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == p) {
+        if (nullptr == obj || nullptr == p) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        uint16 handle_comments = get_config().get("handle_comments");
-        uint16 handle_quoted = get_config().get("handle_quoted");
-        uint16 handle_token = get_config().get("handle_token");
+        uint16 handle_comments = obj->get_config().get("handle_comments");
+        uint16 handle_quoted = obj->get_config().get("handle_quoted");
+        uint16 handle_token = obj->get_config().get("handle_token");
+        uint16 handle_quot_as_unquoted = obj->get_config().get("handle_quot_as_unquoted");
 
-        context.init(p, size);
+        init(obj, p, size);
+        parser::token* lvalue = nullptr;
 
         auto type_of = [&](char c) -> token_t { return _ascii_token_table[c].type; };
-        auto hook = [&](parser_context::token* t) -> void {
-            int entry_no = 0;
-            switch (t->get_type()) {
-                case token_quot_string:
-                    // do not lookup
-                    entry_no = -1;
-                    break;
-                default:
-                    lookup(t->as_string(p), entry_no);
-                    break;
+        auto hook = [&](int where, parser::token* t) -> void {
+            if (0 == where) {
+                parser::token* prev = nullptr;
+                switch (get_token().get_type()) {
+                    case token_assign:
+                        lvalue = last_token();
+                        lvalue->set_type(token_lvalue);
+                        get_token().set_type(token_assign);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                int entry_no = 0;
+                switch (t->get_type()) {
+                    case token_comments:
+                        // do not lookup
+                        entry_no = -1;
+                        break;
+                    case token_quot_string:
+                    default:
+                        obj->lookup(t->as_string(p), entry_no);
+                        break;
+                }
+                t->set_index(entry_no);
             }
-            t->set_index(entry_no);
         };
 
         bool comments = false;
@@ -296,44 +184,32 @@ return_t parser::parse(parser_context& context, const char* p, size_t size) {
                 if (token_newline == type) {
                     comments = false;
 
-                    context.add_token_if(hook);
-                    context.get_token().update_pos(pos + 1).update_size(0);
+                    add_token_if(hook);
+                    get_token().update_pos(pos + 1).update_size(0).newline();
                 } else {
-                    context.get_token().increase();
+                    get_token().increase();
                 }
                 continue;
             }
 
-            // token
+            // parser::token
             if (handle_token) {
-                bool match = false;
-                tokens_t::iterator lbound = _tokens.lower_bound(c);
-                tokens_t::iterator ubound = _tokens.upper_bound(c);
-                for (auto iter = lbound; iter != ubound; iter++) {
-                    const std::string& item = iter->second.first;
-
-                    if (0 == strncmp(p + pos, item.c_str(), item.size())) {
-                        int token_attr = iter->second.second;
-
-                        context.add_token_if(hook);
-
-                        if ((parser_attr_comments == token_attr) && handle_comments) {
-                            comments = true;
-                            context.get_token().set_type(token_comments);
-                        } else {
-                            context.get_token().update_pos(pos).update_size(item.size());
-                            context.add_token_if(hook);
-                            pos += (item.size() - 1);
-                            context.get_token().update_pos(pos + 1).update_size(0);
-                        }
-
-                        match = true;
-
-                        break;
-                    }
-                }
-
+                std::string item;
+                int token_type = 0;
+                bool match = obj->token_match(p + pos, item, token_type);
                 if (match) {
+                    add_token_if(hook);
+
+                    get_token().set_type(token_type);
+                    if ((token_comments == token_type) && handle_comments) {
+                        comments = true;
+                        get_token().increase();
+                    } else {
+                        get_token().update_pos(pos).update_size(item.size());
+                        add_token_if(hook);
+                        pos += (item.size() - 1);
+                        get_token().update_pos(pos + 1).update_size(0);
+                    }
                     continue;
                 }
             }
@@ -343,36 +219,42 @@ return_t parser::parse(parser_context& context, const char* p, size_t size) {
                 if (token_dquote == type) {
                     quot = !quot;
                     if (quot) {
-                        context.add_token_if(hook);
+                        add_token_if(hook);
 
-                        context.get_token().set_type(token_quot_string).update_pos(pos).update_size(1);
+                        if (handle_quot_as_unquoted) {
+                            get_token().set_type(token_emphasis).update_pos(pos + 1).update_size(0);
+                        } else {
+                            get_token().set_type(token_quot_string).update_pos(pos).update_size(1);
+                        }
                     } else {
-                        context.get_token().increase();
-                        context.add_token_if(hook);
-                        context.get_token().update_pos(pos + 1).update_size(0);
+                        if (false == handle_quot_as_unquoted) {
+                            get_token().increase();
+                        }
+                        add_token_if(hook);
+                        get_token().update_pos(pos + 1).update_size(0);
                     }
                     continue;
                 }
             }
 
             if (quot) {
-                context.get_token().increase();
+                get_token().increase();
             } else {
                 // tokenize
                 switch (type) {
                     case token_alpha:
                     case token_number:
-                        context.get_token().set_type(token_identifier).increase();
+                        get_token().set_type(token_identifier).increase();
                         break;
                     case token_space:
-                        context.add_token_if(hook);
+                        add_token_if(hook);
 
-                        context.get_token().update_pos(pos + 1).update_size(0);
+                        get_token().update_pos(pos + 1).update_size(0);
                         break;
                     case token_newline:
-                        context.add_token_if(hook);
+                        add_token_if(hook);
 
-                        context.get_token().update_pos(pos + 1).update_size(0).newline();
+                        get_token().update_pos(pos + 1).update_size(0).newline();
                         break;
                     case token_dquote:
                     default:
@@ -380,16 +262,16 @@ return_t parser::parse(parser_context& context, const char* p, size_t size) {
                             break;
                         }
 
-                        context.add_token_if(hook);
+                        add_token_if(hook);
 
-                        context.get_token().set_type(type).update_pos(pos).update_size(1);
-                        context.add_token_if(hook);
-                        context.get_token().update_pos(pos + 1).update_size(0);
+                        get_token().set_type(type).update_pos(pos).update_size(1);
+                        add_token_if(hook);
+                        get_token().update_pos(pos + 1).update_size(0);
                         break;
                 }
             }
         }
-        context.add_token_if(hook);
+        add_token_if(hook);
     }
     __finally2 {
         //
@@ -397,40 +279,153 @@ return_t parser::parse(parser_context& context, const char* p, size_t size) {
     return ret;
 }
 
-// parser& parser::apply(parser_context& context) {
-//     //
-//     return *this;
-// }
+parser::search_result parser::context::csearch(parser* obj, const char* pattern, size_t size_pattern, unsigned int pos) const {
+    search_result result;
+    __try2 {
+        if (nullptr == obj || nullptr == pattern) {
+            __leave2;
+        }
 
-parser& parser::add_token(const std::string token, int attr) {
-    if (false == token.empty()) {
-        _tokens.insert({token[0], {token, attr}});
-        //_tokens.insert({token, attr});
+        t_kmp_pattern<char> kmp;
+        int idx = kmp.match(_p, _size, pattern, size_pattern, pos);
+        if (-1 == idx) {
+            __leave2;
+        }
+
+        result.match = true;
+        result.p = _p + idx;
+        result.size = size_pattern;
+        result.pos = idx;
     }
-    return *this;
+    __finally2 {
+        // do nothing
+    }
+    return result;
 }
 
-parser& parser::add_rule(const std::string rule) {
-    //
-    return *this;
+parser::search_result parser::context::csearch(parser* obj, const std::string& pattern, unsigned int pos) const {
+    return csearch(obj, pattern.c_str(), pattern.size(), pos);
 }
 
-// parser& parser::learn() {
-//     for (auto item : _tokens) {
-//         //
-//     }
-//     return *this;
-// }
+parser::search_result parser::context::wsearch(parser* obj, const context& pattern, unsigned int pos) const {
+    search_result result;
+    __try2 {
+        if (nullptr == obj) {
+            __leave2;
+        }
+        if (_parser != pattern._parser) {
+            throw exception(errorcode_t::invalid_context);
+            // __leave2;
+        }
+        if (_tokens.empty() || pattern._tokens.empty()) {
+            __leave2;
+        }
 
-t_key_value<std::string, uint16>& parser::get_config() { return _keyvalue; }
+        auto comparator = [](const parser::token* lhs, const parser::token* rhs) -> bool { return (lhs->get_index() == rhs->get_index()); };
 
-void parser::lookup(const std::string& word, int& idx) {
-    size_t entry_no = _dictionary.size() + 1;  // entry 0 reserved
-    std::pair<dictionary_t::iterator, bool> pib = _dictionary.insert({word, entry_no});
-    if (pib.second) {
-        idx = entry_no;
+        t_kmp_pattern<parser::token*> kmp;
+        int idx = kmp.match(_tokens, pattern._tokens, pos, comparator);
+        if (-1 == idx) {
+            __leave2;
+        }
+
+        size_t size = pattern._tokens.size();
+        token* begin = _tokens[idx];
+        token* end = _tokens[idx + size - 1];
+
+        result.match = true;
+        result.p = _p + begin->get_pos();
+        result.size = end->get_pos() - begin->get_pos() + end->get_size();
+        result.pos = begin->get_pos();
+        result.begidx = idx;
+        result.endidx = idx + size - 1;
+    }
+    __finally2 {
+        // do nothing
+    }
+    return result;
+}
+
+bool parser::context::compare(parser* obj, const parser::context& rhs) const {
+    bool ret = false;
+    if ((_parser == obj) && (_parser == rhs._parser)) {
+        size_t size = _tokens.size();
+        if (size == rhs._tokens.size()) {
+            size_t idx = 0;
+            for (idx = 0; idx != size; idx++) {
+                parser::token* token_lhs = _tokens[idx];
+                parser::token* token_rhs = rhs._tokens[idx];
+                if (token_lhs->get_index() != token_lhs->get_index()) {
+                    break;
+                }
+            }
+            if (idx == size) {
+                ret = true;
+            }
+        }
+    }
+    return ret;
+}
+
+return_t parser::context::add_token_if(std::function<void(int, parser::token*)> hook) {
+    return_t ret = errorcode_t::success;
+    if (get_token().size()) {
+        parser::token* newone = get_token().clone();
+        if (hook) {
+            hook(0, newone);
+        }
+        _tokens.push_back(newone);
+        if (hook) {
+            hook(1, newone);
+        }
     } else {
-        idx = pib.first->second;
+        ret = errorcode_t::empty;
+    }
+    return ret;
+}
+
+void parser::context::clear() {
+    for (auto item : _tokens) {
+        delete item;
+    }
+    _tokens.clear();
+}
+
+parser::token& parser::context::get_token() { return _token; }
+
+parser::token* parser::context::last_token() {
+    parser::token* t = nullptr;
+    if (_tokens.size()) {
+        t = _tokens.back();
+    }
+    return t;
+}
+
+void parser::context::for_each(std::function<void(const token_description* desc)> f) const {
+    if (_p && f) {
+        auto handler = [&](const parser::token* t) -> void {
+            // compact parameter
+            token_description desc;
+            desc.index = t->get_index();
+            desc.type = t->get_type();
+            desc.pos = t->get_pos();
+            desc.size = t->get_size();
+            desc.line = t->get_line();
+            desc.p = _p + t->get_pos();
+            f(&desc);
+        };
+
+        for (auto item : _tokens) {
+            item->visit(_p, handler);
+        }
+    }
+}
+
+void parser::context::walk(std::function<void(const char* p, const parser::token*)> f) {
+    if (_p && f) {
+        for (auto item : _tokens) {
+            f(_p, item);
+        }
     }
 }
 

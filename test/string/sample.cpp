@@ -177,7 +177,7 @@ void test_obfuscate_string() {
 
     {
         test_case_notimecheck notimecheck(_test_case);
-        _logger->dump(str.c_str(), str.size());
+        _logger->dump(str);
     }
 
     _test_case.assert((0 == memcmp(helloworld, str.c_str(), str.size())), __FUNCTION__, "std::string << obfuscate");

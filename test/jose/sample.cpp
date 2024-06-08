@@ -79,7 +79,7 @@ void dump2(const char* text, std::string const str) {
     if (text) {
         const OPTION& option = _cmdline->value();
         if (option.verbose) {
-            _logger->dump(str.c_str(), str.size(), 16, 2);
+            _logger->dump(str, 16, 2);
         }
     }
 }

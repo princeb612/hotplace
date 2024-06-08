@@ -138,4 +138,35 @@ uint16 fp16_ieee_from_fp32_value(uint32 x) {
     return (x_sgn >> 16) + h_exp + h_sig;
 }
 
+ieee754_typeof_t is_typeof(float f) {
+    ieee754_typeof_t ret = ieee754_typeof_t::is_finite;
+    uint32 b32 = binary32_from_fp32(f);
+    if (ieee754_t::fp32_pinf == (b32 & ieee754_t::fp32_pinf)) {
+        if (b32 & 0x80000000) {
+            ret = ieee754_typeof_t::is_ninf;
+        } else if (b32 & ~fp32_ninf) {
+            ret = ieee754_typeof_t::is_nan;
+        } else {
+            ret = ieee754_typeof_t::is_pinf;
+        }
+    }
+    return ret;
+}
+
+ieee754_typeof_t is_typeof(double d) {
+    ieee754_typeof_t ret = ieee754_typeof_t::is_finite;
+    uint64 b64 = binary64_from_fp64(d);
+    if (ieee754_t::fp64_pinf == (b64 & ieee754_t::fp64_pinf)) {
+        uint32 b32 = (b64 >> 32);
+        if (b32 & 0x80000000) {
+            ret = ieee754_typeof_t::is_ninf;
+        } else if (b32 & 0x000fffff) {
+            ret = ieee754_typeof_t::is_nan;
+        } else {
+            ret = ieee754_typeof_t::is_pinf;
+        }
+    }
+    return ret;
+}
+
 }  // namespace hotplace

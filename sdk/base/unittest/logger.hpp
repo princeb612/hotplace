@@ -111,11 +111,16 @@ class logger {
     logger& dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& dump(const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& dump(const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
 
     logger& hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& hdump(const std::string& header, const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& hdump(const std::string& header, const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
 
+    logger& operator<<(const char* msg);
     logger& operator<<(const std::string& msg);
     logger& operator<<(const basic_stream& msg);
 

@@ -76,6 +76,11 @@ enum encoding_t {
 #define RTL_NUMBER_OF(x) (sizeof(x) / sizeof(x[0]))
 #define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
 #define FIELD_OFFSET(type, field) ((int32)(arch_t) & (((type *)0)->field))
+#define RTL_SIZEOF_THROUGH_FIELD(type, field) (FIELD_OFFSET(type, field) + RTL_FIELD_SIZE(type, field))
+#define RTL_NUMBER_OF_FIELD(type, field) (RTL_NUMBER_OF(RTL_FIELD_TYPE(type, field)))
+#define RTL_PADDING_BETWEEN_FIELDS(type, field1, field2)                                                                                                  \
+    ((FIELD_OFFSET(type, field2) > FIELD_OFFSET(type, field1)) ? (FIELD_OFFSET(type, field2) - FIELD_OFFSET(type, field1) - RTL_FIELD_SIZE(type, field1)) \
+                                                               : (FIELD_OFFSET(type, field1) - FIELD_OFFSET(type, field2) - RTL_FIELD_SIZE(type, field2)))
 #endif
 
 #define adjust_range(var, minimum, maximum)    \

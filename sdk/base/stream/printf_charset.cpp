@@ -13,6 +13,7 @@
  * 2018.06.15   Soo Han, Kim        printf %zi, %zu, %zd (codename.grape)
  * 2020.02.06   Soo Han, Kim        printf %I128i, %I128u (codename.unicorn)
  * 2021.06.29   Soo Han, Kim        printf unicode (codename.unicorn)
+ * 2024.06.07   Soo Han, Kim        inf, -inf, nan (codename.hotplace)
  *
  * printf license
  *  Copyright (c) 1990 Regents of the University of California.
@@ -38,6 +39,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/stream/printf.hpp>
 
 namespace hotplace {
@@ -422,6 +424,8 @@ int vprintf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar
         0,
     }; /* space for 0x hex-prefix */
 
+    ieee754_typeof_t ieee754_type = ieee754_typeof_t::is_finite;
+
     if (!runtime_printf) {
         goto error;
     }
@@ -596,32 +600,41 @@ int vprintf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar
             case _T('g'):
             case _T('G'):
                 _double = va_arg(ap, double);
-                /*
-                 * don't do unrealistic precision; just pad it with
-                 * zeroes later, so buffer size stays rational.
-                 */
-                if (prec > MAXFRACT) {
-                    if ((ch != _T('g') && ch != _T('G')) || (flags & ALT)) {
-                        fpprec = prec - MAXFRACT;
+                ieee754_type = is_typeof(_double);
+                if (ieee754_typeof_t::is_pinf == ieee754_type) {
+                    PRINT(_T("inf"), (sizeof(TCHAR) * 3));
+                } else if (ieee754_typeof_t::is_ninf == ieee754_type) {
+                    PRINT(_T("-inf"), (sizeof(TCHAR) * 4));
+                } else if (ieee754_typeof_t::is_nan == ieee754_type) {
+                    PRINT(_T("nan"), (sizeof(TCHAR) * 3));
+                } else {
+                    /*
+                     * don't do unrealistic precision; just pad it with
+                     * zeroes later, so buffer size stays rational.
+                     */
+                    if (prec > MAXFRACT) {
+                        if ((ch != _T('g') && ch != _T('G')) || (flags & ALT)) {
+                            fpprec = prec - MAXFRACT;
+                        }
+                        prec = MAXFRACT;
+                    } else if (prec == -1) {
+                        prec = DEFPREC;
                     }
-                    prec = MAXFRACT;
-                } else if (prec == -1) {
-                    prec = DEFPREC;
-                }
-                /* __cvt_double may have to stdround up before the
-                   "start" of its buffer, i.e.
-                   ``intf("%.2f", (double)9.999);'';
-                   if the first character is still NUL, it did.
-                   softsign avoids negative 0 if _double < 0 but
-                   no significant digits will be shown. */
-                cp = buf;
-                *cp = _T('\0');
-                size = __cvt_double(_double, prec, flags, &softsign, ch, cp, buf + sizeof(buf));
-                if (softsign) {
-                    sign = _T('-');
-                }
-                if (*cp == _T('\0')) {
-                    cp++;
+                    /* __cvt_double may have to stdround up before the
+                       "start" of its buffer, i.e.
+                       ``intf("%.2f", (double)9.999);'';
+                       if the first character is still NUL, it did.
+                       softsign avoids negative 0 if _double < 0 but
+                       no significant digits will be shown. */
+                    cp = buf;
+                    *cp = _T('\0');
+                    size = __cvt_double(_double, prec, flags, &softsign, ch, cp, buf + sizeof(buf));
+                    if (softsign) {
+                        sign = _T('-');
+                    }
+                    if (*cp == _T('\0')) {
+                        cp++;
+                    }
                 }
                 break;
 

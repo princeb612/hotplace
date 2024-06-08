@@ -104,7 +104,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     cprint("send %i", session_socket->cli_socket);
                     basic_stream resp;
                     response.get_response(resp);
-                    _logger->dump(resp.data(), resp.size());
+                    _logger->dump(resp);
                 }
 
                 response.respond(session);

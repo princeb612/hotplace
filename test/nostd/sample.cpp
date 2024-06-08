@@ -453,6 +453,16 @@ void test_graph2() {
     do_test_graph_shortest_path<std::string>(g, "get up", "dream");
 }
 
+struct pattern_search_sample_data {
+    std::string dummy;
+    int value;
+
+    pattern_search_sample_data(std::string s, int v) : dummy(s), value(v) {}
+    pattern_search_sample_data(int v) : value(v) {}
+
+    friend bool operator==(const pattern_search_sample_data& lhs, const pattern_search_sample_data& rhs) { return lhs.value == rhs.value; }
+};
+
 void test_pattern_searching() {
     _test_case.begin("pattern searching");
 
@@ -464,18 +474,28 @@ void test_pattern_searching() {
     binary pattern("abacab");
 
     {
+        // vector
+        t_kmp_pattern<byte_t> kmp;
+        int idx = kmp.match(data, pattern);
+        _logger->hdump("data", data);
+        _logger->hdump("pattern", pattern);
+        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<byte_t> %i", idx);
+    }
+
+    {
+        // contiguous memory space
         t_kmp_pattern<byte_t> kmp;
         int idx = kmp.match(&data.get()[0], data.get().size(), &pattern.get()[0], pattern.get().size());
         _logger->hdump("data", data);
         _logger->hdump("pattern", pattern);
-        _test_case.assert(0xa == idx, __FUNCTION__, "The Knuth-Morris-Pratt Algorithm match %i", idx);
+        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<byte_t> %i", idx);
     }
 
     {
-        auto append = [](std::vector<int>& target, int i) -> void { target.insert(target.end(), i); };
-
-        std::vector<int> data2;
-        std::vector<int> pattern2;
+        // compare member (see operator ==)
+        std::vector<pattern_search_sample_data> data2;
+        std::vector<pattern_search_sample_data> pattern2;
+        auto append = [](std::vector<pattern_search_sample_data>& target, int i) -> void { target.insert(target.end(), {"", i}); };
         for (auto temp : data.get()) {
             append(data2, temp);
         }
@@ -483,9 +503,26 @@ void test_pattern_searching() {
             append(pattern2, temp);
         }
 
-        t_kmp_pattern<int> kmp;
+        t_kmp_pattern<pattern_search_sample_data> kmp;
         int idx = kmp.match(&data2[0], data2.size(), &pattern2[0], pattern2.size());
-        _test_case.assert(0xa == idx, __FUNCTION__, "The Knuth-Morris-Pratt Algorithm match %i", idx);
+        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct> %i", idx);
+    }
+
+    {
+        std::vector<pattern_search_sample_data*> data2;
+        std::vector<pattern_search_sample_data*> pattern2;
+        auto append = [](std::vector<pattern_search_sample_data*>& target, int i) -> void { target.insert(target.end(), new pattern_search_sample_data(i)); };
+        for (auto temp : data.get()) {
+            append(data2, temp);
+        }
+        for (auto temp : pattern.get()) {
+            append(pattern2, temp);
+        }
+
+        t_kmp_pattern<pattern_search_sample_data*> kmp;
+        auto comparator = [](const pattern_search_sample_data* lhs, const pattern_search_sample_data* rhs) -> bool { return (lhs->value == rhs->value); };
+        int idx = kmp.match(&data2[0], data2.size(), &pattern2[0], pattern2.size(), 0, comparator);
+        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct*> %i using comparator", idx);
     }
 }
 

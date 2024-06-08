@@ -115,9 +115,7 @@ return_t test_hash_routine(hash_t* hash_object, hash_algorithm_t algorithm, bina
                         if (option.verbose) {
                             test_case_notimecheck notimecheck(_test_case);
 
-                            basic_stream dump;
-                            dump_memory(&hashed[0], hashed.size(), &dump, 16, 0);
-                            _logger->writeln("hmac\n%s", dump.c_str());
+                            _logger->hdump("hmac", hashed);
                         }
 
                         if ((hashed.size() == expect.size()) && (0 == memcmp(&hashed[0], &expect[0], expect.size()))) {
@@ -243,11 +241,8 @@ void test_hmacsha_rfc4231() {
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
-            basic_stream dump;
-            dump_memory(&bin_key[0], bin_key.size(), &dump);
-            _logger->writeln("key\n%s", dump.c_str());
-            dump_memory(&bin_data[0], bin_data.size(), &dump);
-            _logger->writeln("data\n%s", dump.c_str());
+            _logger->hdump("key", bin_key);
+            _logger->hdump("data", bin_data);
         }
 
         test_hash_routine(&openssl_hash, hash_algorithm_t::sha2_224, bin_key, bin_data, bin_expect_sha224, item.text);

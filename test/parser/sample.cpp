@@ -8,15 +8,12 @@
  * Date         Name                Description
  *
  * comments
- *
  */
 
 #include <stdio.h>
 
 #include <iostream>
 #include <sdk/sdk.hpp>
-
-#include "parser.hpp"
 
 using namespace hotplace;
 using namespace hotplace::io;
@@ -33,128 +30,220 @@ typedef struct _OPTION {
 
 t_shared_instance<cmdline_t<OPTION> > cmdline;
 
-/*
- */
-
-void test_parser() {
-    constexpr char example1[] =
-        R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
-            Name Name,
+constexpr char asn1_structure[] =
+    R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
+            name Name,
             title [0] VisibleString,
             number EmployeeNumber,
             dateOfHire [1] Date,
             nameOfSpouse [2] Name,
-            children [3] IMPLICIT
-                SEQUENCE OF ChildInformation DEFAULT {} }
+            children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {} }
+        ChildInformation ::= SET { name Name, dateOfBirth [0] Date}
+        Name ::= [APPLICATION 1] IMPLICIT SEQUENCE { givenName VisibleString, initial VisibleString, familyName VisibleString}
+        EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER
+        Date ::= [APPLICATION 3] IMPLICIT VisibleString -- YYYYMMDD)";
 
-            ChildInformation ::= SET
-                { name Name,
-                dateOfBirth [0] Date}
-
-            Name ::= [APPLICATION 1] IMPLICIT SEQUENCE
-                { givenName VisibleString,
-                initial VisibleString,
-                familyName VisibleString}
-
-            EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER
-
-            Date ::= [APPLICATION 3] IMPLICIT VisibleString -- YYYYMMDD)";
-
-    constexpr char example2[] =
-        R"({ name {givenName "John",initial "P",familyName "Smith"},
-            title "Director",
-            number 51,
-            dateOfHire "19710917",
-            nameOfSpouse {givenName "Mary",initial "T",familyName "Smith"},
-            children
-                {
-                    {name {givenName "Ralph",initial "T",familyName "Smith"},
-                            dateOfBirth "19571111"
-                    },
-                    {name {givenName "Susan",initial "B",familyName "Jones"},
-                            dateOfBirth "19590717"
-                    }
-                }
-            })";
-
-    constexpr char example3[] =
-        R"(Name ::= SEQUENCE OF RelativeDistinguishedName
-
-            RelativeDistinguishedName ::= SET OF AttributeTypeValue
-
-            AttributeTypeValue ::= SEQUENCE 
+constexpr char asn1_value[] =
+    R"({ name {givenName "John",initial "P",familyName "Smith"},
+        title "Director",
+        number 51,
+        dateOfHire "19710917",
+        nameOfSpouse {givenName "Mary",initial "T",familyName "Smith"},
+        children
             {
-               type               OBJECT IDENTIFIER,
-               value              ANY 
-            })";
-    // 1.     30 23            ; SEQUENCE (0x23 = 35 Bytes)
-    // 2.     |  |  31 0f            ; SET (f Bytes)
-    // 3.     |  |  |  30 0d            ; SEQUENCE (d Bytes)
-    // 4.     |  |  |     06 03         ; OBJECT_ID (3 Bytes)
-    // 5.     |  |  |     |  55 04 03
-    // 6.     |  |  |     |     ; 2.5.4.3 Common Name (CN)
-    // 7.     |  |  |     13 06         ; PRINTABLE_STRING (6 Bytes)
-    // 8.     |  |  |        54 65 73 74 43 4e                    ; TestCN
-    // 9.     |  |  |           ; "TestCN"
-    // 10.    |  |  31 10            ; SET (10 Bytes)
-    // 11.    |  |     30 0e            ; SEQUENCE (e Bytes)
-    // 12.    |  |        06 03         ; OBJECT_ID (3 Bytes)
-    // 13.    |  |        |  55 04 0a
-    // 14.    |  |        |     ; 2.5.4.10 Organization (O)
-    // 15.    |  |        13 07         ; PRINTABLE_STRING (7 Bytes)
-    // 16.    |  |           54 65 73 74 4f 72 67                 ; TestOrg
-    // 17.    |  |              ; "TestOrg"
+                {name {givenName "Ralph",initial "T",familyName "Smith"},
+                        dateOfBirth "19571111"
+                },
+                {name {givenName "Susan",initial "B",familyName "Jones"},
+                        dateOfBirth "19590717"
+                }
+            }
+        })";
+
+void test_dump_testdata() {
+    _test_case.begin("parse");
+    _logger->writeln(asn1_structure);
+    _logger->dump(asn1_structure, strlen(asn1_structure));
+    _logger->writeln(asn1_value);
+    _logger->dump(asn1_value, strlen(asn1_value));
+}
+
+void test_parser() {
+    _test_case.begin("parse");
 
     parser p;
+    parser::context context1;
 
-    p.add_token("::=", parser_attr_assign)
-        .add_token("--", parser_attr_comments)
-        .add_token("OBJECT IDENTIFIER")
-        .add_token("OCTET STRING")
-        .add_token("BIT STRING")
-        .add_token("SET OF")
-        .add_token("SEQUENCE OF");
+    p.add_token("::=", token_assign).add_token("--", token_comments);
+    p.parse(context1, asn1_structure, strlen(asn1_structure));
 
-    parser_context context1;
-    parser_context context2;
-    parser_context context3;
-    parser_context context4;
-    parser_context context5;
-    parser_context context6;
-    // parse
-    p.parse(context1, example1, strlen(example1));
-    p.parse(context2, example2, strlen(example2));
-    p.parse(context3, example3, strlen(example3));
+    {
+        test_case_notimecheck notimecheck(_test_case);
+
+        // dump
+        auto dump_handler = [&](const token_description* desc) -> void {
+            _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->index,
+                             desc->pos, desc->size, (unsigned)desc->size, desc->p);
+        };
+
+        context1.for_each(dump_handler);
+
+        uint16 handle_token = p.get_config().get("handle_token");
+        uint16 handle_quoted = p.get_config().get("handle_quoted");
+        uint16 handle_comments = p.get_config().get("handle_comments");
+        _test_case.assert((1 == handle_token) && (1 == handle_quoted) && (1 == handle_comments), __FUNCTION__, "parse #1 (token on, comments on, quot on)");
+    }
+}
+
+void test_parser_options() {
+    _test_case.begin("parse");
+
+    return_t ret = errorcode_t::success;
+    parser p;
+    parser::context context1;
+    parser::context context2;
+    parser::context context3;
+    uint16 handle_token = 0;
+    uint16 handle_quoted = 0;
+    uint16 handle_comments = 0;
+
+    auto dump_handler = [&](const token_description* desc) -> void {
+        _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->index,
+                         desc->pos, desc->size, (unsigned)desc->size, desc->p);
+    };
 
     // turn off switches and parse
     p.get_config().set("handle_comments", 0);
-    p.parse(context4, example1, strlen(example1));
+    ret = p.parse(context1, asn1_structure, strlen(asn1_structure));
+
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        context1.for_each(dump_handler);
+        handle_token = p.get_config().get("handle_token");
+        handle_quoted = p.get_config().get("handle_quoted");
+        handle_comments = p.get_config().get("handle_comments");
+        _test_case.assert((1 == handle_token) && (0 == handle_comments) && (1 == handle_quoted), __FUNCTION__, "parse #2 (token on, comments off, quot on)");
+    }
+
     p.get_config().set("handle_quoted", 0);
-    p.parse(context5, example2, strlen(example2));
+    ret = p.parse(context2, asn1_value, strlen(asn1_value));
+
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        context2.for_each(dump_handler);
+        handle_token = p.get_config().get("handle_token");
+        handle_quoted = p.get_config().get("handle_quoted");
+        handle_comments = p.get_config().get("handle_comments");
+        _test_case.assert((1 == handle_token) && (0 == handle_comments) && (0 == handle_quoted), __FUNCTION__, "parse #3 (token on, comments off, quot off)");
+    }
+
     p.get_config().set("handle_token", 0);
-    p.parse(context6, example3, strlen(example3));
+    ret = p.parse(context3, asn1_value, strlen(asn1_value));
 
-    // learn
-    // p.learn();
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        context3.for_each(dump_handler);
+        handle_token = p.get_config().get("handle_token");
+        handle_quoted = p.get_config().get("handle_quoted");
+        handle_comments = p.get_config().get("handle_comments");
+        _test_case.assert((0 == handle_token) && (0 == handle_comments) && (0 == handle_quoted), __FUNCTION__, "parse #4 (token off, comments off, quot off)");
+    }
+}
 
-    // p.apply(context1);
+void test_parser_search() {
+    _test_case.begin("parse");
 
-    // dump
-    auto dump_handler = [](const token_description* desc) -> void {
-        printf("line %zi type %d index %d len %zi (%.*s)\n", desc->line, desc->type, desc->index, desc->size, desc->size, desc->p);
-    };
-    context1.for_each(dump_handler);
-    _test_case.assert(true, __FUNCTION__, "parse #1");
-    context2.for_each(dump_handler);
-    _test_case.assert(true, __FUNCTION__, "parse #2");
-    context3.for_each(dump_handler);
-    _test_case.assert(true, __FUNCTION__, "parse #3");
-    context4.for_each(dump_handler);
-    _test_case.assert(true, __FUNCTION__, "parse #4 (comments off)");
-    context5.for_each(dump_handler);
-    _test_case.assert(true, __FUNCTION__, "parse #5 (quot off)");
-    context6.for_each(dump_handler);
-    _test_case.assert(true, __FUNCTION__, "parse #6 (token off)");
+    return_t ret = errorcode_t::success;
+    parser p;
+    parser::context context1;
+
+    p.add_token("::=", token_assign).add_token("--", token_comments);
+
+    // parse
+    ret = p.parse(context1, asn1_structure, strlen(asn1_structure));
+
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        auto dump_handler = [&](const token_description* desc) -> void { _logger->writeln("index %d (%.*s)", desc->index, (unsigned)desc->size, desc->p); };
+        context1.for_each(dump_handler);
+        _test_case.test(ret, __FUNCTION__, "parse #1");
+    }
+
+    constexpr char pattern[] = "[APPLICATION 2] IMPLICIT INTEGER";
+    constexpr char pattern2[] = "VisibleString";
+    constexpr char pattern3[] = "ChildInformation";
+
+    // strlen(asn1_structure) --> 612, strlen(pattern) --> 32
+    // character search - KMP N(asn1_structure)=612, M(pattern)=32, O(612+32)
+    // asn1_sequence 612 bytes
+    // pattern        32 bytes
+    parser::search_result cresult = p.csearch(context1, pattern, strlen(pattern));
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        if (cresult.match) {
+            _logger->dump(cresult.p, cresult.size);
+        }
+        _test_case.assert(cresult.match, __FUNCTION__, "character search #1 found");
+        _test_case.assert(0 == strncmp(pattern, cresult.p, cresult.size), __FUNCTION__, "character search #2 contents comparison");
+    }
+    parser::search_result cresult2 = p.csearch(context1, pattern2, strlen(pattern2), cresult.pos);
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        if (cresult2.match) {
+            _logger->dump(cresult2.p, cresult2.size);
+        }
+        _test_case.assert(cresult2.match, __FUNCTION__, "character search #3 continuous search");
+    }
+    parser::search_result cresult3 = p.csearch(context1, pattern3, strlen(pattern3), 0);
+    parser::search_result cresult4 = p.csearch(context1, pattern3, strlen(pattern3), cresult.pos);
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        _test_case.assert((true == cresult3.match) && (false == cresult4.match), __FUNCTION__, "character search #4 search position");
+    }
+
+    // context1._tokens.size() --> 93, pattern._tokens.size() --> 6
+    // word search - KMP N(context1)=93, M(pattern)=6, O(93+6)
+    // asn1_structure 93 tokens [1 2 3 4 ... 3 4 21 6 7 33 ... 7 4 -1]
+    // pattern         6 tokens [            3 4 21 6 7 33           ]
+    parser::search_result wresult = p.wsearch(context1, pattern, strlen(pattern));
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        if (wresult.match) {
+            _logger->dump(wresult.p, wresult.size);
+        }
+        _test_case.assert(wresult.match, __FUNCTION__, "word search #1 found");
+        _test_case.assert(0 == strncmp(pattern, wresult.p, wresult.size), __FUNCTION__, "word search #2 contents comparison");
+    }
+    parser::search_result wresult2 = p.wsearch(context1, pattern2, strlen(pattern2), wresult.endidx + 1);
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        if (wresult2.match) {
+            _logger->dump(wresult2.p, wresult2.size);
+        }
+        _test_case.assert(wresult2.match, __FUNCTION__, "word search #3 continuous search");
+    }
+    parser::search_result wresult3 = p.wsearch(context1, pattern3, strlen(pattern3), 0);
+    parser::search_result wresult4 = p.wsearch(context1, pattern3, strlen(pattern3), wresult.endidx + 1);
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        _test_case.assert((true == wresult3.match) && (false == wresult4.match), __FUNCTION__, "word search #4 search position");
+    }
+}
+
+void test_parser_compare() {
+    _test_case.begin("parse");
+
+    parser p;
+    p.add_token("::=", token_assign);
+
+    constexpr char data1[] = "EmployeeNumber::= [APPLICATION 2] IMPLICIT INTEGER";
+    constexpr char data2[] = "EmployeeNumber  ::=  [APPLICATION  2]  IMPLICIT  INTEGER";
+
+    // compare ignoring white spaces
+    // "EmployeeNumber" "::=" "[" "APPLICATION" "2" "]" "IMPLICIT" "INTEGER"
+
+    bool test = p.compare(data1, data2);
+    _test_case.assert(test, __FUNCTION__, "compare");
 }
 
 int main(int argc, char** argv) {
@@ -172,7 +261,11 @@ int main(int argc, char** argv) {
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
 
+    test_dump_testdata();
     test_parser();
+    test_parser_options();
+    test_parser_search();
+    test_parser_compare();
 
     _logger->flush();
 

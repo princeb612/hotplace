@@ -166,6 +166,28 @@ void test_endian() {
     _test_case.assert((true == ret), __FUNCTION__, text.c_str());
 }
 
+void test_ieee754() {
+    ieee754_typeof_t type = ieee754_typeof_t::is_finite;
+
+    type = is_typeof(fp32_from_binary32(fp32_pinf));
+    _test_case.assert(ieee754_typeof_t::is_pinf == type, __FUNCTION__, "inf");
+
+    type = is_typeof(fp32_from_binary32(fp32_ninf));
+    _test_case.assert(ieee754_typeof_t::is_ninf == type, __FUNCTION__, "-inf");
+
+    type = is_typeof(fp32_from_binary32(fp32_nan));
+    _test_case.assert(ieee754_typeof_t::is_nan == type, __FUNCTION__, "nan");
+
+    type = is_typeof(fp64_from_binary64(fp64_pinf));
+    _test_case.assert(ieee754_typeof_t::is_pinf == type, __FUNCTION__, "inf");
+
+    type = is_typeof(fp64_from_binary64(fp64_ninf));
+    _test_case.assert(ieee754_typeof_t::is_ninf == type, __FUNCTION__, "-inf");
+
+    type = is_typeof(fp64_from_binary64(fp64_nan));
+    _test_case.assert(ieee754_typeof_t::is_nan == type, __FUNCTION__, "nan");
+}
+
 void test_maphint() {
     _test_case.begin("t_maphint");
     return_t ret = errorcode_t::success;
@@ -208,6 +230,7 @@ int main(int argc, char **argv) {
     test_sharedinstance2();
     test_endian();
     test_convert_endian();
+    test_ieee754();
     test_maphint();
 
     _logger->flush();

@@ -138,6 +138,15 @@ float fp32_from_fp16(uint16 half);
  */
 uint16 fp16_ieee_from_fp32_value(uint32 single);
 
+enum ieee754_typeof_t {
+    is_finite = 0,
+    is_pinf,
+    is_ninf,
+    is_nan,
+};
+ieee754_typeof_t is_typeof(float f);
+ieee754_typeof_t is_typeof(double d);
+
 }  // namespace hotplace
 
 #endif
