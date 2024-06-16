@@ -190,7 +190,7 @@ void test_byte_capacity_unsigned() {
         TESTVECTOR_ENTRY(t_htoi<uint128>("80000000000000000000000000000000"), 16),
     };
     for (auto entry : _table) {
-        int bytesize = byte_capacity_unsigned(entry.x);
+        int bytesize = byte_capacity(entry.x);
         _logger->writeln("%032I128x -> %i", entry.x, bytesize);
         _test_case.assert(bytesize == entry.expect, __FUNCTION__, "byte capacity %032I128x (%i)", entry.x, bytesize);
     }

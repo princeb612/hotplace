@@ -49,32 +49,32 @@ void t_asn1_encode_integer(binary_t& bin, type value) {
 }
 
 asn1_encode& asn1_encode::primitive(binary_t& bin, int16 value) {
-    t_asn1_encode_integer<int32>(bin, value);
+    t_asn1_encode_integer<int16>(bin, value);
     return *this;
 }
 
 asn1_encode& asn1_encode::primitive(binary_t& bin, uint16 value) {
-    t_asn1_encode_integer<uint32>(bin, value);
+    t_asn1_encode_integer<uint16>(bin, value);
     return *this;
 }
 
 asn1_encode& asn1_encode::primitive(binary_t& bin, int32 value) {
-    t_asn1_encode_integer<int64>(bin, value);
+    t_asn1_encode_integer<int32>(bin, value);
     return *this;
 }
 
 asn1_encode& asn1_encode::primitive(binary_t& bin, uint32 value) {
-    t_asn1_encode_integer<uint64>(bin, value);
+    t_asn1_encode_integer<uint32>(bin, value);
     return *this;
 }
 
 asn1_encode& asn1_encode::primitive(binary_t& bin, int64 value) {
-    t_asn1_encode_integer<int128>(bin, value);
+    t_asn1_encode_integer<int64>(bin, value);
     return *this;
 }
 
 asn1_encode& asn1_encode::primitive(binary_t& bin, uint64 value) {
-    t_asn1_encode_integer<uint128>(bin, value);
+    t_asn1_encode_integer<uint64>(bin, value);
     return *this;
 }
 
