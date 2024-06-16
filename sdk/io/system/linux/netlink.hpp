@@ -13,7 +13,6 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-#include <sdk/base/stl.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <sdk/io/types.hpp>

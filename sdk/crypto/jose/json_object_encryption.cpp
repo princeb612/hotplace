@@ -11,7 +11,6 @@
  */
 
 #include <iostream>
-#include <sdk/base.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>

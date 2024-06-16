@@ -35,15 +35,42 @@ namespace hotplace {
  *          https://www.corsix.org/content/converting-fp32-to-fp16
  *          https://blog.fpmurphy.com/2008/12/half-precision-floating-point-format_14.html
  *
- *                               sign    exponent    fraction
- *          half precision       1           5           10
- *          single precision     1           8           23
- *          double precision     1          11           52
- *          quadruple            1          15          112
+ *          online converter
+ *          https://www.h-schmidt.net/FloatConverter/IEEE754.html
+ *          https://baseconvert.com/ieee-754-floating-point
+ *          https://www.omnicalculator.com/other/floating-point
+ `
+ *                              bits  sign    exponent    fraction(mantissa)
+ *          half precision      16    1           5           10
+ *          single precision    32    1           8           23
+ *          double precision    64    1          11           52
+ *          quadruple           128   1          15          112
+ *          octuple             256   1          19          236
+ *
+ *          bias-ed representation
+ *              n = no of exponent bits
+ *              bias = 2^(n-1) - 1
+ *
+ *          understanding conversion
+ *              single-precision 1 10000100 00000101000000000000000
+ *              S(1)  : (-1)^1 = -1
+ *              E(8)  : 2^7+2^2 = 128 + 4
+ *                      exponent = 132 - bias(127) = 5
+ *              M(23) : 1.00000101_2
+ *              -1 * 1.00000101_2 * 2^5 = -1 * 100000.101_2 = -32 + ((2^-1)*1) + ((2^-2)*0) + ((2^-3)*1) = -32.625
+ *
+ *              convert to double-precision
+ *              -32.625 = -1 * 32.625 = -1 * 2^5 + (((2^-1)*1) + ((2^-2)*0) + ((2^-3)*1))
+ *                                    = -1 * 100000.101 = -1 * 1.00000101 * 2^5
+ *              S(1) = (-1)^1
+ *              E(11) = 5 + bias = 1024 + 4 = 10000000100
+ *              M(52) = 0000010100000000000000000000000000000000000000000000
+ *              1 10000000100 0000010100000000000000000000000000000000000000000000
+ *
  *
  *                           10987654 32109876 54321098 76543210
- *          half precision                     seeeeeff fffffff
- *          single precision seeeeeee efffffff ffffffff fffffff
+ *          half precision                     seeeeeff ffffffff
+ *          single precision seeeeeee efffffff ffffffff ffffffff
  *          ...
  *
  *                   FP16        FP32        FP64
@@ -133,8 +160,7 @@ uint16 fp16_from_fp32(float single);
 float fp32_from_fp16(uint16 half);
 /**
  * @brief   single precision to half precision
- * @desc    I'd probably try to figure it out on my own... but this is math.
- * @from    https://www.corsix.org/content/converting-fp32-to-fp16
+ * @refer   https://www.corsix.org/content/converting-fp32-to-fp16
  */
 uint16 fp16_ieee_from_fp32_value(uint32 single);
 
@@ -143,6 +169,7 @@ enum ieee754_typeof_t {
     ieee754_pinf,
     ieee754_ninf,
     ieee754_nan,
+    ieee754_zero,
     ieee754_half_precision,
     ieee754_single_precision,
     ieee754_double_precision,
@@ -150,6 +177,9 @@ enum ieee754_typeof_t {
 };
 ieee754_typeof_t is_typeof(float f);
 ieee754_typeof_t is_typeof(double d);
+// understanding frexpf, frexp
+ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m);
+ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m);
 
 }  // namespace hotplace
 

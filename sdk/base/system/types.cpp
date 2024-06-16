@@ -8,7 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/system/types.hpp>
+#include <sdk/base/system/endian.hpp>
+#include <sdk/base/system/types.hpp>
 #if defined __linux__
 #include <arpa/inet.h>
 #endif

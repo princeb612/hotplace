@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKPROTOCOL__
 
 #include <map>
-#include <sdk/base.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {

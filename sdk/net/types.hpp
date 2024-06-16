@@ -33,7 +33,11 @@
 
 #endif
 
-#include <sdk/base.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
+#include <sdk/io/types.hpp>
 
 namespace hotplace {
 namespace net {

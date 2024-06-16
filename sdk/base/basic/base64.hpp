@@ -15,7 +15,10 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_BASE64__
 #define __HOTPLACE_SDK_BASE_BASIC_BASE64__
 
-#include <sdk/base.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 
 namespace hotplace {
 

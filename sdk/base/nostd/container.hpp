@@ -13,7 +13,6 @@
 #define __HOTPLACE_SDK_BASE_NOSTD_CONTAINER__
 
 #include <sdk/base/error.hpp>
-#include <sdk/base/stl.hpp>
 //#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>

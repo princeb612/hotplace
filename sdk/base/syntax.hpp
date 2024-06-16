@@ -11,6 +11,8 @@
 #ifndef __HOTPLACE_SDK_BASE_SYNTAX__
 #define __HOTPLACE_SDK_BASE_SYNTAX__
 
+#include <sdk/base/system/trace.hpp>
+
 #define __try2 do
 #define __finally2 \
     while (0)      \

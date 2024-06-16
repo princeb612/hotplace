@@ -12,7 +12,10 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWSPE__
 #define __HOTPLACE_SDK_IO_SYSTEM_WINDOWSPE__
 
-#include <sdk/base.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 #if defined __linux__
 #include <sdk/io/system/linux/winnt.hpp>
 #elif defined _WIN32

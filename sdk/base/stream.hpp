@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_BASE_STREAM__
 
 #include <iostream>
+#include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
@@ -28,14 +29,14 @@ class stream_t {
    public:
     virtual ~stream_t() {}
 
-    virtual byte_t* data() const = 0;
+    virtual byte_t *data() const = 0;
     virtual uint64 size() const = 0;
-    virtual return_t write(const void* data, size_t size) = 0;
+    virtual return_t write(const void *data, size_t size) = 0;
     virtual return_t fill(size_t l, char c) = 0;
     virtual return_t clear() = 0;
 
-    virtual return_t printf(const char* buf, ...) = 0;
-    virtual return_t vprintf(const char* buf, va_list ap) = 0;
+    virtual return_t printf(const char *buf, ...) = 0;
+    virtual return_t vprintf(const char *buf, va_list ap) = 0;
 };
 
 /**
@@ -45,8 +46,9 @@ class stream_t {
  *          // concept sketch - binder must provide printf (STREAM_T*) method
  *          basic_stream bs;
  *          console_color concolor;
- *          t_stream_binder <basic_stream, console_color> console_colored_stream (bs);
- *          console_colored_stream << concolor.turnon ().set_fgcolor (console_color_t::yellow)
+ *          t_stream_binder <basic_stream, console_color> console_colored_stream
+ * (bs); console_colored_stream << concolor.turnon ().set_fgcolor
+ * (console_color_t::yellow)
  *                                 << "hello"
  *                                 << concolor.turnoff ();
  *          std::cout << bs << std::endl;
@@ -54,47 +56,47 @@ class stream_t {
 template <typename STREAM_T, typename BINDER>
 class t_stream_binder {
    public:
-    t_stream_binder(STREAM_T& stream) : _stream(stream) {
+    t_stream_binder(STREAM_T &stream) : _stream(stream) {
         // do nothing
     }
-    t_stream_binder<STREAM_T, BINDER>& operator<<(const char* rvalue) {
+    t_stream_binder<STREAM_T, BINDER> &operator<<(const char *rvalue) {
         if (rvalue) {
             _stream.printf("%s", rvalue);
         }
         return *this;
     }
-    t_stream_binder<STREAM_T, BINDER>& operator<<(int rvalue) {
+    t_stream_binder<STREAM_T, BINDER> &operator<<(int rvalue) {
         if (rvalue) {
             _stream.printf("%i", rvalue);
         }
         return *this;
     }
-    t_stream_binder<STREAM_T, BINDER>& operator<<(BINDER& rvalue) {
+    t_stream_binder<STREAM_T, BINDER> &operator<<(BINDER &rvalue) {
         rvalue.printf(&_stream);
         return *this;
     }
-    t_stream_binder<STREAM_T, BINDER>& operator+=(const char* rvalue) {
+    t_stream_binder<STREAM_T, BINDER> &operator+=(const char *rvalue) {
         if (rvalue) {
             _stream.printf("%s", rvalue);
         }
         return *this;
     }
-    t_stream_binder<STREAM_T, BINDER>& operator+=(int rvalue) {
+    t_stream_binder<STREAM_T, BINDER> &operator+=(int rvalue) {
         if (rvalue) {
             _stream.printf("%i", rvalue);
         }
         return *this;
     }
-    t_stream_binder<STREAM_T, BINDER>& operator+=(BINDER& rvalue) {
+    t_stream_binder<STREAM_T, BINDER> &operator+=(BINDER &rvalue) {
         // binder MUST provide printf (STREAM_T*) method
         rvalue.printf(&_stream);
         return *this;
     }
 
-    STREAM_T& get_stream() { return _stream; }
+    STREAM_T &get_stream() { return _stream; }
 
    private:
-    STREAM_T& _stream;
+    STREAM_T &_stream;
 };
 
 }  // namespace hotplace

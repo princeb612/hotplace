@@ -11,7 +11,7 @@
 
 #include <fstream>
 #include <iostream>
-#include <sdk/base/stl.hpp>
+#include <sdk/base/string/string.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/base/system/thread.hpp>

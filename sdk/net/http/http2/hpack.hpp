@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACK__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACK__
 
-#include <sdk/base.hpp>
+#include <sdk/base/basic/huffman_coding.hpp>
 
 namespace hotplace {
 namespace net {

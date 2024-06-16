@@ -14,6 +14,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_HASH__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_HASH__
 
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/types.hpp>
 #include <sdk/crypto/crypto.hpp>
 

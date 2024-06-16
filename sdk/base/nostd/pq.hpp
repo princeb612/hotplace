@@ -13,7 +13,6 @@
 #define __HOTPLACE_SDK_BASE_NOSTD_PRIORITYQUEUE__
 
 #include <sdk/base/nostd/vector.hpp>
-#include <sdk/base/stl.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 

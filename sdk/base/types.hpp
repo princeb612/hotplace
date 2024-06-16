@@ -39,6 +39,8 @@
 
 #endif
 
+#include <string.h>
+
 #include <map>
 #include <string>
 #include <vector>
@@ -57,11 +59,6 @@ typedef struct linger linger_t;
 
 #define NET_DEFAULT_TIMEOUT 10
 typedef struct linger linger_t;
-
-template <typename RETURN_T, typename TYPE>
-RETURN_T type_cast(TYPE param) {
-    return static_cast<RETURN_T>(param);
-}
 
 typedef unsigned char byte_t;
 typedef std::vector<byte_t> binary_t;

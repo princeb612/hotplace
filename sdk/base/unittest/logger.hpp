@@ -14,11 +14,14 @@
 
 #include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/binary.hpp>
+#include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/syntax.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/base/system/thread.hpp>
+#include <sdk/base/types.hpp>
 
 namespace hotplace {
 

@@ -98,8 +98,7 @@ float fp32_from_fp16(uint16 h) {
 
 /**
  * @brief   single precision to half precision
- * @desc    I'd probably try to figure it out on my own... but this is math.
- * @from    https://www.corsix.org/content/converting-fp32-to-fp16
+ * @refer   https://www.corsix.org/content/converting-fp32-to-fp16
  */
 uint16 fp16_ieee_from_fp32_value(uint32 x) {
     uint32 x_sgn = x & 0x80000000u;
@@ -141,14 +140,18 @@ uint16 fp16_ieee_from_fp32_value(uint32 x) {
 ieee754_typeof_t is_typeof(float f) {
     ieee754_typeof_t ret = ieee754_typeof_t::ieee754_single_precision;
     uint32 b32 = binary32_from_fp32(f);
-    if (ieee754_t::fp32_pinf == (b32 & ieee754_t::fp32_pinf)) {
-        if (b32 & 0x80000000) {
-            ret = ieee754_typeof_t::ieee754_ninf;
-        } else if (b32 & ~fp32_ninf) {
-            ret = ieee754_typeof_t::ieee754_nan;
-        } else {
-            ret = ieee754_typeof_t::ieee754_pinf;
+    if (b32 & ~0x80000000) {
+        if (ieee754_t::fp32_pinf == (b32 & ieee754_t::fp32_pinf)) {
+            if (b32 & 0x80000000) {
+                ret = ieee754_typeof_t::ieee754_ninf;
+            } else if (b32 & ~fp32_ninf) {
+                ret = ieee754_typeof_t::ieee754_nan;
+            } else {
+                ret = ieee754_typeof_t::ieee754_pinf;
+            }
         }
+    } else {
+        ret = ieee754_typeof_t::ieee754_zero;
     }
     return ret;
 }
@@ -156,17 +159,103 @@ ieee754_typeof_t is_typeof(float f) {
 ieee754_typeof_t is_typeof(double d) {
     ieee754_typeof_t ret = ieee754_typeof_t::ieee754_double_precision;
     uint64 b64 = binary64_from_fp64(d);
-    if (ieee754_t::fp64_pinf == (b64 & ieee754_t::fp64_pinf)) {
-        uint32 b32 = (b64 >> 32);
-        if (b32 & 0x80000000) {
-            ret = ieee754_typeof_t::ieee754_ninf;
-        } else if (b32 & 0x000fffff) {
-            ret = ieee754_typeof_t::ieee754_nan;
-        } else {
-            ret = ieee754_typeof_t::ieee754_pinf;
+    if (b64 & ~0x8000000000000000) {
+        if (ieee754_t::fp64_pinf == (b64 & ieee754_t::fp64_pinf)) {
+            uint32 b32 = (b64 >> 32);
+            if (b32 & 0x80000000) {
+                ret = ieee754_typeof_t::ieee754_ninf;
+            } else if (b32 & 0x000fffff) {
+                ret = ieee754_typeof_t::ieee754_nan;
+            } else {
+                ret = ieee754_typeof_t::ieee754_pinf;
+            }
         }
+    } else {
+        ret = ieee754_typeof_t::ieee754_zero;
     }
     return ret;
+}
+
+// to unserstand IEEE754
+ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m) {
+    ieee754_typeof_t type = is_typeof(value);
+
+    uint32 b32 = binary32_from_fp32(value);
+    int sign = (b32 >> 31);
+    int bias = (1 << 7) - 1;
+    int exponent = 0;
+    float mantissa = 0.0;
+    uint32 bias_m1 = bias - 1;
+
+    switch (type) {
+        case ieee754_zero:
+            break;
+        case ieee754_pinf:
+            mantissa = fp32_from_binary32(fp32_pinf);
+            break;
+        case ieee754_ninf:
+            mantissa = fp32_from_binary32(fp32_ninf);
+            break;
+        case ieee754_nan:
+            mantissa = fp32_from_binary32(fp32_nan);
+            break;
+        default:
+            exponent = ((b32 >> 23) & 0x000000ff) - bias_m1;
+            mantissa = fp32_from_binary32((b32 & 0x807fffff) | (bias_m1 << 23));
+            break;
+    }
+    if (s) {
+        *s = sign;
+    }
+    if (e) {
+        *e = exponent;
+    }
+    if (m) {
+        *m = mantissa;
+    }
+
+    return type;
+}
+
+// to unserstand IEEE754
+ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m) {
+    ieee754_typeof_t type = is_typeof(value);
+
+    uint64 b64 = binary64_from_fp64(value);
+    int sign = (b64 >> 63);
+    int bias = (1 << 10) - 1;
+    int exponent = 0;
+    double mantissa = 0.0;
+    uint64 bias_m1 = bias - 1;
+
+    switch (type) {
+        case ieee754_zero:
+            break;
+        case ieee754_pinf:
+            mantissa = fp64_from_binary64(fp64_pinf);
+            break;
+        case ieee754_ninf:
+            mantissa = fp64_from_binary64(fp64_ninf);
+            break;
+        case ieee754_nan:
+            mantissa = fp64_from_binary64(fp64_nan);
+            break;
+        default:
+            exponent = ((b64 >> 52) & 0x000007ff) - bias_m1;
+            mantissa = fp64_from_binary64((b64 & 0x800fffffffffffff) | (bias_m1 << 52));
+            break;
+    }
+    if (s) {
+        *s = sign;
+    }
+    if (e) {
+        *e = exponent;
+    }
+    if (m) {
+        *m = mantissa;
+    }
+
+    return type;
 }
 
 }  // namespace hotplace

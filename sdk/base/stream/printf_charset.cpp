@@ -684,10 +684,15 @@ int vprintf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar
                 if (_T('6') == *fmt && _T('4') == *(fmt + 1)) {
                     fmt += 2;
 
-                    _ulong = (uint64)va_arg(ap, int64);
+                    _ulong = (uint64)va_arg(ap, uint64);
 
                     if ('i' == *fmt) {
                         fmt++;
+                        if ((int64)_ulong < 0) {
+                            _ulong = -(int64)_ulong;
+                            sign = _T('-');
+                        }
+                        base = DEC;
                         goto number;
                     } else if ('u' == *fmt) {
                         fmt++;
@@ -704,7 +709,7 @@ int vprintf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar
                 else if (_T('1') == *fmt && _T('2') == *(fmt + 1) && _T('8') == *(fmt + 2)) {
                     fmt += 3;
 
-                    _ulong = (uint128)va_arg(ap, int128);
+                    _ulong = (uint128)va_arg(ap, uint128);
 
                     if ('i' == *fmt) {
                         fmt++;

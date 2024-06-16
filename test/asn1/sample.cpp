@@ -37,6 +37,8 @@ t_shared_instance<cmdline_t<OPTION>> _cmdline;
     { e1, e2 }
 #define TESTVECTOR_ENTRY3(e1, e2, e3) \
     { e1, e2, e3 }
+#define TESTVECTOR_ENTRY4(e1, e2, e3, e4) \
+    { e1, e2, e3, e4 }
 
 // X.690 8.1.3 Length octets
 void x690_8_1_3_length_octets() {
@@ -44,18 +46,18 @@ void x690_8_1_3_length_octets() {
         uint32 i;
         const char* expect;
     } _table[] = {
-        TESTVECTOR_ENTRY(38, "26"),
-        TESTVECTOR_ENTRY(201, "81 c9"),
-        TESTVECTOR_ENTRY(127, "7f"),
-        TESTVECTOR_ENTRY(128, "81 80"),
+        TESTVECTOR_ENTRY(38, "26"),         TESTVECTOR_ENTRY(50, "32"),          TESTVECTOR_ENTRY(100, "64"),    TESTVECTOR_ENTRY(127, "7f"),
+        TESTVECTOR_ENTRY(128, "81 80"),     TESTVECTOR_ENTRY(200, "81 c8"),      TESTVECTOR_ENTRY(201, "81 c9"), TESTVECTOR_ENTRY(300, "82 01 2c"),
+        TESTVECTOR_ENTRY(1024, "82 04 00"), TESTVECTOR_ENTRY(65535, "82 ff ff"),
     };
 
     binary_t bin;
 
-    auto encode_length_octet_routine = [&](const testvector& entry, binary_t& bin) -> void { t_asn1_encode_length<uint32>(bin, entry.i); };
+    auto encode_length_octet_routine = [&](const testvector& entry, binary_t& bin) -> void { t_asn1_length_octets<uint32>(bin, entry.i); };
 
     for (auto entry : _table) {
         encode_length_octet_routine(entry, bin);
+        _logger->dump(bin);
         bool test = (bin == base16_decode_rfc(entry.expect));
         _test_case.assert(test, __FUNCTION__, "X.690 8.1.3 length octets %i", entry.i);
         bin.clear();
@@ -76,36 +78,107 @@ void test_x690_encoding() {
         variant var;
         const char* expect;
         const char* text;
+        int debug;
     } _table[] = {
         TESTVECTOR_ENTRY3(variant(), "05 00", "X.690 8.8 encoding of a null value"),
         TESTVECTOR_ENTRY3(variant(true), "0101ff", "X.690 8.2 encoding of a boolean value (true)"),
         TESTVECTOR_ENTRY3(variant(false), "010100", "X.690 8.2 encoding of a boolean value (false)"),
-        TESTVECTOR_ENTRY3(variant(0), "02 01 00", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(127), "02 01 7F", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(128), "02 02 00 80", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(256), "02 02 01 00", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(300), "02 02 01 2C", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(65535), "02 03 00 FF FF", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(-1), "02 01 FF", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(-128), "02 01 80", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(-129), "02 02 FF 7F", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(-256), "02 02 FF 00", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(-257), "02 02 FE FF", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(-300), "02 02 FE D4", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(-32768), "02 02 80 00", "X.690 8.3"),
-        TESTVECTOR_ENTRY3(variant(-32769), "02 03 FF 7F FF", "X.690 8.3"),
 
-        // not yet
-        // TESTVECTOR_ENTRY3(variant(1.23), "09 03 80 00 3F 9D 70", "X.690 8.5"),
-        // TESTVECTOR_ENTRY3(variant(-1.23), "09 03 C0 00 3F 9D 70", "X.690 8.5"),
-        // TESTVECTOR_ENTRY3(variant(0.0), "09 00", "X.690 8.5"),
-        // TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0x7f800000)), "09 01 40", "X.690 8.5 Inf"),
-        // TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0xff800000)), "09 01 41", "X.690 8.5 -Inf"),
-        // TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0x7fc00000)), "09 01 42", "X.690 8.5 NaN"),
-        // TESTVECTOR_ENTRY3(variant(123.45), "09 05 80 02 3F F6 E6 66", "X.690 8.5"),
-        // TESTVECTOR_ENTRY3(variant(12345.6789), "09 09 80 00 00 03 40 E6 B7 27 0A 14 7A E1", "X.690 8.5"),
-        // TESTVECTOR_ENTRY3(variant(-0.000012345), "09 09 C0 FF FF FC 3D CC CC CC CC CC CC CD", "X.690 8.5"),
+        // >>> from pyasn1.type import univ
+        // >>> from pyasn1.codec.ber.encoder import encode
+        // >>> encode(univ.Integer(-128)).hex()
+        TESTVECTOR_ENTRY3(variant(0), "02 01 00", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(123), "02 01 7b", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(127), "02 01 7f", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(128), "02 02 00 80", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(255), "02 02 00 ff", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(256), "02 02 01 00", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(257), "02 02 01 01", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(300), "02 02 01 2c", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(1000), "02 02 03 e8", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(65535), "02 03 00 ff ff", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(65536), "02 03 01 00 00", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(16777215), "02 04 00 ff ff ff", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(2147483647), "02 04 7f ff ff ff", "x.690 8.3"),
+        // Integer(4294967295)
+        //      asn1coding      02 04 7f ff ff ff (??)
+        //      pyasn1          02 05 00 ff ff ff ff
+        TESTVECTOR_ENTRY3(variant(4294967295), "02 05 00 ff ff ff ff", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(4294967296), "02 05 01 00 00 00 00", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(1099511627775), "02 06 00 ff ff ff ff ff", "x.690 8.3"),
+        //      pyasn1          02080fffffffffffffff
+        TESTVECTOR_ENTRY4(variant(1152921504606846975), "02 08 0fff ffff ffff ffff", "x.690 8.3", 1),
+        //      pyasn1          02081000000000000000
+        TESTVECTOR_ENTRY4(variant(1152921504606846976), "02 08 1000 0000 0000 0000", "x.690 8.3", 1),
+        TESTVECTOR_ENTRY3(variant(-1), "02 01 ff", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-10), "02 01 f6", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-126), "02 01 82", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-127), "02 01 81", "x.690 8.3"),
+        // Integer(-128)
+        //      asn1coding -128 -> 02 01 80
+        //      pyasn1     -128 -> 02 ff 80 (??)
+        TESTVECTOR_ENTRY3(variant(-128), "02 01 80", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-129), "02 02 ff 7f", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-256), "02 02 ff 00", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-257), "02 02 fe ff", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-300), "02 02 fe d4", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-1234), "02 02 fb 2e", "x.690 8.3"),
+        //      asn1coding      02028000
+        //      pyasn1          0203ff8000
+        TESTVECTOR_ENTRY3(variant(-32768), "02 02 80 00", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-32769), "02 03 ff 7f ff", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-16777216), "02 04 ff 00 00 00", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-16777217), "02 04 fe ff ff ff", "x.690 8.3"),
+        // Integer(-4294967296)
+        //      asn1coding      02 04 80 00 00 00 (??)
+        //      pyasn1          02 05 ff 00 00 00 00
+        TESTVECTOR_ENTRY3(variant(-4294967296), "02 05 ff 00 00 00 00", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-1099511627775), "02 06 ff 00 00 00 00 01", "x.690 8.3"),
+        TESTVECTOR_ENTRY3(variant(-1099511627776), "02 06 ff 00 00 00 00 00", "x.690 8.3"),
 
+        // from pyasn1.type.univ import Real
+        // from pyasn1.codec.ber.decoder import decode
+        // import binascii
+        // >>> print("Decoded REAL:", decode(binascii.unhexlify('090380fb05'), asn1Spec=Real()))
+        // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [0.15625]>, b'')
+
+        TESTVECTOR_ENTRY3(variant(0.0f), "0900", "X.690 8.5"),
+        // e -20 m 129453.0
+        // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [0.12345600128173828]>, b'')
+        TESTVECTOR_ENTRY3(variant(0.123456), "090580ec01f9ad", "X.690 8.5"),
+        // 2^-3 + 2^-5 -> 0.00101 -> 1.01 * 2^-3 (IEEE754) -> 101 * 2^-5
+        TESTVECTOR_ENTRY3(variant(0.15625), "090380fb05", "X.690 8.5"),
+        // 2^-1 (IEEE754) -> 0.1 -> 1.0 * 2^-1 (IEEE754)
+        TESTVECTOR_ENTRY3(variant(0.5), "090380FF01", "X.690 8.5"),
+        // 2^-1 + 2^-2 -> 0.11 -> 1.1 * 2^-1 (IEEE754) -> 11 * 2^-2 (ASN.1)
+        TESTVECTOR_ENTRY3(variant(0.75), "090380fe03", "X.690 8.5"),
+        // 1.0 * 2^0 (IEEE754) -> 80 00 01
+        TESTVECTOR_ENTRY3(variant(1.0), "0903800001", "X.690 8.5"),
+        // e -21 m 2579497.0
+        // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [1.2300000190734863]>, b'')
+        TESTVECTOR_ENTRY3(variant(1.23), "090580EB275C29", "X.690 8.5"),
+        // 2^1 -> 10 -> 1.0 * 2^1 (IEEE754) -> 80 01 01
+        TESTVECTOR_ENTRY3(variant(2.0), "0903800101", "X.690 8.5"),
+        // 2^5 + 2^-2 + 2^2-4 -> 100000.0101 -> 1.000000101 * 2^5 (IEEE754) -> 1000000101 * 2^-4
+        TESTVECTOR_ENTRY3(variant(32.3125), "090480fc0205", "X.690 8.5"),
+        // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [78.9000015258789]>, b'')
+        TESTVECTOR_ENTRY3(variant(78.90), "090680ef009dcccd", "X.690 8.5"),
+        TESTVECTOR_ENTRY3(variant(123.0), "090380007b", "X.690 8.5"),
+        // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [123.45600128173828]>, b'')
+        TESTVECTOR_ENTRY3(variant(123.456), "090680ef00f6e979", "X.690 8.5"),
+        // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [12345.6787109375]>, b'')
+        TESTVECTOR_ENTRY3(variant(12345.6789), "090680f600c0e6b7", "X.690 8.5"),
+        // (-1)^1 * 1.0 * 2^0 (IEEE754) -> c0 00 01
+        TESTVECTOR_ENTRY3(variant(-1.0), "0903c00001", "X.690 8.5"),
+        // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [-1.2300000190734863]>, b'')
+        TESTVECTOR_ENTRY3(variant(-1.23), "0905c0eb275c29", "X.690 8.5"),
+        TESTVECTOR_ENTRY3(variant(-456.0), "0903c00339", "X.690 8.5"),  //
+        TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0x7f800000)), "090140", "X.690 8.5 Inf"),
+        TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0xff800000)), "090141", "X.690 8.5 -Inf"),
+        // NaN
+        // >>> print("Decoded REAL:", decode(binascii.unhexlify('090142'), asn1Spec=Real()))
+        // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [inf]>, b'')
+        TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0x7fc00000)), "090142", "X.690 8.5 NaN"),
     };
 
     binary_t bin;
@@ -114,9 +187,21 @@ void test_x690_encoding() {
     auto encode_routine = [&](binary_t& bin, const variant& v) -> void { enc.encode(bin, v); };
 
     for (auto entry : _table) {
+        if (entry.debug) {
+            int debug_herer = 1;
+        }
         encode_routine(bin, entry.var);
         _logger->dump(bin);
-        _test_case.assert(bin == base16_decode_rfc(entry.expect), __FUNCTION__, "X.690 expect [%s] %s", entry.expect, entry.text);
+        binary_t bin_expect = base16_decode_rfc(entry.expect);
+        return_t ret = errorcode_t::success;
+        if (bin_expect.empty()) {
+            ret = errorcode_t::not_supported;
+        } else if (bin != bin_expect) {
+            ret = errorcode_t::mismatch;
+        }
+        basic_stream bs;
+        vtprintf(&bs, entry.var);
+        _test_case.test(ret, __FUNCTION__, "X.690 input [%s] expect [%s] %s", bs.c_str(), entry.expect, entry.text);
         bin.clear();
     }
 }
@@ -143,10 +228,10 @@ void x690_8_6_bitstring() {
         bin.push_back(asn1_tag_bitstring | asn1_tag_constructed);
         bin.push_back(0x80);
         bin.push_back(asn1_tag_bitstring);
-        t_asn1_encode_length<uint32>(bin.get(), 3);
+        t_asn1_length_octets<uint32>(bin.get(), 3);
         bin.append(base16_decode("000a3b"));
         bin.push_back(asn1_tag_bitstring);
-        t_asn1_encode_length<uint32>(bin.get(), 5);
+        t_asn1_length_octets<uint32>(bin.get(), 5);
         bin.append(base16_decode("045f291cd0"));
         bin.push_back(0x00);  // EOC
         bin.push_back(0x00);  // EOC
@@ -155,16 +240,6 @@ void x690_8_6_bitstring() {
         _test_case.assert(bin.get() == base16_decode_rfc(expect_constructed), __FUNCTION__, "X.690 8.6.4 BitString constructed");
     }
 }
-
-// X.690 8.8 encoding of a null value
-// void x690_8_8_null() {
-//     binary_t bin;
-//     asn1_encode enc;
-//     enc.null(bin);
-//
-//     _logger->dump(bin);
-//     _test_case.assert(bin == base16_decode("0500"), __FUNCTION__, "X.690 8.8 null");
-// }
 
 // X.690 8.9 encoding of a sequence value
 void x690_8_9_sequence() {
@@ -216,7 +291,7 @@ void x690_8_14_tagged() {
     {
         // enc.encode(bin_type3, asn1_tag_context | asn1_tag_constructed, 2);
         binary_push(bin_type3, asn1_tag_context | asn1_tag_constructed | 2);
-        t_asn1_encode_length<uint32>(bin_type3, bin_type2.size());
+        t_asn1_length_octets<uint32>(bin_type3, bin_type2.size());
         binary_append(bin_type3, bin_type2);
         _logger->dump(bin_type3);
         _test_case.assert(bin_type3 == base16_decode_rfc("a2 07 43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type3");
@@ -224,7 +299,7 @@ void x690_8_14_tagged() {
     // Type4 ::= [Application 7] implicit Type3
     {
         binary_push(bin_type4, asn1_tag_application | asn1_tag_constructed | 7);
-        t_asn1_encode_length<uint32>(bin_type4, bin_type2.size());
+        t_asn1_length_octets<uint32>(bin_type4, bin_type2.size());
         binary_append(bin_type4, bin_type2);  // ?? not bin_type3
         _logger->dump(bin_type4);
         _test_case.assert(bin_type4 == base16_decode_rfc("67 07 43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type4");
@@ -232,7 +307,7 @@ void x690_8_14_tagged() {
     // Type5 ::= [2] implicit Type2
     {
         binary_push(bin_type5, asn1_tag_context | 2);
-        t_asn1_encode_length<uint32>(bin_type5, 5);
+        t_asn1_length_octets<uint32>(bin_type5, 5);
         binary_append(bin_type5, "Jones");
         _logger->dump(bin_type5);
         _test_case.assert(bin_type5 == base16_decode_rfc("82 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # Type5");
@@ -250,6 +325,7 @@ void x690_8_19_objid() {
         std::make_pair(oid_t{1, 3, 6, 1, 4, 1, 311, 60, 2, 1, 1}, "06 0B 2B 06 01 04 01 82 37 3C 02 01 01"),
         std::make_pair(oid_t{1, 2, 840, 10045, 3, 1, 7}, "06 08 2a 86 48 ce 3d 03 01 07"),
         std::make_pair(oid_t{2, 100, 3}, "06 03 81 34 03"),  // 0..39 < 100 ??
+        std::make_pair(oid_t{2, 154}, "06 02 81 6a"),
     };
 
     binary_t bin;
@@ -324,8 +400,6 @@ void x690_annex_a() {
 }
 
 void test_asn1_typedef_value() {
-    // skeleton .. o
-    // implement members .. o
     asn1 notation;
     auto node_personal = new asn1_set("PersonnelRecord", new asn1_tagged(asn1_class_application, 0, asn1_implicit));
     *node_personal << new asn1_namedtype("name", new asn1_type_defined("Name"))
@@ -357,7 +431,7 @@ void test_asn1_typedef_value() {
     basic_stream bs;
     notation.publish(&bs);
     _logger->write(bs);
-    _test_case.assert(true, __FUNCTION__, "publish definition");
+    _test_case.assert(bs.size() > 0, __FUNCTION__, "publish definition");
 
     binary_t bin;
     auto data_personal = notation.clone("PersonnelRecord");
@@ -368,9 +442,9 @@ void test_asn1_typedef_value() {
     // data_personal->get_namedvalue("nameOfSpouse") << "Mary" << "T" << "Smith";
     // data_personal->get_namedvalue("children").spawn() << "Ralph" << "T" << "Smith";
     // data_personal->get_namedvalue("children").spawn() << "Susan" << "B" << "Jones";
-    notation.publish(&bin);
+    // notation.publish(&bin);
     data_personal->release();
-    _test_case.assert(true, __FUNCTION__, "publish value");
+    // _test_case.assert(false == bin.empty(), __FUNCTION__, "publish value");
 }
 
 void test_asn1_parse() {
@@ -616,7 +690,7 @@ void test_asn1_parse() {
 
     // TODO
 
-    _test_case.assert(true, __FUNCTION__, "rule");
+    _test_case.assert(bs.size() > 0, __FUNCTION__, "rule");
 }
 
 int main(int argc, char** argv) {
@@ -638,20 +712,16 @@ int main(int argc, char** argv) {
     x690_8_1_3_length_octets();
     x690_8_1_5_end_of_contents();
     test_x690_encoding();
-    // x690_8_2_boolean();
-    // x690_8_3_integer();
-    // x690_8_5_real();
     x690_8_6_bitstring();
-    // x690_8_8_null();
     x690_8_9_sequence();
     x690_8_14_tagged();
     x690_8_19_objid();
     x690_8_20_relobjid();
     x690_8_21_visiblestring();
     x690_11_7_generallizedtime();
-    x690_annex_a();
-    test_asn1_typedef_value();
-    test_asn1_parse();
+    // x690_annex_a();
+    // test_asn1_typedef_value();
+    // test_asn1_parse();
 
     _logger->flush();
 

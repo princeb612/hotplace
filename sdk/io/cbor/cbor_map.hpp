@@ -16,7 +16,10 @@
 
 #include <deque>
 #include <map>
-#include <sdk/base.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 #include <sdk/io/cbor/cbor_object.hpp>
 #include <sdk/io/stream/stream.hpp>
 

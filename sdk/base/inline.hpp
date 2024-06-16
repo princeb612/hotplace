@@ -15,12 +15,69 @@
 
 #include <algorithm>
 #include <list>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
+#include <sdk/base/template.hpp>
 #include <sdk/base/types.hpp>
 #include <string>
 #include <vector>
 
 namespace hotplace {
+
+/**
+ * @brief   bit length
+ * @remarks gcc builtin clz - count leading zeros (ex. 0000000011111111 return 8)
+ */
+static inline int bit_length(uint16 v) {
+    uint32 temp = v;
+    return __builtin_clz(temp) - 16;
+}
+
+static inline int bit_length(uint32 v) { return __builtin_clz(v); }
+
+static inline int bit_length(uint64 v) { return __builtin_clzll(v); }
+
+static inline int bit_length(uint128 v) {
+    int b = 128;
+    uint64 hi = (v >> 64);
+    uint64 lo = 0;
+    if (hi) {
+        b = __builtin_clzll(hi);
+    } else if (lo = (v & ~0ULL)) {
+        b = __builtin_clzll(lo) + 64;
+    }
+    return b;
+}
+
+/**
+ * @brief   bytes
+ * @example
+ *          00000000000000000000000000000001 1 byte
+ *          00000000000000000000000000000080 1 byte
+ *          00000000000000000000000000008000 2 bytes
+ *          00000000000000000000000800000000 5 bytes
+ *          00080000000000000000000000000000 15 bytes
+ *          08000000000000000000000000000000 16 bytes
+ */
+
+static inline int byte_capacity(uint16 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
+
+static inline int byte_capacity(uint32 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
+
+static inline int byte_capacity(uint64 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
+
+static inline int byte_capacity(uint128 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
+
+static inline int byte_capacity(int16 v) { return byte_capacity_signed<int16>(v); }
+
+static inline int byte_capacity(int32 v) { return byte_capacity_signed<int32>(v); }
+
+static inline int byte_capacity(int64 v) { return byte_capacity_signed<int64>(v); }
+
+static inline int byte_capacity(int128 v) { return byte_capacity_signed<int128>(v); }
+
+// secure functions
 
 static inline void memcpy_inline(void* dest, size_t size_dest, const void* src, size_t size_src) {
 #ifdef __STDC_WANT_SECURE_LIB__
@@ -45,6 +102,9 @@ static inline int vsnprintf_inline(char* buffer, size_t size, const char* fmt, v
     return ret;
 }
 
+/**
+ * @brief   left trim
+ */
 static inline std::string& ltrim(std::string& source) {
 #if __cplusplus >= 201103L  // c++11
     source.erase(source.begin(), std::find_if(source.begin(), source.end(), [](int c) { return !std::isspace(c); }));
@@ -55,6 +115,9 @@ static inline std::string& ltrim(std::string& source) {
     return source;
 }
 
+/**
+ * @brief   right trim
+ */
 static inline std::string& rtrim(std::string& source) {
 #if __cplusplus >= 201103L  // c++11
     source.erase(std::find_if(source.rbegin(), source.rend(), [](int c) { return !std::isspace(c); }).base(), source.end());

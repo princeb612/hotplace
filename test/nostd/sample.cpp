@@ -409,7 +409,6 @@ void test_graph() {
         do_test_graph_shortest_path<int>(g2, i);
     }
 
-    _test_case.begin("multi-path");
     t_graph<int> g3;
     g3.add_undirected_edge(1, 2)
         .add_undirected_edge(2, 3)

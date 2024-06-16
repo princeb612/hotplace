@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base.hpp>
 #include <sdk/io.hpp>
 #include <sdk/net/basic/ipaddr_acl.hpp>
 #include <sdk/net/types.hpp>  // ws2tcpip.h first

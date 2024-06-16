@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base.hpp>
 #include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {

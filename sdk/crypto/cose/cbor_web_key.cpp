@@ -11,7 +11,6 @@
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/base64.hpp>
 #include <sdk/base/basic/variant.hpp>
-#include <sdk/base/stl.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>

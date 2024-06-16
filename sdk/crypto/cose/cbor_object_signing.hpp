@@ -12,7 +12,10 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTSIGNING__
 #define __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTSIGNING__
 
-#include <sdk/base.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/cose/cbor_object_signing_encryption.hpp>
 

@@ -211,8 +211,19 @@ basic_stream& basic_stream::operator<<(int128 value) {
     printf("%I128i", value);
     return *this;
 }
+
 basic_stream& basic_stream::operator<<(uint128 value) {
     printf("%I128u", value);
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(float value) {
+    printf("%f", value);
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(double value) {
+    printf("%lf", value);
     return *this;
 }
 

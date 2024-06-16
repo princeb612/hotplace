@@ -17,9 +17,9 @@
 #include <map>
 #include <sdk/base/error.hpp>
 #include <sdk/base/nostd/tree.hpp>
-#include <sdk/base/stl.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/syntax.hpp>
+#include <sdk/base/template.hpp>
 #include <sdk/base/types.hpp>
 
 namespace hotplace {
@@ -36,16 +36,6 @@ namespace hotplace {
  *          // method.2 - load from pre-trained codes
  *          huff.imports(_h2hcodes);
  */
-
-template <typename T>
-struct t_comparator_base {
-    friend bool operator<(const T &lhs, const T &rhs) { return lhs < rhs; }
-};
-
-template <typename T>
-struct t_type_comparator : t_comparator_base<T> {
-    bool operator()(const T &lhs, const T &rhs) { return lhs.symbol < rhs.symbol; }
-};
 
 class huffman_coding {
    private:

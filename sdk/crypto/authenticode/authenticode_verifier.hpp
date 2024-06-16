@@ -23,7 +23,10 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_VERIFIER__
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_VERIFIER__
 
-#include <sdk/base.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 #include <sdk/crypto/authenticode/authenticode_plugin.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 

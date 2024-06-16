@@ -13,6 +13,7 @@
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/stream/printf.hpp>
 #include <sdk/base/stream/tstring.hpp>
+#include <sdk/base/string/string.hpp>
 
 namespace hotplace {
 

@@ -182,7 +182,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                         publisher.publish(cbor_newone, &bs_diagnostic_composed);
                         dump_test_data("\e[1;36mcompose\e[0m", bs_diagnostic_composed);
 
-                        _test_case.assert(true, __FUNCTION__, "check.compose %s", text ? text : "");
+                        _test_case.assert(false == bin_untagged.empty(), __FUNCTION__, "check.compose %s", text ? text : "");
 
                         cbor_newone->release();
                     }
@@ -1472,7 +1472,7 @@ void test_keygen(crypto_key* key) {
     key->generate_nid(crypto_kty_t::kty_okp, ec_curve_t::ec_x25519, "kid_x25519", crypto_use_t::use_enc);
     key->generate_nid(crypto_kty_t::kty_okp, ec_curve_t::ec_ed25519, "kid_ed25519", crypto_use_t::use_sig);
     key->for_each(dump_crypto_key, nullptr);
-    _test_case.assert(true, __FUNCTION__, "key generation");
+    _test_case.assert(key->size() > 0, __FUNCTION__, "key generation");
 }
 
 const cose_alg_t enc_algs[] = {

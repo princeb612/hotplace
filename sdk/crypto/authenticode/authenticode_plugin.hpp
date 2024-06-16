@@ -17,8 +17,8 @@
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN__
 
 #include <list>
-#include <sdk/base.hpp>
-#include <sdk/io.hpp>
+#include <sdk/base/system/shared_instance.hpp>
+#include <sdk/io/stream/file_stream.hpp>
 #include <string>
 
 namespace hotplace {

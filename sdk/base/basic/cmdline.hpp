@@ -16,8 +16,12 @@
 #include <iostream>
 #include <list>
 #include <map>
-#include <sdk/base.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
 #include <sdk/base/stream.hpp>
+#include <sdk/base/string/string.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 #include <set>
 
 namespace hotplace {
@@ -26,8 +30,6 @@ enum cmdline_flag_t {
     cmdline_preced = (1 << 1),
     cmdline_optional = (1 << 2),
 };
-
-#if __cplusplus >= 201103L  // c++11
 
 template <typename T>
 class cmdline_t;
@@ -330,8 +332,6 @@ void cmdline_t<T>::help() {
         printf(fmt.c_str(), color, expr_arg.c_str(), f, item.desc());
     }
 }
-
-#endif  // __cplusplus >= 201103L (c++11)
 
 }  // namespace hotplace
 

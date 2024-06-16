@@ -12,8 +12,9 @@
 
 #include <ostream>
 #include <sdk/base/basic/ieee754.hpp>
+#include <sdk/base/basic/template.hpp>
 #include <sdk/base/basic/variant.hpp>
-#include <sdk/base/stl.hpp>
+#include <sdk/base/binary.hpp>
 #include <sdk/base/system/endian.hpp>
 #include <sdk/base/system/types.hpp>
 

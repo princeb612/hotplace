@@ -11,10 +11,22 @@
 #ifndef __HOTPLACE_SDK_BASE_STRING_STRING__
 #define __HOTPLACE_SDK_BASE_STRING_STRING__
 
-#include <sdk/base.hpp>
+#include <list>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 #include <string>
 
 namespace hotplace {
+
+/**
+ * @brief   format
+ * @example
+ *  std::string text = format ("%s %d %1.1f\n", "sample", 1, 1.1f);
+ */
+std::string format(const char* fmt, ...);
+std::string format(const char* fmt, va_list ap);
 
 /**
  * @brief replace

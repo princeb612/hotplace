@@ -18,13 +18,12 @@
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/inline.hpp>
-#include <sdk/base/stl.hpp>
 #include <sdk/base/stream.hpp>
 #include <sdk/base/syntax.hpp>
+#include <sdk/base/template.hpp>
 #include <sdk/base/types.hpp>
 
 /* basic */
-//#include <sdk/base/basic/avl.hpp>
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/base64.hpp>
 #include <sdk/base/basic/cmdline.hpp>
@@ -35,6 +34,7 @@
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/basic/obfuscate_string.hpp>
+#include <sdk/base/basic/template.hpp>
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/basic/variant.hpp>
 

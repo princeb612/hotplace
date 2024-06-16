@@ -11,9 +11,13 @@
 #ifndef __HOTPLACE_SDK_IO_BASIC_PAYLOAD__
 #define __HOTPLACE_SDK_IO_BASIC_PAYLOAD__
 
+#include <functional>
 #include <list>
 #include <map>
-#include <sdk/base.hpp>
+#include <sdk/base/basic/template.hpp>
+#include <sdk/base/basic/variant.hpp>
+#include <sdk/base/system/endian.hpp>
+#include <sdk/base/template.hpp>
 #include <sdk/io/system/types.hpp>
 
 namespace hotplace {

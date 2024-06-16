@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base.hpp>
 #include <sdk/crypto.hpp>
 #include <sdk/io.hpp>
 #include <sdk/net/tls/x509.hpp>

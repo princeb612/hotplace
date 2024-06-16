@@ -13,7 +13,6 @@
 #define __HOTPLACE_SDK_BASE_NOSTD_EXCEPTION__
 
 #include <sdk/base/error.hpp>
-#include <sdk/base/stl.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 

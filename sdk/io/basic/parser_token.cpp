@@ -88,10 +88,7 @@ void parser::token::visit(const char* p, std::function<void(const parser::token*
     }
 }
 
-parser::token* parser::token::clone() {
-    parser::token* p = new parser::token(*this);
-    return p;
-}
+parser::token* parser::token::clone() { return new parser::token(*this); }
 
 }  // namespace io
 }  // namespace hotplace

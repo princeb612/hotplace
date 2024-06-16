@@ -11,8 +11,11 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_PROTOCOL__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_PROTOCOL__
 
-#include <sdk/base.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 

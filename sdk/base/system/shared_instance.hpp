@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_SHAREDINSTANCE__
 #define __HOTPLACE_SDK_BASE_SYSTEM_SHAREDINSTANCE__
 
+#include <sdk/base/error.hpp>
 #include <sdk/base/system/atomic.hpp>
 
 namespace hotplace {

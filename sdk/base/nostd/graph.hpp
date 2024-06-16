@@ -18,7 +18,6 @@
 #include <map>
 #include <queue>
 #include <sdk/base/nostd/container.hpp>
-#include <sdk/base/stl.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
@@ -607,15 +606,15 @@ class t_graph {
                     auto iter = section.begin();
                     head = iter->second;  // update head -- while (u != head)
 
-                    for (iter++; iter != section.end(); iter++) {  // alternative section
-                        std::list<T> list_branch = lst;            // branch list
-                        const T& head_branch = iter->second;       // select alternative neighbour
-                        list_branch.push_front(head_branch);       // into branch list
-                        filler(e, list_branch);                    // fill
-                        route_branch.insert({e, list_branch});     // insert branch list into branch route
+                    for (iter++; iter != section.end(); iter++) {          // alternative section
+                        std::list<T> list_branch = lst;                    // branch list
+                        const T& head_branch = iter->second;               // select alternative neighbour
+                        list_branch.push_front(head_branch);               // into branch list
+                        filler(e, list_branch);                            // fill
+                        route_branch.insert({e, std::move(list_branch)});  // insert branch list into branch route
                     }
 
-                    lst.push_front(head);  // into origin list
+                    lst.push_front(head);  // head into list
                 }
             };
 
@@ -624,8 +623,8 @@ class t_graph {
                 auto& lst_origin = item.second;  // origin list
                 filler(e, lst_origin);           // handle origin list or branch list if alternative available
             }
-            for (auto& item : route_branch) {  // merge info route
-                route.insert({item.first, item.second});
+            for (auto& item : route_branch) {  // merge into route
+                route.insert({item.first, std::move(item.second)});
             }
             _route.insert({u, route});
         }

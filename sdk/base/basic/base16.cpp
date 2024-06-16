@@ -14,6 +14,7 @@
 
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/charset.hpp>
+#include <sdk/base/inline.hpp>
 #include <sdk/base/string/string.hpp>
 
 namespace hotplace {

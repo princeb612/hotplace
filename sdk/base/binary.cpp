@@ -15,7 +15,6 @@
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/binary.hpp>
 #include <sdk/base/inline.hpp>
-#include <sdk/base/stl.hpp>
 
 namespace hotplace {
 

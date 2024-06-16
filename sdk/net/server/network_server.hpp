@@ -11,7 +11,10 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKSERVER__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSERVER__
 
-#include <sdk/base.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 #include <sdk/io.hpp>
 #include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/server/network_protocol.hpp>

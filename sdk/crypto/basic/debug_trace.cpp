@@ -9,6 +9,7 @@
  */
 
 #include <iostream>
+#include <sdk/base/stream/tstring.hpp>
 #include <sdk/base/system/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>

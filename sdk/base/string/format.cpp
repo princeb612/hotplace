@@ -12,7 +12,7 @@
 
 #include <ostream>
 #include <sdk/base/inline.hpp>
-#include <sdk/base/stl.hpp>
+#include <sdk/base/string/string.hpp>
 
 namespace hotplace {
 
@@ -40,7 +40,6 @@ std::string format(const char* fmt, ...) {
     return std::string(&buf[0]);
 }
 
-#if __cplusplus > 199711L  // c++98
 std::string format(const char* fmt, va_list ap) {
     const int size = 32;
 
@@ -64,6 +63,5 @@ std::string format(const char* fmt, va_list ap) {
 
     return std::string(&buf[0]);
 }
-#endif
 
 }  // namespace hotplace

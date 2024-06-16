@@ -13,7 +13,12 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1__
 #define __HOTPLACE_SDK_IO_ASN1__
 
-#include <sdk/base.hpp>
+#include <sdk/base/basic/base16.hpp>
+#include <sdk/base/basic/ieee754.hpp>
+#include <sdk/base/basic/variant.hpp>
+#include <sdk/base/binary.hpp>
+#include <sdk/base/system/endian.hpp>
+#include <sdk/base/system/shared_instance.hpp>
 #include <sdk/io/asn.1/types.hpp>
 #include <sdk/io/basic/parser.hpp>
 
@@ -239,89 +244,6 @@ class asn1 {
     parser::context _rule;  // learn
 };
 
-/**
- * @brief   length octets
- * @sa
- *          X.680 8.1.3 Length octets
- *          X.690 8.1.3 Length octets
- */
-template <typename type>
-unsigned t_asn1_encode_length(binary_t& bin, type v) {
-    unsigned size_encode = 0;
-    uint8 octets = sizeof(type);
-
-    uint128 m = 0;
-    for (uint8 i = 1; i <= octets; i++) {
-        m <<= 8;
-        m |= 0xff;
-        if (v <= m) {
-            if ((1 == i) && (v <= 0x7f)) {
-                bin.insert(bin.end(), (uint8)v);
-                size_encode++;
-            } else {
-                type be = v;
-                if (sizeof(type) > 1) {
-                    be = convert_endian(v);
-                }
-
-                uint8 leading = 0x80 | i;
-                bin.insert(bin.end(), leading);
-                bin.insert(bin.end(), (byte_t*)&be + (octets - i), (byte_t*)&be + octets);
-                size_encode += (i + 1);
-            }
-            break;
-        }
-    }
-    return size_encode;
-}
-
-/**
- * @brief   X.690 8.3
- */
-template <typename type>
-unsigned t_asn1_encode_integer(binary_t& bin, type v) {
-    unsigned size_encode = 0;
-    uint32 tsize = sizeof(type);
-    type i = convert_endian(v);
-    type p = v >= 0 ? v : ~v;
-    type mask = 0;
-    uint32 len = 1;
-
-    for (uint32 i = tsize; i > 0; i--) {
-        mask = (0xff << ((i - 1) * 8));
-        if (mask & p) {  // check occupied bytes
-            len = i;
-            type msb = (1 << ((len * 8) - 1));
-            if (msb & p) {  // check msb is set
-                len += 1;
-            }
-            break;
-        }
-    }
-
-    bin.insert(bin.end(), asn1_tag_integer);
-    size_encode = t_asn1_encode_length<type>(bin, len);
-    bin.insert(bin.end(), (byte_t*)&i + (tsize - len), (byte_t*)&i + tsize);
-    return size_encode + len + 1;
-}
-
-template <typename type>
-unsigned t_asn1_variable_length(binary_t& bin, type v, size_t pos = -1) {
-    unsigned len = 0;
-    if (-1 == pos) {
-        pos = bin.size();
-    }
-    uint8 m = 0;
-    while (v >= 0x80) {
-        bin.insert(bin.begin() + pos, (v & 0x7f) | m);
-        v >>= 7;
-        m = 0x80;
-        len++;
-    }
-    bin.insert(bin.begin() + pos, v | m);
-    return len + 1;
-}
-
 class asn1_encode {
    public:
     asn1_encode();
@@ -380,5 +302,7 @@ class asn1_resource {
 
 }  // namespace io
 }  // namespace hotplace
+
+#include <sdk/io/asn.1/template.hpp>
 
 #endif

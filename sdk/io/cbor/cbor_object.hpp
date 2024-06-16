@@ -15,7 +15,11 @@
 #define __HOTPLACE_SDK_IO_CBOR_CBOROBJECT__
 
 #include <deque>
-#include <sdk/base.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/stream.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 #include <sdk/io/cbor/concise_binary_object_representation.hpp>
 
 namespace hotplace {

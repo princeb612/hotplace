@@ -14,8 +14,9 @@
 #include <string.h>
 
 #include <functional>
-#include <map>
+#include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
+#include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 
 namespace hotplace {

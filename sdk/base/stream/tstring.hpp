@@ -8,12 +8,16 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_BASE_STRING_TSTRING__
-#define __HOTPLACE_SDK_BASE_STRING_TSTRING__
+#ifndef __HOTPLACE_SDK_BASE_STREAM_TSTRING__
+#define __HOTPLACE_SDK_BASE_STREAM_TSTRING__
 
 #include <ostream>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/bufferio.hpp>
+#include <sdk/base/syntax.hpp>
+#include <sdk/base/types.hpp>
 
 namespace hotplace {
 

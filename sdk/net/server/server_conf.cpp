@@ -9,7 +9,6 @@
  */
 
 #include <queue>
-#include <sdk/base.hpp>
 #include <sdk/io.hpp>
 #include <sdk/net/server/network_server.hpp>
 

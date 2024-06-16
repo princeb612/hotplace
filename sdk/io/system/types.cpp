@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/template.hpp>
+#include <sdk/base/template.hpp>
 #include <sdk/io/system/types.hpp>
 #if defined __linux__
 #include <arpa/inet.h>
