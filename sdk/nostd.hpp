@@ -11,12 +11,12 @@
 #ifndef __HOTPLACE_SDK_NOSTD__
 #define __HOTPLACE_SDK_NOSTD__
 
-#include <sdk/base/nostd/container.hpp>
 #include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/nostd/graph.hpp>
 #include <sdk/base/nostd/list.hpp>
 #include <sdk/base/nostd/pattern.hpp>
 #include <sdk/base/nostd/pq.hpp>
+#include <sdk/base/nostd/template.hpp>
 #include <sdk/base/nostd/tree.hpp>
 #include <sdk/base/nostd/vector.hpp>
 

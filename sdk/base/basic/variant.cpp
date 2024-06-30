@@ -11,6 +11,7 @@
 #include <stdarg.h>
 
 #include <ostream>
+#include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/template.hpp>
 #include <sdk/base/basic/variant.hpp>
@@ -368,16 +369,44 @@ variant &variant::set_binary_new(const binary_t &bin) {
     return *this;
 }
 
+const std::string variant::to_str() const {
+    std::string ret_value;
+    to_string(ret_value);
+    return ret_value;
+}
+
+const std::string variant::to_hex() const {
+    binary_t bin;
+    std::string ret_value;
+    to_binary(bin);
+    base16_encode(bin, ret_value);
+    return ret_value;
+}
+
+const binary_t variant::to_bin() const {
+    binary_t bin;
+    to_binary(bin);
+    return bin;
+}
+
 int variant::to_int() const { return t_to_int<int>(_vt); }
 
 return_t variant::to_binary(binary_t &target) const {
     return_t ret = errorcode_t::success;
 
-    if (TYPE_BINARY == _vt.type) {
-        target.clear();
-        binary_append(target, _vt.data.bstr, _vt.size);
-    } else {
-        ret = errorcode_t::mismatch;
+    switch (_vt.type) {
+        case TYPE_BINARY:
+        case TYPE_NSTRING:
+            target.clear();
+            binary_append(target, _vt.data.bstr, _vt.size);
+            break;
+        case TYPE_STRING:
+            target.clear();
+            binary_append(target, _vt.data.str);
+            break;
+        default:
+            ret = errorcode_t::mismatch;
+            break;
     }
     return ret;
 }

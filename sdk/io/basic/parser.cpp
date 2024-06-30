@@ -76,7 +76,7 @@ parser::search_result parser::wsearch(const parser::context& context, const char
 }
 
 parser::search_result parser::wsearch(const parser::context& context, const std::string& pattern, unsigned int pos) {
-    return wsearch(context, pattern.c_str(), pattern.size(), pos);  // // handle by word not characters
+    return wsearch(context, pattern.c_str(), pattern.size(), pos);  // handle by word not characters
 }
 
 bool parser::compare(parser* obj, const char* lhs, const char* rhs) {

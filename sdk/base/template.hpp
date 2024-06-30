@@ -49,25 +49,29 @@ struct t_type_comparator : t_comparator_base<T> {
  *          // -170141183460469231731687303715884105728 80000000000000000000000000000000
  */
 template <typename TYPE>
-TYPE t_atoi(const std::string& in) {
+TYPE t_atoi_n(const char* value, size_t size) {
     return_t ret = errorcode_t::success;
     TYPE res = 0;
 
     __try2 {
+        if (nullptr == value) {
+            __leave2;
+        }
+
         size_t i = 0;
         int sign = 0;
 
-        if (in[i] == '-') {
+        if (value[i] == '-') {
             ++i;
             sign = -1;
         }
 
-        if (in[i] == '+') {
+        if (value[i] == '+') {
             ++i;
         }
 
-        for (; i < in.size(); ++i) {
-            const char c = in[i];
+        for (; i < size; ++i) {
+            const char c = value[i];
             if (not std::isdigit(c)) {
                 ret = errorcode_t::bad_data;
                 break;
@@ -89,6 +93,11 @@ TYPE t_atoi(const std::string& in) {
         // do nothing
     }
     return res;
+}
+
+template <typename TYPE>
+TYPE t_atoi(const std::string& value) {
+    return t_atoi_n<TYPE>(value.c_str(), value.size());
 }
 
 /**

@@ -353,6 +353,7 @@ void test_stream_getline() {
 
     size_t pos = 0;
     size_t brk = 0;
+    int l = 0;
 
     _test_case.reset_time();
     while (1) {
@@ -365,11 +366,12 @@ void test_stream_getline() {
         {
             test_case_notimecheck notimecheck(_test_case);
             _logger->writeln("%.*s", (unsigned)line.size(), line.c_str());
+            l++;
         }
 
         pos = brk;
     }
-    _test_case.assert(true, __FUNCTION__, "getline");
+    _test_case.assert(4 == l, __FUNCTION__, "getline");
 }
 
 void test_stream_stdmap() {
@@ -412,7 +414,7 @@ void test_stream_stdmap() {
 }
 
 void test_vtprintf() {
-    _test_case.begin("tokenize");
+    _test_case.begin("variant");
 
     basic_stream bs;
     variant v;

@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#if __GLIBC__ > 4
+
 #include <errno.h>
 #include <linux/cn_proc.h>
 #include <linux/connector.h>
@@ -362,3 +364,5 @@ return_t netlink::netlink_control(socket_t sock, bool enable) {
 
 }  // namespace io
 }  // namespace hotplace
+
+#endif

@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#if __GLIBC__ > 4
+
 #include <arpa/inet.h>
 #include <linux/cn_proc.h>
 #include <sys/epoll.h>
@@ -81,3 +83,5 @@ class netlink {
 
 }  // namespace io
 }  // namespace hotplace
+
+#endif

@@ -1,213 +1,3 @@
-# ASN.1 parser/encoder
-
-## design concept sketch (draft)
-
-
-1. parser
-
-```
-    handle by word not characters
-
-    a. access text by index
-
-      original text
-          Type ::= BuiltinType
-          BuiltinType ::= IntegerType
-          IntegerType ::= INTEGER
-
-      in the memory
-          0               1                2                3               4
-          0123456789abcdef0123 456789abcdef0123456789abcdef 0123456789abcdef01234567
-          Type ::= BuiltinType\nBuiltinType ::= IntegerType\nIntegerType ::= INTEGER
-      dictionary (index 0 reserved, begins at 1)
-          1    2   3            3           2   4            4           2   5
-
-      debug) p dictionary
-      $1 = {{{"Type", 1}, {"::=", 2}, {"BuiltinType", 3}, {"IntegerType", 4}, {"INTEGER", 5}}
-            {{1, "Type"}, {2, "::="}, {3, "BuiltinType"}, {4, "IntegerType"}, {5, "INTEGER"}}}
-
-      debug) p context._tokens
-      $2 = {{index=1, pos=0x00, size=4},  {index=2, pos=0x05, size=3}, {index=3, pos=0x09, size=11},
-            {index=3, pos=0x15, size=11}, {index=2, pos=0x21, size=3}, {index=4, pos=0x25, size=11},
-            {index=4, pos=0x31, size=11}, {index=2, pos=0x3d, size=3}, {index=5, pos=0x41, size=7}}
-
-             lookup(1, word)
-      debug) p word
-      $3 word = "Type"
-
-             lookup(""Type", index)
-      debug) p index
-      $4 index = 1
-
-    b. pattern search
-
-      assume pattern_search (pseudo code)
-          match_result pattern_search(array(index)) {
-              printf("%.*s", size, baseaddr);
-              returns {baseaddr, size};
-          }
-
-      test vector
-          pattern_search(input) | {baseaddr, size}             | stdout
-          array(4, 2, 5)        | {baseaddr = 0x31, size = 23} | IntegerType ::= INTEGER
-          array(1, 2, 3)        | {baseaddr = 0x00, size = 20} | Type ::= BuiltinType
-
-      cf.
-          fulltext.pattern_search("IntegerType ::= INTEGER")
-              full-text 74 bytes, pattern 23 bytes
-              Knuth-Morris-Pratt Algorithm O(74+23)=O(97)
-
-          parser.parse(fulltext)                          ... pre-process : scan(1-phase) and build up(dictionary)
-          parser.pattern_search(array(4, 2, 5))
-              full-text 9 words, pattern 3
-              Knuth-Morris-Pratt Algorithm O(9+3)=O(12)   ... process search
-
-    c. directed graph
-
-      t_graph<int> graph;
-      graph.add_directed_edge(3, 1).add_directed_edge(4, 3).add_directed_edge(5, 4);
-
-          5->4->3->1
-              INTEGER->IntegerType->BuiltinType->Type
-          in the same way
-              number->IntegerValue->BuiltinValue->Value
-```
-
-2. ASN.1 encoder sketch
-
-```
-    a. definition
-
-      input
-          PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET "{" name Name "}"
-          Name ::= [APPLICATION 1] IMPLICIT SEQUENCE "{" givenName VisibleString "}"
-
-      interpretation process
-          SET { name Name } -> SET { NamedType } -> SET { ComponentType }
-                            -> SET { ComponentTypeList } -> SET { RootComponentTypeList }
-                            -> SET { ComponentTypeLists } -> SetType
-          APPLICATION -> Class
-          [APPLICATION 0]  -> Tag(Class=APPLICATION, ClassNumber=0)
-          [APPLICATION 0] IMPLICIT Type -> TaggedType(Tag IMPLICIT Type=SetType) -> BuiltinType -> Type
-          PersonnelRecord <- Type
-
-    b. basic implementation
-
-      asn1_object, asn1_set, asn1_sequence, asn1_namedtype, ...
-
-      type
-          asn1 notation;
-          auto node_personal = new asn1_set("PersonnelRecord", new asn1_tagged(asn1_class_application, 0, asn1_implicit));
-          *node_personal << new asn1_namedtype("name", new asn1_type_defined("Name"))
-                         << new asn1_namedtype("title", new asn1_type(asn1_type_visiblestring, new asn1_tagged(asn1_class_empty, 0)))
-                         << new asn1_namedtype("number", new asn1_type_defined("EmployeeNumber"))
-                         << new asn1_namedtype("dateOfHire", new asn1_type_defined("Date", new asn1_tagged(asn1_class_empty, 1)))
-                         << new asn1_namedtype("nameOfSpouse", new asn1_type_defined("Name", new asn1_tagged(asn1_class_empty, 2)))
-                         << new asn1_namedtype("children", new asn1_sequence_of("ChildInformation", new asn1_tagged(asn1_class_empty, 3, asn1_implicit)));
-          notation << node_personal;
-    
-          auto node_childinfo = new asn1_set("ChildInformation");
-          *node_childinfo << new asn1_namedtype("name", new asn1_type_defined("Name"))
-                          << new asn1_namedtype("dateOfBirth", new asn1_type_defined("Date", new asn1_tagged(asn1_class_empty, 0)));
-          notation << node_childinfo;
-    
-          auto node_name = new asn1_sequence("Name", new asn1_tagged(asn1_class_application, 1, asn1_implicit));
-          *node_name << new asn1_namedtype("givenName", new asn1_type(asn1_type_visiblestring)) << new asn1_namedtype("initial", new asn1_type(asn1_type_visiblestring))
-                     << new asn1_namedtype("familyName", new asn1_type(asn1_type_visiblestring));
-          notation << node_name;
-    
-          auto node_employeenumber = new asn1_namedobject("EmployeeNumber", asn1_type_integer, new asn1_tagged(asn1_class_application, 2, asn1_implicit));
-          notation << node_employeenumber;
-    
-          auto node_date = new asn1_namedobject("Date", asn1_type_visiblestring, new asn1_tagged(asn1_class_application, 3, asn1_implicit));
-          notation << node_date;
-    
-     value
-          binary_t bin;
-          auto data_personal = notation.clone("PersonnelRecord");
-          data_personal->get_namedvalue("name") << "John" << "P" << "Smith";
-          data_personal->get_namedvalue("title") << "Director";
-          data_personal->get_namedvalue("number") << 51;
-          data_personal->get_namedvalue("dateOfHire") << "19710917";
-          data_personal->get_namedvalue("nameOfSpouse") << "Mary" << "T" << "Smith";
-          data_personal->get_namedvalue("children").spawn() << "Ralph" << "T" << "Smith";
-          data_personal->get_namedvalue("children").spawn() << "Susan" << "B" << "Jones";
-          data_personal->encode(bin);
-          data_personal->release();
-    
-     generate
-          node_personal->write_structure(personal_structure); // PersonnelRecord ::= ...
-          notation.write_structure(structures);               // see asn1_structure
-          data_personal->write_value(values);                 // see asn1_value
-    
-     parse
-          asn1 notation2(asn1_structure);
-          asn1 notation3(asn1_structure, asn1_value);
-    
-          notation2.write_structure(structures);
-          notation3.write_structure(structures);
-          notation3.write_value(values);
-    
-     sample data
-    
-          constexpr char asn1_structure[] =
-              R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
-                      name Name,
-                      title [0] VisibleString,
-                      number EmployeeNumber,
-                      dateOfHire [1] Date,
-                      nameOfSpouse [2] Name,
-                      children [3] IMPLICIT
-                          SEQUENCE OF ChildInformation DEFAULT {} }
-    
-                  ChildInformation ::= SET
-                      { name Name,
-                      dateOfBirth [0] Date}
-    
-                  Name ::= [APPLICATION 1] IMPLICIT SEQUENCE
-                      { givenName VisibleString,
-                      initial VisibleString,
-                      familyName VisibleString}
-    
-                  EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER
-    
-                  Date ::= [APPLICATION 3] IMPLICIT VisibleString -- YYYYMMDD)";
-    
-          constexpr char asn1_value[] =
-              R"({ name {givenName "John",initial "P",familyName "Smith"},
-                  title "Director",
-                  number 51,
-                  dateOfHire "19710917",
-                  nameOfSpouse {givenName "Mary",initial "T",familyName "Smith"},
-                  children
-                      {
-                          {name {givenName "Ralph",initial "T",familyName "Smith"},
-                                  dateOfBirth "19571111"
-                          },
-                          {name {givenName "Susan",initial "B",familyName "Jones"},
-                                  dateOfBirth "19590717"
-                          }
-                      }
-                  })";
-
-    c. so ...
-
-     draft
-
-          asn1 notation;
-          constexpr char input[] = R"a(
-                  PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
-                  ... skip long lines ...
-              })a";
-          notation.add_rule(definition);
-          notation.load(input);
-
-          generate ASN.1 structure objects
-              auto node_personal = new asn1_set("PersonnelRecord", new asn1_set("PersonnelRecord", new asn1_tagged(asn1_class_application, 0, asn1_implicit));
-              ... skip long code lines ...
-
-```
-
 ## references
 
 * X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules
@@ -224,3 +14,239 @@
   * ITU-T X.691 ISO/IEC 8825-2 ASN.1 encoding rules: Specification of Packed Encoding Rules (PER)
   * ITU-T X.692 ISO/IEC 8825-3 ASN.1 encoding rules: Specification of Encoding Control Notation (ECN)
   * ITU-T X.693 ISO/IEC 8825-4 ASN.1 encoding rules: XML Encoding Rules (XER)
+
+
+## ITU-T X.680
+
+```
+-- 16 Definition of types and values
+Type ::= BuiltinType | ReferencedType | ConstrainedType
+BuiltinType ::= BitStringType
+    | BooleanType
+    | CharacterStringType
+    | ChoiceType
+    | EmbeddedPDVType
+    | EnumeratedType
+    | ExternalType
+    | InstanceOfType
+    | IntegerType
+    | NullType
+    | ObjectClassFieldType
+    | ObjectIdentifierType
+    | OctetStringType
+    | RealType
+    | RelativeOIDType
+    | SequenceType
+    | SequenceOfType
+    | SetType
+    | SetOfType
+    | TaggedType
+ReferencedType ::= DefinedType | UsefulType | SelectionType | TypeFromObject | ValueSetFromObjects
+NamedType ::= identifier Type
+Value ::= BuiltinValue | ReferencedValue | ObjectClassFieldValue
+BuiltinValue ::= BitStringValue | BooleanValue | CharacterStringValue | ChoiceValue | EmbeddedPDVValue | EnumeratedValue | ExternalValue
+    | InstanceOfValue | IntegerValue | NullValue | ObjectIdentifierValue | OctetStringValue | RealValue | RelativeOIDValue | SequenceValue
+    | SequenceOfValue | SetValue | SetOfValue | TaggedValue
+ReferencedValue ::= DefinedValue | ValueFromObject
+NamedValue ::= identifier Value
+-- ITU-T X.680 17
+BooleanType ::= BOOLEAN
+BooleanValue ::= TRUE | FALSE
+-- ITU-T X.680 18
+IntegerType ::= INTEGER | INTEGER "{" NamedNumberList "}"
+NamedNumberList ::= NamedNumber | NamedNumberList "," NamedNumber
+NamedNumber ::= identifier "(" SignedNumber ")" | identifier "(" DefinedValue ")"
+SignedNumber ::= number | "-" number
+IntegerValue ::= SignedNumber | identifier
+-- ITU-T X.680 19
+EnumeratedType ::= ENUMERATED "{" Enumerations "}"
+Enumerations ::=
+    RootEnumeration
+    | RootEnumeration "," "..." ExceptionSpec
+    | RootEnumeration "," "..." ExceptionSpec "," AdditionalEnumeration
+RootEnumeration ::= Enumeration
+AdditionalEnumeration ::= Enumeration
+Enumeration ::= EnumerationItem | EnumerationItem "," Enumeration
+EnumerationItem ::= identifier | NamedNumber
+-- ITU-T X.680 20
+RealType ::= REAL
+-- 20.5 SEQUENCE { mantissa INTEGER, base INTEGER (2|10), exponent INTEGER }
+RealValue ::= NumericRealValue | SpecialRealValue
+NumericRealValue ::=
+    realnumber
+    | "-" realnumber
+    | SequenceValue -- Value of the associated sequence type
+SpecialRealValue ::= PLUS-INFINITY | MINUS-INFINITY
+-- ITU-T X.680 21
+BitStringType ::= BIT STRING | BIT STRING "{" NamedBitList "}"
+NamedBitList ::= NamedBit | NamedBitList "," NamedBit
+NamedBit ::= identifier "(" number ")" | identifier "(" DefinedValue ")"
+BitStringValue ::=
+    bstring
+    | hstring
+    | "{" IdentifierList "}"
+    | "{" "}"
+    | CONTAINING Value
+IdentifierList ::= identifier | IdentifierList "," identifier
+-- ITU-T X.680 22
+OctetStringType ::= OCTET STRING
+OctetStringValue ::= bstring | hstring | CONTAINING Value
+-- ITU-T X.680 23
+NullType ::= NULL
+NullValue ::= NULL
+-- ITU-T X.680 24
+SequenceType ::=
+    SEQUENCE "{" "}"
+    | SEQUENCE "{" ExtensionAndException OptionalExtensionMarker "}"
+    | SEQUENCE "{" ComponentTypeLists "}"
+ExtensionAndException ::= "..." | "..." ExceptionSpec
+OptionalExtensionMarker ::= "," "..." | empty
+ComponentTypeLists ::=
+    RootComponentTypeList
+    | RootComponentTypeList "," ExtensionAndException ExtensionAdditions OptionalExtensionMarker
+    | RootComponentTypeList "," ExtensionAndException ExtensionAdditions ExtensionEndMarker "," RootComponentTypeList
+    | ExtensionAndException ExtensionAdditions ExtensionEndMarker "," RootComponentTypeList
+    | ExtensionAndException ExtensionAdditions OptionalExtensionMarker
+RootComponentTypeList ::= ComponentTypeList
+ExtensionEndMarker ::= "," "..."
+ExtensionAdditions ::= "," ExtensionAdditionList | empty
+ExtensionAdditionList ::=
+    ExtensionAddition
+    | ExtensionAdditionList "," ExtensionAddition
+ExtensionAddition ::=
+    ComponentType
+    | ExtensionAdditionGroup
+ExtensionAdditionGroup ::= "[[" VersionNumber ComponentTypeList "]]"
+VersionNumber ::= empty | number ":"
+ComponentTypeList ::=
+    ComponentType
+    | ComponentTypeList "," ComponentType
+ComponentType ::=
+    NamedType
+    | NamedType OPTIONAL
+    | NamedType DEFAULT Value
+    | COMPONENTS OF Type
+SequenceValue ::=
+    "{" ComponentValueList "}"
+    | "{" "}"
+ComponentValueList ::=
+    NamedValue
+    | ComponentValueList "," NamedValue
+-- ITU-T X.680 25
+SequenceOfType ::= SEQUENCE OF Type | SEQUENCE OF NamedType
+SequenceOfValue ::=
+    "{" ValueList "}"
+    | "{" NamedValueList "}"
+    | "{" "}"
+ValueList ::= Value | ValueList "," Value
+NamedValueList ::= NamedValue | NamedValueList "," NamedValue
+-- ITU-T X.680 26
+SetType ::=
+    SET "{" "}"
+    | SET "{" ExtensionAndException OptionalExtensionMarker "}"
+    | SET "{" ComponentTypeLists "}"
+SetValue ::=
+    "{" ComponentValueList "}"
+    | "{" "}"
+-- ITU-T X.680 27
+SetOfType ::= SET OF Type | SET OF NamedType
+SetOfValue ::=
+    "{" ValueList "}"
+    | "{" NamedValueList "}"
+    | "{" "}"
+-- ITU-T X.680 28
+ChoiceType ::= CHOICE "{" AlternativeTypeLists "}"
+AlternativeTypeLists ::=
+    RootAlternativeTypeList
+    | RootAlternativeTypeList "," ExtensionAndException ExtensionAdditionAlternatives OptionalExtensionMarker
+RootAlternativeTypeList ::= AlternativeTypeList
+ExtensionAdditionAlternatives ::= "," ExtensionAdditionAlternativesList | empty
+ExtensionAdditionAlternativesList ::=
+    ExtensionAdditionAlternative
+    | ExtensionAdditionAlternativesList "," ExtensionAdditionAlternative
+ExtensionAdditionAlternative ::= ExtensionAdditionAlternativesGroup | NamedType
+ExtensionAdditionAlternativesGroup ::= "[[" VersionNumber AlternativeTypeList "]]"
+AlternativeTypeList ::= NamedType | AlternativeTypeList "," NamedType
+-- ITU-T X.680 29
+SelectionType ::= identifier "<" Type
+-- ITU-T X.680 30
+TaggedType ::=
+    Tag Type
+    | Tag IMPLICIT Type
+    | Tag EXPLICIT Type
+Tag ::= "[" Class ClassNumber "]"
+ClassNumber ::= number | DefinedValue
+Class ::=
+    UNIVERSAL
+    | APPLICATION
+    | PRIVATE
+    | empty
+TaggedValue ::= Value
+-- ITU-T X.680 31
+ObjectIdentifierType ::= OBJECT IDENTIFIER
+ObjectIdentifierValue ::=
+    "{" ObjIdComponentsList "}"
+    | "{" DefinedValue ObjIdComponentsList "}"
+ObjIdComponentsList ::= ObjIdComponents | ObjIdComponents ObjIdComponentsList
+ObjIdComponents ::= NameForm | NumberForm | NameAndNumberForm | DefinedValue
+NameForm ::= identifier
+NumberForm ::= number | DefinedValue
+NameAndNumberForm ::= identifier "(" NumberForm ")"
+-- ITU-T X.680 32
+RelativeOIDValue ::= "{" RelativeOIDComponentsList "}"
+RelativeOIDComponentsList ::= RelativeOIDComponents | RelativeOIDComponents RelativeOIDComponentsList
+RelativeOIDComponents ::= NumberForm | NameAndNumberForm | DefinedValue
+-- ITU-T X.680 33
+EmbeddedPDVType ::= EMBEDDED PDV
+EmbeddedPdvValue ::= SequenceValue -- value of associated type defined in 33.5
+-- ITU-T X.680 36
+CharacterStringType ::= RestrictedCharacterStringType | UnrestrictedCharacterStringType
+CharacterStringValue ::= RestrictedCharacterStringValue | UnrestrictedCharacterStringValue
+-- ITU-T X.680 37
+RestrictedCharacterStringType ::=
+    BMPString
+    | GeneralString
+    | GraphicString
+    | IA5String
+    | ISO646String
+    | NumericString
+    | PrintableString
+    | TeletexString
+    | T61String
+    | UniversalString
+    | UTF8String
+    | VideotexString
+    | VisibleString
+-- Table 6 List of restricted character string types
+-- Table 7 NumericString
+-- Table 8 PrintableString
+RestrictedCharacterStringValue ::= cstring | CharacterStringList | Quadruple | Tuple
+CharacterStringList ::= "{" CharSyms "}"
+CharSyms ::= CharsDefn | CharSyms "," CharsDefn
+CharsDefn ::= cstring | Quadruple | Tuple | DefinedValue
+Quadruple ::= "{" Group "," Plane "," Row "," Cell "}"
+Group ::= number
+Plane ::= number
+Row ::= number
+Cell ::= number
+Tuple ::= "{" TableColumn "," TableRow "}"
+TableColumn ::= number
+TableRow ::= number
+-- ITU-T X.680 42
+GeneralizedTime ::= [UNIVERSAL 24] IMPLICIT VisibleString
+-- ITU-T X.680 43
+UTCTime ::= [UNIVERSAL 23] IMPLICIT VisibleString
+-- ITU-T X.680 45
+ConstrainedType ::= Type Constraint | TypeWithConstraint
+TypeWithConstraint ::=
+    SET Constraint OF Type
+    | SET SizeConstraint OF Type
+    | SEQUENCE Constraint OF Type
+    | SEQUENCE SizeConstraint OF Type
+    | SET Constraint OF NamedType
+    | SET SizeConstraint OF NamedType
+    | SEQUENCE Constraint OF NamedType
+    | SEQUENCE SizeConstraint OF NamedType
+Constraint ::= "(" ConstraintSpec ExceptionSpec ")"
+ConstraintSpec ::= SubtypeConstraint | GeneralConstraint
+```

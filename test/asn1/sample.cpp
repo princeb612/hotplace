@@ -7,14 +7,12 @@
  * Revision History
  * Date         Name                Description
  *
- * studying
- *  ITU-T X.690 ... real not yet
- *  parser ... in progress
  */
 
 #include <algorithm>
 #include <functional>
 #include <sdk/io/asn.1/asn1.hpp>
+#include <sdk/io/asn.1/template.hpp>
 #include <sdk/sdk.hpp>
 
 using namespace hotplace;
@@ -42,6 +40,7 @@ t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 // X.690 8.1.3 Length octets
 void x690_8_1_3_length_octets() {
+    _test_case.begin("ITU-T X.690 8.1.3");
     struct testvector {
         uint32 i;
         const char* expect;
@@ -57,32 +56,42 @@ void x690_8_1_3_length_octets() {
 
     for (auto entry : _table) {
         encode_length_octet_routine(entry, bin);
-        _logger->dump(bin);
-        bool test = (bin == base16_decode_rfc(entry.expect));
-        _test_case.assert(test, __FUNCTION__, "X.690 8.1.3 length octets %i", entry.i);
-        bin.clear();
+
+        {
+            test_case_notimecheck notimecheck(_test_case);
+
+            _logger->dump(bin);
+            bool test = (bin == base16_decode_rfc(entry.expect));
+            _test_case.assert(test, __FUNCTION__, "X.690 8.1.3 length octets [%i] expect [%s]", entry.i, entry.expect);
+            bin.clear();
+        }
     }
 }
 
 // X.690 8.1.5 end-of-contents octets
 void x690_8_1_5_end_of_contents() {
+    _test_case.begin("ITU-T X.690");
     asn1_encode enc;
     binary_t bin;
     enc.end_contents(bin);
-    _logger->dump(bin);
-    _test_case.assert(bin == base16_decode("0000"), __FUNCTION__, "X.690 8.1.5 end-of-contents octets");
+    {
+        test_case_notimecheck notimecheck(_test_case);
+        _logger->dump(bin);
+        _test_case.assert(bin == base16_decode("0000"), __FUNCTION__, "X.690 8.1.5 end-of-contents octets");
+    }
 }
 
-void test_x690_encoding() {
+void x690_encoding() {
+    _test_case.begin("ITU-T X.690 8.2, 8.3, 8.5, 8.8");
     struct testvector {
         variant var;
         const char* expect;
         const char* text;
         int debug;
     } _table[] = {
-        TESTVECTOR_ENTRY3(variant(), "05 00", "X.690 8.8 encoding of a null value"),
-        TESTVECTOR_ENTRY3(variant(true), "0101ff", "X.690 8.2 encoding of a boolean value (true)"),
-        TESTVECTOR_ENTRY3(variant(false), "010100", "X.690 8.2 encoding of a boolean value (false)"),
+        TESTVECTOR_ENTRY3(variant(), "05 00", "X.690 8.8"),
+        TESTVECTOR_ENTRY3(variant(true), "0101ff", "X.690 8.2"),
+        TESTVECTOR_ENTRY3(variant(false), "010100", "X.690 8.2"),
 
         // >>> from pyasn1.type import univ
         // >>> from pyasn1.codec.ber.encoder import encode
@@ -173,42 +182,117 @@ void test_x690_encoding() {
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [-1.2300000190734863]>, b'')
         TESTVECTOR_ENTRY3(variant(-1.23), "0905c0eb275c29", "X.690 8.5"),
         TESTVECTOR_ENTRY3(variant(-456.0), "0903c00339", "X.690 8.5"),  //
-        TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0x7f800000)), "090140", "X.690 8.5 Inf"),
-        TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0xff800000)), "090141", "X.690 8.5 -Inf"),
-        // NaN
-        // >>> print("Decoded REAL:", decode(binascii.unhexlify('090142'), asn1Spec=Real()))
-        // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [inf]>, b'')
-        TESTVECTOR_ENTRY3(variant(fp32_from_binary32(0x7fc00000)), "090142", "X.690 8.5 NaN"),
+        TESTVECTOR_ENTRY3(variant(fp32_from_binary32(fp32_pinf)), "090140", "X.690 8.5 Inf"),
+        TESTVECTOR_ENTRY3(variant(fp32_from_binary32(fp32_ninf)), "090141", "X.690 8.5 -Inf"),
+        TESTVECTOR_ENTRY3(variant(fp32_from_binary32(fp32_nan)), "090142", "X.690 8.5 NaN"),
     };
+
+    _test_case.reset_time();
 
     binary_t bin;
     asn1_encode enc;
 
-    auto encode_routine = [&](binary_t& bin, const variant& v) -> void { enc.encode(bin, v); };
+    auto encode_routine = [&](binary_t& bin, const variant& v) -> void { enc.encode(bin, asn1_type_primitive, v); };
 
     for (auto entry : _table) {
-        if (entry.debug) {
-            int debug_herer = 1;
-        }
         encode_routine(bin, entry.var);
-        _logger->dump(bin);
-        binary_t bin_expect = base16_decode_rfc(entry.expect);
-        return_t ret = errorcode_t::success;
-        if (bin_expect.empty()) {
-            ret = errorcode_t::not_supported;
-        } else if (bin != bin_expect) {
-            ret = errorcode_t::mismatch;
+
+        {
+            test_case_notimecheck notimecheck(_test_case);
+
+            _logger->dump(bin);
+            binary_t bin_expect = base16_decode_rfc(entry.expect);
+            return_t ret = errorcode_t::success;
+            if (bin_expect.empty()) {
+                ret = errorcode_t::not_supported;
+            } else if (bin != bin_expect) {
+                ret = errorcode_t::mismatch;
+            }
+            basic_stream bs;
+            vtprintf(&bs, entry.var);
+            _test_case.test(ret, __FUNCTION__, "%s [%s] expect [%s]", entry.text, bs.c_str(), entry.expect);
+            bin.clear();
         }
+    }
+}
+
+void dump_asn1(asn1* object, const char* expect, const char* text) {
+    if (object && expect && text) {
         basic_stream bs;
-        vtprintf(&bs, entry.var);
-        _test_case.test(ret, __FUNCTION__, "X.690 input [%s] expect [%s] %s", bs.c_str(), entry.expect, entry.text);
-        bin.clear();
+        binary_t bin;
+
+        object->publish(&bs);
+        object->publish(&bin);
+
+        _logger->write(bs);
+        _logger->dump(bin);
+        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "encode [%s] %s", expect, text);
+    }
+}
+
+void x690_encode_typevalue() {
+    _test_case.begin("ITU-T X.690 type and value");
+
+    // X.690 8.14 encoding of a tagged value
+    auto type1 = new asn1_object(asn1_type_visiblestring);
+    auto type2 = new asn1_object(asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit));
+    auto type3 = new asn1_composite(asn1_type_constructed, type2->clone(), new asn1_tag(2));
+    auto type4 = new asn1_composite(asn1_type_constructed, type3->clone(), new asn1_tag(asn1_class_application, 7, asn1_implicit));
+    auto type5 = new asn1_composite(asn1_type_primitive, type2->clone(), new asn1_tag(2, asn1_implicit));
+
+    struct testvector {
+        asn1_object* obj;
+        variant var;
+        const char* expect;
+        const char* text;
+    } _table[] = {
+        // X.690 8.2
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_boolean), variant(true), "01 01 ff", "X.690 8.2 #1"),
+
+        // X.690 8.3
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_integer), variant(128), "02 02 00 80", "X.690 8.3 #1"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_integer), variant(300), "02 02 01 2c", "X.690 8.3 #2"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_integer), variant(-127), "02 01 81", "X.690 8.3 #3"),
+
+        // X.690 8.5
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_real), variant(1.0), "0903800001", "X.690 8.5 #1"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_real), variant(-1.0), "0903c00001", "X.690 8.5 #2"),
+
+        // X.690 8.6 encoding of a bitstring value
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_bitstring), variant("0A3B5F291CD"), "03 07 04 0A 3B 5F 29 1C D0", "X.690 8.6 #1"),
+
+        // X.690 8.8
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_null), variant(), "05 00", "X.690 8.8 #1"),
+
+        // X.690 8.14 encoding of a tagged value
+        // case 1. Type1 ::= VisibleString
+        TESTVECTOR_ENTRY4(type1, variant("Jones"), "1A 05 4A 6F 6E 65 73", "X.690 8.14 #1"),
+        // case 2. Type2 ::= [Application 3] implicit Type1
+        TESTVECTOR_ENTRY4(type2, variant("Jones"), "43 05 4A 6F 6E 65 73", "X.690 8.14 #2"),
+        // case 3. Type3 ::= [2] Type2
+        TESTVECTOR_ENTRY4(type3, variant("Jones"), "a2 07 43 05 4A 6F 6E 65 73", "X.690 8.14 #3"),
+        // case 4. Type4 ::= [Application 7] implicit Type3
+        TESTVECTOR_ENTRY4(type4, variant("Jones"), "67 07 43 05 4A 6F 6E 65 73", "X.690 8.14 #4"),
+        // case 5. Type5 ::= [2] implicit Type2
+        TESTVECTOR_ENTRY4(type5, variant("Jones"), "82 05 4A 6F 6E 65 73", "X.690 8.14 #5"),
+
+        //
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_ia5string), variant("Smith"), "16 05 53 6d 69 74 68", "X.690 8 #1"),
+    };
+
+    for (auto item : _table) {
+        asn1* object = new asn1;
+        *object << item.obj;
+        object->set_value_byindex(0, std::move(item.var));
+        dump_asn1(object, item.expect, item.text);
+        object->release();
     }
 }
 
 // X.690 8.6 encoding of a bitstring value
 // commencing with the leading bit and proceeding to the trailing bit
 void x690_8_6_bitstring() {
+    _test_case.begin("ITU-T X.690 8.6");
     // sketch - pseudo code
     // if(size(input) % 2) { pad = '0'; padbit = 4; }
     // encode(asn1_tag_bitstring).encode(padbit).encode(input).encode(pad)
@@ -243,17 +327,7 @@ void x690_8_6_bitstring() {
 
 // X.690 8.9 encoding of a sequence value
 void x690_8_9_sequence() {
-    // SEQUENCE {name IA5String, ok BOOLEAN}
-    // {name "Smith", ok TRUE}
-    binary_t bin;
-    asn1_encode enc;
-    enc.ia5string(bin, "Smith");
-    enc.primitive(bin, true);
-
-    size_t size = bin.size();
-    bin.insert(bin.begin(), size);                         // 0xa
-    bin.insert(bin.begin(), asn1_tag_constructed | 0x10);  // asn1_tag_sequence
-
+    _test_case.begin("ITU-T X.690 8.9");
     // Sequence Length  Contents
     // 30_16    0A_16
     //                  IA5String  Length  Contents
@@ -261,118 +335,175 @@ void x690_8_9_sequence() {
     //                  Boolean    Length  Contents
     //                  01_16      01_16   FF_16
 
-    // 30 = 0011 0000 primitive, constructed
+    asn1 notation;
+    asn1_encode enc;
 
-    _logger->dump(bin);
-    _test_case.assert(bin == base16_decode_rfc("30 0A 16 05 53 6D 69 74 68 01 01 FF"), __FUNCTION__, "X.690 8.9 Sequence");
+    // SEQUENCE {name IA5String , ok BOOLEAN }
+    {
+        basic_stream bs;
+
+        constexpr char type[] = R"(SEQUENCE {name IA5String, ok BOOLEAN})";
+        constexpr char value[] = R"({name "Smith", ok TRUE})";
+        constexpr char expect[] = "300a1605536d6974680101ff";
+
+        auto seq = new asn1_sequence;
+        *seq << new asn1_object("name", asn1_type_ia5string) << new asn1_object("ok", asn1_type_boolean);
+        notation << seq;
+        notation.publish(&bs);
+        _logger->write(bs);
+    }
+
+    // 00000000 : 30 0A 16 05 53 6D 69 74 68 01 01 FF -- -- -- -- | 0...Smith...
+    {
+        binary_t bin;
+        bin.insert(bin.end(), asn1_class_universal | asn1_tag_constructed | asn1_tag_sequence);
+        size_t pos = bin.size();
+        enc.ia5string(bin, "Smith");
+        enc.primitive(bin, true);
+        size_t size = bin.size() - pos;  // 0xa
+        bin.insert(bin.begin() + pos, size);
+
+        _logger->dump(bin);
+        _test_case.assert(bin == base16_decode_rfc("30 0A 16 05 53 6D 69 74 68 01 01 FF"), __FUNCTION__, "X.690 8.9 Sequence");
+    }
+
+    {
+        basic_stream bs;
+        binary_t bin;
+        auto n = notation.clone();
+        n->set_value_byname("name", "Smith").set_value_byname("ok", true);
+        n->publish(&bin);
+        n->publish(&bs);
+        n->release();
+        _logger->write(bs);
+        _logger->dump(bin);
+    }
 }
 
 // X.690 8.14 encoding of a tagged value
-void x690_8_14_tagged() {
-    asn1_encode enc;
-    binary_t bin_type1;
-    binary_t bin_type2;
-    binary_t bin_type3;
-    binary_t bin_type4;
-    binary_t bin_type5;
-    // Type1 ::= VisibleString
-    {
-        enc.visiblestring(bin_type1, "Jones");
-        _logger->dump(bin_type1);
-        _test_case.assert(bin_type1 == base16_decode_rfc("1A 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type1");
-    }
-    // Type2 ::= [Application 3] implicit Type1
-    {
-        enc.encode(bin_type2, asn1_tag_application, 3, "Jones");
-        _logger->dump(bin_type2);
-        _test_case.assert(bin_type2 == base16_decode_rfc("43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type2");
-    }
-    // Type3 ::= [2] Type2
-    {
-        // enc.encode(bin_type3, asn1_tag_context | asn1_tag_constructed, 2);
-        binary_push(bin_type3, asn1_tag_context | asn1_tag_constructed | 2);
-        t_asn1_length_octets<uint32>(bin_type3, bin_type2.size());
-        binary_append(bin_type3, bin_type2);
-        _logger->dump(bin_type3);
-        _test_case.assert(bin_type3 == base16_decode_rfc("a2 07 43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type3");
-    }
-    // Type4 ::= [Application 7] implicit Type3
-    {
-        binary_push(bin_type4, asn1_tag_application | asn1_tag_constructed | 7);
-        t_asn1_length_octets<uint32>(bin_type4, bin_type2.size());
-        binary_append(bin_type4, bin_type2);  // ?? not bin_type3
-        _logger->dump(bin_type4);
-        _test_case.assert(bin_type4 == base16_decode_rfc("67 07 43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type4");
-    }
-    // Type5 ::= [2] implicit Type2
-    {
-        binary_push(bin_type5, asn1_tag_context | 2);
-        t_asn1_length_octets<uint32>(bin_type5, 5);
-        binary_append(bin_type5, "Jones");
-        _logger->dump(bin_type5);
-        _test_case.assert(bin_type5 == base16_decode_rfc("82 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # Type5");
-    }
-}
+// void x690_8_14_tagged() {
+//     _test_case.begin("ITU-T X.690");
+//     asn1_encode enc;
+//     binary_t bin_type1;
+//     binary_t bin_type2;
+//     binary_t bin_type3;
+//     binary_t bin_type4;
+//     binary_t bin_type5;
+//     // Type1 ::= VisibleString
+//     {
+//         enc.visiblestring(bin_type1, "Jones");
+//         _logger->dump(bin_type1);
+//         _test_case.assert(bin_type1 == base16_decode_rfc("1A 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type1");
+//     }
+//     // Type2 ::= [Application 3] implicit Type1
+//     {
+//         enc.encode(bin_type2, asn1_class_application, 3, "Jones");
+//         _logger->dump(bin_type2);
+//         _test_case.assert(bin_type2 == base16_decode_rfc("43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type2");
+//     }
+//     // Type3 ::= [2] Type2
+//     {
+//         // enc.encode(bin_type3, asn1_class_context | asn1_tag_constructed, 2);
+//         binary_push(bin_type3, asn1_class_context | asn1_tag_constructed | 2);
+//         t_asn1_length_octets<uint32>(bin_type3, bin_type2.size());
+//         binary_append(bin_type3, bin_type2);
+//         _logger->dump(bin_type3);
+//         _test_case.assert(bin_type3 == base16_decode_rfc("a2 07 43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type3");
+//     }
+//     // Type4 ::= [Application 7] implicit Type3
+//     {
+//         binary_push(bin_type4, asn1_class_application | asn1_tag_constructed | 7);
+//         t_asn1_length_octets<uint32>(bin_type4, bin_type2.size());
+//         binary_append(bin_type4, bin_type2);  // ?? not bin_type3
+//         _logger->dump(bin_type4);
+//         _test_case.assert(bin_type4 == base16_decode_rfc("67 07 43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type4_1");
+//     }
+//     // Type5 ::= [2] implicit Type2
+//     {
+//         binary_push(bin_type5, asn1_class_context | 2);
+//         t_asn1_length_octets<uint32>(bin_type5, 5);
+//         binary_append(bin_type5, "Jones");
+//         _logger->dump(bin_type5);
+//         _test_case.assert(bin_type5 == base16_decode_rfc("82 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # Type5");
+//     }
+// }
 
 // X.690 8.19 encoding of an object identifier value
 void x690_8_19_objid() {
+    _test_case.begin("ITU-T X.690");
     struct testvector {
-        std::pair<oid_t, std::string> couple;
+        std::pair<std::string, std::string> couple;
     } _table[] = {
-        std::make_pair(oid_t{1, 3, 6, 1, 4, 1}, "06 05 2b 06 01 04 01"),
-        std::make_pair(oid_t{1, 2, 840, 113549}, "06 06 2A 86 48 86 F7 0d"),
-        std::make_pair(oid_t{1, 3, 6, 1, 4, 1, 311, 21, 20}, "06 09 2b 06 01 04 01 82 37 15 14"),
-        std::make_pair(oid_t{1, 3, 6, 1, 4, 1, 311, 60, 2, 1, 1}, "06 0B 2B 06 01 04 01 82 37 3C 02 01 01"),
-        std::make_pair(oid_t{1, 2, 840, 10045, 3, 1, 7}, "06 08 2a 86 48 ce 3d 03 01 07"),
-        std::make_pair(oid_t{2, 100, 3}, "06 03 81 34 03"),  // 0..39 < 100 ??
-        std::make_pair(oid_t{2, 154}, "06 02 81 6a"),
+        std::make_pair("1.3.6.1.4.1", "06 05 2b 06 01 04 01"),
+        std::make_pair("1.2.840.113549", "06 06 2A 86 48 86 F7 0d"),
+        std::make_pair("1.3.6.1.4.1.311.21.20", "06 09 2b 06 01 04 01 82 37 15 14"),
+        std::make_pair("1.3.6.1.4.1.311.60.2.1.1", "06 0B 2B 06 01 04 01 82 37 3C 02 01 01"),
+        std::make_pair("1.2.840.10045.3.1.7", "06 08 2a 86 48 ce 3d 03 01 07"),
+        std::make_pair("2.100.3", "06 03 81 34 03"),  // 0..39 < 100 ??
+        std::make_pair("2.154", "06 02 81 6a"),
     };
 
     binary_t bin;
     asn1_encode enc;
 
-    auto encode_oid_routine = [&](const oid_t& oid, binary_t& bin) -> void { enc.primitive(bin, oid); };
+    auto encode_oid_routine = [&](const std::string& value, binary_t& bin) -> void { enc.oid(bin, value); };
 
     for (auto entry : _table) {
         const std::string& expect = entry.couple.second;
         encode_oid_routine(entry.couple.first, bin);
-        _logger->dump(bin);
-        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.19 object identifier expect %s", expect.c_str());
-        bin.clear();
+        {
+            test_case_notimecheck notimecheck(_test_case);
+
+            _logger->dump(bin);
+            _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.19 object identifier expect [%s]", expect.c_str());
+            bin.clear();
+        }
     }
 }
 
 // X.690 8.20 encoding of a relative object identifier value
 void x690_8_20_relobjid() {
+    _test_case.begin("ITU-T X.690");
     struct testvector {
-        std::pair<reloid_t, std::string> couple;
+        std::pair<std::string, std::string> couple;
     } _table[] = {
-        std::make_pair(reloid_t{8571, 3, 2}, "0D 04 C27B0302"),
+        std::make_pair("8571.3.2", "0D 04 C27B0302"),
     };
 
     binary_t bin;
     asn1_encode enc;
-    auto encode_reloid_routine = [&](const reloid_t& reloid, binary_t& bin) -> void { enc.primitive(bin, reloid); };
+    auto encode_reloid_routine = [&](const std::string& value, binary_t& bin) -> void { enc.reloid(bin, value); };
 
     for (auto entry : _table) {
         const std::string& expect = entry.couple.second;
         encode_reloid_routine(entry.couple.first, bin);
-        _logger->dump(bin);
-        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.20 relative object identifier expect %s", expect.c_str());
-        bin.clear();
+
+        {
+            test_case_notimecheck notimecheck(_test_case);
+            _logger->dump(bin);
+            _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.20 relative object identifier expect [%s]", expect.c_str());
+            bin.clear();
+        }
     }
 }
 
 // X.690 8.21.5.4 Example Name ::= VisibleString
 void x690_8_21_visiblestring() {
+    _test_case.begin("ITU-T X.690");
     binary_t bin;
     asn1_encode enc;
     enc.visiblestring(bin, "Jones");
-    _logger->dump(bin);
-    _test_case.assert(bin == base16_decode_rfc("1a 05 4a6f6e6573"), __FUNCTION__, "X.690 8.21 VisibleString");
+
+    {
+        test_case_notimecheck notimecheck(_test_case);
+
+        _logger->dump(bin);
+        _test_case.assert(bin == base16_decode_rfc("1a 05 4a6f6e6573"), __FUNCTION__, "X.690 8.21 VisibleString");
+    }
 }
 
 void x690_11_7_generallizedtime() {
+    _test_case.begin("ITU-T X.690");
     struct testvector {
         std::pair<datetime_t, basic_stream> couple;
     } _table[] = {
@@ -389,9 +520,13 @@ void x690_11_7_generallizedtime() {
     for (auto entry : _table) {
         const basic_stream& expect = entry.couple.second;
         encode_generalizedtime_routine(entry.couple.first, bs);
-        _logger->dump(bs);
-        _test_case.assert(bs == expect, __FUNCTION__, "X.690 11.7 generalized time expect %s", expect.c_str());
-        bs.clear();
+
+        {
+            test_case_notimecheck notimecheck(_test_case);
+            _logger->dump(bs);
+            _test_case.assert(bs == expect, __FUNCTION__, "X.690 11.7 generalized time expect %s", expect.c_str());
+            bs.clear();
+        }
     }
 }
 
@@ -400,297 +535,75 @@ void x690_annex_a() {
 }
 
 void test_asn1_typedef_value() {
-    asn1 notation;
-    auto node_personal = new asn1_set("PersonnelRecord", new asn1_tagged(asn1_class_application, 0, asn1_implicit));
-    *node_personal << new asn1_namedtype("name", new asn1_type_defined("Name"))
-                   << new asn1_namedtype("title", new asn1_type(asn1_type_visiblestring, new asn1_tagged(asn1_class_empty, 0)))
-                   << new asn1_namedtype("number", new asn1_type_defined("EmployeeNumber"))
-                   << new asn1_namedtype("dateOfHire", new asn1_type_defined("Date", new asn1_tagged(asn1_class_empty, 1)))
-                   << new asn1_namedtype("nameOfSpouse", new asn1_type_defined("Name", new asn1_tagged(asn1_class_empty, 2)))
-                   << new asn1_namedtype("children",
-                                         &(new asn1_sequence_of("ChildInformation", new asn1_tagged(asn1_class_empty, 3, asn1_implicit)))->set_default());
-    notation << node_personal;
+    _test_case.begin("ASN.1");
+    // PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
+    //      name Name,
+    //      title [0] VisibleString,
+    //      number EmployeeNumber,
+    //      dateOfHire [1] Date,
+    //      nameOfSpouse [2] Name,
+    //      children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}}
+    // ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
+    // Name ::= [APPLICATION 1] IMPLICIT SEQUENCE {givenName VisibleString, initial VisibleString, familyName VisibleString}
+    // EmployeeNumber ::= [APPLICATION 2] IMPLICIT  INTEGER
+    // Date ::= [APPLICATION 3] IMPLICIT  VisibleString
 
-    auto node_childinfo = new asn1_set("ChildInformation");
-    *node_childinfo << new asn1_namedtype("name", new asn1_type_defined("Name"))
-                    << new asn1_namedtype("dateOfBirth", new asn1_type_defined("Date", new asn1_tagged(asn1_class_empty, 0)));
-    notation << node_childinfo;
+    asn1* object = nullptr;
+    __try2 {
+        object = new asn1;
 
-    auto node_name = new asn1_sequence("Name", new asn1_tagged(asn1_class_application, 1, asn1_implicit));
-    *node_name << new asn1_namedtype("givenName", new asn1_type(asn1_type_visiblestring))
-               << new asn1_namedtype("initial", new asn1_type(asn1_type_visiblestring))
-               << new asn1_namedtype("familyName", new asn1_type(asn1_type_visiblestring));
-    notation << node_name;
+        auto node_personal = new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit));
+        *node_personal << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
+                       << new asn1_object("title", new asn1_object(asn1_type_visiblestring, new asn1_tag(0)))
+                       << new asn1_object("number", new asn1_object("EmployeeNumber", asn1_type_referenced))
+                       << new asn1_object("dateOfHire", new asn1_object("Date", asn1_type_referenced, new asn1_tag(1)))
+                       << new asn1_object("nameOfSpouse", new asn1_object("Name", asn1_type_referenced, new asn1_tag(2)))
+                       << new asn1_object("children", &(new asn1_sequence_of("ChildInformation", new asn1_tag(3, asn1_implicit)))->as_default());
+        *object << node_personal;
 
-    auto node_employeenumber = new asn1_namedobject("EmployeeNumber", asn1_type_integer, new asn1_tagged(asn1_class_application, 2, asn1_implicit));
-    notation << node_employeenumber;
+        auto node_childinfo = new asn1_set("ChildInformation");
+        *node_childinfo << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
+                        << new asn1_object("dateOfBirth", new asn1_object("Date", asn1_type_referenced, new asn1_tag(0)));
+        *object << node_childinfo;
 
-    auto node_date = new asn1_namedobject("Date", asn1_type_visiblestring, new asn1_tagged(asn1_class_application, 3, asn1_implicit));
-    notation << node_date;
+        auto node_name = new asn1_sequence("Name", new asn1_tag(asn1_class_application, 1, asn1_implicit));
+        *node_name << new asn1_object("givenName", new asn1_object(asn1_type_visiblestring))
+                   << new asn1_object("initial", new asn1_object(asn1_type_visiblestring))
+                   << new asn1_object("familyName", new asn1_object(asn1_type_visiblestring));
+        *object << node_name;
 
-    basic_stream bs;
-    notation.publish(&bs);
-    _logger->write(bs);
-    _test_case.assert(bs.size() > 0, __FUNCTION__, "publish definition");
+        auto node_employeenumber = new asn1_object("EmployeeNumber", asn1_type_integer, new asn1_tag(asn1_class_application, 2, asn1_implicit));
+        *object << node_employeenumber;
 
-    binary_t bin;
-    auto data_personal = notation.clone("PersonnelRecord");
-    // data_personal->get_namedvalue("name") << "John" << "P" << "Smith";
-    // data_personal->get_namedvalue("title") << "Director";
-    // data_personal->get_namedvalue("number") << 51;
-    // data_personal->get_namedvalue("dateOfHire") << "19710917";
-    // data_personal->get_namedvalue("nameOfSpouse") << "Mary" << "T" << "Smith";
-    // data_personal->get_namedvalue("children").spawn() << "Ralph" << "T" << "Smith";
-    // data_personal->get_namedvalue("children").spawn() << "Susan" << "B" << "Jones";
-    // notation.publish(&bin);
-    data_personal->release();
-    // _test_case.assert(false == bin.empty(), __FUNCTION__, "publish value");
-}
+        auto node_date = new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit));
+        *object << node_date;
 
-void test_asn1_parse() {
-    _test_case.begin("rule");
-    asn1 a1;
-    // ITU-T X.680
-    a1.add_rule(R"a(
-        -- 16 Definition of types and values
-        Type ::= BuiltinType | ReferencedType | ConstrainedType
-        BuiltinType ::= BitStringType
-            | BooleanType
-            | CharacterStringType
-            | ChoiceType
-            | EmbeddedPDVType
-            | EnumeratedType
-            | ExternalType
-            | InstanceOfType
-            | IntegerType
-            | NullType
-            | ObjectClassFieldType
-            | ObjectIdentifierType
-            | OctetStringType
-            | RealType
-            | RelativeOIDType
-            | SequenceType
-            | SequenceOfType
-            | SetType
-            | SetOfType
-            | TaggedType
-        ReferencedType ::= DefinedType | UsefulType | SelectionType | TypeFromObject | ValueSetFromObjects
-        NamedType ::= identifier Type
-        Value ::= BuiltinValue | ReferencedValue | ObjectClassFieldValue
-        BuiltinValue ::= BitStringValue | BooleanValue | CharacterStringValue | ChoiceValue | EmbeddedPDVValue | EnumeratedValue | ExternalValue
-            | InstanceOfValue | IntegerValue | NullValue | ObjectIdentifierValue | OctetStringValue | RealValue | RelativeOIDValue | SequenceValue
-            | SequenceOfValue | SetValue | SetOfValue | TaggedValue
-        ReferencedValue ::= DefinedValue | ValueFromObject
-        NamedValue ::= identifier Value
-        -- ITU-T X.680 17
-        BooleanType ::= BOOLEAN
-        BooleanValue ::= TRUE | FALSE
-        -- ITU-T X.680 18
-        IntegerType ::= INTEGER | INTEGER "{" NamedNumberList "}"
-        NamedNumberList ::= NamedNumber | NamedNumberList "," NamedNumber
-        NamedNumber ::= identifier "(" SignedNumber ")" | identifier "(" DefinedValue ")"
-        SignedNumber ::= number | "-" number
-        IntegerValue ::= SignedNumber | identifier
-        -- ITU-T X.680 19
-        EnumeratedType ::= ENUMERATED "{" Enumerations "}"
-        Enumerations ::=
-            RootEnumeration
-            | RootEnumeration "," "..." ExceptionSpec
-            | RootEnumeration "," "..." ExceptionSpec "," AdditionalEnumeration
-        RootEnumeration ::= Enumeration
-        AdditionalEnumeration ::= Enumeration
-        Enumeration ::= EnumerationItem | EnumerationItem "," Enumeration
-        EnumerationItem ::= identifier | NamedNumber
-        -- ITU-T X.680 20
-        RealType ::= REAL
-        -- 20.5 SEQUENCE { mantissa INTEGER, base INTEGER (2|10), exponent INTEGER }
-        RealValue ::= NumericRealValue | SpecialRealValue
-        NumericRealValue ::=
-            realnumber
-            | "-" realnumber
-            | SequenceValue -- Value of the associated sequence type
-        SpecialRealValue ::= PLUS-INFINITY | MINUS-INFINITY
-        -- ITU-T X.680 21
-        BitStringType ::= BIT STRING | BIT STRING "{" NamedBitList "}"
-        NamedBitList ::= NamedBit | NamedBitList "," NamedBit
-        NamedBit ::= identifier "(" number ")" | identifier "(" DefinedValue ")"
-        BitStringValue ::=
-            bstring
-            | hstring
-            | "{" IdentifierList "}"
-            | "{" "}"
-            | CONTAINING Value
-        IdentifierList ::= identifier | IdentifierList "," identifier
-        -- ITU-T X.680 22
-        OctetStringType ::= OCTET STRING
-        OctetStringValue ::= bstring | hstring | CONTAINING Value
-        -- ITU-T X.680 23
-        NullType ::= NULL
-        NullValue ::= NULL
-        -- ITU-T X.680 24
-        SequenceType ::=
-            SEQUENCE "{" "}"
-            | SEQUENCE "{" ExtensionAndException OptionalExtensionMarker "}"
-            | SEQUENCE "{" ComponentTypeLists "}"
-        ExtensionAndException ::= "..." | "..." ExceptionSpec
-        OptionalExtensionMarker ::= "," "..." | empty
-        ComponentTypeLists ::=
-            RootComponentTypeList
-            | RootComponentTypeList "," ExtensionAndException ExtensionAdditions OptionalExtensionMarker
-            | RootComponentTypeList "," ExtensionAndException ExtensionAdditions ExtensionEndMarker "," RootComponentTypeList
-            | ExtensionAndException ExtensionAdditions ExtensionEndMarker "," RootComponentTypeList
-            | ExtensionAndException ExtensionAdditions OptionalExtensionMarker
-        RootComponentTypeList ::= ComponentTypeList
-        ExtensionEndMarker ::= "," "..."
-        ExtensionAdditions ::= "," ExtensionAdditionList | empty
-        ExtensionAdditionList ::=
-            ExtensionAddition
-            | ExtensionAdditionList "," ExtensionAddition
-        ExtensionAddition ::=
-            ComponentType
-            | ExtensionAdditionGroup
-        ExtensionAdditionGroup ::= "[[" VersionNumber ComponentTypeList "]]"
-        VersionNumber ::= empty | number ":"
-        ComponentTypeList ::=
-            ComponentType
-            | ComponentTypeList "," ComponentType
-        ComponentType ::=
-            NamedType
-            | NamedType OPTIONAL
-            | NamedType DEFAULT Value
-            | COMPONENTS OF Type
-        SequenceValue ::=
-            "{" ComponentValueList "}"
-            | "{" "}"
-        ComponentValueList ::=
-            NamedValue
-            | ComponentValueList "," NamedValue
-        -- ITU-T X.680 25
-        SequenceOfType ::= SEQUENCE OF Type | SEQUENCE OF NamedType
-        SequenceOfValue ::=
-            "{" ValueList "}"
-            | "{" NamedValueList "}"
-            | "{" "}"
-        ValueList ::= Value | ValueList "," Value
-        NamedValueList ::= NamedValue | NamedValueList "," NamedValue
-        -- ITU-T X.680 26
-        SetType ::=
-            SET "{" "}"
-            | SET "{" ExtensionAndException OptionalExtensionMarker "}"
-            | SET "{" ComponentTypeLists "}"
-        SetValue ::=
-            "{" ComponentValueList "}"
-            | "{" "}"
-        -- ITU-T X.680 27
-        SetOfType ::= SET OF Type | SET OF NamedType
-        SetOfValue ::=
-            "{" ValueList "}"
-            | "{" NamedValueList "}"
-            | "{" "}"
-        -- ITU-T X.680 28
-        ChoiceType ::= CHOICE "{" AlternativeTypeLists "}"
-        AlternativeTypeLists ::=
-            RootAlternativeTypeList
-            | RootAlternativeTypeList "," ExtensionAndException ExtensionAdditionAlternatives OptionalExtensionMarker
-        RootAlternativeTypeList ::= AlternativeTypeList
-        ExtensionAdditionAlternatives ::= "," ExtensionAdditionAlternativesList | empty
-        ExtensionAdditionAlternativesList ::=
-            ExtensionAdditionAlternative
-            | ExtensionAdditionAlternativesList "," ExtensionAdditionAlternative
-        ExtensionAdditionAlternative ::= ExtensionAdditionAlternativesGroup | NamedType
-        ExtensionAdditionAlternativesGroup ::= "[[" VersionNumber AlternativeTypeList "]]"
-        AlternativeTypeList ::= NamedType | AlternativeTypeList "," NamedType
-        -- ITU-T X.680 29
-        SelectionType ::= identifier "<" Type
-        -- ITU-T X.680 30
-        TaggedType ::=
-            Tag Type
-            | Tag IMPLICIT Type
-            | Tag EXPLICIT Type
-        Tag ::= "[" Class ClassNumber "]"
-        ClassNumber ::= number | DefinedValue
-        Class ::=
-            UNIVERSAL
-            | APPLICATION
-            | PRIVATE
-            | empty
-        TaggedValue ::= Value
-        -- ITU-T X.680 31
-        ObjectIdentifierType ::= OBJECT IDENTIFIER
-        ObjectIdentifierValue ::=
-            "{" ObjIdComponentsList "}"
-            | "{" DefinedValue ObjIdComponentsList "}"
-        ObjIdComponentsList ::= ObjIdComponents | ObjIdComponents ObjIdComponentsList
-        ObjIdComponents ::= NameForm | NumberForm | NameAndNumberForm | DefinedValue
-        NameForm ::= identifier
-        NumberForm ::= number | DefinedValue
-        NameAndNumberForm ::= identifier "(" NumberForm ")"
-        -- ITU-T X.680 32
-        RelativeOIDValue ::= "{" RelativeOIDComponentsList "}"
-        RelativeOIDComponentsList ::= RelativeOIDComponents | RelativeOIDComponents RelativeOIDComponentsList
-        RelativeOIDComponents ::= NumberForm | NameAndNumberForm | DefinedValue
-        -- ITU-T X.680 33
-        EmbeddedPDVType ::= EMBEDDED PDV
-        EmbeddedPdvValue ::= SequenceValue -- value of associated type defined in 33.5
-        -- ITU-T X.680 36
-        CharacterStringType ::= RestrictedCharacterStringType | UnrestrictedCharacterStringType
-        CharacterStringValue ::= RestrictedCharacterStringValue | UnrestrictedCharacterStringValue
-        -- ITU-T X.680 37
-        RestrictedCharacterStringType ::=
-            BMPString
-            | GeneralString
-            | GraphicString
-            | IA5String
-            | ISO646String
-            | NumericString
-            | PrintableString
-            | TeletexString
-            | T61String
-            | UniversalString
-            | UTF8String
-            | VideotexString
-            | VisibleString
-        -- Table 6 List of restricted character string types
-        -- Table 7 NumericString
-        -- Table 8 PrintableString
-        RestrictedCharacterStringValue ::= cstring | CharacterStringList | Quadruple | Tuple
-        CharacterStringList ::= "{" CharSyms "}"
-        CharSyms ::= CharsDefn | CharSyms "," CharsDefn
-        CharsDefn ::= cstring | Quadruple | Tuple | DefinedValue
-        Quadruple ::= "{" Group "," Plane "," Row "," Cell "}"
-        Group ::= number
-        Plane ::= number
-        Row ::= number
-        Cell ::= number
-        Tuple ::= "{" TableColumn "," TableRow "}"
-        TableColumn ::= number
-        TableRow ::= number
-        -- ITU-T X.680 42
-        GeneralizedTime ::= [UNIVERSAL 24] IMPLICIT VisibleString
-        -- ITU-T X.680 43
-        UTCTime ::= [UNIVERSAL 23] IMPLICIT VisibleString
-        -- ITU-T X.680 45
-        ConstrainedType ::= Type Constraint | TypeWithConstraint
-        TypeWithConstraint ::=
-            SET Constraint OF Type
-            | SET SizeConstraint OF Type
-            | SEQUENCE Constraint OF Type
-            | SEQUENCE SizeConstraint OF Type
-            | SET Constraint OF NamedType
-            | SET SizeConstraint OF NamedType
-            | SEQUENCE Constraint OF NamedType
-            | SEQUENCE SizeConstraint OF NamedType
-        Constraint ::= "(" ConstraintSpec ExceptionSpec ")"
-        ConstraintSpec ::= SubtypeConstraint | GeneralConstraint)a");
+        basic_stream bs1;
+        basic_stream bs2;
 
-    basic_stream bs;
-    a1.learn();
-    a1.get_parser().dump(a1.get_rule_context(), bs);
-    _logger->write(bs);
+        // publish
+        {
+            object->publish(&bs1);
+            _logger->write(bs1);
+        }
 
-    // TODO
+        // clone
+        asn1* n = nullptr;
+        __try2 {
+            n = object->clone();
 
-    _test_case.assert(bs.size() > 0, __FUNCTION__, "rule");
+            binary_t bin;
+            n->publish(&bin);
+            n->publish(&bs2);
+            _logger->write(bs2);
+            _logger->dump(bin);
+        }
+        __finally2 {
+            n->release();
+            _test_case.assert(bs1 == bs2, __FUNCTION__, "publish");
+        }
+    }
+    __finally2 { object->release(); }
 }
 
 int main(int argc, char** argv) {
@@ -711,17 +624,17 @@ int main(int argc, char** argv) {
     // studying ...
     x690_8_1_3_length_octets();
     x690_8_1_5_end_of_contents();
-    test_x690_encoding();
+    x690_encoding();
+    x690_encode_typevalue();
     x690_8_6_bitstring();
     x690_8_9_sequence();
-    x690_8_14_tagged();
+    // x690_8_14_tagged();
     x690_8_19_objid();
     x690_8_20_relobjid();
     x690_8_21_visiblestring();
     x690_11_7_generallizedtime();
-    // x690_annex_a();
-    // test_asn1_typedef_value();
-    // test_asn1_parse();
+    x690_annex_a();
+    test_asn1_typedef_value();
 
     _logger->flush();
 

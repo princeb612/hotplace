@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_BASE_NOSTD_PATTERN__
 #define __HOTPLACE_SDK_BASE_NOSTD_PATTERN__
 
+#include <functional>
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>

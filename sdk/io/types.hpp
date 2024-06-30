@@ -14,9 +14,7 @@
 
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/template.hpp>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/reference_counter.hpp>
 #include <sdk/base/system/shared_instance.hpp>
@@ -26,9 +24,16 @@
 namespace hotplace {
 namespace io {
 
-//
+// ITU-T X.660 ISO/IEC 9834-1, ISO/IEC 6523 Structure for the identification of organizations and organization parts
+// object identifier - node1 0..2, node2 0..39, nodeN positive
+// relative object identifier - nodeN positive
+typedef std::vector<unsigned> oid_t;
 
-}
+void str_to_oid(const std::string& value, oid_t& oid);
+void str_to_oid(const char* value, size_t size, oid_t& oid);
+void oid_to_str(const oid_t& value, basic_stream& oid);
+
+}  // namespace io
 }  // namespace hotplace
 
 #endif

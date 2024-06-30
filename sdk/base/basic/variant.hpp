@@ -309,6 +309,9 @@ class variant {
     variant& set_nstr_new(const char* value, size_t n);
     variant& set_binary_new(const binary_t& bin);
 
+    const std::string to_str() const;
+    const std::string to_hex() const;
+    const binary_t to_bin() const;
     int to_int() const;
     return_t to_binary(binary_t& target) const;
     return_t to_string(std::string& target) const;

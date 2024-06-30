@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include <list>
+#include <sdk/base/nostd/pattern.hpp>
 #include <sdk/base/string/string.hpp>
 #include <string>
 
@@ -82,27 +83,14 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
             __leave2;
         }
 
-        const TCHAR* pos = stream + startpos;
-        const TCHAR* epos = stream + sizestream;
-        const TCHAR* p = stream + startpos;
-
-#if defined _MBCS || defined MBCS
-        size_t sizetoken = strlen(match);
-        while ((0 != strnicmp(match, p, sizetoken)) && p < epos) {
-            p++;
-        }
-#elif defined _UNICODE || defined UNICODE
-        size_t sizetoken = wcslen(match);
-        while ((0 != wcsnicmp(match, p, sizetoken)) && p < epos) {
-            p++;
-        }
-#endif
-
-        if (p < epos) {
-            *brk = startpos + p - pos + 1;
-        } else {
+        t_kmp_pattern<TCHAR> kmp;
+        size_t sizematch = _tcslen(match);
+        int pos = kmp.match(stream, sizestream, match, sizematch, startpos);
+        if (-1 == pos) {
             *brk = sizestream;
-            // ret = errorcode_t::not_found;
+            ret = errorcode_t::not_found;
+        } else {
+            *brk = pos + 1;
         }
     }
     __finally2 {

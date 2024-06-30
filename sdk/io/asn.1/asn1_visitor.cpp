@@ -12,21 +12,22 @@
  */
 
 #include <sdk/io/asn.1/asn1.hpp>
+#include <sdk/io/asn.1/asn1_visitor.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_encoder::asn1_encoder(binary_t* b) : _b(b) {}
+asn1_basic_encoding_visitor::asn1_basic_encoding_visitor(binary_t* b) : _b(b) {}
 
-void asn1_encoder::visit(asn1_object* object) { object->represent(get_binary()); }
+void asn1_basic_encoding_visitor::visit(asn1_object* object) { object->represent(get_binary()); }
 
-binary_t* asn1_encoder::get_binary() { return _b; }
+binary_t* asn1_basic_encoding_visitor::get_binary() { return _b; }
 
-asn1_notation::asn1_notation(stream_t* s) : _s(s) {}
+asn1_notation_visitor::asn1_notation_visitor(stream_t* s) : _s(s) {}
 
-void asn1_notation::visit(asn1_object* object) { object->represent(get_stream()); }
+void asn1_notation_visitor::visit(asn1_object* object) { object->represent(get_stream()); }
 
-stream_t* asn1_notation::get_stream() { return _s; }
+stream_t* asn1_notation_visitor::get_stream() { return _s; }
 
 }  // namespace io
 }  // namespace hotplace

@@ -27,6 +27,7 @@ typedef struct _OPTION {
 t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 #if defined __linux__
+#if __GLIBC__ > 4
 
 enum PROCESS_QUERY {
     PROCESS_QUERY_FILEPATH = 0, /* file path and name */
@@ -162,6 +163,7 @@ void test_netlink() {
     nl.close(handle);
 }
 #endif
+#endif
 
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
@@ -185,7 +187,9 @@ int main(int argc, char** argv) {
 #endif
 
 #if defined __linux__
+#if __GLIBC__ > 4
     test_netlink();
+#endif
 #endif
 
     _logger->flush();

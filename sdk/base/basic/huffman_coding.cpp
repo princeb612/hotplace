@@ -30,8 +30,10 @@ huffman_coding &huffman_coding::operator<<(const char *s) { return load(s); }
 huffman_coding &huffman_coding::load(const char *s) {
     // count
     if (s) {
+        auto hook = [](hc_t &t) -> void { t.weight++; };
         for (const char *p = s; *p; p++) {
-            _measure.insert(hc_t((uint8)*p), [](hc_t &t) -> void { t.weight++; });
+            uint8 symbol = (uint8)*p;
+            _measure.insert(hc_t(symbol), hook);
         }
     }
     return *this;
