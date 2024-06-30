@@ -380,54 +380,6 @@ void x690_8_9_sequence() {
     }
 }
 
-// X.690 8.14 encoding of a tagged value
-// void x690_8_14_tagged() {
-//     _test_case.begin("ITU-T X.690");
-//     asn1_encode enc;
-//     binary_t bin_type1;
-//     binary_t bin_type2;
-//     binary_t bin_type3;
-//     binary_t bin_type4;
-//     binary_t bin_type5;
-//     // Type1 ::= VisibleString
-//     {
-//         enc.visiblestring(bin_type1, "Jones");
-//         _logger->dump(bin_type1);
-//         _test_case.assert(bin_type1 == base16_decode_rfc("1A 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type1");
-//     }
-//     // Type2 ::= [Application 3] implicit Type1
-//     {
-//         enc.encode(bin_type2, asn1_class_application, 3, "Jones");
-//         _logger->dump(bin_type2);
-//         _test_case.assert(bin_type2 == base16_decode_rfc("43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type2");
-//     }
-//     // Type3 ::= [2] Type2
-//     {
-//         // enc.encode(bin_type3, asn1_class_context | asn1_tag_constructed, 2);
-//         binary_push(bin_type3, asn1_class_context | asn1_tag_constructed | 2);
-//         t_asn1_length_octets<uint32>(bin_type3, bin_type2.size());
-//         binary_append(bin_type3, bin_type2);
-//         _logger->dump(bin_type3);
-//         _test_case.assert(bin_type3 == base16_decode_rfc("a2 07 43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type3");
-//     }
-//     // Type4 ::= [Application 7] implicit Type3
-//     {
-//         binary_push(bin_type4, asn1_class_application | asn1_tag_constructed | 7);
-//         t_asn1_length_octets<uint32>(bin_type4, bin_type2.size());
-//         binary_append(bin_type4, bin_type2);  // ?? not bin_type3
-//         _logger->dump(bin_type4);
-//         _test_case.assert(bin_type4 == base16_decode_rfc("67 07 43 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # type4_1");
-//     }
-//     // Type5 ::= [2] implicit Type2
-//     {
-//         binary_push(bin_type5, asn1_class_context | 2);
-//         t_asn1_length_octets<uint32>(bin_type5, 5);
-//         binary_append(bin_type5, "Jones");
-//         _logger->dump(bin_type5);
-//         _test_case.assert(bin_type5 == base16_decode_rfc("82 05 4A 6F 6E 65 73"), __FUNCTION__, "X.690 8.14 tagged # Type5");
-//     }
-// }
-
 // X.690 8.19 encoding of an object identifier value
 void x690_8_19_objid() {
     _test_case.begin("ITU-T X.690");
@@ -628,7 +580,6 @@ int main(int argc, char** argv) {
     x690_encode_typevalue();
     x690_8_6_bitstring();
     x690_8_9_sequence();
-    // x690_8_14_tagged();
     x690_8_19_objid();
     x690_8_20_relobjid();
     x690_8_21_visiblestring();

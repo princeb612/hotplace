@@ -280,6 +280,12 @@ asn1_composite::asn1_composite(const asn1_composite& rhs) : asn1_object(rhs), _o
     }
 }
 
+asn1_composite::~asn1_composite() {
+    if (_object) {
+        _object->release();
+    }
+}
+
 asn1_object* asn1_composite::clone() { return new asn1_composite(*this); }
 
 asn1_composite& asn1_composite::as_primitive() {
@@ -365,7 +371,11 @@ asn1_container::asn1_container(const asn1_container& rhs) : asn1_object(rhs) {
     }
 }
 
-asn1_object* asn1_container::clone() { return new asn1_container(*this); }
+asn1_container::~asn1_container() {
+    for (auto item : _list) {
+        item->release();
+    }
+}
 
 asn1_container& asn1_container::operator<<(asn1_object* rhs) {
     if (rhs) {

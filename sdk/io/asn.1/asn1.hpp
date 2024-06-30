@@ -146,7 +146,7 @@ class asn1_tag : public asn1_object {
  */
 class asn1_container : public asn1_object {
    public:
-    virtual asn1_object* clone();
+    virtual ~asn1_container();
 
     virtual void represent(stream_t* s);
     virtual void represent(binary_t* b);
@@ -238,6 +238,8 @@ class asn1_composite : public asn1_object {
      */
     asn1_composite(asn1_type_t type, asn1_object* obj, asn1_tag* tag = nullptr);
     asn1_composite(const asn1_composite& rhs);
+    virtual ~asn1_composite();
+
     virtual asn1_object* clone();
 
     asn1_composite& as_primitive();
