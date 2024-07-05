@@ -627,7 +627,7 @@ void test_multipattern_search() {
     };
 
     for (auto item : _table) {
-        t_aho_corasick ac;
+        t_aho_corasick<char> ac;
         std::multimap<unsigned, size_t> expect;
         std::multimap<unsigned, size_t> result;
 
@@ -652,7 +652,7 @@ void test_multipattern_search() {
         _test_case.assert(expect == result, __FUNCTION__, R"(multiple pattern search "%s")", item.text);
     }
 
-    t_aho_corasick ac;
+    t_aho_corasick<char> ac;
     ac.insert("he", 2).insert("she", 3).insert("hers", 4).insert("his", 3);
     ac.build_state_machine();
     const char* text = "ahishers";

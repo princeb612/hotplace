@@ -188,7 +188,7 @@ class t_kmp_pattern {
 };
 
 /**
- * @brief   Aho-Cora sick  algorithm
+ * @brief   Aho-Corasick  algorithm
  * @remarks
  *          multiple-patterns
  *              KMP O(n*k + m)
@@ -255,7 +255,7 @@ class t_aho_corasick {
         return *this;
     }
     /**
-     * @brief   build the Aho-Cora sick finite state machine
+     * @brief   build the Aho-Corasick finite state machine
      */
     void build_state_machine() {
         std::queue<trienode*> q;
@@ -330,7 +330,7 @@ class t_aho_corasick {
 };
 
 /**
- * @brief   Aho-Cora sick  algorithm using pointer
+ * @brief   Aho-Corasick  algorithm using pointer
  * @remarks
  *          // sketch
  *          struct token { int type; };
@@ -393,7 +393,7 @@ class t_aho_corasick_ptr {
         return *this;
     }
     /**
-     * @brief   build the Aho-Cora sick finite state machine
+     * @brief   build the Aho-Corasick finite state machine
      */
     void build_state_machine() {
         std::queue<trienode*> q;
