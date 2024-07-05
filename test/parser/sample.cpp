@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 #include <iostream>
+#include <sdk/nostd.hpp>
 #include <sdk/sdk.hpp>
 
 using namespace hotplace;
@@ -246,6 +247,58 @@ void test_parser_compare() {
     _test_case.assert(test, __FUNCTION__, "compare");
 }
 
+void test_multipattern_search() {
+    _test_case.begin("t_aho_corasick");
+
+    // model
+    constexpr char sample[] = R"(int a; int b = 0; bool b = true;)";
+
+    // sketch - pattern search
+    {
+        t_aho_corasick<int> ac;
+        std::multimap<unsigned, size_t> result;
+        std::multimap<unsigned, size_t> expect = {{0, 0}, {1, 3}, {1, 8}};
+        std::vector<int> pattern1 = {token_type, token_identifier, token_colon};
+        std::vector<int> pattern2 = {token_type, token_identifier, token_equal, token_identifier, token_colon};
+        // after parsing
+        std::vector<int> sample_parsed = {
+            token_type, token_identifier, token_colon,                                 // int a;
+            token_type, token_identifier, token_equal, token_identifier, token_colon,  // int b = 0;
+            token_type, token_identifier, token_equal, token_identifier, token_colon   // bool b = true;
+        };
+
+        ac.insert(pattern1).insert(pattern2);
+        ac.build_state_machine();
+        result = ac.search(sample_parsed);
+        _logger->writeln("%zi", result.size());
+        for (auto item : result) {
+            _logger->writeln("pattern[%i] at [%zi]", item.first, item.second);
+        }
+        _test_case.assert(result == expect, __FUNCTION__, "pattern matching #1");
+    }
+
+    // sketch - pattern match
+    {
+        parser p;
+        parser::context context;
+        std::multimap<unsigned, size_t> result;
+        std::multimap<unsigned, size_t> expect = {{0, 0}, {1, 3}, {3, 8}};
+        p.add_token("bool", 0x1000).add_token("int", 0x1001).add_token("true", 0x1002).add_token("false", 0x1002);
+        p.parse(context, sample);
+        p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");
+        result = p.psearch(context);
+        // sample  : int a; int b = 0; bool b = true;
+        // pattern : 0      1          3
+        // tokens  : 0   12 3   4 5 67 8    9 a b   c
+        for (auto item : result) {
+            parser::search_result res;
+            context.psearch_result(res, item.second, item.first);
+            _logger->writeln("pattern[%i] at [%zi] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+        }
+        _test_case.assert(result == expect, __FUNCTION__, "pattern matching #2");
+    }
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -266,6 +319,7 @@ int main(int argc, char** argv) {
     test_parser_options();
     test_parser_search();
     test_parser_compare();
+    test_multipattern_search();
 
     _logger->flush();
 

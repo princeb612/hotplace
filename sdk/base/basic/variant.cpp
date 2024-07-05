@@ -61,6 +61,8 @@ variant::variant(float value) { set_float(value); }
 
 variant::variant(double value) { set_double(value); }
 
+variant::variant(const datetime_t &value) { set_datetime(value); }
+
 variant::variant(const variant_t &rhs) : _vt(rhs) {}
 
 variant::variant(variant_t &&rhs) : _vt(std::move(rhs)) {}
@@ -84,7 +86,7 @@ uint16 variant::flag() const { return _vt.flag; }
  * @example
  *      vt.reset().set_bool(true);
  */
-variant &variant::reset() {
+variant &variant::clear() {
     if (variant_flag_t::flag_free & _vt.flag) {
         free(_vt.data.p);
     }
@@ -247,6 +249,20 @@ variant &variant::set_fp64(double value) {
 }
 
 variant &variant::set_double(double value) { return set_fp64(value); }
+
+variant &variant::set_datetime(const datetime_t &value) {
+    _vt.type = TYPE_DATETIME;
+    _vt.size = sizeof(datetime_t);
+    _vt.flag = flag_datetime;
+    datetime_t *p = (datetime_t *)malloc(sizeof(datetime_t));
+    if (p) {
+        memcpy(p, &value, sizeof(datetime_t));
+        _vt.flag |= variant_flag_t::flag_free;
+    }
+    _vt.data.dt = p;
+
+    return *this;
+}
 
 variant &variant::set_str(const char *value) {
     _vt.type = TYPE_STRING;

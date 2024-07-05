@@ -15,6 +15,7 @@
 
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
+#include <sdk/base/system/datetime.hpp>
 #include <sdk/base/types.hpp>
 
 namespace hotplace {
@@ -133,6 +134,7 @@ enum variant_flag_t {
     flag_binary = 1 << 5,   // binary
     flag_pointer = 1 << 6,  // pointer
     flag_user_type = 1 << 7,
+    flag_datetime = 1 << 8,  // datetime
 };
 
 struct variant_t {
@@ -166,6 +168,7 @@ struct variant_t {
         void* p;
         char* str;
         byte_t* bstr;
+        datetime_t* dt;
     } data;
     uint16 size;
     uint16 flag;
@@ -188,6 +191,10 @@ struct variant_t {
                     break;
                 case TYPE_STRING:
                     data.str = strdup(rhs.data.str);
+                    break;
+                case TYPE_DATETIME:
+                    data.dt = (datetime_t*)malloc(sizeof(datetime_t));
+                    memcpy(data.dt, rhs.data.dt, sizeof(datetime_t));
                     break;
                 default:
                     break;
@@ -256,6 +263,7 @@ class variant {
     variant(uint128 value);
     variant(float value);
     variant(double value);
+    variant(const datetime_t& value);
     variant(const variant_t& rhs);
     variant(variant_t&& rhs);
     variant(const variant& rhs);
@@ -268,11 +276,11 @@ class variant {
     uint16 flag() const;
 
     /**
-     * @brief reset
+     * @brief   clear
      * @example
-     *      vt.reset().set_bool(true);
+     *          vt.clear().set_bool(true);
      */
-    variant& reset();
+    variant& clear();
 
     variant& set_flag(uint8 flag);
     variant& unset_flag(uint8 flag);
@@ -298,6 +306,7 @@ class variant {
     variant& set_float(float value);
     variant& set_fp64(double value);
     variant& set_double(double value);
+    variant& set_datetime(const datetime_t& value);
     variant& set_str(const char* value);
     variant& set_nstr(const char* value, size_t n);
     variant& set_bstr(const unsigned char* value, size_t n);
@@ -319,6 +328,8 @@ class variant {
 
     variant& operator=(const variant& source);
     variant& operator=(variant&& source);
+    variant& operator=(const variant_t& source);
+    variant& operator=(variant_t&& source);
 
    protected:
     variant_t _vt;

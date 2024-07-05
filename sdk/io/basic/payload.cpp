@@ -201,13 +201,11 @@ payload_member& payload_member::read(byte_t* ptr, size_t size_ptr, size_t* size_
             if (size_ptr >= size) {
                 switch (type) {
                     case TYPE_STRING:
-                        v.reset();
-                        v.set_strn_new((char*)ptr, size);
+                        v.clear().set_strn_new((char*)ptr, size);
                         *size_read = size;
                         break;
                     case TYPE_BINARY:
-                        v.reset();
-                        v.set_bstr_new(ptr, size);
+                        v.clear().set_bstr_new(ptr, size);
                         *size_read = size;
                         break;
                     default:

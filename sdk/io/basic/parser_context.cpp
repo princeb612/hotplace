@@ -113,7 +113,7 @@ struct ascii_token_table {
     TOKEN_ENTRY(0xFF, "ÿ", token_unknown),
 };
 
-parser::context::context() : _p(nullptr), _size(0) {}
+parser::context::context() : _parser(nullptr), _p(nullptr), _size(0) {}
 
 parser::context::~context() { clear(); }
 
@@ -170,6 +170,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
                 }
                 t->set_index(entry_no);
             }
+            get_token().set_tag(0);
         };
 
         bool comments = false;
@@ -195,12 +196,13 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
             // parser::token
             if (handle_token) {
                 std::string item;
-                int token_type = 0;
-                bool match = obj->token_match(p + pos, item, token_type);
+                uint32 token_type = 0;
+                uint32 token_tag = 0;
+                bool match = obj->token_match(p + pos, item, token_type, token_tag);
                 if (match) {
                     add_token_if(hook);
 
-                    get_token().set_type(token_type);
+                    get_token().set_type(token_type).set_tag(token_tag);
                     if ((token_comments == token_type) && handle_comments) {
                         comments = true;
                         get_token().increase();
@@ -330,19 +332,26 @@ parser::search_result parser::context::wsearch(parser* obj, const context& patte
         }
 
         size_t size = pattern._tokens.size();
-        token* begin = _tokens[idx];
-        token* end = _tokens[idx + size - 1];
-
-        result.match = true;
-        result.p = _p + begin->get_pos();
-        result.size = end->get_pos() - begin->get_pos() + end->get_size();
-        result.pos = begin->get_pos();
-        result.begidx = idx;
-        result.endidx = idx + size - 1;
+        wsearch_result(result, idx, size);
     }
     __finally2 {
         // do nothing
     }
+    return result;
+}
+
+void parser::context::add_pattern(parser* obj) {
+    if (obj) {
+        auto ac = obj->_ac;
+        ac->insert(&_tokens[0], _tokens.size());
+    }
+}
+
+std::multimap<unsigned, size_t> parser::context::psearch(parser* obj) const {
+    std::multimap<unsigned, size_t> result;
+    auto ac = obj->_ac;
+    ac->build_state_machine();
+    result = ac->search(&_tokens[0], _tokens.size());
     return result;
 }
 
@@ -391,6 +400,23 @@ void parser::context::clear() {
     _tokens.clear();
 }
 
+void parser::context::wsearch_result(search_result& result, uint32 idx, size_t size) const {
+    token* begin = _tokens[idx];
+    token* end = _tokens[idx + size - 1];
+
+    result.match = true;
+    result.p = _p + begin->get_pos();
+    result.size = end->get_pos() - begin->get_pos() + end->get_size();
+    result.pos = begin->get_pos();
+    result.begidx = idx;
+    result.endidx = idx + size - 1;
+}
+
+void parser::context::psearch_result(search_result& result, uint32 idx, unsigned patidx) const {
+    size_t size = _parser->_ac->get_patterns(patidx).size();
+    wsearch_result(result, idx, size);
+}
+
 parser::token& parser::context::get_token() { return _token; }
 
 parser::token* parser::context::last_token() {
@@ -408,6 +434,7 @@ void parser::context::for_each(std::function<void(const token_description* desc)
             token_description desc;
             desc.index = t->get_index();
             desc.type = t->get_type();
+            desc.tag = t->get_tag();
             desc.pos = t->get_pos();
             desc.size = t->get_size();
             desc.line = t->get_line();

@@ -134,6 +134,10 @@ void test_uri() {
         skey_value &kv = request.get_http_uri().get_query_keyvalue();
         std::string code = kv.get("code");
 
+        basic_stream bs;
+        kv.foreach ([&](const std::string &key, const std::string &value, void *param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
+        _logger->write(bs);
+
         _test_case.assert("5lkd8ApNal3fkg3S6fh-uw" == kv.get("code"), __FUNCTION__, "uri.get_query_keyvalue.code");
     }
 }

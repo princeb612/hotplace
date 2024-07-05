@@ -303,8 +303,9 @@ void do_test_graph(t_graph<T>& graph, const T& start) {
     auto traverse_handler = [](const T& from, const T&, int, const std::list<T>& v) -> void {
         basic_stream bs;
         print<std::list<T>, basic_stream>(v, bs, "", ", ", "");
-        std::cout << from << " : " << bs << std::endl;
-        fflush(stdout);
+        basic_stream out;
+        out << from << " : " << bs;
+        _logger->writeln(out);
     };
 
     auto adj = graph.build_adjacent();
@@ -337,8 +338,9 @@ void do_test_graph_shortest_path(t_graph<T>& graph, const T& start) {
     auto traverse_handler = [](const T& from, const T& to, int distance, const std::list<T>& v) -> void {
         basic_stream bs;
         print<std::list<T>, basic_stream>(v, bs, "", " -> ", "");
-        std::cout << "path[" << from << "->" << to << "] " << bs << " (distance : " << distance << ")" << std::endl;
-        fflush(stdout);
+        basic_stream out;
+        out << "path[" << from << "->" << to << "] " << bs << " (distance : " << distance << ")";
+        _logger->writeln(out);
     };
 
     auto shortest = graph.build_dijkstra();
@@ -349,11 +351,12 @@ void do_test_graph_shortest_path(t_graph<T>& graph, const T& start) {
 }
 template <typename T>
 void do_test_graph_shortest_path(t_graph<T>& graph, const T& start, const T& end) {
-    auto traverse_handler = [](const T& from, const T& to, int distance, const std::list<T>& v) -> void {
+    auto traverse_handler = [&](const T& from, const T& to, int distance, const std::list<T>& v) -> void {
         basic_stream bs;
         print<std::list<T>, basic_stream>(v, bs, "", " -> ", "");
-        std::cout << "path[" << from << "->" << to << "] " << bs << " (distance : " << distance << ")" << std::endl;
-        fflush(stdout);
+        basic_stream out;
+        out << "path[" << from << "->" << to << "] " << bs << " (distance : " << distance << ")";
+        _logger->writeln(out);
     };
 
     auto shortest = graph.build_dijkstra();
@@ -468,8 +471,8 @@ struct pattern_search_sample_data {
     friend bool operator==(const pattern_search_sample_data& lhs, const pattern_search_sample_data& rhs) { return lhs.value == rhs.value; }
 };
 
-void test_pattern_searching() {
-    _test_case.begin("pattern searching");
+void test_pattern_search() {
+    _test_case.begin("t_kmp_pattern");
 
     // 0123456789abcdef0123
     // abacaabaccabacabaabb
@@ -531,6 +534,138 @@ void test_pattern_searching() {
     }
 }
 
+void test_multipattern_search() {
+    _test_case.begin("t_aho_corasick");
+
+    struct testvector {
+        const char* text;
+        int npat;
+        struct {
+            const char* p;
+            size_t size;
+        } pat[10];
+        int nexpect;
+        struct {
+            unsigned patid;
+            size_t idx;
+        } expect[10];
+    } _table[] = {
+        {
+            // t_aho_corasick ac;
+            // ac.insert("abc", 3).insert("ab", 2).insert("bc", 2).insert("a", 1);
+            // ac.build_state_machine();
+            // const char* text = "abcaabc";
+            // ac.search(text, strlen(text));
+            "abcaabc",
+            4,
+            {
+                {"abc", 3},
+                {"ab", 2},
+                {"bc", 2},
+                {"a", 1},
+            },
+            9,
+            {
+                //          abcaabc
+                {3, 0},  // a
+                {1, 0},  // ab
+                {0, 0},  // abc
+                {2, 1},  //  bc
+                {3, 3},  //    a
+                {3, 4},  //     a
+                {1, 4},  //     ab
+                {0, 4},  //     abc
+                {2, 5},  //      bc
+            },
+        },
+        {
+            // t_aho_corasick ac;
+            // ac.insert("cache", 5).insert("he", 2).insert("chef", 4).insert("achy", 4);
+            // ac.build_state_machine();
+            // const char* text = "cacachefcachy";
+            // ac.search(text, strlen(text));
+            "cacachefcachy",
+            4,
+            {
+                {"cache", 5},
+                {"he", 2},
+                {"chef", 4},
+                {"achy", 4},
+            },
+            4,
+            {
+                //          cacachefcachy
+                {0, 2},  //   cache
+                {1, 5},  //      he
+                {2, 4},  //     chef
+                {3, 9},  //          achy
+            },
+        },
+        {
+            // t_aho_corasick ac;
+            // ac.insert("he", 2).insert("she", 3).insert("hers", 4).insert("his", 3);
+            // ac.build_state_machine();
+            // const char* text = "ahishers";
+            // ac.search(text, strlen(text));
+            "ahishers",
+            4,
+            {
+                {"he", 2},
+                {"she", 3},
+                {"hers", 4},
+                {"his", 3},
+            },
+            4,
+            {
+                //         ahishers
+                {3, 1},  //  his
+                {1, 3},  //    she
+                {0, 4},  //     he
+                {2, 4},  //     hers
+            },
+        },
+    };
+
+    for (auto item : _table) {
+        t_aho_corasick ac;
+        std::multimap<unsigned, size_t> expect;
+        std::multimap<unsigned, size_t> result;
+
+        _logger->writeln(R"(text "%s")", item.text);
+        for (int i = 0; i < item.npat; i++) {
+            auto p = item.pat[i].p;
+            auto size = item.pat[i].size;
+            ac.insert(p, size);
+            _logger->writeln(R"(pattern[%i] "%.*s")", i, size, p);
+        }
+        for (int i = 0; i < item.nexpect; i++) {
+            auto patid = item.expect[i].patid;
+            auto p = item.pat[patid].p;
+            auto idx = item.expect[i].idx;
+            expect.insert({patid, idx});
+            _logger->writeln(R"(expect pattern[%i](as is "%s") at text[%zi])", patid, p, idx);
+        }
+
+        ac.build_state_machine();
+        result = ac.search(item.text, strlen(item.text));
+
+        _test_case.assert(expect == result, __FUNCTION__, R"(multiple pattern search "%s")", item.text);
+    }
+
+    t_aho_corasick ac;
+    ac.insert("he", 2).insert("she", 3).insert("hers", 4).insert("his", 3);
+    ac.build_state_machine();
+    const char* text = "ahishers";
+    ac.search(text, strlen(text));
+
+    std::multimap<unsigned, size_t> result;
+    result = ac.search(text, strlen(text));
+    for (auto item : result) {
+        _logger->writeln("pattern[%i] at [%zi]", item.first, item.second);
+    }
+    _test_case.assert(4 == result.size(), __FUNCTION__, "multiple pattern");
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -553,7 +688,8 @@ int main(int argc, char** argv) {
     test_pq();
     test_graph();
     test_graph2();
-    test_pattern_searching();
+    test_pattern_search();
+    test_multipattern_search();
 
     _logger->flush();
 

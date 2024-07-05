@@ -17,12 +17,13 @@
 namespace hotplace {
 namespace io {
 
-parser::token::token() : _type(0), _pos(0), _size(0), _line(1), _index(-1) {}
+parser::token::token() : _type(0), _tag(0), _pos(0), _size(0), _line(1), _index(-1) {}
 
-parser::token::token(const parser::token& rhs) : _type(rhs._type), _pos(rhs._pos), _size(rhs._size), _line(rhs._line), _index(rhs._index) {}
+parser::token::token(const parser::token& rhs) : _type(rhs._type), _tag(rhs._tag), _pos(rhs._pos), _size(rhs._size), _line(rhs._line), _index(rhs._index) {}
 
 parser::token& parser::token::init() {
     _type = 0;
+    _tag = 0;
     _pos = 0;
     _size = 0;
     _line = 1;
@@ -37,6 +38,11 @@ parser::token& parser::token::increase() {
 
 parser::token& parser::token::set_type(uint32 type) {
     _type = type;
+    return *this;
+}
+
+parser::token& parser::token::set_tag(uint32 tag) {
+    _tag = tag;
     return *this;
 }
 
@@ -63,6 +69,8 @@ parser::token& parser::token::set_index(uint32 idx) {
 uint32 parser::token::get_index() const { return _index; }
 
 uint32 parser::token::get_type() const { return _type; }
+
+uint32 parser::token::get_tag() const { return _tag; }
 
 size_t parser::token::get_pos() const { return _pos; }
 

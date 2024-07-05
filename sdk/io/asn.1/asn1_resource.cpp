@@ -24,44 +24,53 @@ asn1_resource* asn1_resource::get_instance() { return &_instance; }
 
 void asn1_resource::load_resource() {
     if (_type_id.empty()) {
-        _type_id.insert({asn1_type_boolean, "BOOLEAN"});
-        _type_id.insert({asn1_type_integer, "INTEGER"});
-        _type_id.insert({asn1_type_bitstring, "BIT STRING"});
-        _type_id.insert({asn1_type_octstring, "OCTET STRING"});
-        _type_id.insert({asn1_type_null, "NULL"});
-        _type_id.insert({asn1_type_objid, "OBJECT IDENTIFIER"});
-        _type_id.insert({asn1_type_objdesc, "ObjectDescriptor"});
-        _type_id.insert({asn1_type_extern, "EXTERNAL"});
-        _type_id.insert({asn1_type_real, "REAL"});
-        _type_id.insert({asn1_type_enum, "ENUMERATED"});
-        _type_id.insert({asn1_type_embedpdv, "EMBEDDED PDV"});
-        _type_id.insert({asn1_type_utf8string, "UTF8String"});
-        _type_id.insert({asn1_type_relobjid, "RELATIVE-OID"});
-        _type_id.insert({asn1_type_sequence, "SEQUENCE"});
-        _type_id.insert({asn1_type_sequence_of, "SEQUENCE OF"});
-        _type_id.insert({asn1_type_set, "SET"});
-        _type_id.insert({asn1_type_set_of, "SET OF"});
-        _type_id.insert({asn1_type_numstring, "NumericString"});
-        _type_id.insert({asn1_type_printstring, "PrintableString"});
-        _type_id.insert({asn1_type_teletexstring, "TeletexString"});  // _type_id.insert({asn1_type_t61string, "T61String"});
-        _type_id.insert({asn1_type_videotexstring, "VideotexString"});
-        _type_id.insert({asn1_type_ia5string, "IA5String"});
-        _type_id.insert({asn1_type_utctime, "UTCTime"});
-        _type_id.insert({asn1_type_generalizedtime, "GeneralizedTime"});
-        _type_id.insert({asn1_type_graphicstring, "GraphicString"});
-        _type_id.insert({asn1_type_visiblestring, "VisibleString"});  // _type_id.insert({asn1_type_iso646string, "ISO646String"});
-        _type_id.insert({asn1_type_generalstring, "GeneralString"});
-        _type_id.insert({asn1_type_universalstring, "UniversalString"});
-        _type_id.insert({asn1_type_cstring, "CHARACTER STRING"});
-        _type_id.insert({asn1_type_bmpstring, "BMPString"});
-        _type_id.insert({asn1_type_date, "DATE"});
+        struct builtintypes {
+            asn1_type_t type;
+            const char* type_name;
+        } _types[] = {
+            {asn1_type_boolean, "BOOLEAN"},
+            {asn1_type_integer, "INTEGER"},
+            {asn1_type_bitstring, "BIT STRING"},
+            {asn1_type_octstring, "OCTET STRING"},
+            {asn1_type_null, "NULL"},
+            {asn1_type_objid, "OBJECT IDENTIFIER"},
+            {asn1_type_objdesc, "ObjectDescriptor"},
+            {asn1_type_extern, "EXTERNAL"},
+            {asn1_type_real, "REAL"},
+            {asn1_type_enum, "ENUMERATED"},
+            {asn1_type_embedpdv, "EMBEDDED PDV"},
+            {asn1_type_utf8string, "UTF8String"},
+            {asn1_type_relobjid, "RELATIVE-OID"},
+            {asn1_type_sequence, "SEQUENCE"},
+            {asn1_type_sequence_of, "SEQUENCE OF"},
+            {asn1_type_set, "SET"},
+            {asn1_type_set_of, "SET OF"},
+            {asn1_type_numstring, "NumericString"},
+            {asn1_type_printstring, "PrintableString"},
+            {asn1_type_teletexstring, "TeletexString"},
+            {asn1_type_videotexstring, "VideotexString"},
+            {asn1_type_ia5string, "IA5String"},
+            {asn1_type_utctime, "UTCTime"},
+            {asn1_type_generalizedtime, "GeneralizedTime"},
+            {asn1_type_graphicstring, "GraphicString"},
+            {asn1_type_visiblestring, "VisibleString"},
+            {asn1_type_generalstring, "GeneralString"},
+            {asn1_type_universalstring, "UniversalString"},
+            {asn1_type_cstring, "CHARACTER STRING"},
+            {asn1_type_bmpstring, "BMPString"},
+            {asn1_type_date, "DATE"},
+        };
+        for (auto item : _types) {
+            _type_id.insert({item.type, item.type_name});
+            _type_rid.insert({item.type_name, item.type});
+        }
 
         _class_id.insert({asn1_class_universal, "UNIVERSAL"});
         _class_id.insert({asn1_class_application, "APPLICATION"});
         _class_id.insert({asn1_class_private, "PRIVATE"});
         // _class_id.insert({asn1_class_empty, ""});
     }
-}
+}  // namespace io
 
 std::string asn1_resource::get_type_name(asn1_type_t t) {
     load_resource();
@@ -72,6 +81,17 @@ std::string asn1_resource::get_type_name(asn1_type_t t) {
         name = iter->second;
     }
     return name;
+}
+
+asn1_type_t asn1_resource::get_type(const std::string& name) {
+    load_resource();
+
+    asn1_type_t type = asn1_type_primitive;
+    auto iter = _type_rid.find(name);
+    if (_type_rid.end() != iter) {
+        type = iter->second;
+    }
+    return type;
 }
 
 std::string asn1_resource::get_class_name(int c) {
@@ -109,6 +129,14 @@ std::string asn1_resource::get_componenttype_name(uint32 t) {
             break;
     }
     return name;
+}
+
+void asn1_resource::for_each_type_name(std::function<void(asn1_type_t, const std::string&)> f) {
+    if (f) {
+        for (auto item : _type_id) {
+            f(item.first, item.second);
+        }
+    }
 }
 
 }  // namespace io

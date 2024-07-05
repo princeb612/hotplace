@@ -13,9 +13,13 @@
 #define __HOTPLACE_SDK_BASE_NOSTD_PATTERN__
 
 #include <functional>
+#include <map>
+#include <queue>
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
+#include <string>
+#include <vector>
 
 namespace hotplace {
 
@@ -181,6 +185,288 @@ class t_kmp_pattern {
         }
         return fail;
     }
+};
+
+/**
+ * @brief   Aho-Cora sick  algorithm
+ * @remarks
+ *          multiple-patterns
+ *              KMP O(n*k + m)
+ *              Aho-Corasick O(n + m + z) ; z count of matches
+ * @refer   https://www.javatpoint.com/aho-corasick-algorithm-for-pattern-searching-in-cpp
+ * @sample
+ *          t_aho_corasick ac;
+ *          ac.insert("abc", 3).insert("ab", 2).insert("bc", 2).insert("a", 1);
+ *          ac.build_state_machine();
+ *          const char* text = "abcaabc";
+ *          std::multimap<unsigned, size_t> result;
+ *          result = ac.search(text, strlen(text));
+ *          for (auto item : result) {
+ *              _logger->writeln("pattern[%i] at [%zi]", item.first, item.second);
+ *          }
+ */
+
+template <typename T = char>
+class t_aho_corasick {
+   public:
+    /**
+     * @brief   trie node structure
+     */
+    struct trienode {
+        std::map<T, trienode*> children;
+        trienode* fail;
+        std::vector<int> output;
+
+        trienode() : fail(nullptr) {}
+        ~trienode() {
+            for (auto item : children) {
+                delete item.second;
+            }
+        }
+    };
+
+   public:
+    t_aho_corasick() : _root(new trienode) {}
+    ~t_aho_corasick() { delete _root; }
+
+    /**
+     * @brief   insert a pattern into the trie
+     */
+    t_aho_corasick<T>& insert(const std::vector<T>& pattern) { return insert(&pattern[0], pattern.size()); }
+    t_aho_corasick<T>& insert(const T* pattern, size_t size) {
+        if (pattern) {
+            trienode* current = _root;
+            std::vector<T> p;
+
+            p.insert(p.end(), pattern, pattern + size);
+
+            for (size_t i = 0; i < size; ++i) {
+                const T& t = pattern[i];
+                if (nullptr == current->children[t]) {
+                    current->children[t] = new trienode();
+                }
+                current = current->children[t];
+            }
+
+            size_t index = _patterns.size();
+            current->output.push_back(index);
+            _patterns.insert({index, std::move(p)});
+        }
+        return *this;
+    }
+    /**
+     * @brief   build the Aho-Cora sick finite state machine
+     */
+    void build_state_machine() {
+        std::queue<trienode*> q;
+
+        // set failure links
+        for (auto& pair : _root->children) {
+            pair.second->fail = _root;
+            q.push(pair.second);
+        }
+
+        // Breadth-first traversal
+        while (false == q.empty()) {
+            trienode* current = q.front();
+            q.pop();
+
+            for (auto& pair : current->children) {
+                const T& key = pair.first;
+                trienode* child = pair.second;
+
+                q.push(child);
+
+                trienode* failNode = current->fail;
+                while (failNode && !failNode->children[key]) {
+                    failNode = failNode->fail;
+                }
+
+                child->fail = failNode ? failNode->children[key] : _root;
+
+                // Merge output lists
+                child->output.insert(child->output.end(), child->fail->output.begin(), child->fail->output.end());
+            }
+        }
+    }
+
+    /**
+     * @brief   search for patterns
+     * @return  std::multimap<unsigned, size_t> as is multimap<pattern_id, index>
+     */
+    std::multimap<unsigned, size_t> search(const std::vector<T>& source) { return search(&source[0], source.size()); }
+    std::multimap<unsigned, size_t> search(const T* source, size_t size) {
+        std::multimap<unsigned, size_t> result;
+        if (source) {
+            trienode* current = _root;
+            for (size_t i = 0; i < size; ++i) {
+                const T& t = source[i];
+                while (current && (nullptr == current->children[t])) {
+                    current = current->fail;
+                }
+                if (current) {
+                    current = current->children[t];
+                    for (auto v : current->output) {
+                        // v is index of pattern
+                        // i is end position of pattern
+                        // (i - sizepat + 1) is beginning position of pattern
+                        size_t sizepat = _patterns[v].size();
+                        size_t pos = i - sizepat + 1;
+                        result.insert({v, pos});
+                        // debug
+                        // printf("pattern:%i at [%zi] pattern [%.*s] \n",  v, pos, (unsigned)sizepat, &(_patterns[v])[0]);
+                    }
+                } else {
+                    current = _root;
+                }
+            }
+        }
+        return result;
+    }
+
+   private:
+    trienode* _root;
+    std::map<size_t, std::vector<T>> _patterns;
+};
+
+/**
+ * @brief   Aho-Cora sick  algorithm using pointer
+ * @remarks
+ *          // sketch
+ *          struct token { int type; };
+ *          // lambda conversion - const T* to T* const*
+ *          auto memberof = [](token* const* source, size_t idx) -> int {
+ *              const token* p = source[idx];
+ *              return p->type;
+ *          };
+ *          t_aho_corasick_ptr<int, token*> ac(memberof);
+ * @sa      t_aho_corasick
+ */
+template <typename BT = char, typename T = char>
+class t_aho_corasick_ptr {
+   public:
+    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
+
+    /**
+     * @brief   trie node structure
+     */
+    struct trienode {
+        std::map<BT, trienode*> children;
+        trienode* fail;
+        std::vector<int> output;
+
+        trienode() : fail(nullptr) {}
+        ~trienode() {
+            for (auto item : children) {
+                delete item.second;
+            }
+        }
+    };
+
+   public:
+    t_aho_corasick_ptr(memberof_t memberof) : _root(new trienode), _memberof(memberof) {}
+    ~t_aho_corasick_ptr() { delete _root; }
+
+    /**
+     * @brief   insert a pattern into the trie
+     */
+    t_aho_corasick_ptr<BT, T>& insert(const std::vector<T>& pattern) { return insert(&pattern[0], pattern.size()); }
+    t_aho_corasick_ptr<BT, T>& insert(const T* pattern, size_t size) {
+        if (pattern) {
+            trienode* current = _root;
+            std::vector<T> p;
+
+            p.insert(p.end(), pattern, pattern + size);
+
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(pattern, i);
+                if (nullptr == current->children[t]) {
+                    current->children[t] = new trienode();
+                }
+                current = current->children[t];
+            }
+
+            size_t index = _patterns.size();
+            current->output.push_back(index);
+            _patterns.insert({index, std::move(p)});
+        }
+        return *this;
+    }
+    /**
+     * @brief   build the Aho-Cora sick finite state machine
+     */
+    void build_state_machine() {
+        std::queue<trienode*> q;
+
+        // set failure links
+        for (auto& pair : _root->children) {
+            pair.second->fail = _root;
+            q.push(pair.second);
+        }
+
+        // Breadth-first traversal
+        while (false == q.empty()) {
+            trienode* current = q.front();
+            q.pop();
+
+            for (auto& pair : current->children) {
+                const BT& key = pair.first;
+                trienode* child = pair.second;
+
+                q.push(child);
+
+                trienode* failNode = current->fail;
+                while (failNode && !failNode->children[key]) {
+                    failNode = failNode->fail;
+                }
+
+                child->fail = failNode ? failNode->children[key] : _root;
+
+                // Merge output lists
+                child->output.insert(child->output.end(), child->fail->output.begin(), child->fail->output.end());
+            }
+        }
+    }
+
+    /**
+     * @brief   search for patterns
+     * @return  std::multimap<unsigned, size_t> as is multimap<pattern_id, index>
+     */
+    std::multimap<unsigned, size_t> search(const std::vector<T>& source) { return search(&source[0], source.size()); }
+    std::multimap<unsigned, size_t> search(const T* source, size_t size) {
+        std::multimap<unsigned, size_t> result;
+        if (source) {
+            trienode* current = _root;
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(source, i);
+                while (current && (nullptr == current->children[t])) {
+                    current = current->fail;
+                }
+                if (current) {
+                    current = current->children[t];
+                    for (auto v : current->output) {
+                        // v is index of pattern
+                        // i is end position of pattern
+                        // (i - sizepat + 1) is beginning position of pattern
+                        size_t sizepat = _patterns[v].size();
+                        size_t pos = i - sizepat + 1;
+                        result.insert({v, pos});
+                        // debug
+                        // printf("pattern:%i at [%zi] pattern [%.*s] \n",  v, pos, (unsigned)sizepat, &(_patterns[v])[0]);
+                    }
+                } else {
+                    current = _root;
+                }
+            }
+        }
+        return result;
+    }
+    const std::vector<T>& get_patterns(size_t index) { return _patterns[index]; }
+
+   private:
+    trienode* _root;
+    std::map<size_t, std::vector<T>> _patterns;
+    memberof_t _memberof;
 };
 
 }  // namespace hotplace

@@ -157,6 +157,7 @@ void asn1_object::represent(binary_t* b) {
                 case asn1_type_integer:
                 case asn1_type_null:
                 case asn1_type_real:
+                case asn1_type_generalizedtime:
                     enc.encode(*b, get_type(), _var);
                     break;
                 case asn1_type_bitstring:
@@ -168,6 +169,12 @@ void asn1_object::represent(binary_t* b) {
                 case asn1_type_universalstring:
                 case asn1_type_cstring:
                     enc.primitive(*b, get_type(), _var.to_str());
+                    break;
+                case asn1_type_objid:
+                    enc.oid(*b, _var.to_str());
+                    break;
+                case asn1_type_relobjid:
+                    enc.reloid(*b, _var.to_str());
                     break;
             }
         }
@@ -362,6 +369,8 @@ void asn1_composite::represent(binary_t* b) {
         }
     }
 }
+
+asn1_container::asn1_container(asn1_tag* tag) : asn1_object("", asn1_type_primitive, tag) {}
 
 asn1_container::asn1_container(const std::string& name, asn1_tag* tag) : asn1_object(name, asn1_type_primitive, tag) {}
 

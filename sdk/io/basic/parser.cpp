@@ -17,12 +17,11 @@ namespace hotplace {
 namespace io {
 
 parser::parser() {
+    _ac = new t_aho_corasick_ptr<int, token*>(memberof);
     get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
 
 #if 1
     // debug
-    typedef std::map<uint32, std::string> debug_info;
-    debug_info _token_id;  // typeof_token
 
     _token_id.insert({token_alpha, "alpha"});
     _token_id.insert({token_number, "number"});
@@ -55,11 +54,25 @@ parser::parser() {
     _token_id.insert({token_assign, "assign"});
     _token_id.insert({token_lvalue, "lvalue"});
     _token_id.insert({token_emphasis, "emphasis"});
-
+    _token_id.insert({token_type, "type"});
+    _token_id.insert({token_class, "class"});
+    _token_id.insert({token_tag, "tag"});
 #endif
 }
 
+parser::~parser() { delete _ac; }
+
 return_t parser::parse(parser::context& context, const char* p, size_t size) { return context.parse(this, p, size); }
+
+return_t parser::parse(parser::context& context, const char* p) {
+    return_t ret = errorcode_t::success;
+    if (p) {
+        ret = context.parse(this, p, strlen(p));
+    } else {
+        ret = errorcode_t::invalid_parameter;
+    }
+    return ret;
+}
 
 parser::search_result parser::csearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos) {
     return context.csearch(this, pattern, size_pattern, pos);  // handle by characters
@@ -77,6 +90,20 @@ parser::search_result parser::wsearch(const parser::context& context, const char
 
 parser::search_result parser::wsearch(const parser::context& context, const std::string& pattern, unsigned int pos) {
     return wsearch(context, pattern.c_str(), pattern.size(), pos);  // handle by word not characters
+}
+
+parser& parser::add_pattern(const std::string& pattern) {
+    parser::context context;
+    parse(context, pattern.c_str(), pattern.size());
+    context.add_pattern(this);
+    return *this;
+}
+
+std::multimap<unsigned, size_t> parser::psearch(const parser::context& context) { return context.psearch(this); }
+
+int parser::memberof(token* const* source, size_t index) {
+    const token* t = source[index];
+    return t->get_type();
 }
 
 bool parser::compare(parser* obj, const char* lhs, const char* rhs) {
@@ -101,9 +128,9 @@ bool parser::compare(const char* lhs, const char* rhs) {
 
 bool parser::compare(const parser::context& lhs, const parser::context& rhs) { return lhs.compare(this, rhs); }
 
-parser& parser::add_token(const std::string token_name, int attr) {
+parser& parser::add_token(const std::string& token_name, uint32 attr, uint32 tag) {
     if (false == token_name.empty()) {
-        _tokens.insert({token_name[0], {token_name, attr}});
+        _tokens.insert({token_name[0], {token_name, {attr, tag}}});
     }
     return *this;
 }
@@ -142,13 +169,15 @@ bool parser::lookup(int index, std::string& word) {
     return ret;
 }
 
-bool parser::token_match(const char* p, std::string& token_name, int& token_type) {
+bool parser::token_match(const char* p, std::string& token_name, uint32& token_type, uint32& token_tag) {
     bool ret = false;
     __try2 {
         if (nullptr == p) {
             __leave2;
         }
 
+        token_type = 0;
+        token_tag = 0;
         char c = *p;
 
         tokens_t::iterator lbound = _tokens.lower_bound(c);
@@ -162,7 +191,8 @@ bool parser::token_match(const char* p, std::string& token_name, int& token_type
 
             if (0 == strncmp(p, item.c_str(), item.size())) {
                 token_name = item;
-                token_type = iter->second.second;
+                token_type = iter->second.second.attr;
+                token_tag = iter->second.second.tag;
                 ret = true;
                 break;
             }
@@ -183,6 +213,7 @@ void parser::dump(const parser::context& context, basic_stream& bs) {
     color.insert({token_identifier, "1;37"});
     color.insert({token_comments, "0;37"});
     color.insert({token_emphasis, "1;35"});
+    color.insert({token_type, "1;36"});
 
     auto dump_handler = [&](const token_description* desc) -> void {
         if (line != desc->line) {
@@ -193,8 +224,10 @@ void parser::dump(const parser::context& context, basic_stream& bs) {
         auto iter = color.find(desc->type);
         if (color.end() != iter) {
             code = iter->second;
+            bs.printf("\e[%sm%.*s\e[0m ", code.c_str(), (unsigned)desc->size, desc->p);
+        } else {
+            bs.printf("%.*s ", (unsigned)desc->size, desc->p);
         }
-        bs.printf("\e[%sm%.*s\e[0m ", code.c_str(), (unsigned)desc->size, desc->p);
     };
 
     context.for_each(dump_handler);

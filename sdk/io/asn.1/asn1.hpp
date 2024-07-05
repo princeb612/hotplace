@@ -157,6 +157,7 @@ class asn1_container : public asn1_object {
     void release();
 
    protected:
+    asn1_container(asn1_tag* tag);
     asn1_container(const std::string& name, asn1_tag* tag);
     asn1_container(const asn1_container& rhs);
 
@@ -184,6 +185,7 @@ class asn1_sequence : public asn1_container {
  */
 class asn1_sequence_of : public asn1_container {
    public:
+    asn1_sequence_of(asn1_tag* tag = nullptr);
     asn1_sequence_of(const std::string& name, asn1_tag* tag = nullptr);
     asn1_sequence_of(const asn1_sequence_of& rhs);
 
@@ -206,6 +208,7 @@ class asn1_sequence_of : public asn1_container {
  */
 class asn1_set : public asn1_container {
    public:
+    asn1_set(asn1_tag* tag = nullptr);
     asn1_set(const std::string& name, asn1_tag* tag = nullptr);
     asn1_set(const asn1_set& rhs);
 
@@ -221,6 +224,7 @@ class asn1_set : public asn1_container {
  */
 class asn1_set_of : public asn1_container {
    public:
+    asn1_set_of(asn1_tag* tag = nullptr);
     asn1_set_of(const std::string& name, asn1_tag* tag = nullptr);
     asn1_set_of(const asn1_set_of& rhs);
 
@@ -340,6 +344,8 @@ class asn1_encode {
     asn1_encode& visiblestring(binary_t& bin, const std::string& value);
     asn1_encode& bitstring(binary_t& bin, const std::string& value);
 
+    asn1_encode& generalized_time(binary_t& bin, const datetime_t& dt);
+    asn1_encode& utctime(binary_t& bin, const datetime_t& dt);
     asn1_encode& generalized_time(basic_stream& bs, const datetime_t& dt);
     asn1_encode& utctime(basic_stream& bs, const datetime_t& dt);
 
@@ -354,12 +360,15 @@ class asn1_resource {
     static asn1_resource* get_instance();
 
     std::string get_type_name(asn1_type_t t);
+    asn1_type_t get_type(const std::string& name);
     std::string get_class_name(int c);
     /**
      * @brief   IMPLICIT/EXPLICIT
      */
     std::string get_tagtype_name(uint32 t);
     std::string get_componenttype_name(uint32 t);
+
+    void for_each_type_name(std::function<void(asn1_type_t, const std::string&)> f);
 
    protected:
     asn1_resource();
@@ -368,6 +377,7 @@ class asn1_resource {
     static asn1_resource _instance;
 
     std::map<asn1_type_t, std::string> _type_id;
+    std::map<std::string, asn1_type_t> _type_rid;
     std::map<int, std::string> _class_id;
 };
 

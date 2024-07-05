@@ -106,7 +106,18 @@ return_t getline(const char* stream, size_t sizestream, size_t startpos, size_t*
 return_t getline(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk)
 #endif
 {
-    return scan(stream, sizestream, startpos, brk, _T ("\n"));
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == stream || nullptr == brk || startpos >= sizestream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        scan(stream, sizestream, startpos, brk, _T ("\n"));
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 }  // namespace hotplace

@@ -15,6 +15,7 @@
 #include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
+#include <sdk/base/nostd/pattern.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
@@ -56,12 +57,16 @@ enum token_t {
     token_assign = 35,
     token_lvalue = 36,
     token_emphasis = 37,
+    token_type = 38,
+    token_class = 39,
+    token_tag = 40,
 };
 
 struct token_description {
-    uint32 attr;
+    // uint32 attr;
     uint32 index;
     uint32 type;
+    uint32 tag;
     size_t pos;
     size_t size;
     size_t line;
@@ -123,6 +128,7 @@ class parser {
         token& init();
         token& increase();
         token& set_type(uint32 type);
+        token& set_tag(uint32 tag);
         token& update_pos(size_t pos);
         token& update_size(size_t size);
         token& newline();
@@ -130,6 +136,7 @@ class parser {
         token& set_index(uint32 idx);
         uint32 get_index() const;
         uint32 get_type() const;
+        uint32 get_tag() const;
         size_t get_pos() const;
         size_t get_size() const;
         size_t get_line() const;
@@ -143,6 +150,7 @@ class parser {
 
        private:
         uint32 _type;
+        uint32 _tag;
         size_t _pos;
         size_t _size;
         size_t _line;
@@ -158,16 +166,33 @@ class parser {
         search_result csearch(parser* obj, const char* pattern, size_t size_pattern, unsigned int pos = 0) const;
         search_result csearch(parser* obj, const std::string& pattern, unsigned int pos = 0) const;
         search_result wsearch(parser* obj, const context& pattern, unsigned int pos = 0) const;
+
+        void add_pattern(parser* obj);
+        std::multimap<unsigned, size_t> psearch(parser* obj) const;
+
         bool compare(parser* obj, const parser::context& rhs) const;
 
-        return_t add_token_if(std::function<void(int, parser::token*)> hook = nullptr);
         void clear();
 
         void for_each(std::function<void(const token_description* desc)> f) const;
         void walk(std::function<void(const char* p, const parser::token*)> f);
 
+        void wsearch_result(search_result& result, uint32 idx, size_t size) const;
+        /**
+         * @brief   search_result
+         * @sample
+         *          result = p.psearch(context);
+         *          for (auto item : result) {
+         *              parser::search_result res;
+         *              context.psearch_result(res, item.second, item.first);
+         *              _logger->writeln("pattern[%i] at [%zi] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+         *          }
+         */
+        void psearch_result(search_result& result, uint32 idx, unsigned patidx) const;
+
        protected:
         return_t init(parser* obj, const char* p, size_t size);
+        return_t add_token_if(std::function<void(int, parser::token*)> hook = nullptr);
         parser::token& get_token();
         parser::token* last_token();
 
@@ -181,6 +206,7 @@ class parser {
 
    public:
     parser();
+    ~parser();
 
     /*
      * @brief   parse
@@ -190,6 +216,7 @@ class parser {
      * @remarks
      */
     return_t parse(parser::context& context, const char* p, size_t size);
+    return_t parse(parser::context& context, const char* p);
     /**
      * @brief   pattern search (character search)
      * @param
@@ -221,6 +248,24 @@ class parser {
     search_result wsearch(const parser::context& context, const std::string& pattern, unsigned int pos = 0);
 
     /**
+     * @brief   multiple pattern search
+     * @sa      t_aho_corasick / t_aho_corasick_ptr
+     * @sample
+     *          // sketch
+     *          constexpr char sample[] = R"(int a; int b = 0; bool b = true;)";
+     *          p.add_token("bool", 0x1000).add_token("int", 0x1001).add_token("true", 0x1002).add_token("false", 0x1002);
+     *          p.parse(context, sample);
+     *          p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");
+     =          result = p.psearch();
+     *          // std::multimap<unsigned, size_t> expect = {{0, 0}, {1, 3}, {3, 8}};
+     *          // sample  : int a; int b = 0; bool b = true;
+     *          // pattern : 0      1          3
+     *          // tokens  : 0   12 3   4 5 67 8    9 a b   c
+     */
+    parser& add_pattern(const std::string& pattern);
+    std::multimap<unsigned, size_t> psearch(const parser::context& context);
+
+    /**
      * @brief   compare (ignore white spaces)
      * @param   const char* lhs [in]
      * @param   const char* rhs [in]
@@ -235,12 +280,13 @@ class parser {
 
     /**
      * @brief   add token
-     * @param   const std::string token [in]
-     * @param   int attr [inopt]
+     * @param   const std::string& token [in]
+     * @param   uint32 attr [inopt]
+     * @param   uint32 tag [inopt]
      * @sample
      *          p.add_token("::=", token_assign).add_token("--", token_comments);
      */
-    parser& add_token(const std::string token, int attr = 0);
+    parser& add_token(const std::string& token, uint32 attr = 0, uint32 tag = 0);
 
     /*
      * @sample
@@ -264,19 +310,43 @@ class parser {
     void dump(const parser::context& context, basic_stream& bs);
 
    protected:
+    /**
+     * @brief   lookup
+     * @param   const std::string& word [in]
+     * @param   int& idx [out]
+     */
     bool lookup(const std::string& word, int& idx);
+    /**
+     * @brief   lookup
+     * @param   int index [in]
+     * @param   std::string& word [out]
+     */
     bool lookup(int index, std::string& word);
-    bool token_match(const char* p, std::string& token_name, int& token_type);
+    /**
+     * @brief   match token
+     * @param   const char* p [in]
+     * @param   std::string& token_name [out]
+     * @param   uint32& token_type [out]
+     * @param   uint32& token_tag [out]
+     */
+    bool token_match(const char* p, std::string& token_name, uint32& token_type, uint32& token_tag);
+
+    static int memberof(token* const* source, size_t index);
 
     // lookup by word or index
     struct dictionary_t {
         std::map<std::string, int> index;   // map<word, index>
         std::map<int, std::string> rindex;  // map<index, word>
     };
-    typedef std::multimap<char, std::pair<std::string, int>> tokens_t;
+    struct token_attr_tag {
+        uint32 attr;
+        uint32 tag;
+    };
+    typedef std::multimap<char, std::pair<std::string, token_attr_tag>> tokens_t;
 
     dictionary_t _dictionary;                    // lookup
     tokens_t _tokens;                            // token_match
+    t_aho_corasick_ptr<int, token*>* _ac;        // multi-pattern search
     t_key_value<std::string, uint16> _keyvalue;  // get_config
 
     // debug

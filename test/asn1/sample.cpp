@@ -81,7 +81,7 @@ void x690_8_1_5_end_of_contents() {
     }
 }
 
-void x690_encoding() {
+void x690_encoding_value() {
     _test_case.begin("ITU-T X.690 8.2, 8.3, 8.5, 8.8");
     struct testvector {
         variant var;
@@ -226,11 +226,11 @@ void dump_asn1(asn1* object, const char* expect, const char* text) {
 
         _logger->write(bs);
         _logger->dump(bin);
-        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "encode [%s] %s", expect, text);
+        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "%s [%s]", text, expect);
     }
 }
 
-void x690_encode_typevalue() {
+void x690_encoding_typevalue() {
     _test_case.begin("ITU-T X.690 type and value");
 
     // X.690 8.14 encoding of a tagged value
@@ -264,6 +264,17 @@ void x690_encode_typevalue() {
         // X.690 8.8
         TESTVECTOR_ENTRY4(new asn1_object(asn1_type_null), variant(), "05 00", "X.690 8.8 #1"),
 
+        // X.690 8.9
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_ia5string), variant("Smith"), "16 05 53 6d 69 74 68", "X.690 8.9 #1"),
+
+        // X.690 11.7 generalized time
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 5, 21, 0, 0, 0)), "31 39 39 32 30 35 32 31 30 30 30 30 30 30 5A",
+                          "X.690 11.7 #1"),  // 19920521000000Z
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 6, 22, 12, 34, 21)),
+                          "31 39 39 32 30 36 32 32 31 32 33 34 32 31 5A", "X.690 11.7 #2"),  // 19920622123421Z
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 7, 22, 13, 21, 00, 3)),
+                          " 31 39 39 32 30 37 32 32 31 33 32 31 30 30 2E 33 5A", "X.690 11.7 #3"),  // 19920722132100.3Z
+
         // X.690 8.14 encoding of a tagged value
         // case 1. Type1 ::= VisibleString
         TESTVECTOR_ENTRY4(type1, variant("Jones"), "1A 05 4A 6F 6E 65 73", "X.690 8.14 #1"),
@@ -276,8 +287,20 @@ void x690_encode_typevalue() {
         // case 5. Type5 ::= [2] implicit Type2
         TESTVECTOR_ENTRY4(type5, variant("Jones"), "82 05 4A 6F 6E 65 73", "X.690 8.14 #5"),
 
-        //
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_ia5string), variant("Smith"), "16 05 53 6d 69 74 68", "X.690 8 #1"),
+        // X.690 8.19 object identifier
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1"), "06 05 2b 06 01 04 01", "X.690 8.19 #1"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.2.840.113549"), "06 06 2A 86 48 86 F7 0d", "X.690 8.19 #2"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1.311.21.20"), "06 09 2b 06 01 04 01 82 37 15 14", "X.690 8.19 #3"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1.311.60.2.1.1"), "06 0B 2B 06 01 04 01 82 37 3C 02 01 01", "X.690 8.19 #4"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.2.840.10045.3.1.7"), "06 08 2a 86 48 ce 3d 03 01 07", "X.690 8.19 #5"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("2.100.3"), "06 03 81 34 03", "X.690 8.19 #6"),  // 0..39 < 100 ??
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("2.154"), "06 02 81 6a", "X.690 8.19 #7"),
+
+        // X.690 8.20 encoding of a relative object identifier value
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_relobjid), variant("8571.3.2"), "0D 04 C27B0302", "X.690 8.20 #1"),
+
+        // X.690 8.21.5.4 Example Name ::= VisibleString
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_visiblestring), variant("Jones"), "1a 05 4a6f6e6573", "X.690 8.21 #1"),
     };
 
     for (auto item : _table) {
@@ -380,112 +403,6 @@ void x690_8_9_sequence() {
     }
 }
 
-// X.690 8.19 encoding of an object identifier value
-void x690_8_19_objid() {
-    _test_case.begin("ITU-T X.690");
-    struct testvector {
-        std::pair<std::string, std::string> couple;
-    } _table[] = {
-        std::make_pair("1.3.6.1.4.1", "06 05 2b 06 01 04 01"),
-        std::make_pair("1.2.840.113549", "06 06 2A 86 48 86 F7 0d"),
-        std::make_pair("1.3.6.1.4.1.311.21.20", "06 09 2b 06 01 04 01 82 37 15 14"),
-        std::make_pair("1.3.6.1.4.1.311.60.2.1.1", "06 0B 2B 06 01 04 01 82 37 3C 02 01 01"),
-        std::make_pair("1.2.840.10045.3.1.7", "06 08 2a 86 48 ce 3d 03 01 07"),
-        std::make_pair("2.100.3", "06 03 81 34 03"),  // 0..39 < 100 ??
-        std::make_pair("2.154", "06 02 81 6a"),
-    };
-
-    binary_t bin;
-    asn1_encode enc;
-
-    auto encode_oid_routine = [&](const std::string& value, binary_t& bin) -> void { enc.oid(bin, value); };
-
-    for (auto entry : _table) {
-        const std::string& expect = entry.couple.second;
-        encode_oid_routine(entry.couple.first, bin);
-        {
-            test_case_notimecheck notimecheck(_test_case);
-
-            _logger->dump(bin);
-            _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.19 object identifier expect [%s]", expect.c_str());
-            bin.clear();
-        }
-    }
-}
-
-// X.690 8.20 encoding of a relative object identifier value
-void x690_8_20_relobjid() {
-    _test_case.begin("ITU-T X.690");
-    struct testvector {
-        std::pair<std::string, std::string> couple;
-    } _table[] = {
-        std::make_pair("8571.3.2", "0D 04 C27B0302"),
-    };
-
-    binary_t bin;
-    asn1_encode enc;
-    auto encode_reloid_routine = [&](const std::string& value, binary_t& bin) -> void { enc.reloid(bin, value); };
-
-    for (auto entry : _table) {
-        const std::string& expect = entry.couple.second;
-        encode_reloid_routine(entry.couple.first, bin);
-
-        {
-            test_case_notimecheck notimecheck(_test_case);
-            _logger->dump(bin);
-            _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "X.690 8.20 relative object identifier expect [%s]", expect.c_str());
-            bin.clear();
-        }
-    }
-}
-
-// X.690 8.21.5.4 Example Name ::= VisibleString
-void x690_8_21_visiblestring() {
-    _test_case.begin("ITU-T X.690");
-    binary_t bin;
-    asn1_encode enc;
-    enc.visiblestring(bin, "Jones");
-
-    {
-        test_case_notimecheck notimecheck(_test_case);
-
-        _logger->dump(bin);
-        _test_case.assert(bin == base16_decode_rfc("1a 05 4a6f6e6573"), __FUNCTION__, "X.690 8.21 VisibleString");
-    }
-}
-
-void x690_11_7_generallizedtime() {
-    _test_case.begin("ITU-T X.690");
-    struct testvector {
-        std::pair<datetime_t, basic_stream> couple;
-    } _table[] = {
-        std::make_pair(datetime_t(1992, 5, 21, 0, 0, 0), "19920521000000Z"),
-        std::make_pair(datetime_t(1992, 6, 22, 12, 34, 21), "19920622123421Z"),
-        std::make_pair(datetime_t(1992, 7, 22, 13, 21, 00, 3), "19920722132100.3Z"),
-    };
-
-    asn1_encode enc;
-    basic_stream bs;
-
-    auto encode_generalizedtime_routine = [&](const datetime_t& d, basic_stream& bs) -> void { enc.generalized_time(bs, d); };
-
-    for (auto entry : _table) {
-        const basic_stream& expect = entry.couple.second;
-        encode_generalizedtime_routine(entry.couple.first, bs);
-
-        {
-            test_case_notimecheck notimecheck(_test_case);
-            _logger->dump(bs);
-            _test_case.assert(bs == expect, __FUNCTION__, "X.690 11.7 generalized time expect %s", expect.c_str());
-            bs.clear();
-        }
-    }
-}
-
-void x690_annex_a() {
-    //
-}
-
 void test_asn1_typedef_value() {
     _test_case.begin("ASN.1");
     // PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
@@ -506,7 +423,8 @@ void test_asn1_typedef_value() {
 
         auto node_personal = new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit));
         *node_personal << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
-                       << new asn1_object("title", new asn1_object(asn1_type_visiblestring, new asn1_tag(0)))
+                       //<< new asn1_object("title", new asn1_object(asn1_type_visiblestring, new asn1_tag(0)))
+                       << new asn1_object("title", asn1_type_visiblestring, new asn1_tag(0))
                        << new asn1_object("number", new asn1_object("EmployeeNumber", asn1_type_referenced))
                        << new asn1_object("dateOfHire", new asn1_object("Date", asn1_type_referenced, new asn1_tag(1)))
                        << new asn1_object("nameOfSpouse", new asn1_object("Name", asn1_type_referenced, new asn1_tag(2)))
@@ -558,6 +476,107 @@ void test_asn1_typedef_value() {
     __finally2 { object->release(); }
 }
 
+enum {
+    token_type_null = 0x2000,
+    token_type_bool,
+    token_type_int,
+    token_type_real,
+    token_type_sequence,
+    token_type_sequenceof,
+    token_type_set,
+    token_type_setof,
+    token_type_ia5string,
+    token_type_visiblestring,
+
+    token_value_true,
+    token_value_false,
+
+    token_class_universal,
+    token_class_application,
+    token_class_private,
+
+    token_tag_implicit,
+    token_tag_explicit,
+};
+
+void x690_compose() {
+    struct testvector {
+        const char* source;
+    } _table[] = {
+        R"(NULL)",
+        R"(INTEGER)",
+        R"(REAL)",
+        R"(SEQUENCE {name IA5String, ok BOOLEAN })",
+        R"(Date ::= VisibleString)",
+        R"(Date ::= [APPLICATION 3] IMPLICIT VisibleString)",
+    };
+
+    for (auto item : _table) {
+        _logger->writeln("\e[1;33m%s\e[0m", item.source);
+
+        parser p;
+
+        p.add_token("::=", token_assign)
+            .add_token("--", token_comments)
+            .add_token("BOOLEAN", token_type_bool)
+            .add_token("INTEGER", token_type_int)
+            .add_token("NULL", token_type_null)
+            .add_token("REAL", token_type_real)
+            .add_token("SEQUENCE", token_type_sequence)
+            .add_token("IA5String", token_type_ia5string)
+            .add_token("VisibleString", token_type_visiblestring)
+            .add_token("TRUE", token_value_true)
+            .add_token("FALSE", token_value_false)
+            .add_token("UNIVERSAL", token_class_universal)
+            .add_token("APPLICATION", token_class_application)
+            .add_token("PRIVATE", token_class_private)
+            .add_token("IMPLICIT", token_tag_implicit)
+            .add_token("EXPLICIT", token_tag_explicit);
+
+        parser::context context;
+        p.parse(context, item.source);
+
+        p.add_pattern("NULL")
+            .add_pattern("INTEGER")
+            .add_pattern("REAL")
+            .add_pattern("BOOLEAN")
+            .add_pattern("SEQUENCE")
+            .add_pattern("IA5String")
+            .add_pattern("VisibleString")
+            .add_pattern("name BOOLEAN")
+            .add_pattern("name IA5String")
+            .add_pattern("name VisibleString")
+            .add_pattern("[UNIVERSAL 1]")
+            .add_pattern("[UNIVERSAL 1] IMPLICIT")
+            .add_pattern("[APPLICATION 1]")
+            .add_pattern("[APPLICATION 1] IMPLICIT")
+            .add_pattern("[PRIVATE 1]")
+            .add_pattern("[PRIVATE 1] IMPLICIT");
+
+        auto result = p.psearch(context);
+        for (auto item : result) {
+            parser::search_result res;
+            context.psearch_result(res, item.second, item.first);
+
+            // TODO - sketch
+            // 1. choose a longest pattern
+            //    patterns found
+            //      INTEGER
+            //      id INTEGER
+            // 2. compile pattern
+            //      convert i INTEGER to new asn1_object("i", asn1_type_integer)
+            // 3. sub-patterns pattern1 { pattern2, ... }
+            // 4. except regular expression
+
+            _logger->writeln("pattern[%i] at [%zi] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+        }
+    }
+}
+
+void x690_annex_a() {
+    //
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -576,16 +595,13 @@ int main(int argc, char** argv) {
     // studying ...
     x690_8_1_3_length_octets();
     x690_8_1_5_end_of_contents();
-    x690_encoding();
-    x690_encode_typevalue();
+    x690_encoding_value();
+    x690_encoding_typevalue();
     x690_8_6_bitstring();
     x690_8_9_sequence();
-    x690_8_19_objid();
-    x690_8_20_relobjid();
-    x690_8_21_visiblestring();
-    x690_11_7_generallizedtime();
-    x690_annex_a();
     test_asn1_typedef_value();
+    x690_compose();
+    x690_annex_a();
 
     _logger->flush();
 

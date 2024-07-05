@@ -220,6 +220,15 @@ asn1_encode& asn1_encode::encode(binary_t& bin, asn1_type_t type, const variant&
         case TYPE_STRING:
             primitive(bin, type, value.content().data.str);
             break;
+        case TYPE_DATETIME:
+            switch (type) {
+                case asn1_type_generalizedtime:
+                    generalized_time(bin, *value.content().data.dt);
+                    break;
+                default:
+                    break;
+            }
+            break;
     }
     return *this;
 }
@@ -239,13 +248,6 @@ asn1_encode& asn1_encode::encode(binary_t& bin, int tag, int class_number) {
     }
     return *this;
 }
-
-// asn1_encode& asn1_encode::encode(binary_t& bin, int tag, int class_number, const std::string& value) {
-//     encode(bin, tag, class_number);
-//     t_asn1_length_octets<size_t>(bin, value.size());
-//     binary_append(bin, value);
-//     return *this;
-// }
 
 asn1_encode& asn1_encode::generalstring(binary_t& bin, const std::string& value) {
     primitive(bin, asn1_tag_generalstring, value);
@@ -277,6 +279,18 @@ asn1_encode& asn1_encode::bitstring(binary_t& bin, const std::string& value) {
     t_asn1_length_octets<uint16>(bin, 1 + (temp.size() / 2));
     binary_push(bin, pad);
     binary_append(bin, base16_decode(temp));
+    return *this;
+}
+
+asn1_encode& asn1_encode::generalized_time(binary_t& bin, const datetime_t& dt) {
+    basic_stream bs;
+    generalized_time(bs, dt);
+    bin.insert(bin.end(), bs.data(), bs.data() + bs.size());
+    return *this;
+}
+
+asn1_encode& asn1_encode::utctime(binary_t& bin, const datetime_t& dt) {
+    //
     return *this;
 }
 
