@@ -153,7 +153,7 @@ return_t cmdarg_t<T>::bind(T& source, char* param) {
  *      cmdline.help ();
  *  }
  *
- *  OPTION opt = cmdline.value ();
+ *  const OPTION& opt = cmdline.value ();
  *  std::cout << "infile "  << opt.infile.c_str () << std::endl;
  *  std::cout << "outfile " << opt.outfile.c_str () << std::endl;
  *  std::cout << "keygen "  << opt.keygen << std::endl;

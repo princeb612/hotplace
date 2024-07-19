@@ -550,8 +550,6 @@ class t_graph {
                 dist[temp] = graph_search::graph_infinite;
             }
 
-            // this->visit(u);
-
             pq.push({0, u});
             dist[u] = 0;
 

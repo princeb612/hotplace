@@ -885,7 +885,9 @@ int main(int argc, char **argv) {
     *cmdline << cmdarg_t<OPTION>("-c", "connect", [&](OPTION &o, char *param) -> void { o.connect = 1; }).optional()
              << cmdarg_t<OPTION>("-p", "read stream using http_protocol", [&](OPTION &o, char *param) -> void { o.mode = 1; }).optional()
              << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
-             << cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/)", [&](OPTION &o, char *param) -> void { o.url = param; }).preced().optional();
+             << cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/) feat. httpauth", [&](OPTION &o, char *param) -> void { o.url = param; })
+                    .preced()
+                    .optional();
 
     cmdline->parse(argc, argv);
     const OPTION &option = cmdline->value();

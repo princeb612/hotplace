@@ -131,23 +131,11 @@ bool http_authentication_resolver::custom_authenticate(http_authenticate_provide
     return ret_value;
 }
 
-basic_credentials& http_authentication_resolver::get_basic_credentials(const std::string& realm) {
-    basic_credentials dummy;
-    realm_basic_credentials_pib_t pib = _realm_basic_credentials.insert(std::make_pair(realm, dummy));
-    return pib.first->second;
-}
+basic_credentials& http_authentication_resolver::get_basic_credentials(const std::string& realm) { return _realm_basic_credentials[realm]; }
 
-digest_credentials& http_authentication_resolver::get_digest_credentials(const std::string& realm) {
-    digest_credentials dummy;
-    realm_digest_credentials_pib_t pib = _realm_digest_credentials.insert(std::make_pair(realm, dummy));
-    return pib.first->second;
-}
+digest_credentials& http_authentication_resolver::get_digest_credentials(const std::string& realm) { return _realm_digest_credentials[realm]; }
 
-bearer_credentials& http_authentication_resolver::get_bearer_credentials(const std::string& realm) {
-    bearer_credentials dummy;
-    realm_bearer_credentials_pib_t pib = _realm_bearer_credentials.insert(std::make_pair(realm, dummy));
-    return pib.first->second;
-}
+bearer_credentials& http_authentication_resolver::get_bearer_credentials(const std::string& realm) { return _realm_bearer_credentials[realm]; }
 
 oauth2_credentials& http_authentication_resolver::get_oauth2_credentials() { return _oauth2_credentials; }
 

@@ -18,6 +18,7 @@
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -188,36 +189,203 @@ class t_kmp_pattern {
 };
 
 /**
- * @brief   Aho-Corasick  algorithm
- * @remarks
- *          multiple-patterns
- *              KMP O(n*k + m)
- *              Aho-Corasick O(n + m + z) ; z count of matches
- * @refer   https://www.javatpoint.com/aho-corasick-algorithm-for-pattern-searching-in-cpp
- * @sample
- *          t_aho_corasick ac;
- *          ac.insert("abc", 3).insert("ab", 2).insert("bc", 2).insert("a", 1);
- *          ac.build_state_machine();
- *          const char* text = "abcaabc";
- *          std::multimap<unsigned, size_t> result;
- *          result = ac.search(text, strlen(text));
- *          for (auto item : result) {
- *              _logger->writeln("pattern[%i] at [%zi]", item.first, item.second);
- *          }
+ * @brief   return array[index]
+ * @sa      t_trie, t_aho_corasick
  */
+template <typename BT = char, typename T = BT>
+BT memberof_defhandler(const T* source, size_t idx) {
+    return source ? source[idx] : BT();
+}
 
-template <typename T = char>
-class t_aho_corasick {
+/**
+ * @brief   Trie Data Structure
+ *          A Trie, also known as a prefix tree, is a tree-like data structure used to store a dynamic set of strings.
+ * @refer   https://www.geeksforgeeks.org/trie-data-structure-in-cpp/
+ *          https://www.geeksforgeeks.org/auto-complete-feature-using-trie/
+ * @sample
+ *          t_trie<char> trie;
+ *          trie.add("hello", 5).add("dog", 3).add("help", 4);
+ *          result = trie.search("hello", 5); // true
+ *          result = trie.prefix("he", 2); // true
+ *          auto handler = [](const char* p, size_t size) -> void {
+ *              if (p) {
+ *                  printf("%.*s\n", (unsigned)size, p);
+ *              }
+ *          };
+ *          trie.dump(handler); // dog, hello, help
+ *          result = trie.suggest("he", 2, handler); // hello, help
+ *          trie.erase("help", 4);
+ *          result = trie.search("help", 4); // false
+ */
+template <typename BT = char, typename T = BT>
+class t_trie {
    public:
+    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
+    typedef typename std::function<void(const BT* t, size_t size)> dump_handler;
+
     /**
      * @brief   trie node structure
      */
     struct trienode {
-        std::map<T, trienode*> children;
-        trienode* fail;
-        std::vector<int> output;
+        std::map<BT, trienode*> children;
+        bool eow;  // end of  word
 
-        trienode() : fail(nullptr) {}
+        trienode() : eow(false) {}
+        ~trienode() {
+            for (auto item : children) {
+                delete item.second;
+            }
+        }
+        bool islast() { return children.empty(); }
+    };
+
+    t_trie(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {}
+    virtual ~t_trie() { delete _root; }
+
+    t_trie<BT, T>& add(const T* pattern, size_t size) {
+        if (pattern) {
+            trienode* current = _root;
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(pattern, i);
+                trienode* child = current->children[t];
+                if (nullptr == child) {
+                    child = new trienode;
+                    current->children[t] = child;
+                }
+                current = child;
+            }
+            current->eow = true;
+        }
+
+        return *this;
+    }
+    bool search(const T* pattern, size_t size) {
+        bool ret = false;
+        if (pattern) {
+            trienode* current = _root;
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(pattern, i);
+                trienode* child = current->children[t];
+                if (nullptr == child) {
+                    return false;
+                }
+                current = child;
+            }
+            ret = current->eow;
+        }
+        return ret;
+    }
+    bool prefix(const T* pattern, size_t size) {
+        bool ret = true;
+        if (pattern) {
+            trienode* current = _root;
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(pattern, i);
+                trienode* child = current->children[t];
+                if (nullptr == child) {
+                    return false;
+                }
+                current = child;
+            }
+        }
+        return ret;
+    }
+    void erase(const T* pattern, size_t size) {
+        if (pattern) {
+            trienode* current = _root;
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(pattern, i);
+                trienode* child = current->children[t];
+                if (nullptr == child) {
+                    return;
+                }
+                current = child;
+            }
+            if (current->eow) {
+                current->eow = false;
+            }
+        }
+    }
+
+    t_trie<BT, T>& reset() {
+        if (_root.children.size()) {
+            delete _root;
+            _root = new trienode;
+        }
+        return *this;
+    }
+
+    bool suggest(const T* pattern, size_t size, dump_handler handler) {
+        bool ret = true;
+        if (pattern && handler) {
+            trienode* current = _root;
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(pattern, i);
+                trienode* child = current->children[t];
+                if (nullptr == child) {
+                    return false;
+                }
+                current = child;
+            }
+            if (current->islast()) {
+                handler(pattern, size);
+            } else {
+                dump(current, pattern, size, handler);
+            }
+        } else {
+            ret = false;
+        }
+        return ret;
+    }
+
+    void dump(dump_handler handler) const { dump(_root, nullptr, 0, handler); }
+
+   protected:
+    void dump(trienode* node, const T* pattern, size_t size, dump_handler handler) const {
+        if (node && handler) {
+            if (node->eow) {
+                handler(pattern, size);
+            }
+            for (auto item : node->children) {
+                std::vector<BT> v;
+                v.insert(v.end(), pattern, pattern + size);
+                v.insert(v.end(), item.first);
+                dump(item.second, &v[0], v.size(), handler);
+            }
+        }
+    }
+
+   private:
+    trienode* _root;
+    memberof_t _memberof;
+};
+
+/**
+ * @brief   suffix trie
+ * @refer   https://www.geeksforgeeks.org/pattern-searching-using-trie-suffixes/
+ * @sample
+ *          // construct
+ *          t_suffixtree<char> suffixtree("geeksforgeeks.org", 17);
+ *          std::set<unsigned> result = suffixtree.search("ee", 2);       // 1, 9
+ *          std::set<unsigned> result = suffixtree.search("geek", 4);     // 0, 8
+ *          std::set<unsigned> result = suffixtree.search("quiz", 4);     // not found
+ *          std::set<unsigned> result = suffixtree.search("forgeeks", 8); // 5
+ *
+ *          //
+ *          t_suffixtree<char> suffixtree;
+ *          suffixtree.add("geeksforgeeks.org", 17);
+ *          std::set<unsigned> result = suffixtree.search("ee", 2);       // 1, 9
+ */
+template <typename BT = char, typename T = BT>
+class t_suffixtree {
+   public:
+    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
+
+    struct trienode {
+        std::map<BT, trienode*> children;
+        std::set<unsigned> index;
+
+        trienode() {}
         ~trienode() {
             for (auto item : children) {
                 delete item.second;
@@ -225,125 +393,109 @@ class t_aho_corasick {
         }
     };
 
-   public:
-    t_aho_corasick() : _root(new trienode) {}
-    ~t_aho_corasick() { delete _root; }
+    t_suffixtree(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {}
+    t_suffixtree(const T* pattern, size_t size, memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {
+        add(pattern, size);
+    }
+    virtual ~t_suffixtree() { delete _root; }
 
-    /**
-     * @brief   insert a pattern into the trie
-     */
-    t_aho_corasick<T>& insert(const std::vector<T>& pattern) { return insert(&pattern[0], pattern.size()); }
-    t_aho_corasick<T>& insert(const T* pattern, size_t size) {
+    std::set<unsigned> search(const T* pattern, size_t size) {
+        std::set<unsigned> index;
         if (pattern) {
             trienode* current = _root;
-            std::vector<T> p;
-
-            p.insert(p.end(), pattern, pattern + size);
-
             for (size_t i = 0; i < size; ++i) {
-                const T& t = pattern[i];
-                if (nullptr == current->children[t]) {
-                    current->children[t] = new trienode();
+                const BT& t = _memberof(pattern, i);
+                auto item = current->children.find(t);
+                if (current->children.end() == item) {
+                    return std::set<unsigned>();
                 }
-                current = current->children[t];
+                current = item->second;
             }
+            for (auto item : current->index) {
+                index.insert(item - size + 1);
+            }
+        }
+        return index;
+    }
 
-            size_t index = _patterns.size();
-            current->output.push_back(index);
-            _patterns.insert({index, std::move(p)});
+    t_suffixtree<BT, T>& add(const T* pattern, size_t size) {
+        if (pattern) {
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(pattern, i);
+                _source.insert(_source.end(), t);
+            }
+            size_t size_source = _source.size();
+            for (size_t i = 0; i < size_source; ++i) {
+                add(&_source[i], size_source - i, i);
+            }
         }
         return *this;
     }
-    /**
-     * @brief   build the Aho-Corasick finite state machine
-     */
-    void build_state_machine() {
-        std::queue<trienode*> q;
 
-        // set failure links
-        for (auto& pair : _root->children) {
-            pair.second->fail = _root;
-            q.push(pair.second);
+    t_suffixtree<BT, T>& reset() {
+        if (_root->children.size()) {
+            delete _root;
+            _root = new trienode;
         }
-
-        // Breadth-first traversal
-        while (false == q.empty()) {
-            trienode* current = q.front();
-            q.pop();
-
-            for (auto& pair : current->children) {
-                const T& key = pair.first;
-                trienode* child = pair.second;
-
-                q.push(child);
-
-                trienode* failNode = current->fail;
-                while (failNode && !failNode->children[key]) {
-                    failNode = failNode->fail;
-                }
-
-                child->fail = failNode ? failNode->children[key] : _root;
-
-                // Merge output lists
-                child->output.insert(child->output.end(), child->fail->output.begin(), child->fail->output.end());
-            }
-        }
+        return *this;
     }
 
-    /**
-     * @brief   search for patterns
-     * @return  std::multimap<unsigned, size_t> as is multimap<pattern_id, index>
-     */
-    std::multimap<unsigned, size_t> search(const std::vector<T>& source) { return search(&source[0], source.size()); }
-    std::multimap<unsigned, size_t> search(const T* source, size_t size) {
-        std::multimap<unsigned, size_t> result;
-        if (source) {
+   protected:
+    void add(const BT* pattern, size_t size, unsigned idx) {
+        if (pattern) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
-                const T& t = source[i];
-                while (current && (nullptr == current->children[t])) {
-                    current = current->fail;
+                const BT& t = pattern[i];
+                trienode* child = current->children[t];
+                if (nullptr == child) {
+                    child = new trienode;
+                    current->children[t] = child;
                 }
-                if (current) {
-                    current = current->children[t];
-                    for (auto v : current->output) {
-                        // v is index of pattern
-                        // i is end position of pattern
-                        // (i - sizepat + 1) is beginning position of pattern
-                        size_t sizepat = _patterns[v].size();
-                        size_t pos = i - sizepat + 1;
-                        result.insert({v, pos});
-                        // debug
-                        // printf("pattern:%i at [%zi] pattern [%.*s] \n",  v, pos, (unsigned)sizepat, &(_patterns[v])[0]);
-                    }
-                } else {
-                    current = _root;
-                }
+                current = child;
+                current->index.insert(idx + i);
             }
         }
-        return result;
     }
 
    private:
     trienode* _root;
-    std::map<size_t, std::vector<T>> _patterns;
+    std::vector<BT> _source;
+    memberof_t _memberof;
 };
 
 /**
- * @brief   Aho-Corasick  algorithm using pointer
+ * @brief   Aho-Corasick algorithm
  * @remarks
- *          // sketch
- *          struct token { int type; };
- *          // lambda conversion - const T* to T* const*
- *          auto memberof = [](token* const* source, size_t idx) -> int {
- *              const token* p = source[idx];
- *              return p->type;
- *          };
- *          t_aho_corasick_ptr<int, token*> ac(memberof);
- * @sa      t_aho_corasick
+ *          multiple-patterns
+ *              KMP O(n*k + m)
+ *              Aho-Corasick O(n + m + z) ; z count of matches
+ * @refer   https://www.javatpoint.com/aho-corasick-algorithm-for-pattern-searching-in-cpp
+ * @sample
+ *          // search
+ *          {
+ *              t_aho_corasick ac;
+ *              ac.insert("abc", 3).insert("ab", 2).insert("bc", 2).insert("a", 1);
+ *              ac.build_state_machine();
+ *              const char* text = "abcaabc";
+ *              std::multimap<unsigned, size_t> result;
+ *              result = ac.search(text, strlen(text));
+ *              for (auto item : result) {
+ *                  _logger->writeln("pattern[%i] at [%zi]", item.first, item.second);
+ *              }
+ *          }
+ *          // using pointer
+ *          {
+ *              struct token { int type; };
+ *              // lambda conversion - const T* to T* const*
+ *              auto memberof = [](token* const* source, size_t idx) -> int {
+ *                  const token* p = source[idx];
+ *                  return p->type;
+ *              };
+ *              t_aho_corasick<int, token*> ac(memberof);
+ *          }
  */
-template <typename BT = char, typename T = char>
-class t_aho_corasick_ptr {
+template <typename BT = char, typename T = BT>
+class t_aho_corasick {
    public:
     typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
 
@@ -364,14 +516,14 @@ class t_aho_corasick_ptr {
     };
 
    public:
-    t_aho_corasick_ptr(memberof_t memberof) : _root(new trienode), _memberof(memberof) {}
-    ~t_aho_corasick_ptr() { delete _root; }
+    t_aho_corasick(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {}
+    ~t_aho_corasick() { delete _root; }
 
     /**
      * @brief   insert a pattern into the trie
      */
-    t_aho_corasick_ptr<BT, T>& insert(const std::vector<T>& pattern) { return insert(&pattern[0], pattern.size()); }
-    t_aho_corasick_ptr<BT, T>& insert(const T* pattern, size_t size) {
+    t_aho_corasick<BT, T>& insert(const std::vector<T>& pattern) { return insert(&pattern[0], pattern.size()); }
+    t_aho_corasick<BT, T>& insert(const T* pattern, size_t size) {
         if (pattern) {
             trienode* current = _root;
             std::vector<T> p;
@@ -380,10 +532,12 @@ class t_aho_corasick_ptr {
 
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
-                if (nullptr == current->children[t]) {
-                    current->children[t] = new trienode();
+                trienode* child = current->children[t];
+                if (nullptr == child) {
+                    child = new trienode;
+                    current->children[t] = child;
                 }
-                current = current->children[t];
+                current = child;
             }
 
             size_t index = _patterns.size();
@@ -430,7 +584,7 @@ class t_aho_corasick_ptr {
 
     /**
      * @brief   search for patterns
-     * @return  std::multimap<unsigned, size_t> as is multimap<pattern_id, index>
+     * @return  std::multimap<unsigned, size_t> as is multimap<pattern_id, position>
      */
     std::multimap<unsigned, size_t> search(const std::vector<T>& source) { return search(&source[0], source.size()); }
     std::multimap<unsigned, size_t> search(const T* source, size_t size) {
@@ -462,6 +616,12 @@ class t_aho_corasick_ptr {
         return result;
     }
     const std::vector<T>& get_patterns(size_t index) { return _patterns[index]; }
+
+    void reset() {
+        delete _root;
+        _root = new trienode;
+        _patterns.clear();
+    }
 
    private:
     trienode* _root;

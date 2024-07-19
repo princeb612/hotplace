@@ -503,13 +503,13 @@ void test_pattern_search() {
         // compare member (see operator ==)
         std::vector<pattern_search_sample_data> data2;
         std::vector<pattern_search_sample_data> pattern2;
-        auto append = [](std::vector<pattern_search_sample_data>& target, int i) -> void { target.insert(target.end(), {"", i}); };
-        for (auto temp : data.get()) {
-            append(data2, temp);
-        }
-        for (auto temp : pattern.get()) {
-            append(pattern2, temp);
-        }
+        auto prepare = [](std::vector<pattern_search_sample_data>& target, const binary& source) -> void {
+            for (auto item : source.get()) {
+                target.insert(target.end(), item);
+            }
+        };
+        prepare(data2, data);
+        prepare(pattern2, pattern);
 
         t_kmp_pattern<pattern_search_sample_data> kmp;
         int idx = kmp.match(&data2[0], data2.size(), &pattern2[0], pattern2.size());
@@ -519,18 +519,25 @@ void test_pattern_search() {
     {
         std::vector<pattern_search_sample_data*> data2;
         std::vector<pattern_search_sample_data*> pattern2;
-        auto append = [](std::vector<pattern_search_sample_data*>& target, int i) -> void { target.insert(target.end(), new pattern_search_sample_data(i)); };
-        for (auto temp : data.get()) {
-            append(data2, temp);
-        }
-        for (auto temp : pattern.get()) {
-            append(pattern2, temp);
-        }
+        auto prepare = [](std::vector<pattern_search_sample_data*>& target, const binary& source) -> void {
+            for (auto item : source.get()) {
+                target.insert(target.end(), new pattern_search_sample_data(item));
+            }
+        };
+        auto clean = [](std::vector<pattern_search_sample_data*>& target) -> void {
+            for (auto item : target) {
+                delete item;
+            }
+        };
 
+        prepare(data2, data);
+        prepare(pattern2, pattern);
         t_kmp_pattern<pattern_search_sample_data*> kmp;
         auto comparator = [](const pattern_search_sample_data* lhs, const pattern_search_sample_data* rhs) -> bool { return (lhs->value == rhs->value); };
         int idx = kmp.match(&data2[0], data2.size(), &pattern2[0], pattern2.size(), 0, comparator);
         _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct*> %i using comparator", idx);
+        clean(data2);
+        clean(pattern2);
     }
 }
 
@@ -538,7 +545,7 @@ void test_multipattern_search() {
     _test_case.begin("t_aho_corasick");
 
     struct testvector {
-        const char* text;
+        const char* source;
         int npat;
         struct {
             const char* p;
@@ -554,8 +561,8 @@ void test_multipattern_search() {
             // t_aho_corasick ac;
             // ac.insert("abc", 3).insert("ab", 2).insert("bc", 2).insert("a", 1);
             // ac.build_state_machine();
-            // const char* text = "abcaabc";
-            // ac.search(text, strlen(text));
+            // const char* source = "abcaabc";
+            // ac.search(source, strlen(source));
             "abcaabc",
             4,
             {
@@ -582,8 +589,8 @@ void test_multipattern_search() {
             // t_aho_corasick ac;
             // ac.insert("cache", 5).insert("he", 2).insert("chef", 4).insert("achy", 4);
             // ac.build_state_machine();
-            // const char* text = "cacachefcachy";
-            // ac.search(text, strlen(text));
+            // const char* source = "cacachefcachy";
+            // ac.search(source, strlen(source));
             "cacachefcachy",
             4,
             {
@@ -605,8 +612,8 @@ void test_multipattern_search() {
             // t_aho_corasick ac;
             // ac.insert("he", 2).insert("she", 3).insert("hers", 4).insert("his", 3);
             // ac.build_state_machine();
-            // const char* text = "ahishers";
-            // ac.search(text, strlen(text));
+            // const char* source = "ahishers";
+            // ac.search(source, strlen(source));
             "ahishers",
             4,
             {
@@ -631,7 +638,7 @@ void test_multipattern_search() {
         std::multimap<unsigned, size_t> expect;
         std::multimap<unsigned, size_t> result;
 
-        _logger->writeln(R"(text "%s")", item.text);
+        _logger->writeln(R"(source "%s")", item.source);
         for (int i = 0; i < item.npat; i++) {
             auto p = item.pat[i].p;
             auto size = item.pat[i].size;
@@ -643,27 +650,482 @@ void test_multipattern_search() {
             auto p = item.pat[patid].p;
             auto idx = item.expect[i].idx;
             expect.insert({patid, idx});
-            _logger->writeln(R"(expect pattern[%i](as is "%s") at text[%zi])", patid, p, idx);
+            _logger->writeln(R"(expect pattern[%i](as is "%s") at source[%zi])", patid, p, idx);
         }
 
         ac.build_state_machine();
-        result = ac.search(item.text, strlen(item.text));
+        result = ac.search(item.source, strlen(item.source));
 
-        _test_case.assert(expect == result, __FUNCTION__, R"(multiple pattern search "%s")", item.text);
+        _test_case.assert(expect == result, __FUNCTION__, R"(multiple pattern search "%s")", item.source);
     }
 
     t_aho_corasick<char> ac;
     ac.insert("he", 2).insert("she", 3).insert("hers", 4).insert("his", 3);
     ac.build_state_machine();
-    const char* text = "ahishers";
-    ac.search(text, strlen(text));
+    const char* source = "ahishers";
+    ac.search(source, strlen(source));
 
     std::multimap<unsigned, size_t> result;
-    result = ac.search(text, strlen(text));
+    std::multimap<unsigned, size_t> expect = {{0, 4}, {1, 3}, {2, 4}, {3, 1}};
+    result = ac.search(source, strlen(source));
     for (auto item : result) {
         _logger->writeln("pattern[%i] at [%zi]", item.first, item.second);
     }
-    _test_case.assert(4 == result.size(), __FUNCTION__, "multiple pattern");
+    _test_case.assert(result == expect, __FUNCTION__, "multiple pattern");
+}
+
+void test_trie() {
+    _test_case.begin("t_trie");
+    // https://www.geeksforgeeks.org/trie-data-structure-in-cpp/
+    struct testvector {
+        const char* p;
+        size_t size;
+        bool expect;
+    };
+    testvector _table_pattern[] = {
+        {"geek", 4}, {"geeks", 5}, {"code", 4}, {"coder", 5}, {"coding", 6},
+    };
+    testvector _table_search[] = {
+        {"geek", 4, true}, {"geeks", 5, true}, {"code", 4, true}, {"coder", 5, true}, {"coding", 6, true}, {"codex", 5, false},
+    };
+    testvector _table_prefix[] = {
+        {"ge", 2, true},
+        {"cod", 3, true},
+        {"coz", 3, false},
+    };
+    testvector _table_erase[] = {
+        {"geek", 4, false},
+        {"coding", 6, false},
+    };
+
+    t_trie<char> trie;
+    bool test = false;
+
+    for (auto item : _table_pattern) {
+        trie.add(item.p, item.size);
+    }
+
+    // dump
+    auto handler = [](const char* p, size_t size) -> void {
+        if (p) {
+            printf("%.*s\n", (unsigned)size, p);
+        }
+    };
+    trie.dump(handler);
+    _test_case.assert(true, __FUNCTION__, "dump");
+
+    // search
+    for (auto item : _table_search) {
+        test = trie.search(item.p, item.size);
+        _test_case.assert(item.expect == test, __FUNCTION__, "search %.*s [%d]", (unsigned)item.size, item.p, item.expect ? 1 : 0);
+    }
+    // prefix
+    for (auto item : _table_prefix) {
+        test = trie.prefix(item.p, item.size);
+        _test_case.assert(item.expect == test, __FUNCTION__, "prefix %.*s [%d]", (unsigned)item.size, item.p, item.expect ? 1 : 0);
+    }
+    // erase
+    for (auto item : _table_erase) {
+        trie.erase(item.p, item.size);
+    }
+    for (auto item : _table_erase) {
+        test = trie.search(item.p, item.size);
+        _test_case.assert(item.expect == test, __FUNCTION__, "search after erase %.*s [%d]", (unsigned)item.size, item.p, item.expect ? 1 : 0);
+    }
+}
+
+void test_trie_autocompletion() {
+    _test_case.begin("t_trie");
+    // https://www.geeksforgeeks.org/auto-complete-feature-using-trie/
+    struct testvector {
+        const char* p;
+        size_t size;
+    };
+    testvector _table_pattern[] = {
+        {"hello", 5}, {"dog", 3}, {"hell", 4}, {"cat", 3}, {"a", 1}, {"hel", 3}, {"help", 4}, {"helps", 5}, {"helping", 7},
+    };
+
+    _test_case.begin("t_trie");
+    t_trie<char> trie;
+    bool test = false;
+
+    for (auto item : _table_pattern) {
+        trie.add(item.p, item.size);
+    }
+
+    // dump
+    auto handler = [](const char* p, size_t size) -> void {
+        if (p) {
+            printf("%.*s\n", (unsigned)size, p);
+        }
+    };
+    trie.dump(handler);
+    _test_case.assert(true, __FUNCTION__, "dump");
+
+    test = trie.suggest("hel", 3, handler);
+    _test_case.assert(true == test, __FUNCTION__, "auto-completion hel");
+}
+
+// https://www.geeksforgeeks.org/pattern-searching-using-trie-suffixes/
+void test_suffixtrie() {
+    _test_case.begin("suffix trie");
+
+    struct testvector {
+        const char* p;
+        size_t size;
+        unsigned count;
+        unsigned expect[5];
+    };
+
+    t_suffixtree<char> tree("geeksforgeeks.org", 17);
+    testvector _table_pattern[] = {
+        {"ee", 2, 2, {1, 9}},    //
+        {"geek", 4, 2, {0, 8}},  //
+        {"quiz", 4, 0},          //
+        {"forgeeks", 8, 1, {5}}  //
+    };
+
+    for (auto item : _table_pattern) {
+        std::set<unsigned> expect;
+        for (unsigned i = 0; i < item.count; i++) {
+            expect.insert(item.expect[i]);
+        }
+
+        std::set<unsigned> result = tree.search(item.p, item.size);
+        for (auto idx : result) {
+            _logger->writeln("found at %i", idx);
+        }
+        _test_case.assert(expect == result, __FUNCTION__, "search %.*s", (unsigned)item.size, item.p);
+    }
+}
+
+void test_suffixtrie2() {
+    _test_case.begin("suffix trie");
+
+    struct testvector {
+        const char* p;
+        size_t size;
+        unsigned count;
+        unsigned expect[5];
+    };
+
+    t_suffixtree<char> tree;
+    tree.reset().add("test ", 5).add("geeksforgeeks.org", 17);  // "test geeksforgeeks.org"
+    testvector _table_pattern2[] = {
+        {"ee", 2, 2, {6, 14}},     //
+        {"geek", 4, 2, {5, 13}},   //
+        {"quiz", 4, 0},            //
+        {"forgeeks", 8, 1, {10}},  //
+        {"est g", 4, 1, {1}}       //
+    };
+    for (auto item : _table_pattern2) {
+        std::set<unsigned> expect;
+        for (unsigned i = 0; i < item.count; i++) {
+            expect.insert(item.expect[i]);
+        }
+
+        std::set<unsigned> result = tree.search(item.p, item.size);
+        for (auto idx : result) {
+            _logger->writeln("found at %i", idx);
+        }
+        _test_case.assert(expect == result, __FUNCTION__, "search %.*s", (unsigned)item.size, item.p);
+    }
+}
+
+template <typename BT = char, typename T = BT>
+BT memberof_defhandler2(const T* source, size_t idx) {
+    return source ? source[idx] : BT();
+}
+
+/**
+ * @brief   suffix tree (Ukkonen algorithm)
+ * @refer   https://www.geeksforgeeks.org/ukkonens-suffix-tree-construction-part-1/
+ *          https://brenden.github.io/ukkonen-animation/
+ *          https://programmerspatch.blogspot.com/2013/02/ukkonens-suffix-tree-algorithm.html
+ */
+template <typename BT = char, typename T = BT>
+class t_ukkonen {
+   public:
+    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
+    typedef typename std::function<void(const BT* t, size_t size)> dump_handler;
+
+    struct trienode {
+        std::map<BT, trienode*> children;
+        trienode* suffixLink;
+        int start;
+        int end;
+        int suffixIndex;
+
+        trienode(int start = -1, int end = -1) : start(start), end(end), suffixIndex(-1), suffixLink(nullptr) {}
+        ~trienode() {
+            for (auto item : children) {
+                delete item.second;
+            }
+        }
+
+        int length() { return end - start + 1; }
+    };
+
+    t_ukkonen(memberof_t memberof = memberof_defhandler2<BT, T>) : _memberof(memberof) { init(root = new trienode); }
+    t_ukkonen(const T* source, size_t size, memberof_t memberof = memberof_defhandler2<BT, T>) : _memberof(memberof) {
+        init(root = new trienode);
+        add(source, size);
+    }
+
+    t_ukkonen<BT, T>& add(const T* pattern, size_t size) {
+        if (pattern) {
+            reset();
+            for (int i = 0; i < size; ++i) {
+                const BT& t = _memberof(pattern, i);
+                source.insert(source.end(), t);
+            }
+            init(root);
+            int source_size = source.size();
+            for (int i = 0; i < source_size; ++i) {
+                extend(i);
+            }
+        }
+        set_suffixindex(root, 0);
+        return *this;
+    }
+
+    int search(const T* pattern, size_t size) {
+        int pos = -1;
+        if (pattern) {
+            trienode* currentNode = root;
+            int i = 0;
+            for (int i = 0; i < size;) {
+                const BT& t = _memberof(pattern, i);
+                if (currentNode->children.end() != currentNode->children.find(t)) {
+                    trienode* child = currentNode->children[t];
+                    int len = child->length();
+                    for (int j = 0; j < len && i < size; j++, i++) {
+                        pos = child->start + j;
+                        if (source[pos] != _memberof(pattern, i)) {
+                            return -1;
+                        }
+                    }
+                    currentNode = child;
+                } else {
+                    return -1;
+                }
+            }
+
+            if (-1 == currentNode->suffixIndex) {
+                pos = pos - size + 1;
+            } else {
+                pos = currentNode->suffixIndex;
+            }
+        }
+        return pos;
+    }
+
+    t_ukkonen<BT, T>& reset() {
+        if (root->children.size()) {
+            delete root;
+            root = new trienode;
+        }
+        return *this;
+    }
+
+    void dump(dump_handler handler) { dump(root, 0, handler); }
+
+   private:
+    memberof_t _memberof;
+    std::vector<BT> source;
+    trienode* root;
+    trienode* activeNode;
+    int activeEdge;
+    int activeLength;
+    int remainingSuffixCount;
+    trienode* lastNewNode;
+
+    void init(trienode* node) {
+        activeNode = node;
+        activeEdge = -1;
+        activeLength = 0;
+        remainingSuffixCount = 0;
+    }
+
+    void extend(int pos) {
+        lastNewNode = nullptr;
+        remainingSuffixCount++;
+        while (remainingSuffixCount > 0) {
+            if (0 == activeLength) {
+                activeEdge = pos;
+            }
+
+            auto item = activeNode->children.find(source[activeEdge]);
+            if (activeNode->children.end() == item) {
+                activeNode->children[source[activeEdge]] = new trienode(pos, source.size() - 1);
+                if (lastNewNode != nullptr) {
+                    lastNewNode->suffixLink = activeNode;
+                    lastNewNode = nullptr;
+                }
+            } else {
+                trienode* next = item->second;
+                int len = next->length();
+                if (activeLength >= len) {
+                    activeEdge += len;
+                    activeLength -= len;
+                    activeNode = next;
+                    continue;
+                }
+
+                if (source[next->start + activeLength] == source[pos]) {
+                    activeLength++;
+                    if (lastNewNode) {
+                        lastNewNode->suffixLink = activeNode;
+                        lastNewNode = nullptr;
+                    }
+                    break;
+                }
+
+                trienode* split = new trienode(next->start, next->start + activeLength - 1);
+                activeNode->children[source[activeEdge]] = split;
+                split->children[source[pos]] = new trienode(pos, source.size() - 1);
+                next->start += activeLength;
+                split->children[source[next->start]] = next;
+
+                if (lastNewNode) {
+                    lastNewNode->suffixLink = split;
+                }
+                lastNewNode = split;
+            }
+
+            remainingSuffixCount--;
+
+            if ((activeNode == root) && (activeLength > 0)) {
+                activeLength--;
+                activeEdge = pos - remainingSuffixCount + 1;
+            } else if (activeNode != root) {
+                auto temp = activeNode->suffixLink;
+                if (temp) {
+                    activeNode = temp;
+                } else {
+                    activeNode = root;
+                }
+            }
+        }
+    }
+
+    void set_suffixindex(trienode* node, int height) {
+        if (node) {
+            for (auto child : node->children) {
+                set_suffixindex(child.second, height + child.second->length());
+            }
+            if (node->children.empty()) {
+                node->suffixIndex = source.size() - height;
+            }
+        }
+    }
+
+    void dump(trienode* node, int level, dump_handler handler) {
+        // debug
+        printf("%p start %i end %i len %i index %i link %p (%zi)\n", node, node->start, node->end, node->length(), node->suffixIndex, node->suffixLink,
+               source.size());
+        for (auto& child : node->children) {
+            for (int i = 0; i < level; ++i) {
+                std::cout << " ";
+            }
+            trienode* item = child.second;
+            handler(&source[item->start], item->length());
+            dump(child.second, level + 1, handler);
+        }
+    }
+};
+
+void test_ukkonen() {
+    _test_case.begin("t_suffixtree (ukkonen algorithm)");
+
+    struct testvector {
+        const char* p;
+        size_t size;
+        unsigned count;
+        struct {
+            const char* p;
+            size_t size;
+            int res;
+        } expect[5];
+    };
+    testvector _table[] =  // ...
+        {
+            {"bananas",
+             7,
+             4,
+             {
+                 {"ana", 3, 1},
+                 {"ban", 3, 0},
+                 {"nana", 4, 2},
+                 {"apple", 5, -1},
+             }},
+            //{"THIS IS A TEST TEXT$",
+            // 20,
+            // 3,
+            // {
+            //     {"TEST", 4, 10},
+            //     {"IS A", 4, 5},
+            //     {"EXT$", 4, 16},
+            // }}
+        };
+
+    for (auto item : _table) {
+        t_ukkonen<char> tree(item.p, item.size);
+        auto dump_handler = [](const char* p, size_t size) -> void {
+            if (p) {
+                _logger->writeln(R"("%.*s")", (unsigned)size, p);
+                fflush(stdout);
+            }
+        };
+        tree.dump(dump_handler);
+        for (unsigned i = 0; i < item.count; i++) {
+            int test = tree.search(item.expect[i].p, item.expect[i].size);
+            _test_case.assert(item.expect[i].res == test, __FUNCTION__, "ukkonen search (%i)", test);
+        }
+    }
+}
+
+void test_ukkonen2() {
+    t_ukkonen<char> tree;
+    tree.add("b", 1).add("an", 2).add("anas", 4);
+    auto dump_handler = [](const char* p, size_t size) -> void {
+        if (p) {
+            _logger->writeln(R"("%.*s")", (unsigned)size, p);
+            fflush(stdout);
+        }
+    };
+    tree.dump(dump_handler);
+}
+
+// LCP
+// https://www.geeksforgeeks.org/longest-common-prefix-using-sorting/
+std::string get_lcp(std::string ar[], size_t n) {
+    std::string lcp;
+    if (n) {
+        if (1 == n) {
+            lcp = ar[0];
+        } else {
+            std::sort(ar, ar + n);
+
+            int en = std::min(ar[0].size(), ar[n - 1].size());
+
+            std::string first = ar[0], last = ar[n - 1];
+            int i = 0;
+            while (i < en && first[i] == last[i]) i++;
+
+            lcp = first.substr(0, i);
+        }
+    }
+    return lcp;
+}
+
+void test_lcp() {
+    _test_case.begin("LCP");
+    std::string ar[] = {"geeksforgeeks", "geeks", "geek", "geezer"};
+    int n = sizeof(ar) / sizeof(ar[0]);
+    std::string result = get_lcp(ar, n);
+    std::cout << "The longest common prefix is: " << result << std::endl;
+    _test_case.assert(result == "gee", __FUNCTION__, "LCP");
 }
 
 int main(int argc, char** argv) {
@@ -690,6 +1152,13 @@ int main(int argc, char** argv) {
     test_graph2();
     test_pattern_search();
     test_multipattern_search();
+    test_trie();
+    test_trie_autocompletion();
+    test_suffixtrie();
+    test_suffixtrie2();
+    test_ukkonen();
+    test_ukkonen2();
+    test_lcp();
 
     _logger->flush();
 

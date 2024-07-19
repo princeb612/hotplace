@@ -127,8 +127,9 @@ return_t parser::context::init(parser* obj, const char* p, size_t size) {
     return ret;
 }
 
-return_t parser::context::parse(parser* obj, const char* p, size_t size) {
+return_t parser::context::parse(parser* obj, const char* p, size_t size, uint32 flags) {
     return_t ret = errorcode_t::success;
+    unsigned error_lookup = 0;
     __try2 {
         if (nullptr == obj || nullptr == p) {
             ret = errorcode_t::invalid_parameter;
@@ -139,12 +140,16 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
         uint16 handle_quoted = obj->get_config().get("handle_quoted");
         uint16 handle_token = obj->get_config().get("handle_token");
         uint16 handle_quot_as_unquoted = obj->get_config().get("handle_quot_as_unquoted");
+        uint16 handle_lvalue_usertype = obj->get_config().get("handle_lvalue_usertype");
+        std::set<uint32> lvalues;
+        std::multimap<std::string, parser::token*> index;
 
         init(obj, p, size);
         parser::token* lvalue = nullptr;
 
         auto type_of = [&](char c) -> token_t { return _ascii_token_table[c].type; };
-        auto hook = [&](int where, parser::token* t) -> void {
+        auto hook = [&](int where, parser::token* t) -> bool {
+            bool ret_hook = true;
             if (0 == where) {
                 parser::token* prev = nullptr;
                 switch (get_token().get_type()) {
@@ -152,6 +157,10 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
                         lvalue = last_token();
                         lvalue->set_type(token_lvalue);
                         get_token().set_type(token_assign);
+                        if (handle_lvalue_usertype) {
+                            lvalues.insert(lvalue->get_index());
+                            // printf("add lvalue idx %i\n", lvalue->get_index());
+                        }
                         break;
                     default:
                         break;
@@ -164,19 +173,28 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
                         entry_no = -1;
                         break;
                     case token_quot_string:
-                    default:
-                        obj->lookup(t->as_string(p), entry_no);
-                        break;
+                    default: {
+                        std::string ts = t->as_string(p);
+                        ret_hook = obj->lookup(ts, entry_no, flags);
+                        if (true == ret_hook) {
+                            if (handle_lvalue_usertype) {
+                                index.insert({ts, t});
+                            }
+                        } else {
+                            ++error_lookup;
+                        }
+                    } break;
                 }
                 t->set_index(entry_no);
             }
             get_token().set_tag(0);
+            return ret_hook;
         };
 
         bool comments = false;
         bool quot = false;
 
-        for (size_t pos = 0; pos < size; pos++) {
+        for (size_t pos = 0; (pos < size) && (0 == error_lookup); pos++) {
             char c = p[pos];
             token_t type = type_of(c);
 
@@ -185,7 +203,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
                 if (token_newline == type) {
                     comments = false;
 
-                    add_token_if(hook);
+                    add_context_token(hook);
                     get_token().update_pos(pos + 1).update_size(0).newline();
                 } else {
                     get_token().increase();
@@ -200,7 +218,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
                 uint32 token_tag = 0;
                 bool match = obj->token_match(p + pos, item, token_type, token_tag);
                 if (match) {
-                    add_token_if(hook);
+                    add_context_token(hook);
 
                     get_token().set_type(token_type).set_tag(token_tag);
                     if ((token_comments == token_type) && handle_comments) {
@@ -208,7 +226,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
                         get_token().increase();
                     } else {
                         get_token().update_pos(pos).update_size(item.size());
-                        add_token_if(hook);
+                        add_context_token(hook);
                         pos += (item.size() - 1);
                         get_token().update_pos(pos + 1).update_size(0);
                     }
@@ -221,7 +239,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
                 if (token_dquote == type) {
                     quot = !quot;
                     if (quot) {
-                        add_token_if(hook);
+                        add_context_token(hook);
 
                         if (handle_quot_as_unquoted) {
                             get_token().set_type(token_emphasis).update_pos(pos + 1).update_size(0);
@@ -232,7 +250,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
                         if (false == handle_quot_as_unquoted) {
                             get_token().increase();
                         }
-                        add_token_if(hook);
+                        add_context_token(hook);
                         get_token().update_pos(pos + 1).update_size(0);
                     }
                     continue;
@@ -249,12 +267,12 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
                         get_token().set_type(token_identifier).increase();
                         break;
                     case token_space:
-                        add_token_if(hook);
+                        add_context_token(hook);
 
                         get_token().update_pos(pos + 1).update_size(0);
                         break;
                     case token_newline:
-                        add_token_if(hook);
+                        add_context_token(hook);
 
                         get_token().update_pos(pos + 1).update_size(0).newline();
                         break;
@@ -264,19 +282,35 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size) {
                             break;
                         }
 
-                        add_token_if(hook);
+                        add_context_token(hook);
 
                         get_token().set_type(type).update_pos(pos).update_size(1);
-                        add_token_if(hook);
+                        add_context_token(hook);
                         get_token().update_pos(pos + 1).update_size(0);
                         break;
                 }
             }
         }
-        add_token_if(hook);
+        add_context_token(hook);
+
+        if (handle_lvalue_usertype) {
+            for (auto idx : lvalues) {
+                std::string ts;
+                obj->rlookup(idx, ts);
+                // printf("idx %i %s\n", idx, ts.c_str());
+                obj->add_token(ts, token_usertype);
+                auto liter = index.lower_bound(ts);
+                auto uiter = index.upper_bound(ts);
+                for (auto iter = liter; iter != uiter; iter++) {
+                    iter->second->set_type(token_usertype);
+                }
+            }
+        }
     }
     __finally2 {
-        //
+        if (error_lookup) {
+            ret = errorcode_t::not_exist;
+        }
     }
     return ret;
 }
@@ -376,19 +410,33 @@ bool parser::context::compare(parser* obj, const parser::context& rhs) const {
     return ret;
 }
 
-return_t parser::context::add_token_if(std::function<void(int, parser::token*)> hook) {
+return_t parser::context::add_context_token(std::function<bool(int, parser::token*)> hook) {
     return_t ret = errorcode_t::success;
-    if (get_token().size()) {
-        parser::token* newone = get_token().clone();
-        if (hook) {
-            hook(0, newone);
+    bool ret_hook = true;
+    __try2 {
+        if (get_token().size()) {
+            parser::token* newone = get_token().clone();
+            if (hook) {
+                ret_hook = hook(0, newone);
+                if (false == ret_hook) {
+                    ret = errorcode_t::not_exist;
+                    __leave2;
+                }
+            }
+            _tokens.push_back(newone);
+            if (hook) {
+                ret_hook = hook(1, newone);
+                if (false == ret_hook) {
+                    ret = errorcode_t::not_exist;
+                    __leave2;
+                }
+            }
+        } else {
+            ret = errorcode_t::empty;
         }
-        _tokens.push_back(newone);
-        if (hook) {
-            hook(1, newone);
-        }
-    } else {
-        ret = errorcode_t::empty;
+    }
+    __finally2 {
+        // do nothing
     }
     return ret;
 }

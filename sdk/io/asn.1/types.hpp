@@ -105,7 +105,7 @@ enum asn1_type_t {
     asn1_type_enum = asn1_tag_enum,
     asn1_type_embedpdv = asn1_tag_embedpdv,
     asn1_type_utf8string = asn1_tag_utf8string,
-    asn1_type_relobjid = asn1_tag_relobjid,
+    asn1_type_reloid = asn1_tag_relobjid,
     asn1_type_sequence = asn1_tag_sequence,
     asn1_type_sequence_of = (asn1_type_special + 5),
     asn1_type_set = asn1_tag_set,

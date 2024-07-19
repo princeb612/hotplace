@@ -21,13 +21,12 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-// error: redeclaration in gcc [4.8.5, ? ]
-// extern const char var[]
-// constexpr char var[]
-
 #if __GNUC__ >= 5
 #define CONSTEXPR constexpr
 #else
+// error: redeclaration in gcc [4.8.5, ? ]
+// extern const char var[]
+// constexpr char var[]
 #define CONSTEXPR const
 #endif
 

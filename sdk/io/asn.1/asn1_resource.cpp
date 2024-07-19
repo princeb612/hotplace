@@ -40,7 +40,7 @@ void asn1_resource::load_resource() {
             {asn1_type_enum, "ENUMERATED"},
             {asn1_type_embedpdv, "EMBEDDED PDV"},
             {asn1_type_utf8string, "UTF8String"},
-            {asn1_type_relobjid, "RELATIVE-OID"},
+            {asn1_type_reloid, "RELATIVE-OID"},
             {asn1_type_sequence, "SEQUENCE"},
             {asn1_type_sequence_of, "SEQUENCE OF"},
             {asn1_type_set, "SET"},

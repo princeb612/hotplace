@@ -119,13 +119,6 @@
 ## studying
 
  * RFC 2817 Upgrading to TLS Within HTTP/1.1
- * RFC 9114 HTTP/3
-
- * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
- * RFC 1952 GZIP file format specification version 4.3
- * RFC 7932 Brotli Compressed Data Format
- * RFC 8478 Zstandard Compression and the application/zstd Media Type
- * RFC 8878 Zstandard Compression and the 'application/zstd' Media Type
 
  * ITU-T X.680-X.699
    * X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules
@@ -146,6 +139,14 @@
    * sketch repository (private, spin off, in progress)
 
 ## next time
+
+ * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
+ * RFC 1952 GZIP file format specification version 4.3
+ * RFC 7932 Brotli Compressed Data Format
+ * RFC 8478 Zstandard Compression and the application/zstd Media Type
+ * RFC 8878 Zstandard Compression and the 'application/zstd' Media Type
+
+ * RFC 9114 HTTP/3
 
  * RFC 8778 Use of the HSS/LMS Hash-Based Signature Algorithm with CBOR Object Signing and Encryption (COSE)
  * RFC 9021 Use of the Walnut Digital Signature Algorithm with CBOR Object Signing and Encryption (COSE)

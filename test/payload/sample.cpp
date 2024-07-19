@@ -62,14 +62,14 @@ void test_payload_dump() {
             _logger->dump(bin_padded);
         }
         _test_case.assert(bin_padded == base16_decode_rfc("03 64 61 74 61 00 00 10 00 70 61 64"), __FUNCTION__,
-                          "payload padded");  // 3 || "data" || 0x1000 || "pad"
+                          "payload padded");  // 3 || "data" || 0x00001000 || "pad"
 
         pl.set_group("pad", false);  // disable "pad" group
         pl.dump(bin_notpadded);
         if (option.verbose) {
             _logger->dump(bin_notpadded);
         }
-        _test_case.assert(bin_notpadded == base16_decode_rfc("64 61 74 61 00 00 10 00"), __FUNCTION__, "payload not padded");  // "data" || 0x1000
+        _test_case.assert(bin_notpadded == base16_decode_rfc("64 61 74 61 00 00 10 00"), __FUNCTION__, "payload not padded");  // "data" || 0x00001000
     }
 }
 

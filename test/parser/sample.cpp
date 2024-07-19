@@ -167,7 +167,7 @@ void test_parser_search() {
         test_case_notimecheck notimecheck(_test_case);
         auto dump_handler = [&](const token_description* desc) -> void { _logger->writeln("index %d (%.*s)", desc->index, (unsigned)desc->size, desc->p); };
         context1.for_each(dump_handler);
-        _test_case.test(ret, __FUNCTION__, "parse #1");
+        _test_case.test(ret, __FUNCTION__, "parse #5");
     }
 
     constexpr char pattern[] = "[APPLICATION 2] IMPLICIT INTEGER";
@@ -270,7 +270,6 @@ void test_multipattern_search() {
         ac.insert(pattern1).insert(pattern2);
         ac.build_state_machine();
         result = ac.search(sample_parsed);
-        _logger->writeln("%zi", result.size());
         for (auto item : result) {
             _logger->writeln("pattern[%i] at [%zi]", item.first, item.second);
         }

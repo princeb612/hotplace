@@ -17,7 +17,11 @@ namespace hotplace {
 namespace io {
 
 parser::parser() {
-    _ac = new t_aho_corasick_ptr<int, token*>(memberof);
+    auto tokenptr_to_int = [](token* const* source, size_t index) -> int {
+        const token* t = source[index];
+        return t->get_type();
+    };
+    _ac = new t_aho_corasick<int, token*>(tokenptr_to_int);
     get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
 
 #if 1
@@ -83,28 +87,29 @@ parser::search_result parser::csearch(const parser::context& context, const std:
 }
 
 parser::search_result parser::wsearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos) {
+    return_t ret = errorcode_t::success;
     parser::context pattern_context;
-    parse(pattern_context, pattern, size_pattern);  // handle by word not characters
-    return context.wsearch(this, pattern_context, pos);
+    ret = pattern_context.parse(this, pattern, size_pattern, parser_flag_t::parse_lookup_readonly);  // handle by word not characters
+    // if success, all words of pattern in dictionary
+    return (errorcode_t::success == ret) ? context.wsearch(this, pattern_context, pos) : search_result();
 }
 
 parser::search_result parser::wsearch(const parser::context& context, const std::string& pattern, unsigned int pos) {
     return wsearch(context, pattern.c_str(), pattern.size(), pos);  // handle by word not characters
 }
 
-parser& parser::add_pattern(const std::string& pattern) {
-    parser::context context;
-    parse(context, pattern.c_str(), pattern.size());
-    context.add_pattern(this);
+parser& parser::add_pattern(const char* p, size_t size) {
+    if (p) {
+        parser::context context;
+        parse(context, p, size);
+        context.add_pattern(this);
+    }
     return *this;
 }
 
-std::multimap<unsigned, size_t> parser::psearch(const parser::context& context) { return context.psearch(this); }
+parser& parser::add_pattern(const std::string& pattern) { return add_pattern(pattern.c_str(), pattern.size()); }
 
-int parser::memberof(token* const* source, size_t index) {
-    const token* t = source[index];
-    return t->get_type();
-}
+std::multimap<unsigned, size_t> parser::psearch(const parser::context& context) { return context.psearch(this); }
 
 bool parser::compare(parser* obj, const char* lhs, const char* rhs) {
     bool ret = false;
@@ -135,6 +140,13 @@ parser& parser::add_token(const std::string& token_name, uint32 attr, uint32 tag
     return *this;
 }
 
+parser& parser::add_tokenn(const char* token, size_t size, uint32 attr, uint32 tag) {
+    if (token && size) {
+        _tokens.insert({token[0], {std::string(token, size), {attr, tag}}});
+    }
+    return *this;
+}
+
 t_key_value<std::string, uint16>& parser::get_config() { return _keyvalue; }
 
 std::string parser::typeof_token(uint32 type) {
@@ -146,20 +158,30 @@ std::string parser::typeof_token(uint32 type) {
     return id;
 }
 
-bool parser::lookup(const std::string& word, int& idx) {
-    size_t entry_no = _dictionary.index.size() + 1;  // entry 0 reserved
-    auto pib = _dictionary.index.insert({word, entry_no});
-    if (pib.second) {
-        idx = entry_no;
-        _dictionary.rindex.insert({entry_no, word});
+bool parser::lookup(const std::string& word, int& idx, uint32 flags) {
+    bool ret = true;
+    if (parse_lookup_readonly & flags) {
+        auto iter = _dictionary.index.find(word);
+        if (_dictionary.index.end() == iter) {
+            ret = false;
+        } else {
+            idx = iter->second;
+        }
     } else {
-        idx = pib.first->second;
+        size_t entry_no = _dictionary.index.size() + 1;  // entry 0 reserved
+        auto pib = _dictionary.index.insert({word, entry_no});
+        if (pib.second) {
+            idx = entry_no;
+            _dictionary.rindex.insert({entry_no, word});
+        } else {
+            idx = pib.first->second;
+        }
     }
-    return true;
+    return ret;
 }
 
-bool parser::lookup(int index, std::string& word) {
-    bool ret = false;
+bool parser::rlookup(int index, std::string& word) {
+    bool ret = true;
     auto iter = _dictionary.rindex.find(index);
     if (_dictionary.rindex.end() == iter) {
         ret = false;

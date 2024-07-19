@@ -31,3 +31,24 @@
 
 ; https://gcc.gnu.org/projects/cxx-status.html
 
+## references
+
+ * RFCs
+   * RFC 4648 The Base16, Base32, and Base64 Data Encodings
+ * Online resources
+   * The IEEE Standard for Floating-Point Arithmetic (IEEE 754)
+     * https://en.wikipedia.org/wiki/IEEE_754
+     * https://en.wikipedia.org/wiki/Floating-point_arithmetic
+     * https://en.wikipedia.org/wiki/Half-precision_floating-point_format
+     * https://en.wikipedia.org/wiki/Single-precision_floating-point_format
+     * https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
+     * https://www.cl.cam.ac.uk/teaching/1011/FPComp/fpcomp10slides.pdf
+     * https://www.youtube.com/watch?v=8afbTaA-gOQ
+     * https://www.corsix.org/content/converting-fp32-to-fp16
+     * https://blog.fpmurphy.com/2008/12/half-precision-floating-point-format_14.html
+   * IEEE754 online converter
+     * https://www.h-schmidt.net/FloatConverter/IEEE754.html
+     * https://baseconvert.com/ieee-754-floating-point
+     * https://www.omnicalculator.com/other/floating-point
+ * articles
+   * http://stackoverflow.com/questions/11695237/creating-va-list-dynamically-in-gcc-can-it-be-done

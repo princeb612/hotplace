@@ -297,7 +297,7 @@ void x690_encoding_typevalue() {
         TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("2.154"), "06 02 81 6a", "X.690 8.19 #7"),
 
         // X.690 8.20 encoding of a relative object identifier value
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_relobjid), variant("8571.3.2"), "0D 04 C27B0302", "X.690 8.20 #1"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_reloid), variant("8571.3.2"), "0D 04 C27B0302", "X.690 8.20 #1"),
 
         // X.690 8.21.5.4 Example Name ::= VisibleString
         TESTVECTOR_ENTRY4(new asn1_object(asn1_type_visiblestring), variant("Jones"), "1a 05 4a6f6e6573", "X.690 8.21 #1"),
@@ -476,27 +476,14 @@ void test_asn1_typedef_value() {
     __finally2 { object->release(); }
 }
 
-enum {
-    token_type_null = 0x2000,
-    token_type_bool,
-    token_type_int,
-    token_type_real,
-    token_type_sequence,
-    token_type_sequenceof,
-    token_type_set,
-    token_type_setof,
-    token_type_ia5string,
-    token_type_visiblestring,
+enum token_tag_t {
+    token_userdef = 0x2000,
 
-    token_value_true,
-    token_value_false,
-
-    token_class_universal,
-    token_class_application,
-    token_class_private,
-
-    token_tag_implicit,
-    token_tag_explicit,
+    token_builtintype,
+    // token_type_namedtype,
+    token_taggedmode,
+    token_of,
+    token_default,
 };
 
 void x690_compose() {
@@ -509,64 +496,106 @@ void x690_compose() {
         R"(SEQUENCE {name IA5String, ok BOOLEAN })",
         R"(Date ::= VisibleString)",
         R"(Date ::= [APPLICATION 3] IMPLICIT VisibleString)",
+        R"(
+           ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
+           Name ::= [APPLICATION 1] IMPLICIT SEQUENCE {givenName VisibleString, initial VisibleString, familyName VisibleString}
+           EmployeeNumber ::= [APPLICATION 2] IMPLICIT  INTEGER
+           Date ::= [APPLICATION 3] IMPLICIT  VisibleString
+           PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
+                name Name,
+                title [0] VisibleString,
+                number EmployeeNumber,
+                dateOfHire [1] Date,
+                nameOfSpouse [2] Name,
+                children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}})",
     };
 
     for (auto item : _table) {
         _logger->writeln("\e[1;33m%s\e[0m", item.source);
 
         parser p;
+        p.get_config().set("handle_usertype", 1);
 
         p.add_token("::=", token_assign)
             .add_token("--", token_comments)
-            .add_token("BOOLEAN", token_type_bool)
-            .add_token("INTEGER", token_type_int)
-            .add_token("NULL", token_type_null)
-            .add_token("REAL", token_type_real)
-            .add_token("SEQUENCE", token_type_sequence)
-            .add_token("IA5String", token_type_ia5string)
-            .add_token("VisibleString", token_type_visiblestring)
-            .add_token("TRUE", token_value_true)
-            .add_token("FALSE", token_value_false)
-            .add_token("UNIVERSAL", token_class_universal)
-            .add_token("APPLICATION", token_class_application)
-            .add_token("PRIVATE", token_class_private)
-            .add_token("IMPLICIT", token_tag_implicit)
-            .add_token("EXPLICIT", token_tag_explicit);
+            .add_token("BOOLEAN", token_builtintype, token_bool)                 // BooleanType
+            .add_token("INTEGER", token_builtintype, token_int)                  // IntegerType
+            .add_token("BIT STRING", token_builtintype, token_bitstring)         // BitStringType
+            .add_token("OCT STRING", token_builtintype, token_octstring)         // BitStringType
+            .add_token("NULL", token_builtintype, token_null)                    // NullType
+            .add_token("REAL", token_builtintype, token_real)                    // RealType
+            .add_token("IA5String", token_builtintype, token_ia5string)          // CharacterStringType
+            .add_token("VisibleString", token_builtintype, token_visiblestring)  // CharacterStringType
+            .add_token("OF", token_of)
+            .add_token("SEQUENCE", token_sequence)
+            .add_token("SET", token_set)
+            // BooleanValue ::= TRUE | FALSE
+            .add_token("TRUE", token_bool, token_true)
+            .add_token("FALSE", token_bool, token_false)
+            // Class ::= UNIVERSAL | APPLICATION | PRIVATE | empty
+            .add_token("UNIVERSAL", token_class, token_universal)
+            .add_token("APPLICATION", token_class, token_application)
+            .add_token("PRIVATE", token_class, token_private)
+            // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
+            .add_token("IMPLICIT", token_taggedmode, token_implicit)
+            .add_token("EXPLICIT", token_taggedmode, token_explicit)
+            .add_token("DEFAULT", token_default);
+
+        p.add_token("$pattern_builtintype", token_builtintype)
+            .add_token("$pattern_usertype", token_usertype)
+            .add_token("$pattern_class", token_class)
+            .add_token("$pattern_sequence", token_sequence)
+            .add_token("$pattern_of", token_of)
+            .add_token("$pattern_taggedmode", token_taggedmode);
+
+        // TODO
+        // find token_lvalue and add_token
+        // p.add_token("ChildInformation", token_usertype)
+        //     .add_token("Name", token_usertype)
+        //     .add_token("EmployeeNumber", token_usertype)
+        //     .add_token("Date", token_usertype)
+        //     .add_token("PersonnelRecord", token_usertype);
+        p.get_config().set("handle_lvalue_usertype", 1);
 
         parser::context context;
         p.parse(context, item.source);
 
-        p.add_pattern("NULL")
-            .add_pattern("INTEGER")
-            .add_pattern("REAL")
-            .add_pattern("BOOLEAN")
+        auto dump_handler = [&](const token_description* desc) -> void {
+            _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->index,
+                             desc->pos, desc->size, (unsigned)desc->size, desc->p);
+        };
+        context.for_each(dump_handler);
+
+        p.add_pattern("$pattern_builtintype")
+            .add_pattern("name $pattern_builtintype")
+            .add_pattern("name $pattern_usertype")
             .add_pattern("SEQUENCE")
-            .add_pattern("IA5String")
-            .add_pattern("VisibleString")
-            .add_pattern("name BOOLEAN")
-            .add_pattern("name IA5String")
-            .add_pattern("name VisibleString")
-            .add_pattern("[UNIVERSAL 1]")
-            .add_pattern("[UNIVERSAL 1] IMPLICIT")
-            .add_pattern("[APPLICATION 1]")
-            .add_pattern("[APPLICATION 1] IMPLICIT")
-            .add_pattern("[PRIVATE 1]")
-            .add_pattern("[PRIVATE 1] IMPLICIT");
+            .add_pattern("SEQUENCE OF $pattern_usertype")
+            .add_pattern("SEQUENCE OF $pattern_usertype DEFAULT")
+            .add_pattern("SEQUENCE OF $pattern_usertype DEFAULT {}")
+            .add_pattern("SET")
+            .add_pattern("[$pattern_class 1] $pattern_builtintype")
+            .add_pattern("[$pattern_class 1] $pattern_usertype")
+            .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_builtintype")
+            .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_usertype")
+            .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_sequence")
+            .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_set")
+            .add_pattern("[1] $pattern_builtintype")
+            .add_pattern("[1] $pattern_usertype")
+            .add_pattern("[1] $pattern_taggedmode $pattern_builtintype")
+            .add_pattern("[1] $pattern_taggedmode $pattern_usertype")
+            .add_pattern("[1] $pattern_taggedmode $pattern_sequence")
+            .add_pattern("[1] $pattern_taggedmode $pattern_sequence $pattern_of $pattern_usertype")
+            .add_pattern("$pattern_sequence")
+            .add_pattern("$pattern_sequence $pattern_of")
+            .add_pattern("$pattern_set")
+            .add_pattern("$pattern_set $pattern_of $pattern_usertype")
+            .add_pattern("$pattern_usertype ::=");
 
         auto result = p.psearch(context);
         for (auto item : result) {
             parser::search_result res;
             context.psearch_result(res, item.second, item.first);
-
-            // TODO - sketch
-            // 1. choose a longest pattern
-            //    patterns found
-            //      INTEGER
-            //      id INTEGER
-            // 2. compile pattern
-            //      convert i INTEGER to new asn1_object("i", asn1_type_integer)
-            // 3. sub-patterns pattern1 { pattern2, ... }
-            // 4. except regular expression
 
             _logger->writeln("pattern[%i] at [%zi] %.*s", item.first, item.second, (unsigned)res.size, res.p);
         }
