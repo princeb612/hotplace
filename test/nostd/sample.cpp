@@ -856,6 +856,20 @@ void test_ukkonen() {
               {"nana", 4, 1, {2}},
               {"apple", 5, 0, {}},
           }},
+         {"xabac",
+          5,
+          1,
+          {
+              {"ba", 2, 1, {2}},
+              {"a", 1, 2, {1, 3}},
+          }},
+         {"abcabcde",
+          8,
+          2,
+          {
+              {"abc", 3, 2, {0, 3}},
+              {"bc", 2, 2, {1, 4}},
+          }},
          {"THIS IS A TEST TEXT$",
           20,
           3,
@@ -943,6 +957,25 @@ void test_lcp() {
     _test_case.assert(result == "gee", __FUNCTION__, "LCP");
 }
 
+void test_wildcards() {
+    _test_case.begin("wildcards");
+
+    std::string text = "baaabab";
+    std::string pattern1 = "*****ba*****ab";
+    std::string pattern2 = "ba?aba?";
+    std::string pattern3 = "ba?ab?c";
+
+    bool test = false;
+    t_wildcards<char> wild('?', '*');
+
+    test = wild.match(text.c_str(), text.size(), pattern1.c_str(), pattern1.size());
+    _test_case.assert(test, __FUNCTION__, "wildcard");
+    test = wild.match(text.c_str(), text.size(), pattern2.c_str(), pattern2.size());
+    _test_case.assert(test, __FUNCTION__, "wildcard");
+    test = wild.match(text.c_str(), text.size(), pattern3.c_str(), pattern3.size());
+    _test_case.assert(false == test, __FUNCTION__, "wildcard");
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -974,6 +1007,7 @@ int main(int argc, char** argv) {
     test_ukkonen();
     test_ukkonen2();
     test_lcp();
+    test_wildcards();
 
     _logger->flush();
 

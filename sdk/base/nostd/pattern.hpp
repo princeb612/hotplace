@@ -406,7 +406,7 @@ class t_suffixtree {
                 const BT& t = _memberof(pattern, i);
                 auto item = current->children.find(t);
                 if (current->children.end() == item) {
-                    return index; // not found
+                    return index;  // not found
                 }
                 current = item->second;
             }
@@ -837,6 +837,95 @@ class t_aho_corasick {
     trienode* _root;
     std::map<size_t, std::vector<T>> _patterns;
     memberof_t _memberof;
+};
+
+/*
+ * @brief   wildcard pattern matching
+ * @refer   https://www.geeksforgeeks.org/wildcard-pattern-matching/?ref=lbp
+ *          time complexcity: O(n), auxiliary space: O(1)
+ *
+ *          bool wildcards(std::string text, std::string pattern) {
+ *              int n = text.length();
+ *              int m = pattern.length();
+ *              int i = 0;
+ *              int j = 0;
+ *              int startIndex = -1;
+ *              int match = 0;
+ *
+ *              while (i < n) {
+ *                  if (j < m && (('?' == pattern[j]) || (pattern[j] == text[i]))) {
+ *                      i++;
+ *                      j++;
+ *                  } else if ((j < m) && ('*' == pattern[j])) {
+ *                      startIndex = j;
+ *                      match = i;
+ *                      j++;
+ *                  } else if (-1 != startIndex) {
+ *                      j = startIndex + 1;
+ *                      match++;
+ *                      i = match;
+ *                  } else {
+ *                      return false;
+ *                  }
+ *              }
+ *
+ *              while ((j < m) && ('*' == pattern[j])) {
+ *                  j++;
+ *              }
+ *
+ *              return j == m;
+ *          }
+ * @sample
+ *          t_wildcards<char> wild('?', '*');
+ *          test = wild.match("baaabab", 7, "*****ba*****ab", 14); // true
+ *          test = wild.match("baaabab", 7, "ba?aba?", 7); // true
+ */
+template <typename BT = char, typename T = BT>
+class t_wildcards {
+   public:
+    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
+    typedef typename std::function<int(const BT& t)> kindof_t;
+
+    t_wildcards(const BT& exact_one, const BT& zero_or_more, memberof_t memberof = memberof_defhandler<BT, T>)
+        : _exact_one(exact_one), _zero_or_more(zero_or_more), _memberof(memberof) {}
+
+    bool match(const T* text, size_t n, const T* pattern, size_t m) {
+        int i = 0;
+        int j = 0;
+        int startIndex = -1;
+        int match = 0;
+
+        while (i < n) {
+            const BT& t = _memberof(text, i);
+            const BT& p = _memberof(pattern, j);
+            if (j < m && ((_exact_one == p) || (p == t))) {
+                i++;
+                j++;
+            } else if ((j < m) && (_zero_or_more == p)) {
+                startIndex = j;
+                match = i;
+                j++;
+            } else if (-1 != startIndex) {
+                j = startIndex + 1;
+                match++;
+                i = match;
+            } else {
+                return false;
+            }
+        }
+
+        const BT& p = _memberof(pattern, j);
+        while ((j < m) && ('*' == p)) {
+            j++;
+        }
+
+        return j == m;
+    }
+
+   private:
+    memberof_t _memberof;
+    BT _exact_one;
+    BT _zero_or_more;
 };
 
 }  // namespace hotplace
