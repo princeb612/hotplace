@@ -55,6 +55,19 @@ void for_each(container_t& c, typename std::function<void(typename container_t::
     }
 }
 
+/**
+ * @brief   util
+ * @sample
+ *          std::list<int> result = {1, 2, 3};
+ *          basic_stream bs;
+ *          print<std::list<int>, basic_stream>(result, bs);
+ *          std::cout << bs << std::endl; // [1, 2, 3]
+ *
+ *          std::set<int> result = {2, 3, 4};
+ *          basic_stream bs;
+ *          print<std::set<int>, basic_stream>(result, bs);
+ *          std::cout << bs << std::endl; // [2, 3, 4]
+ */
 template <typename container_t, typename stream_type>
 void print(const container_t& c, stream_type& s, const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ",
            const std::string& mark_epilogue = "]") {

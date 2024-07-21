@@ -767,8 +767,8 @@ void test_trie_autocompletion() {
 }
 
 // https://www.geeksforgeeks.org/pattern-searching-using-trie-suffixes/
-void test_suffixtrie() {
-    _test_case.begin("suffix trie");
+void test_suffixtree() {
+    _test_case.begin("suffix tree");
 
     struct testvector {
         const char* p;
@@ -799,8 +799,8 @@ void test_suffixtrie() {
     }
 }
 
-void test_suffixtrie2() {
-    _test_case.begin("suffix trie");
+void test_suffixtree2() {
+    _test_case.begin("suffix tree");
 
     struct testvector {
         const char* p;
@@ -811,14 +811,14 @@ void test_suffixtrie2() {
 
     t_suffixtree<char> tree;
     tree.reset().add("test ", 5).add("geeksforgeeks.org", 17);  // "test geeksforgeeks.org"
-    testvector _table_pattern2[] = {
+    testvector _table_pattern[] = {
         {"ee", 2, 2, {6, 14}},     //
         {"geek", 4, 2, {5, 13}},   //
         {"quiz", 4, 0},            //
         {"forgeeks", 8, 1, {10}},  //
         {"est g", 4, 1, {1}}       //
     };
-    for (auto item : _table_pattern2) {
+    for (auto item : _table_pattern) {
         std::set<unsigned> expect;
         for (unsigned i = 0; i < item.count; i++) {
             expect.insert(item.expect[i]);
@@ -832,211 +832,8 @@ void test_suffixtrie2() {
     }
 }
 
-template <typename BT = char, typename T = BT>
-BT memberof_defhandler2(const T* source, size_t idx) {
-    return source ? source[idx] : BT();
-}
-
-/**
- * @brief   suffix tree (Ukkonen algorithm)
- * @refer   https://www.geeksforgeeks.org/ukkonens-suffix-tree-construction-part-1/
- *          https://brenden.github.io/ukkonen-animation/
- *          https://programmerspatch.blogspot.com/2013/02/ukkonens-suffix-tree-algorithm.html
- */
-template <typename BT = char, typename T = BT>
-class t_ukkonen {
-   public:
-    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
-    typedef typename std::function<void(const BT* t, size_t size)> dump_handler;
-
-    struct trienode {
-        std::map<BT, trienode*> children;
-        trienode* suffixLink;
-        int start;
-        int end;
-        int suffixIndex;
-
-        trienode(int start = -1, int end = -1) : start(start), end(end), suffixIndex(-1), suffixLink(nullptr) {}
-        ~trienode() {
-            for (auto item : children) {
-                delete item.second;
-            }
-        }
-
-        int length() { return end - start + 1; }
-    };
-
-    t_ukkonen(memberof_t memberof = memberof_defhandler2<BT, T>) : _memberof(memberof) { init(root = new trienode); }
-    t_ukkonen(const T* source, size_t size, memberof_t memberof = memberof_defhandler2<BT, T>) : _memberof(memberof) {
-        init(root = new trienode);
-        add(source, size);
-    }
-
-    t_ukkonen<BT, T>& add(const T* pattern, size_t size) {
-        if (pattern) {
-            reset();
-            for (int i = 0; i < size; ++i) {
-                const BT& t = _memberof(pattern, i);
-                source.insert(source.end(), t);
-            }
-            init(root);
-            int source_size = source.size();
-            for (int i = 0; i < source_size; ++i) {
-                extend(i);
-            }
-        }
-        set_suffixindex(root, 0);
-        return *this;
-    }
-
-    int search(const T* pattern, size_t size) {
-        int pos = -1;
-        if (pattern) {
-            trienode* currentNode = root;
-            int i = 0;
-            for (int i = 0; i < size;) {
-                const BT& t = _memberof(pattern, i);
-                if (currentNode->children.end() != currentNode->children.find(t)) {
-                    trienode* child = currentNode->children[t];
-                    int len = child->length();
-                    for (int j = 0; j < len && i < size; j++, i++) {
-                        pos = child->start + j;
-                        if (source[pos] != _memberof(pattern, i)) {
-                            return -1;
-                        }
-                    }
-                    currentNode = child;
-                } else {
-                    return -1;
-                }
-            }
-
-            if (-1 == currentNode->suffixIndex) {
-                pos = pos - size + 1;
-            } else {
-                pos = currentNode->suffixIndex;
-            }
-        }
-        return pos;
-    }
-
-    t_ukkonen<BT, T>& reset() {
-        if (root->children.size()) {
-            delete root;
-            root = new trienode;
-        }
-        return *this;
-    }
-
-    void dump(dump_handler handler) { dump(root, 0, handler); }
-
-   private:
-    memberof_t _memberof;
-    std::vector<BT> source;
-    trienode* root;
-    trienode* activeNode;
-    int activeEdge;
-    int activeLength;
-    int remainingSuffixCount;
-    trienode* lastNewNode;
-
-    void init(trienode* node) {
-        activeNode = node;
-        activeEdge = -1;
-        activeLength = 0;
-        remainingSuffixCount = 0;
-    }
-
-    void extend(int pos) {
-        lastNewNode = nullptr;
-        remainingSuffixCount++;
-        while (remainingSuffixCount > 0) {
-            if (0 == activeLength) {
-                activeEdge = pos;
-            }
-
-            auto item = activeNode->children.find(source[activeEdge]);
-            if (activeNode->children.end() == item) {
-                activeNode->children[source[activeEdge]] = new trienode(pos, source.size() - 1);
-                if (lastNewNode != nullptr) {
-                    lastNewNode->suffixLink = activeNode;
-                    lastNewNode = nullptr;
-                }
-            } else {
-                trienode* next = item->second;
-                int len = next->length();
-                if (activeLength >= len) {
-                    activeEdge += len;
-                    activeLength -= len;
-                    activeNode = next;
-                    continue;
-                }
-
-                if (source[next->start + activeLength] == source[pos]) {
-                    activeLength++;
-                    if (lastNewNode) {
-                        lastNewNode->suffixLink = activeNode;
-                        lastNewNode = nullptr;
-                    }
-                    break;
-                }
-
-                trienode* split = new trienode(next->start, next->start + activeLength - 1);
-                activeNode->children[source[activeEdge]] = split;
-                split->children[source[pos]] = new trienode(pos, source.size() - 1);
-                next->start += activeLength;
-                split->children[source[next->start]] = next;
-
-                if (lastNewNode) {
-                    lastNewNode->suffixLink = split;
-                }
-                lastNewNode = split;
-            }
-
-            remainingSuffixCount--;
-
-            if ((activeNode == root) && (activeLength > 0)) {
-                activeLength--;
-                activeEdge = pos - remainingSuffixCount + 1;
-            } else if (activeNode != root) {
-                auto temp = activeNode->suffixLink;
-                if (temp) {
-                    activeNode = temp;
-                } else {
-                    activeNode = root;
-                }
-            }
-        }
-    }
-
-    void set_suffixindex(trienode* node, int height) {
-        if (node) {
-            for (auto child : node->children) {
-                set_suffixindex(child.second, height + child.second->length());
-            }
-            if (node->children.empty()) {
-                node->suffixIndex = source.size() - height;
-            }
-        }
-    }
-
-    void dump(trienode* node, int level, dump_handler handler) {
-        // debug
-        printf("%p start %i end %i len %i index %i link %p (%zi)\n", node, node->start, node->end, node->length(), node->suffixIndex, node->suffixLink,
-               source.size());
-        for (auto& child : node->children) {
-            for (int i = 0; i < level; ++i) {
-                std::cout << " ";
-            }
-            trienode* item = child.second;
-            handler(&source[item->start], item->length());
-            dump(child.second, level + 1, handler);
-        }
-    }
-};
-
 void test_ukkonen() {
-    _test_case.begin("t_suffixtree (ukkonen algorithm)");
+    _test_case.begin("ukkonen algorithm");
 
     struct testvector {
         const char* p;
@@ -1045,47 +842,62 @@ void test_ukkonen() {
         struct {
             const char* p;
             size_t size;
-            int res;
+            size_t count;
+            int res[5];
         } expect[5];
     };
     testvector _table[] =  // ...
-        {
-            {"bananas",
-             7,
-             4,
-             {
-                 {"ana", 3, 1},
-                 {"ban", 3, 0},
-                 {"nana", 4, 2},
-                 {"apple", 5, -1},
-             }},
-            //{"THIS IS A TEST TEXT$",
-            // 20,
-            // 3,
-            // {
-            //     {"TEST", 4, 10},
-            //     {"IS A", 4, 5},
-            //     {"EXT$", 4, 16},
-            // }}
-        };
+        {{"bananas",
+          7,
+          4,
+          {
+              {"ana", 3, 2, {1, 3}},
+              {"ban", 3, 1, {0}},
+              {"nana", 4, 1, {2}},
+              {"apple", 5, 0, {}},
+          }},
+         {"THIS IS A TEST TEXT$",
+          20,
+          3,
+          {
+              {"TEST", 4, 1, {10}},
+              {"IS A", 4, 1, {5}},
+              {"EXT$", 4, 1, {16}},
+          }}};
 
     for (auto item : _table) {
         t_ukkonen<char> tree(item.p, item.size);
-        auto dump_handler = [](const char* p, size_t size) -> void {
+        auto debug_handler = [](t_ukkonen<char>::trienode* node, int level, const char* p, size_t size) -> void {
             if (p) {
-                _logger->writeln(R"("%.*s")", (unsigned)size, p);
+                basic_stream bs;
+
+                bs.printf("%p start %i end %i len %i index %i link %p\n", node, node->start, node->end, node->length(), node->suffix_index, node->suffix_link);
+
+                bs.fill(level, ' ');
+                bs.printf(R"("%.*s")", (unsigned)size, p);
+
+                _logger->writeln(bs);
                 fflush(stdout);
             }
         };
-        tree.dump(dump_handler);
+        tree.debug(debug_handler);
         for (unsigned i = 0; i < item.count; i++) {
-            int test = tree.search(item.expect[i].p, item.expect[i].size);
-            _test_case.assert(item.expect[i].res == test, __FUNCTION__, "ukkonen search (%i)", test);
+            std::set<int> expect;
+            for (int j = 0; j < item.expect[i].count; j++) {
+                expect.insert(item.expect[i].res[j]);
+            }
+            std::set<int> result = tree.search(item.expect[i].p, item.expect[i].size);
+            basic_stream bs;
+            print<std::set<int>, basic_stream>(result, bs);
+
+            _test_case.assert(result == expect, __FUNCTION__, "ukkonen search %s -> %s", item.expect[i].p, bs.c_str());
         }
     }
 }
 
 void test_ukkonen2() {
+    _test_case.begin("ukkonen algorithm");
+
     t_ukkonen<char> tree;
     tree.add("b", 1).add("an", 2).add("anas", 4);
     auto dump_handler = [](const char* p, size_t size) -> void {
@@ -1095,6 +907,9 @@ void test_ukkonen2() {
         }
     };
     tree.dump(dump_handler);
+    std::set<int> result = tree.search("ana", 3);
+    std::set<int> expect = {1, 3};
+    _test_case.assert(result == expect, __FUNCTION__, "ukkonen search");
 }
 
 // LCP
@@ -1154,8 +969,8 @@ int main(int argc, char** argv) {
     test_multipattern_search();
     test_trie();
     test_trie_autocompletion();
-    test_suffixtrie();
-    test_suffixtrie2();
+    test_suffixtree();
+    test_suffixtree2();
     test_ukkonen();
     test_ukkonen2();
     test_lcp();

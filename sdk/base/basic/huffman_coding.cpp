@@ -91,6 +91,63 @@ huffman_coding &huffman_coding::infer() {
     return *this;
 }
 
+void huffman_coding::infer(hc_temp &hc, typename btree_t::node_t *t) {
+    if (t) {
+        hc.depth++;
+
+        hc.code += "0";
+        infer(hc, t->_left);
+        hc.code.pop_back();
+
+        if (0 == t->_key.flags) {
+            _codetable.insert(std::make_pair(t->_key.symbol, hc.code));
+            _reverse_codetable.insert(std::make_pair(hc.code, t->_key.symbol));
+        }
+
+        hc.code += "1";
+        infer(hc, t->_right);
+        hc.code.pop_back();
+
+        hc.depth--;
+    }
+}
+
+huffman_coding::node_t *huffman_coding::build(node_t **root) {
+    typename btree_t::node_t *p = nullptr;
+    if (_m.size()) {
+        p = _m.rbegin()->second;
+        _m.erase(p->_key);
+
+        while (_m.size()) {
+            build(p);
+        }
+
+        if (root) {
+            *root = p;
+        }
+    }
+    return p;
+}
+
+void huffman_coding::build(typename btree_t::node_t *&p) {
+    if (p) {
+        if (p->_left) {
+            build(p->_left);
+        }
+        if (p->_right) {
+            build(p->_right);
+        }
+        typename map_t::iterator iter = _m.find(p->_key);
+        if (_m.end() != iter) {
+            typename btree_t::node_t *t = iter->second;
+
+            _btree.clean(p);
+            p = t;
+            _m.erase(iter);
+        }
+    }
+}
+
 huffman_coding &huffman_coding::imports(const hc_code_t *table) {
     _codetable.clear();
     _reverse_codetable.clear();
@@ -366,63 +423,6 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
     return ret;
 }
 
-huffman_coding::node_t *huffman_coding::build(node_t **root) {
-    typename btree_t::node_t *p = nullptr;
-    if (_m.size()) {
-        p = _m.rbegin()->second;
-        _m.erase(p->_key);
-
-        while (_m.size()) {
-            build(p);
-        }
-
-        if (root) {
-            *root = p;
-        }
-    }
-    return p;
-}
-
-void huffman_coding::build(typename btree_t::node_t *&p) {
-    if (p) {
-        if (p->_left) {
-            build(p->_left);
-        }
-        if (p->_right) {
-            build(p->_right);
-        }
-        typename map_t::iterator iter = _m.find(p->_key);
-        if (_m.end() != iter) {
-            typename btree_t::node_t *t = iter->second;
-
-            _btree.clean(p);
-            p = t;
-            _m.erase(iter);
-        }
-    }
-}
-
-void huffman_coding::infer(hc_temp &hc, typename btree_t::node_t *t) {
-    if (t) {
-        hc.depth++;
-
-        hc.code += "0";
-        infer(hc, t->_left);
-        hc.code.pop_back();
-
-        if (0 == t->_key.flags) {
-            _codetable.insert(std::make_pair(t->_key.symbol, hc.code));
-            _reverse_codetable.insert(std::make_pair(hc.code, t->_key.symbol));
-        }
-
-        hc.code += "1";
-        infer(hc, t->_right);
-        hc.code.pop_back();
-
-        hc.depth--;
-    }
-}
-
 bool huffman_coding::decodable() {
     bool ret = false;
     __try2 {
@@ -431,11 +431,9 @@ bool huffman_coding::decodable() {
         }
 
         size_t code_msize = _reverse_codetable.begin()->first.size();
-        if (code_msize <= 4) {
-            __leave2;
+        if (code_msize > 4) {
+            ret = true;
         }
-
-        ret = true;
     }
     __finally2 {
         // do nothing

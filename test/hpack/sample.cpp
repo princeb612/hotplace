@@ -48,8 +48,8 @@ void cprint(const char* text, ...) {
     _logger->writeln(bs);
 }
 
-void test_huffman_codes_routine(const char* sample, const char* expect, const char* text) {
-    if (sample && expect && text) {
+void test_huffman_codes_routine(const char* sample, const char* expect) {
+    if (sample && expect) {
         const OPTION& option = cmdline->value();
 
         return_t ret = errorcode_t::success;
@@ -68,7 +68,7 @@ void test_huffman_codes_routine(const char* sample, const char* expect, const ch
             _logger->dump(bin);
         }
 
-        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "%s encode", text);
+        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "encode %s", sample);
 
         bs.clear();
         ret = (*huffman_instance).decode(&bs, &bin[0], bin.size());
@@ -77,7 +77,7 @@ void test_huffman_codes_routine(const char* sample, const char* expect, const ch
             _logger->writeln("%s", bs.c_str());
         }
 
-        _test_case.assert(((errorcode_t::success == ret) && (bs == basic_stream(sample))), __FUNCTION__, "%s decode", text);
+        _test_case.assert(((errorcode_t::success == ret) && (bs == basic_stream(sample))), __FUNCTION__, "decode %s", sample);
     }
 }
 
@@ -87,25 +87,31 @@ void test_huffman_codes() {
     struct huffman_coding_testvector {
         const char* sample;
         const char* expect;
-        const char* text;
     } vector[] = {
-        {"www.example.com", "f1e3 c2e5 f23a 6ba0 ab90 f4ff", "data#1"},  // RFC 7541 C.4.1
-        {"no-cache", "a8eb 1064 9cbf", "data#2"},                        // RFC 7541 C.4.2
-        {"custom-key", "25a8 49e9 5ba9 7d7f", "data#3"},                 // RFC 7541 C.4.3
-        {"custom-value", "25a8 49e9 5bb8 e8b4 bf", "data#4"},            // RFC 7541 C.4.3
-
-        {"still a man hears what he wants to hear and disregards the rest",  // The boxer, Simon and Garfunkel
-         "424d450a0d4a4752939476214f138d2a4e553c0ea4a1449d49ca3b141d5229219161661d922144ce552c2a13", "data#5"},
-        {"We don't playing because we grow old; we grow old because we stop playing.",  // George Bernard Shaw
-         "E4 55 24 3D 5F E9 2A 57 40 FD 1A A9 94 8C A4 1D "
-         "A8 2A 9E 0A A4 D6 1F C2 87 A2 4F B5 3C 15 49 AC "
-         "3F 85 0F 44 8A 46 52 0E D4 15 4F 05 51 09 3D 6A "
-         "57 40 FD 1A A9 97 -- -- -- -- -- -- -- -- -- -- ",
-         "data#6"},
+        {
+            "www.example.com",
+            "f1e3 c2e5 f23a 6ba0 ab90 f4ff",
+        },
+        {
+            "no-cache",
+            "a8eb 1064 9cbf",
+        },
+        {
+            "custom-key",
+            "25a8 49e9 5ba9 7d7f",
+        },
+        {
+            "custom-value",
+            "25a8 49e9 5bb8 e8b4 bf",
+        },
+        {"still a man hears what he wants to hear and disregards the rest - The boxer, Simon and Garfunkel",
+         "424d450a0d4a4752939476214f138d2a4e553c0ea4a1449d49ca3b141d5229219161661d922144ce552c2a12a2ca6f9caa467f25b3e94dc6a4f5283aa45310ec96daba968f"},
+        {"We don't playing because we grow old; we grow old because we stop playing. - George Bernard Shaw",
+         "e455243d5fe92a5740fd1aa9948ca41da82a9e0aa4d61fc287a24fb53c1549ac3f850f448a46520ed4154f0551093d6a5740fd1aa99751653114f64c552e96ca87648a6e9c7e3f"},
     };
     for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
         huffman_coding_testvector* item = vector + i;
-        test_huffman_codes_routine(item->sample, item->expect, item->text);
+        test_huffman_codes_routine(item->sample, item->expect);
     }
 }
 
@@ -595,6 +601,11 @@ void test_h2_header_frame_fragment() {
 
     // [test vector] chrome generated header
 
+    struct testvector {
+        const char* key;
+        const char* value;
+    };
+
     hpack_session session;
     binary_t bin;
     size_t pos = 0;
@@ -639,12 +650,23 @@ void test_h2_header_frame_fragment() {
 
     pos = 0;
     bin = base16_decode_rfc(sample1);
+    skey_value kv1;
     while (pos < bin.size()) {
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
+        kv1.set(name, value);
         if (option.verbose) {
             _logger->writeln("> %s: %s", name.c_str(), value.c_str());
             fflush(stdout);
         }
+    }
+    testvector _tv1[] = {
+        {":method", "GET"},
+        {":scheme", "https"},
+        {":authority", "localhost:9000"},
+        {":path", "/"},
+    };
+    for (auto item : _tv1) {
+        _test_case.assert(kv1[item.key] == item.value, __FUNCTION__, "decode %s: %s", item.key, kv1[item.key].c_str());
     }
 
     const char* sample2 =
@@ -663,14 +685,24 @@ void test_h2_header_frame_fragment() {
 
     pos = 0;
     bin = base16_decode_rfc(sample2);
+    skey_value kv2;
     while (pos < bin.size()) {
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
+        kv2.set(name, value);
         if (option.verbose) {
             _logger->writeln("> %s: %s", name.c_str(), value.c_str());
             fflush(stdout);
         }
     }
-    _test_case.assert(true, __FUNCTION__, "decompress");
+    testvector _tv2[] = {
+        {":method", "GET"},
+        {":scheme", "https"},
+        {":authority", "localhost:9000"},
+        {":path", "/favicon.ico"},
+    };
+    for (auto item : _tv2) {
+        _test_case.assert(kv2[item.key] == item.value, __FUNCTION__, "decode %s: %s", item.key, kv2[item.key].c_str());
+    }
 }
 
 int main(int argc, char** argv) {
