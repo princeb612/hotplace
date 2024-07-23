@@ -24,96 +24,121 @@
 
 namespace hotplace {
 
-// Data Structures & Algorithms 12.3.2 The Boyer-Moore Algorithm
-//  O(nm+|Sigma|)
-//  Algorithm BMMatch(T,P):
-//      Input: Strings T (text) with n characters and P (pattern) with m characters
-//      Output: Starting index of the first substring of T matching P, or an indication
-//              that P is not a substring of T
-//      compute function last
-//      i←m−1
-//      j←m−1
-//      repeat
-//          if P[ j] = T[i] then
-//              if j = 0 then
-//                  return i {a match!}
-//              else
-//                  i←i−1
-//                  j ← j−1
-//          else
-//              i←i+m−min(j,1+last(T[i])) {jump step}
-//              j ←m−1
-//      until i > n−1
-//      return “There is no substring of T matching P.”
+/**
+ * Data Structures & Algorithms 12.3.2 The Boyer-Moore Algorithm
+ *  O(nm+|Sigma|)
+ *  Algorithm BMMatch(T,P):
+ *      Input: Strings T (text) with n characters and P (pattern) with m characters
+ *      Output: Starting index of the first substring of T matching P, or an indication
+ *              that P is not a substring of T
+ *      compute function last
+ *      i←m−1
+ *      j←m−1
+ *      repeat
+ *          if P[ j] = T[i] then
+ *              if j = 0 then
+ *                  return i {a match!}
+ *              else
+ *                  i←i−1
+ *                  j ← j−1
+ *          else
+ *              i←i+m−min(j,1+last(T[i])) {jump step}
+ *              j ←m−1
+ *      until i > n−1
+ *      return “There is no substring of T matching P.”
+ */
+// not implemented
 
-// Data Structures & Algorithms 12.3.3 The Knuth-Morris-Pratt Algorithm
-//  O(n+m)
-//
-//  Algorithm KMPMatch(T,P):
-//      Input: Strings T (text) with n characters and P (pattern) with m characters
-//      Output: Starting index of the first substring of T matching P, or an indication
-//              that P is not a substring of T
-//      f ←KMPFailureFunction(P) {construct the failure function f for P}
-//      i←0
-//      j←0
-//      while i < n do
-//          if P[ j] = T[i] then
-//              if j = m−1 then
-//                  return i−m+1 {a match!}
-//              i←i+1
-//              j ← j+1
-//          else if j > 0 {no match, but we have advanced in P} then
-//              j ← f ( j−1) { j indexes just after prefix of P that must match}
-//          else
-//              i←i+1
-//      return “There is no substring of T matching P.”
-//
-//  Algorithm KMPFailureFunction(P):
-//      Input: String P (pattern) with m characters
-//      Output: The failure function f for P, which maps j to the length of the longest
-//              prefix of P that is a suffix of P[1.. j]
-//          i←1
-//          j←0
-//          f (0)←0
-//          while i < m do
-//              if P[ j] = P[i] then
-//                  {we have matched j+1 characters}
-//                  f (i)← j+1
-//                  i←i+1
-//                  j ← j+1
-//              else if j > 0 then
-//                  { j indexes just after a prefix of P that must match}
-//                  j ← f ( j−1)
-//              else
-//                  {we have no match here}
-//                  f (i)←0
-//                  i←i+1
-
+/**
+ * Data Structures & Algorithms 12.3.3 The Knuth-Morris-Pratt Algorithm
+ *  O(n+m)
+ *
+ *  Algorithm KMPMatch(T,P):
+ *      Input: Strings T (text) with n characters and P (pattern) with m characters
+ *      Output: Starting index of the first substring of T matching P, or an indication
+ *              that P is not a substring of T
+ *      f ←KMPFailureFunction(P) {construct the failure function f for P}
+ *      i←0
+ *      j←0
+ *      while i < n do
+ *          if P[ j] = T[i] then
+ *              if j = m−1 then
+ *                  return i−m+1 {a match!}
+ *              i←i+1
+ *              j ← j+1
+ *          else if j > 0 {no match, but we have advanced in P} then
+ *              j ← f ( j−1) { j indexes just after prefix of P that must match}
+ *          else
+ *              i←i+1
+ *      return “There is no substring of T matching P.”
+ *
+ *  Algorithm KMPFailureFunction(P):
+ *      Input: String P (pattern) with m characters
+ *      Output: The failure function f for P, which maps j to the length of the longest
+ *              prefix of P that is a suffix of P[1.. j]
+ *          i←1
+ *          j←0
+ *          f (0)←0
+ *          while i < m do
+ *              if P[ j] = P[i] then
+ *                  {we have matched j+1 characters}
+ *                  f (i)← j+1
+ *                  i←i+1
+ *                  j ← j+1
+ *              else if j > 0 then
+ *                  { j indexes just after a prefix of P that must match}
+ *                  j ← f ( j−1)
+ *              else
+ *                  {we have no match here}
+ *                  f (i)←0
+ *                  i←i+1
+ */
 template <typename T = char>
 class t_kmp_pattern {
    public:
     /**
-     * comparator for pointer type - t_kmp_pattern<object*>
+     * @brief   KMP pattern matching
+     * @remarks
+     *          comparator for pointer type - t_kmp_pattern<object*>
      *
-     * struct object {
-     *      int value;
-     *      friend bool operator==(const object& lhs, const object& rhs) { return lhs.value == rhs.value; }
-     * }
-     * auto comparator = [](const object* lhs, const object* rhs) -> bool {
-     *      return (lhs->value == rhs->value);
-     * };
+     *          struct object {
+     *               int value;
+     *               object(int v) : value(v) {}
+     *               friend bool operator==(const object& lhs, const object& rhs) { return lhs.value == rhs.value; }
+     *          }
+     *          auto comparator = [](const object* lhs, const object* rhs) -> bool {
+     *               return (lhs->value == rhs->value);
+     *          };
      *
-     * std::vector<objec*> data1; // 1 2 3 4 5 by new object
-     * std::vector<objec*> data2; // 3 4 by new object
+     *          std::vector<objec*> data1; // 1 2 3 4 5 by new object
+     *          std::vector<objec*> data2; // 3 4 by new object
+     *          // data1.push_back(new object(1));
+     *          // ...
      *
-     * t_kmp_pattern<object*> search;
-     * search.match(data1, data2);
-     *      // if (pattern[j] == data[i]) - incorrect
-     *      // return -1
+     *          t_kmp_pattern<object*> search;
+     *          search.match(data1, data2);
+     *               // if (pattern[j] == data[i]) - incorrect
+     *               // return -1
      *
-     * search.match(data1, data2, 0, comparator);
-     *      // if (comparator(pattern[j], data[i])) - correct
-     *      // return 2
+     *          search.match(data1, data2, 0, comparator);
+     *               // if (comparator(pattern[j], data[i])) - correct
+     *               // return 2
+     *
+     * @sa      parser::add_pattern, parser::psearch
+     *
+     *          parser p;
+     *          parser::context context;
+     *          constexpr char sample[] = R"(int a; int b = 0; bool b = true;)";
+     *          p.add_token("bool", 0x1000).add_token("int", 0x1001).add_token("true", 0x1002).add_token("false", 0x1002);
+     *          p.parse(context, sample);
+     *          // after parsing, convert each word to a token object
+     *          p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");
+     *          // pattern matching using t_aho_corasick<int, token*>
+     =          result = p.psearch();
+     *          // std::multimap<unsigned, size_t> expect = {{0, 0}, {1, 3}, {3, 8}};
+     *          // sample  : int a; int b = 0; bool b = true;
+     *          // pattern : 0      1          3
+     *          // tokens  : 0   12 3   4 5 67 8    9 a b   c
      */
     typedef typename std::function<bool(const T&, const T&)> comparator_t;
 
@@ -189,8 +214,30 @@ class t_kmp_pattern {
 };
 
 /**
- * @brief   return array[index]
- * @sa      t_trie, t_aho_corasick
+ * @brief   access specified element
+ * @sa      t_trie, t_suffixtree, t_ukkonen, t_aho_corasick, t_wildcards
+ * @remarks
+ *
+ *      // implementation1. simple array (simply return array[index])
+ *          char data[] = { 's', 'a', 'm', 'p', 'l', 'e' };
+ *          t_trie<char> trie;
+ *          t_suffixtree<char> suffixtree;
+ *          t_ukkonen<char> ukkonen;
+ *          t_aho_corasick<char> ac;
+ *          t_wildcards<char> wild('?', '*');
+ *
+ *      // implementation2. using pointer data array or vector
+ *          struct mystruct {
+ *              // other members
+ *              int elem; // key
+ *              mystruct(char c) : elem(c) {}
+ *          }
+ *          auto memberof = [](mystruct* const* n, size_t idx) -> int { return n[idx]->elem; };
+ *          t_trie<int, mystruct*> trie(memberof);
+ *          t_suffixtree<int, mystruct*> suffixtree(memberof);
+ *          t_ukkonen<int, mystruct*> ukkonen(memberof);
+ *          t_aho_corasick<int, mystruct*> ac(memberof);
+ *          t_wildcards<int, mystruct*> wild(kindof_exact_one, kindof_zero_or_more, memberof);
  */
 template <typename BT = char, typename T = BT>
 BT memberof_defhandler(const T* source, size_t idx) {
@@ -242,6 +289,7 @@ class t_trie {
     t_trie(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {}
     virtual ~t_trie() { delete _root; }
 
+    t_trie<BT, T>& add(const std::vector<T>& pattern) { return add(&pattern[0], pattern.size()); }
     t_trie<BT, T>& add(const T* pattern, size_t size) {
         if (pattern) {
             trienode* current = _root;
@@ -258,6 +306,7 @@ class t_trie {
         }
         return *this;
     }
+    bool search(const std::vector<T>& pattern) { return search(&pattern[0], pattern.size()); }
     bool search(const T* pattern, size_t size) {
         bool ret = false;
         if (pattern) {
@@ -274,6 +323,7 @@ class t_trie {
         }
         return ret;
     }
+    bool prefix(const std::vector<T>& pattern) { return prefix(&pattern[0], pattern.size()); }
     bool prefix(const T* pattern, size_t size) {
         bool ret = true;
         if (pattern) {
@@ -289,6 +339,7 @@ class t_trie {
         }
         return ret;
     }
+    void erase(const std::vector<T>& pattern) { erase(&pattern[0], pattern.size()); }
     void erase(const T* pattern, size_t size) {
         if (pattern) {
             trienode* current = _root;
@@ -314,6 +365,7 @@ class t_trie {
         return *this;
     }
 
+    bool suggest(const std::vector<T>& pattern, dump_handler handler) { return suggest(&pattern[0], pattern.size(), handler); }
     bool suggest(const T* pattern, size_t size, dump_handler handler) {
         bool ret = true;
         if (pattern && handler) {
@@ -398,6 +450,22 @@ class t_suffixtree {
     }
     virtual ~t_suffixtree() { delete _root; }
 
+    t_suffixtree<BT, T>& add(const std::vector<T>& pattern) { return add(&pattern[0], pattern.size()); }
+    t_suffixtree<BT, T>& add(const T* pattern, size_t size) {
+        if (pattern) {
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(pattern, i);
+                _source.insert(_source.end(), t);
+            }
+            size_t size_source = _source.size();
+            for (size_t i = 0; i < size_source; ++i) {
+                add(&_source[i], size_source - i, i);
+            }
+        }
+        return *this;
+    }
+
+    std::set<unsigned> search(const std::vector<T>& pattern) { return search(&pattern[0], pattern.size()); }
     std::set<unsigned> search(const T* pattern, size_t size) {
         std::set<unsigned> index;
         if (pattern) {
@@ -415,20 +483,6 @@ class t_suffixtree {
             }
         }
         return index;
-    }
-
-    t_suffixtree<BT, T>& add(const T* pattern, size_t size) {
-        if (pattern) {
-            for (size_t i = 0; i < size; ++i) {
-                const BT& t = _memberof(pattern, i);
-                _source.insert(_source.end(), t);
-            }
-            size_t size_source = _source.size();
-            for (size_t i = 0; i < size_source; ++i) {
-                add(&_source[i], size_source - i, i);
-            }
-        }
-        return *this;
     }
 
     t_suffixtree<BT, T>& reset() {
@@ -500,6 +554,7 @@ class t_ukkonen {
     }
     virtual ~t_ukkonen() { delete _root; }
 
+    t_ukkonen<BT, T>& add(const std::vector<T>& pattern) { return add(&pattern[0], pattern.size()); }
     t_ukkonen<BT, T>& add(const T* pattern, size_t size) {
         if (pattern) {
             reset();
@@ -517,6 +572,7 @@ class t_ukkonen {
         return *this;
     }
 
+    std::set<int> search(const std::vector<T>& pattern) { return search(&pattern[0], pattern.size()); }
     std::set<int> search(const T* pattern, size_t size) {
         std::set<int> result;
         int pos = -1;
@@ -889,24 +945,26 @@ class t_wildcards {
     t_wildcards(const BT& exact_one, const BT& zero_or_more, memberof_t memberof = memberof_defhandler<BT, T>)
         : _exact_one(exact_one), _zero_or_more(zero_or_more), _memberof(memberof) {}
 
-    bool match(const T* text, size_t n, const T* pattern, size_t m) {
+    bool match(const std::vector<T>& source, const std::vector<T>& pattern) { return match(&source[0], source.size(), &pattern[0], pattern.size()); }
+    bool match(const T* source, size_t n, const T* pattern, size_t m) {
+        bool ret = false;
         int i = 0;
         int j = 0;
-        int startIndex = -1;
+        int startidx = -1;
         int match = 0;
 
-        while (i < n) {
-            const BT& t = _memberof(text, i);
+        while ((i < n) && (j < m)) {
+            const BT& t = _memberof(source, i);
             const BT& p = _memberof(pattern, j);
             if (j < m && ((_exact_one == p) || (p == t))) {
                 i++;
                 j++;
             } else if ((j < m) && (_zero_or_more == p)) {
-                startIndex = j;
+                startidx = j;
                 match = i;
                 j++;
-            } else if (-1 != startIndex) {
-                j = startIndex + 1;
+            } else if (-1 != startidx) {
+                j = startidx + 1;
                 match++;
                 i = match;
             } else {
@@ -914,12 +972,16 @@ class t_wildcards {
             }
         }
 
-        const BT& p = _memberof(pattern, j);
-        while ((j < m) && ('*' == p)) {
-            j++;
+        while (j < m) {
+            const BT& p = _memberof(pattern, j);
+            if (_zero_or_more == p) {
+                j++;
+            } else {
+                break;
+            }
         }
 
-        return j == m;
+        return (j == m);
     }
 
    private:

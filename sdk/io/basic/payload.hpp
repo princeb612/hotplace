@@ -111,10 +111,40 @@ class payload {
     payload();
     ~payload();
 
+    /**
+     * @brief   add
+     * @sa      payload_member
+     */
     payload& operator<<(payload_member* member);
 
+    /**
+     * @brief   enable/disable group
+     */
     payload& set_group(const std::string& name, bool optional);
+    /**
+     * @brief   set_group(name, true);
+     */
+    payload& enable_group(const std::string& name);
+    /**
+     * @brief   set_group(name, false);
+     */
+    payload& disable_group(const std::string& name);
+    /**
+     * @brief   group status
+     */
     bool get_group_condition(const std::string& name);
+    /**
+     * @brief
+     * @sample
+     *          payload pl;
+     *          binary_t data;
+     *          binary_t pad;
+     *          pl << new payload_member((uint8)0, "padlen", "pad") << new payload_member(data, "data") << new payload_member((uint32)0, true, "value")
+     *             << new payload_member(pad, "pad", "pad");
+     *          binary_t decoded = base16_decode("036461746100001000706164");
+     *          pl.set_reference_value("pad", "padlen"); // padlen=03, so pad 3 bytes
+     *          pl.read(decoded);
+     */
     payload& set_reference_value(const std::string& name, const std::string& ref);
 
     return_t dump(binary_t& bin);
@@ -124,6 +154,7 @@ class payload {
     payload& for_each(std::function<void(payload_member*)> func);
     payload_member* select(const std::string& name);
 
+   private:
     /**
      * @brief   size
      * @return  size estimated
@@ -136,7 +167,6 @@ class payload {
     size_t size_occupied();
     payload& clear();
 
-   private:
     // dump
     std::list<payload_member*> _members;  // basic list
 

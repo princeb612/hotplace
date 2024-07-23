@@ -961,19 +961,105 @@ void test_wildcards() {
     _test_case.begin("wildcards");
 
     std::string text = "baaabab";
-    std::string pattern1 = "*****ba*****ab";
-    std::string pattern2 = "ba?aba?";
-    std::string pattern3 = "ba?ab?c";
 
-    bool test = false;
     t_wildcards<char> wild('?', '*');
 
-    test = wild.match(text.c_str(), text.size(), pattern1.c_str(), pattern1.size());
-    _test_case.assert(test, __FUNCTION__, "wildcard");
-    test = wild.match(text.c_str(), text.size(), pattern2.c_str(), pattern2.size());
-    _test_case.assert(test, __FUNCTION__, "wildcard");
-    test = wild.match(text.c_str(), text.size(), pattern3.c_str(), pattern3.size());
-    _test_case.assert(false == test, __FUNCTION__, "wildcard");
+    struct testvector {
+        const char* pattern;
+        bool expect;
+    };
+    testvector _table[] = {
+        {"*****ba*****ab", true},
+        {"ba?aba?", true},
+        {"ba?ab?c", false},
+        {"ba?a*b", true},
+    };
+
+    for (auto item : _table) {
+        bool test = wild.match(text.c_str(), text.size(), item.pattern, strlen(item.pattern));
+        _test_case.assert(item.expect == test, __FUNCTION__, "wildcards %s [%d]", item.pattern, item.expect ? 1 : 0);
+    }
+}
+
+// pointer simulation
+enum tok_t {
+    tok_bool,
+    tok_int,
+    tok_real,
+    tok_id,
+    tok_assign,
+    tok_boolvalue,
+    tok_intvalue,
+    tok_semicolon,
+    tok_question,
+    tok_asterisk,
+};
+struct node {
+    tok_t data;
+
+    node(tok_t data) : data(data) {}
+};
+
+void test_wildcards2() {
+    _test_case.begin("wildcards");
+
+    // pattern matching by pointer
+    auto memberof = [](node* const* n, size_t idx) -> tok_t { return n[idx]->data; };
+    t_wildcards<tok_t, node*> wild(tok_question, tok_asterisk, memberof);
+
+    // bool a;
+    // int b = 0;
+    tok_t raw_source[] = {tok_bool, tok_id, tok_semicolon, tok_int, tok_id, tok_assign, tok_intvalue, tok_semicolon};
+    // bool ?;
+    tok_t raw_pattern1[] = {tok_bool, tok_question, tok_semicolon};
+    // bool ?; *
+    tok_t raw_pattern2[] = {tok_bool, tok_question, tok_semicolon, tok_asterisk};
+    // ? ? ? int ? = ?;
+    tok_t raw_pattern3[] = {tok_question, tok_question, tok_question, tok_int, tok_question, tok_assign, tok_question, tok_semicolon};
+    // * int ? = *;
+    tok_t raw_pattern4[] = {tok_asterisk, tok_int, tok_question, tok_assign, tok_asterisk, tok_semicolon};
+    // * int ? = ; (not found)
+    tok_t raw_pattern5[] = {tok_asterisk, tok_int, tok_question, tok_assign, tok_semicolon};
+    // * real *
+    tok_t raw_pattern6[] = {tok_asterisk, tok_real, tok_asterisk};
+
+    auto build_vector = [](std::vector<node*>& target, const tok_t* source, size_t size) -> void {
+        for (size_t i = 0; i < size; i++) {
+            target.push_back(new node(source[i]));
+        }
+    };
+    auto free_vector = [](std::vector<node*>& target) -> void {
+        for (auto item : target) {
+            delete item;
+        }
+        target.clear();
+    };
+
+    std::vector<node*> source;
+    build_vector(source, raw_source, RTL_NUMBER_OF(raw_source));
+
+    struct testvector {
+        const char* text;
+        tok_t* array;
+        size_t size;
+        bool expect;
+    };
+    testvector _table[] = {
+        {"bool ?;", raw_pattern1, RTL_NUMBER_OF(raw_pattern1), true},          {"bool ?; *", raw_pattern2, RTL_NUMBER_OF(raw_pattern2), true},
+        {"? ? ? int ? = ?;", raw_pattern3, RTL_NUMBER_OF(raw_pattern3), true}, {"* int ? = *;", raw_pattern4, RTL_NUMBER_OF(raw_pattern4), true},
+        {"* int ? = ;", raw_pattern5, RTL_NUMBER_OF(raw_pattern5), false},     {"* real *", raw_pattern6, RTL_NUMBER_OF(raw_pattern6), false},
+    };
+    for (auto item : _table) {
+        std::vector<node*> data;
+        build_vector(data, item.array, item.size);
+
+        bool test = wild.match(source, data);
+        _test_case.assert(test == item.expect, __FUNCTION__, "wildcards %s [%i]", item.text, item.expect ? 1 : 0);
+
+        free_vector(data);
+    }
+
+    free_vector(source);
 }
 
 int main(int argc, char** argv) {
@@ -1008,6 +1094,7 @@ int main(int argc, char** argv) {
     test_ukkonen2();
     test_lcp();
     test_wildcards();
+    test_wildcards2();
 
     _logger->flush();
 

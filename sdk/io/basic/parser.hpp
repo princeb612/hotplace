@@ -315,6 +315,103 @@ class parser {
      */
     parser& add_pattern(const char* p, size_t size);
     parser& add_pattern(const std::string& pattern);
+    /**
+     * @brief   pattern search
+     * @remarks
+     *          // sketch
+     *
+     *          // define token_builtintype, token_taggedmode, token_of, token_default
+     *
+     *          p.add_token("::=", token_assign)
+     *              .add_token("--", token_comments)
+     *              .add_token("BOOLEAN", token_builtintype, token_bool)                 // BooleanType
+     *              .add_token("INTEGER", token_builtintype, token_int)                  // IntegerType
+     *              .add_token("BIT STRING", token_builtintype, token_bitstring)         // BitStringType
+     *              .add_token("OCT STRING", token_builtintype, token_octstring)         // BitStringType
+     *              .add_token("NULL", token_builtintype, token_null)                    // NullType
+     *              .add_token("REAL", token_builtintype, token_real)                    // RealType
+     *              .add_token("IA5String", token_builtintype, token_ia5string)          // CharacterStringType
+     *              .add_token("VisibleString", token_builtintype, token_visiblestring)  // CharacterStringType
+     *              .add_token("OF", token_of)
+     *              .add_token("SEQUENCE", token_sequence)
+     *              .add_token("SET", token_set)
+     *              // BooleanValue ::= TRUE | FALSE
+     *              .add_token("TRUE", token_bool, token_true)
+     *              .add_token("FALSE", token_bool, token_false)
+     *              // Class ::= UNIVERSAL | APPLICATION | PRIVATE | empty
+     *              .add_token("UNIVERSAL", token_class, token_universal)
+     *              .add_token("APPLICATION", token_class, token_application)
+     *              .add_token("PRIVATE", token_class, token_private)
+     *              // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
+     *              .add_token("IMPLICIT", token_taggedmode, token_implicit)
+     *              .add_token("EXPLICIT", token_taggedmode, token_explicit)
+     *              .add_token("DEFAULT", token_default);
+     *
+     *          p.add_token("$pattern_builtintype", token_builtintype)
+     *              .add_token("$pattern_usertype", token_usertype)
+     *              .add_token("$pattern_class", token_class)
+     *              .add_token("$pattern_sequence", token_sequence)
+     *              .add_token("$pattern_of", token_of)
+     *              .add_token("$pattern_taggedmode", token_taggedmode);
+     *
+     *          // set the input as follows ...
+     *          const char* source = R"(
+     *                ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
+     *                Name ::= [APPLICATION 1] IMPLICIT SEQUENCE {givenName VisibleString, initial VisibleString, familyName VisibleString}
+     *                EmployeeNumber ::= [APPLICATION 2] IMPLICIT  INTEGER
+     *                Date ::= [APPLICATION 3] IMPLICIT  VisibleString
+     *                PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
+     *                     name Name,
+     *                     title [0] VisibleString,
+     *                     number EmployeeNumber,
+     *                     dateOfHire [1] Date,
+     *                     nameOfSpouse [2] Name,
+     *                     children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}})"
+     *
+     *          p.get_config().set("handle_usertype", 1);
+     *          p.parse(context, source);
+     *          // after parsing, convert each word to a token object
+     *          // array of parser::token*
+     *          // [0] ChildInformation type token_usertype
+     *          // [1] ::= type token_assign
+     *          // [2] SET type set
+     *          // ...
+     *
+     *          p.add_pattern("$pattern_builtintype")
+     *              .add_pattern("name $pattern_builtintype")
+     *              .add_pattern("name $pattern_usertype")
+     *              .add_pattern("SEQUENCE")
+     *              .add_pattern("SEQUENCE OF $pattern_usertype")
+     *              .add_pattern("SEQUENCE OF $pattern_usertype DEFAULT")
+     *              .add_pattern("SEQUENCE OF $pattern_usertype DEFAULT {}")
+     *              .add_pattern("SET")
+     *              .add_pattern("[$pattern_class 1] $pattern_builtintype")
+     *              .add_pattern("[$pattern_class 1] $pattern_usertype")
+     *              .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_builtintype")
+     *              .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_usertype")
+     *              .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_sequence")
+     *              .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_set")
+     *              .add_pattern("[1] $pattern_builtintype")
+     *              .add_pattern("[1] $pattern_usertype")
+     *              .add_pattern("[1] $pattern_taggedmode $pattern_builtintype")
+     *              .add_pattern("[1] $pattern_taggedmode $pattern_usertype")
+     *              .add_pattern("[1] $pattern_taggedmode $pattern_sequence")
+     *              .add_pattern("[1] $pattern_taggedmode $pattern_sequence $pattern_of $pattern_usertype")
+     *              .add_pattern("$pattern_sequence")
+     *              .add_pattern("$pattern_sequence $pattern_of")
+     *              .add_pattern("$pattern_set")
+     *              .add_pattern("$pattern_set $pattern_of $pattern_usertype")
+     *              .add_pattern("$pattern_usertype ::=");
+     *
+     *          // pattern search
+     *          auto result = p.psearch(context);
+     *          for (auto item : result) {
+     *              parser::search_result res;
+     *              context.psearch_result(res, item.second, item.first);
+     *
+     *              _logger->writeln("pattern[%i] at [%zi] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+     *          }
+     */
     std::multimap<unsigned, size_t> psearch(const parser::context& context);
 
     /**

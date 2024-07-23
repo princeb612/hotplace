@@ -107,6 +107,20 @@ void test_sharedinstance2() {
 void test_convert_endian() {
     _test_case.begin("endian");
 
+    {
+        int16 i = 0x1234;
+        int16 a = htons(i);
+        int16 b = convert_endian(i);
+        _test_case.assert(a == b, __FUNCTION__, "hton16 %x %x", a, b);
+    }
+
+    {
+        int32 i = 0x12345678;
+        int32 a = htonl(i);
+        int32 b = convert_endian(i);
+        _test_case.assert(a == b, __FUNCTION__, "hton32 %x %x", a, b);
+    }
+
     struct testvector_64 {
         uint64 h;
         uint64 n;
@@ -180,7 +194,30 @@ void test_byte_capacity_unsigned() {
         TESTVECTOR_ENTRY(0x80, 1),
         TESTVECTOR_ENTRY(0x800, 2),
         TESTVECTOR_ENTRY(0x8000, 2),
+        TESTVECTOR_ENTRY(0x80000, 3),
+        TESTVECTOR_ENTRY(0x800000, 3),
+        TESTVECTOR_ENTRY(0x8000000, 4),
+        TESTVECTOR_ENTRY(0x80000000, 4),
         TESTVECTOR_ENTRY(0x800000000, 5),
+        TESTVECTOR_ENTRY(0x8000000000, 5),
+        TESTVECTOR_ENTRY(0x80000000000, 6),
+        TESTVECTOR_ENTRY(0x800000000000, 6),
+        TESTVECTOR_ENTRY(0x8000000000000, 7),
+        TESTVECTOR_ENTRY(0x80000000000000, 7),
+        TESTVECTOR_ENTRY(0x800000000000000, 8),
+        TESTVECTOR_ENTRY(0x8000000000000000, 8),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("80000000000000000"), 9),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("800000000000000000"), 9),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("8000000000000000000"), 10),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("80000000000000000000"), 10),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("800000000000000000000"), 11),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("8000000000000000000000"), 11),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("80000000000000000000000"), 12),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("800000000000000000000000"), 12),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("8000000000000000000000000"), 13),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("80000000000000000000000000"), 13),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("800000000000000000000000000"), 14),
+        TESTVECTOR_ENTRY(t_htoi<uint128>("8000000000000000000000000000"), 14),
         TESTVECTOR_ENTRY(t_htoi<uint128>("80000000000000000000000000000"), 15),
         TESTVECTOR_ENTRY(t_htoi<uint128>("800000000000000000000000000000"), 15),
         TESTVECTOR_ENTRY(t_htoi<uint128>("8000000000000000000000000000000"), 16),
@@ -192,7 +229,7 @@ void test_byte_capacity_unsigned() {
     for (auto entry : _table) {
         int bytesize = byte_capacity(entry.x);
         _logger->writeln("%032I128x -> %i", entry.x, bytesize);
-        _test_case.assert(bytesize == entry.expect, __FUNCTION__, "byte capacity %032I128x (%i)", entry.x, bytesize);
+        _test_case.assert(bytesize == entry.expect, __FUNCTION__, "(%2i) byte capacity %032I128x %I128i", bytesize, entry.x, entry.x);
     }
 }
 
@@ -242,7 +279,7 @@ void test_byte_capacity_signed() {
     for (auto entry : _table) {
         int bytesize = byte_capacity_signed<int128>(entry.x);
         _logger->writeln("%40I128i %032I128x (%i bytes)", entry.x, entry.x, bytesize);
-        _test_case.assert(bytesize == entry.expect, __FUNCTION__, "byte capacity %I128i (%i)", entry.x, bytesize);
+        _test_case.assert(bytesize == entry.expect, __FUNCTION__, "(%2i) byte capacity %032I128x %I128i", bytesize, entry.x, entry.x);
     }
 }
 
