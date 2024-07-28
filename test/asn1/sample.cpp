@@ -526,9 +526,10 @@ void x690_compose() {
             .add_token("REAL", token_builtintype, token_real)                    // RealType
             .add_token("IA5String", token_builtintype, token_ia5string)          // CharacterStringType
             .add_token("VisibleString", token_builtintype, token_visiblestring)  // CharacterStringType
-            .add_token("OF", token_of)
             .add_token("SEQUENCE", token_sequence)
+            .add_token("SEQUENCE OF", token_sequenceof)
             .add_token("SET", token_set)
+            .add_token("SET OF", token_setof)
             // BooleanValue ::= TRUE | FALSE
             .add_token("TRUE", token_bool, token_true)
             .add_token("FALSE", token_bool, token_false)
@@ -538,42 +539,32 @@ void x690_compose() {
             .add_token("PRIVATE", token_class, token_private)
             // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
             .add_token("IMPLICIT", token_taggedmode, token_implicit)
-            .add_token("EXPLICIT", token_taggedmode, token_explicit)
-            .add_token("DEFAULT", token_default);
+            .add_token("EXPLICIT", token_taggedmode, token_explicit);
 
         p.add_token("$pattern_builtintype", token_builtintype)
             .add_token("$pattern_usertype", token_usertype)
             .add_token("$pattern_class", token_class)
             .add_token("$pattern_sequence", token_sequence)
-            .add_token("$pattern_of", token_of)
+            .add_token("$pattern_sequenceof", token_sequenceof)
+            .add_token("$pattern_set", token_set)
+            .add_token("$pattern_setof", token_setof)
             .add_token("$pattern_taggedmode", token_taggedmode);
 
-        // TODO
-        // find token_lvalue and add_token
-        // p.add_token("ChildInformation", token_usertype)
-        //     .add_token("Name", token_usertype)
-        //     .add_token("EmployeeNumber", token_usertype)
-        //     .add_token("Date", token_usertype)
-        //     .add_token("PersonnelRecord", token_usertype);
         p.get_config().set("handle_lvalue_usertype", 1);
 
         parser::context context;
         p.parse(context, item.source);
 
-        auto dump_handler = [&](const token_description* desc) -> void {
-            _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->index,
-                             desc->pos, desc->size, (unsigned)desc->size, desc->p);
-        };
-        context.for_each(dump_handler);
-
         p.add_pattern("$pattern_builtintype")
-            .add_pattern("name $pattern_builtintype")
-            .add_pattern("name $pattern_usertype")
-            .add_pattern("SEQUENCE")
-            .add_pattern("SEQUENCE OF $pattern_usertype")
-            .add_pattern("SEQUENCE OF $pattern_usertype DEFAULT")
-            .add_pattern("SEQUENCE OF $pattern_usertype DEFAULT {}")
-            .add_pattern("SET")
+            .add_pattern("$pattern_usertype")
+            .add_pattern("$pattern_sequence")
+            .add_pattern("$pattern_set")
+            .add_pattern("$pattern_sequenceof $pattern_usertype")
+            .add_pattern("$pattern_sequenceof $pattern_usertype DEFAULT")
+            .add_pattern("$pattern_sequenceof $pattern_usertype DEFAULT {}")
+            .add_pattern("{")
+            .add_pattern(",")
+            .add_pattern("}")
             .add_pattern("[$pattern_class 1] $pattern_builtintype")
             .add_pattern("[$pattern_class 1] $pattern_usertype")
             .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_builtintype")
@@ -585,20 +576,43 @@ void x690_compose() {
             .add_pattern("[1] $pattern_taggedmode $pattern_builtintype")
             .add_pattern("[1] $pattern_taggedmode $pattern_usertype")
             .add_pattern("[1] $pattern_taggedmode $pattern_sequence")
-            .add_pattern("[1] $pattern_taggedmode $pattern_sequence $pattern_of $pattern_usertype")
-            .add_pattern("$pattern_sequence")
-            .add_pattern("$pattern_sequence $pattern_of")
-            .add_pattern("$pattern_set")
-            .add_pattern("$pattern_set $pattern_of $pattern_usertype")
-            .add_pattern("$pattern_usertype ::=");
+            .add_pattern("[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype")
+            .add_pattern("[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT")
+            .add_pattern("[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}")
+            .add_pattern("[1] $pattern_taggedmode $pattern_set")
+            .add_pattern("name $pattern_builtintype")
+            .add_pattern("name $pattern_usertype")
+            .add_pattern("name $pattern_sequence")
+            .add_pattern("name $pattern_set")
+            .add_pattern("name [$pattern_class 1] $pattern_builtintype")
+            .add_pattern("name [$pattern_class 1] $pattern_usertype")
+            .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_builtintype")
+            .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_usertype")
+            .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_sequence")
+            .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_set")
+            .add_pattern("name [1] $pattern_builtintype")
+            .add_pattern("name [1] $pattern_usertype")
+            .add_pattern("name [1] $pattern_taggedmode $pattern_builtintype")
+            .add_pattern("name [1] $pattern_taggedmode $pattern_usertype")
+            .add_pattern("name [1] $pattern_taggedmode $pattern_sequence")
+            .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype")
+            .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT")
+            .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}")
+            .add_pattern("name [1] $pattern_taggedmode $pattern_set");
 
-        auto result = p.psearch(context);
-        for (auto item : result) {
+        auto result = p.psearchex(context);
+        for (auto r : result) {
             parser::search_result res;
-            context.psearch_result(res, item.second, item.first);
+            context.psearch_result(res, r.first, r.second);
 
-            _logger->writeln("pattern[%i] at [%zi] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+            _logger->writeln("pos [%2zi] pattern[%2i] %.*s", r.first, r.second, (unsigned)res.size, res.p);
         }
+
+        auto dump_handler = [&](const token_description* desc) -> void {
+            _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->index,
+                             desc->pos, desc->size, (unsigned)desc->size, desc->p);
+        };
+        context.for_each(dump_handler);
     }
 }
 

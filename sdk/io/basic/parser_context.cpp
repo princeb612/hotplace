@@ -381,11 +381,34 @@ void parser::context::add_pattern(parser* obj) {
     }
 }
 
-std::multimap<unsigned, size_t> parser::context::psearch(parser* obj) const {
-    std::multimap<unsigned, size_t> result;
-    auto ac = obj->_ac;
-    ac->build_state_machine();
-    result = ac->search(&_tokens[0], _tokens.size());
+std::multimap<size_t, unsigned> parser::context::psearch(parser* obj) const {
+    std::multimap<size_t, unsigned> result;
+    if (obj) {
+        auto ac = obj->_ac;
+        ac->build_state_machine();
+        result = ac->search(&_tokens[0], _tokens.size());
+    }
+    return result;
+}
+
+std::multimap<size_t, unsigned> parser::context::psearchex(parser* obj) const {
+    std::multimap<size_t, unsigned> result;
+    if (obj) {
+        auto ac = obj->_ac;
+        ac->build_state_machine();
+        auto acres = ac->search(&_tokens[0], _tokens.size());
+
+        t_merge_ovl_intervals<int> moi;
+        search_result r;
+        for (auto item : acres) {
+            psearch_result(r, item.first, item.second);
+            moi.add(r.begidx, r.endidx, item.second);
+        }
+        auto moires = moi.merge();
+        for (auto item : moires) {
+            result.insert({item.s, item.t});
+        }
+    }
     return result;
 }
 

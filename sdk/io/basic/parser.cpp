@@ -109,7 +109,9 @@ parser& parser::add_pattern(const char* p, size_t size) {
 
 parser& parser::add_pattern(const std::string& pattern) { return add_pattern(pattern.c_str(), pattern.size()); }
 
-std::multimap<unsigned, size_t> parser::psearch(const parser::context& context) { return context.psearch(this); }
+std::multimap<size_t, unsigned> parser::psearch(const parser::context& context) { return context.psearch(this); }
+
+std::multimap<size_t, unsigned> parser::psearchex(const parser::context& context) { return context.psearchex(this); }
 
 bool parser::compare(parser* obj, const char* lhs, const char* rhs) {
     bool ret = false;

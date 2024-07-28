@@ -16,6 +16,7 @@
 #include <map>
 #include <queue>
 #include <sdk/base/error.hpp>
+#include <sdk/base/nostd/template.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <set>
@@ -135,10 +136,10 @@ class t_kmp_pattern {
      *          p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");
      *          // pattern matching using t_aho_corasick<int, token*>
      =          result = p.psearch();
-     *          // std::multimap<unsigned, size_t> expect = {{0, 0}, {1, 3}, {3, 8}};
+     *          // std::multimap<unsigned, size_t> expect = {{0, 0}, {3, 1}, {8, 3}};
      *          // sample  : int a; int b = 0; bool b = true;
-     *          // pattern : 0      1          3
      *          // tokens  : 0   12 3   4 5 67 8    9 a b   c
+     *          // pattern : 0      1          3
      */
     typedef typename std::function<bool(const T&, const T&)> comparator_t;
 
@@ -746,7 +747,7 @@ class t_ukkonen {
  *              std::multimap<unsigned, size_t> result;
  *              result = ac.search(text, strlen(text));
  *              for (auto item : result) {
- *                  _logger->writeln("pattern[%i] at [%zi]", item.first, item.second);
+ *                  _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
  *              }
  *          }
  *          // using pointer
@@ -771,7 +772,7 @@ class t_aho_corasick {
     struct trienode {
         std::map<BT, trienode*> children;
         trienode* fail;
-        std::vector<int> output;
+        std::vector<unsigned> output;
 
         trienode() : fail(nullptr) {}
         ~trienode() {
@@ -850,11 +851,26 @@ class t_aho_corasick {
 
     /**
      * @brief   search for patterns
-     * @return  std::multimap<unsigned, size_t> as is multimap<pattern_id, position>
+     * @return  std::multimap<size_t, unsigned> as is multimap<pattern_id, position>
+     *          pair(pos_occurrence, id_pattern)
      */
-    std::multimap<unsigned, size_t> search(const std::vector<T>& source) { return search(&source[0], source.size()); }
-    std::multimap<unsigned, size_t> search(const T* source, size_t size) {
-        std::multimap<unsigned, size_t> result;
+    std::multimap<size_t, unsigned> search(const std::vector<T>& source) { return do_search(&source[0], source.size()); }
+    std::multimap<size_t, unsigned> search(const T* source, size_t size) { return do_search(source, size); }
+    const std::vector<T>& get_patterns(size_t index) { return _patterns[index]; }
+
+    void reset() {
+        delete _root;
+        _root = new trienode;
+        _patterns.clear();
+    }
+
+   protected:
+    /**
+     * @brief   match
+     * @return  pair(pos_occurrence, id_pattern)
+     */
+    std::multimap<size_t, unsigned> do_search(const T* source, size_t size) {
+        std::multimap<size_t, unsigned> result;
         if (source) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
@@ -870,9 +886,7 @@ class t_aho_corasick {
                         // (i - sizepat + 1) is beginning position of pattern
                         size_t sizepat = _patterns[v].size();
                         size_t pos = i - sizepat + 1;
-                        result.insert({v, pos});
-                        // debug
-                        // printf("pattern:%i at [%zi] pattern [%.*s] \n",  v, pos, (unsigned)sizepat, &(_patterns[v])[0]);
+                        result.insert({pos, v});
                     }
                 } else {
                     current = _root;
@@ -880,13 +894,6 @@ class t_aho_corasick {
             }
         }
         return result;
-    }
-    const std::vector<T>& get_patterns(size_t index) { return _patterns[index]; }
-
-    void reset() {
-        delete _root;
-        _root = new trienode;
-        _patterns.clear();
     }
 
    private:

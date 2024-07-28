@@ -553,8 +553,9 @@ void test_multipattern_search() {
         } pat[10];
         int nexpect;
         struct {
-            unsigned patid;
+            // pair(pos_occurrence, id_pattern)
             size_t idx;
+            unsigned patid;
         } expect[10];
     } _table[] = {
         {
@@ -566,23 +567,23 @@ void test_multipattern_search() {
             "abcaabc",
             4,
             {
-                {"abc", 3},
-                {"ab", 2},
-                {"bc", 2},
-                {"a", 1},
+                {"abc", 3},  // pattern 0
+                {"ab", 2},   // pattern 1
+                {"bc", 2},   // pattern 2
+                {"a", 1},    // pattern 3
             },
             9,
             {
                 //          abcaabc
-                {3, 0},  // a
-                {1, 0},  // ab
+                {0, 3},  // a
+                {0, 1},  // ab
                 {0, 0},  // abc
-                {2, 1},  //  bc
+                {1, 2},  //  bc
                 {3, 3},  //    a
-                {3, 4},  //     a
-                {1, 4},  //     ab
-                {0, 4},  //     abc
-                {2, 5},  //      bc
+                {4, 3},  //     a
+                {4, 1},  //     ab
+                {4, 0},  //     abc
+                {5, 2},  //      bc
             },
         },
         {
@@ -594,18 +595,18 @@ void test_multipattern_search() {
             "cacachefcachy",
             4,
             {
-                {"cache", 5},
-                {"he", 2},
-                {"chef", 4},
-                {"achy", 4},
+                {"cache", 5},  // pattern 0
+                {"he", 2},     // pattern 1
+                {"chef", 4},   // pattern 2
+                {"achy", 4},   // pattern 3
             },
             4,
             {
                 //          cacachefcachy
-                {0, 2},  //   cache
-                {1, 5},  //      he
-                {2, 4},  //     chef
-                {3, 9},  //          achy
+                {2, 0},  //   cache
+                {5, 1},  //      he
+                {4, 2},  //     chef
+                {9, 3},  //          achy
             },
         },
         {
@@ -617,26 +618,26 @@ void test_multipattern_search() {
             "ahishers",
             4,
             {
-                {"he", 2},
-                {"she", 3},
-                {"hers", 4},
-                {"his", 3},
+                {"he", 2},    // pattern 0
+                {"she", 3},   // pattern 1
+                {"hers", 4},  // pattern 2
+                {"his", 3},   // pattern 3
             },
             4,
             {
                 //         ahishers
-                {3, 1},  //  his
-                {1, 3},  //    she
-                {0, 4},  //     he
-                {2, 4},  //     hers
+                {1, 3},  // his
+                {3, 1},  //   she
+                {4, 0},  //    he
+                {4, 2},  //    hers
             },
         },
     };
 
     for (auto item : _table) {
         t_aho_corasick<char> ac;
-        std::multimap<unsigned, size_t> expect;
-        std::multimap<unsigned, size_t> result;
+        std::multimap<size_t, unsigned> expect;
+        std::multimap<size_t, unsigned> result;
 
         _logger->writeln(R"(source "%s")", item.source);
         for (int i = 0; i < item.npat; i++) {
@@ -649,7 +650,7 @@ void test_multipattern_search() {
             auto patid = item.expect[i].patid;
             auto p = item.pat[patid].p;
             auto idx = item.expect[i].idx;
-            expect.insert({patid, idx});
+            expect.insert({idx, patid});
             _logger->writeln(R"(expect pattern[%i](as is "%s") at source[%zi])", patid, p, idx);
         }
 
@@ -665,11 +666,11 @@ void test_multipattern_search() {
     const char* source = "ahishers";
     ac.search(source, strlen(source));
 
-    std::multimap<unsigned, size_t> result;
-    std::multimap<unsigned, size_t> expect = {{0, 4}, {1, 3}, {2, 4}, {3, 1}};
+    std::multimap<size_t, unsigned> result;
+    std::multimap<size_t, unsigned> expect = {{4, 0}, {3, 1}, {4, 2}, {1, 3}};
     result = ac.search(source, strlen(source));
     for (auto item : result) {
-        _logger->writeln("pattern[%i] at [%zi]", item.first, item.second);
+        _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
     }
     _test_case.assert(result == expect, __FUNCTION__, "multiple pattern");
 }
@@ -1062,6 +1063,73 @@ void test_wildcards2() {
     free_vector(source);
 }
 
+void merge_overlapping_intervals() {
+    _test_case.begin("merge overlapping intervals");
+    t_merge_ovl_intervals<int> moi;
+    typedef t_merge_ovl_intervals<int>::interval interval;
+    typedef std::vector<interval> result;
+    result res;
+    result expect;
+    basic_stream bs;
+
+    auto func = [&](result::const_iterator iter, int where) -> void {
+        switch (where) {
+            case seek_t::seek_begin:
+                bs << "{";
+                bs << "{" << iter->s << "," << iter->e << "}";
+                break;
+            case seek_t::seek_move:
+                bs << ",";
+                bs << "{" << iter->s << "," << iter->e << "}";
+                break;
+            case seek_t::seek_end:
+                bs << "}";
+                break;
+        }
+    };
+
+    expect = {interval(1, 9, 0)};
+    moi.clear().add(6, 8).add(1, 9).add(2, 4).add(4, 7);
+    res = moi.merge();
+    for_each<result>(res, func);
+    _logger->writeln(bs);  // {1, 9}
+    _test_case.assert(res == expect, __FUNCTION__, "test #1");
+    bs.clear();
+
+    expect = {interval(1, 4, 0), interval(6, 8, 0), interval(9, 10, 0)};
+    // expect = {{1,4,0},{6,8,0},{9,10,0}};
+    moi.clear().add(9, 10).add(6, 8).add(1, 3).add(2, 4).add(6, 8);  // partially duplicated
+    res = moi.merge();
+    for_each<result>(res, func);
+    _logger->writeln(bs);  // {1, 4}, {6, 8}, {9, 10}
+    _test_case.assert(res == expect, __FUNCTION__, "test #2");
+    bs.clear();
+
+    expect = {interval(1, 8, 4), interval(9, 10, 3)};
+    moi.clear().add(9, 10, 3).add(6, 8, 2).add(1, 3, 0).add(2, 4, 1).add(1, 8, 4);
+    res = moi.merge();
+    for_each<result>(res, func);
+    _logger->writeln(bs);  // {1, 8}, {9, 10}
+    _test_case.assert(res == expect, __FUNCTION__, "test #3");
+    bs.clear();
+
+    expect = {interval(1, 8, 4), interval(9, 10, 3)};
+    moi.clear().add(9, 10, 3).add(6, 8, 2).add(1, 3, 0).add(2, 4, 1).add(1, 8, 4);
+    res = moi.merge();
+    for_each<result>(res, func);
+    _logger->writeln(bs);  // {1, 8}, {9, 10}
+    _test_case.assert(res == expect, __FUNCTION__, "test #4");
+    bs.clear();
+
+    expect = {interval(1, 8, 4)};
+    moi.clear().add(1, 8, 4);
+    res = moi.merge();
+    for_each<result>(res, func);
+    _logger->writeln(bs);  // {1, 8}
+    _test_case.assert(res == expect, __FUNCTION__, "test #5");
+    bs.clear();
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -1095,6 +1163,7 @@ int main(int argc, char** argv) {
     test_lcp();
     test_wildcards();
     test_wildcards2();
+    merge_overlapping_intervals();
 
     _logger->flush();
 

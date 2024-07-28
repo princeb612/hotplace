@@ -44,14 +44,14 @@ namespace io {
  *          pl.dump(bin_padded);
  *          dump_memory(bin_padded, &bs);
  *          printf("%s\n", bs.c_str());
- *          _test_case.assert(12 == bin_padded.size(), __FUNCTION__, "payload padded");  // 3 || "data" || 0x1000 || "pad"
+ *          _test_case.assert(12 == bin_padded.size(), __FUNCTION__, "payload padded");  // 3 || "data" || 0x00001000 || "pad"
  *          // 00000000 : 03 64 61 74 61 00 00 10 00 70 61 64 -- -- -- -- | .data....pad
  *
  *          pl.set_group("pad", false); // disable "pad" group
  *          pl.dump(bin_notpadded);
  *          dump_memory(bin_notpadded, &bs);
  *          printf("%s\n", bs.c_str());
- *          _test_case.assert(8 == bin_notpadded.size(), __FUNCTION__, "payload not padded");  // "data" || 0x1000
+ *          _test_case.assert(8 == bin_notpadded.size(), __FUNCTION__, "payload not padded");  // "data" || 0x00001000
  *          // 00000000 : 64 61 74 61 00 00 10 00 -- -- -- -- -- -- -- -- | data....
  *
  *          // sketch.2 (parse)
@@ -142,7 +142,7 @@ class payload {
      *          pl << new payload_member((uint8)0, "padlen", "pad") << new payload_member(data, "data") << new payload_member((uint32)0, true, "value")
      *             << new payload_member(pad, "pad", "pad");
      *          binary_t decoded = base16_decode("036461746100001000706164");
-     *          pl.set_reference_value("pad", "padlen"); // padlen=03, so pad 3 bytes
+     *          pl.set_reference_value("pad", "padlen"); // padlen=03, so length of pad 3 bytes
      *          pl.read(decoded);
      */
     payload& set_reference_value(const std::string& name, const std::string& ref);

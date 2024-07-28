@@ -219,7 +219,8 @@ class parser {
         search_result wsearch(parser* obj, const context& pattern, unsigned int pos = 0) const;
 
         void add_pattern(parser* obj);
-        std::multimap<unsigned, size_t> psearch(parser* obj) const;
+        std::multimap<size_t, unsigned> psearch(parser* obj) const;
+        std::multimap<size_t, unsigned> psearchex(parser* obj) const;
 
         bool compare(parser* obj, const parser::context& rhs) const;
 
@@ -235,8 +236,8 @@ class parser {
          *          result = p.psearch(context);
          *          for (auto item : result) {
          *              parser::search_result res;
-         *              context.psearch_result(res, item.second, item.first);
-         *              _logger->writeln("pattern[%i] at [%zi] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+         *              context.psearch_result(res, item.first, item.second);
+         *              _logger->writeln("pos [%zi] pattern[%i] %.*s", item.first, item.second, (unsigned)res.size, res.p);
          *          }
          */
         void psearch_result(search_result& result, uint32 idx, unsigned patidx) const;
@@ -332,9 +333,10 @@ class parser {
      *              .add_token("REAL", token_builtintype, token_real)                    // RealType
      *              .add_token("IA5String", token_builtintype, token_ia5string)          // CharacterStringType
      *              .add_token("VisibleString", token_builtintype, token_visiblestring)  // CharacterStringType
-     *              .add_token("OF", token_of)
      *              .add_token("SEQUENCE", token_sequence)
+     *              .add_token("SEQUENCE OF", token_sequenceof)
      *              .add_token("SET", token_set)
+     *              .add_token("SET OF", token_setof)
      *              // BooleanValue ::= TRUE | FALSE
      *              .add_token("TRUE", token_bool, token_true)
      *              .add_token("FALSE", token_bool, token_false)
@@ -344,14 +346,15 @@ class parser {
      *              .add_token("PRIVATE", token_class, token_private)
      *              // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
      *              .add_token("IMPLICIT", token_taggedmode, token_implicit)
-     *              .add_token("EXPLICIT", token_taggedmode, token_explicit)
-     *              .add_token("DEFAULT", token_default);
+     *              .add_token("EXPLICIT", token_taggedmode, token_explicit);
      *
      *          p.add_token("$pattern_builtintype", token_builtintype)
      *              .add_token("$pattern_usertype", token_usertype)
      *              .add_token("$pattern_class", token_class)
      *              .add_token("$pattern_sequence", token_sequence)
-     *              .add_token("$pattern_of", token_of)
+     *              .add_token("$pattern_sequenceof", token_sequenceof)
+     *              .add_token("$pattern_set", token_set)
+     *              .add_token("$pattern_setof", token_setof)
      *              .add_token("$pattern_taggedmode", token_taggedmode);
      *
      *          // set the input as follows ...
@@ -378,13 +381,14 @@ class parser {
      *          // ...
      *
      *          p.add_pattern("$pattern_builtintype")
-     *              .add_pattern("name $pattern_builtintype")
-     *              .add_pattern("name $pattern_usertype")
-     *              .add_pattern("SEQUENCE")
-     *              .add_pattern("SEQUENCE OF $pattern_usertype")
-     *              .add_pattern("SEQUENCE OF $pattern_usertype DEFAULT")
-     *              .add_pattern("SEQUENCE OF $pattern_usertype DEFAULT {}")
-     *              .add_pattern("SET")
+     *              .add_pattern("$pattern_usertype")
+     *              .add_pattern("$pattern_sequence")
+     *              .add_pattern("$pattern_set")
+     *              .add_pattern("$pattern_sequenceof $pattern_usertype")
+     *              .add_pattern("$pattern_sequenceof $pattern_usertype DEFAULT")
+     *              .add_pattern("$pattern_sequenceof $pattern_usertype DEFAULT {}")
+     *              .add_pattern("{")
+     *              .add_pattern("}")
      *              .add_pattern("[$pattern_class 1] $pattern_builtintype")
      *              .add_pattern("[$pattern_class 1] $pattern_usertype")
      *              .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_builtintype")
@@ -396,23 +400,41 @@ class parser {
      *              .add_pattern("[1] $pattern_taggedmode $pattern_builtintype")
      *              .add_pattern("[1] $pattern_taggedmode $pattern_usertype")
      *              .add_pattern("[1] $pattern_taggedmode $pattern_sequence")
-     *              .add_pattern("[1] $pattern_taggedmode $pattern_sequence $pattern_of $pattern_usertype")
-     *              .add_pattern("$pattern_sequence")
-     *              .add_pattern("$pattern_sequence $pattern_of")
-     *              .add_pattern("$pattern_set")
-     *              .add_pattern("$pattern_set $pattern_of $pattern_usertype")
-     *              .add_pattern("$pattern_usertype ::=");
+     *              .add_pattern("[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype")
+     *              .add_pattern("[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT")
+     *              .add_pattern("[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}")
+     *              .add_pattern("[1] $pattern_taggedmode $pattern_set")
+     *              .add_pattern("name $pattern_builtintype")
+     *              .add_pattern("name $pattern_usertype")
+     *              .add_pattern("name $pattern_sequence")
+     *              .add_pattern("name $pattern_set")
+     *              .add_pattern("name [$pattern_class 1] $pattern_builtintype")
+     *              .add_pattern("name [$pattern_class 1] $pattern_usertype")
+     *              .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_builtintype")
+     *              .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_usertype")
+     *              .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_sequence")
+     *              .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_set")
+     *              .add_pattern("name [1] $pattern_builtintype")
+     *              .add_pattern("name [1] $pattern_usertype")
+     *              .add_pattern("name [1] $pattern_taggedmode $pattern_builtintype")
+     *              .add_pattern("name [1] $pattern_taggedmode $pattern_usertype")
+     *              .add_pattern("name [1] $pattern_taggedmode $pattern_sequence")
+     *              .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype")
+     *              .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT")
+     *              .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}")
+     *              .add_pattern("name [1] $pattern_taggedmode $pattern_set");
      *
      *          // pattern search
      *          auto result = p.psearch(context);
      *          for (auto item : result) {
      *              parser::search_result res;
-     *              context.psearch_result(res, item.second, item.first);
+     *              context.psearch_result(res, item.first, item.second);
      *
-     *              _logger->writeln("pattern[%i] at [%zi] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+     *              _logger->writeln("pos [%zi] pattern[%i] %.*s", item.first, item.second, (unsigned)res.size, res.p);
      *          }
      */
-    std::multimap<unsigned, size_t> psearch(const parser::context& context);
+    std::multimap<size_t, unsigned> psearch(const parser::context& context);
+    std::multimap<size_t, unsigned> psearchex(const parser::context& context);
 
     /**
      * @brief   compare (ignore white spaces)

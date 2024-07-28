@@ -256,8 +256,8 @@ void test_multipattern_search() {
     // sketch - pattern search
     {
         t_aho_corasick<int> ac;
-        std::multimap<unsigned, size_t> result;
-        std::multimap<unsigned, size_t> expect = {{0, 0}, {1, 3}, {1, 8}};
+        std::multimap<size_t, unsigned> result;
+        std::multimap<size_t, unsigned> expect = {{0, 0}, {3, 1}, {8, 1}};
         std::vector<int> pattern1 = {token_type, token_identifier, token_colon};
         std::vector<int> pattern2 = {token_type, token_identifier, token_equal, token_identifier, token_colon};
         // after parsing
@@ -271,7 +271,8 @@ void test_multipattern_search() {
         ac.build_state_machine();
         result = ac.search(sample_parsed);
         for (auto item : result) {
-            _logger->writeln("pattern[%i] at [%zi]", item.first, item.second);
+            // pair(pos_occurrence, id_pattern)
+            _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
         }
         _test_case.assert(result == expect, __FUNCTION__, "pattern matching #1");
     }
@@ -280,8 +281,8 @@ void test_multipattern_search() {
     {
         parser p;
         parser::context context;
-        std::multimap<unsigned, size_t> result;
-        std::multimap<unsigned, size_t> expect = {{0, 0}, {1, 3}, {3, 8}};
+        std::multimap<size_t, unsigned> result;
+        std::multimap<size_t, unsigned> expect = {{0, 0}, {3, 1}, {8, 3}};
         p.add_token("bool", 0x1000).add_token("int", 0x1001).add_token("true", 0x1002).add_token("false", 0x1002);
         p.parse(context, sample);
         p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");
@@ -290,12 +291,18 @@ void test_multipattern_search() {
         // pattern : 0      1          3
         // tokens  : 0   12 3   4 5 67 8    9 a b   c
         for (auto item : result) {
+            // pair(pos_occurrence, id_pattern)
             parser::search_result res;
-            context.psearch_result(res, item.second, item.first);
-            _logger->writeln("pattern[%i] at [%zi] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+            context.psearch_result(res, item.first, item.second);
+            _logger->writeln("pos [%zi] pattern[%i] %.*s", item.first, item.second, (unsigned)res.size, res.p);
         }
         _test_case.assert(result == expect, __FUNCTION__, "pattern matching #2");
     }
+}
+
+void test_sub_pattern() {
+    _test_case.begin("sub pattern");
+    //
 }
 
 int main(int argc, char** argv) {
