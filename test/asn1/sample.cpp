@@ -479,9 +479,6 @@ void test_asn1_typedef_value() {
 enum token_tag_t {
     token_userdef = 0x2000,
 
-    token_builtintype,
-    // token_type_namedtype,
-    token_taggedmode,
     token_of,
     token_default,
 };
@@ -548,7 +545,8 @@ void x690_compose() {
             .add_token("$pattern_sequenceof", token_sequenceof)
             .add_token("$pattern_set", token_set)
             .add_token("$pattern_setof", token_setof)
-            .add_token("$pattern_taggedmode", token_taggedmode);
+            .add_token("$pattern_taggedmode", token_taggedmode)
+            .add_token("$pattern_assign", token_assign);
 
         p.get_config().set("handle_lvalue_usertype", 1);
 
@@ -598,7 +596,8 @@ void x690_compose() {
             .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype")
             .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT")
             .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}")
-            .add_pattern("name [1] $pattern_taggedmode $pattern_set");
+            .add_pattern("name [1] $pattern_taggedmode $pattern_set")
+            .add_pattern("$pattern_assign");
 
         auto result = p.psearchex(context);
         for (auto r : result) {

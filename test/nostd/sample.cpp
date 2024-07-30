@@ -767,6 +767,54 @@ void test_trie_autocompletion() {
     _test_case.assert(true == test, __FUNCTION__, "auto-completion hel");
 }
 
+void test_trie_lookup() {
+    _test_case.begin("t_trie");
+    t_trie<char> trie;
+    trie.add("hello", 5).add("world", 5);
+    const char* source = "helloworld";
+    size_t len = 0;
+    // 0123456789
+    // helloworld
+    // hello      - in
+    //  x         - not in
+    //      world - in
+    len = trie.lookup(source, 10);  // 5
+    _test_case.assert(5 == len, __FUNCTION__, "lookup #1");
+    len = trie.lookup(source + 1, 9);  // 0
+    _test_case.assert(0 == len, __FUNCTION__, "lookup #2");
+    len = trie.lookup(source + 5, 5);  // 5
+    _test_case.assert(5 == len, __FUNCTION__, "lookup #3");
+
+    int index = -1;
+    index = trie.find("hello", 5);
+    _test_case.assert(1 == index, __FUNCTION__, "find #1");
+    index = trie.find("world", 5);
+    _test_case.assert(2 == index, __FUNCTION__, "find #2");
+    index = trie.find("word", 4);
+    _test_case.assert(-1 == index, __FUNCTION__, "find #3");
+
+    auto compare = [](const std::vector<char>& lhs, const std::string& rhs) -> bool {
+        size_t match = 0;
+        if (lhs.size() == rhs.size()) {
+            for (size_t i = 0; i < lhs.size(); i++) {
+                if (lhs[i] == rhs[i]) {
+                    ++match;
+                }
+            }
+        }
+        return (match == lhs.size());
+    };
+
+    bool test = false;
+    std::vector<char> res;
+    test = trie.rfind(1, res);
+    _test_case.assert(test && compare(res, "hello"), __FUNCTION__, "rfind #1");
+    test = trie.rfind(2, res);
+    _test_case.assert(test && compare(res, "world"), __FUNCTION__, "rfind #2");
+    test = trie.rfind(3, res);
+    _test_case.assert((false == test) && res.empty(), __FUNCTION__, "rfind #3");
+}
+
 // https://www.geeksforgeeks.org/pattern-searching-using-trie-suffixes/
 void test_suffixtree() {
     _test_case.begin("suffix tree");
@@ -1156,6 +1204,7 @@ int main(int argc, char** argv) {
     test_multipattern_search();
     test_trie();
     test_trie_autocompletion();
+    test_trie_lookup();
     test_suffixtree();
     test_suffixtree2();
     test_ukkonen();

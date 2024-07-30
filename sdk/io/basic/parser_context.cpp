@@ -155,11 +155,13 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size, uint32 
                 switch (get_token().get_type()) {
                     case token_assign:
                         lvalue = last_token();
-                        lvalue->set_type(token_lvalue);
-                        get_token().set_type(token_assign);
-                        if (handle_lvalue_usertype) {
-                            lvalues.insert(lvalue->get_index());
-                            // printf("add lvalue idx %i\n", lvalue->get_index());
+                        if (lvalue) {
+                            lvalue->set_type(token_lvalue);
+                            get_token().set_type(token_assign);
+                            if (handle_lvalue_usertype) {
+                                lvalues.insert(lvalue->get_index());
+                                // printf("add lvalue idx %i\n", lvalue->get_index());
+                            }
                         }
                         break;
                     default:
@@ -216,7 +218,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size, uint32 
                 std::string item;
                 uint32 token_type = 0;
                 uint32 token_tag = 0;
-                bool match = obj->token_match(p + pos, item, token_type, token_tag);
+                bool match = obj->lookup(p + pos, size - pos, item, token_type, token_tag);
                 if (match) {
                     add_context_token(hook);
 
@@ -374,6 +376,27 @@ parser::search_result parser::context::wsearch(parser* obj, const context& patte
     return result;
 }
 
+bool parser::context::compare(parser* obj, const parser::context& rhs) const {
+    bool ret = false;
+    if ((_parser == obj) && (_parser == rhs._parser)) {
+        size_t size = _tokens.size();
+        if (size == rhs._tokens.size()) {
+            size_t idx = 0;
+            for (idx = 0; idx != size; idx++) {
+                parser::token* token_lhs = _tokens[idx];
+                parser::token* token_rhs = rhs._tokens[idx];
+                if (token_lhs->get_index() != token_lhs->get_index()) {
+                    break;
+                }
+            }
+            if (idx == size) {
+                ret = true;
+            }
+        }
+    }
+    return ret;
+}
+
 void parser::context::add_pattern(parser* obj) {
     if (obj) {
         auto ac = obj->_ac;
@@ -410,27 +433,6 @@ std::multimap<size_t, unsigned> parser::context::psearchex(parser* obj) const {
         }
     }
     return result;
-}
-
-bool parser::context::compare(parser* obj, const parser::context& rhs) const {
-    bool ret = false;
-    if ((_parser == obj) && (_parser == rhs._parser)) {
-        size_t size = _tokens.size();
-        if (size == rhs._tokens.size()) {
-            size_t idx = 0;
-            for (idx = 0; idx != size; idx++) {
-                parser::token* token_lhs = _tokens[idx];
-                parser::token* token_rhs = rhs._tokens[idx];
-                if (token_lhs->get_index() != token_lhs->get_index()) {
-                    break;
-                }
-            }
-            if (idx == size) {
-                ret = true;
-            }
-        }
-    }
-    return ret;
 }
 
 return_t parser::context::add_context_token(std::function<bool(int, parser::token*)> hook) {

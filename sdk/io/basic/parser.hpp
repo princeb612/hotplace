@@ -106,6 +106,9 @@ enum token_t {
     token_implicit,
     token_explicit,
 
+    token_builtintype,
+    token_taggedmode,
+
     // reserved
     token_char,
     token_usertype,
@@ -205,7 +208,7 @@ class parser {
         size_t _pos;
         size_t _size;
         size_t _line;
-        uint32 _index;
+        uint32 _index;  // 0 reserved, start with 1
     };
 
     class context {
@@ -214,15 +217,28 @@ class parser {
         ~context();
 
         return_t parse(parser* obj, const char* p, size_t size, uint32 flags = 0);
+
+        /**
+         * @brief   character-level search
+         */
         search_result csearch(parser* obj, const char* pattern, size_t size_pattern, unsigned int pos = 0) const;
         search_result csearch(parser* obj, const std::string& pattern, unsigned int pos = 0) const;
-        search_result wsearch(parser* obj, const context& pattern, unsigned int pos = 0) const;
 
+        /**
+         * @brief   word-level search
+         */
+        search_result wsearch(parser* obj, const context& pattern, unsigned int pos = 0) const;
+        /**
+         * @brief   word-level comparison
+         */
+        bool compare(parser* obj, const parser::context& rhs) const;
+
+        /**
+         * @brief   pattern-level search
+         */
         void add_pattern(parser* obj);
         std::multimap<size_t, unsigned> psearch(parser* obj) const;
         std::multimap<size_t, unsigned> psearchex(parser* obj) const;
-
-        bool compare(parser* obj, const parser::context& rhs) const;
 
         void clear();
 
@@ -270,7 +286,7 @@ class parser {
     return_t parse(parser::context& context, const char* p, size_t size);
     return_t parse(parser::context& context, const char* p);
     /**
-     * @brief   pattern search (character search)
+     * @brief   pattern search (character-level)
      * @param
      * @sample
      *          // strlen(asn1_structure) --> 612, strlen(pattern) --> 32
@@ -283,7 +299,7 @@ class parser {
     search_result csearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos = 0);
     search_result csearch(const parser::context& context, const std::string& pattern, unsigned int pos = 0);
     /**
-     * @brief   pattern search (word search)
+     * @brief   pattern search (word-level)
      * @param   const parser::context& context [in]
      * @param   const char* pattern [in]
      * @param   size_t size_pattern [in]
@@ -298,6 +314,18 @@ class parser {
      */
     search_result wsearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos = 0);
     search_result wsearch(const parser::context& context, const std::string& pattern, unsigned int pos = 0);
+    /**
+     * @brief   compare (word-level comparison, ignore white spaces)
+     * @param   const char* lhs [in]
+     * @param   const char* rhs [in]
+     * @sample
+     *          constexpr char data1[] = "[APPLICATION 2] IMPLICIT INTEGER";
+     *          constexpr char data2[] = "[APPLICATION  2]  IMPLICIT  INTEGER";
+     *          bool test = p.compare(data1, data2); // true
+     */
+    static bool compare(parser* obj, const char* lhs, const char* rhs);
+    bool compare(const char* lhs, const char* rhs);
+    bool compare(const parser::context& lhs, const parser::context& rhs);
 
     /**
      * @brief   multiple pattern search
@@ -317,7 +345,7 @@ class parser {
     parser& add_pattern(const char* p, size_t size);
     parser& add_pattern(const std::string& pattern);
     /**
-     * @brief   pattern search
+     * @brief   pattern search (pattern-level)
      * @remarks
      *          // sketch
      *
@@ -434,20 +462,12 @@ class parser {
      *          }
      */
     std::multimap<size_t, unsigned> psearch(const parser::context& context);
-    std::multimap<size_t, unsigned> psearchex(const parser::context& context);
-
     /**
-     * @brief   compare (ignore white spaces)
-     * @param   const char* lhs [in]
-     * @param   const char* rhs [in]
-     * @sample
-     *          constexpr char data1[] = "[APPLICATION 2] IMPLICIT INTEGER";
-     *          constexpr char data2[] = "[APPLICATION  2]  IMPLICIT  INTEGER";
-     *          bool test = p.compare(data1, data2); // true
+     * @brief   pattern search
+     * @remarks merge all overlapping patterns
+     * @sa      t_merge_ovl_intervals
      */
-    static bool compare(parser* obj, const char* lhs, const char* rhs);
-    bool compare(const char* lhs, const char* rhs);
-    bool compare(const parser::context& lhs, const parser::context& rhs);
+    std::multimap<size_t, unsigned> psearchex(const parser::context& context);
 
     /**
      * @brief   add token
@@ -496,27 +516,23 @@ class parser {
      */
     bool rlookup(int index, std::string& word);
     /**
-     * @brief   match token
+     * @brief   lookup
      * @param   const char* p [in]
+     * @param   size_t size [in]
      * @param   std::string& token_name [out]
      * @param   uint32& token_type [out]
      * @param   uint32& token_tag [out]
      */
-    bool token_match(const char* p, std::string& token_name, uint32& token_type, uint32& token_tag);
+    bool lookup(const char* p, size_t size, std::string& token_name, uint32& token_type, uint32& token_tag);
 
-    // lookup by word or index
-    struct dictionary_t {
-        std::map<std::string, int> index;   // map<word, index>
-        std::map<int, std::string> rindex;  // map<index, word>
-    };
     struct token_attr_tag {
         uint32 attr;
         uint32 tag;
+        token_attr_tag(uint32 attr, uint32 tag) : attr(attr), tag(tag) {}
     };
-    typedef std::multimap<char, std::pair<std::string, token_attr_tag>> tokens_t;
 
-    dictionary_t _dictionary;                    // lookup
-    tokens_t _tokens;                            // token_match
+    t_trie<char, char, token_attr_tag> _tokens;  // tokens
+    t_trie<char> _dictionary;                    // lookup
     t_aho_corasick<int, token*>* _ac;            // multi-pattern search
     t_key_value<std::string, uint16> _keyvalue;  // get_config
 

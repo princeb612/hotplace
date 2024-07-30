@@ -265,7 +265,7 @@ BT memberof_defhandler(const T* source, size_t idx) {
  *          trie.erase("help", 4);
  *          result = trie.search("help", 4); // false
  */
-template <typename BT = char, typename T = BT>
+template <typename BT = char, typename T = BT, typename TP = char>
 class t_trie {
    public:
     typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
@@ -276,24 +276,67 @@ class t_trie {
      */
     struct trienode {
         std::map<BT, trienode*> children;
-        bool eow;  // end of  word
+        bool eow;   // end of  word
+        int index;  // 0 for reserved
 
-        trienode() : eow(false) {}
-        ~trienode() {
+        trienode() : eow(false), index(-1) {}
+        virtual ~trienode() {
             for (auto item : children) {
                 delete item.second;
             }
         }
+
+        /**
+         * is
+         */
         bool islast() { return children.empty(); }
+        bool iseow() { return eow; }
+        /**
+         * getter
+         */
+        int getindex() { return index; }
+        /**
+         * setter
+         */
+        void setindex(int idx) { index = idx; }
+        /**
+         * verb
+         */
+        virtual void invalidate() {
+            eow = false;
+            index = -1;
+        }
     };
 
-    t_trie(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {}
+    t_trie(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof), _index(0) {}
     virtual ~t_trie() { delete _root; }
 
-    t_trie<BT, T>& add(const std::vector<T>& pattern) { return add(&pattern[0], pattern.size()); }
-    t_trie<BT, T>& add(const T* pattern, size_t size) {
+    /**
+     * @brief   add
+     * @return  *this
+     * @sa      insert
+     * @sample
+     *          t_trie<char, char, int> trie;
+     *          trie.add("pattern", 7, new int(3));
+     *
+     */
+    t_trie<BT, T, TP>& add(const std::vector<T>& pattern, TP* tag = nullptr) {
+        insert(&pattern[0], pattern.size(), tag);
+        return *this;
+    }
+    t_trie<BT, T, TP>& add(const T* pattern, size_t size, TP* tag = nullptr) {
+        insert(pattern, size, tag);
+        return *this;
+    }
+    /**
+     * @brief   add
+     * @return  trienode*
+     * @sa      add
+     */
+    trienode* insert(const std::vector<T>& pattern, TP* tag = nullptr) { return insert(&pattern[0], pattern.size(), tag); }
+    trienode* insert(const T* pattern, size_t size, TP* tag = nullptr) {
+        trienode* current = _root;
         if (pattern) {
-            trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
                 trienode* child = current->children[t];
@@ -303,57 +346,163 @@ class t_trie {
                 }
                 current = child;
             }
-            current->eow = true;
+            inserthook(current, pattern, size, tag);
         }
-        return *this;
+        return current;
     }
-    bool search(const std::vector<T>& pattern) { return search(&pattern[0], pattern.size()); }
-    bool search(const T* pattern, size_t size) {
+    /**
+     * @brief   search
+     * @return  true/false
+     * @sa      find
+     */
+    bool search(const std::vector<T>& pattern, TP** tag = nullptr) { return search(&pattern[0], pattern.size(), tag); }
+    bool search(const T* pattern, size_t size, TP** tag = nullptr) {
         bool ret = false;
         if (pattern) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
-                auto item = current->children.find(t);
-                if (current->children.end() == item) {
+                auto iter = current->children.find(t);
+                if (current->children.end() == iter) {
                     return false;
                 }
-                current = item->second;
+                current = iter->second;
             }
             ret = current->eow;
+            gettag(current, tag);
         }
         return ret;
     }
+    /**
+     * @brief   find in index
+     * @return  index (-1 if not found)
+     * @sa      search
+     */
+    int find(const std::vector<T>& pattern, TP** tag = nullptr) { return find(&pattern[0], pattern.size(), tag); }
+    int find(const T* pattern, size_t size, TP** tag = nullptr) {
+        int index = -1;
+        if (pattern) {
+            trienode* current = _root;
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = this->_memberof(pattern, i);
+                auto item = current->children.find(t);
+                if (current->children.end() == item) {
+                    return -1;  // not found
+                }
+                current = item->second;
+            }
+            if (current->eow) {
+                gettag(current, tag);
+                index = current->index;
+            }
+        }
+        return index;
+    }
+    /**
+     * @brief   find by index
+     * @return  bool
+     */
+    bool rfind(int index, std::vector<BT>& arr) {
+        bool ret = false;
+        arr.clear();
+        std::vector<BT> prefix;
+        auto node = searchindex(this->_root, index, prefix, arr);
+        if (node) {
+            ret = true;
+        }
+        return ret;
+    }
+
+    /**
+     * @brief   prefix
+     * @return  true/false
+     */
     bool prefix(const std::vector<T>& pattern) { return prefix(&pattern[0], pattern.size()); }
-    bool prefix(const T* pattern, size_t size) {
+    bool prefix(const T* pattern, size_t size, bool* eow = nullptr, TP** tag = nullptr) {
         bool ret = true;
         if (pattern) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
-                trienode* child = current->children[t];
-                if (nullptr == child) {
+                auto iter = current->children.find(t);
+                if (current->children.end() == iter) {
                     return false;
                 }
-                current = child;
+                current = iter->second;
+                if (eow) {
+                    *eow = current->eow;
+                    gettag(current, tag);
+                }
             }
         }
         return ret;
     }
+
+    /**
+     * @brief   lookup
+     * @param   const T* pattern [in]
+     * @param   size_t size [in]
+     * @param   TP** tag [outopt] nullptr
+     * @return  length, 0 if not found
+     * @sample
+     *          t_trieindexer<char> trie;
+     *          trie.add("hello", 5).add("world", 5);
+     *          const char* source = "helloworld";
+     *          // 0123456789
+     *          // helloworld
+     *          // hello      - in
+     *          //  x         - not in
+     *          //      world - in
+     *          len = trie.lookup(source, 10);     // 5
+     *          len = trie.lookup(source + 1, 9);  // 0
+     *          len = trie.lookup(source + 5, 5);  // 5
+     */
+    size_t lookup(const T* pattern, size_t size, TP** tag = nullptr) {
+        size_t len = 0;
+        bool ret = true;
+        bool eow = false;
+        if (pattern) {
+            trienode* current = _root;
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = _memberof(pattern, i);
+                auto iter = current->children.find(t);
+                if (current->children.end() == iter) {
+                    return 0;
+                }
+                current = iter->second;
+                eow = current->eow;
+                if (eow) {
+                    gettag(current, tag);
+                    len = i + 1;
+                    break;
+                }
+            }
+        }
+        return len;
+    }
+    /**
+     * @brief   erase
+     */
     void erase(const std::vector<T>& pattern) { erase(&pattern[0], pattern.size()); }
     void erase(const T* pattern, size_t size) {
         if (pattern) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
-                trienode* child = current->children[t];
-                if (nullptr == child) {
+                auto iter = current->children.find(t);
+                if (current->children.end() == iter) {
                     return;
                 }
-                current = child;
+                current = iter->second;
             }
             if (current->eow) {
-                current->eow = false;
+                auto iter = _tags.find(current->index);
+                if (_tags.end() != iter) {
+                    delete iter->second;
+                    _tags.erase(iter);
+                }
+
+                current->invalidate();
             }
         }
     }
@@ -363,6 +512,7 @@ class t_trie {
             delete _root;
             _root = new trienode;
         }
+        clear();
         return *this;
     }
 
@@ -373,11 +523,11 @@ class t_trie {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
-                trienode* child = current->children[t];
-                if (nullptr == child) {
+                auto iter = current->children.find(t);
+                if (current->children.end() == iter) {
                     return false;
                 }
-                current = child;
+                current = iter->second;
             }
             if (current->islast()) {
                 handler(pattern, size);
@@ -393,6 +543,70 @@ class t_trie {
     void dump(dump_handler handler) const { dump(_root, nullptr, 0, handler); }
 
    protected:
+    trienode* searchindex(trienode* node, int index, std::vector<BT>& prefix, std::vector<BT>& arr) {
+        trienode* ret_value = nullptr;
+        __try2 {
+            if (node->eow && (index == node->index)) {
+                ret_value = node;
+                arr = prefix;
+                __leave2;
+            }
+
+            for (auto& item : node->children) {
+                prefix.push_back(item.first);
+                node = searchindex(item.second, index, prefix, arr);
+                prefix.pop_back();
+                if (node) {
+                    ret_value = node;
+                    break;
+                }
+            }
+        }
+        __finally2 {
+            // do nothing
+        }
+        return ret_value;
+    }
+    void clear() {
+        for (auto item : _tags) {
+            delete item;
+        }
+        _tags.clear();
+    }
+    virtual void inserthook(trienode* node, const T* pattern, size_t size, TP* tag) {
+        if (-1 == node->index) {
+            node->setindex(++_index);
+        }
+        node->eow = true;
+        settag(node, tag);
+    }
+    bool settag(trienode* node, TP* tag) {
+        bool ret = false;
+        if (node && tag) {
+            ret = node->eow;
+            if (ret) {
+                auto iter = _tags.find(node->index);
+                if (_tags.end() != iter) {
+                    delete iter->second;
+                }
+                _tags[node->index] = tag;
+            }
+        }
+        return ret;
+    }
+    bool gettag(trienode* node, TP** tag) {
+        bool ret = false;
+        if (node) {
+            ret = node->eow;
+            if (ret && tag) {
+                auto iter = _tags.find(node->index);
+                if (_tags.end() != iter) {
+                    *tag = iter->second;
+                }
+            }
+        }
+        return ret;
+    }
     void dump(trienode* node, const T* pattern, size_t size, dump_handler handler) const {
         if (node && handler) {
             if (node->eow) {
@@ -407,9 +621,10 @@ class t_trie {
         }
     }
 
-   private:
     trienode* _root;
     memberof_t _memberof;
+    unsigned _index;
+    std::unordered_map<int, TP*> _tags;
 };
 
 /**
@@ -434,7 +649,7 @@ class t_suffixtree {
     typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
 
     struct trienode {
-        std::map<BT, trienode*> children;
+        std::unordered_map<BT, trienode*> children;
         std::set<unsigned> index;
 
         trienode() {}
@@ -532,7 +747,7 @@ class t_ukkonen {
     typedef typename std::function<void(trienode* node, int level, const BT* t, size_t size)> debug_handler;
 
     struct trienode {
-        std::map<BT, trienode*> children;
+        std::unordered_map<BT, trienode*> children;
         trienode* suffix_link;
         int start;
         int end;
@@ -770,7 +985,7 @@ class t_aho_corasick {
      * @brief   trie node structure
      */
     struct trienode {
-        std::map<BT, trienode*> children;
+        std::unordered_map<BT, trienode*> children;
         trienode* fail;
         std::vector<unsigned> output;
 
@@ -898,7 +1113,7 @@ class t_aho_corasick {
 
    private:
     trienode* _root;
-    std::map<size_t, std::vector<T>> _patterns;
+    std::unordered_map<size_t, std::vector<T>> _patterns;
     memberof_t _memberof;
 };
 
