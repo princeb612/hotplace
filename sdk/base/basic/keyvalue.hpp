@@ -202,7 +202,7 @@ class t_skey_value {
      *          value = kv ["value"]; // nullptr
      */
     value_t operator[](const std::string& name) {
-        value_t ret_value;
+        value_t ret_value = value_t();
 
         __try2 {
             std::string key(name);
@@ -254,7 +254,7 @@ class t_skey_value {
         return ret;
     }
     value_t get(const std::string& name) {
-        value_t ret_value;
+        value_t ret_value = value_t();
         query(name, ret_value);
         return ret_value;
     }
@@ -376,7 +376,7 @@ class t_key_value {
         return *this;
     }
     value_t get(const key_t& key) {
-        value_t value;
+        value_t value = value_t();
 
         typename keyvalue_map_t::iterator iter = _keyvalue_map.find(key);
         if (_keyvalue_map.end() != iter) {

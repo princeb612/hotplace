@@ -10,6 +10,10 @@ add_subdirectory (bufferio)
 add_subdirectory (cmdline)
 add_subdirectory (datetime)
 add_subdirectory (encode)
+add_subdirectory (ieee754)
+add_subdirectory (graph)
+add_subdirectory (nostd)
+add_subdirectory (pattern)
 add_subdirectory (thread)
 add_subdirectory (unittest)
 
@@ -48,7 +52,6 @@ add_subdirectory (odbc)
 endif ()
 
 # etc
-add_subdirectory (nostd)
 add_subdirectory (varstring)
 
 # platform

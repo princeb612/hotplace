@@ -21,6 +21,7 @@
 #include <sdk/base/types.hpp>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace hotplace {
@@ -309,16 +310,44 @@ class t_trie {
     };
 
     t_trie(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof), _index(0) {}
-    virtual ~t_trie() { delete _root; }
+    virtual ~t_trie() {
+        delete _root;
+        clear();
+    }
 
     /**
      * @brief   add
      * @return  *this
      * @sa      insert
-     * @sample
-     *          t_trie<char, char, int> trie;
-     *          trie.add("pattern", 7, new int(3));
+     * @remarks
+     *          // sketch
+     *          {
+     *              t_trie<char> trie;
+     *              trie.add("pattern", 7);
+     *          }
      *
+     *          // handle text and addtional info
+     *          {
+     *              struct mystruct { int blahblah; };
+     *              t_trie<char, char, mystruct> trie;
+     *              auto tagged = new mystruct(1);
+     *              trie.add("pattern", 7, tagged);
+     *              mystruct* tag = nullptr;
+     *              trie.search("pattern", 7, &tag);
+     *              // never delete tagged
+     *          }   // ~trie free all tagged
+     *
+     *          // index-based operations
+     *          {
+     *              t_trie<char> trie;
+     *              auto node = trie.insert("hello", 5);
+     *              auto index = trie.find("hello", 5);
+     *              bool compare = (node->index == index); // true;
+     *
+     *              std::vector<char> arr;
+     *              trie.rfind(index, arr);
+     *              auto rc = strncmp("hello", &arr[0], arr.size()); // 0
+     *          }
      */
     t_trie<BT, T, TP>& add(const std::vector<T>& pattern, TP* tag = nullptr) {
         insert(&pattern[0], pattern.size(), tag);
@@ -569,7 +598,7 @@ class t_trie {
     }
     void clear() {
         for (auto item : _tags) {
-            delete item;
+            delete item.second;
         }
         _tags.clear();
     }
@@ -992,7 +1021,10 @@ class t_aho_corasick {
         trienode() : fail(nullptr) {}
         ~trienode() {
             for (auto item : children) {
-                delete item.second;
+                auto child = item.second;
+                if (child) {
+                    delete child;
+                }
             }
         }
     };
@@ -1036,8 +1068,11 @@ class t_aho_corasick {
 
         // set failure links
         for (auto& pair : _root->children) {
-            pair.second->fail = _root;
-            q.push(pair.second);
+            auto child = pair.second;
+            if (child) {
+                child->fail = _root;
+                q.push(pair.second);
+            }
         }
 
         // Breadth-first traversal
@@ -1048,18 +1083,19 @@ class t_aho_corasick {
             for (auto& pair : current->children) {
                 const BT& key = pair.first;
                 trienode* child = pair.second;
+                if (child) {
+                    q.push(child);
 
-                q.push(child);
+                    trienode* failNode = current->fail;
+                    while (failNode && !failNode->children[key]) {
+                        failNode = failNode->fail;
+                    }
 
-                trienode* failNode = current->fail;
-                while (failNode && !failNode->children[key]) {
-                    failNode = failNode->fail;
+                    child->fail = failNode ? failNode->children[key] : _root;
+
+                    // Merge output lists
+                    child->output.insert(child->output.end(), child->fail->output.begin(), child->fail->output.end());
                 }
-
-                child->fail = failNode ? failNode->children[key] : _root;
-
-                // Merge output lists
-                child->output.insert(child->output.end(), child->fail->output.begin(), child->fail->output.end());
             }
         }
     }

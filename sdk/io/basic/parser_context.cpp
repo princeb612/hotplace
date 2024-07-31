@@ -143,9 +143,9 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size, uint32 
         uint16 handle_lvalue_usertype = obj->get_config().get("handle_lvalue_usertype");
         std::set<uint32> lvalues;
         std::multimap<std::string, parser::token*> index;
-
-        init(obj, p, size);
         parser::token* lvalue = nullptr;
+        bool comments = false;
+        bool quot = false;
 
         auto type_of = [&](char c) -> token_t { return _ascii_token_table[c].type; };
         auto hook = [&](int where, parser::token* t) -> bool {
@@ -193,8 +193,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size, uint32 
             return ret_hook;
         };
 
-        bool comments = false;
-        bool quot = false;
+        init(obj, p, size);
 
         for (size_t pos = 0; (pos < size) && (0 == error_lookup); pos++) {
             char c = p[pos];

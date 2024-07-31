@@ -195,58 +195,6 @@ void test_i128() {
     }
 }
 
-void test_float() {
-    basic_stream bs;
-
-    bs.printf("%f", fp32_from_binary32(fp32_pinf));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("inf") == bs, __FUNCTION__, "inf");
-        _logger->writeln(bs);
-        bs.clear();
-    }
-
-    bs.printf("%f", fp32_from_binary32(fp32_ninf));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("-inf") == bs, __FUNCTION__, "-inf");
-        _logger->writeln(bs);
-        bs.clear();
-    }
-
-    bs.printf("%f", fp32_from_binary32(fp32_nan));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("nan") == bs, __FUNCTION__, "nan");
-        _logger->writeln(bs);
-        bs.clear();
-    }
-
-    bs.printf("%f", fp64_from_binary64(fp64_pinf));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("inf") == bs, __FUNCTION__, "inf");
-        _logger->writeln(bs);
-        bs.clear();
-    }
-
-    bs.printf("%f", fp64_from_binary64(fp64_ninf));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("-inf") == bs, __FUNCTION__, "-inf");
-        _logger->writeln(bs);
-        bs.clear();
-    }
-
-    bs.printf("%f", fp64_from_binary64(fp64_nan));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("nan") == bs, __FUNCTION__, "nan");
-        _logger->writeln(bs);
-        bs.clear();
-    }
-}
-
 void test_sprintf_routine(const valist& va, const char* fmt, const char* expect) {
     basic_stream bs;
 
@@ -442,7 +390,6 @@ int main() {
     test_consolecolor();
     test_dumpmemory();
     test_i128();
-    test_float();
     test_sprintf();
     test_vprintf();
     test_stream();

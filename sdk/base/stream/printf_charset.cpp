@@ -14,6 +14,7 @@
  * 2020.02.06   Soo Han, Kim        printf %I128i, %I128u (codename.unicorn)
  * 2021.06.29   Soo Han, Kim        printf unicode (codename.unicorn)
  * 2024.06.07   Soo Han, Kim        inf, -inf, nan (codename.hotplace)
+ * 2024.08.01   Soo Han, Kim        -0.0 (codename.hotplace)
  *
  * printf license
  *  Copyright (c) 1990 Regents of the University of California.
@@ -153,7 +154,18 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
     double integer, tmp;
 
     expcnt = 0;
-    if (number < 0) {
+
+    // replace to handle -0.0
+    //  original code
+    //  if (number < 0) {
+    //      number = -number;
+    //      *signp = _T('-');
+    //  } else {
+    //      *signp = 0;
+    //  }
+    int s = 0;
+    ieee754_exp(number, &s, nullptr, nullptr);  // (-1) ^ s for sign
+    if (s) {
         number = -number;
         *signp = _T('-');
     } else {

@@ -16,6 +16,7 @@
 #include <sdk/base/basic/template.hpp>
 #include <sdk/base/basic/variant.hpp>
 #include <sdk/base/binary.hpp>
+#include <sdk/base/string/string.hpp>
 #include <sdk/base/system/endian.hpp>
 #include <sdk/base/system/types.hpp>
 
@@ -430,27 +431,104 @@ return_t variant::to_binary(binary_t &target) const {
 return_t variant::to_string(std::string &target) const {
     return_t ret = errorcode_t::success;
 
-    if (_vt.data.str) {
-        if (TYPE_STRING == _vt.type) {
-            target = _vt.data.str;
-        } else if (TYPE_NSTRING == _vt.type) {
-            target.assign(_vt.data.str, _vt.size);
-        } else if (TYPE_BINARY == _vt.type) {
-            target.clear();
-            uint32 i = 0;
-            char *p = nullptr;
-            for (i = 0, p = _vt.data.str; i < _vt.size; i++, p++) {
-                if (isprint(*p)) {
-                    target.append(p, 1);
-                } else {
-                    target.append(".");
+    target.clear();
+    switch (_vt.type) {
+        case TYPE_NULL:
+            target = "null";
+            break;
+        case TYPE_BOOLEAN:
+        case TYPE_BOOL: {
+            target = _vt.data.b ? "true" : "false";
+        } break;
+#if 1
+        case TYPE_CHAR:
+        case TYPE_BYTE: {
+            if (isprint(_vt.data.c)) {
+                target.assign(&_vt.data.c, 1);
+            } else {
+                target = ".";
+            }
+        } break;
+#else
+        case TYPE_INT8:
+            target = format("%i", _vt.data.i8);
+            break;
+        case TYPE_UINT8:
+            target = format("%u", _vt.data.ui8);
+            break;
+#endif
+        case TYPE_INT16:
+            target = format("%i", _vt.data.i16);
+            break;
+        case TYPE_UINT16:
+            target = format("%u", _vt.data.ui16);
+            break;
+        case TYPE_INT32:
+            target = format("%i", _vt.data.i32);
+            break;
+        case TYPE_UINT32:
+            target = format("%u", _vt.data.ui32);
+            break;
+        case TYPE_INT64: {
+            basic_stream bs;
+            bs.printf("%I64i", _vt.data.i64);
+            target << bs;
+        } break;
+        case TYPE_UINT64: {
+            basic_stream bs;
+            bs.printf("%I64u", _vt.data.ui64);
+            target << bs;
+        } break;
+        case TYPE_INT128: {
+            basic_stream bs;
+            bs.printf("%I128i", _vt.data.i128);
+            target << bs;
+        } break;
+        case TYPE_UINT128: {
+            basic_stream bs;
+            bs.printf("%I128u", _vt.data.ui128);
+            target << bs;
+        } break;
+        case TYPE_FP16:
+            //
+            break;
+        case TYPE_FLOAT: {
+            basic_stream bs;
+            bs.printf("%f", _vt.data.f);
+            target << bs;
+        } break;
+        case TYPE_DOUBLE: {
+            basic_stream bs;
+            bs.printf("%lf", _vt.data.d);
+            target << bs;
+        } break;
+        case TYPE_STRING:
+            if (_vt.data.str) {
+                target = _vt.data.str;
+            }
+            break;
+        case TYPE_NSTRING:
+            if (_vt.data.str) {
+                target.assign(_vt.data.str, _vt.size);
+            }
+            break;
+        case TYPE_BINARY: {
+            if (_vt.data.str) {
+                target.clear();
+                uint32 i = 0;
+                char *p = nullptr;
+                for (i = 0, p = _vt.data.str; i < _vt.size; i++, p++) {
+                    if (isprint(*p)) {
+                        target.append(p, 1);
+                    } else {
+                        target.append(".");
+                    }
                 }
             }
-        } else {
+        } break;
+        default:
             ret = errorcode_t::mismatch;
-        }
-    } else {
-        target.clear();
+            break;
     }
     return ret;
 }
@@ -465,6 +543,7 @@ return_t variant::dump(binary_t &target, bool change_endian) const {
             break;
         case TYPE_INT16:
         case TYPE_UINT16:
+        case TYPE_FP16:
             if (change_endian) {
                 binary_append(target, _vt.data.ui16, hton16);
             } else {

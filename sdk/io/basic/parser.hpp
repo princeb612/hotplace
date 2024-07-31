@@ -383,7 +383,8 @@ class parser {
      *              .add_token("$pattern_sequenceof", token_sequenceof)
      *              .add_token("$pattern_set", token_set)
      *              .add_token("$pattern_setof", token_setof)
-     *              .add_token("$pattern_taggedmode", token_taggedmode);
+     *              .add_token("$pattern_taggedmode", token_taggedmode)
+     *              .add_token("$pattern_assign", token_assign);
      *
      *          // set the input as follows ...
      *          const char* source = R"(
@@ -416,6 +417,7 @@ class parser {
      *              .add_pattern("$pattern_sequenceof $pattern_usertype DEFAULT")
      *              .add_pattern("$pattern_sequenceof $pattern_usertype DEFAULT {}")
      *              .add_pattern("{")
+     *              .add_pattern(",")
      *              .add_pattern("}")
      *              .add_pattern("[$pattern_class 1] $pattern_builtintype")
      *              .add_pattern("[$pattern_class 1] $pattern_usertype")
@@ -450,7 +452,8 @@ class parser {
      *              .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype")
      *              .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT")
      *              .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}")
-     *              .add_pattern("name [1] $pattern_taggedmode $pattern_set");
+     *              .add_pattern("name [1] $pattern_taggedmode $pattern_set")
+     *              .add_pattern("$pattern_assign");
      *
      *          // pattern search
      *          auto result = p.psearch(context);
@@ -458,8 +461,32 @@ class parser {
      *              parser::search_result res;
      *              context.psearch_result(res, item.first, item.second);
      *
+     *              // all patterns matched
      *              _logger->writeln("pos [%zi] pattern[%i] %.*s", item.first, item.second, (unsigned)res.size, res.p);
      *          }
+     *          auto resultex = p.psearch(context);
+     *          for (auto item : resultex) {
+     *              parser::search_result res;
+     *              context.psearch_result(res, item.first, item.second);
+     *
+     *              // merge all overlapping intervals into one and output the result which should have only mutually exclusive intervals
+     *              _logger->writeln("pos [%2zi] pattern[%2i] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+     *          }
+     *
+     *          // source
+     *          //  Date ::= [APPLICATION 3] IMPLICIT VisibleString
+     *
+     *          // result psearch
+     *          //  pos [ 0] pattern[ 1] Date
+     *          //  pos [ 1] pattern[44] ::=
+     *          //  pos [ 2] pattern[12] [APPLICATION 3] IMPLICIT VisibleString
+     *          //  pos [ 7] pattern[ 0] VisibleString
+     *
+     *          // result psearchex
+     *          //  pos [ 0] pattern[ 1] Date
+     *          //  pos [ 1] pattern[44] ::=
+     *          //  pos [ 2] pattern[12] [APPLICATION 3] IMPLICIT VisibleString  // including pattern [0]
+     *
      */
     std::multimap<size_t, unsigned> psearch(const parser::context& context);
     /**
@@ -499,6 +526,9 @@ class parser {
     std::string typeof_token(uint32 type);
     std::string attrof_token(uint32 attr);
 
+    /**
+     * @brief   debug dump
+     */
     void dump(const parser::context& context, basic_stream& bs);
 
    protected:

@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_BASE_NOSTD_CONTAINER__
 #define __HOTPLACE_SDK_BASE_NOSTD_CONTAINER__
 
+#include <algorithm>
 #include <functional>
 #include <sdk/base/error.hpp>
 //#include <sdk/base/stream/basic_stream.hpp>
