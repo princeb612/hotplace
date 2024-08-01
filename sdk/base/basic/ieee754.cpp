@@ -36,9 +36,9 @@ namespace hotplace {
  *
  *      ieee754_as_small_as_possible
  *          return size of floating point (2 half, 4 single, 8 double)
- *      fp16_from_fp32, fp32_from_fp16
+ *      fp16_from_float, float_from_fp16
  *          convert single precision floating point to half one and vice versa
- *      fp16_ieee_from_fp32_value
+ *      fp16_from_fp32
  *          do not call directly
  *          see ieee754_as_small_as_possible
  */
@@ -49,7 +49,7 @@ uint8 ieee754_as_small_as_possible(variant& vt, float fp) {
     vt.set_fp32(fp);
     fp32.fp = fp;
     if ((0 == (0x3ff & fp32.storage)) && (0x7f800000 != (0x7f800000 & fp32.storage))) {
-        uint16 bin16 = fp16_ieee_from_fp32_value(fp32.storage);
+        uint16 bin16 = fp16_from_fp32(fp32.storage);
         if (0x7c00 != (0x7c00 & bin16)) {
             vt.set_fp16(bin16);
             ret = 2;
@@ -78,29 +78,120 @@ uint8 ieee754_as_small_as_possible(variant& vt, double fp) {
     return ret;
 }
 
-uint16 fp16_from_fp32(float single) {
+uint16 fp16_from_float(float single) {
     fp32_t fp32;
 
     fp32.fp = single;
-    return fp16_ieee_from_fp32_value(fp32.storage);
+    return fp16_from_fp32(fp32.storage);
 }
 
-/**
- * @from    Fast Half Float Conversions (http://www.fox-toolkit.org/ftp/fasthalffloatconversion.pdf)
- */
-float fp32_from_fp16(uint16 h) {
-    uint32 bin32 = ((h & 0x8000) << 16) | (((h & 0x7c00) + 0x1C000) << 13) | ((h & 0x03FF) << 13);
-    fp32_t fp32;
+struct fp32conv_t {
+    uint32 s;
+    uint32 e;
+    uint32 m;
+    fp32conv_t() : s(0), e(0), m(0) {}
+};
+void fp32conv_from_fp16(fp32conv_t& conv, uint16 half);
+float float_from_fp32conv(const fp32conv_t& conv);
+double double_from_fp32conv(const fp32conv_t& conv);
 
-    fp32.storage = bin32;
+/**
+ * @from    Fast Half Float Conversions
+ * @refer   http://www.fox-toolkit.org/ftp/fasthalffloatconversion.pdf
+ * @refer   chatgpt
+ */
+const uint32 bits_fp16_to_fp32_s = 16;  // (8 + 23) - (5 + 10)
+const uint32 bits_fp16_to_fp64_s = 48;  // (11 + 52) - (5 + 10)
+const uint32 bits_fp16_to_fp32_e = 13;  // (23 - 10)
+const uint32 bits_fp16_to_fp64_e = 42;  // (52 - 10);
+const uint32 bits_fp16_to_fp32_m = 13;  // (23 - 10)
+const uint32 bits_fp16_to_fp64_m = 42;  // (52 - 10);
+
+float float_from_fp16(uint16 half) {
+    // understanding FP16 to float
+
+    // uint32 bin32 = ((half & 0x8000) << 16) | (((half & 0x7c00) + 0x1C000) << 13) | ((half & 0x03FF) << 13);
+    // fp32_t fp32;
+    //
+    // fp32.storage = bin32;
+    // return fp32.fp;
+
+    //                     bits  sign    exponent    fraction(mantissa)
+    // half precision      16    1           5           10
+    // single precision    32    1           8           23
+    // double precision    64    1          11           52
+    // quadruple           128   1          15          112
+    // octuple             256   1          19          236
+
+    // FP16                                                        seeeeemm mmmmmmmm
+    // FP32                                      seeeeeee emmmmmmm mmmmmmmm mmmmmmmm
+    // FP64  seeeeeee eeeemmmm mmmmmmmm mmmmmmmm mmmmmmmm mmmmmmmm mmmmmmmm mmmmmmmm
+
+    // mask
+    // FP16  s:8000,             e:7c00,             m:03ff
+    // FP32  s:80000000,         e:7f800000,         m:007fffff
+    // FP64  s:8000000000000000, e:7ff0000000000000, m:000f000000000000
+
+    // FP16 to FP32
+    // 1. fp32.s from fp16.s
+    //  1) shift left (exponent bits + mantissa bits) -> shift left ((8 + 23) - (5 + 10)) -> shift left (16)
+    uint32 fp16s = (half & 0x8000);
+    // 2. fp32.e from fp16.e
+    //  1) e = bias + exponent
+    //     fp16.e = fp16.bias + exponent = 15 + exponent = 15
+    //     fp32.e = fp32.bias + exponent = 127 + exponent = 127
+    //  2) fp32.e from fp16.e
+    //     fp32.bias - fp16.bias + exponent
+    //     fp16.e + (fp32.bias - fp16.bias) << bits(fp16.mantissa) = (127 - 15) << 10 = 1c000
+    //  3) shft left (mantissa bits)
+    //     shift left (23 - 10) = shift left (13)
+    uint32 fp16e = (half & 0x7c00);
+    uint32 fp32e_adj = (127 - 15) << 10;  // 0x1c000
+    // 3. fp32.m from fp16.m
+    uint32 fp16m = (half & 0x03ff);
+
+    // example
+    // -1.5 = (-1)^1 * 2^0 + 2^-1 = -1^1 * 1.1_2 * 2^0
+    // s = 1, e = bias + 0 (exponent), m = b1.1
+    // FP16
+    //      bias = 2^(5-1) - 1 = 15, e = 15 + 0
+    //      1 01111 1000000000 -> 0XBE00
+    // FP32
+    //      bias = 2^(8-1) - 1 = 127, e = 127 + 0
+    //      1 01111111 10000000000000000000000 -> BFC00000
+    // FP64
+    //      bias = 2^(11-1) - 1 = 1023, e = 1023 + 0
+    //      1 01111111111 1000000000000000000000000000000000000000000000000000 -> BFF8000000000000
+
+    fp32_t fp32;
+    fp32.storage = (fp16s << bits_fp16_to_fp32_s);
+    if (fp16e) {
+        fp32.storage |= ((fp16e + fp32e_adj) << bits_fp16_to_fp32_e);
+    }
+    fp32.storage |= (fp16m << bits_fp16_to_fp32_m);
     return fp32.fp;
+}
+
+double double_from_fp16(uint16 half) {
+    // see float_from_fp16
+    uint64 fp16s = (half & 0x8000);
+    uint64 fp16e = (half & 0x7c00);
+    uint64 fp64e_adj = (1023 - 15) << 10;
+    uint64 fp16m = (half & 0x03ff);
+    fp64_t fp64;
+    fp64.storage = (fp16s << bits_fp16_to_fp64_s);
+    if (fp16e) {
+        fp64.storage |= ((fp16e + fp64e_adj) << bits_fp16_to_fp64_e);
+    }
+    fp64.storage |= (fp16m << bits_fp16_to_fp64_m);
+    return fp64.fp;
 }
 
 /**
  * @brief   single precision to half precision
  * @refer   https://www.corsix.org/content/converting-fp32-to-fp16
  */
-uint16 fp16_ieee_from_fp32_value(uint32 x) {
+uint16 fp16_from_fp32(uint32 x) {
     uint32 x_sgn = x & 0x80000000u;
     uint32 x_exp = x & 0x7f800000u;
 
@@ -137,7 +228,7 @@ uint16 fp16_ieee_from_fp32_value(uint32 x) {
     return (x_sgn >> 16) + h_exp + h_sig;
 }
 
-ieee754_typeof_t is_typeof(float f) {
+ieee754_typeof_t ieee754_typeof(float f) {
     ieee754_typeof_t ret = ieee754_typeof_t::ieee754_single_precision;
     uint32 b32 = binary32_from_fp32(f);
     if (b32 & ~0x80000000) {
@@ -156,7 +247,7 @@ ieee754_typeof_t is_typeof(float f) {
     return ret;
 }
 
-ieee754_typeof_t is_typeof(double d) {
+ieee754_typeof_t ieee754_typeof(double d) {
     ieee754_typeof_t ret = ieee754_typeof_t::ieee754_double_precision;
     uint64 b64 = binary64_from_fp64(d);
     if (b64 & ~0x8000000000000000) {
@@ -178,7 +269,7 @@ ieee754_typeof_t is_typeof(double d) {
 
 // to unserstand IEEE754
 ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m) {
-    ieee754_typeof_t type = is_typeof(value);
+    ieee754_typeof_t type = ieee754_typeof(value);
 
     uint32 b32 = binary32_from_fp32(value);
     int sign = (b32 >> 31);
@@ -187,22 +278,24 @@ ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m) {
     float mantissa = 0.0;
     uint32 bias_m1 = bias - 1;
 
-    switch (type) {
-        case ieee754_zero:
-            break;
-        case ieee754_pinf:
-            mantissa = fp32_from_binary32(fp32_pinf);
-            break;
-        case ieee754_ninf:
-            mantissa = fp32_from_binary32(fp32_ninf);
-            break;
-        case ieee754_nan:
-            mantissa = fp32_from_binary32(fp32_nan);
-            break;
-        default:
-            exponent = ((b32 >> 23) & 0x000000ff) - bias_m1;
-            mantissa = fp32_from_binary32((b32 & 0x807fffff) | (bias_m1 << 23));
-            break;
+    if (e && m) {
+        switch (type) {
+            case ieee754_zero:
+                break;
+            case ieee754_pinf:
+                mantissa = fp32_from_binary32(fp32_pinf);
+                break;
+            case ieee754_ninf:
+                mantissa = fp32_from_binary32(fp32_ninf);
+                break;
+            case ieee754_nan:
+                mantissa = fp32_from_binary32(fp32_nan);
+                break;
+            default:
+                exponent = ((b32 >> 23) & 0x000000ff) - bias_m1;
+                mantissa = fp32_from_binary32((b32 & 0x807fffff) | (bias_m1 << 23));
+                break;
+        }
     }
     if (s) {
         *s = sign;
@@ -219,7 +312,7 @@ ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m) {
 
 // to unserstand IEEE754
 ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m) {
-    ieee754_typeof_t type = is_typeof(value);
+    ieee754_typeof_t type = ieee754_typeof(value);
 
     uint64 b64 = binary64_from_fp64(value);
     int sign = (b64 >> 63);
@@ -228,22 +321,24 @@ ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m) {
     double mantissa = 0.0;
     uint64 bias_m1 = bias - 1;
 
-    switch (type) {
-        case ieee754_zero:
-            break;
-        case ieee754_pinf:
-            mantissa = fp64_from_binary64(fp64_pinf);
-            break;
-        case ieee754_ninf:
-            mantissa = fp64_from_binary64(fp64_ninf);
-            break;
-        case ieee754_nan:
-            mantissa = fp64_from_binary64(fp64_nan);
-            break;
-        default:
-            exponent = ((b64 >> 52) & 0x000007ff) - bias_m1;
-            mantissa = fp64_from_binary64((b64 & 0x800fffffffffffff) | (bias_m1 << 52));
-            break;
+    if (e && m) {
+        switch (type) {
+            case ieee754_zero:
+                break;
+            case ieee754_pinf:
+                mantissa = fp64_from_binary64(fp64_pinf);
+                break;
+            case ieee754_ninf:
+                mantissa = fp64_from_binary64(fp64_ninf);
+                break;
+            case ieee754_nan:
+                mantissa = fp64_from_binary64(fp64_nan);
+                break;
+            default:
+                exponent = ((b64 >> 52) & 0x000007ff) - bias_m1;
+                mantissa = fp64_from_binary64((b64 & 0x800fffffffffffff) | (bias_m1 << 52));
+                break;
+        }
     }
     if (s) {
         *s = sign;

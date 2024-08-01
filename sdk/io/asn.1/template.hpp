@@ -137,11 +137,11 @@ size_t t_asn1_encode_real(binary_t& bin, fptype value) {
     int sign = 0;
     int exponent = 0;
     float mantissa = 0;
-    ieee754_typeof_t type = ieee754_exp(value, &sign, &exponent, &mantissa);  // is_typeof and frexpf
+    ieee754_typeof_t type = ieee754_exp(value, &sign, &exponent, &mantissa);  // ieee754_typeof and frexpf
 
     auto isint = [](fptype v) -> bool { return 0.0 == fmod(v, 1); };
 
-    while (ieee754_single_precision == is_typeof(mantissa)) {
+    while (ieee754_single_precision == ieee754_typeof(mantissa)) {
         if (isint(mantissa)) {
             break;
         }

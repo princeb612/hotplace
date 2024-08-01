@@ -35,28 +35,28 @@ void test_ieee754() {
 
     ieee754_typeof_t type = ieee754_typeof_t::ieee754_finite;
 
-    type = is_typeof(0.0);
+    type = ieee754_typeof(0.0);
     _test_case.assert(ieee754_typeof_t::ieee754_zero == type, __FUNCTION__, "zero");
 
-    type = is_typeof(-0.0);
+    type = ieee754_typeof(-0.0);
     _test_case.assert(ieee754_typeof_t::ieee754_zero == type, __FUNCTION__, "zero");
 
-    type = is_typeof(fp32_from_binary32(fp32_pinf));
+    type = ieee754_typeof(fp32_from_binary32(fp32_pinf));
     _test_case.assert(ieee754_typeof_t::ieee754_pinf == type, __FUNCTION__, "inf");
 
-    type = is_typeof(fp32_from_binary32(fp32_ninf));
+    type = ieee754_typeof(fp32_from_binary32(fp32_ninf));
     _test_case.assert(ieee754_typeof_t::ieee754_ninf == type, __FUNCTION__, "-inf");
 
-    type = is_typeof(fp32_from_binary32(fp32_nan));
+    type = ieee754_typeof(fp32_from_binary32(fp32_nan));
     _test_case.assert(ieee754_typeof_t::ieee754_nan == type, __FUNCTION__, "nan");
 
-    type = is_typeof(fp64_from_binary64(fp64_pinf));
+    type = ieee754_typeof(fp64_from_binary64(fp64_pinf));
     _test_case.assert(ieee754_typeof_t::ieee754_pinf == type, __FUNCTION__, "inf");
 
-    type = is_typeof(fp64_from_binary64(fp64_ninf));
+    type = ieee754_typeof(fp64_from_binary64(fp64_ninf));
     _test_case.assert(ieee754_typeof_t::ieee754_ninf == type, __FUNCTION__, "-inf");
 
-    type = is_typeof(fp64_from_binary64(fp64_nan));
+    type = ieee754_typeof(fp64_from_binary64(fp64_nan));
     _test_case.assert(ieee754_typeof_t::ieee754_nan == type, __FUNCTION__, "nan");
 }
 
@@ -129,22 +129,23 @@ void test_as_small_as_possible() {
 
     struct testvector {
         variant var;
-        uint16 b16;
+        uint16 fp16;
+        float f;
     } _table[] = {
-        {variant(0.0f), 0x0000},
-        {variant(-0.0f), 0x8000},
-        {variant(1.0f), 0x3c00},
-        {variant(-1.0f), 0xbc00},
-        {variant(1.5f), 0x3e00},
-        {variant(-1.5f), 0xbe00},
-        {variant(2.0f), 0x4000},
-        {variant(-2.0f), 0xc000},
-        {variant(4.0f), 0x4400},
-        {variant(0.00006103515625f), 0x0400},
-        {variant(-0.00006103515625f), 0x8400},
-        {variant(0.00006103515625f), 0x0400},
-        {variant(5.960464477539063e-8), 0001},
-        {variant(0.00006103515625), 0x0400},
+        {variant(0.0f), 0x0000, 0.0},
+        {variant(-0.0f), 0x8000, -0.0},
+        {variant(1.0f), 0x3c00, 1.0},
+        {variant(-1.0f), 0xbc00, -1.0},
+        {variant(1.5f), 0x3e00, 1.5},
+        {variant(-1.5f), 0xbe00, -1.5},
+        {variant(2.0f), 0x4000, 2.0},
+        {variant(-2.0f), 0xc000, -2.0},
+        {variant(4.0f), 0x4400, 4.0},
+        {variant(0.00006103515625f), 0x0400, 0.000061},    // float
+        {variant(-0.00006103515625f), 0x8400, -0.000061},  // float
+        {variant(0.00006103515625), 0x0400, 0.000061},     // double
+        {variant(0.00006103515625), 0x0400, 0.000061},     // double
+        {variant(5.960464477539063e-8), 0001, 0.000000},   // 0.000000059604644775390625
     };
 
     for (auto item : _table) {
@@ -161,12 +162,14 @@ void test_as_small_as_possible() {
                 len = ieee754_as_small_as_possible(var, item.var.content().data.d);
                 break;
         }
+        float f = float_from_fp16(item.fp16);
+        double d = double_from_fp16(item.fp16);
         item.var.to_string(tostr);
         item.var.dump(bin, true);
         _logger->writeln(tostr);
         _logger->dump(bin);
-        bool expect = (var.content().data.ui16 == item.b16);
-        _test_case.assert(expect, __FUNCTION__, "ieee754_as_small_as_possible %s", tostr.c_str());
+        bool expect = (var.content().data.ui16 == item.fp16);
+        _test_case.assert(expect, __FUNCTION__, "ieee754_as_small_as_possible %s fp16 %04x fp32 %f fp64 %lf", tostr.c_str(), item.fp16, f, d);
     }
 }
 

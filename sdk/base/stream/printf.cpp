@@ -198,7 +198,7 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                         stream->printf("Infinity");
                     }
                 } else {
-                    stream->printf("%g", fp32_from_fp16(vt.data.ui16));
+                    stream->printf("%g", float_from_fp16(vt.data.ui16));
                 }
                 break;
             case TYPE_FLOAT:

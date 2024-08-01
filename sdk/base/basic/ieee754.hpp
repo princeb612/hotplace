@@ -153,16 +153,19 @@ static inline double fp64_from_binary64(uint64 bin) {
 uint8 ieee754_as_small_as_possible(variant& vt, float fp);
 uint8 ieee754_as_small_as_possible(variant& vt, double fp);
 
-uint16 fp16_from_fp32(float single);
+uint16 fp16_from_float(float single);
 /**
- * @from    Fast Half Float Conversions (http://www.fox-toolkit.org/ftp/fasthalffloatconversion.pdf)
+ * @from    Fast Half Float Conversions
+ * @refer   http://www.fox-toolkit.org/ftp/fasthalffloatconversion.pdf
  */
-float fp32_from_fp16(uint16 half);
+float float_from_fp16(uint16 half);
+double double_from_fp16(uint16 half);
+
 /**
  * @brief   single precision to half precision
  * @refer   https://www.corsix.org/content/converting-fp32-to-fp16
  */
-uint16 fp16_ieee_from_fp32_value(uint32 single);
+uint16 fp16_from_fp32(uint32 single);
 
 enum ieee754_typeof_t {
     ieee754_finite = 0,
@@ -175,8 +178,8 @@ enum ieee754_typeof_t {
     ieee754_double_precision,
     ieee754_quadruple_precision,
 };
-ieee754_typeof_t is_typeof(float f);
-ieee754_typeof_t is_typeof(double d);
+ieee754_typeof_t ieee754_typeof(float f);
+ieee754_typeof_t ieee754_typeof(double d);
 // understanding frexpf, frexp
 ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m);
 ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m);

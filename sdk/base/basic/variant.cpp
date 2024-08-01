@@ -489,9 +489,12 @@ return_t variant::to_string(std::string &target) const {
             bs.printf("%I128u", _vt.data.ui128);
             target << bs;
         } break;
-        case TYPE_FP16:
-            //
-            break;
+        case TYPE_FP16: {
+            basic_stream bs;
+            float f = float_from_fp16(_vt.data.ui16);
+            bs.printf("%f", f);
+            target << bs;
+        } break;
         case TYPE_FLOAT: {
             basic_stream bs;
             bs.printf("%f", _vt.data.f);
