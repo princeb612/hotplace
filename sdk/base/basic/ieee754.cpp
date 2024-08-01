@@ -85,16 +85,6 @@ uint16 fp16_from_float(float single) {
     return fp16_from_fp32(fp32.storage);
 }
 
-struct fp32conv_t {
-    uint32 s;
-    uint32 e;
-    uint32 m;
-    fp32conv_t() : s(0), e(0), m(0) {}
-};
-void fp32conv_from_fp16(fp32conv_t& conv, uint16 half);
-float float_from_fp32conv(const fp32conv_t& conv);
-double double_from_fp32conv(const fp32conv_t& conv);
-
 /**
  * @from    Fast Half Float Conversions
  * @refer   http://www.fox-toolkit.org/ftp/fasthalffloatconversion.pdf
@@ -138,8 +128,8 @@ float float_from_fp16(uint16 half) {
     uint32 fp16s = (half & 0x8000);
     // 2. fp32.e from fp16.e
     //  1) e = bias + exponent
-    //     fp16.e = fp16.bias + exponent = 15 + exponent = 15
-    //     fp32.e = fp32.bias + exponent = 127 + exponent = 127
+    //     fp16.e = fp16.bias + exponent = 15 + exponent
+    //     fp32.e = fp32.bias + exponent = 127 + exponent
     //  2) fp32.e from fp16.e
     //     fp32.bias - fp16.bias + exponent
     //     fp16.e + (fp32.bias - fp16.bias) << bits(fp16.mantissa) = (127 - 15) << 10 = 1c000
@@ -164,11 +154,27 @@ float float_from_fp16(uint16 half) {
     //      1 01111111111 1000000000000000000000000000000000000000000000000000 -> BFF8000000000000
 
     fp32_t fp32;
-    fp32.storage = (fp16s << bits_fp16_to_fp32_s);
-    if (fp16e) {
-        fp32.storage |= ((fp16e + fp32e_adj) << bits_fp16_to_fp32_e);
+    ieee754_typeof_t type = ieee754_typeof(half);
+    switch (type) {
+        case ieee754_typeof_t::ieee754_pinf:
+            fp32.storage = fp32_pinf;
+            break;
+        case ieee754_typeof_t::ieee754_ninf:
+            fp32.storage = fp32_ninf;
+            break;
+        case ieee754_typeof_t::ieee754_nan:
+            fp32.storage = fp32_nan;
+            break;
+        case ieee754_typeof_t::ieee754_zero:
+        case ieee754_typeof_t::ieee754_single_precision:
+        default:
+            fp32.storage = (fp16s << bits_fp16_to_fp32_s);
+            if (fp16e) {
+                fp32.storage |= ((fp16e + fp32e_adj) << bits_fp16_to_fp32_e);
+            }
+            fp32.storage |= (fp16m << bits_fp16_to_fp32_m);
+            break;
     }
-    fp32.storage |= (fp16m << bits_fp16_to_fp32_m);
     return fp32.fp;
 }
 
@@ -179,11 +185,26 @@ double double_from_fp16(uint16 half) {
     uint64 fp64e_adj = (1023 - 15) << 10;
     uint64 fp16m = (half & 0x03ff);
     fp64_t fp64;
-    fp64.storage = (fp16s << bits_fp16_to_fp64_s);
-    if (fp16e) {
-        fp64.storage |= ((fp16e + fp64e_adj) << bits_fp16_to_fp64_e);
+    ieee754_typeof_t type = ieee754_typeof(half);
+    switch (type) {
+        case ieee754_typeof_t::ieee754_pinf:
+            fp64.storage = fp64_pinf;
+            break;
+        case ieee754_typeof_t::ieee754_ninf:
+            fp64.storage = fp64_ninf;
+            break;
+        case ieee754_typeof_t::ieee754_nan:
+            fp64.storage = fp64_nan;
+            break;
+        case ieee754_typeof_t::ieee754_zero:
+        case ieee754_typeof_t::ieee754_double_precision:
+        default:
+            fp64.storage = (fp16s << bits_fp16_to_fp64_s);
+            if (fp16e) {
+                fp64.storage |= ((fp16e + fp64e_adj) << bits_fp16_to_fp64_e);
+            }
+            fp64.storage |= (fp16m << bits_fp16_to_fp64_m);
     }
-    fp64.storage |= (fp16m << bits_fp16_to_fp64_m);
     return fp64.fp;
 }
 
@@ -228,6 +249,24 @@ uint16 fp16_from_fp32(uint32 x) {
     return (x_sgn >> 16) + h_exp + h_sig;
 }
 
+ieee754_typeof_t ieee754_typeof(uint16 half) {
+    ieee754_typeof_t ret = ieee754_typeof_t::ieee754_half_precision;
+    if (half & ~0x8000) {
+        if (ieee754_t::fp16_pinf == (half & ieee754_t::fp16_pinf)) {
+            if (half & 0x8000) {
+                ret = ieee754_typeof_t::ieee754_ninf;
+            } else if (half & ~fp16_ninf) {
+                ret = ieee754_typeof_t::ieee754_nan;
+            } else {
+                ret = ieee754_typeof_t::ieee754_pinf;
+            }
+        }
+    } else {
+        ret = ieee754_typeof_t::ieee754_zero;
+    }
+    return ret;
+}
+
 ieee754_typeof_t ieee754_typeof(float f) {
     ieee754_typeof_t ret = ieee754_typeof_t::ieee754_single_precision;
     uint32 b32 = binary32_from_fp32(f);
@@ -252,10 +291,9 @@ ieee754_typeof_t ieee754_typeof(double d) {
     uint64 b64 = binary64_from_fp64(d);
     if (b64 & ~0x8000000000000000) {
         if (ieee754_t::fp64_pinf == (b64 & ieee754_t::fp64_pinf)) {
-            uint32 b32 = (b64 >> 32);
-            if (b32 & 0x80000000) {
+            if (b64 & 0x8000000000000000) {
                 ret = ieee754_typeof_t::ieee754_ninf;
-            } else if (b32 & 0x000fffff) {
+            } else if (b64 & ~fp64_ninf) {
                 ret = ieee754_typeof_t::ieee754_nan;
             } else {
                 ret = ieee754_typeof_t::ieee754_pinf;
@@ -268,6 +306,47 @@ ieee754_typeof_t ieee754_typeof(double d) {
 }
 
 // to unserstand IEEE754
+ieee754_typeof_t ieee754_exp(uint16 value, int* s, int* e, uint16* m) {
+    ieee754_typeof_t type = ieee754_typeof(value);
+
+    int sign = (value >> 15);
+    int bias = (1 << 4) - 1;
+    int exponent = 0;
+    uint16 mantissa = 0;
+    uint16 bias_m1 = bias - 1;
+
+    if (e && m) {
+        switch (type) {
+            case ieee754_zero:
+                break;
+            case ieee754_pinf:
+                mantissa = fp32_from_binary32(fp32_pinf);
+                break;
+            case ieee754_ninf:
+                mantissa = fp32_from_binary32(fp32_ninf);
+                break;
+            case ieee754_nan:
+                mantissa = fp32_from_binary32(fp32_nan);
+                break;
+            default:
+                exponent = ((value >> 10) & 0x001f) - bias_m1;
+                mantissa = (value & 0x83ff) | (bias_m1 << 10);
+                break;
+        }
+    }
+    if (s) {
+        *s = sign;
+    }
+    if (e) {
+        *e = exponent;
+    }
+    if (m) {
+        *m = mantissa;
+    }
+
+    return type;
+}
+
 ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m) {
     ieee754_typeof_t type = ieee754_typeof(value);
 

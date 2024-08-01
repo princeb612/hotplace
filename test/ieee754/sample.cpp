@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <math.h>
 #include <stdio.h>
 
 #include <functional>
@@ -31,98 +32,143 @@ typedef struct _OPTION {
 t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
 void test_ieee754() {
-    _test_case.begin("ieee754");
+    _test_case.begin("ieee754_typeof");
 
-    ieee754_typeof_t type = ieee754_typeof_t::ieee754_finite;
+    {
+        struct {
+            uint16 half;
+            ieee754_typeof_t type;
+        } _table[] = {
+            {0x0000, ieee754_typeof_t::ieee754_zero},    {0x8000, ieee754_typeof_t::ieee754_zero},    {0x3c00, ieee754_typeof_t::ieee754_half_precision},
+            {fp16_pinf, ieee754_typeof_t::ieee754_pinf}, {fp16_ninf, ieee754_typeof_t::ieee754_ninf}, {fp16_nan, ieee754_typeof_t::ieee754_nan},
+            {fp16_qnan, ieee754_typeof_t::ieee754_nan},  {fp16_snan, ieee754_typeof_t::ieee754_nan},
+        };
 
-    type = ieee754_typeof(0.0);
-    _test_case.assert(ieee754_typeof_t::ieee754_zero == type, __FUNCTION__, "zero");
+        for (auto item : _table) {
+            ieee754_typeof_t type = ieee754_typeof(item.half);
+            _test_case.assert(type == item.type, __FUNCTION__, "%f", float_from_fp16(item.half));
+        }
+    }
+    {
+        struct {
+            float f;
+            ieee754_typeof_t type;
+        } _table[] = {
+            {0.0, ieee754_typeof_t::ieee754_zero},
+            {-0.0, ieee754_typeof_t::ieee754_zero},
+            {1.0, ieee754_typeof_t::ieee754_single_precision},
+            {fp32_from_binary32(fp32_pinf), ieee754_typeof_t::ieee754_pinf},
+            {fp32_from_binary32(fp32_ninf), ieee754_typeof_t::ieee754_ninf},
+            {fp32_from_binary32(fp32_nan), ieee754_typeof_t::ieee754_nan},
+            {fp32_from_binary32(fp32_qnan), ieee754_typeof_t::ieee754_nan},
+            {fp32_from_binary32(fp32_snan), ieee754_typeof_t::ieee754_nan},
+        };
 
-    type = ieee754_typeof(-0.0);
-    _test_case.assert(ieee754_typeof_t::ieee754_zero == type, __FUNCTION__, "zero");
+        for (auto item : _table) {
+            ieee754_typeof_t type = ieee754_typeof(item.f);
+            _test_case.assert(type == item.type, __FUNCTION__, "%f", item.f);
+        }
+    }
+    {
+        struct {
+            double d;
+            ieee754_typeof_t type;
+        } _table[] = {
+            {0.0, ieee754_typeof_t::ieee754_zero},
+            {-0.0, ieee754_typeof_t::ieee754_zero},
+            {1.0, ieee754_typeof_t::ieee754_double_precision},
+            {fp64_from_binary64(fp64_pinf), ieee754_typeof_t::ieee754_pinf},
+            {fp64_from_binary64(fp64_ninf), ieee754_typeof_t::ieee754_ninf},
+            {fp64_from_binary64(fp64_nan), ieee754_typeof_t::ieee754_nan},
+            {fp64_from_binary64(fp64_qnan), ieee754_typeof_t::ieee754_nan},
+            {fp64_from_binary64(fp64_snan), ieee754_typeof_t::ieee754_nan},
+        };
 
-    type = ieee754_typeof(fp32_from_binary32(fp32_pinf));
-    _test_case.assert(ieee754_typeof_t::ieee754_pinf == type, __FUNCTION__, "inf");
+        for (auto item : _table) {
+            ieee754_typeof_t type = ieee754_typeof(item.d);
+            _test_case.assert(type == item.type, __FUNCTION__, "%lf", item.d);
+        }
+    }
+}
 
-    type = ieee754_typeof(fp32_from_binary32(fp32_ninf));
-    _test_case.assert(ieee754_typeof_t::ieee754_ninf == type, __FUNCTION__, "-inf");
-
-    type = ieee754_typeof(fp32_from_binary32(fp32_nan));
-    _test_case.assert(ieee754_typeof_t::ieee754_nan == type, __FUNCTION__, "nan");
-
-    type = ieee754_typeof(fp64_from_binary64(fp64_pinf));
-    _test_case.assert(ieee754_typeof_t::ieee754_pinf == type, __FUNCTION__, "inf");
-
-    type = ieee754_typeof(fp64_from_binary64(fp64_ninf));
-    _test_case.assert(ieee754_typeof_t::ieee754_ninf == type, __FUNCTION__, "-inf");
-
-    type = ieee754_typeof(fp64_from_binary64(fp64_nan));
-    _test_case.assert(ieee754_typeof_t::ieee754_nan == type, __FUNCTION__, "nan");
+void test_frexp() {
+    _test_case.begin("frexp vs. ieee754_exp");
+    float ftable[] = {0.0, 1.0, -1.0, 1.5, -1.5, 2.0, -2.0, 4.0, -4.0, 0.00006103515625, -0.00006103515625};
+    for (auto item : ftable) {
+        int s1 = 0;
+        int s2 = 0;
+        int e1 = 0;
+        int e2 = 0;
+        float m1 = 0;
+        float m2 = 0;
+        s1 = (item < 0) ? 1 : 0;
+        m1 = frexp(item, &e1);
+        ieee754_exp(item, &s2, &e2, &m2);
+        bool test = (s1 == s2) && (e1 == e2) && (m1 == m2);
+        _test_case.assert(test, __FUNCTION__, "frexp %f sign %i exponent %i mantissa %f", item, s2, e2, m2);
+    }
+    double dtable[] = {0.0, 1.0, -1.0, 1.5, -1.5, 2.0, -2.0, 4.0, -4.0, 0.00006103515625, -0.00006103515625};
+    for (auto item : dtable) {
+        int s1 = 0;
+        int s2 = 0;
+        int e1 = 0;
+        int e2 = 0;
+        double m1 = 0;
+        double m2 = 0;
+        s1 = (item < 0) ? 1 : 0;
+        m1 = frexp(item, &e1);
+        ieee754_exp(item, &s2, &e2, &m2);
+        bool test = (s1 == s2) && (e1 == e2) && (m1 == m2);
+        _test_case.assert(test, __FUNCTION__, "frexp %lf sign %i exponent %i mantissa %lf", item, s2, e2, m2);
+    }
 }
 
 void test_basic_stream() {
-    _test_case.begin("ieee754");
+    _test_case.begin("basic_stream");
     basic_stream bs;
 
-    bs.printf("%f", -0.0f);
     {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("-0.000000") == bs, __FUNCTION__, "-0.0");
-        _logger->writeln(bs);
-        bs.clear();
-    }
+        struct testvector {
+            float f;
+            basic_stream bs;
+        } _table[] = {
+            {0.0, "0.000000"},
+            {-0.0, "-0.000000"},
+            {fp32_from_binary32(fp32_pinf), "inf"},
+            {fp32_from_binary32(fp32_ninf), "-inf"},
+            {fp32_from_binary32(fp32_nan), "nan"},
+        };
 
-    bs.printf("%f", fp32_from_binary32(fp32_pinf));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("inf") == bs, __FUNCTION__, "inf");
-        _logger->writeln(bs);
-        bs.clear();
+        for (auto item : _table) {
+            bs.printf("%f", item.f);
+            _logger->writeln(bs);
+            _test_case.assert(item.bs == bs, __FUNCTION__, "float %s", item.bs.c_str());
+            bs.clear();
+        }
     }
-
-    bs.printf("%f", fp32_from_binary32(fp32_ninf));
     {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("-inf") == bs, __FUNCTION__, "-inf");
-        _logger->writeln(bs);
-        bs.clear();
-    }
+        struct testvector {
+            double f;
+            basic_stream bs;
+        } _table[] = {
+            {0.0, "0.000000"},
+            {-0.0, "-0.000000"},
+            {fp64_from_binary64(fp64_pinf), "inf"},
+            {fp64_from_binary64(fp64_ninf), "-inf"},
+            {fp64_from_binary64(fp64_nan), "nan"},
+        };
 
-    bs.printf("%f", fp32_from_binary32(fp32_nan));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("nan") == bs, __FUNCTION__, "nan");
-        _logger->writeln(bs);
-        bs.clear();
-    }
-
-    bs.printf("%f", fp64_from_binary64(fp64_pinf));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("inf") == bs, __FUNCTION__, "inf");
-        _logger->writeln(bs);
-        bs.clear();
-    }
-
-    bs.printf("%f", fp64_from_binary64(fp64_ninf));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("-inf") == bs, __FUNCTION__, "-inf");
-        _logger->writeln(bs);
-        bs.clear();
-    }
-
-    bs.printf("%f", fp64_from_binary64(fp64_nan));
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _test_case.assert(basic_stream("nan") == bs, __FUNCTION__, "nan");
-        _logger->writeln(bs);
-        bs.clear();
+        for (auto item : _table) {
+            bs.printf("%lf", item.f);
+            _logger->writeln(bs);
+            _test_case.assert(item.bs == bs, __FUNCTION__, "double %s", item.bs.c_str());
+            bs.clear();
+        }
     }
 }
 
 void test_as_small_as_possible() {
-    _test_case.begin("ieee754");
+    _test_case.begin("ieee754_as_small_as_possible");
     // ieee754_as_small_as_possible
     // RFC 7049 Concise Binary Object Representation (CBOR)
     // RFC 8949 Concise Binary Object Representation (CBOR)
@@ -189,6 +235,7 @@ int main(int argc, char **argv) {
     _logger.make_share(builder.build());
 
     test_ieee754();
+    test_frexp();
     test_basic_stream();
     test_as_small_as_possible();
 
