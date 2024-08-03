@@ -114,8 +114,10 @@ class datetime {
     bool elapsed(timespan_t ts);
 
     return_t gettimespec(struct timespec* ts);
+    return_t gettime(struct tm* tm, long* nsec = nullptr);
     return_t getlocaltime(struct tm* tm, long* nsec = nullptr);
     return_t getgmtime(struct tm* tm, long* nsec = nullptr);
+    return_t gettime(datetime_t* dt, long* nsec = nullptr);
     return_t getlocaltime(datetime_t* dt, long* nsec = nullptr);
     return_t getgmtime(datetime_t* dt, long* nsec = nullptr);
     return_t getgmtime(stream_t* stream);
@@ -179,6 +181,7 @@ class datetime {
      * @return error code (see error.hpp)
      */
     static return_t datetime_to_timespec(const datetime_t& ft, struct timespec& ts);
+    static return_t gmtime_to_timespec(const datetime_t& ft, struct timespec& ts);
     /**
      * @brief filetime to timespec
      * @param const filetime_t& ft [in]
@@ -228,6 +231,15 @@ return_t time_diff(struct timespec& timespec, struct timespec begin, struct time
  * @param   std::list <struct timespec>& slices [in]
  */
 return_t time_sum(struct timespec& timespec, std::list<struct timespec>& slices);
+
+/**
+ * @brief   minutes to timespan
+ */
+void timespan_m(timespan_t& ts, int minutes);
+/**
+ * @brief   seconds to timespan
+ */
+void timespan_s(timespan_t& ts, int seconds);
 
 static inline void msleep(uint32 msecs) {
 #if defined _WIN32 || defined _WIN64

@@ -18,6 +18,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #endif
+#include <time.h>
 
 namespace hotplace {
 
@@ -99,6 +100,8 @@ return_t datetime::gettimespec(struct timespec* ts) {
     return ret;
 }
 
+return_t datetime::gettime(struct tm* tm, long* nsec) { return getlocaltime(tm, nsec); }
+
 return_t datetime::getlocaltime(struct tm* tm, long* nsec) {
     return_t ret = errorcode_t::success;
 
@@ -112,6 +115,8 @@ return_t datetime::getgmtime(struct tm* tm, long* nsec) {
     ret = timespec_to_tm(0, _timespec, tm, nsec);
     return ret;
 }
+
+return_t datetime::gettime(datetime_t* dt, long* nsec) { return getlocaltime(dt, nsec); }
 
 return_t datetime::getlocaltime(datetime_t* dt, long* nsec) {
     return_t ret = errorcode_t::success;
@@ -432,6 +437,30 @@ return_t datetime::datetime_to_timespec(const datetime_t& dt, struct timespec& t
     return ret;
 }
 
+return_t datetime::gmtime_to_timespec(const datetime_t& dt, struct timespec& ts) {
+    return_t ret = errorcode_t::success;
+
+    struct tm tm;
+
+    memset(&tm, 0, sizeof(struct tm));
+
+    tm.tm_year = dt.year - 1900;
+    tm.tm_mon = dt.month - 1;
+    tm.tm_mday = dt.day;
+    tm.tm_hour = dt.hour;
+    tm.tm_min = dt.minute;
+    tm.tm_sec = dt.second;
+
+#if defined _WIN32 || defined _WIN64
+    ts.tv_sec = _mkgmtime(&tm);
+#elif defined __linux__
+    ts.tv_sec = timegm(&tm);
+#endif
+    ts.tv_nsec = 0;
+
+    return ret;
+}
+
 return_t datetime::filetime_to_timespec(const filetime_t& ft, struct timespec& ts) {
     return_t ret = errorcode_t::success;
     int64 i64 = *(int64*)&ft;
@@ -587,6 +616,20 @@ void system_gettime(int clockid, struct timespec& ts) {
 #else
     clock_gettime(clockid, &ts);
 #endif
+}
+
+void timespan_m(timespan_t& ts, int minutes) {
+    int day = 60 * 24;
+    ts.days = minutes / day;
+    ts.seconds = (minutes % day) * 60;
+    ts.milliseconds = 0;
+}
+
+void timespan_s(timespan_t& ts, int seconds) {
+    int day = 60 * 60 * 24;
+    ts.days = seconds / day;
+    ts.seconds = seconds % day;
+    ts.milliseconds = 0;
 }
 
 }  // namespace hotplace

@@ -113,6 +113,9 @@
    * sdk/net/tls/
    * test/tlsserver/
 
+ * IEEE 754
+   * test/ieee754/
+
 ## not applied
 
 

@@ -8,9 +8,13 @@
  * Date         Name                Description
  *
  * comments
- *
+ *  X.690 8 Basic encoding rules
+ *  X.690 9 Canonical Encoding Rules
+ *  X.690 10 Distinguished encoding rules
+ *  X.690 11 Restrictions on BER employed by both CER and DER
  */
 
+#include <sdk/base/system/datetime.hpp>
 #include <sdk/io/asn.1/asn1.hpp>
 #include <sdk/io/asn.1/template.hpp>
 
@@ -249,21 +253,6 @@ asn1_encode& asn1_encode::encode(binary_t& bin, int tag, int class_number) {
     return *this;
 }
 
-asn1_encode& asn1_encode::generalstring(binary_t& bin, const std::string& value) {
-    primitive(bin, asn1_tag_generalstring, value);
-    return *this;
-}
-
-asn1_encode& asn1_encode::ia5string(binary_t& bin, const std::string& value) {
-    primitive(bin, asn1_tag_ia5string, value);
-    return *this;
-}
-
-asn1_encode& asn1_encode::visiblestring(binary_t& bin, const std::string& value) {
-    primitive(bin, asn1_tag_visiblestring, value);
-    return *this;
-}
-
 asn1_encode& asn1_encode::bitstring(binary_t& bin, const std::string& value) {
     // X.690 8.6 encoding of a bitstring value
     // X.690 8.6.2.2 The initial octet shall encode, as an unsigned binary integer with bit 1 as the least significant bit,
@@ -282,15 +271,49 @@ asn1_encode& asn1_encode::bitstring(binary_t& bin, const std::string& value) {
     return *this;
 }
 
-asn1_encode& asn1_encode::generalized_time(binary_t& bin, const datetime_t& dt) {
-    basic_stream bs;
-    generalized_time(bs, dt);
-    bin.insert(bin.end(), bs.data(), bs.data() + bs.size());
+asn1_encode& asn1_encode::generalstring(binary_t& bin, const std::string& value) {
+    primitive(bin, asn1_tag_generalstring, value);
     return *this;
 }
 
-asn1_encode& asn1_encode::utctime(binary_t& bin, const datetime_t& dt) {
-    //
+asn1_encode& asn1_encode::ia5string(binary_t& bin, const std::string& value) {
+    primitive(bin, asn1_tag_ia5string, value);
+    return *this;
+}
+
+asn1_encode& asn1_encode::octstring(binary_t& bin, const std::string& value) {
+    binary_t oct = base16_decode(value);
+    binary_push(bin, asn1_tag_octstring);
+    t_asn1_length_octets<uint16>(bin, oct.size());
+    binary_append(bin, oct);
+    return *this;
+}
+
+asn1_encode& asn1_encode::printablestring(binary_t& bin, const std::string& value) {
+    binary_push(bin, asn1_tag_printstring);
+    t_asn1_length_octets<uint16>(bin, value.size());
+    binary_append(bin, value);
+    return *this;
+}
+
+asn1_encode& asn1_encode::t61string(binary_t& bin, const std::string& value) {
+    binary_push(bin, asn1_tag_teletexstring);
+    t_asn1_length_octets<uint16>(bin, value.size());
+    binary_append(bin, value);
+    return *this;
+}
+
+asn1_encode& asn1_encode::visiblestring(binary_t& bin, const std::string& value) {
+    primitive(bin, asn1_tag_visiblestring, value);
+    return *this;
+}
+
+asn1_encode& asn1_encode::generalized_time(binary_t& bin, const datetime_t& dt) {
+    basic_stream bs;
+    generalized_time(bs, dt);
+    binary_push(bin, asn1_tag_generalizedtime);
+    t_asn1_length_octets<uint16>(bin, bs.size());
+    bin.insert(bin.end(), bs.data(), bs.data() + bs.size());
     return *this;
 }
 
@@ -303,8 +326,29 @@ asn1_encode& asn1_encode::generalized_time(basic_stream& bs, const datetime_t& d
     return *this;
 }
 
-asn1_encode& asn1_encode::utctime(basic_stream& obj, const datetime_t& dt) {
-    //
+asn1_encode& asn1_encode::utctime(binary_t& bin, const datetime_t& dt, int tzoffset) {
+    basic_stream bs;
+    utctime(bs, dt, tzoffset);
+    binary_push(bin, asn1_tag_utctime);
+    t_asn1_length_octets<uint16>(bin, bs.size());
+    bin.insert(bin.end(), bs.data(), bs.data() + bs.size());
+    return *this;
+}
+
+asn1_encode& asn1_encode::utctime(basic_stream& bs, const datetime_t& dt, int tzoffset) {
+    // Z indicates that local time is GMT, + indicates that local time is later than GMT, and - indicates that local time is earlier than GMT
+    datetime d(dt);
+    datetime_t utc;
+    timespan_t ts;
+
+    timespan_m(ts, tzoffset);
+    d -= ts;
+    d.gettime(&utc);
+    if (utc.milliseconds) {
+        bs.printf("%02d%02d%02d%02d%02d%02d.%dZ", utc.year % 100, utc.month, utc.day, utc.hour, utc.minute, utc.second, utc.milliseconds);
+    } else {
+        bs.printf("%02d%02d%02d%02d%02d%02dZ", utc.year % 100, utc.month, utc.day, utc.hour, utc.minute, utc.second);
+    }
     return *this;
 }
 

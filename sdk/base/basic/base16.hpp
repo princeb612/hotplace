@@ -47,9 +47,9 @@ enum base16_flag_t {
  * @example
  *          binary_t source = tobin ("wild wild world");
  *          size_t size = 0;
- *          base16_decode (&source[0], source.size, nullptr, &size);
+ *          base16_encode (&source[0], source.size, nullptr, &size);
  *          char* buf = (char*) malloc (size);
- *          base16_decode (&source[0], source.size, buf, &size);
+ *          base16_encode (&source[0], source.size, buf, &size);
  *          free (buf);
  */
 return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen);
@@ -62,7 +62,7 @@ return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buf
  * @example
  *          binary_t source = tobin ("wild wild world");
  *          std::string encoded;
- *          base16_decode (&source[0], source.size, encoded);
+ *          base16_encode (&source[0], source.size, encoded);
  */
 return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, uint32 flags = 0);
 /*
@@ -74,7 +74,7 @@ return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, 
  * @example
  *          binary_t source = tobin ("wild wild world");
  *          basic_stream encoded;
- *          base16_decode (&source[0], source.size, &encoded);
+ *          base16_encode (&source[0], source.size, &encoded);
  */
 return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint32 flags = 0);
 /*
@@ -85,9 +85,9 @@ return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint
  * @example
  *          binary_t source = tobin ("wild wild world");
  *          size_t size = 0;
- *          base16_decode (source, nullptr, &size);
+ *          base16_encode (source, nullptr, &size);
  *          char* buf = (char*) malloc (size);
- *          base16_decode (source, buf, &size);
+ *          base16_encode (source, buf, &size);
  *          free (buf);
  */
 return_t base16_encode(const binary_t& source, char* buf, size_t* buflen);
@@ -99,7 +99,7 @@ return_t base16_encode(const binary_t& source, char* buf, size_t* buflen);
  * @example
  *          binary_t source = tobin ("wild wild world");
  *          std::string encoded;
- *          base16_decode (source, encoded);
+ *          base16_encode (source, encoded);
  */
 return_t base16_encode(const binary_t& source, std::string& outpart, uint32 flags = 0);
 /*
@@ -109,7 +109,7 @@ return_t base16_encode(const binary_t& source, std::string& outpart, uint32 flag
  * @example
  *          binary_t source = tobin ("wild wild world");
  *          basic_stream encoded;
- *          base16_decode (source, &encoded);
+ *          base16_encode (source, &encoded);
  */
 return_t base16_encode(const binary_t& source, stream_t* stream);
 /*
@@ -117,7 +117,7 @@ return_t base16_encode(const binary_t& source, stream_t* stream);
  * @param   const binary_t& source [in]
  * @example
  *          binary_t source = tobin ("wild wild world");
- *          std::string encoded = base16_decode (source);;
+ *          std::string encoded = base16_encode (source);;
  */
 std::string base16_encode(const binary_t& source);
 

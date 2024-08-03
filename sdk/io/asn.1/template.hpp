@@ -111,26 +111,47 @@ static inline uint64 binary_from_fp(double fp) { return binary64_from_fp64(fp); 
 static inline float ieee754_fabs(float v) { return fabsf(v); }
 static inline double ieee754_fabs(double v) { return fabs(v); }
 
+/**
+ * @refer   ASN.1 by simple words - Chapter 2. Encoding of REAL type
+ * @remarks
+ *          0.15625 = 2^-3 + 2^-5 = 0.00101b = 1.01b * 2^-3 = S(0) E(-3) M(010...0) (IEEE754)
+ *          1) base 2
+ *             101b * 2^-5 -> (09 03 80 FB 05)
+ *             info (80) binary format (80), base 2 (00), 1 exponent octet (00)
+ *             exponent -5(FB)
+ *             mantissa 5(05)
+ *          2) base 8
+ *             8^-1 + 2 * 8^-2 -> 00.12 -> 012 * 8^-2 -> (09 03 90 FE 0A)
+ *             info (90) binary format (80), base 8 (10), 1 exponent octet (00)
+ *             exponent -2(FE)
+ *             mantissa 10(0a)
+ *          3) base 16
+ *             2*16^-1 + 8*16^-2 = 0x0.28 = 0x28 * 16^-2 -> M(0x28) = N * 2^F (N=5, F=3) -> (09 03 AC FE 05)
+ *             info (AC) binary format (80), base 16 (20), scaling factor 11(0c), 1 exponent octet (00)
+ *             exponent -2(FE)
+ *             N 5(5)
+ */
 template <typename fptype, typename bintype>
 size_t t_asn1_encode_real(binary_t& bin, fptype value) {
+    // Step.1
     // ASN.1 by simple words - Chapter 2. Encoding of REAL type
-    //
-    // 0.15625 = 2^-3 + 2^-5 = 0b0.00101 = 0b1.01 * 2^-3 = S(0) E(-3) M(010...0) (IEEE754)
-    // 1) base 2
-    //    0b101 * 2^-5 -> (09 03 80 FB 05)
-    //    info (80) binary format (80), base 2 (00), 1 exponent octet (00)
-    //    exponent -5(FB)
-    //    mantissa 5(05)
-    // 2) base 8
-    //    8^-1 + 2 * 8^-2 -> 00.12 -> 012 * 8^-2 -> (09 03 90 FE 0A)
-    //    info (90) binary format (80), base 8 (10), 1 exponent octet (00)
-    //    exponent -2(FE)
-    //    mantissa 10(0a)
-    // 3) base 16
-    //    2*16^-1 + 8*16^-2 = 0x0.28 = 0x28 * 16^-2 -> M(0x28) = N * 2^F (N=5, F=3) -> (09 03 AC FE 05)
-    //    info (AC) binary format (80), base 16 (20), scaling factor 11(0c), 1 exponent octet (00)
-    //    exponent -2(FE)
-    //    N 5(5)
+
+    // Step.2 X.690 11.3 Real Values
+    //   11.3.1 If the encoding represents a real value whose base B is 2, then binary encoding employing base 2 shall be used.
+    //          Before encoding, the mantissa M and exponent E are chosen so that M is either 0 or is odd.
+    //          NOTE – This is necessary because the same real value can be regarded as both {M, 2, E} and {M', 2, E'} with M ≠ M' if, for some non-zero integer
+    //          n:
+    //            M' = M × 2^–n
+    //            E' = E + n
+    //          In encoding the value, the binary scaling factor F shall be zero, and M and E shall each be represented in the fewest octets necessary.
+    //   11.3.2 If the encoding represents a real value whose base B is 10, then decimal encoding shall be used. In forming the encoding, the following applies:
+    //   11.3.2.1 The ISO 6093 NR3 form shall be used (see 8.5.8).
+    //   11.3.2.2 SPACE shall not be used within the encoding.
+    //   11.3.2.3 If the real value is negative, then it shall begin with a MINUS SIGN (–), otherwise, it shall begin with a digit.
+    //   11.3.2.4 Neither the first nor the last digit of the mantissa may be a 0.
+    //   11.3.2.5 The last digit in the mantissa shall be immediately followed by FULL STOP (.), followed by the exponentmark "E".
+    //   11.3.2.6 If the exponent has the value 0, it shall be written "+0", otherwise the exponent's first digit shall not be zero, and PLUS SIGN shall not be
+    //   used.
 
     size_t size_before = bin.size();
 
@@ -142,6 +163,15 @@ size_t t_asn1_encode_real(binary_t& bin, fptype value) {
     auto isint = [](fptype v) -> bool { return 0.0 == fmod(v, 1); };
 
     while (ieee754_single_precision == ieee754_typeof(mantissa)) {
+#if 0
+        {
+            basic_stream bs;
+            bs << "FP" << (sizeof(fptype) << 3) << " : " << value << " exponent " << exponent << " mantissa " << mantissa;
+            std::cout << bs << std::endl;
+        }
+#endif
+
+        // break if either M is zero or odd
         if (isint(mantissa)) {
             break;
         }
@@ -149,14 +179,6 @@ size_t t_asn1_encode_real(binary_t& bin, fptype value) {
         mantissa *= 2;
         exponent--;
     }
-
-#if 0
-    {
-        basic_stream bs;
-        bs << "FP" << (sizeof(fptype) << 3) << " : " << value << " exponent " << exponent << " mantissa " << mantissa;
-        std::cout << bs << std::endl;
-    }
-#endif
 
     bin.insert(bin.end(), asn1_tag_real);
     size_t pos = bin.size();

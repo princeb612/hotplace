@@ -137,6 +137,8 @@ void test_basic_stream() {
             {fp32_from_binary32(fp32_pinf), "inf"},
             {fp32_from_binary32(fp32_ninf), "-inf"},
             {fp32_from_binary32(fp32_nan), "nan"},
+            {fp32_from_binary32(fp32_qnan), "nan"},
+            {fp32_from_binary32(fp32_snan), "nan"},
         };
 
         for (auto item : _table) {
@@ -156,6 +158,8 @@ void test_basic_stream() {
             {fp64_from_binary64(fp64_pinf), "inf"},
             {fp64_from_binary64(fp64_ninf), "-inf"},
             {fp64_from_binary64(fp64_nan), "nan"},
+            {fp64_from_binary64(fp64_qnan), "nan"},
+            {fp64_from_binary64(fp64_snan), "nan"},
         };
 
         for (auto item : _table) {

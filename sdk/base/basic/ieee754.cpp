@@ -127,12 +127,12 @@ float float_from_fp16(uint16 half) {
     //  1) shift left (exponent bits + mantissa bits) -> shift left ((8 + 23) - (5 + 10)) -> shift left (16)
     uint32 fp16s = (half & 0x8000);
     // 2. fp32.e from fp16.e
-    //  1) e = bias + exponent
-    //     fp16.e = fp16.bias + exponent = 15 + exponent
-    //     fp32.e = fp32.bias + exponent = 127 + exponent
+    //  1) e = bias + saclefactor
+    //     fp16.e = fp16.bias + saclefactor = 15 + saclefactor
+    //     fp32.e = fp32.bias + saclefactor = 127 + saclefactor
     //  2) fp32.e from fp16.e
-    //     fp32.bias - fp16.bias + exponent
-    //     fp16.e + (fp32.bias - fp16.bias) << bits(fp16.mantissa) = (127 - 15) << 10 = 1c000
+    //     fp32.bias - fp16.bias + saclefactor
+    //     fp16.e + (fp32.bias - fp16.bias) << bits(fp16.mantissa) = fp16.e + ((127 - 15) << 10) = (fp16.e + 1c000)
     //  3) shft left (mantissa bits)
     //     shift left (23 - 10) = shift left (13)
     uint32 fp16e = (half & 0x7c00);
@@ -142,7 +142,7 @@ float float_from_fp16(uint16 half) {
 
     // example
     // -1.5 = (-1)^1 * 2^0 + 2^-1 = -1^1 * 1.1_2 * 2^0
-    // s = 1, e = bias + 0 (exponent), m = b1.1
+    // s = 1, e = bias + 0 (saclefactor), m = b1.1
     // FP16
     //      bias = 2^(5-1) - 1 = 15, e = 15 + 0
     //      1 01111 1000000000 -> 0XBE00
