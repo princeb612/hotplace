@@ -198,7 +198,7 @@ class parser {
         size_t size();
 
         std::string as_string(const char* p);
-        void visit(const char* p, std::function<void(const token* t)> f);
+        void visit(const char* p, std::function<void(const token* t)> f) const;
 
         parser::token* clone();
 
@@ -223,11 +223,15 @@ class parser {
          */
         search_result csearch(parser* obj, const char* pattern, size_t size_pattern, unsigned int pos = 0) const;
         search_result csearch(parser* obj, const std::string& pattern, unsigned int pos = 0) const;
+        search_result csearch(parser* obj, const basic_stream& pattern, unsigned int pos = 0) const;
 
         /**
          * @brief   word-level search
          */
         search_result wsearch(parser* obj, const context& pattern, unsigned int pos = 0) const;
+        search_result wsearch(parser* obj, const char* pattern, size_t size_pattern, unsigned int pos = 0) const;
+        search_result wsearch(parser* obj, const std::string& pattern, unsigned int pos = 0) const;
+        search_result wsearch(parser* obj, const basic_stream& pattern, unsigned int pos = 0) const;
         /**
          * @brief   word-level comparison
          */
@@ -243,6 +247,7 @@ class parser {
         void clear();
 
         void for_each(std::function<void(const token_description* desc)> f) const;
+        void for_each(const search_result& res, std::function<void(const token_description* desc)> f) const;
         void walk(std::function<void(const char* p, const parser::token*)> f);
 
         void wsearch_result(search_result& result, uint32 idx, size_t size) const;
@@ -257,6 +262,8 @@ class parser {
          *          }
          */
         void psearch_result(search_result& result, uint32 idx, unsigned patidx) const;
+
+        return_t get(uint32 index, token_description* desc);
 
        protected:
         return_t init(parser* obj, const char* p, size_t size);
@@ -285,6 +292,8 @@ class parser {
      */
     return_t parse(parser::context& context, const char* p, size_t size);
     return_t parse(parser::context& context, const char* p);
+    return_t parse(parser::context& context, const std::string& p);
+    return_t parse(parser::context& context, const basic_stream& p);
     /**
      * @brief   pattern search (character-level)
      * @param
@@ -298,6 +307,7 @@ class parser {
      */
     search_result csearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos = 0);
     search_result csearch(const parser::context& context, const std::string& pattern, unsigned int pos = 0);
+    search_result csearch(const parser::context& context, const basic_stream& pattern, unsigned int pos = 0);
     /**
      * @brief   pattern search (word-level)
      * @param   const parser::context& context [in]
@@ -314,6 +324,7 @@ class parser {
      */
     search_result wsearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos = 0);
     search_result wsearch(const parser::context& context, const std::string& pattern, unsigned int pos = 0);
+    search_result wsearch(const parser::context& context, const basic_stream& pattern, unsigned int pos = 0);
     /**
      * @brief   compare (word-level comparison, ignore white spaces)
      * @param   const char* lhs [in]

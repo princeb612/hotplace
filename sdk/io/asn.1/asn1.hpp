@@ -166,12 +166,21 @@ class asn1_container : public asn1_object {
 
 /**
  * @brief   SequenceType
+ * @example
+ *          // snippet 1
+ *          auto seq = new asn1_sequence;
+ *          *seq << new asn1_object("name", asn1_type_ia5string) << new asn1_object("ok", asn1_type_boolean);
+ *
+ *          // snippet 2
+ *          auto seq = new asn1_sequence(2, new asn1_object("name", asn1_type_ia5string), new asn1_object("ok", asn1_type_boolean));
  */
 class asn1_sequence : public asn1_container {
    public:
     asn1_sequence(asn1_tag* tag = nullptr);
     asn1_sequence(const std::string& name, asn1_tag* tag = nullptr);
     asn1_sequence(const asn1_sequence& rhs);
+    asn1_sequence(int count, ...);
+    asn1_sequence(asn1_tag* tag, int count, ...);
 
     virtual asn1_object* clone();
 
@@ -291,12 +300,9 @@ class asn1 {
     void addref();
     void release();
 
-    // parser& get_parser();
-    // const parser::context& get_rule_context() const;
-
-   protected:
     void clear();
 
+   protected:
    private:
     t_shared_reference<asn1> _ref;
     std::list<asn1_object*> _types;
@@ -309,9 +315,7 @@ class asn1 {
     namevalues_t _namevalues;
     indexvalues_t _idxvalues;
 
-    // parser _parser;
-    // basic_stream _buf;      // add_rule
-    // parser::context _rule;  // learn
+    parser _parser;
 };
 
 class asn1_encode {

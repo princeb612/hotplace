@@ -74,6 +74,10 @@ return_t wide_string::fill(size_t l, char c) {
 
 return_t wide_string::clear() { return _bio.clear(_handle); }
 
+bool wide_string::empty() { return _bio.empty(_handle); }
+
+bool wide_string::occupied() { return _bio.occupied(_handle); }
+
 return_t wide_string::printf(const char* buf, ...) {
     return_t ret = errorcode_t::success;
     va_list ap;

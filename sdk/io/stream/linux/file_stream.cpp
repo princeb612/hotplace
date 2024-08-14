@@ -325,6 +325,10 @@ return_t file_stream::read(void* data, uint32 buffer, uint32* size_read) {
 
 return_t file_stream::clear() { return errorcode_t::success; }
 
+bool file_stream::empty() { return 0 == size(); }
+
+bool file_stream::occupied() { return 0 != size(); }
+
 return_t file_stream::flush() { return errorcode_t::success; }
 
 #if 0

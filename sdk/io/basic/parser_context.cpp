@@ -323,8 +323,8 @@ parser::search_result parser::context::csearch(parser* obj, const char* pattern,
             __leave2;
         }
 
-        t_kmp_pattern<char> kmp;
-        int idx = kmp.match(_p, _size, pattern, size_pattern, pos);
+        t_kmp<char> kmp;
+        int idx = kmp.search(_p, _size, pattern, size_pattern, pos);
         if (-1 == idx) {
             __leave2;
         }
@@ -344,6 +344,10 @@ parser::search_result parser::context::csearch(parser* obj, const std::string& p
     return csearch(obj, pattern.c_str(), pattern.size(), pos);
 }
 
+parser::search_result parser::context::csearch(parser* obj, const basic_stream& pattern, unsigned int pos) const {
+    return csearch(obj, pattern.c_str(), pattern.size(), pos);
+}
+
 parser::search_result parser::context::wsearch(parser* obj, const context& pattern, unsigned int pos) const {
     search_result result;
     __try2 {
@@ -360,8 +364,8 @@ parser::search_result parser::context::wsearch(parser* obj, const context& patte
 
         auto comparator = [](const parser::token* lhs, const parser::token* rhs) -> bool { return (lhs->get_index() == rhs->get_index()); };
 
-        t_kmp_pattern<parser::token*> kmp;
-        int idx = kmp.match(_tokens, pattern._tokens, pos, comparator);
+        t_kmp<parser::token*> kmp;
+        int idx = kmp.search(_tokens, pattern._tokens, pos, comparator);
         if (-1 == idx) {
             __leave2;
         }
@@ -373,6 +377,23 @@ parser::search_result parser::context::wsearch(parser* obj, const context& patte
         // do nothing
     }
     return result;
+}
+
+parser::search_result parser::context::wsearch(parser* obj, const char* pattern, size_t size_pattern, unsigned int pos) const {
+    // handle by word
+    return_t ret = errorcode_t::success;
+    parser::context pattern_context;
+    ret = pattern_context.parse(obj, pattern, size_pattern, parser_flag_t::parse_lookup_readonly);
+    // if success, all words of pattern in dictionary
+    return (errorcode_t::success == ret) ? wsearch(obj, pattern_context, pos) : search_result();
+}
+
+parser::search_result parser::context::wsearch(parser* obj, const std::string& pattern, unsigned int pos) const {
+    return wsearch(obj, pattern.c_str(), pattern.size(), pos);
+}
+
+parser::search_result parser::context::wsearch(parser* obj, const basic_stream& pattern, unsigned int pos) const {
+    return wsearch(obj, pattern.c_str(), pattern.size(), pos);
 }
 
 bool parser::context::compare(parser* obj, const parser::context& rhs) const {
@@ -407,7 +428,7 @@ std::multimap<size_t, unsigned> parser::context::psearch(parser* obj) const {
     std::multimap<size_t, unsigned> result;
     if (obj) {
         auto ac = obj->_ac;
-        ac->build_state_machine();
+        ac->build();
         result = ac->search(&_tokens[0], _tokens.size());
     }
     return result;
@@ -417,7 +438,7 @@ std::multimap<size_t, unsigned> parser::context::psearchex(parser* obj) const {
     std::multimap<size_t, unsigned> result;
     if (obj) {
         auto ac = obj->_ac;
-        ac->build_state_machine();
+        ac->build();
         auto acres = ac->search(&_tokens[0], _tokens.size());
 
         t_merge_ovl_intervals<int> moi;
@@ -485,8 +506,34 @@ void parser::context::wsearch_result(search_result& result, uint32 idx, size_t s
 }
 
 void parser::context::psearch_result(search_result& result, uint32 idx, unsigned patidx) const {
-    size_t size = _parser->_ac->get_patterns(patidx).size();
+    size_t size = _parser->_ac->get_pattern_size(patidx);
     wsearch_result(result, idx, size);
+}
+
+return_t parser::context::get(uint32 index, token_description* desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == desc) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (index > _tokens.size()) {
+            ret = errorcode_t::out_of_range;
+            __leave2;
+        }
+        auto t = _tokens[index];
+        desc->index = index;
+        desc->type = t->get_type();
+        desc->tag = t->get_tag();
+        desc->pos = t->get_pos();
+        desc->size = t->get_size();
+        desc->line = t->get_line();
+        desc->p = _p + t->get_pos();
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 parser::token& parser::context::get_token() { return _token; }
@@ -516,6 +563,28 @@ void parser::context::for_each(std::function<void(const token_description* desc)
 
         for (auto item : _tokens) {
             item->visit(_p, handler);
+        }
+    }
+}
+
+void parser::context::for_each(const parser::search_result& res, std::function<void(const token_description* desc)> f) const {
+    if (res.match && _p && f) {
+        auto handler = [&](const parser::token* t) -> void {
+            // compact parameter
+            token_description desc;
+            desc.index = t->get_index();
+            desc.type = t->get_type();
+            desc.tag = t->get_tag();
+            desc.pos = t->get_pos();
+            desc.size = t->get_size();
+            desc.line = t->get_line();
+            desc.p = _p + t->get_pos();
+            f(&desc);
+        };
+
+        for (int i = res.begidx; i <= res.endidx; i++) {
+            auto token = _tokens[i];
+            token->visit(_p, handler);
         }
     }
 }

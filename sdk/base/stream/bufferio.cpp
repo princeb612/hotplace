@@ -248,6 +248,48 @@ return_t bufferio::clear(bufferio_context_t* handle) {
     return ret;
 }
 
+bool bufferio::empty(bufferio_context_t* handle) {
+    bool ret = false;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        return (0 == handle->bufferio_size);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return false;
+}
+
+bool bufferio::occupied(bufferio_context_t* handle) {
+    bool ret = false;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        return (0 != handle->bufferio_size);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return false;
+}
+
 return_t bufferio::size(bufferio_context_t* handle, size_t* contents_size) {
     return_t ret = errorcode_t::success;
     size_t data_size = 0;

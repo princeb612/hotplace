@@ -56,17 +56,17 @@ class basic_stream : public stream_t {
     /**
      * @brief   data
      */
-    byte_t* data() const;
+    virtual byte_t* data() const;
     /**
      * @brief   size
      */
-    uint64 size() const;
+    virtual uint64 size() const;
     /**
      * @brief   write
      * @param   void* data [in]
      * @param   size_t size [in]
      */
-    return_t write(const void* data, size_t size);
+    virtual return_t write(const void* data, size_t size);
     return_t cut(uint32 begin_pos, uint32 length);
     return_t insert(size_t begin, const void* data, size_t data_size);
     /**
@@ -74,11 +74,13 @@ class basic_stream : public stream_t {
      * @param   size_t l [in]
      * @param   char c [in]
      */
-    return_t fill(size_t l, char c);
+    virtual return_t fill(size_t l, char c);
     /**
      * @brief   clear
      */
-    return_t clear();
+    virtual return_t clear();
+    virtual bool empty();
+    virtual bool occupied();
 
     /**
      * @brief   printf
@@ -89,9 +91,9 @@ class basic_stream : public stream_t {
      * @brief   vprintf
      * @param   const char* buf [in]
      */
-    return_t vprintf(const char* buf, va_list ap);
+    virtual return_t vprintf(const char* buf, va_list ap);
 #if defined _WIN32 || defined _WIN64
-    return_t printf(const wchar_t* buf, ...);
+    virtual return_t printf(const wchar_t* buf, ...);
     return_t vprintf(const wchar_t* buf, va_list ap);
 #endif
 
@@ -142,6 +144,7 @@ class basic_stream : public stream_t {
     bool operator>(const basic_stream& rhs) const;
 
     bool operator==(const basic_stream& rhs) const;
+    bool operator==(const char* rhs) const;
 
     friend std::string& operator+=(std::string& lhs, const basic_stream& rhs);
     friend std::string& operator<<(std::string& lhs, const basic_stream& rhs);

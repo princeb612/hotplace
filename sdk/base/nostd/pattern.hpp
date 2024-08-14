@@ -96,12 +96,12 @@ namespace hotplace {
  *                  i←i+1
  */
 template <typename T = char>
-class t_kmp_pattern {
+class t_kmp {
    public:
     /**
      * @brief   KMP pattern matching
      * @remarks
-     *          comparator for pointer type - t_kmp_pattern<object*>
+     *          comparator for pointer type - t_kmp<object*>
      *
      *          struct object {
      *               int value;
@@ -117,12 +117,12 @@ class t_kmp_pattern {
      *          // data1.push_back(new object(1));
      *          // ...
      *
-     *          t_kmp_pattern<object*> search;
-     *          search.match(data1, data2);
+     *          t_kmp<object*> kmp;
+     *          kmp.search(data1, data2);
      *               // if (pattern[j] == data[i]) - incorrect
      *               // return -1
      *
-     *          search.match(data1, data2, 0, comparator);
+     *          kmp.search(data1, data2, 0, comparator);
      *               // if (comparator(pattern[j], data[i])) - correct
      *               // return 2
      *
@@ -144,17 +144,17 @@ class t_kmp_pattern {
      */
     typedef typename std::function<bool(const T&, const T&)> comparator_t;
 
-    t_kmp_pattern() {}
+    t_kmp() {}
 
-    int match(const std::vector<T>& data, const std::vector<T>& pattern, unsigned int pos = 0, comparator_t comparator = nullptr) {
-        return match(&data[0], data.size(), &pattern[0], pattern.size(), pos, comparator);
+    int search(const std::vector<T>& data, const std::vector<T>& pattern, unsigned int pos = 0, comparator_t comparator = nullptr) {
+        return search(&data[0], data.size(), &pattern[0], pattern.size(), pos, comparator);
     }
 
     /**
-     * @brief   match
+     * @brief   search
      * @return  index, -1 (not found)
      */
-    int match(const T* data, size_t size_data, const T* pattern, size_t size_pattern, unsigned int pos = 0, comparator_t comparator = nullptr) {
+    int search(const T* data, size_t size_data, const T* pattern, size_t size_pattern, unsigned int pos = 0, comparator_t comparator = nullptr) {
         int ret = -1;
         if (data && pattern && size_pattern) {
             unsigned int n = size_data;
@@ -981,12 +981,17 @@ class t_ukkonen {
  *              KMP O(n*k + m)
  *              Aho-Corasick O(n + m + z) ; z count of matches
  * @refer   https://www.javatpoint.com/aho-corasick-algorithm-for-pattern-searching-in-cpp
+ *          unserstanding failure link and output
+ *          https://daniel.lawrence.lu/blog/y2014m03d25/
  * @sample
  *          // search
  *          {
  *              t_aho_corasick ac;
- *              ac.insert("abc", 3).insert("ab", 2).insert("bc", 2).insert("a", 1);
- *              ac.build_state_machine();
+ *              ac.insert("abc", 3);
+ *              ac.insert("ab", 2);
+ *              ac.insert("bc", 2);
+ *              ac.insert("a", 1);
+ *              ac.build();
  *              const char* text = "abcaabc";
  *              std::multimap<unsigned, size_t> result;
  *              result = ac.search(text, strlen(text));
@@ -1015,34 +1020,68 @@ class t_aho_corasick {
      */
     struct trienode {
         std::unordered_map<BT, trienode*> children;
-        trienode* fail;
-        std::vector<unsigned> output;
+        trienode* failure;
+        std::set<unsigned> output;
+        uint8 flag;  // reserved
 
-        trienode() : fail(nullptr) {}
-        ~trienode() {
+        trienode() : failure(nullptr), flag(0) {}
+        ~trienode() { clear(); }
+        void clear() {
             for (auto item : children) {
                 auto child = item.second;
-                if (child) {
-                    delete child;
-                }
+                delete child;
             }
         }
     };
 
    public:
     t_aho_corasick(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {}
-    ~t_aho_corasick() { delete _root; }
+    virtual ~t_aho_corasick() { dodestroy(); }
 
     /**
      * @brief   insert a pattern into the trie
      */
-    t_aho_corasick<BT, T>& insert(const std::vector<T>& pattern) { return insert(&pattern[0], pattern.size()); }
-    t_aho_corasick<BT, T>& insert(const T* pattern, size_t size) {
+    void insert(const std::vector<T>& pattern) { doinsert(&pattern[0], pattern.size()); }
+    void insert(const T* pattern, size_t size) { doinsert(pattern, size); }
+    /**
+     * @brief   build the Aho-Corasick finite state machine
+     */
+    void build() { dobuild(); }
+
+    /**
+     * @brief   search for patterns
+     * @return  std::multimap<size_t, unsigned> as is multimap<pattern_id, position>
+     *          pair(pos_occurrence, id_pattern)
+     */
+    std::multimap<size_t, unsigned> search(const std::vector<T>& source) {
+        std::multimap<size_t, unsigned> result;
+        dosearch(&source[0], source.size(), result);
+        return result;
+    }
+    std::multimap<size_t, unsigned> search(const T* source, size_t size) {
+        std::multimap<size_t, unsigned> result;
+        dosearch(source, size, result);
+        return result;
+    }
+    size_t get_pattern_size(size_t index) {
+        size_t size = 0;
+        auto iter = _patterns.find(index);
+        if (_patterns.end() != iter) {
+            size = iter->second;
+        }
+        return size;
+    }
+
+    void reset() {
+        delete _root;
+        _root = new trienode;
+        _patterns.clear();
+    }
+
+   protected:
+    virtual void doinsert(const T* pattern, size_t size) {
         if (pattern) {
             trienode* current = _root;
-            std::vector<T> p;
-
-            p.insert(p.end(), pattern, pattern + size);
 
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
@@ -1055,24 +1094,18 @@ class t_aho_corasick {
             }
 
             size_t index = _patterns.size();
-            current->output.push_back(index);
-            _patterns.insert({index, std::move(p)});
+            current->output.insert(index);
+            _patterns.insert({index, size});
         }
-        return *this;
     }
-    /**
-     * @brief   build the Aho-Corasick finite state machine
-     */
-    void build_state_machine() {
+    virtual void dobuild() {
         std::queue<trienode*> q;
 
         // set failure links
         for (auto& pair : _root->children) {
             auto child = pair.second;
-            if (child) {
-                child->fail = _root;
-                q.push(pair.second);
-            }
+            child->failure = _root;
+            q.push(child);
         }
 
         // Breadth-first traversal
@@ -1083,73 +1116,78 @@ class t_aho_corasick {
             for (auto& pair : current->children) {
                 const BT& key = pair.first;
                 trienode* child = pair.second;
-                if (child) {
-                    q.push(child);
+                trienode* failnode = current->failure;
 
-                    trienode* failNode = current->fail;
-                    while (failNode && !failNode->children[key]) {
-                        failNode = failNode->fail;
-                    }
+                q.push(child);
 
-                    child->fail = failNode ? failNode->children[key] : _root;
+                while ((failnode != _root) && (failnode->children.end() == failnode->children.find(key))) {
+                    failnode = failnode->failure;
+                }
+                auto iter = failnode->children.find(key);
+                if (failnode->children.end() == iter) {
+                    child->failure = _root;
+                } else {
+                    child->failure = iter->second;
+                }
 
-                    // Merge output lists
-                    child->output.insert(child->output.end(), child->fail->output.begin(), child->fail->output.end());
+                // merge output lists (pattern ids)
+                for (auto item : child->failure->output) {
+                    child->output.insert(item);  // cf. std::set merge c++17
                 }
             }
         }
     }
-
     /**
-     * @brief   search for patterns
-     * @return  std::multimap<size_t, unsigned> as is multimap<pattern_id, position>
-     *          pair(pos_occurrence, id_pattern)
+     * @brief   search
      */
-    std::multimap<size_t, unsigned> search(const std::vector<T>& source) { return do_search(&source[0], source.size()); }
-    std::multimap<size_t, unsigned> search(const T* source, size_t size) { return do_search(source, size); }
-    const std::vector<T>& get_patterns(size_t index) { return _patterns[index]; }
-
-    void reset() {
-        delete _root;
-        _root = new trienode;
-        _patterns.clear();
-    }
-
-   protected:
-    /**
-     * @brief   match
-     * @return  pair(pos_occurrence, id_pattern)
-     */
-    std::multimap<size_t, unsigned> do_search(const T* source, size_t size) {
-        std::multimap<size_t, unsigned> result;
+    virtual void dosearch(const T* source, size_t size, std::multimap<size_t, unsigned>& result) {
         if (source) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(source, i);
-                while (current && (nullptr == current->children[t])) {
-                    current = current->fail;
+                while ((current != _root) && (current->children.end() == current->children.find(t))) {
+                    current = current->failure;
                 }
-                if (current) {
-                    current = current->children[t];
-                    for (auto v : current->output) {
-                        // v is index of pattern
-                        // i is end position of pattern
-                        // (i - sizepat + 1) is beginning position of pattern
-                        size_t sizepat = _patterns[v].size();
-                        size_t pos = i - sizepat + 1;
-                        result.insert({pos, v});
-                    }
-                } else {
-                    current = _root;
+
+                auto iter = current->children.find(t);
+                if (current->children.end() != iter) {
+                    current = iter->second;
+                    collect_results(current, i, result);
                 }
             }
         }
-        return result;
     }
+    void collect_results(trienode* node, size_t pos, std::multimap<size_t, unsigned>& result) {
+        if (node) {
+            for (auto v : node->output) {
+                // v is index of pattern
+                // i is end position of pattern
+                // (i - sizepat + 1) is beginning position of pattern
+                size_t sizepat = get_pattern_size(v);
+                size_t p = pos - sizepat + 1;
+                result.insert({p, v});
+            }
+        }
+    }
+    /*
+     * @brief   result removed duplicates
+     */
+    void collect_results(trienode* node, size_t pos, std::map<size_t, std::set<unsigned>>& result) {
+        if (node) {
+            for (auto v : node->output) {
+                // v is index of pattern
+                // i is end position of pattern
+                // (i - sizepat + 1) is beginning position of pattern
+                size_t sizepat = get_pattern_size(v);
+                size_t p = pos - sizepat + 1;
+                result[p].insert(v);
+            }
+        }
+    }
+    virtual void dodestroy() { delete _root; }
 
-   private:
     trienode* _root;
-    std::unordered_map<size_t, std::vector<T>> _patterns;
+    std::unordered_map<size_t, size_t> _patterns;
     memberof_t _memberof;
 };
 
@@ -1200,8 +1238,8 @@ class t_wildcards {
     typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
     typedef typename std::function<int(const BT& t)> kindof_t;
 
-    t_wildcards(const BT& exact_one, const BT& zero_or_more, memberof_t memberof = memberof_defhandler<BT, T>)
-        : _exact_one(exact_one), _zero_or_more(zero_or_more), _memberof(memberof) {}
+    t_wildcards(const BT& wild_single, const BT& wild_any, memberof_t memberof = memberof_defhandler<BT, T>)
+        : _wild_single(wild_single), _wild_any(wild_any), _memberof(memberof) {}
 
     bool match(const std::vector<T>& source, const std::vector<T>& pattern) { return match(&source[0], source.size(), &pattern[0], pattern.size()); }
     bool match(const T* source, size_t n, const T* pattern, size_t m) {
@@ -1214,10 +1252,10 @@ class t_wildcards {
         while ((i < n) && (j < m)) {
             const BT& t = _memberof(source, i);
             const BT& p = _memberof(pattern, j);
-            if (j < m && ((_exact_one == p) || (p == t))) {
+            if (j < m && ((_wild_single == p) || (p == t))) {
                 i++;
                 j++;
-            } else if ((j < m) && (_zero_or_more == p)) {
+            } else if ((j < m) && (_wild_any == p)) {
                 startidx = j;
                 match = i;
                 j++;
@@ -1232,7 +1270,7 @@ class t_wildcards {
 
         while (j < m) {
             const BT& p = _memberof(pattern, j);
-            if (_zero_or_more == p) {
+            if (_wild_any == p) {
                 j++;
             } else {
                 break;
@@ -1244,8 +1282,8 @@ class t_wildcards {
 
    private:
     memberof_t _memberof;
-    BT _exact_one;
-    BT _zero_or_more;
+    BT _wild_single;  // ?
+    BT _wild_any;     // *
 };
 
 }  // namespace hotplace

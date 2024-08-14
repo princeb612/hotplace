@@ -40,8 +40,8 @@ struct pattern_search_sample_data {
     friend bool operator==(const pattern_search_sample_data& lhs, const pattern_search_sample_data& rhs) { return lhs.value == rhs.value; }
 };
 
-void test_pattern_search() {
-    _test_case.begin("t_kmp_pattern");
+void test_kmp() {
+    _test_case.begin("t_kmp");
 
     // 0123456789abcdef0123
     // abacaabaccabacabaabb
@@ -52,8 +52,8 @@ void test_pattern_search() {
 
     {
         // vector
-        t_kmp_pattern<byte_t> kmp;
-        int idx = kmp.match(data, pattern);
+        t_kmp<byte_t> kmp;
+        int idx = kmp.search(data, pattern);
         _logger->hdump("data", data);
         _logger->hdump("pattern", pattern);
         _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<byte_t> %i", idx);
@@ -61,8 +61,8 @@ void test_pattern_search() {
 
     {
         // contiguous memory space
-        t_kmp_pattern<byte_t> kmp;
-        int idx = kmp.match(&data.get()[0], data.get().size(), &pattern.get()[0], pattern.get().size());
+        t_kmp<byte_t> kmp;
+        int idx = kmp.search(&data.get()[0], data.get().size(), &pattern.get()[0], pattern.get().size());
         _logger->hdump("data", data);
         _logger->hdump("pattern", pattern);
         _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<byte_t> %i", idx);
@@ -80,8 +80,8 @@ void test_pattern_search() {
         prepare(data2, data);
         prepare(pattern2, pattern);
 
-        t_kmp_pattern<pattern_search_sample_data> kmp;
-        int idx = kmp.match(&data2[0], data2.size(), &pattern2[0], pattern2.size());
+        t_kmp<pattern_search_sample_data> kmp;
+        int idx = kmp.search(&data2[0], data2.size(), &pattern2[0], pattern2.size());
         _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct> %i", idx);
     }
 
@@ -101,16 +101,16 @@ void test_pattern_search() {
 
         prepare(data2, data);
         prepare(pattern2, pattern);
-        t_kmp_pattern<pattern_search_sample_data*> kmp;
+        t_kmp<pattern_search_sample_data*> kmp;
         auto comparator = [](const pattern_search_sample_data* lhs, const pattern_search_sample_data* rhs) -> bool { return (lhs->value == rhs->value); };
-        int idx = kmp.match(&data2[0], data2.size(), &pattern2[0], pattern2.size(), 0, comparator);
+        int idx = kmp.search(&data2[0], data2.size(), &pattern2[0], pattern2.size(), 0, comparator);
         _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct*> %i using comparator", idx);
         clean(data2);
         clean(pattern2);
     }
 }
 
-void test_multipattern_search() {
+void test_aho_corasick() {
     _test_case.begin("t_aho_corasick");
 
     struct testvector {
@@ -130,7 +130,7 @@ void test_multipattern_search() {
         {
             // t_aho_corasick ac;
             // ac.insert("abc", 3).insert("ab", 2).insert("bc", 2).insert("a", 1);
-            // ac.build_state_machine();
+            // ac.build();
             // const char* source = "abcaabc";
             // ac.search(source, strlen(source));
             "abcaabc",
@@ -158,7 +158,7 @@ void test_multipattern_search() {
         {
             // t_aho_corasick ac;
             // ac.insert("cache", 5).insert("he", 2).insert("chef", 4).insert("achy", 4);
-            // ac.build_state_machine();
+            // ac.build();
             // const char* source = "cacachefcachy";
             // ac.search(source, strlen(source));
             "cacachefcachy",
@@ -181,7 +181,7 @@ void test_multipattern_search() {
         {
             // t_aho_corasick ac;
             // ac.insert("he", 2).insert("she", 3).insert("hers", 4).insert("his", 3);
-            // ac.build_state_machine();
+            // ac.build();
             // const char* source = "ahishers";
             // ac.search(source, strlen(source));
             "ahishers",
@@ -223,25 +223,26 @@ void test_multipattern_search() {
             _logger->writeln(R"(expect pattern[%i](as is "%s") at source[%zi])", patid, p, idx);
         }
 
-        ac.build_state_machine();
+        ac.build();
         result = ac.search(item.source, strlen(item.source));
 
         _test_case.assert(expect == result, __FUNCTION__, R"(multiple pattern search "%s")", item.source);
     }
 
     t_aho_corasick<char> ac;
-    ac.insert("he", 2).insert("she", 3).insert("hers", 4).insert("his", 3);
-    ac.build_state_machine();
+    ac.insert("he", 2);
+    ac.insert("she", 3);
+    ac.insert("hers", 4);
+    ac.insert("his", 3);
+    ac.build();
     const char* source = "ahishers";
-    ac.search(source, strlen(source));
-
     std::multimap<size_t, unsigned> result;
     std::multimap<size_t, unsigned> expect = {{4, 0}, {3, 1}, {4, 2}, {1, 3}};
     result = ac.search(source, strlen(source));
     for (auto item : result) {
         _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
     }
-    _test_case.assert(result == expect, __FUNCTION__, "multiple pattern");
+    _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm");
 }
 
 void test_trie() {
@@ -685,7 +686,7 @@ void test_wildcards2() {
  * https://www.geeksforgeeks.org/merging-intervals/
  * applied parser::psearchex
  */
-void merge_overlapping_intervals() {
+void test_merge_ovl_intervals() {
     _test_case.begin("merge overlapping intervals");
     t_merge_ovl_intervals<int> moi;
     typedef t_merge_ovl_intervals<int>::interval interval;
@@ -752,6 +753,422 @@ void merge_overlapping_intervals() {
     bs.clear();
 }
 
+/**
+ * @brief   Aho Corasick + wildcard
+ * @remarks
+ *  single(?) - testing
+ *  any(*) - not supported yet
+ *
+ *  sketch ... aho corasick + wildcard
+ *
+ *  pattern
+ *      his her hers ?is h?r h*s
+ *      (0 his, 1 her, 2 hers, 3 ?is, 4 h?r, 5 h*s)
+ *  sketch              asis    tobe
+ *      h
+ *          e
+ *              r       o(1) -> o(1,4)
+ *                  s   o(2)
+ *          i
+ *              s       o(0) -> o(0,3,5)
+ *          ?
+ *              r       o(4)
+ *          *
+ *              s       o(7)    check length of *
+ *      a
+ *          ?           o(6)
+ *      ?
+ *          i
+ *              s       o(3)
+ *          ?
+ *              s       s(5)
+ *
+ *  input
+ *      ahishers
+ *  results             asis        approach    expect      final       checkpoint
+ *  results.single(?)
+ *     [01234567]
+ *      ahishers
+ *      a?              o(6)        -           0[6]        0[6]
+ *       his            o(0)        o(0,3,5)    1[0,3,5]    1[0,3,5]
+ *       ?is            o(3)        -
+ *       ??s            o(5)        -
+ *          her         o(1)        o(1,4)      4[1,4]      4[1,2,4]
+ *          h?r         o(4)        -
+ *          hers        o(2)        -           4[2]
+ *           ??s        o(5)        -           5[5]        5[5]
+ *  results.any(*)
+ *       h*s            o(6)        -                       1[0,3,5,6]
+ *          h**s        o(6)        -                       4[1,2,4,6]  actual distance shoud be counted
+ *
+ * @sample
+ *          // t_aho_corasick<char> ac(memberof_defhandler<char>);
+ *          t_aho_corasick_wildcard<char> ac(memberof_defhandler<char>, '?', '*');
+ *          // his her hers ?is h?r h*s
+ *          ac.insert("his", 3);   // pattern 0
+ *          ac.insert("her", 3);   // pattern 1
+ *          ac.insert("hers", 4);  // pattern 2
+ *          ac.insert("?is", 3);   // pattern 3
+ *          ac.insert("h?r", 3);   // pattern 4
+ *          ac.insert("??s", 3);   // pattern 5
+ *          ac.insert("a?", 2);    // pattern 6 - wildcards not in previous
+ *          ac.build();
+ *          const char* source = "ahishers";
+ *          std::multimap<size_t, unsigned> result;
+ *          std::multimap<size_t, unsigned> expect = {{0, 6}, {1, 0}, {1, 3}, {1, 5}, {4, 1}, {4, 2}, {4, 4}, {5, 5}};
+ *          result = ac.search(source, strlen(source));
+ *          for (auto item : result) {
+ *              _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
+ *          }
+ *          _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm + wildcards");
+ */
+template <typename BT = char, typename T = BT>
+class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
+   public:
+    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
+    typedef typename t_aho_corasick<BT, T>::trienode trienode;
+    enum {
+        flag_single = (1 << 0),
+        flag_any = (1 << 1),
+    };
+
+   public:
+    t_aho_corasick_wildcard(memberof_t memberof = memberof_defhandler<BT, T>, const BT& wildcard_single = BT(), const BT& wildcard_any = BT())
+        : t_aho_corasick<BT, T>(memberof), _wildcard_single(wildcard_single), _wildcard_any(wildcard_any), _logger(nullptr) {}
+
+    void enable_debug(logger* logger = nullptr) { _logger = logger; }
+
+   protected:
+    virtual void doinsert(const T* pattern, size_t size) {
+        // sketch - classify into _nowildcards or _wildcards according to wildcards
+        pattern_t p;
+        bool is_wild = false;
+        for (size_t i = 0; i < size; ++i) {
+            const BT& t = this->_memberof(pattern, i);
+            if (t == _wildcard_single) {
+                is_wild = true;
+            }
+            p.push_back(t);
+        }
+        if (is_wild) {
+            _wildcards.push_back(std::move(p));
+        } else {
+            _nowildcards.push_back(std::move(p));
+        }
+    }
+    virtual void doinsert_pattern(const BT* pattern, size_t size) {
+        if (pattern) {
+            trienode* current = this->_root;
+
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = pattern[i];
+                // sketch - same as t_aho_corasick<BT, T>::doinsert but added flag
+                if (_wildcard_single == t) {
+                    current->flag |= flag_single;
+                } else if (_wildcard_any == t) {
+                    current->flag |= flag_any;
+                }
+                trienode* child = current->children[t];
+                if (nullptr == child) {
+                    child = new trienode;
+                    current->children[t] = child;
+                }
+                current = child;
+            }
+
+            size_t index = this->_patterns.size();
+            current->output.insert(index);
+            this->_patterns.insert({index, size});
+
+            // if (_logger) {
+            //     _logger->dump(pattern, size);
+            //     _logger->writeln("index %zi added", index);
+            // }
+        }
+    }
+    virtual void doinsert_wildcard(const BT* pattern, size_t size) {
+        if (pattern && size) {
+            size_t index = this->_patterns.size();
+            doinsert_pattern(pattern, size);
+
+            // sketch - merge wildcard pattern id into the output of matching patterns.
+
+            std::queue<std::pair<trienode*, int>> q;
+            q.push({this->_root, 0});
+
+            while (false == q.empty()) {
+                auto [node, i] = q.front();
+                q.pop();
+
+                if (size == i) {
+                    if (node->output.size()) {
+                        node->output.insert(index);
+                    }
+                }
+                const BT& t = pattern[i];
+                if (_wildcard_single == t) {
+                    for (auto [t, child] : node->children) {
+                        q.push({child, i + 1});
+                        q.push({child, i});
+                    }
+                } else {
+                    auto iter = node->children.find(t);
+                    if (node->children.end() != iter) {
+                        q.push({iter->second, i + 1});
+                    }
+                }
+            }
+        }
+    }
+    virtual void doinsert_all() {
+        // _nowildcards first
+        for (auto item : _nowildcards) {
+            doinsert_pattern(&item[0], item.size());
+        }
+        // and then _wildcards
+        for (auto item : _wildcards) {
+            doinsert_wildcard(&item[0], item.size());
+        }
+    }
+    virtual void dobuild() {
+        // insert and build
+        doinsert_all();
+        t_aho_corasick<BT, T>::dobuild();
+    }
+    virtual void dosearch(const T* source, size_t size, std::multimap<size_t, unsigned>& result) {
+        std::map<size_t, std::set<unsigned>> res;
+        dosearch(source, size, res);
+        for (auto [pos, set] : res) {
+            for (auto pattern : set) {
+                result.insert({pos, pattern});
+            }
+        }
+    }
+    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<unsigned>>& result) {
+        if (source) {
+            typedef std::pair<trienode*, size_t> pair_t;
+            std::set<pair_t> history;
+            std::queue<pair_t> q;
+            q.push({this->_root, 0});
+            auto enqueue = [&](trienode* node, size_t idx) -> void {
+                if (idx < size) {
+                    // approach 1
+                    // q.push({node, idx});
+
+                    // approach 2
+                    pair_t p = {node, idx};
+                    auto iter = history.find(p);
+                    if (history.end() == iter) {
+                        q.push(p);
+                        history.insert(p);
+                    }
+                }
+            };
+            auto print_children = [&](typename std::unordered_map<BT, trienode*>::const_iterator iter, basic_stream& bs) -> void {
+                bs.printf("%c, %p", iter->first, iter->second);
+            };
+            auto dump = [&](trienode* current) -> void {
+                if (_logger) {
+                    basic_stream bs;
+                    basic_stream output;
+                    print_pair<std::unordered_map<BT, trienode*>, basic_stream>(current->children, bs, print_children);
+                    print<std::set<unsigned>, basic_stream>(current->output, output);
+                    if (false == bs.empty()) {
+                        _logger->writeln("-- children : %s", bs.c_str());
+                    }
+                    if (false == output.empty()) {
+                        _logger->writeln("-- output   : %s", output.c_str());
+                    }
+                }
+            };
+            while (false == q.empty()) {
+                auto [current, i] = q.front();
+                history.insert({current, i});
+                q.pop();
+
+                if (size == i) {
+                    continue;
+                }
+
+                const BT& t = this->_memberof(source, i);
+                if (_logger) {
+                    _logger->writeln("[%i] %c", i, t);
+                }
+                while ((current != this->_root) && (current->children.end() == current->children.find(t)) && (false == has_wildcard(current))) {
+                    current = current->failure;
+                }
+                auto iter = current->children.find(t);
+                if (current->children.end() != iter) {
+                    current = iter->second;
+                    this->collect_results(current, i, result);
+                    enqueue(current, i + 1);
+                    dump(current);
+
+                    if (current->flag & flag_single) {
+                        auto child = current->children[_wildcard_single];
+                        enqueue(child, i + 1);
+                        dump(child);
+                    }
+                } else if (current->flag & flag_single) {
+                    auto single = current->children[_wildcard_single];
+                    this->collect_results(single, i, result);
+                    enqueue(single, i + 1);
+                    dump(single);
+
+                    // yield
+                    if (current->failure) {
+                        auto iter = current->failure->children.find(t);
+                        if (current->children.end() != iter) {
+                            auto child = iter->second;
+                            dump(child);
+                            enqueue(child, i + 1);
+                        }
+                    }
+                } else if (current->flag & flag_any) {
+                    auto child = current->children[_wildcard_any];
+                    this->collect_results(child, i, result);
+                    enqueue(child, i + 1);
+                    dump(child);
+                }
+            }
+        }
+    }
+
+   private:
+    bool has_wildcard(trienode* node) { return node->flag > 0; } /* check node->flag & (flag_single | flag_any) */
+    BT _wildcard_single;
+    BT _wildcard_any;
+    typedef typename std::vector<BT> pattern_t;
+    typedef typename std::list<pattern_t> patterns_t;
+    patterns_t _wildcards;
+    patterns_t _nowildcards;
+    logger* _logger;
+};
+
+void test_aho_corasick_wildcard() {
+    // studying...
+    _test_case.begin("t_aho_corasick + wildcards");
+
+    const unsigned MAX_PATTERN = 10;
+    struct testvector {
+        const char* source;
+        unsigned count_pattern;
+        struct {
+            const char* pattern;
+            unsigned len;
+        } pat[MAX_PATTERN];
+        unsigned count_expect;
+        struct {
+            size_t pos;
+            unsigned pid;  // pattern id
+        } expect[20];
+    } _table[] = {
+        {"ahishers",
+         7,
+         {
+             {"his", 3},
+             {"her", 3},
+             {"hers", 4},
+             {"?is", 3},
+             {"h?r", 3},
+             {"??s", 3},
+             {"a?", 2},
+         },
+         8,
+         {{0, 6}, {1, 0}, {1, 3}, {1, 5}, {4, 1}, {4, 2}, {4, 4}, {5, 5}}},
+        {"ahishers",
+         // a
+         //     ?
+         //         i   [0]
+         // ?
+         //     i
+         //         s   [1]
+         //     s       [2]
+         //     ?
+         //         s   [4]
+         // h
+         //     ?       [3]
+         5,
+         {
+             {"a?i", 3},
+             {"?is", 3},
+             {"?s", 2},
+             {"h?", 2},
+             {"??s", 3},
+         },
+         // ahishers
+         // a?i         0[0]
+         //  ?is        1[1]
+         //  h?         1[3]
+         //  ??s        1[4]
+         //   ?s        2[2]
+         //     h?      4[3]
+         //      ??s    5[4]
+         //       ?s    6[2]
+         8,
+         {{0, 0}, {1, 1}, {1, 3}, {1, 4}, {2, 2}, {4, 3}, {5, 4}, {6, 2}}},
+        {
+            "banana",
+            //  b
+            //      a
+            //          n   [0]
+            //  a
+            //      n
+            //          ?   [1]
+            //      ?
+            //          a   [2]
+            3,
+            {
+                {"ban", 3},
+                {"an?", 3},
+                {"a?a", 3},
+            },
+            // banana
+            // ban     0[0]
+            //  an?    1[1]
+            //  a?a    1[2]
+            //    an?  3[1]
+            //    a?a  3[2]
+            5,
+            {
+                {0, 0},
+                {1, 1},
+                {1, 2},
+                {3, 1},
+                {3, 2},
+            },
+        },
+    };
+
+    const OPTION& option = _cmdline->value();
+
+    for (auto item : _table) {
+        // t_aho_corasick<char> ac(memberof_defhandler<char>);
+        t_aho_corasick_wildcard<char> ac(memberof_defhandler<char>, '?', '*');
+        std::multimap<size_t, unsigned> result;
+        std::multimap<size_t, unsigned> expect;
+
+        ac.enable_debug(&(*_logger));
+
+        _logger->writeln("source %.*s", strlen(item.source), item.source);
+
+        for (unsigned i = 0; i < item.count_pattern; i++) {
+            ac.insert(item.pat[i].pattern, item.pat[i].len);
+            _logger->writeln("pattern %.*s", item.pat[i].len, item.pat[i].pattern);
+        }
+        ac.build();
+
+        result = ac.search(item.source, strlen(item.source));
+        for (auto item : result) {
+            _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
+        }
+        for (unsigned i = 0; i < item.count_expect; i++) {
+            expect.insert({item.expect[i].pos, item.expect[i].pid});
+        }
+        _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm + wildcards");
+    }
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -767,8 +1184,8 @@ int main(int argc, char** argv) {
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
 
-    test_pattern_search();
-    test_multipattern_search();
+    test_kmp();
+    test_aho_corasick();
     test_trie();
     test_trie_autocompletion();
     test_trie_lookup();
@@ -779,7 +1196,8 @@ int main(int argc, char** argv) {
     test_lcp();
     test_wildcards();
     test_wildcards2();
-    merge_overlapping_intervals();
+    test_merge_ovl_intervals();
+    test_aho_corasick_wildcard();
 
     _logger->flush();
 

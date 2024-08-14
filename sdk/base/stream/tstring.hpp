@@ -29,14 +29,17 @@ class ansi_string : public stream_t {
     ansi_string(ansi_string&& rhs);
     virtual ~ansi_string();
 
-    byte_t* data() const;
-    uint64 size() const;
-    return_t write(const void* data, size_t size);
-    return_t fill(size_t l, char c);
-    return_t clear();
+    virtual byte_t* data() const;
+    virtual uint64 size() const;
+    virtual return_t write(const void* data, size_t size);
+    virtual return_t fill(size_t l, char c);
+    virtual return_t clear();
 
-    return_t printf(const char* buf, ...);
-    return_t vprintf(const char* buf, va_list ap);
+    virtual bool empty();
+    virtual bool occupied();
+
+    virtual return_t printf(const char* buf, ...);
+    virtual return_t vprintf(const char* buf, va_list ap);
 #if defined _WIN32 || defined _WIN64
     return_t printf(const wchar_t* buf, ...);
     return_t vprintf(const wchar_t* buf, va_list ap);
@@ -159,14 +162,17 @@ class wide_string : public stream_t {
     wide_string(wide_string&& rhs);
     virtual ~wide_string();
 
-    byte_t* data() const;
-    uint64 size() const;
-    return_t write(const void* data, size_t size);
-    return_t fill(size_t l, char c);
-    return_t clear();
+    virtual byte_t* data() const;
+    virtual uint64 size() const;
+    virtual return_t write(const void* data, size_t size);
+    virtual return_t fill(size_t l, char c);
+    virtual return_t clear();
 
-    return_t printf(const char* buf, ...);
-    return_t vprintf(const char* buf, va_list ap);
+    virtual bool empty();
+    virtual bool occupied();
+
+    virtual return_t printf(const char* buf, ...);
+    virtual return_t vprintf(const char* buf, va_list ap);
     return_t printf(const wchar_t* buf, ...);
     return_t vprintf(const wchar_t* buf, va_list ap);
 

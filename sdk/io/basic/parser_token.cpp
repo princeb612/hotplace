@@ -90,7 +90,7 @@ std::string parser::token::as_string(const char* p) {
     return obj;
 }
 
-void parser::token::visit(const char* p, std::function<void(const parser::token* t)> f) {
+void parser::token::visit(const char* p, std::function<void(const parser::token* t)> f) const {
     if (p && f) {
         f(this);
     }

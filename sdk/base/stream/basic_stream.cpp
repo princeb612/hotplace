@@ -93,6 +93,10 @@ return_t basic_stream::fill(size_t l, char c) {
 
 return_t basic_stream::clear() { return _bio.clear(_handle); }
 
+bool basic_stream::empty() { return _bio.empty(_handle); }
+
+bool basic_stream::occupied() { return _bio.occupied(_handle); }
+
 return_t basic_stream::printf(const char* buf, ...) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -246,6 +250,14 @@ bool basic_stream::operator<(const basic_stream& rhs) const { return 0 > strcmp(
 bool basic_stream::operator>(const basic_stream& rhs) const { return 0 < strcmp((*this).c_str(), rhs.c_str()); }
 
 bool basic_stream::operator==(const basic_stream& rhs) const { return 0 == strcmp((*this).c_str(), rhs.c_str()); }
+
+bool basic_stream::operator==(const char* rhs) const {
+    bool ret = false;
+    if (rhs) {
+        ret = (0 == strcmp((*this).c_str(), rhs));
+    }
+    return ret;
+}
 
 std::string& operator+=(std::string& lhs, const basic_stream& rhs) {
     lhs += rhs.c_str();

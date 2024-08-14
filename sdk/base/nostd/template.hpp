@@ -108,6 +108,39 @@ void print_pair(const container_t& c, stream_type& s, const std::string& mark_pr
 }
 
 /**
+ * @brief   util
+ * @sample
+ *          typedef std::unordered_map<BT, trienode*> children_t;
+ *          auto handler = [&](typename children_t::const_iterator iter, basic_stream& bs) -> void {
+ *              bs.printf("%c, %p", iter->first, iter->second);
+ *          };
+ *          print_pair<children_t, basic_stream>(node->children, bs, handler);
+ *          _logger->writeln("children : %s", bs.c_str());
+ */
+template <typename container_t, typename stream_type>
+void print_pair(const container_t& c, stream_type& s, std::function<void(typename container_t::const_iterator, stream_type&)> f,
+                const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ", const std::string& mark_epilogue = "]") {
+    auto func = [&](typename container_t::const_iterator iter, int where) -> void {
+        switch (where) {
+            case seek_t::seek_begin:
+                s << mark_prologue << "{";
+                f(iter, s);
+                s << "}";
+                break;
+            case seek_t::seek_move:
+                s << mark_delimiter << "{";
+                f(iter, s);
+                s << "}";
+                break;
+            case seek_t::seek_end:
+                s << mark_epilogue;
+                break;
+        }
+    };
+    for_each_const<container_t>(c, func);
+}
+
+/**
  * @brief   merge overlapping intervals
  * @refer   https://www.geeksforgeeks.org/merging-intervals/
  *          merge all overlapping intervals into one and output the result which should have only mutually exclusive intervals

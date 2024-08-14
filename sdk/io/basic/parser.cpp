@@ -122,24 +122,32 @@ return_t parser::parse(parser::context& context, const char* p) {
     return ret;
 }
 
+return_t parser::parse(parser::context& context, const std::string& p) { return parse(context, p.c_str(), p.size()); }
+
+return_t parser::parse(parser::context& context, const basic_stream& p) { return parse(context, p.c_str(), p.size()); }
+
 parser::search_result parser::csearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos) {
     return context.csearch(this, pattern, size_pattern, pos);  // handle by characters
 }
 
 parser::search_result parser::csearch(const parser::context& context, const std::string& pattern, unsigned int pos) {
-    return csearch(context, pattern.c_str(), pattern.size(), pos);  // handle by characters
+    return context.csearch(this, pattern, pos);  // handle by characters
+}
+
+parser::search_result parser::csearch(const parser::context& context, const basic_stream& pattern, unsigned int pos) {
+    return context.csearch(this, pattern, pos);  // handle by characters
 }
 
 parser::search_result parser::wsearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos) {
-    return_t ret = errorcode_t::success;
-    parser::context pattern_context;
-    ret = pattern_context.parse(this, pattern, size_pattern, parser_flag_t::parse_lookup_readonly);  // handle by word not characters
-    // if success, all words of pattern in dictionary
-    return (errorcode_t::success == ret) ? context.wsearch(this, pattern_context, pos) : search_result();
+    return context.wsearch(this, pattern, size_pattern, pos);
 }
 
 parser::search_result parser::wsearch(const parser::context& context, const std::string& pattern, unsigned int pos) {
-    return wsearch(context, pattern.c_str(), pattern.size(), pos);  // handle by word not characters
+    return context.wsearch(this, pattern, pos);
+}
+
+parser::search_result parser::wsearch(const parser::context& context, const basic_stream& pattern, unsigned int pos) {
+    return context.wsearch(this, pattern, pos);
 }
 
 bool parser::compare(parser* obj, const char* lhs, const char* rhs) {

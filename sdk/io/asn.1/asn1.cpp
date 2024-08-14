@@ -120,6 +120,8 @@ void asn1::clear() {
     for (auto item : _types) {
         item->release();
     }
+    _types.clear();
+    _dictionary.clear();
     _namevalues.clear();
     _idxvalues.clear();
 }

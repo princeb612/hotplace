@@ -34,6 +34,8 @@ class stream_t {
     virtual return_t write(const void *data, size_t size) = 0;
     virtual return_t fill(size_t l, char c) = 0;
     virtual return_t clear() = 0;
+    virtual bool empty() = 0;
+    virtual bool occupied() = 0;
 
     virtual return_t printf(const char *buf, ...) = 0;
     virtual return_t vprintf(const char *buf, va_list ap) = 0;

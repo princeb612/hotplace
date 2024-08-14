@@ -39,7 +39,7 @@ t_shared_instance<cmdline_t<OPTION>> _cmdline;
     { e1, e2, e3, e4 }
 
 // X.690 8.1.3 Length octets
-void x690_8_1_3_length_octets() {
+void test_x690_8_1_3_length_octets() {
     _test_case.begin("ITU-T X.690 8.1.3");
     struct testvector {
         uint32 i;
@@ -69,7 +69,7 @@ void x690_8_1_3_length_octets() {
 }
 
 // X.690 8.1.5 end-of-contents octets
-void x690_8_1_5_end_of_contents() {
+void test_x690_8_1_5_end_of_contents() {
     _test_case.begin("ITU-T X.690");
     asn1_encode enc;
     binary_t bin;
@@ -81,7 +81,7 @@ void x690_8_1_5_end_of_contents() {
     }
 }
 
-void x690_encoding_value() {
+void test_x690_encoding_value() {
     _test_case.begin("ITU-T X.690 8.2, 8.3, 8.5, 8.8");
     struct testvector {
         variant var;
@@ -285,7 +285,7 @@ void dump_asn1(asn1* object, const char* expect, const char* text) {
     }
 }
 
-void x690_encoding_typevalue() {
+void test_x690_encoding_typevalue() {
     _test_case.begin("ITU-T X.690 type and value");
 
     // X.690 8.14 encoding of a tagged value
@@ -302,26 +302,33 @@ void x690_encoding_typevalue() {
         const char* text;
     } _table[] = {
         // X.690 8.2
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_boolean), variant(true), "01 01 ff", "X.690 8.2 #1"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_boolean), variant(true), "01 01 ff", "X.690 8.2 true"),
 
         // X.690 8.3
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_integer), variant(128), "02 02 00 80", "X.690 8.3 #1"),
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_integer), variant(300), "02 02 01 2c", "X.690 8.3 #2"),
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_integer), variant(-127), "02 01 81", "X.690 8.3 #3"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_integer), variant(128), "02 02 00 80", "X.690 8.3 128"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_integer), variant(300), "02 02 01 2c", "X.690 8.3 300"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_integer), variant(-127), "02 01 81", "X.690 8.3 -127"),
 
         // X.690 8.5
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_real), variant(1.0), "0903800001", "X.690 8.5 #1"),
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_real), variant(-1.0), "0903c00001", "X.690 8.5 #2"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_real), variant(1.0), "0903800001", "X.690 8.5 1.0"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_real), variant(-1.0), "0903c00001", "X.690 8.5 -1.0"),
 
         // X.690 8.6 encoding of a bitstring value
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_bitstring), variant("0A3B5F291CD"), "03 07 04 0A 3B 5F 29 1C D0", "X.690 8.6 #1"),
+        // commencing with the leading bit and proceeding to the trailing bit
+        // if(size(input) % 2) { pad = '0'; padbit = 4; }
+        // encode(asn1_tag_bitstring).encode(padbit).encode(input).encode(pad)
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_bitstring), variant("0a3b5f291cd"), "03 07 04 0A 3B 5F 29 1C D0", "X.690 8.6 0a3b5f291cd"),
+
+        // X.690 8.7
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_octstring), variant("0123456789abcdef"), "04 08 01 23 45 67 89 ab cd ef", "X.690 8.7.4 0123456789abcdef"),
 
         // X.690 8.8
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_null), variant(), "05 00", "X.690 8.8 #1"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_null), variant(), "05 00", "X.690 8.8 null"),
 
         // X.690 8.9
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_ia5string), variant("Smith"), "16 05 53 6d 69 74 68", "X.690 8.9 #1"),
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_ia5string), variant("test1@rsa.com"), "16 0d 74 65 73 74 31 40 72 73 61 2e 63 6f 6d", "X.690 8.9 #1"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_ia5string), variant("Smith"), "16 05 53 6d 69 74 68", "X.690 8.9 Smith"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_ia5string), variant("test1@rsa.com"), "16 0d 74 65 73 74 31 40 72 73 61 2e 63 6f 6d",
+                          "X.690 8.9 test1@rsa.com"),
 
         // X.690 11.7 generalized time
         TESTVECTOR_ENTRY4(new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 5, 21, 0, 0, 0)),
@@ -333,30 +340,46 @@ void x690_encoding_typevalue() {
 
         // X.690 8.14 encoding of a tagged value
         // case 1. Type1 ::= VisibleString
-        TESTVECTOR_ENTRY4(type1, variant("Jones"), "1A 05 4A 6F 6E 65 73", "X.690 8.14 #1"),
+        TESTVECTOR_ENTRY4(type1, variant("Jones"), "1A 05 4A 6F 6E 65 73", "X.690 8.14 Type1"),
         // case 2. Type2 ::= [Application 3] implicit Type1
-        TESTVECTOR_ENTRY4(type2, variant("Jones"), "43 05 4A 6F 6E 65 73", "X.690 8.14 #2"),
+        TESTVECTOR_ENTRY4(type2, variant("Jones"), "43 05 4A 6F 6E 65 73", "X.690 8.14 Type2"),
         // case 3. Type3 ::= [2] Type2
-        TESTVECTOR_ENTRY4(type3, variant("Jones"), "a2 07 43 05 4A 6F 6E 65 73", "X.690 8.14 #3"),
+        TESTVECTOR_ENTRY4(type3, variant("Jones"), "a2 07 43 05 4A 6F 6E 65 73", "X.690 8.14 Type3"),
         // case 4. Type4 ::= [Application 7] implicit Type3
-        TESTVECTOR_ENTRY4(type4, variant("Jones"), "67 07 43 05 4A 6F 6E 65 73", "X.690 8.14 #4"),
+        TESTVECTOR_ENTRY4(type4, variant("Jones"), "67 07 43 05 4A 6F 6E 65 73", "X.690 8.14 Type4"),
         // case 5. Type5 ::= [2] implicit Type2
-        TESTVECTOR_ENTRY4(type5, variant("Jones"), "82 05 4A 6F 6E 65 73", "X.690 8.14 #5"),
+        TESTVECTOR_ENTRY4(type5, variant("Jones"), "82 05 4A 6F 6E 65 73", "X.690 8.14 Type5"),
 
         // X.690 8.19 object identifier
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1"), "06 05 2b 06 01 04 01", "X.690 8.19 #1"),
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.2.840.113549"), "06 06 2A 86 48 86 F7 0d", "X.690 8.19 #2"),
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1.311.21.20"), "06 09 2b 06 01 04 01 82 37 15 14", "X.690 8.19 #3"),
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1.311.60.2.1.1"), "06 0B 2B 06 01 04 01 82 37 3C 02 01 01", "X.690 8.19 #4"),
+        // http://oid-info.com/cgi-bin/display?tree=
+        // ITU-T(0)
+        // ISO(1)
+        // - member-body(2)
+        //   - us(840)
+        // - identified-organizaton(3)
+        //   - dod(6)
+        //     - internet(1)
+        //       - private(4)
+        //         - enterprise(1)
+        // joint-iso-itu-t(2)
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1"), "06 05 2b 06 01 04 01", "X.690 8.19 OID #1"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.2.840.113549"), "06 06 2A 86 48 86 F7 0d", "X.690 8.19 OID #2"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1.311.21.20"), "06 09 2b 06 01 04 01 82 37 15 14", "X.690 8.19 OID #3"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1.311.60.2.1.1"), "06 0B 2B 06 01 04 01 82 37 3C 02 01 01", "X.690 8.19 OID #4"),
         TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("1.2.840.10045.3.1.7"), "06 08 2a 86 48 ce 3d 03 01 07", "X.690 8.19 #5"),
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("2.100.3"), "06 03 81 34 03", "X.690 8.19 #6"),  // 0..39 < 100 ??
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("2.154"), "06 02 81 6a", "X.690 8.19 #7"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("2.100.3"), "06 03 81 34 03", "X.690 8.19 OID #6"),  // 0..39 < 100 ??
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_objid), variant("2.154"), "06 02 81 6a", "X.690 8.19 OID #7"),
 
         // X.690 8.20 encoding of a relative object identifier value
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_reloid), variant("8571.3.2"), "0D 04 C27B0302", "X.690 8.20 #1"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_reloid), variant("8571.3.2"), "0D 04 C27B0302", "X.690 8.20 relative object identifier"),
 
         // X.690 8.21.5.4 Example Name ::= VisibleString
-        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_visiblestring), variant("Jones"), "1a 05 4a6f6e6573", "X.690 8.21 #1"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_visiblestring), variant("Jones"), "1a 05 4a6f6e6573", "X.690 8.21 VisibleString"),
+        // X.690 8.23
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_printstring), variant("Test User 1"), "13 0b 54 65 73 74 20 55 73 65 72 20 31",
+                          "X.690 8.23 PrintableString"),
+        TESTVECTOR_ENTRY4(new asn1_object(asn1_type_t61string), variant("cl'es publiques"), "14 0f 63 6c 27 65 73 20 70 75 62 6c 69 71 75 65 73",
+                          "X.690 8.23 T61String"),  // // replace Â C2 for ' 27
     };
 
     for (auto item : _table) {
@@ -368,22 +391,8 @@ void x690_encoding_typevalue() {
     }
 }
 
-// X.690 8.6 encoding of a bitstring value
-// commencing with the leading bit and proceeding to the trailing bit
-void x690_8_6_bitstring() {
-    _test_case.begin("ITU-T X.690 8.6");
-    // sketch - pseudo code
-    // if(size(input) % 2) { pad = '0'; padbit = 4; }
-    // encode(asn1_tag_bitstring).encode(padbit).encode(input).encode(pad)
-
-    // primitive
-    {
-        binary_t bin;
-        asn1_encode enc;
-        enc.bitstring(bin, "0A3B5F291CD");
-        _logger->dump(bin);
-        _test_case.assert(bin == base16_decode("0307040A3B5F291CD0"), __FUNCTION__, "X.690 8.6.4 BitString");
-    }
+void test_x690_constructed() {
+    _test_case.begin("ITU-T X.690 constructed");
 
     // constructed
     // X.690 10.2 String encoding forms
@@ -406,19 +415,8 @@ void x690_8_6_bitstring() {
     }
 }
 
-void x690_8_7_octstring() {
-    _test_case.begin("ITU-T X.690 8.7");
-    {
-        binary_t bin;
-        asn1_encode enc;
-        enc.octstring(bin, "0123456789abcdef");
-        _logger->dump(bin);
-        _test_case.assert(bin == base16_decode_rfc("04 08 01 23 45 67 89 ab cd ef"), __FUNCTION__, "X.690 8.7.4 octstring");
-    }
-}
-
 // X.690 8.9 encoding of a sequence value
-void x690_8_9_sequence() {
+void test_x690_8_9_sequence() {
     _test_case.begin("ITU-T X.690 8.9");
     // Sequence Length  Contents
     // 30_16    0A_16
@@ -472,25 +470,7 @@ void x690_8_9_sequence() {
     }
 }
 
-void x690_8_23() {
-    _test_case.begin("ITU-T X.690 8.23");
-    {
-        binary_t bin;
-        asn1_encode enc;
-        enc.printablestring(bin, "Test User 1");
-        _logger->dump(bin);
-        _test_case.assert(bin == base16_decode_rfc("13 0b 54 65 73 74 20 55 73 65 72 20 31"), __FUNCTION__, "X.690 8.23 PrintableString");
-    }
-    {
-        binary_t bin;
-        asn1_encode enc;
-        enc.t61string(bin, "cl'es publiques");  // replace Â C2 for ' 27
-        _logger->dump(bin);
-        _test_case.assert(bin == base16_decode_rfc("14 0f 63 6c 27 65 73 20 70 75 62 6c 69 71 75 65 73"), __FUNCTION__, "X.690 8.23 T61String");
-    }
-}
-
-void x690_time() {
+void test_x690_time() {
     _test_case.begin("ITU-T X.690 UTCTime");
     datetime_t dt(1991, 5, 6, 16, 45, 40);
     binary_t bin;
@@ -500,8 +480,262 @@ void x690_time() {
     _test_case.assert(bin == base16_decode_rfc("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a"), __FUNCTION__, "X.690 UTCTime");
 }
 
-void test_asn1_typedef_value() {
-    _test_case.begin("ASN.1");
+enum token_tag_t {
+    token_userdef = 0x2000,
+
+    token_of,
+    token_default,
+};
+
+void test_x690_parse_and_compose() {
+    parser p;
+    p.get_config().set("handle_lvalue_usertype", 1);
+
+    struct asn1_token {
+        const char* token;
+        uint32 attr;
+        uint32 tag;
+    };
+    struct asn1_pattern {
+        int patid;
+        const char* pattern;
+    };
+
+    asn1_token asn1_tokens[] = {
+        {"::=", token_assign},
+        {"--", token_comments},
+        {"BOOLEAN", token_builtintype, token_bool},                 // BooleanType
+        {"INTEGER", token_builtintype, token_int},                  // IntegerType
+        {"BIT STRING", token_builtintype, token_bitstring},         // BitStringType
+        {"OCTET STRING", token_builtintype, token_octstring},       // OctetStringType
+        {"NULL", token_builtintype, token_null},                    // NullType, NullValue
+        {"REAL", token_builtintype, token_real},                    // RealType
+        {"IA5String", token_builtintype, token_ia5string},          // CharacterStringType
+        {"VisibleString", token_builtintype, token_visiblestring},  // CharacterStringType
+        {"SEQUENCE", token_sequence},                               // SequenceType
+        {"SEQUENCE OF", token_sequenceof},                          // SequenceOfType
+        {"SET", token_set},                                         // SetType
+        {"SET OF", token_setof},                                    // SetOfType
+        {"TRUE", token_bool, token_true},                           // BooleanValue
+        {"FALSE", token_bool, token_false},                         // BooleanValue
+        {"UNIVERSAL", token_class, token_universal},                // Class
+        {"APPLICATION", token_class, token_application},            // Class
+        {"PRIVATE", token_class, token_private},                    // Class
+        {"IMPLICIT", token_taggedmode, token_implicit},             // TaggedType
+        {"EXPLICIT", token_taggedmode, token_explicit},             // TaggedType
+        {"$pattern_builtintype", token_builtintype},
+        {"$pattern_usertype", token_usertype},
+        {"$pattern_class", token_class},
+        {"$pattern_sequence", token_sequence},
+        {"$pattern_sequenceof", token_sequenceof},
+        {"$pattern_set", token_set},
+        {"$pattern_setof", token_setof},
+        {"$pattern_taggedmode", token_taggedmode},
+        {"$pattern_assign", token_assign},
+    };
+    asn1_pattern asn1_patterns[] = {
+        {0, "$pattern_builtintype"},
+        {1, "$pattern_usertype"},
+        {2, "$pattern_sequence"},
+        {3, "$pattern_set"},
+        {4, "$pattern_sequenceof $pattern_usertype"},
+        {5, "$pattern_sequenceof $pattern_usertype DEFAULT"},
+        {6, "$pattern_sequenceof $pattern_usertype DEFAULT {}"},
+        {7, "{"},
+        {8, ","},
+        {9, "}"},
+        {10, "[$pattern_class 1] $pattern_builtintype"},
+        {11, "[$pattern_class 1] $pattern_usertype"},
+        {12, "[$pattern_class 1] $pattern_taggedmode $pattern_builtintype"},
+        {13, "[$pattern_class 1] $pattern_taggedmode $pattern_usertype"},
+        {14, "[$pattern_class 1] $pattern_taggedmode $pattern_sequence"},
+        {15, "[$pattern_class 1] $pattern_taggedmode $pattern_set"},
+        {16, "[1] $pattern_builtintype"},
+        {17, "[1] $pattern_usertype"},
+        {18, "[1] $pattern_taggedmode $pattern_builtintype"},
+        {19, "[1] $pattern_taggedmode $pattern_usertype"},
+        {20, "[1] $pattern_taggedmode $pattern_sequence"},
+        {21, "[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype"},
+        {22, "[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT"},
+        {23, "[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}"},
+        {24, "[1] $pattern_taggedmode $pattern_set"},
+        {25, "name $pattern_builtintype"},
+        {26, "name $pattern_usertype"},
+        {27, "name $pattern_sequence"},
+        {28, "name $pattern_set"},
+        {29, "name [$pattern_class 1] $pattern_builtintype"},
+        {30, "name [$pattern_class 1] $pattern_usertype"},
+        {31, "name [$pattern_class 1] $pattern_taggedmode $pattern_builtintype"},
+        {32, "name [$pattern_class 1] $pattern_taggedmode $pattern_usertype"},
+        {33, "name [$pattern_class 1] $pattern_taggedmode $pattern_sequence"},
+        {34, "name [$pattern_class 1] $pattern_taggedmode $pattern_set"},
+        {35, "name [1] $pattern_builtintype"},
+        {36, "name [1] $pattern_usertype"},
+        {37, "name [1] $pattern_taggedmode $pattern_builtintype"},
+        {38, "name [1] $pattern_taggedmode $pattern_usertype"},
+        {39, "name [1] $pattern_taggedmode $pattern_sequence"},
+        {40, "name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype"},
+        {41, "name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT"},
+        {42, "name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}"},
+        {43, "name [1] $pattern_taggedmode $pattern_set"},
+        {44, "$pattern_assign"},
+        {45, "name $pattern_assign [$pattern_class 1] $pattern_builtintype"},
+        {46, "name $pattern_assign [$pattern_class 1] $pattern_usertype"},
+        {47, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_builtintype"},
+        {48, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_usertype"},
+        {49, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_sequence"},
+        {50, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_set"},
+        {51, "name $pattern_assign [1] $pattern_builtintype"},
+        {52, "name $pattern_assign [1] $pattern_usertype"},
+        {53, "name $pattern_assign [1] $pattern_taggedmode $pattern_builtintype"},
+        {54, "name $pattern_assign [1] $pattern_taggedmode $pattern_usertype"},
+        {55, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequence"},
+        {56, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype"},
+        {57, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT"},
+        {58, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}"},
+        {59, "name $pattern_assign [1] $pattern_taggedmode $pattern_set"},
+    };
+
+    for (auto item : asn1_tokens) {
+        p.add_token(item.token, item.attr, item.tag);
+    }
+    int i = 0;
+    for (auto item : asn1_patterns) {
+        _logger->writeln(R"(add pattern[%2i] "%s")", i++, item.pattern);
+        p.add_pattern(item.pattern);
+    }
+
+    struct testvector {
+        const char* source;
+    } _table[] = {
+        R"(NULL)",
+        R"(INTEGER)",
+        R"(REAL)",
+        R"(SEQUENCE {name IA5String, ok BOOLEAN })",
+        R"(Date ::= VisibleString)",
+        R"(Date ::= [APPLICATION 3] IMPLICIT VisibleString)",
+        R"(
+           PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
+                name Name,
+                title [0] VisibleString,
+                number EmployeeNumber,
+                dateOfHire [1] Date,
+                nameOfSpouse [2] Name,
+                children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}}
+           ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
+           Name ::= [APPLICATION 1] IMPLICIT SEQUENCE {givenName VisibleString, initial VisibleString, familyName VisibleString}
+           EmployeeNumber ::= [APPLICATION 2] IMPLICIT  INTEGER
+           Date ::= [APPLICATION 3] IMPLICIT  VisibleString)",
+    };
+
+    for (auto item : _table) {
+        _logger->writeln("\e[1;33m%s\e[0m", item.source);
+
+        parser::context context;
+        p.parse(context, item.source);
+
+        auto result = p.psearchex(context);
+        for (auto r : result) {
+            parser::search_result res;
+            context.psearch_result(res, r.first, r.second);
+
+            _logger->writeln("pos [%2zi] pattern[%2i] %.*s", r.first, r.second, (unsigned)res.size, res.p);
+        }
+
+        auto dump_handler = [&](const token_description* desc) -> void {
+            _logger->writeln("line %zi type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(),
+                             desc->tag, desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+        };
+        context.for_each(dump_handler);
+    }
+
+    // $pattern_builtintype
+    //     new asn1_object(builtintype)
+    // [$pattern_class 1] $pattern_taggedmode $pattern_builtintype
+    //     new asn1_object(builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
+    // lvalue ::= $pattern_builtintype
+    //     new asn1_object(lvalue, builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
+    // name $pattern_builtintype
+    //     new asn1_object(name, new asn1_object(builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit))));
+    struct testvector2 {
+        const char* note;
+        asn1_object* asn1obj;
+    };
+    testvector2 table2[] = {
+        {"NULL", new asn1_object(asn1_type_null)},
+        {"INTEGER", new asn1_object(asn1_type_integer)},
+        {"REAL", new asn1_object(asn1_type_real)},
+        {"SEQUENCE {name IA5String, ok BOOLEAN}", new asn1_sequence(2, new asn1_object("name", asn1_type_ia5string), new asn1_object("ok", asn1_type_boolean))},
+        {"Date ::= VisibleString", new asn1_object("Date", asn1_type_visiblestring)},
+        {"Date ::= [APPLICATION 3] IMPLICIT VisibleString",
+         new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit))},
+    };
+
+    basic_stream bs;
+    asn1* object = new asn1;
+    for (auto item : table2) {
+        *object << item.asn1obj;
+        object->publish(&bs);
+        object->clear();
+        _logger->write(bs);
+
+        // compare
+        parser::context ctx;
+        parser::search_result res;
+        p.parse(ctx, item.note);
+        res = p.wsearch(ctx, bs);
+        bs.clear();
+
+        // psearchex
+        auto result = p.psearchex(ctx);
+        auto dump_handler = [&](const token_description* desc) -> void {
+            _logger->writeln("> type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->type, p.typeof_token(desc->type).c_str(), desc->tag, desc->index,
+                             desc->pos, desc->size, (unsigned)desc->size, desc->p);
+        };
+        std::map<uint32, asn1_type_t> typemap;
+        typemap.insert({token_bool, asn1_type_boolean});
+        typemap.insert({token_int, asn1_type_integer});
+        typemap.insert({token_bitstring, asn1_type_bitstring});
+        typemap.insert({token_octstring, asn1_type_octstring});
+        typemap.insert({token_null, asn1_type_null});
+        typemap.insert({token_real, asn1_type_real});
+        typemap.insert({token_ia5string, asn1_type_ia5string});
+        typemap.insert({token_visiblestring, asn1_type_visiblestring});
+
+        for (auto r : result) {
+            parser::search_result res;
+            ctx.psearch_result(res, r.first, r.second);
+
+            _logger->writeln("pos [%2zi] pattern[%2i] %.*s", r.first, r.second, (unsigned)res.size, res.p);
+            ctx.for_each(res, dump_handler);
+
+            token_description desc;
+            asn1_type_t type;
+
+            // pattern to asn1_object*
+            unsigned patid = r.second;
+            switch (patid) {
+                case 0:  // $pattern_builtintype
+                    ctx.get(res.begidx, &desc);
+                    type = typemap[desc.tag];
+                    *object << new asn1_object(type);
+                    break;
+            }
+            object->publish(&bs);
+            object->clear();
+            _logger->write(bs);
+        }
+
+        _test_case.assert(res.match, __FUNCTION__, item.note);
+
+        bs.clear();
+    }
+    object->release();
+}
+
+void test_x690_annex_a_1() {
+    _test_case.begin("X.690 A.1");
+
     // PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
     //      name Name,
     //      title [0] VisibleString,
@@ -514,13 +748,11 @@ void test_asn1_typedef_value() {
     // EmployeeNumber ::= [APPLICATION 2] IMPLICIT  INTEGER
     // Date ::= [APPLICATION 3] IMPLICIT  VisibleString
 
-    asn1* object = nullptr;
-    __try2 {
-        object = new asn1;
+    {
+        asn1* object = new asn1;
 
         auto node_personal = new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit));
         *node_personal << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
-                       //<< new asn1_object("title", new asn1_object(asn1_type_visiblestring, new asn1_tag(0)))
                        << new asn1_object("title", asn1_type_visiblestring, new asn1_tag(0))
                        << new asn1_object("number", new asn1_object("EmployeeNumber", asn1_type_referenced))
                        << new asn1_object("dateOfHire", new asn1_object("Date", asn1_type_referenced, new asn1_tag(1)))
@@ -551,6 +783,7 @@ void test_asn1_typedef_value() {
         // publish
         {
             object->publish(&bs1);
+            _logger->writeln("\e[1;33mcompose\e[0m");
             _logger->write(bs1);
         }
 
@@ -560,159 +793,21 @@ void test_asn1_typedef_value() {
             n = object->clone();
 
             binary_t bin;
-            n->publish(&bin);
             n->publish(&bs2);
+            _logger->writeln("\e[1;33mclone\e[0m");
             _logger->write(bs2);
-            _logger->dump(bin);
         }
         __finally2 {
             n->release();
             _test_case.assert(bs1 == bs2, __FUNCTION__, "publish");
         }
-    }
-    __finally2 { object->release(); }
-}
 
-enum token_tag_t {
-    token_userdef = 0x2000,
-
-    token_of,
-    token_default,
-};
-
-void x690_compose() {
-    struct testvector {
-        const char* source;
-    } _table[] = {
-        R"(NULL)",
-        R"(INTEGER)",
-        R"(REAL)",
-        R"(SEQUENCE {name IA5String, ok BOOLEAN })",
-        R"(Date ::= VisibleString)",
-        R"(Date ::= [APPLICATION 3] IMPLICIT VisibleString)",
-        R"(
-           ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
-           Name ::= [APPLICATION 1] IMPLICIT SEQUENCE {givenName VisibleString, initial VisibleString, familyName VisibleString}
-           EmployeeNumber ::= [APPLICATION 2] IMPLICIT  INTEGER
-           Date ::= [APPLICATION 3] IMPLICIT  VisibleString
-           PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
-                name Name,
-                title [0] VisibleString,
-                number EmployeeNumber,
-                dateOfHire [1] Date,
-                nameOfSpouse [2] Name,
-                children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}})",
-    };
-
-    for (auto item : _table) {
-        _logger->writeln("\e[1;33m%s\e[0m", item.source);
-
-        parser p;
-        p.get_config().set("handle_usertype", 1);
-
-        p.add_token("::=", token_assign)
-            .add_token("--", token_comments)
-            .add_token("BOOLEAN", token_builtintype, token_bool)                 // BooleanType
-            .add_token("INTEGER", token_builtintype, token_int)                  // IntegerType
-            .add_token("BIT STRING", token_builtintype, token_bitstring)         // BitStringType
-            .add_token("OCT STRING", token_builtintype, token_octstring)         // BitStringType
-            .add_token("NULL", token_builtintype, token_null)                    // NullType
-            .add_token("REAL", token_builtintype, token_real)                    // RealType
-            .add_token("IA5String", token_builtintype, token_ia5string)          // CharacterStringType
-            .add_token("VisibleString", token_builtintype, token_visiblestring)  // CharacterStringType
-            .add_token("SEQUENCE", token_sequence)
-            .add_token("SEQUENCE OF", token_sequenceof)
-            .add_token("SET", token_set)
-            .add_token("SET OF", token_setof)
-            // BooleanValue ::= TRUE | FALSE
-            .add_token("TRUE", token_bool, token_true)
-            .add_token("FALSE", token_bool, token_false)
-            // Class ::= UNIVERSAL | APPLICATION | PRIVATE | empty
-            .add_token("UNIVERSAL", token_class, token_universal)
-            .add_token("APPLICATION", token_class, token_application)
-            .add_token("PRIVATE", token_class, token_private)
-            // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
-            .add_token("IMPLICIT", token_taggedmode, token_implicit)
-            .add_token("EXPLICIT", token_taggedmode, token_explicit);
-
-        p.add_token("$pattern_builtintype", token_builtintype)
-            .add_token("$pattern_usertype", token_usertype)
-            .add_token("$pattern_class", token_class)
-            .add_token("$pattern_sequence", token_sequence)
-            .add_token("$pattern_sequenceof", token_sequenceof)
-            .add_token("$pattern_set", token_set)
-            .add_token("$pattern_setof", token_setof)
-            .add_token("$pattern_taggedmode", token_taggedmode)
-            .add_token("$pattern_assign", token_assign);
-
-        p.get_config().set("handle_lvalue_usertype", 1);
-
-        parser::context context;
-        p.parse(context, item.source);
-
-        p.add_pattern("$pattern_builtintype")
-            .add_pattern("$pattern_usertype")
-            .add_pattern("$pattern_sequence")
-            .add_pattern("$pattern_set")
-            .add_pattern("$pattern_sequenceof $pattern_usertype")
-            .add_pattern("$pattern_sequenceof $pattern_usertype DEFAULT")
-            .add_pattern("$pattern_sequenceof $pattern_usertype DEFAULT {}")
-            .add_pattern("{")
-            .add_pattern(",")
-            .add_pattern("}")
-            .add_pattern("[$pattern_class 1] $pattern_builtintype")
-            .add_pattern("[$pattern_class 1] $pattern_usertype")
-            .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_builtintype")
-            .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_usertype")
-            .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_sequence")
-            .add_pattern("[$pattern_class 1] $pattern_taggedmode $pattern_set")
-            .add_pattern("[1] $pattern_builtintype")
-            .add_pattern("[1] $pattern_usertype")
-            .add_pattern("[1] $pattern_taggedmode $pattern_builtintype")
-            .add_pattern("[1] $pattern_taggedmode $pattern_usertype")
-            .add_pattern("[1] $pattern_taggedmode $pattern_sequence")
-            .add_pattern("[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype")
-            .add_pattern("[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT")
-            .add_pattern("[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}")
-            .add_pattern("[1] $pattern_taggedmode $pattern_set")
-            .add_pattern("name $pattern_builtintype")
-            .add_pattern("name $pattern_usertype")
-            .add_pattern("name $pattern_sequence")
-            .add_pattern("name $pattern_set")
-            .add_pattern("name [$pattern_class 1] $pattern_builtintype")
-            .add_pattern("name [$pattern_class 1] $pattern_usertype")
-            .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_builtintype")
-            .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_usertype")
-            .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_sequence")
-            .add_pattern("name [$pattern_class 1] $pattern_taggedmode $pattern_set")
-            .add_pattern("name [1] $pattern_builtintype")
-            .add_pattern("name [1] $pattern_usertype")
-            .add_pattern("name [1] $pattern_taggedmode $pattern_builtintype")
-            .add_pattern("name [1] $pattern_taggedmode $pattern_usertype")
-            .add_pattern("name [1] $pattern_taggedmode $pattern_sequence")
-            .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype")
-            .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT")
-            .add_pattern("name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}")
-            .add_pattern("name [1] $pattern_taggedmode $pattern_set")
-            .add_pattern("$pattern_assign");
-
-        auto result = p.psearchex(context);
-        for (auto r : result) {
-            parser::search_result res;
-            context.psearch_result(res, r.first, r.second);
-
-            _logger->writeln("pos [%2zi] pattern[%2i] %.*s", r.first, r.second, (unsigned)res.size, res.p);
-        }
-
-        auto dump_handler = [&](const token_description* desc) -> void {
-            _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->index,
-                             desc->pos, desc->size, (unsigned)desc->size, desc->p);
-        };
-        context.for_each(dump_handler);
+        object->release();
     }
 }
 
-void x690_annex_a() {
+void test_x690_annex_a_2() {
+    //
     //
 }
 
@@ -732,18 +827,16 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
 
     // studying ...
-    x690_8_1_3_length_octets();
-    x690_8_1_5_end_of_contents();
-    x690_encoding_value();
-    x690_encoding_typevalue();
-    x690_8_6_bitstring();
-    x690_8_7_octstring();
-    x690_8_9_sequence();
-    x690_8_23();
-    x690_time();
-    test_asn1_typedef_value();
-    x690_compose();
-    x690_annex_a();
+    test_x690_8_1_3_length_octets();
+    test_x690_8_1_5_end_of_contents();
+    test_x690_encoding_value();
+    test_x690_encoding_typevalue();
+    test_x690_constructed();
+    test_x690_8_9_sequence();
+    test_x690_time();
+    test_x690_parse_and_compose();
+    test_x690_annex_a_1();
+    test_x690_annex_a_2();
 
     _logger->flush();
 

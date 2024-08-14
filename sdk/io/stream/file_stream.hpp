@@ -126,6 +126,8 @@ class file_stream : public stream_t {
      * @sa
      */
     virtual return_t clear();
+    virtual bool empty();
+    virtual bool occupied();
     /**
      * @brief
      * @param

@@ -129,7 +129,21 @@ class bufferio {
      * @remarks
      */
     return_t clear(bufferio_context_t* handle);
-
+    /**
+     * @brief empty
+     * @return bool
+     */
+    bool empty(bufferio_context_t* handle);
+    /**
+     * @brief occupied
+     * @return bool
+     * @remarks
+     *      negative sentense
+     *          if (!bio.empty(handle)) { do something }
+     *      positive sentense
+     *          if (bio.occupied(handle)) { do something }
+     */
+    bool occupied(bufferio_context_t* handle);
     /**
      * @brief size only
      * @param bufferio_context_t* handle [IN] handle

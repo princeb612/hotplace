@@ -163,11 +163,16 @@ void asn1_object::represent(binary_t* b) {
                 case asn1_type_bitstring:
                     enc.bitstring(*b, _var.to_str());
                     break;
-                case asn1_type_ia5string:
-                case asn1_type_visiblestring:
-                case asn1_type_generalstring:
-                case asn1_type_universalstring:
+                case asn1_type_octstring:
+                    enc.octstring(*b, _var.to_str());
+                    break;
                 case asn1_type_cstring:
+                case asn1_type_generalstring:
+                case asn1_type_ia5string:
+                case asn1_type_printstring:
+                case asn1_type_t61string:
+                case asn1_type_universalstring:
+                case asn1_type_visiblestring:
                     enc.primitive(*b, get_type(), _var.to_str());
                     break;
                 case asn1_type_objid:
