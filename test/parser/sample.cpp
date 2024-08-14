@@ -267,8 +267,9 @@ void test_multipattern_search() {
             token_type, token_identifier, token_equal, token_identifier, token_colon   // bool b = true;
         };
 
-        ac.insert(pattern1).insert(pattern2);
-        ac.build_state_machine();
+        ac.insert(pattern1);
+        ac.insert(pattern2);
+        ac.build();
         result = ac.search(sample_parsed);
         for (auto item : result) {
             // pair(pos_occurrence, id_pattern)
