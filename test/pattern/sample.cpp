@@ -834,9 +834,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
 
    public:
     t_aho_corasick_wildcard(memberof_t memberof = memberof_defhandler<BT, T>, const BT& wildcard_single = BT(), const BT& wildcard_any = BT())
-        : t_aho_corasick<BT, T>(memberof), _wildcard_single(wildcard_single), _wildcard_any(wildcard_any), _logger(nullptr) {}
-
-    void enable_debug(logger* logger = nullptr) { _logger = logger; }
+        : t_aho_corasick<BT, T>(memberof), _wildcard_single(wildcard_single), _wildcard_any(wildcard_any) {}
 
    protected:
     virtual void doinsert(const T* pattern, size_t size) {
@@ -879,17 +877,11 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
             size_t index = this->_patterns.size();
             current->output.insert(index);
             this->_patterns.insert({index, size});
-
-            // if (_logger) {
-            //     _logger->dump(pattern, size);
-            //     _logger->writeln("index %zi added", index);
-            // }
         }
     }
     virtual void doinsert_wildcard(const BT* pattern, size_t size) {
         if (pattern && size) {
             size_t index = this->_patterns.size();
-            doinsert_pattern(pattern, size);
 
             // sketch - merge wildcard pattern id into the output of matching patterns.
 
@@ -901,15 +893,12 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                 q.pop();
 
                 if (size == i) {
-                    if (node->output.size()) {
-                        node->output.insert(index);
-                    }
+                    node->output.insert(index);
                 }
                 const BT& t = pattern[i];
                 if (_wildcard_single == t) {
                     for (auto [t, child] : node->children) {
                         q.push({child, i + 1});
-                        q.push({child, i});
                     }
                 } else {
                     auto iter = node->children.find(t);
@@ -918,6 +907,9 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                     }
                 }
             }
+
+            // insert
+            doinsert_pattern(pattern, size);
         }
     }
     virtual void doinsert_all() {
@@ -947,88 +939,83 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
     virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<unsigned>>& result) {
         if (source) {
             typedef std::pair<trienode*, size_t> pair_t;
-            std::set<pair_t> history;
+            std::set<pair_t> visit;
             std::queue<pair_t> q;
             q.push({this->_root, 0});
+            auto print_children = [&](typename std::unordered_map<BT, trienode*>::const_iterator iter, basic_stream& bs) -> void {
+                bs.printf("%c, %p", iter->first, iter->second);
+            };
+            auto dump = [&](trienode* current) -> void {
+                basic_stream bs;
+                basic_stream output;
+                print_pair<std::unordered_map<BT, trienode*>, basic_stream>(current->children, bs, print_children);
+                print<std::set<unsigned>, basic_stream>(current->output, output);
+                if (false == bs.empty()) {
+                    _logger->writeln("-- %p children : %s", current, bs.c_str());
+                }
+                if (false == output.empty()) {
+                    _logger->writeln("-- %p output   : %s", current, output.c_str());
+                }
+            };
             auto enqueue = [&](trienode* node, size_t idx) -> void {
                 if (idx < size) {
                     // approach 1
                     // q.push({node, idx});
 
-                    // approach 2
+                    // approach 2 - necessary to remove duplicates
                     pair_t p = {node, idx};
-                    auto iter = history.find(p);
-                    if (history.end() == iter) {
+                    auto iter = visit.find(p);
+                    if (visit.end() == iter) {
                         q.push(p);
-                        history.insert(p);
-                    }
-                }
-            };
-            auto print_children = [&](typename std::unordered_map<BT, trienode*>::const_iterator iter, basic_stream& bs) -> void {
-                bs.printf("%c, %p", iter->first, iter->second);
-            };
-            auto dump = [&](trienode* current) -> void {
-                if (_logger) {
-                    basic_stream bs;
-                    basic_stream output;
-                    print_pair<std::unordered_map<BT, trienode*>, basic_stream>(current->children, bs, print_children);
-                    print<std::set<unsigned>, basic_stream>(current->output, output);
-                    if (false == bs.empty()) {
-                        _logger->writeln("-- children : %s", bs.c_str());
-                    }
-                    if (false == output.empty()) {
-                        _logger->writeln("-- output   : %s", output.c_str());
+                        visit.insert(p);
+                        dump(node);
+                    } else {
+                        _logger->writeln("\e[1;31mcheck duplicates\e[0m");
                     }
                 }
             };
             while (false == q.empty()) {
                 auto [current, i] = q.front();
-                history.insert({current, i});
+                visit.insert({current, i});
                 q.pop();
 
-                if (size == i) {
-                    continue;
-                }
-
                 const BT& t = this->_memberof(source, i);
-                if (_logger) {
-                    _logger->writeln("[%i] %c", i, t);
-                }
+                _logger->writeln("[%i] %c", i, t);
                 while ((current != this->_root) && (current->children.end() == current->children.find(t)) && (false == has_wildcard(current))) {
                     current = current->failure;
                 }
                 auto iter = current->children.find(t);
                 if (current->children.end() != iter) {
+                    // case - found t
                     current = iter->second;
                     this->collect_results(current, i, result);
                     enqueue(current, i + 1);
-                    dump(current);
 
-                    if (current->flag & flag_single) {
-                        auto child = current->children[_wildcard_single];
-                        enqueue(child, i + 1);
-                        dump(child);
+                    // yield - case not t
+                    auto temp = current->failure;
+                    if (temp) {
+                        if (temp->flag & flag_single) {
+                            auto single = temp->children[_wildcard_single];
+                            enqueue(single, i + 1);
+                        }
                     }
                 } else if (current->flag & flag_single) {
+                    // case - not t but single
                     auto single = current->children[_wildcard_single];
                     this->collect_results(single, i, result);
                     enqueue(single, i + 1);
-                    dump(single);
 
-                    // yield
-                    if (current->failure) {
-                        auto iter = current->failure->children.find(t);
-                        if (current->children.end() != iter) {
+                    // yield - case not t nor single
+                    auto temp = current->failure;
+                    if (temp) {
+                        auto iter = temp->children.find(t);
+                        if (temp->children.end() != iter) {
                             auto child = iter->second;
-                            dump(child);
                             enqueue(child, i + 1);
                         }
                     }
                 } else if (current->flag & flag_any) {
-                    auto child = current->children[_wildcard_any];
-                    this->collect_results(child, i, result);
-                    enqueue(child, i + 1);
-                    dump(child);
+                    // not implemented yet
                 }
             }
         }
@@ -1042,7 +1029,6 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
     typedef typename std::list<pattern_t> patterns_t;
     patterns_t _wildcards;
     patterns_t _nowildcards;
-    logger* _logger;
 };
 
 void test_aho_corasick_wildcard() {
@@ -1063,81 +1049,45 @@ void test_aho_corasick_wildcard() {
             unsigned pid;  // pattern id
         } expect[20];
     } _table[] = {
+        // banana
+        // ??       0[0]
+        //  ??      1[0]
+        //   ??     2[0]
+        //    ??    3[0]
+        //     ??   4[0]
+        {"banana", 1, {{"??", 2}}, 5, {{0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}}},
+        // banana
+        // ???      0[0]
+        //  ???     1[0]
+        //   ???    2[0]
+        //    ???   3[0]
+        {"banana", 1, {{"???", 3}}, 4, {{0, 0}, {1, 0}, {2, 0}, {3, 0}}},
+        // banana
+        //  ??a     1[0]
+        //    ??a   3[0]
+        {"banana", 1, {{"??a", 3}}, 2, {{1, 0}, {3, 0}}},
         {"ahishers",
          7,
-         {
-             {"his", 3},
-             {"her", 3},
-             {"hers", 4},
-             {"?is", 3},
-             {"h?r", 3},
-             {"??s", 3},
-             {"a?", 2},
-         },
+         {{"his", 3}, {"her", 3}, {"hers", 4}, {"?is", 3}, {"h?r", 3}, {"??s", 3}, {"a?", 2}},
          8,
          {{0, 6}, {1, 0}, {1, 3}, {1, 5}, {4, 1}, {4, 2}, {4, 4}, {5, 5}}},
-        {"ahishers",
-         // a
-         //     ?
-         //         i   [0]
-         // ?
-         //     i
-         //         s   [1]
-         //     s       [2]
-         //     ?
-         //         s   [4]
-         // h
-         //     ?       [3]
-         5,
-         {
-             {"a?i", 3},
-             {"?is", 3},
-             {"?s", 2},
-             {"h?", 2},
-             {"??s", 3},
-         },
-         // ahishers
-         // a?i         0[0]
-         //  ?is        1[1]
-         //  h?         1[3]
-         //  ??s        1[4]
-         //   ?s        2[2]
-         //     h?      4[3]
-         //      ??s    5[4]
-         //       ?s    6[2]
-         8,
-         {{0, 0}, {1, 1}, {1, 3}, {1, 4}, {2, 2}, {4, 3}, {5, 4}, {6, 2}}},
-        {
-            "banana",
-            //  b
-            //      a
-            //          n   [0]
-            //  a
-            //      n
-            //          ?   [1]
-            //      ?
-            //          a   [2]
-            3,
-            {
-                {"ban", 3},
-                {"an?", 3},
-                {"a?a", 3},
-            },
-            // banana
-            // ban     0[0]
-            //  an?    1[1]
-            //  a?a    1[2]
-            //    an?  3[1]
-            //    a?a  3[2]
-            5,
-            {
-                {0, 0},
-                {1, 1},
-                {1, 2},
-                {3, 1},
-                {3, 2},
-            },
-        },
+        // ahishers
+        // a?i         0[0]
+        //  ?is        1[1]
+        //  h?         1[3]
+        //  ??s        1[4]
+        //   ?s        2[2]
+        //     h?      4[3]
+        //      ??s    5[4]
+        //       ?s    6[2]
+        {"ahishers", 5, {{"a?i", 3}, {"?is", 3}, {"?s", 2}, {"h?", 2}, {"??s", 3}}, 8, {{0, 0}, {1, 1}, {1, 3}, {1, 4}, {2, 2}, {4, 3}, {5, 4}, {6, 2}}},
+        // banana
+        // ban     0[0]
+        //  an?    1[1]
+        //  a?a    1[2]
+        //    an?  3[1]
+        //    a?a  3[2]
+        {"banana", 3, {{"ban", 3}, {"an?", 3}, {"a?a", 3}}, 5, {{0, 0}, {1, 1}, {1, 2}, {3, 1}, {3, 2}}},
     };
 
     const OPTION& option = _cmdline->value();
@@ -1147,8 +1097,6 @@ void test_aho_corasick_wildcard() {
         t_aho_corasick_wildcard<char> ac(memberof_defhandler<char>, '?', '*');
         std::multimap<size_t, unsigned> result;
         std::multimap<size_t, unsigned> expect;
-
-        ac.enable_debug(&(*_logger));
 
         _logger->writeln("source %.*s", strlen(item.source), item.source);
 
