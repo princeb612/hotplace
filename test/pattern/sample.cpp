@@ -914,6 +914,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                 q.pop();
 
                 const BT& t = this->_memberof(source, i);
+                // _logger->writeln("[%zi] %c", i, t);
                 while ((current != this->_root) && (current->children.end() == current->children.find(t)) && (false == has_wildcard(current))) {
                     current = current->failure;
                 }
@@ -953,6 +954,9 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                             enqueue(child, i + 1);
                         }
                     }
+
+                    // yield - root
+                    enqueue(this->_root, i + 1);
                 } else if (current->flag & flag_any) {
                     // not implemented yet
                 }
@@ -1036,22 +1040,38 @@ void test_aho_corasick_wildcard() {
         // PS Platinum Trophy Games
         //
 
-        // Dark Soul3
-        // D????S???3   0[0]
+        // Dark Soul 3
+        // D????S??? 3  0[0]
         //   ??_        2[1]
         //    ?_?       3[2]
-        {"Dark Soul3", 3, {{"D????S???3", 10}, {"?? ", 3}, {"? ?", 3}}, 3, {{0, 0}, {2, 1}, {3, 2}}},
-        // Monster Hunter World: Icebournce
+        //        ??_   7[1]
+        //         ?_?  8[2]
+        {"Dark Soul 3", 3, {{"D????S??? 3", 11}, {"?? ", 3}, {"? ?", 3}}, 5, {{0, 0}, {2, 1}, {3, 2}, {7, 1}, {8, 2}}},
+        // Monster Hunter World: Icebourne
         //    ?ter                              3[0]
         //           ?ter                       10[0]
         //                       ?ce            22[1]
         //                       Ice            22[2]
-        //                              ?ce     30[1]
-        {"Monster Hunter World: Icebournce", 3, {{"?ter", 4}, {"?ce", 2}, {"Ice", 2}}, 5, {{3, 0}, {10, 0}, {22, 1}, {22, 2}, {29, 1}}},
+        {"Monster Hunter World: Icebourne", 3, {{"?ter", 4}, {"?ce", 2}, {"Ice", 2}}, 4, {{3, 0}, {10, 0}, {22, 1}, {22, 2}}},
         // Elden Ring
         //    ?n
         //        ?n
         {"Elden Ring", 1, {{"?n", 2}}, 2, {{3, 0}, {7, 0}}},
+
+        // George Bernard Shaw
+        // We don't playing because we grow old; we grow old because we stop playing.
+        //          ????ing                                                             9[0]
+        //                  be??use                                                     17[2]
+        //                          we                                                  25[1]
+        //                                       we                                     38[1]
+        //                                                   be??use                    50[2]
+        //                                                           we                 58[1]
+        //                                                                   ????ing    66[0]
+        {"We don't playing because we grow old; we grow old because we stop playing.",
+         3,
+         {{"????ing", 7}, {"we", 2}, {"be??use", 7}},
+         7,
+         {{9, 0}, {17, 2}, {25, 1}, {38, 1}, {50, 2}, {58, 1}, {66, 0}}},
     };
 
     const OPTION& option = _cmdline->value();
