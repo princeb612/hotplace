@@ -1054,13 +1054,17 @@ class t_aho_corasick {
      *          pair(pos_occurrence, id_pattern)
      */
     std::multimap<size_t, unsigned> search(const std::vector<T>& source) {
+        std::map<size_t, std::set<unsigned>> ordered;
         std::multimap<size_t, unsigned> result;
-        dosearch(&source[0], source.size(), result);
+        dosearch(&source[0], source.size(), ordered);
+        get_result(ordered, result);
         return result;
     }
     std::multimap<size_t, unsigned> search(const T* source, size_t size) {
+        std::map<size_t, std::set<unsigned>> ordered;
         std::multimap<size_t, unsigned> result;
-        dosearch(source, size, result);
+        dosearch(source, size, ordered);
+        get_result(ordered, result);
         return result;
     }
     size_t get_pattern_size(size_t index) {
@@ -1140,7 +1144,7 @@ class t_aho_corasick {
     /**
      * @brief   search
      */
-    virtual void dosearch(const T* source, size_t size, std::multimap<size_t, unsigned>& result) {
+    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<unsigned>>& result) {
         if (source) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
@@ -1184,6 +1188,14 @@ class t_aho_corasick {
             }
         }
     }
+    void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<size_t, unsigned>& result) {
+        for (auto [pos, set] : ordered) {
+            for (auto pattern : set) {
+                result.insert({pos, pattern});
+            }
+        }
+    }
+
     virtual void dodestroy() { delete _root; }
 
     trienode* _root;

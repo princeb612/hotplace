@@ -144,14 +144,14 @@ void test_aho_corasick() {
             9,
             {
                 //          abcaabc
-                {0, 3},  // a
-                {0, 1},  // ab
                 {0, 0},  // abc
+                {0, 1},  // ab
+                {0, 3},  // a
                 {1, 2},  //  bc
                 {3, 3},  //    a
-                {4, 3},  //     a
-                {4, 1},  //     ab
                 {4, 0},  //     abc
+                {4, 1},  //     ab
+                {4, 3},  //     a
                 {5, 2},  //      bc
             },
         },
@@ -173,8 +173,8 @@ void test_aho_corasick() {
             {
                 //          cacachefcachy
                 {2, 0},  //   cache
-                {5, 1},  //      he
                 {4, 2},  //     chef
+                {5, 1},  //      he
                 {9, 3},  //          achy
             },
         },
@@ -237,7 +237,7 @@ void test_aho_corasick() {
     ac.build();
     const char* source = "ahishers";
     std::multimap<size_t, unsigned> result;
-    std::multimap<size_t, unsigned> expect = {{4, 0}, {3, 1}, {4, 2}, {1, 3}};
+    std::multimap<size_t, unsigned> expect = {{1, 3}, {3, 1}, {4, 0}, {4, 2}};  // only have to keep order {4,0}, {4,2}
     result = ac.search(source, strlen(source));
     for (auto item : result) {
         _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
@@ -756,50 +756,31 @@ void test_merge_ovl_intervals() {
 /**
  * @brief   Aho Corasick + wildcard
  * @remarks
- *  single(?) - testing
- *  any(*) - not supported yet
+ *          single(?) - testing
+ *          any(*) - not supported yet
  *
- *  sketch ... aho corasick + wildcard
+ *          sketch ... aho corasick + wildcard
  *
- *  pattern
- *      his her hers ?is h?r h*s
- *      (0 his, 1 her, 2 hers, 3 ?is, 4 h?r, 5 h*s)
- *  sketch              asis    tobe
- *      h
- *          e
- *              r       o(1) -> o(1,4)
- *                  s   o(2)
- *          i
- *              s       o(0) -> o(0,3,5)
- *          ?
- *              r       o(4)
- *          *
- *              s       o(7)    check length of *
- *      a
- *          ?           o(6)
- *      ?
- *          i
- *              s       o(3)
- *          ?
- *              s       s(5)
- *
- *  input
- *      ahishers
- *  results             asis        approach    expect      final       checkpoint
- *  results.single(?)
- *     [01234567]
- *      ahishers
- *      a?              o(6)        -           0[6]        0[6]
- *       his            o(0)        o(0,3,5)    1[0,3,5]    1[0,3,5]
- *       ?is            o(3)        -
- *       ??s            o(5)        -
- *          her         o(1)        o(1,4)      4[1,4]      4[1,2,4]
- *          h?r         o(4)        -
- *          hers        o(2)        -           4[2]
- *           ??s        o(5)        -           5[5]        5[5]
- *  results.any(*)
- *       h*s            o(6)        -                       1[0,3,5,6]
- *          h**s        o(6)        -                       4[1,2,4,6]  actual distance shoud be counted
+ *          pattern
+ *                  his her hers ?is h?r h*s
+ *                  (0 his, 1 her, 2 hers, 3 ?is, 4 h?r, 5 h*s)
+ *          input
+ *                  ahishers
+ *          results                  asis        approach    expect      final       checkpoint
+ *          results.single(?)
+ *                  [01234567]
+ *                   ahishers
+ *                   a?              o(6)        -           0[6]        0[6]
+ *                    his            o(0)        o(0,3,5)    1[0,3,5]    1[0,3,5]
+ *                    ?is            o(3)        -
+ *                    ??s            o(5)        -
+ *                       her         o(1)        o(1,4)      4[1,4]      4[1,2,4]
+ *                       h?r         o(4)        -
+ *                       hers        o(2)        -           4[2]
+ *                        ??s        o(5)        -           5[5]        5[5]
+ *          results.any(*)
+ *                    h*s            o(6)        -                       1[0,3,5,6]
+ *                       h**s        o(6)        -                       4[1,2,4,6]  actual distance shoud be counted
  *
  * @sample
  *          // t_aho_corasick<char> ac(memberof_defhandler<char>);
@@ -811,7 +792,7 @@ void test_merge_ovl_intervals() {
  *          ac.insert("?is", 3);   // pattern 3
  *          ac.insert("h?r", 3);   // pattern 4
  *          ac.insert("??s", 3);   // pattern 5
- *          ac.insert("a?", 2);    // pattern 6 - wildcards not in previous
+ *          ac.insert("a?", 2);    // pattern 6
  *          ac.build();
  *          const char* source = "ahishers";
  *          std::multimap<size_t, unsigned> result;
@@ -886,15 +867,6 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
         }
     }
 
-    virtual void dosearch(const T* source, size_t size, std::multimap<size_t, unsigned>& result) {
-        std::map<size_t, std::set<unsigned>> res;
-        dosearch(source, size, res);
-        for (auto [pos, set] : res) {
-            for (auto pattern : set) {
-                result.insert({pos, pattern});
-            }
-        }
-    }
     virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<unsigned>>& result) {
         if (source) {
             typedef std::pair<trienode*, size_t> pair_t;
@@ -952,7 +924,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                     this->collect_results(child, i, result);
                     enqueue(child, i + 1);
 
-                    // case - single
+                    // case - sibling single
                     if (current->flag & flag_single) {
                         auto single = current->children[_wildcard_single];
                         enqueue(single, i + 1);
@@ -1059,6 +1031,27 @@ void test_aho_corasick_wildcard() {
         //     h??     4[0]
         //       ?s    6[1]
         {"ahishers", 3, {{"h??", 3}, {"?s", 2}, {"?h", 2}}, 6, {{0, 2}, {1, 0}, {2, 1}, {3, 2}, {4, 0}, {6, 1}}},
+
+        //
+        // PS Platinum Trophy Games
+        //
+
+        // Dark Soul3
+        // D????S???3   0[0]
+        //   ??_        2[1]
+        //    ?_?       3[2]
+        {"Dark Soul3", 3, {{"D????S???3", 10}, {"?? ", 3}, {"? ?", 3}}, 3, {{0, 0}, {2, 1}, {3, 2}}},
+        // Monster Hunter World: Icebournce
+        //    ?ter                              3[0]
+        //           ?ter                       10[0]
+        //                       ?ce            22[1]
+        //                       Ice            22[2]
+        //                              ?ce     30[1]
+        {"Monster Hunter World: Icebournce", 3, {{"?ter", 4}, {"?ce", 2}, {"Ice", 2}}, 5, {{3, 0}, {10, 0}, {22, 1}, {22, 2}, {29, 1}}},
+        // Elden Ring
+        //    ?n
+        //        ?n
+        {"Elden Ring", 1, {{"?n", 2}}, 2, {{3, 0}, {7, 0}}},
     };
 
     const OPTION& option = _cmdline->value();
@@ -1069,11 +1062,11 @@ void test_aho_corasick_wildcard() {
         std::multimap<size_t, unsigned> result;
         std::multimap<size_t, unsigned> expect;
 
-        _logger->writeln("source %.*s", strlen(item.source), item.source);
+        _logger->writeln(R"(source     "%.*s")", strlen(item.source), item.source);
 
         for (unsigned i = 0; i < item.count_pattern; i++) {
             ac.insert(item.pat[i].pattern, item.pat[i].len);
-            _logger->writeln("pattern %.*s", item.pat[i].len, item.pat[i].pattern);
+            _logger->writeln(R"(pattern[%i] "%.*s")", i, item.pat[i].len, item.pat[i].pattern);
         }
         ac.build();
 
