@@ -684,7 +684,6 @@ void test_aho_corasick_wildcard() {
         std::vector<pattern_t> patterns;
         std::multimap<range_t, unsigned> expects;
     } _table[] = {
-#if 0
         // banana
         // ??       (0..1)[0]
         //  ??      (1..2)[0]
@@ -841,7 +840,6 @@ void test_aho_corasick_wildcard() {
           {range_t(50, 56), 2},
           {range_t(58, 59), 1},
           {range_t(66, 72), 0}}},
-#endif
         // We don't playing because we grow old; we grow old because we stop playing.
         // -------------ing                                                             (0..15)[2]
         // ----------------------------------------------------------------------ing    (0..72)[2]

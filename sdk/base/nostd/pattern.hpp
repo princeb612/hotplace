@@ -1534,7 +1534,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                             }
                         }
                         size_t p = 0;
-                        find_lessthan_or_equal<size_t>(_node_pos[node], pos - letters, p);
+                        find_lessthan_or_equal<size_t>(_node_pos[node], pos - letters + 1, p);
                         range.begin = p;
                         range.end = pos;
                         result.insert({range, v});
