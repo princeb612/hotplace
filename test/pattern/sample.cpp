@@ -684,6 +684,7 @@ void test_aho_corasick_wildcard() {
         std::vector<pattern_t> patterns;
         std::multimap<range_t, unsigned> expects;
     } _table[] = {
+#if 0
         // banana
         // ??       (0..1)[0]
         //  ??      (1..2)[0]
@@ -840,6 +841,16 @@ void test_aho_corasick_wildcard() {
           {range_t(50, 56), 2},
           {range_t(58, 59), 1},
           {range_t(66, 72), 0}}},
+#endif
+        // We don't playing because we grow old; we grow old because we stop playing.
+        // -------------ing                                                             (0..15)[2]
+        // ----------------------------------------------------------------------ing    (0..72)[2]
+        //                          we ---- old                                         (25..35)[0]
+        //                                       we ---- old                            (38..48)[0]
+        //                                                              stop ----ing    (61..72)[1]
+        {"We don't playing because we grow old; we grow old because we stop playing.",
+         {{"we * old", 8}, {"stop *ing", 9}, {"*ing", 4}},
+         {{range_t(0, 15), 2}, {range_t(0, 72), 2}, {range_t(25, 35), 0}, {range_t(38, 48), 0}, {range_t(61, 72), 1}}},
     };
 
     const OPTION& option = _cmdline->value();

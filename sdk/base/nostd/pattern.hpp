@@ -1292,8 +1292,6 @@ class t_wildcards {
 /**
  * @brief   Aho Corasick + wildcard
  * @remarks
- *          single(?) - testing
- *          any(*) - not supported yet
  *
  *          sketch ... aho corasick + wildcard
  *
@@ -1303,7 +1301,7 @@ class t_wildcards {
  *          input
  *                  ahishers
  *          results
- *          results.single(?)
+ *              results.single(?)
  *                  [01234567]
  *                   ahishers
  *                   a?              (0..1)(6)
@@ -1314,7 +1312,7 @@ class t_wildcards {
  *                       h?r         (4..6)(4)
  *                       hers        (4..7)(2)
  *                        ??s        (5..7)(5)
- *          results.any(*)
+ *              results.any(*)
  *                    h-s            (1..3)(7)
  *                       h--s        (4..7)(7)
  *
@@ -1525,22 +1523,22 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
 
                     const std::vector<BT>& pattern = iter->second;
                     const BT& t = pattern[0];
-                    trienode* node = this->_root->children[t];
-                    int letters = 0;
-                    for (auto c : pattern) {
-                        if (c == t) {
-                            letters++;
+                    if (_wildcard_any == t) {
+                        result.insert({range_t(0, pos), v});
+                    } else {
+                        trienode* node = this->_root->children[t];
+                        int letters = 0;
+                        for (auto c : pattern) {
+                            if (c != _wildcard_any) {
+                                letters++;
+                            }
                         }
+                        size_t p = 0;
+                        find_lessthan_or_equal<size_t>(_node_pos[node], pos - letters, p);
+                        range.begin = p;
+                        range.end = pos;
+                        result.insert({range, v});
                     }
-                    size_t n = pos;
-                    size_t p = 0;
-                    while (letters--) {
-                        n -= 1;
-                        find_lessthan_or_equal<size_t>(_node_pos[node], n, p);
-                    };
-                    range.begin = p;
-                    range.end = pos;
-                    result.insert({range, v});
                 }
             }
         }
