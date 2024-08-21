@@ -398,8 +398,56 @@ void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stre
 void test_case::report(uint32 top_count) {
     basic_stream stream;
 
+    // @ test case "" success 1 fail 1 skip 1 low  1
+    // --------------------------------------------------------------------------------
+    // result|errorcode |test function       |time       |message
+    //  pass |0x00000000|function1           |0.000000049|case desc 1
+    //  fail |0xef010003|function2           |0.000000032|case desc 2 - intentional fail
+    //  skip |0xef010100|function3           |0.000000115|case desc 4
+    //  low  |0xef010101|function4           |0.000000020|case desc 5
+    // --------------------------------------------------------------------------------
+    // @ test case "test case 1" success 1 fail 1
+    // --------------------------------------------------------------------------------
+    // result|errorcode |test function       |time       |message
+    //  pass |0x00000000|function5           |0.000000100|case 1 desc 1
+    //  fail |0xef01001b|function6           |0.000000029|case 1 desc 2 - intentional fail
+    // --------------------------------------------------------------------------------
+    // @ test case "test case 2" success 3 fail 1
+    // --------------------------------------------------------------------------------
+    // result|errorcode |test function       |time       |message
+    //  pass |0x00000000|function7           |0.000000042|case 2 desc 1
+    //  pass |0x00000000|function8           |0.000000074|case 2 desc 2
+    //  fail |0xef010036|function9           |0.000000049|case 2 desc 3 - intentional fail
+    //  pass |0x00000000|test_unittest       |0.000000103|result
+    // --------------------------------------------------------------------------------
+    // @ test case "try finally" success 3
+    // --------------------------------------------------------------------------------
+    // result|errorcode |test function       |time       |message
+    //  pass |0x00000000|test_fail           |0.000000053|__leave2_if_fail
+    //  pass |0x00000000|test_trace          |0.000721476|__leave2_trace
+    //  pass |0x00000000|test_try_leave      |0.000656350|__leave2_tracef
+    // --------------------------------------------------------------------------------
+    // # pass 8 fail 3 skip 1 low  1
+    // ================================================================================
+    // TEST FAILED
     report_unittest(stream);
+    // 3 cases failed
+    // --------------------------------------------------------------------------------
+    // result|errorcode |desc                            |test function       |time       |message
+    //  fail |0xef010003|invalid parameter               |function2           |0.000000032|case desc 2 - intentional fail
+    //  fail |0xef01001b|unexpected                      |function6           |0.000000029|case 1 desc 2 - intentional fail
+    //  fail |0xef010036|assert_failed                   |function9           |0.000000049|case 2 desc 3 - intentional fail
+    // --------------------------------------------------------------------------------
     report_failed(stream);
+    // sort by time (top 5)
+    // --------------------------------------------------------------------------------
+    // result|errorcode |test function       |time       |message
+    //  pass |0x00000000|test_trace          |0.000721476|__leave2_trace
+    //  pass |0x00000000|test_try_leave      |0.000656350|__leave2_tracef
+    //  skip |0xef010100|function3           |0.000000115|case desc 4
+    //  pass |0x00000000|test_unittest       |0.000000103|result
+    //  pass |0x00000000|function5           |0.000000100|case 1 desc 1
+    // --------------------------------------------------------------------------------
     report_testtime(stream, top_count);
 
     critical_section_guard guard(_lock);

@@ -256,8 +256,8 @@ void test_multipattern_search() {
     // sketch - pattern search
     {
         t_aho_corasick<int> ac;
-        std::multimap<size_t, unsigned> result;
-        std::multimap<size_t, unsigned> expect = {{0, 0}, {3, 1}, {8, 1}};
+        std::multimap<range_t, unsigned> result;
+        std::multimap<range_t, unsigned> expect = {{range_t(0, 2), 0}, {range_t(3, 7), 1}, {range_t(8, 12), 1}};
         std::vector<int> pattern1 = {token_type, token_identifier, token_colon};
         std::vector<int> pattern2 = {token_type, token_identifier, token_equal, token_identifier, token_colon};
         // after parsing
@@ -282,8 +282,8 @@ void test_multipattern_search() {
     {
         parser p;
         parser::context context;
-        std::multimap<size_t, unsigned> result;
-        std::multimap<size_t, unsigned> expect = {{0, 0}, {3, 1}, {8, 3}};
+        std::multimap<range_t, unsigned> result;
+        std::multimap<range_t, unsigned> expect = {{range_t(0, 2), 0}, {range_t(3, 7), 1}, {range_t(8, 12), 3}};
         p.add_token("bool", 0x1000).add_token("int", 0x1001).add_token("true", 0x1002).add_token("false", 0x1002);
         p.parse(context, sample);
         p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");
@@ -291,11 +291,11 @@ void test_multipattern_search() {
         // sample  : int a; int b = 0; bool b = true;
         // pattern : 0      1          3
         // tokens  : 0   12 3   4 5 67 8    9 a b   c
-        for (auto item : result) {
+        for (auto [range, pid] : result) {
             // pair(pos_occurrence, id_pattern)
             parser::search_result res;
-            context.psearch_result(res, item.first, item.second);
-            _logger->writeln("pos [%zi] pattern[%i] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+            context.psearch_result(res, range);
+            _logger->writeln("pos [%zi..%zi] pattern[%i] %.*s", range.begin, range.end, pid, (unsigned)res.size, res.p);
         }
         _test_case.assert(result == expect, __FUNCTION__, "pattern matching #2");
     }

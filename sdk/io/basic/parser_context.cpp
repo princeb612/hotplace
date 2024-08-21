@@ -424,8 +424,8 @@ void parser::context::add_pattern(parser* obj) {
     }
 }
 
-std::multimap<size_t, unsigned> parser::context::psearch(parser* obj) const {
-    std::multimap<size_t, unsigned> result;
+std::multimap<range_t, unsigned> parser::context::psearch(parser* obj) const {
+    std::multimap<range_t, unsigned> result;
     if (obj) {
         auto ac = obj->_ac;
         ac->build();
@@ -434,8 +434,8 @@ std::multimap<size_t, unsigned> parser::context::psearch(parser* obj) const {
     return result;
 }
 
-std::multimap<size_t, unsigned> parser::context::psearchex(parser* obj) const {
-    std::multimap<size_t, unsigned> result;
+std::multimap<range_t, unsigned> parser::context::psearchex(parser* obj) const {
+    std::multimap<range_t, unsigned> result;
     if (obj) {
         auto ac = obj->_ac;
         ac->build();
@@ -443,13 +443,14 @@ std::multimap<size_t, unsigned> parser::context::psearchex(parser* obj) const {
 
         t_merge_ovl_intervals<int> moi;
         search_result r;
-        for (auto item : acres) {
-            psearch_result(r, item.first, item.second);
-            moi.add(r.begidx, r.endidx, item.second);
+        for (auto [range, pid] : acres) {
+            psearch_result(r, range);
+            moi.add(r.begidx, r.endidx, pid);
         }
         auto moires = moi.merge();
         for (auto item : moires) {
-            result.insert({item.s, item.t});
+            range_t range(item.s, item.e);
+            result.insert({range, item.t});
         }
     }
     return result;
@@ -505,9 +506,16 @@ void parser::context::wsearch_result(search_result& result, uint32 idx, size_t s
     result.endidx = idx + size - 1;
 }
 
-void parser::context::psearch_result(search_result& result, uint32 idx, unsigned patidx) const {
-    size_t size = _parser->_ac->get_pattern_size(patidx);
-    wsearch_result(result, idx, size);
+void parser::context::psearch_result(search_result& result, range_t range) const {
+    token* begin = _tokens[range.begin];
+    token* end = _tokens[range.end];
+
+    result.match = true;
+    result.p = _p + begin->get_pos();
+    result.size = end->get_pos() - begin->get_pos() + end->get_size();
+    result.pos = begin->get_pos();
+    result.begidx = range.begin;
+    result.endidx = range.end;
 }
 
 return_t parser::context::get(uint32 index, token_description* desc) {

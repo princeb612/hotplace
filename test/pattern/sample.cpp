@@ -30,6 +30,11 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
+struct pattern_t {
+    const char* pattern;
+    unsigned len;
+};
+
 struct pattern_search_sample_data {
     std::string dummy;
     int value;
@@ -115,118 +120,88 @@ void test_aho_corasick() {
 
     struct testvector {
         const char* source;
-        int npat;
-        struct {
-            const char* p;
-            size_t size;
-        } pat[10];
-        int nexpect;
-        struct {
-            // pair(pos_occurrence, id_pattern)
-            size_t idx;
-            unsigned patid;
-        } expect[10];
+        std::vector<pattern_t> patterns;
+        std::multimap<range_t, unsigned> expects;  // pair(pos_occurrence, id_pattern)
     } _table[] = {
-        {
-            // t_aho_corasick ac;
-            // ac.insert("abc", 3).insert("ab", 2).insert("bc", 2).insert("a", 1);
-            // ac.build();
-            // const char* source = "abcaabc";
-            // ac.search(source, strlen(source));
-            "abcaabc",
-            4,
-            {
-                {"abc", 3},  // pattern 0
-                {"ab", 2},   // pattern 1
-                {"bc", 2},   // pattern 2
-                {"a", 1},    // pattern 3
-            },
-            9,
-            {
-                //          abcaabc
-                {0, 0},  // abc
-                {0, 1},  // ab
-                {0, 3},  // a
-                {1, 2},  //  bc
-                {3, 3},  //    a
-                {4, 0},  //     abc
-                {4, 1},  //     ab
-                {4, 3},  //     a
-                {5, 2},  //      bc
-            },
-        },
-        {
-            // t_aho_corasick ac;
-            // ac.insert("cache", 5).insert("he", 2).insert("chef", 4).insert("achy", 4);
-            // ac.build();
-            // const char* source = "cacachefcachy";
-            // ac.search(source, strlen(source));
-            "cacachefcachy",
-            4,
-            {
-                {"cache", 5},  // pattern 0
-                {"he", 2},     // pattern 1
-                {"chef", 4},   // pattern 2
-                {"achy", 4},   // pattern 3
-            },
-            4,
-            {
-                //          cacachefcachy
-                {2, 0},  //   cache
-                {4, 2},  //     chef
-                {5, 1},  //      he
-                {9, 3},  //          achy
-            },
-        },
-        {
-            // t_aho_corasick ac;
-            // ac.insert("he", 2).insert("she", 3).insert("hers", 4).insert("his", 3);
-            // ac.build();
-            // const char* source = "ahishers";
-            // ac.search(source, strlen(source));
-            "ahishers",
-            4,
-            {
-                {"he", 2},    // pattern 0
-                {"she", 3},   // pattern 1
-                {"hers", 4},  // pattern 2
-                {"his", 3},   // pattern 3
-            },
-            4,
-            {
-                //         ahishers
-                {1, 3},  // his
-                {3, 1},  //   she
-                {4, 0},  //    he
-                {4, 2},  //    hers
-            },
-        },
+        {// t_aho_corasick ac;
+         // ac.insert("abc", 3);
+         // ac.insert("ab", 2);
+         // ac.insert("bc", 2);
+         // ac.insert("a", 1);
+         // ac.build();
+         // const char* source = "abcaabc";
+         // ac.search(source, strlen(source));
+         "abcaabc",
+         {{"abc", 3}, {"ab", 2}, {"bc", 2}, {"a", 1}},
+         //   abcaabc
+         //   abc       (0..2)[0]
+         //   ab        (0..1)[1]
+         //   a         (0..0)[3]
+         //    bc       (1..2)[2]
+         //      a      (3..3)[3]
+         //       abc   (4..6)[0]
+         //       ab    (4..5)[1]
+         //       a     (4..4)[3]
+         //        bc   (5..6)[2]
+         {{range_t(0, 2), 0},
+          {range_t(0, 1), 1},
+          {range_t(0, 0), 3},
+          {range_t(1, 2), 2},
+          {range_t(3, 3), 3},
+          {range_t(4, 6), 0},
+          {range_t(4, 5), 1},
+          {range_t(4, 4), 3},
+          {range_t(5, 6), 2}}},
+        {// t_aho_corasick ac;
+         // ac.insert("cache", 5);
+         // ac.insert("he", 2);
+         // ac.insert("chef", 4);
+         // ac.insert("achy", 4);
+         // ac.build();
+         // const char* source = "cacachefcachy";
+         // ac.search(source, strlen(source));
+         "cacachefcachy",
+         {{"cache", 5}, {"he", 2}, {"chef", 4}, {"achy", 4}},
+         // cacachefcachy
+         //   cache         (2..6)[0]
+         //     chef        (4..7)[2]
+         //      he         (5..6)[1]
+         //          achy   (9..12)[3]
+         {{range_t(2, 6), 0}, {range_t(4, 7), 2}, {range_t(5, 6), 1}, {range_t(9, 12), 3}}},
+        {// t_aho_corasick ac;
+         // ac.insert("he", 2);
+         // ac.insert("she", 3);
+         // ac.insert("hers", 4);
+         // ac.insert("his", 3);
+         // ac.build();
+         // const char* source = "ahishers";
+         // ac.search(source, strlen(source));
+         "ahishers",
+         {{"he", 2}, {"she", 3}, {"hers", 4}, {"his", 3}},
+         // ahishers
+         //  his        (1..3)[3]
+         //    she      (3..5)[1]
+         //     he      (4..5)[0]
+         //     hers    (4..7)[2]
+         {{range_t(1, 3), 3}, {range_t(3, 5), 1}, {range_t(4, 5), 0}, {range_t(4, 7), 2}}},
     };
 
     for (auto item : _table) {
         t_aho_corasick<char> ac;
-        std::multimap<size_t, unsigned> expect;
-        std::multimap<size_t, unsigned> result;
+        std::multimap<range_t, unsigned> expect;
+        std::multimap<range_t, unsigned> result;
 
         _logger->writeln(R"(source "%s")", item.source);
-        for (int i = 0; i < item.npat; i++) {
-            auto p = item.pat[i].p;
-            auto size = item.pat[i].size;
-            ac.insert(p, size);
-            _logger->writeln(R"(pattern[%i] "%.*s")", i, size, p);
-        }
-        for (int i = 0; i < item.nexpect; i++) {
-            auto patid = item.expect[i].patid;
-            auto p = item.pat[patid].p;
-            auto idx = item.expect[i].idx;
-            expect.insert({idx, patid});
-            _logger->writeln(R"(expect pattern[%i](as is "%s") at source[%zi])", patid, p, idx);
+        int i = 0;
+        for (auto item : item.patterns) {
+            ac.insert(item.pattern, item.len);
+            _logger->writeln(R"(pattern[%i] "%.*s")", i++, item.len, item.pattern);
         }
 
         ac.build();
         result = ac.search(item.source, strlen(item.source));
 
-        _test_case.assert(expect == result, __FUNCTION__, R"(multiple pattern search "%s")", item.source);
+        _test_case.assert(item.expects == result, __FUNCTION__, R"(multiple pattern search "%s")", item.source);
     }
 
     t_aho_corasick<char> ac;
@@ -236,8 +211,8 @@ void test_aho_corasick() {
     ac.insert("his", 3);
     ac.build();
     const char* source = "ahishers";
-    std::multimap<size_t, unsigned> result;
-    std::multimap<size_t, unsigned> expect = {{1, 3}, {3, 1}, {4, 0}, {4, 2}};  // only have to keep order {4,0}, {4,2}
+    std::multimap<range_t, unsigned> result;
+    std::multimap<range_t, unsigned> expect = {{range_t(1, 3), 3}, {range_t(3, 5), 1}, {range_t(4, 5), 0}, {range_t(4, 7), 2}};
     result = ac.search(source, strlen(source));
     for (auto item : result) {
         _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
@@ -279,7 +254,7 @@ void test_trie() {
     // dump
     auto handler = [](const char* p, size_t size) -> void {
         if (p) {
-            printf("%.*s\n", (unsigned)size, p);
+            _logger->writeln("%.*s", (unsigned)size, p);
         }
     };
     trie.dump(handler);
@@ -327,7 +302,7 @@ void test_trie_autocompletion() {
     // dump
     auto handler = [](const char* p, size_t size) -> void {
         if (p) {
-            printf("%.*s\n", (unsigned)size, p);
+            _logger->writeln("%.*s", (unsigned)size, p);
         }
     };
     trie.dump(handler);
@@ -392,29 +367,18 @@ void test_suffixtree() {
     struct testvector {
         const char* p;
         size_t size;
-        unsigned count;
-        unsigned expect[5];
+        std::set<unsigned> expects;
     };
 
     t_suffixtree<char> tree("geeksforgeeks.org", 17);
-    testvector _table_pattern[] = {
-        {"ee", 2, 2, {1, 9}},    //
-        {"geek", 4, 2, {0, 8}},  //
-        {"quiz", 4, 0},          //
-        {"forgeeks", 8, 1, {5}}  //
-    };
+    testvector _table_pattern[] = {{"ee", 2, {1, 9}}, {"geek", 4, {0, 8}}, {"quiz", 4, {}}, {"forgeeks", 8, {5}}};
 
     for (auto item : _table_pattern) {
-        std::set<unsigned> expect;
-        for (unsigned i = 0; i < item.count; i++) {
-            expect.insert(item.expect[i]);
-        }
-
         std::set<unsigned> result = tree.search(item.p, item.size);
         for (auto idx : result) {
             _logger->writeln("found at %i", idx);
         }
-        _test_case.assert(expect == result, __FUNCTION__, "search %.*s", (unsigned)item.size, item.p);
+        _test_case.assert(item.expects == result, __FUNCTION__, "search %.*s", (unsigned)item.size, item.p);
     }
 }
 
@@ -424,30 +388,18 @@ void test_suffixtree2() {
     struct testvector {
         const char* p;
         size_t size;
-        unsigned count;
-        unsigned expect[5];
+        std::set<unsigned> expects;
     };
 
     t_suffixtree<char> tree;
     tree.reset().add("test ", 5).add("geeksforgeeks.org", 17);  // "test geeksforgeeks.org"
-    testvector _table_pattern[] = {
-        {"ee", 2, 2, {6, 14}},     //
-        {"geek", 4, 2, {5, 13}},   //
-        {"quiz", 4, 0},            //
-        {"forgeeks", 8, 1, {10}},  //
-        {"est g", 4, 1, {1}}       //
-    };
+    testvector _table_pattern[] = {{"ee", 2, {6, 14}}, {"geek", 4, {5, 13}}, {"quiz", 4, {}}, {"forgeeks", 8, {10}}, {"est g", 4, {1}}};
     for (auto item : _table_pattern) {
-        std::set<unsigned> expect;
-        for (unsigned i = 0; i < item.count; i++) {
-            expect.insert(item.expect[i]);
-        }
-
         std::set<unsigned> result = tree.search(item.p, item.size);
         for (auto idx : result) {
             _logger->writeln("found at %i", idx);
         }
-        _test_case.assert(expect == result, __FUNCTION__, "search %.*s", (unsigned)item.size, item.p);
+        _test_case.assert(item.expects == result, __FUNCTION__, "search %.*s", (unsigned)item.size, item.p);
     }
 }
 
@@ -461,42 +413,14 @@ void test_ukkonen() {
         struct {
             const char* p;
             size_t size;
-            size_t count;
-            int res[5];
+            std::set<int> expects;
         } expect[5];
     };
     testvector _table[] =  // ...
-        {{"bananas",
-          7,
-          4,
-          {
-              {"ana", 3, 2, {1, 3}},
-              {"ban", 3, 1, {0}},
-              {"nana", 4, 1, {2}},
-              {"apple", 5, 0, {}},
-          }},
-         {"xabac",
-          5,
-          1,
-          {
-              {"ba", 2, 1, {2}},
-              {"a", 1, 2, {1, 3}},
-          }},
-         {"abcabcde",
-          8,
-          2,
-          {
-              {"abc", 3, 2, {0, 3}},
-              {"bc", 2, 2, {1, 4}},
-          }},
-         {"THIS IS A TEST TEXT$",
-          20,
-          3,
-          {
-              {"TEST", 4, 1, {10}},
-              {"IS A", 4, 1, {5}},
-              {"EXT$", 4, 1, {16}},
-          }}};
+        {{"bananas", 7, 4, {{"ana", 3, {1, 3}}, {"ban", 3, {0}}, {"nana", 4, {2}}, {"apple", 5, {}}}},
+         {"xabac", 5, 1, {{"ba", 2, {2}}, {"a", 1, {1, 3}}}},
+         {"abcabcde", 8, 2, {{"abc", 3, {0, 3}}, {"bc", 2, {1, 4}}}},
+         {"THIS IS A TEST TEXT$", 20, 3, {{"TEST", 4, {10}}, {"IS A", 4, {5}}, {"EXT$", 4, {16}}}}};
 
     for (auto item : _table) {
         t_ukkonen<char> tree(item.p, item.size);
@@ -510,20 +434,15 @@ void test_ukkonen() {
                 bs.printf(R"("%.*s")", (unsigned)size, p);
 
                 _logger->writeln(bs);
-                fflush(stdout);
             }
         };
         tree.debug(debug_handler);
         for (unsigned i = 0; i < item.count; i++) {
-            std::set<int> expect;
-            for (int j = 0; j < item.expect[i].count; j++) {
-                expect.insert(item.expect[i].res[j]);
-            }
             std::set<int> result = tree.search(item.expect[i].p, item.expect[i].size);
             basic_stream bs;
             print<std::set<int>, basic_stream>(result, bs);
 
-            _test_case.assert(result == expect, __FUNCTION__, "ukkonen search %s -> %s", item.expect[i].p, bs.c_str());
+            _test_case.assert(item.expect[i].expects == result, __FUNCTION__, "ukkonen search %s -> %s", item.expect[i].p, bs.c_str());
         }
     }
 }
@@ -536,7 +455,6 @@ void test_ukkonen2() {
     auto dump_handler = [](const char* p, size_t size) -> void {
         if (p) {
             _logger->writeln(R"("%.*s")", (unsigned)size, p);
-            fflush(stdout);
         }
     };
     tree.dump(dump_handler);
@@ -572,7 +490,11 @@ void test_lcp() {
     std::string ar[] = {"geeksforgeeks", "geeks", "geek", "geezer"};
     int n = sizeof(ar) / sizeof(ar[0]);
     std::string result = get_lcp(ar, n);
-    std::cout << "The longest common prefix is: " << result << std::endl;
+
+    basic_stream bs;
+    bs << "The longest common prefix is: " << result;
+    _logger->writeln(bs);
+
     _test_case.assert(result == "gee", __FUNCTION__, "LCP");
 }
 
@@ -753,351 +675,196 @@ void test_merge_ovl_intervals() {
     bs.clear();
 }
 
-/**
- * @brief   Aho Corasick + wildcard
- * @remarks
- *          single(?) - testing
- *          any(*) - not supported yet
- *
- *          sketch ... aho corasick + wildcard
- *
- *          pattern
- *                  his her hers ?is h?r h*s
- *                  (0 his, 1 her, 2 hers, 3 ?is, 4 h?r, 5 h*s)
- *          input
- *                  ahishers
- *          results                  asis        approach    expect      final       checkpoint
- *          results.single(?)
- *                  [01234567]
- *                   ahishers
- *                   a?              o(6)        -           0[6]        0[6]
- *                    his            o(0)        o(0,3,5)    1[0,3,5]    1[0,3,5]
- *                    ?is            o(3)        -
- *                    ??s            o(5)        -
- *                       her         o(1)        o(1,4)      4[1,4]      4[1,2,4]
- *                       h?r         o(4)        -
- *                       hers        o(2)        -           4[2]
- *                        ??s        o(5)        -           5[5]        5[5]
- *          results.any(*)
- *                    h*s            o(6)        -                       1[0,3,5,6]
- *                       h**s        o(6)        -                       4[1,2,4,6]  actual distance shoud be counted
- *
- * @sample
- *          // t_aho_corasick<char> ac(memberof_defhandler<char>);
- *          t_aho_corasick_wildcard<char> ac(memberof_defhandler<char>, '?', '*');
- *          // his her hers ?is h?r h*s
- *          ac.insert("his", 3);   // pattern 0
- *          ac.insert("her", 3);   // pattern 1
- *          ac.insert("hers", 4);  // pattern 2
- *          ac.insert("?is", 3);   // pattern 3
- *          ac.insert("h?r", 3);   // pattern 4
- *          ac.insert("??s", 3);   // pattern 5
- *          ac.insert("a?", 2);    // pattern 6
- *          ac.build();
- *          const char* source = "ahishers";
- *          std::multimap<size_t, unsigned> result;
- *          std::multimap<size_t, unsigned> expect = {{0, 6}, {1, 0}, {1, 3}, {1, 5}, {4, 1}, {4, 2}, {4, 4}, {5, 5}};
- *          result = ac.search(source, strlen(source));
- *          for (auto item : result) {
- *              _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
- *          }
- *          _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm + wildcards");
- */
-template <typename BT = char, typename T = BT>
-class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
-   public:
-    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
-    typedef typename t_aho_corasick<BT, T>::trienode trienode;
-    enum {
-        flag_single = (1 << 0),
-        flag_any = (1 << 1),
-    };
-
-   public:
-    t_aho_corasick_wildcard(memberof_t memberof = memberof_defhandler<BT, T>, const BT& wildcard_single = BT(), const BT& wildcard_any = BT())
-        : t_aho_corasick<BT, T>(memberof), _wildcard_single(wildcard_single), _wildcard_any(wildcard_any) {}
-
-   protected:
-    virtual void doinsert(const T* pattern, size_t size) {
-        trienode* current = this->_root;
-
-        for (size_t i = 0; i < size; ++i) {
-            const BT& t = this->_memberof(pattern, i);
-
-            if (_wildcard_single == t) {
-                current->flag |= flag_single;
-            } else if (_wildcard_any == t) {
-                current->flag |= flag_any;
-            }
-            trienode* child = current->children[t];
-            if (nullptr == child) {
-                child = new trienode;
-                current->children[t] = child;
-            }
-            current = child;
-        }
-
-        size_t index = this->_patterns.size();
-        current->output.insert(index);
-        this->_patterns.insert({index, size});
-    }
-    virtual void doinsert_pattern(const BT* pattern, size_t size) {
-        if (pattern) {
-            trienode* current = this->_root;
-
-            for (size_t i = 0; i < size; ++i) {
-                const BT& t = pattern[i];
-                // sketch - same as t_aho_corasick<BT, T>::doinsert but added flag
-                if (_wildcard_single == t) {
-                    current->flag |= flag_single;
-                } else if (_wildcard_any == t) {
-                    current->flag |= flag_any;
-                }
-                trienode* child = current->children[t];
-                if (nullptr == child) {
-                    child = new trienode;
-                    current->children[t] = child;
-                }
-                current = child;
-            }
-
-            size_t index = this->_patterns.size();
-            current->output.insert(index);
-            this->_patterns.insert({index, size});
-        }
-    }
-
-    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<unsigned>>& result) {
-        if (source) {
-            typedef std::pair<trienode*, size_t> pair_t;
-            std::set<pair_t> visit;
-            std::queue<pair_t> q;
-            q.push({this->_root, 0});
-
-            // debug
-            // auto print_children = [&](typename std::unordered_map<BT, trienode*>::const_iterator iter, basic_stream& bs) -> void {
-            //     bs.printf("%c, %p", iter->first, iter->second);
-            // };
-            // auto dump = [&](trienode* current) -> void {
-            //     basic_stream bs;
-            //     basic_stream output;
-            //     print_pair<std::unordered_map<BT, trienode*>, basic_stream>(current->children, bs, print_children);
-            //     print<std::set<unsigned>, basic_stream>(current->output, output);
-            //     if (false == bs.empty()) {
-            //         _logger->writeln("%p children : %s", current, bs.c_str());
-            //     }
-            //     if (false == output.empty()) {
-            //         _logger->writeln("%p output   : %s", current, output.c_str());
-            //     }
-            // };
-            // debug
-
-            auto enqueue = [&](trienode* node, size_t idx) -> void {
-                if (idx < size) {
-                    // q.push({node, idx});
-
-                    pair_t p = {node, idx};
-                    auto iter = visit.find(p);
-                    if (visit.end() == iter) {
-                        q.push(p);
-                        visit.insert(p);
-                        // dump(node);
-                    }
-                }
-            };
-
-            // dump(this->_root);
-
-            while (false == q.empty()) {
-                auto [current, i] = q.front();
-                visit.insert({current, i});
-                q.pop();
-
-                const BT& t = this->_memberof(source, i);
-                // _logger->writeln("[%zi] %c", i, t);
-                while ((current != this->_root) && (current->children.end() == current->children.find(t)) && (false == has_wildcard(current))) {
-                    current = current->failure;
-                }
-                auto iter = current->children.find(t);
-                if (current->children.end() != iter) {
-                    // case - found t
-                    auto child = iter->second;
-                    this->collect_results(child, i, result);
-                    enqueue(child, i + 1);
-
-                    // case - sibling single
-                    if (current->flag & flag_single) {
-                        auto single = current->children[_wildcard_single];
-                        enqueue(single, i + 1);
-                    }
-
-                    // yield - case not t
-                    auto temp = current->failure;
-                    if (temp) {
-                        if (temp->flag & flag_single) {
-                            auto single = temp->children[_wildcard_single];
-                            enqueue(single, i + 1);
-                        }
-                    }
-                } else if (current->flag & flag_single) {
-                    // case - not t but single
-                    auto single = current->children[_wildcard_single];
-                    this->collect_results(single, i, result);
-                    enqueue(single, i + 1);
-
-                    // yield - case not t nor single
-                    auto temp = current->failure;
-                    if (temp) {
-                        auto iter = temp->children.find(t);
-                        if (temp->children.end() != iter) {
-                            auto child = iter->second;
-                            enqueue(child, i + 1);
-                        }
-                    }
-
-                    // yield - root
-                    enqueue(this->_root, i + 1);
-                } else if (current->flag & flag_any) {
-                    // not implemented yet
-                }
-            }
-        }
-    }
-
-   private:
-    bool has_wildcard(trienode* node) { return node->flag > 0; } /* check node->flag & (flag_single | flag_any) */
-    BT _wildcard_single;
-    BT _wildcard_any;
-};
-
 void test_aho_corasick_wildcard() {
     // studying...
     _test_case.begin("t_aho_corasick + wildcards");
 
-    const unsigned MAX_PATTERN = 10;
     struct testvector {
         const char* source;
-        unsigned count_pattern;
-        struct {
-            const char* pattern;
-            unsigned len;
-        } pat[MAX_PATTERN];
-        unsigned count_expect;
-        struct {
-            size_t pos;
-            unsigned pid;  // pattern id
-        } expect[20];
+        std::vector<pattern_t> patterns;
+        std::multimap<range_t, unsigned> expects;
     } _table[] = {
         // banana
-        // ??       0[0]
-        //  ??      1[0]
-        //   ??     2[0]
-        //    ??    3[0]
-        //     ??   4[0]
-        {"banana", 1, {{"??", 2}}, 5, {{0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}}},
+        // ??       (0..1)[0]
+        //  ??      (1..2)[0]
+        //   ??     (2..3)[0]
+        //    ??    (3..4)[0]
+        //     ??   (4..5)[0]
+        {"banana", {{"??", 2}}, {{range_t(0, 1), 0}, {range_t(1, 2), 0}, {range_t(2, 3), 0}, {range_t(3, 4), 0}, {range_t(4, 5), 0}}},
         // banana
-        // ???      0[0]
-        //  ???     1[0]
-        //   ???    2[0]
-        //    ???   3[0]
-        {"banana", 1, {{"???", 3}}, 4, {{0, 0}, {1, 0}, {2, 0}, {3, 0}}},
+        // ???      (0..2)[0]
+        //  ???     (1..3)[0]
+        //   ???    (2..4)[0]
+        //    ???   (3..5)[0]
+        {"banana", {{"???", 3}}, {{range_t(0, 2), 0}, {range_t(1, 3), 0}, {range_t(2, 4), 0}, {range_t(3, 5), 0}}},
         // banana
-        //  ??a     1[0]
-        //    ??a   3[0]
-        {"banana", 1, {{"??a", 3}}, 2, {{1, 0}, {3, 0}}},
+        //  ??a     (1..3)[0]
+        //    ??a   (3..5)[0]
+        {"banana", {{"??a", 3}}, {{range_t(1, 3), 0}, {range_t(3, 5), 0}}},
         // banana
-        // ban     0[0]
-        //  an?    1[1]
-        //  a?a    1[2]
-        //    an?  3[1]
-        //    a?a  3[2]
-        {"banana", 3, {{"ban", 3}, {"an?", 3}, {"a?a", 3}}, 5, {{0, 0}, {1, 1}, {1, 2}, {3, 1}, {3, 2}}},
+        // ban      (0..2)[0]
+        //  an?     (1..3)[1]
+        //  a?a     (1..3)[2]
+        //    an?   (3..5)[1]
+        //    a?a   (3..5)[2]
+        // case sibling single (element exist, also single sibling exists)
+        {"banana", {{"ban", 3}, {"an?", 3}, {"a?a", 3}}, {{range_t(0, 2), 0}, {range_t(1, 3), 1}, {range_t(1, 3), 2}, {range_t(3, 5), 1}, {range_t(3, 5), 2}}},
+        // banana
+        // ba       (0..1)[0]
+        // b--a     (0..3)[0]
+        // b----a   (0..5)[0]
+        // b-n      (0..2)[1]
+        // b---n    (0..4)[1]
+        {"banana", {{"b*a", 3}, {"b*n", 3}}, {{range_t(0, 1), 0}, {range_t(0, 3), 0}, {range_t(0, 5), 0}, {range_t(0, 2), 1}, {range_t(0, 4), 1}}},
+
         {"ahishers",
-         7,
          {{"his", 3}, {"her", 3}, {"hers", 4}, {"?is", 3}, {"h?r", 3}, {"??s", 3}, {"a?", 2}},
-         8,
-         {{0, 6}, {1, 0}, {1, 3}, {1, 5}, {4, 1}, {4, 2}, {4, 4}, {5, 5}}},
+         {{range_t(0, 1), 6},
+          {range_t(1, 3), 0},
+          {range_t(1, 3), 3},
+          {range_t(1, 3), 5},
+          {range_t(4, 6), 1},
+          {range_t(4, 6), 4},
+          {range_t(4, 7), 2},
+          {range_t(5, 7), 5}}},
         // ahishers
-        // a?i         0[0]
-        //  ?is        1[1]
-        //  h?         1[3]
-        //  ??s        1[4]
-        //   ?s        2[2]
-        //     h?      4[3]
-        //      ??s    5[4]
-        //       ?s    6[2]
-        {"ahishers", 5, {{"a?i", 3}, {"?is", 3}, {"?s", 2}, {"h?", 2}, {"??s", 3}}, 8, {{0, 0}, {1, 1}, {1, 3}, {1, 4}, {2, 2}, {4, 3}, {5, 4}, {6, 2}}},
+        // a?i        (0..2)[0]
+        //  ?is       (1..3)[1]
+        //  h?        (1..2)[3]
+        //  ??s       (1..3)[4]
+        //   ?s       (2..3)[2]
+        //     h?     (4..5)[3]
+        //      ??s   (5..7)[4]
+        //       ?s   (6..7)[2]
+        {"ahishers",
+         {{"a?i", 3}, {"?is", 3}, {"?s", 2}, {"h?", 2}, {"??s", 3}},
+         {{range_t(0, 2), 0},
+          {range_t(1, 3), 1},
+          {range_t(1, 2), 3},
+          {range_t(1, 3), 4},
+          {range_t(2, 3), 2},
+          {range_t(4, 5), 3},
+          {range_t(5, 7), 4},
+          {range_t(6, 7), 2}}},
         // ahishers
-        // ?h          0[2]
-        //  h??        1[0]
-        //   ?s        2[1]
-        //    ?h       3[2]
-        //     h??     4[0]
-        //       ?s    6[1]
-        {"ahishers", 3, {{"h??", 3}, {"?s", 2}, {"?h", 2}}, 6, {{0, 2}, {1, 0}, {2, 1}, {3, 2}, {4, 0}, {6, 1}}},
+        // ?h         (0..1)[2]
+        //  h??       (1..3)[0]
+        //   ?s       (2..3)[1]
+        //    ?h      (3..4)[2]
+        //     h??    (4..6)[0]
+        //       ?s   (6..7)[1]
+        {"ahishers",
+         {{"h??", 3}, {"?s", 2}, {"?h", 2}},
+         {{range_t(0, 1), 2}, {range_t(1, 3), 0}, {range_t(2, 3), 1}, {range_t(3, 4), 2}, {range_t(4, 6), 0}, {range_t(6, 7), 1}}},
+        // ahishers
+        //  h-s       (1..3)[0]
+        //  h--he     (1..5)[2]
+        //    s---s   (3..7)[3]
+        //     h--s   (4..7)[0]
+        //       rs   (6..7)[1]
+        {"ahishers",
+         {{"h*s", 3}, {"r*s", 3}, {"h*h*e", 5}, {"s*s", 3}},
+         {{range_t(1, 3), 0}, {range_t(1, 5), 2}, {range_t(3, 7), 3}, {range_t(4, 7), 0}, {range_t(6, 7), 1}}},
 
         //
         // PS Platinum Trophy Games
         //
 
         // Dark Soul 3
-        // D????S??? 3  0[0]
-        //   ??_        2[1]
-        //    ?_?       3[2]
-        //        ??_   7[1]
-        //         ?_?  8[2]
-        {"Dark Soul 3", 3, {{"D????S??? 3", 11}, {"?? ", 3}, {"? ?", 3}}, 5, {{0, 0}, {2, 1}, {3, 2}, {7, 1}, {8, 2}}},
+        // D????S??? 3   (0..10)[0]
+        //   ??_         (2.. 4)[1]
+        //    ?_?        (3.. 5)[2]
+        //        ??_    (7.. 9)[1]
+        //         ?_?   (8..10)[2]
+        {"Dark Soul 3",
+         {{"D????S??? 3", 11}, {"?? ", 3}, {"? ?", 3}},
+         {{range_t(0, 10), 0}, {range_t(2, 4), 1}, {range_t(3, 5), 2}, {range_t(7, 9), 1}, {range_t(8, 10), 2}}},
         // Monster Hunter World: Icebourne
-        //    ?ter                              3[0]
-        //           ?ter                       10[0]
-        //                       ?ce            22[1]
-        //                       Ice            22[2]
-        {"Monster Hunter World: Icebourne", 3, {{"?ter", 4}, {"?ce", 2}, {"Ice", 2}}, 4, {{3, 0}, {10, 0}, {22, 1}, {22, 2}}},
+        //    ?ter                           ( 3.. 6)[0]
+        //           ?ter                    (10..13)[0]
+        //                       ?ce         (22..24)[1]
+        //                       Ice         (22..24)[2]
+        {"Monster Hunter World: Icebourne",
+         {{"?ter", 4}, {"?ce", 3}, {"Ice", 3}},
+         {{range_t(3, 6), 0}, {range_t(10, 13), 0}, {range_t(22, 24), 1}, {range_t(22, 24), 2}}},
         // Elden Ring
-        //    ?n
-        //        ?n
-        {"Elden Ring", 1, {{"?n", 2}}, 2, {{3, 0}, {7, 0}}},
-
+        //    ?n        (3..4)[0]
+        //        ?n    (7..8)[0]
+        {"Elden Ring", {{"?n", 2}}, {{range_t(3, 4), 0}, {range_t(7, 8), 0}}},
+        // the boxer - Simon & Garfunkel
+        // still a man hears what he wants to hear and disregards the rest
+        //          an                                                       ( 9..10)[2]
+        //             he                                                    (12..13)[0]
+        //             he?r                                                  (12..15)[1]
+        //              e?r                                                  (13..15)[3]
+        //                        he                                         (23..24)[0]
+        //                            an                                     (27..28)[2]
+        //                                    he                             (35..36)[0]
+        //                                    he?r                           (35..38)[1]
+        //                                     e?r                           (36..38)[3]
+        //                                         an                        (40..41)[2]
+        //                                                         he        (56..57)[0]
+        //                                                         he?r      (56..59)[1]
+        //                                                          e?r      (57..59)[3]
+        {"still a man hears what he wants to hear and disregards the rest",
+         {{"he", 2}, {"he?r", 4}, {"an", 2}, {"e?r", 3}},
+         {{range_t(9, 10), 2},
+          {range_t(12, 13), 0},
+          {range_t(12, 15), 1},
+          {range_t(13, 15), 3},
+          {range_t(23, 24), 0},
+          {range_t(27, 28), 2},
+          {range_t(35, 36), 0},
+          {range_t(35, 38), 1},
+          {range_t(36, 38), 3},
+          {range_t(40, 41), 2},
+          {range_t(56, 57), 0},
+          {range_t(56, 59), 1},
+          {range_t(57, 59), 3}}},
         // George Bernard Shaw
         // We don't playing because we grow old; we grow old because we stop playing.
-        //          ????ing                                                             9[0]
-        //                  be??use                                                     17[2]
-        //                          we                                                  25[1]
-        //                                       we                                     38[1]
-        //                                                   be??use                    50[2]
-        //                                                           we                 58[1]
-        //                                                                   ????ing    66[0]
+        //          ????ing                                                             ( 9..15)[0]
+        //                  be??use                                                     (17..23)[2]
+        //                          we                                                  (25..26)[1]
+        //                                       we                                     (38..39)[1]
+        //                                                   be??use                    (50..56)[2]
+        //                                                           we                 (58..59)[1]
+        //                                                                   ????ing    (66..72)[0]
+        // case yield - root (not found element, but single exists)
         {"We don't playing because we grow old; we grow old because we stop playing.",
-         3,
          {{"????ing", 7}, {"we", 2}, {"be??use", 7}},
-         7,
-         {{9, 0}, {17, 2}, {25, 1}, {38, 1}, {50, 2}, {58, 1}, {66, 0}}},
+         {{range_t(9, 15), 0},
+          {range_t(17, 23), 2},
+          {range_t(25, 26), 1},
+          {range_t(38, 39), 1},
+          {range_t(50, 56), 2},
+          {range_t(58, 59), 1},
+          {range_t(66, 72), 0}}},
     };
 
     const OPTION& option = _cmdline->value();
 
-    for (auto item : _table) {
+    for (auto entry : _table) {
         // t_aho_corasick<char> ac(memberof_defhandler<char>);
         t_aho_corasick_wildcard<char> ac(memberof_defhandler<char>, '?', '*');
-        std::multimap<size_t, unsigned> result;
-        std::multimap<size_t, unsigned> expect;
+        std::multimap<range_t, unsigned> result;
+        std::multimap<range_t, unsigned> expect;
 
-        _logger->writeln(R"(source     "%.*s")", strlen(item.source), item.source);
+        _logger->writeln(R"(source     "%.*s")", strlen(entry.source), entry.source);
 
-        for (unsigned i = 0; i < item.count_pattern; i++) {
-            ac.insert(item.pat[i].pattern, item.pat[i].len);
-            _logger->writeln(R"(pattern[%i] "%.*s")", i, item.pat[i].len, item.pat[i].pattern);
+        int i = 0;
+        for (auto item : entry.patterns) {
+            ac.insert(item.pattern, item.len);
+            _logger->writeln(R"(pattern[%i] "%.*s")", i++, item.len, item.pattern);
         }
         ac.build();
 
-        result = ac.search(item.source, strlen(item.source));
-        for (auto item : result) {
-            _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
+        result = ac.search(entry.source, strlen(entry.source));
+        for (auto [range, pid] : result) {
+            _logger->writeln("pos [%2zi..%2zi] pattern[%i]", range.begin, range.end, pid);
         }
-        for (unsigned i = 0; i < item.count_expect; i++) {
-            expect.insert({item.expect[i].pos, item.expect[i].pid});
-        }
-        _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm + wildcards");
+
+        _test_case.assert(result == entry.expects, __FUNCTION__, "Aho Corasick algorithm + wildcards");
     }
 }
 

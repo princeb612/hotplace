@@ -298,6 +298,25 @@ void test_pq() {
     _test_case.assert(false == errorcheck, __FUNCTION__, "case 3");
 }
 
+void test_find_lessthan_or_equal() {
+    _test_case.begin("find_lessthan_or_equal");
+
+    std::set<int> container = {1, 2, 4, 7, 11, 16, 22, 29};
+    std::vector<int> input = {1, 2, 3, 5, 8, 10, 12, 17, 20, 23, 30};
+    std::vector<int> expect = {1, 2, 2, 4, 7, 7, 11, 16, 16, 22, 29};
+
+    basic_stream bs;
+    print<std::set<int>, basic_stream>(container, bs);
+    _logger->writeln(bs);
+
+    for (size_t i = 0; i < input.size(); i++) {
+        int value = 0;
+        int point = input[i];
+        find_lessthan_or_equal<int>(container, point, value);
+        _test_case.assert(value == expect[i], __FUNCTION__, "%i -> %i", point, value);
+    }
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -318,6 +337,7 @@ int main(int argc, char** argv) {
     test_vector();
     test_list();
     test_pq();
+    test_find_lessthan_or_equal();
 
     _logger->flush();
 

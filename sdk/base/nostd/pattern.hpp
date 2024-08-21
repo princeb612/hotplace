@@ -993,10 +993,10 @@ class t_ukkonen {
  *              ac.insert("a", 1);
  *              ac.build();
  *              const char* text = "abcaabc";
- *              std::multimap<unsigned, size_t> result;
+ *              std::multimap<range_t, unsigned> result;
  *              result = ac.search(text, strlen(text));
- *              for (auto item : result) {
- *                  _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
+ *              for (auto [range, pid] : result) {
+ *                  _logger->writeln("pos [%zi..%zi] pattern[%i]", range.begin, range.end, pid);
  *              }
  *          }
  *          // using pointer
@@ -1050,24 +1050,24 @@ class t_aho_corasick {
 
     /**
      * @brief   search for patterns
-     * @return  std::multimap<size_t, unsigned> as is multimap<pattern_id, position>
-     *          pair(pos_occurrence, id_pattern)
+     * @return  std::multimap<range_t, unsigned> as is multimap<pattern_id, position>
+     *          pair(range_t, id_pattern)
      */
-    std::multimap<size_t, unsigned> search(const std::vector<T>& source) {
+    std::multimap<range_t, unsigned> search(const std::vector<T>& source) {
         std::map<size_t, std::set<unsigned>> ordered;
-        std::multimap<size_t, unsigned> result;
+        std::multimap<range_t, unsigned> result;
         dosearch(&source[0], source.size(), ordered);
         get_result(ordered, result);
         return result;
     }
-    std::multimap<size_t, unsigned> search(const T* source, size_t size) {
+    std::multimap<range_t, unsigned> search(const T* source, size_t size) {
         std::map<size_t, std::set<unsigned>> ordered;
-        std::multimap<size_t, unsigned> result;
+        std::multimap<range_t, unsigned> result;
         dosearch(source, size, ordered);
         get_result(ordered, result);
         return result;
     }
-    size_t get_pattern_size(size_t index) {
+    virtual size_t get_pattern_size(size_t index) {
         size_t size = 0;
         auto iter = _patterns.find(index);
         if (_patterns.end() != iter) {
@@ -1161,37 +1161,28 @@ class t_aho_corasick {
             }
         }
     }
-    void collect_results(trienode* node, size_t pos, std::multimap<size_t, unsigned>& result) {
-        if (node) {
-            for (auto v : node->output) {
-                // v is index of pattern
-                // i is end position of pattern
-                // (i - sizepat + 1) is beginning position of pattern
-                size_t sizepat = get_pattern_size(v);
-                size_t p = pos - sizepat + 1;
-                result.insert({p, v});
-            }
-        }
-    }
     /*
-     * @brief   result removed duplicates
+     * @brief   collect results
      */
-    void collect_results(trienode* node, size_t pos, std::map<size_t, std::set<unsigned>>& result) {
+    virtual void collect_results(trienode* node, size_t pos, std::map<size_t, std::set<unsigned>>& result) {
         if (node) {
             for (auto v : node->output) {
-                // v is index of pattern
-                // i is end position of pattern
-                // (i - sizepat + 1) is beginning position of pattern
-                size_t sizepat = get_pattern_size(v);
-                size_t p = pos - sizepat + 1;
-                result[p].insert(v);
+                // pos is an end position of a pattern
+                // v is an index of a pattern
+                result[pos].insert(v);
             }
         }
     }
-    void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<size_t, unsigned>& result) {
+    virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result) {
         for (auto [pos, set] : ordered) {
-            for (auto pattern : set) {
-                result.insert({pos, pattern});
+            for (auto v : set) {
+                // v is an index of a pattern
+                // i is an end position of a pattern
+                // (i - sizepat + 1) is beginning position of pattern
+                range_t range;
+                range.begin = pos - get_pattern_size(v) + 1;
+                range.end = pos;
+                result.insert({range, v});
             }
         }
     }
@@ -1296,6 +1287,274 @@ class t_wildcards {
     memberof_t _memberof;
     BT _wild_single;  // ?
     BT _wild_any;     // *
+};
+
+/**
+ * @brief   Aho Corasick + wildcard
+ * @remarks
+ *          single(?) - testing
+ *          any(*) - not supported yet
+ *
+ *          sketch ... aho corasick + wildcard
+ *
+ *          pattern
+ *                  his her hers ?is h?r h*s
+ *                  (0 his, 1 her, 2 hers, 3 ?is, 4 h?r, 5 ??s, 6 a?, 7 h*s)
+ *          input
+ *                  ahishers
+ *          results
+ *          results.single(?)
+ *                  [01234567]
+ *                   ahishers
+ *                   a?              (0..1)(6)
+ *                    his            (1..3)(0)
+ *                    ?is            (1..3)(3)
+ *                    ??s            (1..3)(5)
+ *                       her         (4..6)(1)
+ *                       h?r         (4..6)(4)
+ *                       hers        (4..7)(2)
+ *                        ??s        (5..7)(5)
+ *          results.any(*)
+ *                    h-s            (1..3)(7)
+ *                       h--s        (4..7)(7)
+ *
+ * @sample
+ *          // t_aho_corasick<char> ac(memberof_defhandler<char>);
+ *          t_aho_corasick_wildcard<char> ac(memberof_defhandler<char>, '?', '*');
+ *          // his her hers ?is h?r h*s
+ *          ac.insert("his", 3);   // pattern 0
+ *          ac.insert("her", 3);   // pattern 1
+ *          ac.insert("hers", 4);  // pattern 2
+ *          ac.insert("?is", 3);   // pattern 3
+ *          ac.insert("h?r", 3);   // pattern 4
+ *          ac.insert("??s", 3);   // pattern 5
+ *          ac.insert("a?", 2);    // pattern 6
+ *          ac.build();
+ *          const char* source = "ahishers";
+ *          std::multimap<size_t, unsigned> result;
+ *          std::multimap<size_t, unsigned> expect =
+ *              {{range_t(0, 1), 6}, {range_t(1, 3), 0}, {range_t(1, 3), 3}, {range_t(1, 3), 5},
+ *               {range_t(4, 6), 1}, {range_t(4, 7), 2}, {range_t(4, 6), 4}, {range_t(5, 7), 5}}};
+ *          result = ac.search(source, strlen(source));
+ *          for (auto item : result) {
+ *              _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
+ *          }
+ *          _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm + wildcards");
+ */
+template <typename BT = char, typename T = BT>
+class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
+   public:
+    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
+    typedef typename t_aho_corasick<BT, T>::trienode trienode;
+    enum {
+        flag_single = (1 << 0),
+        flag_any = (1 << 1),
+    };
+
+   public:
+    t_aho_corasick_wildcard(memberof_t memberof = memberof_defhandler<BT, T>, const BT& wildcard_single = BT(), const BT& wildcard_any = BT())
+        : t_aho_corasick<BT, T>(memberof), _wildcard_single(wildcard_single), _wildcard_any(wildcard_any) {}
+
+   protected:
+    virtual void doinsert(const T* pattern, size_t size) {
+        // sketch - same as t_aho_corasick<BT, T>::doinsert but added flag
+        trienode* current = this->_root;
+        bool has_any = false;
+
+        for (size_t i = 0; i < size; ++i) {
+            const BT& t = this->_memberof(pattern, i);
+
+            if (_wildcard_single == t) {
+                current->flag |= flag_single;
+            } else if (_wildcard_any == t) {
+                current->flag |= flag_any;
+                has_any = true;
+            }
+            trienode* child = current->children[t];
+            if (nullptr == child) {
+                child = new trienode;
+                current->children[t] = child;
+            }
+            current = child;
+        }
+
+        size_t index = this->_patterns.size();
+        current->output.insert(index);
+        this->_patterns.insert({index, size});
+
+        // patterns containing a wildcard *
+        if (has_any) {
+            std::vector<BT> p;
+            for (size_t i = 0; i < size; ++i) {
+                const BT& t = this->_memberof(pattern, i);
+                p.push_back(t);
+            }
+            _patterns_any.insert({index, std::move(p)});
+        }
+    }
+    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<unsigned>>& result) {
+        if (source) {
+            typedef std::pair<trienode*, size_t> pair_t;
+            std::set<pair_t> visit;
+            std::queue<pair_t> q;
+
+            auto enqueue = [&](trienode* node, size_t idx) -> void {
+                if (idx < size) {
+                    pair_t p = {node, idx};
+                    auto iter = visit.find(p);
+                    if (visit.end() == iter) {
+                        q.push(p);
+                        visit.insert(p);
+                    }
+                }
+            };
+
+            enqueue(this->_root, 0);
+
+            while (false == q.empty()) {
+                auto [current, i] = q.front();
+                visit.insert({current, i});
+                q.pop();
+
+                const BT& t = this->_memberof(source, i);
+                auto rootiter = this->_root->children.find(t);
+                if (this->_root->children.end() != rootiter) {
+                    auto child = rootiter->second;
+                    _node_pos[child].insert(i);
+                }
+
+                while ((current != this->_root) && (current->children.end() == current->children.find(t)) && (false == has_wildcard(current))) {
+                    current = current->failure;
+                }
+                auto iter = current->children.find(t);
+                if (current->children.end() != iter) {
+                    // case - found t
+                    auto node = iter->second;
+                    this->collect_results(node, i, result);
+                    enqueue(node, i + 1);
+
+                    // case - sibling single/any
+                    if (current->flag & flag_single) {
+                        auto single = current->children[_wildcard_single];
+                        enqueue(single, i + 1);
+                    }
+                    if (current->flag & flag_any) {
+                        auto any = current->children[_wildcard_any];
+                        while (any->flag & flag_any) {
+                            any = any->children[_wildcard_any];
+                        }
+                        enqueue(any, i + 1);
+                    }
+
+                    // yield - case not t
+                    auto fail = current->failure;
+                    if (fail) {
+                        if (fail->flag & flag_single) {
+                            auto single = fail->children[_wildcard_single];
+                            enqueue(single, i + 1);
+                        }
+                        if (fail->flag & flag_any) {
+                            auto any = fail->children[_wildcard_any];
+                            while (any->flag & flag_any) {
+                                any = any->children[_wildcard_any];
+                            }
+                            enqueue(any, i + 1);
+                        }
+                    }
+                } else if (has_wildcard(current)) {
+                    // case - not t but single
+                    if (current->flag & flag_single) {
+                        auto single = current->children[_wildcard_single];
+                        this->collect_results(single, i, result);
+                        enqueue(single, i + 1);
+                    }
+                    if (current->flag & flag_any) {
+                        enqueue(current, i + 1);
+
+                        auto temp = current->children[_wildcard_any];
+                        while (temp->flag & flag_any) {
+                            temp = temp->children[_wildcard_any];
+                        }
+
+                        auto iter = temp->children.find(t);
+                        if (temp->children.end() != iter) {
+                            auto child = iter->second;
+                            this->collect_results(child, i, result);
+                            enqueue(child, i + 1);
+                        }
+                    }
+
+                    // yield - case not t nor single
+                    auto fail = current->failure;
+                    if (fail) {
+                        auto iter = fail->children.find(t);
+                        if (fail->children.end() != iter) {
+                            auto child = iter->second;
+                            enqueue(child, i + 1);
+                        }
+                    }
+
+                    // yield - root
+                    enqueue(this->_root, i + 1);
+                } else {
+                    // yield - root
+                    enqueue(this->_root, i + 1);
+                }
+            }
+        }
+    }
+
+    virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result) {
+        for (auto [pos, set] : ordered) {
+            for (auto v : set) {
+                range_t range;
+                auto iter = _patterns_any.find(v);
+                if (_patterns_any.end() == iter) {
+                    range.begin = pos - this->get_pattern_size(v) + 1;
+                    range.end = pos;
+
+                    result.insert({range, v});
+                } else {
+                    // ahishers as an input
+                    // 0 h*s, 1 r*s, 2 h*h*e, 3 s*s
+                    //  h-s       (1..3)[0]
+                    //  h--he     (1..5)[2]
+                    //    s---s   (3..7)[3]
+                    //     h--s   (4..7)[0]
+                    //       rs   (6..7)[1]
+
+                    const std::vector<BT>& pattern = iter->second;
+                    const BT& t = pattern[0];
+                    trienode* node = this->_root->children[t];
+                    int letters = 0;
+                    for (auto c : pattern) {
+                        if (c == t) {
+                            letters++;
+                        }
+                    }
+                    size_t n = pos;
+                    size_t p = 0;
+                    while (letters--) {
+                        n -= 1;
+                        find_lessthan_or_equal<size_t>(_node_pos[node], n, p);
+                    };
+                    range.begin = p;
+                    range.end = pos;
+                    result.insert({range, v});
+                }
+            }
+        }
+    }
+
+   private:
+    bool has_wildcard(trienode* node) { return node->flag > 0; } /* check node->flag & (flag_single | flag_any) */
+    BT _wildcard_single;
+    BT _wildcard_any;
+
+    // patterns containing a wildcard *
+    std::map<unsigned, std::vector<BT>> _patterns_any;
+    // starting position of a pattern containing a wildcard *
+    std::map<trienode*, std::set<size_t>> _node_pos;
 };
 
 }  // namespace hotplace

@@ -637,7 +637,7 @@ void test_x690_parse_and_compose() {
         auto result = p.psearchex(context);
         for (auto r : result) {
             parser::search_result res;
-            context.psearch_result(res, r.first, r.second);
+            context.psearch_result(res, r.first);
 
             _logger->writeln("pos [%2zi] pattern[%2i] %.*s", r.first, r.second, (unsigned)res.size, res.p);
         }
@@ -704,7 +704,7 @@ void test_x690_parse_and_compose() {
 
         for (auto r : result) {
             parser::search_result res;
-            ctx.psearch_result(res, r.first, r.second);
+            ctx.psearch_result(res, r.first);
 
             _logger->writeln("pos [%2zi] pattern[%2i] %.*s", r.first, r.second, (unsigned)res.size, res.p);
             ctx.for_each(res, dump_handler);

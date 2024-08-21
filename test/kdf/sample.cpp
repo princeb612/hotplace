@@ -347,6 +347,8 @@ void test_kdf_extract_expand_rfc5869() {
     }
 }
 
+// The Advanced Encryption Standard-Cipher-based Message Authentication Code-Pseudo-Random Function-128
+// (AES-CMAC-PRF-128) Algorithm for the Internet Key Exchange Protocol (IKE)
 void test_ckdf_rfc4615() {
     _test_case.begin("CMAC-based Extract-and-Expand Key Derivation Function (CKDF)");
     const OPTION& option = _cmdline->value();

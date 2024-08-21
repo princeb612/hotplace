@@ -28,9 +28,11 @@ add_subdirectory (parser)
 add_subdirectory (sysmon)
 
 # crypto
+add_subdirectory (random)
 add_subdirectory (crypto)
 add_subdirectory (kdf)
 add_subdirectory (hash)
+add_subdirectory (sign)
 add_subdirectory (jose)
 add_subdirectory (cose)
 add_subdirectory (authenticode)
@@ -52,7 +54,7 @@ add_subdirectory (odbc)
 endif ()
 
 # etc
-add_subdirectory (varstring)
+add_subdirectory (etc)
 
 # platform
 if (UNIX)

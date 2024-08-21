@@ -15,8 +15,13 @@
    * CBOR ![implemented](https://img.shields.io/badge/implemented-green)
    * COSE ![implemented](https://img.shields.io/badge/implemented-green)
    * HTTP/1.1,2,3 ![studying](https://img.shields.io/badge/studying-magenta)
+   * ASN.1 ![studying](https://img.shields.io/badge/studying-magenta)
 
 ## implemented
+
+ * Authenticode (1. for Digital Certificate verification 2. plugin_msi, plugin_cabinet not included)
+  * sdk/crypto/authenticode/
+  * test/authenticode/
 
  * RFC 7049 Concise Binary Object Representation (CBOR)
  * RFC 8949 Concise Binary Object Representation (CBOR)
@@ -49,21 +54,26 @@
 
 ## applied
 
+ * Pattern Search (KMP algorithm, Trie, Suffix Tree, Ukkonen algorithm, Aho-Corasick algorithm)
+   * sdk/base/nostd/
+   * test/pattern/
+   * test/parser/
+
  * RFC 4648 The Base16, Base32, and Base64 Data Encodings
    * sdk/io/basic/
    * test/encode/
 
- * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
- * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
-   * sdk/crypto/basic/
-   * test/crypto/
-
  * RFC 2144 The CAST-128 Encryption Algorithm (May 1997)
  * RFC 2612 The CAST-256 Encryption Algorithm (June 1999)
+ * RFC 3217 Triple-DES and RC2 Key Wrapping (December 2001)
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm (September 2002)
+ * RFC 3610 Counter with CBC-MAC (CCM)
+ * RFC 4615 The Advanced Encryption Standard-Cipher-based Message Authentication Code-Pseudo-Random Function-128 (AES-CMAC-PRF-128) Algorithm for the Internet Key Exchange Protocol (IKE)
+ * RFC 4772 Security Implications of Using the Data Encryption Standard (DES) (December 2006)
  * RFC 5649 Advanced Encryption Starndard (AES) Key Wrap with Padding Algorithm (September 2009)
  * RFC 5794 A Description of the ARIA Encryption Algorithm (March 2010)
  * RFC 5869 HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
+ * RFC 6070 PKCS #5: Password-Based Key Derivation Function 2 (PBKDF2) Test Vectors
  * RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
  * RFC 7914 The scrypt Password-Based Key Derivation Function
  * RFC 8017 PKCS #1: RSA Cryptography Specifications Version 2.2
@@ -76,21 +86,28 @@
    * https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
    * test/crypto/
 
+ * RFC 2104 HMAC: Keyed-Hashing for Message Authentication
+ * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
  * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
  * RFC 4493 The AES-CMAC Algorithm
+ * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
+ * RFC 6979 Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)
  * NIST CAVP (Cryptographic Algorithm Validation Program) ECDSA
    * https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
    * sdk/crypto/basic/
    * test/hash/
+   * test/sign/
 
  * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
  * RFC 1952 GZIP file format specification version 4.3
  * RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0
  * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2069 An Extension to HTTP : Digest Access Authentication
+ * RFC 2396 Uniform Resource Identifiers (URI): Generic Syntax
  * RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
  * RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
  * RFC 6749 OAuth 2.0
+ * RFC 6750 The OAuth 2.0 Authorization Framework: Bearer Token Usage
  * RFC 7616 HTTP Digest Access Authentication
    * sdk/net/http/
    * test/httpserver/

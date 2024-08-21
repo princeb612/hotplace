@@ -15,9 +15,9 @@
 #include <algorithm>
 #include <functional>
 #include <sdk/base/error.hpp>
-//#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
+#include <set>
 
 namespace hotplace {
 
@@ -200,6 +200,10 @@ class t_merge_ovl_intervals {
         _arr.push_back(interval(start, end, t));
         return *this;
     }
+    t_merge_ovl_intervals& add(const range_t& range, const T& t) {
+        _arr.push_back(interval(range.begin, range.end, t));
+        return *this;
+    }
 
     t_merge_ovl_intervals& clear() {
         _arr.clear();
@@ -234,6 +238,21 @@ class t_merge_ovl_intervals {
    private:
     std::vector<interval> _arr;
 };
+
+/**
+ * @brief   find_lessthan_or_equal
+ */
+template <typename T>
+void find_lessthan_or_equal(std::set<T>& container, const T& point, T& value) {
+    auto iter = std::lower_bound(container.begin(), container.end(), point);
+    if ((container.begin() == iter) && (*iter > point)) {
+        value = T();
+    } else if ((container.end() == iter) || (*iter > point)) {
+        value = *(--iter);
+    } else {
+        value = *iter;
+    }
+}
 
 }  // namespace hotplace
 

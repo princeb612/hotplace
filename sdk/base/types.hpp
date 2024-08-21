@@ -63,6 +63,23 @@ typedef struct linger linger_t;
 typedef unsigned char byte_t;
 typedef std::vector<byte_t> binary_t;
 
+struct range_t {
+    size_t begin;
+    size_t end;
+    range_t() : begin(0), end(0) {}
+    range_t(size_t b, size_t e) : begin(b), end(e) {}
+    bool operator<(const range_t &rhs) const {
+        bool ret = false;
+        if (begin < rhs.begin) {
+            ret = true;
+        } else if (begin == rhs.begin) {
+            ret = (end < rhs.end);
+        }
+        return ret;
+    }
+    bool operator==(const range_t &rhs) const { return (begin == rhs.begin) && (end == rhs.end); }
+};
+
 enum encoding_t {
     encoding_base16 = 1,
     encoding_base64,

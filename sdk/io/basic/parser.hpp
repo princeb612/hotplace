@@ -241,8 +241,8 @@ class parser {
          * @brief   pattern-level search
          */
         void add_pattern(parser* obj);
-        std::multimap<size_t, unsigned> psearch(parser* obj) const;
-        std::multimap<size_t, unsigned> psearchex(parser* obj) const;
+        std::multimap<range_t, unsigned> psearch(parser* obj) const;
+        std::multimap<range_t, unsigned> psearchex(parser* obj) const;
 
         void clear();
 
@@ -255,13 +255,13 @@ class parser {
          * @brief   search_result
          * @sample
          *          result = p.psearch(context);
-         *          for (auto item : result) {
+         *          for (auto [range, pid] : result) {
          *              parser::search_result res;
-         *              context.psearch_result(res, item.first, item.second);
-         *              _logger->writeln("pos [%zi] pattern[%i] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+         *              context.psearch_result(res, range, pid);
+         *              _logger->writeln("pos [%i..%i] pattern[%i] %.*s", res.begidx, res.endidx, (unsigned)res.size, res.p);
          *          }
          */
-        void psearch_result(search_result& result, uint32 idx, unsigned patidx) const;
+        void psearch_result(search_result& result, range_t range) const;
 
         return_t get(uint32 index, token_description* desc);
 
@@ -468,20 +468,20 @@ class parser {
      *
      *          // pattern search
      *          auto result = p.psearch(context);
-     *          for (auto item : result) {
+     *          for (auto [range, pid] : result) {
      *              parser::search_result res;
-     *              context.psearch_result(res, item.first, item.second);
+     *              context.psearch_result(res, range, pid);
      *
      *              // all patterns matched
-     *              _logger->writeln("pos [%zi] pattern[%i] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+     *              _logger->writeln("pos [%i..%i] pattern[%i] %.*s", res.begin, res.end, pid, (unsigned)res.size, res.p);
      *          }
      *          auto resultex = p.psearch(context);
-     *          for (auto item : resultex) {
+     *          for (auto [range, pid] : resultex) {
      *              parser::search_result res;
-     *              context.psearch_result(res, item.first, item.second);
+     *              context.psearch_result(res, range, pid);
      *
      *              // merge all overlapping intervals into one and output the result which should have only mutually exclusive intervals
-     *              _logger->writeln("pos [%2zi] pattern[%2i] %.*s", item.first, item.second, (unsigned)res.size, res.p);
+     *              _logger->writeln("pos [%2i..%2i] pattern[%2i] %.*s", res.begin, res.end, pid, (unsigned)res.size, res.p);
      *          }
      *
      *          // source
@@ -499,13 +499,13 @@ class parser {
      *          //  pos [ 2] pattern[12] [APPLICATION 3] IMPLICIT VisibleString  // including pattern [0]
      *
      */
-    std::multimap<size_t, unsigned> psearch(const parser::context& context);
+    std::multimap<range_t, unsigned> psearch(const parser::context& context);
     /**
      * @brief   pattern search
      * @remarks merge all overlapping patterns
      * @sa      t_merge_ovl_intervals
      */
-    std::multimap<size_t, unsigned> psearchex(const parser::context& context);
+    std::multimap<range_t, unsigned> psearchex(const parser::context& context);
 
     /**
      * @brief   add token
