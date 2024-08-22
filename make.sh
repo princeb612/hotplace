@@ -104,6 +104,18 @@ if [ $do_clangformat = 1 ]; then
     clang-format -i `find test -name \*.\?pp`
 fi
 
+# redist mingw binaries
+if [ $do_redist = 1 ]; then
+    # redist binaries to run wo mingw environment
+    cd ${HOTPLACE_HOME}
+    source redist.msys
+    redist
+    # and now
+    #   cp xxx.exe ${HOTPLACE_HOME}/redist
+    #   cd ${HOTPLACE_HOME}
+    #   xxx.exe
+fi
+
 # build
 mkdir -p build
 cd build
@@ -117,13 +129,6 @@ time make
 if [ $do_ctest = 1 ]; then
     cd ${HOTPLACE_HOME}/build/test/
     ctest
-fi
-# redist mingw binaries
-if [ $do_redist = 1 ]; then
-    # redist binaries to run wo mingw environment
-    cd ${HOTPLACE_HOME}
-    source redist.msys
-    redist
 fi
 # run build/test/test.sh
 if [ $do_test = 1 ]; then

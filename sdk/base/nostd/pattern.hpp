@@ -1056,15 +1056,16 @@ class t_aho_corasick {
     std::multimap<range_t, unsigned> search(const std::vector<T>& source) {
         std::map<size_t, std::set<unsigned>> ordered;
         std::multimap<range_t, unsigned> result;
-        dosearch(&source[0], source.size(), ordered);
-        get_result(ordered, result);
+        auto size = source.size();
+        dosearch(&source[0], size, ordered);
+        get_result(ordered, result, size);
         return result;
     }
     std::multimap<range_t, unsigned> search(const T* source, size_t size) {
         std::map<size_t, std::set<unsigned>> ordered;
         std::multimap<range_t, unsigned> result;
         dosearch(source, size, ordered);
-        get_result(ordered, result);
+        get_result(ordered, result, size);
         return result;
     }
     virtual size_t get_pattern_size(size_t index) {
@@ -1173,7 +1174,7 @@ class t_aho_corasick {
             }
         }
     }
-    virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result) {
+    virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result, size_t size) {
         for (auto [v, positions] : ordered) {
             for (auto pos : positions) {
                 range_t range;
@@ -1495,6 +1496,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                         auto iter = fail->children.find(t);
                         if (fail->children.end() != iter) {
                             auto child = iter->second;
+                            this->collect_results(child, i, result);
                             enqueue(child, i + 1);
                         }
                     }
@@ -1509,49 +1511,62 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
         }
     }
 
-    virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result) {
+    virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result, size_t size) {
         for (auto [v, positions] : ordered) {
-            if (v >= baseof_prefix) {
-                break;
-            }
-
-            auto prefix_v = v + baseof_prefix;
-            auto iter = _hidden.find(prefix_v);
-            // example
-            //  "hello*world" as an input
-            //  "hello*world" as _patterns[0] = length(11)
-            //  "hello" as _hidden[0 + 0x10000000] = length(5)
-            // so ...
-            //  if (_hidden.end() == iter) ; pattern[v] not contains * ; pattern
-            //  if (_hidden.end() != iter) ; pattern[v] contains *     ; prefix
-            if (_hidden.end() == iter) {
-                for (auto pos : positions) {
-                    range_t range;
-                    range.begin = pos - this->get_pattern_size(v) + 1;
-                    range.end = pos;
-
-                    result.insert({range, v});
-                }
-            } else {
-                auto tag = iter->second;
-                auto iter_prefix = ordered.find(v + baseof_prefix);
-                if (ordered.end() != iter_prefix) {  // always true
-                    auto positions_prefix = iter_prefix->second;
+            if (v < baseof_prefix) {
+                auto prefix_v = v + baseof_prefix;
+                auto iter = _hidden.find(prefix_v);
+                // example
+                //  "hello*world" as an input
+                //  "hello*world" as _patterns[0] = length(11)
+                //  "hello" as _hidden[0 + 0x10000000] = length(5)
+                // so ...
+                //  if (_hidden.end() == iter) ; pattern[v] not contains * ; pattern
+                //  if (_hidden.end() != iter) ; pattern[v] contains *     ; prefix
+                if (_hidden.end() == iter) {
                     for (auto pos : positions) {
                         range_t range;
+                        range.begin = pos - this->get_pattern_size(v) + 1;
                         range.end = pos;
-                        if (startswith_wildcard_any & tag.modes) {
-                            range.begin = 0;
-                        } else if (endswith_wildcard_any & tag.modes) {
-                            // not implemented yet
-                        } else {
-                            unsigned n = pos - tag.adjust + 1;
-                            unsigned p = 0;
-                            find_lessthan_or_equal<unsigned>(positions_prefix, n, p);
 
-                            range.begin = p - tag.size + 1;
-                        }
                         result.insert({range, v});
+                    }
+                } else {
+                    auto tag = iter->second;
+                    auto iter_prefix = ordered.find(v + baseof_prefix);
+                    if (ordered.end() != iter_prefix) {  // always true
+                        auto positions_prefix = iter_prefix->second;
+                        for (auto pos : positions) {
+                            range_t range;
+
+                            range.end = pos;
+
+                            if (startswith_wildcard_any & tag.modes) {
+                                range.begin = 0;
+                            } else {
+                                unsigned n = pos - tag.adjust + 1;
+                                unsigned p = 0;
+                                find_lessthan_or_equal<unsigned>(positions_prefix, n, p);
+
+                                range.begin = p - tag.size + 1;
+                            }
+
+                            result.insert({range, v});
+                        }
+                    }
+                }
+            } else {
+                //
+                auto iter = _hidden.find(v);
+                if (_hidden.end() != iter) {
+                    auto tag = iter->second;
+                    if (endswith_wildcard_any & tag.modes) {
+                        for (auto pos : positions) {
+                            range_t range;
+                            range.begin = pos - tag.adjust + 1;
+                            range.end = size - 1;
+                            result.insert({range, v - baseof_prefix});
+                        }
                     }
                 }
             }
@@ -1585,12 +1600,12 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
      *
      *  2. result
      *  ; should be (1..5)[0] not (4..5)[0]
-     *    d) the stating position is prior than the index 4 ('h')
-     *       d.1) patterhn[0] at least 3 items occupied implicitly ("hhe")
+     *    d) the stating position is earlier than the index 4 ('h')
+     *       d.1) pattern[0] at least 3 items occupied implicitly ("hhe")
      *       d.2) adjust = lengthof(pattern) - lengthof(wildcard_any) = lengthof("h*h*e") - lengthof("**") = 5 - 2 = 3
      *       d.3) set adjust into hidden_tag_t::adjust
      *    e) so... find_lessthan_or_equal(container, pos - adjust + 1, wanted);
-     *       e.1) pos occurrence of pattern (Aho-Corasick return end position of pattern)
+     *       e.1) occurrence of pattern at pos (Aho-Corasick return the end position of a pattern)
      *       e.2) find_lessthan_or_equal(container, 5 - 3 + 1, wanted)
      *       e.3) find_lessthan_or_equal 3 in [1, 4]
      *    f) starting position

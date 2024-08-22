@@ -746,6 +746,7 @@ void test_aho_corasick_wildcard() {
           {range_t(4, 5), 3},
           {range_t(5, 7), 4},
           {range_t(6, 7), 2}}},
+        // 01234567
         // ahishers
         // ?h         (0..1)[2]
         //  h??       (1..3)[0]
@@ -756,6 +757,7 @@ void test_aho_corasick_wildcard() {
         {"ahishers",
          {{"h??", 3}, {"?s", 2}, {"?h", 2}},
          {{range_t(0, 1), 2}, {range_t(1, 3), 0}, {range_t(2, 3), 1}, {range_t(3, 4), 2}, {range_t(4, 6), 0}, {range_t(6, 7), 1}}},
+        // 01234567
         // ahishers
         //  h-s       (1..3)[0]
         //  h--he     (1..5)[2]
@@ -770,6 +772,8 @@ void test_aho_corasick_wildcard() {
         // PS Platinum Trophy Games
         //
 
+        // 0         1
+        // 01234567890
         // Dark Soul 3
         // D????S??? 3   (0..10)[0]
         //   ??_         (2.. 4)[1]
@@ -779,6 +783,8 @@ void test_aho_corasick_wildcard() {
         {"Dark Soul 3",
          {{"D????S??? 3", 11}, {"?? ", 3}, {"? ?", 3}},
          {{range_t(0, 10), 0}, {range_t(2, 4), 1}, {range_t(3, 5), 2}, {range_t(7, 9), 1}, {range_t(8, 10), 2}}},
+        // 0         1         2         3
+        // 0123456789012345678901234567890
         // Monster Hunter World: Icebourne
         //    ?ter                           ( 3.. 6)[0]
         //           ?ter                    (10..13)[0]
@@ -792,6 +798,8 @@ void test_aho_corasick_wildcard() {
         //        ?n    (7..8)[0]
         {"Elden Ring", {{"?n", 2}}, {{range_t(3, 4), 0}, {range_t(7, 8), 0}}},
         // the boxer - Simon & Garfunkel
+        // 0         1         2         3         4         5         6
+        // 012345678901234567890123456789012345678901234567890123456789012
         // still a man hears what he wants to hear and disregards the rest
         //          an                                                       ( 9..10)[2]
         //             he                                                    (12..13)[0]
@@ -821,6 +829,8 @@ void test_aho_corasick_wildcard() {
           {range_t(56, 57), 0},
           {range_t(56, 59), 1},
           {range_t(57, 59), 3}}},
+        // 0         1         2         3         4         5         6
+        // 012345678901234567890123456789012345678901234567890123456789012
         // still a man hears what he wants to hear and disregards the rest
         //                   what ----------- hear                         (18..38)[0]
         // st?ll ----- h                                                   ( 0..12)[1]
@@ -831,6 +841,8 @@ void test_aho_corasick_wildcard() {
          {{"wha? * hear", 11}, {"st?ll * h", 9}, {"and * rest", 10}},
          {{range_t(18, 38), 0}, {range_t(0, 12), 1}, {range_t(0, 23), 1}, {range_t(0, 35), 1}, {range_t(40, 62), 2}}},
         // George Bernard Shaw
+        // 0         1         2         3         4         5         6         7
+        // 01234567890123456789012345678901234567890123456789012345678901234567890123
         // We don't playing because we grow old; we grow old because we stop playing.
         //          ????ing                                                             ( 9..15)[0]
         //                  be??use                                                     (17..23)[2]
@@ -849,15 +861,25 @@ void test_aho_corasick_wildcard() {
           {range_t(50, 56), 2},
           {range_t(58, 59), 1},
           {range_t(66, 72), 0}}},
+        // 0         1         2         3         4         5         6         7
+        // 01234567890123456789012345678901234567890123456789012345678901234567890123
         // We don't playing because we grow old; we grow old because we stop playing.
         // -------------ing                                                             ( 0..15)[2]
         // ----------------------------------------------------------------------ing    ( 0..72)[2]
+        //                  because -------------------------------------------------   (17..73)[3]
         //                          we ---- old                                         (25..35)[0]
         //                                       we ---- old                            (38..48)[0]
+        //                                                   because ----------------   (50..73)[3]
         //                                                              stop ----ing    (61..72)[1]
         {"We don't playing because we grow old; we grow old because we stop playing.",
-         {{"we * old", 8}, {"stop *ing", 9}, {"*ing", 4}},
-         {{range_t(0, 15), 2}, {range_t(0, 72), 2}, {range_t(25, 35), 0}, {range_t(38, 48), 0}, {range_t(61, 72), 1}}},
+         {{"we * old", 8}, {"stop *ing", 9}, {"*ing", 4}, {"because *", 9}},
+         {{range_t(0, 15), 2},
+          {range_t(0, 72), 2},
+          {range_t(25, 35), 0},
+          {range_t(38, 48), 0},
+          {range_t(61, 72), 1},
+          {range_t(17, 73), 3},
+          {range_t(50, 73), 3}}},
     };
 
     const OPTION& option = _cmdline->value();

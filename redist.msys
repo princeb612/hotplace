@@ -22,8 +22,8 @@ if [ $OSTYPE = "msys" ]; then
     mingw_bin_dll+=(libidn2-0.dll libssh2-1.dll libintl-?.dll libiconv-?.dll libunistring-?.dll liblzma-?.dll)
     mingw_bin_dll+=(zlib1.dll)
 
-    cd ${project_dir}
+    cd ${HOTPLACE_HOME}
     mkdir -p redist
-    copy_dir_files ${project_dir}/redist/ ${MSYSTEM_PREFIX}/bin ${mingw_bin_dll[@]}
+    copy_dir_files ${HOTPLACE_HOME}/redist/ ${MSYSTEM_PREFIX}/bin ${mingw_bin_dll[@]}
 fi
 }
