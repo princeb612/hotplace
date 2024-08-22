@@ -1167,18 +1167,15 @@ class t_aho_corasick {
     virtual void collect_results(trienode* node, size_t pos, std::map<size_t, std::set<unsigned>>& result) {
         if (node) {
             for (auto v : node->output) {
-                // pos is an end position of a pattern
                 // v is an index of a pattern
-                result[pos].insert(v);
+                // pos is an end position of a pattern
+                result[v].insert(pos);
             }
         }
     }
     virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result) {
-        for (auto [pos, set] : ordered) {
-            for (auto v : set) {
-                // v is an index of a pattern
-                // i is an end position of a pattern
-                // (i - sizepat + 1) is beginning position of pattern
+        for (auto [v, positions] : ordered) {
+            for (auto pos : positions) {
                 range_t range;
                 range.begin = pos - get_pattern_size(v) + 1;
                 range.end = pos;
@@ -1291,6 +1288,7 @@ class t_wildcards {
 
 /**
  * @brief   Aho Corasick + wildcard
+ *          endswith_wildcard_any not implemented yet
  * @remarks
  *
  *          sketch ... aho corasick + wildcard
@@ -1356,38 +1354,52 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
    protected:
     virtual void doinsert(const T* pattern, size_t size) {
         // sketch - same as t_aho_corasick<BT, T>::doinsert but added flag
-        trienode* current = this->_root;
-        bool has_any = false;
+        if (pattern && size) {
+            size_t index = this->_patterns.size();
 
-        for (size_t i = 0; i < size; ++i) {
-            const BT& t = this->_memberof(pattern, i);
+            trienode* current = this->_root;
+            size_t count_any = 0;
+            int modes = 0;  // begins with *, ends with *
 
-            if (_wildcard_single == t) {
-                current->flag |= flag_single;
-            } else if (_wildcard_any == t) {
-                current->flag |= flag_any;
-                has_any = true;
-            }
-            trienode* child = current->children[t];
-            if (nullptr == child) {
-                child = new trienode;
-                current->children[t] = child;
-            }
-            current = child;
-        }
-
-        size_t index = this->_patterns.size();
-        current->output.insert(index);
-        this->_patterns.insert({index, size});
-
-        // patterns containing a wildcard *
-        if (has_any) {
-            std::vector<BT> p;
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = this->_memberof(pattern, i);
-                p.push_back(t);
+
+                trienode* child = current->children[t];
+                if (nullptr == child) {
+                    child = new trienode;
+                    current->children[t] = child;
+                }
+
+                if (_wildcard_single == t) {
+                    current->flag |= flag_single;
+                } else if (_wildcard_any == t) {
+                    current->flag |= flag_any;
+                    if (0 == count_any) {
+                        // to find a starting position, remember pattern up to the first wildcard *
+                        auto prefix_index = index + baseof_prefix;
+
+                        current->output.insert(prefix_index);
+                        hidden_tag_t tag(i);
+                        _hidden.insert({prefix_index, i});
+                    }
+                    if (0 == i) {
+                        modes |= startswith_wildcard_any;
+                    } else if (size - 1 == i) {
+                        modes |= endswith_wildcard_any;
+                    }
+                    count_any++;
+                }
+
+                current = child;
             }
-            _patterns_any.insert({index, std::move(p)});
+
+            current->output.insert(index);
+            this->_patterns.insert({index, size});
+            if (count_any) {
+                auto prefix_index = index + baseof_prefix;
+                _hidden[prefix_index].adjust = size - count_any;
+                _hidden[prefix_index].modes = modes;
+            }
         }
     }
     virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<unsigned>>& result) {
@@ -1415,11 +1427,6 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                 q.pop();
 
                 const BT& t = this->_memberof(source, i);
-                auto rootiter = this->_root->children.find(t);
-                if (this->_root->children.end() != rootiter) {
-                    auto child = rootiter->second;
-                    _node_pos[child].insert(i);
-                }
 
                 while ((current != this->_root) && (current->children.end() == current->children.find(t)) && (false == has_wildcard(current))) {
                     current = current->failure;
@@ -1503,40 +1510,47 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
     }
 
     virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result) {
-        for (auto [pos, set] : ordered) {
-            for (auto v : set) {
-                range_t range;
-                auto iter = _patterns_any.find(v);
-                if (_patterns_any.end() == iter) {
+        for (auto [v, positions] : ordered) {
+            if (v >= baseof_prefix) {
+                break;
+            }
+
+            auto prefix_v = v + baseof_prefix;
+            auto iter = _hidden.find(prefix_v);
+            // example
+            //  "hello*world" as an input
+            //  "hello*world" as _patterns[0] = length(11)
+            //  "hello" as _hidden[0 + 0x10000000] = length(5)
+            // so ...
+            //  if (_hidden.end() == iter) ; pattern[v] not contains * ; pattern
+            //  if (_hidden.end() != iter) ; pattern[v] contains *     ; prefix
+            if (_hidden.end() == iter) {
+                for (auto pos : positions) {
+                    range_t range;
                     range.begin = pos - this->get_pattern_size(v) + 1;
                     range.end = pos;
 
                     result.insert({range, v});
-                } else {
-                    // ahishers as an input
-                    // 0 h*s, 1 r*s, 2 h*h*e, 3 s*s
-                    //  h-s       (1..3)[0]
-                    //  h--he     (1..5)[2]
-                    //    s---s   (3..7)[3]
-                    //     h--s   (4..7)[0]
-                    //       rs   (6..7)[1]
-
-                    const std::vector<BT>& pattern = iter->second;
-                    const BT& t = pattern[0];
-                    if (_wildcard_any == t) {
-                        result.insert({range_t(0, pos), v});
-                    } else {
-                        trienode* node = this->_root->children[t];
-                        int letters = 0;
-                        for (auto c : pattern) {
-                            if (c != _wildcard_any) {
-                                letters++;
-                            }
-                        }
-                        size_t p = 0;
-                        find_lessthan_or_equal<size_t>(_node_pos[node], pos - letters + 1, p);
-                        range.begin = p;
+                }
+            } else {
+                auto tag = iter->second;
+                auto iter_prefix = ordered.find(v + baseof_prefix);
+                if (ordered.end() != iter_prefix) {  // always true
+                    auto positions_prefix = iter_prefix->second;
+                    for (auto pos : positions) {
+                        range_t range;
                         range.end = pos;
+                        if (startswith_wildcard_any & tag.modes) {
+                            range.begin = 0;
+                        } else if (endswith_wildcard_any & tag.modes) {
+                            // not implemented yet
+                        } else {
+                            unsigned n = pos - tag.adjust + 1;
+                            unsigned p = 0;
+                            find_lessthan_or_equal<unsigned>(positions_prefix, n, p);
+
+                            range.begin = p - tag.size + 1;
+                        }
                         result.insert({range, v});
                     }
                 }
@@ -1549,10 +1563,56 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
     BT _wildcard_single;
     BT _wildcard_any;
 
-    // patterns containing a wildcard *
-    std::map<unsigned, std::vector<BT>> _patterns_any;
-    // starting position of a pattern containing a wildcard *
-    std::map<trienode*, std::set<size_t>> _node_pos;
+    /**
+     * sketch - starting position of wildcard * pattern
+     *
+     * "ahishers" as an input
+     * "h*h*e" as _patterns[0]
+     * "h" as _hidden[0] (pattern up to the first wildcard *)
+     *
+     *  1. computation
+     *
+     *    a) _pattern[0] ends at 5
+     *    b) _hidden[0] at [1, 4]
+     *    c) container [1, 4]
+     *       (1..5)[0] or (4..5)[0] ; represented as (start..end)[patternid]
+     *
+     *  ; figure
+     *       index    01234567
+     *       input    ahishers
+     *       pattern   h--he    see a) and c)
+     *       hidden    h  h     see b)
+     *
+     *  2. result
+     *  ; should be (1..5)[0] not (4..5)[0]
+     *    d) the stating position is prior than the index 4 ('h')
+     *       d.1) patterhn[0] at least 3 items occupied implicitly ("hhe")
+     *       d.2) adjust = lengthof(pattern) - lengthof(wildcard_any) = lengthof("h*h*e") - lengthof("**") = 5 - 2 = 3
+     *       d.3) set adjust into hidden_tag_t::adjust
+     *    e) so... find_lessthan_or_equal(container, pos - adjust + 1, wanted);
+     *       e.1) pos occurrence of pattern (Aho-Corasick return end position of pattern)
+     *       e.2) find_lessthan_or_equal(container, 5 - 3 + 1, wanted)
+     *       e.3) find_lessthan_or_equal 3 in [1, 4]
+     *    f) starting position
+     *       wanted - lengthof(prefix) + 1 = 1 - 1 + 1 = 1
+     *       ; lengthof(_hidden[0]) = lengthof("h") = 1
+     *    g) finally result is (1..5)[0]
+     */
+    enum hidden_tag_mode_t {
+        startswith_wildcard_any = (1 << 0),
+        endswith_wildcard_any = (1 << 1),
+    };
+    struct hidden_tag_t {
+        size_t size;
+        size_t adjust;
+        int modes;
+        hidden_tag_t() : size(0), adjust(0), modes(0) {}
+        hidden_tag_t(size_t s) : size(s), adjust(0), modes(0) {}
+        hidden_tag_t(size_t s, size_t adj) : size(s), adjust(adj), modes(0) {}
+        void set_mode(int flags) { modes = flags; }
+    };
+    std::unordered_map<size_t, hidden_tag_t> _hidden;  // pair(pid + baseof_prefix, hidden_tag_t)
+    const size_t baseof_prefix = 0x10000000;
 };
 
 }  // namespace hotplace

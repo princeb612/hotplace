@@ -821,6 +821,15 @@ void test_aho_corasick_wildcard() {
           {range_t(56, 57), 0},
           {range_t(56, 59), 1},
           {range_t(57, 59), 3}}},
+        // still a man hears what he wants to hear and disregards the rest
+        //                   what ----------- hear                         (18..38)[0]
+        // st?ll ----- h                                                   ( 0..12)[1]
+        // st?ll ---------------- h                                        ( 0..23)[1]
+        // st?ll ---------------------------- h                            ( 0..35)[1]
+        //                                         and -------------- rest (40..62)[2]
+        {"still a man hears what he wants to hear and disregards the rest",
+         {{"wha? * hear", 11}, {"st?ll * h", 9}, {"and * rest", 10}},
+         {{range_t(18, 38), 0}, {range_t(0, 12), 1}, {range_t(0, 23), 1}, {range_t(0, 35), 1}, {range_t(40, 62), 2}}},
         // George Bernard Shaw
         // We don't playing because we grow old; we grow old because we stop playing.
         //          ????ing                                                             ( 9..15)[0]
@@ -841,8 +850,8 @@ void test_aho_corasick_wildcard() {
           {range_t(58, 59), 1},
           {range_t(66, 72), 0}}},
         // We don't playing because we grow old; we grow old because we stop playing.
-        // -------------ing                                                             (0..15)[2]
-        // ----------------------------------------------------------------------ing    (0..72)[2]
+        // -------------ing                                                             ( 0..15)[2]
+        // ----------------------------------------------------------------------ing    ( 0..72)[2]
         //                          we ---- old                                         (25..35)[0]
         //                                       we ---- old                            (38..48)[0]
         //                                                              stop ----ing    (61..72)[1]
