@@ -908,6 +908,76 @@ void test_aho_corasick_wildcard() {
     }
 }
 
+char memberof_tolower(const char* source, size_t idx) { return source ? std::tolower(source[idx]) : char(); }
+
+void test_aho_corasick_ignorecase() {
+    _test_case.begin("t_aho_corasick + wildcards");
+
+    struct testvector {
+        const char* source;
+        std::vector<pattern_t> patterns;
+        std::multimap<range_t, unsigned> expects;
+    } _table[] = {
+        // George Bernard Shaw
+        // 0         1         2         3         4         5         6         7
+        // 01234567890123456789012345678901234567890123456789012345678901234567890123
+        // We don't playing because we grow old; we grow old because we stop playing.
+        // we                                                                           ( 0.. 1)[1]
+        //          ????ing                                                             ( 9..15)[0]
+        //                  be??use                                                     (17..23)[2]
+        //                          we                                                  (25..26)[1]
+        //                                       we                                     (38..39)[1]
+        //                                                   be??use                    (50..56)[2]
+        //                                                           we                 (58..59)[1]
+        //                                                                   ????ing    (66..72)[0]
+        // case yield - root (not found element, but single exists)
+        {"We don't playing because we grow old; we grow old because we stop playing.",
+         {{"????ing", 7}, {"we", 2}, {"be??use", 7}},
+         {{range_t(0, 1), 1},
+          {range_t(9, 15), 0},
+          {range_t(17, 23), 2},
+          {range_t(25, 26), 1},
+          {range_t(38, 39), 1},
+          {range_t(50, 56), 2},
+          {range_t(58, 59), 1},
+          {range_t(66, 72), 0}}},
+        // 0         1         2         3         4         5         6         7
+        // 01234567890123456789012345678901234567890123456789012345678901234567890123
+        // We don't playing because we grow old; we grow old because we stop playing.
+        // we ----------ing                                                           ( 0..15)[0]
+        //                                                           we ---------ing  (58..72)[0]
+        //                          we ---- old                                       (25..35)[1]
+        //                                       we ---- old                          (38..48)[1]
+        {"We don't playing because we grow old; we grow old because we stop playing.",
+         {{"we *ing", 7}, {"we * old", 8}},
+         {{range_t(0, 15), 0}, {range_t(58, 72), 0}, {range_t(25, 35), 1}, {range_t(38, 48), 1}}},
+    };
+
+    const OPTION& option = _cmdline->value();
+
+    for (auto entry : _table) {
+        t_aho_corasick_wildcard<char> ac(memberof_tolower, '?', '*');
+        std::multimap<range_t, unsigned> result;
+        std::multimap<range_t, unsigned> expect;
+
+        _logger->writeln(R"(source     "%.*s")", strlen(entry.source), entry.source);
+
+        int i = 0;
+        for (auto item : entry.patterns) {
+            ac.insert(item.pattern, item.len);
+            _logger->writeln(R"(pattern[%i] "%.*s")", i++, item.len, item.pattern);
+        }
+        ac.build();
+
+        result = ac.search(entry.source, strlen(entry.source));
+        for (auto [range, pid] : result) {
+            _logger->writeln("pos [%2zi..%2zi] pattern[%i]", range.begin, range.end, pid);
+        }
+
+        _test_case.assert(result == entry.expects, __FUNCTION__, "Aho Corasick algorithm + wildcards + ignorecase");
+    }
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -937,6 +1007,7 @@ int main(int argc, char** argv) {
     test_wildcards2();
     test_merge_ovl_intervals();
     test_aho_corasick_wildcard();
+    test_aho_corasick_ignorecase();
 
     _logger->flush();
 

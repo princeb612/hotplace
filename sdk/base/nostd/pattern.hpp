@@ -1009,6 +1009,16 @@ class t_ukkonen {
  *              };
  *              t_aho_corasick<int, token*> ac(memberof);
  *          }
+ *
+ *          // sample.2 ignore case
+ *          {
+ *              char memberof_tolower(const char* source, size_t idx) { return source ? std::tolower(source[idx]) : char(); }
+ *              t_aho_corasick<char> ac(memberof_tolower);
+ *              ac.insert("hello", 7);
+ *              ac.insert("world", 8);
+ *              const char* source = "Hello World ";
+ *              auto result = ac.search(source, strlen(source));
+ *          }
  */
 template <typename BT = char, typename T = BT>
 class t_aho_corasick {
@@ -1289,7 +1299,6 @@ class t_wildcards {
 
 /**
  * @brief   Aho Corasick + wildcard
- *          endswith_wildcard_any not implemented yet
  * @remarks
  *
  *          sketch ... aho corasick + wildcard
@@ -1316,27 +1325,41 @@ class t_wildcards {
  *                       h--s        (4..7)(7)
  *
  * @sample
- *          // t_aho_corasick<char> ac(memberof_defhandler<char>);
- *          t_aho_corasick_wildcard<char> ac(memberof_defhandler<char>, '?', '*');
- *          // his her hers ?is h?r h*s
- *          ac.insert("his", 3);   // pattern 0
- *          ac.insert("her", 3);   // pattern 1
- *          ac.insert("hers", 4);  // pattern 2
- *          ac.insert("?is", 3);   // pattern 3
- *          ac.insert("h?r", 3);   // pattern 4
- *          ac.insert("??s", 3);   // pattern 5
- *          ac.insert("a?", 2);    // pattern 6
- *          ac.build();
- *          const char* source = "ahishers";
- *          std::multimap<size_t, unsigned> result;
- *          std::multimap<size_t, unsigned> expect =
- *              {{range_t(0, 1), 6}, {range_t(1, 3), 0}, {range_t(1, 3), 3}, {range_t(1, 3), 5},
- *               {range_t(4, 6), 1}, {range_t(4, 7), 2}, {range_t(4, 6), 4}, {range_t(5, 7), 5}}};
- *          result = ac.search(source, strlen(source));
- *          for (auto item : result) {
- *              _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
+ *          // sample.1 wildcard *, ?
+ *          {
+ *              t_aho_corasick_wildcard<char> ac(memberof_defhandler<char>, '?', '*');
+ *              // his her hers ?is h?r h*s
+ *              ac.insert("his", 3);   // pattern 0
+ *              ac.insert("her", 3);   // pattern 1
+ *              ac.insert("hers", 4);  // pattern 2
+ *              ac.insert("?is", 3);   // pattern 3
+ *              ac.insert("h?r", 3);   // pattern 4
+ *              ac.insert("??s", 3);   // pattern 5
+ *              ac.insert("a?", 2);    // pattern 6
+ *              ac.insert("h*s", 3);   // pattern 7
+ *              ac.build();
+ *              const char* source = "ahishers";
+ *              std::multimap<size_t, unsigned> result;
+ *              std::multimap<size_t, unsigned> expect =
+ *                  {{range_t(0, 1), 6}, {range_t(1, 3), 0}, {range_t(1, 3), 3}, {range_t(1, 3), 5},
+ *                   {range_t(4, 6), 1}, {range_t(4, 7), 2}, {range_t(4, 6), 4}, {range_t(5, 7), 5}}};
+ *              result = ac.search(source, strlen(source));
+ *              for (auto item : result) {
+ *                  _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
+ *              }
+ *              _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm + wildcards");
  *          }
- *          _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm + wildcards");
+ *
+ *          // sample.2 ignore case + wildcard ?, *
+ *          {
+ *              char memberof_tolower(const char* source, size_t idx) { return source ? std::tolower(source[idx]) : char(); }
+ *              t_aho_corasick_wildcard<char> ac(memberof_tolower, '?', '*');
+ *              ac.insert("we *ing", 7);
+ *              ac.insert("we * old", 8);
+ *              const char* source = "We don't playing because we grow old; we grow old because we stop playing.";
+ *              auto result = ac.search(source, strlen(source));
+ *              // (0..15)[0], (25..35)[1]), (38..48)[1], (58..72)[0] ; represented as (start..end)[patternid]
+ *          }
  */
 template <typename BT = char, typename T = BT>
 class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
@@ -1556,7 +1579,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                     }
                 }
             } else {
-                //
+                // endswith_wildcard_any
                 auto iter = _hidden.find(v);
                 if (_hidden.end() != iter) {
                     auto tag = iter->second;
