@@ -152,7 +152,7 @@ return_t echo_server(void*) {
         std::string digest_access_realm = "happiness";
         std::string digest_access_realm2 = "testrealm@host.com";
         std::string digest_access_alg = "SHA-256-sess";
-        std::string digest_access_alg2 = "SHA-512-256-sess";
+        std::string digest_access_alg2 = "SHA-256-sess";  // chrome not support SHA-512, SHA-512-sess, ...
         std::string digest_access_qop = "auth";
         bool digest_access_userhash = true;
         // Bearer Authentication (realm)
@@ -225,9 +225,9 @@ return_t echo_server(void*) {
             // basic authentication
             .add("/auth/basic", default_handler, new basic_authentication_provider(basic_realm))
             // digest access authentication
-            .add("/auth/digest", default_handler,
-                 new digest_access_authentication_provider(digest_access_realm, digest_access_alg, digest_access_qop, digest_access_userhash))
-            .add("/auth/digest2", default_handler, new digest_access_authentication_provider(digest_access_realm2, "", digest_access_qop))
+            .add("/auth/digest", default_handler, new digest_access_authentication_provider(digest_access_realm, digest_access_alg, digest_access_qop))
+            .add("/auth/userhash", default_handler,
+                 new digest_access_authentication_provider(digest_access_realm2, digest_access_alg2, digest_access_qop, digest_access_userhash))
             // bearer authentication
             .add("/auth/bearer", default_handler, new bearer_authentication_provider(bearer_realm))
             // callback
@@ -252,7 +252,9 @@ return_t echo_server(void*) {
         resolver.get_basic_credentials(basic_realm).add("user", "password");
         resolver.get_basic_credentials(oauth2_realm).add("s6BhdRkqt3", "gX1fBat3bV");  // RFC 6749 Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
         resolver.get_digest_credentials(digest_access_realm).add(digest_access_realm, digest_access_alg, "user", "password");
-        resolver.get_digest_credentials(digest_access_realm2).add(digest_access_realm2, digest_access_alg2, "Mufasa", "Circle Of Life");
+        resolver.get_digest_credentials(digest_access_realm2)
+            .add(digest_access_realm2, digest_access_alg2, "Mufasa", "Circle Of Life")
+            .add(digest_access_realm2, digest_access_alg2, "user", "password");
         resolver.get_bearer_credentials(bearer_realm).add("clientid", "token");
 
         resolver.get_oauth2_credentials().insert("s6BhdRkqt3", "gX1fBat3bV", "user", "testapp", cb_url.c_str(), std::list<std::string>());

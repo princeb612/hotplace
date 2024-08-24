@@ -1014,8 +1014,8 @@ class t_ukkonen {
  *          {
  *              char memberof_tolower(const char* source, size_t idx) { return source ? std::tolower(source[idx]) : char(); }
  *              t_aho_corasick<char> ac(memberof_tolower);
- *              ac.insert("hello", 7);
- *              ac.insert("world", 8);
+ *              ac.insert("hello", 5);
+ *              ac.insert("world", 5);
  *              const char* source = "Hello World ";
  *              auto result = ac.search(source, strlen(source));
  *          }

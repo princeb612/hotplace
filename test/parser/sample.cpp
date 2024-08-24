@@ -62,11 +62,11 @@ constexpr char asn1_value[] =
         })";
 
 void test_dump_testdata() {
-    _test_case.begin("parse");
-    _logger->writeln(asn1_structure);
-    _logger->dump(asn1_structure, strlen(asn1_structure));
-    _logger->writeln(asn1_value);
-    _logger->dump(asn1_value, strlen(asn1_value));
+    // _test_case.begin("parse");
+    // _logger->writeln(asn1_structure);
+    // _logger->dump(asn1_structure, strlen(asn1_structure));
+    // _logger->writeln(asn1_value);
+    // _logger->dump(asn1_value, strlen(asn1_value));
 }
 
 void test_parser() {
@@ -181,18 +181,18 @@ void test_parser_search() {
     parser::search_result cresult = p.csearch(context1, pattern, strlen(pattern));
     {
         test_case_notimecheck notimecheck(_test_case);
-        if (cresult.match) {
-            _logger->dump(cresult.p, cresult.size);
-        }
-        _test_case.assert(cresult.match, __FUNCTION__, "character search #1 found");
+        // if (cresult.match) {
+        //     _logger->dump(cresult.p, cresult.size);
+        // }
+        _test_case.assert(cresult.match, __FUNCTION__, "character search #1 search");
         _test_case.assert(0 == strncmp(pattern, cresult.p, cresult.size), __FUNCTION__, "character search #2 contents comparison");
     }
     parser::search_result cresult2 = p.csearch(context1, pattern2, strlen(pattern2), cresult.pos);
     {
         test_case_notimecheck notimecheck(_test_case);
-        if (cresult2.match) {
-            _logger->dump(cresult2.p, cresult2.size);
-        }
+        // if (cresult2.match) {
+        //     _logger->dump(cresult2.p, cresult2.size);
+        // }
         _test_case.assert(cresult2.match, __FUNCTION__, "character search #3 continuous search");
     }
     parser::search_result cresult3 = p.csearch(context1, pattern3, strlen(pattern3), 0);
@@ -209,18 +209,18 @@ void test_parser_search() {
     parser::search_result wresult = p.wsearch(context1, pattern, strlen(pattern));
     {
         test_case_notimecheck notimecheck(_test_case);
-        if (wresult.match) {
-            _logger->dump(wresult.p, wresult.size);
-        }
-        _test_case.assert(wresult.match, __FUNCTION__, "word search #1 found");
+        // if (wresult.match) {
+        //     _logger->dump(wresult.p, wresult.size);
+        // }
+        _test_case.assert(wresult.match, __FUNCTION__, "word search #1 search");
         _test_case.assert(0 == strncmp(pattern, wresult.p, wresult.size), __FUNCTION__, "word search #2 contents comparison");
     }
     parser::search_result wresult2 = p.wsearch(context1, pattern2, strlen(pattern2), wresult.endidx + 1);
     {
         test_case_notimecheck notimecheck(_test_case);
-        if (wresult2.match) {
-            _logger->dump(wresult2.p, wresult2.size);
-        }
+        // if (wresult2.match) {
+        //     _logger->dump(wresult2.p, wresult2.size);
+        // }
         _test_case.assert(wresult2.match, __FUNCTION__, "word search #3 continuous search");
     }
     parser::search_result wresult3 = p.wsearch(context1, pattern3, strlen(pattern3), 0);
@@ -244,7 +244,7 @@ void test_parser_compare() {
     // "EmployeeNumber" "::=" "[" "APPLICATION" "2" "]" "IMPLICIT" "INTEGER"
 
     bool test = p.compare(data1, data2);
-    _test_case.assert(test, __FUNCTION__, "compare");
+    _test_case.assert(test, __FUNCTION__, "token/word-level compare");
 }
 
 void test_multipattern_search() {
@@ -253,13 +253,25 @@ void test_multipattern_search() {
     // model
     constexpr char sample[] = R"(int a; int b = 0; bool b = true;)";
 
-    // sketch - pattern search
+    // sketch - pattern search (wo add_pattern)
     {
+        // result, expect
+        // 0                        1
+        // 0   12 3   4 5 67 8    9 0 1   2
+        // int a; int b = 0; bool b = true; ; sample as an input
+        // 0   12                           ; 0..2
+        // int a;                           ; pattern1 (pattern index 0)
+        //        3   4 5 67                ; 3..7
+        //        int b = 0;                ; pattern2 (pattern index 1)
+        //                   8    9 0 1   2 ; 8..12
+        //                   bool b = true; ; pattern2 (pattern index 1)
+
         t_aho_corasick<int> ac;
         std::multimap<range_t, unsigned> result;
         std::multimap<range_t, unsigned> expect = {{range_t(0, 2), 0}, {range_t(3, 7), 1}, {range_t(8, 12), 1}};
         std::vector<int> pattern1 = {token_type, token_identifier, token_colon};
         std::vector<int> pattern2 = {token_type, token_identifier, token_equal, token_identifier, token_colon};
+
         // after parsing
         std::vector<int> sample_parsed = {
             token_type, token_identifier, token_colon,                                 // int a;
@@ -271,39 +283,210 @@ void test_multipattern_search() {
         ac.insert(pattern2);
         ac.build();
         result = ac.search(sample_parsed);
-        for (auto item : result) {
+        for (auto [range, pid] : result) {
             // pair(pos_occurrence, id_pattern)
-            _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
+            _logger->writeln("pos [%zi] pattern[%i]", range.begin, pid);
         }
         _test_case.assert(result == expect, __FUNCTION__, "pattern matching #1");
     }
 
-    // sketch - pattern match
+    // sketch - pattern match (using add_pattern)
     {
         parser p;
         parser::context context;
+        // input
+        //  sample  : int a; int b = 0; bool b = true;
+        //  tokens  : 0   12 3   4 5 67 8    9 a b   c
+        //  pattern : 0      1          3
+        // result/expect
+        //  pattern[0] 0..2
+        //  pattern[1] 3..7
+        //  pattern[2] no match
+        //  pattern[3] 8..12
         std::multimap<range_t, unsigned> result;
         std::multimap<range_t, unsigned> expect = {{range_t(0, 2), 0}, {range_t(3, 7), 1}, {range_t(8, 12), 3}};
         p.add_token("bool", 0x1000).add_token("int", 0x1001).add_token("true", 0x1002).add_token("false", 0x1002);
         p.parse(context, sample);
         p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");
         result = p.psearch(context);
-        // sample  : int a; int b = 0; bool b = true;
-        // pattern : 0      1          3
-        // tokens  : 0   12 3   4 5 67 8    9 a b   c
         for (auto [range, pid] : result) {
             // pair(pos_occurrence, id_pattern)
             parser::search_result res;
             context.psearch_result(res, range);
-            _logger->writeln("pos [%zi..%zi] pattern[%i] %.*s", range.begin, range.end, pid, (unsigned)res.size, res.p);
+            _logger->writeln("pos [%zi] pattern[%i] %.*s", range.begin, pid, (unsigned)res.size, res.p);
         }
         _test_case.assert(result == expect, __FUNCTION__, "pattern matching #2");
     }
 }
 
-void test_sub_pattern() {
-    _test_case.begin("sub pattern");
-    //
+enum token_tag_t {
+    token_userdef = 0x2000,
+
+    token_of,
+    token_default,
+};
+
+void test_patterns() {
+    parser p;
+    p.get_config().set("handle_lvalue_usertype", 1);
+
+    struct asn1_token {
+        const char* token;
+        uint32 attr;
+        uint32 tag;
+    };
+    struct asn1_pattern {
+        int patid;
+        const char* pattern;
+    };
+
+    asn1_token asn1_tokens[] = {
+        {"::=", token_assign},
+        {"--", token_comments},
+        {"BOOLEAN", token_builtintype, token_bool},                 // BooleanType
+        {"INTEGER", token_builtintype, token_int},                  // IntegerType
+        {"BIT STRING", token_builtintype, token_bitstring},         // BitStringType
+        {"OCTET STRING", token_builtintype, token_octstring},       // OctetStringType
+        {"NULL", token_builtintype, token_null},                    // NullType, NullValue
+        {"REAL", token_builtintype, token_real},                    // RealType
+        {"IA5String", token_builtintype, token_ia5string},          // CharacterStringType
+        {"VisibleString", token_builtintype, token_visiblestring},  // CharacterStringType
+        {"SEQUENCE", token_sequence},                               // SequenceType
+        {"SEQUENCE OF", token_sequenceof},                          // SequenceOfType
+        {"SET", token_set},                                         // SetType
+        {"SET OF", token_setof},                                    // SetOfType
+        {"TRUE", token_bool, token_true},                           // BooleanValue
+        {"FALSE", token_bool, token_false},                         // BooleanValue
+        {"UNIVERSAL", token_class, token_universal},                // Class
+        {"APPLICATION", token_class, token_application},            // Class
+        {"PRIVATE", token_class, token_private},                    // Class
+        {"IMPLICIT", token_taggedmode, token_implicit},             // TaggedType
+        {"EXPLICIT", token_taggedmode, token_explicit},             // TaggedType
+        {"$pattern_builtintype", token_builtintype},
+        {"$pattern_usertype", token_usertype},
+        {"$pattern_class", token_class},
+        {"$pattern_sequence", token_sequence},
+        {"$pattern_sequenceof", token_sequenceof},
+        {"$pattern_set", token_set},
+        {"$pattern_setof", token_setof},
+        {"$pattern_taggedmode", token_taggedmode},
+        {"$pattern_assign", token_assign},
+    };
+    asn1_pattern asn1_patterns[] = {
+        {0, "$pattern_builtintype"},
+        {1, "$pattern_usertype"},
+        {2, "$pattern_sequence"},
+        {3, "$pattern_set"},
+        {4, "$pattern_sequenceof $pattern_usertype"},
+        {5, "$pattern_sequenceof $pattern_usertype DEFAULT"},
+        {6, "$pattern_sequenceof $pattern_usertype DEFAULT {}"},
+        {7, "{"},
+        {8, ","},
+        {9, "}"},
+        {10, "[$pattern_class 1] $pattern_builtintype"},
+        {11, "[$pattern_class 1] $pattern_usertype"},
+        {12, "[$pattern_class 1] $pattern_taggedmode $pattern_builtintype"},
+        {13, "[$pattern_class 1] $pattern_taggedmode $pattern_usertype"},
+        {14, "[$pattern_class 1] $pattern_taggedmode $pattern_sequence"},
+        {15, "[$pattern_class 1] $pattern_taggedmode $pattern_set"},
+        {16, "[1] $pattern_builtintype"},
+        {17, "[1] $pattern_usertype"},
+        {18, "[1] $pattern_taggedmode $pattern_builtintype"},
+        {19, "[1] $pattern_taggedmode $pattern_usertype"},
+        {20, "[1] $pattern_taggedmode $pattern_sequence"},
+        {21, "[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype"},
+        {22, "[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT"},
+        {23, "[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}"},
+        {24, "[1] $pattern_taggedmode $pattern_set"},
+        {25, "name $pattern_builtintype"},
+        {26, "name $pattern_usertype"},
+        {27, "name $pattern_sequence"},
+        {28, "name $pattern_set"},
+        {29, "name [$pattern_class 1] $pattern_builtintype"},
+        {30, "name [$pattern_class 1] $pattern_usertype"},
+        {31, "name [$pattern_class 1] $pattern_taggedmode $pattern_builtintype"},
+        {32, "name [$pattern_class 1] $pattern_taggedmode $pattern_usertype"},
+        {33, "name [$pattern_class 1] $pattern_taggedmode $pattern_sequence"},
+        {34, "name [$pattern_class 1] $pattern_taggedmode $pattern_set"},
+        {35, "name [1] $pattern_builtintype"},
+        {36, "name [1] $pattern_usertype"},
+        {37, "name [1] $pattern_taggedmode $pattern_builtintype"},
+        {38, "name [1] $pattern_taggedmode $pattern_usertype"},
+        {39, "name [1] $pattern_taggedmode $pattern_sequence"},
+        {40, "name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype"},
+        {41, "name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT"},
+        {42, "name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}"},
+        {43, "name [1] $pattern_taggedmode $pattern_set"},
+        {44, "$pattern_assign"},
+        {45, "name $pattern_assign [$pattern_class 1] $pattern_builtintype"},
+        {46, "name $pattern_assign [$pattern_class 1] $pattern_usertype"},
+        {47, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_builtintype"},
+        {48, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_usertype"},
+        {49, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_sequence"},
+        {50, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_set"},
+        {51, "name $pattern_assign [1] $pattern_builtintype"},
+        {52, "name $pattern_assign [1] $pattern_usertype"},
+        {53, "name $pattern_assign [1] $pattern_taggedmode $pattern_builtintype"},
+        {54, "name $pattern_assign [1] $pattern_taggedmode $pattern_usertype"},
+        {55, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequence"},
+        {56, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype"},
+        {57, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT"},
+        {58, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}"},
+        {59, "name $pattern_assign [1] $pattern_taggedmode $pattern_set"},
+    };
+
+    for (auto item : asn1_tokens) {
+        p.add_token(item.token, item.attr, item.tag);
+    }
+    int i = 0;
+    for (auto item : asn1_patterns) {
+        _logger->writeln(R"(add pattern[%2i] "%s")", i++, item.pattern);
+        p.add_pattern(item.pattern);
+    }
+
+    struct testvector {
+        const char* source;
+    } _table[] = {
+        R"(NULL)",
+        R"(INTEGER)",
+        R"(REAL)",
+        R"(SEQUENCE {name IA5String, ok BOOLEAN })",
+        R"(Date ::= VisibleString)",
+        R"(Date ::= [APPLICATION 3] IMPLICIT VisibleString)",
+        R"(
+           PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
+                name Name,
+                title [0] VisibleString,
+                number EmployeeNumber,
+                dateOfHire [1] Date,
+                nameOfSpouse [2] Name,
+                children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}}
+           ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
+           Name ::= [APPLICATION 1] IMPLICIT SEQUENCE {givenName VisibleString, initial VisibleString, familyName VisibleString}
+           EmployeeNumber ::= [APPLICATION 2] IMPLICIT  INTEGER
+           Date ::= [APPLICATION 3] IMPLICIT  VisibleString)",
+    };
+
+    for (auto item : _table) {
+        _logger->writeln("\e[1;33m%s\e[0m", item.source);
+
+        parser::context context;
+        p.parse(context, item.source);
+
+        auto result = p.psearchex(context);
+        for (auto [range, pid] : result) {
+            parser::search_result res;
+            context.psearch_result(res, range);
+
+            _logger->writeln("pos [%zi] pattern[%2i] %.*s", range.begin, pid, (unsigned)res.size, res.p);
+        }
+
+        auto dump_handler = [&](const token_description* desc) -> void {
+            _logger->writeln("line %zi type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(),
+                             desc->tag, desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+        };
+        context.for_each(dump_handler);
+    }
 }
 
 int main(int argc, char** argv) {
@@ -327,6 +510,7 @@ int main(int argc, char** argv) {
     test_parser_search();
     test_parser_compare();
     test_multipattern_search();
+    test_patterns();
 
     _logger->flush();
 

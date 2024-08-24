@@ -480,175 +480,7 @@ void test_x690_time() {
     _test_case.assert(bin == base16_decode_rfc("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a"), __FUNCTION__, "X.690 UTCTime");
 }
 
-enum token_tag_t {
-    token_userdef = 0x2000,
-
-    token_of,
-    token_default,
-};
-
-void test_x690_parse_and_compose() {
-    parser p;
-    p.get_config().set("handle_lvalue_usertype", 1);
-
-    struct asn1_token {
-        const char* token;
-        uint32 attr;
-        uint32 tag;
-    };
-    struct asn1_pattern {
-        int patid;
-        const char* pattern;
-    };
-
-    asn1_token asn1_tokens[] = {
-        {"::=", token_assign},
-        {"--", token_comments},
-        {"BOOLEAN", token_builtintype, token_bool},                 // BooleanType
-        {"INTEGER", token_builtintype, token_int},                  // IntegerType
-        {"BIT STRING", token_builtintype, token_bitstring},         // BitStringType
-        {"OCTET STRING", token_builtintype, token_octstring},       // OctetStringType
-        {"NULL", token_builtintype, token_null},                    // NullType, NullValue
-        {"REAL", token_builtintype, token_real},                    // RealType
-        {"IA5String", token_builtintype, token_ia5string},          // CharacterStringType
-        {"VisibleString", token_builtintype, token_visiblestring},  // CharacterStringType
-        {"SEQUENCE", token_sequence},                               // SequenceType
-        {"SEQUENCE OF", token_sequenceof},                          // SequenceOfType
-        {"SET", token_set},                                         // SetType
-        {"SET OF", token_setof},                                    // SetOfType
-        {"TRUE", token_bool, token_true},                           // BooleanValue
-        {"FALSE", token_bool, token_false},                         // BooleanValue
-        {"UNIVERSAL", token_class, token_universal},                // Class
-        {"APPLICATION", token_class, token_application},            // Class
-        {"PRIVATE", token_class, token_private},                    // Class
-        {"IMPLICIT", token_taggedmode, token_implicit},             // TaggedType
-        {"EXPLICIT", token_taggedmode, token_explicit},             // TaggedType
-        {"$pattern_builtintype", token_builtintype},
-        {"$pattern_usertype", token_usertype},
-        {"$pattern_class", token_class},
-        {"$pattern_sequence", token_sequence},
-        {"$pattern_sequenceof", token_sequenceof},
-        {"$pattern_set", token_set},
-        {"$pattern_setof", token_setof},
-        {"$pattern_taggedmode", token_taggedmode},
-        {"$pattern_assign", token_assign},
-    };
-    asn1_pattern asn1_patterns[] = {
-        {0, "$pattern_builtintype"},
-        {1, "$pattern_usertype"},
-        {2, "$pattern_sequence"},
-        {3, "$pattern_set"},
-        {4, "$pattern_sequenceof $pattern_usertype"},
-        {5, "$pattern_sequenceof $pattern_usertype DEFAULT"},
-        {6, "$pattern_sequenceof $pattern_usertype DEFAULT {}"},
-        {7, "{"},
-        {8, ","},
-        {9, "}"},
-        {10, "[$pattern_class 1] $pattern_builtintype"},
-        {11, "[$pattern_class 1] $pattern_usertype"},
-        {12, "[$pattern_class 1] $pattern_taggedmode $pattern_builtintype"},
-        {13, "[$pattern_class 1] $pattern_taggedmode $pattern_usertype"},
-        {14, "[$pattern_class 1] $pattern_taggedmode $pattern_sequence"},
-        {15, "[$pattern_class 1] $pattern_taggedmode $pattern_set"},
-        {16, "[1] $pattern_builtintype"},
-        {17, "[1] $pattern_usertype"},
-        {18, "[1] $pattern_taggedmode $pattern_builtintype"},
-        {19, "[1] $pattern_taggedmode $pattern_usertype"},
-        {20, "[1] $pattern_taggedmode $pattern_sequence"},
-        {21, "[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype"},
-        {22, "[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT"},
-        {23, "[1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}"},
-        {24, "[1] $pattern_taggedmode $pattern_set"},
-        {25, "name $pattern_builtintype"},
-        {26, "name $pattern_usertype"},
-        {27, "name $pattern_sequence"},
-        {28, "name $pattern_set"},
-        {29, "name [$pattern_class 1] $pattern_builtintype"},
-        {30, "name [$pattern_class 1] $pattern_usertype"},
-        {31, "name [$pattern_class 1] $pattern_taggedmode $pattern_builtintype"},
-        {32, "name [$pattern_class 1] $pattern_taggedmode $pattern_usertype"},
-        {33, "name [$pattern_class 1] $pattern_taggedmode $pattern_sequence"},
-        {34, "name [$pattern_class 1] $pattern_taggedmode $pattern_set"},
-        {35, "name [1] $pattern_builtintype"},
-        {36, "name [1] $pattern_usertype"},
-        {37, "name [1] $pattern_taggedmode $pattern_builtintype"},
-        {38, "name [1] $pattern_taggedmode $pattern_usertype"},
-        {39, "name [1] $pattern_taggedmode $pattern_sequence"},
-        {40, "name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype"},
-        {41, "name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT"},
-        {42, "name [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}"},
-        {43, "name [1] $pattern_taggedmode $pattern_set"},
-        {44, "$pattern_assign"},
-        {45, "name $pattern_assign [$pattern_class 1] $pattern_builtintype"},
-        {46, "name $pattern_assign [$pattern_class 1] $pattern_usertype"},
-        {47, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_builtintype"},
-        {48, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_usertype"},
-        {49, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_sequence"},
-        {50, "name $pattern_assign [$pattern_class 1] $pattern_taggedmode $pattern_set"},
-        {51, "name $pattern_assign [1] $pattern_builtintype"},
-        {52, "name $pattern_assign [1] $pattern_usertype"},
-        {53, "name $pattern_assign [1] $pattern_taggedmode $pattern_builtintype"},
-        {54, "name $pattern_assign [1] $pattern_taggedmode $pattern_usertype"},
-        {55, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequence"},
-        {56, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype"},
-        {57, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT"},
-        {58, "name $pattern_assign [1] $pattern_taggedmode $pattern_sequenceof $pattern_usertype DEFAULT {}"},
-        {59, "name $pattern_assign [1] $pattern_taggedmode $pattern_set"},
-    };
-
-    for (auto item : asn1_tokens) {
-        p.add_token(item.token, item.attr, item.tag);
-    }
-    int i = 0;
-    for (auto item : asn1_patterns) {
-        _logger->writeln(R"(add pattern[%2i] "%s")", i++, item.pattern);
-        p.add_pattern(item.pattern);
-    }
-
-    struct testvector {
-        const char* source;
-    } _table[] = {
-        R"(NULL)",
-        R"(INTEGER)",
-        R"(REAL)",
-        R"(SEQUENCE {name IA5String, ok BOOLEAN })",
-        R"(Date ::= VisibleString)",
-        R"(Date ::= [APPLICATION 3] IMPLICIT VisibleString)",
-        R"(
-           PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
-                name Name,
-                title [0] VisibleString,
-                number EmployeeNumber,
-                dateOfHire [1] Date,
-                nameOfSpouse [2] Name,
-                children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}}
-           ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
-           Name ::= [APPLICATION 1] IMPLICIT SEQUENCE {givenName VisibleString, initial VisibleString, familyName VisibleString}
-           EmployeeNumber ::= [APPLICATION 2] IMPLICIT  INTEGER
-           Date ::= [APPLICATION 3] IMPLICIT  VisibleString)",
-    };
-
-    for (auto item : _table) {
-        _logger->writeln("\e[1;33m%s\e[0m", item.source);
-
-        parser::context context;
-        p.parse(context, item.source);
-
-        auto result = p.psearchex(context);
-        for (auto r : result) {
-            parser::search_result res;
-            context.psearch_result(res, r.first);
-
-            _logger->writeln("pos [%2zi] pattern[%2i] %.*s", r.first, r.second, (unsigned)res.size, res.p);
-        }
-
-        auto dump_handler = [&](const token_description* desc) -> void {
-            _logger->writeln("line %zi type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(),
-                             desc->tag, desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
-        };
-        context.for_each(dump_handler);
-    }
-
+void test_asn1_object() {
     // $pattern_builtintype
     //     new asn1_object(builtintype)
     // [$pattern_class 1] $pattern_taggedmode $pattern_builtintype
@@ -680,13 +512,13 @@ void test_x690_parse_and_compose() {
         _logger->write(bs);
 
         // compare
+        parser p;
         parser::context ctx;
         parser::search_result res;
         p.parse(ctx, item.note);
         res = p.wsearch(ctx, bs);
         bs.clear();
 
-        // psearchex
         auto result = p.psearchex(ctx);
         auto dump_handler = [&](const token_description* desc) -> void {
             _logger->writeln("> type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->type, p.typeof_token(desc->type).c_str(), desc->tag, desc->index,
@@ -702,19 +534,18 @@ void test_x690_parse_and_compose() {
         typemap.insert({token_ia5string, asn1_type_ia5string});
         typemap.insert({token_visiblestring, asn1_type_visiblestring});
 
-        for (auto r : result) {
+        for (auto [range, pid] : result) {
             parser::search_result res;
-            ctx.psearch_result(res, r.first);
+            ctx.psearch_result(res, range);
 
-            _logger->writeln("pos [%2zi] pattern[%2i] %.*s", r.first, r.second, (unsigned)res.size, res.p);
+            _logger->writeln("pos [%zi] pattern[%2i] %.*s", range.begin, pid, (unsigned)res.size, res.p);
             ctx.for_each(res, dump_handler);
 
             token_description desc;
             asn1_type_t type;
 
             // pattern to asn1_object*
-            unsigned patid = r.second;
-            switch (patid) {
+            switch (pid) {
                 case 0:  // $pattern_builtintype
                     ctx.get(res.begidx, &desc);
                     type = typemap[desc.tag];
@@ -834,7 +665,7 @@ int main(int argc, char** argv) {
     test_x690_constructed();
     test_x690_8_9_sequence();
     test_x690_time();
-    test_x690_parse_and_compose();
+    test_asn1_object();
     test_x690_annex_a_1();
     test_x690_annex_a_2();
 
