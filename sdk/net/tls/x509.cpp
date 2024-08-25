@@ -11,6 +11,7 @@
 #include <sdk/crypto.hpp>
 #include <sdk/io.hpp>
 #include <sdk/net/tls/x509.hpp>
+#include <sdk/nostd.hpp>
 
 namespace hotplace {
 using namespace io;
@@ -133,15 +134,24 @@ return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key
                 __leave2;
             }
 
-#if 0  // ASN.1 studying ...
-            ASN1_TIME* time_not_before = X509_get_notBefore(x509);
-            ASN1_TIME* time_not_after = X509_get_notAfter(x509);
-            if (time_not_before && time_not_after) {
-                asn1time_t asn1_not_before(time_not_before->type, (char*)time_not_before->data);
-                asn1time_t asn1_not_after(time_not_after->type, (char*)time_not_after->data);
-                datetime now;
-                datetime not_before(asn1_not_before);
-                datetime not_after(asn1_not_after);
+            // function         UTC/local?  in          out         return
+            // ASN1_TIME_to_tm  UTC         ASN1_TIME*  tm*
+            // time             local       N/A         time_t*     time_t
+            // mktime           local       tm*         N/A         time_t
+            // timegm/_mkgmtime UTC         tm*         N/A         time_t
+
+            ASN1_TIME* asn1time_not_before = X509_get_notBefore(x509);
+            ASN1_TIME* asn1time_not_after = X509_get_notAfter(x509);
+            if (asn1time_not_before && asn1time_not_after) {
+                struct tm tm_not_before;
+                struct tm tm_not_after;
+                // GMT(UTC)
+                ASN1_TIME_to_tm(asn1time_not_before, &tm_not_before);
+                ASN1_TIME_to_tm(asn1time_not_after, &tm_not_after);
+                // localtime
+                time_t now = time(nullptr);
+                time_t not_before = mktime(&tm_not_before);
+                time_t not_after = mktime(&tm_not_after);
 
                 if ((not_before < now) && (now < not_after)) {
                     // do nothing
@@ -150,7 +160,6 @@ return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key
                     __leave2;
                 }
             }
-#endif
         }
 
         *context = ssl_ctx;
@@ -190,11 +199,15 @@ x509cert& x509cert::set_verify(int mode) {
     return *this;
 }
 
-static int set_alpn_select_cb(SSL* ssl, const unsigned char** out, unsigned char* outlen, const unsigned char* in, unsigned int inlen, void* arg) {
+static int set_alpn_select_h2_cb(SSL* ssl, const unsigned char** out, unsigned char* outlen, const unsigned char* in, unsigned int inlen, void* arg) {
+    // TLS Application-Layer Protocol Negotiation Extension
+    // see enable_alpn_h2, http_server_builder, test/httpserver2
+
     int ret = SSL_TLSEXT_ERR_NOACK;
 
     // 00000000 : 02 68 32 08 68 74 74 70 2F 31 2E 31 -- -- -- -- | .h2.http/1.1
 
+#if 1
     int pos_h2 = -1;
     int pos_h1_1 = -1;
 
@@ -202,8 +215,10 @@ static int set_alpn_select_cb(SSL* ssl, const unsigned char** out, unsigned char
         uint8 len = in[pos];
         if (0 == strncmp((char*)in + pos, "\x2h2", 3)) {
             pos_h2 = pos;
+            break;
         } else if (0 == strncmp((char*)in + pos, "\x8http/1.1", 9)) {
             pos_h1_1 = pos;
+            // keep searching h2
         }
         pos += (len + 1);
     }
@@ -217,6 +232,35 @@ static int set_alpn_select_cb(SSL* ssl, const unsigned char** out, unsigned char
         *outlen = in[pos_h1_1];
         ret = SSL_TLSEXT_ERR_OK;
     }
+#else
+    // tested codes
+
+    t_aho_corasick<char> ac;
+    std::multimap<unsigned, range_t> rearranged;
+
+    ac.insert("\x2h2", 3);        // pattern [0]
+    ac.insert("\x8http/1.1", 9);  // pattern [1]
+    ac.build();
+
+    auto result = ac.search((char*)in, inlen);
+
+    ac.order_by_pattern(result, rearranged);
+
+    auto select = [&](unsigned pid) -> void {
+        auto iter = rearranged.lower_bound(pid);  // pattern id
+        if (rearranged.end() != iter) {
+            range_t& range = iter->second;
+            *out = in + range.begin + 1;  // h2, http1.1
+            *outlen = in[range.begin];    // \x2, \8
+            ret = SSL_TLSEXT_ERR_OK;
+        }
+    };
+
+    select(0);  // \x2h2
+    if (SSL_TLSEXT_ERR_OK != ret) {
+        select(1);  // \x8http/1.1
+    }
+#endif
 
     return ret;
 }
@@ -225,7 +269,7 @@ x509cert& x509cert::enable_alpn_h2(bool enable) {
     if (enable) {
         // RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
         // RFC 7540 3.1.  HTTP/2 Version Identification
-        SSL_CTX_set_alpn_select_cb(_x509, set_alpn_select_cb, nullptr);
+        SSL_CTX_set_alpn_select_cb(_x509, set_alpn_select_h2_cb, nullptr);
     } else {
         SSL_CTX_set_alpn_select_cb(_x509, nullptr, nullptr);
     }

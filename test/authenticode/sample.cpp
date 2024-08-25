@@ -88,6 +88,18 @@ int main(int argc, char** argv) {
             __leave2;
         }
 
+        // 1 linux style file path name
+        //   a. mingw
+        //     $ ./test-authenticate -v -i /c/home/tools/tool.exe
+        //   b. linux
+        //     $ ./test-authenticate -v -i ~/tools/tool.exe
+        // 2 windows style file path name
+        //   a. mingw-gdb
+        //     $ gdb ./test-authenticate
+        //     (gdb) r -v -i c:\home\tools\tool.exe
+        //   b. windows
+        //     dir> test-authenticate -v -i c:\home\tools\tool.exe
+
         test1();
     }
     __finally2 {

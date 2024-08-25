@@ -120,7 +120,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
             va_new.at(i, v);
             formatter_map_t::iterator fmt_it = formats.find(v.type);
             if (formats.end() != fmt_it) {
-                formatter.replace(format("{%zi}", idx + 1).c_str(), fmt_it->second.c_str(), bufferio_flag_t::run_once);
+                formatter.replace(format("{%i}", idx + 1).c_str(), fmt_it->second.c_str(), bufferio_flag_t::run_once);
             }
             i++;
         }

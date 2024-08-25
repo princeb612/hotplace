@@ -1060,8 +1060,7 @@ class t_aho_corasick {
 
     /**
      * @brief   search for patterns
-     * @return  std::multimap<range_t, unsigned> as is multimap<pattern_id, position>
-     *          pair(range_t, id_pattern)
+     * @return  std::multimap<range_t, unsigned>
      */
     std::multimap<range_t, unsigned> search(const std::vector<T>& source) {
         std::map<size_t, std::set<unsigned>> ordered;
@@ -1085,6 +1084,25 @@ class t_aho_corasick {
             size = iter->second;
         }
         return size;
+    }
+    /**
+     * @brief   order the search result by pattern id
+     * @sample
+     *          std::multimap<unsigned, range_t> rearranged;
+     *          ac.insert(pattern1, size_pattern1);
+     *          ac.build();
+     *          auto result = ac.search(source, size);
+     *          ac.order_by_pattern(result, rearranged);
+     *          auto iter = rearranged.lower_bound(pattern_id);
+     *          if (rearranged.end() != iter) {
+     *              // do something
+     *          }
+     */
+    void order_by_pattern(const std::multimap<range_t, unsigned>& input, std::multimap<unsigned, range_t>& output) {
+        output.clear();
+        for (auto& pair : input) {
+            output.insert({pair.second, pair.first});
+        }
     }
 
     void reset() {

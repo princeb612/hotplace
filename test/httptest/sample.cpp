@@ -642,7 +642,7 @@ void test_rfc_digest_example() {
     // part of SHA-512-256
     {
         // result mismatch ... what I missed ??
-        //      try     _H<SHA-256>(unescape("J%C3%A4s%C3%B8n%20Doe"):api@example.org)
+        //      try     _H<SHA-512-256>(unescape("J%C3%A4s%C3%B8n%20Doe"):api@example.org)
         //      expect '488869477bf257147b804c45308cd62ac4e25eb717b12b298c79e62dcea254ec'
         //
         // charset input

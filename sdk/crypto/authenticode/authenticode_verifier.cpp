@@ -346,7 +346,6 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
             engine_matched->digest(&filestream, md.c_str(), md_digest);
 
             if (authenticode_engine_id_msi != engine_matched->id()) {
-                // stack overflow - compare using std::equal
                 if (pkcs7_digest != md_digest) {
                     ret = errorcode_t::error_digest;
                     __leave2;
