@@ -443,7 +443,11 @@ std::multimap<range_t, unsigned> parser::context::psearchex(parser* obj) const {
 
         t_merge_ovl_intervals<int> moi;
         search_result r;
-        for (auto [range, pid] : acres) {
+
+        for (const auto& pair : acres) {
+            // pair(pos_occurrence, id_pattern)
+            const auto& range = pair.first;
+            const auto& pid = pair.second;
             psearch_result(r, range);
             moi.add(r.begidx, r.endidx, pid);
         }

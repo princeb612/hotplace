@@ -283,8 +283,10 @@ void test_multipattern_search() {
         ac.insert(pattern2);
         ac.build();
         result = ac.search(sample_parsed);
-        for (auto [range, pid] : result) {
+        for (auto& pair : result) {
             // pair(pos_occurrence, id_pattern)
+            const auto& range = pair.first;
+            const auto& pid = pair.second;
             _logger->writeln("pos [%zi] pattern[%i]", range.begin, pid);
         }
         _test_case.assert(result == expect, __FUNCTION__, "pattern matching #1");
@@ -309,8 +311,10 @@ void test_multipattern_search() {
         p.parse(context, sample);
         p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");
         result = p.psearch(context);
-        for (auto [range, pid] : result) {
+        for (auto& pair : result) {
             // pair(pos_occurrence, id_pattern)
+            const auto& range = pair.first;
+            const auto& pid = pair.second;
             parser::search_result res;
             context.psearch_result(res, range);
             _logger->writeln("pos [%zi] pattern[%i] %.*s", range.begin, pid, (unsigned)res.size, res.p);
@@ -474,7 +478,10 @@ void test_patterns() {
         p.parse(context, item.source);
 
         auto result = p.psearchex(context);
-        for (auto [range, pid] : result) {
+        for (auto& pair : result) {
+            // pair(pos_occurrence, id_pattern)
+            const auto& range = pair.first;
+            const auto& pid = pair.second;
             parser::search_result res;
             context.psearch_result(res, range);
 

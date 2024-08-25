@@ -1177,7 +1177,7 @@ class t_aho_corasick {
      */
     virtual void collect_results(trienode* node, size_t pos, std::map<size_t, std::set<unsigned>>& result) {
         if (node) {
-            for (auto v : node->output) {
+            for (const auto& v : node->output) {
                 // v is an index of a pattern
                 // pos is an end position of a pattern
                 result[v].insert(pos);
@@ -1185,8 +1185,10 @@ class t_aho_corasick {
         }
     }
     virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result, size_t size) {
-        for (auto [v, positions] : ordered) {
-            for (auto pos : positions) {
+        for (const auto& pair : ordered) {
+            const auto& v = pair.first;
+            const auto& positions = pair.second;
+            for (const auto& pos : positions) {
                 range_t range;
                 range.begin = pos - get_pattern_size(v) + 1;
                 range.end = pos;
@@ -1446,7 +1448,9 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
             enqueue(this->_root, 0);
 
             while (false == q.empty()) {
-                auto [current, i] = q.front();
+                const auto& pair = q.front();
+                trienode* current = pair.first;
+                const auto& i = pair.second;
                 visit.insert({current, i});
                 q.pop();
 
@@ -1535,7 +1539,9 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
     }
 
     virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result, size_t size) {
-        for (auto [v, positions] : ordered) {
+        for (const auto& pair : ordered) {
+            const auto& v = pair.first;
+            const auto& positions = pair.second;
             if (v < baseof_prefix) {
                 auto prefix_v = v + baseof_prefix;
                 auto iter = _hidden.find(prefix_v);

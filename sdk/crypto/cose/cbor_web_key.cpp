@@ -127,9 +127,7 @@ return_t cbor_web_key::load(crypto_key* key, cbor_object* root, int flags) {
 
         if (cbor_type_t::cbor_type_array == root->type()) {
             const std::list<cbor_object*>& keys = ((cbor_array*)root)->accessor();
-            std::list<cbor_object*>::const_iterator iter;
-            for (iter = keys.begin(); iter != keys.end(); iter++) {
-                cbor_object* child = *iter;
+            for (cbor_object* child : keys) {
                 do_load(key, child, flags);
             }
         } else if (cbor_type_t::cbor_type_map == root->type()) {
@@ -155,9 +153,7 @@ return_t cbor_web_key::do_load(crypto_key* crypto_key, cbor_object* object, int 
         if (cbor_type_t::cbor_type_map == object->type()) {
             cose_key_object keyobj;
             const std::list<cbor_pair*>& key_contents = ((cbor_map*)object)->accessor();
-            std::list<cbor_pair*>::const_iterator contents_iter;
-            for (contents_iter = key_contents.begin(); contents_iter != key_contents.end(); contents_iter++) {
-                cbor_pair* pair = *contents_iter;
+            for (cbor_pair* pair : key_contents) {
                 cbor_data* lhs = (cbor_data*)pair->left();
                 cbor_data* rhs = (cbor_data*)pair->right();
                 // (nullptr != lhs) && (nullptr != rhs)

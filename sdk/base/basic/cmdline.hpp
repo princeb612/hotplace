@@ -237,12 +237,10 @@ return_t cmdline_t<T>::parse(int argc, char** argv) {
     return_t ret = errorcode_t::success;
     int index = 0;
 
-    typename cmdline_args_map_t::iterator iter;
-
     _mandatory.clear();
 
-    for (iter = _args.begin(); iter != _args.end(); iter++) {
-        cmdarg_t<T>& item = iter->second;
+    for (const auto& pair : _args) {
+        const cmdarg_t<T>& item = pair.second;
         uint32 flag = item.flag();
         if (0 == (cmdline_flag_t::cmdline_optional & flag)) {
             _mandatory.insert(item.token());
@@ -288,14 +286,13 @@ template <typename T>
 void cmdline_t<T>::help() {
     std::cout << "help" << std::endl;
 
-    typename cmdline_args_list_t::iterator list_iter;
     typename cmdline_args_map_t::iterator map_iter;
     typename cmdline_args_set_t::iterator set_iter;
 
     size_t maxlen = 5;
     size_t len = 0;
-    for (map_iter = _args.begin(); map_iter != _args.end(); map_iter++) {
-        cmdarg_t<T>& item = map_iter->second;
+    for (const auto& pair : _args) {
+        const cmdarg_t<T>& item = pair.second;
         len = strlen(item.token());
         if (len > maxlen) {
             maxlen = len;
@@ -303,9 +300,7 @@ void cmdline_t<T>::help() {
     }
     maxlen += 5;  // " arg" for preced case
     std::string fmt = format("\e[%%im%%-%zis\e[0m %%c %%s\n", maxlen);
-    for (list_iter = _list.begin(); list_iter != _list.end(); list_iter++) {
-        std::string& key = *list_iter;
-
+    for (const auto& key : _list) {
         map_iter = _args.find(key);
         if (_args.end() == map_iter) {
             continue;

@@ -380,8 +380,7 @@ void test_basic_authentication() {
 
 /**
  * calcuration routine
- * cf. see digest_access_authentication_provider::auth_digest_access (slightly
- * diffrent)
+ * cf. see digest_access_authentication_provider::auth_digest_access (slightly different)
  */
 return_t calc_digest_digest_access(http_authenticate_provider *provider, network_session *session, http_request *request, skey_value &kv,
                                    std::string &digest_response) {
@@ -525,15 +524,16 @@ void test_digest_access_authentication(const char *alg = nullptr) {
         request.open("GET /auth/digest HTTP/1.1");  // set a method and an uri
         kv.set("uri", request.get_http_uri().get_uri());
 
-        calc_digest_digest_access(&provider, &session, &request, kv,
-                                  response_calc);  // calcurate a response
-        request.get_http_header().add("Authorization", format("Digest username=\"%s\", realm=\"%s\", algorithm=%s, "
-                                                              "nonce=\"%s\", uri=\"%s\", response=\"%s\", opaque=\"%s\", "
-                                                              "qop=%s, nc=%s, cnonce=\"%s\"",
-                                                              kv.get("username").c_str(), provider.get_realm().c_str(), kv.get("algorithm").c_str(),
-                                                              kv.get("nonce").c_str(), request.get_http_uri().get_uri(), response_calc.c_str(),
-                                                              kv.get("opaque").c_str(), kv.get("qop").c_str(), kv.get("nc").c_str(),
-                                                              kv.get("cnonce").c_str()));  // set a response
+        calc_digest_digest_access(&provider, &session, &request, kv, response_calc);  // calcurate a response
+
+        basic_stream digest_stream;
+        valist va;
+        va << kv.get("username") << provider.get_realm() << kv.get("algorithm") << kv.get("nonce") << request.get_http_uri().get_uri() << response_calc
+           << kv.get("opaque") << kv.get("qop") << kv.get("nc") << kv.get("cnonce");
+        const char *digest_fmt =
+            R"(Digest username="{1}", realm="{2}", algorithm={3}, nonce="{4}", uri="{5}", response="{6}", opaque="{7}", qop={8}, nc={9}, cnonce="{10}")";
+        sprintf(&digest_stream, digest_fmt, va);
+        request.get_http_header().add("Authorization", digest_stream.c_str());  // set a response
 
         if (option.verbose) {
             request.get_request(bs);

@@ -85,9 +85,9 @@ return_t file_stream::open(const wchar_t* file_name, uint32 flag) {
             __leave2;
         }
 
-        int access = GENERIC_READ;
-        int share = FILE_SHARE_READ;
-        int create = OPEN_EXISTING;
+        uint32 access = GENERIC_READ;    // 0x80000000L
+        uint32 share = FILE_SHARE_READ;  // 0x00000001
+        uint32 create = OPEN_EXISTING;   // 3
         if (filestream_flag_t::open_write & flag) {
             access |= GENERIC_WRITE;
             share |= FILE_SHARE_WRITE;

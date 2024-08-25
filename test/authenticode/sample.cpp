@@ -89,14 +89,14 @@ int main(int argc, char** argv) {
         }
 
         test1();
-
-        _logger->flush();
     }
     __finally2 {
         // do nothing
     }
 
     openssl_cleanup();
+
+    _logger->flush();
 
     _test_case.report(5);
     _cmdline->help();

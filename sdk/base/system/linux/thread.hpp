@@ -35,7 +35,7 @@ class thread : public thread_t {
     ~thread();
 
     virtual return_t start();
-    virtual return_t join(threadid_t tid);
+    virtual return_t join();
 
     /**
      * @brief wait

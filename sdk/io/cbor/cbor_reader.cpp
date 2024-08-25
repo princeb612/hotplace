@@ -89,9 +89,7 @@ return_t cbor_reader::clear(cbor_reader_context_t* handle) {
             __leave2;
         }
 
-        cbor_root_t::iterator it;
-        for (it = handle->roots.begin(); it != handle->roots.end(); it++) {
-            cbor_object* object = *it;
+        for (cbor_object* object : handle->roots) {
             object->release();
         }
         handle->roots.clear();
@@ -559,9 +557,9 @@ return_t cbor_foreach_t(cbor_reader_context_t* handle, void (*function)(unsigned
         }
 
         unsigned idx = 0;
-        cbor_root_t::iterator it;
-        for (it = handle->roots.begin(); it != handle->roots.end(); it++, idx++) {
-            (*function)(idx, *it, param);
+        for (cbor_object* object : handle->roots) {
+            (*function)(idx, object, param);
+            idx++;
         }
     }
     __finally2 {

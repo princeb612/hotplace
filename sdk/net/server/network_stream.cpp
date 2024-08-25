@@ -164,7 +164,6 @@ return_t network_stream::do_write(network_stream* target) {
 return_t network_stream::do_writep(network_protocol_group* protocol_group, network_stream* target) {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
-    network_stream_data* buffer_object = nullptr;
 
     basic_stream bufstream;
 
@@ -176,9 +175,8 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
 
     critical_section_guard guard(_lock);
 
-    for (network_stream_list_t::iterator it = _queue.begin(); it != _queue.end(); it++) {
+    for (network_stream_data* buffer_object : _queue) {
         roll_count++;
-        buffer_object = *it;
 
         network_protocol* protocol = nullptr;
         bufstream.write(buffer_object->content(), buffer_object->size()); /* append */
@@ -230,7 +228,7 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
             size_t content_size = 0;
             network_stream_list_t::iterator iter;
             for (iter = _queue.begin(); iter != _queue.end();) {
-                buffer_object = *iter;
+                auto buffer_object = *iter;
                 content_pos = content_size;
                 content_size += buffer_object->size();
                 if (message_size >= content_size) {
@@ -255,8 +253,7 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
         case protocol_state_t::protocol_state_forged:
         case protocol_state_t::protocol_state_crash:
         case protocol_state_t::protocol_state_large:
-            for (network_stream_list_t::iterator iter = _queue.begin(); iter != _queue.end(); iter++) {
-                buffer_object = *iter;
+            for (network_stream_data* buffer_object : _queue) {
                 buffer_object->release();
             }
             _queue.clear();

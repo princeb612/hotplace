@@ -347,9 +347,7 @@ void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stre
         stream.printf(constexpr_header, "result", "errorcode", "test function", "time", "message");
     }
 
-    for (unittest_list_t::iterator list_iterator = array.begin(); list_iterator != array.end(); list_iterator++) {
-        unittest_item_t item = *list_iterator;
-
+    for (const auto& item : array) {
         basic_stream error_message;
         t_stream_binder<basic_stream, console_color> console_colored_stream(error_message);
 
@@ -487,8 +485,7 @@ void test_case::report_unittest(basic_stream& stream) {
     console_colored_stream << _concolor.set_fgcolor(fgcolor) << constexpr_report;
     stream << "\n";
 
-    for (unittest_index_t::iterator iter = _test_list.begin(); iter != _test_list.end(); iter++) {
-        std::string testcase = *iter;
+    for (const auto& testcase : _test_list) {
         unittest_map_t::iterator map_iter = _test_map.find(testcase);
         test_status_t status = map_iter->second;
 
@@ -555,15 +552,12 @@ void test_case::report_failed(basic_stream& stream) {
     critical_section_guard guard(_lock);
 
     unittest_list_t array;
-    unittest_map_t::iterator it;
 
     unsigned int field_nsec = (RTL_FIELD_SIZE(struct timespec, tv_nsec) << 3);
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
 
-    for (it = _test_map.begin(); it != _test_map.end(); it++) {
-        unittest_list_t::iterator unittest_it;
-        for (unittest_it = it->second._test_list.begin(); unittest_it != it->second._test_list.end(); unittest_it++) {
-            unittest_item_t& item = *unittest_it;
+    for (const auto& pair : _test_map) {
+        for (const auto& item : pair.second._test_list) {
             switch (item._result) {
                 case errorcode_t::not_supported:
                 case errorcode_t::low_security:
@@ -603,28 +597,18 @@ void test_case::report_testtime(basic_stream& stream, uint32 top_count) {
     critical_section_guard guard(_lock);
 
     unittest_list_t array;
-    typedef std::map<uint128, unittest_item_t*> temp_map_t;
+    typedef std::map<uint128, const unittest_item_t*> temp_map_t;
     temp_map_t temp_map;
     unittest_map_t::iterator it;
 
     unsigned int field_nsec = (RTL_FIELD_SIZE(struct timespec, tv_nsec) << 3);
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
 
-    for (it = _test_map.begin(); it != _test_map.end(); it++) {
-        // neither efficient nor satisfactory results
-        //     test_status_t& status = it->second;
-        //     unittest_list_t copied = it->second._test_list;
-        //     array.sort (compare_timespec);
-        //     copied.sort (compare_timespec);
-        //     array.merge (copied, compare_timespec);
-        // so... use map
-        //      pair <time, pointer>
-        //      list of object don't needed right now
-        unittest_list_t::iterator unittest_it;
-        for (unittest_it = it->second._test_list.begin(); unittest_it != it->second._test_list.end(); unittest_it++) {
-            struct timespec* t = &((*unittest_it)._time);
+    for (const auto& pair : _test_map) {
+        for (auto& testitem : pair.second._test_list) {
+            const struct timespec* t = &(testitem._time);
             uint128 timekey = ((uint128)t->tv_sec << field_nsec) | (t->tv_nsec);
-            temp_map.insert(std::make_pair(timekey, &(*unittest_it)));  // build pair(timekey, pointer)
+            temp_map.insert(std::make_pair(timekey, &testitem));  // build pair(timekey, pointer)
         }
     }
 

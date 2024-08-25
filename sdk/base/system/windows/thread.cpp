@@ -14,7 +14,7 @@ namespace hotplace {
 
 thread::thread(THREAD_CALLBACK_ROUTINE callback, void* param) : _tid(nullptr), _callback(callback), _param(param) {}
 
-thread::~thread() { join(_tid); }
+thread::~thread() { join(); }
 
 DWORD thread::thread_routine(void* param) {
     thread* this_ptr = static_cast<thread*>(param);
@@ -39,7 +39,7 @@ return_t thread::start() {
     return ret;
 }
 
-return_t thread::join(threadid_t tid) {
+return_t thread::join() {
     return_t ret = errorcode_t::success;
 
     if (_tid) {

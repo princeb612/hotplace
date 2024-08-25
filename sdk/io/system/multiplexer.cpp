@@ -135,8 +135,8 @@ return_t multiplexer_controller::event_loop_break(multiplexer_controller_context
         critical_section_guard guard(context->lock);
 
         if (nullptr == token_handle) {
-            for (iter = context->control.begin(); iter != context->control.end(); iter++) {
-                iter->second = 0;
+            for (auto& pair : context->control) {
+                pair.second = 0;
             }
         } else {
             iter = context->control.find(*token_handle);
@@ -171,12 +171,12 @@ return_t multiplexer_controller::event_loop_break_concurrent(multiplexer_control
 
         size_t i = 0;
         critical_section_guard guard(context->lock);
-        for (iter = context->control.begin(); iter != context->control.end(); iter++) {
+        for (auto& pair : context->control) {
             if (i >= concurrent) {
                 break;
             }
-            if (iter->second) {
-                iter->second = 0;
+            if (pair.second) {
+                pair.second = 0;
                 i++;
             }
         }

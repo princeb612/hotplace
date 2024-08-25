@@ -33,12 +33,15 @@ void hpack_session::for_each(std::function<void(const std::string&, const std::s
 match_result_t hpack_session::match(const std::string& name, const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
     size_t idx = 0;
-    for (dynamic_table_t::iterator iter = _dynamic_table.begin(); iter != _dynamic_table.end(); iter++, idx++) {
-        if ((name == iter->first) && (value == iter->second.first)) {
+    for (const auto& pair : _dynamic_table) {
+        const auto& k = pair.first;
+        const auto& v = pair.second;
+        if ((name == k) && (value == v.first)) {
             state = match_result_t::all_matched;
             index = idx;
             break;
         }
+        idx++;
     }
     return state;
 }
@@ -46,13 +49,16 @@ match_result_t hpack_session::match(const std::string& name, const std::string& 
 return_t hpack_session::select(uint32 flags, size_t index, std::string& name, std::string& value) {
     return_t ret = errorcode_t::not_found;
     size_t idx = 0;
-    for (dynamic_table_t::iterator iter = _dynamic_table.begin(); iter != _dynamic_table.end(); iter++, idx++) {
+    for (const auto& pair : _dynamic_table) {
+        const auto& k = pair.first;
+        const auto& v = pair.second;
         if (index == idx) {
-            name = iter->first;
-            value = iter->second.first;
+            name = k;
+            value = v.first;
             ret = errorcode_t::success;
             break;
         }
+        idx++;
     }
     return ret;
 }

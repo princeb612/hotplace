@@ -286,9 +286,8 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::clear(void* param) {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);
-    for (typename mlfq_map_t::iterator it = _mfq.begin(); it != _mfq.end(); it++) {
-        mlfq_queue_t& q = it->second;
-
+    for (auto& pair : _mfq) {
+        auto& q = pair.second;
         while (false == q.empty()) {
             TYPENAME_T* source = q.front();
             q.pop();

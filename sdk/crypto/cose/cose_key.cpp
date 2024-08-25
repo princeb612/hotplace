@@ -73,8 +73,7 @@ cbor_map* cose_data::cose_key::cbor() {
         }
 
         if (_order.size()) {
-            for (cose_orderlist_t::iterator iter = _order.begin(); iter != _order.end(); iter++) {
-                int key = *iter;
+            for (const auto& key : _order) {
                 switch (key) {
                     case cose_key_lable_t::cose_lable_kty:
                         *object << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(kty));

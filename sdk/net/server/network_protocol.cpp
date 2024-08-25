@@ -105,10 +105,9 @@ return_t network_protocol_group::clear() {
 
     __try2 {
         critical_section_guard guard(_lock);
-        for (protocol_map_t::iterator it = _protocols.begin(); it != _protocols.end(); it++) {
-            network_protocol* protocol_ref = it->second;
-
-            protocol_ref->release();
+        for (auto& pair : _protocols) {
+            network_protocol* protocol = pair.second;
+            protocol->release();
         }
         _protocols.clear();
     }
@@ -137,8 +136,8 @@ return_t network_protocol_group::is_kind_of(void* stream, size_t stream_size, ne
 
         critical_section_guard guard(_lock);
 
-        for (protocol_map_t::iterator it = _protocols.begin(); it != _protocols.end(); it++) {
-            network_protocol* protocol = it->second;
+        for (auto& pair : _protocols) {
+            network_protocol* protocol = pair.second;
             return_t dwResult = protocol->is_kind_of(stream, stream_size);
 
             if (errorcode_t::success == dwResult) {

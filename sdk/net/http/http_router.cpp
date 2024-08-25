@@ -186,10 +186,9 @@ bool http_router::get_auth_provider(http_request* request, http_response* respon
 
             std::string uri = request->get_http_uri().get_uripath();
 
-            for (authenticate_map_t::iterator iter = _authenticate_map.begin(); iter != _authenticate_map.end(); iter++) {
-                std::string root_uri = iter->first;
-                if (root_uri == uri) {
-                    auth_provider = iter->second;
+            for (const auto& pair : _authenticate_map) {
+                if (uri == pair.first) {
+                    auth_provider = pair.second;
                     break;
                 }
             }

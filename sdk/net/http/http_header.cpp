@@ -150,8 +150,7 @@ return_t http_header::get_headers(std::function<void(const std::string&, const s
 
         critical_section_guard guard(_lock);
         t_maphint<std::string, std::string> hint(_headers);
-        for (http_header_list_t::iterator iter = _names.begin(); iter != _names.end(); iter++) {
-            std::string key = *iter;
+        for (const auto& key : _names) {
             std::string value;
             hint.find(key, &value);
             f(key, value);

@@ -52,12 +52,12 @@ return_t thread::start() {
     return ret;
 }
 
-return_t thread::join(threadid_t tid) {
+return_t thread::join() {
     return_t ret = errorcode_t::success;
 
     // wait
     // pthread_join (tid, nullptr);
-    pthread_detach(tid);
+    pthread_detach(_tid);
     return ret;
 }
 

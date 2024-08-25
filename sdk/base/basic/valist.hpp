@@ -111,7 +111,10 @@ class valist {
     valist& operator<<(double value);
     valist& operator<<(void* value);
     valist& operator<<(const char* value);
+    valist& operator<<(const std::string& value);
+    valist& operator<<(const basic_stream& value);
     valist& operator<<(const variant_t& v);
+    valist& operator<<(variant_t&& v);
     valist& operator<<(const valist& object);
     /**
      * @brief clear
@@ -145,6 +148,7 @@ class valist {
      * @param variant_t& v [in]
      */
     void insert(const variant_t& v);
+    void insert(variant_t&& v);
 
     typedef std::vector<variant_t> args_t;
 

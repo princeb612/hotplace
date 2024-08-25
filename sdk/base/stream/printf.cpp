@@ -101,10 +101,8 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
 
         // Step2. relocate valist, build list
         valist va_new;
-        va_map_t::iterator iter;
-        i = 0;
-        for (va_map_t::iterator iter = va_map.begin(); iter != va_map.end(); iter++) {
-            size_t idx = iter->second;
+        for (const auto& pair : va_map) {
+            const auto& idx = pair.second;
             va.at(idx, v);
             va_new << v;
             va_array.push_back(idx);
@@ -117,14 +115,14 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
             variant_conversion_t* item = type_formatter + i;
             formats.insert(std::make_pair(item->type, item->formatter));
         }
-        va_array_t::iterator array_it;
-        for (i = 0, array_it = va_array.begin(); array_it != va_array.end(); i++, array_it++) {
-            size_t idx = *array_it;
+        i = 0;
+        for (const auto& idx : va_array) {
             va_new.at(i, v);
             formatter_map_t::iterator fmt_it = formats.find(v.type);
             if (formats.end() != fmt_it) {
                 formatter.replace(format("{%zi}", idx + 1).c_str(), fmt_it->second.c_str(), bufferio_flag_t::run_once);
             }
+            i++;
         }
 
         stream->vprintf((char*)formatter.data(), va_new.get());

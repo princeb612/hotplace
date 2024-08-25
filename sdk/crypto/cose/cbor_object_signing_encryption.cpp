@@ -567,10 +567,7 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
         // check appropriate algorithms set
         uint32 flags = 0;
         std::multimap<crypt_category_t, cose_alg_t> algmap;
-        std::list<cose_alg_t>::iterator iter;
-        for (iter = algs.begin(); iter != algs.end(); iter++) {
-            cose_alg_t alg = *iter;
-
+        for (const cose_alg_t& alg : algs) {
             const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
             const hint_cose_group_t* hint_group = hint->hint_group;
 

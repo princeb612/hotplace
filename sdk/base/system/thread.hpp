@@ -33,7 +33,7 @@ typedef pthread_t threadid_t;
 class thread_t {
    public:
     virtual return_t start() = 0;
-    virtual return_t join(threadid_t tid) = 0;
+    virtual return_t join() = 0;
     virtual return_t wait(unsigned msec) = 0;
     virtual threadid_t gettid() = 0;
 };

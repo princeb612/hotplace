@@ -534,7 +534,10 @@ void test_asn1_object() {
         typemap.insert({token_ia5string, asn1_type_ia5string});
         typemap.insert({token_visiblestring, asn1_type_visiblestring});
 
-        for (auto [range, pid] : result) {
+        for (auto& pair : result) {
+            // pair(pos_occurrence, id_pattern)
+            const auto& range = pair.first;
+            const auto& pid = pair.second;
             parser::search_result res;
             ctx.psearch_result(res, range);
 

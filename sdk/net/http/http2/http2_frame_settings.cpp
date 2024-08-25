@@ -85,10 +85,11 @@ return_t http2_frame_settings::write(binary_t& frame) {
         http2_frame::write(frame);
 
         // RFC 7540 Figure 10: Setting Format
-        h2_setting_map_t::iterator iter;
-        for (iter = _settings.begin(); iter != _settings.end(); iter++) {
-            binary_append(frame, iter->first, hton16);
-            binary_append(frame, iter->second, hton32);
+        for (const auto& pair : _settings) {
+            const auto& k = pair.first;
+            const auto& v = pair.second;
+            binary_append(frame, k, hton16);
+            binary_append(frame, v, hton32);
         }
     }
 
@@ -100,10 +101,12 @@ void http2_frame_settings::dump(stream_t* s) {
         http2_frame::dump(s);
 
         h2_setting_map_t::iterator iter;
-        for (iter = _settings.begin(); iter != _settings.end(); iter++) {
+        for (const auto& pair : _settings) {
+            const auto& k = pair.first;
+            const auto& v = pair.second;
             s->printf(" > ");
-            s->printf("%s %u ", constexpr_frame_identifier, iter->first);
-            s->printf("%s %u (0x%08x) ", constexpr_frame_value, iter->second, iter->second);
+            s->printf("%s %u ", constexpr_frame_identifier, k);
+            s->printf("%s %u (0x%08x) ", constexpr_frame_value, v, v);
             s->printf("\n");
         }
     }

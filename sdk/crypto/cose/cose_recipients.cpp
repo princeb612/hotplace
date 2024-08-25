@@ -32,9 +32,8 @@ cose_recipient& cose_recipients::add(cose_recipient* recipient) {
 }
 
 cose_recipients& cose_recipients::clear() {
-    for (std::list<cose_recipient*>::iterator iter = _recipients.begin(); iter != _recipients.end(); iter++) {
-        cose_recipient* item = *iter;
-        delete item;
+    for (cose_recipient* recipient : _recipients) {
+        delete recipient;
     }
     _recipients.clear();
     return *this;
@@ -56,10 +55,8 @@ cose_recipient* cose_recipients::operator[](size_t index) {
 
 void cose_recipients::for_each(void (*for_each_handler)(cose_layer*, void* userdata), void* userdata) {
     if (for_each_handler) {
-        std::list<cose_recipient*>::iterator iter;
-        for (iter = _recipients.begin(); iter != _recipients.end(); iter++) {
-            cose_recipient* item = *iter;
-            item->for_each(for_each_handler, userdata);
+        for (cose_recipient* recipient : _recipients) {
+            recipient->for_each(for_each_handler, userdata);
         }
     }
 }
@@ -73,10 +70,8 @@ cose_recipient* cose_recipients::get_upperlayer() { return _upperlayer; }
 
 return_t cose_recipients::finditem(int key, int& value, int scope) {
     return_t ret = errorcode_t::not_found;
-    std::list<cose_recipient*>::iterator iter;
-    for (iter = _recipients.begin(); iter != _recipients.end(); iter++) {
-        cose_recipient* item = *iter;
-        ret = item->finditem(key, value, scope);
+    for (cose_recipient* recipient : _recipients) {
+        ret = recipient->finditem(key, value, scope);
         if (errorcode_t::success == ret) {
             break;
         }
@@ -86,10 +81,8 @@ return_t cose_recipients::finditem(int key, int& value, int scope) {
 
 return_t cose_recipients::finditem(int key, std::string& value, int scope) {
     return_t ret = errorcode_t::not_found;
-    std::list<cose_recipient*>::iterator iter;
-    for (iter = _recipients.begin(); iter != _recipients.end(); iter++) {
-        cose_recipient* item = *iter;
-        ret = item->finditem(key, value, scope);
+    for (cose_recipient* recipient : _recipients) {
+        ret = recipient->finditem(key, value, scope);
         if (errorcode_t::success == ret) {
             break;
         }
@@ -99,10 +92,8 @@ return_t cose_recipients::finditem(int key, std::string& value, int scope) {
 
 return_t cose_recipients::finditem(int key, binary_t& value, int scope) {
     return_t ret = errorcode_t::not_found;
-    std::list<cose_recipient*>::iterator iter;
-    for (iter = _recipients.begin(); iter != _recipients.end(); iter++) {
-        cose_recipient* item = *iter;
-        ret = item->finditem(key, value, scope);
+    for (cose_recipient* recipient : _recipients) {
+        ret = recipient->finditem(key, value, scope);
         if (errorcode_t::success == ret) {
             break;
         }
@@ -112,10 +103,8 @@ return_t cose_recipients::finditem(int key, binary_t& value, int scope) {
 
 cbor_array* cose_recipients::cbor() {
     cbor_array* object = new cbor_array;
-    std::list<cose_recipient*>::iterator iter;
-    for (iter = _recipients.begin(); iter != _recipients.end(); iter++) {
-        cose_recipient* item = *iter;
-        *object << item->cbor();
+    for (cose_recipient* recipient : _recipients) {
+        *object << recipient->cbor();
     }
     return object;
 }

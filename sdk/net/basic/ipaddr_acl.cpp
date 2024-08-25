@@ -340,10 +340,10 @@ return_t ipaddr_acl::determine(const char* addr, bool& accept) {
             if (_single_type_rule.end() != iter) {
                 result.push_back(iter->second.allow);
             }
-            for (ipaddress_rule_map_t::iterator iter = _range_type_rule.begin(); iter != _range_type_rule.end(); iter++) {
-                ipaddr_t begin = iter->first;
-                ipaddress_rule_item_t& item = iter->second;
-                ipaddr_t end = item.addr;
+            for (const auto& pair : _range_type_rule) {
+                const auto& begin = pair.first;
+                const auto& item = pair.second;
+                const ipaddr_t& end = pair.second.addr;
 
                 if ((begin <= address) && (address <= end)) {
                     result.push_back(item.allow);
@@ -403,11 +403,10 @@ return_t ipaddr_acl::determine(const sockaddr_storage_t* sockaddr, bool& accept)
             if (_single_type_rule.end() != iter) {
                 result.push_back(iter->second.allow);
             }
-            for (ipaddress_rule_map_t::iterator iter = _range_type_rule.begin(); iter != _range_type_rule.end(); iter++) {
-                ipaddr_t begin = iter->first;
-
-                ipaddress_rule_item_t& item = iter->second;
-                ipaddr_t end = item.addr;
+            for (const auto& pair : _range_type_rule) {
+                const auto& begin = pair.first;
+                const auto& item = pair.second;
+                const ipaddr_t& end = pair.second.addr;
 
                 if ((begin <= address) && (address <= end)) {
                     result.push_back(item.allow);

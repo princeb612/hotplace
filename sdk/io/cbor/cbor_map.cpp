@@ -136,10 +136,7 @@ cbor_pair* cbor_map::operator[](size_t index) {
 std::list<cbor_pair*>& cbor_map::accessor() { return _array; }
 
 int cbor_map::addref() {
-    std::list<cbor_pair*>::iterator iter;
-
-    for (iter = _array.begin(); iter != _array.end(); iter++) {
-        cbor_pair* item = *iter;
+    for (cbor_pair* item : _array) {
         item->addref();
     }
     return _shared.addref();
@@ -148,10 +145,7 @@ int cbor_map::addref() {
 int cbor_map::release() {
     return_t ret = errorcode_t::success;
 
-    std::list<cbor_pair*>::iterator iter;
-
-    for (iter = _array.begin(); iter != _array.end(); iter++) {
-        cbor_pair* item = *iter;
+    for (cbor_pair* item : _array) {
         item->release();
     }
     return _shared.delref();
@@ -166,13 +160,12 @@ void cbor_map::represent(stream_t* s) {
 
         size_t i = 0;
         size_t size = _array.size();
-        std::list<cbor_pair*>::iterator iter;
-        for (i = 0, iter = _array.begin(); iter != _array.end(); i++, iter++) {
-            cbor_pair* item = *iter;
+        for (cbor_pair* item : _array) {
             item->represent(s);
             if (i + 1 != size) {
                 s->printf(",");
             }
+            i++;
         }
 
         s->printf("}");

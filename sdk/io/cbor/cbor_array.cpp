@@ -104,20 +104,14 @@ cbor_object* cbor_array::operator[](size_t index) {
 std::list<cbor_object*>& cbor_array::accessor() { return _array; }
 
 int cbor_array::addref() {
-    std::list<cbor_object*>::iterator iter;
-
-    for (iter = _array.begin(); iter != _array.end(); iter++) {
-        cbor_object* item = *iter;
+    for (cbor_object* item : _array) {
         item->addref();
     }
     return _shared.addref();
 }
 
 int cbor_array::release() {
-    std::list<cbor_object*>::iterator iter;
-
-    for (iter = _array.begin(); iter != _array.end(); iter++) {
-        cbor_object* item = *iter;
+    for (cbor_object* item : _array) {
         item->release();
     }
     return _shared.delref();
@@ -136,13 +130,12 @@ void cbor_array::represent(stream_t* s) {
 
         size_t i = 0;
         size_t size = _array.size();
-        std::list<cbor_object*>::iterator iter;
-        for (i = 0, iter = _array.begin(); iter != _array.end(); i++, iter++) {
-            cbor_object* item = *iter;
+        for (cbor_object* item : _array) {
             item->represent(s);
             if (i + 1 != size) {
                 s->printf(",");
             }
+            i++;
         }
 
         s->printf("]");

@@ -47,7 +47,7 @@ class t_skey_value {
      */
     t_skey_value<value_t>(uint32 flags = key_value_flag_t::key_value_case_sensitive) : _flags(flags), _order(0) {}
 
-    t_skey_value<value_t>(const t_skey_value<value_t>& object) {
+    t_skey_value<value_t>(const t_skey_value<value_t> &object) {
         _keyvalues = object._keyvalues;
         _order_map = object._order_map;
         _reverse_order_map = object._reverse_order_map;
@@ -63,7 +63,7 @@ class t_skey_value {
      * @brief set
      * @param uint32 flags [in]
      */
-    t_skey_value<value_t>& set(uint32 flags) {
+    t_skey_value<value_t> &set(uint32 flags) {
         _flags = flags;
         return *this;
     }
@@ -79,7 +79,7 @@ class t_skey_value {
      *          set (key1, value2, key_value_mode_t::kv_keep); // return errorcode_t::already_exist
      *          set (key1, value2, key_value_mode_t::kv_update); // kv_update, return errorcode_t::success
      */
-    return_t set(const std::string& name, const value_t& value, int mode = key_value_mode_t::kv_update) {
+    return_t set(const std::string &name, const value_t &value, int mode = key_value_mode_t::kv_update) {
         return_t ret = errorcode_t::success;
 
         __try2 {
@@ -116,13 +116,13 @@ class t_skey_value {
      * @remarks
      *          set(name, value, key_value_mode_t::kv_update);
      */
-    return_t update(const std::string& name, const value_t& value) { return set(name, value, key_value_mode_t::kv_update); }
+    return_t update(const std::string &name, const value_t &value) { return set(name, value, key_value_mode_t::kv_update); }
     /**
      * @brief   remove
      * @param   const std::string&  name    [IN]
      * @return  error code (see error.hpp)
      */
-    return_t remove(const std::string& name) {
+    return_t remove(const std::string &name) {
         return_t ret = errorcode_t::success;
 
         __try2 {
@@ -173,7 +173,7 @@ class t_skey_value {
      *          result = exist ("key"); // true
      *          result = exist ("value"); // false
      */
-    bool exist(const std::string& name) {
+    bool exist(const std::string &name) {
         bool ret_value = false;
 
         __try2 {
@@ -201,7 +201,7 @@ class t_skey_value {
      *          value = kv ["key"]; // "value"
      *          value = kv ["value"]; // nullptr
      */
-    value_t operator[](const std::string& name) {
+    value_t operator[](const std::string &name) {
         value_t ret_value = value_t();
 
         __try2 {
@@ -231,7 +231,7 @@ class t_skey_value {
      *          kv.query ("key", value); // "value"
      *          kv.query ("value", value); // ""
      */
-    return_t query(const std::string& name, value_t& value) {
+    return_t query(const std::string &name, value_t &value) {
         return_t ret = errorcode_t::success;
 
         __try2 {
@@ -253,7 +253,7 @@ class t_skey_value {
         }
         return ret;
     }
-    value_t get(const std::string& name) {
+    value_t get(const std::string &name) {
         value_t ret_value = value_t();
         query(name, ret_value);
         return ret_value;
@@ -272,11 +272,11 @@ class t_skey_value {
      *          result of kv1.copy (kv2, key_value_mode_t::kv_update) is kv1 [ ("key1", "value1"), ("key2", "item2"), ("key3", "item3") ]
      *          result of kv1.copy (kv2, key_value_mode_t::kv_keep)   is kv1 [ ("key1", "value1"), ("key2", "value2"), ("key3", "item3") ]
      */
-    return_t copy(t_skey_value<value_t>& rhs, int mode = key_value_mode_t::kv_update) {
+    return_t copy(t_skey_value<value_t> &rhs, int mode = key_value_mode_t::kv_update) {
         return_t ret = errorcode_t::success;
 
         critical_section_guard guard(rhs._lock);
-        keyvalue_map_t& source = rhs._keyvalues;
+        keyvalue_map_t &source = rhs._keyvalues;
 
         ret = copyfrom(source, mode);
         return ret;
@@ -287,7 +287,7 @@ class t_skey_value {
      * @return  error code (see error.hpp)
      * @sa      copy
      */
-    return_t copyfrom(const std::map<std::string, value_t>& source, int mode) {
+    return_t copyfrom(const std::map<std::string, value_t> &source, int mode) {
         return_t ret = errorcode_t::success;
 
         critical_section_guard guard(_lock);
@@ -296,13 +296,13 @@ class t_skey_value {
             clear();
         }
 
-        for (typename keyvalue_map_t::iterator source_iter = source.begin(); source_iter != source.end(); source_iter++) {
-            set(source_iter->first, source_iter->second, mode);
+        for (const auto &pair : source) {
+            set(pair.first, pair.second, mode);
         }
 
         return ret;
     }
-    return_t copyto(std::map<std::string, value_t>& target) {
+    return_t copyto(std::map<std::string, value_t> &target) {
         return_t ret = errorcode_t::success;
 
         critical_section_guard guard(_lock);
@@ -315,11 +315,10 @@ class t_skey_value {
      * @param   std::function<void(const std::string&, const std::string&, void*)> func [in]
      * @param   void* param [inopt]
      */
-    void foreach (std::function<void(const std::string&, const value_t&, void*)> func, void* param = nullptr) {
+    void foreach (std::function<void(const std::string &, const value_t &, void *)> func, void *param = nullptr) {
         critical_section_guard guard(_lock);
-        typename key_order_map_t::iterator order_iter;
-        for (order_iter = _order_map.begin(); order_iter != _order_map.end(); order_iter++) {
-            typename keyvalue_map_t::iterator iter = _keyvalues.find(order_iter->second);
+        for (const auto &pair : _order_map) {
+            typename keyvalue_map_t::iterator iter = _keyvalues.find(pair.second);
             func(iter->first, iter->second, param);
         }
     }
@@ -330,7 +329,7 @@ class t_skey_value {
      * @return  t_skey_value&
      * @remarks copy with key_value_mode_t::kv_update
      */
-    t_skey_value<value_t>& operator<<(t_skey_value<value_t>& rhs) {
+    t_skey_value<value_t> &operator<<(t_skey_value<value_t> &rhs) {
         copy(rhs, key_value_mode_t::kv_update);
         return *this;
     }
@@ -363,9 +362,9 @@ class t_key_value {
     typedef std::pair<typename keyvalue_map_t::iterator, bool> keyvalue_map_pib_t;
 
     t_key_value<key_t, value_t>() {}
-    t_key_value<key_t, value_t>(const t_key_value<key_t, value_t>& rhs) { _keyvalue_map = rhs._keyvalue_map; }
+    t_key_value<key_t, value_t>(const t_key_value<key_t, value_t> &rhs) { _keyvalue_map = rhs._keyvalue_map; }
 
-    t_key_value<key_t, value_t>& set(key_t key, const value_t& value) {
+    t_key_value<key_t, value_t> &set(key_t key, const value_t &value) {
         return_t ret = errorcode_t::success;
 
         keyvalue_map_pib_t pib = _keyvalue_map.insert(std::make_pair(key, value));
@@ -375,7 +374,7 @@ class t_key_value {
 
         return *this;
     }
-    value_t get(const key_t& key) {
+    value_t get(const key_t &key) {
         value_t value = value_t();
 
         typename keyvalue_map_t::iterator iter = _keyvalue_map.find(key);

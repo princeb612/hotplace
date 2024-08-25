@@ -67,20 +67,14 @@ cbor_tstrings& cbor_tstrings::operator<<(const char* str) {
 size_t cbor_tstrings::size() { return _array.size(); }
 
 int cbor_tstrings::addref() {
-    std::list<cbor_data*>::iterator iter;
-
-    for (iter = _array.begin(); iter != _array.end(); iter++) {
-        cbor_data* item = *iter;
+    for (cbor_data* item : _array) {
         item->addref();
     }
     return _shared.addref();
 }
 
 int cbor_tstrings::release() {
-    std::list<cbor_data*>::iterator iter;
-
-    for (iter = _array.begin(); iter != _array.end(); iter++) {
-        cbor_data* item = *iter;
+    for (cbor_data* item : _array) {
         item->release();
     }
     return _shared.delref();
@@ -95,13 +89,12 @@ void cbor_tstrings::represent(stream_t* s) {
 
         size_t i = 0;
         size_t size = _array.size();
-        std::list<cbor_data*>::iterator iter;
-        for (i = 0, iter = _array.begin(); iter != _array.end(); i++, iter++) {
-            cbor_data* item = *iter;
+        for (cbor_data* item : _array) {
             item->represent(s);
             if (i + 1 != size) {
                 s->printf(",");
             }
+            i++;
         }
 
         s->printf(")");

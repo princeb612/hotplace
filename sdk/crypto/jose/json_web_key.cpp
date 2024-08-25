@@ -239,9 +239,7 @@ return_t jwk_serialize_t(json_mapper_t mapper, void (*callback)(char* data, TYPE
             } else {
                 json_t* json_keys = json_array();
                 if (json_keys) {
-                    for (json_mapper_items_t::iterator iter = mapper.items.begin(); iter != mapper.items.end(); iter++) {
-                        json_mapper_item_t item = *iter;
-
+                    for (const auto& item : mapper.items) {
                         json_t* json_key = json_object();
 
                         if (json_key) {

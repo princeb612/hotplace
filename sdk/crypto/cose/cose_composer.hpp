@@ -516,9 +516,7 @@ class cose_countersigns : public cose_recipients {
             if (size_countersigns > 1) {
                 __try_new_catch(object, new cbor_array, ret, __leave2);
 
-                std::list<cose_recipient*>::iterator iter;
-                for (iter = _recipients.begin(); iter != _recipients.end(); iter++) {
-                    cose_recipient* sign = *iter;
+                for (cose_recipient* sign : _recipients) {
                     *object << sign->cbor();  // array in array
                 }
             } else if (size_countersigns == 1) {

@@ -63,17 +63,14 @@ return_t bufferio::open(bufferio_context_t** handle, uint32 block_size, byte_t p
 void copy_from_bufferio_queue_nolock(byte_t* dest, size_t& index, bufferin_queue_t& source_queue) {
     bufferio_t* bufferio_item = nullptr;
 
-    for (bufferin_queue_t::iterator it = source_queue.begin(); it != source_queue.end(); it++) {
-        bufferio_item = *it;
+    for (const bufferio_t* bufferio_item : source_queue) {
         memcpy(dest + index, bufferio_item->base_address, bufferio_item->offset);
         index += bufferio_item->offset;
     }
 }
 
 void clear_bufferio_queue_nolock(bufferio_context_t* handle, bufferin_queue_t& source_queue) {
-    for (bufferin_queue_t::iterator it = source_queue.begin(); it != source_queue.end(); it++) {
-        bufferio_t* item = *it;
-
+    for (bufferio_t* item : source_queue) {
         if (bufferio_context_flag_t::memzero_free & handle->flags) {
             memset(item->base_address, 0, item->offset);
         }
@@ -401,28 +398,29 @@ bool bufferio::compare(bufferio_context_t* handle, const void* data_to_compare, 
 
         const byte_t* target = static_cast<const byte_t*>(data_to_compare);
         size_t target_index = 0;
-        int nCmp = -1;
-        size_t dwCompareRemainSize = size_to_compare;
-        size_t dwCompareSize = 0;
+        int cmp = -1;
+        size_t compare_size_remains = size_to_compare;
+        size_t compare_size = 0;
 
         critical_section_guard guard(handle->bufferio_lock);
 
-        bufferin_queue_t::iterator iter;
-        for (iter = handle->bufferio_queue.begin(); iter != handle->bufferio_queue.end() && (dwCompareRemainSize > 0); iter++) {
-            bufferio_t* pIo = *iter;
+        for (const auto& pIo : handle->bufferio_queue) {
+            if (0 == compare_size_remains) {
+                break;
+            }
 
-            dwCompareSize = (pIo->offset < dwCompareRemainSize) ? pIo->offset : dwCompareRemainSize;
+            compare_size = (pIo->offset < compare_size_remains) ? pIo->offset : compare_size_remains;
 
-            nCmp = memcmp(pIo->base_address, target + target_index, dwCompareSize);
-            if (0 != nCmp) {
+            cmp = memcmp(pIo->base_address, target + target_index, compare_size);
+            if (0 != cmp) {
                 break;
             }
 
             target_index += pIo->offset;
-            dwCompareRemainSize -= pIo->offset;
+            compare_size_remains -= pIo->offset;
         }
 
-        ret_bool = ((0 == nCmp) && (0 == dwCompareRemainSize));
+        ret_bool = ((0 == cmp) && (0 == compare_size_remains));
     }
     __finally2 {
         // do nothing

@@ -25,10 +25,7 @@ return_t http_server::start() {
     return_t ret = errorcode_t::success;
     uint16 producers = get_server_conf().get(netserver_config_t::serverconf_concurrent_network);
     uint16 consumers = get_server_conf().get(netserver_config_t::serverconf_concurrent_consume);
-    http_handles_t::iterator iter;
-    for (iter = _http_handles.begin(); iter != _http_handles.end(); iter++) {
-        network_multiplexer_context_t* handle = *iter;
-
+    for (network_multiplexer_context_t* handle : _http_handles) {
         get_network_server().consumer_loop_run(handle, consumers);
         get_network_server().event_loop_run(handle, producers);
     }
@@ -39,10 +36,7 @@ return_t http_server::stop() {
     return_t ret = errorcode_t::success;
     uint16 producers = get_server_conf().get(netserver_config_t::serverconf_concurrent_network);
     uint16 consumers = get_server_conf().get(netserver_config_t::serverconf_concurrent_consume);
-    http_handles_t::iterator iter;
-    for (iter = _http_handles.begin(); iter != _http_handles.end(); iter++) {
-        network_multiplexer_context_t* handle = *iter;
-
+    for (network_multiplexer_context_t* handle : _http_handles) {
         get_network_server().event_loop_break(handle, producers);
         get_network_server().consumer_loop_break(handle, consumers);
     }
@@ -135,8 +129,7 @@ return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, htt
 return_t http_server::shutdown_server() {
     return_t ret = errorcode_t::success;
     http_handles_t::iterator iter;
-    for (iter = _http_handles.begin(); iter != _http_handles.end(); iter++) {
-        network_multiplexer_context_t* handle = *iter;
+    for (network_multiplexer_context_t* handle : _http_handles) {
         get_network_server().close(handle);
     }
     _http_handles.clear();

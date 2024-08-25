@@ -578,14 +578,12 @@ return_t time_diff(struct timespec& ts, struct timespec begin, struct timespec e
 
 return_t time_sum(struct timespec& ts, std::list<struct timespec>& slices) {
     return_t ret = errorcode_t::success;
-    std::list<struct timespec>::iterator it;
     size_t sec = 0;
     uint64 nsec = 0;
 
     memset(&ts, 0, sizeof(ts));
 
-    for (it = slices.begin(); it != slices.end(); it++) {
-        struct timespec& item = *it;
+    for (const auto& item : slices) {
         sec += item.tv_sec;
         nsec += item.tv_nsec;
     }

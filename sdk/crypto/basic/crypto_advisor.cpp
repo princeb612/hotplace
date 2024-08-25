@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/inline.hpp>
 #include <sdk/base/system/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
@@ -232,13 +233,11 @@ return_t crypto_advisor::cleanup() {
     return_t ret = errorcode_t::success;
 
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-    cipher_map_t::iterator iter_cipher;
-    for (iter_cipher = _cipher_map.begin(); iter_cipher != _cipher_map.end(); iter_cipher++) {
-        EVP_CIPHER_free(iter_cipher->second);
+    for (auto& pair : _cipher_map) {
+        EVP_CIPHER_free(pair.second);
     }
-    md_map_t::iterator iter_md;
-    for (iter_md = _md_map.begin(); iter_md != _md_map.end(); iter_md++) {
-        EVP_MD_free(iter_md->second);
+    for (auto& pair : _md_map) {
+        EVP_MD_free(pair.second);
     }
 #endif
 
@@ -424,7 +423,7 @@ const hint_digest_t* crypto_advisor::hintof_digest(const char* name) {
         }
 
         t_maphint<std::string, const hint_digest_t*> hint(_md_byname_map);
-        hint.find(name, &ret_value);
+        hint.find(lowername(name).c_str(), &ret_value);
     }
     __finally2 {
         // do nothing

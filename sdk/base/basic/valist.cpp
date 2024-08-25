@@ -44,7 +44,7 @@ valist& valist::operator<<(bool value) {
 
     v.type = TYPE_BOOLEAN;
     v.data.b = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -53,7 +53,7 @@ valist& valist::operator<<(char value) {
 
     v.type = TYPE_CHAR;
     v.data.c = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -62,7 +62,7 @@ valist& valist::operator<<(unsigned char value) {
 
     v.type = TYPE_BYTE;
     v.data.uc = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -71,7 +71,7 @@ valist& valist::operator<<(short value) {
 
     v.type = TYPE_SHORT;
     v.data.i16 = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -80,7 +80,7 @@ valist& valist::operator<<(unsigned short value) {
 
     v.type = TYPE_USHORT;
     v.data.ui16 = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -89,7 +89,7 @@ valist& valist::operator<<(int value) {
 
     v.type = TYPE_INT;
     v.data.i32 = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -98,7 +98,7 @@ valist& valist::operator<<(unsigned int value) {
 
     v.type = TYPE_UINT;
     v.data.i64 = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -115,7 +115,7 @@ valist& valist::operator<<(long value) {
 #elif defined _WIN32 || defined _WIN64
     v.data.i32 = value;
 #endif
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -133,7 +133,7 @@ valist& valist::operator<<(unsigned long value) {
     v.data.ui32 = value;
 #endif
 
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -142,7 +142,7 @@ valist& valist::operator<<(long long value) {
 
     v.type = TYPE_LONGLONG;
     v.data.i64 = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -151,7 +151,7 @@ valist& valist::operator<<(unsigned long long value) {
 
     v.type = TYPE_ULONGLONG;
     v.data.ui64 = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -160,7 +160,7 @@ valist& valist::operator<<(float value) {
 
     v.type = TYPE_FLOAT;
     v.data.f = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -169,7 +169,7 @@ valist& valist::operator<<(double value) {
 
     v.type = TYPE_DOUBLE;
     v.data.d = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
@@ -178,21 +178,38 @@ valist& valist::operator<<(void* value) {
 
     v.type = TYPE_POINTER;
     v.data.p = value;
-    insert(v);
+    insert(std::move(v));
     return *this;
 }
 
 valist& valist::operator<<(const char* value) {
-    variant_t v;
+    if (value) {
+        variant_t v;
+        v.type = TYPE_STRING;
+        v.data.p = strdup(value);
+        v.flag |= variant_flag_t::flag_free;
+        insert(std::move(v));
+    }
+    return *this;
+}
 
-    v.type = TYPE_STRING;
-    v.data.str = (char*)value;
-    insert(v);
+valist& valist::operator<<(const std::string& value) {
+    *this << value.c_str();
+    return *this;
+}
+
+valist& valist::operator<<(const basic_stream& value) {
+    *this << value.c_str();
     return *this;
 }
 
 valist& valist::operator<<(const variant_t& v) {
     insert(v);
+    return *this;
+}
+
+valist& valist::operator<<(variant_t&& v) {
+    insert(std::move(v));
     return *this;
 }
 
@@ -291,8 +308,7 @@ void valist::build() {
     critical_section_guard guard(_lock);
 
     __try2 {
-        for (args_t::iterator iter1 = _args.begin(); iter1 != _args.end(); iter1++) {
-            variant_t vt = *iter1;
+        for (const auto& vt : _args) {
             unsigned native_data_size = 0;
             unsigned padded_size = 0;
 
@@ -358,11 +374,10 @@ void valist::build() {
 #if defined __linux__
 
         int pos = 0;
-        for (args_t::iterator iter = _args.begin(); iter != _args.end(); iter++) {
-            variant_t vt = *iter;
+        for (const auto& vt : _args) {
             unsigned int native_data_size = 0;
             unsigned int padded_size = 0;
-            void* native_data = nullptr;
+            const void* native_data = nullptr;
             void* vdata = nullptr;
 
             switch (vt.type) {
@@ -450,9 +465,7 @@ void valist::build() {
 #define va_assign_type_promotion_int(x) int
 #define va_assign_type_promotion_double(x) double
 
-        for (args_t::iterator iter = _args.begin(); iter != _args.end(); iter++) {
-            variant_t& vt = *iter;
-
+        for (const auto& vt : _args) {
             switch (vt.type) {
                 case TYPE_CHAR:
                 case TYPE_BYTE:
@@ -513,6 +526,13 @@ void valist::build() {
 }
 
 void valist::insert(const variant_t& v) {
+    critical_section_guard guard(_lock);
+
+    _args.push_back(v);
+    _modified = true;
+}
+
+void valist::insert(variant_t&& v) {
     critical_section_guard guard(_lock);
 
     _args.push_back(v);

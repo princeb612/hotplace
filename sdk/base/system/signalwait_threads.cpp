@@ -162,8 +162,8 @@ return_t signalwait_threads::join(threadid_t tid) {
     }
 
     if (thread) {
-        thread->join(tid);  // valgrind pthread_create problem, so pthread_detach here
-        delete thread;      // delete a thread object
+        thread->join();  // valgrind pthread_create problem, so pthread_detach here
+        delete thread;   // delete a thread object
     }
     if (thread_rt) {
         delete thread_rt;  // delete after a thread destroyed

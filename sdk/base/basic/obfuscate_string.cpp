@@ -75,12 +75,11 @@ bool obfuscate_string::compare(obfuscate_string& o) {
     bool ret = false;
 
     if (size() == o.size()) {
-        binary_t::iterator lit, rit;
         typedef std::set<byte_t> differ_set_t;
         std::pair<differ_set_t::iterator, bool> differ_set_pib_t;
         differ_set_t differ_set;
-        for (lit = _contents.begin(), rit = o._contents.begin(); (lit != _contents.end()) && (rit != o._contents.end()); lit++, rit++) {
-            byte_t diff = *lit - *rit;
+        for (size_t i = 0; i < size(); i++) {
+            byte_t diff = _contents[i] - o._contents[i];
 
             differ_set.insert(diff);
             if (differ_set.size() > 1) {
@@ -161,28 +160,22 @@ bool obfuscate_string::operator==(obfuscate_string& o) { return true == compare(
 bool obfuscate_string::operator!=(obfuscate_string& o) { return false == compare(o); }
 
 std::string& operator<<(std::string& lhs, const obfuscate_string& rhs) {
-    binary_t::const_iterator it;
-
-    for (it = rhs._contents.begin(); it != rhs._contents.end(); it++) {
-        lhs += (*it - rhs._factor);
+    for (const auto& item : rhs._contents) {
+        lhs += (item - rhs._factor);
     }
     return lhs;
 }
 
 basic_stream& operator<<(basic_stream& lhs, const obfuscate_string& rhs) {
-    binary_t::const_iterator it;
-
-    for (it = rhs._contents.begin(); it != rhs._contents.end(); it++) {
-        lhs << (byte_t)(*it - rhs._factor);
+    for (const auto& item : rhs._contents) {
+        lhs << (byte_t)(item - rhs._factor);
     }
     return lhs;
 }
 
 binary_t& operator<<(binary_t& lhs, const obfuscate_string& rhs) {
-    binary_t::const_iterator it;
-
-    for (it = rhs._contents.begin(); it != rhs._contents.end(); it++) {
-        lhs.insert(lhs.end(), *it - rhs._factor);
+    for (const auto& item : rhs._contents) {
+        lhs.insert(lhs.end(), item - rhs._factor);
     }
     return lhs;
 }

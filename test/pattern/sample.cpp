@@ -900,7 +900,10 @@ void test_aho_corasick_wildcard() {
         ac.build();
 
         result = ac.search(entry.source, strlen(entry.source));
-        for (auto [range, pid] : result) {
+        for (auto& pair : result) {
+            // pair(pos_occurrence, id_pattern)
+            const auto& range = pair.first;
+            const auto& pid = pair.second;
             _logger->writeln("pos [%2zi..%2zi] pattern[%i]", range.begin, range.end, pid);
         }
 
@@ -970,7 +973,10 @@ void test_aho_corasick_ignorecase() {
         ac.build();
 
         result = ac.search(entry.source, strlen(entry.source));
-        for (auto [range, pid] : result) {
+        for (auto& pair : result) {
+            // pair(pos_occurrence, id_pattern)
+            const auto& range = pair.first;
+            const auto& pid = pair.second;
             _logger->writeln("pos [%2zi..%2zi] pattern[%i]", range.begin, range.end, pid);
         }
 

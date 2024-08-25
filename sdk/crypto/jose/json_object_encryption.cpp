@@ -108,9 +108,7 @@ return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, std:
             zlib_deflate(zlib_windowbits_t::windowbits_deflate, input, deflated);
         }
 
-        for (std::list<jwa_t>::iterator iter = algs.begin(); iter != algs.end(); iter++) {
-            jwa_t alg = *iter;
-
+        for (const jwa_t &alg : algs) {
             return_t check = errorcode_t::success;
 
             if (jose_flag_t::jose_deflate & handle->flags) {
@@ -155,22 +153,19 @@ return_t json_object_encryption::decrypt(jose_context_t *handle, const std::stri
 
         return_t ret_test = errorcode_t::success;
         std::list<bool> results;
-        for (jose_encryptions_map_t::iterator eit = handle->encryptions.begin(); eit != handle->encryptions.end(); eit++) {
-            jwe_t enc = eit->first;
-            jose_encryption_t &item = eit->second;
-
+        for (auto &epair : handle->encryptions) {
+            const jwe_t &enc = epair.first;
+            jose_encryption_t &item = epair.second;
             binary_t zip;
             t_maphint<crypt_item_t, binary_t> hint(item.datamap);
             hint.find(crypt_item_t::item_zip, &zip);
 
-            for (jose_recipients_t::iterator rit = item.recipients.begin(); rit != item.recipients.end(); rit++) {
-                jwa_t alg = rit->first;
-
+            for (auto &rpair : item.recipients) {
+                const jwa_t &alg = rpair.first;
                 bool run = true;
 
                 if (run) {
-                    jose_recipient_t &recipient = rit->second;
-
+                    jose_recipient_t &recipient = rpair.second;
                     std::string kid;
 
                     if (false == recipient.kid.empty()) {
@@ -842,10 +837,9 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t *ha
                     __leave2;
                 }
                 json_object_set_new(json_serialization, "protected", json_string(b64_header.c_str()));
-                for (jose_recipients_t::iterator rit = encryption.recipients.begin(); rit != encryption.recipients.end(); rit++) {
-                    jwa_t alg = rit->first;
-
-                    jose_recipient_t &recipient = rit->second;
+                for (auto &pair : encryption.recipients) {
+                    const jwa_t &alg = pair.first;
+                    jose_recipient_t &recipient = pair.second;
 
                     json_recipient = json_object();
                     if (json_recipient) {
@@ -1051,9 +1045,7 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
                 item.header.assign((char *)&protected_header[0], protected_header.size());
                 base64_encode(&protected_header[0], protected_header.size(), item.datamap[crypt_item_t::item_aad], base64_encoding_t::base64url_encoding);
 
-                for (std::list<jwa_t>::const_iterator iter = algs.begin(); iter != algs.end(); iter++) {
-                    jwa_t alg = *iter;
-
+                for (const jwa_t &alg : algs) {
                     // const hint_jose_encryption_t* alg_hint =
                     // advisor->hintof_jose_algorithm (alg);  // key management
                     std::string kid;
@@ -1243,9 +1235,8 @@ static void json_unpack_helper(std::list<json_t *> const &pool, const char *key,
             __leave2;
         }
 
-        std::list<json_t *>::const_iterator iter;
-        for (iter = pool.begin(); iter != pool.end(); iter++) {
-            ret = json_unpack(*iter, "{s:s}", key, &value);
+        for (json_t *json : pool) {
+            ret = json_unpack(json, "{s:s}", key, &value);
             if (0 == ret) {
                 *ptr = value;
                 break;
@@ -1266,9 +1257,8 @@ static void json_unpack_helper(std::list<json_t *> const &pool, const char *key,
             __leave2;
         }
 
-        std::list<json_t *>::const_iterator iter;
-        for (iter = pool.begin(); iter != pool.end(); iter++) {
-            ret = json_unpack(*iter, "{s:i}", key, &value);
+        for (json_t *json : pool) {
+            ret = json_unpack(json, "{s:i}", key, &value);
             if (0 == ret) {
                 *ptr = value;
                 break;
@@ -1289,9 +1279,8 @@ static void json_unpack_helper(std::list<json_t *> const &pool, const char *key,
             __leave2;
         }
 
-        std::list<json_t *>::const_iterator iter;
-        for (iter = pool.begin(); iter != pool.end(); iter++) {
-            ret = json_unpack(*iter, "{s:o}", key, &value);
+        for (json_t *json : pool) {
+            ret = json_unpack(json, "{s:o}", key, &value);
             if (0 == ret) {
                 *ptr = value;
                 break;

@@ -89,7 +89,7 @@ void logger::stop_consumer() {
     if (_thread) {
         _run = false;
         _thread->wait(-1);
-        _thread->join(_thread->gettid());
+        _thread->join();
         delete _thread;
         _thread = nullptr;
     }
@@ -377,8 +377,8 @@ logger& logger::flush(bool check) {
     uint16 flush_size = _keyvalue.get(logger_t::logger_flush_size);
     std::string logfile = _skeyvalue.get("logfile");
 
-    for (iter = _logger_stream_map.begin(); iter != _logger_stream_map.end(); iter++) {
-        logger_item* item = iter->second;
+    for (auto& pair : _logger_stream_map) {
+        logger_item* item = pair.second;
         basic_stream& bs = item->delayed;
         bool cond = true;
         if (bs.size()) {

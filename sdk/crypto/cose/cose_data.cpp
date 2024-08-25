@@ -240,9 +240,8 @@ cose_data& cose_data::clear() {
     _data_map.clear();
     _order.clear();
     _payload.clear();
-    for (std::list<cose_key*>::iterator it = _keys.begin(); it != _keys.end(); it++) {
-        cose_key* object = *it;
-        delete object;
+    for (cose_key* key : _keys) {
+        delete key;
     }
     _keys.clear();
     return *this;
@@ -312,10 +311,7 @@ return_t cose_data::build_protected(cbor_data** object) {
             if (_data_map.size()) {
                 __try_new_catch(part_protected, new cbor_map(), ret, __leave2);
 
-                cose_orderlist_t::iterator list_iter;
-                for (list_iter = _order.begin(); list_iter != _order.end(); list_iter++) {
-                    int key = *list_iter;
-
+                for (const auto& key : _order) {
                     cose_variantmap_t::iterator map_iter = _data_map.find(key);
                     variant value = map_iter->second;
                     *part_protected << new cbor_pair(new cbor_data(key), new cbor_data(std::move(value)));
@@ -354,10 +350,7 @@ return_t cose_data::build_protected(cbor_data** object, cose_variantmap_t& unsen
             if (_data_map.size()) {
                 __try_new_catch(part_protected, new cbor_map(), ret, __leave2);
 
-                cose_orderlist_t::iterator list_iter;
-                for (list_iter = _order.begin(); list_iter != _order.end(); list_iter++) {
-                    int key = *list_iter;
-
+                for (const auto& key : _order) {
                     cose_variantmap_t::iterator unsent_iter = unsent.find(key);
                     if (unsent.end() != unsent_iter) {
                         continue;
@@ -397,10 +390,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
 
         __try_new_catch(part_unprotected, new cbor_map(), ret, __leave2);
 
-        cose_orderlist_t::iterator list_iter;
-        for (list_iter = _order.begin(); list_iter != _order.end(); list_iter++) {
-            int key = *list_iter;
-
+        for (const auto& key : _order) {
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
             variant value = map_iter->second;
             const variant_t& vt = value.content();
@@ -436,10 +426,7 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
 
         __try_new_catch(part_unprotected, new cbor_map(), ret, __leave2);
 
-        cose_orderlist_t::iterator list_iter;
-        for (list_iter = _order.begin(); list_iter != _order.end(); list_iter++) {
-            int key = *list_iter;
-
+        for (const auto& key : _order) {
             cose_variantmap_t::iterator unsent_iter = unsent.find(key);
             if (unsent.end() != unsent_iter) {
                 continue;

@@ -40,9 +40,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<jws_t> cons
     output.clear();
     std::list<std::string> headers;
 
-    for (std::list<jws_t>::const_iterator method_iter = methods.begin(); method_iter != methods.end(); method_iter++) {
-        jws_t sig = *method_iter;
-
+    for (const jws_t& sig : methods) {
         const hint_signature_t* hint = advisor->hintof_jose_signature(sig);
 
         if (hint) {
@@ -85,9 +83,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
             __leave2;
         }
 
-        for (std::list<std::string>::const_iterator iter = headers.begin(); iter != headers.end(); iter++) {
-            std::string header = *iter;
-
+        for (const auto& header : headers) {
             jws_t sig = jws_t::jws_unknown;
             std::string kid;
 
@@ -159,9 +155,7 @@ return_t json_object_signing::verify(jose_context_t* handle, const std::string& 
         }
 
         std::list<bool> list_result;
-        for (jose_signs_t::iterator iter = handle->signs.begin(); iter != handle->signs.end(); iter++) {
-            jose_sign_t item = *iter;
-
+        for (const auto& item : handle->signs) {
             bool result_per_signature = false;
 
             std::string protected_header = base64_decode_careful(item.header, base64_encoding_t::base64url_encoding);
