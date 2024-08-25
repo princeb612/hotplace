@@ -44,7 +44,9 @@ void client() {
     char buffer[BUFFER_SIZE];
 
     __try2 {
+#if defined _WIN32 || defined _WIN64
         winsock_startup();
+#endif
 
         ret = create_socket(&sock, &sock_storage, SOCK_DGRAM, option.address.c_str(), option.port);
         if (errorcode_t::success != ret) {
@@ -61,7 +63,9 @@ void client() {
     __finally2 {
         close_socket(sock, true, 0);
 
+#if defined _WIN32 || defined _WIN64
         winsock_cleanup();
+#endif
     }
 }
 

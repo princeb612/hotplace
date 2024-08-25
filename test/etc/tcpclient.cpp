@@ -45,7 +45,9 @@ void client() {
     basic_stream bs;
 
     __try2 {
+#if defined _WIN32 || defined _WIN64
         winsock_startup();
+#endif
 
         ret = cli.connect(&sock, nullptr, option.address.c_str(), option.port, 1);
         if (errorcode_t::success != ret) {
@@ -68,7 +70,9 @@ void client() {
     __finally2 {
         cli.close(sock, nullptr);
 
+#if defined _WIN32 || defined _WIN64
         winsock_cleanup();
+#endif
     }
 
     _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);

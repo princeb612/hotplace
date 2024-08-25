@@ -51,7 +51,9 @@ void client() {
 
     __try2 {
         openssl_startup();
+#if defined _WIN32 || defined _WIN64
         winsock_startup();
+#endif
 
         ret = cli.connect(&sock, &tlshandle, option.address.c_str(), option.port, 1);
         if (errorcode_t::success != ret) {
@@ -76,7 +78,9 @@ void client() {
     __finally2 {
         cli.close(sock, tlshandle);
         SSL_CTX_free(x509);
+#if defined _WIN32 || defined _WIN64
         winsock_cleanup();
+#endif
         openssl_cleanup();
     }
 
