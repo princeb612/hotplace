@@ -42,7 +42,7 @@ void client() {
     tls_context_t* tlshandle = nullptr;
     socket_t sock = -1;
     SSL_CTX* x509 = nullptr;
-    x509_open_simple(&x509);
+    x509_open_simple(x509cert_flag_tls, &x509);
     transport_layer_security tls(x509);
     tls_client_socket cli(&tls);
 

@@ -198,7 +198,7 @@ return_t echo_server(void*) {
                     req.get_http_header().add("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW");  // s6BhdRkqt3:gX1fBat3bV
 
                     client.set_url(endpoint_url.c_str());
-                    client.set_ttl(10 * 1000);
+                    client.set_wto(10 * 1000);
                     client.request(req, &resp);
                     if (resp) {
                         *response = *resp;

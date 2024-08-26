@@ -76,7 +76,7 @@ return_t tls_client_socket::read(socket_t sock, tls_context_t* tls_handle, char*
      * in case read 8 bytes and 2 bytes remains, return errorcode_t::more_data
      */
     while (true) {
-        ret = wait_socket(sock, get_ttl(), SOCK_WAIT_READABLE);
+        ret = wait_socket(sock, get_wto(), SOCK_WAIT_READABLE);
         if (errorcode_t::success == ret) {
             ret = _tls->read(tls_handle, tls_io_flag_t::read_ssl_read | tls_io_flag_t::read_bio_write | tls_io_flag_t::read_socket_recv, ptr_data, size_data,
                              cbread);

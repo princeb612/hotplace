@@ -17,7 +17,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-return_t x509_open_simple(SSL_CTX** context) {
+return_t x509_open_simple(uint32 flag, SSL_CTX** context) {
     return_t ret = errorcode_t::success;
     SSL_CTX* ssl_ctx = nullptr;
 
@@ -27,11 +27,20 @@ return_t x509_open_simple(SSL_CTX** context) {
             __leave2;
         }
 
+        const SSL_METHOD* method = nullptr;
+        if (x509cert_flag_tls == flag) {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-        const SSL_METHOD* method = TLS_method();
+            method = TLS_method();
 #else
-        const SSL_METHOD* method = SSLv23_method();
+            method = SSLv23_method();
 #endif
+        } else if (x509cert_flag_dtls == flag) {
+            method = DTLS_server_method();
+        } else {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         ssl_ctx = SSL_CTX_new(method);
         if (nullptr == ssl_ctx) {
             ret = errorcode_t::internal_error;
@@ -69,7 +78,7 @@ static int set_default_passwd_callback_routine(char* buf, int num, int rwflag, v
     return len;
 }
 
-return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
+return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
     return_t ret = errorcode_t::success;
     SSL_CTX* ssl_ctx = nullptr;
     SSL* ssl = nullptr;
@@ -80,7 +89,7 @@ return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key
             __leave2;
         }
 
-        ret = x509_open_simple(&ssl_ctx);
+        ret = x509_open_simple(flag, &ssl_ctx);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -157,7 +166,7 @@ return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key
                     // do nothing
                 } else {
                     ret = errorcode_t::expired;
-                    __leave2;
+                    // __leave2;
                 }
             }
         }
@@ -168,34 +177,65 @@ return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key
         if (ssl) {
             SSL_free(ssl);
         }
-        if (errorcode_t::success != ret) {
-            SSL_CTX_free(ssl_ctx);
+        switch (ret) {
+            case errorcode_t::success:
+            case errorcode_t::expired:
+                break;
+            default:
+                SSL_CTX_free(ssl_ctx);
+                break;
         }
     }
     return ret;
 }
 
-x509cert::x509cert() : _x509(nullptr) { x509_open_simple(&_x509); }
+x509cert::x509cert(uint32 flags) : _x509_tls(nullptr), _x509_dtls(nullptr) {
+    if (x509cert_flag_tls & flags) {
+        x509_open_simple(x509cert_flag_tls, &_x509_tls);
+    }
+    if (x509cert_flag_dtls & flags) {
+        x509_open_simple(x509cert_flag_dtls, &_x509_dtls);
+    }
+}
 
-x509cert::x509cert(const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _x509(nullptr) {
-    x509cert_open(&_x509, cert_file, key_file, password, chain_file);
+x509cert::x509cert(uint32 flags, const char* cert_file, const char* key_file, const char* password, const char* chain_file)
+    : _x509_tls(nullptr), _x509_dtls(nullptr) {
+    if (x509cert_flag_tls & flags) {
+        x509cert_open(x509cert_flag_tls, &_x509_tls, cert_file, key_file, password, chain_file);
+    }
+    if (x509cert_flag_dtls & flags) {
+        x509cert_open(x509cert_flag_dtls, &_x509_dtls, cert_file, key_file, password, chain_file);
+    }
 }
 
 x509cert::~x509cert() {
-    if (_x509) {
-        SSL_CTX_free(_x509);
+    if (_x509_tls) {
+        SSL_CTX_free(_x509_tls);
+    }
+    if (_x509_dtls) {
+        SSL_CTX_free(_x509_dtls);
     }
 }
 
 x509cert& x509cert::set_cipher_list(const char* list) {
     if (list) {
-        SSL_CTX_set_cipher_list(_x509, list);
+        if (_x509_tls) {
+            SSL_CTX_set_cipher_list(_x509_tls, list);
+        }
+        if (_x509_dtls) {
+            SSL_CTX_set_cipher_list(_x509_dtls, list);
+        }
     }
     return *this;
 }
 
 x509cert& x509cert::set_verify(int mode) {
-    SSL_CTX_set_verify(_x509, mode, nullptr);
+    if (_x509_tls) {
+        SSL_CTX_set_verify(_x509_tls, mode, nullptr);
+    }
+    if (_x509_dtls) {
+        SSL_CTX_set_verify(_x509_dtls, mode, nullptr);
+    }
     return *this;
 }
 
@@ -269,14 +309,26 @@ x509cert& x509cert::enable_alpn_h2(bool enable) {
     if (enable) {
         // RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
         // RFC 7540 3.1.  HTTP/2 Version Identification
-        SSL_CTX_set_alpn_select_cb(_x509, set_alpn_select_h2_cb, nullptr);
+        if (_x509_tls) {
+            SSL_CTX_set_alpn_select_cb(_x509_tls, set_alpn_select_h2_cb, nullptr);
+        }
+        if (_x509_dtls) {
+            SSL_CTX_set_alpn_select_cb(_x509_dtls, set_alpn_select_h2_cb, nullptr);
+        }
     } else {
-        SSL_CTX_set_alpn_select_cb(_x509, nullptr, nullptr);
+        if (_x509_tls) {
+            SSL_CTX_set_alpn_select_cb(_x509_tls, nullptr, nullptr);
+        }
+        if (_x509_dtls) {
+            SSL_CTX_set_alpn_select_cb(_x509_dtls, nullptr, nullptr);
+        }
     }
     return *this;
 }
 
-SSL_CTX* x509cert::get() { return _x509; }
+SSL_CTX* x509cert::get_tls_ctx() { return _x509_tls; }
+
+SSL_CTX* x509cert::get_dtls_ctx() { return _x509_dtls; }
 
 }  // namespace net
 }  // namespace hotplace

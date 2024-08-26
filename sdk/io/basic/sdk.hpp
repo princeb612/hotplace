@@ -93,12 +93,20 @@ enum SOCK_WAIT_FLAGS {
 /**
  * @brief   wait
  * @param   socket_t    sock            [in]
- * @param   uint32      dwMilliSeconds  [in]
- * @param   uint32      dwFlag          [in] see SOCK_WAIT_FLAGS
+ * @param   uint32      milliSeconds    [in]
+ * @param   uint32      flags           [in] see SOCK_WAIT_FLAGS
  */
-return_t wait_socket(socket_t sock, uint32 dwMilliSeconds, uint32 dwFlag);
+return_t wait_socket(socket_t sock, uint32 milliSeconds, uint32 flags);
 
 return_t set_sock_nbio(socket_t sock, uint32 nbio_mode);
+
+/**
+ * @brief   sockaddr_storage
+ * @param   sockaddr_storage_t* storage [out]
+ * @param   const char* address [in]
+ * @param   uint16 port [in]
+ */
+return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint16 port);
 
 #if defined _WIN32 || defined _WIN64
 return_t winsock_startup();

@@ -33,39 +33,43 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<cmdline_t<OPTION>> _cmdline;
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE (1 << 16)
 
 void client() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
+    udp_client_socket cli;
     socket_t sock = -1;
-    sockaddr_storage_t sock_storage;
     char buffer[BUFFER_SIZE];
+    basic_stream bs;
 
     __try2 {
 #if defined _WIN32 || defined _WIN64
         winsock_startup();
 #endif
 
-        ret = create_socket(&sock, &sock_storage, SOCK_DGRAM, option.address.c_str(), option.port);
+        ret = cli.open(&sock, nullptr, option.address.c_str(), option.port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        sendto(sock, option.message.c_str(), option.message.size(), 0, (struct sockaddr*)&sock_storage, sizeof(sock_storage));
+        size_t cbsent = 0;
+        ret = cli.send(sock, nullptr, option.message.c_str(), option.message.size(), &cbsent);
 
-        // receive response from server
-        int n = recvfrom(sock, buffer, BUFFER_SIZE, 0, NULL, NULL);
-        buffer[n] = '\0';  // null-terminate the received string
-        _logger->writeln("received response: %s", buffer);
+        size_t cbread = 0;
+        ret = cli.read(sock, nullptr, buffer, BUFFER_SIZE, &cbread);
+        bs.write(buffer, cbread);
+        _logger->writeln("received response: %s", bs.c_str());
     }
     __finally2 {
-        close_socket(sock, true, 0);
+        cli.close(sock, nullptr);
 
 #if defined _WIN32 || defined _WIN64
         winsock_cleanup();
 #endif
+
+        _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);
     }
 }
 

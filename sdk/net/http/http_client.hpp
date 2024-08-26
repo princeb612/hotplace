@@ -60,7 +60,7 @@ class http_client {
 
     http_client& set_url(const std::string& url);
     http_client& set_url(const url_info_t& url_info);
-    http_client& set_ttl(uint32 milliseconds);
+    http_client& set_wto(uint32 milliseconds);
     http_client& request(const std::string& url, http_response** response);
     http_client& request(http_request& request, http_response** response);
     http_client& close();
@@ -77,7 +77,7 @@ class http_client {
     tls_context_t* _tls_context;
     SSL_CTX* _x509;
     url_info_t _url_info;
-    uint32 _ttl;
+    uint32 _wto;
 };
 
 }  // namespace net

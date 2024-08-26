@@ -1086,7 +1086,7 @@ class t_aho_corasick {
         return size;
     }
     /**
-     * @brief   order the search result by pattern id
+     * @brief   order by pattern id
      * @sample
      *          std::multimap<unsigned, range_t> rearranged;
      *          ac.insert(pattern1, size_pattern1);

@@ -116,6 +116,7 @@
 
  * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
  * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
+ * RFC 9113 HTTP/2
    * sdk/net/http/http2/
    * sdk/net/tls/
    * test/payload/
@@ -139,6 +140,9 @@
 ## studying
 
  * RFC 2817 Upgrading to TLS Within HTTP/1.1
+
+ * RFC 9204 QPACK: Field Compression for HTTP/3
+ * RFC 9114 HTTP/3
 
  * ITU-T X.680-X.699
    * X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules

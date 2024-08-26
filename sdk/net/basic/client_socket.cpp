@@ -15,7 +15,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-tcp_client_socket::tcp_client_socket() : _ttl(1000) {
+tcp_client_socket::tcp_client_socket() : _wto(1000) {
     // do nothing
 }
 
@@ -56,22 +56,26 @@ return_t tcp_client_socket::close(socket_t sock, tls_context_t* tls_handle) {
 return_t tcp_client_socket::read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read) {
     return_t ret = errorcode_t::success;
 
-    ret = wait_socket(sock, _ttl, SOCK_WAIT_READABLE);
+    ret = wait_socket(sock, _wto, SOCK_WAIT_READABLE);
     if (errorcode_t::success == ret) {
-#if defined _WIN32 || defined _WIN64
-        int ret_recv = recv(sock, ptr_data, (int)size_data, 0);
-#elif defined __linux__
-        int ret_recv = recv(sock, ptr_data, size_data, 0);
-#endif
-        if (-1 == ret_recv) {
 #if defined __linux__
+        int ret_recv = recv(sock, ptr_data, size_data, 0);
+
+        if (-1 == ret_recv) {
             ret = get_errno(ret_recv);
-#elif defined _WIN32 || defined _WIN64
-            ret = GetLastError();
-#endif
         } else if (0 == ret_recv) {
             ret = errorcode_t::closed;
         }
+#elif defined _WIN32 || defined _WIN64
+        int ret_recv = recv(sock, ptr_data, (int)size_data, 0);
+
+        if (-1 == ret_recv) {
+            ret = GetLastError();
+        } else if (0 == ret_recv) {
+            ret = errorcode_t::closed;
+        }
+#endif
+
         if (nullptr != size_read) {
             *size_read = ret_recv;
         }
@@ -96,14 +100,13 @@ return_t tcp_client_socket::send(socket_t sock, tls_context_t* tls_handle, const
         int ret_send = ::send(sock, ptr_data, size_data, 0);
         if (-1 == ret_send) {
             ret = get_errno(ret_send);
+        }
 #elif defined _WIN32 || defined _WIN64
         int ret_send = ::send(sock, ptr_data, (int)size_data, 0);
         if (-1 == ret_send) {
             ret = GetLastError();
-#endif
-        } else if (0 == ret_send) {
-            // closed
         }
+#endif
         if (nullptr != size_sent) {
             *size_sent = ret_send;
         }
@@ -116,14 +119,148 @@ return_t tcp_client_socket::send(socket_t sock, tls_context_t* tls_handle, const
 
 bool tcp_client_socket::support_tls() { return false; }
 
-tcp_client_socket& tcp_client_socket::set_ttl(uint32 milliseconds) {
+tcp_client_socket& tcp_client_socket::set_wto(uint32 milliseconds) {
     if (milliseconds) {
-        _ttl = milliseconds;
+        _wto = milliseconds;
     }
     return *this;
 }
 
-uint32 tcp_client_socket::get_ttl() { return _ttl; }
+uint32 tcp_client_socket::get_wto() { return _wto; }
+
+udp_client_socket::udp_client_socket() : _wto(1000) {}
+
+udp_client_socket::~udp_client_socket() {}
+
+return_t udp_client_socket::open(socket_t* sock, tls_context_t* tls_handle, const char* address, uint16 port) {
+    return_t ret = errorcode_t::success;
+    __try2 { ret = create_socket(sock, &_sock_storage, SOCK_DGRAM, address, port); }
+    __finally2 {
+        // do something
+    }
+    return ret;
+}
+
+return_t udp_client_socket::close(socket_t sock, tls_context_t* tls_handle) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (INVALID_SOCKET == sock) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        close_socket(sock, true, 0);
+    }
+    __finally2 {
+        // do something
+    }
+    return ret;
+}
+
+return_t udp_client_socket::read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        ret = wait_socket(sock, _wto, SOCK_WAIT_READABLE);
+        if (errorcode_t::success == ret) {
+#if 1
+            int size_peek = recvfrom(sock, ptr_data, size_data, MSG_PEEK, nullptr, nullptr);
+            if (size_data < size_peek) {
+                ret = errorcode_t::insufficient_buffer;
+                __leave2;
+            }
+#endif
+
+#if defined __linux__
+            int ret_recv = recvfrom(sock, ptr_data, size_data, 0, nullptr, nullptr);
+            if (-1 == ret_recv) {
+                ret = get_errno(ret_recv);
+            } else if (0 == ret_recv) {
+                ret = errorcode_t::closed;
+            }
+#elif defined _WIN32 || defined _WIN64
+            int ret_recv = recvfrom(sock, ptr_data, (int)size_data, 0, nullptr, nullptr);
+            if (-1 == ret_recv) {
+                ret = GetLastError();
+            } else if (0 == ret_recv) {
+                ret = errorcode_t::closed;
+            }
+#endif
+
+            if (nullptr != size_read) {
+                *size_read = ret_recv;
+            }
+            if (size_data == ret_recv) {
+                ret = errorcode_t::more_data;
+            }
+        }
+    }
+    __finally2 {
+        // do something
+    }
+    return ret;
+}
+
+return_t udp_client_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+#if defined __linux__
+        int ret_send = ::sendto(sock, ptr_data, size_data, 0, (const struct sockaddr*)&_sock_storage, sizeof(sockaddr_storage_t));
+        if (-1 == ret_send) {
+            ret = get_errno(ret_send);
+        } else if (0 == ret_send) {
+            //
+        }
+#elif defined _WIN32 || defined _WIN64
+        int ret_send = ::sendto(sock, ptr_data, (int)size_data, 0, (const struct sockaddr*)&_sock_storage, sizeof(sockaddr_storage_t));
+        if (-1 == ret_send) {
+            ret = GetLastError();
+        } else if (0 == ret_send) {
+            //
+        }
+#endif
+    }
+    __finally2 {
+        // do something
+    }
+    return ret;
+}
+
+return_t udp_client_socket::sendto(socket_t sock, tls_context_t* tls_handle, sockaddr_storage_t* sock_storage, const char* ptr_data, size_t size_data,
+                                   size_t* size_sent) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+#if defined __linux__
+        int ret_send = ::sendto(sock, ptr_data, size_data, 0, (const struct sockaddr*)&sock_storage, sizeof(sockaddr_storage_t));
+        if (-1 == ret_send) {
+            ret = get_errno(ret_send);
+        } else if (0 == ret_send) {
+            //
+        }
+#elif defined _WIN32 || defined _WIN64
+        int ret_send = ::sendto(sock, ptr_data, (int)size_data, 0, (const struct sockaddr*)&sock_storage, sizeof(sockaddr_storage_t));
+        if (-1 == ret_send) {
+            ret = GetLastError();
+        } else if (0 == ret_send) {
+            //
+        }
+#endif
+    }
+    __finally2 {
+        // do something
+    }
+    return ret;
+}
+
+bool udp_client_socket::support_tls() { return false; }
+
+udp_client_socket& udp_client_socket::set_wto(uint32 milliseconds) {
+    if (milliseconds) {
+        _wto = milliseconds;
+    }
+    return *this;
+}
+
+uint32 udp_client_socket::get_wto() { return _wto; }
 
 }  // namespace net
 }  // namespace hotplace

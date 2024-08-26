@@ -55,18 +55,27 @@ namespace net {
  *  openssl x509 -text -in server.crt
  */
 
+enum x509cert_flag_t {
+    x509cert_flag_tls = (1 << 0),
+    x509cert_flag_dtls = (1 << 1),
+    x509cert_flag_allow_expired = (1 << 2),  // reserved
+};
+
 /**
  * @brief certificate
+ * @param uint32 flag [in] x509cert_flag_tls or x509cert_flag_dtls
  * @param SSL_CTX** context [out]
  */
-return_t x509_open_simple(SSL_CTX** context);
+return_t x509_open_simple(uint32 flag, SSL_CTX** context);
+
 /**
- * @brief certificate
- * @param SSL_CTX** context [out]
- * @param const char* cert_file [in]
- * @param const char* key_file [in]
- * @param const char* password [in]
- * @param const char* chain_file [in]
+ * @brief   SSL_CTX*
+ * @param   uint32 flag [in] x509cert_flag_tls or x509cert_flag_dtls
+ * @param   SSL_CTX** context [out]
+ * @param   const char* cert_file [in]
+ * @param   const char* key_file [in]
+ * @param   const char* password [inopt]
+ * @param   const char* chain_file [inopt]
  * @return error code (see error.hpp)
  *      invalid_parameter : check parameters
  *      internal_error_1  : something wrong cert_file
@@ -84,22 +93,34 @@ return_t x509_open_simple(SSL_CTX** context);
  *        unencrypted key (ex. -----BEGIN PRIVATE KEY-----)
  *          works good, password parameter useless
  */
-return_t x509cert_open(SSL_CTX** context, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
+return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, const char* key_file, const char* password = nullptr,
+                       const char* chain_file = nullptr);
 
 class x509cert {
    public:
-    x509cert();
-    x509cert(const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
+    x509cert(uint32 flags = x509cert_flag_tls);
+    /**
+     * @brief   SSL_CTX*
+     * @param   uint32 flags [in] see x509cert_flag_t
+     * @param   SSL_CTX** context [out]
+     * @param   const char* cert_file [in]
+     * @param   const char* key_file [in]
+     * @param   const char* password [inopt]
+     * @param   const char* chain_file [inopt]
+     */
+    x509cert(uint32 flags, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
     ~x509cert();
 
     x509cert& set_cipher_list(const char* list);
     x509cert& set_verify(int mode);
     x509cert& enable_alpn_h2(bool enable);
 
-    SSL_CTX* get();
+    SSL_CTX* get_tls_ctx();
+    SSL_CTX* get_dtls_ctx();
 
    private:
-    SSL_CTX* _x509;
+    SSL_CTX* _x509_tls;
+    SSL_CTX* _x509_dtls;
 };
 
 }  // namespace net

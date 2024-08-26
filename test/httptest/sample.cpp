@@ -755,7 +755,7 @@ void test_get_tlsclient() {
 
         tls_context_t *handle = nullptr;
         SSL_CTX *x509 = nullptr;
-        x509_open_simple(&x509);
+        x509_open_simple(x509cert_flag_tls, &x509);
         transport_layer_security tls(x509);
         tls_client_socket cli(&tls);
         basic_stream bs;
@@ -848,7 +848,7 @@ void test_get_httpclient() {
     http_response *response = nullptr;
 
     client.set_url(option.url);
-    client.set_ttl(60000);  // 1 min
+    client.set_wto(60000);  // 1 min
 
     request.compose(http_method_t::HTTP_GET, "/");
     request.get_http_header().add("Accept-Encoding", "gzip, deflate");
@@ -877,7 +877,7 @@ void test_bearer_token() {
     http_request request;
     http_response *response = nullptr;
     client.set_url(option.url);
-    client.set_ttl(60000);  // 1 min
+    client.set_wto(60000);  // 1 min
 
     request.compose(http_method_t::HTTP_GET, "/auth/bearer");
     request.get_http_header().clear().add("Accept-Encoding", "gzip, deflate").add("Authorization", "Bearer token");

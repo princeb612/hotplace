@@ -153,8 +153,6 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
                 closesocket(s);
 #endif
             }
-
-            // do nothing
         }
     }
 
@@ -411,45 +409,22 @@ return_t close_socket(socket_t sock, bool bOnOff, uint16 wLinger) {
     return_t ret = errorcode_t::success;
 
     if (INVALID_SOCKET != sock) {
-        linger_t linger;
-        linger.l_onoff = (true == bOnOff) ? 1 : 0;
-        linger.l_linger = wLinger;
-        setsockopt(sock, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&linger), sizeof(linger));
+        int optval = 0;
+        socklen_t optlen = sizeof(optval);
+        getsockopt(sock, SOL_SOCKET, SO_TYPE, (char*)&optval, &optlen);
 
-#if defined __linux__
-        int nRet = close(sock);
-#elif defined _WIN32 || defined _WIN64
-        int nRet = closesocket(sock);
-#endif
-        if (0 != wLinger) {
-            while (nRet < 0) {
-#if defined __linux__
-                if (EWOULDBLOCK == nRet) {
-#elif defined _WIN32 || defined _WIN64
-                if (WSAEWOULDBLOCK == nRet) {
-#endif
-                    fd_set fds;
-                    timeval tv;
-
-                    FD_ZERO(&fds);
-                    FD_SET(sock, &fds); /* VC 6.0 - C4127 */
-
-                    tv.tv_sec = 0;
-                    tv.tv_usec = 100;
-
-                    nRet = select((int)sock + 1, &fds, nullptr, nullptr, &tv);
-                    if (nRet > 0) {
-#if defined __linux__
-                        nRet = close(sock);
-#elif defined _WIN32 || defined _WIN64
-                        nRet = closesocket(sock);
-#endif
-                    }
-                } else {
-                    break;
-                }
-            }
+        if (SOCK_STREAM == optval) {
+            linger_t linger;
+            linger.l_onoff = (true == bOnOff) ? 1 : 0;
+            linger.l_linger = wLinger;
+            setsockopt(sock, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&linger), sizeof(linger));
         }
+
+#if defined __linux__
+        close(sock);
+#elif defined _WIN32 || defined _WIN64
+        closesocket(sock);
+#endif
     }
 
     return ret;
@@ -484,7 +459,7 @@ return_t close_listener(unsigned int nSockets, socket_t* Sockets) {
     return ret;
 }
 
-return_t wait_socket(socket_t sock, uint32 dwMilliSeconds, uint32 dwFlag) {
+return_t wait_socket(socket_t sock, uint32 milliSeconds, uint32 flags) {
     return_t ret = errorcode_t::success;
     fd_set readset, writeset;
 
@@ -494,20 +469,20 @@ return_t wait_socket(socket_t sock, uint32 dwMilliSeconds, uint32 dwFlag) {
     fd_set* preadset = nullptr;
     fd_set* pwriteset = nullptr;
 
-    if (SOCK_WAIT_READABLE & dwFlag) {
+    if (SOCK_WAIT_READABLE & flags) {
         FD_SET(sock, &readset);
         preadset = &readset;
     }
 
-    if (SOCK_WAIT_WRITABLE & dwFlag) {
+    if (SOCK_WAIT_WRITABLE & flags) {
         FD_SET(sock, &writeset);
         pwriteset = &writeset;
     }
 
     struct timeval tv;
 
-    tv.tv_sec = dwMilliSeconds / 1000;
-    tv.tv_usec = (dwMilliSeconds % 1000) * 1000;
+    tv.tv_sec = milliSeconds / 1000;
+    tv.tv_usec = (milliSeconds % 1000) * 1000;
 
     int ret_select = select((int)sock + 1, preadset, pwriteset, nullptr, &tv);
 
@@ -548,6 +523,46 @@ return_t set_sock_nbio(socket_t sock, uint32 nbio_mode) {
 #elif defined _WIN32 || defined _WIN64
         ret = GetLastError();
 #endif
+    }
+    return ret;
+}
+
+return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint16 port) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if ((nullptr == storage) || (nullptr == address)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        memset(storage, 0, sizeof(sockaddr_storage_t));
+
+        int rc = 0;
+        const char* temp = strstr(address, ":");
+        if (temp) {
+            struct sockaddr_in6* addr = (struct sockaddr_in6*)storage;
+            addr->sin6_family = AF_INET6;
+            addr->sin6_port = htons(port);
+            rc = inet_pton(AF_INET6, address, &addr->sin6_addr);
+        } else {
+            struct sockaddr_in* addr = (struct sockaddr_in*)storage;
+            addr->sin_family = AF_INET;
+            addr->sin_port = htons(port);
+            rc = inet_pton(AF_INET, address, &addr->sin_addr);
+        }
+
+        if (-1 == rc) {
+#if defined __linux__
+            ret = get_errno(rc);
+#elif defined _WIN32 || defined _WIN64
+            ret = GetLastError();
+#endif
+        } else if (0 == rc) {
+            ret = errorcode_t::bad_format;
+        }
+    }
+    __finally2 {
+        // do nothing
     }
     return ret;
 }
