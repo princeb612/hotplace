@@ -77,7 +77,7 @@ void test_trace() {
     __try2 {
         ret = function_always_fail();
         if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
+            __leave2_trace(ret);  // PDB
         }
     }
     __finally2 { _test_case.assert(true, __FUNCTION__, "__leave2_trace"); }
@@ -93,6 +93,18 @@ void test_try_leave() {
         }
     }
     __finally2 { _test_case.assert(true, __FUNCTION__, "__leave2_tracef"); }
+}
+
+void test_error() {
+    _test_case.begin("error");
+    error_advisor* advisor = error_advisor::get_instance();
+    std::string code;
+    std::string message;
+    return_t ret = errorcode_t::invalid_parameter;
+    advisor->error_code(ret, code);
+    advisor->error_message(ret, message);
+    _logger->writeln("code    %08x %s", ret, code.c_str());
+    _logger->writeln("message %08x %s", ret, message.c_str());
 }
 
 void test_except() {
@@ -127,6 +139,7 @@ int main(int argc, char** argv) {
     set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
     test_trace();
     test_try_leave();
+    test_error();
     // test_except ();
 
     _logger->flush();

@@ -43,7 +43,7 @@ void cprint(const char *text, ...) {
     bs << _concolor.turnon().set_fgcolor(console_color_t::cyan);
     va_list ap;
     va_start(ap, text);
-    vprintf(text, ap);
+    bs.vprintf(text, ap);
     va_end(ap);
     bs << _concolor.turnoff();
 
@@ -549,7 +549,7 @@ void test_digest_access_authentication(const char *alg = nullptr) {
         if (test) {
             ret = errorcode_t::success;
         }
-        cprint("[%08x] %s:%s", ret, user.c_str(), password.c_str());
+        // cprint("[%08x] %s:%s", ret, user.c_str(), password.c_str());
         return ret;
     };
 

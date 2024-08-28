@@ -18,6 +18,9 @@ namespace hotplace {
 #define errordef(e, msg) \
     { errorcode_t::e, #e, msg, }
 
+// errno    strerror(errno)
+// EAI_     gai_strerror(ret)
+
 const error_description error_descriptions[] = {
 #if defined __linux__
     errordef(eperm, "Operation not permitted"),

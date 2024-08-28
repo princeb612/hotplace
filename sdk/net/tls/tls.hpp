@@ -21,43 +21,21 @@ namespace net {
 /**
  * @brief TLS
  * @example
- *      transport_layer_security tls;
  *      uint32 ret = errorcode_t::success;
- *      int sock = socket (PF_INET, SOCK_STREAM, 0);
- *      struct sockaddr_in addr;
- *      addr.sin_family = AF_INET;
- *      addr.sin_port = htons (PORT);
- *      addr.sin_addr.s_addr = inet_addr ("127.0.0.1");
- *      connect (sock, (struct sockaddr*)&addr, sizeof (addr));
- *      x509_t* x509 = nullptr;
- *      // snippet 1
- *      {
- *          SSL_CTX* sslctx = SSL_CTX_new (SSLv23_method ());
- *          // SSL_CTX_set_options (sslctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3); // TLS 1.0 and above
- *          // SSL_CTX_set_cipher_list (sslctx, "DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA256:AES256-SHA256");
- *          try {
- *              x509 = new x509_t (sslctx);
- *          }
- *          catch (std::bad_alloc)
- *          {
- *              // ...
- *          }
+ *      x509cert_open_simple(x509cert_flag_tls, &x509);
+ *      transport_layer_security tls(x509);
+ *      tls_client_socket cli(&tls);
+ *      cli.connect(&sock, &tlshandle, host, port, 1);
+ *      cli.send(sock, tlshandle, message, size, &cbsent);
+ *      size_t cbread = 0;
+ *      ret_read = cli.read(sock, tlshandle, buffer, BUFFER_SIZE, &cbread);
+ *      bs.write(buffer, cbread);
+ *      while (errorcode_t::more_data == ret_read) {
+ *          ret_read = cli.more(sock, tlshandle, buffer, BUFFER_SIZE, &cbread);
+ *          bs.write(buffer, cbread);
  *      }
- *      // snippet 2
- *		{
- *          x509_create (&x509);
- *      }
- *      tls.attach (x509);
- *      ret = tls.connect (&tls_handle, sock, 10);
- *      if (errorcode_t::success == ret)
- *      {
- *          int size_sent = 0;
- *          tls.send (tls_handle, mode, message, strlen (message), 0, &size_sent);
- *      }
- *      tls.close (tls_handle); // close (sock)
- *      SSL_CTX_free (sslctx);
- *      close (sock);
- *      x509->release ();
+ *      cli.close(sock, tlshandle);
+ *      SSL_CTX_free(x509);
  */
 class transport_layer_security {
    public:

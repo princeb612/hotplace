@@ -168,6 +168,7 @@ enum errorcode_t {
     /* 0x00000084 0000000132 ERFKILL        */ erfkill,         /* Operation not possible due to RF-kill */
     /* 0x00000085 0000000133 EHWPOISON      */ ehwpoison,       /* Memory page has hardware error */
 
+    /* Extended Addressing Information / Extended API Information */
     /* 0x00001000 0000004096 */ error_eai_base = 0x00001000,
 
     // netdb.h
@@ -277,37 +278,39 @@ enum errorcode_t {
     /* 0xef010102 4009820418 */ debug,
 };
 
-#if defined __linux__
 /*
  * @sample
  *      errorcode_t ret = errorcode_t::success;
  *      int test = function(...);
- *      ret = get_errno(test);
+ *      // linunx
+ *      ret = get_lasterror(test);
+ *      // windows
+ *      ret = GetLastError();
  */
-static inline return_t get_errno(int code) {
+static inline return_t get_lasterror(int code) {
     return_t ret = errorcode_t::success;
-
+#if defined __linux__
     // errno.h 1~133
-    if (code < 0) {
-        ret = errno;
-    }
-    return ret;
-}
-
-static inline return_t get_eai_error(int code) {
-    return_t ret = errorcode_t::success;
-
     // netdb.h -1~-105 to errorcode_t
     if (code < 0) {
         if (EAI_SYSTEM == code) {
             ret = errno;
         } else {
-            ret = errorcode_t::error_eai_base + abs(code);
+            if (errno > 0) {
+                // POSIX errno
+                // kernel error code
+                ret = errno;
+            } else {
+                // EAI_
+                ret = errorcode_t::error_eai_base + (-code);
+            }
         }
     }
+#elif defined _WIN32 || defined _WIN64
+    ret = GetLastError();
+#endif
     return ret;
 }
-#endif
 
 typedef struct _error_description {
     errorcode_t error;

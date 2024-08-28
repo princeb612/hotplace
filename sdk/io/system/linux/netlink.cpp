@@ -294,7 +294,7 @@ return_t netlink::netlink_open(socket_t *sock) {
         int rc = 0;
         struct sockaddr_nl sa_nl;
         nl_sock = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_CONNECTOR);
-        ret = get_errno(nl_sock);
+        ret = get_lasterror(nl_sock);
         if (errorcode_t::success != ret) {
             __leave2_trace(ret);
         }
@@ -303,7 +303,7 @@ return_t netlink::netlink_open(socket_t *sock) {
         sa_nl.nl_groups = CN_IDX_PROC;
         sa_nl.nl_pid = getpid();
         rc = bind(nl_sock, (struct sockaddr *)&sa_nl, sizeof(sa_nl));  // sudo required
-        ret = get_errno(rc);
+        ret = get_lasterror(rc);
         if (errorcode_t::success != ret) {
             __leave2_trace(ret);
         }
@@ -351,7 +351,7 @@ return_t netlink::netlink_control(socket_t sock, bool enable) {
         nlcn_msg.cn_msg.len = sizeof(enum proc_cn_mcast_op);
         nlcn_msg.cn_mcast = enable ? PROC_CN_MCAST_LISTEN : PROC_CN_MCAST_IGNORE;
         rc = send(sock, &nlcn_msg, sizeof(nlcn_msg), 0);
-        ret = get_errno(rc);
+        ret = get_lasterror(rc);
         if (errorcode_t::success != ret) {
             __leave2_trace(ret);
         }

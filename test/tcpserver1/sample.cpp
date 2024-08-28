@@ -20,9 +20,6 @@ using namespace hotplace::io;
 using namespace hotplace::crypto;
 using namespace hotplace::net;
 
-test_case _test_case;
-t_shared_instance<logger> _logger;
-
 #define BUFSIZE 1024
 #define FILENAME_RUN _T (".run")
 
@@ -32,24 +29,42 @@ typedef struct {
 } accept_context_t;
 
 #if defined _WIN32 || defined _WIN64
-typedef struct _wsa_buffer_t {
+struct wsa_buffer_t {
     OVERLAPPED overlapped;
     WSABUF wsabuf;
     char buffer[BUFSIZE];
-} wsa_buffer_t;
+
+    wsa_buffer_t() { init(); }
+    void init() {
+        memset(&overlapped, 0, sizeof(overlapped));
+        wsabuf.len = sizeof(buffer);
+        wsabuf.buf = buffer;
+    }
+};
 #endif
 
 /* windows */
-typedef struct _netsocket_event_t {
+struct netsocket_event_t {
     socket_t cli_socket;
     sockaddr_storage_t client_addr;  // both ipv4 and ipv6
 
 #if defined _WIN32 || defined _WIN64
     wsa_buffer_t netio_read;
-    wsa_buffer_t netio_write;
 #endif
+};
 
-} netsocket_event_t;
+typedef struct _OPTION {
+    int verbose;
+    uint16 port;
+
+    _OPTION() : verbose(0), port(9000) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<cmdline_t<OPTION>> _cmdline;
+
+test_case _test_case;
+t_shared_instance<logger> _logger;
 
 return_t accept_thread_routine(void* user_context);
 return_t network_thread_routine(void* user_context);
@@ -58,17 +73,17 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 return_t client_connected_handler(socket_t sockcli, netsocket_event_t** out_netsocket_context) {
     return_t ret = errorcode_t::success;
 
-    netsocket_event_t* netsocket_context = nullptr;
+    netsocket_event_t* netsocket_event = nullptr;
     sockaddr_storage_t sockaddr_client;
     int sockaddr_len = sizeof(sockaddr_client);
 
-    netsocket_context = (netsocket_event_t*)malloc(sizeof(netsocket_event_t));
-    netsocket_context->cli_socket = sockcli;
+    netsocket_event = (netsocket_event_t*)malloc(sizeof(netsocket_event_t));
+    netsocket_event->cli_socket = sockcli;
     memset(&sockaddr_client, 0, sockaddr_len);
     getpeername(sockcli, (struct sockaddr*)&sockaddr_client, (socklen_t*)&sockaddr_len);
-    memcpy(&(netsocket_context->client_addr), &sockaddr_client, sockaddr_len);
+    memcpy(&(netsocket_event->client_addr), &sockaddr_client, sockaddr_len);
 
-    *out_netsocket_context = netsocket_context;
+    *out_netsocket_context = netsocket_event;
 
     _logger->writeln("accept %d", (int)sockcli);
 
@@ -77,11 +92,11 @@ return_t client_connected_handler(socket_t sockcli, netsocket_event_t** out_nets
     return ret;
 }
 
-return_t client_disconnected_handler(netsocket_event_t* netsocket_context, void* user_context) {
+return_t client_disconnected_handler(netsocket_event_t* netsocket_event, void* user_context) {
     return_t ret = errorcode_t::success;
     accept_context_t* accept_context = (accept_context_t*)user_context;
 
-    _logger->writeln("closed [%d]", (int)netsocket_context->cli_socket);
+    _logger->writeln("closed [%d]", (int)netsocket_event->cli_socket);
 
 #if defined __linux__
     multiplexer_epoll mplexer;
@@ -89,31 +104,29 @@ return_t client_disconnected_handler(netsocket_event_t* netsocket_context, void*
     multiplexer_iocp mplexer;
 #endif
 
-    mplexer.unbind(accept_context->mplex_handle, (handle_t)netsocket_context->cli_socket, nullptr);
+    mplexer.unbind(accept_context->mplex_handle, (handle_t)netsocket_event->cli_socket, nullptr);
 
 #if defined __linux__
-    close(netsocket_context->cli_socket);
+    close(netsocket_event->cli_socket);
 #elif defined _WIN32 || defined _WIN64
-    closesocket(netsocket_context->cli_socket);
+    closesocket(netsocket_event->cli_socket);
 #endif
-    free(netsocket_context);
+    free(netsocket_event);
 
     _test_case.test(ret, __FUNCTION__, "disconnected");
 
     return ret;
 }
 
-return_t async_handler(netsocket_event_t* netsocket_context) {
+return_t async_handler(netsocket_event_t* netsocket_event) {
     return_t ret = errorcode_t::success;
 
 #if defined _WIN32 || defined _WIN64
     DWORD flags = 0;
     DWORD bytes_received = 0;
-    memset(&(netsocket_context->netio_read.overlapped), 0, sizeof(OVERLAPPED));
-    netsocket_context->netio_read.wsabuf.len = BUFSIZE;
-    netsocket_context->netio_read.wsabuf.buf = netsocket_context->netio_read.buffer;
+    netsocket_event->netio_read.init();
 
-    WSARecv(netsocket_context->cli_socket, &(netsocket_context->netio_read.wsabuf), 1, &bytes_received, &flags, &(netsocket_context->netio_read.overlapped),
+    WSARecv(netsocket_event->cli_socket, &(netsocket_event->netio_read.wsabuf), 1, &bytes_received, &flags, &(netsocket_event->netio_read.overlapped),
             nullptr); /* asynchronus read */
 #endif
 
@@ -143,12 +156,12 @@ return_t accept_thread_routine(void* user_context) {
             break;
         }
 
-        netsocket_event_t* pnetsocket_context = nullptr;
+        netsocket_event_t* netsocket_event = nullptr;
 
-        client_connected_handler(hClntSock, &pnetsocket_context);
-        mplexer.bind(handle, (handle_t)hClntSock, pnetsocket_context);
+        client_connected_handler(hClntSock, &netsocket_event);
+        mplexer.bind(handle, (handle_t)hClntSock, netsocket_event);
 #if defined _WIN32 || defined _WIN64
-        async_handler(pnetsocket_context);
+        async_handler(netsocket_event);
 #endif
     }
     return 0;
@@ -157,37 +170,7 @@ return_t accept_thread_routine(void* user_context) {
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     //_test_case.test (errorcode_t::success, __FUNCTION__, "processing network events");
 
-#if defined _WIN32 || defined _WIN64
-
-    uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
-    netsocket_event_t* pnetsocket_context = (netsocket_event_t*)data_array[2];
-
-    __try2 {
-        if (mux_read == type) {
-            memcpy(&pnetsocket_context->netio_write.wsabuf, &pnetsocket_context->netio_read.wsabuf, sizeof(WSABUF));
-            memcpy(&pnetsocket_context->netio_write.buffer, &pnetsocket_context->netio_read.buffer, RTL_FIELD_SIZE(wsa_buffer_t, buffer));
-            pnetsocket_context->netio_write.wsabuf.len = bytes_transfered;
-
-            if (0 != strnicmp("\r\n", pnetsocket_context->netio_write.wsabuf.buf, 2)) {
-                _logger->writeln("[%d] %.*s", (int)bytes_transfered, (int)bytes_transfered, pnetsocket_context->netio_write.wsabuf.buf);
-            }
-
-            /* echo */
-            DWORD dwSentButes = 0;
-            WSASend(pnetsocket_context->cli_socket, &(pnetsocket_context->netio_write.wsabuf), 1, &dwSentButes, 0, nullptr, nullptr);
-
-            async_handler(pnetsocket_context);
-        }
-        if (mux_disconnect == type) {
-            client_disconnected_handler(pnetsocket_context, user_context);
-            __leave2;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-
-#elif defined __linux__
+#if defined __linux__
 
     multiplexer_epoll mplexer;
     multiplexer_context_t* handle = (multiplexer_context_t*)data_array[0];
@@ -233,6 +216,35 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
         close(sockcli);
     }
 
+#elif defined _WIN32 || defined _WIN64
+
+    uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
+    netsocket_event_t* netsocket_event = (netsocket_event_t*)data_array[2];
+
+    __try2 {
+        if (mux_read == type) {
+            wsa_buffer_t& wsabuf_read = netsocket_event->netio_read;
+            wsabuf_read.wsabuf.len = bytes_transfered;
+
+            if (0 != strnicmp("\r\n", wsabuf_read.wsabuf.buf, 2)) {
+                _logger->writeln("[%d] %.*s", (int)bytes_transfered, (int)bytes_transfered, wsabuf_read.wsabuf.buf);
+            }
+
+            /* echo */
+            DWORD size_sent = 0;
+            WSASend(netsocket_event->cli_socket, &(wsabuf_read.wsabuf), 1, &size_sent, 0, nullptr, nullptr);
+
+            async_handler(netsocket_event);
+        }
+        if (mux_disconnect == type) {
+            client_disconnected_handler(netsocket_event, user_context);
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+
 #endif
 
     return 0;
@@ -241,10 +253,10 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 return_t network_thread_routine(void* user_context) {
     accept_context_t* accept_context = (accept_context_t*)user_context;
 
-#if defined _WIN32 || defined _WIN64
-    multiplexer_iocp mplexer;
-#elif defined __linux__
+#if defined __linux__
     multiplexer_epoll mplexer;
+#elif defined _WIN32 || defined _WIN64
+    multiplexer_iocp mplexer;
 #endif
     mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->tcp_server_socket, consume_routine, user_context);
 
@@ -268,6 +280,7 @@ return_t network_signal_routine(void* param) {
 
 return_t echo_server(void* param) {
     return_t ret = errorcode_t::success;
+    const OPTION& option = _cmdline->value();
 
     FILE* fp = fopen(FILENAME_RUN, "w");
 
@@ -302,7 +315,7 @@ return_t echo_server(void* param) {
         unsigned int family[2] = {AF_INET, AF_INET6};  // IPv4 and IPv6
         socket_t socket_list[2] = {INVALID_SOCKET, INVALID_SOCKET};
 
-        create_listener(2, family, socket_list, IPPROTO_TCP, 9000);
+        create_listener(2, family, socket_list, IPPROTO_TCP, option.port);
         _logger->writeln("socket ipv4[%d], ipv6[%d] created", (int)socket_list[0], (int)socket_list[1]);
 
         accept_context_t accept_context_ipv4;
@@ -379,7 +392,7 @@ return_t echo_server(void* param) {
     return ret;
 }
 
-void test1() {
+void run_server() {
     _test_case.begin("echo server");
 
     thread thread1(echo_server, nullptr);
@@ -388,13 +401,20 @@ void test1() {
     __finally2 { thread1.wait(-1); }
 }
 
-int main() {
+int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    _cmdline.make_share(new cmdline_t<OPTION>);
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced();
+    _cmdline->parse(argc, argv);
+
+    const OPTION& option = _cmdline->value();
+
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, 1).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
 
 #if defined _WIN32 || defined _WIN64
@@ -403,7 +423,7 @@ int main() {
     openssl_startup();
     openssl_thread_setup();
 
-    test1();
+    run_server();
 
     openssl_thread_end();
     openssl_cleanup();
@@ -415,5 +435,6 @@ int main() {
     _logger->flush();
 
     _test_case.report();
+    _cmdline->help();
     return _test_case.result();
 }

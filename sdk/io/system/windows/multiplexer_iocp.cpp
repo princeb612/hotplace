@@ -17,7 +17,7 @@ namespace io {
 
 typedef struct _multiplexer_iocp_context_t : public multiplexer_context_t {
     uint32 signature;
-    HANDLE hIocp;
+    HANDLE handle_iocp;
     multiplexer_controller_context_t* handle_controller;
 } multiplexer_iocp_context_t;
 
@@ -32,7 +32,7 @@ multiplexer_iocp::~multiplexer_iocp() {
 return_t multiplexer_iocp::open(multiplexer_context_t** handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
     multiplexer_iocp_context_t* pContext = nullptr;
-    HANDLE hIocp = nullptr;
+    HANDLE handle_iocp = nullptr;
     multiplexer_controller_context_t* handle_controller = nullptr;
     multiplexer_controller controller;
 
@@ -48,10 +48,10 @@ return_t multiplexer_iocp::open(multiplexer_context_t** handle, size_t concurren
             __leave2;
         }
 
-        hIocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
+        handle_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
 
         pContext->signature = MULTIPLEXER_IOCP_CONTEXT_SIGNATURE;
-        pContext->hIocp = hIocp;
+        pContext->handle_iocp = handle_iocp;
         pContext->handle_controller = handle_controller;
 
         *handle = pContext;
@@ -80,7 +80,7 @@ return_t multiplexer_iocp::close(multiplexer_context_t* handle) {
 
         event_loop_break(handle);
 
-        CloseHandle(pContext->hIocp);
+        CloseHandle(pContext->handle_iocp);
 
         controller.close(pContext->handle_controller);
 
@@ -111,7 +111,7 @@ return_t multiplexer_iocp::bind(multiplexer_context_t* handle, handle_t eventsou
             __leave2;
         }
 
-        HANDLE handle = CreateIoCompletionPort(eventsource, pContext->hIocp, (ULONG_PTR)data, 0);
+        HANDLE handle = CreateIoCompletionPort(eventsource, pContext->handle_iocp, (ULONG_PTR)data, 0);
         if (nullptr == handle) {
             ret = GetLastError();
             __leave2;
@@ -159,7 +159,7 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
             DWORD size_transfered = 0;
             ULONG_PTR completion_key = 0;
             LPOVERLAPPED overlapped = nullptr;
-            bRet = GetQueuedCompletionStatus(pContext->hIocp, &size_transfered, &completion_key, &overlapped, 100);
+            bRet = GetQueuedCompletionStatus(pContext->handle_iocp, &size_transfered, &completion_key, &overlapped, 100);
             if ((FALSE == bRet) && (nullptr == overlapped)) {
                 ret = GetLastError();
                 if (WAIT_TIMEOUT == ret) { /* timeout */
@@ -264,7 +264,7 @@ return_t multiplexer_iocp::post(multiplexer_context_t* handle, uint32 size_vecot
             __leave2;
         }
 
-        PostQueuedCompletionStatus(pContext->hIocp, (DWORD)(arch_t)data_vector[1], (ULONG_PTR)data_vector[2], (LPOVERLAPPED)data_vector[3]);
+        PostQueuedCompletionStatus(pContext->handle_iocp, (DWORD)(arch_t)data_vector[1], (ULONG_PTR)data_vector[2], (LPOVERLAPPED)data_vector[3]);
     }
     __finally2 {
         // do nothing

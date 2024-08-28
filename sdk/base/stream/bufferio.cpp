@@ -8,7 +8,7 @@
  * Date         Name                Description
  * 2008.07.16   Soo Han, Kim        codename.merlin
  * 2023.08.15   Soo Han, Kim        fix : insert (lock)
-                                    fix : find_not_first_of, replace
+ *                                  fix : find_not_first_of, replace
  *                                  removed : replace1
  */
 

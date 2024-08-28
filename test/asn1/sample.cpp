@@ -669,6 +669,8 @@ int main(int argc, char** argv) {
     test_x690_8_9_sequence();
     test_x690_time();
     test_asn1_object();
+
+    // TODO
     test_x690_annex_a_1();
     test_x690_annex_a_2();
 

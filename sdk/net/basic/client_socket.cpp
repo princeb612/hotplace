@@ -60,21 +60,14 @@ return_t tcp_client_socket::read(socket_t sock, tls_context_t* tls_handle, char*
     if (errorcode_t::success == ret) {
 #if defined __linux__
         int ret_recv = recv(sock, ptr_data, size_data, 0);
-
-        if (-1 == ret_recv) {
-            ret = get_errno(ret_recv);
-        } else if (0 == ret_recv) {
-            ret = errorcode_t::closed;
-        }
 #elif defined _WIN32 || defined _WIN64
         int ret_recv = recv(sock, ptr_data, (int)size_data, 0);
-
+#endif
         if (-1 == ret_recv) {
-            ret = GetLastError();
+            ret = get_lasterror(ret_recv);
         } else if (0 == ret_recv) {
             ret = errorcode_t::closed;
         }
-#endif
 
         if (nullptr != size_read) {
             *size_read = ret_recv;
@@ -98,15 +91,12 @@ return_t tcp_client_socket::send(socket_t sock, tls_context_t* tls_handle, const
     __try2 {
 #if defined __linux__
         int ret_send = ::send(sock, ptr_data, size_data, 0);
-        if (-1 == ret_send) {
-            ret = get_errno(ret_send);
-        }
 #elif defined _WIN32 || defined _WIN64
         int ret_send = ::send(sock, ptr_data, (int)size_data, 0);
-        if (-1 == ret_send) {
-            ret = GetLastError();
-        }
 #endif
+        if (-1 == ret_send) {
+            ret = get_lasterror(ret_send);
+        }
         if (nullptr != size_sent) {
             *size_sent = ret_send;
         }
@@ -172,25 +162,17 @@ return_t udp_client_socket::read(socket_t sock, tls_context_t* tls_handle, char*
 
 #if defined __linux__
             int ret_recv = recvfrom(sock, ptr_data, size_data, 0, nullptr, nullptr);
-            if (-1 == ret_recv) {
-                ret = get_errno(ret_recv);
-            } else if (0 == ret_recv) {
-                ret = errorcode_t::closed;
-            }
 #elif defined _WIN32 || defined _WIN64
             int ret_recv = recvfrom(sock, ptr_data, (int)size_data, 0, nullptr, nullptr);
+#endif
             if (-1 == ret_recv) {
-                ret = GetLastError();
+                ret = get_lasterror(ret_recv);
             } else if (0 == ret_recv) {
                 ret = errorcode_t::closed;
             }
-#endif
 
             if (nullptr != size_read) {
                 *size_read = ret_recv;
-            }
-            if (size_data == ret_recv) {
-                ret = errorcode_t::more_data;
             }
         }
     }
@@ -205,19 +187,14 @@ return_t udp_client_socket::send(socket_t sock, tls_context_t* tls_handle, const
     __try2 {
 #if defined __linux__
         int ret_send = ::sendto(sock, ptr_data, size_data, 0, (const struct sockaddr*)&_sock_storage, sizeof(sockaddr_storage_t));
-        if (-1 == ret_send) {
-            ret = get_errno(ret_send);
-        } else if (0 == ret_send) {
-            //
-        }
 #elif defined _WIN32 || defined _WIN64
         int ret_send = ::sendto(sock, ptr_data, (int)size_data, 0, (const struct sockaddr*)&_sock_storage, sizeof(sockaddr_storage_t));
+#endif
         if (-1 == ret_send) {
-            ret = GetLastError();
+            ret = get_lasterror(ret_send);
         } else if (0 == ret_send) {
             //
         }
-#endif
     }
     __finally2 {
         // do something
@@ -231,19 +208,14 @@ return_t udp_client_socket::sendto(socket_t sock, tls_context_t* tls_handle, soc
     __try2 {
 #if defined __linux__
         int ret_send = ::sendto(sock, ptr_data, size_data, 0, (const struct sockaddr*)&sock_storage, sizeof(sockaddr_storage_t));
-        if (-1 == ret_send) {
-            ret = get_errno(ret_send);
-        } else if (0 == ret_send) {
-            //
-        }
 #elif defined _WIN32 || defined _WIN64
         int ret_send = ::sendto(sock, ptr_data, (int)size_data, 0, (const struct sockaddr*)&sock_storage, sizeof(sockaddr_storage_t));
+#endif
         if (-1 == ret_send) {
-            ret = GetLastError();
+            ret = get_lasterror(ret_send);
         } else if (0 == ret_send) {
             //
         }
-#endif
     }
     __finally2 {
         // do something

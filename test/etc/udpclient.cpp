@@ -56,6 +56,9 @@ void client() {
 
         size_t cbsent = 0;
         ret = cli.send(sock, nullptr, option.message.c_str(), option.message.size(), &cbsent);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         size_t cbread = 0;
         ret = cli.read(sock, nullptr, buffer, BUFFER_SIZE, &cbread);

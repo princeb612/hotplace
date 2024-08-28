@@ -47,6 +47,7 @@ add_subdirectory (httpauth)
 add_subdirectory (httptest)
 add_subdirectory (hpack)
 add_subdirectory (httpserver2)
+add_subdirectory (udpserver)
 
 # odbc
 if (SUPPORT_ODBC)

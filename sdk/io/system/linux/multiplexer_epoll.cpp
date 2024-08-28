@@ -6,6 +6,12 @@
  *
  * Revision History
  * Date         Name                Description
+ *
+ *
+ * references
+ * https://man7.org/linux/man-pages/man2/epoll_create.2.html
+ *  epoll_create    linux 2.6.8, glibc 2.3.2
+ *  epoll_create1   linux 2.6.27, glibc 2.9
  */
 
 #include <sys/epoll.h>
@@ -201,6 +207,11 @@ return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle
             __leave2;
         }
 
+        int optval = 0;
+        socklen_t optlen = sizeof(optval);
+        getsockopt(listenfd, SOL_SOCKET, SO_TYPE, (char*)&optval, &optlen);
+        bool is_udp = (SOCK_DGRAM == optval);
+
         while (true) {
             bool ret_event_loop_test_broken = controller.event_loop_test_broken(context->handle_controller, token_handle);
             if (true == ret_event_loop_test_broken) {
@@ -228,7 +239,8 @@ return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle
                 data_vector[1] = (void*)(arch_t)context->events[i].data.fd;
 
                 if (context->events[i].data.fd == listenfd) {
-                    event_callback_routine(multiplexer_event_type_t::mux_connect, 2, data_vector, &callback_control, parameter);
+                    multiplexer_event_type_t type = (is_udp ? multiplexer_event_type_t::mux_read : multiplexer_event_type_t::mux_connect);
+                    event_callback_routine(type, 2, data_vector, &callback_control, parameter);
                 } else if (context->events[i].events & EPOLLIN) {
                     event_callback_routine(multiplexer_event_type_t::mux_read, 2, data_vector, &callback_control, parameter);
                 } else if ((context->events[i].events & EPOLLHUP) || (context->events[i].events & EPOLLERR)) {

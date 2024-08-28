@@ -51,7 +51,7 @@ return_t query(pid_t pid, int id, std::string& value) {
             constexpr char STRING__PROC__D_EXE[] = "/proc/%d/exe";
             ret_read = readlink(format(STRING__PROC__D_EXE, pid).c_str(), buf, RTL_NUMBER_OF(buf));
             if (-1 == ret_read) {
-                ret = get_errno(errno);
+                ret = get_lasterror(errno);
             } else {
                 value.assign(buf, ret_read);
             }
@@ -61,7 +61,7 @@ return_t query(pid_t pid, int id, std::string& value) {
             /* "/proc/%d/exe" */
             constexpr char STRING__PROC__D_EXE[] = "/proc/%d/exe";
             ret_read = readlink(format(STRING__PROC__D_EXE, pid).c_str(), buf, RTL_NUMBER_OF(buf));
-            ret = get_errno(ret_read);
+            ret = get_lasterror(ret_read);
             if (errorcode_t::success == ret) {
                 std::string source(buf, ret_read);
                 value = source.substr(0, source.find_last_of('/'));

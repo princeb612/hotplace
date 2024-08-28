@@ -519,10 +519,8 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
             /* mingw environments GetLastError () return 0 */
 #if defined __MINGW32__
             ret = errorcode_t::canceled;
-#elif defined __linux__
-            ret = get_errno(ret);
-#elif defined _WIN32 || defined _WIN64
-            ret = GetLastError();
+#else
+            ret = get_lasterror(ret);
 #endif
 
             __leave2;

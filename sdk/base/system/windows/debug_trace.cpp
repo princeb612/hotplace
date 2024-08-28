@@ -15,6 +15,16 @@
 
 namespace hotplace {
 
+/**
+ *  1. GCC
+ *    a. DWARF
+ *    b. STABS
+ *  * c. PE/COFF with CodeView - MinGW, Cygwin (gcc+windows)
+ *  2. MSVC
+ *  - a. PDB (Program Database)
+ *  - b. COFF (Common Object File Format)
+ *  - c. CodeView
+ */
 return_t trace(return_t errorcode) {
     return_t ret = errorcode_t::success;
 
@@ -405,14 +415,14 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
                         stream->printf(constexpr_fileline, dwOffsetFromSymbol);
                     }
                 } else {
-                    // bfd
+                    // ...
                 }
 
                 bRet = context->mssdk.lpfnSymGetLineFromAddr(process_handle, frame.AddrPC.Offset, &dwOffsetFromSymbol, &Line);
                 if (TRUE == bRet) {
                     stream->printf(constexpr_line, Line.FileName, Line.LineNumber);
                 } else {
-                    // bfd
+                    // ...
                 }
             }
 

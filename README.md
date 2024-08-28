@@ -20,8 +20,8 @@
 ## implemented
 
  * Authenticode (1. for Digital Certificate verification 2. plugin_msi, plugin_cabinet not included)
-  * sdk/crypto/authenticode/
-  * test/authenticode/
+   * sdk/crypto/authenticode/
+   * test/authenticode/
 
  * RFC 7049 Concise Binary Object Representation (CBOR)
  * RFC 8949 Concise Binary Object Representation (CBOR)
@@ -79,12 +79,10 @@
  * RFC 8017 PKCS #1: RSA Cryptography Specifications Version 2.2
  * RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
  * RFC 9106 Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications
+ * [Authenticated Encryption with AES-CBC and HMAC-SHA](https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt)
    * sdk/crypto/basic/
    * test/crypto/
    * test/kdf/
- * Authenticated Encryption with AES-CBC and HMAC-SHA
-   * https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
-   * test/crypto/
 
  * RFC 2104 HMAC: Keyed-Hashing for Message Authentication
  * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
@@ -92,8 +90,7 @@
  * RFC 4493 The AES-CMAC Algorithm
  * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
  * RFC 6979 Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)
- * NIST CAVP (Cryptographic Algorithm Validation Program) ECDSA
-   * https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
+ * [NIST CAVP (Cryptographic Algorithm Validation Program) ECDSA](https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures)
    * sdk/crypto/basic/
    * test/hash/
    * test/sign/
@@ -145,11 +142,9 @@
  * RFC 9114 HTTP/3
 
  * ITU-T X.680-X.699
-   * X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules
-     * https://www.itu.int/rec/T-REC-X.680-X.693-202102-I/en
+   * [X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules](https://www.itu.int/rec/T-REC-X.680-X.693-202102-I/en)
      * Recommendation X.680-X.693 (02/21)
-   * ASN.1 (Abstract Syntax Notation One) is the international standard for representing data types and structures.
-     * https://obj-sys.com/asn1tutorial/asn1only.html
+   * [ASN.1 (Abstract Syntax Notation One) is the international standard for representing data types and structures.](https://obj-sys.com/asn1tutorial/asn1only.html)
      * ITU-T X.680 ISO/IEC 8824-1 Abstract Syntax Notation One (ASN.1): Specification of basic notation
      * ITU-T X.681 ISO/IEC 8824-2 Abstract Syntax Notation One (ASN.1): Information object specification
      * ITU-T X.682 ISO/IEC 8824-3 Abstract Syntax Notation One (ASN.1): Constraint specification

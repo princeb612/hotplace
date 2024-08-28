@@ -330,11 +330,7 @@ return_t transport_layer_security::read(tls_context_t* handle, int mode, void* b
                 __leave2;
             }
             if (-1 == ret_recv) {
-#if defined __linux__
-                ret = get_errno(ret_recv);
-#elif defined _WIN32 || defined _WIN64
-                ret = GetLastError();
-#endif
+                ret = get_lasterror(ret_recv);
                 __leave2;
             }
 

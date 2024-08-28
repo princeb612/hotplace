@@ -36,13 +36,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
 
         *socket_created = INVALID_SOCKET;
 
-        // if (port <= 0 || port > 65535)
-        //{
-        //  ret = errorcode_t::invalid_parameter;
-        //  __leave2_trace(ret);
-        //}
-
-        /*
+        /**
          * IPv4 32bit   127.0.0.1
          * IPv6 128bit  ::1
          */
@@ -66,12 +60,12 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
             }
         }
 
-        /*
-           GetAddrInfoW 의 OS 지원 범위
-           minimum supported : Windows Server 2003, Windows Vista, Windows XP with SP2
-
-           ADDRINFOW  hints, *res = nullptr;
-           ret_routine = GetAddrInfoW(tszAddress, port_value, &hints, &res);
+        /**
+         * GetAddrInfoW
+         * minimum supported : Windows Server 2003, Windows Vista, Windows XP with SP2
+         *
+         * ADDRINFOW  hints, *res = nullptr;
+         * ret_routine = GetAddrInfoW(tszAddress, port_value, &hints, &res);
          */
 
         struct addrinfo hints;
@@ -80,23 +74,17 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
         memset(&hints, 0, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = address_type;
-
-        char string_port[1 << 3];
-        snprintf(string_port, RTL_NUMBER_OF(string_port), "%d", port);
-
         if (address_t::addr_host == address_type_adjusted) {
             hints.ai_flags = AI_PASSIVE;
         } else {
             hints.ai_flags = AI_NUMERICHOST;
         }
 
+        char string_port[1 << 3];
+        snprintf(string_port, RTL_NUMBER_OF(string_port), "%d", port);
         ret_function = getaddrinfo(address_pointer, string_port, &hints, &addrinf);
         if (0 != ret_function) {
-#if defined __linux__
-            ret = get_eai_error(ret_function);
-#elif defined _WIN32 || defined _WIN64
-            ret = GetLastError();
-#endif
+            ret = get_lasterror(ret_function);
             __leave2;
         }
 
@@ -112,11 +100,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
         } while (nullptr != addrinf_traverse);
 
         if (INVALID_SOCKET == s) {
-#if defined __linux__
-            ret = get_errno(s);
-#elif defined _WIN32 || defined _WIN64
-            ret = GetLastError();
-#endif
+            ret = get_lasterror(s);
             __leave2;
         }
 
@@ -198,15 +182,11 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
         hints.ai_protocol = ipprotocol;
         hints.ai_flags = AI_PASSIVE;
 
-        char port_value[10];
-        snprintf(port_value, 10, ("%d"), port);
+        char port_value[1 << 3];
+        snprintf(port_value, sizeof(port_value), ("%d"), port);
         ret_function = getaddrinfo(nullptr, port_value, &hints, &addrinf);
         if (0 != ret_function) {
-#if defined __linux__
-            ret = get_eai_error(ret_function);
-#elif defined _WIN32 || defined _WIN64
-            ret = GetLastError();
-#endif
+            ret = get_lasterror(ret_function);
             __leave2;
         }
 
@@ -224,13 +204,10 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
                                          WSA_FLAG_OVERLAPPED);
 #endif
                         if (INVALID_SOCKET == sock) {
-#if defined __linux__
-                            ret = get_errno(sock);
-#elif defined _WIN32 || defined _WIN64
-                            ret = GetLastError();
-#endif
+                            ret = get_lasterror(sock);
                             __leave2;
                         }
+
 #if defined __linux__
                         if (PF_INET6 == addrinf_traverse->ai_family) {
                             int only_ipv6 = 1;
@@ -242,11 +219,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
 
                         ret_function = bind(sock, addrinf_traverse->ai_addr, (int)addrinf_traverse->ai_addrlen);
                         if (0 != ret_function) {
-#if defined __linux__
-                            ret = get_errno(ret_function);
-#elif defined _WIN32 || defined _WIN64
-                            ret = GetLastError();
-#endif
+                            ret = get_lasterror(ret_function);
                             __leave2;
                         }
 
@@ -260,11 +233,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
 
                             ret_function = listen(sock, SOMAXCONN);
                             if (-1 == ret_function) {
-#if defined __linux__
-                                ret = get_errno(ret_function);
-#elif defined _WIN32 || defined _WIN64
-                                ret = GetLastError();
-#endif
+                                ret = get_lasterror(ret_function);
                                 __leave2;
                             }
                         }
@@ -373,18 +342,8 @@ return_t connect_socket_addr(socket_t sock, sockaddr_storage_t* pSockAddr, size_
                 ret_routine = select((int)sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, -1 if an error occurred */
                 if (0 == ret_routine) {
                     ret = errorcode_t::timeout;
-                }
-#if defined __linux__
-                else if (-1 == ret_routine)
-#elif defined _WIN32 || defined _WIN64
-                else if (0 > ret_routine)
-#endif
-                {
-#if defined __linux__
-                    ret = get_errno(ret_routine);
-#elif defined _WIN32 || defined _WIN64
-                    ret = GetLastError();
-#endif
+                } else if (ret_routine < 0) {
+                    ret = get_lasterror(ret_routine);
                 }
             }
         }
@@ -489,11 +448,7 @@ return_t wait_socket(socket_t sock, uint32 milliSeconds, uint32 flags) {
     if (0 == ret_select) {
         ret = errorcode_t::timeout;
     } else if (0 > ret_select) {
-#if defined __linux__
-        ret = get_errno(ret_select);
-#elif defined _WIN32 || defined _WIN64
-        ret = GetLastError();
-#endif
+        ret = get_lasterror(ret_select);
     }
 
     return ret;
@@ -518,11 +473,7 @@ return_t set_sock_nbio(socket_t sock, uint32 nbio_mode) {
     ret_fcntl = ioctlsocket(sock, FIONBIO, &nbio_mode);
 #endif
     if (-1 == ret_fcntl) {
-#if defined __linux__
-        ret = get_errno(ret_fcntl);
-#elif defined _WIN32 || defined _WIN64
-        ret = GetLastError();
-#endif
+        ret = get_lasterror(ret_fcntl);
     }
     return ret;
 }
@@ -552,11 +503,7 @@ return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint
         }
 
         if (-1 == rc) {
-#if defined __linux__
-            ret = get_errno(rc);
-#elif defined _WIN32 || defined _WIN64
-            ret = GetLastError();
-#endif
+            ret = get_lasterror(rc);
         } else if (0 == rc) {
             ret = errorcode_t::bad_format;
         }
