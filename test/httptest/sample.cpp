@@ -467,96 +467,107 @@ return_t calc_digest_digest_access(http_authenticate_provider *provider, network
     return ret;
 }
 
-void test_digest_access_authentication(const char *alg = nullptr) {
+void test_digest_access_authentication(const char *alg = nullptr, unsigned long *ossl_minver = nullptr) {
     _test_case.begin("Digest Access Authentication Scheme");
     const OPTION &option = cmdline->value();
 
     return_t ret = errorcode_t::success;
-    tcp_server_socket socket;  // dummy
-    network_session session(&socket);
-    std::string realm = "digest realm";
-    std::string qop = "auth";
-    digest_access_authentication_provider provider(realm, alg, qop.c_str());
-    http_authentication_resolver resolver;
-    http_request request;
-    http_response response;
-    basic_stream bs;
 
-    resolver.get_digest_credentials(provider.get_realm()).add(realm, alg ? alg : "", "user", "password");
+    bool support = true;
+    if (ossl_minver) {
+        crypto_advisor *advisor = crypto_advisor::get_instance();
+        support = advisor->at_least_openssl_version(*ossl_minver);
+    }
 
-    provider.request_auth(&session, &request, &response);
+    if (support) {
+        tcp_server_socket socket;  // dummy
+        network_session session(&socket);
+        std::string realm = "digest realm";
+        std::string qop = "auth";
+        digest_access_authentication_provider provider(realm, alg, qop.c_str());
+        http_authentication_resolver resolver;
+        http_request request;
+        http_response response;
+        basic_stream bs;
 
-    std::function<return_t(const std::string &user, const std::string &password)> test_resolver = [&](const std::string &user,
-                                                                                                      const std::string &password) -> return_t {
-        return_t ret = errorcode_t::failed;
+        resolver.get_digest_credentials(provider.get_realm()).add(realm, alg ? alg : "", "user", "password");
 
-        // server response
-        if (option.verbose) {
-            response.get_response(bs);
+        provider.request_auth(&session, &request, &response);
 
-            cprint("session nonce %s", session.get_session_data()->get("nonce").c_str());
-            cprint("session opaque %s", session.get_session_data()->get("opaque").c_str());
+        std::function<return_t(const std::string &user, const std::string &password)> test_resolver = [&](const std::string &user,
+                                                                                                          const std::string &password) -> return_t {
+            return_t ret = errorcode_t::failed;
 
-            cprint("server response");
-            _logger->writeln("%s", bs.c_str());
-        }
+            // server response
+            if (option.verbose) {
+                response.get_response(bs);
 
-        // calcuration
-        std::string auth;
-        std::string cred;
-        skey_value kv;
-        size_t pos = 0;
-        response.get_http_header().get("WWW-Authenticate", auth);
-        http_header::to_keyvalue(auth, kv);
+                cprint("session nonce %s", session.get_session_data()->get("nonce").c_str());
+                cprint("session opaque %s", session.get_session_data()->get("opaque").c_str());
 
-        std::string response_calc;
-        kv.set("username", user);
-        kv.set("password", password);  // calc
-        kv.set("qop", "auth");
-        kv.set("nc", "00000002");
-        kv.set("cnonce", "0123456789abcdef");
-        if (kv.get("algorithm").empty()) {
-            kv.set("algorithm", "MD5");  // calc
-        }
+                cprint("server response");
+                _logger->writeln("%s", bs.c_str());
+            }
 
-        // client request
-        request.get_http_header().clear();
-        request.open("GET /auth/digest HTTP/1.1");  // set a method and an uri
-        kv.set("uri", request.get_http_uri().get_uri());
+            // calcuration
+            std::string auth;
+            std::string cred;
+            skey_value kv;
+            size_t pos = 0;
+            response.get_http_header().get("WWW-Authenticate", auth);
+            http_header::to_keyvalue(auth, kv);
 
-        calc_digest_digest_access(&provider, &session, &request, kv, response_calc);  // calcurate a response
+            std::string response_calc;
+            kv.set("username", user);
+            kv.set("password", password);  // calc
+            kv.set("qop", "auth");
+            kv.set("nc", "00000002");
+            kv.set("cnonce", "0123456789abcdef");
+            if (kv.get("algorithm").empty()) {
+                kv.set("algorithm", "MD5");  // calc
+            }
 
-        basic_stream digest_stream;
-        valist va;
-        va << kv.get("username") << provider.get_realm() << kv.get("algorithm") << kv.get("nonce") << request.get_http_uri().get_uri() << response_calc
-           << kv.get("opaque") << kv.get("qop") << kv.get("nc") << kv.get("cnonce");
-        const char *digest_fmt =
-            R"(Digest username="{1}", realm="{2}", algorithm={3}, nonce="{4}", uri="{5}", response="{6}", opaque="{7}", qop={8}, nc={9}, cnonce="{10}")";
-        sprintf(&digest_stream, digest_fmt, va);
-        request.get_http_header().add("Authorization", digest_stream.c_str());  // set a response
+            // client request
+            request.get_http_header().clear();
+            request.open("GET /auth/digest HTTP/1.1");  // set a method and an uri
+            kv.set("uri", request.get_http_uri().get_uri());
 
-        if (option.verbose) {
-            request.get_request(bs);
+            calc_digest_digest_access(&provider, &session, &request, kv, response_calc);  // calcurate a response
 
-            cprint("client request");
-            _logger->writeln("%s", bs.c_str());
-        }
+            basic_stream digest_stream;
+            valist va;
+            va << kv.get("username") << provider.get_realm() << kv.get("algorithm") << kv.get("nonce") << request.get_http_uri().get_uri() << response_calc
+               << kv.get("opaque") << kv.get("qop") << kv.get("nc") << kv.get("cnonce");
+            const char *digest_fmt =
+                R"(Digest username="{1}", realm="{2}", algorithm={3}, nonce="{4}", uri="{5}", response="{6}", opaque="{7}", qop={8}, nc={9}, cnonce="{10}")";
+            sprintf(&digest_stream, digest_fmt, va);
+            request.get_http_header().add("Authorization", digest_stream.c_str());  // set a response
 
-        response.close();
+            if (option.verbose) {
+                request.get_request(bs);
 
-        // resolver
-        bool test = resolver.resolve(&provider, &session, &request, &response);
-        if (test) {
-            ret = errorcode_t::success;
-        }
-        // cprint("[%08x] %s:%s", ret, user.c_str(), password.c_str());
-        return ret;
-    };
+                cprint("client request");
+                _logger->writeln("%s", bs.c_str());
+            }
 
-    ret = test_resolver("user", "password1");
-    _test_case.assert((errorcode_t::success != ret), __FUNCTION__, "Digest Access Authentication Scheme (negative case) algorithm=%s", alg ? alg : "");
-    ret = test_resolver("user", "password");
-    _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Digest Access Authentication Scheme (positive case) algorithm=%s", alg ? alg : "");
+            response.close();
+
+            // resolver
+            bool test = resolver.resolve(&provider, &session, &request, &response);
+            if (test) {
+                ret = errorcode_t::success;
+            }
+            // cprint("[%08x] %s:%s", ret, user.c_str(), password.c_str());
+            return ret;
+        };
+
+        ret = test_resolver("user", "password1");
+        _test_case.assert((errorcode_t::success != ret), __FUNCTION__, "Digest Access Authentication Scheme (negative case) algorithm=%s", alg ? alg : "");
+        ret = test_resolver("user", "password");
+        _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Digest Access Authentication Scheme (positive case) algorithm=%s", alg ? alg : "");
+    } else {
+        _test_case.test(errorcode_t::not_supported, __FUNCTION__, "%s require openssl-3.0");
+    }
 }
 
 void test_rfc_example_routine(const std::string &text, digest_access_authentication_provider *provider, http_request &request, const std::string &username,
@@ -938,14 +949,16 @@ int main(int argc, char **argv) {
     test_response_parse();
 
     // authenticate
+    unsigned long ossl_minver = 0x30000000;
     test_basic_authentication();
     test_digest_access_authentication();
     test_digest_access_authentication("MD5");
     test_digest_access_authentication("MD5-sess");
     test_digest_access_authentication("SHA-256");
     test_digest_access_authentication("SHA-256-sess");
-    test_digest_access_authentication("SHA-512-256");       // openssl-3.0
-    test_digest_access_authentication("SHA-512-256-sess");  // openssl-3.0
+    test_digest_access_authentication("SHA-512-256", &ossl_minver);       // openssl-3.0
+    test_digest_access_authentication("SHA-512-256-sess", &ossl_minver);  // openssl-3.0
+
     test_rfc_digest_example();
 
     // documents

@@ -19,6 +19,19 @@
 namespace hotplace {
 namespace crypto {
 
+enum advisor_feature_t {
+    advisor_feature_cipher = (1 << 0),
+    advisor_feature_md = (1 << 1),
+    advisor_feature_wrap = (1 << 2),
+    advisor_feature_jwa = (1 << 3),
+    advisor_feature_jwe = (1 << 4),
+    advisor_feature_jws = (1 << 5),
+    advisor_feature_cose = (1 << 6),
+    advisor_feature_curve = (1 << 7),
+    advisor_feature_version = (1 << 8),
+    advisor_feature_unspecified = (1 << 9),
+};
+
 class crypto_advisor {
    public:
     static crypto_advisor* get_instance();
@@ -107,7 +120,8 @@ class crypto_advisor {
      */
     const char* nameof_md(hash_algorithm_t algorithm);
 
-#if __cplusplus >= 201103L  // c++11
+    return_t cipher_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t md_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
     /**
      * @brief   iteration helper methods  - algoritm encrypton signature
      * @example
@@ -116,7 +130,7 @@ class crypto_advisor {
      *          std::function <void (const hint_jose_encryption_t*, void*)> lambda1 =
      *                  [] (const hint_jose_encryption_t* item, void* user) -> void { printf ("    %s\n", item->alg_name); };
      *          std::function <void (const hint_signature_t*, void*)> lambda2 =
-     *                  [] (const hint_signature_t* item, void* user) -> void { printf ("    %s\n", item->alg_name); };
+     *                  [] (const hint_signature_t* item, void* user) -> void { printf ("    %s\n", item->jws_name); };
      *
      *          advisor->jose_for_each_algorithm (lambda1, nullptr );
      *          advisor->jose_for_each_encryption (lambda1, nullptr );
@@ -126,7 +140,8 @@ class crypto_advisor {
     return_t jose_for_each_algorithm(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
     return_t jose_for_each_encryption(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
     return_t jose_for_each_signature(std::function<void(const hint_signature_t*, void*)> f, void* user);
-#endif
+    return_t cose_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t curve_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
 
     /**
      * @brief hint
@@ -446,6 +461,79 @@ class crypto_advisor {
     cose_ec_curve_t curveof(uint32 nid);
     uint32 curveof(cose_ec_curve_t curve);
 
+    /**
+     * query_feature("scrypt")
+     *  in openssl-1.1.1 return false
+     *  in openssl-3.0.x return true
+     * features
+     *   cipher
+     *     aes-128-cbc, ...
+     *     aria-128-cbc, ...
+     *     bf-cbc, ...
+     *     camellia-128-cbc, ...
+     *     cast5-cbc, ...
+     *     idea-cbc, ...
+     *     rc2-cbc, ...
+     *     rc5-cbc, ...
+     *     sm4-cbc, ...
+     *     seed-cbc, ...
+     *     chacha20, chacha20-poly1305, ...
+     *   digest
+     *     md4, md5,
+     *     sha1,
+     *     sha224, sha256, sha384, sha512, sha2-512/224, sha2-512/256
+     *     sha3-224, sha3-256, sha3-384, sha3-512,
+     *     shake128, shake256, blake2b512, blake2s256,
+     *     ripemd160, whirlpool
+     *   JWA
+     *     RSA1_5, RSA-OAEP, RSA-OAEP-256,
+     *     A128KW, A192KW, A256KW,
+     *     dir,
+     *     ECDH-ES,
+     *     ECDH-ES+A128KW, ECDH-ES+A192KW, ECDH-ES+A256KW,
+     *     A128GCMKW, A192GCMKW, A256GCMKW,
+     *     PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW
+     *   JWE
+     *     A128CBC-HS256, A192CBC-HS384, A256CBC-HS512
+     *     A128GCM, A192GCM, A256GCM
+     *   JWS
+     *     HS256, HS384, HS512,
+     *     RS256, RS384, RS512, RS1
+     *     ES256, ES384, ES512, ES256K
+     *     PS256, PS384, PS512,
+     *     EdDSA
+     *   COSE
+     *     A128KW, A192KW, A256KW,
+     *     direct,
+     *     ES256, ES384, ES512, ES256K,
+     *     RS256, RS384, RS512, RS1
+     *     HS256/256, HS384/384, HS512/512, HS256/64
+     *     EdDSA,
+     *     direct+HKDF-SHA-256, direct+HKDF-SHA-512,
+     *     direct+HKDF-AES-128, direct+HKDF-AES-256,
+     *     SHA-1,
+     *     SHA-256/64, SHA-256, SHA-512/256, SHA-384, SHA-512, SHAKE128, SHAKE256,
+     *     ECDH-ES + HKDF-256, ECDH-ES + HKDF-512,
+     *     ECDH-SS + HKDF-256, ECDH-SS + HKDF-512,
+     *     ECDH-ES + A128KW, ECDH-ES + A192KW, ECDH-ES + A256KW,
+     *     ECDH-SS + A128KW, ECDH-SS + A192KW, ECDH-SS + A256KW,
+     *     RSA-PSS-256, RSA-PSS-384, RSA-PSS-512,
+     *     RSA-OAEP, RSA-OAEP-256, RSA-OAEP-512,
+     *     A128GCM, A192GCM, A256GCM,
+     *     AES-CCM-16-64-128, AES-CCM-16-64-256, AES-CCM-64-64-128,
+     *     AES-CCM-64-64-256, AES-CCM-16-128-128, AES-CCM-16-128-256,
+     *     AES-CCM-64-128-128, AES-CCM-64-128-256, AES-MAC-128/64,
+     *     AES-MAC-256/64, AES-MAC-128/128, AES-MAC-256/128,
+     *     // ChaCha20/Poly1305, IV-GENERATION
+     *   CURVE
+     *     P-192, P-224, P-256, P-384, P-521,
+     *     K-163, K-233, K-283, K-409, K-571,
+     *     B-163, B-233, B-283, B-409, B-571,
+     *     Ed25519, Ed448, X25519, X448
+     */
+    bool query_feature(const char* feature, uint32 spec = 0);
+    bool at_least_openssl_version(unsigned long osslver);
+
    protected:
     return_t build_if_necessary();
     return_t cleanup();
@@ -521,6 +609,9 @@ class crypto_advisor {
 
     cipher_byname_map_t _cipher_byname_map;
     md_byname_map_t _md_byname_map;
+
+    std::map<std::string, uint32> _features;
+    std::map<std::string, uint32> _versions;
 };
 
 extern const hint_cipher_t evp_cipher_methods[];

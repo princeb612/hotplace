@@ -19,7 +19,6 @@ namespace crypto {
 
 #define CRYPT_CIPHER_VALUE(a, m) ((a << 16) | m)
 
-#if (OPENSSL_VERSION_NUMBER < 0x30000000L)
 typedef struct _openssl_evp_cipher_method_older_t {
     const EVP_CIPHER* _cipher;
     hint_cipher_t method;
@@ -49,7 +48,6 @@ const openssl_evp_cipher_method_older_t aes_wrap_methods[] = {
         },
     },
 };
-#endif
 
 crypto_advisor crypto_advisor::_instance;
 
@@ -62,6 +60,14 @@ crypto_advisor::crypto_advisor() : _flag(0) { build_if_necessary(); }
 return_t crypto_advisor::build_if_necessary() {
     return_t ret = errorcode_t::success;
     uint32 i = 0;
+    unsigned long osslver = OpenSSL_version_num();
+
+    auto set_feature = [&](const std::string& key, uint32 feature) -> void {
+        auto pib = _features.insert({key, feature});
+        if (false == pib.second) {         // already exist
+            pib.first->second |= feature;  // iterator->second points feature
+        }
+    };
 
     if (0 == _flag) {
         for (i = 0; i < sizeof_hint_blockciphers; i++) {
@@ -99,14 +105,21 @@ return_t crypto_advisor::build_if_necessary() {
 
             _cipher_fetch_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item)), item));
             _cipher_byname_map.insert(std::make_pair(nameof_alg(item), item));
+
+            if (evp_cipher) {
+                set_feature(nameof_alg(item), advisor_feature_cipher);
+            }
         }
-#if (OPENSSL_VERSION_NUMBER < 0x30000000L)
+
         for (i = 0; i < RTL_NUMBER_OF(aes_wrap_methods); i++) {
             const openssl_evp_cipher_method_older_t* item = aes_wrap_methods + i;
-            _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->method.algorithm, item->method.mode), (EVP_CIPHER*)item->_cipher));
-            _evp_cipher_map.insert(std::make_pair(item->_cipher, &item->method));
+            if (osslver < 0x30000000L) {
+                _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->method.algorithm, item->method.mode), (EVP_CIPHER*)item->_cipher));
+                _evp_cipher_map.insert(std::make_pair(item->_cipher, &item->method));
+            }
+
+            set_feature(item->method.fetchname, advisor_feature_wrap);
         }
-#endif
 
         for (i = 0; i < sizeof_evp_md_methods; i++) {
             const hint_digest_t* item = evp_md_methods + i;
@@ -126,6 +139,10 @@ return_t crypto_advisor::build_if_necessary() {
             }
             _md_fetch_map.insert(std::make_pair(typeof_alg(item), item));
             _md_byname_map.insert(std::make_pair(nameof_alg(item), item));
+
+            if (evp_md) {
+                set_feature(nameof_alg(item), advisor_feature_md);
+            }
         }
 
         ERR_clear_error();  // errors while EVP_CIPHER_fetch, EVP_MD_fetch
@@ -136,6 +153,8 @@ return_t crypto_advisor::build_if_necessary() {
             if (item->alg_name) {
                 _alg_byname_map.insert(std::make_pair(item->alg_name, item));
             }
+
+            set_feature(item->alg_name, advisor_feature_jwa);
         }
         for (i = 0; i < sizeof_hint_jose_encryptions; i++) {
             const hint_jose_encryption_t* item = hint_jose_encryptions + i;
@@ -143,6 +162,8 @@ return_t crypto_advisor::build_if_necessary() {
             if (item->alg_name) {
                 _enc_byname_map.insert(std::make_pair(item->alg_name, item));
             }
+
+            set_feature(item->alg_name, advisor_feature_jwe);
         }
         for (i = 0; i < sizeof_hint_signatures; i++) {
             const hint_signature_t* item = hint_signatures + i;
@@ -154,6 +175,8 @@ return_t crypto_advisor::build_if_necessary() {
                 _jose_sig_map.insert(std::make_pair(item->jws_type, item));
                 _sig2jws_map.insert(std::make_pair(item->sig_type, item->jws_type));
             }
+
+            set_feature(item->jws_name, advisor_feature_jws);
         }
         for (i = 0; i < sizeof_hint_signatures; i++) {
             const hint_signature_t* item = hint_signatures + i;
@@ -165,6 +188,8 @@ return_t crypto_advisor::build_if_necessary() {
             const hint_cose_algorithm_t* item = hint_cose_algorithms + i;
             _cose_alg_map.insert(std::make_pair(item->alg, item));
             _cose_algorithm_byname_map.insert(std::make_pair(item->name, item));
+
+            set_feature(item->name, advisor_feature_cose);
         }
         for (i = 0; i < sizeof_hint_curves; i++) {
             const hint_curve_t* item = hint_curves + i;
@@ -175,6 +200,10 @@ return_t crypto_advisor::build_if_necessary() {
                 _cose_curve_map.insert(std::make_pair(item->cose_crv, item));
             }
             _curve_bynid_map.insert(std::make_pair(item->nid, item));
+
+            if (item->name) {
+                set_feature(item->name, advisor_feature_curve);
+            }
         }
 
         _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_ec, cose_kty_t::cose_kty_ec2));
@@ -221,6 +250,22 @@ return_t crypto_advisor::build_if_necessary() {
             _nid2curve_map.insert(std::make_pair(hint_curves[i].nid, hint_curves[i].cose_crv));
             if (hint_curves[i].cose_crv) {
                 _curve2nid_map.insert(std::make_pair(hint_curves[i].cose_crv, hint_curves[i].nid));
+            }
+        }
+
+        {
+            struct mapdata {
+                const char* feature;
+                unsigned long version;
+            } _table[] = {
+                {"scrypt", 0x30000000},
+                {"argon2d", 0x30200000},
+                {"argon2i", 0x30200000},
+                {"argon2id", 0x30200000},
+            };
+            for (auto item : _table) {
+                _features.insert({item.feature, advisor_feature_version});
+                _versions.insert({item.feature, item.version});
             }
         }
 
@@ -465,7 +510,28 @@ const char* crypto_advisor::nameof_md(hash_algorithm_t algorithm) {
     return ret_value;
 }
 
-#if __cplusplus >= 201103L  // c++11
+return_t crypto_advisor::cipher_for_each(std::function<void(const char*, uint32, void*)> f, void* user) {
+    return_t ret = errorcode_t::success;
+    for (auto i = 0; i < sizeof_evp_cipher_methods; i++) {
+        const hint_cipher_t* item = evp_cipher_methods + i;
+        f(nameof_alg(item), advisor_feature_cipher, user);
+    }
+    for (auto i = 0; i < RTL_NUMBER_OF(aes_wrap_methods); i++) {
+        const openssl_evp_cipher_method_older_t* item = aes_wrap_methods + i;
+        f(item->method.fetchname, advisor_feature_wrap, user);
+    }
+    return ret;
+}
+
+return_t crypto_advisor::md_for_each(std::function<void(const char*, uint32, void*)> f, void* user) {
+    return_t ret = errorcode_t::success;
+    for (auto i = 0; i < sizeof_evp_md_methods; i++) {
+        const hint_digest_t* item = evp_md_methods + i;
+        f(nameof_alg(item), advisor_feature_md, user);
+    }
+    return ret;
+}
+
 return_t crypto_advisor::jose_for_each_algorithm(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
 
@@ -487,7 +553,26 @@ return_t crypto_advisor::jose_for_each_signature(std::function<void(const hint_s
     std::for_each(hint_signatures, hint_signatures + sizeof_hint_signatures, [&](const hint_signature_t& item) { return f(&item, user); });
     return ret;
 }
-#endif
+
+return_t crypto_advisor::cose_for_each(std::function<void(const char*, uint32, void*)> f, void* user) {
+    return_t ret = errorcode_t::success;
+    for (auto i = 0; i < sizeof_hint_cose_algorithms; i++) {
+        const hint_cose_algorithm_t* item = hint_cose_algorithms + i;
+        f(item->name, advisor_feature_cose, user);
+    }
+    return ret;
+}
+
+return_t crypto_advisor::curve_for_each(std::function<void(const char*, uint32, void*)> f, void* user) {
+    return_t ret = errorcode_t::success;
+    for (auto i = 0; i < sizeof_hint_curves; i++) {
+        const hint_curve_t* item = hint_curves + i;
+        if (item->name) {
+            f(item->name, advisor_feature_curve, user);
+        }
+    }
+    return ret;
+}
 
 const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm(jwa_t alg) {
     const hint_jose_encryption_t* item = nullptr;
@@ -994,6 +1079,32 @@ uint32 crypto_advisor::curveof(cose_ec_curve_t curve) {
 
     hint.find(curve, &nid);
     return nid;
+}
+
+bool crypto_advisor::query_feature(const char* feature, uint32 spec) {
+    bool ret = false;
+    if (feature) {
+        std::string key = feature;
+        auto iter = _features.find(key);
+        if (_features.end() != iter) {
+            const uint32& flags = iter->second;
+            if (advisor_feature_version & flags) {
+                unsigned long osslver = OpenSSL_version_num();
+                auto ver = _versions[key];
+                ret = (osslver >= ver);
+            } else if (spec) {
+                ret = (flags & spec);
+            } else {
+                ret = true;
+            }
+        }
+    }
+    return ret;
+}
+
+bool crypto_advisor::at_least_openssl_version(unsigned long osslver) {
+    unsigned long ver = OpenSSL_version_num();
+    return (ver >= osslver) ? true : false;
 }
 
 }  // namespace crypto

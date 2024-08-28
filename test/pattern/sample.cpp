@@ -193,9 +193,9 @@ void test_aho_corasick() {
 
         _logger->writeln(R"(source "%s")", item.source);
         int i = 0;
-        for (auto item : item.patterns) {
-            ac.insert(item.pattern, item.len);
-            _logger->writeln(R"(pattern[%i] "%.*s")", i++, item.len, item.pattern);
+        for (auto pat : item.patterns) {
+            ac.insert(pat.pattern, pat.len);
+            _logger->writeln(R"(pattern[%i] "%.*s")", i++, pat.len, pat.pattern);
         }
 
         ac.build();

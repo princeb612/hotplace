@@ -143,7 +143,7 @@ void test_constexpr_obf() {
 
     _test_case.assert(true, __FUNCTION__, "obfuscate a string at compile time");
 #else
-    _test_case.assert(false, __FUNCTION__, "at least c++14 needed");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "at least c++14 needed");
 #endif
 }
 

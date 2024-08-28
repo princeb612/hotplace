@@ -22,8 +22,9 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
+    bool test_pbkdf2;
 
-    _OPTION() : verbose(0) {}
+    _OPTION() : verbose(0), test_pbkdf2(false) {}
 } OPTION;
 
 t_shared_instance<cmdline_t<OPTION> > _cmdline;
@@ -141,35 +142,42 @@ void test_kdf_scrypt_rfc7914() {
     return_t ret = errorcode_t::success;
     openssl_kdf kdf;
 
-    struct {
-        const char* password;
-        const char* salt;
-        int n;
-        int r;
-        int p;
-        int dlen;
-        const char* expect;
-    } vector[] = {
-        {"",
-         "",  // openssl 1.1.1 - [crypto/kdf/scrypt.c @ 261] error:3407B06F:KDF routines:kdf_scrypt_derive:missing salt
-         16, 1, 1, 64, "77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906"},
-        {"password", "NaCl", 1024, 8, 16, 64,
-         "fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640"},
-        {"pleaseletmein", "SodiumChloride", 16384, 8, 1, 64,
-         "7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887"},
-        {"pleaseletmein", "SodiumChloride", 1048576, 8, 1, 64,
-         "2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4"}};
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    bool support = advisor->query_feature("scrypt");
+    if (support) {
+        // openssl-3.0
+        struct {
+            const char* password;
+            const char* salt;
+            int n;
+            int r;
+            int p;
+            int dlen;
+            const char* expect;
+        } vector[] = {
+            {"",
+             "",  // openssl 1.1.1 - [crypto/kdf/scrypt.c @ 261] error:3407B06F:KDF routines:kdf_scrypt_derive:missing salt
+             16, 1, 1, 64, "77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906"},
+            {"password", "NaCl", 1024, 8, 16, 64,
+             "fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640"},
+            {"pleaseletmein", "SodiumChloride", 16384, 8, 1, 64,
+             "7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887"},
+            {"pleaseletmein", "SodiumChloride", 1048576, 8, 1, 64,
+             "2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4"}};
 
-    binary_t result;
+        binary_t result;
 
-    for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        ret = kdf.scrypt(result, vector[i].dlen, vector[i].password, tobin(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
-        if (errorcode_t::success == ret) {
-            if (option.verbose) {
-                _logger->dump(result);
+        for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
+            ret = kdf.scrypt(result, vector[i].dlen, vector[i].password, tobin(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
+            if (errorcode_t::success == ret) {
+                if (option.verbose) {
+                    _logger->dump(result);
+                }
             }
+            _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "scrypt");
         }
-        _test_case.assert(base16_decode(vector[i].expect) == result, __FUNCTION__, "scrypt");
+    } else {
+        _test_case.test(errorcode_t::not_supported, __FUNCTION__, "scrypt");
     }
 }
 
@@ -178,42 +186,44 @@ void test_kdf_argon_rfc9106() {
     const OPTION& option = _cmdline->value();
     openssl_kdf kdf;
 
-#if OPENSSL_VERSION_NUMBER >= 0x30200000L
-    struct {
-        argon2_t mode;
-        const char* password;
-        const char* salt;
-        const char* secret;
-        const char* ad;
-        const char* expect;
-        const char* message;
-    } vector[] = {
-        {// 5.1.  Argon2d Test Vectors
-         argon2_t::argon2d, "0101010101010101010101010101010101010101010101010101010101010101", "02020202020202020202020202020202", "0303030303030303",
-         "040404040404040404040404", "512b391b6f1162975371d30919734294f868e3be3984f3c1a13a4db9fabe4acb", "RFC 9106 5.1.  Argon2d Test Vectors"},
-        {// 5.2.  Argon2i Test Vectors
-         argon2_t::argon2i, "0101010101010101010101010101010101010101010101010101010101010101", "02020202020202020202020202020202", "0303030303030303",
-         "040404040404040404040404", "c814d9d1dc7f37aa13f0d77f2494bda1c8de6b016dd388d29952a4c4672b6ce8", "RFC 9106 5.2.  Argon2i Test Vectors"},
-        {// 5.3.  Argon2id Test Vectors
-         argon2_t::argon2id, "0101010101010101010101010101010101010101010101010101010101010101", "02020202020202020202020202020202", "0303030303030303",
-         "040404040404040404040404", "0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659", "RFC 9106 5.3.  Argon2id Test Vectors"},
-    };
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    if (advisor->at_least_openssl_version(0x30200000L)) {
+        // openssl-3.2
+        struct {
+            argon2_t mode;
+            const char* password;
+            const char* salt;
+            const char* secret;
+            const char* ad;
+            const char* expect;
+            const char* message;
+        } vector[] = {
+            {// 5.1.  Argon2d Test Vectors
+             argon2_t::argon2d, "0101010101010101010101010101010101010101010101010101010101010101", "02020202020202020202020202020202", "0303030303030303",
+             "040404040404040404040404", "512b391b6f1162975371d30919734294f868e3be3984f3c1a13a4db9fabe4acb", "RFC 9106 5.1.  Argon2d Test Vectors"},
+            {// 5.2.  Argon2i Test Vectors
+             argon2_t::argon2i, "0101010101010101010101010101010101010101010101010101010101010101", "02020202020202020202020202020202", "0303030303030303",
+             "040404040404040404040404", "c814d9d1dc7f37aa13f0d77f2494bda1c8de6b016dd388d29952a4c4672b6ce8", "RFC 9106 5.2.  Argon2i Test Vectors"},
+            {// 5.3.  Argon2id Test Vectors
+             argon2_t::argon2id, "0101010101010101010101010101010101010101010101010101010101010101", "02020202020202020202020202020202", "0303030303030303",
+             "040404040404040404040404", "0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659", "RFC 9106 5.3.  Argon2id Test Vectors"},
+        };
 
-    for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        binary_t derived;
+        for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
+            binary_t derived;
 
-        kdf.argon2(derived, vector[i].mode, 32, base16_decode(vector[i].password), base16_decode(vector[i].salt), base16_decode(vector[i].ad),
-                   base16_decode(vector[i].secret));
+            kdf.argon2(derived, vector[i].mode, 32, base16_decode(vector[i].password), base16_decode(vector[i].salt), base16_decode(vector[i].ad),
+                       base16_decode(vector[i].secret));
 
-        if (option.verbose) {
-            _logger->dump(derived);
+            if (option.verbose) {
+                _logger->dump(derived);
+            }
+
+            _test_case.assert(derived == base16_decode(vector[i].expect), __FUNCTION__, "argon2id");
         }
-
-        _test_case.assert(derived == base16_decode(vector[i].expect), __FUNCTION__, "argon2id");
+    } else {
+        _test_case.test(errorcode_t::not_supported, __FUNCTION__, "argon2d,argon2i,argon2id at least openssl 3.2 required");
     }
-#else
-    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "argon2d,argon2i,argon2id at least openssl 3.2 required");
-#endif
 }
 
 void test_kdf_extract_expand_rfc5869() {
@@ -488,7 +498,8 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << cmdarg_t<OPTION>("-p", "test pbkdf2", [&](OPTION& o, char* param) -> void { o.test_pbkdf2 = true; }).optional();
 
     _cmdline->parse(argc, argv);
 
@@ -504,8 +515,11 @@ int main(int argc, char** argv) {
 
         test_kdf_hkdf();
 
-        test_kdf_pbkdf2_rfc6070();
-        test_kdf_pbkdf2_rfc7914();
+        // debugging problem (takes a long time), valgrind --tool=helgrind or --tool=drd ...
+        if (option.test_pbkdf2) {
+            test_kdf_pbkdf2_rfc6070();
+            test_kdf_pbkdf2_rfc7914();
+        }
         test_kdf_scrypt_rfc7914();
         test_kdf_argon_rfc9106();
 

@@ -871,6 +871,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             16,
         },
     },
+#if 0
     {
         cose_alg_t::cose_iv_generation,
         "IV-GENERATION",
@@ -878,6 +879,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         cose_group_t::cose_group_iv_generate,
         hint_cose_groups + (cose_group_t::cose_group_iv_generate - 1),
     },
+#endif
 };
 
 const size_t sizeof_hint_cose_algorithms = RTL_NUMBER_OF(hint_cose_algorithms);
