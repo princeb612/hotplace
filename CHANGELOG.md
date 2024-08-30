@@ -1,8 +1,8 @@
 # history
 
 * Revision 595
-  * [changed] substitute cmdline_t with t_cmdline_t
-  * [changed] substitute cmdarg_t with t_cmdarg_t
+  * [changed] rename cmdline_t to t_cmdline_t
+  * [changed] rename cmdarg_t to t_cmdarg_t
   * [changed] rename tls_server_socket::listen to tls_server_socket::open
   * [changed] network_server::open prototype changed
 
@@ -37,7 +37,7 @@
 * Revision 584
   * [changed] thread::join prototype changed
   * [changed] authenticode_verifier::verify
-    * substitute std::equal with operator ==
+    * rename std::equal to operator ==
     * std::equal (a.begin(), a.end(), empty.begin()) stack overflow
   * [changed] crypto_advisor::hintof_digest
     * lower case digest algorithm
@@ -50,15 +50,15 @@
   * [added] range_t
   * [added] find_lessthan_or_equal
   * [changed] parser::psearch, parser::context::psearch changed return type
-    * substitute std::multimap<size_t, unsigned> with std::multimap<range_t, unsigned>
+    * rename std::multimap<size_t, unsigned> to std::multimap<range_t, unsigned>
 
 * Revision 568
   * [added] print_pair
   * [added] empty, occupied (stream_t, bufferio, basic_stream, ansi_string, wide_string, file_stream)
   * [added] basic_stream operator ==
   * [added] parser::context::wsearch
-  * [changed] substitute t_kmp_pattern with t_kmp
-  * [changed] substitute t_kmp::match with t_kmp::search
+  * [changed] rename t_kmp_pattern to t_kmp
+  * [changed] rename t_kmp::match to t_kmp::search
   * [changed] t_aho_corasick_wildcard support wildcard single ?
 
 * Revision 567
@@ -66,10 +66,10 @@
 
 * Revision 565
   * [added] double_from_fp16
-  * [changed] substitute fp16_from_fp32 with fp16_from_float
-  * [changed] substitute fp32_from_fp16 with float_from_fp16
-  * [changed] substitute fp16_ieee_from_fp32_value with fp16_from_fp32
-  * [changed] substitute is_typeof with ieee754_typeof
+  * [changed] rename fp16_from_fp32 to fp16_from_float
+  * [changed] rename fp32_from_fp16 to float_from_fp16
+  * [changed] rename fp16_ieee_from_fp32_value to fp16_from_fp32
+  * [changed] rename is_typeof to ieee754_typeof
 
 * Revision 561
   * [added] t_trie::find, t_trie::rfind
@@ -116,7 +116,7 @@
   * [added] parser
 
 * Revision 535
-  * [changed] substitute convert with tostring/tobin
+  * [changed] rename convert to tostring/tobin
 
 * Revision 534
   * [added] void test_case::attach(logger* log)
@@ -159,8 +159,8 @@
   * [added] huffman_coding
 
 * Revision 499
-  * [changed] substitute uint24_32 with i32_b24
-  * [changed] substitute uint32_24 with i32_b24
+  * [changed] rename uint24_32 to i32_b24
+  * [changed] rename uint32_24 to i32_b24
 
 * Revision 498
   * [added] uint32_24_t, payload

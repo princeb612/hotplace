@@ -22,6 +22,7 @@ COMMENTS
     ctest    - build and run ctest
     debug    - debug build
     format   - clang-format (syn. cf)
+    leaks    - gdb 
     opt      - optimize
     pch      - precompiled header
     prof     - gprof
@@ -71,6 +72,8 @@ if [ ${#args[@]} -ne 0 ]; then
             CXXFLAGS="${CXXFLAGS} -DDEBUG -g"
         elif [ $arg = 'format' ]; then
             do_clangformat=1
+        elif [ $arg = 'leaks' ]; then
+            CXXFLAGS="${CXXFLAGS} -fsanitize=address"
         elif [ $arg = 'odbc' ]; then
             export SUPPORT_ODBC=1
         elif [ $arg = 'opt' ]; then
@@ -78,7 +81,7 @@ if [ ${#args[@]} -ne 0 ]; then
         elif [ $arg = 'pch' ]; then
             SUPPORT_PCH=1
         elif [ $arg = 'prof' ]; then
-            CXXFLAGS="${CXXFLAGS}  -pg"
+            CXXFLAGS="${CXXFLAGS} -pg"
         elif [ $arg = 'redist' ]; then
             do_redist=1
         elif [ $arg = 'shared' ]; then

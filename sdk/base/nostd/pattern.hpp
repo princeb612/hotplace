@@ -1321,7 +1321,22 @@ class t_wildcards {
  * @brief   Aho Corasick + wildcard
  * @remarks
  *
- *          sketch ... aho corasick + wildcard
+ *          review or reflection ... Soo Han, Kim (princeb612.kr@gmail.com)
+ *
+ *          // sketch.1 ... aho corasick + wildcard
+ *
+ *          1. wildcard single(?)
+ *             it's so good to understand the Aho-Corasick algorithm
+ *             dosearch reimplemented using queue (first design was based on simple-loop as referenced by t_aho_corasick)
+ *          2. about the starting position
+ *             in class t_aho_corasick, it is not really matter where the starting position is located.
+ *             starting position is (ending position) - (length of pattern) + 1
+ *             but, starting position is very important to handle wildcard any*
+ *          3. wildcard any(*) - the problem about the starting position
+ *             see sketch.2 about the details
+ *             after failing several times, search results includes range_t (see search/dosearch method)
+ *             also added order_by_pattern member function (have shape-shifting overhead but is easy to search by pattern id)
+ *             supplement some case about the endswith_wildcard_any and startswith_wildcard_any
  *
  *          pattern
  *                  his her hers ?is h?r h*s
@@ -1343,6 +1358,41 @@ class t_wildcards {
  *              results.any(*)
  *                    h-s            (1..3)(7)
  *                       h--s        (4..7)(7)
+ *
+ *          // sketch.2 - starting position of wildcard * pattern
+ *
+ *          0. premise
+ *             "ahishers" as an input
+ *             "h*h*e" as _patterns[0]
+ *             "h" as _hidden[0] (pattern up to the first wildcard *)
+ *
+ *           1. computation
+ *
+ *             a) _pattern[0] ends at 5
+ *             b) _hidden[0] at [1, 4]
+ *             c) container [1, 4]
+ *                (1..5)[0] or (4..5)[0] ; represented as (start..end)[patternid]
+ *
+ *           ; figure
+ *                index    01234567
+ *                input    ahishers
+ *                pattern   h--he    see a) and c)
+ *                hidden    h  h     see b)
+ *
+ *           2. result
+ *           ; should be (1..5)[0] not (4..5)[0]
+ *             d) the stating position is earlier than the index 4 ('h')
+ *                d.1) pattern[0] at least 3 items occupied implicitly ("hhe")
+ *                d.2) adjust = lengthof(pattern) - lengthof(wildcard_any) = lengthof("h*h*e") - lengthof("**") = 5 - 2 = 3
+ *                d.3) set adjust into hidden_tag_t::adjust
+ *             e) so... find_lessthan_or_equal(container, pos - adjust + 1, wanted);
+ *                e.1) occurrence of pattern at pos (Aho-Corasick return the end position of a pattern)
+ *                e.2) find_lessthan_or_equal(container, 5 - 3 + 1, wanted)
+ *                e.3) find_lessthan_or_equal 3 in [1, 4]
+ *             f) starting position
+ *                wanted - lengthof(prefix) + 1 = 1 - 1 + 1 = 1
+ *                ; lengthof(_hidden[0]) = lengthof("h") = 1
+ *             g) finally result is (1..5)[0]
  *
  * @sample
  *          // sample.1 wildcard *, ?
@@ -1403,7 +1453,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
 
             trienode* current = this->_root;
             size_t count_any = 0;
-            int modes = 0;  // begins with *, ends with *
+            int modes = 0;  // begins with *, ends with * (see hidden_tag_mode_t)
 
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = this->_memberof(pattern, i);
@@ -1452,6 +1502,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
             std::set<pair_t> visit;
             std::queue<pair_t> q;
 
+            // remember without duplicates
             auto enqueue = [&](trienode* node, size_t idx) -> void {
                 if (idx < size) {
                     pair_t p = {node, idx};
@@ -1484,11 +1535,12 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                     this->collect_results(node, i, result);
                     enqueue(node, i + 1);
 
-                    // case - sibling single/any
+                    // case - sibling single
                     if (current->flag & flag_single) {
                         auto single = current->children[_wildcard_single];
                         enqueue(single, i + 1);
                     }
+                    // case - sibling any
                     if (current->flag & flag_any) {
                         auto any = current->children[_wildcard_any];
                         while (any->flag & flag_any) {
@@ -1500,10 +1552,12 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                     // yield - case not t
                     auto fail = current->failure;
                     if (fail) {
+                        // case sibling single
                         if (fail->flag & flag_single) {
                             auto single = fail->children[_wildcard_single];
                             enqueue(single, i + 1);
                         }
+                        // case sibling any
                         if (fail->flag & flag_any) {
                             auto any = fail->children[_wildcard_any];
                             while (any->flag & flag_any) {
@@ -1519,14 +1573,17 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                         this->collect_results(single, i, result);
                         enqueue(single, i + 1);
                     }
+                    // case - not t but sibling any
                     if (current->flag & flag_any) {
                         enqueue(current, i + 1);
 
+                        // case - make multple * to one *
                         auto temp = current->children[_wildcard_any];
                         while (temp->flag & flag_any) {
                             temp = temp->children[_wildcard_any];
                         }
 
+                        // case - t after *
                         auto iter = temp->children.find(t);
                         if (temp->children.end() != iter) {
                             auto child = iter->second;
@@ -1625,49 +1682,14 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
     BT _wildcard_single;
     BT _wildcard_any;
 
-    /**
-     * sketch - starting position of wildcard * pattern
-     *
-     * "ahishers" as an input
-     * "h*h*e" as _patterns[0]
-     * "h" as _hidden[0] (pattern up to the first wildcard *)
-     *
-     *  1. computation
-     *
-     *    a) _pattern[0] ends at 5
-     *    b) _hidden[0] at [1, 4]
-     *    c) container [1, 4]
-     *       (1..5)[0] or (4..5)[0] ; represented as (start..end)[patternid]
-     *
-     *  ; figure
-     *       index    01234567
-     *       input    ahishers
-     *       pattern   h--he    see a) and c)
-     *       hidden    h  h     see b)
-     *
-     *  2. result
-     *  ; should be (1..5)[0] not (4..5)[0]
-     *    d) the stating position is earlier than the index 4 ('h')
-     *       d.1) pattern[0] at least 3 items occupied implicitly ("hhe")
-     *       d.2) adjust = lengthof(pattern) - lengthof(wildcard_any) = lengthof("h*h*e") - lengthof("**") = 5 - 2 = 3
-     *       d.3) set adjust into hidden_tag_t::adjust
-     *    e) so... find_lessthan_or_equal(container, pos - adjust + 1, wanted);
-     *       e.1) occurrence of pattern at pos (Aho-Corasick return the end position of a pattern)
-     *       e.2) find_lessthan_or_equal(container, 5 - 3 + 1, wanted)
-     *       e.3) find_lessthan_or_equal 3 in [1, 4]
-     *    f) starting position
-     *       wanted - lengthof(prefix) + 1 = 1 - 1 + 1 = 1
-     *       ; lengthof(_hidden[0]) = lengthof("h") = 1
-     *    g) finally result is (1..5)[0]
-     */
     enum hidden_tag_mode_t {
-        startswith_wildcard_any = (1 << 0),
-        endswith_wildcard_any = (1 << 1),
+        startswith_wildcard_any = (1 << 0),  // *pattern
+        endswith_wildcard_any = (1 << 1),    // pattern*
     };
     struct hidden_tag_t {
-        size_t size;
-        size_t adjust;
-        int modes;
+        size_t size;    // size of pattern
+        size_t adjust;  // see sketch.2
+        int modes;      // see doinsert, hidden_tag_mode_t
         hidden_tag_t() : size(0), adjust(0), modes(0) {}
         hidden_tag_t(size_t s) : size(s), adjust(0), modes(0) {}
         hidden_tag_t(size_t s, size_t adj) : size(s), adjust(adj), modes(0) {}
