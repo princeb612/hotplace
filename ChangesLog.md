@@ -1,3 +1,4 @@
+# history
 
 * Revision 595
   * [changed] substitute cmdline_t with t_cmdline_t
