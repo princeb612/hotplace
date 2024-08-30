@@ -1329,14 +1329,16 @@ class t_wildcards {
  *             it's so good to understand the Aho-Corasick algorithm
  *             dosearch reimplemented using queue (first design was based on simple-loop as referenced by t_aho_corasick)
  *          2. about the starting position
- *             in class t_aho_corasick, it is not really matter where the starting position is located.
+ *             in t_aho_corasick, it is not really matter where the starting position is located.
  *             starting position is (ending position) - (length of pattern) + 1
  *             but, starting position is very important to handle wildcard any*
  *          3. wildcard any(*) - the problem about the starting position
- *             see sketch.2 about the details
+ *             see sketch.2 for more details (_hidden is the key to the problem)
  *             after failing several times, search results includes range_t (see search/dosearch method)
  *             also added order_by_pattern member function (have shape-shifting overhead but is easy to search by pattern id)
  *             supplement some case about the endswith_wildcard_any and startswith_wildcard_any
+ *          4. comments
+ *             lambda enqueue - working with large data sets, may be able to reduce overhead by deleting data that is no longer accessed...
  *
  *          pattern
  *                  his her hers ?is h?r h*s

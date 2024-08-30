@@ -22,8 +22,11 @@
   * [added] crypto_advisor::query_feature
   * [added] crypto_advisor::at_least_openssl_version
 
+* Revision 590
+  * [changed] multiplexer_epoll
+
 * Revision 589
-  * [added] udp_server_socket
+  * [added] udp_server_socket based on IOCP
   * [changed] linux get_errno, get_eai_error integrated into get_lasterror
 
 * Revision 588
@@ -253,3 +256,111 @@
 
 * Revision 353
   * [added] hkdf_extract, hkdf_expand
+
+* Revision 348
+  * [changed] COSE RSA-OAEP
+
+* Revision 346
+  * [changed] AES CCM (openssl-1.1.1)
+
+* Revision 343
+  * [changed] COSE static_key, static_keyid
+
+* Revision 342
+  * [changed] COSE ECDH-ES using OKP
+
+* Revision 340
+  * [changed] COSE AES-CCM, AES-GCM
+
+* Revision 335
+  * [changed] RFC 8152 C.3.2 C.4.1 C.4.2 decryption
+
+* Revision 333
+  * [changed] RFC 8152 C.3.1 C.3.3 decryption
+
+* Revision 325
+  * [changed] RFC 8152 4.3 Externally Supplied Data
+
+* Revision 320
+  * [added] [COSE examples](https://github.com/cose-wg/Examples)
+
+* Revision 305
+  * [added] elliptic curves B-163, K-163, P-192 
+
+* Revision 303
+  * [changed] ECDSA NIST CAVP - tested (truncated sha)
+
+* Revision 302
+  * [added] elliptic curves K-233, K-283, K-409, K-571, B-233, B-283, B-409, B-571
+  * [changes] ECDSA NIST CAVP - tested
+
+* Revision 292
+  * [changed] RFC7520 5.10
+
+* Revision 289
+  * [changed] RFC7520 5.10, 5.11
+
+* Revision 287
+  * [added] JOSE deflate
+
+* Revision 286
+  * [changed] preserve leading zero (crypto_key)
+
+* Revision 283
+  * [changed] cose_sign1
+
+* Revision 262
+  * [added] kdf_argon2, kdf_argon2d, kdf_argon2i, kdf_argon2id
+
+* Revision 257
+  * [added] CMAC
+
+* Revision 249
+  * [changed] cbor_web_key
+
+* Revision 211
+  * [added] RFC 8152 examples (.cbor, .diag)
+
+* Revision 205
+  * [added] fp16_from_fp32, fp16_ieee_from_fp32_value, ieee754_format_as_small_as_possible
+
+* Revision 164
+  * [added] CCM (Block cipher mode of operation)
+
+* Revision 125
+  * [added] obfuscate_string, test_case_notimecheck
+
+* Revision 108
+  * [added] authenticode
+
+* Revision 107
+  * [added] CBOR
+
+* Revision 106
+  * [added] ODBC
+
+* Revision 101
+  * [changed] test_case::time_report
+
+* Revision 84
+  * [changed] network_session (windows fix)
+
+* Revision 38
+  * [added] HOTP, TOTP
+
+* Revision 34
+  * [changed] base64_encode
+
+* Revision 31
+  * [changed] rename hex2bin to base16
+
+* Revision 21
+  * [changed] precompiled header
+
+* Revision 9
+  * [changed] bufferio
+
+* Revision 5
+  * [added] t_shared_instance
+
+

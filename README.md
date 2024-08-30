@@ -17,6 +17,7 @@
    * HTTP/1.1,2,3 ![studying](https://img.shields.io/badge/studying-magenta)
    * ASN.1 ![studying](https://img.shields.io/badge/studying-magenta)
  * link
+   * [changelog](CHANGELOG.md)
    * [implemented](#implemented)
    * [applied](#applied)
    * [not applied](#not-applied)
