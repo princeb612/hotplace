@@ -36,7 +36,7 @@ typedef struct _OPTION {
         // do nothing
     }
 } OPTION;
-t_shared_instance<cmdline_t<OPTION>> _cmdline;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 return_t enum_modules_handler(uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* parameter) {
     switch (type) {
@@ -88,8 +88,8 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

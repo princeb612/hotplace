@@ -48,6 +48,8 @@ add_subdirectory (httptest)
 add_subdirectory (hpack)
 add_subdirectory (httpserver2)
 add_subdirectory (udpserver)
+add_subdirectory (udpserver2)
+add_subdirectory (dtlsserver)
 
 # odbc
 if (SUPPORT_ODBC)

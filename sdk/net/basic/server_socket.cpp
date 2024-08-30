@@ -23,7 +23,7 @@ tcp_server_socket::~tcp_server_socket() {
     // do nothing
 }
 
-return_t tcp_server_socket::listen(socket_t* sock, unsigned int family, uint16 port) {
+return_t tcp_server_socket::open(socket_t* sock, unsigned int family, uint16 port) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -197,13 +197,15 @@ return_t udp_server_socket::close(socket_t sock, tls_context_t* tls_handle) {
     return ret;
 }
 
-// return_t udp_server_socket::accept(socket_t sock, socket_t* clisock, struct sockaddr* addr, socklen_t* addrlen) {
-//     return_t ret = errorcode_t::success;
-//     return ret;
-// }
+return_t udp_server_socket::tls_listen(socket_t* sock, unsigned int family, uint16 port) {
+    return_t ret = errorcode_t::success;
+    // do nothing
+    return ret;
+}
 
 return_t udp_server_socket::tls_accept(socket_t clisock, tls_context_t** tls_handle) {
     return_t ret = errorcode_t::success;
+    // do nothing
     return ret;
 }
 

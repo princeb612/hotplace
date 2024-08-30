@@ -89,7 +89,7 @@ typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
  *      .set(netserver_config_t::serverconf_concurrent_network, 2)
  *      .set(netserver_config_t::serverconf_concurrent_consume, 2);
  *  network_multiplexer_context_t* handle = nullptr;
- *  netserver.open (&handle, AF_INET,  IPPROTO_TCP, PORT, &conf, NetworkRoutine, nullptr);
+ *  netserver.open (&handle, AF_INET, PORT, &conf, NetworkRoutine, nullptr);
  *  netserver.consumer_loop_run (handle, 2);
  *  netserver.event_loop_run (handle, 2);
  *
@@ -134,8 +134,8 @@ class network_server {
      * @brief   open
      * @param   network_multiplexer_context_t** handle              [OUT] handle
      * @param   unsigned int                    family              [IN] AF_INET for ipv4, AF_INET6 for ipv6
-     * @param   unsigned int                    type                [IN] ip protocol, IPPROTO_TCP(or IPPROTO_TCP)
      * @param   uint16                          port                [IN] port
+     * @param   tcp_server_socket*              svr_socket          [IN] socket layer (see also tcp_server_socket, tls_server_socket)
      * @param   server_conf*                    conf                [inopt]
      *
      *          serverconf_concurrent_event         default 1024
@@ -175,14 +175,15 @@ class network_server {
      *              data_array[1] sockaddr_storage_t*
      *
      * @param   void*               callback_param  [IN] callback parameter
-     * @param   tcp_server_socket*  svr_socket      [IN] socket layer (see also tcp_server_socket, tls_server_socket)
      * @return  error code (see error.hpp)
      * @remarks
      *          It'll be automatically created 1 tls_accept_thread, if server_socketis an instance of tls_server_socket class.
      *          see tls_accept_loop_run/tls_accept_loop_break
      */
-    return_t open(network_multiplexer_context_t** handle, unsigned int family, unsigned int type, uint16 port, server_conf* conf,
-                  TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param, tcp_server_socket* svr_socket);
+    return_t open(network_multiplexer_context_t** handle, unsigned int family, uint16 port, tcp_server_socket* svr_socket, server_conf* conf,
+                  TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param);
+    return_t open(network_multiplexer_context_t** handle, unsigned int family, uint16 port, udp_server_socket* svr_socket, server_conf* conf,
+                  TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param);
 
     /**
      * @brief   access control or handle tcp before tls upgrade

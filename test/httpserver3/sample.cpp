@@ -30,6 +30,10 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
+void run_server() {
+    // todo
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -45,7 +49,7 @@ int main(int argc, char** argv) {
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
 
-    // do something
+    run_server();
 
     _logger->flush();
 

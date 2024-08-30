@@ -36,7 +36,7 @@ typedef struct _OPTION {
     _OPTION() : port(8080), port_tls(9000), verbose(0) {}
 } OPTION;
 
-t_shared_instance<cmdline_t<OPTION>> _cmdline;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 t_shared_instance<http_server> _http_server;
 
 void api_response_html_handler(network_session *, http_request *request, http_response *response, http_router *router) {
@@ -226,10 +226,10 @@ int main(int argc, char **argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION &o, char *param) -> void { o.port = atoi(param); }).preced().optional()
-              << cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION &o, char *param) -> void { o.port_tls = atoi(param); }).preced().optional()
-              << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION &o, char *param) -> void { o.verbose = 1; }).optional();
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
+    *_cmdline << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION &o, char *param) -> void { o.port = atoi(param); }).preced().optional()
+              << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION &o, char *param) -> void { o.port_tls = atoi(param); }).preced().optional()
+              << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION &o, char *param) -> void { o.verbose = 1; }).optional();
 
     _cmdline->parse(argc, argv);
 

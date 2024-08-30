@@ -1,8 +1,9 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file {file}
- * @author Soo Han, Kim (princeb612.kr@gmail.com)
- * @desc
+ * @author  Soo Han, Kim (princeb612.kr@gmail.com)
+ * @desc    see etc/udpclient
+ * @sa      See in the following order : udpserver, udpserver2, dtlsserver
  *
  * Revision History
  * Date         Name                Description
@@ -58,7 +59,7 @@ typedef struct _OPTION {
         // do nothing
     }
 } OPTION;
-t_shared_instance<cmdline_t<OPTION>> _cmdline;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
@@ -214,9 +215,9 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-              << cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced();
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

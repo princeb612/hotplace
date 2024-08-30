@@ -108,7 +108,7 @@ return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, htt
             socket = &_server_socket;
         }
 
-        ret = get_network_server().open(&handle, family, IPPROTO_TCP, port, &get_server_conf(), &consume_routine, this, socket);
+        ret = get_network_server().open(&handle, family, port, socket, &get_server_conf(), &consume_routine, this);
         if (errorcode_t::success != ret) {
             __leave2;
         }

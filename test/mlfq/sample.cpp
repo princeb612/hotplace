@@ -72,7 +72,7 @@ return_t test_scenario::producer_scenario(void* parameter) {
     test_scenario* obj = (test_scenario*)parameter;
     int i = 0;
     for (i = 0; i < _test_loop; i++) {
-        return_t wait = obj->__producer_signal.wait(10);
+        return_t wait = obj->__producer_signal.wait(1);
         if (errorcode_t::success == wait) {
             break;
         }
@@ -93,7 +93,7 @@ return_t test_scenario::consumer_scenario(void* parameter) {
     test_scenario* obj = (test_scenario*)parameter;
 
     while (true) {
-        return_t wait = obj->__consumer_signal.wait(10);
+        return_t wait = obj->__consumer_signal.wait(1);
         if (errorcode_t::success == wait) {
             break;
         }
@@ -106,14 +106,14 @@ return_t test_scenario::consumer_scenario(void* parameter) {
             _logger->writeln("get  %d %d", pri, *data);
             fflush(stdout);
 
+            delete data;
+
             if (_test_loop == ++_test_count) {
                 _test_signal.signal();
             }
-
-            delete data;
         }
 
-        _test_sleep.wait(30); /* data variation */
+        _test_sleep.wait(3); /* data variation */
     }
     return 0;
 }

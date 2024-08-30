@@ -34,7 +34,7 @@ typedef struct _OPTION {
     _OPTION() : url("https://localhost:9000/"), mode(0), connect(0), verbose(0) {}
 } OPTION;
 
-t_shared_instance<cmdline_t<OPTION>> cmdline;
+t_shared_instance<t_cmdline_t<OPTION>> cmdline;
 
 void cprint(const char *text, ...) {
     console_color _concolor;
@@ -919,12 +919,12 @@ int main(int argc, char **argv) {
     openssl_startup();
     openssl_thread_setup();
 
-    cmdline.make_share(new cmdline_t<OPTION>);
+    cmdline.make_share(new t_cmdline_t<OPTION>);
 
-    *cmdline << cmdarg_t<OPTION>("-c", "connect", [&](OPTION &o, char *param) -> void { o.connect = 1; }).optional()
-             << cmdarg_t<OPTION>("-p", "read stream using http_protocol", [&](OPTION &o, char *param) -> void { o.mode = 1; }).optional()
-             << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
-             << cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/) feat. httpauth", [&](OPTION &o, char *param) -> void { o.url = param; })
+    *cmdline << t_cmdarg_t<OPTION>("-c", "connect", [&](OPTION &o, char *param) -> void { o.connect = 1; }).optional()
+             << t_cmdarg_t<OPTION>("-p", "read stream using http_protocol", [&](OPTION &o, char *param) -> void { o.mode = 1; }).optional()
+             << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
+             << t_cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/) feat. httpauth", [&](OPTION &o, char *param) -> void { o.url = param; })
                     .preced()
                     .optional();
 

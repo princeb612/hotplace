@@ -14,20 +14,14 @@ namespace hotplace {
 
 thread::thread(THREAD_CALLBACK_ROUTINE callback, void* param) : _tid(0), _callback(callback), _param(param) {}
 
-thread::~thread() {
-    if (_tid) {
-        // pthread_detach (_tid);
-        // pthread_join (_tid, nullptr);
-    }
-    // do nothing
-}
+thread::~thread() { join(); }
 
 void* thread::thread_routine(void* param) {
     thread* this_ptr = static_cast<thread*>(param);
 
     this_ptr->thread_routine_implementation();
 
-    // pthread_join (pthread_self (), nullptr);
+    pthread_exit(nullptr);
 
     return nullptr;
 }
@@ -41,7 +35,6 @@ return_t thread::start() {
     if (0 == _tid) {
         pthread_attr_t attr;
         pthread_attr_init(&attr);
-        // pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
         ret_value = pthread_create(&_tid, &attr, thread_routine, this);
         if (0 != ret_value) {
@@ -54,10 +47,7 @@ return_t thread::start() {
 
 return_t thread::join() {
     return_t ret = errorcode_t::success;
-
-    // wait
-    // pthread_join (tid, nullptr);
-    pthread_detach(_tid);
+    ret = wait(-1);
     return ret;
 }
 
@@ -65,12 +55,18 @@ return_t thread::wait(unsigned msec) {
     return_t ret = errorcode_t::success;
     int ret_value = 0;
 
+#if __GLIBC_MINOR >= 3
+#else
+    msec = -1;
+#endif
+
     if (_tid) {
         if ((unsigned)-1 == msec) {
-            ret_value = pthread_join(_tid, nullptr);
-            if (0 == ret_value) {
+            int rc = pthread_join(_tid, nullptr);
+            if (0 == rc) {
+                _tid = 0;
             } else {
-                ret = errorcode_t::failed;
+                ret = get_lasterror(rc);
             }
         } else {
 #if __GLIBC_MINOR >= 3
@@ -89,12 +85,12 @@ return_t thread::wait(unsigned msec) {
             dt.gettimespec(&ts);
 
             // glibc 2.3.3
-            ret_value = pthreadid_timedjoin_np(_tid, nullptr, &ts);
-            if (0 != ret_value) {
-                ret = errorcode_t::timeout;
+            int rc = pthreadid_timedjoin_np(_tid, nullptr, &ts);
+            if (0 == rc) {
+                _tid = 0;
+            } else {
+                ret = get_lasterror(rc);
             }
-#else
-            ret = errorcode_t::not_supported;
 #endif
         }
     }

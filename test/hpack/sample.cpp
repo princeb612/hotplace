@@ -30,7 +30,7 @@ typedef struct _OPTION {
     _OPTION() : verbose(0) {}
 } OPTION;
 
-t_shared_instance<cmdline_t<OPTION> > cmdline;
+t_shared_instance<t_cmdline_t<OPTION> > cmdline;
 t_shared_instance<hpack_encoder> encoder;
 t_shared_instance<huffman_coding> huffman_instance;
 
@@ -717,9 +717,9 @@ int main(int argc, char** argv) {
     openssl_startup();
     openssl_thread_setup();
 
-    cmdline.make_share(new cmdline_t<OPTION>);
+    cmdline.make_share(new t_cmdline_t<OPTION>);
 
-    *cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    *cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
     const OPTION& option = cmdline->value();

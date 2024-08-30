@@ -27,7 +27,7 @@ typedef struct _OPTION {
         // do nothing
     }
 } OPTION;
-t_shared_instance<cmdline_t<OPTION>> _cmdline;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 return_t thread_routine(void* param) {
     t_shared_instance<semaphore> mtx(_mutex);
@@ -72,7 +72,7 @@ void test_signalwait_threads() {
     _test_case.assert(true, __FUNCTION__, "msleep");
 
     _logger->writeln("send signal");
-    threads.signal();
+    threads.join();
 
     _logger->writeln("terminating all threads (running %zi)", threads.running());
     threads.signal_and_wait_all();
@@ -84,8 +84,8 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

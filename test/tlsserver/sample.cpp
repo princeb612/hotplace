@@ -27,15 +27,15 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
+    uint16 port;
 
-    _OPTION() : verbose(0) {
+    _OPTION() : verbose(0), port(9000) {
         // do nothing
     }
 } OPTION;
-t_shared_instance<cmdline_t<OPTION>> _cmdline;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 #define FILENAME_RUN _T (".run")
-#define PORT 9000
 
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
@@ -66,9 +66,12 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
 return_t echo_server(void*) {
     return_t ret = errorcode_t::success;
+    const OPTION& option = _cmdline->value();
+
     network_server netserver;
     network_multiplexer_context_t* handle_ipv4 = nullptr;
     network_multiplexer_context_t* handle_ipv6 = nullptr;
+    uint16 port = option.port;
 
     FILE* fp = fopen(FILENAME_RUN, "w");
 
@@ -101,8 +104,8 @@ return_t echo_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
 
         // start server
-        netserver.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, &conf, consume_routine, nullptr, tls_server);
-        netserver.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, &conf, consume_routine, nullptr, tls_server);
+        netserver.open(&handle_ipv4, AF_INET, port, tls_server, &conf, consume_routine, nullptr);
+        netserver.open(&handle_ipv6, AF_INET6, port, tls_server, &conf, consume_routine, nullptr);
         // netserver.add_protocol(handle_ipv4, http_prot);
 
         netserver.consumer_loop_run(handle_ipv4, 2);
@@ -161,8 +164,9 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

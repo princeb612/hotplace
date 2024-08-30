@@ -21,28 +21,30 @@ semaphore::~semaphore() {
     }
 }
 
-uint32 semaphore::signal() {
-    uint32 ret = errorcode_t::success;
+return_t semaphore::signal() {
+    return_t ret = errorcode_t::success;
     BOOL bRet = ::ReleaseSemaphore(_sem, 1, nullptr);
-
     if (FALSE == bRet) {
         ret = ::GetLastError();
     }
     return ret;
 }
 
-uint32 semaphore::wait(unsigned msec) {
-    uint32 ret = 0;
+return_t semaphore::wait(unsigned msec) {
+    return_t ret = errorcode_t::success;
     DWORD wait = ::WaitForSingleObject(_sem, msec);
 
     switch (wait) {
         case WAIT_OBJECT_0:
             break;
         case WAIT_TIMEOUT:
-            ret = 1;
+            ret = errorcode_t::timeout;
             break;
         case WAIT_FAILED:
-            ret = 2;
+            ret = GetLastError();
+            break;
+        case WAIT_ABANDONED:
+            ret = errorcode_t::abandoned;
             break;
     }
     return ret;

@@ -13,6 +13,7 @@
 
 #include <map>
 #include <sdk/base/system/critical_section.hpp>
+#include <sdk/base/system/semaphore.hpp>
 #include <sdk/base/system/thread.hpp>
 
 namespace hotplace {
@@ -80,7 +81,7 @@ class signalwait_threads {
     /**
      * @brief call (*signal_callback)(thread_param)
      */
-    void signal();
+    void join();
     /**
      * @brief stop all
      * @param   int     reserved    [INOPT] 0
@@ -113,7 +114,8 @@ class signalwait_threads {
      * @param threadid_t tid
      * @return error code (see error.hpp)
      */
-    return_t join(threadid_t tid);
+    return_t ready_to_join(threadid_t tid);
+    void join_signaled();
 
     size_t _capacity;                                             ///<< max number of concurrent thread
     SIGNALWAITTHREADS_CALLBACK_ROUTINE _thread_callback_routine;  ///<< thread
@@ -123,6 +125,8 @@ class signalwait_threads {
     typedef std::map<threadid_t, thread_info*> SIGNALWAITTHREADS_MAP;
     critical_section _lock;
     SIGNALWAITTHREADS_MAP _container;
+    SIGNALWAITTHREADS_MAP _readytojoin;
+    semaphore _sem;
 };
 
 }  // namespace hotplace

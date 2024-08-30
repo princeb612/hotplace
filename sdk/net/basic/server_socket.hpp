@@ -32,7 +32,7 @@ class tcp_server_socket {
      * @param   uint16          port            [IN]
      * @return  error code (see error.hpp)
      */
-    virtual return_t listen(socket_t* sock, unsigned int family, uint16 port);
+    virtual return_t open(socket_t* sock, unsigned int family, uint16 port);
     /**
      * @brief   close
      * @param   socket_t        sock            [IN]
@@ -123,14 +123,13 @@ class udp_server_socket {
     virtual return_t close(socket_t sock, tls_context_t* tls_handle);
 
     /**
-     * @brief   accept
-     * @param   socket_t        sock            [IN] listen socket
-     * @param   socket_t*       clisock         [OUT] client socket
-     * @param   struct sockaddr* addr           [OUT]
-     * @param   socklen_t*      addrlen         [IN]
+     * @brief   listen
+     * @param   socket_t*       sock            [OUT] listen socket
+     * @param   unsigned int    family          [IN] AF_INET, AF_INET6
+     * @param   uint16          port            [IN]
      * @return  error code (see error.hpp)
      */
-    // virtual return_t accept(socket_t sock, socket_t* clisock, struct sockaddr* addr, socklen_t* addrlen);
+    virtual return_t tls_listen(socket_t* sock, unsigned int family, uint16 port);
     /**
      * @brief   Tls accept
      * @param   socket_t        clisock         [IN] client socket

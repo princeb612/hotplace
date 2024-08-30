@@ -81,30 +81,43 @@ return_t signalwait_threads::create() {
     return ret;
 }
 
-void signalwait_threads::signal() {
-    if (nullptr != _signal_callback_routine) {
+void signalwait_threads::join() {
+    size_t run = running();
+    if (run && _signal_callback_routine) {
         (*_signal_callback_routine)(_thread_callback_param);
+        join_signaled();
+    }
+}
+
+void signalwait_threads::join_signaled() {
+    return_t ret = errorcode_t::success;
+    ret = _sem.wait(-1);
+    if (errorcode_t::success == ret) {
+        thread_info* thread_context = nullptr;
+        thread* thread = nullptr;
+
+        {
+            critical_section_guard guard(_lock);
+            if (_readytojoin.size()) {
+                auto iter = _readytojoin.begin();
+                thread_context = iter->second;
+                thread = thread_context->get_thread();
+                _readytojoin.erase(iter);
+            }
+        }
+
+        if (thread) {
+            thread->join();
+            delete thread;
+            delete thread_context;
+        }
     }
 }
 
 void signalwait_threads::signal_and_wait_all(int reserved) {
-    {
-        critical_section_guard guard(_lock);
-        int loop = _container.size();
-
-        for (int i = 0; i < loop; i++) {
-            signal();
-        }
-    }
-
-    size_t run = 0;
-    while (true) {
-        run = running();
-        if (!run) {
-            break;
-        }
-
-        msleep(10);
+    size_t loop = running();
+    for (auto i = 0; i < loop; i++) {
+        join();
     }
 }
 
@@ -136,38 +149,26 @@ return_t signalwait_threads::thread_routine_implementation(void* param) {
 
     _thread_callback_routine(_thread_callback_param);
 
-    join(thread_rt->get_thread()->gettid());
+    ready_to_join(thread_rt->get_thread()->gettid());
 
     return ret;
 }
 
-return_t signalwait_threads::join(threadid_t tid) {
+return_t signalwait_threads::ready_to_join(threadid_t tid) {
     return_t ret = errorcode_t::success;
 
-    thread_info* thread_rt = nullptr;
-    thread* thread = nullptr;
+    critical_section_guard guard(_lock);
 
-    {
-        critical_section_guard guard(_lock);
-
-        SIGNALWAITTHREADS_MAP::iterator iter = _container.find(tid);
-        if (_container.end() == iter) {
-            ret = errorcode_t::not_found;
-        } else {
-            thread_rt = iter->second;
-            thread = thread_rt->get_thread();
-
-            _container.erase(iter);
-        }
+    SIGNALWAITTHREADS_MAP::iterator iter = _container.find(tid);
+    if (_container.end() == iter) {
+        ret = errorcode_t::not_found;
+        throw ret;
+    } else {
+        _readytojoin.insert({iter->first, iter->second});
+        _container.erase(iter);
+        _sem.signal();
     }
 
-    if (thread) {
-        thread->join();  // valgrind pthread_create problem, so pthread_detach here
-        delete thread;   // delete a thread object
-    }
-    if (thread_rt) {
-        delete thread_rt;  // delete after a thread destroyed
-    }
     return ret;
 }
 

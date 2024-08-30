@@ -29,7 +29,7 @@ typedef struct _OPTION {
     _OPTION() : verbose(0) {}
 } OPTION;
 
-t_shared_instance<cmdline_t<OPTION> > cmdline;
+t_shared_instance<t_cmdline_t<OPTION> > cmdline;
 
 constexpr char asn1_structure[] =
     R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
@@ -500,9 +500,9 @@ int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
-    cmdline.make_share(new cmdline_t<OPTION>);
+    cmdline.make_share(new t_cmdline_t<OPTION>);
 
-    *cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    *cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
     const OPTION& option = cmdline->value();

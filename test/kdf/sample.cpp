@@ -22,12 +22,12 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
-    bool test_pbkdf2;
+    bool test_slow_kdf;
 
-    _OPTION() : verbose(0), test_pbkdf2(false) {}
+    _OPTION() : verbose(0), test_slow_kdf(false) {}
 } OPTION;
 
-t_shared_instance<cmdline_t<OPTION> > _cmdline;
+t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 void test_kdf_hkdf() {
     _test_case.begin("hkdf");
@@ -497,9 +497,9 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-              << cmdarg_t<OPTION>("-p", "test pbkdf2", [&](OPTION& o, char* param) -> void { o.test_pbkdf2 = true; }).optional();
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-s", "test slow pbkdf2/scrypt", [&](OPTION& o, char* param) -> void { o.test_slow_kdf = true; }).optional();
 
     _cmdline->parse(argc, argv);
 
@@ -516,11 +516,11 @@ int main(int argc, char** argv) {
         test_kdf_hkdf();
 
         // debugging problem (takes a long time), valgrind --tool=helgrind or --tool=drd ...
-        if (option.test_pbkdf2) {
+        if (option.test_slow_kdf) {
             test_kdf_pbkdf2_rfc6070();
             test_kdf_pbkdf2_rfc7914();
+            test_kdf_scrypt_rfc7914();
         }
-        test_kdf_scrypt_rfc7914();
         test_kdf_argon_rfc9106();
 
         test_kdf_extract_expand_rfc5869();

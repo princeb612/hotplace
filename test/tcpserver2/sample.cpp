@@ -24,15 +24,15 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
+    uint16 port;
 
-    _OPTION() : verbose(0) {
+    _OPTION() : verbose(0), port(9000) {
         // do nothing
     }
 } OPTION;
-t_shared_instance<cmdline_t<OPTION>> _cmdline;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 #define FILENAME_RUN _T (".run")
-#define PORT 9000
 
 ipaddr_acl acl;
 
@@ -70,10 +70,13 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
 return_t echo_server(void* param) {
     return_t ret = errorcode_t::success;
+    const OPTION& option = _cmdline->value();
+
     network_server network_server;
     network_multiplexer_context_t* handle_ipv4 = nullptr;
     network_multiplexer_context_t* handle_ipv6 = nullptr;
     tcp_server_socket svr_sock;
+    uint16 port = option.port;
 
     FILE* fp = fopen(FILENAME_RUN, "w");
 
@@ -90,8 +93,8 @@ return_t echo_server(void* param) {
             .set(netserver_config_t::serverconf_concurrent_network, 2)
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
 
-        network_server.open(&handle_ipv4, AF_INET, IPPROTO_TCP, PORT, &conf, consume_routine, nullptr, &svr_sock);
-        network_server.open(&handle_ipv6, AF_INET6, IPPROTO_TCP, PORT, &conf, consume_routine, nullptr, &svr_sock);
+        network_server.open(&handle_ipv4, AF_INET, port, &svr_sock, &conf, consume_routine, nullptr);
+        network_server.open(&handle_ipv6, AF_INET6, port, &svr_sock, &conf, consume_routine, nullptr);
 
         network_server.set_accept_control_handler(handle_ipv4, accept_handler);
         network_server.set_accept_control_handler(handle_ipv6, accept_handler);
@@ -130,7 +133,7 @@ return_t echo_server(void* param) {
     return ret;
 }
 
-void test1() {
+void run_server() {
     _test_case.begin("echo server");
 
     thread thread1(echo_server, nullptr);
@@ -145,8 +148,9 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -161,7 +165,7 @@ int main(int argc, char** argv) {
     openssl_startup();
     openssl_thread_setup();
 
-    test1();
+    run_server();
 
     openssl_thread_end();
     openssl_cleanup();

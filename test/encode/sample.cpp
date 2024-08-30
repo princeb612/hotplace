@@ -47,7 +47,7 @@ typedef struct _OPTION {
         }
     }
 } OPTION;
-t_shared_instance<cmdline_t<OPTION>> _cmdline;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 void test_base16() {
     return_t ret = errorcode_t::success;
@@ -305,17 +305,17 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    _cmdline.make_share(new cmdline_t<OPTION>);
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
 
     constexpr char constexpr_helpmsg_rfc[] = R"(encode base16 from rfc style expression ex. "[1,2,3,4,5]" or "01:02:03:04:05" or "01 02 03 04 05")";
 
-    (*_cmdline) << cmdarg_t<OPTION>("-b64u", "decode base64url", [&](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
-                << cmdarg_t<OPTION>("-b64", "decode base64", [&](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()
-                << cmdarg_t<OPTION>("-b16", "decode base16", [&](OPTION& o, char* param) -> void { o.set(decode_b16, param); }).preced().optional()
-                << cmdarg_t<OPTION>("-t", "plaintext", [&](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
-                << cmdarg_t<OPTION>("-rfc", constexpr_helpmsg_rfc, [&](OPTION& o, char* param) -> void { o.set(encode_b16_rfc, param); }).preced().optional()
-                << cmdarg_t<OPTION>("-out", "write to file", [&](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional()
-                << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    (*_cmdline) << t_cmdarg_t<OPTION>("-b64u", "decode base64url", [&](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-b64", "decode base64", [&](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-b16", "decode base16", [&](OPTION& o, char* param) -> void { o.set(decode_b16, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-t", "plaintext", [&](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-rfc", constexpr_helpmsg_rfc, [&](OPTION& o, char* param) -> void { o.set(encode_b16_rfc, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-out", "write to file", [&](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     _cmdret = _cmdline->parse(argc, argv);
 

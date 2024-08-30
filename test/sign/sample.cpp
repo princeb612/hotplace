@@ -30,7 +30,7 @@ typedef struct _OPTION {
         // do nothing
     }
 } OPTION;
-t_shared_instance<cmdline_t<OPTION> > _cmdline;
+t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 void test_hash_hmac_sign() {
     const OPTION& option = _cmdline->value();
@@ -189,9 +189,9 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    _cmdline.make_share(new cmdline_t<OPTION>);
-    *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = true; }).optional()
-              << cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = true; }).optional()
+              << t_cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

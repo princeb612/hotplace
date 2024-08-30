@@ -66,9 +66,9 @@ logger::logger() : _thread(nullptr), _run(true) {}
 logger::~logger() { clear(); }
 
 void logger::clear() {
-    critical_section_guard guard(_lock);
-
     stop_consumer();
+
+    critical_section_guard guard(_lock);
 
     flush();
 
@@ -87,8 +87,10 @@ void logger::start_consumer() {
 
 void logger::stop_consumer() {
     if (_thread) {
-        _run = false;
-        _thread->wait(-1);
+        {
+            critical_section_guard guard(_lock);
+            _run = false;
+        }
         _thread->join();
         delete _thread;
         _thread = nullptr;
@@ -103,7 +105,13 @@ return_t logger::consumer(void* param) {
         critical_section_guard guard(inst->_lock);
         interval = inst->_keyvalue.get(logger_t::logger_interval);
     }
-    while (inst->_run) {
+    while (1) {
+        {
+            critical_section_guard guard(inst->_lock);
+            if (false == inst->_run) {
+                break;
+            }
+        }
         inst->flush(true);
         msleep(interval);
     }

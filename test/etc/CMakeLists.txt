@@ -7,12 +7,12 @@
 #template
 set (module_start start)
 file (GLOB SOURCE_FILES_START start*.cpp)
-maketest (${module_start} SOURCE_FILES_START PROJECT_SDK_MODULE_DEPENDENCIES PROJECT_SDK_PLATFORM_DEPENDENCIES 1)
+maketest (${module_start} SOURCE_FILES_START PROJECT_SDK_MODULE_DEPENDENCIES PROJECT_SDK_PLATFORM_DEPENDENCIES 0)
 
 # c98 const char* variables
 set (module_varstring varstring)
 file (GLOB SOURCE_FILES_VARSTRING var*.cpp)
-maketest (${module_varstring} SOURCE_FILES_VARSTRING PROJECT_SDK_MODULE_DEPENDENCIES PROJECT_SDK_PLATFORM_DEPENDENCIES 1)
+maketest (${module_varstring} SOURCE_FILES_VARSTRING PROJECT_SDK_MODULE_DEPENDENCIES PROJECT_SDK_PLATFORM_DEPENDENCIES 0)
 
 set (module_tcpclient tcpclient)
 file (GLOB SOURCE_FILES_TCPCLIENT tcpclient.cpp)

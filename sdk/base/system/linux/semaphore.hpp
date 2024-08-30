@@ -29,13 +29,13 @@ class semaphore : public semaphore_t {
     /**
      * @brief signal
      */
-    virtual uint32 signal();
+    virtual return_t signal();
     /**
      * @brief wait
      *
      * @param unsigned msec [in]
      */
-    virtual uint32 wait(unsigned msec);
+    virtual return_t wait(unsigned msec);
 
    protected:
     sem_t _sem;

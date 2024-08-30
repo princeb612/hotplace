@@ -23,13 +23,13 @@ class semaphore_t {
     /**
      * @brief signal
      */
-    virtual uint32 signal() = 0;
+    virtual return_t signal() = 0;
     /**
      * @brief wait
      *
      * @param unsigned msec [in]
      */
-    virtual uint32 wait(unsigned msec) = 0;
+    virtual return_t wait(unsigned msec) = 0;
 };
 
 }  // namespace hotplace

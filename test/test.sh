@@ -38,6 +38,8 @@ for item in ${array[@]}; do
             option=
             if [ $tool = 'memcheck' ]; then
                 option='--leak-check=full --show-leak-kinds=all --track-origins=yes'
+            elif [ $tool = 'drd' ]; then
+                option='--read-var-info=yes'
             fi
             valgrind -v --tool=$tool $option --log-file=report-$tool $binary
             cat report-$tool

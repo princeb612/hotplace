@@ -235,6 +235,7 @@ const error_description error_descriptions[] = {
     errordef(error_bind, "bind"),
     errordef(error_send, "send"),
     errordef(error_recv, "recv"),
+    errordef(abandoned, "abandoned"),
     errordef(not_supported, "not supported"),
     errordef(low_security, "low security"),
     errordef(debug, "debug"),

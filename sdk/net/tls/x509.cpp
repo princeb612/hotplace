@@ -35,7 +35,7 @@ return_t x509_open_simple(uint32 flag, SSL_CTX** context) {
             method = SSLv23_method();
 #endif
         } else if (x509cert_flag_dtls == flag) {
-            method = DTLS_server_method();
+            method = DTLS_method();
         } else {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -48,17 +48,29 @@ return_t x509_open_simple(uint32 flag, SSL_CTX** context) {
         }
 
         long option_flags = 0;
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+
         /* 1.0.x defines SSL_OP_NO_SSLv2~SSL_OP_NO_TLSv1_1 */
 #ifndef SSL_OP_NO_TLSv1_2
 #define SSL_OP_NO_TLSv1_2 0x0
 #endif
+#ifndef SSL_OP_NO_DTLSv1
+#define SSL_OP_NO_DTLSv1 0x0
 #endif
-        /*
-         * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
-         * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
-         */
-        option_flags = (SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1); /* TLS 1.2 and above */
+#ifndef SSL_OP_NO_DTLSv1_2
+#define SSL_OP_NO_DTLSv1_2
+#endif
+
+        if (x509cert_flag_tls == flag) {
+            /*
+             * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+             * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
+             */
+            option_flags = (SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1); /* TLS 1.2 and above */
+        } else if (x509cert_flag_dtls == flag) {
+            option_flags = SSL_OP_NO_DTLSv1;
+            // SSL_CTX_set_cookie_generate_cb
+            // SSL_CTX_set_cookie_verify_cb
+        }
         SSL_CTX_set_options(ssl_ctx, option_flags);
         SSL_CTX_set_verify(ssl_ctx, 0, nullptr);
 

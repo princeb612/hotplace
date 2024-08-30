@@ -33,7 +33,7 @@ typedef struct _OPTION {
         // do nothing
     }
 } OPTION;
-t_shared_instance<cmdline_t<OPTION> > _cmdline;
+t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 return_t test1() {
     return_t ret = errorcode_t::success;
@@ -69,9 +69,9 @@ int main(int argc, char** argv) {
     openssl_startup();
 
     __try2 {
-        _cmdline.make_share(new cmdline_t<OPTION>);
-        *_cmdline << cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-                  << cmdarg_t<OPTION>("-i", "file", [](OPTION& o, char* param) -> void { o.infile = param; }).preced().optional();
+        _cmdline.make_share(new t_cmdline_t<OPTION>);
+        *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+                  << t_cmdarg_t<OPTION>("-i", "file", [](OPTION& o, char* param) -> void { o.infile = param; }).preced().optional();
         ret = _cmdline->parse(argc, argv);
         if (errorcode_t::success != ret) {
             _cmdline->help();
