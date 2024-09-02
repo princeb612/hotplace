@@ -9,9 +9,10 @@
  */
 
 #include <sdk/crypto.hpp>
-#include <sdk/io/basic/sdk.hpp>
+#include <sdk/io/system/socket.hpp>
 
 namespace hotplace {
+using namespace crypto;
 using namespace io;
 namespace net {
 
@@ -37,13 +38,12 @@ return_t tls_connect(socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio) {
 
             /*
              * openssl-1.0.1i
-             * 1) blocking io 방식에서 SSL_connect 멈추는 현상 발생
-             *    -> non-blocking io 방식으로 변경
+             * 1) SSL_connect block issue, make SSL_connect non-blocking
              * 2) SSL_connect crash
              *    ; X509_LOOKUP_by_subject 에서 발생
-             *      X509_LOOKUP *lu; // 초기화되지 않음
-             *      lu=sk_X509_LOOKUP_value(ctx->get_cert_methods,i); // sk_X509_LOOKUP_value 실패시 잘못된 주소 공간
-             *      j=X509_LOOKUP_by_subject(lu,type,name,&stmp); // crash 발생
+             *      X509_LOOKUP *lu; // uninitialized
+             *      lu=sk_X509_LOOKUP_value(ctx->get_cert_methods,i); // if sk_X509_LOOKUP_value fails
+             *      j=X509_LOOKUP_by_subject(lu,type,name,&stmp); // crash
              */
             try {
                 int ret_connect = 0;
@@ -88,6 +88,64 @@ return_t tls_connect(socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio) {
         // do nothing
     }
 
+    return ret;
+}
+
+return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, socklen_t addrlen) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        size_t socklen4 = sizeof(struct sockaddr_in);
+        size_t socklen6 = sizeof(struct sockaddr_in6);
+
+        if ((nullptr == bio_addr) || (nullptr == sockaddr) || (addrlen < socklen4)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto family = BIO_ADDR_family(bio_addr);
+        struct sockaddr_in* addr4 = (struct sockaddr_in*)sockaddr;
+        addr4->sin_family = family;
+        switch (family) {
+            case AF_INET: {
+                BIO_ADDR_rawaddress(bio_addr, &addr4->sin_addr, nullptr);
+                addr4->sin_port = BIO_ADDR_rawport(bio_addr);
+            } break;
+            case AF_INET6:
+                if (addrlen >= socklen6) {
+                    struct sockaddr_in6* addr6 = (struct sockaddr_in6*)sockaddr;
+                    BIO_ADDR_rawaddress(bio_addr, &addr6->sin6_addr, nullptr);
+                    addr6->sin6_port = BIO_ADDR_rawport(bio_addr);
+                } else {
+                    ret = errorcode_t::insufficient_buffer;
+                }
+                break;
+            default:
+                ret = errorcode_t::unknown;
+                break;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t SSL_to_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t addrlen) {
+    return_t ret = errorcode_t::success;
+    BIO_ADDR* bio_addr = nullptr;
+    __try2 {
+        if ((nullptr == ssl) || (nullptr == sockaddr)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        BIO_dgram_get_peer(SSL_get_rbio(ssl), bio_addr);
+        BIO_ADDR_to_sockaddr(bio_addr, sockaddr, addrlen);
+    }
+    __finally2 {
+        if (bio_addr) {
+            BIO_ADDR_free(bio_addr);
+        }
+    }
     return ret;
 }
 

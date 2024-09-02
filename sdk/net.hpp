@@ -18,9 +18,11 @@
 #include <sdk/net/types.hpp>
 
 /* basic */
-#include <sdk/net/basic/client_socket.hpp>
 #include <sdk/net/basic/ipaddr_acl.hpp>
-#include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/basic/tcp_client_socket.hpp>
+#include <sdk/net/basic/tcp_server_socket.hpp>
+#include <sdk/net/basic/udp_client_socket.hpp>
+#include <sdk/net/basic/udp_server_socket.hpp>
 
 /* http */
 #include <sdk/net/http/html_documents.hpp>
@@ -62,10 +64,12 @@
 #include <sdk/net/server/network_stream.hpp>
 
 /* TLS */
+#include <sdk/net/tls/dtls_client_socket.hpp>
+#include <sdk/net/tls/dtls_server_socket.hpp>
 #include <sdk/net/tls/sdk.hpp>
 #include <sdk/net/tls/tls.hpp>
-#include <sdk/net/tls/tls_client.hpp>
-#include <sdk/net/tls/tls_server.hpp>
+#include <sdk/net/tls/tls_client_socket.hpp>
+#include <sdk/net/tls/tls_server_socket.hpp>
 #include <sdk/net/tls/x509.hpp>
 
 #endif

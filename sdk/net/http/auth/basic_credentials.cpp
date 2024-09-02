@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+ *  RFC 7617 The 'Basic' HTTP Authentication Scheme
  *
  * Revision History
  * Date         Name                Description
@@ -21,6 +23,7 @@ namespace net {
 basic_credentials::basic_credentials() {}
 
 basic_credentials& basic_credentials::add(const std::string& username, const std::string& password) {
+    // RFC 2617 2 Basic Authentication Scheme
     basic_stream bs;
     bs << username << ":" << password;
 

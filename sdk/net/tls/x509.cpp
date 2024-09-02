@@ -8,14 +8,38 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/binary.hpp>
 #include <sdk/crypto.hpp>
 #include <sdk/io.hpp>
 #include <sdk/net/tls/x509.hpp>
 #include <sdk/nostd.hpp>
 
 namespace hotplace {
+using namespace crypto;
 using namespace io;
 namespace net {
+
+static int set_cookie_generate_callback_routine(SSL* ssl, unsigned char* cookie, unsigned int* cookie_len) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    binary_t bin;
+    unsigned cookie_size = 16;
+    advisor->get_cookie_secret(0, cookie_size, bin);
+    memcpy(cookie, &bin[0], cookie_size);
+    *cookie_len = cookie_size;
+    return 1;
+}
+
+static int set_cookie_verify_callback_routine(SSL* ssl, const unsigned char* cookie, unsigned int cookie_len) {
+    int ret = 0;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    binary_t bin;
+    unsigned cookie_size = 16;
+    advisor->get_cookie_secret(0, cookie_size, bin);
+    if ((cookie_len == cookie_size) && (cookie_len == bin.size()) && (0 == memcmp(cookie, &bin[0], cookie_len))) {
+        ret = 1;
+    }
+    return ret;
+}
 
 return_t x509_open_simple(uint32 flag, SSL_CTX** context) {
     return_t ret = errorcode_t::success;
@@ -68,8 +92,8 @@ return_t x509_open_simple(uint32 flag, SSL_CTX** context) {
             option_flags = (SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1); /* TLS 1.2 and above */
         } else if (x509cert_flag_dtls == flag) {
             option_flags = SSL_OP_NO_DTLSv1;
-            // SSL_CTX_set_cookie_generate_cb
-            // SSL_CTX_set_cookie_verify_cb
+            SSL_CTX_set_cookie_generate_cb(ssl_ctx, &set_cookie_generate_callback_routine);
+            SSL_CTX_set_cookie_verify_cb(ssl_ctx, &set_cookie_verify_callback_routine);
         }
         SSL_CTX_set_options(ssl_ctx, option_flags);
         SSL_CTX_set_verify(ssl_ctx, 0, nullptr);

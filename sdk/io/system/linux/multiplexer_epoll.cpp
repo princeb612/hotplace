@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include <sdk/io/system/multiplexer.hpp>
+#include <sdk/io/system/socket.hpp>
 
 namespace hotplace {
 namespace io {
@@ -207,10 +208,9 @@ return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle
             __leave2;
         }
 
-        int optval = 0;
-        socklen_t optlen = sizeof(optval);
-        getsockopt(listenfd, SOL_SOCKET, SO_TYPE, (char*)&optval, &optlen);
-        bool is_udp = (SOCK_DGRAM == optval);
+        int socktype = 0;
+        typeof_socket((socket_t)listenfd, socktype);
+        bool is_dgram = (SOCK_DGRAM == socktype);
 
         while (true) {
             bool ret_event_loop_test_broken = controller.event_loop_test_broken(context->handle_controller, token_handle);
@@ -239,7 +239,7 @@ return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle
                 data_vector[1] = (void*)(arch_t)context->events[i].data.fd;
 
                 if (context->events[i].data.fd == listenfd) {
-                    multiplexer_event_type_t type = (is_udp ? multiplexer_event_type_t::mux_read : multiplexer_event_type_t::mux_connect);
+                    multiplexer_event_type_t type = (is_dgram ? multiplexer_event_type_t::mux_dgram : multiplexer_event_type_t::mux_connect);
                     event_callback_routine(type, 2, data_vector, &callback_control, parameter);
                 } else if (context->events[i].events & EPOLLIN) {
                     event_callback_routine(multiplexer_event_type_t::mux_read, 2, data_vector, &callback_control, parameter);

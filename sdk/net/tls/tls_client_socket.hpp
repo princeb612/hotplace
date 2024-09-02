@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSCLIENT__
-#define __HOTPLACE_SDK_NET_TLS_TLSCLIENT__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLSCLIENTSOCKET__
+#define __HOTPLACE_SDK_NET_TLS_TLSCLIENTSOCKET__
 
-#include <sdk/net/basic/client_socket.hpp>
+#include <sdk/net/basic/tcp_client_socket.hpp>
 #include <sdk/net/tls/tls.hpp>
 #include <sdk/net/tls/x509.hpp>
 

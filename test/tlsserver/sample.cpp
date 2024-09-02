@@ -80,7 +80,7 @@ return_t echo_server(void*) {
     SSL_CTX* x509 = nullptr;
     // http_protocol* http_prot = nullptr;
     transport_layer_security* tls = nullptr;
-    tls_server_socket* tls_server = nullptr;
+    tls_server_socket* tls_socket = nullptr;
 
     __try2 {
         // part of ssl certificate
@@ -95,7 +95,7 @@ return_t echo_server(void*) {
 
         __try_new_catch(tls, new transport_layer_security(x509), ret, __leave2);
         //__try_new_catch (http_prot, new http_protocol, ret, __leave2);
-        __try_new_catch(tls_server, new tls_server_socket(tls), ret, __leave2);
+        __try_new_catch(tls_socket, new tls_server_socket(tls), ret, __leave2);
 
         server_conf conf;
         conf.set(netserver_config_t::serverconf_concurrent_event, 1024)  // concurrent (linux epoll concerns, windows ignore)
@@ -104,8 +104,8 @@ return_t echo_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
 
         // start server
-        netserver.open(&handle_ipv4, AF_INET, port, tls_server, &conf, consume_routine, nullptr);
-        netserver.open(&handle_ipv6, AF_INET6, port, tls_server, &conf, consume_routine, nullptr);
+        netserver.open(&handle_ipv4, AF_INET, port, tls_socket, &conf, consume_routine, nullptr);
+        netserver.open(&handle_ipv6, AF_INET6, port, tls_socket, &conf, consume_routine, nullptr);
         // netserver.add_protocol(handle_ipv4, http_prot);
 
         netserver.consumer_loop_run(handle_ipv4, 2);
@@ -139,7 +139,7 @@ return_t echo_server(void*) {
         netserver.close(handle_ipv6);
 
         // http_prot->release ();
-        tls_server->release();
+        tls_socket->release();
         tls->release();
         SSL_CTX_free(x509);
     }
@@ -147,7 +147,7 @@ return_t echo_server(void*) {
     return ret;
 }
 
-void test_tlsserver() {
+void run_server() {
     thread thread1(echo_server, nullptr);
     return_t ret = errorcode_t::success;
 
@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
     openssl_startup();
     openssl_thread_setup();
 
-    test_tlsserver();
+    run_server();
 
     openssl_thread_end();
     openssl_cleanup();

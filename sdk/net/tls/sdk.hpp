@@ -26,6 +26,16 @@ namespace net {
  */
 return_t tls_connect(socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio);
 
+/**
+ * @brief   BIO_ADDR*
+ */
+return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, socklen_t addrlen);
+/**
+ * @brief   BIO_ADDR*
+ * @remarks BIO_dgram_get_peer(ssl)
+ */
+return_t SSL_to_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t addrlen);
+
 }  // namespace net
 }  // namespace hotplace
 

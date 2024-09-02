@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *          OVERLAPPED
  *
  * Revision History
  * Date         Name                Description
@@ -12,7 +13,8 @@
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 
 #include <sdk/io.hpp>
-#include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/basic/tcp_server_socket.hpp>
+#include <sdk/net/basic/udp_server_socket.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>
 #include <sdk/net/server/network_protocol.hpp>
@@ -25,10 +27,11 @@ namespace net {
 
 /* windows overlapped */
 #if defined _WIN32 || defined _WIN64
+// assign per socket
 typedef struct _net_session_wsabuf_t {
     OVERLAPPED overlapped;
     WSABUF wsabuf;
-    char buffer[1 << 10];
+    char buffer[1 << 7];
 
     _net_session_wsabuf_t() {
         memset(&overlapped, 0, sizeof(OVERLAPPED));
@@ -39,19 +42,18 @@ typedef struct _net_session_wsabuf_t {
 
 typedef struct _net_session_wsabuf_pair_t {
     net_session_wsabuf_t r;
-    net_session_wsabuf_t w;
+    // net_session_wsabuf_t w;
 } net_session_wsabuf_pair_t;
 
 #endif
 
 typedef struct _net_session_socket_t {
-    handle_t cli_socket;
+    handle_t event_socket;
     sockaddr_storage_t cli_addr;  // both ipv4 and ipv6
 
-    _net_session_socket_t() : cli_socket((handle_t)INVALID_SOCKET) {}
+    _net_session_socket_t() : event_socket((handle_t)INVALID_SOCKET) {}
 } net_session_socket_t;
 
-class tcp_server_socket;
 typedef struct _net_session_t {
     net_session_socket_t netsock;
     void* mplexer_handle;
@@ -59,10 +61,10 @@ typedef struct _net_session_t {
 #if defined _WIN32 || defined _WIN64
     net_session_wsabuf_pair_t wsabuf_pair;
 #elif defined __linux__
-    char buffer[1 << 10];
+    char buffer[1 << 7];
 #endif
 
-    tcp_server_socket* svr_socket;
+    server_socket* svr_socket;
     tls_context_t* tls_handle;
     int priority;
     reference_counter refcount;
@@ -86,18 +88,22 @@ class network_session {
     friend class network_server;
 
    public:
-    network_session(tcp_server_socket* svr_socket);
+    network_session(server_socket* svr_socket);
     virtual ~network_session();
 
     /**
      * @brief   connect handler
-     * @param   handle_t            client_socket   [IN]
-     * @param   sockaddr_storage_t* sockaddr        [IN]
-     * @param   tls_context_t*      tls_handle      [IN]
+     * @param   handle_t            event_socket  [IN]
+     * @param   sockaddr_storage_t* sockaddr    [IN]
+     * @param   tls_context_t*      tls_handle  [IN]
      * @return  error code (see error.hpp)
      * @remarks copy socket and address
      */
-    return_t connected(handle_t client_socket, sockaddr_storage_t* sockaddr, tls_context_t* tls_handle);
+    return_t connected(handle_t event_socket, sockaddr_storage_t* sockaddr, tls_context_t* tls_handle);
+    /**
+     * @brief   handle udp data without cookie secret
+     */
+    return_t dgram_start(handle_t listen_sock);
     /**
      * @brief in windows call wsarecv to read asynchronously
      * @return  error code (see error.hpp)
@@ -152,9 +158,10 @@ class network_session {
      * @param   t_mlfq<network_session>*    q               [IN]
      * @param   byte_t*                     buf_read        [IN]
      * @param   size_t                      size_buf_read   [IN]
+     * @param   const sockaddr_storage_t*   addr            [inopt]
      * @remarks
      */
-    return_t produce(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read);
+    return_t produce(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr = nullptr);
     /**
      * @brief consume from stream and put into request, then read stream buffer list from request
      * @param   network_protocol_group* protocol_group              [IN]
@@ -162,7 +169,7 @@ class network_session {
      */
     return_t consume(network_protocol_group* protocol_group, network_stream_data** ptr_network_stream_buffer);
 
-    tcp_server_socket* get_server_socket();
+    server_socket* get_server_socket();
     network_session_data* get_session_data();
     http2_session& get_http2_session();
 
@@ -192,55 +199,113 @@ class network_session_manager {
 
     /**
      * @brief   new network_session
-     * @param   handle_t            client_socket       [IN]
-     * @param   sockaddr_storage_t* sockaddr            [IN]
-     * @param   tcp_server_socket*  svr_socket          [IN]
-     * @param   tls_context_t*      tls_handle          [IN]
+     * @param   handle_t            event_socket      [IN]
+     * @param   sockaddr_storage_t* sockaddr        [IN]
+     * @param   server_socket*      svr_socket      [IN]
+     * @param   tls_context_t*      tls_handle      [IN]
      * @param   network_session**   ptr_session_object  [OUT] use release to free
      * @return  error code (see error.hpp)
      */
-    return_t connected(handle_t client_socket, sockaddr_storage_t* sockaddr, tcp_server_socket* svr_socket, tls_context_t* tls_handle,
+    return_t connected(handle_t event_socket, sockaddr_storage_t* sockaddr, server_socket* svr_socket, tls_context_t* tls_handle,
                        network_session** ptr_session_object);
     /**
+     * @brief   handle udp data without cookie secret
+     */
+    return_t dgram_start(handle_t listen_sock, server_socket* svr_socket, tls_context_t* tls_handle, network_session** ptr_session_object);
+    /**
+     * @brief   handle udp data with cookie secret
+     * @remarks TODO
+     */
+    return_t dtls_start(handle_t listen_sock);
+    /**
      * @brief   find a network session
-     * @param   handle_t            client_socket       [IN]
+     * @param   handle_t            event_socket          [IN]
      * @param   network_session**   ptr_session_object  [OUT] referenced, call release
      * @return  error code (see error.hpp)
      * @example
-     *          network_session* session = session_manager.find (client_socket);
+     *          network_session* session = session_manager.find (event_socket);
      *          if (nullptr != session)
      *          {
      *              session->release (); // decrease reference counter
      *          }
      */
-    return_t find(handle_t client_socket, network_session** ptr_session_object);
+    return_t find(handle_t event_socket, network_session** ptr_session_object);
     /**
      * @brief   operator[socket]
      * @return  error code (see error.hpp)
      * @remarks
      * @example
-     *          network_session* session = session_manager[client_socket];
+     *          network_session* session = session_manager[event_socket];
      *          if (nullptr != session)
      *          {
      *              session->release (); // decrease reference counter
      *          }
      */
-    network_session* operator[](handle_t client_socket);
+    network_session* operator[](handle_t event_socket);
     /**
      * @brief   remove from session list
-     * @param   handle_t            client_socket       [IN]
+     * @param   handle_t            event_socket          [IN]
      * @param   network_session**   ptr_session_object  [OUT]
      * @return  error code (see error.hpp)
      */
-    return_t ready_to_close(handle_t client_socket, network_session** ptr_session_object);
+    return_t ready_to_close(handle_t event_socket, network_session** ptr_session_object);
 
    protected:
+    void shutdown();
+
     typedef std::map<handle_t, network_session*> network_session_map_t;
     typedef std::pair<network_session_map_t::iterator, bool> network_session_map_pib_t;
 
     critical_section _session_lock;
     network_session_map_t _session_map;
 };
+
+/* windows overlapped */
+#if defined _WIN32 || defined _WIN64
+typedef struct _net_dgram_wsabuf_t {
+    OVERLAPPED overlapped;
+    WSABUF wsabuf;
+    char buffer[1 << 16];
+
+    _net_dgram_wsabuf_t() { init(); }
+    void init() {
+        memset(&overlapped, 0, sizeof(OVERLAPPED));
+        wsabuf.len = RTL_NUMBER_OF(buffer);
+        wsabuf.buf = buffer;
+    }
+} net_dgram_wsabuf_t;
+
+typedef struct _net_dgram_wsabuf_pair_t {
+    net_dgram_wsabuf_t r;
+    // net_session_wsabuf_t w;
+} net_dgram_wsabuf_pair_t;
+
+#endif
+
+typedef struct _net_dgram_socket_t {
+    handle_t listen_sock;
+    sockaddr_storage_t cli_addr;  // both ipv4 and ipv6
+
+    _net_dgram_socket_t() : listen_sock((handle_t)INVALID_SOCKET) {}
+} net_dgram_socket_t;
+
+typedef struct _net_dgram_t {
+    net_dgram_socket_t netsock;
+    void* mplexer_handle;
+
+#if defined _WIN32 || defined _WIN64
+    net_dgram_wsabuf_pair_t wsabuf_pair;
+#elif defined __linux__
+    char buffer[1 << 16];
+#endif
+
+    server_socket* svr_socket;
+    tls_context_t* tls_handle;
+    int priority;
+    // reference_counter refcount;
+
+    _net_dgram_t() : mplexer_handle(nullptr), svr_socket(nullptr), tls_handle(nullptr), priority(0) {}
+} net_dgram_t;
 
 }  // namespace net
 }  // namespace hotplace

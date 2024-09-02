@@ -111,6 +111,9 @@ return_t unescape_url(const char* url, stream_t* s) {
     return ret;
 }
 
+// RFC 2068 3.2 Uniform Resource Identifiers
+// 3.2.1 General Syntax
+// 3.2.2 http URL
 return_t split_url(const char* src, url_info_t* info) {
     return_t ret = errorcode_t::success;
 

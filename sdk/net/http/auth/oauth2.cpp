@@ -3,7 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *  RFC 6749 OAuth 2.0
+ *  RFC 6749 The OAuth 2.0 Authorization Framework
  *
  * Revision History
  * Date         Name                Description
@@ -40,6 +40,10 @@ oauth2_authorization_code_grant_provider::~oauth2_authorization_code_grant_provi
 
 void oauth2_authorization_code_grant_provider::authorization_handler(network_session* session, http_request* request, http_response* response,
                                                                      http_router* router) {
+    // 4.1. Authorization Code Grant
+    // 4.1.1.  Authorization Request
+    // 4.1.2.  Authorization Response
+
     skey_value& kv = request->get_http_uri().get_query_keyvalue();
 
     std::string client_id = kv.get("client_id");
@@ -70,6 +74,10 @@ void oauth2_authorization_code_grant_provider::authorization_handler(network_ses
 }
 
 void oauth2_authorization_code_grant_provider::token_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
+    // 4.1. Authorization Code Grant
+    // 4.1.3.  Access Token Request
+    // 4.1.4.  Access Token Response
+
     skey_value& kv = request->get_http_uri().get_query_keyvalue();
     basic_stream body;
     json_t* root = nullptr;
@@ -88,6 +96,7 @@ void oauth2_authorization_code_grant_provider::token_handler(network_session* se
         std::string code = kv.get("code");
         return_t test = router->get_authenticate_resolver().get_oauth2_credentials().verify_grant_code(code);
         if (errorcode_t::success == test) {
+            // 5.1.  Successful Response
             router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, kv.get("client_id"), expire);
             response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
 
@@ -97,6 +106,7 @@ void oauth2_authorization_code_grant_provider::token_handler(network_session* se
             json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
             json_object_set_new(root, "example_parameter", json_string("example_value"));
         } else {
+            // 5.2.  Error Response
             json_object_set_new(root, "error", json_string("invalid_request"));
         }
     }
@@ -109,7 +119,7 @@ void oauth2_authorization_code_grant_provider::token_handler(network_session* se
             }
             json_decref(root);
         } else {
-            body << "{\"error\":\"server_error\"}";
+            body << R"({"error":"server_error"})";
         }
     }
 
@@ -127,6 +137,10 @@ oauth2_implicit_grant_provider::oauth2_implicit_grant_provider() : oauth2_grant_
 oauth2_implicit_grant_provider::~oauth2_implicit_grant_provider() {}
 
 void oauth2_implicit_grant_provider::authorization_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
+    // 4.2. Implicit Grant
+    // 4.2.1.  Authorization Request
+    // 4.2.2.  Access Token Response
+
     skey_value& kv = request->get_http_uri().get_query_keyvalue();
 
     std::string client_id = kv.get("client_id");
@@ -166,6 +180,11 @@ oauth2_resource_owner_password_credentials_grant_provider::~oauth2_resource_owne
 
 void oauth2_resource_owner_password_credentials_grant_provider::token_handler(network_session* session, http_request* request, http_response* response,
                                                                               http_router* router) {
+    // 4.3.  Resource Owner Password Credentials Grant
+    // 4.3.1.  Authorization Request and Response
+    // 4.3.2.  Access Token Request
+    // 4.3.3.  Access Token Response
+
     skey_value& kv = request->get_http_uri().get_query_keyvalue();
     basic_stream body;
     json_t* root = nullptr;
@@ -186,6 +205,7 @@ void oauth2_resource_owner_password_credentials_grant_provider::token_handler(ne
 
         bool test = router->get_authenticate_resolver().get_custom_credentials().verify(nullptr, username, password);
         if (test) {
+            // 5.1.  Successful Response
             router->get_authenticate_resolver().get_oauth2_credentials().grant(access_token, refresh_token, kv.get("client_id"), expire);
             response->get_http_header().clear().add("Cache-Control", "no-store").add("Pragma", "no-cache");
 
@@ -195,6 +215,7 @@ void oauth2_resource_owner_password_credentials_grant_provider::token_handler(ne
             json_object_set_new(root, "refresh_token", json_string(refresh_token.c_str()));
             json_object_set_new(root, "example_parameter", json_string("example_value"));
         } else {
+            // 5.2.  Error Response
             json_object_set_new(root, "error", json_string("access_denied"));
         }
     }
@@ -207,7 +228,7 @@ void oauth2_resource_owner_password_credentials_grant_provider::token_handler(ne
             }
             json_decref(root);
         } else {
-            body << "{\"error\":\"server_error\"}";
+            body << R"({"error":"server_error"})";
         }
     }
 
@@ -223,6 +244,11 @@ oauth2_client_credentials_grant_provider::oauth2_client_credentials_grant_provid
 oauth2_client_credentials_grant_provider::~oauth2_client_credentials_grant_provider() {}
 
 void oauth2_client_credentials_grant_provider::token_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
+    // 4.4.  Client Credentials Grant
+    // 4.4.1.  Authorization Request and Response
+    // 4.4.2.  Access Token Request
+    // 4.4.3.  Access Token Response
+
     skey_value& kv = request->get_http_uri().get_query_keyvalue();
     basic_stream body;
     json_t* root = nullptr;
@@ -256,7 +282,7 @@ void oauth2_client_credentials_grant_provider::token_handler(network_session* se
             }
             json_decref(root);
         } else {
-            body << "{\"error\":\"server_error\"}";
+            body << R"({"error":"server_error"})";
         }
     }
 
@@ -308,7 +334,7 @@ void oauth2_unsupported_provider::token_handler(network_session* session, http_r
             }
             json_decref(root);
         } else {
-            body << "{\"error\":\"server_error\"}";
+            body << R"({"error":"server_error"})";
         }
     }
 

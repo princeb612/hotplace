@@ -566,7 +566,7 @@ void test_digest_access_authentication(const char *alg = nullptr, unsigned long 
         ret = test_resolver("user", "password");
         _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Digest Access Authentication Scheme (positive case) algorithm=%s", alg ? alg : "");
     } else {
-        _test_case.test(errorcode_t::not_supported, __FUNCTION__, "%s require openssl-3.0");
+        _test_case.test(errorcode_t::not_supported, __FUNCTION__, "require OpenSSL_version_num %08x", *ossl_minver);
     }
 }
 
@@ -604,7 +604,7 @@ void test_rfc_digest_example() {
 
     http_request request;
 
-    // RFC 2617 "Circle Of Life"
+    // RFC 2617 3.5 Example "Circle Of Life"
     {
         digest_access_authentication_provider provider("testrealm@host.com");
         const char *value = R"(Digest username="Mufasa", realm="testrealm@host.com", nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
@@ -650,6 +650,7 @@ void test_rfc_digest_example() {
     //    select user from digest_credentials where username = '<valueof_username>';
 
 #if 0
+    // RFC 7616 3.9.2.  Example with SHA-512-256, Charset, and Userhash
     // part of SHA-512-256
     {
         // result mismatch ... what I missed ??

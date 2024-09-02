@@ -1,4 +1,4 @@
-## CBOR
+## RFC 8949 CBOR Appendix A.  Examples of Encoded CBOR Data Items
 
    | Diagnostic                   | Encoded                            |
    |--                            |--                                  |

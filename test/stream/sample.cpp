@@ -266,7 +266,7 @@ void test_vprintf() {
 
     _test_case.test(ret, __FUNCTION__, "vprintf (Ts... args)");
 #else
-    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "skip c++14");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "at least c++14 required");
 #endif
 }
 

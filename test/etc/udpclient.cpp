@@ -62,8 +62,10 @@ void client() {
 
         size_t cbread = 0;
         ret = cli.read(sock, nullptr, buffer, BUFFER_SIZE, &cbread);
-        bs.write(buffer, cbread);
-        _logger->writeln("received response: %s", bs.c_str());
+        if (errorcode_t::success == ret) {
+            bs.write(buffer, cbread);
+            _logger->writeln("received response: %s", bs.c_str());
+        }
     }
     __finally2 {
         cli.close(sock, nullptr);

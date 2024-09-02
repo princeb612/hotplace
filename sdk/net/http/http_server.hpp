@@ -26,7 +26,7 @@
 #include <sdk/net/http/http_router.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/tls/tls.hpp>
-#include <sdk/net/tls/tls_server.hpp>
+#include <sdk/net/tls/tls_server_socket.hpp>
 #include <sdk/net/types.hpp>  // ws2tcpip.h first
 
 namespace hotplace {

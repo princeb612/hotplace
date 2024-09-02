@@ -9,7 +9,7 @@
  */
 
 #include <sdk/crypto.hpp>
-#include <sdk/io/basic/sdk.hpp>
+#include <sdk/io/system/socket.hpp>
 #include <sdk/net/tls/sdk.hpp>
 #include <sdk/net/tls/tls.hpp>
 
@@ -30,6 +30,8 @@ typedef struct _tls_context_t {
     SSL* _ssl;
     BIO* _sbio_read;
     BIO* _sbio_write;
+
+    _tls_context_t() : _signature(0), _flags(0), _socket(-1), _ssl(nullptr), _sbio_read(nullptr), _sbio_write(nullptr) {}
 } tls_context_t;
 
 transport_layer_security::transport_layer_security(SSL_CTX* x509) : _x509(x509) {
@@ -60,7 +62,7 @@ return_t transport_layer_security::connect(tls_context_t** handle, int type, con
             __leave2;
         }
 
-        ret = create_socket(&sock, &sockaddr_address, SOCK_STREAM, address, port);
+        ret = create_socket(&sock, &sockaddr_address, type, address, port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -107,8 +109,6 @@ return_t transport_layer_security::connect(tls_context_t** handle, socket_t sock
         SSL_CTX* tls_ctx = _x509;
 
         __try_new_catch(context, new tls_context_t, ret, __leave2);
-
-        memset(context, 0, sizeof(tls_context_t));
 
         ssl = SSL_new(tls_ctx);
         if (nullptr == ssl) {
@@ -171,8 +171,6 @@ return_t transport_layer_security::accept(tls_context_t** handle, socket_t fd) {
 
         __try_new_catch(context, new tls_context_t, ret, __leave2);
 
-        memset(context, 0, sizeof(tls_context_t));
-
         /* SSL_accept */
         ssl = SSL_new(tls_ctx);
         SSL_set_fd(ssl, (int)fd);
@@ -229,7 +227,7 @@ return_t transport_layer_security::accept(tls_context_t** handle, socket_t fd) {
         set_sock_nbio(fd, 0);
 
         if (status < 0) {
-            ret = errorcode_t::internal_error;
+            ret = get_lasterror(status);
             __leave2;
         }
 
@@ -257,6 +255,76 @@ return_t transport_layer_security::accept(tls_context_t** handle, socket_t fd) {
                 closesocket(fd);
 #endif
             }
+            if (nullptr != ssl) {
+                // SSL_shutdown(ssl);
+                SSL_free(ssl);
+            }
+            if (nullptr != context) {
+                context->_signature = 0;
+                delete context;
+            }
+        }
+    }
+
+    return ret;
+}
+
+return_t transport_layer_security::dtls_listen(tls_context_t** handle, socket_t fd, struct sockaddr* addr, socklen_t addrlen) {
+    return_t ret = errorcode_t::success;
+
+    BIO* sbio_read = nullptr;
+    BIO* sbio_write = nullptr;
+    SSL* ssl = nullptr;
+    tls_context_t* context = nullptr;
+    BIO_ADDR* bio_addr = nullptr;
+
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (nullptr == _x509) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        SSL_CTX* tls_ctx = _x509;
+
+        __try_new_catch(context, new tls_context_t, ret, __leave2);
+
+        /* SSL_accept */
+        ssl = SSL_new(tls_ctx);
+        SSL_set_fd(ssl, (int)fd);
+
+        int status = -1;
+        bio_addr = BIO_ADDR_new();
+        status = DTLSv1_listen(ssl, bio_addr);
+        if (status < 0) {
+            ret = get_lasterror(status);
+            __leave2;
+        }
+        BIO_ADDR_to_sockaddr(bio_addr, addr, addrlen);
+
+        /* SSL_set_bio */
+        sbio_read = BIO_new(BIO_s_mem());
+        sbio_write = BIO_new(BIO_s_mem());
+        SSL_set_bio(ssl, sbio_read, sbio_write);
+
+        /* compose the context */
+        context->_socket = fd;
+        context->_ssl = ssl;
+
+        context->_sbio_read = sbio_read;
+        context->_sbio_write = sbio_write;
+        context->_signature = TLS_CONTEXT_SIGNATURE;
+
+        *handle = context;
+    }
+    __finally2 {
+        if (bio_addr) {
+            BIO_ADDR_free(bio_addr);
+        }
+        if (errorcode_t::success != ret) {
             if (nullptr != ssl) {
                 // SSL_shutdown(ssl);
                 SSL_free(ssl);

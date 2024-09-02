@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
+ *  RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
  *
  * Revision History
  * Date         Name                Description
@@ -112,6 +114,8 @@ return_t http_request::open(const char* request, size_t size_request, uint32 fla
             _uri.open(get_http_header().get(":path"));
         }
 
+        // RFC 2616 3.7 Media Types
+        // RFC 2616 14.17 Content-Type
         constexpr char constexpr_content_type[] = "Content-Type";
         constexpr char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
         if (_content.empty()) {
@@ -173,6 +177,13 @@ http_header& http_request::get_http_header() { return _header; }
 http_uri& http_request::get_http_uri() { return _uri; }
 
 std::string http_request::get_method() {
+    // RFC 2616
+    // 9.3 GET
+    // 9.4 HEAD
+    // 9.5 POST
+    // 9.6 PUT
+    // 9.7 DELETE
+    // 9.8 TRACE
     std::string m;
     if (1 == _version) {
         m = _method;
@@ -188,6 +199,7 @@ http_request& http_request::compose(http_method_t method, const std::string& uri
         basic_stream stream;
 
         stream << resource->get_method(method) << " " << uri << " " << get_version() << "\r\n";
+        // RFC 2616 14.13 Content-Length
         if (body.size()) {
             stream << "Content-Length: " << body.size() << "\r\n";
         }
@@ -204,6 +216,7 @@ std::string http_request::get_content() { return _content; }
 
 http_request& http_request::get_request(basic_stream& bs) {
     if (1 == _version) {
+        // RFC 2616 14.13 Content-Length
         std::string headers;
         bs.clear();
         get_http_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
@@ -214,7 +227,7 @@ http_request& http_request::get_request(basic_stream& bs) {
 }
 
 std::string http_request::get_version_str() {
-    constexpr char ver1[] = "HTTP/1.1";
+    constexpr char ver1[] = "HTTP/1.1";  // RFC 2616 3.1 HTTP Version
     constexpr char ver2[] = "HTTP/2";
 
     return (1 == _version) ? ver1 : ver2;

@@ -180,6 +180,7 @@ return_t json_object_encryption::decrypt(jose_context_t *handle, const std::stri
                         ret_test = dodecrypt(handle, enc, alg, kid.c_str(), item.datamap[crypt_item_t::item_ciphertext], output);
                     }
                     if ((errorcode_t::success == ret_test) && zip.size() && (0 == memcmp(&zip[0], "DEF", 3))) {
+                        // RFC 7520 5.9.  Compressed Content
                         binary_t inflated;
                         zlib_inflate(zlib_windowbits_t::windowbits_deflate, output, inflated);
                         output = inflated;
@@ -290,10 +291,6 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                  * RFC7518 4.4. Key Wrapping with AES Key Wrap
                  * RFC7520 5.8. Key Wrap Using AES-KeyWrap with AES-GCM
                  */
-                // crypt_context_t* handle_kw = nullptr;
-                // crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &oct[0],
-                // oct.size(), &kw_iv[0], kw_iv.size()); ret = crypt.encrypt(handle_kw,
-                // &cek[0], cek.size(), encrypted_key); crypt.close(handle_kw);
                 ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, oct, kw_iv, cek, encrypted_key);
             } else if (jwa_group_t::jwa_group_dir == alg_group) {
                 /*
@@ -328,10 +325,8 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman
                  * Ephemeral Static (ECDH-ES)
                  * 2.  as a symmetric key used to wrap the CEK with the "A128KW",
-                 *     "A192KW", or "A256KW" algorithms, in the Key Agreement with Key
-                 *     Wrapping mode.
-                 * RFC7520 5.4. Key Agreement with Key Wrapping Using ECDH-ES and
-                 * AES-KeyWrap with AES-GCM
+                 *     "A192KW", or "A256KW" algorithms, in the Key Agreement with Key Wrapping mode.
+                 * RFC7520 5.4. Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM
                  */
                 binary_t derived_key;
                 const EVP_PKEY *epk = item.recipients[alg].epk;
@@ -342,11 +337,6 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                 }
                 ret = ecdh_es(epk, pkey, alg_hint->alg_name, "", "", keylen, derived_key);
 
-                // crypt_context_t* handle_kw = nullptr;
-                // crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode,
-                // &derived_key[0], derived_key.size(), &kw_iv[0], kw_iv.size()); ret =
-                // crypt.encrypt(handle_kw, &cek[0], cek.size(), encrypted_key);
-                // crypt.close(handle_kw);
                 ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, derived_key, kw_iv, cek, encrypted_key);
             } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
                 /*
@@ -356,14 +346,8 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                  */
                 binary_t iv1 = item.recipients[alg].datamap[crypt_item_t::item_iv];
                 binary_t aad1;                                                          // empty
-                binary_t &tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];  // compute authencation tag
-                                                                                        // here
+                binary_t &tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];  // compute authencation tag here
 
-                // crypt_context_t* handle_crypt = nullptr;
-                // crypt.open(&handle_crypt, alg_crypt_alg, alg_crypt_mode, &oct[0],
-                // oct.size(), &iv1[0], iv1.size()); ret = crypt.encrypt2(handle_crypt,
-                // &cek[0], cek.size(), encrypted_key, &aad1, &tag1);
-                // crypt.close(handle_crypt);
                 ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, oct, iv1, cek, encrypted_key, aad1, tag1);
 
                 /*
@@ -402,22 +386,8 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                  * derived_key = PKCS5_PBKDF2_HMAC(passphrase, salt, iteration_count =
                  * p2c, hash)
                  */
-                // oct.resize(0);
                 binary_t pbkdf2_derived_key;
-                // pbkdf2_derived_key.resize (alg_keysize);
-                // const EVP_MD* alg_evp_md = (const EVP_MD*) advisor->find_evp_md
-                // (alg_hash_alg); PKCS5_PBKDF2_HMAC ((char *) &oct[0], oct.size (),
-                // &salt[0], salt.size (), p2c, alg_evp_md,
-                //                    pbkdf2_derived_key.size (),
-                //                    &pbkdf2_derived_key[0]);
                 kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, tostring(oct), salt, p2c);
-
-                // crypt_context_t* crypt_handle = nullptr;
-                // crypt.open(&crypt_handle, alg_crypt_alg, alg_crypt_mode,
-                // &pbkdf2_derived_key[0], pbkdf2_derived_key.size(), &kw_iv[0],
-                //            kw_iv.size());
-                // ret = crypt.encrypt(crypt_handle, &cek[0], cek.size(),
-                // encrypted_key); crypt.close(crypt_handle);
                 ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, pbkdf2_derived_key, kw_iv, cek, encrypted_key);
             }
         }
@@ -438,12 +408,6 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                 openssl_aead aead;
                 ret = aead.aes_cbc_hmac_sha2_encrypt(enc_crypt_alg, enc_crypt_mode, enc_hash_alg, cek, iv, aad, input, ciphertext, tag);
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
-                // crypt_context_t* handle_crypt = nullptr;
-                // crypt.open(&handle_crypt, enc_crypt_alg, enc_crypt_mode, &cek[0],
-                // cek.size(), &iv[0], iv.size());
-                // /* Content Encryption */
-                // ret = crypt.encrypt2(handle_crypt, &input[0], input.size(),
-                // ciphertext, &aad, &tag); crypt.close(handle_crypt);
                 ret = crypt.encrypt(enc_crypt_alg, enc_crypt_mode, cek, iv, input, ciphertext, aad, tag);
             }
         }
@@ -531,11 +495,6 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
             }
 
             if (crypto_kty_t::kty_oct == alg_hint->kty) {
-                /* EVP_KEY_HMAC key data and length */
-                // size_t key_length = 0;
-                // EVP_PKEY_get_raw_private_key(pkey, nullptr, &key_length);
-                // oct.resize(key_length);
-                // EVP_PKEY_get_raw_private_key(pkey, &oct[0], &key_length);
                 crypto_kty_t kty;
                 crypto_key::get_privkey(pkey, kty, oct, true);
             }
@@ -558,11 +517,6 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
                  * RFC7518 4.4. Key Wrapping with AES Key Wrap
                  * RFC7520 5.8. Key Wrap Using AES-KeyWrap with AES-GCM
                  */
-                // crypt_context_t* handle_kw = nullptr;
-                // crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode, &oct[0],
-                // oct.size(), &kw_iv[0], kw_iv.size()); ret = crypt.decrypt(handle_kw,
-                // &encrypted_key[0], encrypted_key.size(), cek);
-                // crypt.close(handle_kw);
                 ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, oct, kw_iv, encrypted_key, cek);
             } else if (jwa_group_t::jwa_group_dir == alg_group) {
                 /*
@@ -608,11 +562,6 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
                 }
                 ret = ecdh_es(pkey, epk, alg_hint->alg_name, "", "", keylen, derived_key);
 
-                // crypt_context_t* handle_kw = nullptr;
-                // crypt.open(&handle_kw, alg_crypt_alg, alg_crypt_mode,
-                // &derived_key[0], derived_key.size(), &kw_iv[0], kw_iv.size()); ret =
-                // crypt.decrypt(handle_kw, &encrypted_key[0], encrypted_key.size(),
-                // cek); crypt.close(handle_kw);
                 ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, derived_key, kw_iv, encrypted_key, cek);
             } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
                 /*
@@ -624,12 +573,6 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
                 binary_t aad1;  // empty
                 binary_t tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];
 
-                /* cek, aad(null), tag = AESGCM (HMAC.key, iv).decrypt (encryted_key) */
-                // crypt_context_t* handle_crypt = nullptr;
-                // crypt.open(&handle_crypt, alg_crypt_alg, alg_crypt_mode, &oct[0],
-                // oct.size(), &iv1[0], iv1.size()); ret = crypt.decrypt2(handle_crypt,
-                // &encrypted_key[0], encrypted_key.size(), cek, &aad1, &tag1);
-                // crypt.close(handle_crypt);
                 ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, oct, iv1, encrypted_key, cek, aad1, tag1);
             } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
                 /*
@@ -653,19 +596,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
                  * p2c, hash)
                  */
                 binary_t pbkdf2_derived_key;
-                // pbkdf2_derived_key.resize (alg_keysize);
-                // const EVP_MD* alg_evp_md = (const EVP_MD*) advisor->find_evp_md
-                // (alg_hash_alg); PKCS5_PBKDF2_HMAC ((char *) &oct[0], oct.size (),
-                // &salt[0], salt.size (), p2c, alg_evp_md,
-                //                    pbkdf2_derived_key.size (),
-                //                    &pbkdf2_derived_key[0]);
                 kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, tostring(oct), salt, p2c);
-
-                // crypt_context_t* crypt_handle = nullptr;
-                // crypt.open(&crypt_handle, alg_crypt_alg, alg_crypt_mode,
-                // &pbkdf2_derived_key[0], pbkdf2_derived_key.size(), &kw_iv[0],
-                // kw_iv.size()); ret = crypt.decrypt(crypt_handle, &encrypted_key[0],
-                // encrypted_key.size(), cek); crypt.close(crypt_handle);
                 ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, pbkdf2_derived_key, kw_iv, encrypted_key, cek);
             }
         }
@@ -686,12 +617,6 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
                 openssl_aead aead;
                 ret = aead.aes_cbc_hmac_sha2_decrypt(enc_crypt_alg, enc_crypt_mode, enc_hash_alg, cek, iv, aad, ciphertext, output, tag);
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
-                // crypt_context_t* handle_crypt = nullptr;
-                // crypt.open(&handle_crypt, enc_crypt_alg, enc_crypt_mode, &cek[0],
-                // cek.size(), &iv[0], iv.size());
-                // /* Content Encryption */
-                // ret = crypt.decrypt2(handle_crypt, &ciphertext[0], ciphertext.size(),
-                // output, &aad, &tag); crypt.close(handle_crypt);
                 ret = crypt.decrypt(enc_crypt_alg, enc_crypt_mode, cek, iv, ciphertext, output, aad, tag);
             }
         }
@@ -1106,8 +1031,6 @@ return_t json_object_encryption::composer::docompose_encryption_header_parameter
         json_header = json_object();
 
         if (jose_compose_t::jose_enc_only & flag) {
-            // const hint_jose_encryption_t* enc_hint =
-            // advisor->hintof_jose_encryption(enc);
             if (nullptr == enc_value) {
                 ret = errorcode_t::invalid_parameter;
                 __leave2;
@@ -1162,6 +1085,7 @@ return_t json_object_encryption::composer::docompose_encryption_header_parameter
             }
         }
         if (flags & jose_flag_t::jose_deflate) {
+            // RFC 7520 5.9.  Compressed Content
             json_object_set_new(json_header, "zip", json_string("DEF"));
         }
 

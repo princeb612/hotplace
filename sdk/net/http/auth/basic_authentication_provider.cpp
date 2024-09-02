@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+ *  RFC 7617 The 'Basic' HTTP Authentication Scheme
  *
  * Revision History
  * Date         Name                Description
@@ -53,6 +55,7 @@ return_t basic_authentication_provider::request_auth(network_session* session, h
             __leave2;
         }
 
+        // RFC 2617 2 Basic Authentication Scheme
         response->get_http_header().add("WWW-Authenticate", format("Basic realm=\"%s\"", _realm.c_str()));
 
         int status_code = 401;

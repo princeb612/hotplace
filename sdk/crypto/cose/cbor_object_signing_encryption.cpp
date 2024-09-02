@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 8152 CBOR Object Signing and Encryption (COSE)
  *
  * Revision History
  * Date         Name                Description
@@ -408,6 +409,7 @@ return_t cbor_object_signing_encryption::process(cose_context_t* handle, crypto_
             results.insert(check);
         }
 
+        // RFC 8152 4.5.  Computing Counter Signatures
         cose_countersigns* countersigns1 = body.get_countersigns0();
         if (countersigns1) {
             if (cose_flag_t::cose_flag_allow_debug & handle->flags) {

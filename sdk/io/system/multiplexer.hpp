@@ -28,10 +28,11 @@ enum multiplexer_type_t {
 
 enum multiplexer_event_type_t {
     mux_tryconnect = 0, /* try to sslaccept */
-    mux_connect = 1,    /* connected */
-    mux_read = 2,       /* read */
-    mux_write = 3,      /* send */
-    mux_disconnect = 4, /* closed */
+    mux_connect = 1,    /* stream connected */
+    mux_read = 2,       /* stream read */
+    mux_write = 3,      /* stream send, reserved */
+    mux_disconnect = 4, /* stream closed */
+    mux_dgram = 5,      /* datagram read */
 };
 
 typedef struct {

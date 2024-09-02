@@ -239,22 +239,32 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
         } SIGN_TABLE;
 
         SIGN_TABLE sign_table[] = {
+            // RFC 7515 A.1.  Example JWS Using HMAC SHA-256
+            // RFC 7520 4.4.  HMAC-SHA2 Integrity Protection
             {
                 jws_group_t::jws_group_hmac,
                 &openssl_sign::sign_hmac,
             },
+            // RFC 7515 A.2.  Example JWS Using RSASSA-PKCS1-v1_5 SHA-256
+            // RFC 7520 4.1.  RSA v1.5 Signature
             {
                 jws_group_t::jws_group_rsassa_pkcs15,
                 &openssl_sign::sign_rsassa_pkcs15,
             },
+            // RFC 7515 A.3.  Example JWS Using ECDSA P-256 SHA-256
+            // RFC 7515 A.4.  Example JWS Using ECDSA P-521 SHA-512
+            // RFC 7520 4.3.  ECDSA Signature
             {
                 jws_group_t::jws_group_ecdsa,
                 &openssl_sign::sign_ecdsa,
             },
+            // RFC 7520 4.2.  RSA-PSS Signature
             {
                 jws_group_t::jws_group_rsassa_pss,
                 &openssl_sign::sign_rsassa_pss,
             },
+            // RFC 8037 A.4.  Ed25519 Signing
+            // RFC 8037 A.5.  Ed25519 Validation
             {
                 jws_group_t::jws_group_eddsa,
                 &openssl_sign::sign_eddsa,
@@ -269,7 +279,6 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
         }
         int group = hint->group;
 
-#if __cplusplus >= 201103L  // c++11
         const SIGN_TABLE* item = std::find_if(std::begin(sign_table), std::end(sign_table), [group](const SIGN_TABLE& item) { return item.group == group; });
         if (std::end(sign_table) != item) {
             signer = item->signer;
@@ -277,19 +286,6 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
             ret = errorcode_t::not_supported;
             __leave2;
         }
-#else
-        for (size_t k = 0; k < RTL_NUMBER_OF(sign_table); k++) {
-            SIGN_TABLE* item = sign_table + k;
-            if (item->group == group) {
-                signer = item->signer;
-                break;
-            }
-        }
-        if (nullptr == signer) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-#endif
 
         const EVP_PKEY* pkey = nullptr;
         pkey = key->select(kid, sig, crypto_use_t::use_sig);
@@ -340,22 +336,32 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
         } SIGN_TABLE;
 
         SIGN_TABLE sign_table[] = {
+            // RFC 7515 A.1.  Example JWS Using HMAC SHA-256
+            // RFC 7520 4.4.  HMAC-SHA2 Integrity Protection
             {
                 jws_group_t::jws_group_hmac,
                 &openssl_sign::verify_hmac,
             },
+            // RFC 7515 A.2.  Example JWS Using RSASSA-PKCS1-v1_5 SHA-256
+            // RFC 7520 4.1.  RSA v1.5 Signature
             {
                 jws_group_t::jws_group_rsassa_pkcs15,
                 &openssl_sign::verify_digest,
             },
+            // RFC 7515 A.3.  Example JWS Using ECDSA P-256 SHA-256
+            // RFC 7515 A.4.  Example JWS Using ECDSA P-521 SHA-512
+            // RFC 7520 4.3.  ECDSA Signature
             {
                 jws_group_t::jws_group_ecdsa,
                 &openssl_sign::verify_ecdsa,
             },
+            // RFC 7520 4.2.  RSA-PSS Signature
             {
                 jws_group_t::jws_group_rsassa_pss,
                 &openssl_sign::verify_rsassa_pss,
             },
+            // RFC 8037 A.4.  Ed25519 Signing
+            // RFC 8037 A.5.  Ed25519 Validation
             {
                 jws_group_t::jws_group_eddsa,
                 &openssl_sign::verify_eddsa,
@@ -370,7 +376,6 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
         }
         int group = hint->group;
 
-#if __cplusplus >= 201103L  // c++11
         const SIGN_TABLE* item = std::find_if(std::begin(sign_table), std::end(sign_table), [group](const SIGN_TABLE& item) { return item.group == group; });
         if (std::end(sign_table) != item) {
             verifier = item->verifier;
@@ -378,19 +383,6 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
             ret = errorcode_t::not_supported;
             __leave2;
         }
-#else
-        for (size_t k = 0; k < RTL_NUMBER_OF(sign_table); k++) {
-            SIGN_TABLE* item = sign_table + k;
-            if (item->group == group) {
-                verifier = item->verifier;
-                break;
-            }
-        }
-        if (nullptr == verifier) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-#endif
 
         const EVP_PKEY* pkey = nullptr;
         pkey = key->find(kid, sig, crypto_use_t::use_sig);
@@ -674,8 +666,10 @@ return_t json_object_signing::composer::compose_signature(jose_context_t* handle
         jose_sign_t item = handle->signs.front();
 
         if (jose_serialization_t::jose_compact == type) {
+            // 7.1.  JWS Compact Serialization
             signature = format("%s.%s.%s", item.header.c_str(), item.payload.c_str(), item.signature.c_str());
         } else if (jose_serialization_t::jose_flatjson == type) {
+            // 7.2.2.  Flattened JWS JSON Serialization Syntax
             json_t* json_serialization = nullptr;
             __try2 {
                 json_serialization = json_object();
@@ -704,6 +698,7 @@ return_t json_object_signing::composer::compose_signature(jose_context_t* handle
                 }
             }
         } else if (jose_serialization_t::jose_json == type) {
+            // 7.2.1.  General JWS JSON Serialization Syntax
             json_t* json_serialization = nullptr;
             json_t* json_signatures = nullptr;
             json_t* json_signature = nullptr;

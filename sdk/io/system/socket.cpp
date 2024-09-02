@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/basic/sdk.hpp>
+#include <sdk/io/system/socket.hpp>
 
 namespace hotplace {
 namespace io {
@@ -511,6 +511,14 @@ return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint
     __finally2 {
         // do nothing
     }
+    return ret;
+}
+
+return_t typeof_socket(socket_t sock, int& type) {
+    return_t ret = errorcode_t::success;
+    socklen_t optlen = sizeof(type);
+    int rc = getsockopt(sock, SOL_SOCKET, SO_TYPE, (char*)&type, &optlen);
+    ret = get_lasterror(rc);
     return ret;
 }
 

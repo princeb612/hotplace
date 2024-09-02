@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
+ *  RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
  *
  * Revision History
  * Date         Name                Description
@@ -115,6 +117,8 @@ return_t http_response::open(const char* response, size_t size_response) {
             byte_t* content = (byte_t*)response + epos;
             size_t content_size = size_response - epos;
 
+            // RFC 2616 3.5 Content Codings
+            // RFC 2616 14.11 Content-Encoding
             std::string encoding = get_http_header().get("Content-Encoding");
             if ("deflate" == encoding) {
                 basic_stream inflated;
@@ -129,6 +133,8 @@ return_t http_response::open(const char* response, size_t size_response) {
             }
         }
 
+        // RFC 2616 3.7 Media Types
+        // RFC 2616 14.17 Content-Type
         _header.get("Content-Type", _content_type);
     }
     __finally2 {
@@ -244,6 +250,8 @@ http_response& http_response::get_response(basic_stream& bs) {
         std::string accept_encoding;
         basic_stream method;
         if (_request) {
+            // RFC 2616 3.5 Content Codings
+            // RFC 2616 14.3 Accept-Encoding
             _request->get_http_header().get("Accept-Encoding", accept_encoding);
             method = _request->get_method();
         }
@@ -252,14 +260,19 @@ http_response& http_response::get_response(basic_stream& bs) {
 
         std::string headers;
         if (_content_type.size() && content_size()) {
+            // RFC 2616 3.7 Media Types
+            // RFC 2616 14.17 Content-Type
             get_http_header().add("Content-Type", content_type());
         }
         get_http_header().add("Connection", "Keep-Alive");
 
+        // RFC 2616 5.1.1 Method
         if (0 == strcmp("HEAD", method.c_str())) {
             get_http_header().add("Content-Length", "0").get_headers(headers);
             bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
         } else {
+            // RFC 2616 3.5 Content Codings
+            // RFC 2616 14.11 Content-Encoding
             if (std::string::npos != accept_encoding.find("deflate")) {
                 basic_stream encoded;
                 zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), &encoded);
@@ -301,11 +314,13 @@ http_response& http_response::response_h2(network_session* session) {
         binary_t encoded;
         bool header_only = false;
 
+        // RFC 2616 5.1.1 Method
         if (0 == strcmp("HEAD", method.c_str())) {
             header_only = true;
         } else if (content_size()) {
             header_only = false;
 
+            // RFC 2616 3.5 Content Codings
             if (std::string::npos != accept_encoding.find("deflate")) {
                 encoding = "deflate";
             } else if (std::string::npos != accept_encoding.find("gzip")) {
@@ -343,6 +358,7 @@ http_response& http_response::response_h2(network_session* session) {
             if (encoding.empty()) {
                 data.get_data().insert(data.get_data().end(), content(), content() + content_size());
             } else {
+                // RFC 2616 3.5 Content Codings
                 if ("deflate" == encoding) {
                     zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), data.get_data());
                 } else if ("gzip" == encoding) {
@@ -396,7 +412,7 @@ http_response& http_response::response_h2(network_session* session) {
 }
 
 std::string http_response::get_version_str() {
-    constexpr char ver1[] = "HTTP/1.1";
+    constexpr char ver1[] = "HTTP/1.1";  // RFC 2616 3.1 HTTP Version
     constexpr char ver2[] = "HTTP/2";
 
     return (1 == _version) ? ver1 : ver2;

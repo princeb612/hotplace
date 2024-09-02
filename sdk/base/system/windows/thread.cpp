@@ -32,6 +32,8 @@ return_t thread::start() {
         if (nullptr == _tid) {
             ret = GetLastError();
         }
+    } else {
+        ret = errorcode_t::already_assigned;
     }
     return ret;
 }

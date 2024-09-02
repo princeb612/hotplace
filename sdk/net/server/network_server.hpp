@@ -16,13 +16,15 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <sdk/io.hpp>
-#include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/basic/tcp_server_socket.hpp>
+#include <sdk/net/basic/udp_server_socket.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/tls.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {
+using namespace io;
 namespace net {
 
 enum netserver_config_t {
@@ -61,6 +63,7 @@ enum netserver_cb_type_t {
     netserver_cb_datasize = 2,      // size_t
     netserver_cb_session = 3,       // network_session*
     netserver_cb_http_request = 4,  // http_request*
+    netserver_cb_sockaddr = 5,      // sockaddr_storage_t*, udp client address
 };
 
 typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
@@ -135,7 +138,7 @@ class network_server {
      * @param   network_multiplexer_context_t** handle              [OUT] handle
      * @param   unsigned int                    family              [IN] AF_INET for ipv4, AF_INET6 for ipv6
      * @param   uint16                          port                [IN] port
-     * @param   tcp_server_socket*              svr_socket          [IN] socket layer (see also tcp_server_socket, tls_server_socket)
+     * @param   server_socket*                  svr_socket          [IN] socket
      * @param   server_conf*                    conf                [inopt]
      *
      *          serverconf_concurrent_event         default 1024
@@ -161,6 +164,9 @@ class network_server {
      *                equivalant data_array[netserver_cb_type_t::netserver_cb_datasize]
      *              data_array[3] network_session*
      *                equivalant data_array[netserver_cb_type_t::netserver_cb_session]
+     *              data_array[5] sockaddr_storage_t*
+     *                equivalant data_array[netserver_cb_type_t::netserver_cb_sockaddr]
+     *
      *            parameter 4
      *              CALLBACK_CONTROL* is always null
      *            parameter 5
@@ -180,9 +186,7 @@ class network_server {
      *          It'll be automatically created 1 tls_accept_thread, if server_socketis an instance of tls_server_socket class.
      *          see tls_accept_loop_run/tls_accept_loop_break
      */
-    return_t open(network_multiplexer_context_t** handle, unsigned int family, uint16 port, tcp_server_socket* svr_socket, server_conf* conf,
-                  TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param);
-    return_t open(network_multiplexer_context_t** handle, unsigned int family, uint16 port, udp_server_socket* svr_socket, server_conf* conf,
+    return_t open(network_multiplexer_context_t** handle, unsigned int family, uint16 port, server_socket* svr_socket, server_conf* conf,
                   TYPE_CALLBACK_HANDLEREXV callback_routine, void* callback_param);
 
     /**
@@ -375,6 +379,18 @@ class network_server {
      * @return  error code (see error.hpp)
      */
     return_t session_closed(network_multiplexer_context_t* handle, handle_t cli_socket);
+
+    return_t dgram_start(network_multiplexer_context_t* handle);
+    return_t dgram_ready_to_read(network_multiplexer_context_t* handle);
+
+   private:
+#if defined __linux__
+    multiplexer_epoll mplexer;
+#elif defined __APPLE__
+    multiplexer_kqueue mplexer;
+#elif defined _WIN32 || defined _WIN64
+    multiplexer_iocp mplexer;
+#endif
 };
 
 }  // namespace net

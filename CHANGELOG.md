@@ -1,5 +1,12 @@
 # history
 
+* Revision 598
+  * [changed] test/udpserver2 (udp server on network_server)
+    * [added] multiplexer_event_type_t::mux_dgram, typeof_socket
+    * [changed] tcp_server_socket, udp_server_socket inherits from server_socket
+    * [changed] tcp_client_socket, udp_client_socket inherits from client_socket
+    * [changed] network_server, network_session, network_stream, network_stream_data
+
 * Revision 595
   * [changed] rename cmdline_t to t_cmdline_t
   * [changed] rename cmdarg_t to t_cmdarg_t
@@ -55,6 +62,9 @@
   * [changed] parser::psearch, parser::context::psearch changed return type
     * rename std::multimap<size_t, unsigned> to std::multimap<range_t, unsigned>
 
+* Revision 573
+  * [changed] t_aho_corasick support wildcard single (?)
+
 * Revision 568
   * [added] print_pair
   * [added] empty, occupied (stream_t, bufferio, basic_stream, ansi_string, wide_string, file_stream)
@@ -66,6 +76,9 @@
 
 * Revision 567
   * [added] datetime::gettime, datetime::gmtime_to_timespec, timespan_m, timespan_s
+
+* Revision 566
+  * [changed] float_from_fp16, double_from_fp16, ieee754_exp, ieee754_typeof
 
 * Revision 565
   * [added] double_from_fp16
@@ -117,6 +130,7 @@
 
 * Revision 536
   * [added] parser
+  * [added] The Knuth-Morris-Pratt Algorithm
 
 * Revision 535
   * [changed] rename convert to tostring/tobin
@@ -149,6 +163,9 @@
 * Revision 514
   * [added] enable_alpn_h2
 
+* Revision 511
+  * [changed] HTTP/2 hello world
+
 * Revision 510
   * [added] hpack_encoder
 
@@ -156,7 +173,7 @@
   * [added] http_server_builder, hpack_session
 
 * Revision 506
-  * [changed] HPACK
+  * [changed] HPACK (RFC 7541)
 
 * Revision 504
   * [added] huffman_coding
@@ -189,6 +206,9 @@
 
 * Revision 479
   * [added] Authorization Code Grant (RFC 6749 4.1)
+
+* Revision 478
+  * [changed] RFC 6749 4.1 Authorization Code Grant
 
 * Revision 476
   * [added] error_advisor
@@ -230,6 +250,27 @@
   * [added] crypto_key::generate_nid, crypto_key::generate_cose
   * [added] ES256K (RFC8812)
 
+* Revision 434
+  * [changed] COSE encrypt, sign, createmac
+
+* Revision 433
+  * [changed] COSE untagged message
+
+* Revision 433
+  * [changed] COSE untagged message
+
+* Revision 431
+  * [added] variant
+
+* Revision 428
+  * [changed] cose_countersigns
+
+* Revision 426
+  * [changed] cose_key OKP
+
+* Revision 418
+  * [changed] ChaCha20/Poly1305(24) not supported
+
 * Revision 416
   * [changed] openssl_chacha20_iv
 
@@ -248,14 +289,50 @@
 * Revision 399
   * [changed] preserve leading zero (JKW, CWK)
 
+* Revision 393
+  * [changed] AES-CBC-MAC
+
 * Revision 392
   * [changed] mingw terminal delay fixed
+
+* Revision 389, 390
+  * [changed] COSE example, debug
+
+* Revision 381
+  * [changed] RFC 8152 C.5.2 C.5.4
+
+* Revision 379
+  * [changed] COSE decrypt
+
+* Revision 378
+  * [changed] COSE verify_sign
+
+* Revision 377
+  * [changed] COSE verify_mac
+
+* Revision 369
+  * [changed] aes_cbc_hmac_sha2_encrypt/decrypt
+
+* Revision 364
+  * [changed] Authenticated Encryption with AES-CBC and HMAC-SHA
+
+* Revision 363
+  * [changed] AEAD_AES_128_CBC_HMAC_SHA_256
+
+* Revision 358
+  * [changed] partial_iv
+
+* Revision 357
+  * [changed] COSE AES KEYWRAP
 
 * Revision 354
   * [added] kdf_ckdf, ckdf_extract, ckdf_expand
 
 * Revision 353
   * [added] hkdf_extract, hkdf_expand
+
+* Revision 350
+  * [changed] COSE ECDH-ES/SS+AES KEYWRAP
 
 * Revision 348
   * [changed] COSE RSA-OAEP
@@ -272,6 +349,9 @@
 * Revision 340
   * [changed] COSE AES-CCM, AES-GCM
 
+* Revision 339
+  * [changed] Fedora Core 4 TESTED
+
 * Revision 335
   * [changed] RFC 8152 C.3.2 C.4.1 C.4.2 decryption
 
@@ -285,7 +365,7 @@
   * [added] [COSE examples](https://github.com/cose-wg/Examples)
 
 * Revision 305
-  * [added] elliptic curves B-163, K-163, P-192 
+  * [added] elliptic curves B-163, K-163, P-192
 
 * Revision 303
   * [changed] ECDSA NIST CAVP - tested (truncated sha)
@@ -318,14 +398,23 @@
 * Revision 249
   * [changed] cbor_web_key
 
+* Revision 224
+  * [added] json_web_key
+
 * Revision 211
   * [added] RFC 8152 examples (.cbor, .diag)
 
 * Revision 205
   * [added] fp16_from_fp32, fp16_ieee_from_fp32_value, ieee754_format_as_small_as_possible
 
+* Revision 171
+  * [added] openssl_chacha20_iv
+
 * Revision 164
   * [added] CCM (Block cipher mode of operation)
+
+* Revision 128
+  * [added] windows_registry, windows_version
 
 * Revision 125
   * [added] obfuscate_string, test_case_notimecheck
@@ -357,10 +446,14 @@
 * Revision 21
   * [changed] precompiled header
 
+* Revision 11
+  * [changed] namespace hotplace
+
 * Revision 9
   * [changed] bufferio
 
 * Revision 5
   * [added] t_shared_instance
 
-
+* Revision 2
+  * [added] console_color

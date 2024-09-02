@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
+ *  RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
  *
  * Revision History
  * Date         Name                Description

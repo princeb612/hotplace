@@ -23,7 +23,7 @@ network_stream::~network_stream() {
     // do nothing
 }
 
-return_t network_stream::produce(byte_t* buf_read, size_t size_buf_read) {
+return_t network_stream::produce(byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr) {
     return_t ret = errorcode_t::success;
     network_stream_data* buffer_object = nullptr;
 
@@ -32,6 +32,9 @@ return_t network_stream::produce(byte_t* buf_read, size_t size_buf_read) {
             __try_new_catch(buffer_object, new network_stream_data, ret, __leave2);
 
             buffer_object->assign(buf_read, size_buf_read);
+            if (addr) {
+                buffer_object->set_sockaddr(addr);
+            }
 
             critical_section_guard guard(_lock);
             _queue.push_back(buffer_object);
@@ -149,7 +152,7 @@ return_t network_stream::do_write(network_stream* target) {
         while (false == _queue.empty()) {
             buffer_object = _queue.front();
 
-            target->produce(buffer_object->content(), buffer_object->size());
+            target->produce(buffer_object->content(), buffer_object->size(), buffer_object->get_sockaddr());
 
             buffer_object->release();
             _queue.pop_front();
@@ -195,7 +198,7 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
             protocol->read_stream(&bufstream, &message_size, &state, &priority);
             switch (state) {
                 case protocol_state_t::protocol_state_complete:
-                    target->produce(bufstream.data(), message_size);
+                    target->produce(bufstream.data(), message_size, buffer_object->get_sockaddr());
                     _run = false;
                     break;
                 case protocol_state_t::protocol_state_forged:
@@ -265,11 +268,14 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
     return ret;
 }
 
-network_stream_data::network_stream_data() : _ptr(nullptr), _size(0), _next(nullptr), _priority(0) { _instance.make_share(this); }
+network_stream_data::network_stream_data() : _ptr(nullptr), _size(0), _next(nullptr), _priority(0), _addr(nullptr) { _instance.make_share(this); }
 
 network_stream_data::~network_stream_data() {
-    if (nullptr != _ptr) {
+    if (_ptr) {
         free(_ptr);
+    }
+    if (_addr) {
+        free(_addr);
     }
 }
 
@@ -308,6 +314,27 @@ void network_stream_data::set_priority(int priority) { _priority = priority; }
 int network_stream_data::addref() { return _instance.addref(); }
 
 int network_stream_data::release() { return _instance.delref(); }
+
+void network_stream_data::set_sockaddr(const sockaddr_storage_t* cliaddr) {
+    // store recvfrom sockaddr
+    if (cliaddr) {
+        if (nullptr == _addr) {
+            _addr = (sockaddr_storage_t*)malloc(sizeof(sockaddr_storage_t));
+        }
+        if (_addr) {
+            memcpy(_addr, cliaddr, sizeof(sockaddr_storage_t));
+        }
+    }
+}
+
+void network_stream_data::get_sockaddr(sockaddr_storage_t* cliaddr) {
+    if (cliaddr && _addr) {
+        // get recvfrom sockaddr
+        memcpy(cliaddr, _addr, sizeof(sockaddr_storage_t));
+    }
+}
+
+const sockaddr_storage_t* network_stream_data::get_sockaddr() { return _addr; }
 
 }  // namespace net
 }  // namespace hotplace

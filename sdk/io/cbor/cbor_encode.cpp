@@ -111,6 +111,7 @@ return_t cbor_encode::encode(binary_t& bin, bool value) {
 }
 
 return_t cbor_encode::encode(binary_t& bin, int8 value) {
+    // 4.2.1.  Core Deterministic Encoding Requirements
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -153,6 +154,7 @@ return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint8 value) {
 }
 
 return_t cbor_encode::encode(binary_t& target, int16 value) {
+    // 4.2.1.  Core Deterministic Encoding Requirements
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -201,6 +203,7 @@ return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint16 value)
 }
 
 return_t cbor_encode::encode(binary_t& target, int32 value) {
+    // 4.2.1.  Core Deterministic Encoding Requirements
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -256,6 +259,7 @@ return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint32 value)
 }
 
 return_t cbor_encode::encode(binary_t& target, int64 value) {
+    // 4.2.1.  Core Deterministic Encoding Requirements
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -428,6 +432,7 @@ return_t cbor_encode::encodefp16(binary_t& target, uint16 value) {
 }
 
 return_t cbor_encode::encode(binary_t& target, float value) {
+    // 4.2.2.  Additional Deterministic Encoding Considerations
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -456,6 +461,7 @@ return_t cbor_encode::encode(binary_t& target, float value) {
 }
 
 return_t cbor_encode::encode(binary_t& target, double value) {
+    // 4.2.2.  Additional Deterministic Encoding Considerations
     return_t ret = errorcode_t::success;
 
     __try2 {

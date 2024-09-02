@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
+ *  RFC 2616 Hypertext Transfer Protocol -- HTTP/1.1
  *
  * Revision History
  * Date         Name                Description
@@ -27,8 +29,10 @@ void http_resource::load_resources() {
     // RFC 2616 HTTP/1.1
     // 6.1.1 Status Code and Reason Phrase
     if (_status_codes.empty()) {
+        // 10.1 Informational 1xx
         _status_codes.insert(std::make_pair(100, "Continue"));
         _status_codes.insert(std::make_pair(101, "Switching Protocols"));
+        // 10.2 Successful 2xx
         _status_codes.insert(std::make_pair(200, "OK"));
         _status_codes.insert(std::make_pair(201, "Created"));
         _status_codes.insert(std::make_pair(202, "Accepted"));
@@ -36,6 +40,7 @@ void http_resource::load_resources() {
         _status_codes.insert(std::make_pair(204, "No Content"));
         _status_codes.insert(std::make_pair(205, "Reset Content"));
         _status_codes.insert(std::make_pair(206, "Partial Content"));
+        // 10.3 Redirection 3xx
         _status_codes.insert(std::make_pair(300, "Multiple Choices"));
         _status_codes.insert(std::make_pair(301, "Moved Permanently"));
         _status_codes.insert(std::make_pair(302, "Found"));
@@ -43,6 +48,7 @@ void http_resource::load_resources() {
         _status_codes.insert(std::make_pair(304, "Not Modified"));
         _status_codes.insert(std::make_pair(305, "Use Proxy"));
         _status_codes.insert(std::make_pair(307, "Temporary Redirect"));
+        // 10.4 Client Error 4xx
         _status_codes.insert(std::make_pair(400, "Bad Request"));
         _status_codes.insert(std::make_pair(401, "Unauthorized"));
         _status_codes.insert(std::make_pair(402, "Payment Required"));
@@ -62,6 +68,7 @@ void http_resource::load_resources() {
         _status_codes.insert(std::make_pair(416, "Requested Range Not Satisfiable"));
         _status_codes.insert(std::make_pair(417, "Expectation Failed"));
         _status_codes.insert(std::make_pair(426, "Upgrade Required"));
+        // 10.5 Server Error 5xx
         _status_codes.insert(std::make_pair(500, "Internal Server Error"));
         _status_codes.insert(std::make_pair(501, "Not Implemented"));
         _status_codes.insert(std::make_pair(502, "Bad Gateway"));

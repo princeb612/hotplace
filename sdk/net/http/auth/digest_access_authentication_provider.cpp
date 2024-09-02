@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+ *  RFC 7616 HTTP Digest Access Authentication
  *
  * Revision History
  * Date         Name                Description
@@ -80,12 +82,13 @@ return_t digest_access_authentication_provider::request_auth(network_session* se
         session->get_session_data()->set("nonce", nonce);    // should be uniquely generated each time a 401 response is made
         session->get_session_data()->set("opaque", opaque);  // should be returned by the client unchanged in the Authorization header of subsequent requests
 
+        valist va;
         basic_stream cred;
-        cred << "Digest realm=\"" << get_realm() << "\"";
+        va << get_realm() << get_qop() << nonce << opaque;
+        cred.vprintf(R"(Digest realm="%s", qop="%s", nonce="%s", opaque="%s")", va.get());
         if (false == get_algorithm().empty()) {
             cred << ", algorithm=" << get_algorithm();
         }
-        cred << ", qop=\"" << get_qop() << "\", nonce=\"" << nonce << "\", opaque=\"" << opaque << "\"";
         if (get_userhash()) {
             cred << ", userhash=true";
         }

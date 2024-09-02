@@ -41,6 +41,8 @@ return_t thread::start() {
             ret = errorcode_t::failed;
         }
         pthread_attr_destroy(&attr);
+    } else {
+        ret = errorcode_t::already_assigned;
     }
     return ret;
 }

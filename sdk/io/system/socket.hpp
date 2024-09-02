@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_BASIC_SDK__
-#define __HOTPLACE_SDK_IO_BASIC_SDK__
+#ifndef __HOTPLACE_SDK_IO_BASIC_SOCKET__
+#define __HOTPLACE_SDK_IO_BASIC_SOCKET__
 
 #include <sdk/io/types.hpp>
 
@@ -107,6 +107,18 @@ return_t set_sock_nbio(socket_t sock, uint32 nbio_mode);
  * @param   uint16 port [in]
  */
 return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint16 port);
+
+/**
+ * @brief   type of socket
+ * @param   socket_t sock [in]
+ * @param   int& type [out]
+ * @sample
+ *          int socktype = 0;
+ *          typeof_socket(listenfd, socktype);
+ *          bool is_stream = (SOCK_STREAM == socktype);
+ *          bool is_dgram = (SOCK_DGRAM == socktype);
+ */
+return_t typeof_socket(socket_t sock, int& type);
 
 #if defined _WIN32 || defined _WIN64
 return_t winsock_startup();

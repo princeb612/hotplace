@@ -22,6 +22,7 @@ cbor_publisher::cbor_publisher() {
 }
 
 return_t cbor_publisher::publish(cbor_object* object, binary_t* b) {
+    // 8.  Diagnostic Notation
     return_t ret = errorcode_t::success;
 
     __try2 {

@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 8152 CBOR Object Signing and Encryption (COSE)
  *
  * Revision History
  * Date         Name                Description

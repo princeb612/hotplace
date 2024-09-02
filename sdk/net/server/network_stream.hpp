@@ -60,12 +60,20 @@ class network_stream_data {
      */
     int release();
 
+    /*
+     * udp client address
+     */
+    void set_sockaddr(const sockaddr_storage_t* cliaddr);
+    void get_sockaddr(sockaddr_storage_t* cliaddr);
+    const sockaddr_storage_t* get_sockaddr();
+
    protected:
     t_shared_reference<network_stream_data> _instance;
     byte_t* _ptr;
     size_t _size;
     network_stream_data* _next;
     int _priority;
+    sockaddr_storage_t* _addr;  // udp
 };
 
 /**
@@ -79,10 +87,11 @@ class network_stream {
 
     /**
      * @brief produce
-     * @param   byte_t* buf_read        [IN]
-     * @param   size_t  size_buf_read   [IN]
+     * @param   byte_t* buf_read         [IN]
+     * @param   size_t  size_buf_read    [IN]
+     * @param   const sockaddr_storage_t* addr [inopt]
      */
-    return_t produce(byte_t* buf_read, size_t size_buf_read);
+    return_t produce(byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr = nullptr);
     /**
      * @brief data ready
      */

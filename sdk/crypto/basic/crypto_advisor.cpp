@@ -12,6 +12,7 @@
 #include <sdk/base/system/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/system/sdk.hpp>
 
 namespace hotplace {
@@ -1105,6 +1106,17 @@ bool crypto_advisor::query_feature(const char* feature, uint32 spec) {
 bool crypto_advisor::at_least_openssl_version(unsigned long osslver) {
     unsigned long ver = OpenSSL_version_num();
     return (ver >= osslver) ? true : false;
+}
+
+void crypto_advisor::get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret) {
+    auto iter = _cookie_secret.find(key);
+    if (_cookie_secret.end() == iter) {
+        openssl_prng prng;
+        prng.random(secret, secret_size);
+        _cookie_secret.insert({key, secret});
+    } else {
+        secret = iter->second;
+    }
 }
 
 }  // namespace crypto

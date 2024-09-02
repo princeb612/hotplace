@@ -9,6 +9,7 @@
  */
 
 #include <sdk/io/system/multiplexer.hpp>
+#include <sdk/io/system/socket.hpp>
 
 namespace hotplace {
 namespace io {
@@ -147,6 +148,10 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
 
         ret = controller.event_loop_new(pContext->handle_controller, &token_handle);
 
+        int socktype = 0;
+        typeof_socket((socket_t)listenfd, socktype);
+        bool is_dgram = (SOCK_DGRAM == socktype);
+
         BOOL bRet = TRUE;
         while (true) {
             bool broken = controller.event_loop_test_broken(pContext->handle_controller, token_handle);
@@ -186,7 +191,7 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
             if (0 == size_transfered) {
                 type = multiplexer_event_type_t::mux_disconnect;
             } else {
-                type = multiplexer_event_type_t::mux_read;
+                type = (is_dgram ? multiplexer_event_type_t::mux_dgram : multiplexer_event_type_t::mux_read);
             }
 
             event_callback_routine(type, 4, data_vector, nullptr, parameter);

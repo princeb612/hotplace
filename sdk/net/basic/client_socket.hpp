@@ -11,19 +11,20 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_CLIENTSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_CLIENTSOCKET__
 
+#include <sdk/io/system/socket.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {
+using namespace io;
 namespace net {
 
 /**
  * @brief   client socket
- * @sa      class tls_client_socket : public tcp_client_socket
  */
-class tcp_client_socket {
+class client_socket {
    public:
-    tcp_client_socket();
-    virtual ~tcp_client_socket();
+    client_socket() : _wto(1000) {}
+    virtual ~client_socket() {}
 
     /**
      * @brief   connect
@@ -34,14 +35,28 @@ class tcp_client_socket {
      * @param   uint32          timeout         [IN]
      * @return  error code (see error.hpp)
      */
-    virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
+    virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) { return errorcode_t::success; }
     /**
      * @brief   close
      * @param   socket_t        sock            [IN] see connect
      * @param   tls_context_t*  tls_handle      [IN] ignore, see tls_client_socket
      * @return  error code (see error.hpp)
      */
-    virtual return_t close(socket_t sock, tls_context_t* tls_handle);
+    virtual return_t close(socket_t sock, tls_context_t* tls_handle) {
+        return_t ret = errorcode_t::success;
+
+        __try2 {
+            if (INVALID_SOCKET == sock) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
+            ret = close_socket(sock, true, 0);
+        }
+        __finally2 {
+            // do nothing
+        }
+        return ret;
+    }
 
     /**
      * @brief   read
@@ -52,8 +67,8 @@ class tcp_client_socket {
      * @param   size_t*         cbread          [OUT]
      * @return  error code (see error.hpp)
      */
-    virtual return_t read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
-    virtual return_t more(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
+    virtual return_t read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread) { return errorcode_t::success; }
+
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]
@@ -63,72 +78,19 @@ class tcp_client_socket {
      * @param   size_t*         size_sent       [OUT]
      * @return  error code (see error.hpp)
      */
-    virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent);
+    virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent) { return errorcode_t::success; }
 
-    bool support_tls();
+    bool support_tls() { return false; }
 
-    tcp_client_socket& set_wto(uint32 milliseconds);
-    uint32 get_wto();
+    void set_wto(uint32 milliseconds) {
+        if (milliseconds) {
+            _wto = milliseconds;
+        }
+    }
+    uint32 get_wto() { return _wto; }
 
-   private:
+   protected:
     uint32 _wto;  // msec, default 1,000 msec (1 sec)
-};
-
-/**
- * @brief   client socket
- */
-class udp_client_socket {
-   public:
-    udp_client_socket();
-    virtual ~udp_client_socket();
-
-    /**
-     * @brief   open
-     * @param   socket_t*       sock [out]
-     * @param   tls_context_t*  tls_handle [out] ignore, see tls_client_socket
-     * @param   const char*     address [in]
-     * @param   uint16          port [in]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t open(socket_t* sock, tls_context_t* tls_handle, const char* address, uint16 port);
-    /**
-     * @brief   close
-     * @param   socket_t        sock            [IN] see connect
-     * @param   tls_context_t*  tls_handle      [IN] ignore, see tls_client_socket
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t close(socket_t sock, tls_context_t* tls_handle);
-    /**
-     * @brief   read
-     * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN] ignore, see tls_client_socket
-     * @param   char*           ptr_data        [OUT]
-     * @param   size_t          size_data       [IN]
-     * @param   size_t*         size_read       [OUT]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read);
-    /**
-     * @brief   send
-     * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN] ignore, see tls_client_socket
-     * @param   const char*     ptr_data        [IN]
-     * @param   size_t          size_data       [IN]
-     * @param   size_t*         size_sent       [OUT]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent);
-    virtual return_t sendto(socket_t sock, tls_context_t* tls_handle, sockaddr_storage_t* sock_storage, const char* ptr_data, size_t size_data,
-                            size_t* size_sent);
-
-    bool support_tls();
-
-    udp_client_socket& set_wto(uint32 milliseconds);
-    uint32 get_wto();
-
-   private:
-    uint32 _wto;  // msec, default 1,000 msec (1 sec)
-    sockaddr_storage_t _sock_storage;
 };
 
 }  // namespace net

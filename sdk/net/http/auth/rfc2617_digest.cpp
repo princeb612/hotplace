@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
  *
  * Revision History
  * Date         Name                Description
@@ -59,7 +60,7 @@ rfc2617_digest& rfc2617_digest::digest(const std::string& algorithm) {
     openssl_digest dgst;
     std::string digest_value;
 
-    // RFC 7616
+    // RFC 7616 6.1.  Hash Algorithms for HTTP Digest Authentication
     //      MD5, SHA-512-256, SHA-256
     //      MD5-sess, SHA-512-256-sess, SHA-256-sess
     std::map<std::string, std::string> algmap;

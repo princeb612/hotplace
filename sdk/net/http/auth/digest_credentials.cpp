@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *  RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+ *  RFC 7616 HTTP Digest Access Authentication
  *
  * Revision History
  * Date         Name                Description

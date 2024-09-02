@@ -70,6 +70,10 @@ class transport_layer_security {
      */
     return_t accept(tls_context_t** handle, socket_t sock);
     /**
+     * @brief   DTLSv1_listen
+     */
+    return_t dtls_listen(tls_context_t** handle, socket_t sock, struct sockaddr* addr, socklen_t addrlen);
+    /**
      * @brief   close
      * @param   tls_context_t*  handle      [IN]
      * @remarks connect, accept 등으로 생성된 핸들을 해제한다.

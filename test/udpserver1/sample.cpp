@@ -83,7 +83,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     accept_context_t* accept_context = (accept_context_t*)user_context;
     return_t ret = errorcode_t::success;
 
-    if (mux_read == type) {
+    if (mux_dgram == type) {
 #if defined __linux__
         multiplexer_context_t* handle = (multiplexer_context_t*)data_array[0];
         int svr_cli = (int)(long)data_array[1];

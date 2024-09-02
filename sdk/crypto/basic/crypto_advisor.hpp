@@ -534,6 +534,17 @@ class crypto_advisor {
     bool query_feature(const char* feature, uint32 spec = 0);
     bool at_least_openssl_version(unsigned long osslver);
 
+    /**
+     * @brief   cookie secret
+     * @param   uint8 key [in]
+     * @param   size_t secret_size [in]
+     * @param   binary_t& secret [out]
+     * @example
+     *          advisor->get_cookie_secret(0, 16, secret); // generate 16 bytes
+     *          advisor->get_cookie_secret(0, 16, secret); // read generated secret, secret_size ignored
+     */
+    void get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret);
+
    protected:
     return_t build_if_necessary();
     return_t cleanup();
@@ -612,6 +623,8 @@ class crypto_advisor {
 
     std::map<std::string, uint32> _features;
     std::map<std::string, uint32> _versions;
+
+    std::map<uint8, binary_t> _cookie_secret;
 };
 
 extern const hint_cipher_t evp_cipher_methods[];

@@ -113,7 +113,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     return ret;
 }
 
-return_t echo_server(void*) {
+return_t simple_http2_server(void*) {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
@@ -291,8 +291,8 @@ return_t echo_server(void*) {
     return ret;
 }
 
-void test_tlsserver() {
-    thread thread1(echo_server, nullptr);
+void run_server() {
+    thread thread1(simple_http2_server, nullptr);
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -327,7 +327,7 @@ int main(int argc, char** argv) {
     openssl_startup();
     openssl_thread_setup();
 
-    test_tlsserver();
+    run_server();
 
     openssl_thread_end();
     openssl_cleanup();

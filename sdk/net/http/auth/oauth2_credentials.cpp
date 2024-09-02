@@ -3,7 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *  RFC 6749 OAuth 2.0
+ *  RFC 6749 The OAuth 2.0 Authorization Framework
  *
  * Revision History
  * Date         Name                Description
@@ -337,6 +337,7 @@ return_t oauth2_credentials::isvalid(const std::string& access_token) {
 }
 
 return_t oauth2_credentials::refresh(std::string& next_access_token, std::string& next_refresh_token, const std::string& refresh_token, uint16 expire) {
+    // 6.  Refreshing an Access Token
     return_t ret = errorcode_t::success;
     __try2 {
         critical_section_guard guard(_lock);
