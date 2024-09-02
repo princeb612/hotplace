@@ -76,10 +76,10 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            cprint("connect %i", session_socket->cli_socket);
+            cprint("connect %i", session_socket->event_socket);
             break;
         case mux_read:
-            cprint("read %i", session_socket->cli_socket);
+            cprint("read %i", session_socket->event_socket);
             if (option.verbose) {
                 _logger->writeln("%.*s", (unsigned)bufsize, buf);
             }
@@ -104,7 +104,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
                 }
 
                 if (option.verbose) {
-                    cprint("send %i", session_socket->cli_socket);
+                    cprint("send %i", session_socket->event_socket);
                     basic_stream resp;
                     response.get_response(resp);
                     _logger->dump(resp);
@@ -116,7 +116,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
 
             break;
         case mux_disconnect:
-            cprint("disconnect %i", session_socket->cli_socket);
+            cprint("disconnect %i", session_socket->event_socket);
             break;
     }
     return ret;

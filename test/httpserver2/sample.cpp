@@ -92,10 +92,10 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            // cprint("connect %i", session_socket->cli_socket);
+            // cprint("connect %i", session_socket->event_socket);
             break;
         case mux_read:
-            // cprint("read %i", session_socket->cli_socket);
+            // cprint("read %i", session_socket->event_socket);
             if (request) {
                 http_response response(request);
                 if (option.verbose) {
@@ -106,7 +106,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             }
             break;
         case mux_disconnect:
-            // cprint("disconnect %i", session_socket->cli_socket);
+            // cprint("disconnect %i", session_socket->event_socket);
             break;
     }
 
