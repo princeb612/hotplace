@@ -3,6 +3,7 @@
 * Revision 600
   * [changed] test/udpserver2 (udp server on network_server, epoll)
   * [changed] rename tostring, tobin to bin2str, strtobin
+  * [changed] server_socket::read
 
 * Revision 598
   * [changed] test/udpserver2 (udp server on network_server, iocp)
