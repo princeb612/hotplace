@@ -24,7 +24,7 @@ class dtls_client_socket : public udp_client_socket {
     virtual ~dtls_client_socket();
 
     /**
-     * @brief   connect
+     * @brief   open
      * @param   socket_t*       sock            [OUT]
      * @param   tls_context_t** tls_handle      [OUT]
      * @param   const char*     address         [IN]
@@ -33,6 +33,10 @@ class dtls_client_socket : public udp_client_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
+    /**
+     * @brief   connect
+     */
+    virtual return_t connectto(socket_t sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
     /**
      * @brief   close
      * @param   socket_t        sock            [IN]
@@ -47,28 +51,12 @@ class dtls_client_socket : public udp_client_socket {
      * @param   char*           ptr_data        [OUT]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbread          [OUT]
+     * @param   struct sockaddr* addr           [out]
+     * @param   socklen_t*      addrlen         [in]
      * @return  error code (see error.hpp)
-     *          if return errorcode_t::more_data, call more member function
-     *          ret = cli.read (sock, handle, buf, sizeof (buf), &sizeread);
-     *          printf ("%.*s\n", (int) sizeread, buf);
-     *          while (errorcode_t::more_data == ret) {
-     *              ret = cli.more (sock, handle, buf, sizeof (buf), &sizeread);
-     *              printf ("%.*s\n", (int) sizeread, buf);
-     *          }
      */
-    virtual return_t read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
-    /**
-     * @brief read more
-     * @param socket_t          sock
-     * @param tls_context_t*    tls_handle
-     * @param char*             ptr_data
-     * @param size_t            size_data
-     * @param size_t*           cbread
-     * @return
-     *      errorcode_t::pending   no data ready
-     *      errorcode_t::more_data more data
-     */
-    virtual return_t more(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
+    virtual return_t recvfrom(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
+                              socklen_t* addrlen);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]
@@ -76,18 +64,17 @@ class dtls_client_socket : public udp_client_socket {
      * @param   const char*     ptr_data        [IN]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbsent          [OUT]
+     * @param   const struct sockaddr* addr     [in]
+     * @param   socklen_t       addrlen         [in]
      * @return  error code (see error.hpp)
      */
-    virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
+    virtual return_t sendto(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
+                            socklen_t addrlen);
 
     virtual bool support_tls();
 
-    int addref();
-    int release();
-
    protected:
     transport_layer_security* _tls;
-    t_shared_reference<dtls_client_socket> _shared;
 };
 
 }  // namespace net

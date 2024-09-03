@@ -97,7 +97,7 @@ class tls_client_socket : public tcp_client_socket {
     virtual ~tls_client_socket();
 
     /**
-     * @brief   connect
+     * @brief   open and connect
      * @param   socket_t*       sock            [OUT]
      * @param   tls_context_t** tls_handle      [OUT]
      * @param   const char*     address         [IN]
@@ -106,6 +106,10 @@ class tls_client_socket : public tcp_client_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
+    /**
+     * @brief   connect
+     */
+    virtual return_t connectto(socket_t sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
     /**
      * @brief   close
      * @param   socket_t        sock            [IN]
@@ -155,12 +159,8 @@ class tls_client_socket : public tcp_client_socket {
 
     virtual bool support_tls();
 
-    int addref();
-    int release();
-
    protected:
     transport_layer_security* _tls;
-    t_shared_reference<tls_client_socket> _shared;
 };
 
 }  // namespace net

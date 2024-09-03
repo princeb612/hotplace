@@ -23,11 +23,15 @@ namespace net {
  */
 class client_socket {
    public:
-    client_socket() : _wto(1000) {}
+    client_socket() : _wto(1000) { _shared.make_share(this); }
     virtual ~client_socket() {}
 
     /**
-     * @brief   connect
+     * @brief   open (tcp/udp)
+     */
+    virtual return_t open(socket_t* sock, sockaddr_storage_t* addr, const char* address, uint16 port) { return errorcode_t::success; }
+    /**
+     * @brief   open and connect
      * @param   socket_t*       sock            [OUT]
      * @param   tls_context_t** tls_handle      [OUT] ignore, see tls_client_socket
      * @param   const char*     address         [IN]
@@ -36,6 +40,10 @@ class client_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) { return errorcode_t::success; }
+    /**
+     * @brief   connect
+     */
+    virtual return_t connectto(socket_t sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) { return errorcode_t::success; }
     /**
      * @brief   close
      * @param   socket_t        sock            [IN] see connect
@@ -68,6 +76,26 @@ class client_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread) { return errorcode_t::success; }
+    /**
+     * @brief   more (tcp)
+     */
+    virtual return_t more(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread) { return errorcode_t::success; }
+    /**
+     * @brief   recvfrom
+     * @param   socket_t        sock            [IN]
+     * @param   tls_context_t*  tls_handle      [IN] nullptr
+     * @param   char*           ptr_data        [OUT]
+     * @param   size_t          size_data       [IN]
+     * @param   size_t*         cbread          [OUT]
+     * @param   struct sockaddr* addr           [out]
+     * @param   socklen_t*      addrlen         [in]
+     * @return  error code (see error.hpp)
+     * @remarks
+     */
+    virtual return_t recvfrom(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
+                              socklen_t* addrlen) {
+        return errorcode_t::success;
+    }
 
     /**
      * @brief   send
@@ -79,8 +107,24 @@ class client_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent) { return errorcode_t::success; }
+    /**
+     * @brief   send
+     * @param   socket_t        sock            [IN]
+     * @param   tls_context_t*  tls_handle      [IN]
+     * @param   const char*     ptr_data        [IN]
+     * @param   size_t          size_data       [IN]
+     * @param   size_t*         cbsent          [OUT]
+     * @param   const struct sockaddr* addr     [in]
+     * @param   socklen_t       addrlen         [in]
+     * @return  error code (see error.hpp)
+     */
+    virtual return_t sendto(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
+                            socklen_t addrlen) {
+        return errorcode_t::success;
+    }
 
     bool support_tls() { return false; }
+    virtual int socket_type() { return 0; } /* override */
 
     void set_wto(uint32 milliseconds) {
         if (milliseconds) {
@@ -88,8 +132,11 @@ class client_socket {
         }
     }
     uint32 get_wto() { return _wto; }
+    int addref() { return _shared.addref(); }
+    int release() { return _shared.delref(); }
 
    protected:
+    t_shared_reference<client_socket> _shared;
     uint32 _wto;  // msec, default 1,000 msec (1 sec)
 };
 

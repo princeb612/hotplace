@@ -27,6 +27,10 @@ class tcp_client_socket : public client_socket {
     tcp_client_socket();
 
     /**
+     * @brief   open (tcp/udp)
+     */
+    virtual return_t open(socket_t* sock, const char* address, uint16 port);
+    /**
      * @brief   connect
      * @param   socket_t*       sock            [OUT]
      * @param   tls_context_t** tls_handle      [OUT] ignore, see tls_client_socket
@@ -36,6 +40,10 @@ class tcp_client_socket : public client_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
+    /**
+     * @brief   connect
+     */
+    virtual return_t connectto(socket_t sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
 
     /**
      * @brief   read
@@ -47,6 +55,9 @@ class tcp_client_socket : public client_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
+    /**
+     * @brief   more (tcp)
+     */
     virtual return_t more(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread);
     /**
      * @brief   send

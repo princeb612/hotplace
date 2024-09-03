@@ -20,14 +20,9 @@ tls_client_socket::tls_client_socket(transport_layer_security* tls) : tcp_client
         throw errorcode_t::insufficient;
     }
     tls->addref();
-    _shared.make_share(this);
 }
 
 tls_client_socket::~tls_client_socket() { _tls->release(); }
-
-int tls_client_socket::addref() { return _shared.addref(); }
-
-int tls_client_socket::release() { return _shared.delref(); }
 
 return_t tls_client_socket::connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
     return_t ret = errorcode_t::success;
@@ -38,10 +33,29 @@ return_t tls_client_socket::connect(socket_t* sock, tls_context_t** tls_handle, 
             __leave2;
         }
         tls_context_t* handle = nullptr;
-        std::string addr = address;
-        ret = _tls->connect(&handle, SOCK_STREAM, addr.c_str(), port, timeout);
+        ret = _tls->connect(&handle, SOCK_STREAM, address, port, timeout);
         if (errorcode_t::success == ret) {
             *sock = _tls->get_socket(handle);
+            *tls_handle = handle;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_client_socket::connectto(socket_t sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == tls_handle || nullptr == address) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        tls_context_t* handle = nullptr;
+        ret = _tls->connect(&handle, sock, timeout);
+        if (errorcode_t::success == ret) {
             *tls_handle = handle;
         }
     }
@@ -58,7 +72,7 @@ return_t tls_client_socket::close(socket_t sock, tls_context_t* tls_handle) {
         if (nullptr != tls_handle) {
             _tls->close(tls_handle);
         }
-        tcp_client_socket::close(sock, tls_handle);
+        client_socket::close(sock, tls_handle);
     }
     __finally2 {
         // do nothing

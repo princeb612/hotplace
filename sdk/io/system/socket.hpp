@@ -55,13 +55,12 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
 /**
  * @brief   create_socket and connect_socket_addr
  * @param   socket_t*   socket  [out]
- * @param   int         nType   [in]
  * @param   const char* address [in]
  * @param   uint16      port    [in]
  * @param   uint32      timeout [in]
  * @error   error code (see error.hpp)
  */
-return_t connect_socket(socket_t* socket, int nType, const char* address, uint16 port, uint32 timeout);
+return_t connect_socket(socket_t* socket, const char* address, uint16 port, uint32 timeout);
 /**
  * @brief   connect to address
  * @param   socket_t            sock            [in]

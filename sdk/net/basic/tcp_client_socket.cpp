@@ -19,10 +19,37 @@ tcp_client_socket::tcp_client_socket() : client_socket() {
     // do nothing
 }
 
+return_t tcp_client_socket::open(socket_t* sock, const char* address, uint16 port) {
+    return_t ret = errorcode_t::success;
+    sockaddr_storage_t addr;
+    ret = create_socket(sock, &addr, SOCK_STREAM, address, port);
+    return ret;
+}
+
 return_t tcp_client_socket::connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
     return_t ret = errorcode_t::success;
 
-    __try2 { ret = connect_socket(sock, SOCK_STREAM, address, port, timeout); }
+    __try2 {
+        /* open and connect */
+        ret = connect_socket(sock, address, port, timeout);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tcp_client_socket::connectto(socket_t sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        /* connect */
+        sockaddr_storage_t addr;
+        ret = addr_to_sockaddr(&addr, address, port);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = connect_socket_addr(sock, &addr, sizeof(addr), timeout);
+    }
     __finally2 {
         // do nothing
     }

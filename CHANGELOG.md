@@ -1,5 +1,9 @@
 # history
 
+* Revision 602
+  * [changed] client_socket
+  * [changed] connect_socket
+
 * Revision 601
   * [changed] test/udpserver2 (udp server on network_server, epoll/iocp)
     * [changed] server_socket (recvfrom, sendto)

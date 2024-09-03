@@ -65,7 +65,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
          * minimum supported : Windows Server 2003, Windows Vista, Windows XP with SP2
          *
          * ADDRINFOW  hints, *res = nullptr;
-         * ret_routine = GetAddrInfoW(tszAddress, port_value, &hints, &res);
+         * ret_routine = GetAddrInfoW(address, port_value, &hints, &res);
          */
 
         struct addrinfo hints;
@@ -280,15 +280,15 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
     return ret;
 }
 
-return_t connect_socket(socket_t* socket, int nType, const char* tszAddress, uint16 wPort, uint32 dwTimeout) {
+return_t connect_socket(socket_t* socket, const char* address, uint16 port, uint32 dwTimeout) {
     socket_t sock = INVALID_SOCKET;
-    sockaddr_storage_t Addr;
+    sockaddr_storage_t addr;
     return_t ret = errorcode_t::success;
 
     __try2 {
-        ret = create_socket(&sock, &Addr, SOCK_STREAM, tszAddress, wPort);
+        ret = create_socket(&sock, &addr, SOCK_STREAM, address, port);
         if (errorcode_t::success == ret) {
-            ret = connect_socket_addr(sock, &Addr, sizeof(Addr), dwTimeout);
+            ret = connect_socket_addr(sock, &addr, sizeof(addr), dwTimeout);
         }
         if (errorcode_t::success != ret) {
             __leave2;
@@ -310,23 +310,23 @@ return_t connect_socket(socket_t* socket, int nType, const char* tszAddress, uin
     return ret;
 }
 
-return_t connect_socket_addr(socket_t sock, sockaddr_storage_t* pSockAddr, size_t sizeSockAddr, uint32 dwTimeout) {
+return_t connect_socket_addr(socket_t sock, sockaddr_storage_t* addr, size_t addrlen, uint32 wto) {
     return_t ret = errorcode_t::success;
     int ret_routine = 0;
 
     __try2 {
-        if (nullptr == pSockAddr) {
+        if (nullptr == addr) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        if (0 == dwTimeout) {
-            dwTimeout = NET_DEFAULT_TIMEOUT;
+        if (0 == wto) {
+            wto = NET_DEFAULT_TIMEOUT;
         }
 
         set_sock_nbio(sock, 1);
 
-        ret_routine = connect(sock, reinterpret_cast<sockaddr*>(pSockAddr), (int)sizeSockAddr);
+        ret_routine = connect(sock, reinterpret_cast<sockaddr*>(addr), (int)addrlen);
         if (-1 == ret_routine) {
 #if defined __linux__
             if (EINPROGRESS == errno)
@@ -336,7 +336,7 @@ return_t connect_socket_addr(socket_t sock, sockaddr_storage_t* pSockAddr, size_
 #endif
             {
                 fd_set fds;
-                struct timeval tv = {(int32)dwTimeout, 0};  // linux { time_t, suseconds_t }, windows { long, long }
+                struct timeval tv = {(int32)wto, 0};  // linux { time_t, suseconds_t }, windows { long, long }
                 FD_ZERO(&fds);
                 FD_SET(sock, &fds);                                               /* VC 6.0 - C4127 */
                 ret_routine = select((int)sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, -1 if an error occurred */

@@ -43,25 +43,27 @@ void client() {
     socket_t sock = -1;
     char buffer[BUFFER_SIZE];
     basic_stream bs;
+    sockaddr_storage_t addr;
+    socklen_t addrlen = sizeof(addr);
 
     __try2 {
 #if defined _WIN32 || defined _WIN64
         winsock_startup();
 #endif
 
-        ret = cli.open(&sock, nullptr, option.address.c_str(), option.port);
+        ret = cli.open(&sock, &addr, option.address.c_str(), option.port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         size_t cbsent = 0;
-        ret = cli.send(sock, nullptr, option.message.c_str(), option.message.size(), &cbsent);
+        ret = cli.sendto(sock, nullptr, option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&addr, addrlen);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         size_t cbread = 0;
-        ret = cli.read(sock, nullptr, buffer, BUFFER_SIZE, &cbread);
+        ret = cli.recvfrom(sock, nullptr, buffer, BUFFER_SIZE, &cbread, (sockaddr*)&addr, &addrlen);
         if (errorcode_t::success == ret) {
             bs.write(buffer, cbread);
             _logger->writeln("received response: %s", bs.c_str());
