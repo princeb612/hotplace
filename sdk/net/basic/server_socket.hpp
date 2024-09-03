@@ -91,14 +91,26 @@ class server_socket {
      * @param   char*           ptr_data        [OUT]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbread          [OUT]
-     * @param   struct sockaddr* addr           [outopt]
-     * @param   socklen_t* addrlen              [inopt]
      * @return  error code (see error.hpp)
      * @remarks
      *          ERROR_CONNECTION_CLOSED
      */
-    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr = nullptr,
-                          socklen_t* addrlen = nullptr) {
+    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) { return errorcode_t::success; }
+    /**
+     * @brief   recvfrom
+     * @param   socket_t        sock            [IN]
+     * @param   tls_context_t*  tls_handle      [IN] nullptr
+     * @param   int             mode            [IN] ignore, it defines operation mode. see also transport_layer_security_server.
+     * @param   char*           ptr_data        [OUT]
+     * @param   size_t          size_data       [IN]
+     * @param   size_t*         cbread          [OUT]
+     * @param   struct sockaddr* addr           [out]
+     * @param   socklen_t*      addrlen         [in]
+     * @return  error code (see error.hpp)
+     * @remarks
+     */
+    virtual return_t recvfrom(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
+                              socklen_t* addrlen) {
         return errorcode_t::success;
     }
     /**
@@ -111,6 +123,21 @@ class server_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent) { return errorcode_t::success; }
+    /**
+     * @brief   send
+     * @param   socket_t        sock            [IN]
+     * @param   tls_context_t*  tls_handle      [IN]
+     * @param   const char*     ptr_data        [IN]
+     * @param   size_t          size_data       [IN]
+     * @param   size_t*         cbsent          [OUT]
+     * @param   const struct sockaddr* addr     [in]
+     * @param   socklen_t       addrlen         [in]
+     * @return  error code (see error.hpp)
+     */
+    virtual return_t sendto(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
+                            socklen_t addrlen) {
+        return errorcode_t::success;
+    }
 
     virtual bool support_tls() { return false; }
     virtual int socket_type() { return 0; } /* override */

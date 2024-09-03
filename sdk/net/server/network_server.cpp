@@ -706,14 +706,6 @@ return_t network_server::tls_accept_routine(network_multiplexer_context_t* handl
 
         return_t test = errorcode_t::success;
 
-        // if (is_dgram) {
-        //     test = svr_socket->dtls_listen(listen_sock, (sockaddr*)&accpt_ctx.client_addr, sizeof(accpt_ctx.client_addr), &tls_handle);
-        //     if (errorcode_t::success == test) {
-        //         svr.try_connect(handle, listen_sock, &accpt_ctx.client_addr);
-        //         svr.session_accepted(handle, tls_handle, (handle_t)listen_sock, &accpt_ctx.client_addr);
-        //     }
-        // }
-
         test = svr_socket->tls_accept(accpt_ctx.cli_socket, &tls_handle);
         if (errorcode_t::success == test) {
             svr.session_accepted(handle, tls_handle, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);

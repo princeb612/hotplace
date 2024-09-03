@@ -76,8 +76,8 @@ return_t dtls_server_socket::tls_stop_accept() {
     return ret;
 }
 
-return_t dtls_server_socket::read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
-                                  socklen_t* addrlen) {
+return_t dtls_server_socket::recvfrom(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread,
+                                      struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
 
     __try2 { ret = _tls->read(tls_handle, mode, ptr_data, size_data, cbread); }
@@ -87,7 +87,8 @@ return_t dtls_server_socket::read(socket_t sock, tls_context_t* tls_handle, int 
     return ret;
 }
 
-return_t dtls_server_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
+return_t dtls_server_socket::sendto(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent,
+                                    const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
 
     __try2 { ret = _tls->send(tls_handle, tls_io_flag_t::send_all, ptr_data, size_data, cbsent); }

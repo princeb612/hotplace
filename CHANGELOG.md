@@ -1,5 +1,9 @@
 # history
 
+* Revision 601
+  * [changed] test/udpserver2 (udp server on network_server, epoll/iocp)
+    * [changed] server_socket (recvfrom, sendto)
+
 * Revision 600
   * [changed] test/udpserver2 (udp server on network_server, epoll)
   * [changed] rename tostring, tobin to bin2str, strtobin

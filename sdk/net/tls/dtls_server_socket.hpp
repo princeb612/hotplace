@@ -57,12 +57,12 @@ class dtls_server_socket : public udp_server_socket {
      * @param   char*           ptr_data    [IN]
      * @param   size_t          size_data   [IN]
      * @param   size_t*         cbread      [OUT]
-     * @param   struct sockaddr* addr       [outopt]
-     * @param   socklen_t* addrlen          [inopt]
+     * @param   struct sockaddr* addr       [out]
+     * @param   socklen_t* addrlen          [in]
      * @return  error code (see error.hpp)
      */
-    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr = nullptr,
-                          socklen_t* addrlen = nullptr);
+    virtual return_t recvfrom(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
+                              socklen_t* addrlen);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]
@@ -70,9 +70,12 @@ class dtls_server_socket : public udp_server_socket {
      * @param   const char*     ptr_data        [IN]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbsent          [OUT]
+     * @param   const struct sockaddr* addr     [in]
+     * @param   socklen_t       addrlen         [in]
      * @return  error code (see error.hpp)
      */
-    virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
+    virtual return_t sendto(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
+                            socklen_t addrlen);
 
     virtual bool support_tls();
 

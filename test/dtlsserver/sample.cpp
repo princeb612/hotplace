@@ -38,26 +38,20 @@ t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
     net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
-    network_session* session = (network_session*)data_array[3];
     byte_t* buf = (byte_t*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
+    network_session* session = (network_session*)data_array[3];
+    sockaddr_storage_t* addr = (sockaddr_storage_t*)data_array[5];
 
     basic_stream bs;
     std::string message;
 
     switch (type) {
-        case mux_connect:
-            _logger->writeln("connect %d", session_socket->event_socket);
-            break;
-        case mux_read:
         case mux_dgram:
             _logger->writeln("read %d msg [%.*s]", session_socket->event_socket, (unsigned)bufsize, buf);
             // dump_memory (buf, bufsize, &bs, 16, 4);
             // std::cout << bs << std::endl;
-            session->send((char*)buf, bufsize);
-            break;
-        case mux_disconnect:
-            _logger->writeln("disconnect %d", session_socket->event_socket);
+            session->sendto(buf, bufsize, addr);
             break;
     }
     return ret;
@@ -151,7 +145,7 @@ void run_server() {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        _test_case.begin("tls server");
+        _test_case.begin("dtls server");
 
         thread1.start();
     }

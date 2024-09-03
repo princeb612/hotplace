@@ -441,6 +441,78 @@ return_t transport_layer_security::read(tls_context_t* handle, int mode, void* b
     return ret;
 }
 
+return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread, struct sockaddr* addr,
+                                            socklen_t* addrlen) {
+    return_t ret = errorcode_t::success;
+
+    int ret_recv = 0;
+
+    __try2 {
+        if (nullptr == handle || nullptr == buffer) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        if (nullptr != cbread) {
+            *cbread = 0;
+        }
+
+        size_t size_read = buffer_size;
+        if (tls_io_flag_t::read_socket_recv & mode) {
+            ret_recv = ::recvfrom(handle->_socket, (char*)buffer, buffer_size, 0, addr, addrlen);
+            if (0 == ret_recv) { /* gracefully closed */
+                ret = errorcode_t::disconnect;
+                __leave2;
+            }
+            if (-1 == ret_recv) {
+                ret = get_lasterror(ret_recv);
+                __leave2;
+            }
+
+            size_read = ret_recv;
+            if (nullptr != cbread) {
+                *cbread = ret_recv;
+            }
+        }
+        if (tls_io_flag_t::read_bio_write & mode) {
+            BIO_write(handle->_sbio_read, buffer, (int)size_read);
+        }
+        if (tls_io_flag_t::read_ssl_read & mode) {
+            int written = BIO_number_written(handle->_sbio_read);
+            ret_recv = SSL_read(handle->_ssl, buffer, (int)buffer_size);
+            if (ret_recv <= 0) {
+                int ssl_error = SSL_get_error(handle->_ssl, ret_recv);
+                if (SSL_ERROR_WANT_READ == ssl_error) {
+                    ret = errorcode_t::pending;
+                } else {
+                    ret = errorcode_t::internal_error;
+                }
+                __leave2;
+            } else {
+                if (buffer_size < (size_t)written) {
+                    ret = errorcode_t::more_data;
+                    if (nullptr != cbread) {
+                        *cbread = buffer_size;
+                    }
+                }
+                if (nullptr != cbread) {
+                    *cbread = ret_recv;
+                }
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return ret;
+}
+
 return_t transport_layer_security::send(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent) {
     return_t ret = errorcode_t::success;
 
@@ -486,6 +558,61 @@ return_t transport_layer_security::send(tls_context_t* handle, int mode, const c
 
             if (tls_io_flag_t::send_socket_send & mode) {
                 ::send(handle->_socket, &buf[0], ret_read, 0);
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t transport_layer_security::sendto(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent, const struct sockaddr* addr,
+                                          socklen_t addrlen) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (size_sent) {
+            *size_sent = 0;
+        }
+
+        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        if (tls_io_flag_t::send_ssl_write & mode) {
+            int ret_write = SSL_write(handle->_ssl, data, (int)size_data);
+
+            if (ret_write < 1) {
+                ret = errorcode_t::internal_error;
+                __leave2;
+            }
+            if (size_sent) {
+                *size_sent = ret_write;
+            }
+        }
+
+        int written = BIO_number_written(handle->_sbio_write);
+
+        int ret_read = 0;
+        std::vector<char> buf;
+        buf.resize(written);
+
+        if (tls_io_flag_t::send_bio_read & mode) {
+            ret_read = BIO_read(handle->_sbio_write, &buf[0], buf.size());
+            if (ret_read < 1) {
+                ret = errorcode_t::internal_error;
+                __leave2; /* too many traces here */
+            }
+
+            if (tls_io_flag_t::send_socket_send & mode) {
+                ::sendto(handle->_socket, &buf[0], ret_read, 0, addr, addrlen);
             }
         }
     }

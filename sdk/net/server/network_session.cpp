@@ -75,6 +75,26 @@ return_t network_session::send(const char* data_ptr, size_t size_data) {
 
 return_t network_session::send(const byte_t* data_ptr, size_t size_data) { return send((char*)data_ptr, size_data); }
 
+return_t network_session::sendto(const char* data_ptr, size_t size_data, sockaddr_storage_t* addr) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == data_ptr) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        size_t cbsent = 0;
+        ret = get_server_socket()->sendto((socket_t)_session.netsock.event_socket, _session.tls_handle, data_ptr, size_data, &cbsent, (sockaddr*)addr,
+                                          sizeof(sockaddr_storage_t));
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t network_session::sendto(const byte_t* data_ptr, size_t size_data, sockaddr_storage_t* addr) { return sendto((char*)data_ptr, size_data, addr); }
+
 net_session_socket_t* network_session::socket_info() { return &_session.netsock; }
 
 #if defined _WIN32 || defined _WIN64
@@ -94,6 +114,9 @@ int network_session::addref() { return _shared.addref(); }
 int network_session::release() { return _shared.delref(); }
 
 return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr) {
+    // const sockaddr_storage_t* addr
+    // (epoll) nullptr
+    // (iocp)  valid
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
 
@@ -111,7 +134,40 @@ return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, 
         buf_read = (byte_t*)_session.buffer;
 #endif
 
-        // int socktype = get_server_socket()->socket_type();
+        int socktype = get_server_socket()->socket_type();
+        bool is_stream = (SOCK_STREAM == socktype);
+        if (is_stream) {
+            ret = produce_stream(q, buf_read, size_buf_read, addr);
+        } else {
+            ret = produce_dgram(q, buf_read, size_buf_read, addr);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr) {
+    // const sockaddr_storage_t* addr
+    // (epoll) nullptr
+    // (iocp)  valid
+    return_t ret = errorcode_t::success;
+    critical_section_guard guard(_lock);
+
+    __try2 {
+        if (nullptr == q) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+#if defined _WIN32 || defined _WIN64
+        // buf_read, size_buf_read transmitted
+#elif defined __linux__
+        // read
+        size_buf_read = RTL_NUMBER_OF(_session.buffer);
+        buf_read = (byte_t*)_session.buffer;
+#endif
 
         return_t result = errorcode_t::success;
 
@@ -132,6 +188,110 @@ return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, 
             while (true) {
                 result = get_server_socket()->read((socket_t)_session.netsock.event_socket, _session.tls_handle, tls_io_flag_t::read_ssl_read, (char*)buf_read,
                                                    size_buf_read, &cbread); /*SSL_read */
+                if (errorcode_t::success == result || errorcode_t::more_data == result) {
+                    getstream()->produce(buf_read, cbread);
+
+                    data_ready = true;
+
+                    if (_df) {
+                        basic_stream bs;
+                        datetime dt;
+                        datetime_t t;
+                        dt.getlocaltime(&t);
+
+                        bs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d ", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
+                        bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
+                        dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
+                        bs << "\n";
+                        _df(&bs);
+                    }
+
+                } else {
+                    break;
+                }
+            }
+
+            if (data_ready) {
+                q->push(get_priority(), this);
+            }
+        } else { /* wo TLS */
+            size_t cbread = 0;
+#if defined __linux__
+            ret = get_server_socket()->read((socket_t)_session.netsock.event_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, &cbread);
+            if (errorcode_t::success == ret) {
+                getstream()->produce(buf_read, cbread);
+                q->push(get_priority(), this);
+            }
+#elif defined _WIN32 || defined _WIN64
+            // udp client address
+            cbread = size_buf_read;
+            getstream()->produce(buf_read, size_buf_read);
+            q->push(get_priority(), this);
+#endif
+
+            if (_df && (errorcode_t::success == ret)) {
+                basic_stream bs;
+                datetime dt;
+                datetime_t t;
+                dt.getlocaltime(&t);
+
+                bs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d ", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
+                bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
+                dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
+                bs << "\n";
+                _df(&bs);
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr) {
+    // const sockaddr_storage_t* addr
+    // (epoll) nullptr
+    // (iocp)  valid
+    return_t ret = errorcode_t::success;
+    critical_section_guard guard(_lock);
+
+    __try2 {
+        if (nullptr == q) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+#if defined _WIN32 || defined _WIN64
+        // buf_read, size_buf_read transmitted
+#elif defined __linux__
+        // read
+        size_buf_read = RTL_NUMBER_OF(_session.buffer);
+        buf_read = (byte_t*)_session.buffer;
+#endif
+
+        return_t result = errorcode_t::success;
+
+        if (_session.tls_handle) { /* TLS */
+            size_t cbread = 0;
+            bool data_ready = false;
+            int mode = 0;
+#if defined __linux__
+            mode = tls_io_flag_t::read_epoll;
+#elif defined _WIN32 || defined _WIN64
+            mode = tls_io_flag_t::read_iocp;
+#endif
+            sockaddr_storage_t sa;
+            socklen_t sa_size = sizeof(sa);
+            ret = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read, nullptr,
+                                                (sockaddr*)&sa, &sa_size);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            while (true) {
+                result = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, tls_io_flag_t::read_ssl_read,
+                                                       (char*)buf_read, size_buf_read, &cbread, (sockaddr*)&sa, &sa_size); /*SSL_read */
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream()->produce(buf_read, cbread, addr);
 
@@ -163,8 +323,8 @@ return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, 
 #if defined __linux__
             sockaddr_storage_t sa;
             socklen_t sa_size = sizeof(sa);
-            ret = get_server_socket()->read((socket_t)_session.netsock.event_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, &cbread,
-                                            (sockaddr*)&sa, &sa_size);
+            ret = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, &cbread,
+                                                (sockaddr*)&sa, &sa_size);
             if (errorcode_t::success == ret) {
                 getstream()->produce(buf_read, cbread, &sa);
                 q->push(get_priority(), this);

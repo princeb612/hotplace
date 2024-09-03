@@ -118,6 +118,8 @@ class network_session {
      */
     return_t send(const char* data_ptr, size_t size_data);
     return_t send(const byte_t* data_ptr, size_t size_data);
+    return_t sendto(const char* data_ptr, size_t size_data, sockaddr_storage_t* addr);
+    return_t sendto(const byte_t* data_ptr, size_t size_data, sockaddr_storage_t* addr);
 
     /**
      * @brief return socket information
@@ -176,6 +178,9 @@ class network_session {
     network_session& trace(std::function<void(stream_t*)> f);
 
    protected:
+    return_t produce_stream(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr = nullptr);
+    return_t produce_dgram(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr = nullptr);
+
     net_session_t _session;
     network_stream _stream;
     network_stream _request;

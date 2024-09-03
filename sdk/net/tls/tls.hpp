@@ -89,6 +89,7 @@ class transport_layer_security {
      * @param   size_t*         size_read   [OUT]
      */
     return_t read(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* size_read);
+    return_t recvfrom(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* size_read, struct sockaddr* addr, socklen_t* addrlen);
 
     /**
      * @brief   send
@@ -99,6 +100,7 @@ class transport_layer_security {
      * @remarks send 를 SSL_write 로 대체
      */
     return_t send(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent);
+    return_t sendto(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent, const struct sockaddr* addr, socklen_t addrlen);
 
     socket_t get_socket(tls_context_t* handle);
 

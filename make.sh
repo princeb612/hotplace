@@ -73,7 +73,7 @@ if [ ${#args[@]} -ne 0 ]; then
         elif [ $arg = 'format' ]; then
             do_clangformat=1
         elif [ $arg = 'leaks' ]; then
-            CXXFLAGS="${CXXFLAGS} -fsanitize=address"
+            CXXFLAGS="${CXXFLAGS} -fsanitize=leak"
         elif [ $arg = 'odbc' ]; then
             export SUPPORT_ODBC=1
         elif [ $arg = 'opt' ]; then
