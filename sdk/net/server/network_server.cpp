@@ -832,7 +832,14 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
             }
         }
     } else if (multiplexer_event_type_t::mux_dgram == type) {
-        //
+        network_session* session_object = nullptr;
+        ret = context->session_manager.find(context->listen_sock, &session_object); /* reference increased, call release later */
+        if (errorcode_t::success == ret) {
+            /* consumer_routine (decrease), close_if_not_referenced (delete) */
+            ret = session_object->produce(&context->event_queue, nullptr, 0);
+
+            session_object->release(); /* find, refcount-- */
+        }
     }
     // else if (multiplexer_event_type_t::mux_disconnect == type) /* no event catchable */
 

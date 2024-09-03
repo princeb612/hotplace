@@ -28,8 +28,8 @@ namespace io {
  * @sample
  *          // sketch.1
  *          payload pl;
- *          binary_t data = tobin("data");
- *          binary_t pad = tobin("pad");
+ *          binary_t data = strtobin("data");
+ *          binary_t pad = strtobin("pad");
  *          uint8 padlen = 3;  // "pad"
  *          basic_stream bs;
  *          binary_t bin_padded;

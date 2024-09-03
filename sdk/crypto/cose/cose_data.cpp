@@ -221,7 +221,7 @@ cose_data& cose_data::set(const binary_t& bin) {
 }
 
 cose_data& cose_data::set(const std::string& value) {
-    _payload = tobin(value);
+    _payload = strtobin(value);
     return *this;
 }
 

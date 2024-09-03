@@ -318,11 +318,13 @@ int network_stream_data::release() { return _instance.delref(); }
 void network_stream_data::set_sockaddr(const sockaddr_storage_t* cliaddr) {
     // store recvfrom sockaddr
     if (cliaddr) {
-        if (nullptr == _addr) {
-            _addr = (sockaddr_storage_t*)malloc(sizeof(sockaddr_storage_t));
-        }
-        if (_addr) {
-            memcpy(_addr, cliaddr, sizeof(sockaddr_storage_t));
+        if (cliaddr->ss_family) {
+            if (nullptr == _addr) {
+                _addr = (sockaddr_storage_t*)malloc(sizeof(sockaddr_storage_t));
+            }
+            if (_addr) {
+                memcpy(_addr, cliaddr, sizeof(sockaddr_storage_t));
+            }
         }
     }
 }

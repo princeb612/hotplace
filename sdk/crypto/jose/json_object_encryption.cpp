@@ -387,7 +387,7 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                  * p2c, hash)
                  */
                 binary_t pbkdf2_derived_key;
-                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, tostring(oct), salt, p2c);
+                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, bin2str(oct), salt, p2c);
                 ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, pbkdf2_derived_key, kw_iv, cek, encrypted_key);
             }
         }
@@ -596,7 +596,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
                  * p2c, hash)
                  */
                 binary_t pbkdf2_derived_key;
-                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, tostring(oct), salt, p2c);
+                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, bin2str(oct), salt, p2c);
                 ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, pbkdf2_derived_key, kw_iv, encrypted_key, cek);
             }
         }
@@ -1399,7 +1399,7 @@ return_t json_object_encryption::composer::doparse_decryption(jose_context_t *ha
         // do not update if crypt_item_t::item_aad already exists
         // see RFC 7520 5.10.  Including Additional Authenticated Data
         if (protected_header) {
-            item.datamap.insert(std::make_pair(crypt_item_t::item_aad, tobin(protected_header)));
+            item.datamap.insert(std::make_pair(crypt_item_t::item_aad, strtobin(protected_header)));
         }
 
         item.header = protected_header_decoded;
@@ -1411,7 +1411,7 @@ return_t json_object_encryption::composer::doparse_decryption(jose_context_t *ha
         json_unpack_helper(pool, "zip", &zip);
         if (zip) {
             // RFC 7520 5.9.  Compressed Content
-            item.datamap[crypt_item_t::item_zip] = tobin(zip);
+            item.datamap[crypt_item_t::item_zip] = strtobin(zip);
         }
     }
     __finally2 {

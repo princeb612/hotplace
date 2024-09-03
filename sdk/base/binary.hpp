@@ -202,7 +202,7 @@ static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
 /**
  * @brief   util
  */
-static inline std::string tostring(const binary_t& bin) {
+static inline std::string bin2str(const binary_t& bin) {
     std::string result;
 
     result.assign((char*)&bin[0], bin.size());
@@ -212,7 +212,7 @@ static inline std::string tostring(const binary_t& bin) {
 /**
  * @brief   util
  */
-static inline binary_t tobin(const std::string& source) {
+static inline binary_t strtobin(const std::string& source) {
     binary_t result;
 
     result.insert(result.end(), source.begin(), source.end());

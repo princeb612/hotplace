@@ -76,7 +76,8 @@ return_t dtls_server_socket::tls_stop_accept() {
     return ret;
 }
 
-return_t dtls_server_socket::read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) {
+return_t dtls_server_socket::read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
+                                  socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
 
     __try2 { ret = _tls->read(tls_handle, mode, ptr_data, size_data, cbread); }

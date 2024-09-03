@@ -46,8 +46,8 @@ void test_payload_dump() {
 
     {
         payload pl;
-        binary_t data = tobin("data");
-        binary_t pad = tobin("pad");
+        binary_t data = strtobin("data");
+        binary_t pad = strtobin("pad");
         uint8 padlen = 3;  // "pad"
         basic_stream bs;
         binary_t bin_padded;
@@ -92,7 +92,7 @@ void test_payload_parse() {
 
         binary_t data2;
         pl.select("data")->get_variant().dump(data2, true);
-        _test_case.assert(data2 == tobin("data"), __FUNCTION__, "read binary");
+        _test_case.assert(data2 == strtobin("data"), __FUNCTION__, "read binary");
     }
 }
 
@@ -108,7 +108,7 @@ void test_payload_uint24() {
     const OPTION& option = cmdline->value();
     _test_case.begin("payload");
 
-    binary_t pad = tobin("pad");
+    binary_t pad = strtobin("pad");
     binary_t bin_payload;
     binary_t expect = base16_decode("0310000010000000706164");
 
@@ -229,7 +229,7 @@ void test_http2_frame() {
 
     http2_frame_data frame_data;
     frame_data.set_flags(h2_flag_end_stream).set_stream_id(1);
-    frame_data.get_data() = tobin("hello world");
+    frame_data.get_data() = strtobin("hello world");
 
     const char* expect_data =
         "00 00 0B 00 01 00 00 00 01 68 65 6C 6C 6F 20 77"
@@ -241,7 +241,7 @@ void test_http2_frame() {
 
     http2_frame_headers frame_goaway;
     frame_goaway.set_stream_id(1);
-    frame_goaway.get_fragment() = tobin("protocol error cause of .... blah blah ...");
+    frame_goaway.get_fragment() = strtobin("protocol error cause of .... blah blah ...");
 
     const char* expect_goaway =
         "00 00 2A 01 00 00 00 00 01 70 72 6F 74 6F 63 6F "

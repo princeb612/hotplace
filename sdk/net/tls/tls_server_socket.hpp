@@ -59,9 +59,12 @@ class tls_server_socket : public tcp_server_socket {
      * @param   char*           ptr_data    [IN]
      * @param   size_t          size_data   [IN]
      * @param   size_t*         cbread      [OUT]
+     * @param   struct sockaddr* addr       [outopt]
+     * @param   socklen_t* addrlen          [inopt]
      * @return  error code (see error.hpp)
      */
-    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
+    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr = nullptr,
+                          socklen_t* addrlen = nullptr);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]

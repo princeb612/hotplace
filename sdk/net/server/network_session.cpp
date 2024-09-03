@@ -161,12 +161,16 @@ return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, 
         } else { /* wo TLS */
             size_t cbread = 0;
 #if defined __linux__
-            ret = get_server_socket()->read((socket_t)_session.netsock.event_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, &cbread);
+            sockaddr_storage_t sa;
+            socklen_t sa_size = sizeof(sa);
+            ret = get_server_socket()->read((socket_t)_session.netsock.event_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, &cbread,
+                                            (sockaddr*)&sa, &sa_size);
             if (errorcode_t::success == ret) {
-                getstream()->produce(buf_read, cbread, addr);
+                getstream()->produce(buf_read, cbread, &sa);
                 q->push(get_priority(), this);
             }
 #elif defined _WIN32 || defined _WIN64
+            // udp client address
             cbread = size_buf_read;
             getstream()->produce(buf_read, size_buf_read, addr);
             q->push(get_priority(), this);

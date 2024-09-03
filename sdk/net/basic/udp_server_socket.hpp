@@ -52,17 +52,17 @@ class udp_server_socket : public server_socket {
      * @param   socket_t        sock            [IN]
      * @param   tls_context_t*  tls_handle      [IN] nullptr
      * @param   int             mode            [IN] ignore, it defines operation mode. see also transport_layer_security_server.
-     * @param   struct sockaddr* addr           [in]
-     * @param   socklen_t*      addrlen         [in]
      * @param   char*           ptr_data        [OUT]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbread          [OUT]
+     * @param   struct sockaddr* addr           [in]
+     * @param   socklen_t*      addrlen         [in]
      * @return  error code (see error.hpp)
      * @remarks
      *          ERROR_CONNECTION_CLOSED
      */
-    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, struct sockaddr* addr, socklen_t* addrlen, char* ptr_data, size_t size_data,
-                          size_t* cbread);
+    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
+                          socklen_t* addrlen);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]

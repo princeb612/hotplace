@@ -44,7 +44,7 @@ class json_object_encryption {
      *          jose_context_t* handle_decrypt = nullptr;
      *          jose.open (&handle_encrypt, &crypto_pubkey);
      *          jose.open (&handle_decrypt, &crypto_privkey);
-     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_ecdh_es, tostring (input), encrypted, jose_serialization_t::jose_json);
+     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_ecdh_es, bin2str (input), encrypted, jose_serialization_t::jose_json);
      *          ret = jose.decrypt (handle_decrypt, encrypted, output, result);
      *          jose.close (handle_encrypt);
      *          jose.close (handle_decrypt);
@@ -92,7 +92,7 @@ class json_object_encryption {
      *          algs.push_back (jwa_t::jwa_pbes2_hs256_a128kw);
      *          algs.push_back (jwa_t::jwa_pbes2_hs384_a192kw);
      *          algs.push_back (jwa_t::jwa_pbes2_hs512_a256kw);
-     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, algs, tostring (input), encrypted, jose_serialization_t::jose_json);
+     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, algs, bin2str (input), encrypted, jose_serialization_t::jose_json);
      *          jose.close (handle_encrypt);
      */
     return_t encrypt(jose_context_t* context, jwe_t enc, std::list<jwa_t> algs, const binary_t& input, std::string& output,

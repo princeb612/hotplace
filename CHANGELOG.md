@@ -1,7 +1,11 @@
 # history
 
+* Revision 600
+  * [changed] test/udpserver2 (udp server on network_server, epoll)
+  * [changed] rename tostring, tobin to bin2str, strtobin
+
 * Revision 598
-  * [changed] test/udpserver2 (udp server on network_server)
+  * [changed] test/udpserver2 (udp server on network_server, iocp)
     * [added] multiplexer_event_type_t::mux_dgram, typeof_socket
     * [changed] tcp_server_socket, udp_server_socket inherits from server_socket
     * [changed] tcp_client_socket, udp_client_socket inherits from client_socket

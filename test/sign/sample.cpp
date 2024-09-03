@@ -41,7 +41,7 @@ void test_hash_hmac_sign() {
     // Rhapsody - Emerald Sword
     constexpr char in_source[] = "I crossed the valleys the dust of midlands / To search for the third key to open the gates";
     binary_t bin_key = base16_decode(key_source);
-    binary_t bin_in = tobin(in_source);
+    binary_t bin_in = strtobin(in_source);
 
     keychain.add_oct(&key, base16_decode(key_source));
     binary_t result;
@@ -164,7 +164,7 @@ void test_ecdsa_testvector(const test_vector_nist_cavp_ecdsa_t* vector, size_t s
         if (base16) {
             message = base16_decode(vector[i].msg);
         } else {
-            message = tobin(vector[i].msg);
+            message = strtobin(vector[i].msg);
         }
         test_ecdsa(&key, vector[i].nid, vector[i].alg, message, signature);
     }
