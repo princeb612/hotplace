@@ -36,7 +36,7 @@ class client_socket {
      * @param   tls_context_t** tls_handle      [OUT] ignore, see tls_client_socket
      * @param   const char*     address         [IN]
      * @param   uint16          port            [IN]
-     * @param   uint32          timeout         [IN]
+     * @param   uint32          timeout         [IN] second
      * @return  error code (see error.hpp)
      */
     virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) { return errorcode_t::success; }

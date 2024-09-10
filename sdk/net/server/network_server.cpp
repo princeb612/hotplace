@@ -3,7 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *      UDP not supported
+ *      TCP/TLS/UDP ... support
+ *      DTLS not supported yet
  *
  *      bind socket and multiplexr.handle
  *                 TCP/TLS   DTLS
@@ -20,11 +21,20 @@
  *
  *             mux    type     accept_queue.push
  *          1) epoll  tcp/tls  network_routine.mux_connect->accept_routine
- *          2) epoll  dtls     ...
+ *          2) epoll  dtls     not supported yet
  *          3) epoll  udp      N/A
  *          4) iocp   tcp/tls  accept_routine
- *          5) iocp   dtls     ...
+ *          5) iocp   dtls     not supported yet
  *          6) iocp   udp      N/A
+ *
+ *      network_session
+ *          TCP/TLS
+ *              accept - new network_session
+ *              disclosure - delete network_session
+ *          UDP/DTLS
+ *              single network_session
+ *              recvfrom - network_session per remote address (DTLS cookie)
+ *
  *
  * Revision History
  * Date         Name                Description
@@ -40,20 +50,18 @@ namespace net {
 
 #define NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE 0x20151127
 
-struct _network_multiplexer_context_t;
-typedef struct _accept_context_t {
+struct accept_context_t {
     struct _network_multiplexer_context_t* mplexer_context;
     socket_t cli_socket;
     sockaddr_storage_t client_addr;
     socklen_t client_addr_len;
 
-    _accept_context_t() : mplexer_context(nullptr), cli_socket(INVALID_SOCKET) { client_addr_len = sizeof(client_addr); }
-
-} accept_context_t;
+    accept_context_t() : mplexer_context(nullptr), cli_socket(INVALID_SOCKET) { client_addr_len = sizeof(client_addr); }
+};
 
 typedef std::queue<accept_context_t> accept_queue_t;
 
-typedef struct _network_multiplexer_context_t {
+struct _network_multiplexer_context_t {
     uint32 signature;
 
     multiplexer_context_t* mplexer_handle;
@@ -84,9 +92,8 @@ typedef struct _network_multiplexer_context_t {
 
     ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler;
 
-    net_dgram_t dgram;
-
     std::function<void(stream_t*)> df;
+    network_session* dgram_session;
 
     _network_multiplexer_context_t()
         : signature(0),
@@ -96,8 +103,9 @@ typedef struct _network_multiplexer_context_t {
           callback_param(nullptr),
           listen_sock(INVALID_SOCKET),
           svr_socket(nullptr),
-          accept_control_handler(nullptr) {}
-} network_multiplexer_context_t;
+          accept_control_handler(nullptr),
+          dgram_session(nullptr) {}
+};
 
 network_server::network_server() {}
 
@@ -162,6 +170,8 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
         context->svr_socket = svr_socket;
 
         context->accept_control_handler = nullptr;
+
+        context->session_manager.set_server_conf(conf);  // serverconf_tcp_bufsize, server_udp_bufsize
 
         context->signature = NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE;
 
@@ -658,7 +668,6 @@ return_t network_server::tls_accept_thread(void* user_context) {
             }
         }
 
-        // openssl_thread_end (); // ssl23_accept memory leak, call for each thread
         handle->svr_socket->tls_stop_accept();
     }
     __finally2 {
@@ -848,9 +857,17 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
         svr.session_closed(context, session_object->socket_info()->event_socket);
     } else if (multiplexer_event_type_t::mux_dgram) {
         // socket_t listen_sock = context->listen_sock;
-        net_dgram_wsabuf_t& wsabuf_read = context->dgram.wsabuf_pair.r;
-        sockaddr_storage_t& addr = context->dgram.netsock.cli_addr;
-        session_object->produce(&context->event_queue, (byte_t*)wsabuf_read.buffer, transferred, &addr);
+        network_session_buffer_t* wsabuf_read = context->dgram_session->get_buffer();
+        const sockaddr_storage_t& addr = context->dgram_session->socket_info()->cli_addr;
+        if (context->svr_socket->support_tls()) {
+            network_session* dtls_session = nullptr;
+            context->session_manager.dgram_start_cookie((handle_t)context->listen_sock, &addr, context->svr_socket, nullptr, &dtls_session);
+            if (dtls_session) {
+                dtls_session->produce(&context->event_queue, (byte_t*)&wsabuf_read->bin[0], transferred, &addr);
+            }
+        } else {
+            session_object->produce(&context->event_queue, (byte_t*)&wsabuf_read->bin[0], transferred, &addr);
+        }
         svr.dgram_ready_to_read(context);
     }
 
@@ -1004,7 +1021,7 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
         void* dispatch_data[4] = {
             nullptr,
         };
-        dispatch_data[0] = (void*)session_object->socket_info(); /* NET_OBJECT_SOCKET* */
+        dispatch_data[0] = (void*)session_object->socket_info();
         handle->callback_routine(multiplexer_event_type_t::mux_connect, 4, dispatch_data, nullptr, handle->callback_param);
     }
     __finally2 {
@@ -1018,25 +1035,26 @@ return_t network_server::dgram_start(network_multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
 
     socket_t listen_sock = handle->listen_sock;
-    network_session* session_object = nullptr;
-    handle->session_manager.dgram_start((handle_t)listen_sock, handle->svr_socket, nullptr, &session_object);
-    mplexer.bind(handle->mplexer_handle, (handle_t)listen_sock, session_object);
-#if defined _WIN32 || defined _WIN64
+    handle->session_manager.dgram_start((handle_t)listen_sock, handle->svr_socket, nullptr, &handle->dgram_session);
+    mplexer.bind(handle->mplexer_handle, (handle_t)listen_sock, handle->dgram_session);
+
     dgram_ready_to_read(handle);
-#endif
+
     return ret;
 }
 
 return_t network_server::dgram_ready_to_read(network_multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
+    network_session_buffer_t* wsabuf_read = handle->dgram_session->get_buffer();
+    wsabuf_read->init();
+#if defined __linux__
+    //
+#elif defined _WIN32 || defined _WIN64
     socket_t listen_sock = handle->listen_sock;
-#if defined _WIN32 || defined _WIN64
-    net_dgram_wsabuf_t& wsabuf_read = handle->dgram.wsabuf_pair.r;
-    sockaddr_storage_t& addr = handle->dgram.netsock.cli_addr;
+    sockaddr_storage_t& addr = handle->dgram_session->socket_info()->cli_addr;
     uint32 flags = 0;
-    wsabuf_read.init();
     int addrlen = sizeof(sockaddr_storage_t);
-    WSARecvFrom(listen_sock, &wsabuf_read.wsabuf, 1, nullptr, &flags, (sockaddr*)&addr, &addrlen, &wsabuf_read.overlapped, nullptr);
+    WSARecvFrom(listen_sock, &wsabuf_read->wsabuf, 1, nullptr, &flags, (sockaddr*)&addr, &addrlen, &wsabuf_read->overlapped, nullptr);
 #endif
     return ret;
 }
@@ -1065,7 +1083,7 @@ return_t network_server::session_closed(network_multiplexer_context_t* handle, h
             void* dispatch_data[4] = {
                 nullptr,
             };
-            dispatch_data[0] = (void*)session_object->socket_info(); /* NET_OBJECT_SOCKET* */
+            dispatch_data[0] = (void*)session_object->socket_info();
             handle->callback_routine(multiplexer_event_type_t::mux_disconnect, 4, dispatch_data, nullptr, handle->callback_param);
 
             /* end-of-life. if reference counter is 0, close a socket and delete an instance */

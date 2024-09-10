@@ -384,6 +384,21 @@ class t_key_value {
 
         return value;
     }
+    t_key_value<key_t, value_t> &operator=(const t_key_value<key_t, value_t> &rhs) {
+        _keyvalue_map.clear();
+        _keyvalue_map = rhs._keyvalue_map;
+        return *this;
+    }
+    return_t copyfrom(const t_key_value<key_t, value_t> *rhs) {
+        return_t ret = errorcode_t::success;
+        if (nullptr == rhs) {
+            ret = errorcode_t::invalid_parameter;
+        } else {
+            _keyvalue_map.clear();
+            _keyvalue_map = rhs->_keyvalue_map;
+        }
+        return ret;
+    }
 
    private:
     keyvalue_map_t _keyvalue_map;

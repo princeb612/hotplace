@@ -70,6 +70,6 @@
 #include <sdk/net/tls/tls.hpp>
 #include <sdk/net/tls/tls_client_socket.hpp>
 #include <sdk/net/tls/tls_server_socket.hpp>
-#include <sdk/net/tls/x509.hpp>
+#include <sdk/net/tls/x509cert.hpp>
 
 #endif

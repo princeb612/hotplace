@@ -53,8 +53,9 @@ return_t tls_client_socket::connectto(socket_t sock, tls_context_t** tls_handle,
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
         tls_context_t* handle = nullptr;
-        ret = _tls->connect(&handle, sock, timeout);
+        ret = _tls->connectto(&handle, sock, address, port, timeout);
         if (errorcode_t::success == ret) {
             *tls_handle = handle;
         }

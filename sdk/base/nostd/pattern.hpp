@@ -413,7 +413,7 @@ class t_trie {
         if (pattern) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
-                const BT& t = this->_memberof(pattern, i);
+                const BT& t = _memberof(pattern, i);
                 auto item = current->children.find(t);
                 if (current->children.end() == item) {
                     return -1;  // not found
@@ -435,7 +435,7 @@ class t_trie {
         bool ret = false;
         arr.clear();
         std::vector<BT> prefix;
-        auto node = searchindex(this->_root, index, prefix, arr);
+        auto node = searchindex(_root, index, prefix, arr);
         if (node) {
             ret = true;
         }
@@ -1436,12 +1436,15 @@ class t_wildcards {
 template <typename BT = char, typename T = BT>
 class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
    public:
-    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
+    typedef typename t_aho_corasick<BT, T>::memberof_t memberof_t;
     typedef typename t_aho_corasick<BT, T>::trienode trienode;
     enum {
         flag_single = (1 << 0),
         flag_any = (1 << 1),
     };
+    using t_aho_corasick<BT, T>::_root;
+    using t_aho_corasick<BT, T>::_patterns;
+    using t_aho_corasick<BT, T>::_memberof;
 
    public:
     t_aho_corasick_wildcard(memberof_t memberof = memberof_defhandler<BT, T>, const BT& wildcard_single = BT(), const BT& wildcard_any = BT())
@@ -1451,14 +1454,14 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
     virtual void doinsert(const T* pattern, size_t size) {
         // sketch - same as t_aho_corasick<BT, T>::doinsert but added flag
         if (pattern && size) {
-            size_t index = this->_patterns.size();
+            size_t index = _patterns.size();
 
-            trienode* current = this->_root;
+            trienode* current = _root;
             size_t count_any = 0;
             int modes = 0;  // begins with *, ends with * (see hidden_tag_mode_t)
 
             for (size_t i = 0; i < size; ++i) {
-                const BT& t = this->_memberof(pattern, i);
+                const BT& t = _memberof(pattern, i);
 
                 trienode* child = current->children[t];
                 if (nullptr == child) {
@@ -1490,7 +1493,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
             }
 
             current->output.insert(index);
-            this->_patterns.insert({index, size});
+            _patterns.insert({index, size});
             if (count_any) {
                 auto prefix_index = index + baseof_prefix;
                 _hidden[prefix_index].adjust = size - count_any;
@@ -1516,7 +1519,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                 }
             };
 
-            enqueue(this->_root, 0);
+            enqueue(_root, 0);
 
             while (false == q.empty()) {
                 const auto& pair = q.front();
@@ -1525,9 +1528,9 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                 visit.insert({current, i});
                 q.pop();
 
-                const BT& t = this->_memberof(source, i);
+                const BT& t = _memberof(source, i);
 
-                while ((current != this->_root) && (current->children.end() == current->children.find(t)) && (false == has_wildcard(current))) {
+                while ((current != _root) && (current->children.end() == current->children.find(t)) && (false == has_wildcard(current))) {
                     current = current->failure;
                 }
                 auto iter = current->children.find(t);
@@ -1606,10 +1609,10 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                     }
 
                     // yield - root
-                    enqueue(this->_root, i + 1);
+                    enqueue(_root, i + 1);
                 } else {
                     // yield - root
-                    enqueue(this->_root, i + 1);
+                    enqueue(_root, i + 1);
                 }
             }
         }

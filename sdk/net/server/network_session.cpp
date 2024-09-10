@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
@@ -21,7 +22,7 @@ network_session::network_session(server_socket* serversocket) {
 
 network_session::~network_session() {
     get_server_socket()->close((socket_t)_session.netsock.event_socket, _session.tls_handle);
-    _session.svr_socket->release();
+    get_server_socket()->release();
 }
 
 return_t network_session::connected(handle_t event_socket, sockaddr_storage_t* sockaddr, tls_context_t* tls_handle) {
@@ -38,7 +39,7 @@ return_t network_session::dgram_start(handle_t listen_sock) {
 
     _session.netsock.event_socket = listen_sock;
     memset(&(_session.netsock.cli_addr), 0, sizeof(sockaddr_storage_t));
-    // _session.tls_handle = nullptr;
+    get_server_socket()->dtls_open(&_session.tls_handle, (socket_t)listen_sock);
     return ret;
 }
 
@@ -50,8 +51,7 @@ return_t network_session::ready_to_read() {
     DWORD dwFlags = 0;
     DWORD dwRecvBytes = 0;
 
-    WSARecv((socket_t)_session.netsock.event_socket, &(_session.wsabuf_pair.r.wsabuf), 1, &dwRecvBytes, &dwFlags, &(_session.wsabuf_pair.r.overlapped),
-            nullptr);
+    WSARecv((socket_t)_session.netsock.event_socket, &(_session.buf.wsabuf), 1, &dwRecvBytes, &dwFlags, &(_session.buf.overlapped), nullptr);
 #endif
     return ret;
 }
@@ -95,10 +95,12 @@ return_t network_session::sendto(const char* data_ptr, size_t size_data, sockadd
 
 return_t network_session::sendto(const byte_t* data_ptr, size_t size_data, sockaddr_storage_t* addr) { return sendto((char*)data_ptr, size_data, addr); }
 
-net_session_socket_t* network_session::socket_info() { return &_session.netsock; }
+network_session_socket_t* network_session::socket_info() { return _session.socket_info(); }
+
+network_session_buffer_t* network_session::get_buffer() { return &_session.buf; }
 
 #if defined _WIN32 || defined _WIN64
-WSABUF* network_session::wsabuf_read() { return &_session.wsabuf_pair.r.wsabuf; }
+WSABUF* network_session::wsabuf_read() { return &_session.buf.wsabuf; }
 #endif
 
 network_stream* network_session::getstream() { return &_stream; }
@@ -126,12 +128,12 @@ return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, 
             __leave2;
         }
 
-#if defined _WIN32 || defined _WIN64
-        // buf_read, size_buf_read transmitted
-#elif defined __linux__
+#if defined __linux__
         // read
-        size_buf_read = RTL_NUMBER_OF(_session.buffer);
-        buf_read = (byte_t*)_session.buffer;
+        size_buf_read = _session.buf.buflen;
+        buf_read = (byte_t*)_session.buf.buffer;
+#elif defined _WIN32 || defined _WIN64
+        // buf_read, size_buf_read transmitted
 #endif
 
         int socktype = get_server_socket()->socket_type();
@@ -161,12 +163,12 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
             __leave2;
         }
 
-#if defined _WIN32 || defined _WIN64
-        // buf_read, size_buf_read transmitted
-#elif defined __linux__
+#if defined __linux__
         // read
-        size_buf_read = RTL_NUMBER_OF(_session.buffer);
-        buf_read = (byte_t*)_session.buffer;
+        size_buf_read = _session.buf.buflen;
+        buf_read = (byte_t*)_session.buf.buffer;
+#elif defined _WIN32 || defined _WIN64
+        // buf_read, size_buf_read transmitted
 #endif
 
         return_t result = errorcode_t::success;
@@ -262,36 +264,42 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
             __leave2;
         }
 
-#if defined _WIN32 || defined _WIN64
-        // buf_read, size_buf_read transmitted
-#elif defined __linux__
+#if defined __linux__
         // read
-        size_buf_read = RTL_NUMBER_OF(_session.buffer);
-        buf_read = (byte_t*)_session.buffer;
+        size_buf_read = _session.buf.buflen;
+        buf_read = (byte_t*)_session.buf.buffer;
+#elif defined _WIN32 || defined _WIN64
+        // buf_read, size_buf_read transmitted
 #endif
 
         return_t result = errorcode_t::success;
 
-        if (_session.tls_handle) { /* TLS */
-            size_t cbread = 0;
-            bool data_ready = false;
-            int mode = 0;
-#if defined __linux__
-            mode = tls_io_flag_t::read_epoll;
-#elif defined _WIN32 || defined _WIN64
-            mode = tls_io_flag_t::read_iocp;
-#endif
-            sockaddr_storage_t sa;
-            socklen_t sa_size = sizeof(sa);
-            ret = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read, nullptr,
-                                                (sockaddr*)&sa, &sa_size);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
+        if (get_server_socket()->support_tls()) { /* TLS */
+            // TODO
 
-            while (true) {
+            __try2 {
+                size_t cbread = 0;
+                bool data_ready = false;
+                int mode = 0;
+
+                sockaddr* sas = nullptr;
+                socklen_t saslen = sizeof(sockaddr_storage_t);
+#if defined __linux__
+                mode = tls_io_flag_t::read_epoll | read_dtls_handshake;
+                sockaddr_storage_t sa;
+                sas = (sockaddr*)&sa;
+#elif defined _WIN32 || defined _WIN64
+                mode = tls_io_flag_t::read_iocp | read_dtls_handshake;
+                sas = (sockaddr*)addr;
+#endif
+                ret = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read, nullptr,
+                                                    sas, &saslen);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
+
                 result = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, tls_io_flag_t::read_ssl_read,
-                                                       (char*)buf_read, size_buf_read, &cbread, (sockaddr*)&sa, &sa_size); /*SSL_read */
+                                                       (char*)buf_read, size_buf_read, &cbread, sas, &saslen); /*SSL_read */
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream()->produce(buf_read, cbread, addr);
 
@@ -309,14 +317,14 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                         bs << "\n";
                         _df(&bs);
                     }
+                }
 
-                } else {
-                    break;
+                if (data_ready) {
+                    q->push(get_priority(), this);
                 }
             }
-
-            if (data_ready) {
-                q->push(get_priority(), this);
+            __finally2 {
+                //
             }
         } else { /* wo TLS */
             size_t cbread = 0;
@@ -373,137 +381,6 @@ http2_session& network_session::get_http2_session() { return _http2_session; }
 network_session& network_session::trace(std::function<void(stream_t*)> f) {
     _df = f;
     return *this;
-}
-
-network_session_manager::network_session_manager() {
-    // do nothing
-}
-
-network_session_manager::~network_session_manager() { shutdown(); }
-
-return_t network_session_manager::connected(handle_t event_socket, sockaddr_storage_t* sockaddr, server_socket* svr_socket, tls_context_t* tls_handle,
-                                            network_session** ptr_session_object) {
-    return_t ret = errorcode_t::success;
-    network_session_map_pib_t pairib;
-    network_session* session_object = nullptr;
-
-    __try2 {
-        critical_section_guard guard(_session_lock);
-
-        pairib = _session_map.insert(std::make_pair(event_socket, (network_session*)nullptr));
-        if (true == pairib.second) {
-            session_object = new network_session(svr_socket);
-            pairib.first->second = session_object;
-            session_object->connected(event_socket, sockaddr, tls_handle);
-            *ptr_session_object = session_object;
-        } else {
-            ret = errorcode_t::already_assigned;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-
-    return ret;
-}
-
-return_t network_session_manager::dgram_start(handle_t listen_sock, server_socket* svr_socket, tls_context_t* tls_handle,
-                                              network_session** ptr_session_object) {
-    return_t ret = errorcode_t::success;
-    network_session_map_pib_t pairib;
-    network_session* session_object = nullptr;
-
-    __try2 {
-        critical_section_guard guard(_session_lock);
-
-        pairib = _session_map.insert(std::make_pair(listen_sock, (network_session*)nullptr));
-        if (true == pairib.second) {
-            session_object = new network_session(svr_socket);
-            pairib.first->second = session_object;
-            session_object->dgram_start(listen_sock);
-            *ptr_session_object = session_object;
-        } else {
-            *ptr_session_object = pairib.first->second;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-
-    return ret;
-}
-
-return_t network_session_manager::dtls_start(handle_t listen_sock) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
-
-return_t network_session_manager::find(handle_t event_socket, network_session** ptr_session_object) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == ptr_session_object) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        critical_section_guard guard(_session_lock);
-        network_session_map_t::iterator iter = _session_map.find(event_socket);
-        if (_session_map.end() == iter) {
-            ret = errorcode_t::not_found;
-        } else {
-            network_session* session_object = iter->second;
-            session_object->addref(); /* in-use */
-            *ptr_session_object = session_object;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-
-    return ret;
-}
-
-network_session* network_session_manager::operator[](handle_t event_socket) {
-    network_session* ptr_session_object = nullptr;
-
-    find(event_socket, &ptr_session_object);
-    return ptr_session_object;
-}
-
-return_t network_session_manager::ready_to_close(handle_t event_socket, network_session** ptr_session_object) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == ptr_session_object) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        critical_section_guard guard(_session_lock);
-        network_session_map_t::iterator iter = _session_map.find(event_socket);
-        if (_session_map.end() == iter) {
-            ret = errorcode_t::not_found;
-        } else {
-            network_session* session_object = iter->second;
-            *ptr_session_object = session_object;
-
-            _session_map.erase(iter);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-
-    return ret;
-}
-
-void network_session_manager::shutdown() {
-    critical_section_guard guard(_session_lock);
-    for (auto item : _session_map) {
-        item.second->release();
-    }
-    _session_map.clear();
 }
 
 }  // namespace net

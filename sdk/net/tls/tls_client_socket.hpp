@@ -13,7 +13,7 @@
 
 #include <sdk/net/basic/tcp_client_socket.hpp>
 #include <sdk/net/tls/tls.hpp>
-#include <sdk/net/tls/x509.hpp>
+#include <sdk/net/tls/x509cert.hpp>
 
 namespace hotplace {
 namespace net {
@@ -32,7 +32,7 @@ namespace net {
  *
  *      tls_context_t* handle = nullptr;
  *      SSL_CTX* x509 = nullptr;
- *      x509_open_simple(&x509);
+ *      x509cert_open_simple(&x509);
  *      transport_layer_security tls(x509);
  *      tls_client_socket cli(&tls);
  *
@@ -102,7 +102,7 @@ class tls_client_socket : public tcp_client_socket {
      * @param   tls_context_t** tls_handle      [OUT]
      * @param   const char*     address         [IN]
      * @param   uint16          port            [IN]
-     * @param   uint32          timeout         [IN]
+     * @param   uint32          timeout         [IN] second
      * @return  error code (see error.hpp)
      */
     virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);

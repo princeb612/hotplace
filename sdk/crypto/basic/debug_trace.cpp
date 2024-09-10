@@ -20,13 +20,27 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
+return_t get_opensslerror(int rc) {
+    return_t ret = errorcode_t::success;
+    if (rc < 0) {
+        ret = errorcode_t::error_openssl_inside;
+        uint32 option = get_trace_option();
+        if (trace_option_t::trace_bt & option) {
+            basic_stream stream;
+            debug_trace_openssl(&stream);
+            std::cout << stream;
+        }
+    }
+    return ret;
+}
+
 return_t trace_openssl(return_t errorcode) {
     return_t ret = errorcode_t::success;
 
     if (errorcode_t::success != errorcode) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
-            ansi_string stream;
+            basic_stream stream;
             debug_trace_openssl(&stream);
             std::cout << stream;
         }

@@ -5,8 +5,8 @@
 * ![codeql workflow](https://github.com/princeb612/hotplace/actions/workflows/codeql.yml/badge.svg)
 * powered by
   * ![openssl](https://img.shields.io/badge/openssl-1.1.1/3.0/3.1/3.2-green)
-  * ![jansson](https://img.shields.io/badge/jansson-latest-green)
-  * ![zlib](https://img.shields.io/badge/zlb-latest-green)
+  * ![jansson](https://img.shields.io/badge/jansson-2.14-green)
+  * ![zlib](https://img.shields.io/badge/zlb-1.3.1-green)
 * badge
   * ![c++11](https://img.shields.io/badge/c++11-green) ![gcc](https://img.shields.io/badge/gcc-green) ![cmake](https://img.shields.io/badge/cmake-green)
   * ![mingw64](https://img.shields.io/badge/mingw64-green) ![ubuntu](https://img.shields.io/badge/ubuntu-green) ![RHEL](https://img.shields.io/badge/RHEL-green)
@@ -93,7 +93,11 @@
     * test/hash/
     * test/sign/
 * Pattern Search
-  * KMP algorithm, Trie, Suffix Tree, Ukkonen algorithm, Aho-Corasick algorithm
+  * KMP algorithm
+  * Trie
+  * Suffix Tree
+  * Ukkonen algorithm
+  * Aho-Corasick algorithm (wildcard)
     * sdk/base/nostd/
     * test/pattern/
     * test/parser/

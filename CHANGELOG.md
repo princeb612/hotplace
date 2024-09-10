@@ -1,5 +1,14 @@
 # history
 
+* Revision 604
+  * [changed] rename x509 to x509cert
+
+* Revision 603
+  * [added] t_key_value operator =, copyfrom
+  * [added] get_opensslerror
+  * [changed] rename x509_open_simple to x509cert_open_simple
+  * [changed] transport_layer_security, network_session
+
 * Revision 602
   * [changed] client_socket
   * [changed] connect_socket

@@ -58,7 +58,7 @@ return_t http_server::startup_tls(const std::string& server_cert, const std::str
     return_t ret = errorcode_t::success;
     __try2 {
         __try_new_catch(_cert, new x509cert(x509cert_flag_tls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
-        __try_new_catch(_tls, new transport_layer_security(_cert->get_tls_ctx()), ret, __leave2);
+        __try_new_catch(_tls, new transport_layer_security(_cert->get_ctx()), ret, __leave2);
         __try_new_catch(_tls_server_socket, new tls_server_socket(_tls), ret, __leave2);
     }
     __finally2 {
@@ -157,7 +157,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
 
 #if 0
     if (_df) {
-        net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
+        network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
         basic_stream bs;
 
         switch (type) {

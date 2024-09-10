@@ -17,7 +17,7 @@ using namespace io;
 namespace net {
 
 http_client::http_client() : _socket(0), _client_socket(nullptr), _tls_context(nullptr), _x509(nullptr), _wto(1000) {
-    x509_open_simple(x509cert_flag_tls, &_x509);
+    x509cert_open_simple(x509cert_flag_tls, &_x509);
     _tls_client_socket = new tls_client_socket(new transport_layer_security(_x509));
     _client_socket = new tcp_client_socket;
 }

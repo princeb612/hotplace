@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *      openssl s_server -cert server.crt -key server.key -dtls1_2 -accept 9000
+ *      ctrl+c
  *
  * Revision History
  * Date         Name                Description
@@ -33,8 +35,60 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
+#define BUFFER_SIZE (1 << 16)
+
 void client() {
-    // todo
+    const OPTION& option = _cmdline->value();
+
+    return_t ret = errorcode_t::success;
+    tls_context_t* tlshandle = nullptr;
+    socket_t sock = -1;
+    SSL_CTX* sslctx = nullptr;
+    x509cert_open_simple(x509cert_flag_dtls, &sslctx);
+    transport_layer_security tls(sslctx);
+    dtls_client_socket cli(&tls);
+    sockaddr_storage_t addr;
+
+    char buffer[BUFFER_SIZE];
+    basic_stream bs;
+
+    __try2 {
+        openssl_startup();
+#if defined _WIN32 || defined _WIN64
+        winsock_startup();
+#endif
+
+        ret = cli.open(&sock, &addr, option.address.c_str(), option.port);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = cli.connectto(sock, &tlshandle, option.address.c_str(), option.port, 1);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        size_t cbsent = 0;
+        ret = cli.send(sock, tlshandle, option.message.c_str(), option.message.size(), &cbsent);
+        if (errorcode_t::success == ret) {
+            return_t ret_read = errorcode_t::success;
+            size_t cbread = 0;
+            ret_read = cli.read(sock, tlshandle, buffer, BUFFER_SIZE, &cbread);
+            bs.write(buffer, cbread);
+
+            _logger->writeln("received response: %s", bs.c_str());
+        }
+    }
+    __finally2 {
+        cli.close(sock, tlshandle);
+        SSL_CTX_free(sslctx);
+#if defined _WIN32 || defined _WIN64
+        winsock_cleanup();
+#endif
+        openssl_cleanup();
+    }
+
+    _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);
 }
 
 int main(int argc, char** argv) {
@@ -43,7 +97,10 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
+              << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
+              << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -51,6 +108,10 @@ int main(int argc, char** argv) {
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
+
+    if (option.verbose) {
+        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
+    }
 
     client();
 

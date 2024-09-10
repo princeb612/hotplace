@@ -72,8 +72,8 @@ return_t tcp_client_socket::read(socket_t sock, tls_context_t* tls_handle, char*
             ret = errorcode_t::closed;
         }
 
-        if (nullptr != size_read) {
-            *size_read = ret_recv;
+        if (size_read) {
+            *size_read = (errorcode_t::success == ret) ? ret_recv : 0;
         }
         if (size_data == ret_recv) {
             ret = errorcode_t::more_data;

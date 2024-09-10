@@ -69,7 +69,7 @@ class server_socket {
     /**
      * @brief   DTLSv1_listen
      */
-    virtual return_t dtls_listen(socket_t sock, struct sockaddr* addr, socklen_t addrlen, tls_context_t** tls_handle) { return errorcode_t::success; }
+    virtual return_t dtls_open(tls_context_t** tls_handle, socket_t sock) { return errorcode_t::success; }
     /**
      * @brief   tls accept
      * @param   socket_t        clisock         [IN] client socket

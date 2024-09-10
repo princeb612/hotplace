@@ -766,9 +766,9 @@ void test_get_tlsclient() {
         socket_t sock = 0;
 
         tls_context_t *handle = nullptr;
-        SSL_CTX *x509 = nullptr;
-        x509_open_simple(x509cert_flag_tls, &x509);
-        transport_layer_security tls(x509);
+        SSL_CTX *sslctx = nullptr;
+        x509cert_open_simple(x509cert_flag_tls, &sslctx);
+        transport_layer_security tls(sslctx);
         tls_client_socket cli(&tls);
         basic_stream bs;
 
@@ -838,7 +838,7 @@ void test_get_tlsclient() {
             cprint("closed");
         }  // connect
 
-        SSL_CTX_free(x509);
+        SSL_CTX_free(sslctx);
     }
     __finally2 {
         // do nothing
@@ -950,15 +950,14 @@ int main(int argc, char **argv) {
     test_response_parse();
 
     // authenticate
-    unsigned long ossl_minver = 0x30000000;
     test_basic_authentication();
     test_digest_access_authentication();
     test_digest_access_authentication("MD5");
     test_digest_access_authentication("MD5-sess");
     test_digest_access_authentication("SHA-256");
     test_digest_access_authentication("SHA-256-sess");
-    test_digest_access_authentication("SHA-512-256", &ossl_minver);       // openssl-3.0
-    test_digest_access_authentication("SHA-512-256-sess", &ossl_minver);  // openssl-3.0
+    test_digest_access_authentication("SHA-512-256");
+    test_digest_access_authentication("SHA-512-256-sess");
 
     test_rfc_digest_example();
 

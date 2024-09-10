@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_NET_TLS_TLS__
 
 #include <sdk/crypto.hpp>
-#include <sdk/net/tls/x509.hpp>
+#include <sdk/net/tls/x509cert.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {
@@ -22,8 +22,8 @@ namespace net {
  * @brief TLS
  * @example
  *      uint32 ret = errorcode_t::success;
- *      x509cert_open_simple(x509cert_flag_tls, &x509);
- *      transport_layer_security tls(x509);
+ *      x509cert_open_simple(x509cert_flag_tls, &sslctx);
+ *      transport_layer_security tls(sslctx);
  *      tls_client_socket cli(&tls);
  *      cli.connect(&sock, &tlshandle, host, port, 1);
  *      cli.send(sock, tlshandle, message, size, &cbsent);
@@ -35,11 +35,12 @@ namespace net {
  *          bs.write(buffer, cbread);
  *      }
  *      cli.close(sock, tlshandle);
- *      SSL_CTX_free(x509);
+ *      SSL_CTX_free(sslctx);
  */
 class transport_layer_security {
    public:
-    transport_layer_security(SSL_CTX* x509);
+    transport_layer_security(SSL_CTX* sslctx);
+    transport_layer_security(x509cert* cert);
     ~transport_layer_security();
 
     /**
@@ -56,9 +57,11 @@ class transport_layer_security {
      * @brief   open
      * @param   tls_context_t** handle      [OUT]
      * @param   socket_t        sock        [IN]
+     * @param   const char*     address     [in]
+     * @param   uint16          port        [in]
      * @remarks 연결된 socket 으로 핸들만 구성하는 경우
      */
-    return_t connect(tls_context_t** handle, socket_t sock, uint32 to_seconds = NET_DEFAULT_TIMEOUT);
+    return_t connectto(tls_context_t** handle, socket_t sock, const char* address, uint16 port, uint32 to_seconds = NET_DEFAULT_TIMEOUT);
     /**
      * @brief   socket layer handshake
      * @param   tls_context_t** handle      [OUT]
@@ -70,9 +73,9 @@ class transport_layer_security {
      */
     return_t accept(tls_context_t** handle, socket_t sock);
     /**
-     * @brief   DTLSv1_listen
+     * @brief   DTLS
      */
-    return_t dtls_listen(tls_context_t** handle, socket_t sock, struct sockaddr* addr, socklen_t addrlen);
+    return_t dtls_open(tls_context_t** handle, socket_t sock);
     /**
      * @brief   close
      * @param   tls_context_t*  handle      [IN]
@@ -110,7 +113,7 @@ class transport_layer_security {
     SSL_CTX* get();
 
    protected:
-    SSL_CTX* _x509;
+    SSL_CTX* _ctx;
     t_shared_reference<transport_layer_security> _shared;
 };
 

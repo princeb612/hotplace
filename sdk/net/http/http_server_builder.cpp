@@ -101,7 +101,7 @@ http_server* http_server_builder::build() {
     __try2 {
         __try_new_catch(server, new http_server, ret, __leave2);
 
-        server->get_server_conf() = get_server_conf();
+        server->get_server_conf().copyfrom(&get_server_conf());
 
         uint16 ipv4 = get_server_conf().get(netserver_config_t::serverconf_enable_ipv4);
         uint16 ipv6 = get_server_conf().get(netserver_config_t::serverconf_enable_ipv6);

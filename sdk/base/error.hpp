@@ -194,10 +194,8 @@ enum errorcode_t {
 #endif
 
     /* 0xef010000 4009820160 */ internal_error = ERROR_CODE_BEGIN + 0,
-
     /* 0xef010001 4009820161 */ out_of_memory,
     /* 0xef010002 4009820162 */ insufficient_buffer,
-
     /* 0xef010003 4009820163 */ invalid_parameter,
     /* 0xef010004 4009820164 */ invalid_context,
     /* 0xef010005 4009820165 */ invalid_pointer,
@@ -256,6 +254,7 @@ enum errorcode_t {
     /* 0xef010039 4009820217 */ error_send,
     /* 0xef01003a 4009820218 */ error_recv,
     /* 0xef01003b 4009820219 */ abandoned,
+    /* 0xef01003c 4009820220 */ difference_type,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,
@@ -273,6 +272,7 @@ enum errorcode_t {
     /* 0xef01008d 4009820301 */ internal_error_13,
     /* 0xef01008e 4009820302 */ internal_error_14,
     /* 0xef01008f 4009820303 */ internal_error_15,
+    /* 0xef010090 4009820304 */ error_openssl_inside,
 
     /* 0xef010100 4009820416 */ not_supported = 0xef010100,
     /* 0xef010101 4009820417 */ low_security,

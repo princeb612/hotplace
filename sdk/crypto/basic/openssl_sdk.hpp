@@ -33,6 +33,7 @@ void openssl_thread_setup(void);
 void openssl_thread_cleanup(void);
 void openssl_thread_end(void);
 
+return_t get_opensslerror(int rc);
 return_t trace_openssl(return_t errorcode);
 return_t debug_trace_openssl(stream_t* stream);
 #define __leave2_trace_openssl(x)       \
@@ -160,8 +161,6 @@ return_t ossl_set_unitsize(uint32 bytes);
  *        default 4096 bytes
  */
 uint32 ossl_get_unitsize();
-
-return_t debug_trace_openssl(stream_t* stream);
 
 }  // namespace crypto
 }  // namespace hotplace

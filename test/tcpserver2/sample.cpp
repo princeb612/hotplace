@@ -3,7 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver, httpauth, httpserver2
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2
  *
  * Revision History
  * Date         Name                Description
@@ -49,7 +49,7 @@ return_t accept_handler(socket_t socket, sockaddr_storage_t* client_addr, CALLBA
 
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
-    net_session_socket_t* network_session = (net_session_socket_t*)data_array[0];
+    network_session_socket_t* network_session = (network_session_socket_t*)data_array[0];
     char* buf = (char*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
 
@@ -137,7 +137,6 @@ void run_server() {
     _test_case.begin("echo server");
 
     thread thread1(echo_server, nullptr);
-    std::string result;
 
     __try2 { thread1.start(); }
     __finally2 { thread1.wait(-1); }

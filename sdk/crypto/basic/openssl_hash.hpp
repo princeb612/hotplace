@@ -34,10 +34,12 @@ class openssl_hash : public hash_t {
     /**
      * @brief open (hash, HMAC, CMAC)
      * @param hash_context_t** handle [out]
-     * @param hash_algorithm_t alg [in]
+     * @param const char* algorithm [in] "md5", "sha1", "sha224", "sha256", "sha384", "sha512"
      * @param const unsigned char* key [inopt]
      * @param unsigned keysize [inopt]
      * @return error code (see error.hpp)
+     * @remarks
+     *         openssl 3.0 required - "sha2-512/224", "sha2-512/256"
      * @example
      *    binary_t hash_data;
      *    // hash

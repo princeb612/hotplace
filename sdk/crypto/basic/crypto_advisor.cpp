@@ -259,7 +259,9 @@ return_t crypto_advisor::build_if_necessary() {
                 const char* feature;
                 unsigned long version;
             } _table[] = {
+                // scrypt 3.0
                 {"scrypt", 0x30000000},
+                // argon 3.2
                 {"argon2d", 0x30200000},
                 {"argon2i", 0x30200000},
                 {"argon2id", 0x30200000},

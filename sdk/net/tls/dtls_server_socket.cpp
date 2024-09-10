@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *      DTLS not supported yet
  *
  * Revision History
  * Date         Name                Description
@@ -40,11 +41,11 @@ return_t dtls_server_socket::close(socket_t sock, tls_context_t* tls_handle) {
     return ret;
 }
 
-return_t dtls_server_socket::dtls_listen(socket_t sock, struct sockaddr* addr, socklen_t addrlen, tls_context_t** tls_handle) {
+return_t dtls_server_socket::dtls_open(tls_context_t** tls_handle, socket_t sock) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        ret = _tls->dtls_listen(tls_handle, sock, addr, addrlen);
+        ret = _tls->dtls_open(tls_handle, sock);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -72,7 +73,7 @@ return_t dtls_server_socket::tls_accept(socket_t clisock, tls_context_t** tls_ha
 
 return_t dtls_server_socket::tls_stop_accept() {
     return_t ret = errorcode_t::success;
-    openssl_thread_end();  // ssl23_accept memory leak, call for each thread
+    openssl_thread_end();
     return ret;
 }
 
@@ -80,7 +81,7 @@ return_t dtls_server_socket::recvfrom(socket_t sock, tls_context_t* tls_handle, 
                                       struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
 
-    __try2 { ret = _tls->read(tls_handle, mode, ptr_data, size_data, cbread); }
+    __try2 { ret = _tls->recvfrom(tls_handle, mode, ptr_data, size_data, cbread, addr, addrlen); }
     __finally2 {
         // do nothing
     }
@@ -91,7 +92,7 @@ return_t dtls_server_socket::sendto(socket_t sock, tls_context_t* tls_handle, co
                                     const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
 
-    __try2 { ret = _tls->send(tls_handle, tls_io_flag_t::send_all, ptr_data, size_data, cbsent); }
+    __try2 { ret = _tls->sendto(tls_handle, tls_io_flag_t::send_all, ptr_data, size_data, cbsent, addr, addrlen); }
     __finally2 {
         // do nothing
     }

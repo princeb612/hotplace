@@ -52,6 +52,7 @@ enum tls_io_flag_t {
     read_iocp = (read_bio_write),                                    // 0000 0010
     read_epoll = (read_bio_write | read_socket_recv),                // 0000 0110
     send_all = (send_ssl_write | send_bio_read | send_socket_send),  // 0011 1000
+    read_dtls_handshake = (1 << 6),                                  // 0100 0000
 };
 
 struct _tls_context_t;

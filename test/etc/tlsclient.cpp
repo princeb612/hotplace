@@ -3,6 +3,11 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *      test.1
+ *          openssl s_server -cert server.crt -key server.key -tls1_3 -accept 9000
+ *          ctrl+1
+ *      test.2
+ *          test/tlsserver
  *
  * Revision History
  * Date         Name                Description
@@ -41,9 +46,9 @@ void client() {
     return_t ret = errorcode_t::success;
     tls_context_t* tlshandle = nullptr;
     socket_t sock = -1;
-    SSL_CTX* x509 = nullptr;
-    x509_open_simple(x509cert_flag_tls, &x509);
-    transport_layer_security tls(x509);
+    SSL_CTX* sslctx = nullptr;
+    x509cert_open_simple(x509cert_flag_tls, &sslctx);
+    transport_layer_security tls(sslctx);
     tls_client_socket cli(&tls);
 
     char buffer[BUFFER_SIZE];
@@ -77,7 +82,7 @@ void client() {
     }
     __finally2 {
         cli.close(sock, tlshandle);
-        SSL_CTX_free(x509);
+        SSL_CTX_free(sslctx);
 #if defined _WIN32 || defined _WIN64
         winsock_cleanup();
 #endif
@@ -104,6 +109,10 @@ int main(int argc, char** argv) {
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
+
+    if (option.verbose) {
+        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
+    }
 
     client();
 

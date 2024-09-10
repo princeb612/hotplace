@@ -52,6 +52,7 @@ return_t tls_connect(socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio) {
                     if (ret_connect == 0) {
                         ret = errorcode_t::internal_error;
                     } else if (ret_connect < 0) {
+                        get_opensslerror(ret_connect);
                         switch (SSL_get_error(ssl, ret_connect)) {
                             case SSL_ERROR_WANT_READ:
                                 if (errorcode_t::success == wait_socket(sock, dwSeconds * 1000, SOCK_WAIT_READABLE)) {
@@ -102,6 +103,8 @@ return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, soc
             __leave2;
         }
 
+        memset(sockaddr, 0, addrlen);
+
         auto family = BIO_ADDR_family(bio_addr);
         struct sockaddr_in* addr4 = (struct sockaddr_in*)sockaddr;
         addr4->sin_family = family;
@@ -130,7 +133,7 @@ return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, soc
     return ret;
 }
 
-return_t SSL_to_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t addrlen) {
+return_t SSL_dgram_peer_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     BIO_ADDR* bio_addr = nullptr;
     __try2 {
@@ -138,6 +141,15 @@ return_t SSL_to_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t addrlen)
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        int socktype = 0;
+        socket_t sock = SSL_get_fd(ssl);
+        typeof_socket(sock, socktype);
+        if (SOCK_DGRAM != socktype) {
+            ret = errorcode_t::difference_type;
+            __leave2;
+        }
+
         BIO_dgram_get_peer(SSL_get_rbio(ssl), bio_addr);
         BIO_ADDR_to_sockaddr(bio_addr, sockaddr, addrlen);
     }
@@ -145,6 +157,53 @@ return_t SSL_to_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t addrlen)
         if (bio_addr) {
             BIO_ADDR_free(bio_addr);
         }
+    }
+    return ret;
+}
+
+return_t generate_cookie_sockaddr(binary_t& cookie, const sockaddr* addr, socklen_t addrlen) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == addr) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        unsigned cookie_size = 16;
+        binary_t key;
+        advisor->get_cookie_secret(0, cookie_size, key);
+
+        openssl_hash hash;
+        hash_context_t* handle = nullptr;
+        hash.open(&handle, "sha256", &key[0], key.size());
+        hash.init(handle);
+        hash.update(handle, (byte_t*)addr, addrlen);
+        hash.finalize(handle, cookie);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t dtls_cookie_dgram_peer_sockaddr(binary_t& cookie, SSL* ssl) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == ssl) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        sockaddr_storage_t addr;
+        ret = SSL_dgram_peer_sockaddr(ssl, (sockaddr*)&addr, (socklen_t)sizeof(addr));
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = generate_cookie_sockaddr(cookie, (sockaddr*)&addr, (socklen_t)sizeof(addr));
+    }
+    __finally2 {
+        // do nothing
     }
     return ret;
 }

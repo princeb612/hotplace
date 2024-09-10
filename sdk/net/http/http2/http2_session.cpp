@@ -34,7 +34,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         }
 
         if (_df) {
-            net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
+            network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
             basic_stream bs;
 
             datetime dt;
@@ -62,7 +62,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             _df(&bs);
         }
 
-        net_session_socket_t* session_socket = (net_session_socket_t*)data_array[0];
+        network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
         byte_t* buf = (byte_t*)data_array[1];
         size_t bufsize = (size_t)data_array[2];
         basic_stream bs;

@@ -13,7 +13,7 @@
 
 #include <sdk/net/basic/udp_server_socket.hpp>
 #include <sdk/net/tls/tls.hpp>
-#include <sdk/net/tls/x509.hpp>
+#include <sdk/net/tls/x509cert.hpp>
 
 namespace hotplace {
 namespace net {
@@ -27,14 +27,12 @@ class dtls_server_socket : public udp_server_socket {
      */
     return_t close(socket_t sock, tls_context_t* tls_handle);
     /**
-     * @brief   dtls listen
-     * @param   socket_t        clisock         [IN] client socket
-     * @param   struct sockaddr* addr           [out] sockaddr*
-     * @param   socklen_t addrlen               [in]
+     * @brief   dtls open
      * @param   tls_context_t** tls_handle      [OUT] tls context
+     * @param   socket_t        clisock         [IN] client socket
      * @return  error code (see error.hpp)
      */
-    return_t dtls_listen(socket_t sock, struct sockaddr* addr, socklen_t addrlen, tls_context_t** tls_handle);
+    return_t dtls_open(tls_context_t** tls_handle, socket_t sock);
     /**
      * @brief   tls accept
      * @param   socket_t        clisock         [IN] client socket
