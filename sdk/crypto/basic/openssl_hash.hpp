@@ -34,12 +34,23 @@ class openssl_hash : public hash_t {
     /**
      * @brief open (hash, HMAC, CMAC)
      * @param hash_context_t** handle [out]
-     * @param const char* algorithm [in] "md5", "sha1", "sha224", "sha256", "sha384", "sha512"
+     * @param const char* algorithm [in] "md5", "sha1", "sha256", "sha384", "sha512"
+     *      "md4", "md5"
+     *      "sha1", "sha224", "sha256", "sha384", "sha512", "sha2-512/224", "sha2-512/256"
+     *      "sha3-224", "sha3-256", "sha3-384", "sha3-512"
+     *      "shake128", "shake256"
+     *      "blake2b512", "blake2s256"
+     *      "ripemd160", "whirlpool"
+     *
+     *      unsupported algorithms (build default option)
+     *      openssl 1.1.1 - sha2-512/224, sha2-512/256
+     *      openssl 3.0   - md4, whirlpool
+     *      openssl 3.1   - md4, whirlpool
+     *
      * @param const unsigned char* key [inopt]
      * @param unsigned keysize [inopt]
      * @return error code (see error.hpp)
      * @remarks
-     *         openssl 3.0 required - "sha2-512/224", "sha2-512/256"
      * @example
      *    binary_t hash_data;
      *    // hash

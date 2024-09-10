@@ -207,6 +207,14 @@ return_t binary_load(binary_t& target, uint32 bnlen, byte_t* data, uint32 len) {
     return ret;
 }
 
+return_t binary_fill(binary_t& target, size_t count, const byte_t& value) {
+    return_t ret = errorcode_t::success;
+    for (auto i = 0; i < count; i++) {
+        target.push_back(value);
+    }
+    return ret;
+}
+
 binary::binary() {}
 
 binary::binary(const binary& rhs) : _bin(rhs._bin) {}
@@ -334,6 +342,11 @@ binary& binary::append(const byte_t* buf, size_t size) {
 
 binary& binary::append(const byte_t* buf, size_t from, size_t to) {
     binary_append(_bin, buf, from, to);
+    return *this;
+}
+
+binary& binary::fill(size_t count, const byte_t& value) {
+    binary_fill(_bin, count, value);
     return *this;
 }
 

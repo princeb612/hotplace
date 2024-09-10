@@ -73,6 +73,7 @@ class binary {
     binary& append(const char* buf, size_t size);
     binary& append(const byte_t* buf, size_t size);
     binary& append(const byte_t* buf, size_t from, size_t to);
+    binary& fill(size_t count, const byte_t& value);
 
     binary& operator<<(char rhs);
     binary& operator<<(byte_t rhs);
@@ -166,6 +167,7 @@ return_t binary_append(binary_t& target, const char* buf, size_t size);
 return_t binary_append(binary_t& target, const byte_t* buf, size_t size);
 return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t to);
 return_t binary_load(binary_t& bn, uint32 bnlen, byte_t* data, uint32 len);
+return_t binary_fill(binary_t& target, size_t count, const byte_t& value);
 
 /**
  * @brief append

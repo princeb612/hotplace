@@ -19,6 +19,7 @@ extern const size_t sizeof_test_vector_nist_cavp_blockcipher;
 
 typedef struct _test_vector_rfc3394_t {
     crypt_algorithm_t alg;
+    const char* algname;
     const char* kek;
     const char* key;
     const char* expect;

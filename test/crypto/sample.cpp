@@ -31,7 +31,7 @@ typedef struct _OPTION {
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 void test_features() {
-    _test_case.begin("features");
+    _test_case.begin("features openssl version %08x", OpenSSL_version_num());
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     auto query_cipher = [&](const char* feature, uint32 spec, void* user) -> void {
@@ -269,6 +269,7 @@ void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
     _test_case.reset_time();
 
     crypt_algorithm_t alg = vector->alg;
+    const char* algname = vector->algname;
     const binary_t& kek = base16_decode(vector->kek);
     const binary_t& key = base16_decode(vector->key);
     const binary_t& expect = base16_decode(vector->expect);
@@ -276,15 +277,39 @@ void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
 
     openssl_crypt crypt;
     crypt_context_t* handle = nullptr;
-    byte_t iv[8];
-    int i = 0;
-
-    for (i = 0; i < 8; i++) {
-        iv[i] = 0xa6;
-    }
+    binary_t iv;
+    binary_fill(iv, 8, 0xa6);
     binary_t out_kw, out_kuw;
 
-    ret = crypt.open(&handle, alg, crypt_mode_t::wrap, &kek[0], kek.size(), iv, RTL_NUMBER_OF(iv));
+    ret = crypt.open(&handle, alg, crypt_mode_t::wrap, kek, iv);
+    if (errorcode_t::success == ret) {
+        crypt.encrypt(handle, &key[0], key.size(), out_kw);
+
+        if (option.verbose) {
+            test_case_notimecheck notimecheck(_test_case);
+
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            const char* nameof_alg = advisor->nameof_cipher(alg, crypt_mode_t::wrap);
+            _logger->writeln("alg %s", nameof_alg);
+
+            _logger->hdump("kek", kek);
+            _logger->hdump("key", key);
+            _logger->hdump("keywrap", out_kw);
+        }
+
+        crypt.decrypt(handle, &out_kw[0], out_kw.size(), out_kuw);
+
+        if (option.verbose) {
+            test_case_notimecheck notimecheck(_test_case);
+
+            _logger->hdump("key", out_kuw);
+        }
+
+        crypt.close(handle);
+    }
+    _test_case.assert(out_kw == expect, __FUNCTION__, msg ? msg : "");
+
+    ret = crypt.open(&handle, algname, kek, iv);
     if (errorcode_t::success == ret) {
         crypt.encrypt(handle, &key[0], key.size(), out_kw);
 

@@ -119,6 +119,7 @@ return_t crypto_advisor::build_if_necessary() {
                 _evp_cipher_map.insert(std::make_pair(item->_cipher, &item->method));
             }
 
+            set_feature(item->method.fetchname, advisor_feature_cipher); // workaround for openssl-1.1.1 - EVP_CIPHER_fetch("aes-128-wrap") return nullptr
             set_feature(item->method.fetchname, advisor_feature_wrap);
         }
 
