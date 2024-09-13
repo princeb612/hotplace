@@ -389,23 +389,19 @@ return_t close_socket(socket_t sock, bool bOnOff, uint16 wLinger) {
     return ret;
 }
 
-return_t close_listener(unsigned int nSockets, socket_t* Sockets) {
+return_t close_listener(unsigned int count, socket_t* sockets) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == Sockets) {
+        if (nullptr == sockets) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        for (unsigned int i = 0; i < nSockets; i++) {
-            if (INVALID_SOCKET != Sockets[i]) {
-#if defined __linux__
-                close(Sockets[i]);
-#elif defined _WIN32 || defined _WIN64
-                closesocket(Sockets[i]);
-#endif
-                Sockets[i] = INVALID_SOCKET;
+        for (unsigned int i = 0; i < count; i++) {
+            if (INVALID_SOCKET != sockets[i]) {
+                close_socket(sockets[i], true, 0);
+                sockets[i] = INVALID_SOCKET;
             }
         }
     }

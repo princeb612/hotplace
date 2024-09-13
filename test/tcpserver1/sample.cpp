@@ -375,7 +375,9 @@ return_t echo_server(void* param) {
 #endif
         }
 
-        close_listener(2, socket_list);  // stop accepting
+        for (auto item : socket_list) {
+            close_socket(item, true, 0);  // stop accepting
+        }
 
         acceptipv4_threads.signal_and_wait_all();
         acceptipv6_threads.signal_and_wait_all();

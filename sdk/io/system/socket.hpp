@@ -45,10 +45,12 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
  * @error   error code (see error.hpp)
  * @example
  *          unsigned int nFamily[2] = { AF_INET, AF_INET6 };  // IPv4 and IPv6
- *          socket_t Sockets[2] = { INVALID_SOCKET, INVALID_SOCKET };
- *          create_listener (2, nFamily, Sockets, IPPROTO_TCP, 9000);
+ *          socket_t sockets[2] = { INVALID_SOCKET, INVALID_SOCKET };
+ *          create_listener (2, nFamily, sockets, IPPROTO_TCP, 9000);
  *          // ...
- *          close_listener (2, Sockets);
+ *          for (auto sock : sockets) {
+ *              close_socket(sock, true, 0);
+ *          }
  */
 return_t create_listener(unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type, uint32 port,
                          bool support_win32_acceptex = false);
@@ -76,14 +78,6 @@ return_t connect_socket_addr(socket_t sock, sockaddr_storage_t* pSockAddr, size_
  * @param   uint16      linger  [in]
  */
 return_t close_socket(socket_t sock, bool onoff, uint16 linger);
-/**
- * @brief   stop listen
- * @param   unsigned int    nSockets    [in]
- * @param   socket_t*       Sockets     [in]
- * @return  error code (see error.hpp)
- * @example  see create_listener
- */
-return_t close_listener(unsigned int nSockets, socket_t* Sockets);
 
 enum SOCK_WAIT_FLAGS {
     SOCK_WAIT_READABLE = 1 << 0,

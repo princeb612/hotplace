@@ -1,5 +1,9 @@
 # history
 
+* Revision 607
+  * [changed] sprintf
+  * [deprecated] close_listener (see close_socket)
+
 * Revision 604
   * [changed] rename x509 to x509cert
 

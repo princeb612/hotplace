@@ -41,33 +41,42 @@ static void set_info_callback_routine(const SSL* ssl, int where, int ret) {
     } else if (where & SSL_CB_ALERT) {
         if (where & SSL_CB_READ) {
             state = "read";
-        } else {
+        } else if (where & SSL_CB_WRITE) {
             state = "write";
         }
         va << "alert" << state << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
     } else if (where & SSL_CB_HANDSHAKE_START) {
         if (where & SSL_CB_READ) {
             state = "read";
-        } else {
+        } else if (where & SSL_CB_WRITE) {
             state = "write";
         }
         va << "handshake start" << state << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
     } else if (where & SSL_CB_HANDSHAKE_DONE) {
         if (where & SSL_CB_READ) {
             state = "read";
-        } else {
+        } else if (where & SSL_CB_WRITE) {
             state = "write";
         }
         va << "handshake done" << state << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
     } else {
         va << "state" << SSL_state_string_long(ssl) << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
     }
+
+    // # define TLS1_3_VERSION  0x0304
+    // # define TLS1_VERSION    0x0301
+    // # define TLS1_1_VERSION  0x0302
+    // # define TLS1_2_VERSION  0x0303
+    // # define DTLS1_VERSION   0xFEFF
+    // # define DTLS1_2_VERSION 0xFEFD
+
+    bs.printf("SSL %08x ", SSL_version(ssl));
     switch (va.size()) {
         case 3:
-            sprintf(&bs, "SSL {1} {2}:{3}", va);
+            sprintf(&bs, "{1} {2}:{3}", va);
             break;
         case 4:
-            sprintf(&bs, "SSL {1} {2}:{3}:{4}", va);
+            sprintf(&bs, "{1} {2}:{3}:{4}", va);
             break;
         default:
             break;
@@ -141,7 +150,7 @@ return_t x509cert_open_simple(uint32 flag, SSL_CTX** context) {
 #define SSL_OP_NO_DTLSv1 0x0
 #endif
 #ifndef SSL_OP_NO_DTLSv1_2
-#define SSL_OP_NO_DTLSv1_2
+#define SSL_OP_NO_DTLSv1_2 0x0
 #endif
 
         if (x509cert_flag_tls == flag) {
@@ -149,6 +158,7 @@ return_t x509cert_open_simple(uint32 flag, SSL_CTX** context) {
              * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
              * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
              */
+            SSL_CTX_set_min_proto_version(ssl_ctx, TLS1_3_VERSION);
             option_flags = (SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1); /* TLS 1.2 and above */
         } else if (x509cert_flag_dtls == flag) {
             SSL_CTX_set_min_proto_version(ssl_ctx, DTLS1_2_VERSION);

@@ -11,6 +11,7 @@
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/valist.hpp>
+#include <sdk/base/nostd/pattern.hpp>
 #include <sdk/base/stream/printf.hpp>
 #include <sdk/base/stream/tstring.hpp>
 #include <sdk/base/string/string.hpp>
@@ -46,8 +47,6 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        stream->clear();
 
         if (nullptr == fmt) {
             ret = errorcode_t::invalid_parameter;
@@ -85,18 +84,17 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
         typedef std::list<int> va_array_t;
         va_map_t va_map; /* pair(position, {id}) */
         va_array_t va_array;
-        for (i = 0; i != va.size(); i++) {
-            size_t id = i + 1;
-            std::string find = format("{%zi}", id);
-            size_t pos = 0;
-            while (true) {
-                pos = formatter.find_first_of(find.c_str(), pos);
-                if ((size_t)-1 == pos) {
-                    break;
-                }
-                va_map.insert(std::make_pair(pos, i));
-                pos += find.size();
-            }
+        t_aho_corasick<char> ac;
+        for (i = 0; i < va.size(); i++) {
+            auto pat = format("{%zi}", i + 1);
+            ac.insert(pat.c_str(), pat.size());
+        }
+        ac.build();
+        auto result = ac.search(formatter.c_str(), formatter.size());
+        for (auto item : result) {
+            const range_t& range = item.first;
+            unsigned patid = item.second;
+            va_map.insert({range.begin, patid});
         }
 
         // Step2. relocate valist, build list
@@ -120,7 +118,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
             va_new.at(i, v);
             formatter_map_t::iterator fmt_it = formats.find(v.type);
             if (formats.end() != fmt_it) {
-                formatter.replace(format("{%i}", idx + 1).c_str(), fmt_it->second.c_str(), bufferio_flag_t::run_once);
+                formatter.replace(format("{%i}", idx + 1).c_str(), fmt_it->second.c_str(), 0, bufferio_flag_t::run_once);
             }
             i++;
         }

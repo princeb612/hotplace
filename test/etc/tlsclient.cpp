@@ -6,6 +6,7 @@
  *      test.1
  *          openssl s_server -cert server.crt -key server.key -tls1_3 -accept 9000
  *          ctrl+1
+ *          ; check ... rehandshake while SSL_read
  *      test.2
  *          test/tlsserver
  *
@@ -61,23 +62,32 @@ void client() {
 #endif
 
         ret = cli.connect(&sock, &tlshandle, option.address.c_str(), option.port, 1);
+        _test_case.test(ret, __FUNCTION__, "connect");
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         size_t cbsent = 0;
         ret = cli.send(sock, tlshandle, option.message.c_str(), option.message.size(), &cbsent);
+        _test_case.test(ret, __FUNCTION__, "send");
         if (errorcode_t::success == ret) {
             return_t ret_read = errorcode_t::success;
             size_t cbread = 0;
             ret_read = cli.read(sock, tlshandle, buffer, BUFFER_SIZE, &cbread);
-            bs.write(buffer, cbread);
-            while (errorcode_t::more_data == ret_read) {
-                ret_read = cli.more(sock, tlshandle, buffer, BUFFER_SIZE, &cbread);
+            if (errorcode_t::success == ret_read || errorcode_t::more_data == ret_read) {
                 bs.write(buffer, cbread);
             }
+            while (errorcode_t::more_data == ret_read) {
+                ret_read = cli.more(sock, tlshandle, buffer, BUFFER_SIZE, &cbread);
+                if (errorcode_t::success == ret_read || errorcode_t::more_data == ret_read) {
+                    bs.write(buffer, cbread);
+                }
+            }
 
-            _logger->writeln("received response: %s", bs.c_str());
+            _test_case.test(ret, __FUNCTION__, "read");
+
+            // _logger->writeln("received response: %s", bs.c_str());
+            _logger->dump(bs);
         }
     }
     __finally2 {

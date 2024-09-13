@@ -195,7 +195,7 @@ void test_i128() {
     }
 }
 
-void test_sprintf_routine(const valist& va, const char* fmt, const char* expect) {
+void test_sprintf_routine(valist& va, const char* fmt, const char* expect) {
     basic_stream bs;
 
     sprintf(&bs, fmt, va);
@@ -209,7 +209,6 @@ void test_sprintf_routine(const valist& va, const char* fmt, const char* expect)
 void test_sprintf() {
     _test_case.begin("sprintf");
 
-    basic_stream bs;
     valist va;
     va << 3.141592 << "phi" << 123;
 
@@ -223,7 +222,11 @@ void test_sprintf() {
     test_sprintf_routine(va, "value={2} value={1} value={3} value={2}", "value=phi value=3.141592 value=123 value=phi");
     test_sprintf_routine(va, "value={3} value={2} value={2} value={1} value={4} value={5}", "value=123 value=phi value=phi value=3.141592 value={4} value={5}");
 
-    _test_case.assert(true, __FUNCTION__, "sprintf");
+    basic_stream bs;
+    bs.printf("value %08x ", 0x304);
+    sprintf(&bs, "{1}:{2}:{3}", va);
+    _logger->writeln(bs);
+    _test_case.assert(bs == "value 00000304 3.141592:phi:123", __FUNCTION__, "value 00000304 3.141592:phi:123");
 }
 
 void test_vprintf() {

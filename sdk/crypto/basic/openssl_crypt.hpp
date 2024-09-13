@@ -130,7 +130,7 @@ class openssl_crypt : public crypt_t {
      *      "chacha20", "chacha20-poly1305",
      *      "aes-128-wrap", "aes-192-wrap", "aes-256-wrap"
      *
-     *      unsupported algorithms (build default option)
+     *      unsupported algorithms
      *      openssl 1.1.1 - rc5
      *      openssl 3.0   - bf, cast5, idea, rc2, rc5, seed series
      *      openssl 3.1   - bf, cast5, idea, rc2, rc5, seed series

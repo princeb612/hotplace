@@ -247,17 +247,22 @@ void test_case::test(return_t result, const char* test_function, const char* mes
         critical_section_guard guard(_lock);
 
         console_color_t color = console_color_t::yellow;
-        if (errorcode_t::success == result) {
-            _total._count_success++;
-        } else if (errorcode_t::not_supported == result) {
-            color = console_color_t::cyan;
-            _total._count_not_supported++;
-        } else if (errorcode_t::low_security == result) {
-            color = console_color_t::yellow;
-            _total._count_low_security++;
-        } else {
-            color = console_color_t::red;
-            _total._count_fail++;
+        switch (result) {
+            case errorcode_t::success:
+                _total._count_success++;
+                break;
+            case errorcode_t::not_supported:
+                color = console_color_t::cyan;
+                _total._count_not_supported++;
+                break;
+            case errorcode_t::low_security:
+                color = console_color_t::yellow;
+                _total._count_low_security++;
+                break;
+            default:
+                color = console_color_t::red;
+                _total._count_fail++;
+                break;
         }
 
         unittest_item_t item;
@@ -278,14 +283,19 @@ void test_case::test(return_t result, const char* test_function, const char* mes
         unittest_map_t::iterator it = pib.first;
         test_status_t& status = it->second;
 
-        if (errorcode_t::success == result) {
-            status._test_stat._count_success++;
-        } else if (errorcode_t::not_supported == result) {
-            status._test_stat._count_not_supported++;
-        } else if (errorcode_t::low_security == result) {
-            status._test_stat._count_low_security++;
-        } else {
-            status._test_stat._count_fail++;
+        switch (result) {
+            case errorcode_t::success:
+                status._test_stat._count_success++;
+                break;
+            case errorcode_t::not_supported:
+                status._test_stat._count_not_supported++;
+                break;
+            case errorcode_t::low_security:
+                status._test_stat._count_low_security++;
+                break;
+            default:
+                status._test_stat._count_fail++;
+                break;
         }
 
         status._test_list.push_back(item); /* append a unittest_item_t */
@@ -559,8 +569,9 @@ void test_case::report_failed(basic_stream& stream) {
     for (const auto& pair : _test_map) {
         for (const auto& item : pair.second._test_list) {
             switch (item._result) {
-                case errorcode_t::not_supported:
                 case errorcode_t::low_security:
+                case errorcode_t::not_supported:
+                case errorcode_t::pending:
                 case errorcode_t::success:
                     break;
                 default:

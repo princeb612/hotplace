@@ -73,7 +73,7 @@ return_t dtls_client_socket::close(socket_t sock, tls_context_t* tls_handle) {
 
     __try2 {
         if (nullptr != tls_handle) {
-            _tls->close(tls_handle);
+            _tls->close(tls_handle);  // closure notification
         }
         client_socket::close(sock, tls_handle);
     }
@@ -96,8 +96,8 @@ return_t dtls_client_socket::recvfrom(socket_t sock, tls_context_t* tls_handle, 
     while (true) {
         ret = wait_socket(sock, get_wto(), SOCK_WAIT_READABLE);
         if (errorcode_t::success == ret) {
-            ret = _tls->recvfrom(tls_handle, tls_io_flag_t::read_ssl_read | tls_io_flag_t::read_bio_write | tls_io_flag_t::read_socket_recv, ptr_data,
-                                 size_data, cbread, addr, addrlen);
+            int mode = tls_io_flag_t::read_ssl_read | tls_io_flag_t::read_bio_write | tls_io_flag_t::read_socket_recv;
+            ret = _tls->recvfrom(tls_handle, mode, ptr_data, size_data, cbread, addr, addrlen);
             if (errorcode_t::pending == ret) {
                 continue;
             } else {

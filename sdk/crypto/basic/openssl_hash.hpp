@@ -42,7 +42,7 @@ class openssl_hash : public hash_t {
      *      "blake2b512", "blake2s256"
      *      "ripemd160", "whirlpool"
      *
-     *      unsupported algorithms (build default option)
+     *      unsupported algorithms
      *      openssl 1.1.1 - sha2-512/224, sha2-512/256
      *      openssl 3.0   - md4, whirlpool
      *      openssl 3.1   - md4, whirlpool

@@ -69,7 +69,8 @@ return_t tls_server_socket::read(socket_t sock, tls_context_t* tls_handle, int m
 
 return_t tls_server_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
-    __try2 { ret = _tls->send(tls_handle, tls_io_flag_t::send_all, ptr_data, size_data, cbsent); }
+    int mode = tls_io_flag_t::send_all;
+    __try2 { ret = _tls->send(tls_handle, mode, ptr_data, size_data, cbsent); }
     __finally2 {
         // do nothing
     }

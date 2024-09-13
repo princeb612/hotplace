@@ -101,15 +101,16 @@ return_t transport_layer_security::connect(tls_context_t** handle, int type, con
             __leave2;
         }
 
+        context->_socket = sock;
+        context->_ssl = ssl;
+
         sbio_read = BIO_new(BIO_s_mem());
         sbio_write = BIO_new(BIO_s_mem());
         SSL_set_bio(ssl, sbio_read, sbio_write);
 
-        context->_socket = sock;
-        context->_ssl = ssl;
-
         context->_sbio_read = sbio_read;
         context->_sbio_write = sbio_write;
+
         context->_signature = TLS_CONTEXT_SIGNATURE;
         context->_flags = tls_context_flag_t::closesocket_ondestroy;
 
@@ -394,8 +395,10 @@ return_t transport_layer_security::close(tls_context_t* handle) {
             __leave2;
         }
 
-        SSL_shutdown(handle->_ssl);
-        SSL_free(handle->_ssl);
+        auto ssl = handle->_ssl;
+
+        SSL_shutdown(ssl);
+        SSL_free(ssl);
 
         if (tls_context_flag_t::closesocket_ondestroy == (handle->_flags & tls_context_flag_t::closesocket_ondestroy)) {
             close_socket(handle->_socket, true, 0);
@@ -447,15 +450,23 @@ return_t transport_layer_security::read(tls_context_t* handle, int mode, void* b
                 *cbread = ret_recv;
             }
         }
+
+        auto ssl = handle->_ssl;
+        auto rbio = SSL_get_rbio(ssl);
+
         if (tls_io_flag_t::read_bio_write & mode) {
-            BIO_write(handle->_sbio_read, buffer, (int)size_read);
+            BIO_write(rbio, buffer, (int)size_read);
         }
+
         if (tls_io_flag_t::read_ssl_read & mode) {
-            int written = BIO_number_written(handle->_sbio_read);
-            ret_recv = SSL_read(handle->_ssl, buffer, (int)buffer_size);
+            int written = BIO_number_written(rbio);
+            // SSL_read
+            // ~ TLS 1.2 SSL_do_handshake(ssl)
+            // TLS 1.3~ no handshake
+            ret_recv = SSL_read(ssl, buffer, (int)buffer_size);
             if (ret_recv <= 0) {
-                int ssl_error = SSL_get_error(handle->_ssl, ret_recv);
-                if (SSL_ERROR_WANT_READ == ssl_error) {
+                int ssl_error = SSL_get_error(ssl, ret_recv);
+                if (SSL_ERROR_WANT_READ == ssl_error || SSL_ERROR_WANT_WRITE == ssl_error) {
                     ret = errorcode_t::pending;
                 } else {
                     ret = errorcode_t::internal_error;
@@ -464,9 +475,6 @@ return_t transport_layer_security::read(tls_context_t* handle, int mode, void* b
             } else {
                 if (buffer_size < (size_t)written) {
                     ret = errorcode_t::more_data;
-                    if (nullptr != cbread) {
-                        *cbread = buffer_size;
-                    }
                 }
                 if (nullptr != cbread) {
                     *cbread = ret_recv;
@@ -521,42 +529,26 @@ return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, voi
             }
         }
 
-        // dump
-        {
-            basic_stream bs;
-
-            binary_t cookie;
-            generate_cookie_sockaddr(cookie, addr, *addrlen);
-            dump_memory(cookie, &bs);
-            std::cout << "hash(addr)" << std::endl << bs << std::endl;
-
-            bs.clear();
-
-            dump_memory((byte_t*)buffer, buffer_size, &bs);
-            std::cout << "recvfrom" << std::endl << bs << std::endl;
-        }
+        auto ssl = handle->_ssl;
+        auto rbio = SSL_get_rbio(ssl);
 
         if (tls_io_flag_t::read_bio_write & mode) {
-            BIO_write(handle->_sbio_read, buffer, (int)size_read);
+            BIO_write(rbio, buffer, (int)size_read);
         }
 
         if (tls_io_flag_t::read_ssl_read & mode) {
-            int written = BIO_number_written(handle->_sbio_read);
-            ret_recv = SSL_read(handle->_ssl, buffer, (int)buffer_size);
+            int written = BIO_number_written(rbio);
+            ret_recv = SSL_read(ssl, buffer, (int)buffer_size);
             if (ret_recv <= 0) {
-                int ssl_error = SSL_get_error(handle->_ssl, ret_recv);
-                if (SSL_ERROR_WANT_READ == ssl_error) {
+                int ssl_error = SSL_get_error(ssl, ret_recv);
+                if (SSL_ERROR_WANT_READ == ssl_error || SSL_ERROR_WANT_WRITE == ssl_error) {
                     ret = errorcode_t::pending;
                 } else {
                     ret = errorcode_t::internal_error;
                 }
-                __leave2;
             } else {
                 if (buffer_size < (size_t)written) {
                     ret = errorcode_t::more_data;
-                    if (nullptr != cbread) {
-                        *cbread = buffer_size;
-                    }
                 }
                 if (nullptr != cbread) {
                     *cbread = ret_recv;
@@ -595,11 +587,14 @@ return_t transport_layer_security::send(tls_context_t* handle, int mode, const c
             __leave2;
         }
 
+        auto ssl = handle->_ssl;
+        auto wbio = SSL_get_wbio(ssl);
+
         if (tls_io_flag_t::send_ssl_write & mode) {
-            int ret_write = SSL_write(handle->_ssl, data, (int)size_data);
+            int ret_write = SSL_write(ssl, data, (int)size_data);
 
             if (ret_write < 1) {
-                ret = errorcode_t::internal_error;
+                ret = get_opensslerror(ret_write);
                 __leave2;
             }
             if (size_sent) {
@@ -607,16 +602,16 @@ return_t transport_layer_security::send(tls_context_t* handle, int mode, const c
             }
         }
 
-        int written = BIO_number_written(handle->_sbio_write);
-
-        int ret_read = 0;
-        std::vector<char> buf;
-        buf.resize(written);
-
         if (tls_io_flag_t::send_bio_read & mode) {
-            ret_read = BIO_read(handle->_sbio_write, &buf[0], buf.size());
+            int written = BIO_number_written(wbio);
+
+            int ret_read = 0;
+            std::vector<char> buf;
+            buf.resize(written);
+
+            ret_read = BIO_read(wbio, &buf[0], buf.size());
             if (ret_read < 1) {
-                ret = errorcode_t::internal_error;
+                ret = get_opensslerror(ret_read);
                 __leave2; /* too many traces here */
             }
 
@@ -650,11 +645,14 @@ return_t transport_layer_security::sendto(tls_context_t* handle, int mode, const
             __leave2;
         }
 
+        auto ssl = handle->_ssl;
+        auto wbio = SSL_get_wbio(ssl);
+
         if (tls_io_flag_t::send_ssl_write & mode) {
-            int ret_write = SSL_write(handle->_ssl, data, (int)size_data);
+            int ret_write = SSL_write(ssl, data, (int)size_data);
 
             if (ret_write < 1) {
-                ret = errorcode_t::internal_error;
+                ret = get_opensslerror(ret_write);
                 __leave2;
             }
             if (size_sent) {
@@ -662,16 +660,16 @@ return_t transport_layer_security::sendto(tls_context_t* handle, int mode, const
             }
         }
 
-        int written = BIO_number_written(handle->_sbio_write);
-
-        int ret_read = 0;
-        std::vector<char> buf;
-        buf.resize(written);
-
         if (tls_io_flag_t::send_bio_read & mode) {
-            ret_read = BIO_read(handle->_sbio_write, &buf[0], buf.size());
+            int written = BIO_number_written(wbio);
+
+            int ret_read = 0;
+            std::vector<char> buf;
+            buf.resize(written);
+
+            ret_read = BIO_read(wbio, &buf[0], buf.size());
             if (ret_read < 1) {
-                ret = errorcode_t::internal_error;
+                ret = get_opensslerror(ret_read);
                 __leave2; /* too many traces here */
             }
 

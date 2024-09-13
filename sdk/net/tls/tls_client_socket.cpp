@@ -73,7 +73,7 @@ return_t tls_client_socket::close(socket_t sock, tls_context_t* tls_handle) {
         if (nullptr != tls_handle) {
             _tls->close(tls_handle);
         }
-        client_socket::close(sock, tls_handle);
+        close_socket(sock, true, 0);
     }
     __finally2 {
         // do nothing
@@ -91,13 +91,14 @@ return_t tls_client_socket::read(socket_t sock, tls_context_t* tls_handle, char*
      * in case read 8 bytes and 2 bytes remains, return errorcode_t::more_data
      */
     while (true) {
-        ret = wait_socket(sock, get_wto(), SOCK_WAIT_READABLE);
-        if (errorcode_t::success == ret) {
-            ret = _tls->read(tls_handle, tls_io_flag_t::read_ssl_read | tls_io_flag_t::read_bio_write | tls_io_flag_t::read_socket_recv, ptr_data, size_data,
-                             cbread);
-            if (errorcode_t::pending == ret) {
+        return_t test = wait_socket(sock, get_wto(), SOCK_WAIT_READABLE);
+        if (errorcode_t::success == test) {
+            int mode = tls_io_flag_t::read_ssl_read | tls_io_flag_t::read_bio_write | tls_io_flag_t::read_socket_recv;
+            test = _tls->read(tls_handle, mode, ptr_data, size_data, cbread);
+            if (errorcode_t::pending == test) {
                 continue;
             } else {
+                ret = test;
                 break;
             }
         } else {
@@ -109,15 +110,15 @@ return_t tls_client_socket::read(socket_t sock, tls_context_t* tls_handle, char*
 
 return_t tls_client_socket::more(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
-
-    ret = _tls->read(tls_handle, tls_io_flag_t::read_ssl_read, ptr_data, size_data, cbread);
+    int mode = tls_io_flag_t::read_ssl_read;
+    ret = _tls->read(tls_handle, mode, ptr_data, size_data, cbread);
     return ret;
 }
 
 return_t tls_client_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
-
-    ret = _tls->send(tls_handle, tls_io_flag_t::send_all, ptr_data, size_data, cbsent);
+    int mode = tls_io_flag_t::send_all;
+    ret = _tls->send(tls_handle, mode, ptr_data, size_data, cbsent);
     return ret;
 }
 

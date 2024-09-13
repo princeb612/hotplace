@@ -60,3 +60,8 @@
 | O | RSA   | JWK/PEM                |   |
 | O | EC    | JWK/PEM                | crv "P-256","P-384","P-521" |
 | O | OKP   | JWK/PEM                | crv "Ed25519","Ed448","X25519","X448" |
+
+## JSON parser performance comparison
+
+* https://github.com/miloyip/nativejson-benchmark
+* https://github.com/fabienrenaud/java-json-benchmark

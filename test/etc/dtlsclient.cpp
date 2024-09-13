@@ -48,6 +48,7 @@ void client() {
     transport_layer_security tls(sslctx);
     dtls_client_socket cli(&tls);
     sockaddr_storage_t addr;
+    socklen_t addrlen = sizeof(addr);
 
     char buffer[BUFFER_SIZE];
     basic_stream bs;
@@ -64,19 +65,24 @@ void client() {
         }
 
         ret = cli.connectto(sock, &tlshandle, option.address.c_str(), option.port, 1);
+        _test_case.test(ret, __FUNCTION__, "connectto");
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         size_t cbsent = 0;
-        ret = cli.send(sock, tlshandle, option.message.c_str(), option.message.size(), &cbsent);
+        ret = cli.sendto(sock, tlshandle, option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&addr, sizeof(addr));
+        _test_case.test(ret, __FUNCTION__, "sendto");
         if (errorcode_t::success == ret) {
+#if 0
             return_t ret_read = errorcode_t::success;
             size_t cbread = 0;
-            ret_read = cli.read(sock, tlshandle, buffer, BUFFER_SIZE, &cbread);
+            ret_read = cli.recvfrom(sock, tlshandle, buffer, BUFFER_SIZE, &cbread, (sockaddr*)&addr, &addrlen);
             bs.write(buffer, cbread);
 
-            _logger->writeln("received response: %s", bs.c_str());
+            // _logger->writeln("received response: %s", bs.c_str());
+            _logger->dump(bs);
+#endif
         }
     }
     __finally2 {
