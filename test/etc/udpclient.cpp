@@ -25,15 +25,16 @@ typedef struct _OPTION {
     int verbose;
     std::string address;
     uint16 port;
+    uint16 count;
     std::string message;
 
-    _OPTION() : verbose(0), address("127.0.0.1"), port(9000), message("hello") {
+    _OPTION() : verbose(0), address("127.0.0.1"), port(9000), count(1), message("hello") {
         // do nothing
     }
 } OPTION;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
-#define BUFFER_SIZE (1 << 16)
+#define BUFFER_SIZE 1500
 
 void client() {
     const OPTION& option = _cmdline->value();
@@ -57,16 +58,18 @@ void client() {
         }
 
         size_t cbsent = 0;
-        ret = cli.sendto(sock, nullptr, option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&addr, addrlen);
-        if (errorcode_t::success != ret) {
-            __leave2;
+        for (auto i = 0; (i < option.count) && (errorcode_t::success == ret); i++) {
+            ret = cli.sendto(sock, nullptr, option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&addr, addrlen);
         }
 
         size_t cbread = 0;
-        ret = cli.recvfrom(sock, nullptr, buffer, BUFFER_SIZE, &cbread, (sockaddr*)&addr, &addrlen);
-        if (errorcode_t::success == ret) {
-            bs.write(buffer, cbread);
-            _logger->writeln("received response: %s", bs.c_str());
+        for (auto i = 0; (i < option.count) && (errorcode_t::success == ret); i++) {
+            ret = cli.recvfrom(sock, nullptr, buffer, BUFFER_SIZE, &cbread, (sockaddr*)&addr, &addrlen);
+            if (errorcode_t::success == ret) {
+                bs.write(buffer, cbread);
+                _logger->writeln("received response: %s", bs.c_str());
+                bs.clear();
+            }
         }
     }
     __finally2 {
@@ -89,6 +92,7 @@ int main(int argc, char** argv) {
     *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
               << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
               << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
+              << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
               << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced();
     _cmdline->parse(argc, argv);
 

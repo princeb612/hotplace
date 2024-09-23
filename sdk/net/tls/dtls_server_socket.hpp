@@ -25,33 +25,26 @@ class dtls_server_socket : public udp_server_socket {
     /**
      * @brief   close
      */
-    return_t close(socket_t sock, tls_context_t* tls_handle);
+    virtual return_t close(socket_t sock, tls_context_t* tls_handle);
     /**
      * @brief   dtls open
      * @param   tls_context_t** tls_handle      [OUT] tls context
      * @param   socket_t        clisock         [IN] client socket
      * @return  error code (see error.hpp)
      */
-    return_t dtls_open(tls_context_t** tls_handle, socket_t sock);
+    virtual return_t dtls_open(tls_context_t** tls_handle, socket_t sock);
     /**
-     * @brief   tls accept
-     * @param   socket_t        clisock         [IN] client socket
-     * @param   tls_context_t** tls_handle      [OUT] tls context
-     * @return  error code (see error.hpp)
+     * @brief   handshake
+     * @param   tls_context_t* handle [in]
+     * @param   sockaddr* addr [inopt]
+     * @param   socklen_t addrlen [in]
      */
-    virtual return_t tls_accept(socket_t clisock, tls_context_t** tls_handle);
-    /**
-     * @brief   tls_stop_accept
-     */
-    virtual return_t tls_stop_accept();
+    virtual return_t dtls_handshake(tls_context_t* handle, sockaddr* addr, socklen_t addrlen);
     /**
      * @brief   read
      * @param   socket_t        sock        [IN]
      * @param   tls_context_t*  tls_handle  [IN]
-     * @param   int             mode        [IN]
-     *                                          2 recv
-     *                                          1 bio_write
-     *                                          0 ssl_read
+     * @param   int             mode        [IN] see tls_io_flag_t
      * @param   char*           ptr_data    [IN]
      * @param   size_t          size_data   [IN]
      * @param   size_t*         cbread      [OUT]

@@ -65,12 +65,12 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
 return_t connect_socket(socket_t* socket, const char* address, uint16 port, uint32 timeout);
 /**
  * @brief   connect to address
- * @param   socket_t            sock            [in]
- * @param   sockaddr_storage_t* pSockAddr       [in]
- * @param   size_t              sizeSockAddr    [in]
- * @param   uint32              dwTimeout       [in]
+ * @param   socket_t            sock        [in]
+ * @param   const sockaddr*     addr        [in]
+ * @param   socklen_t           addrlen     [in]
+ * @param   uint32              timeout     [in]
  */
-return_t connect_socket_addr(socket_t sock, sockaddr_storage_t* pSockAddr, size_t sizeSockAddr, uint32 dwTimeout);
+return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 timeout);
 /**
  * @brief   disconnect
  * @param   socket_t    sock    [in]

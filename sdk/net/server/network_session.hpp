@@ -113,9 +113,13 @@ class network_session {
      */
     return_t connected(handle_t event_socket, sockaddr_storage_t* sockaddr, tls_context_t* tls_handle);
     /**
-     * @brief   handle udp data without cookie secret
+     * @brief   dtls
      */
-    return_t dgram_start(handle_t listen_sock);
+    return_t dtls_session_open(handle_t listen_sock);
+    /**
+     * @brief   dtls
+     */
+    return_t dtls_session_handshake();
     /**
      * @brief in windows call wsarecv to read asynchronously
      * @return  error code (see error.hpp)
@@ -268,12 +272,12 @@ class network_session_manager {
     /**
      * @brief   [UDP] handle udp data without cookie secret
      */
-    return_t dgram_start(handle_t listen_sock, server_socket* svr_socket, tls_context_t* tls_handle, network_session** ptr_session_object);
+    return_t get_dgram_session(handle_t listen_sock, server_socket* svr_socket, tls_context_t* tls_handle, network_session** ptr_session_object);
     /**
      * @brief   [DTLS] handle dtls session
      */
-    return_t dgram_start_cookie(handle_t listen_sock, const sockaddr_storage_t* sockaddr, server_socket* svr_socket, tls_context_t* tls_handle,
-                                network_session** ptr_session_object);
+    return_t get_dgram_cookie_session(handle_t listen_sock, const sockaddr_storage_t* sockaddr, server_socket* svr_socket, tls_context_t* tls_handle,
+                                      network_session** ptr_session_object);
     /**
      * @brief   [DTLS] find DTLS session
      * @remarks

@@ -44,7 +44,7 @@ class transport_layer_security {
     ~transport_layer_security();
 
     /**
-     * @brief   open
+     * @brief   connect
      * @param   tls_context_t** handle      [OUT]
      * @param   int             type        [IN]
      * @param   LPCSTR          addr        [IN]
@@ -54,7 +54,7 @@ class transport_layer_security {
      */
     return_t connect(tls_context_t** handle, int type, const char* addr, uint16 port, uint32 to_seconds);
     /**
-     * @brief   open
+     * @brief   connect to
      * @param   tls_context_t** handle      [OUT]
      * @param   socket_t        sock        [IN]
      * @param   const char*     address     [in]
@@ -62,6 +62,14 @@ class transport_layer_security {
      * @remarks 연결된 socket 으로 핸들만 구성하는 경우
      */
     return_t connectto(tls_context_t** handle, socket_t sock, const char* address, uint16 port, uint32 to_seconds = NET_DEFAULT_TIMEOUT);
+    /**
+     * @brief   connect to
+     * @param   tls_context_t** handle      [OUT]
+     * @param   socket_t        sock        [IN]
+     * @param   const sockaddr* addr        [in]
+     * @param   socklen_t       addrlen     [in]
+     */
+    return_t connectto(tls_context_t** handle, socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 to_seconds = NET_DEFAULT_TIMEOUT);
     /**
      * @brief   socket layer handshake
      * @param   tls_context_t** handle      [OUT]
@@ -76,6 +84,26 @@ class transport_layer_security {
      * @brief   DTLS
      */
     return_t dtls_open(tls_context_t** handle, socket_t sock);
+    /**
+     * @brief   handshake
+     * @param   tls_context_t* handle [in]
+     * @param   sockaddr* addr [inopt]
+     * @param   socklen_t addrlen [in]
+     * @remarks
+     *
+     *          // handshake with cookie
+     *          SSL_CTX_set_cookie_generate_cb(sslctx, set_cookie_generate_callback_routine);
+     *          SSL_CTX_set_cookie_verify_cb(sslctx, set_cookie_verify_callback_routine);
+     *          BIO_ADDR* bio_addr = BIO_ADDR_new();
+     *          DTLSv1_listen(ssl, bio_addr);
+     *          BIO_ADDR_free(bio_addr);
+     *
+     *          // cf. handshake without cookie
+     *			SSL_set_accept_state(ssl);
+     *			SSL_do_handshake(ssl);
+     *
+     */
+    return_t dtls_handshake(tls_context_t* handle, sockaddr* addr, socklen_t addrlen);
     /**
      * @brief   close
      * @param   tls_context_t*  handle      [IN]
@@ -113,6 +141,23 @@ class transport_layer_security {
     SSL_CTX* get();
 
    protected:
+    /**
+     * @brief   SSL_connect
+     * @param   socket_t    sock        [in]
+     * @param   SSL*        ssl         [in]
+     * @param   uint32      dwSeconds   [in]
+     * @param   uint32      nbio        [in]
+     */
+    return_t do_connect(socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio);
+    /**
+     * @brief   dtls_handshake
+     */
+    return_t do_dtls_listen(tls_context_t* handle, sockaddr* addr, socklen_t addrlen);
+    /**
+     * @brief   SSL_accept
+     */
+    return_t do_accept(tls_context_t* handle);
+
     SSL_CTX* _ctx;
     t_shared_reference<transport_layer_security> _shared;
 };

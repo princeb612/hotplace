@@ -48,10 +48,25 @@ return_t tcp_client_socket::connectto(socket_t sock, tls_context_t** tls_handle,
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = connect_socket_addr(sock, &addr, sizeof(addr), timeout);
+        ret = connect_socket_addr(sock, (sockaddr*)&addr, sizeof(addr), timeout);
     }
     __finally2 {
         // do nothing
+    }
+    return ret;
+}
+
+return_t tcp_client_socket::connectto(socket_t sock, tls_context_t** tls_handle, const sockaddr* addr, socklen_t addrlen, uint32 timeout) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == addr) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = connect_socket_addr(sock, addr, addrlen, timeout);
+    }
+    __finally2 {
+        //
     }
     return ret;
 }

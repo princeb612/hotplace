@@ -93,7 +93,6 @@ struct _network_multiplexer_context_t {
     ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler;
 
     std::function<void(stream_t*)> df;
-    network_session* dgram_session;
 
     _network_multiplexer_context_t()
         : signature(0),
@@ -103,8 +102,7 @@ struct _network_multiplexer_context_t {
           callback_param(nullptr),
           listen_sock(INVALID_SOCKET),
           svr_socket(nullptr),
-          accept_control_handler(nullptr),
-          dgram_session(nullptr) {}
+          accept_control_handler(nullptr) {}
 };
 
 network_server::network_server() {}
@@ -369,7 +367,15 @@ return_t network_server::event_loop_run(network_multiplexer_context_t* handle, u
         if (SOCK_DGRAM == handle->svr_socket->socket_type()) {
             // (epoll, iocp) bind udp.socket - mplexer.bind(mplexer_handle, (handle_t)sock, session_object);
             // (windows) async read
-            dgram_start(handle);
+
+            socket_t listen_sock = handle->listen_sock;
+            network_session* dgram_session = nullptr;
+            handle->session_manager.get_dgram_session((handle_t)listen_sock, handle->svr_socket, nullptr, &dgram_session);
+            if (dgram_session) {
+                mplexer.bind(handle->mplexer_handle, (handle_t)listen_sock, dgram_session);
+                dgram_session->ready_to_read();
+                dgram_session->release();
+            }
         }
     }
     __finally2 {
@@ -833,13 +839,23 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
             }
         }
     } else if (multiplexer_event_type_t::mux_dgram == type) {
-        network_session* session_object = nullptr;
-        ret = context->session_manager.find(context->listen_sock, &session_object); /* reference increased, call release later */
-        if (errorcode_t::success == ret) {
-            /* consumer_routine (decrease), close_if_not_referenced (delete) */
-            ret = session_object->produce(&context->event_queue, nullptr, 0);
-
-            session_object->release(); /* find, refcount-- */
+        network_session* dgram_session = nullptr;
+        context->session_manager.find(context->listen_sock, &dgram_session); /* reference increased, call release later */
+        if (dgram_session) {
+            byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
+            const sockaddr_storage_t& addr = dgram_session->socket_info()->cli_addr;
+            if (context->svr_socket->support_tls()) {
+                network_session* dtls_session = nullptr;
+                context->session_manager.get_dgram_cookie_session((handle_t)context->listen_sock, &addr, context->svr_socket, nullptr, &dtls_session);
+                if (dtls_session) {
+                    dtls_session->produce(&context->event_queue, nullptr, 0);
+                    dtls_session->release();
+                }
+            } else {
+                /* consumer_routine (decrease), close_if_not_referenced (delete) */
+                dgram_session->produce(&context->event_queue, nullptr, 0);
+            }
+            dgram_session->release(); /* find, refcount-- */
         }
     }
     // else if (multiplexer_event_type_t::mux_disconnect == type) /* no event catchable */
@@ -856,19 +872,25 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
     } else if (multiplexer_event_type_t::mux_disconnect == type) {
         svr.session_closed(context, session_object->socket_info()->event_socket);
     } else if (multiplexer_event_type_t::mux_dgram) {
-        // socket_t listen_sock = context->listen_sock;
-        network_session_buffer_t* wsabuf_read = context->dgram_session->get_buffer();
-        const sockaddr_storage_t& addr = context->dgram_session->socket_info()->cli_addr;
-        if (context->svr_socket->support_tls()) {
-            network_session* dtls_session = nullptr;
-            context->session_manager.dgram_start_cookie((handle_t)context->listen_sock, &addr, context->svr_socket, nullptr, &dtls_session);
-            if (dtls_session) {
-                dtls_session->produce(&context->event_queue, (byte_t*)&wsabuf_read->bin[0], transferred, &addr);
+        network_session* dgram_session = nullptr;
+
+        context->session_manager.get_dgram_session((handle_t)context->listen_sock, context->svr_socket, nullptr, &dgram_session);
+        if (dgram_session) {
+            byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
+            const sockaddr_storage_t& addr = dgram_session->socket_info()->cli_addr;
+            if (context->svr_socket->support_tls()) {
+                network_session* dtls_session = nullptr;
+                context->session_manager.get_dgram_cookie_session((handle_t)context->listen_sock, &addr, context->svr_socket, nullptr, &dtls_session);
+                if (dtls_session) {
+                    dtls_session->produce(&context->event_queue, buffer, transferred, &addr);
+                    dtls_session->release();
+                }
+            } else {
+                dgram_session->produce(&context->event_queue, buffer, transferred, &addr);
             }
-        } else {
-            session_object->produce(&context->event_queue, (byte_t*)&wsabuf_read->bin[0], transferred, &addr);
+            dgram_session->ready_to_read();
+            dgram_session->release();
         }
-        svr.dgram_ready_to_read(context);
     }
 
 #endif
@@ -1028,34 +1050,6 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
         // do nothing
     }
 
-    return ret;
-}
-
-return_t network_server::dgram_start(network_multiplexer_context_t* handle) {
-    return_t ret = errorcode_t::success;
-
-    socket_t listen_sock = handle->listen_sock;
-    handle->session_manager.dgram_start((handle_t)listen_sock, handle->svr_socket, nullptr, &handle->dgram_session);
-    mplexer.bind(handle->mplexer_handle, (handle_t)listen_sock, handle->dgram_session);
-
-    dgram_ready_to_read(handle);
-
-    return ret;
-}
-
-return_t network_server::dgram_ready_to_read(network_multiplexer_context_t* handle) {
-    return_t ret = errorcode_t::success;
-    network_session_buffer_t* wsabuf_read = handle->dgram_session->get_buffer();
-    wsabuf_read->init();
-#if defined __linux__
-    //
-#elif defined _WIN32 || defined _WIN64
-    socket_t listen_sock = handle->listen_sock;
-    sockaddr_storage_t& addr = handle->dgram_session->socket_info()->cli_addr;
-    uint32 flags = 0;
-    int addrlen = sizeof(sockaddr_storage_t);
-    WSARecvFrom(listen_sock, &wsabuf_read->wsabuf, 1, nullptr, &flags, (sockaddr*)&addr, &addrlen, &wsabuf_read->overlapped, nullptr);
-#endif
     return ret;
 }
 

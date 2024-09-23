@@ -52,10 +52,7 @@ class tls_server_socket : public tcp_server_socket {
      * @brief   read
      * @param   socket_t        sock        [IN]
      * @param   tls_context_t*  tls_handle  [IN]
-     * @param   int             mode        [IN]
-     *                                          2 recv
-     *                                          1 bio_write
-     *                                          0 ssl_read
+     * @param   int             mode        [IN] see tls_io_flag_t
      * @param   char*           ptr_data    [IN]
      * @param   size_t          size_data   [IN]
      * @param   size_t*         cbread      [OUT]

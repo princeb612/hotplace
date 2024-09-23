@@ -45,6 +45,8 @@ class ansi_string : public stream_t {
     return_t vprintf(const wchar_t* buf, va_list ap);
 #endif
 
+    return_t vprintf(const char* fmt, valist ap);
+
     const char* c_str() const;
     size_t find(char* data);
 

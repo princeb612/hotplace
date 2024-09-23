@@ -29,10 +29,8 @@ typedef struct _tls_context_t {
     uint32 _flags;
     socket_t _socket;
     SSL* _ssl;
-    BIO* _sbio_read;
-    BIO* _sbio_write;
 
-    _tls_context_t() : _signature(0), _flags(0), _socket(-1), _ssl(nullptr), _sbio_read(nullptr), _sbio_write(nullptr) {}
+    _tls_context_t() : _signature(0), _flags(0), _socket(-1), _ssl(nullptr) {}
 } tls_context_t;
 
 transport_layer_security::transport_layer_security(SSL_CTX* ctx) : _ctx(ctx) {
@@ -82,7 +80,7 @@ return_t transport_layer_security::connect(tls_context_t** handle, int type, con
             __leave2;
         }
 
-        ret = connect_socket_addr(sock, &addr, sizeof(addr), wto);
+        ret = connect_socket_addr(sock, (sockaddr*)&addr, sizeof(addr), wto);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -96,7 +94,7 @@ return_t transport_layer_security::connect(tls_context_t** handle, int type, con
         }
         SSL_set_fd(ssl, (int)sock);
 
-        ret = tls_connect(sock, ssl, wto, 1);
+        ret = do_connect(sock, ssl, wto, 1);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -107,9 +105,6 @@ return_t transport_layer_security::connect(tls_context_t** handle, int type, con
         sbio_read = BIO_new(BIO_s_mem());
         sbio_write = BIO_new(BIO_s_mem());
         SSL_set_bio(ssl, sbio_read, sbio_write);
-
-        context->_sbio_read = sbio_read;
-        context->_sbio_write = sbio_write;
 
         context->_signature = TLS_CONTEXT_SIGNATURE;
         context->_flags = tls_context_flag_t::closesocket_ondestroy;
@@ -152,7 +147,28 @@ return_t transport_layer_security::connectto(tls_context_t** handle, socket_t so
             __leave2;
         }
 
-        ret = connect_socket_addr(sock, &addr, sizeof(addr), wto);
+        ret = connectto(handle, sock, (sockaddr*)&addr, sizeof(addr), wto);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t transport_layer_security::connectto(tls_context_t** handle, socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 wto) {
+    return_t ret = errorcode_t::success;
+    BIO* sbio_read = nullptr;
+    BIO* sbio_write = nullptr;
+    SSL* ssl = nullptr;
+    tls_context_t* context = nullptr;
+
+    __try2 {
+        if (nullptr == handle || nullptr == addr) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = connect_socket_addr(sock, addr, addrlen, wto);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -166,7 +182,7 @@ return_t transport_layer_security::connectto(tls_context_t** handle, socket_t so
         }
         SSL_set_fd(ssl, (int)sock);
 
-        ret = tls_connect(sock, ssl, wto, 1);
+        ret = do_connect(sock, ssl, wto, 1);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -178,8 +194,6 @@ return_t transport_layer_security::connectto(tls_context_t** handle, socket_t so
         context->_socket = sock;
         context->_ssl = ssl;
 
-        context->_sbio_read = sbio_read;
-        context->_sbio_write = sbio_write;
         context->_signature = TLS_CONTEXT_SIGNATURE;
         context->_flags = 0;
 
@@ -224,65 +238,18 @@ return_t transport_layer_security::accept(tls_context_t** handle, socket_t fd) {
         ssl = SSL_new(_ctx);
         SSL_set_fd(ssl, (int)fd);
 
-        int socktype = 0;
-        typeof_socket(fd, socktype);
-        if (SOCK_DGRAM == socktype) {
-            DTLSv1_listen(ssl, nullptr);
-        }
+        /* compose the context */
+        context->_signature = TLS_CONTEXT_SIGNATURE;
+        context->_socket = fd;
+        context->_ssl = ssl;
 
         set_sock_nbio(fd, 1);
 
-        fd_set rfdset;
-        fd_set wfdset;
-
-        int status = -1;
-        do {
-            FD_ZERO(&rfdset);
-            FD_ZERO(&wfdset);
-
-            status = SSL_accept(ssl);
-            int condition = SSL_get_error(ssl, status);
-            switch (condition) {
-                case SSL_ERROR_NONE:
-                    status = 0;
-                    break;
-                case SSL_ERROR_WANT_WRITE:
-                    FD_SET(fd, &wfdset);
-                    status = 1;
-                    break;
-                case SSL_ERROR_WANT_READ:
-                    FD_SET(fd, &rfdset);
-                    status = 1;
-                    break;
-                case SSL_ERROR_ZERO_RETURN:
-                case SSL_ERROR_SYSCALL:
-                    // peer closed connection during SSL handshake
-                    status = -1;
-                    break;
-                default:
-                    status = -1;
-                    break;
-            }
-            if (1 == status) {
-                struct timeval tv;
-                tv.tv_sec = 2;
-                tv.tv_usec = 0;
-
-                status = select(fd + 1, &rfdset, &wfdset, nullptr, &tv);
-                // 0 timeout
-                // -1 error
-                if (status >= 1) {
-                    status = 1;
-                } else {
-                    status = -1;
-                }
-            }
-        } while ((1 == status) && !SSL_is_init_finished(ssl));
+        ret = do_accept(context);
 
         set_sock_nbio(fd, 0);
 
-        if (status < 0) {
-            ret = get_lasterror(status);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -291,24 +258,20 @@ return_t transport_layer_security::accept(tls_context_t** handle, socket_t fd) {
         sbio_write = BIO_new(BIO_s_mem());
         SSL_set_bio(ssl, sbio_read, sbio_write);
 
-        /* compose the context */
-        context->_socket = fd;
-        context->_ssl = ssl;
-
-        context->_sbio_read = sbio_read;
-        context->_sbio_write = sbio_write;
-        context->_signature = TLS_CONTEXT_SIGNATURE;
-
         *handle = context;
     }
     __finally2 {
         if (errorcode_t::success != ret) {
             if (INVALID_SOCKET != fd) {
+                int socktype = 0;
+                typeof_socket(fd, socktype);
+                if (SOCK_STREAM == socktype) {
 #if defined __linux__
-                ::close(fd);
+                    ::close(fd);
 #elif defined _WIN32 || defined _WIN64
-                closesocket(fd);
+                    closesocket(fd);
 #endif
+                }
             }
             if (nullptr != ssl) {
                 // SSL_shutdown(ssl);
@@ -327,8 +290,7 @@ return_t transport_layer_security::accept(tls_context_t** handle, socket_t fd) {
 return_t transport_layer_security::dtls_open(tls_context_t** handle, socket_t fd) {
     return_t ret = errorcode_t::success;
 
-    BIO* sbio_read = nullptr;
-    BIO* sbio_write = nullptr;
+    BIO* sbio = nullptr;
     SSL* ssl = nullptr;
     tls_context_t* context = nullptr;
 
@@ -349,17 +311,14 @@ return_t transport_layer_security::dtls_open(tls_context_t** handle, socket_t fd
         ssl = SSL_new(_ctx);
         SSL_set_fd(ssl, (int)fd);
 
-        /* SSL_set_bio */
-        sbio_read = BIO_new(BIO_s_mem());
-        sbio_write = BIO_new(BIO_s_mem());
-        SSL_set_bio(ssl, sbio_read, sbio_write);
+        /* SSL_set_bio - BIO_s_mem for TCP, BIO_s_datagram for UDP */
+        sbio = BIO_new_dgram(fd, BIO_NOCLOSE);
+        SSL_set_bio(ssl, sbio, sbio);
 
         /* compose the context */
         context->_socket = fd;
         context->_ssl = ssl;
 
-        context->_sbio_read = sbio_read;
-        context->_sbio_write = sbio_write;
         context->_signature = TLS_CONTEXT_SIGNATURE;
 
         *handle = context;
@@ -377,6 +336,244 @@ return_t transport_layer_security::dtls_open(tls_context_t** handle, socket_t fd
         }
     }
 
+    return ret;
+}
+
+return_t transport_layer_security::dtls_handshake(tls_context_t* handle, sockaddr* addr, socklen_t addrlen) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        auto fd = handle->_socket;
+        auto ssl = handle->_ssl;
+
+        if (1 == SSL_is_init_finished(ssl)) {
+            __leave2;
+        }
+
+        int rc = 0;
+
+        // SSL_get_state(ssl) -> TLS_ST_BEFORE
+
+        do_dtls_listen(handle, addr, addrlen);
+
+        // SSL_get_state(ssl) -> TLS_ST_SR_CLNT_HELLO
+
+        do_accept(handle);
+
+        // SSL_get_state(ssl) -> TLS_ST_OK
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t transport_layer_security::do_connect(socket_t fd, SSL* ssl, uint32 wto, uint32 nbio) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == ssl) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (0 == nbio) { /* blocking */
+            int nRet = 0;
+            nRet = SSL_connect(ssl);
+
+            if (nRet <= 0) {
+                ret = errorcode_t::internal_error;
+                __leave2;
+            }
+        } else { /* non-blocking */
+            set_sock_nbio(fd, 1);
+
+            try {
+                int rc = 1;
+                int flags = 0;
+
+                // TLS_ST_CW_CLNT_HELLO 0x0c
+                // TLS_ST_CR_SRVR_HELLO 0x03
+                // TLS_ST_CW_FINISHED   0x12
+                // TLS_ST_OK            0x01
+
+                do {
+                    flags = 0;
+
+                    rc = SSL_connect(ssl);
+
+                    int condition = SSL_get_error(ssl, rc);
+                    switch (condition) {
+                        case SSL_ERROR_NONE:
+                            rc = 0;
+                            break;
+                        case SSL_ERROR_WANT_WRITE:
+                            flags |= SOCK_WAIT_WRITABLE;
+                            rc = 1;
+                            break;
+                        case SSL_ERROR_WANT_READ:
+                            flags |= SOCK_WAIT_READABLE;
+                            rc = 1;
+                            break;
+                        case SSL_ERROR_ZERO_RETURN:
+                        case SSL_ERROR_SYSCALL:
+                            // peer closed connection during SSL handshake
+                            rc = -1;
+                            break;
+                        default:
+                            rc = -1;
+                            break;
+                    }
+                    if (1 == rc) {
+                        ret = wait_socket(fd, wto * 1000, flags);
+                    }
+                } while ((success == ret) && (1 != SSL_is_init_finished(ssl)));
+            } catch (...) {
+                /*
+                 * openssl-1.0.1i SSL_connect crash
+                 *    at X509_LOOKUP_by_subject
+                 *      X509_LOOKUP *lu; // uninitialized
+                 *      lu=sk_X509_LOOKUP_value(ctx->get_cert_methods,i); // if sk_X509_LOOKUP_value fails
+                 *      j=X509_LOOKUP_by_subject(lu,type,name,&stmp); // crash
+                 */
+                ret = errorcode_t::internal_error;
+            }
+
+            set_sock_nbio(fd, 0);
+
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return ret;
+}
+
+return_t transport_layer_security::do_dtls_listen(tls_context_t* handle, sockaddr* addr, socklen_t addrlen) {
+    return_t ret = errorcode_t::success;
+    BIO_ADDR* bio_addr = nullptr;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        auto ssl = handle->_ssl;
+        int rc = 1;
+
+        if (1 == SSL_is_init_finished(ssl)) {
+            __leave2;
+        }
+
+        bio_addr = BIO_ADDR_new();
+
+        do {
+            rc = DTLSv1_listen(ssl, bio_addr);
+            if (rc > 0) {
+                if (addr) {
+                    BIO_ADDR_to_sockaddr(bio_addr, addr, addrlen);
+                    // basic_stream bs;
+                    // dump_memory((byte_t*)addr, addrlen, &bs);
+                    // printf("%s\n", bs.c_str());
+                }
+            } else {
+                ret = get_opensslerror(rc);
+            }
+        } while (TLS_ST_SR_CLNT_HELLO != SSL_get_state(ssl));
+    }
+    __finally2 {
+        if (bio_addr) {
+            BIO_ADDR_free(bio_addr);
+        }
+    }
+    return ret;
+}
+
+return_t transport_layer_security::do_accept(tls_context_t* handle) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        auto fd = handle->_socket;
+        auto ssl = handle->_ssl;
+
+        if (1 == SSL_is_init_finished(ssl)) {
+            __leave2;
+        }
+
+        int rc = 1;
+        int flags = 0;
+        fd_set rfdset;
+        fd_set wfdset;
+
+        // TLS_ST_BEFORE        0x00
+        // TLS_ST_SR_CLNT_HELLO 0x14
+        // TLS_ST_OK            0x01
+
+        do {
+            flags = 0;
+
+            rc = SSL_accept(ssl);
+            int condition = SSL_get_error(ssl, rc);
+            switch (condition) {
+                case SSL_ERROR_NONE:
+                    rc = 0;
+                    break;
+                case SSL_ERROR_WANT_WRITE:
+                    flags |= SOCK_WAIT_WRITABLE;
+                    rc = 1;
+                    break;
+                case SSL_ERROR_WANT_READ:
+                    flags |= SOCK_WAIT_READABLE;
+                    rc = 1;
+                    break;
+                case SSL_ERROR_ZERO_RETURN:
+                case SSL_ERROR_SYSCALL:
+                    // peer closed connection during SSL handshake
+                    rc = -1;
+                    break;
+                default:
+                    rc = -1;
+                    break;
+            }
+            if (1 == rc) {
+                ret = wait_socket(fd, 1 * 1000, flags);
+            }
+        } while ((success == ret) && (1 != SSL_is_init_finished(ssl)));
+
+        if (rc < 1) {
+            ret = get_opensslerror(rc);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -492,9 +689,7 @@ return_t transport_layer_security::read(tls_context_t* handle, int mode, void* b
 return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread, struct sockaddr* addr,
                                             socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
-
     int ret_recv = 0;
-    BIO_ADDR* bio_addr = nullptr;
 
     __try2 {
         if (nullptr == handle || nullptr == buffer) {
@@ -557,10 +752,6 @@ return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, voi
         }
     }
     __finally2 {
-        if (bio_addr) {
-            BIO_ADDR_free(bio_addr);
-        }
-
         fflush(stdout);
 
         // do nothing
@@ -629,7 +820,6 @@ return_t transport_layer_security::send(tls_context_t* handle, int mode, const c
 return_t transport_layer_security::sendto(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent, const struct sockaddr* addr,
                                           socklen_t addrlen) {
     return_t ret = errorcode_t::success;
-
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;

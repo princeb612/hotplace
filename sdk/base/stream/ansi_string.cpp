@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/valist.hpp>
+#include <sdk/base/stream/printf.hpp>
 #include <sdk/base/stream/tstring.hpp>
 #include <sdk/base/string/string.hpp>
 
@@ -117,6 +119,12 @@ return_t ansi_string::vprintf(const wchar_t* buf, va_list ap) {
     return ret;
 }
 #endif
+
+return_t ansi_string::vprintf(const char* fmt, valist ap) {
+    return_t ret = errorcode_t::success;
+    ret = sprintf(this, fmt, ap);
+    return ret;
+}
 
 const char* ansi_string::c_str() const {
     char* data = nullptr;

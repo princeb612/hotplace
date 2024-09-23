@@ -24,6 +24,7 @@
 #include <sdk/base/types.hpp>
 
 namespace hotplace {
+class valist;
 
 /**
  * @brief   basic_stream null-padded
@@ -96,6 +97,8 @@ class basic_stream : public stream_t {
     virtual return_t printf(const wchar_t* buf, ...);
     return_t vprintf(const wchar_t* buf, va_list ap);
 #endif
+
+    return_t vprintf(const char* fmt, valist ap);
 
     basic_stream& operator<<(const char* str);
     basic_stream& operator<<(char value);

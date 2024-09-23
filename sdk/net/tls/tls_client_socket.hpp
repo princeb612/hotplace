@@ -108,8 +108,22 @@ class tls_client_socket : public tcp_client_socket {
     virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
     /**
      * @brief   connect
+     * @oaram   socket_t sock [in]
+     * @oaram   tls_context_t** tls_handle [out]
+     * @oaram   const char* address [in]
+     * @oaram   uint16 port [in]
+     * @oaram   uint32 timeout [in[
      */
     virtual return_t connectto(socket_t sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
+    /**
+     * @brief   connect
+     * @param   socket_t sock [in]
+     * @param   tls_context_t** tls_handle [out]
+     * @param   const sockaddr* addr [in]
+     * @param   socklen_t addrlen [in]
+     * @param   uint32 timeout [in]
+     */
+    virtual return_t connectto(socket_t sock, tls_context_t** tls_handle, const sockaddr* addr, socklen_t addrlen, uint32 timeout);
     /**
      * @brief   close
      * @param   socket_t        sock            [IN]

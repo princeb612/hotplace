@@ -216,6 +216,9 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
 #endif
                         int reuse = 1;
                         setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse, sizeof(reuse));
+#ifdef SO_REUSEPORT
+                        setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char*)&reuse, sizeof(reuse));
+#endif
 
                         ret_function = bind(sock, addrinf_traverse->ai_addr, (int)addrinf_traverse->ai_addrlen);
                         if (0 != ret_function) {
@@ -288,7 +291,7 @@ return_t connect_socket(socket_t* socket, const char* address, uint16 port, uint
     __try2 {
         ret = create_socket(&sock, &addr, SOCK_STREAM, address, port);
         if (errorcode_t::success == ret) {
-            ret = connect_socket_addr(sock, &addr, sizeof(addr), dwTimeout);
+            ret = connect_socket_addr(sock, (sockaddr*)&addr, sizeof(addr), dwTimeout);
         }
         if (errorcode_t::success != ret) {
             __leave2;
@@ -310,7 +313,7 @@ return_t connect_socket(socket_t* socket, const char* address, uint16 port, uint
     return ret;
 }
 
-return_t connect_socket_addr(socket_t sock, sockaddr_storage_t* addr, size_t addrlen, uint32 wto) {
+return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 wto) {
     return_t ret = errorcode_t::success;
     int ret_routine = 0;
 
@@ -326,7 +329,7 @@ return_t connect_socket_addr(socket_t sock, sockaddr_storage_t* addr, size_t add
 
         set_sock_nbio(sock, 1);
 
-        ret_routine = connect(sock, reinterpret_cast<sockaddr*>(addr), (int)addrlen);
+        ret_routine = connect(sock, addr, addrlen);
         if (-1 == ret_routine) {
 #if defined __linux__
             if (EINPROGRESS == errno)
@@ -384,31 +387,6 @@ return_t close_socket(socket_t sock, bool bOnOff, uint16 wLinger) {
 #elif defined _WIN32 || defined _WIN64
         closesocket(sock);
 #endif
-    }
-
-    return ret;
-}
-
-return_t close_listener(unsigned int count, socket_t* sockets) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == sockets) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        for (unsigned int i = 0; i < count; i++) {
-            if (INVALID_SOCKET != sockets[i]) {
-                close_socket(sockets[i], true, 0);
-                sockets[i] = INVALID_SOCKET;
-            }
-        }
-    }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
     }
 
     return ret;

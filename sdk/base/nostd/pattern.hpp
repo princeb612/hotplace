@@ -1436,18 +1436,21 @@ class t_wildcards {
 template <typename BT = char, typename T = BT>
 class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
    public:
-    typedef typename t_aho_corasick<BT, T>::memberof_t memberof_t;
-    typedef typename t_aho_corasick<BT, T>::trienode trienode;
     enum {
         flag_single = (1 << 0),
         flag_any = (1 << 1),
     };
+
+    typedef typename t_aho_corasick<BT, T>::memberof_t memberof_t;
+    typedef typename t_aho_corasick<BT, T>::trienode trienode;
     using t_aho_corasick<BT, T>::_root;
     using t_aho_corasick<BT, T>::_patterns;
     using t_aho_corasick<BT, T>::_memberof;
+    using t_aho_corasick<BT, T>::collect_results;
+    using t_aho_corasick<BT, T>::get_pattern_size;
 
    public:
-    t_aho_corasick_wildcard(memberof_t memberof = memberof_defhandler<BT, T>, const BT& wildcard_single = BT(), const BT& wildcard_any = BT())
+    t_aho_corasick_wildcard(memberof_t memberof, const BT& wildcard_single, const BT& wildcard_any)
         : t_aho_corasick<BT, T>(memberof), _wildcard_single(wildcard_single), _wildcard_any(wildcard_any) {}
 
    protected:
@@ -1537,7 +1540,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                 if (current->children.end() != iter) {
                     // case - found t
                     auto node = iter->second;
-                    this->collect_results(node, i, result);
+                    collect_results(node, i, result);
                     enqueue(node, i + 1);
 
                     // case - sibling single
@@ -1575,7 +1578,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                     // case - not t but single
                     if (current->flag & flag_single) {
                         auto single = current->children[_wildcard_single];
-                        this->collect_results(single, i, result);
+                        collect_results(single, i, result);
                         enqueue(single, i + 1);
                     }
                     // case - not t but sibling any
@@ -1592,7 +1595,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                         auto iter = temp->children.find(t);
                         if (temp->children.end() != iter) {
                             auto child = iter->second;
-                            this->collect_results(child, i, result);
+                            collect_results(child, i, result);
                             enqueue(child, i + 1);
                         }
                     }
@@ -1603,7 +1606,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                         auto iter = fail->children.find(t);
                         if (fail->children.end() != iter) {
                             auto child = iter->second;
-                            this->collect_results(child, i, result);
+                            collect_results(child, i, result);
                             enqueue(child, i + 1);
                         }
                     }
@@ -1635,7 +1638,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                 if (_hidden.end() == iter) {
                     for (auto pos : positions) {
                         range_t range;
-                        range.begin = pos - this->get_pattern_size(v) + 1;
+                        range.begin = pos - get_pattern_size(v) + 1;
                         range.end = pos;
 
                         result.insert({range, v});

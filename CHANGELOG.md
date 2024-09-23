@@ -1,5 +1,14 @@
 # history
 
+* Revision 611
+  * [added] basic_stream::vprintf, ansi_string::vprintf
+  * [changed] network_server, network_session, network_session_manager, dtls_server_socket
+
+* Revision 610
+  * [changed] create_listener SO_REUSEPORT
+
+* Revision 609
+
 * Revision 607
   * [changed] sprintf
   * [deprecated] close_listener (see close_socket)

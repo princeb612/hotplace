@@ -131,6 +131,32 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
     return ret;
 }
 
+template <typename T1, typename T2>
+void vprintf_floating_point(T1 t1, T2 t2, stream_t* stream, vtprintf_style_t style) {
+    ieee754_typeof_t t = ieee754_typeof(t1);
+    switch (t) {
+        case ieee754_typeof_t::ieee754_nan:
+            if (vtprintf_style_cbor == style) {
+                stream->printf("NaN");
+            } else {
+                stream->printf("nan");
+            }
+            break;
+        case ieee754_typeof_t::ieee754_ninf:
+            stream->printf("-");
+        case ieee754_typeof_t::ieee754_pinf:
+            if (vtprintf_style_cbor == style) {
+                stream->printf("Infinity");
+            } else {
+                stream->printf("inf");
+            }
+            break;
+        default:
+            stream->printf("%g", t2);
+            break;
+    }
+}
+
 return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style) {
     return_t ret = errorcode_t::success;
 
@@ -184,46 +210,13 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 break;
 #endif
             case TYPE_FP16:
-                if (0x7c00 == (0x7c00 & vt.data.ui16)) {
-                    if (0x200 & vt.data.ui16) {
-                        stream->printf("NaN");
-                    } else {
-                        if (0x8000 & vt.data.ui16) {
-                            stream->printf("-");
-                        }
-                        stream->printf("Infinity");
-                    }
-                } else {
-                    stream->printf("%g", float_from_fp16(vt.data.ui16));
-                }
+                vprintf_floating_point<uint16, float>(vt.data.ui16, float_from_fp16(vt.data.ui16), stream, style);
                 break;
             case TYPE_FLOAT:
-                if (0x7f800000 == (0x7f800000 & vt.data.ui32)) {
-                    if (0x400000 & vt.data.ui32) {
-                        stream->printf("NaN");
-                    } else {
-                        if (0x80000000 & vt.data.ui32) {
-                            stream->printf("-");
-                        }
-                        stream->printf("Infinity");
-                    }
-                } else {
-                    stream->printf("%g", vt.data.f);
-                }
+                vprintf_floating_point<float, float>(vt.data.f, vt.data.f, stream, style);
                 break;
             case TYPE_DOUBLE:
-                if (0x7ff0000000000000 == (0x7ff0000000000000 & vt.data.ui64)) {
-                    if (0x8000000000000 & vt.data.ui64) {
-                        stream->printf("NaN");
-                    } else {
-                        if (0x8000000000000000 & vt.data.ui64) {
-                            stream->printf("-");
-                        }
-                        stream->printf("Infinity");
-                    }
-                } else {
-                    stream->printf("%g", vt.data.d);
-                }
+                vprintf_floating_point<double, double>(vt.data.d, vt.data.d, stream, style);
                 break;
 #if defined __SIZEOF_INT128__
             case TYPE_FP128:  // not implemented

@@ -10,7 +10,9 @@
 
 #include <ctype.h>
 
+#include <sdk/base/basic/valist.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/stream/printf.hpp>
 
 namespace hotplace {
 
@@ -142,6 +144,12 @@ return_t basic_stream::printf(const wchar_t* buf, ...) {
 
 return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return _bio.vprintf(_handle, buf, ap); }
 #endif
+
+return_t basic_stream::vprintf(const char* fmt, valist ap) {
+    return_t ret = errorcode_t::success;
+    ret = sprintf(this, fmt, ap);
+    return ret;
+}
 
 basic_stream& basic_stream::operator=(const basic_stream& rhs) {
     clear();

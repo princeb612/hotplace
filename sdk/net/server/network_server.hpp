@@ -383,9 +383,6 @@ class network_server {
      */
     return_t session_closed(network_multiplexer_context_t* handle, handle_t cli_socket);
 
-    return_t dgram_start(network_multiplexer_context_t* handle);
-    return_t dgram_ready_to_read(network_multiplexer_context_t* handle);
-
    private:
 #if defined __linux__
     multiplexer_epoll mplexer;

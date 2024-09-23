@@ -133,8 +133,8 @@ void network_session_manager::shutdown() {
     _dgram_map.clear();
 }
 
-return_t network_session_manager::dgram_start(handle_t listen_sock, server_socket* svr_socket, tls_context_t* tls_handle,
-                                              network_session** ptr_session_object) {
+return_t network_session_manager::get_dgram_session(handle_t listen_sock, server_socket* svr_socket, tls_context_t* tls_handle,
+                                                    network_session** ptr_session_object) {
     return_t ret = errorcode_t::success;
     network_session_map_pib_t pairib;
     network_session* session_object = nullptr;
@@ -156,10 +156,15 @@ return_t network_session_manager::dgram_start(handle_t listen_sock, server_socke
                 session_object->get_buffer()->set_bufsize(udp_bufsize);  // 0 for default buffer size
             }
             pairib.first->second = session_object;
-            session_object->dgram_start(listen_sock);
+            session_object->dtls_session_open(listen_sock);
             *ptr_session_object = session_object;
         } else {
-            *ptr_session_object = pairib.first->second;
+            session_object = pairib.first->second;
+            *ptr_session_object = session_object;
+        }
+
+        if (session_object) {
+            session_object->addref();
         }
     }
     __finally2 {
@@ -169,8 +174,8 @@ return_t network_session_manager::dgram_start(handle_t listen_sock, server_socke
     return ret;
 }
 
-return_t network_session_manager::dgram_start_cookie(handle_t listen_sock, const sockaddr_storage_t* addr, server_socket* svr_socket, tls_context_t* tls_handle,
-                                                     network_session** ptr_session_object) {
+return_t network_session_manager::get_dgram_cookie_session(handle_t listen_sock, const sockaddr_storage_t* addr, server_socket* svr_socket,
+                                                           tls_context_t* tls_handle, network_session** ptr_session_object) {
     return_t ret = errorcode_t::success;
     dgram_session_map_pib_t pairib;
     network_session* session_object = nullptr;
@@ -195,10 +200,17 @@ return_t network_session_manager::dgram_start_cookie(handle_t listen_sock, const
                 session_object->get_buffer()->set_bufsize(udp_bufsize);  // 0 for default buffer size
             }
             pairib.first->second = session_object;
-            session_object->dgram_start(listen_sock);
+            session_object->dtls_session_open(listen_sock);
+            session_object->dtls_session_handshake();
             *ptr_session_object = session_object;
         } else {
-            *ptr_session_object = pairib.first->second;
+            session_object = pairib.first->second;
+            session_object->dtls_session_handshake();
+            *ptr_session_object = session_object;
+        }
+
+        if (session_object) {
+            session_object->addref();
         }
     }
     __finally2 {

@@ -24,7 +24,6 @@ namespace net {
 class udp_server_socket : public server_socket {
    public:
     udp_server_socket();
-    ~udp_server_socket();
 
     /**
      * @brief   open

@@ -18,15 +18,6 @@ namespace hotplace {
 namespace net {
 
 /**
- * @brief   SSL_connect
- * @param   socket_t    sock        [in]
- * @param   SSL*        ssl         [in]
- * @param   uint32      dwSeconds   [in]
- * @param   uint32      nbio        [in]
- */
-return_t tls_connect(socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio);
-
-/**
  * @brief   BIO_ADDR*
  */
 return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, socklen_t addrlen);

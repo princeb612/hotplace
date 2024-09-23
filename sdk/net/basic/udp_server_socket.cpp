@@ -17,8 +17,6 @@ namespace net {
 
 udp_server_socket::udp_server_socket() : server_socket() {}
 
-udp_server_socket::~udp_server_socket() {}
-
 return_t udp_server_socket::open(socket_t* sock, unsigned int family, uint16 port) {
     return_t ret = errorcode_t::success;
 

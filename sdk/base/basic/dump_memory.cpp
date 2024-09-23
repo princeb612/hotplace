@@ -15,20 +15,20 @@
 
 namespace hotplace {
 
-return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* stream_object, unsigned hex_part, unsigned indent, size_t rebase, int flags) {
+return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* stream, unsigned hex_part, unsigned indent, size_t rebase, int flags) {
     return_t ret = errorcode_t::success;
 
     __try2 {
         if (0 == (dump_memory_flag_t::dump_notrunc & flags)) {
-            if (stream_object) {
-                stream_object->clear();
+            if (stream) {
+                stream->clear();
             }
         }
 
         if (0 == dump_size) {
             __leave2;
         }
-        if (nullptr == dump_address || nullptr == stream_object || 0 == hex_part) {
+        if (nullptr == dump_address || nullptr == stream || 0 == hex_part) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -43,39 +43,39 @@ return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* str
         constexpr char constexpr_dumpbyte[] = "%02X ";
 
         if (dump_memory_flag_t::dump_header & flags) {
-            stream_object->fill(11, ' ');
+            stream->fill(11, ' ');
             for (size_t i = 0; i < hex_part; i++) {
-                stream_object->printf(constexpr_dumpbyte, i);
+                stream->printf(constexpr_dumpbyte, i);
             }
-            stream_object->printf("\n");
+            stream->printf("\n");
         }
         while (position < end_position) {
             if (0 == position % hex_part) {                  /* part of address and hex-decimal */
                 if (0 != position && position < dump_size) { /* new line */
-                    stream_object->printf("\n");
+                    stream->printf("\n");
                 }
                 if (0 != indent) { /* preceding indent */
-                    stream_object->fill(indent, ' ');
+                    stream->fill(indent, ' ');
                 }
                 ascii_pointer = hex_pointer;
-                stream_object->printf(constexpr_dumpaddr, (byte_t*)((size_t)rebase + (size_t)hex_pointer - (size_t)dump_address)); /* address */
+                stream->printf(constexpr_dumpaddr, (byte_t*)((size_t)rebase + (size_t)hex_pointer - (size_t)dump_address)); /* address */
             }
             if (position < dump_size) {
-                stream_object->printf(constexpr_dumpbyte, *(hex_pointer++)); /* hexdecimal */
+                stream->printf(constexpr_dumpbyte, *(hex_pointer++)); /* hexdecimal */
             } else {
-                stream_object->printf("-- "); /* do not dump here */
+                stream->printf("-- "); /* do not dump here */
                 ++dumped_hex_part;
             }
             if (0 == (++position % hex_part)) { /* readable part of ASCII */
-                stream_object->printf("| ");    /* delimeter ie. address : hex | ascii */
+                stream->printf("| ");           /* delimeter ie. address : hex | ascii */
                 for (unsigned count = 0; count < hex_part - dumped_hex_part; count++) {
                     byte_t c = (byte_t) * (ascii_pointer++);
                     if ('%' == c) {
-                        stream_object->printf("%%");
+                        stream->printf("%%");
                     } else if (isprint(c)) {
-                        stream_object->printf("%c", c); /* printable */
+                        stream->printf("%c", c); /* printable */
                     } else {
-                        stream_object->printf("%c", '.'); /*special characters */
+                        stream->printf("%c", '.'); /*special characters */
                     }
                 }
                 dumped_hex_part = 0;

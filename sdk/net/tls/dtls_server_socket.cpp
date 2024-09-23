@@ -56,11 +56,11 @@ return_t dtls_server_socket::dtls_open(tls_context_t** tls_handle, socket_t sock
     return ret;
 }
 
-return_t dtls_server_socket::tls_accept(socket_t clisock, tls_context_t** tls_handle) {
+return_t dtls_server_socket::dtls_handshake(tls_context_t* handle, sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        ret = _tls->accept(tls_handle, clisock); /* new TLS_CONTEXT, to release see close member  */
+        ret = _tls->dtls_handshake(handle, addr, addrlen);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -68,12 +68,6 @@ return_t dtls_server_socket::tls_accept(socket_t clisock, tls_context_t** tls_ha
     __finally2 {
         // do nothing
     }
-    return ret;
-}
-
-return_t dtls_server_socket::tls_stop_accept() {
-    return_t ret = errorcode_t::success;
-    openssl_thread_end();
     return ret;
 }
 
@@ -92,7 +86,8 @@ return_t dtls_server_socket::sendto(socket_t sock, tls_context_t* tls_handle, co
                                     const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
 
-    __try2 { ret = _tls->sendto(tls_handle, tls_io_flag_t::send_all, ptr_data, size_data, cbsent, addr, addrlen); }
+    int mode = tls_io_flag_t::send_ssl_write;  // mode = tls_io_flag_t::send_all;
+    __try2 { ret = _tls->sendto(tls_handle, mode, ptr_data, size_data, cbsent, addr, addrlen); }
     __finally2 {
         // do nothing
     }

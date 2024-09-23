@@ -58,7 +58,8 @@ namespace net {
 enum x509cert_flag_t {
     x509cert_flag_tls = (1 << 0),
     x509cert_flag_dtls = (1 << 1),
-    x509cert_flag_allow_expired = (1 << 2),  // reserved
+    x509cert_flag_dh = (1 << 2),
+    x509cert_flag_allow_expired = (1 << 5),  // reserved
 };
 
 /**
@@ -113,6 +114,7 @@ class x509cert {
     ~x509cert();
 
     x509cert& set_cipher_list(const char* list);
+    x509cert& set_use_dh(int bits);
     x509cert& set_verify(int mode);
     x509cert& enable_alpn_h2(bool enable);
 
