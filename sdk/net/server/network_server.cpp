@@ -549,13 +549,7 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
         accpt_ctx.mplexer_context = handle;
 
         ret = svr_socket->accept(listen_sock, &accpt_ctx.cli_socket, (struct sockaddr*)&accpt_ctx.client_addr, &accpt_ctx.client_addr_len);
-        if (INVALID_SOCKET == accpt_ctx.cli_socket) {
-#if defined __MINGW32__
-            /* mingw environments GetLastError () return 0 */
-            ret = errorcode_t::canceled;
-#else
-            ret = get_lasterror(ret);
-#endif
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 

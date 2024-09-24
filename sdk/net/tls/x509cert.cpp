@@ -200,8 +200,7 @@ static int set_default_passwd_callback_routine(char* buf, int num, int rwflag, v
     return len;
 }
 
-return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file,
-                       const char* cacert_file) {
+return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
     return_t ret = errorcode_t::success;
     SSL_CTX* ssl_ctx = nullptr;
     SSL* ssl = nullptr;
@@ -254,21 +253,6 @@ return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, co
             ret = get_opensslerror(check);
             if (errorcode_t::success != ret) {
                 __leave2;
-            }
-        }
-        // CA certificate
-        if (cacert_file) {
-            check = SSL_CTX_load_verify_locations(ssl_ctx, cacert_file, nullptr);
-            ret = get_opensslerror(check);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-            {
-                check = SSL_CTX_set_default_verify_file(ssl_ctx);
-                ret = get_opensslerror(check);
-                if (errorcode_t::success != ret) {
-                    __leave2;
-                }
             }
         }
 
@@ -335,9 +319,8 @@ return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, co
 
 x509cert::x509cert(uint32 flag) : _ctx(nullptr) { x509cert_open_simple(flag, &_ctx); }
 
-x509cert::x509cert(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file, const char* cacert_file)
-    : _ctx(nullptr) {
-    x509cert_open(flag, &_ctx, cert_file, key_file, password, chain_file, cacert_file);
+x509cert::x509cert(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _ctx(nullptr) {
+    x509cert_open(flag, &_ctx, cert_file, key_file, password, chain_file);
 }
 
 x509cert::~x509cert() {

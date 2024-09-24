@@ -84,7 +84,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
         snprintf(string_port, RTL_NUMBER_OF(string_port), "%d", port);
         ret_function = getaddrinfo(address_pointer, string_port, &hints, &addrinf);
         if (0 != ret_function) {
-            ret = get_lasterror(ret_function);
+            ret = get_lasterror(ret_function, wsaerror);
             __leave2;
         }
 
@@ -100,7 +100,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
         } while (nullptr != addrinf_traverse);
 
         if (INVALID_SOCKET == s) {
-            ret = get_lasterror(s);
+            ret = get_lasterror(s, wsaerror);
             __leave2;
         }
 
@@ -186,7 +186,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
         snprintf(port_value, sizeof(port_value), ("%d"), port);
         ret_function = getaddrinfo(nullptr, port_value, &hints, &addrinf);
         if (0 != ret_function) {
-            ret = get_lasterror(ret_function);
+            ret = get_lasterror(ret_function, wsaerror);
             __leave2;
         }
 
@@ -204,7 +204,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
                                          WSA_FLAG_OVERLAPPED);
 #endif
                         if (INVALID_SOCKET == sock) {
-                            ret = get_lasterror(sock);
+                            ret = get_lasterror(sock, wsaerror);
                             __leave2;
                         }
 
@@ -222,7 +222,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
 
                         ret_function = bind(sock, addrinf_traverse->ai_addr, (int)addrinf_traverse->ai_addrlen);
                         if (0 != ret_function) {
-                            ret = get_lasterror(ret_function);
+                            ret = get_lasterror(ret_function, wsaerror);
                             __leave2;
                         }
 
@@ -236,7 +236,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
 
                             ret_function = listen(sock, SOMAXCONN);
                             if (-1 == ret_function) {
-                                ret = get_lasterror(ret_function);
+                                ret = get_lasterror(ret_function, wsaerror);
                                 __leave2;
                             }
                         }
@@ -346,7 +346,7 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
                 if (0 == ret_routine) {
                     ret = errorcode_t::timeout;
                 } else if (ret_routine < 0) {
-                    ret = get_lasterror(ret_routine);
+                    ret = get_lasterror(ret_routine, wsaerror);
                 }
             }
         }
@@ -422,7 +422,10 @@ return_t wait_socket(socket_t sock, uint32 milliSeconds, uint32 flags) {
     if (0 == ret_select) {
         ret = errorcode_t::timeout;
     } else if (0 > ret_select) {
-        ret = get_lasterror(ret_select);
+        ret = get_lasterror(ret_select, wsaerror);
+        if (0 == ret) {
+            printf("-----------------\n");
+        }
     }
 
     return ret;
@@ -447,7 +450,7 @@ return_t set_sock_nbio(socket_t sock, uint32 nbio_mode) {
     ret_fcntl = ioctlsocket(sock, FIONBIO, &nbio_mode);
 #endif
     if (-1 == ret_fcntl) {
-        ret = get_lasterror(ret_fcntl);
+        ret = get_lasterror(ret_fcntl, wsaerror);
     }
     return ret;
 }
@@ -477,7 +480,7 @@ return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint
         }
 
         if (-1 == rc) {
-            ret = get_lasterror(rc);
+            ret = get_lasterror(rc, wsaerror);
         } else if (0 == rc) {
             ret = errorcode_t::bad_format;
         }
@@ -492,7 +495,7 @@ return_t typeof_socket(socket_t sock, int& type) {
     return_t ret = errorcode_t::success;
     socklen_t optlen = sizeof(type);
     int rc = getsockopt(sock, SOL_SOCKET, SO_TYPE, (char*)&type, &optlen);
-    ret = get_lasterror(rc);
+    ret = get_lasterror(rc, wsaerror);
     return ret;
 }
 

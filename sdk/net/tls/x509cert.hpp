@@ -95,7 +95,7 @@ return_t x509cert_open_simple(uint32 flag, SSL_CTX** context);
  *          works good, password parameter useless
  */
 return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, const char* key_file, const char* password = nullptr,
-                       const char* chain_file = nullptr, const char* cacert_file = nullptr);
+                       const char* chain_file = nullptr);
 
 class x509cert {
    public:
@@ -109,15 +109,29 @@ class x509cert {
      * @param   const char* password [inopt]
      * @param   const char* chain_file [inopt]
      */
-    x509cert(uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr,
-             const char* cacert_file = nullptr);
+    x509cert(uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
     ~x509cert();
 
+    /**
+     * SSL_CTX_set_cipher_list
+     */
     x509cert& set_cipher_list(const char* list);
+    /**
+     * DH_generate_parameters_ex, SSL_CTX_set_tmp_dh
+     */
     x509cert& set_use_dh(int bits);
+    /**
+     * SSL_CTX_set_verify
+     */
     x509cert& set_verify(int mode);
+    /**
+     * SSL_CTX_set_alpn_select_cb
+     */
     x509cert& enable_alpn_h2(bool enable);
 
+    /**
+     * @brief   call openssl api
+     */
     SSL_CTX* get_ctx();
 
    private:

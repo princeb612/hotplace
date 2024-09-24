@@ -288,7 +288,10 @@ enum errorcode_t {
  *      // windows
  *      ret = GetLastError();
  */
-static inline return_t get_lasterror(int code) {
+enum errorflag_t {
+    wsaerror = 1,
+};
+static inline return_t get_lasterror(int code, int flags = 0) {
     return_t ret = errorcode_t::success;
 #if defined __linux__
     // errno.h 1~133
@@ -308,7 +311,11 @@ static inline return_t get_lasterror(int code) {
         }
     }
 #elif defined _WIN32 || defined _WIN64
-    ret = GetLastError();
+    if (0 == flags) {
+        ret = GetLastError();
+    } else if (errorflag_t::wsaerror & flags) {
+        ret = WSAGetLastError();
+    }
 #endif
     return ret;
 }

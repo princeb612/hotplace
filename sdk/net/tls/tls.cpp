@@ -245,7 +245,7 @@ return_t transport_layer_security::accept(tls_context_t** handle, socket_t fd) {
 
         set_sock_nbio(fd, 1);
 
-        ret = do_accept(context);
+        do_accept(context);
 
         set_sock_nbio(fd, 0);
 
@@ -434,9 +434,10 @@ return_t transport_layer_security::do_connect(socket_t fd, SSL* ssl, uint32 wto,
                             break;
                     }
                     if (1 == rc) {
-                        ret = wait_socket(fd, wto * 1000, flags);
+                        auto test = wait_socket(fd, wto * 1000, flags);
+                        rc = (success == test) ? 1 : -1;
                     }
-                } while ((success == ret) && (1 != SSL_is_init_finished(ssl)));
+                } while ((1 == rc) && (1 != SSL_is_init_finished(ssl)));
             } catch (...) {
                 /*
                  * openssl-1.0.1i SSL_connect crash
@@ -563,9 +564,10 @@ return_t transport_layer_security::do_accept(tls_context_t* handle) {
                     break;
             }
             if (1 == rc) {
-                ret = wait_socket(fd, 1 * 1000, flags);
+                auto test = wait_socket(fd, 1 * 1000, flags);
+                rc = (success == test) ? 1 : -1;
             }
-        } while ((success == ret) && (1 != SSL_is_init_finished(ssl)));
+        } while ((1 == rc) && (1 != SSL_is_init_finished(ssl)));
 
         if (rc < 1) {
             ret = get_opensslerror(rc);
