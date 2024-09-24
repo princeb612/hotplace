@@ -687,21 +687,21 @@ class t_graph {
          * gdb) p route
          * $3 = std::multimap with 8 elements = {
          *        [{_from = {_data = 0}, _to = {_data = 1}, _weight = 4,
-         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1},
+         *            _direction = graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1},
          *        [{_from = {_data = 0}, _to = {_data = 2}, _weight = 12,
-         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1, [2] = 2},
+         *            _direction = graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1, [2] = 2},
          *        [{_from = {_data = 0}, _to = {_data = 3}, _weight = 19,
-         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1, [2] = 2, [3] = 3},
+         *            _direction = graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1, [2] = 2, [3] = 3},
          *        [{_from = {_data = 0}, _to = {_data = 4}, _weight = 21,
-         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7, [2] = 6, [3] = 5, [4] = 4},
+         *            _direction = graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7, [2] = 6, [3] = 5, [4] = 4},
          *        [{_from = {_data = 0}, _to = {_data = 5}, _weight = 11,
-         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7, [2] = 6, [3] = 5},
+         *            _direction = graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7, [2] = 6, [3] = 5},
          *        [{_from = {_data = 0}, _to = {_data = 6}, _weight = 9,
-         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7, [2] = 6},
+         *            _direction = graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7, [2] = 6},
          *        [{_from = {_data = 0}, _to = {_data = 7}, _weight = 8,
-         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7},
+         *            _direction = graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 7},
          *        [{_from = {_data = 0}, _to = {_data = 8}, _weight = 14,
-         *            _direction = hotplace::graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1, [2] = 2, [3] = 8}}
+         *            _direction = graph_directed}] = std::__cxx11::list = {[0] = 0, [1] = 1, [2] = 2, [3] = 8}}
          */
         typedef std::multimap<edge, std::list<T>> route_t;
 

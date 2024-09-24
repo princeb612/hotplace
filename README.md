@@ -66,14 +66,14 @@
   * RFC 6750 The OAuth 2.0 Authorization Framework: Bearer Token Usage
   * RFC 7616 HTTP Digest Access Authentication
     * sdk/net/http/
-    * test/httpserver/
+    * test/httpserver1/
     * test/httpauth/
     * test/httptest/
 * HTTP/2
   * RFC 7541 HPACK: Header Compression for HTTP/2
-    * sdk/net/http/http2
-    * test/hpack
-    * test/httpserver2
+    * sdk/net/http/http2/
+    * test/hpack/
+    * test/httpserver2/
   * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
   * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
   * RFC 9113 HTTP/2
@@ -84,14 +84,13 @@
     * test/httpserver2/
 * BASE16, BASE64, BASE64URL
   * RFC 4648 The Base16, Base32, and Base64 Data Encodings
-    * sdk/io/basic/
+    * sdk/base/basic/
     * test/encode/
 * HOTP, TOTP
   * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
   * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
     * sdk/crypto/basic/
     * test/hash/
-    * test/sign/
 * Pattern Search
   * KMP algorithm
   * Trie

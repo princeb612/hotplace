@@ -423,9 +423,6 @@ return_t wait_socket(socket_t sock, uint32 milliSeconds, uint32 flags) {
         ret = errorcode_t::timeout;
     } else if (0 > ret_select) {
         ret = get_lasterror(ret_select, wsaerror);
-        if (0 == ret) {
-            printf("-----------------\n");
-        }
     }
 
     return ret;

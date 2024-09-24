@@ -50,6 +50,7 @@ add_subdirectory (httpserver2)
 add_subdirectory (udpserver1)
 add_subdirectory (udpserver2)
 add_subdirectory (dtlsserver)
+add_subdirectory (netclient)
 
 # odbc
 if (SUPPORT_ODBC)

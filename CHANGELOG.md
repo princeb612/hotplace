@@ -1,5 +1,8 @@
 # history
 
+* Revision 613
+  * [added] test/netclient
+
 * Revision 612
   * [changed] get_lasterror
 

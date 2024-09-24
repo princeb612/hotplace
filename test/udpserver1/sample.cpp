@@ -202,7 +202,7 @@ return_t udp_server(void* param) {
 }
 
 void run_server() {
-    _test_case.begin("udp server");
+    _test_case.begin("echo server (udp powered by multiplexer)");
 
     thread thread1(udp_server, nullptr);
 

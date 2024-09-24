@@ -134,7 +134,7 @@ return_t echo_server(void* param) {
 }
 
 void run_server() {
-    _test_case.begin("echo server");
+    _test_case.begin("echo server (tcp powered by network_server)");
 
     thread thread1(echo_server, nullptr);
 
