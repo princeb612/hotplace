@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *      openssl s_server -cert server.crt -key server.key -tls1_3 -accept 9000
+ *      openssl s_server -cert server.crt -key server.key -dtls1_2 -accept 9000
  *
  * Revision History
  * Date         Name                Description
@@ -230,8 +232,8 @@ void dtls_client() {
 }
 
 uint16 toprot(const char* source) {
-    int type = 1; // 1 tcp, 2 udp, 3 tls, 4 dtls
-    std::string text = source; // source not nullptr
+    int type = 1;               // 1 tcp, 2 udp, 3 tls, 4 dtls
+    std::string text = source;  // source not nullptr
     std::transform(text.begin(), text.end(), text.begin(), tolower);
     if (("tcp" == text) || ("1" == text)) {
         type = 1;
@@ -255,7 +257,9 @@ int main(int argc, char** argv) {
               << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
               << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
               << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
-              << t_cmdarg_t<OPTION>("-t", "protocol 1|2|3|4 (1 tcp, 2 udp, 3 tls, 4 dtls)", [](OPTION& o, char* param) -> void { o.prot = toprot(param); }).optional().preced()
+              << t_cmdarg_t<OPTION>("-t", "protocol 1|2|3|4 (1 tcp, 2 udp, 3 tls, 4 dtls)", [](OPTION& o, char* param) -> void { o.prot = toprot(param); })
+                     .optional()
+                     .preced()
               << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
               << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced();
     _cmdline->parse(argc, argv);
@@ -267,10 +271,10 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
 
 #if defined _WIN32 || defined _WIN64
-        winsock_startup();
+    winsock_startup();
 #endif
 
-    switch(option.prot) {
+    switch (option.prot) {
         case 2:
             udp_client();
             break;
@@ -287,7 +291,7 @@ int main(int argc, char** argv) {
     }
 
 #if defined _WIN32 || defined _WIN64
-        winsock_cleanup();
+    winsock_cleanup();
 #endif
 
     _logger->flush();

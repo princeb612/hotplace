@@ -70,7 +70,20 @@ return_t network_session::ready_to_read() {
     } else if (SOCK_DGRAM == type) {
         uint32 flags = 0;
         if (get_server_socket()->support_tls()) {
-            // flags = MSG_PEEK;  // handshake
+            //  DTLS IOCP (blocking io, no SO_RCVTIMEO)
+            //      SSL_connect
+            //          int flag = 0;
+            //          WSARecvFrom(..., &flags, &ov, ...)
+            //          GetQueuedCompletionStatus
+            //              00000000 : 16 FE FF 00 00 00 00 00 00 00 00 00 C0 01 00 00 | ................
+            //              ; handshake 0x16, DTLS1_2_VERSION 0xFEFD
+            //          DTLSv1_listen
+            //              recvfrom - hang
+            //      SSL_connect
+            //          DTLSv1_listen
+            //          SSL_accept
+            //          consume
+            flags = MSG_PEEK;
         }
         int addrlen = sizeof(sockaddr_storage_t);
         WSARecvFrom((socket_t)_session.netsock.event_socket, &get_buffer()->wsabuf, 1, nullptr, &flags, (sockaddr*)&socket_info()->cli_addr, &addrlen,

@@ -95,7 +95,6 @@ return_t echo_server(void*) {
         SSL_CTX_set_verify(sslctx, 0, nullptr);
 
         __try_new_catch(tls, new transport_layer_security(sslctx), ret, __leave2);
-        //__try_new_catch (http_prot, new http_protocol, ret, __leave2);
         __try_new_catch(tls_socket, new tls_server_socket(tls), ret, __leave2);
 
         server_conf conf;
@@ -107,7 +106,6 @@ return_t echo_server(void*) {
         // start server
         netserver.open(&handle_ipv4, AF_INET, port, tls_socket, &conf, consume_routine, nullptr);
         netserver.open(&handle_ipv6, AF_INET6, port, tls_socket, &conf, consume_routine, nullptr);
-        // netserver.add_protocol(handle_ipv4, http_prot);
 
         netserver.consumer_loop_run(handle_ipv4, 2);
         netserver.consumer_loop_run(handle_ipv6, 2);
@@ -139,7 +137,6 @@ return_t echo_server(void*) {
         netserver.close(handle_ipv4);
         netserver.close(handle_ipv6);
 
-        // http_prot->release ();
         tls_socket->release();
         tls->release();
         SSL_CTX_free(sslctx);

@@ -14,10 +14,6 @@
  *                 TCP/TLS   DTLS
  *          epoll     O       -
  *          IOCP      O       -
- *      accept
- *                 TCP/TLS   DTLS
- *          epoll     -       -
- *          IOCP      O       -
  *
  *             mux    type     accept_queue.push
  *          1) epoll  tcp/tls  network_routine.mux_connect->accept_routine
@@ -26,15 +22,6 @@
  *          4) iocp   tcp/tls  accept_routine
  *          5) iocp   dtls     not supported yet
  *          6) iocp   udp      N/A
- *
- *      network_session
- *          TCP/TLS
- *              accept - new network_session
- *              disclosure - delete network_session
- *          UDP/DTLS
- *              single network_session
- *              recvfrom - network_session per remote address (DTLS cookie)
- *
  *
  * Revision History
  * Date         Name                Description
@@ -872,6 +859,7 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
         if (dgram_session) {
             byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
             const sockaddr_storage_t& addr = dgram_session->socket_info()->cli_addr;
+
             if (context->svr_socket->support_tls()) {
                 network_session* dtls_session = nullptr;
                 context->session_manager.get_dgram_cookie_session((handle_t)context->listen_sock, &addr, context->svr_socket, nullptr, &dtls_session);

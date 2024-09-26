@@ -1,5 +1,8 @@
 # history
 
+* Revision 614
+  * [tested] DTLS server (IOCP)
+
 * Revision 613
   * [added] test/netclient
 
@@ -242,6 +245,9 @@
 * Revision 481
   * [added] http_server::get_ipaddr_acl
   * [changed] http_authentication_resolver::get_basic_credentials, http_authentication_resolver::get_digest_credentials, http_authentication_resolver::get_bearer_credentials
+
+* Revision 480
+  * [added] http_server
 
 * Revision 479
   * [added] Authorization Code Grant (RFC 6749 4.1)

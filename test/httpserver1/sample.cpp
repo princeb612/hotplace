@@ -213,7 +213,7 @@ void run_server() {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        _test_case.begin("tls server");
+        _test_case.begin("http/1.1 powered by http_server");
 
         thread1.start();
     }

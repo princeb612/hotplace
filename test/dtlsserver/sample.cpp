@@ -82,13 +82,15 @@ return_t echo_server(void*) {
 
         // https://docs.openssl.org/1.1.1/man1/ciphers/
         // TLS 1.2
-        SSL_CTX_set_cipher_list(sslctx,
-                                "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384:DHE-DSS-AES256-GCM-SHA384:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:ECDHE-RSA-AES256-GCM-"
-                                "SHA384:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:ECDHE-ECDSA-AES256-GCM-SHA384");
+        SSL_CTX_set_cipher_list(
+            sslctx,
+            "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-"
+            "RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-"
+            "AES256-SHA384:DHE-RSA-AES256-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-"
+            "AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA");
         SSL_CTX_set_verify(sslctx, 0, nullptr);
 
         __try_new_catch(tls, new transport_layer_security(sslctx), ret, __leave2);
-        //__try_new_catch (http_prot, new http_protocol, ret, __leave2);
         __try_new_catch(tls_socket, new dtls_server_socket(tls), ret, __leave2);
 
         server_conf conf;
@@ -100,7 +102,6 @@ return_t echo_server(void*) {
         // start server
         netserver.open(&handle_ipv4, AF_INET, port, tls_socket, &conf, consume_routine, nullptr);
         netserver.open(&handle_ipv6, AF_INET6, port, tls_socket, &conf, consume_routine, nullptr);
-        // netserver.add_protocol(handle_ipv4, http_prot);
 
         netserver.consumer_loop_run(handle_ipv4, 2);
         netserver.consumer_loop_run(handle_ipv6, 2);
@@ -132,7 +133,6 @@ return_t echo_server(void*) {
         netserver.close(handle_ipv4);
         netserver.close(handle_ipv6);
 
-        // http_prot->release ();
         tls_socket->release();
         tls->release();
         SSL_CTX_free(sslctx);
