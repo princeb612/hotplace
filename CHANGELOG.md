@@ -1,5 +1,8 @@
 # history
 
+* Revision 615
+  * [changed] TLS non-blocking io
+
 * Revision 614
   * [tested] DTLS server (IOCP)
 

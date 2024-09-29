@@ -80,7 +80,6 @@ T t_to_int(const variant_t& vt) {
             }
             break;
         default:
-            // errorcode_t::unexpected;
             break;
     }
     return i;

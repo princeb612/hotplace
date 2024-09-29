@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/types.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/sdk.hpp>

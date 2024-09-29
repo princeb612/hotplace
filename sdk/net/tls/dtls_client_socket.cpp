@@ -25,28 +25,6 @@ dtls_client_socket::dtls_client_socket(transport_layer_security* tls) : udp_clie
 
 dtls_client_socket::~dtls_client_socket() { _tls->release(); }
 
-return_t dtls_client_socket::connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == sock || nullptr == tls_handle || nullptr == address) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        tls_context_t* handle = nullptr;
-        std::string addr = address;
-        ret = _tls->connect(&handle, SOCK_DGRAM, addr.c_str(), port, timeout);
-        if (errorcode_t::success == ret) {
-            *sock = _tls->get_socket(handle);
-            *tls_handle = handle;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
 return_t dtls_client_socket::connectto(socket_t sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
     return_t ret = errorcode_t::success;
 
@@ -108,12 +86,6 @@ return_t dtls_client_socket::recvfrom(socket_t sock, tls_context_t* tls_handle, 
                                       socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
 
-    /*
-     * case ... server sent 10 bytes, and client recv buffer size 8
-     * recv 8 (SSL_read SSL_ERROR_WANT_READ)
-     * recv 2 (SSL_read SUCCESS)
-     * in case read 8 bytes and 2 bytes remains, return errorcode_t::more_data
-     */
     while (true) {
         ret = wait_socket(sock, get_wto(), SOCK_WAIT_READABLE);
         if (errorcode_t::success == ret) {
@@ -134,8 +106,8 @@ return_t dtls_client_socket::recvfrom(socket_t sock, tls_context_t* tls_handle, 
 return_t dtls_client_socket::sendto(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent,
                                     const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
-
-    ret = _tls->sendto(tls_handle, tls_io_flag_t::send_all, ptr_data, size_data, cbsent, addr, addrlen);
+    int mode = tls_io_flag_t::send_all;
+    ret = _tls->sendto(tls_handle, mode, ptr_data, size_data, cbsent, addr, addrlen);
     return ret;
 }
 

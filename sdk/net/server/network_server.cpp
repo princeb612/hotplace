@@ -568,7 +568,7 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
                 handle->accept_queue.push(accpt_ctx);
             }
 
-            svr.try_connect(handle, accpt_ctx.cli_socket, &accpt_ctx.client_addr);
+            svr.try_connected(handle, accpt_ctx.cli_socket, &accpt_ctx.client_addr);
         } else {
             ret = svr.session_accepted(handle, nullptr, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
         }
@@ -580,7 +580,7 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
     return ret;
 }
 
-return_t network_server::try_connect(network_multiplexer_context_t* handle, socket_t event_socket, sockaddr_storage_t* client_addr) {
+return_t network_server::try_connected(network_multiplexer_context_t* handle, socket_t event_socket, sockaddr_storage_t* client_addr) {
     // see accept_routine
     return_t ret = errorcode_t::success;
 
@@ -821,13 +821,15 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
         }
     } else if (multiplexer_event_type_t::mux_dgram == type) {
         network_session* dgram_session = nullptr;
-        context->session_manager.find(context->listen_sock, &dgram_session); /* reference increased, call release later */
+        // context->session_manager.find(context->listen_sock, &dgram_session); /* reference increased, call release later */
+        context->session_manager.get_dgram_session((handle_t)context->listen_sock, context->svr_socket, nullptr, &dgram_session);
         if (dgram_session) {
-            byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
-            const sockaddr_storage_t& addr = dgram_session->socket_info()->cli_addr;
+            // byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
             if (context->svr_socket->support_tls()) {
+                sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;
+                dgram_session->dgram_get_sockaddr(addr);
                 network_session* dtls_session = nullptr;
-                context->session_manager.get_dgram_cookie_session((handle_t)context->listen_sock, &addr, context->svr_socket, nullptr, &dtls_session);
+                context->session_manager.get_dgram_cookie_session((handle_t)context->listen_sock, addr, context->svr_socket, nullptr, &dtls_session);
                 if (dtls_session) {
                     dtls_session->produce(&context->event_queue, nullptr, 0);
                     dtls_session->release();
@@ -854,21 +856,19 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
         svr.session_closed(context, session_object->socket_info()->event_socket);
     } else if (multiplexer_event_type_t::mux_dgram) {
         network_session* dgram_session = nullptr;
-
         context->session_manager.get_dgram_session((handle_t)context->listen_sock, context->svr_socket, nullptr, &dgram_session);
         if (dgram_session) {
             byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
-            const sockaddr_storage_t& addr = dgram_session->socket_info()->cli_addr;
-
+            sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;
             if (context->svr_socket->support_tls()) {
                 network_session* dtls_session = nullptr;
-                context->session_manager.get_dgram_cookie_session((handle_t)context->listen_sock, &addr, context->svr_socket, nullptr, &dtls_session);
+                context->session_manager.get_dgram_cookie_session((handle_t)context->listen_sock, addr, context->svr_socket, nullptr, &dtls_session);
                 if (dtls_session) {
-                    dtls_session->produce(&context->event_queue, buffer, transferred, &addr);
+                    dtls_session->produce(&context->event_queue, buffer, transferred, addr);
                     dtls_session->release();
                 }
             } else {
-                dgram_session->produce(&context->event_queue, buffer, transferred, &addr);
+                dgram_session->produce(&context->event_queue, buffer, transferred, addr);
             }
             dgram_session->ready_to_read();
             dgram_session->release();

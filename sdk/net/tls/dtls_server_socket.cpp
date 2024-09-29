@@ -3,7 +3,6 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *      DTLS not supported yet
  *
  * Revision History
  * Date         Name                Description
@@ -43,12 +42,20 @@ return_t dtls_server_socket::close(socket_t sock, tls_context_t* tls_handle) {
 
 return_t dtls_server_socket::dtls_open(tls_context_t** tls_handle, socket_t sock) {
     return_t ret = errorcode_t::success;
+    tls_context_t* context = nullptr;
 
     __try2 {
-        ret = _tls->dtls_open(tls_handle, sock);
+        if (nullptr == tls_handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = _tls->dtls_open(&context, sock);
         if (errorcode_t::success != ret) {
             __leave2;
         }
+
+        *tls_handle = context;
     }
     __finally2 {
         // do nothing

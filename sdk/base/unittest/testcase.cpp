@@ -443,7 +443,7 @@ void test_case::report(uint32 top_count) {
     // --------------------------------------------------------------------------------
     // result|errorcode |desc                            |test function       |time       |message
     //  fail |0xef010003|invalid parameter               |function2           |0.000000032|case desc 2 - intentional fail
-    //  fail |0xef01001b|unexpected                      |function6           |0.000000029|case 1 desc 2 - intentional fail
+    //  fail |0xef01001b|failed                          |function6           |0.000000029|case 1 desc 2 - intentional fail
     //  fail |0xef010036|assert_failed                   |function9           |0.000000049|case 2 desc 3 - intentional fail
     // --------------------------------------------------------------------------------
     report_failed(stream);

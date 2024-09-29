@@ -24,16 +24,6 @@ class dtls_client_socket : public udp_client_socket {
     virtual ~dtls_client_socket();
 
     /**
-     * @brief   open
-     * @param   socket_t*       sock            [OUT]
-     * @param   tls_context_t** tls_handle      [OUT]
-     * @param   const char*     address         [IN]
-     * @param   uint16          port            [IN]
-     * @param   uint32          timeout         [IN]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout);
-    /**
      * @brief   connect
      * @oaram   socket_t sock [in]
      * @oaram   tls_context_t** tls_handle [out]

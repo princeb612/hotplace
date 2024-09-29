@@ -44,8 +44,8 @@ void test_unittest() {
         msleep(1000);
     }
 
-    _test_case.test(errorcode_t::success, "function5", "case 1 desc 1");                        // pass
-    _test_case.test(errorcode_t::unexpected, "function6", "case 1 desc 2 - intentional fail");  // fail
+    _test_case.test(errorcode_t::success, "function5", "case 1 desc 1");                    // pass
+    _test_case.test(errorcode_t::failed, "function6", "case 1 desc 2 - intentional fail");  // fail
 
     _test_case.begin("test case 2");
     _test_case.test(errorcode_t::success, "function7", "case 2 desc 1");        // pass

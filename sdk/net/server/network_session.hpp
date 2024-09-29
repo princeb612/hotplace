@@ -195,6 +195,8 @@ class network_session {
 
     network_session& trace(std::function<void(stream_t*)> f);
 
+    return_t dgram_get_sockaddr(sockaddr_storage_t* addr);
+
    protected:
     return_t produce_stream(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr = nullptr);
     return_t produce_dgram(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr = nullptr);

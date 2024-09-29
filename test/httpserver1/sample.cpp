@@ -238,6 +238,11 @@ int main(int argc, char **argv) {
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
 
+    if (option.verbose) {
+        // openssl ERR_get_error_all/ERR_get_error_line_data
+        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
+    }
+
 #if defined _WIN32 || defined _WIN64
     winsock_startup();
 #endif

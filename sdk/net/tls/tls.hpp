@@ -18,6 +18,11 @@
 namespace hotplace {
 namespace net {
 
+enum tls_flag_t {
+    closesocket_ondestroy = (1 << 0),
+    tls_nbio = (1 << 1),
+};
+
 /**
  * @brief TLS
  * @example
@@ -44,52 +49,86 @@ class transport_layer_security {
     ~transport_layer_security();
 
     /**
-     * @brief   connect
-     * @param   tls_context_t** handle      [OUT]
-     * @param   int             type        [IN]
-     * @param   LPCSTR          addr        [IN]
-     * @param   uint16          port        [IN]
-     * @param   uint32          to_seconds  [IN] seconds
-     * @remarks socket 생성 및 연결을 포함한 구현을 하는 경우
+     * @brief   TLS
+     * @param   tls_context_t** handle  [out]
+     * @param   socket_t        sock    [in]
+     * @param   uint32          flags   [inopt] see tls_flag_t
+     * @return  error code (see error.hpp)
      */
-    return_t connect(tls_context_t** handle, int type, const char* addr, uint16 port, uint32 to_seconds);
+    return_t tls_open(tls_context_t** handle, socket_t sock, uint32 flags = 0);
+    /**
+     * @brief   DTLS
+     * @param   tls_context_t** handle  [out]
+     * @param   socket_t        sock    [in]
+     * @param   uint32          flags   [inopt] see tls_flag_t
+     * @return  error code (see error.hpp)
+     */
+    return_t dtls_open(tls_context_t** handle, socket_t sock, uint32 flags = 0);
+    /**
+     * @brief   close
+     * @param   tls_context_t*  handle  [in]
+     * @return  error code (see error.hpp)
+     */
+    return_t close(tls_context_t* handle);
+
+    /**
+     * @brief   connect
+     * @param   tls_context_t** handle      [out]
+     * @param   int             type        [in]
+     * @param   const char*     addr        [in]
+     * @param   uint16          port        [in]
+     * @param   uint32          wtoseconds  [inopt] seconds
+     * @return  error code (see error.hpp)
+     * @remarks set closesocket_ondestroy flag
+     */
+    return_t connect(tls_context_t** handle, int type, const char* addr, uint16 port, uint32 wtoseconds = NET_DEFAULT_TIMEOUT);
     /**
      * @brief   connect to
-     * @param   tls_context_t** handle      [OUT]
-     * @param   socket_t        sock        [IN]
+     * @param   tls_context_t** handle      [out]
+     * @param   socket_t        sock        [in]
      * @param   const char*     address     [in]
      * @param   uint16          port        [in]
-     * @remarks 연결된 socket 으로 핸들만 구성하는 경우
+     * @param   uint32          wtoseconds  [inopt] seconds
+     * @return  error code (see error.hpp)
+     * @remarks do not set closesocket_ondestroy flag
      */
-    return_t connectto(tls_context_t** handle, socket_t sock, const char* address, uint16 port, uint32 to_seconds = NET_DEFAULT_TIMEOUT);
+    return_t connectto(tls_context_t** handle, socket_t sock, const char* address, uint16 port, uint32 wtoseconds = NET_DEFAULT_TIMEOUT);
     /**
      * @brief   connect to
-     * @param   tls_context_t** handle      [OUT]
-     * @param   socket_t        sock        [IN]
+     * @param   tls_context_t** handle      [out]
+     * @param   socket_t        sock        [in]
      * @param   const sockaddr* addr        [in]
      * @param   socklen_t       addrlen     [in]
+     * @param   uint32          wtoseconds  [inopt] seconds
+     * @return  error code (see error.hpp)
+     * @remarks do not set closesocket_ondestroy flag
      */
-    return_t connectto(tls_context_t** handle, socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 to_seconds = NET_DEFAULT_TIMEOUT);
+    return_t connectto(tls_context_t** handle, socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 wtoseconds = NET_DEFAULT_TIMEOUT);
     /**
-     * @brief   socket layer handshake
-     * @param   tls_context_t** handle      [OUT]
-     * @param   socket_t        clisock     [IN] socket
+     * @brief   tls accept (handshake)
+     * @param   tls_context_t** handle      [out]
+     * @param   socket_t        clisock     [in] socket
+     * @return  error code (see error.hpp)
      * @remarks 연결된 소켓에 대해 handshake 를 진행한다.
      *
      *          cli_socket = accept (...);
-     *          ret = ssl->accept (handle, cli_socket); // handshake
+     *          // RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+     *          // RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
+     *          // RFC 4346 The Transport Layer Security (TLS) Protocol Version 1.1
+     *          ret = ssl->tls_handshake (handle, cli_socket); // handshake
      */
-    return_t accept(tls_context_t** handle, socket_t sock);
+    return_t tls_handshake(tls_context_t** handle, socket_t sock);
     /**
-     * @brief   DTLS
-     */
-    return_t dtls_open(tls_context_t** handle, socket_t sock);
-    /**
-     * @brief   handshake
+     * @brief   dtls accept (handshake)
      * @param   tls_context_t* handle [in]
      * @param   sockaddr* addr [inopt]
      * @param   socklen_t addrlen [in]
+     * @return  error code (see error.hpp)
      * @remarks
+     *
+     *          // RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
+     *          // RFC 6347 Datagram Transport Layer Security Version 1.2
+     *          // RFC 4347 Datagram Transport Layer Security
      *
      *          // handshake with cookie
      *          SSL_CTX_set_cookie_generate_cb(sslctx, set_cookie_generate_callback_routine);
@@ -98,41 +137,69 @@ class transport_layer_security {
      *          DTLSv1_listen(ssl, bio_addr);
      *          BIO_ADDR_free(bio_addr);
      *
-     *          // cf. handshake without cookie
+     *          // cf. without SSL_CTX_set_cookie_generate_cb, SSL_CTX_set_cookie_verify_cb
      *			SSL_set_accept_state(ssl);
      *			SSL_do_handshake(ssl);
      *
      */
     return_t dtls_handshake(tls_context_t* handle, sockaddr* addr, socklen_t addrlen);
+
     /**
-     * @brief   close
-     * @param   tls_context_t*  handle      [IN]
-     * @remarks connect, accept 등으로 생성된 핸들을 해제한다.
+     * @brief   SSL_set_bio
+     * @param   tls_context_t*  handle  [in]
+     * @param   int             type    [in] 0 BIO_s_mem, 1 BIO_s_datagram
+     * @return  error code (see error.hpp)
      */
-    return_t close(tls_context_t* handle);
+    return_t set_tls_io(tls_context_t* handle, int type);
 
     /**
      * @brief   read (network_Server_v2 specification)
-     * @param   tls_context_t*  handle      [IN]
-     * @param   int             mode        [IN] see tls_io_flag_t (2 recv 1 BIO_write 0 SSL_read)
-     * @param   void*           buffer      [IN]
-     * @param   size_t          buffer_size [IN]
-     * @param   size_t*         size_read   [OUT]
+     * @param   tls_context_t*  handle      [in]
+     * @param   int             mode        [in] see tls_io_flag_t (2 recv 1 BIO_write 0 SSL_read)
+     * @param   void*           buffer      [in]
+     * @param   size_t          buffer_size [in]
+     * @param   size_t*         size_read   [out]
+     * @return  error code (see error.hpp)
      */
     return_t read(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* size_read);
+    /**
+     * @brief   recvfrom
+     * @param   tls_context_t*      handle [in]
+     * @param   int                 mode [in]
+     * @param   void*               buffer [in]
+     * @param   size_t              buffer_size [in]
+     * @param   size_t*             size_read [out]
+     * @param   struct sockaddr*    addr [out]
+     * @param   socklen_t*          addrlen [in]
+     * @return  error code (see error.hpp)
+     */
     return_t recvfrom(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* size_read, struct sockaddr* addr, socklen_t* addrlen);
 
     /**
      * @brief   send
-     * @param   tls_context_t*  handle      [IN]
-     * @param   const char*     data        [IN]
-     * @param   size_t          size_data   [IN]
-     * @param   size_t*         size_sent   [OUT]
-     * @remarks send 를 SSL_write 로 대체
+     * @param   tls_context_t*  handle      [in]
+     * @param   const char*     data        [in]
+     * @param   size_t          size_data   [in]
+     * @param   size_t*         size_sent   [out]
+     * @return  error code (see error.hpp)
      */
     return_t send(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent);
+    /**
+     * @brief   sendto
+     * @param   tls_context_t*          handle      [in]
+     * @param   int                     mode        [in]
+     * @param   const char*             data        [in]
+     * @param   size_t                  size_data   [in]
+     * @param   size_t*                 size_sent   [out]
+     * @param   const struct sockaddr*  addr        [in]
+     * @param   socklen_t               addrlen     [in]
+     * @return  error code (see error.hpp)
+     */
     return_t sendto(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent, const struct sockaddr* addr, socklen_t addrlen);
-
+    /**
+     * @brief   socket related
+     * @param   tls_context_t*  handle  [in]
+     */
     socket_t get_socket(tls_context_t* handle);
 
     int addref();
@@ -143,18 +210,23 @@ class transport_layer_security {
    protected:
     /**
      * @brief   SSL_connect
-     * @param   socket_t    sock        [in]
-     * @param   SSL*        ssl         [in]
-     * @param   uint32      dwSeconds   [in]
-     * @param   uint32      nbio        [in]
+     * @param   tls_context_t*  handle  [in]
+     * @param   uint32          wto     [in]
+     * @return  error code (see error.hpp)
      */
-    return_t do_connect(socket_t sock, SSL* ssl, uint32 dwSeconds, uint32 nbio);
+    return_t do_connect(tls_context_t* handle, uint32 wto);
     /**
      * @brief   dtls_handshake
+     * @param   tls_context_t*  handle  [in]
+     * @param   sockaddr*       addr    [out]
+     * @param   socklen_t       addrlen [in]
+     * @return  error code (see error.hpp)
      */
     return_t do_dtls_listen(tls_context_t* handle, sockaddr* addr, socklen_t addrlen);
     /**
      * @brief   SSL_accept
+     * @param   tls_context_t*  handle  [in]
+     * @return  error code (see error.hpp)
      */
     return_t do_accept(tls_context_t* handle);
 

@@ -233,6 +233,8 @@ const error_description error_descriptions[] = {
     errordef(assert_failed, "assert_failed"),
     errordef(error_socket, "socket"),
     errordef(error_bind, "bind"),
+    errordef(error_handshake, "handshake"),
+    errordef(error_connect, "connect"),
     errordef(error_send, "send"),
     errordef(error_recv, "recv"),
     errordef(abandoned, "abandoned"),

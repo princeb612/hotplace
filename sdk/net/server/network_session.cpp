@@ -70,19 +70,43 @@ return_t network_session::ready_to_read() {
     } else if (SOCK_DGRAM == type) {
         uint32 flags = 0;
         if (get_server_socket()->support_tls()) {
-            //  DTLS IOCP (blocking io, no SO_RCVTIMEO)
-            //      SSL_connect
-            //          int flag = 0;
-            //          WSARecvFrom(..., &flags, &ov, ...)
-            //          GetQueuedCompletionStatus
-            //              00000000 : 16 FE FF 00 00 00 00 00 00 00 00 00 C0 01 00 00 | ................
-            //              ; handshake 0x16, DTLS1_2_VERSION 0xFEFD
-            //          DTLSv1_listen
-            //              recvfrom - hang
-            //      SSL_connect
-            //          DTLSv1_listen
-            //          SSL_accept
-            //          consume
+            /**
+             *  DTLS IOCP (blocking io, no SO_RCVTIMEO)
+             *  1. recvfrom, flag = 0
+             *      Client: SSL_connect
+             *      Server: int flag = 0;
+             *      Server: WSARecvFrom(..., &flags, &ov, ...)
+             *      Server: GetQueuedCompletionStatus
+             *      Server:     00000000 : 16 FE FF 00 00 00 00 00 00 00 00 00 C0 01 00 00 | ................
+             *      Server:     ; handshake 0x16, DTLS1_2_VERSION 0xFEFD
+             *      Server: DTLSv1_listen
+             *      Server:     recvfrom - hang
+             *      Client: SSL_connect
+             *      Server: DTLSv1_listen
+             *      Server:     recvfrom - resume
+             *                  SSL_get_state -> TLS_ST_SR_CLNT_HELLO
+             *      Server: SSL_accept
+             *                  SSL_get_state -> TLS_ST_OK
+             *      Client: SSL_write
+             *      Server: SSL_read
+             *      Server: WSARecvFrom(..., &flags, &ov, ...)
+             *  2. recvfrom, flag = MSG_PEEK
+             *      Client: SSL_connect
+             *      Server: int flag = MSG_PEEK;
+             *      Server: WSARecvFrom(..., &flags, &ov, ...)
+             *      Server: GetQueuedCompletionStatus
+             *      Server: DTLSv1_listen
+             *                  SSL_get_state -> TLS_ST_SR_CLNT_HELLO
+             *      Server: SSL_accept
+             *                  SSL_get_state -> TLS_ST_OK
+             *      Client: SSL_write
+             *      Server: SSL_read
+             *      Server: WSARecvFrom(..., &flags, &ov, ...)
+             *      Client: SSL_write
+             *      Server: GetQueuedCompletionStatus
+             *      Server: SSL_read
+             *      Server: WSARecvFrom(..., &flags, &ov, ...)
+             */
             flags = MSG_PEEK;
         }
         int addrlen = sizeof(sockaddr_storage_t);
@@ -317,27 +341,18 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
             __try2 {
                 size_t cbread = 0;
                 bool data_ready = false;
-                int mode = 0;
+                int mode = tls_io_flag_t::read_ssl_read;
 
-                sockaddr* sas = nullptr;
-                socklen_t saslen = sizeof(sockaddr_storage_t);
+                sockaddr* sa = nullptr;
+                socklen_t salen = sizeof(sockaddr_storage_t);
 #if defined __linux__
-                mode = tls_io_flag_t::read_epoll;
-                sockaddr_storage_t sa;
-                sas = (sockaddr*)&sa;
-
-                ret = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read, nullptr,
-                                                    sas, &saslen);
-                if (errorcode_t::success != ret) {
-                    __leave2;
-                }
-
+                sockaddr_storage_t sockstorage;
+                sa = (sockaddr*)&sockstorage;
 #elif defined _WIN32 || defined _WIN64
-                mode = tls_io_flag_t::read_iocp;
-                sas = (sockaddr*)addr;
+                sa = (sockaddr*)addr;
 #endif
-                result = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, tls_io_flag_t::read_ssl_read,
-                                                       (char*)buf_read, size_buf_read, &cbread, sas, &saslen); /*SSL_read */
+                result = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read,
+                                                       &cbread, sa, &salen); /*SSL_read */
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream()->produce(buf_read, cbread, addr);
 
@@ -419,6 +434,26 @@ http2_session& network_session::get_http2_session() { return _http2_session; }
 network_session& network_session::trace(std::function<void(stream_t*)> f) {
     _df = f;
     return *this;
+}
+
+return_t network_session::dgram_get_sockaddr(sockaddr_storage_t* addr) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == addr) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        socklen_t sa_size = sizeof(sockaddr_storage_t);
+        size_t cbread = _session.buf.bin.size();
+        int mode = read_socket_recv | peek_msg;
+        ret = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, mode, &_session.buf.bin[0], _session.buf.bin.size(),
+                                            &cbread, (sockaddr*)addr, &sa_size);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 }  // namespace net

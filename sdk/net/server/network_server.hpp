@@ -307,7 +307,7 @@ class network_server {
      * @param socket_t cli_socket [in]
      * @param sockaddr_storage_t* client_addr [in]
      */
-    return_t try_connect(network_multiplexer_context_t* handle, socket_t cli_socket, sockaddr_storage_t* client_addr);
+    return_t try_connected(network_multiplexer_context_t* handle, socket_t cli_socket, sockaddr_storage_t* client_addr);
     return_t tls_accept_ready(network_multiplexer_context_t* handle, bool* ready);
     /**
      * @brief   Tls accept

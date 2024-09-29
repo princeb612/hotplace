@@ -41,7 +41,7 @@ return_t tls_server_socket::close(socket_t sock, tls_context_t* tls_handle) {
 return_t tls_server_socket::tls_accept(socket_t clisock, tls_context_t** tls_handle) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = _tls->accept(tls_handle, clisock); /* new TLS_CONTEXT, to release see close member  */
+        ret = _tls->tls_handshake(tls_handle, clisock); /* new TLS_CONTEXT, to release see close member  */
         if (errorcode_t::success != ret) {
             __leave2;
         }
