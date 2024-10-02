@@ -50,7 +50,11 @@ return_t dtls_server_socket::dtls_open(tls_context_t** tls_handle, socket_t sock
             __leave2;
         }
 
-        ret = _tls->dtls_open(&context, sock);
+        uint32 flags = 0;
+#if defined _WIN32 || defined _WIN64
+        flags = tls_nbio;  // IOCP - passed
+#endif
+        ret = _tls->dtls_open(&context, sock, flags);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -93,7 +97,7 @@ return_t dtls_server_socket::sendto(socket_t sock, tls_context_t* tls_handle, co
                                     const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
 
-    int mode = tls_io_flag_t::send_ssl_write;  // mode = tls_io_flag_t::send_all;
+    int mode = tls_io_flag_t::send_ssl_write;
     __try2 { ret = _tls->sendto(tls_handle, mode, ptr_data, size_data, cbsent, addr, addrlen); }
     __finally2 {
         // do nothing

@@ -71,9 +71,20 @@ return_t echo_server(void*) {
     fclose(fp);
 
     SSL_CTX* sslctx = nullptr;
-    // http_protocol* http_prot = nullptr;
     transport_layer_security* tls = nullptr;
     dtls_server_socket* tls_socket = nullptr;
+    // DTLS handshake and thread-model
+    //          single      multi
+    // epoll    passed      N/A
+    // IOCP     passed      passed
+    uint16 nproc_threads = 1;
+#if defined __linux__
+    // [epoll] DTLS handshake only support single-thread model
+#elif defined _WIN32 || defined _WIN64
+    // [IOCP] GetQueuedCompletionStatus only catches information directly related to overlapped
+    //        and is not interested in DTLS handshakes that do not use overlapped
+    // uint16 nproc_threads = 2; // it works
+#endif
 
     __try2 {
         // part of ssl certificate
@@ -95,7 +106,7 @@ return_t echo_server(void*) {
         server_conf conf;
         conf.set(netserver_config_t::serverconf_concurrent_event, 1024)  // concurrent (linux epoll concerns, windows ignore)
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
-            .set(netserver_config_t::serverconf_concurrent_network, 2)
+            .set(netserver_config_t::serverconf_concurrent_network, nproc_threads)
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
 
         // start server
@@ -104,8 +115,8 @@ return_t echo_server(void*) {
 
         netserver.consumer_loop_run(handle_ipv4, 2);
         netserver.consumer_loop_run(handle_ipv6, 2);
-        netserver.event_loop_run(handle_ipv4, 2);
-        netserver.event_loop_run(handle_ipv6, 2);
+        netserver.event_loop_run(handle_ipv4, nproc_threads);
+        netserver.event_loop_run(handle_ipv6, nproc_threads);
 
         while (true) {
             msleep(1000);
@@ -123,8 +134,8 @@ return_t echo_server(void*) {
 #endif
         }
 
-        netserver.event_loop_break(handle_ipv4, 2);
-        netserver.event_loop_break(handle_ipv6, 2);
+        netserver.event_loop_break(handle_ipv4, nproc_threads);
+        netserver.event_loop_break(handle_ipv6, nproc_threads);
         netserver.consumer_loop_break(handle_ipv4, 2);
         netserver.consumer_loop_break(handle_ipv6, 2);
     }

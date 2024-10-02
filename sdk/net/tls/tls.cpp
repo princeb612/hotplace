@@ -2,7 +2,8 @@
 /**
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
- * @reference
+ * @remarks
+ *      references
  *      RFC 4346 The Transport Layer Security (TLS) Protocol Version 1.1
  *      RFC 4347 Datagram Transport Layer Security
  *      RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
@@ -521,9 +522,6 @@ return_t transport_layer_security::do_dtls_listen(tls_context_t* handle, sockadd
                     default:
                         break;
                 }
-                if (0 == rc) {
-                    continue;
-                }
                 if (flags) {
                     auto res = wait_socket(fd, 1 * 1000, flags);
                     if (errorcode_t::success != res) {
@@ -531,7 +529,7 @@ return_t transport_layer_security::do_dtls_listen(tls_context_t* handle, sockadd
                     }
                 }
             }
-        } while (flags);
+        } while ((0 == rc) || flags);
 
         if (rc > 0) {
             if (addr) {
@@ -803,6 +801,8 @@ return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, voi
             if (rc <= 0) {
                 if (SSL_ERROR_WANT_READ == condition || SSL_ERROR_WANT_WRITE == condition) {
                     ret = errorcode_t::pending;
+                } else if (SSL_ERROR_NONE == condition) {
+                    // do nothing
                 } else {
                     ret = errorcode_t::internal_error;
                 }

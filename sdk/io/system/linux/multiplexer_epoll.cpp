@@ -142,7 +142,7 @@ return_t multiplexer_epoll::bind(multiplexer_context_t* handle, handle_t eventso
 
         struct epoll_event ev;
         memset(&ev, 0, sizeof(ev));
-        ev.events = EPOLLIN | EPOLLHUP;
+        ev.events = EPOLLIN | EPOLLHUP | EPOLLRDHUP;
         ev.data.fd = eventsource;
         int ret_epoll_ctl = epoll_ctl(context->epoll_fd, EPOLL_CTL_ADD, eventsource, &ev);
         if (ret_epoll_ctl < 0) {
@@ -243,7 +243,7 @@ return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle
                     event_callback_routine(type, 2, data_vector, &callback_control, parameter);
                 } else if (context->events[i].events & EPOLLIN) {
                     event_callback_routine(multiplexer_event_type_t::mux_read, 2, data_vector, &callback_control, parameter);
-                } else if ((context->events[i].events & EPOLLHUP) || (context->events[i].events & EPOLLERR)) {
+                } else if (context->events[i].events & (EPOLLHUP | EPOLLRDHUP | EPOLLERR)) {
                     event_callback_routine(multiplexer_event_type_t::mux_disconnect, 2, data_vector, &callback_control, parameter);
                 }
             }

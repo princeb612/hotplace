@@ -1,5 +1,8 @@
 # history
 
+* Revision 617
+  * [tested] DTLS server (epoll)
+
 * Revision 615
   * [changed] TLS non-blocking io
 
