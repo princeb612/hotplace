@@ -176,6 +176,11 @@ void http_resource::for_each_hpack_static_table(std::function<void(uint32 index,
 #define HPACK_ENTRY(index, header_name, header_value) \
     { index, header_name, header_value }
 
+    /**
+     * RFC 7541 HPACK: Header Compression for HTTP/2
+     * Appendix A.  Static Table Definition
+     */
+
     struct static_table_entry {
         uint32 index;
         const char* name;
@@ -242,6 +247,129 @@ void http_resource::for_each_hpack_static_table(std::function<void(uint32 index,
         HPACK_ENTRY(59, "vary", nullptr),
         HPACK_ENTRY(60, "via", nullptr),
         HPACK_ENTRY(61, "www-authenticate", nullptr),
+    };
+
+    if (func) {
+        for (size_t i = 0; i < RTL_NUMBER_OF(entries); i++) {
+            static_table_entry* item = entries + i;
+            func(item->index, item->name, item->value);
+        }
+    }
+}
+
+void http_resource::for_each_qpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func) {
+#define QPACK_ENTRY(index, header_name, header_value) \
+    { index, header_name, header_value }
+
+    /**
+     * RFC 9204 QPACK: Field Compression for HTTP/3
+     * Appendix A.  Static Table
+     */
+
+    struct static_table_entry {
+        uint32 index;
+        const char* name;
+        const char* value;
+    } entries[] = {
+        QPACK_ENTRY(0, ":authority", nullptr),
+        QPACK_ENTRY(1, ":path", "/"),
+        QPACK_ENTRY(2, "age", "0"),
+        QPACK_ENTRY(3, "content-disposition", nullptr),
+        QPACK_ENTRY(4, "content-length", "0"),
+        QPACK_ENTRY(5, "cookie", nullptr),
+        QPACK_ENTRY(6, "date", nullptr),
+        QPACK_ENTRY(7, "etag", nullptr),
+        QPACK_ENTRY(8, "if-modified-since", nullptr),
+        QPACK_ENTRY(9, "if-none-match", nullptr),
+        QPACK_ENTRY(10, "last-modified", nullptr),
+        QPACK_ENTRY(11, "link", nullptr),
+        QPACK_ENTRY(12, "location", nullptr),
+        QPACK_ENTRY(13, "referer", nullptr),
+        QPACK_ENTRY(14, "set-cookie", nullptr),
+        QPACK_ENTRY(15, ":method", "CONNECT"),
+        QPACK_ENTRY(16, ":method", "DELETE"),
+        QPACK_ENTRY(17, ":method", "GET"),
+        QPACK_ENTRY(18, ":method", "HEAD"),
+        QPACK_ENTRY(19, ":method", "OPTIONS"),
+        QPACK_ENTRY(20, ":method", "POST"),
+        QPACK_ENTRY(21, ":method", "PUT"),
+        QPACK_ENTRY(22, ":scheme", "http"),
+        QPACK_ENTRY(23, ":scheme", "https"),
+        QPACK_ENTRY(24, ":status", "103"),
+        QPACK_ENTRY(25, ":status", "200"),
+        QPACK_ENTRY(26, ":status", "304"),
+        QPACK_ENTRY(27, ":status", "404"),
+        QPACK_ENTRY(28, ":status", "503"),
+        QPACK_ENTRY(29, "accept", "*/*"),
+        QPACK_ENTRY(30, "accept", "application/dns-message"),
+        QPACK_ENTRY(31, "accept-encoding", "gzip, deflate, br"),
+        QPACK_ENTRY(32, "accept-ranges", "bytes"),
+        QPACK_ENTRY(33, "access-control-allow-headers", "cache-control"),
+        QPACK_ENTRY(34, "access-control-allow-headers", "content-type"),
+        QPACK_ENTRY(35, "access-control-allow-origin", "*"),
+        QPACK_ENTRY(36, "cache-control", "max-age=0"),
+        QPACK_ENTRY(37, "cache-control", "max-age=2592000"),
+        QPACK_ENTRY(38, "cache-control", "max-age=604800"),
+        QPACK_ENTRY(39, "cache-control", "no-cache"),
+        QPACK_ENTRY(40, "cache-control", "no-store"),
+        QPACK_ENTRY(41, "cache-control", "public, max-age=31536000"),
+        QPACK_ENTRY(42, "content-encoding", "br"),
+        QPACK_ENTRY(43, "content-encoding", "gzip"),
+        QPACK_ENTRY(44, "content-type", "application/dns-message"),
+        QPACK_ENTRY(45, "content-type", "application/javascript"),
+        QPACK_ENTRY(46, "content-type", "application/json"),
+        QPACK_ENTRY(47, "content-type", "application/x-www-form-urlencoded"),
+        QPACK_ENTRY(48, "content-type", "image/gif"),
+        QPACK_ENTRY(49, "content-type", "image/jpeg"),
+        QPACK_ENTRY(50, "content-type", "image/png"),
+        QPACK_ENTRY(51, "content-type", "text/css"),
+        QPACK_ENTRY(52, "content-type", "text/html;charset=utf-8"),
+        QPACK_ENTRY(53, "content-type", "text/plain"),
+        QPACK_ENTRY(54, "content-type", "text/plain;charset=utf-8"),
+        QPACK_ENTRY(55, "range", "bytes=0-"),
+        QPACK_ENTRY(56, "strict-transport-security", "max-age=31536000"),
+        QPACK_ENTRY(57, "strict-transport-security", "max-age=31536000;includesubdomains"),
+        QPACK_ENTRY(58, "strict-transport-security", "max-age=31536000;includesubdomains;preload"),
+        QPACK_ENTRY(59, "vary", "accept-encoding"),
+        QPACK_ENTRY(60, "vary", "origin"),
+        QPACK_ENTRY(61, "x-content-type-options", "nosniff"),
+        QPACK_ENTRY(62, "x-xss-protection", "1; mode=block"),
+        QPACK_ENTRY(63, ":status", "100"),
+        QPACK_ENTRY(64, ":status", "204"),
+        QPACK_ENTRY(65, ":status", "206"),
+        QPACK_ENTRY(66, ":status", "302"),
+        QPACK_ENTRY(67, ":status", "400"),
+        QPACK_ENTRY(68, ":status", "403"),
+        QPACK_ENTRY(69, ":status", "421"),
+        QPACK_ENTRY(70, ":status", "425"),
+        QPACK_ENTRY(71, ":status", "500"),
+        QPACK_ENTRY(72, "accept-language", nullptr),
+        QPACK_ENTRY(73, "access-control-allow-credentials", "FALSE"),
+        QPACK_ENTRY(74, "access-control-allow-credentials", "TRUE"),
+        QPACK_ENTRY(75, "access-control-allow-headers", "*"),
+        QPACK_ENTRY(76, "access-control-allow-methods", "get"),
+        QPACK_ENTRY(77, "access-control-allow-methods", "get, post, options"),
+        QPACK_ENTRY(78, "access-control-allow-methods", "options"),
+        QPACK_ENTRY(79, "access-control-expose-headers", "content-length"),
+        QPACK_ENTRY(80, "access-control-request-headers", "content-type"),
+        QPACK_ENTRY(81, "access-control-request-method", "get"),
+        QPACK_ENTRY(82, "access-control-request-method", "post"),
+        QPACK_ENTRY(83, "alt-svc", "clear"),
+        QPACK_ENTRY(84, "authorization", nullptr),
+        QPACK_ENTRY(85, "content-security-policy", "script-src 'none';object-src 'none';base-uri 'none'"),
+        QPACK_ENTRY(86, "early-data", "1"),
+        QPACK_ENTRY(87, "expect-ct", nullptr),
+        QPACK_ENTRY(88, "forwarded", nullptr),
+        QPACK_ENTRY(89, "if-range", nullptr),
+        QPACK_ENTRY(90, "origin", nullptr),
+        QPACK_ENTRY(91, "purpose", "prefetch"),
+        QPACK_ENTRY(92, "server", nullptr),
+        QPACK_ENTRY(93, "timing-allow-origin", "*"),
+        QPACK_ENTRY(94, "upgrade-insecure-requests", "1"),
+        QPACK_ENTRY(95, "user-agent", nullptr),
+        QPACK_ENTRY(96, "x-forwarded-for", nullptr),
+        QPACK_ENTRY(97, "x-frame-options", "deny"),
+        QPACK_ENTRY(98, "x-frame-options", "sameorigin"),
     };
 
     if (func) {

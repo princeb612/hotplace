@@ -171,7 +171,7 @@ huffman_coding &huffman_coding::exports(std::function<void(uint8, const char *)>
     return *this;
 }
 
-return_t huffman_coding::expect(const char *source, size_t &size_expected) {
+return_t huffman_coding::expect(const char *source, size_t &size_expected) const {
     return_t ret = errorcode_t::success;
     __try2 {
         size_expected = 0;
@@ -188,7 +188,7 @@ return_t huffman_coding::expect(const char *source, size_t &size_expected) {
     return ret;
 }
 
-return_t huffman_coding::expect(const char *source, size_t size, size_t &size_expected) {
+return_t huffman_coding::expect(const char *source, size_t size, size_t &size_expected) const {
     return_t ret = errorcode_t::success;
     __try2 {
         size_expected = 0;
@@ -205,7 +205,7 @@ return_t huffman_coding::expect(const char *source, size_t size, size_t &size_ex
     return ret;
 }
 
-return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_expected) {
+return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_expected) const {
     return_t ret = errorcode_t::success;
     __try2 {
         size_expected = 0;
@@ -220,7 +220,7 @@ return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_
             __leave2;
         }
 
-        t_maphint<uint8, std::string> hint(_codetable);
+        t_maphint_const<uint8, std::string> hint(_codetable);
         size_t i = 0;
         const byte_t *p = source;
         for (i = 0; i < size; i++) {
@@ -242,16 +242,16 @@ return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_
     return ret;
 }
 
-return_t huffman_coding::encode(binary_t &bin, const char *source, size_t size, bool usepad) { return encode(bin, (byte_t *)source, size, usepad); }
+return_t huffman_coding::encode(binary_t &bin, const char *source, size_t size, bool usepad) const { return encode(bin, (byte_t *)source, size, usepad); }
 
-return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size, bool usepad) {
+return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size, bool usepad) const {
     return_t ret = errorcode_t::success;
     std::string buf;
     std::string code;
     size_t totalbits = 0;
     const byte_t *p = nullptr;
     size_t i = 0;
-    t_maphint<uint8, std::string> hint(_codetable);
+    t_maphint_const<uint8, std::string> hint(_codetable);
 
     // RFC 7541 Appendix B.  Huffman Code
     // As the Huffman-encoded data doesn't always end at an octet boundary,
@@ -337,9 +337,9 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
     return ret;
 }
 
-return_t huffman_coding::encode(stream_t *stream, const char *source, size_t size) { return encode(stream, (byte_t *)source, size); }
+return_t huffman_coding::encode(stream_t *stream, const char *source, size_t size) const { return encode(stream, (byte_t *)source, size); }
 
-return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t size) {
+return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t size) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream || nullptr == source) {
@@ -349,7 +349,7 @@ return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t s
         // align to MSB
         const byte_t *p = nullptr;
         size_t i = 0;
-        t_maphint<uint8, std::string> hint(_codetable);
+        t_maphint_const<uint8, std::string> hint(_codetable);
         for (p = source, i = 0; i < size; i++) {
             std::string code;
             hint.find(p[i], &code);
@@ -362,7 +362,7 @@ return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t s
     return ret;
 }
 
-return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t size) {
+return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t size) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == stream) || (nullptr == source)) {
@@ -395,7 +395,7 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
                 int count = 0;
                 for (size_t l = code_msize; l <= que.size(); l++) {
                     token = que.substr(0, l);
-                    std::map<std::string, uint8>::iterator iter = _reverse_codetable.find(token);
+                    std::map<std::string, uint8>::const_iterator iter = _reverse_codetable.find(token);
                     if (_reverse_codetable.end() != iter) {
                         stream->printf("%c", iter->second);
                         que.erase(0, l);

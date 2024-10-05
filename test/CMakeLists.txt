@@ -51,6 +51,8 @@ add_subdirectory (udpserver1)
 add_subdirectory (udpserver2)
 add_subdirectory (dtlsserver)
 add_subdirectory (netclient)
+add_subdirectory (qpack)
+add_subdirectory (httpserver3)
 
 # odbc
 if (SUPPORT_ODBC)

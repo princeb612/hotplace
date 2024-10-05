@@ -126,9 +126,9 @@ class huffman_coding {
      */
     huffman_coding &exports(std::function<void(uint8, const char *)> v);
 
-    return_t expect(const char *source, size_t &size_expected);
-    return_t expect(const char *source, size_t size, size_t &size_expected);
-    return_t expect(const byte_t *source, size_t size, size_t &size_expected);
+    return_t expect(const char *source, size_t &size_expected) const;
+    return_t expect(const char *source, size_t size, size_t &size_expected) const;
+    return_t expect(const byte_t *source, size_t size, size_t &size_expected) const;
 
     /*
      * @brief   encode
@@ -138,8 +138,8 @@ class huffman_coding {
      *          huff.encode(bin, (byte_t*)sample, strlen(sample));
      *          // f1 e3 c2 e5 f2 3a 6b a0 ab 90 f4 ff
      */
-    return_t encode(binary_t &bin, const char *source, size_t size, bool usepad = true);
-    return_t encode(binary_t &bin, const byte_t *source, size_t size, bool usepad = true);
+    return_t encode(binary_t &bin, const char *source, size_t size, bool usepad = true) const;
+    return_t encode(binary_t &bin, const byte_t *source, size_t size, bool usepad = true) const;
     /*
      * @brief   encode
      * @sample
@@ -149,8 +149,8 @@ class huffman_coding {
      *          printf("%s\n", bs.c_str());
      *
      */
-    return_t encode(stream_t *stream, const char *source, size_t size);
-    return_t encode(stream_t *stream, const byte_t *source, size_t size);
+    return_t encode(stream_t *stream, const char *source, size_t size) const;
+    return_t encode(stream_t *stream, const byte_t *source, size_t size) const;
     /**
      * @brief   decode
      * @remarks constraints : min(code len in bits) >= 5
@@ -159,7 +159,7 @@ class huffman_coding {
      *          huff.encode(...);
      *          huff.decode(...);
      */
-    return_t decode(stream_t *stream, const byte_t *source, size_t size);
+    return_t decode(stream_t *stream, const byte_t *source, size_t size) const;
 
     /**
      * @brief   check min(code len in bits) >= 5

@@ -255,6 +255,7 @@ class http2_frame_settings : public http2_frame {
     http2_frame_settings(const http2_frame_settings& rhs);
 
     http2_frame_settings& add(uint16 id, uint32 value);
+    return_t find(uint16 id, uint32& value);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);

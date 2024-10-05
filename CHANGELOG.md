@@ -1,5 +1,9 @@
 # history
 
+* Revision 618
+  * [added] hpack_session::set_capacity
+  * [changed] separate http_header_compression from hpack_encoder (prepare qpack_encoder)
+
 * Revision 617
   * [tested] DTLS server (epoll)
 

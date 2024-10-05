@@ -4,8 +4,7 @@
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      simple https server implementation
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver,
- * httpserver
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver
  *
  * Revision History
  * Date         Name                Description
@@ -922,6 +921,11 @@ int main(int argc, char **argv) {
 
     cmdline.make_share(new t_cmdline_t<OPTION>);
 
+    /**
+     *      to test -c
+     *      run first : httpauth -v
+     *      and then  : httptest -c
+     */
     *cmdline << t_cmdarg_t<OPTION>("-c", "connect", [&](OPTION &o, char *param) -> void { o.connect = 1; }).optional()
              << t_cmdarg_t<OPTION>("-p", "read stream using http_protocol", [&](OPTION &o, char *param) -> void { o.mode = 1; }).optional()
              << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()

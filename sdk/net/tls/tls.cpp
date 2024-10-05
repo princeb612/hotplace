@@ -510,7 +510,7 @@ return_t transport_layer_security::do_dtls_listen(tls_context_t* handle, sockadd
             rc = DTLSv1_listen(ssl, bio_addr);
             //  0 HelloRetryRequest
             // -1 failure
-            if (rc < 1) {
+            if (rc <= 1) {
                 int condition = SSL_get_error(ssl, rc);
                 switch (condition) {
                     case SSL_ERROR_WANT_WRITE:
@@ -529,7 +529,7 @@ return_t transport_layer_security::do_dtls_listen(tls_context_t* handle, sockadd
                     }
                 }
             }
-        } while ((0 == rc) || flags);
+        } while (flags);
 
         if (rc > 0) {
             if (addr) {

@@ -33,6 +33,18 @@ http2_frame_settings& http2_frame_settings::add(uint16 id, uint32 value) {
     return *this;
 }
 
+return_t http2_frame_settings::find(uint16 id, uint32& value) {
+    return_t ret = errorcode_t::success;
+    auto iter = _settings.find(id);
+    if (_settings.end() == iter) {
+        ret = errorcode_t::not_found;
+        value = 0;
+    } else {
+        value = iter->second;
+    }
+    return ret;
+}
+
 return_t http2_frame_settings::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {

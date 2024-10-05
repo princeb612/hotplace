@@ -47,7 +47,7 @@ endif ()
 if (UNIX)
 # -std=c++11
 # -Wl,-z,noexecstack
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,-z,noexecstack")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,-z,noexecstack -Wl,--as-needed -Wl,--version-script=hotplace.version")
 else (1)
 endif ()
 
