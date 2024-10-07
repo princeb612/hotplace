@@ -1,8 +1,12 @@
 # history
 
+* Revision 620
+  * [changed] hpack_session (faster match/select using std::multimap)
+
 * Revision 618
+  * [added] version-script
   * [added] hpack_session::set_capacity
-  * [changed] separate http_header_compression from hpack_encoder (prepare qpack_encoder)
+  * [changed] separate http_header_compression from hpack_encoder
 
 * Revision 617
   * [tested] DTLS server (epoll)

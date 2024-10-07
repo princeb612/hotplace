@@ -257,6 +257,8 @@ void http_resource::for_each_hpack_static_table(std::function<void(uint32 index,
     }
 }
 
+size_t http_resource::sizeof_hpack_static_table_entries() { return 61; }
+
 void http_resource::for_each_qpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func) {
 #define QPACK_ENTRY(index, header_name, header_value) \
     { index, header_name, header_value }
@@ -379,6 +381,8 @@ void http_resource::for_each_qpack_static_table(std::function<void(uint32 index,
         }
     }
 }
+
+size_t http_resource::sizeof_qpack_static_table_entries() { return 99; }
 
 }  // namespace net
 }  // namespace hotplace

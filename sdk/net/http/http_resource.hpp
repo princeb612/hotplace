@@ -61,10 +61,12 @@ class http_resource {
      * @brief   RFC 7541 Appendix A.  Static Table Definition
      */
     void for_each_hpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func);
+    size_t sizeof_hpack_static_table_entries();
     /**
      * @brief   RFC 9204 Appendix A.  Static Table
      */
     void for_each_qpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func);
+    size_t sizeof_qpack_static_table_entries();
 
    protected:
     http_resource();
