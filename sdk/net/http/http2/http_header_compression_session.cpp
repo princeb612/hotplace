@@ -25,7 +25,11 @@ void http_header_compression_session::for_each(std::function<void(const std::str
 }
 
 bool http_header_compression_session::operator==(const http_header_compression_session& rhs) {
-    return (_dynamic_map == rhs._dynamic_map) && (_separate == rhs._separate);
+    return (_separate == rhs._separate) && (_dynamic_map == rhs._dynamic_map);
+}
+
+bool http_header_compression_session::operator!=(const http_header_compression_session& rhs) {
+    return (_separate != rhs._separate) || (_dynamic_map != rhs._dynamic_map);
 }
 
 match_result_t http_header_compression_session::match(const std::string& name, const std::string& value, size_t& index) {
@@ -133,9 +137,9 @@ return_t http_header_compression_session::insert(const std::string& name, const 
 
     _dynamic_map.insert({name, {value, _inserted}});
     _dynamic_reversemap.insert({_inserted, name});
-    _inserted++;
-
     _entry_size.insert({_inserted, entrysize});
+
+    _inserted++;
 
     return ret;
 }
@@ -194,6 +198,10 @@ void http_header_compression_session::set_capacity(uint32 capacity) {
         evict();
     }
 }
+
+size_t http_header_compression_session::get_capacity() { return _capacity; }
+
+size_t http_header_compression_session::get_tablesize() { return _tablesize; }
 
 return_t http_header_compression_session::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
 

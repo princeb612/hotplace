@@ -1,5 +1,8 @@
 # history
 
+* Revision 623
+  * [tested] HPACK eviction
+
 * Revision 622
   * [changed] HPACK/QPACK eviction
 

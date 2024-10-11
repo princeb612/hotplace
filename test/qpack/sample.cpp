@@ -12,7 +12,10 @@
  * sketch
  *     insert field line
  *         flags |= qpack_indexing;
- *         encode(..., flags);
+ *         encode(..., flags) {
+ *             if (success == ret) { do_encode }
+ *             else if (already_exist == ret) { return do_duplicate }
+ *         }
  *     field section
  *         flags &= ~qpack_indexing;
  *         encode(..., flags);
@@ -52,7 +55,7 @@ void test_expect(binary_t& bin, const char* expect, bool flush, const char* text
     }
 }
 
-void next_step(binary_t& bin, bool flush, const char* text) {
+void test_dump(binary_t& bin, bool flush, const char* text) {
     if (text) {
         _logger->hdump(text, bin);
     } else {
@@ -86,7 +89,7 @@ void tet_rfc9204_b1() {
 
     // field section
     enc.encode(&session, bin, ":path", "/index.html", flags);
-    enc.sync(&session, bin);
+    enc.sync(&session, bin, flags);
 
     const char* expect2 = "0000 510b 2f69 6e64 6578 2e68 746d 6c";
     test_expect(bin, expect2, true, "B.1.  Literal Field Line with Name Reference #1");
@@ -147,7 +150,7 @@ void tet_rfc9204_b2() {
     flags = qpack_postbase_index;
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // ref++
     enc.encode(&session, bin, ":path", "/sample/path", flags);          // ref++
-    enc.sync(&session, bin);
+    enc.sync(&session, bin, flags);
 
     const char* expect3 = "0381 10 11";
     test_expect(bin, expect3, true, "B.2.  Dynamic Table #3");
@@ -181,9 +184,9 @@ void tet_rfc9204_b3() {
     flags = qpack_indexing | qpack_intermediary;
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // abs 0
     enc.encode(&session, bin, ":path", "/sample/path", flags);          // abs 1
-    enc.sync(&session, bin);
+    enc.sync(&session, bin, flags);
 
-    next_step(bin, true, "B.3.  Speculative Insert #1");
+    test_dump(bin, true, "B.3.  Speculative Insert #1");
 
     /**
      *   Stream: Encoder
@@ -232,8 +235,9 @@ void tet_rfc9204_b4() {
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // abs 0
     enc.encode(&session, bin, ":path", "/sample/path", flags);          // abs 1
     enc.encode(&session, bin, "custom-key", "custom-value", flags);     // abs 2
-    _logger->hdump("B.4.  Duplicate Instruction, Stream Cancellation #1", bin);
-    bin.clear();  // next step
+
+    test_dump(bin, true, "B.4.  Duplicate Instruction, Stream Cancellation #1");
+
     /**
      *   Stream: Encoder
      *   02                  | Duplicate (Relative Index = 2)
@@ -275,15 +279,13 @@ void tet_rfc9204_b4() {
      *                                 Size=217
      */
 
-    // studying
-    // 0500
-
     flags = 0;
     enc.encode(&session, bin, ":authority", "www.example.com", flags);
     enc.encode(&session, bin, ":path", "/", flags);
     enc.encode(&session, bin, "custom-key", "custom-value", flags);
+    enc.sync(&session, bin, flags);
 
-    const char* expect3 = "80 c1 81";
+    const char* expect3 = "0500 80 c1 81";
     test_expect(bin, expect3, true, "B.4.  Duplicate Instruction, Stream Cancellation #3");
     /**
      *   Stream: Decoder
@@ -334,7 +336,7 @@ void tet_rfc9204_b5() {
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // abs 0
     enc.encode(&session, bin, ":path", "/sample/path", flags);          // abs 1
     enc.encode(&session, bin, "custom-key", "custom-value", flags);     // abs 2
-    enc.sync(&session, bin);
+    enc.sync(&session, bin, flags);
     bin.clear();  // next step
 
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // abs 3

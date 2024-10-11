@@ -108,7 +108,7 @@ return_t qpack_encoder::decode(http_header_compression_session* session, const b
     return ret;
 }
 
-return_t qpack_encoder::sync(http_header_compression_session* session, binary_t& target) {
+return_t qpack_encoder::sync(http_header_compression_session* session, binary_t& target, uint32 flags) {
     return_t ret = errorcode_t::success;
     /**
      * RFC 9204 4.5.1.  Encoded Field Section Prefix
@@ -128,17 +128,21 @@ return_t qpack_encoder::sync(http_header_compression_session* session, binary_t&
      */
     if (session) {
         size_t respsize = 0;
+        size_t base = 0;
 
-        qpack_section_prefix_t req_prefix(_tobe_sync, 0);
-        qpack_section_prefix_t resp_prefix;
-        respsize = sizeof(qpack_section_prefix_t);
-        session->query(qpack_cmd_section_prefix, &req_prefix, sizeof(req_prefix), &resp_prefix, respsize);
+        if (qpack_postbase_index & flags) {
+            base = 0;
+        } else {
+            base = _tobe_sync;
+        }
+
+        qpack_section_prefix_t fsp(session->get_capacity(), _tobe_sync, base);
 
         binary_t temp;
-        temp.push_back(resp_prefix.ric);
-        uint8 mask = resp_prefix.sign() ? 0x80 : 0x00;
+        temp.push_back(fsp.eic);
+        uint8 mask = fsp.sign() ? 0x80 : 0x00;
         uint8 prefix = 7;
-        encode_int(temp, mask, prefix, resp_prefix.base);
+        encode_int(temp, mask, prefix, fsp.delta);
         target.insert(target.begin(), temp.begin(), temp.end());
 
         _tobe_sync = 0;

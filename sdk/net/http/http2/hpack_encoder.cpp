@@ -144,7 +144,7 @@ return_t hpack_encoder::decode(http_header_compression_session* session, const b
     return ret;
 }
 
-return_t hpack_encoder::sync(http_header_compression_session* session, binary_t& target) { return errorcode_t::success; }
+return_t hpack_encoder::sync(http_header_compression_session* session, binary_t& target, uint32 flags) { return errorcode_t::success; }
 
 hpack_encoder& hpack_encoder::encode_header(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,
                                             uint32 flags) {

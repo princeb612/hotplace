@@ -11,6 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
 #define __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
 
+#include <math.h>
+
 #include <sdk/base/basic/huffman_coding.hpp>
 
 namespace hotplace {
@@ -87,13 +89,14 @@ class http_header_compression {
      * @brief   synchronize
      * @param   http_header_compression_session* session [in] dynamic table
      * @param   binary_t& target [out]
+     * @param   uint32 flags [inopt]
      * @remarks
      *          // sketch
      *          qpackenc.encode
      *          qpackenc.encode
      *          qpackenc.sync -> generate the QPACK field section prefix
      */
-    virtual return_t sync(http_header_compression_session* session, binary_t& target);
+    virtual return_t sync(http_header_compression_session* session, binary_t& target, uint32 flags = 0);
 
     /**
      * @brief   Integer Representation
@@ -217,15 +220,60 @@ enum header_compression_cmd_t {
     hpack_cmd_dropped = 2,
     qpack_cmd_dropped = 2,
     qpack_cmd_postbase_index = 3,
-    qpack_cmd_section_prefix = 4,
+    qpack_cmd_capacity = 4,
 };
 
 struct qpack_section_prefix_t {
+    size_t capacity;
     size_t ric;
     size_t base;
+    size_t eic;
+    size_t delta;
 
-    qpack_section_prefix_t() : ric(0), base(0) {}
-    qpack_section_prefix_t(size_t c, size_t b) : ric(c), base(b) {}
+    qpack_section_prefix_t(size_t c) : capacity(c), ric(0), base(0), eic(0), delta(0) {}
+    qpack_section_prefix_t(size_t c, size_t r, size_t b) : capacity(c), ric(r), base(b), eic(0), delta(0) { calc(); }
+    qpack_section_prefix_t(const qpack_section_prefix_t& rhs) : capacity(rhs.capacity), ric(rhs.ric), base(rhs.base), eic(rhs.eic), delta(rhs.delta) { calc(); }
+    qpack_section_prefix_t(qpack_section_prefix_t* rhs) {
+        copyfrom(rhs);
+        calc();
+    }
+    void copyfrom(qpack_section_prefix_t* rhs) {
+        if (rhs) {
+            capacity = rhs->capacity;
+            ric = rhs->ric;
+            base = rhs->base;
+            eic = rhs->eic;
+            delta = rhs->delta;
+        }
+    }
+    void calc() {
+        if ((0 == eic) && (0 == delta)) {
+            /* RFC 9204 4.5.1.1.  Required Insert Count
+             *  if (ReqInsertCount) EncInsertCount = (ReqInsertCount mod (2 * MaxEntries)) + 1
+             *  else EncInsertCount = 0;
+             */
+            if (0 == ric) {
+                eic = ric;
+            } else {
+                size_t maxentries = ::floor(capacity / 32);
+                eic = (ric % (2 * maxentries)) + 1;
+            }
+            /* RFC 9204 4.5.1.2.  Base
+             *  A Sign bit of 1 indicates that the Base is less than the Required Insert Count
+             *
+             *  if (0 == Sign) Base = DeltaBase + ReqInsertCount
+             *  else Base = ReqInsertCount - DeltaBase - 1
+             *
+             *  if (0 == Sign) DeltaBase = Base - ReqInsertCount
+             *  else DeltaBase = ReqInsertCount - Base - 1
+             */
+            if (sign()) {
+                delta = ric - base - 1;
+            } else {
+                delta = ric - base;
+            }
+        }
+    }
     bool sign() { return ric > base; }
 };
 
@@ -274,6 +322,11 @@ class http_header_compression_session {
      * @brief   capacity
      */
     void set_capacity(uint32 capacity);
+    size_t get_capacity();
+    /**
+     * @brief   table size
+     */
+    size_t get_tablesize();
     /**
      * @brief   HPACK/QPACK query function
      * @param   int cmd [in] see header_compression_cmd_t

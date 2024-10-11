@@ -53,39 +53,6 @@ return_t qpack_session::query(int cmd, void* req, size_t reqsize, void* resp, si
                     ret = errorcode_t::bad_request;
                 }
                 break;
-            case qpack_cmd_section_prefix:
-                if (req && (sizeof(qpack_section_prefix_t) == reqsize)) {
-                    qpack_section_prefix_t* req_section_prefix = (qpack_section_prefix_t*)req;
-                    qpack_section_prefix_t* resp_section_prefix = (qpack_section_prefix_t*)resp;
-                    const auto& ric = req_section_prefix->ric;
-                    const auto& reqbase = req_section_prefix->base;
-                    auto& respinscnt = resp_section_prefix->ric;
-                    auto& respbase = resp_section_prefix->base;
-
-                    respsize = sizeof(qpack_section_prefix_t);
-                    /* RFC 9204 4.5.1.1.  Required Insert Count
-                     *  if (ReqInsertCount) EncInsertCount = (ReqInsertCount mod (2 * MaxEntries)) + 1
-                     *  else EncInsertCount = 0;
-                     */
-                    if (0 == ric) {
-                        respinscnt = ric;
-                    } else {
-                        respinscnt = (ric % (2 * _capacity)) + 1;
-                    }
-                    /* RFC 9204 4.5.1.2.  Base
-                     *  A Sign bit of 1 indicates that the Base is less than the Required Insert Count
-                     *  if (0 == Sign) Base = DeltaBase + ReqInsertCount
-                     *  else Base = ReqInsertCount - DeltaBase - 1
-                     */
-                    if (req_section_prefix->sign()) {
-                        respbase = ric - reqbase - 1;
-                    } else {
-                        respbase = ric + reqbase;
-                    }
-                } else {
-                    ret = errorcode_t::bad_request;
-                }
-                break;
             default:
                 ret = errorcode_t::not_supported;
                 break;

@@ -29,7 +29,7 @@ return_t http_header_compression::decode(http_header_compression_session* sessio
     return errorcode_t::success;
 }
 
-return_t http_header_compression::sync(http_header_compression_session* session, binary_t& target) { return errorcode_t::success; }
+return_t http_header_compression::sync(http_header_compression_session* session, binary_t& target, uint32 flags) { return errorcode_t::success; }
 
 return_t http_header_compression::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value) {
     return_t ret = errorcode_t::success;

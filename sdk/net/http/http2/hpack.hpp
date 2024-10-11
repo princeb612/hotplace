@@ -137,9 +137,10 @@ class hpack_encoder : public http_header_compression {
      * @brief   reserved
      * @param   http_header_compression_session* session [in] dynamic table
      * @param   binary_t& target [out]
+     * @param   uint32 flags [inopt]
      * @remarks do nothing
      */
-    virtual return_t sync(http_header_compression_session* session, binary_t& target);
+    virtual return_t sync(http_header_compression_session* session, binary_t& target, uint32 flags = 0);
 
     /**
      * @brief   encode (header compression)
@@ -229,38 +230,6 @@ class hpack_encoder : public http_header_compression {
 class hpack_session : public http_header_compression_session {
    public:
     hpack_session();
-    // hpack_session(const hpack_session& rhs);
-
-    // hpack_session& set_capacity(uint32 capacity);
-
-    // bool operator==(const hpack_session& rhs);
-    // bool operator!=(const hpack_session& rhs);
-    // void for_each(std::function<void(const std::string&, const std::string&)> v);
-
-    /**
-     * @brief   match
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     * @param   size_t& index [out]
-     */
-    // virtual match_result_t match(const std::string& name, const std::string& value, size_t& index);
-    /**
-     * @brief   select
-     * @param   size_t index [in]
-     * @param   std::string& name [out]
-     * @param   std::string& value [out]
-     */
-    // virtual return_t select(size_t index, std::string& name, std::string& value);
-    /**
-     * @brief   insert
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     */
-    // virtual return_t insert(const std::string& name, const std::string& value);
-    /**
-     * @brief   evict
-     */
-    // virtual return_t evict();
     /**
      * @brief   HPACK query function
      * @param   int cmd [in] see header_compression_cmd_t
@@ -270,21 +239,6 @@ class hpack_session : public http_header_compression_session {
      * @param   size_t& respsize [inout]
      */
     virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
-
-   private:
-    // uint32 _capacity;
-    //
-    // typedef http_header_compression::table_entry_t table_entry_t;
-    // typedef std::multimap<std::string, table_entry_t> dynamic_map_t;
-    // typedef std::map<size_t, std::string> dynamic_reversemap_t;
-    // typedef std::map<size_t, size_t> entry_size_t;  // map<entry, size of entry>
-    //
-    // dynamic_map_t _dynamic_map;
-    // dynamic_reversemap_t _dynamic_reversemap;
-    // entry_size_t _entry_size;
-    // size_t _inserted;
-    // size_t _dropped;
-    // size_t _tablesize;
 };
 
 }  // namespace net

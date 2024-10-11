@@ -50,13 +50,14 @@ class qpack_encoder : public http_header_compression {
      * @brief   synchronize
      * @param   http_header_compression_session* session [in] dynamic table
      * @param   binary_t& target [out]
+     * @param   uint32 flags [inopt]
      * @remarks
      *          // sketch
      *          qpackenc.encode
      *          qpackenc.encode
      *          qpackenc.sync -> generate the QPACK field section prefix
      */
-    virtual return_t sync(http_header_compression_session* session, binary_t& target);
+    virtual return_t sync(http_header_compression_session* session, binary_t& target, uint32 flags = 0);
 
     /**
      * @brief   encode (header compression)
