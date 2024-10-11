@@ -23,7 +23,142 @@ hpack_encoder::hpack_encoder() : http_header_compression() {
     });
 }
 
-hpack_encoder& hpack_encoder::encode_index(binary_t& target, uint8 index) {
+return_t hpack_encoder::encode(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    match_result_t state = match_result_t::not_matched;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        size_t index = 0;
+
+        state = match(session, 0, name, value, index);
+        switch (state) {
+            case match_result_t::all_matched:
+            case match_result_t::all_matched_dynamic:
+                encode_index(target, index);
+                break;
+            case match_result_t::key_matched:
+            case match_result_t::key_matched_dynamic:
+                encode_indexed_name(target, flags, index, value);
+                if (hpack_indexing & flags) {
+                    session->insert(name, value);
+                }
+                break;
+            default:
+                encode_name_value(target, flags, name, value);
+                if (hpack_indexing & flags) {
+                    session->insert(name, value);
+                }
+                break;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t hpack_encoder::decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                               std::string& value) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if ((nullptr == session) || (nullptr == source)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        byte_t b = source[pos];
+        uint8 mask = 0;
+        uint8 prefix = 0;
+        uint32 flags = 0;
+        if (0x80 & b) {
+            // index
+            mask = 0x80;
+            prefix = 7;
+            flags |= hpack_layout_index;
+        } else if (0x40 & b) {
+            // indexing
+            mask = 0x40;
+            prefix = 6;
+            flags |= hpack_indexing;
+            if (0x3f & b) {
+                flags |= hpack_layout_indexed_name;
+            } else {
+                flags |= hpack_layout_name_value;
+            }
+        } else if (0xf0 & ~b) {
+            // without indexing
+            mask = 0x00;
+            prefix = 4;
+            flags |= hpack_wo_indexing;
+            if (0x0f & b) {
+                flags |= hpack_layout_indexed_name;
+            } else {
+                flags |= hpack_layout_name_value;
+            }
+        } else if (0x10 & b) {
+            // never indexed
+            mask = 0x10;
+            prefix = 4;
+            flags |= hpack_never_indexed;
+            if (0x0f & b) {
+                flags |= hpack_layout_indexed_name;
+            } else {
+                flags |= hpack_layout_name_value;
+            }
+        }
+
+        size_t i = 0;
+        size_t idx = 0;
+        if (hpack_layout_index & flags) {
+            decode_int(source, pos, mask, prefix, i);
+            select(session, flags, i, name, value);
+        } else if (hpack_layout_indexed_name & flags) {
+            decode_int(source, pos, mask, prefix, i);
+            select(session, flags, i, name, value);
+            decode_string(source, pos, flags, value);
+        } else if (hpack_layout_name_value & flags) {
+            pos++;
+            decode_string(source, pos, flags, name);
+            decode_string(source, pos, flags, value);
+        }
+
+        if (hpack_indexing & flags) {
+            auto r = match(session, 0, name, value, idx);
+            switch (r) {
+                case all_matched:
+                case all_matched_dynamic:
+                    break;
+                default:
+                    session->insert(name, value);
+                    break;
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t hpack_encoder::sync(http_header_compression_session* session, binary_t& target) { return errorcode_t::success; }
+
+hpack_encoder& hpack_encoder::encode_header(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,
+                                            uint32 flags) {
+    encode(session, target, name, value, flags);
+    return *this;
+}
+
+hpack_encoder& hpack_encoder::decode_header(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                            std::string& value) {
+    decode(session, source, size, pos, name, value);
+    return *this;
+}
+
+hpack_encoder& hpack_encoder::encode_index(binary_t& target, size_t index) {
     // RFC 7541 Figure 5: Indexed Header Field
     //
     //     0   1   2   3   4   5   6   7
@@ -35,14 +170,14 @@ hpack_encoder& hpack_encoder::encode_index(binary_t& target, uint8 index) {
     return *this;
 }
 
-hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const char* value) {
+hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, size_t index, const char* value) {
     if (value) {
         encode_indexed_name(target, flags, index, value, strlen(value));
     }
     return *this;
 }
 
-hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const char* value, size_t size) {
+hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, size_t index, const char* value, size_t size) {
     __try2 {
         if (nullptr == value) {
             __leave2;
@@ -89,7 +224,7 @@ hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags
     return *this;
 }
 
-hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const std::string& value) {
+hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags, size_t index, const std::string& value) {
     encode_indexed_name(target, flags, index, value.c_str(), value.size());
     return *this;
 }
@@ -155,100 +290,6 @@ hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, 
 
 hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, const std::string& name, const std::string& value) {
     encode_name_value(target, flags, name.c_str(), name.size(), value.c_str(), value.size());
-    return *this;
-}
-
-hpack_encoder& hpack_encoder::encode_header(hpack_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
-    match_result_t state = match_result_t::not_matched;
-    if (session) {
-        size_t index = 0;
-
-        state = match(session, name, value, index);
-        switch (state) {
-            case match_result_t::all_matched:
-                encode_index(target, index);
-                break;
-            case match_result_t::key_matched:
-                encode_indexed_name(target, flags, index, value);
-                if (hpack_indexing & flags) {
-                    session->insert(name, value);
-                }
-                break;
-            default:
-                encode_name_value(target, flags, name, value);
-                if (hpack_indexing & flags) {
-                    session->insert(name, value);
-                }
-                break;
-        }
-    }
-    return *this;
-}
-
-hpack_encoder& hpack_encoder::decode_header(hpack_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
-    if (session && source) {
-        byte_t b = source[pos];
-        uint8 mask = 0;
-        uint8 prefix = 0;
-        uint32 flags = 0;
-        if (0x80 & b) {
-            // index
-            mask = 0x80;
-            prefix = 7;
-            flags |= hpack_index;
-        } else if (0x40 & b) {
-            // indexing
-            mask = 0x40;
-            prefix = 6;
-            flags |= hpack_indexing;
-            if (0x3f & b) {
-                flags |= hpack_indexed_name;
-            } else {
-                flags |= hpack_name_value;
-            }
-        } else if (0xf0 & ~b) {
-            // without indexing
-            mask = 0x00;
-            prefix = 4;
-            flags |= hpack_wo_indexing;
-            if (0x0f & b) {
-                flags |= hpack_indexed_name;
-            } else {
-                flags |= hpack_name_value;
-            }
-        } else if (0x10 & b) {
-            // never indexed
-            mask = 0x10;
-            prefix = 4;
-            flags |= hpack_never_indexed;
-            if (0x0f & b) {
-                flags |= hpack_indexed_name;
-            } else {
-                flags |= hpack_name_value;
-            }
-        }
-
-        size_t i = 0;
-        size_t idx = 0;
-        if (hpack_index & flags) {
-            decode_int(source, pos, mask, prefix, i);
-            select(session, flags, i, name, value);
-        } else if (hpack_indexed_name & flags) {
-            decode_int(source, pos, mask, prefix, i);
-            select(session, flags, i, name, value);
-            decode_string(source, pos, flags, value);
-        } else if (hpack_name_value & flags) {
-            pos++;
-            decode_string(source, pos, flags, name);
-            decode_string(source, pos, flags, value);
-        }
-
-        if (hpack_indexing & flags) {
-            if (all_matched != match(session, name, value, idx)) {
-                session->insert(name, value);
-            }
-        }
-    }
     return *this;
 }
 

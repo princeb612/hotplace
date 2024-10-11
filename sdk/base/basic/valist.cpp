@@ -371,6 +371,12 @@ void valist::build() {
             __leave2;
         }
 
+        /**
+         * va_arg
+         *                      linux   windows
+         *  type promotion        O        O
+         *  compiler warning      -        O
+         */
 #if defined __linux__
 
         int pos = 0;
@@ -462,6 +468,7 @@ void valist::build() {
         u.ptr = arg_list;
         ap = u.ap;
 
+        /* avoid compiler warning */
 #define va_assign_type_promotion_int(x) int
 #define va_assign_type_promotion_double(x) double
 

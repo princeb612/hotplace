@@ -914,7 +914,7 @@ void test_aho_corasick_wildcard() {
 char memberof_tolower(const char* source, size_t idx) { return source ? std::tolower(source[idx]) : char(); }
 
 void test_aho_corasick_ignorecase() {
-    _test_case.begin("t_aho_corasick + wildcards");
+    _test_case.begin("t_aho_corasick + wildcards + ignore case");
 
     struct testvector {
         const char* source;

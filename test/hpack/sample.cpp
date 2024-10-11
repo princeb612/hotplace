@@ -712,19 +712,19 @@ int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
-    logger_builder builder;
-    builder.set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
-    _logger.make_share(builder.build());
-
-    openssl_startup();
-    openssl_thread_setup();
-
     cmdline.make_share(new t_cmdline_t<OPTION>);
 
     *cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
     const OPTION& option = cmdline->value();
+
+    logger_builder builder;
+    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    _logger.make_share(builder.build());
+
+    openssl_startup();
+    openssl_thread_setup();
 
     _test_case.reset_time();
 

@@ -19,6 +19,18 @@ http_header_compression::http_header_compression() : _safe_mask(false) {
     _huffcode.imports(_h2hcodes);
 }
 
+return_t http_header_compression::encode(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,
+                                         uint32 flags) {
+    return errorcode_t::success;
+}
+
+return_t http_header_compression::decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                         std::string& value) {
+    return errorcode_t::success;
+}
+
+return_t http_header_compression::sync(http_header_compression_session* session, binary_t& target) { return errorcode_t::success; }
+
 return_t http_header_compression::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value) {
     return_t ret = errorcode_t::success;
     if ((1 <= prefix) && (prefix <= 8)) {
@@ -149,6 +161,10 @@ return_t http_header_compression::encode_string(binary_t& target, uint32 flags, 
     return ret;
 }
 
+return_t http_header_compression::encode_string(binary_t& target, uint32 flags, const std::string& value) {
+    return encode_string(target, flags, value.c_str(), value.size());
+}
+
 return_t http_header_compression::decode_string(const byte_t* p, size_t& pos, uint8 flags, std::string& value) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -198,7 +214,8 @@ return_t http_header_compression::set_dynamic_table_size(binary_t& target, uint8
 
 void http_header_compression::safe_mask(bool enable) { _safe_mask = enable; }
 
-match_result_t http_header_compression::match(http_header_compression_session* session, const std::string& name, const std::string& value, size_t& index) {
+match_result_t http_header_compression::match(http_header_compression_session* session, uint32 flags, const std::string& name, const std::string& value,
+                                              size_t& index) {
     match_result_t state = match_result_t::not_matched;
     index = 0;
 
@@ -240,7 +257,7 @@ return_t http_header_compression::select(http_header_compression_session* sessio
         }
 
         if (index > _static_table.size()) {
-            ret = session->select(flags, index, name, value);
+            ret = session->select(index, name, value);
         } else {
             static_table_index_t::iterator iter = _static_table_index.find(index);
             if (_static_table_index.end() == iter) {
@@ -248,7 +265,7 @@ return_t http_header_compression::select(http_header_compression_session* sessio
                 __leave2;
             } else {
                 name = iter->second.first;
-                if ((hpack_index | hpack_name_value) & flags) {
+                if ((hpack_layout_index | hpack_layout_name_value) & flags) {
                     value = iter->second.second;
                 }
             }

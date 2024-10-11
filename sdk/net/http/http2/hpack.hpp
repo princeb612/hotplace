@@ -111,62 +111,89 @@ class hpack {
  *
  */
 class hpack_encoder : public http_header_compression {
-    friend class hpack_session;
-
    public:
     hpack_encoder();
 
     /**
      * @brief   encode (header compression)
-     * @param   hpack_session* session [in] dynamic table
+     * @param   http_header_compression_session* session [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
-     * @param   uint32 flags [inopt]
+     * @param   uint32 flags [inopt] see http_header_compression_flag_t
      */
-    hpack_encoder& encode_header(hpack_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+    virtual return_t encode(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   hpack_session* session [in] dynamic table
+     * @param   http_header_compression_session* session [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
      * @param   std::string& name [in]
      * @param   std::string& value [in]
      */
-    hpack_encoder& decode_header(hpack_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    virtual return_t decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    /**
+     * @brief   reserved
+     * @param   http_header_compression_session* session [in] dynamic table
+     * @param   binary_t& target [out]
+     * @remarks do nothing
+     */
+    virtual return_t sync(http_header_compression_session* session, binary_t& target);
+
+    /**
+     * @brief   encode (header compression)
+     * @param   http_header_compression_session* session [in] dynamic table
+     * @param   binary_t& target [out]
+     * @param   const std::string& name [in]
+     * @param   const std::string& value [in]
+     * @param   uint32 flags [inopt] see http_header_compression_flag_t
+     */
+    hpack_encoder& encode_header(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,
+                                 uint32 flags = 0);
+    /**
+     * @brief   decode (header compression)
+     * @param   http_header_compression_session* session [in] dynamic table
+     * @param   const byte_t* source [in]
+     * @param   size_t size [in]
+     * @param   size_t& pos [in]
+     * @param   std::string& name [in]
+     * @param   std::string& value [in]
+     */
+    hpack_encoder& decode_header(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                 std::string& value);
 
     /**
      * @brief   index
      * @param   binary_t& target [out]
-     * @param   uint8 index [in]
+     * @param   size_t index [in]
      */
-    hpack_encoder& encode_index(binary_t& target, uint8 index);
+    hpack_encoder& encode_index(binary_t& target, size_t index);
     /**
      * @bried   indexed name
      * @param   binary_t& target [out]
      * @param   uint32 flags [in]
-     * @param   uint8 index [in]
+     * @param   size_t index [in]
      * @param   const char* value [in]
      */
-    hpack_encoder& encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const char* value);
+    hpack_encoder& encode_indexed_name(binary_t& target, uint32 flags, size_t index, const char* value);
     /**
      * @bried   indexed name
      * @param   binary_t& target [out]
      * @param   uint32 flags [in]
-     * @param   uint8 index [in]
+     * @param   size_t index [in]
      * @param   const char* value [in]
      * @param   size_t size [in]
      */
-    hpack_encoder& encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const char* value, size_t size);
+    hpack_encoder& encode_indexed_name(binary_t& target, uint32 flags, size_t index, const char* value, size_t size);
     /**
      * @bried   indexed name
      * @param   binary_t& target [out]
      * @param   uint32 flags [in]
-     * @param   uint8 index [in]
+     * @param   size_t index [in]
      * @param   const std::string& value [in]
      */
-    hpack_encoder& encode_indexed_name(binary_t& target, uint32 flags, uint8 index, const std::string& value);
+    hpack_encoder& encode_indexed_name(binary_t& target, uint32 flags, size_t index, const std::string& value);
     /**
      * @brief   name value
      * @param   binary_t& target [out]
@@ -217,21 +244,47 @@ class hpack_session : public http_header_compression_session {
     bool operator!=(const hpack_session& rhs);
     void for_each(std::function<void(const std::string&, const std::string&)> v);
 
+    /**
+     * @brief   match
+     * @param   const std::string& name [in]
+     * @param   const std::string& value [in]
+     * @param   size_t& index [out]
+     */
     virtual match_result_t match(const std::string& name, const std::string& value, size_t& index);
-    virtual return_t select(uint32 flags, size_t index, std::string& name, std::string& value);
+    /**
+     * @brief   select
+     * @param   size_t index [in]
+     * @param   std::string& name [out]
+     * @param   std::string& value [out]
+     */
+    virtual return_t select(size_t index, std::string& name, std::string& value);
+    /**
+     * @brief   insert
+     * @param   const std::string& name [in]
+     * @param   const std::string& value [in]
+     */
     virtual return_t insert(const std::string& name, const std::string& value);
+    /**
+     * @brief   HPACK function
+     * @param   int cmd [in] see header_compression_cmd_t
+     * @param   void* req [in]
+     * @param   size_t reqsize [in]
+     * @param   void* resp [out]
+     * @param   size_t& respsize [inout]
+     */
+    virtual return_t ctrl(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
 
    private:
     uint32 _capacity;
 
-    typedef hpack_encoder::table_entry_t table_entry_t;
+    typedef http_header_compression::table_entry_t table_entry_t;
 #if PERFORMANCE_HPACK_DYNAMIC_TABLE_USING_MAP
     typedef std::multimap<std::string, table_entry_t> dynamic_map_t;
     typedef std::map<size_t, std::string> dynamic_reversemap_t;
     dynamic_map_t _dynamic_map;
     dynamic_reversemap_t _dynamic_reversemap;
-    uint32 _inserted;
-    uint32 _dropped;
+    size_t _inserted;
+    size_t _dropped;
 #else
     typedef std::list<std::pair<std::string, table_entry_t> > dynamic_table_t;
     dynamic_table_t _dynamic_table;

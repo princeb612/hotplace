@@ -197,6 +197,7 @@ return_t base16_decode(const char* source, size_t size, binary_t& outpart, uint3
         }
 
         size_t cur = 0;
+        /* ignore 0x prefix*/
         if ((size > 2) && (0 == strnicmp(source, "0x", 2))) {
             cur = 2;
         }
@@ -235,15 +236,19 @@ return_t base16_decode(const char* source, size_t size, stream_t* stream, uint32
         }
 
         size_t cur = 0;
+        /* ignore 0x prefix*/
         if ((size > 2) && (0 == strnicmp(source, "0x", 2))) {
             cur = 2;
         }
 
-        if (size % 2) { /* support NIST CAVP test vector */
+        /* case of an odd size - NIST CAVP test vector */
+        if (size % 2) {
             byte_t i = 0;
             i += conv(source[cur++]);
             stream->printf("%c", i);
         }
+
+        /* octet */
         for (; cur < size; cur += 2) {
             byte_t i = 0;
             i = conv(source[cur]) << 4;

@@ -45,8 +45,10 @@ huffman_coding &huffman_coding::learn() {
     _codetable.clear();
     _reverse_codetable.clear();
 
-    // _measure .. count(weight) by symbol, see hc_t::operator
-    // _btree   .. merge by weight until (1 == size()), see hc_comparator::operator
+    /**
+     * _measure .. count(weight) by symbol, see hc_t::operator
+     * _btree   .. merge by weight until (1 == size()), see hc_comparator::operator
+     */
 
     _measure.for_each([&](hc_t const &t) -> void { _btree.insert(t); });
 
@@ -229,11 +231,13 @@ return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_
             sum += code.size();
         }
 
-        // bits to bytes
-
-        // align (2^n) | (x + (align-1)) & ~(align-1) | output                      |
-        //      4      | (x + 3) & ~3                 | 1..4 -> 4, 5..8 -> 8, ...   |
-        //      8      | (x + 7) & ~7                 | 1..8 -> 8, 9..16 -> 16, ... |
+        /**
+         * bits to bytes
+         *
+         * align (2^n) | (x + (align-1)) & ~(align-1) | output                      |
+         *      4      | (x + 3) & ~3                 | 1..4 -> 4, 5..8 -> 8, ...   |
+         *      8      | (x + 7) & ~7                 | 1..8 -> 8, 9..16 -> 16, ... |
+         */
         size_expected = ((sum + 7) & ~7) >> 3;
     }
     __finally2 {
@@ -253,26 +257,28 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
     size_t i = 0;
     t_maphint_const<uint8, std::string> hint(_codetable);
 
-    // RFC 7541 Appendix B.  Huffman Code
-    // As the Huffman-encoded data doesn't always end at an octet boundary,
-    // some padding is inserted after it, up to the next octet boundary.
-
-    // RFC 7541 5.2. String Literal Representation
-    // As the Huffman-encoded data doesn't always end at an octet boundary,
-    // some padding is inserted after it, up to the next octet boundary.  To
-    // prevent this padding from being misinterpreted as part of the string
-    // literal, the most significant bits of the code corresponding to the
-    // EOS (end-of-string) symbol are used.
-
-    //  if min(code len in bits) >=  5 ... no problem while encode/decode
-    //      huffman_coding huff;
-    //      huff.imports(_h2hcodes);
-    //      // EOS 256 111111111111111111111111111111 3fffffff [30]
-    //  else min(code len in bits) < 5 ... ambiguous
-    //      // A |1010  a [4]
-    //      // B |1111  f [4]
-    //      // 1010 1111 -> AB
-    //      // 1010 pppp -> AB or A ?
+    /**
+     * RFC 7541 Appendix B.  Huffman Code
+     * As the Huffman-encoded data doesn't always end at an octet boundary,
+     * some padding is inserted after it, up to the next octet boundary.
+     *
+     * RFC 7541 5.2. String Literal Representation
+     * As the Huffman-encoded data doesn't always end at an octet boundary,
+     * some padding is inserted after it, up to the next octet boundary.  To
+     * prevent this padding from being misinterpreted as part of the string
+     * literal, the most significant bits of the code corresponding to the
+     * EOS (end-of-string) symbol are used.
+     *
+     *  if min(code len in bits) >=  5 ... no problem while encode/decode
+     *      huffman_coding huff;
+     *      huff.imports(_h2hcodes);
+     *      // EOS 256 111111111111111111111111111111 3fffffff [30]
+     *  else min(code len in bits) < 5 ... ambiguous
+     *      // A |1010  a [4]
+     *      // B |1111  f [4]
+     *      // 1010 1111 -> AB
+     *      // 1010 pppp -> AB or A ?
+     */
 
     __try2 {
         if (nullptr == source) {

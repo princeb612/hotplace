@@ -1,5 +1,7 @@
 # history
 
+* Revision 621
+
 * Revision 620
   * [changed] hpack_session (faster match/select using std::multimap)
 
@@ -9,6 +11,7 @@
   * [changed] separate http_header_compression from hpack_encoder
 
 * Revision 617
+  * [feature] DTLS on network_server (epoll/IOCP)
   * [tested] DTLS server (epoll)
 
 * Revision 615
@@ -48,6 +51,7 @@
   * [changed] connect_socket
 
 * Revision 601
+  * [feature] UDP on network_server (epoll/IOCP)
   * [changed] test/udpserver2 (udp server on network_server, epoll/iocp)
     * [changed] server_socket (recvfrom, sendto)
 
@@ -101,7 +105,7 @@
   * [changed] x509cert_open check errorcode_t::expired
 
 * Revision 584
-  * [changed] thread::join prototype changed
+  * [changed] thread::join
   * [changed] authenticode_verifier::verify
     * rename std::equal to operator ==
     * std::equal (a.begin(), a.end(), empty.begin()) stack overflow
@@ -110,6 +114,7 @@
   * [changed] file_stream::open (windows)
 
 * Revision 578
+  * [feature] Aho Corasick Algorithm + wildcard
   * [changed] t_aho_corasick_wildcard support wildcard any *
 
 * Revision 574
@@ -157,16 +162,16 @@
   * [added] t_wildcards
 
 * Revision 553
-  * [added] t_ukkonen
+  * [feature] Ukkonen algorithm
 
 * Revision 551
-  * [added] t_suffixtree
+  * [feature] suffix tree
 
 * Revision 550
-  * [added] t_trie
+  * [feature] trie
 
 * Revision 548
-  * [added] t_aho_corasick
+  * [feature] Aho Corasick algorithm
   * [added] variant::set_datetime, variant::operator =, variant::to_str, variant::to_hex, variant::to_bin
 
 * Revision 545
@@ -176,6 +181,7 @@
   * [added] bit_length, byte_capacity, byte_capacity_signed
 
 * Revision 541
+  * [feature] shortest path (djkstra)
   * [changed] t_graph::graph_dijkstra alternative paths
 
 * Revision 540
@@ -185,8 +191,8 @@
   * [added] ieee754_typeof_t is_typeof
 
 * Revision 536
-  * [added] parser
-  * [added] The Knuth-Morris-Pratt Algorithm
+  * [feature] parser
+  * [feature] Knuth-Morris-Pratt Algorithm
 
 * Revision 535
   * [changed] rename convert to tostring/tobin
@@ -204,17 +210,17 @@
   * [changed] const T& cmdline_t::option() const
 
 * Revision 524
-  * [added] logger
+  * [feature] logger
 
 * Revision 523
-  * [changed] HTTP/2
-  * [changed] network_stream changed
+  * [feature] RFC 7541, RFC 9113
+  * [changed] network_stream
 
 * Revision 522
   * [changed] network_session changed
 
 * Revision 516
-  * [changed] hpack_session implementation changed
+  * [changed] hpack_session
 
 * Revision 514
   * [added] enable_alpn_h2
@@ -229,10 +235,10 @@
   * [added] http_server_builder, hpack_session
 
 * Revision 506
-  * [changed] HPACK (RFC 7541)
+  * [feature] RFC 7541
 
 * Revision 504
-  * [added] huffman_coding
+  * [feature] huffman_coding
 
 * Revision 499
   * [changed] rename uint24_32 to i32_b24
@@ -251,6 +257,7 @@
   * [added] server_conf
 
 * Revision 486
+  * [feature] RFC 6749
   * [changed] OAuth 2.0 (RFC 6749)
 
 * Revision 483
@@ -285,9 +292,11 @@
   * [added] x509cert
 
 * Revision 455
+  * [feature] RFC 7616
   * [changed] http_digest_access_authenticate_provider (RFC 7616, userhash)
 
 * Revision 454
+  * [feature] RFC 2617
   * [changed] http_basic_authenticate_provider (RFC 2617)
 
 * Revision 452
@@ -303,7 +312,8 @@
   * [added] critical_section_guard
 
 * Revision 442
-  * [changed] COSE (valgrind tested)
+  * [feature] RFC 8152, RFC 8230, RFC 8392, RFC 8812, RFC 9052, RFC 9053, RFC 9338
+  * [tested] COSE (valgrind)
 
 * Revision 436
   * [added] crypto_key::generate_nid, crypto_key::generate_cose
@@ -479,13 +489,14 @@
   * [added] obfuscate_string, test_case_notimecheck
 
 * Revision 108
-  * [added] authenticode
+  * [feature] Authenticode
 
 * Revision 107
+  * [feature] RFC 7049, RFC 8949
   * [added] CBOR
 
 * Revision 106
-  * [added] ODBC
+  * [feature] ODBC
 
 * Revision 101
   * [changed] test_case::time_report
@@ -494,6 +505,7 @@
   * [changed] network_session (windows fix)
 
 * Revision 38
+  * [feature] RFC 4226, RFC 6238
   * [added] HOTP, TOTP
 
 * Revision 34

@@ -154,7 +154,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
 
             // RFC 7541 2.3.3.  Index Address Space
             // RFC 9113 6.5.2.  Defined Settings
-            // SETTINGS_HEADER_TABLE_SIZE (0x01)
+            //                  SETTINGS_HEADER_TABLE_SIZE (0x01)
             uint32 table_size = 0;
             if (errorcode_t::success == frame.find(0x1, table_size)) {
                 get_hpack_session().set_capacity(table_size);

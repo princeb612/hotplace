@@ -135,13 +135,14 @@ return_t simple_http2_server(void*) {
             .enable_ipv4(true)       // enable IPv4
             .enable_ipv6(false)      // disable IPv6
             .enable_h2(true)         // enable HTTP/2
-            .set_handler(consume_routine)
-            .trace([](stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); });
+            .set_handler(consume_routine);
         builder.get_server_conf()
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
             .set(netserver_config_t::serverconf_concurrent_network, 2)
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
         if (option.verbose) {
+            auto trace_handler = [](stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); };
+            builder.trace(trace_handler);
             builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
         }
         _http_server.make_share(builder.build());

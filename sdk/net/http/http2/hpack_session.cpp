@@ -90,7 +90,7 @@ match_result_t hpack_session::match(const std::string& name, const std::string& 
         const auto& k = iter->first;
         const auto& v = iter->second;
         if ((name == k) && (value == v.first)) {
-            state = match_result_t::all_matched;
+            state = match_result_t::all_matched_dynamic;
             /**
              * get index from v.second
              *
@@ -117,7 +117,7 @@ match_result_t hpack_session::match(const std::string& name, const std::string& 
         const auto& k = pair.first;
         const auto& v = pair.second;
         if ((name == k) && (value == v.first)) {
-            state = match_result_t::all_matched;
+            state = match_result_t::all_matched_dynamic;
             index = idx;
             auto static_entries = http_resource::get_instance()->sizeof_hpack_static_table_entries();
             index += (static_entries + 1);
@@ -129,7 +129,7 @@ match_result_t hpack_session::match(const std::string& name, const std::string& 
     return state;
 }
 
-return_t hpack_session::select(uint32 flags, size_t index, std::string& name, std::string& value) {
+return_t hpack_session::select(size_t index, std::string& name, std::string& value) {
     return_t ret = errorcode_t::not_found;
 
     __try2 {
@@ -233,6 +233,38 @@ return_t hpack_session::insert(const std::string& name, const std::string& value
     _dynamic_table.push_front(std::make_pair(name, std::make_pair(value, 0)));  // insert
 #endif
 
+    return ret;
+}
+
+return_t hpack_session::ctrl(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if ((nullptr == resp) || (respsize < sizeof(size_t))) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        switch (cmd) {
+            case hpack_cmd_size: {
+                respsize = sizeof(size_t);
+                auto tablesize = _dynamic_map.size();
+                memcpy(resp, &tablesize, respsize);
+            } break;
+            case hpack_cmd_inserted:
+                respsize = sizeof(size_t);
+                memcpy(resp, &_inserted, respsize);
+                break;
+            case hpack_cmd_dropped:
+                respsize = sizeof(size_t);
+                memcpy(resp, &_dropped, respsize);
+                break;
+            default:
+                ret = errorcode_t::not_supported;
+                break;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
