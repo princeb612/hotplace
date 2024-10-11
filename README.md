@@ -142,14 +142,17 @@
     * test/hash/
     * test/sign/
 
-* JOSE
-  * RFC 7638 3.1.  Example JWK Thumbprint Computation
-    * test/jose/
-* TLS
+  * RFC 4347 Datagram Transport Layer Security
+  * RFC 6347 Datagram Transport Layer Security Version 1.2
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
   * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
     * sdk/net/tls/
     * test/tlsserver/
+    * test/dtlsserver/
+
+* JOSE
+  * RFC 7638 3.1.  Example JWK Thumbprint Computation
+    * test/jose/
 * IEEE 754
   * half/single/double precision floating point
     * test/ieee754/
@@ -162,8 +165,6 @@
 * HTTP/1.1
   * RFC 2817 Upgrading to TLS Within HTTP/1.1
 * HTTP/3
-  * RFC 4347 Datagram Transport Layer Security
-  * RFC 6347 Datagram Transport Layer Security Version 1.2
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
   * RFC 9204 QPACK: Field Compression for HTTP/3
   * RFC 9114 HTTP/3

@@ -153,6 +153,16 @@ class http_header_compression {
      *          RFC 9204 4.3.1.  Set Dynamic Table Capacity
      */
     return_t set_dynamic_table_size(binary_t& target, uint8 maxsize);
+    /**
+     * @brief   size of entry
+     * @param   const std::string& name [in]
+     * @param   const std::string& value [in]
+     * @param   size_t& size [out]
+     * @remarks
+     *          RFC 7541 4.1.  Calculating Table Size
+     *          RFC 9204 3.2.1.  Dynamic Table Size
+     */
+    static return_t sizeof_entry(const std::string& name, const std::string& value, size_t& size);
     /*
      * @brief   safe mask
      * @param   bool enable [in]
@@ -200,8 +210,8 @@ class http_header_compression {
 };
 
 enum header_compression_cmd_t {
-    hpack_cmd_size = 0,
-    qpack_cmd_size = 0,
+    hpack_cmd_tablesize = 0,
+    qpack_cmd_tablesize = 0,
     hpack_cmd_inserted = 1,
     qpack_cmd_inserted = 1,
     hpack_cmd_dropped = 2,
@@ -225,37 +235,70 @@ struct qpack_section_prefix_t {
  */
 class http_header_compression_session {
    public:
-    http_header_compression_session(){};
+    http_header_compression_session();
 
+    /**
+     * @brief   for_each
+     */
+    void for_each(std::function<void(const std::string&, const std::string&)> v);
+    /**
+     * @brief   compare
+     */
+    bool operator==(const http_header_compression_session& rhs);
+    bool operator!=(const http_header_compression_session& rhs);
     /**
      * @brief   match
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   size_t& index [out]
      */
-    virtual match_result_t match(const std::string& name, const std::string& value, size_t& index) = 0;
+    virtual match_result_t match(const std::string& name, const std::string& value, size_t& index);
     /**
      * @brief   select
      * @param   size_t index [in]
      * @param   std::string& name [out]
      * @param   std::string& value [out]
      */
-    virtual return_t select(size_t index, std::string& name, std::string& value) = 0;
+    virtual return_t select(size_t index, std::string& name, std::string& value);
     /**
      * @brief   insert
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      */
-    virtual return_t insert(const std::string& name, const std::string& value) = 0;
+    virtual return_t insert(const std::string& name, const std::string& value);
     /**
-     * @brief   HPACK/QPACK ctrl function
+     * @brief   evict
+     */
+    virtual return_t evict();
+    /**
+     * @brief   capacity
+     */
+    void set_capacity(uint32 capacity);
+    /**
+     * @brief   HPACK/QPACK query function
      * @param   int cmd [in] see header_compression_cmd_t
      * @param   void* req [in]
      * @param   size_t reqsize [in]
      * @param   void* resp [out]
      * @param   size_t& respsize [inout]
      */
-    virtual return_t ctrl(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) = 0;
+    virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
+
+   protected:
+    typedef http_header_compression::table_entry_t table_entry_t;
+    typedef std::multimap<std::string, table_entry_t> dynamic_map_t;
+    typedef std::map<size_t, std::string> dynamic_reversemap_t;
+    typedef std::map<size_t, size_t> entry_size_t;  // map<entry, size of entry>
+
+    dynamic_map_t _dynamic_map;
+    dynamic_reversemap_t _dynamic_reversemap;
+    entry_size_t _entry_size;
+
+    bool _separate;  // false:HPACK, true:QPACK
+    uint32 _capacity;
+    size_t _tablesize;
+    size_t _inserted;
+    size_t _dropped;
 };
 
 /*

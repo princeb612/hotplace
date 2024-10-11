@@ -153,45 +153,14 @@ class qpack_session : public http_header_compression_session {
     qpack_session();
 
     /**
-     * @brief   match
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     * @param   size_t& index [out]
-     */
-    virtual match_result_t match(const std::string& name, const std::string& value, size_t& index);
-    /**
-     * @brief   select
-     * @param   size_t index [in]
-     * @param   std::string& name [out]
-     * @param   std::string& value [out]
-     */
-    virtual return_t select(size_t index, std::string& name, std::string& value);
-    /**
-     * @brief   insert
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     */
-    virtual return_t insert(const std::string& name, const std::string& value);
-    /**
-     * @brief   QPACK function
+     * @brief   QPACK query function
      * @param   int cmd [in] see header_compression_cmd_t
      * @param   void* req [in]
      * @param   size_t reqsize [in]
      * @param   void* resp [out]
      * @param   size_t& respsize [inout]
      */
-    virtual return_t ctrl(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
-
-   private:
-    uint32 _capacity;
-
-    typedef http_header_compression::table_entry_t table_entry_t;
-    typedef std::multimap<std::string, table_entry_t> dynamic_map_t;
-    typedef std::map<size_t, std::string> dynamic_reversemap_t;
-    dynamic_map_t _dynamic_map;
-    dynamic_reversemap_t _dynamic_reversemap;
-    size_t _inserted;
-    size_t _dropped;
+    virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
 };
 
 }  // namespace net

@@ -1,6 +1,10 @@
 # history
 
+* Revision 622
+  * [changed] HPACK/QPACK eviction
+
 * Revision 621
+  * [changed] hpack_encoder::encode series (change index type from uint8 to size_t)
 
 * Revision 620
   * [changed] hpack_session (faster match/select using std::multimap)

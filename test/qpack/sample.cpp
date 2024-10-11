@@ -9,6 +9,14 @@
  * Revision History
  * Date         Name                Description
  *
+ * sketch
+ *     insert field line
+ *         flags |= qpack_indexing;
+ *         encode(..., flags);
+ *     field section
+ *         flags &= ~qpack_indexing;
+ *         encode(..., flags);
+ *         sync(...); // prefix
  * TODO
  *  - understand RIC and Base (B.4)
  *  - decoder not implemented yet
@@ -44,6 +52,17 @@ void test_expect(binary_t& bin, const char* expect, bool flush, const char* text
     }
 }
 
+void next_step(binary_t& bin, bool flush, const char* text) {
+    if (text) {
+        _logger->hdump(text, bin);
+    } else {
+        _logger->dump(bin);
+    }
+    if (flush) {
+        bin.clear();
+    }
+}
+
 void tet_rfc9204_b1() {
     /**
      * Data                | Interpretation
@@ -63,9 +82,11 @@ void tet_rfc9204_b1() {
     qpack_encoder enc;
     qpack_session session;
     binary_t bin;
+    uint32 flags = 0;
 
-    enc.encode(&session, bin, ":path", "/index.html");  // wo qpack_indexing
-    enc.sync(&session, bin);                            // field section prefix
+    // field section
+    enc.encode(&session, bin, ":path", "/index.html", flags);
+    enc.sync(&session, bin);
 
     const char* expect2 = "0000 510b 2f69 6e64 6578 2e68 746d 6c";
     test_expect(bin, expect2, true, "B.1.  Literal Field Line with Name Reference #1");
@@ -97,6 +118,7 @@ void tet_rfc9204_b2() {
     const char* expect1 = "3fbd01";
     test_expect(bin, expect1, true, "B.2.  Dynamic Table #1");
 
+    // insert field line
     flags = qpack_indexing | qpack_intermediary;
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // abs 0
     enc.encode(&session, bin, ":path", "/sample/path", flags);          // abs 1
@@ -121,6 +143,7 @@ void tet_rfc9204_b2() {
      *
      */
 
+    // field section
     flags = qpack_postbase_index;
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // ref++
     enc.encode(&session, bin, ":path", "/sample/path", flags);          // ref++
@@ -144,7 +167,7 @@ void tet_rfc9204_b2() {
     enc.ack(bin, streamid);
 
     const char* expect5 = "84";
-    test_expect(bin, expect5, true, "B.2.  Dynamic Table #5");
+    test_expect(bin, expect5, true, "B.2.  Dynamic Table #4");
 }
 
 void tet_rfc9204_b3() {
@@ -154,12 +177,14 @@ void tet_rfc9204_b3() {
     uint32 flags = 0;
     binary_t bin;
 
+    // insert field line
     flags = qpack_indexing | qpack_intermediary;
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // abs 0
     enc.encode(&session, bin, ":path", "/sample/path", flags);          // abs 1
     enc.sync(&session, bin);
-    _logger->dump(bin);
-    bin.clear();  // next step
+
+    next_step(bin, true, "B.3.  Speculative Insert #1");
+
     /**
      *   Stream: Encoder
      *   4a63 7573 746f 6d2d | Insert With Literal Name
@@ -174,8 +199,9 @@ void tet_rfc9204_b3() {
      *                                 Size=160
      */
     ret = enc.encode(&session, bin, "custom-key", "custom-value", flags);  // abs 2
-    const char* expect1 = "4a63 7573 746f 6d2d 6b65 790c 6375 7374 6f6d 2d76 616c 7565";
-    test_expect(bin, expect1, true, "B.3.  Speculative Insert #1");
+
+    const char* expect2 = "4a63 7573 746f 6d2d 6b65 790c 6375 7374 6f6d 2d76 616c 7565";
+    test_expect(bin, expect2, true, "B.3.  Speculative Insert #2");
     /**
      *   Stream: Decoder
      *   01                  | Insert Count Increment (1)
@@ -191,7 +217,7 @@ void tet_rfc9204_b3() {
         enc.increment(bin, 1);  // stream id 1
     }
 
-    test_expect(bin, "01", true, "B.3.  Speculative Insert #2");
+    test_expect(bin, "01", true, "B.3.  Speculative Insert #3");
 }
 
 void tet_rfc9204_b4() {
@@ -201,6 +227,7 @@ void tet_rfc9204_b4() {
     uint32 flags = 0;
     binary_t bin;
 
+    // insert field line
     flags = qpack_indexing | qpack_intermediary;
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // abs 0
     enc.encode(&session, bin, ":path", "/sample/path", flags);          // abs 1

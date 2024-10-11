@@ -212,6 +212,12 @@ return_t http_header_compression::set_dynamic_table_size(binary_t& target, uint8
     return encode_int(target, 0x20, 5, maxsize);
 }
 
+return_t http_header_compression::sizeof_entry(const std::string& name, const std::string& value, size_t& size) {
+    return_t ret = errorcode_t::success;
+    size = name.size() + value.size() + 32;
+    return ret;
+}
+
 void http_header_compression::safe_mask(bool enable) { _safe_mask = enable; }
 
 match_result_t http_header_compression::match(http_header_compression_session* session, uint32 flags, const std::string& name, const std::string& value,

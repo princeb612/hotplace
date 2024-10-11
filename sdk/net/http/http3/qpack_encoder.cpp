@@ -54,7 +54,7 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
                 } else {
                     size_t postbase = 0;
                     size_t respsize = sizeof(size_t);
-                    session->ctrl(qpack_cmd_postbase_index, &index, sizeof(index), &postbase, respsize);
+                    session->query(qpack_cmd_postbase_index, &index, sizeof(index), &postbase, respsize);
                     if (qpack_postbase_index & flags) {
                         encode_index(target, flags, postbase);
                     } else {
@@ -127,15 +127,12 @@ return_t qpack_encoder::sync(http_header_compression_session* session, binary_t&
      * 4.5.1.1.  Required Insert Count
      */
     if (session) {
-        size_t tablesize = 0;
         size_t respsize = 0;
-        respsize = sizeof(size_t);
-        session->ctrl(qpack_cmd_size, nullptr, 0, &tablesize, respsize);
 
         qpack_section_prefix_t req_prefix(_tobe_sync, 0);
         qpack_section_prefix_t resp_prefix;
         respsize = sizeof(qpack_section_prefix_t);
-        session->ctrl(qpack_cmd_section_prefix, &req_prefix, sizeof(req_prefix), &resp_prefix, respsize);
+        session->query(qpack_cmd_section_prefix, &req_prefix, sizeof(req_prefix), &resp_prefix, respsize);
 
         binary_t temp;
         temp.push_back(resp_prefix.ric);

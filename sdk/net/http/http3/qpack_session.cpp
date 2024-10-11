@@ -16,106 +16,9 @@ namespace net {
 
 // studying
 
-qpack_session::qpack_session() : http_header_compression_session(), _capacity(0x10000), _inserted(0), _dropped(0) {}
+qpack_session::qpack_session() : http_header_compression_session() { _separate = true; }
 
-match_result_t qpack_session::match(const std::string& name, const std::string& value, size_t& index) {
-    match_result_t state = match_result_t::not_matched;
-    // using std::multimap
-    auto lbound = _dynamic_map.lower_bound(name);
-    auto ubound = _dynamic_map.upper_bound(name);
-    for (auto iter = lbound; iter != ubound; iter++) {
-        const auto& k = iter->first;
-        const auto& v = iter->second;
-        if ((name == k) && (value == v.first)) {
-            state = match_result_t::all_matched_dynamic;
-            /**
-             * get index from v.second
-             *
-             * consider following cases
-             *  capacity = 3, _inserted = 2, _dropped = 0, table {1 0}, table.size = 2
-             *  capacity = 3, _inserted = 3, _dropped = 0, table {2 1 0}, table.size = 3
-             *  capacity = 3, _inserted = 4, _dropped = 1, table {3 2 1}, table.size = 3
-             *  capacity = 3, _inserted = 5, _dropped = 2, table {4 3 2}, table.size = 3
-             *
-             * conclusion
-             *  index = _inserted - _dropped - v.second + _dropped - 1 = _inserted - v.second - 1
-             */
-            index = _inserted - v.second - 1;
-            break;
-        }
-    }
-    return state;
-}
-
-return_t qpack_session::select(size_t index, std::string& name, std::string& value) {
-    return_t ret = errorcode_t::not_found;
-
-    __try2 {
-        auto static_entries = http_resource::get_instance()->sizeof_hpack_static_table_entries();
-        if (index <= static_entries) {
-            __leave2;
-        }
-
-        if (_dynamic_reversemap.size()) {
-            /**
-             * refer hpack_session::match
-             * index = _inserted - v.second - 1
-             * v.second = _inserted - index - 1
-             */
-            const auto& t = _inserted - index - 1;
-            auto riter = _dynamic_reversemap.find(t);
-            // never happen (_dynamic_reversemap.end() == riter)
-            const auto& k = riter->second;
-            auto lbound = _dynamic_map.lower_bound(k);
-            auto ubound = _dynamic_map.upper_bound(k);
-
-            for (auto iter = lbound; iter != ubound; iter++) {
-                const auto& v = iter->second;
-                if (t == v.second) {
-                    name = k;
-                    value = v.first;
-                    break;
-                }
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t qpack_session::insert(const std::string& name, const std::string& value) {
-    return_t ret = errorcode_t::success;
-
-    if (_capacity - 1 == _dynamic_map.size()) {
-        auto back = _dynamic_reversemap.find(_dropped);
-
-        auto const& t = back->first;
-        auto const& k = back->second;
-
-        auto lbound = _dynamic_map.lower_bound(name);
-        auto ubound = _dynamic_map.upper_bound(name);
-
-        for (auto iter = lbound; iter != ubound; iter++) {
-            auto const& v = iter->second;
-            if (v.second == t) {
-                _dynamic_map.erase(iter);
-                break;
-            }
-        }
-        _dynamic_reversemap.erase(back);
-        _dropped++;
-    }
-
-    _dynamic_map.insert({name, {value, _inserted}});
-    _dynamic_reversemap.insert({_inserted, name});
-    _inserted++;
-
-    return ret;
-}
-
-return_t qpack_session::ctrl(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
+return_t qpack_session::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == resp) || (respsize < sizeof(size_t))) {
@@ -123,10 +26,9 @@ return_t qpack_session::ctrl(int cmd, void* req, size_t reqsize, void* resp, siz
             __leave2;
         }
         switch (cmd) {
-            case qpack_cmd_size: {
+            case qpack_cmd_tablesize: {
                 respsize = sizeof(size_t);
-                auto tablesize = _dynamic_map.size();
-                memcpy(resp, &tablesize, respsize);
+                memcpy(resp, &_tablesize, respsize);
             } break;
             case qpack_cmd_inserted:
                 respsize = sizeof(size_t);
