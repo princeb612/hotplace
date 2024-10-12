@@ -290,10 +290,9 @@ void test_rfc7541_c_3() {
     const OPTION& option = cmdline->value();
 
     hpack hp;
-    hpack_session session;  // dynamic table
-    basic_stream bs;
-
+    hpack_session session;           // dynamic table
     hpack_session session_receiver;  // dynamic table
+    basic_stream bs;
 
     // C.3.1.  First Request
     // :method: GET
@@ -316,7 +315,6 @@ void test_rfc7541_c_3() {
         "8286 8441 0f77 7777 2e65 7861 6d70 6c65 "
         "2e63 6f6d                               ";
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "RFC 7541 C.3.1 First Request");
-
 
     // [  1] (s =  57) :authority: www.example.com
     //       Table size:  57
@@ -386,10 +384,9 @@ void test_rfc7541_c_4() {
     const OPTION& option = cmdline->value();
 
     hpack hp;
-    hpack_session session;  // dynamic table
-    basic_stream bs;
-
+    hpack_session session;           // dynamic table
     hpack_session session_receiver;  // dynamic table
+    basic_stream bs;
 
     // C.4.1.  First Request
     hp.set_encoder(&*encoder)
@@ -463,7 +460,7 @@ void test_rfc7541_c_5() {
     const OPTION& option = cmdline->value();
 
     hpack hp;
-    hpack_session session;  // dynamic table
+    hpack_session session;           // dynamic table
     hpack_session session_receiver;  // dynamic table
     basic_stream bs;
 
@@ -552,7 +549,7 @@ void test_rfc7541_c_6() {
     const OPTION& option = cmdline->value();
 
     hpack hp;
-    hpack_session session;  // dynamic table
+    hpack_session session;           // dynamic table
     hpack_session session_receiver;  // dynamic table
     basic_stream bs;
 

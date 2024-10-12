@@ -14,7 +14,8 @@
   * JOSE ![implemented](https://img.shields.io/badge/implemented-green)
   * CBOR ![implemented](https://img.shields.io/badge/implemented-green)
   * COSE ![implemented](https://img.shields.io/badge/implemented-green)
-  * HTTP/1.1,2,3 ![studying](https://img.shields.io/badge/studying-magenta)
+  * HTTP/1.1,2 ![implemented](https://img.shields.io/badge/implemented-green)
+  * HTTP/3 ![studying](https://img.shields.io/badge/studying-magenta)
   * ASN.1 ![studying](https://img.shields.io/badge/studying-magenta)
 * link
   * [changelog](CHANGELOG.md)

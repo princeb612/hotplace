@@ -16,6 +16,11 @@ namespace net {
 
 hpack_session::hpack_session() : http_header_compression_session() {}
 
+return_t hpack_session::duplicate(const std::string& name, const std::string& value) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
+
 return_t hpack_session::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
     return_t ret = errorcode_t::success;
     __try2 {

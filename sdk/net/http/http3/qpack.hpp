@@ -154,6 +154,12 @@ class qpack_session : public http_header_compression_session {
     qpack_session();
 
     /**
+     * @brief   duplicate
+     * @param   const std::string& name [in]
+     * @param   const std::string& value [in]
+     */
+    virtual return_t duplicate(const std::string& name, const std::string& value);
+    /**
      * @brief   QPACK query function
      * @param   int cmd [in] see header_compression_cmd_t
      * @param   void* req [in]

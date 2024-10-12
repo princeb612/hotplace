@@ -159,8 +159,9 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
                 break;
             }
 
-            // GetQueuedCompletionStatus
-            // GetQueuedCompletionStatusEx : retrieves multiple completion port entries simultaneously
+            // GetQueuedCompletionStatus    | Windows XP    | Windows Server 2003
+            // GetQueuedCompletionStatusEx  | Windows Vista | Windows Server 2008
+            //                                retrieves multiple completion port entries simultaneously
             DWORD size_transfered = 0;
             ULONG_PTR completion_key = 0;
             LPOVERLAPPED overlapped = nullptr;
@@ -172,7 +173,7 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
                 } else if (errorcode_t::success == ret) { /* mingw environments */
                     continue;
                 } else {
-                    break;  // GLE - Windows 2003 returns 87, Windows 7 returns 735
+                    break;  // GLE - Windows 2003 returns 87, Windows 7 returns 735(ERROR_ABANDONED_WAIT_0)
                 }
             }
             if (0 == completion_key) {

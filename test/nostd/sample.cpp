@@ -280,6 +280,7 @@ void test_pq() {
 
     for (size_t i = 0; i < 10; i++) {
         heap.push(table[i]);  // fast
+        _logger->writeln("push %u", table[i]);
     }
 
     _test_case.assert(heap.size() > 0, __FUNCTION__, "case 1");
@@ -288,9 +289,11 @@ void test_pq() {
     uint32 lastone = 0;
     while (heap.size()) {
         uint32 elem = heap.top();
+        _logger->writeln("top %u", elem);
         if (lastone > elem) {
             errorcheck |= true;
         }
+        lastone = elem;
         heap.pop();
     }
 

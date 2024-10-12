@@ -60,6 +60,7 @@ class http_server_builder {
     http_server_builder& enable_ipv6(bool enable);
 
     http_server_builder& enable_h2(bool enable);
+    http_server_builder& enable_h3(bool enable);
 
     http_server_builder& set_handler(http_server_handler_t handler, void* user_context = nullptr);
 

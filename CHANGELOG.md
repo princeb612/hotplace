@@ -1,5 +1,8 @@
 # history
 
+* Revision 624
+ * [changed] QPACK duplicate
+
 * Revision 623
   * [tested] HPACK eviction
 
@@ -328,9 +331,6 @@
 
 * Revision 434
   * [changed] COSE encrypt, sign, createmac
-
-* Revision 433
-  * [changed] COSE untagged message
 
 * Revision 433
   * [changed] COSE untagged message

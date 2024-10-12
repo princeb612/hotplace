@@ -93,6 +93,7 @@ void tet_rfc9204_b1() {
 
     const char* expect2 = "0000 510b 2f69 6e64 6578 2e68 746d 6c";
     test_expect(bin, expect2, true, "B.1.  Literal Field Line with Name Reference #1");
+    _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "table size");
 }
 
 void tet_rfc9204_b2() {
@@ -117,7 +118,7 @@ void tet_rfc9204_b2() {
      *                                  1   0  :path       /sample/path
      *                                 Size=106
      */
-    enc.set_dynamic_table_size(bin, 220);
+    enc.set_dynamic_table_size(&session, bin, 220);
     const char* expect1 = "3fbd01";
     test_expect(bin, expect1, true, "B.2.  Dynamic Table #1");
 
@@ -127,6 +128,7 @@ void tet_rfc9204_b2() {
     enc.encode(&session, bin, ":path", "/sample/path", flags);          // abs 1
     const char* expect2 = "c00f 7777 772e 6578 616d 706c 652e 636f 6d c10c 2f73 616d 706c 652f 7061 7468";
     test_expect(bin, expect2, true, "B.2.  Dynamic Table #2");
+    _test_case.assert(106 == session.get_tablesize(), __FUNCTION__, "table size");
 
     /**
      *   Stream: 4
@@ -154,6 +156,7 @@ void tet_rfc9204_b2() {
 
     const char* expect3 = "0381 10 11";
     test_expect(bin, expect3, true, "B.2.  Dynamic Table #3");
+    _test_case.assert(106 == session.get_tablesize(), __FUNCTION__, "table size");
 
     /**
      *   Stream: Decoder
@@ -171,6 +174,7 @@ void tet_rfc9204_b2() {
 
     const char* expect5 = "84";
     test_expect(bin, expect5, true, "B.2.  Dynamic Table #4");
+    _test_case.assert(106 == session.get_tablesize(), __FUNCTION__, "table size");
 }
 
 void tet_rfc9204_b3() {
@@ -205,6 +209,8 @@ void tet_rfc9204_b3() {
 
     const char* expect2 = "4a63 7573 746f 6d2d 6b65 790c 6375 7374 6f6d 2d76 616c 7565";
     test_expect(bin, expect2, true, "B.3.  Speculative Insert #2");
+    _test_case.assert(160 == session.get_tablesize(), __FUNCTION__, "table size");
+
     /**
      *   Stream: Decoder
      *   01                  | Insert Count Increment (1)
@@ -257,6 +263,7 @@ void tet_rfc9204_b4() {
     _test_case.assert(errorcode_t::already_exist == ret, __FUNCTION__, "B.4.  Duplicate Instruction, Stream Cancellation #2.1");
     // check duplicate
     test_expect(bin, "02", true, "B.4.  Duplicate Instruction, Stream Cancellation #2.2");
+    _test_case.assert(217 == session.get_tablesize(), __FUNCTION__, "table size #2");
 
     /**
      *   Stream: 8
@@ -287,6 +294,8 @@ void tet_rfc9204_b4() {
 
     const char* expect3 = "0500 80 c1 81";
     test_expect(bin, expect3, true, "B.4.  Duplicate Instruction, Stream Cancellation #3");
+    _test_case.assert(217 == session.get_tablesize(), __FUNCTION__, "table size #3");
+
     /**
      *   Stream: Decoder
      *   48                  | Stream Cancellation (Stream=8)
@@ -300,13 +309,11 @@ void tet_rfc9204_b4() {
      *                                 Size=217
      */
 
-    // studying
-    //
-
     uint32 streamid = 8;
     enc.cancel(bin, streamid);
     const char* expect4 = "48";
     test_expect(bin, expect4, true, "B.4.  Duplicate Instruction, Stream Cancellation #4");
+    _test_case.assert(217 == session.get_tablesize(), __FUNCTION__, "table size #4");
 }
 
 void tet_rfc9204_b5() {
@@ -314,7 +321,11 @@ void tet_rfc9204_b5() {
     qpack_encoder enc;
     qpack_session session;
     uint32 flags = 0;
-    binary_t bin;
+    binary_t bin, bin1;
+    auto trace_handler = [&](stream_t* s) -> void { _logger->writeln("\e[1;36m%.*s\e[0m", (unsigned int)s->size(), s->data()); };
+
+    session.set_capacity(217);
+    session.trace(trace_handler);
 
     /**
      *   Stream: Encoder
@@ -332,21 +343,18 @@ void tet_rfc9204_b5() {
      *                                  4   0  custom-key  custom-value2
      *                                 Size=215
      */
-    flags = qpack_indexing;
+    flags = qpack_indexing | qpack_intermediary;
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // abs 0
     enc.encode(&session, bin, ":path", "/sample/path", flags);          // abs 1
     enc.encode(&session, bin, "custom-key", "custom-value", flags);     // abs 2
     enc.sync(&session, bin, flags);
-    bin.clear();  // next step
-
     enc.encode(&session, bin, ":authority", "www.example.com", flags);  // abs 3
-    enc.encode(&session, bin, "custom-key", "custom-value2", flags);    // abs 4
+    enc.encode(&session, bin1, "custom-key", "custom-value2", flags);   // abs 4
 
-    // 81(1000 0001) indexed, dynamic table, 1
-    // 0d(0000 1011)
+    _test_case.assert(215 == session.get_tablesize(), __FUNCTION__, "table size");
 
     const char* expect = "810d 6375 7374 6f6d 2d76 616c 7565 32";
-    test_expect(bin, expect, true, "B.5.  Dynamic Table Insert, Eviction #1");
+    test_expect(bin1, expect, true, "B.5.  Dynamic Table Insert, Eviction #3");
 }
 
 int main(int argc, char** argv) {

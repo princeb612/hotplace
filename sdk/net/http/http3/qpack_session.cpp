@@ -14,9 +14,9 @@
 namespace hotplace {
 namespace net {
 
-// studying
-
 qpack_session::qpack_session() : http_header_compression_session() { _separate = true; }
+
+return_t qpack_session::duplicate(const std::string& name, const std::string& value) { return insert(name, value); }
 
 return_t qpack_session::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
     return_t ret = errorcode_t::success;

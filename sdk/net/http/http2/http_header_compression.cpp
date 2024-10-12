@@ -196,7 +196,7 @@ return_t http_header_compression::decode_string(const byte_t* p, size_t& pos, ui
     return ret;
 }
 
-return_t http_header_compression::set_dynamic_table_size(binary_t& target, uint8 maxsize) {
+return_t http_header_compression::set_dynamic_table_size(http_header_compression_session* session, binary_t& target, uint8 maxsize) {
     // RFC 7541 Figure 12: Maximum Dynamic Table Size Change
     //   0   1   2   3   4   5   6   7
     // +---+---+---+---+---+---+---+---+
@@ -208,6 +208,13 @@ return_t http_header_compression::set_dynamic_table_size(binary_t& target, uint8
     // +---+---+---+---+---+---+---+---+
     // | 0 | 0 | 1 |   Capacity (5+)   |
     // +---+---+---+-------------------+
+
+    if (session) {
+        // RFC 7541 4.2.  Maximum Table Size
+        // RFC 7541 6.3.  Dynamic Table Size Update
+        // SETTINGS_HEADER_TABLE_SIZE
+        session->set_capacity(maxsize);
+    }
 
     return encode_int(target, 0x20, 5, maxsize);
 }

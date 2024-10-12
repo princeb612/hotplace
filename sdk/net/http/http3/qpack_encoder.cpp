@@ -40,15 +40,31 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
                 if (match_result_t::all_matched == state) {
                     flags |= qpack_static;
                 }
-                if (qpack_indexing & flags) {
+                if ((all_matched_dynamic == state) && (qpack_indexing & flags)) {
                     /**
                      *  RFC 9204
+                     *      2.1.1.1.  Avoiding Prohibited Insertions
+                     *
+                     *                <-- Newer Entries          Older Entries -->
+                     *                  (Larger Indices)       (Smaller Indices)
+                     *      +--------+---------------------------------+----------+
+                     *      | Unused |          Referenceable          | Draining |
+                     *      | Space  |             Entries             | Entries  |
+                     *      +--------+---------------------------------+----------+
+                     *               ^                                 ^          ^
+                     *               |                                 |          |
+                     *         Insertion Point                 Draining Index  Dropping
+                     *                                                          Point
+                     *
+                     *                  Figure 1: Draining Dynamic Table Entries
+                     *
                      *      4.3.  Encoder Instructions
                      *      4.3.4.  Duplicate
                      *      B.4.  Duplicate Instruction, Stream Cancellation
-                     *          an encoded field section referencing the dynamic table entries including the duplicated entry
+                     *      - an encoded field section referencing the dynamic table entries including the duplicated entry
                      */
                     ret = errorcode_t::already_exist;
+                    session->duplicate(name, value);
                     duplicate(target, index);
                     _tobe_sync++;
                 } else {
@@ -58,7 +74,7 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
                     if (qpack_postbase_index & flags) {
                         encode_index(target, flags, postbase);
                     } else {
-                        encode_index(target, flags, postbase);
+                        encode_index(target, flags, index);
                     }
                 }
                 break;
@@ -127,8 +143,12 @@ return_t qpack_encoder::sync(http_header_compression_session* session, binary_t&
      * 4.5.1.1.  Required Insert Count
      */
     if (session) {
-        size_t respsize = 0;
+        size_t capacity = session->get_capacity();
+        size_t ric = _tobe_sync;
         size_t base = 0;
+        size_t eic = 0;
+        bool sign = true;
+        size_t deltabase = 0;
 
         if (qpack_postbase_index & flags) {
             base = 0;
@@ -136,13 +156,13 @@ return_t qpack_encoder::sync(http_header_compression_session* session, binary_t&
             base = _tobe_sync;
         }
 
-        qpack_section_prefix_t fsp(session->get_capacity(), _tobe_sync, base);
+        qpack_ric2eic(capacity, ric, base, eic, sign, deltabase);
 
         binary_t temp;
-        temp.push_back(fsp.eic);
-        uint8 mask = fsp.sign() ? 0x80 : 0x00;
+        temp.push_back(eic);
+        uint8 mask = sign ? 0x80 : 0x00;
         uint8 prefix = 7;
-        encode_int(temp, mask, prefix, fsp.delta);
+        encode_int(temp, mask, prefix, deltabase);
         target.insert(target.begin(), temp.begin(), temp.end());
 
         _tobe_sync = 0;

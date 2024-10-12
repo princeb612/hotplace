@@ -84,6 +84,11 @@ http_server_builder& http_server_builder::enable_h2(bool enable) {
     return *this;
 }
 
+http_server_builder& http_server_builder::enable_h3(bool enable) {
+    get_server_conf().set(netserver_config_t::serverconf_enable_h3, enable ? 1 : 0);
+    return *this;
+}
+
 http_server_builder& http_server_builder::set_handler(http_server_handler_t handler, void* user_context) {
     _handler = handler;
     _user_context = user_context;

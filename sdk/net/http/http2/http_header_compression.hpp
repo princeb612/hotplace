@@ -11,8 +11,6 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
 #define __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
 
-#include <math.h>
-
 #include <sdk/base/basic/huffman_coding.hpp>
 
 namespace hotplace {
@@ -149,13 +147,14 @@ class http_header_compression {
 
     /**
      * @brief   dynamic table size
+     * @param   http_header_compression_session* session [in]
      * @param   binary_t& target
      * @param   uint8 maxsize
      * @remarks
      *          RFC 7541 6.3.  Dynamic Table Size Update
      *          RFC 9204 4.3.1.  Set Dynamic Table Capacity
      */
-    return_t set_dynamic_table_size(binary_t& target, uint8 maxsize);
+    return_t set_dynamic_table_size(http_header_compression_session* session, binary_t& target, uint8 maxsize);
     /**
      * @brief   size of entry
      * @param   const std::string& name [in]
@@ -223,59 +222,27 @@ enum header_compression_cmd_t {
     qpack_cmd_capacity = 4,
 };
 
-struct qpack_section_prefix_t {
-    size_t capacity;
-    size_t ric;
-    size_t base;
-    size_t eic;
-    size_t delta;
-
-    qpack_section_prefix_t(size_t c) : capacity(c), ric(0), base(0), eic(0), delta(0) {}
-    qpack_section_prefix_t(size_t c, size_t r, size_t b) : capacity(c), ric(r), base(b), eic(0), delta(0) { calc(); }
-    qpack_section_prefix_t(const qpack_section_prefix_t& rhs) : capacity(rhs.capacity), ric(rhs.ric), base(rhs.base), eic(rhs.eic), delta(rhs.delta) { calc(); }
-    qpack_section_prefix_t(qpack_section_prefix_t* rhs) {
-        copyfrom(rhs);
-        calc();
-    }
-    void copyfrom(qpack_section_prefix_t* rhs) {
-        if (rhs) {
-            capacity = rhs->capacity;
-            ric = rhs->ric;
-            base = rhs->base;
-            eic = rhs->eic;
-            delta = rhs->delta;
-        }
-    }
-    void calc() {
-        if ((0 == eic) && (0 == delta)) {
-            /* RFC 9204 4.5.1.1.  Required Insert Count
-             *  if (ReqInsertCount) EncInsertCount = (ReqInsertCount mod (2 * MaxEntries)) + 1
-             *  else EncInsertCount = 0;
-             */
-            if (0 == ric) {
-                eic = ric;
-            } else {
-                size_t maxentries = ::floor(capacity / 32);
-                eic = (ric % (2 * maxentries)) + 1;
-            }
-            /* RFC 9204 4.5.1.2.  Base
-             *  A Sign bit of 1 indicates that the Base is less than the Required Insert Count
-             *
-             *  if (0 == Sign) Base = DeltaBase + ReqInsertCount
-             *  else Base = ReqInsertCount - DeltaBase - 1
-             *
-             *  if (0 == Sign) DeltaBase = Base - ReqInsertCount
-             *  else DeltaBase = ReqInsertCount - Base - 1
-             */
-            if (sign()) {
-                delta = ric - base - 1;
-            } else {
-                delta = ric - base;
-            }
-        }
-    }
-    bool sign() { return ric > base; }
-};
+/**
+ * @brief   Field Section Prefix
+ * @param   size_t capacity [in]
+ * @param   size_t ric [in]
+ * @param   size_t base [in]
+ * @param   size_t& eic [out]
+ * @param   bool& sign [out]
+ * @param   size_t& deltabase [out]
+ */
+return_t qpack_ric2eic(size_t capacity, size_t ric, size_t base, size_t& eic, bool& sign, size_t& deltabase);
+/**
+ * @brief   Field Section Prefix (reconstruct)
+ * @param   size_t capacity [in]
+ * @param   size_t tni [in] total number of inserts
+ * @param   size_t eic [in]
+ * @param   bool sign [in]
+ * @param   size_t deltabase [in]
+ * @param   size_t& ric [out]
+ * @param   size_t& base [out]
+ */
+return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_t deltabase, size_t& ric, size_t& base);
 
 /**
  * @brief   session
@@ -294,6 +261,10 @@ class http_header_compression_session {
      */
     bool operator==(const http_header_compression_session& rhs);
     bool operator!=(const http_header_compression_session& rhs);
+    /**
+     * @brief   trace
+     */
+    void trace(std::function<void(stream_t*)> f);
     /**
      * @brief   match
      * @param   const std::string& name [in]
@@ -319,6 +290,12 @@ class http_header_compression_session {
      */
     virtual return_t evict();
     /**
+     * @brief   duplicate
+     * @param   const std::string& name [in]
+     * @param   const std::string& value [in]
+     */
+    virtual return_t duplicate(const std::string& name, const std::string& value);
+    /**
      * @brief   capacity
      */
     void set_capacity(uint32 capacity);
@@ -339,19 +316,19 @@ class http_header_compression_session {
 
    protected:
     typedef http_header_compression::table_entry_t table_entry_t;
-    typedef std::multimap<std::string, table_entry_t> dynamic_map_t;
-    typedef std::map<size_t, std::string> dynamic_reversemap_t;
-    typedef std::map<size_t, size_t> entry_size_t;  // map<entry, size of entry>
+    typedef std::multimap<std::string, table_entry_t> dynamic_map_t;  // table_entry_t(value, entry)
+    typedef std::map<size_t, table_entry_t> dynamic_reversemap_t;     // table_entry_t(name, entry size)
 
     dynamic_map_t _dynamic_map;
     dynamic_reversemap_t _dynamic_reversemap;
-    entry_size_t _entry_size;
 
     bool _separate;  // false:HPACK, true:QPACK
     uint32 _capacity;
     size_t _tablesize;
     size_t _inserted;
     size_t _dropped;
+
+    std::function<void(stream_t*)> _df;
 };
 
 /*
