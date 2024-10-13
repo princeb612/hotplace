@@ -133,14 +133,6 @@ class hpack_encoder : public http_header_compression {
      * @param   std::string& value [in]
      */
     virtual return_t decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
-    /**
-     * @brief   reserved
-     * @param   http_header_compression_session* session [in] dynamic table
-     * @param   binary_t& target [out]
-     * @param   uint32 flags [inopt]
-     * @remarks do nothing
-     */
-    virtual return_t sync(http_header_compression_session* session, binary_t& target, uint32 flags = 0);
 
     /**
      * @brief   encode (header compression)
@@ -230,12 +222,6 @@ class hpack_encoder : public http_header_compression {
 class hpack_session : public http_header_compression_session {
    public:
     hpack_session();
-    /**
-     * @brief   duplicate
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     */
-    virtual return_t duplicate(const std::string& name, const std::string& value);
     /**
      * @brief   HPACK query function
      * @param   int cmd [in] see header_compression_cmd_t

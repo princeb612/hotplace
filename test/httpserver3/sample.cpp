@@ -10,10 +10,9 @@
  * Date         Name                Description
  *
  * @comments
- *      debug w/ curl
- *      curl -v -k https://localhost:9000 --http2
- *      curl -v -k https://localhost:9000 --http2  --http2-prior-knowledge
  */
+
+// studying - not implemented yet
 
 #include <signal.h>
 #include <stdio.h>
@@ -124,17 +123,23 @@ return_t simple_http2_server(void*) {
     fclose(fp);
 
     __try2 {
+        constexpr char ciphersuites[] =
+            "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-"
+            "RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-"
+            "AES256-SHA384:DHE-RSA-AES256-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-"
+            "AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA";
         builder
             .enable_http(false)  // disable http scheme
             .set_port_http(option.port)
             .enable_https(true)  // enable https scheme
             .set_port_https(option.port_tls)
             .set_tls_certificate("server.crt", "server.key")
-            .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
+            .set_tls_cipher_list(ciphersuites)
             .set_tls_verify_peer(0)  // self-signed certificate
             .enable_ipv4(true)       // enable IPv4
             .enable_ipv6(false)      // disable IPv6
-            .enable_h2(true)         // enable HTTP/2
+            .enable_h2(false)        // enable HTTP/2
+            .enable_h3(true)         // enable HTTP/3
             .set_handler(consume_routine);
         builder.get_server_conf()
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
@@ -297,7 +302,7 @@ void run_server() {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        _test_case.begin("http/2 powered by http_server");
+        _test_case.begin("http/3 powered by http_server");
 
         thread1.start();
     }

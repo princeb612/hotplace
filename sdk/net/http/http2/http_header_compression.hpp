@@ -45,15 +45,20 @@ enum http_header_compression_flag_t {
     qpack_static = (1 << 7),        // RFC 9204 4.5.4.  Literal Field Line with Name Reference
     qpack_intermediary = (1 << 8),  // RFC 9204 4.5.4.  Literal Field Line with Name Reference
     qpack_postbase_index = (1 << 9),
+    qpack_name_reference = (1 << 5),
 
     // analysis layout while decoding
+    qpack_layout_capacity = (1 << 13),                 // RFC 9204 4.3.1.  Set Dynamic Table Capacity
     qpack_layout_index = (1 << 4),                     // RFC 9204 4.5.2.  Indexed Field Line
     qpack_layout_postbase_index = (1 << 11),           // RFC 9204 4.5.3.  Indexed Field Line with Post-Base Index
     qpack_layout_name_reference = (1 << 5),            // RFC 9204 4.5.4.  Literal Field Line with Name Reference
     qpack_layout_postbase_name_reference = (1 << 12),  // RFC 9204 4.5.5.  Literal Field Line with Post-Base Name Reference
     qpack_layout_name_value = (1 << 6),                // RFC 9204 4.5.6.  Literal Field Line with Literal Name
 };
-
+enum http_header_compression_event_t {
+    header_compression_event_insert = 1,
+    header_compression_event_evict = 2,
+};
 class http_header_compression_session;
 
 /**
@@ -195,6 +200,7 @@ class http_header_compression {
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   size_t& index [out]
+     * @param   uint32 flags [inopt]
      * @return  match_result_t
      * @remarks select index from table where name = arg(name) and value = arg(value)
      */
@@ -219,7 +225,7 @@ enum header_compression_cmd_t {
     hpack_cmd_dropped = 2,
     qpack_cmd_dropped = 2,
     qpack_cmd_postbase_index = 3,
-    qpack_cmd_capacity = 4,
+    qpack_cmd_ric = 4,
 };
 
 /**
@@ -264,14 +270,15 @@ class http_header_compression_session {
     /**
      * @brief   trace
      */
-    void trace(std::function<void(stream_t*)> f);
+    void trace(std::function<void(uint32, stream_t*)> f);
     /**
      * @brief   match
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   size_t& index [out]
+     * @param   uint32 flags [inopt]
      */
-    virtual match_result_t match(const std::string& name, const std::string& value, size_t& index);
+    virtual match_result_t match(const std::string& name, const std::string& value, size_t& index, uint32 flags = 0);
     /**
      * @brief   select
      * @param   size_t index [in]
@@ -289,12 +296,6 @@ class http_header_compression_session {
      * @brief   evict
      */
     virtual return_t evict();
-    /**
-     * @brief   duplicate
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     */
-    virtual return_t duplicate(const std::string& name, const std::string& value);
     /**
      * @brief   capacity
      */
@@ -328,7 +329,7 @@ class http_header_compression_session {
     size_t _inserted;
     size_t _dropped;
 
-    std::function<void(stream_t*)> _df;
+    std::function<void(uint32, stream_t*)> _df;
 };
 
 /*

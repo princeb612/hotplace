@@ -34,20 +34,24 @@ return_t http_header_compression::sync(http_header_compression_session* session,
 return_t http_header_compression::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value) {
     return_t ret = errorcode_t::success;
     if ((1 <= prefix) && (prefix <= 8)) {
-        // RFC 7541 5.1.  Integer Representation
-        // RFC 7541 C.1.  Integer Representation Examples
-        // RFC 7541 Figure 3: Integer Value Encoded after the Prefix (Shown for N = 5)
-        //
-        //     0   1   2   3   4   5   6   7
-        //   +---+---+---+---+---+---+---+---+
-        //   | ? | ? | ? | 1   1   1   1   1 |
-        //   +---+---+---+-------------------+
-        //   | 1 |    Value-(2^N-1) LSB      |
-        //   +---+---------------------------+
-        //                  ...
-        //   +---+---------------------------+
-        //   | 0 |    Value-(2^N-1) MSB      |
-        //   +---+---------------------------+
+        /**
+         * RFC 7541 5.1.  Integer Representation
+         * RFC 7541 C.1.  Integer Representation Examples
+         * RFC 7541 Figure 3: Integer Value Encoded after the Prefix (Shown for N = 5)
+         *
+         *     0   1   2   3   4   5   6   7
+         *   +---+---+---+---+---+---+---+---+
+         *   | ? | ? | ? | 1   1   1   1   1 |
+         *   +---+---+---+-------------------+
+         *   | 1 |    Value-(2^N-1) LSB      |
+         *   +---+---------------------------+
+         *                  ...
+         *   +---+---------------------------+
+         *   | 0 |    Value-(2^N-1) MSB      |
+         *   +---+---------------------------+
+         *
+         * RFC 9204 4.1.1.  Prefixed Integers
+         */
 
         uint8 n = (1 << prefix) - 1;
 
@@ -84,8 +88,11 @@ return_t http_header_compression::encode_int(binary_t& target, uint8 mask, uint8
 }
 
 return_t http_header_compression::decode_int(const byte_t* p, size_t& pos, uint8 mask, uint8 prefix, size_t& value) {
-    // 5.1.  Integer Representation
-    // C.1.  Integer Representation Examples
+    /**
+     * RFC 7541 5.1.  Integer Representation
+     * RFC 7541 C.1.  Integer Representation Examples
+     * RFC 9204 4.1.1.  Prefixed Integers
+     */
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == p) {
@@ -135,15 +142,19 @@ return_t http_header_compression::encode_string(binary_t& target, uint32 flags, 
             __leave2;
         }
 
-        // RFC 7541 5.2.  String Literal Representation
-        // RFC 7541 Figure 4: String Literal Representation
-        //
-        //     0   1   2   3   4   5   6   7
-        //   +---+---+---+---+---+---+---+---+
-        //   | H |    String Length (7+)     |
-        //   +---+---------------------------+
-        //   |  String Data (Length octets)  |
-        //   +-------------------------------+
+        /**
+         * RFC 7541 5.2.  String Literal Representation
+         * RFC 7541 Figure 4: String Literal Representation
+         *
+         *     0   1   2   3   4   5   6   7
+         *   +---+---+---+---+---+---+---+---+
+         *   | H |    String Length (7+)     |
+         *   +---+---------------------------+
+         *   |  String Data (Length octets)  |
+         *   +-------------------------------+
+         *
+         * RFC 9204 4.1.2.  String Literals
+         */
 
         if (hpack_huffman & flags) {
             size_t size_expected = 0;
@@ -197,22 +208,29 @@ return_t http_header_compression::decode_string(const byte_t* p, size_t& pos, ui
 }
 
 return_t http_header_compression::set_dynamic_table_size(http_header_compression_session* session, binary_t& target, uint8 maxsize) {
-    // RFC 7541 Figure 12: Maximum Dynamic Table Size Change
-    //   0   1   2   3   4   5   6   7
-    // +---+---+---+---+---+---+---+---+
-    // | 0 | 0 | 1 |   Max size (5+)   |
-    // +---+---------------------------+
-    //
-    // RFC 9204 Figure 5: Set Dynamic Table Capacity
-    //   0   1   2   3   4   5   6   7
-    // +---+---+---+---+---+---+---+---+
-    // | 0 | 0 | 1 |   Capacity (5+)   |
-    // +---+---+---+-------------------+
+    /**
+     * RFC 7541 Figure 12: Maximum Dynamic Table Size Change
+     *   0   1   2   3   4   5   6   7
+     * +---+---+---+---+---+---+---+---+
+     * | 0 | 0 | 1 |   Max size (5+)   |
+     * +---+---------------------------+
+     *
+     * RFC 9204 Figure 5: Set Dynamic Table Capacity
+     *   0   1   2   3   4   5   6   7
+     * +---+---+---+---+---+---+---+---+
+     * | 0 | 0 | 1 |   Capacity (5+)   |
+     * +---+---+---+-------------------+
+     */
 
     if (session) {
-        // RFC 7541 4.2.  Maximum Table Size
-        // RFC 7541 6.3.  Dynamic Table Size Update
-        // SETTINGS_HEADER_TABLE_SIZE
+        /**
+         * RFC 7541 4.2.  Maximum Table Size
+         * RFC 7541 6.3.  Dynamic Table Size Update
+         * RFC 9204 5.  Configuration
+         *
+         * SETTINGS_HEADER_TABLE_SIZE
+         * SETTINGS_QPACK_MAX_TABLE_CAPACITY
+         */
         session->set_capacity(maxsize);
     }
 
@@ -233,7 +251,7 @@ match_result_t http_header_compression::match(http_header_compression_session* s
     index = 0;
 
     if (session) {
-        state = session->match(name, value, index);
+        state = session->match(name, value, index, flags);
     }
     if (match_result_t::not_matched == state) {
         static_table_t::iterator iter;

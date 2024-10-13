@@ -10,6 +10,7 @@ file (GLOB FILEGROUP_SDK_HEADER_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/http/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/auth/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http2/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/http3/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.hpp
 )

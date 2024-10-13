@@ -60,6 +60,11 @@ class qpack_encoder : public http_header_compression {
     virtual return_t sync(http_header_compression_session* session, binary_t& target, uint32 flags = 0);
 
     /**
+     * @brief   encode (qpack_indexing flag)
+     */
+    return_t insert(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+
+    /**
      * @brief   encode (header compression)
      * @param   http_header_compression_session* session [in] dynamic table
      * @param   binary_t& target [out]
@@ -143,22 +148,11 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.4.3.  Insert Count Increment
      */
     qpack_encoder& increment(binary_t& target, size_t inc);
-
-   private:
-    uint32 _base;
-    uint32 _tobe_sync;
 };
 
 class qpack_session : public http_header_compression_session {
    public:
     qpack_session();
-
-    /**
-     * @brief   duplicate
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     */
-    virtual return_t duplicate(const std::string& name, const std::string& value);
     /**
      * @brief   QPACK query function
      * @param   int cmd [in] see header_compression_cmd_t

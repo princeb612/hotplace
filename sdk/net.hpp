@@ -18,7 +18,9 @@
 #include <sdk/net/types.hpp>
 
 /* basic */
+#include <sdk/net/basic/client_socket.hpp>
 #include <sdk/net/basic/ipaddr_acl.hpp>
+#include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/basic/tcp_client_socket.hpp>
 #include <sdk/net/basic/tcp_server_socket.hpp>
 #include <sdk/net/basic/udp_client_socket.hpp>
@@ -56,6 +58,11 @@
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
+#include <sdk/net/http/http2/http2_session.hpp>
+#include <sdk/net/http/http2/http_header_compression.hpp>
+
+/* http/http3 */
+#include <sdk/net/http/http3/qpack.hpp>
 
 /* server */
 #include <sdk/net/server/network_protocol.hpp>

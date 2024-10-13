@@ -14,9 +14,13 @@
 namespace hotplace {
 namespace net {
 
-qpack_session::qpack_session() : http_header_compression_session() { _separate = true; }
+qpack_session::qpack_session() : http_header_compression_session() {
+    _separate = true;
 
-return_t qpack_session::duplicate(const std::string& name, const std::string& value) { return insert(name, value); }
+    // RFC 9204 5.  Configuration
+    // SETTINGS_QPACK_MAX_TABLE_CAPACITY (0x01):  The default value is zero.
+    _capacity = 0;
+}
 
 return_t qpack_session::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
     return_t ret = errorcode_t::success;
@@ -53,6 +57,11 @@ return_t qpack_session::query(int cmd, void* req, size_t reqsize, void* resp, si
                     ret = errorcode_t::bad_request;
                 }
                 break;
+            case qpack_cmd_ric: {
+                respsize = sizeof(size_t);
+                size_t ric = _dynamic_map.size();
+                memcpy(resp, &ric, respsize);
+            } break;
             default:
                 ret = errorcode_t::not_supported;
                 break;

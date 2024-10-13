@@ -212,22 +212,34 @@ void test_case::check_time(struct timespec& ts) {
 
 void test_case::assert(bool expect, const char* test_function, const char* message, ...) {
     return_t ret = errorcode_t::success;
+    va_list ap;
+    va_start(ap, message);
+    assert(expect, test_function, message, ap);
+    va_end(ap);
+}
+
+void test_case::assert(bool expect, const char* test_function, const char* message, va_list ap) {
+    return_t ret = errorcode_t::success;
 
     if (false == expect) {
         ret = errorcode_t::assert_failed;
     }
 
     basic_stream tltle;
-    if (nullptr != message) {
-        va_list ap;
-        va_start(ap, message);
+    if (message) {
         tltle.vprintf(message, ap);
-        va_end(ap);
     }
     test(ret, test_function, tltle.c_str());
 }
 
 void test_case::test(return_t result, const char* test_function, const char* message, ...) {
+    va_list ap;
+    va_start(ap, message);
+    test(result, test_function, message, ap);
+    va_end(ap);
+}
+
+void test_case::test(return_t result, const char* test_function, const char* message, va_list ap) {
     struct timespec elapsed;
     arch_t tid = get_thread_id();
     testcase_per_thread_pib_t pib;
@@ -237,11 +249,8 @@ void test_case::test(return_t result, const char* test_function, const char* mes
         check_time(elapsed);
 
         basic_stream tltle;
-        if (nullptr != message) {
-            va_list ap;
-            va_start(ap, message);
+        if (message) {
             tltle.vprintf(message, ap);
-            va_end(ap);
         }
 
         critical_section_guard guard(_lock);
@@ -268,7 +277,7 @@ void test_case::test(return_t result, const char* test_function, const char* mes
         unittest_item_t item;
         memcpy(&item._time, &elapsed, sizeof(elapsed));
         item._result = result;
-        if (nullptr != test_function) {
+        if (test_function) {
             item._test_function = test_function;
         }
         item._message = tltle.c_str();

@@ -37,14 +37,14 @@ enum netserver_config_t {
     /* http_server */
     serverconf_enable_ipv4 = 5,
     serverconf_enable_ipv6 = 6,
-    serverconf_enable_tls = 7,
-    serverconf_verify_peer = 8,
-    serverconf_enable_http = 9,
-    serverconf_enable_https = 10,
-    serverconf_port_http = 11,
-    serverconf_port_https = 12,
-    serverconf_enable_h2 = 13,
-    serverconf_enable_h3 = 14,
+    serverconf_verify_peer = 7,
+    serverconf_enable_http = 8,   // http scheme
+    serverconf_enable_https = 9,  // https scheme
+    serverconf_port_http = 10,    // http port
+    serverconf_port_https = 11,   // https port
+    serverconf_enable_h1 = 12,    // HTTP/1.1
+    serverconf_enable_h2 = 13,    // HTTP/2
+    serverconf_enable_h3 = 14,    // HTTP/3
 
     serverconf_tcp_bufsize = 15,
     serverconf_udp_bufsize = 16,

@@ -70,6 +70,18 @@ return_t hpack_encoder::decode(http_header_compression_session* session, const b
             __leave2;
         }
 
+        /**
+         * RFC 7541
+         *  6.  Binary Format
+         *   1     7+ - 6.1.  Indexed Header Field Representation
+         *   01    6+ - 6.2.1.  Literal Header Field with Incremental Indexing / Figure 6
+         *   01000000 - 6.2.1.  Literal Header Field with Incremental Indexing / Figure 7
+         *   0000  4+ - 6.2.2.  Literal Header Field without Indexing / Figure 8
+         *   00000000 - 6.2.2.  Literal Header Field without Indexing / Figure 9
+         *   0001  4+ - 6.2.3.  Literal Header Field Never Indexed / Figure 10
+         *   00010000 - 6.2.3.  Literal Header Field Never Indexed / Figure 11
+         *   001   5+ - 6.3.  Dynamic Table Size Update
+         */
         byte_t b = source[pos];
         uint8 mask = 0;
         uint8 prefix = 0;
@@ -143,8 +155,6 @@ return_t hpack_encoder::decode(http_header_compression_session* session, const b
     }
     return ret;
 }
-
-return_t hpack_encoder::sync(http_header_compression_session* session, binary_t& target, uint32 flags) { return errorcode_t::success; }
 
 hpack_encoder& hpack_encoder::encode_header(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,
                                             uint32 flags) {

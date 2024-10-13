@@ -19,12 +19,12 @@ http_server_builder::http_server_builder() : _handler(nullptr), _user_context(nu
     get_server_conf()
         .set(netserver_config_t::serverconf_enable_ipv4, 0)
         .set(netserver_config_t::serverconf_enable_ipv6, 0)
-        .set(netserver_config_t::serverconf_enable_tls, 0)
         .set(netserver_config_t::serverconf_verify_peer, 0)
         .set(netserver_config_t::serverconf_enable_http, 0)
         .set(netserver_config_t::serverconf_enable_https, 0)
         .set(netserver_config_t::serverconf_port_http, 80)
         .set(netserver_config_t::serverconf_port_https, 443)
+        .set(netserver_config_t::serverconf_enable_h1, 1)
         .set(netserver_config_t::serverconf_concurrent_event, 1024)
         .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
         .set(netserver_config_t::serverconf_concurrent_network, 2)
@@ -111,24 +111,42 @@ http_server* http_server_builder::build() {
         uint16 ipv4 = get_server_conf().get(netserver_config_t::serverconf_enable_ipv4);
         uint16 ipv6 = get_server_conf().get(netserver_config_t::serverconf_enable_ipv6);
         if (ipv4 || ipv6) {
+            uint16 enable_h1 = get_server_conf().get(netserver_config_t::serverconf_enable_h1);
+            uint16 enable_h2 = get_server_conf().get(netserver_config_t::serverconf_enable_h2);
+            uint16 enable_h3 = get_server_conf().get(netserver_config_t::serverconf_enable_h3);
+            uint16 enable_http = get_server_conf().get(netserver_config_t::serverconf_enable_http);
             uint16 enable_https = get_server_conf().get(netserver_config_t::serverconf_enable_https);
+
             if (enable_https) {
                 uint16 port_https = get_server_conf().get(netserver_config_t::serverconf_port_https);
                 uint16 verify_peer = get_server_conf().get(netserver_config_t::serverconf_verify_peer);
 
-                ret = server->startup_tls(_server_cert, _server_key, _tls_cipher_list, verify_peer);
-                if (errorcode_t::success != ret) {
-                    __leave2;
+                if (enable_h1 || enable_h2) {
+                    ret = server->startup_tls(_server_cert, _server_key, _tls_cipher_list, verify_peer);
+                    if (errorcode_t::success != ret) {
+                        __leave2;
+                    }
+                    if (ipv4) {
+                        server->startup_server(1, AF_INET, port_https, _handler);
+                    }
+                    if (ipv6) {
+                        server->startup_server(1, AF_INET6, port_https, _handler);
+                    }
                 }
-                if (ipv4) {
-                    server->startup_server(1, AF_INET, port_https, _handler);
-                }
-                if (ipv6) {
-                    server->startup_server(1, AF_INET6, port_https, _handler);
+                if (enable_h3) {
+                    ret = server->startup_dtls(_server_cert, _server_key, _tls_cipher_list, verify_peer);
+                    if (errorcode_t::success != ret) {
+                        __leave2;
+                    }
+                    if (ipv4) {
+                        server->startup_server(1, AF_INET, port_https, _handler);
+                    }
+                    if (ipv6) {
+                        server->startup_server(1, AF_INET6, port_https, _handler);
+                    }
                 }
             }
 
-            uint16 enable_http = get_server_conf().get(netserver_config_t::serverconf_enable_http);
             if (enable_http) {
                 uint16 port_http = get_server_conf().get(netserver_config_t::serverconf_port_http);
 
@@ -139,11 +157,11 @@ http_server* http_server_builder::build() {
                     server->startup_server(0, AF_INET6, port_http, _handler);
                 }
             }
-        }
-        uint16 enable_h2 = get_server_conf().get(netserver_config_t::serverconf_enable_h2);
-        if (enable_h2) {
-            if (server->_cert) {
-                server->_cert->enable_alpn_h2(true);
+
+            if (enable_h2) {
+                if (server->_tlscert) {
+                    server->_tlscert->enable_alpn_h2(true);
+                }
             }
         }
 

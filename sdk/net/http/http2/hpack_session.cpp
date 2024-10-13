@@ -14,11 +14,13 @@
 namespace hotplace {
 namespace net {
 
-hpack_session::hpack_session() : http_header_compression_session() {}
+hpack_session::hpack_session() : http_header_compression_session() {
+    // _separate = false;
 
-return_t hpack_session::duplicate(const std::string& name, const std::string& value) {
-    return_t ret = errorcode_t::success;
-    return ret;
+    // RFC 7540 6.5.2.  Defined SETTINGS Parameters
+    // SETTINGS_HEADER_TABLE_SIZE (0x1):
+    // ... The initial value is 4,096 octets.
+    _capacity = 4096;
 }
 
 return_t hpack_session::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {

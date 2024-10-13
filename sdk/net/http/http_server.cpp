@@ -15,7 +15,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_server::http_server() : _cert(nullptr), _tls(nullptr), _tls_server_socket(nullptr) {
+http_server::http_server() : _tlscert(nullptr), _dtlscert(nullptr), _tls(nullptr), _dtls(nullptr), _tls_server_socket(nullptr), _dtls_server_socket(nullptr) {
     get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 }
 
@@ -57,8 +57,8 @@ return_t http_server::accept_handler(socket_t socket, sockaddr_storage_t* client
 return_t http_server::startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
     return_t ret = errorcode_t::success;
     __try2 {
-        __try_new_catch(_cert, new x509cert(x509cert_flag_tls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
-        __try_new_catch(_tls, new transport_layer_security(_cert->get_ctx()), ret, __leave2);
+        __try_new_catch(_tlscert, new x509cert(x509cert_flag_tls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
+        __try_new_catch(_tls, new transport_layer_security(_tlscert->get_ctx()), ret, __leave2);
         __try_new_catch(_tls_server_socket, new tls_server_socket(_tls), ret, __leave2);
     }
     __finally2 {
@@ -78,9 +78,44 @@ return_t http_server::shutdown_tls() {
             _tls->release();
             _tls = nullptr;
         }
-        if (_cert) {
-            delete _cert;
-            _cert = nullptr;
+        if (_tlscert) {
+            delete _tlscert;
+            _tlscert = nullptr;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t http_server::startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        __try_new_catch(_dtlscert, new x509cert(x509cert_flag_dtls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
+        __try_new_catch(_dtls, new transport_layer_security(_dtlscert->get_ctx()), ret, __leave2);
+        __try_new_catch(_dtls_server_socket, new dtls_server_socket(_dtls), ret, __leave2);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t http_server::shutdown_dtls() {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (_dtls_server_socket) {
+            _dtls_server_socket->release();
+            _dtls_server_socket = nullptr;
+        }
+        if (_dtls) {
+            _dtls->release();
+            _dtls = nullptr;
+        }
+        if (_dtlscert) {
+            delete _dtlscert;
+            _dtlscert = nullptr;
         }
     }
     __finally2 {
@@ -114,7 +149,9 @@ return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, htt
         }
         get_network_server().set_accept_control_handler(handle, accept_handler);
         get_network_server().add_protocol(handle, &get_http_protocol());
-        if (get_server_conf().get(netserver_config_t::serverconf_enable_h2)) {
+
+        uint16 enable_h2 = get_server_conf().get(netserver_config_t::serverconf_enable_h2);
+        if (enable_h2) {
             get_network_server().add_protocol(handle, &get_http2_protocol());
         }
 

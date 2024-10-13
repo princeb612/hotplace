@@ -50,6 +50,12 @@ void cprint(const char* text, ...) {
     _logger->writeln(bs);
 }
 
+void debug_hpack(uint32 event, stream_t* s) {
+    if (s) {
+        _logger->writeln("\e[1;36m%.*s\e[0m", (unsigned int)s->size(), s->data());
+    }
+};
+
 void test_huffman_codes_routine(const char* sample, const char* expect) {
     if (sample && expect) {
         const OPTION& option = cmdline->value();
@@ -167,52 +173,55 @@ void test_rfc7541_c_2() {
     // "custom-key: custom-header"
     {
         hpack_session session;  // dynamic table
-        const char* text1 = "RFC 7541 C.2.1 Literal Header Field with Indexing";
         bin.clear();
         encoder->encode_header(&session, bin, "custom-key", "custom-header", hpack_indexing);
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             _logger->hdump("encode", bin, 16, 2);
         }
+
+        const char* text1 = "RFC 7541 C.2.1 Literal Header Field with Indexing";
         const char* expect1 =
             "400a 6375 7374 6f6d 2d6b 6579 0d63 7573 "
             "746f 6d2d 6865 6164 6572                ";
-        _test_case.assert(bin == base16_decode_rfc(expect1), __FUNCTION__, "%s - encode", text1);
-        _test_case.assert(55 == session.get_tablesize(), __FUNCTION__, "%s - table size", text1);
-
         // 00000000 : 40 0A 63 75 73 74 6F 6D 2D 6B 65 79 0D 63 75 73 | @.custom-key.cus
         // 00000010 : 74 6F 6D 2D 68 65 61 64 65 72 -- -- -- -- -- -- | tom-header
+        _test_case.assert(bin == base16_decode_rfc(expect1), __FUNCTION__, "%s #encode", text1);
+
         pos = 0;
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
-        _test_case.assert(("custom-key" == name) && ("custom-header" == value), __FUNCTION__, "%s - decode", text1);
+
+        _test_case.assert(55 == session.get_tablesize(), __FUNCTION__, "%s #table size", text1);
+        _test_case.assert(("custom-key" == name) && ("custom-header" == value), __FUNCTION__, "%s #decode", text1);
     }
 
     // C.2.2.  Literal Header Field without Indexing
     // :path: /sample/path
     {
         hpack_session session;  // dynamic table
-        const char* text2 = "RFC 7541 C.2.2 Literal Header Field without Indexing";
         bin.clear();
         encoder->encode_header(&session, bin, ":path", "/sample/path", hpack_wo_indexing);
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             _logger->hdump("encode", bin, 16, 2);
         }
-        const char* expect2 = "040c 2f73 616d 706c 652f 7061 7468";
-        _test_case.assert(bin == base16_decode_rfc(expect2), __FUNCTION__, "%s - encode", text2);
-        _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s - table size", text2);
 
+        const char* text2 = "RFC 7541 C.2.2 Literal Header Field without Indexing";
+        const char* expect2 = "040c 2f73 616d 706c 652f 7061 7468";
         // 00000000 : 04 0C 2F 73 61 6D 70 6C 65 2F 70 61 74 68 -- -- | ../sample/path
+        _test_case.assert(bin == base16_decode_rfc(expect2), __FUNCTION__, "%s #encode", text2);
+
         pos = 0;
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
-        _test_case.assert((":path" == name) && ("/sample/path" == value), __FUNCTION__, "%s - decode", text2);
+
+        _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s #table size", text2);
+        _test_case.assert((":path" == name) && ("/sample/path" == value), __FUNCTION__, "%s #decode", text2);
     }
 
     // C.2.3.  Literal Header Field Never Indexed
     // password: secret
     {
         hpack_session session;  // dynamic table
-        const char* text3 = "RFC 7541 C.2.3 Literal Header Field Never Indexed";
         bin.clear();
         encoder->encode_header(&session, bin, "password", "secret", hpack_never_indexed);
         if (option.verbose) {
@@ -220,37 +229,42 @@ void test_rfc7541_c_2() {
             dump_memory(bin, &bs, 16, 2);
             _logger->hdump("encode", bin, 16, 2);
         }
+
+        const char* text3 = "RFC 7541 C.2.3 Literal Header Field Never Indexed";
         const char* expect3 =
             "1008 7061 7373 776f 7264 0673 6563 7265 "
             "74                                      ";
-        _test_case.assert(bin == base16_decode_rfc(expect3), __FUNCTION__, "%s - encode", text3);
-        _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s - table size", text3);
-
         // 00000000 : 10 08 70 61 73 73 77 6F 72 64 06 73 65 63 72 65 | ..password.secre
         // 00000010 : 74 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- | t
+        _test_case.assert(bin == base16_decode_rfc(expect3), __FUNCTION__, "%s #encode", text3);
+        _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s #table size", text3);
+
         pos = 0;
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
-        _test_case.assert(("password" == name) && ("secret" == value), __FUNCTION__, "%s - decode", text3);
+
+        _test_case.assert(("password" == name) && ("secret" == value), __FUNCTION__, "%s #decode", text3);
     }
 
     // C.2.4.  Indexed Header Field
     {
         hpack_session session;  // dynamic table
-        const char* text4 = "RFC 7541 C.2.4 Indexed Header Field";
         bin.clear();
         encoder->encode_header(&session, bin, ":method", "GET");
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             _logger->hdump("encode", bin, 16, 2);
         }
-        const char* expect4 = "82";
-        _test_case.assert(bin == base16_decode_rfc(expect4), __FUNCTION__, "%s - encode", text4);
-        _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s - table size", text4);
 
+        const char* text4 = "RFC 7541 C.2.4 Indexed Header Field";
+        const char* expect4 = "82";
         // 00000000 : 82 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- | .
+        _test_case.assert(bin == base16_decode_rfc(expect4), __FUNCTION__, "%s #encode", text4);
+        _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s #table size", text4);
+
         pos = 0;
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
-        _test_case.assert((":method" == name) && ("GET" == value), __FUNCTION__, "%s - decode", text4);
+
+        _test_case.assert((":method" == name) && ("GET" == value), __FUNCTION__, "%s #decode", text4);
     }
 }
 
@@ -311,17 +325,20 @@ void test_rfc7541_c_3() {
         dump_memory(hp.get_binary(), &bs, 16, 2);
         _logger->writeln("encode\n%s", bs.c_str());
     }
+
+    constexpr char text1[] = "RFC 7541 C.3.1 First Request";
     const char* expect1 =
         "8286 8441 0f77 7777 2e65 7861 6d70 6c65 "
         "2e63 6f6d                               ";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "RFC 7541 C.3.1 First Request");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "%s #encode", text1);
 
     // [  1] (s =  57) :authority: www.example.com
     //       Table size:  57
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(57 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text1);
+    _test_case.assert(57 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
     // C.3.2.  Second Request
     hp.get_binary().clear();
@@ -338,16 +355,19 @@ void test_rfc7541_c_3() {
         dump_memory(hp.get_binary(), &bs, 16, 2);
         _logger->writeln("encode\n%s", bs.c_str());
     }
+
+    constexpr char text2[] = "RFC 7541 C.3.2 Second Request";
     const char* expect2 = "8286 84be 5808 6e6f 2d63 6163 6865";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.3.2 Second Request");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "%s #encode", text2);
 
     // [  1] (s =  53) cache-control: no-cache
     // [  2] (s =  57) :authority: www.example.com
     //       Table size: 110
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(110 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text2);
+    _test_case.assert(110 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text2);
 
     // C.3.3.  Third Request
     hp.get_binary().clear();
@@ -363,10 +383,12 @@ void test_rfc7541_c_3() {
         test_case_notimecheck notimecheck(_test_case);
         _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
+
+    constexpr char text3[] = "RFC 7541 C.3.3 Third Request";
     const char* expect3 =
         "8287 85bf 400a 6375 7374 6f6d 2d6b 6579 "
         "0c63 7573 746f 6d2d 7661 6c75 65        ";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "RFC 7541 C.3.3 Third Request");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "%s #encode", text3);
 
     // [  1] (s =  54) custom-key: custom-value
     // [  2] (s =  53) cache-control: no-cache
@@ -374,8 +396,9 @@ void test_rfc7541_c_3() {
     //       Table size: 164
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(164 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text3);
+    _test_case.assert(164 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text3);
 }
 
 // C.4.  Request Examples with Huffman Coding
@@ -400,14 +423,17 @@ void test_rfc7541_c_4() {
         test_case_notimecheck notimecheck(_test_case);
         _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
+
+    constexpr char text1[] = "RFC 7541 C.4.1 First Request";
     const char* expect1 =
         "8286 8441 8cf1 e3c2 e5f2 3a6b a0ab 90f4 "
         "ff                                      ";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "RFC 7541 C.4.1 First Request");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "%s #encode", text1);
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(57 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text1);
+    _test_case.assert(57 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
     // C.4.2.  Second Request
     hp.get_binary().clear();
@@ -423,12 +449,15 @@ void test_rfc7541_c_4() {
         test_case_notimecheck notimecheck(_test_case);
         _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
+
+    constexpr char text2[] = "RFC 7541 C.4.2 Second Request";
     const char* expect2 = "8286 84be 5886 a8eb 1064 9cbf";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.4.2 Second Request");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "%s #encode", text2);
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(110 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text2);
+    _test_case.assert(110 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text2);
 
     // C.4.3.  Third Request
     hp.get_binary().clear();
@@ -444,14 +473,17 @@ void test_rfc7541_c_4() {
         test_case_notimecheck notimecheck(_test_case);
         _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
+
+    constexpr char text3[] = "RFC 7541 C.4.3 Third Request";
     const char* expect3 =
         "8287 85bf 4088 25a8 49e9 5ba9 7d7f 8925 "
         "a849 e95b b8e8 b4bf                     ";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "RFC 7541 C.4.3 Third Request");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "%s #encode", text3);
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(164 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text3);
+    _test_case.assert(164 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text3);
 }
 
 // C.5.  Response Examples without Huffman Coding
@@ -468,6 +500,8 @@ void test_rfc7541_c_5() {
     // The HTTP/2 setting parameter SETTINGS_HEADER_TABLE_SIZE is set to the value of 256 octets
     session.set_capacity(256);
     session_receiver.set_capacity(256);
+    session.trace(debug_hpack);
+    session_receiver.trace(debug_hpack);
 
     // C.5.1.  First Response
     hp.set_encoder(&*encoder)
@@ -481,17 +515,20 @@ void test_rfc7541_c_5() {
         test_case_notimecheck notimecheck(_test_case);
         _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
+
+    constexpr char text1[] = "RFC 7541 C.5.1 First Response";
     const char* expect1 =
         "4803 3330 3258 0770 7269 7661 7465 611d "
         "4d6f 6e2c 2032 3120 4f63 7420 3230 3133 "
         "2032 303a 3133 3a32 3120 474d 546e 1768 "
         "7474 7073 3a2f 2f77 7777 2e65 7861 6d70 "
         "6c65 2e63 6f6d                          ";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "RFC 7541 C.5.1 First Response");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "%s #encode", text1);
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(222 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text1);
+    _test_case.assert(222 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
     // C.5.2.  Second Response
     hp.get_binary().clear();
@@ -506,12 +543,15 @@ void test_rfc7541_c_5() {
         test_case_notimecheck notimecheck(_test_case);
         _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
+
+    constexpr char text2[] = "RFC 7541 C.5.2 Second Response";
     const char* expect2 = "4803 3330 37c1 c0bf";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.5.2 Second Response");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "%s #encode", text2);
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(222 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text2);
+    _test_case.assert(222 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text2);
 
     // C.5.3.  Third Response
     hp.get_binary().clear();
@@ -528,6 +568,8 @@ void test_rfc7541_c_5() {
         test_case_notimecheck notimecheck(_test_case);
         _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
+
+    constexpr char text3[] = "RFC 7541 C.5.3 Third Response";
     const char* expect3 =
         "88c1 611d 4d6f 6e2c 2032 3120 4f63 7420 "
         "3230 3133 2032 303a 3133 3a32 3220 474d "
@@ -536,11 +578,12 @@ void test_rfc7541_c_5() {
         "5541 5851 5745 4f49 553b 206d 6178 2d61 "
         "6765 3d33 3630 303b 2076 6572 7369 6f6e "
         "3d31                                    ";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "RFC 7541 C.5.3 Third Response");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "%s #encode", text3);
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(215 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text3);
+    _test_case.assert(215 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text3);
 }
 
 // C.6.  Response Examples with Huffman Coding
@@ -557,6 +600,8 @@ void test_rfc7541_c_6() {
     // The HTTP/2 setting parameter SETTINGS_HEADER_TABLE_SIZE is set to the value of 256 octets
     session.set_capacity(256);
     session_receiver.set_capacity(256);
+    session.trace(debug_hpack);
+    session_receiver.trace(debug_hpack);
 
     // C.6.1.  First Response
     hp.get_binary().clear();
@@ -571,16 +616,19 @@ void test_rfc7541_c_6() {
         test_case_notimecheck notimecheck(_test_case);
         _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
+
+    constexpr char text1[] = "RFC 7541 C.6.1 First Response";
     const char* expect1 =
         "4882 6402 5885 aec3 771a 4b61 96d0 7abe "
         "9410 54d4 44a8 2005 9504 0b81 66e0 82a6 "
         "2d1b ff6e 919d 29ad 1718 63c7 8f0b 97c8 "
         "e9ae 82ae 43d3                          ";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "RFC 7541 C.6.1 First Response");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "%s #encode", text1);
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(222 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text1);
+    _test_case.assert(222 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
     // C.6.2.  Second Response
     hp.get_binary().clear();
@@ -595,12 +643,15 @@ void test_rfc7541_c_6() {
         test_case_notimecheck notimecheck(_test_case);
         _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
+
+    constexpr char text2[] = "RFC 7541 C.6.2 Second Response";
     const char* expect2 = "4883 640e ffc1 c0bf";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "RFC 7541 C.6.2 Second Response");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "%s #encode", text2);
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(222 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text2);
+    _test_case.assert(222 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text2);
 
     // C.6.3.  Third Response
     hp.get_binary().clear();
@@ -617,17 +668,20 @@ void test_rfc7541_c_6() {
         test_case_notimecheck notimecheck(_test_case);
         _logger->hdump("encode", hp.get_binary(), 16, 2);
     }
+
+    constexpr char text3[] = "RFC 7541 C.6.3 Third Response";
     const char* expect3 =
         "88c1 6196 d07a be94 1054 d444 a820 0595 "
         "040b 8166 e084 a62d 1bff c05a 839b d9ab "
         "77ad 94e7 821d d7f2 e6c7 b335 dfdf cd5b "
         "3960 d5af 2708 7f36 72c1 ab27 0fb5 291f "
         "9587 3160 65c0 03ed 4ee5 b106 3d50 07   ";
-    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "RFC 7541 C.6.3 Third Response");
+    _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "%s #encode", text3);
 
     decode(hp.get_binary(), &session_receiver, &session);
-    _test_case.assert(session == session_receiver, __FUNCTION__, "#decode");
-    _test_case.assert(215 == session_receiver.get_tablesize(), __FUNCTION__, "#decode table size");
+
+    _test_case.assert(session == session_receiver, __FUNCTION__, "%s #decode", text3);
+    _test_case.assert(215 == session_receiver.get_tablesize(), __FUNCTION__, "%s #table size", text3);
 }
 
 void test_h2_header_frame_fragment() {

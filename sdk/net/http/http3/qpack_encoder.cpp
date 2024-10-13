@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-qpack_encoder::qpack_encoder() : http_header_compression(), _base(0), _tobe_sync(0) {
+qpack_encoder::qpack_encoder() : http_header_compression() {
     // RFC 9204 Appendix A.  Static Table
     http_resource::get_instance()->for_each_qpack_static_table([&](uint32 index, const char* name, const char* value) -> void {
         _static_table.insert(std::make_pair(name, std::make_pair(value ? value : "", index)));
@@ -33,7 +33,7 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
 
         size_t index = 0;
 
-        state = match(session, 0, name, value, index);
+        state = match(session, flags, name, value, index);
         switch (state) {
             case match_result_t::all_matched:
             case match_result_t::all_matched_dynamic:
@@ -64,9 +64,8 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
                      *      - an encoded field section referencing the dynamic table entries including the duplicated entry
                      */
                     ret = errorcode_t::already_exist;
-                    session->duplicate(name, value);
+                    session->insert(name, value);  // duplicate
                     duplicate(target, index);
-                    _tobe_sync++;
                 } else {
                     size_t postbase = 0;
                     size_t respsize = sizeof(size_t);
@@ -87,7 +86,6 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
                 // RFC 9204 4.3.2.  Insert with Name Reference
                 if (qpack_indexing & flags) {
                     session->insert(name, value);
-                    _tobe_sync++;
                 }
                 break;
             default:
@@ -96,7 +94,6 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
                 // ... adds an entry to the dynamic table ...
                 if (qpack_indexing & flags) {
                     session->insert(name, value);
-                    _tobe_sync++;
                 }
                 break;
         }
@@ -116,7 +113,50 @@ return_t qpack_encoder::decode(http_header_compression_session* session, const b
             __leave2;
         }
 
-        // todo
+        /**
+         * RFC 9204
+         *  4.3.  Encoder Instructions
+         *   001   5+ - 4.3.1.  Set Dynamic Table Capacity
+         *   1T    6+ - 4.3.2.  Insert with Name Reference
+         *   01H   5+ - 4.3.3.  Insert with Literal Name
+         *   000   5+ - 4.3.4.  Duplicate
+         *  4.4.  Decoder Instructions
+         *   1     7+ - 4.4.1.  Section Acknowledgment
+         *   01    6+ - 4.4.2.  Stream Cancellation
+         *   00    6+ - 4.4.3.  Insert Count Increment
+         *  4.5.  Field Line Representations
+         *  4.5.1.  Encoded Field Section Prefix
+         *        0   1   2   3   4   5   6   7
+         *   +---+---+---+---+---+---+---+---+
+         *   |   Required Insert Count (8+)  |
+         *   +---+---------------------------+
+         *   | S |      Delta Base (7+)      |
+         *   +---+---------------------------+
+         *   |      Encoded Field Lines    ...
+         *   +-------------------------------+
+         *      Figure 12: Encoded Field Section
+         *
+         *   1T    6+ - 4.5.2.  Indexed Field Line / Figure 13
+         *   0001  4+ - 4.5.3.  Indexed Field Line with Post-Base Index / Figure 14
+         *   01NT  4+ - 4.5.4.  Literal Field Line with Name Reference / Figure 15
+         *   0000N 3+ - 4.5.5.  Literal Field Line with Post-Base Name Reference / Figure 16
+         *   001NH 3+ - 4.5.6.  Literal Field Line with Literal Name / Figure 17
+         */
+        byte_t b = source[pos];
+        uint8 mask = 0;
+        uint8 prefix = 0;
+        uint32 flags = 0;
+        if (0x80 & b) {
+            // index
+        } else if (0x10 & b) {
+            // post-base index
+        } else if (0x40 & b) {
+            // name reference
+        } else if (0xf0 & ~b) {
+            // post-base name reference
+        } else if (0x20 & b) {
+            // name value
+        }
     }
     __finally2 {
         // do nothing
@@ -144,16 +184,19 @@ return_t qpack_encoder::sync(http_header_compression_session* session, binary_t&
      */
     if (session) {
         size_t capacity = session->get_capacity();
-        size_t ric = _tobe_sync;
+        size_t ric = 0;
         size_t base = 0;
         size_t eic = 0;
         bool sign = true;
         size_t deltabase = 0;
 
+        size_t respsize = sizeof(ric);
+        session->query(qpack_cmd_ric, nullptr, 0, &ric, respsize);
+
         if (qpack_postbase_index & flags) {
             base = 0;
         } else {
-            base = _tobe_sync;
+            base = ric;
         }
 
         qpack_ric2eic(capacity, ric, base, eic, sign, deltabase);
@@ -164,11 +207,13 @@ return_t qpack_encoder::sync(http_header_compression_session* session, binary_t&
         uint8 prefix = 7;
         encode_int(temp, mask, prefix, deltabase);
         target.insert(target.begin(), temp.begin(), temp.end());
-
-        _tobe_sync = 0;
     }
 
     return ret;
+}
+
+return_t qpack_encoder::insert(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
+    return encode(session, target, name, value, flags | qpack_indexing);
 }
 
 qpack_encoder& qpack_encoder::encode_header(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,

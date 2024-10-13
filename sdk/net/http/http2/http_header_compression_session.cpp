@@ -18,28 +18,34 @@ namespace net {
 
 return_t qpack_ric2eic(size_t capacity, size_t ric, size_t base, size_t& eic, bool& sign, size_t& deltabase) {
     return_t ret = errorcode_t::success;
-    /* RFC 9204 4.5.1.1.  Required Insert Count
-     *  if (ReqInsertCount) EncInsertCount = (ReqInsertCount mod (2 * MaxEntries)) + 1
-     *  else EncInsertCount = 0;
-     */
-    if (0 == ric) {
-        eic = ric;
-    } else {
-        size_t maxentries = ::floor(capacity / 32);
-        eic = (ric % (2 * maxentries)) + 1;
-    }
+    if (capacity) {
+        /* RFC 9204 4.5.1.1.  Required Insert Count
+         *  if (ReqInsertCount) EncInsertCount = (ReqInsertCount mod (2 * MaxEntries)) + 1
+         *  else EncInsertCount = 0;
+         */
+        if (0 == ric) {
+            eic = ric;
+        } else {
+            size_t maxentries = ::floor(capacity / 32);
+            eic = (ric % (2 * maxentries)) + 1;
+        }
 
-    /* RFC 9204 4.5.1.2.  Base
-     *  A Sign bit of 1 indicates that the Base is less than the Required Insert Count
-     *
-     *  if (0 == Sign) DeltaBase = Base - ReqInsertCount
-     *  else DeltaBase = ReqInsertCount - Base - 1
-     */
-    sign = (ric > base);
-    if (ric > base) {
-        deltabase = ric - base - 1;
+        /* RFC 9204 4.5.1.2.  Base
+         *  A Sign bit of 1 indicates that the Base is less than the Required Insert Count
+         *
+         *  if (0 == Sign) DeltaBase = Base - ReqInsertCount
+         *  else DeltaBase = ReqInsertCount - Base - 1
+         */
+        sign = (ric > base);
+        if (ric > base) {
+            deltabase = ric - base - 1;
+        } else {
+            deltabase = ric - base;
+        }
     } else {
-        deltabase = ric - base;
+        eic = 0;
+        sign = false;
+        deltabase = 0;
     }
 
     return ret;
@@ -48,7 +54,33 @@ return_t qpack_ric2eic(size_t capacity, size_t ric, size_t base, size_t& eic, bo
 return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_t deltabase, size_t& ric, size_t& base) {
     return_t ret = errorcode_t::success;
     __try2 {
-        // RFC 9204 4.5.1.1.  Required Insert Count
+        /**
+         * RFC 9204 4.5.1.1.  Required Insert Count
+         *
+         * FullRange = 2 * MaxEntries
+         * if EncodedInsertCount == 0:
+         *    ReqInsertCount = 0
+         * else:
+         *    if EncodedInsertCount > FullRange:
+         *       Error
+         *    MaxValue = TotalNumberOfInserts + MaxEntries
+         *
+         *    # MaxWrapped is the largest possible value of
+         *    # ReqInsertCount that is 0 mod 2 * MaxEntries
+         *    MaxWrapped = floor(MaxValue / FullRange) * FullRange
+         *    ReqInsertCount = MaxWrapped + EncodedInsertCount - 1
+         *
+         *    # If ReqInsertCount exceeds MaxValue, the Encoder's value
+         *    # must have wrapped one fewer time
+         *    if ReqInsertCount > MaxValue:
+         *       if ReqInsertCount <= FullRange:
+         *          Error
+         *       ReqInsertCount -= FullRange
+         *
+         *    # Value of 0 must be encoded as 0.
+         *    if ReqInsertCount == 0:
+         *       Error
+         */
         size_t maxentries = ::floor(capacity / 32);
         eic = (ric % (2 * maxentries)) + 1;
         size_t fullrange = 2 * maxentries;
@@ -97,7 +129,7 @@ return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_
     return ret;
 }
 
-http_header_compression_session::http_header_compression_session() : _separate(false), _inserted(0), _dropped(0), _capacity(0x10000), _tablesize(0) {}
+http_header_compression_session::http_header_compression_session() : _separate(false), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
 
 void http_header_compression_session::for_each(std::function<void(const std::string&, const std::string&)> v) {
     if (v) {
@@ -115,14 +147,15 @@ bool http_header_compression_session::operator!=(const http_header_compression_s
     return (_separate != rhs._separate) || (_dynamic_map != rhs._dynamic_map);
 }
 
-void http_header_compression_session::trace(std::function<void(stream_t*)> f) { _df = f; }
+void http_header_compression_session::trace(std::function<void(uint32, stream_t*)> f) { _df = f; }
 
-match_result_t http_header_compression_session::match(const std::string& name, const std::string& value, size_t& index) {
+match_result_t http_header_compression_session::match(const std::string& name, const std::string& value, size_t& index, uint32 flags) {
     match_result_t state = match_result_t::not_matched;
 
     auto lbound = _dynamic_map.lower_bound(name);
     auto ubound = _dynamic_map.upper_bound(name);
     std::priority_queue<size_t> pq;
+    std::priority_queue<size_t> nr;
 
     for (auto iter = lbound; iter != ubound; iter++) {
         const auto& k = iter->first;
@@ -130,13 +163,16 @@ match_result_t http_header_compression_session::match(const std::string& name, c
         const auto& val = v.first;
         const auto& ent = v.second;
         if ((name == k) && (value == val)) {
-            pq.push(ent);
+            pq.push(ent);  // using greater
+        }
+        if (qpack_name_reference & flags) {
+            if (name == k) {
+                nr.push(ent);
+            }
         }
     }
 
-    if (pq.size()) {
-        state = match_result_t::all_matched_dynamic;
-        const auto& ent = pq.top();
+    auto get_entry = [&](size_t ent, size_t& idx) -> void {
         /**
          * get index from v.second
          *
@@ -149,12 +185,36 @@ match_result_t http_header_compression_session::match(const std::string& name, c
          * conclusion
          *  index = _inserted - _dropped - v.second + _dropped - 1 = _inserted - v.second - 1
          */
-        index = _inserted - ent - 1;
+        idx = _inserted - ent - 1;
         if (false == _separate) {
-            // HPACK
+            /**
+             * HPACK
+             * RFC 7541 2.3.3.  Index Address Space
+             *
+             *  <----------  Index Address Space ---------->
+             *  <-- Static  Table -->  <-- Dynamic Table -->
+             *  +---+-----------+---+  +---+-----------+---+
+             *  | 1 |    ...    | s |  |s+1|    ...    |s+k|
+             *  +---+-----------+---+  +---+-----------+---+
+             *                         ^                   |
+             *                         |                   V
+             *                  Insertion Point      Dropping Point
+             *
+             *              Figure 1: Index Address Space
+             */
             auto static_entries = http_resource::get_instance()->sizeof_hpack_static_table_entries();
-            index += (static_entries + 1);
+            idx += (static_entries + 1);
         }
+    };
+
+    if (pq.size()) {
+        state = match_result_t::all_matched_dynamic;
+        auto const& ent = pq.top();  // biggest = latest
+        get_entry(ent, index);
+    } else if (nr.size()) {
+        state = match_result_t::key_matched_dynamic;
+        auto const& ent = nr.top();
+        get_entry(ent, index);
     }
 
     return state;
@@ -208,20 +268,6 @@ return_t http_header_compression_session::select(size_t index, std::string& name
 
 return_t http_header_compression_session::insert(const std::string& name, const std::string& value) {
     return_t ret = errorcode_t::success;
-    /**
-     * RFC 7541 2.3.3.  Index Address Space
-     *
-     *  <----------  Index Address Space ---------->
-     *  <-- Static  Table -->  <-- Dynamic Table -->
-     *  +---+-----------+---+  +---+-----------+---+
-     *  | 1 |    ...    | s |  |s+1|    ...    |s+k|
-     *  +---+-----------+---+  +---+-----------+---+
-     *                         ^                   |
-     *                         |                   V
-     *                  Insertion Point      Dropping Point
-     *
-     *              Figure 1: Index Address Space
-     */
 
     // RFC 7541 4.1.  Calculating Table Size
     // RFC 9204 3.2.1.  Dynamic Table Size
@@ -234,6 +280,12 @@ return_t http_header_compression_session::insert(const std::string& name, const 
     _dynamic_map.insert({name, {value, _inserted}});
     _dynamic_reversemap.insert({_inserted, {name, entrysize}});
 
+    if (_df) {
+        basic_stream bs;
+        bs.printf("insert entry[%zi] %s=%s", _inserted, name.c_str(), value.c_str());
+        _df(header_compression_event_insert, &bs);
+    }
+
     _inserted++;
 
     return ret;
@@ -242,48 +294,45 @@ return_t http_header_compression_session::insert(const std::string& name, const 
 return_t http_header_compression_session::evict() {
     return_t ret = errorcode_t::success;
 
-    while (_tablesize > _capacity) {
+    while (_dynamic_reversemap.size() && (_tablesize > _capacity)) {
         // RFC 7541 4.2.  Maximum Table Size
         // RFC 7541 4.4.  Entry Eviction When Adding New Entries
         // RFC 9204 3.2.2.  Dynamic Table Capacity and Eviction
         auto entry = _dropped;
         auto back = _dynamic_reversemap.find(entry);
 
-        auto const& t = back->first;   // entry
-        auto const& k = back->second;  // (name, entry size)
+        if (_dynamic_reversemap.end() != back) {
+            auto const& t = back->first;   // entry
+            auto const& k = back->second;  // (name, entry size)
 
-        auto const& name = k.first;
-        auto const& entrysize = k.second;
+            auto const& name = k.first;
+            auto const& entrysize = k.second;
 
-        _tablesize -= entrysize;
+            _tablesize -= entrysize;
 
-        auto lbound = _dynamic_map.lower_bound(name);
-        auto ubound = _dynamic_map.upper_bound(name);
+            auto lbound = _dynamic_map.lower_bound(name);
+            auto ubound = _dynamic_map.upper_bound(name);
 
-        for (auto iter = lbound; iter != ubound; iter++) {
-            auto const& v = iter->second;  // pair(value, entry)
-            auto const& val = v.first;
-            auto const& ent = v.second;
-            if (ent == t) {
-                if (_df) {
-                    basic_stream bs;
-                    bs.printf("evict entry[%zi] %s=%s", entry, name.c_str(), val.c_str());
-                    _df(&bs);
+            for (auto iter = lbound; iter != ubound; iter++) {
+                auto const& v = iter->second;  // pair(value, entry)
+                auto const& val = v.first;
+                auto const& ent = v.second;
+                if (ent == t) {
+                    if (_df) {
+                        basic_stream bs;
+                        bs.printf("evict entry[%zi] %s=%s", entry, name.c_str(), val.c_str());
+                        _df(header_compression_event_evict, &bs);
+                    }
+                    _dynamic_map.erase(iter);
+                    break;
                 }
-                _dynamic_map.erase(iter);
-                break;
             }
-        }
 
-        _dynamic_reversemap.erase(back);
-        _dropped++;
+            _dynamic_reversemap.erase(back);
+            _dropped++;
+        }
     }
 
-    return ret;
-}
-
-return_t http_header_compression_session::duplicate(const std::string& name, const std::string& value) {
-    return_t ret = errorcode_t::success;
     return ret;
 }
 

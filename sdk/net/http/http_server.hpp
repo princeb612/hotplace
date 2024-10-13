@@ -25,6 +25,7 @@
 #include <sdk/net/http/http_protocol.hpp>
 #include <sdk/net/http/http_router.hpp>
 #include <sdk/net/server/network_server.hpp>
+#include <sdk/net/tls/dtls_server_socket.hpp>
 #include <sdk/net/tls/tls.hpp>
 #include <sdk/net/tls/tls_server_socket.hpp>
 #include <sdk/net/types.hpp>  // ws2tcpip.h first
@@ -65,6 +66,8 @@ class http_server {
 
     return_t startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
     return_t shutdown_tls();
+    return_t startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
+    return_t shutdown_dtls();
     return_t startup_server(uint16 tls, uint16 family, uint16 port, http_server_handler_t handler, void* user_context = nullptr);
     return_t shutdown_server();
 
@@ -84,6 +87,14 @@ class http_server {
      * @param   void* server_context [in] http_server*
      */
     static return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* server_context);
+    /**
+     * @brief   consume
+     * @param   uint32 type [in]
+     * @param   uint32 data_count [in]
+     * @param   void* data_array[] [in]
+     * @param   CALLBACK_CONTROL* callback_control [in]
+     * @param   void* user_context [in]
+     */
     return_t consume(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
 
    private:
@@ -94,9 +105,14 @@ class http_server {
     tcp_server_socket _server_socket;
 
     // TLS
-    x509cert* _cert;
+    x509cert* _tlscert;
     transport_layer_security* _tls;
     tls_server_socket* _tls_server_socket;
+
+    // DTLS
+    x509cert* _dtlscert;
+    transport_layer_security* _dtls;
+    dtls_server_socket* _dtls_server_socket;
 
     // ACL
     ipaddr_acl _acl;

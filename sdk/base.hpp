@@ -38,6 +38,16 @@
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/basic/variant.hpp>
 
+/* nostd */
+#include <sdk/base/nostd/exception.hpp>
+#include <sdk/base/nostd/graph.hpp>
+#include <sdk/base/nostd/list.hpp>
+#include <sdk/base/nostd/pattern.hpp>
+#include <sdk/base/nostd/pq.hpp>
+#include <sdk/base/nostd/template.hpp>
+#include <sdk/base/nostd/tree.hpp>
+#include <sdk/base/nostd/vector.hpp>
+
 /* stream */
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/bufferio.hpp>
