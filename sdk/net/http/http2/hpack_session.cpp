@@ -15,7 +15,7 @@ namespace hotplace {
 namespace net {
 
 hpack_session::hpack_session() : http_header_compression_session() {
-    // _separate = false;
+    // _type = header_compression_hpack;
 
     // RFC 7540 6.5.2.  Defined SETTINGS Parameters
     // SETTINGS_HEADER_TABLE_SIZE (0x1):
@@ -31,10 +31,6 @@ return_t hpack_session::query(int cmd, void* req, size_t reqsize, void* resp, si
             __leave2;
         }
         switch (cmd) {
-            case hpack_cmd_tablesize: {
-                respsize = sizeof(size_t);
-                memcpy(resp, &_tablesize, respsize);
-            } break;
             case hpack_cmd_inserted:
                 respsize = sizeof(size_t);
                 memcpy(resp, &_inserted, respsize);

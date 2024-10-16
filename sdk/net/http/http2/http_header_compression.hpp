@@ -27,17 +27,13 @@ enum match_result_t {
     key_matched_dynamic = 5,
     all_matched_dynamic = 6,
 };
+
 enum http_header_compression_flag_t {
     // encoding/decoding
     hpack_huffman = (1 << 0),        // RFC 7541 5.2.  String Literal Representation
     hpack_indexing = (1 << 1),       // RFC 7541 6.2.1.  Literal Header Field with Incremental Indexing
     hpack_wo_indexing = (1 << 2),    // RFC 7541 6.2.2.  Literal Header Field without Indexing
     hpack_never_indexed = (1 << 3),  // RFC 7541 6.2.3.  Literal Header Field Never Indexed
-
-    // analysis layout while decoding
-    hpack_layout_index = (1 << 4),         // RFC 7541 6.1.  Indexed Header Field Representation
-    hpack_layout_indexed_name = (1 << 5),  // RFC 7541 6.2.  Literal Header Field Representation
-    hpack_layout_name_value = (1 << 6),    // RFC 7541 6.2.  Literal Header Field Representation
 
     // encoding/decoding
     qpack_huffman = hpack_huffman,
@@ -48,17 +44,31 @@ enum http_header_compression_flag_t {
     qpack_name_reference = (1 << 5),
 
     // analysis layout while decoding
-    qpack_layout_capacity = (1 << 13),                 // RFC 9204 4.3.1.  Set Dynamic Table Capacity
-    qpack_layout_index = (1 << 4),                     // RFC 9204 4.5.2.  Indexed Field Line
-    qpack_layout_postbase_index = (1 << 11),           // RFC 9204 4.5.3.  Indexed Field Line with Post-Base Index
-    qpack_layout_name_reference = (1 << 5),            // RFC 9204 4.5.4.  Literal Field Line with Name Reference
-    qpack_layout_postbase_name_reference = (1 << 12),  // RFC 9204 4.5.5.  Literal Field Line with Post-Base Name Reference
-    qpack_layout_name_value = (1 << 6),                // RFC 9204 4.5.6.  Literal Field Line with Literal Name
+    hpack_layout_index = (1 << 4),         // RFC 7541 6.1.  Indexed Header Field Representation
+    hpack_layout_indexed_name = (1 << 5),  // RFC 7541 6.2.  Literal Header Field Representation
+    hpack_layout_name_value = (1 << 6),    // RFC 7541 6.2.  Literal Header Field Representation
+    hpack_layout_capacity = (1 << 10),     // RFC 7541 6.3.  Dynamic Table Size Update
+
+    // analysis layout while decoding
+    qpack_layout_capacity = (1 << 10),       // RFC 9204 4.3.1.  Set Dynamic Table Capacity
+    qpack_layout_index = (1 << 4),           // RFC 9204 4.5.2.  Indexed Field Line
+    qpack_layout_name_reference = (1 << 5),  // RFC 9204 4.5.4.  Literal Field Line with Name Reference
+    qpack_layout_name_value = (1 << 6),      // RFC 9204 4.5.6.  Literal Field Line with Literal Name
+    qpack_layout_duplicate = (1 << 11),
+    qpack_layout_ack = (1 << 12),
+    qpack_layout_cancel = (1 << 13),
+    qpack_layout_inc = (1 << 14),
+
+    qpack_quic_stream_encoder = (1 << 15),  // RFC 9204 4.3.  Encoder Instructions
+    qpack_quic_stream_decoder = (1 << 16),  // RFC 9204 4.4.  Decoder Instructions
+    qpack_quic_stream_header = (1 << 17),   // RFC 9204 4.5.  Field Line Representations
 };
+
 enum http_header_compression_event_t {
     header_compression_event_insert = 1,
     header_compression_event_evict = 2,
 };
+
 class http_header_compression_session;
 
 /**
@@ -86,8 +96,10 @@ class http_header_compression {
      * @param   size_t& pos [in]
      * @param   std::string& name [in]
      * @param   std::string& value [in]
+     * @param   uint32 flags [inopt]
      */
-    virtual return_t decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    virtual return_t decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
+                            uint32 flags = 0);
     /**
      * @brief   synchronize
      * @param   http_header_compression_session* session [in] dynamic table
@@ -151,6 +163,17 @@ class http_header_compression {
     return_t decode_string(const byte_t* p, size_t& pos, uint8 flags, std::string& value);
 
     /**
+     * @brief   name reference
+     * @param   const byte_t* p [in]
+     * @param   size_t& pos [inout]
+     * @param   uint8 flags [in]
+     * @param   uint8 mask [in]
+     * @param   uint8 prefix [in]
+     * @param   std::string& name [out]
+     */
+    return_t decode_name_reference(const byte_t* p, size_t& pos, uint8 flags, uint8 mask, uint8 prefix, std::string& name);
+
+    /**
      * @brief   dynamic table size
      * @param   http_header_compression_session* session [in]
      * @param   binary_t& target
@@ -159,7 +182,7 @@ class http_header_compression {
      *          RFC 7541 6.3.  Dynamic Table Size Update
      *          RFC 9204 4.3.1.  Set Dynamic Table Capacity
      */
-    return_t set_dynamic_table_size(http_header_compression_session* session, binary_t& target, uint8 maxsize);
+    return_t set_capacity(http_header_compression_session* session, binary_t& target, uint8 maxsize);
     /**
      * @brief   size of entry
      * @param   const std::string& name [in]
@@ -181,18 +204,6 @@ class http_header_compression {
      */
     void safe_mask(bool enable);
 
-    typedef std::pair<std::string, size_t> table_entry_t;
-
-   protected:
-    bool _safe_mask;
-
-    typedef std::multimap<std::string, table_entry_t> static_table_t;
-    typedef std::map<size_t, std::pair<std::string, std::string>> static_table_index_t;
-
-    huffman_coding _huffcode;
-    static_table_t _static_table;
-    static_table_index_t _static_table_index;
-
     /**
      * @brief   match
      * @param   http_header_compression_session* session [in]
@@ -200,7 +211,6 @@ class http_header_compression {
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   size_t& index [out]
-     * @param   uint32 flags [inopt]
      * @return  match_result_t
      * @remarks select index from table where name = arg(name) and value = arg(value)
      */
@@ -215,40 +225,31 @@ class http_header_compression {
      * @remarks select name, value from table where index = arg(index)
      */
     return_t select(http_header_compression_session* session, uint32 flags, size_t index, std::string& name, std::string& value);
+
+   protected:
+    bool _safe_mask;
+
+    typedef std::pair<std::string, size_t> table_entry_t;
+    typedef std::multimap<std::string, table_entry_t> static_table_t;
+    typedef std::map<size_t, std::pair<std::string, std::string>> static_table_index_t;
+
+    huffman_coding _huffcode;
+    static_table_t _static_table;
+    static_table_index_t _static_table_index;
+};
+
+enum header_compression_type_t {
+    header_compression_hpack = 0,
+    header_compression_qpack = 1,
 };
 
 enum header_compression_cmd_t {
-    hpack_cmd_tablesize = 0,
-    qpack_cmd_tablesize = 0,
     hpack_cmd_inserted = 1,
     qpack_cmd_inserted = 1,
     hpack_cmd_dropped = 2,
     qpack_cmd_dropped = 2,
     qpack_cmd_postbase_index = 3,
-    qpack_cmd_ric = 4,
 };
-
-/**
- * @brief   Field Section Prefix
- * @param   size_t capacity [in]
- * @param   size_t ric [in]
- * @param   size_t base [in]
- * @param   size_t& eic [out]
- * @param   bool& sign [out]
- * @param   size_t& deltabase [out]
- */
-return_t qpack_ric2eic(size_t capacity, size_t ric, size_t base, size_t& eic, bool& sign, size_t& deltabase);
-/**
- * @brief   Field Section Prefix (reconstruct)
- * @param   size_t capacity [in]
- * @param   size_t tni [in] total number of inserts
- * @param   size_t eic [in]
- * @param   bool sign [in]
- * @param   size_t deltabase [in]
- * @param   size_t& ric [out]
- * @param   size_t& base [out]
- */
-return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_t deltabase, size_t& ric, size_t& base);
 
 /**
  * @brief   session
@@ -282,10 +283,11 @@ class http_header_compression_session {
     /**
      * @brief   select
      * @param   size_t index [in]
+     * @param   uint32 flags [in]
      * @param   std::string& name [out]
      * @param   std::string& value [out]
      */
-    virtual return_t select(size_t index, std::string& name, std::string& value);
+    virtual return_t select(size_t index, uint32 flags, std::string& name, std::string& value);
     /**
      * @brief   insert
      * @param   const std::string& name [in]
@@ -297,7 +299,7 @@ class http_header_compression_session {
      */
     virtual return_t evict();
     /**
-     * @brief   capacity
+     * @brief   capacity (SETTINGS_QPACK_MAX_TABLE_CAPACITY)
      */
     void set_capacity(uint32 capacity);
     size_t get_capacity();
@@ -305,6 +307,10 @@ class http_header_compression_session {
      * @brief   table size
      */
     size_t get_tablesize();
+    /**
+     * @brief   entries
+     */
+    size_t get_entries();
     /**
      * @brief   HPACK/QPACK query function
      * @param   int cmd [in] see header_compression_cmd_t
@@ -314,16 +320,21 @@ class http_header_compression_session {
      * @param   size_t& respsize [inout]
      */
     virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
+    /**
+     * @brief   type
+     * @return  see header_compression_type_t
+     */
+    uint8 type();
 
    protected:
-    typedef http_header_compression::table_entry_t table_entry_t;
+    typedef std::pair<std::string, size_t> table_entry_t;
     typedef std::multimap<std::string, table_entry_t> dynamic_map_t;  // table_entry_t(value, entry)
     typedef std::map<size_t, table_entry_t> dynamic_reversemap_t;     // table_entry_t(name, entry size)
 
     dynamic_map_t _dynamic_map;
     dynamic_reversemap_t _dynamic_reversemap;
 
-    bool _separate;  // false:HPACK, true:QPACK
+    uint8 _type;  // see header_compression_type_t
     uint32 _capacity;
     size_t _tablesize;
     size_t _inserted;

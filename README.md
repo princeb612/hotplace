@@ -84,6 +84,8 @@
     * test/payload/
     * test/hpack/
     * test/httpserver2/
+* HTTP/3
+  * RFC 9204 QPACK: Field Compression for HTTP/3
 * BASE16, BASE64, BASE64URL
   * RFC 4648 The Base16, Base32, and Base64 Data Encodings
     * sdk/base/basic/
@@ -168,7 +170,6 @@
   * RFC 2817 Upgrading to TLS Within HTTP/1.1
 * HTTP/3
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
-  * RFC 9204 QPACK: Field Compression for HTTP/3
   * RFC 9114 HTTP/3
 * ASN.1
   * ITU-T X.680-X.699
@@ -189,8 +190,6 @@
 ## next time
 
 * Compression
-  * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
-  * RFC 1952 GZIP file format specification version 4.3
   * RFC 7932 Brotli Compressed Data Format
   * RFC 8478 Zstandard Compression and the application/zstd Media Type
   * RFC 8878 Zstandard Compression and the 'application/zstd' Media Type

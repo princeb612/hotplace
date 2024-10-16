@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <math.h>
+
 #include <sdk/net/http/http3/qpack.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
@@ -33,7 +35,12 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
 
         size_t index = 0;
 
-        state = match(session, flags, name, value, index);
+        if (0 == session->get_capacity()) {
+            // no dynamic table
+            flags &= ~(qpack_indexing | qpack_name_reference);
+        }
+
+        state = match(session, flags, name, value, index);  // flag effected - qpack_name_reference
         switch (state) {
             case match_result_t::all_matched:
             case match_result_t::all_matched_dynamic:
@@ -67,10 +74,10 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
                     session->insert(name, value);  // duplicate
                     duplicate(target, index);
                 } else {
-                    size_t postbase = 0;
-                    size_t respsize = sizeof(size_t);
-                    session->query(qpack_cmd_postbase_index, &index, sizeof(index), &postbase, respsize);
                     if (qpack_postbase_index & flags) {
+                        size_t postbase = 0;
+                        size_t respsize = sizeof(size_t);
+                        session->query(qpack_cmd_postbase_index, &index, sizeof(index), &postbase, respsize);
                         encode_index(target, flags, postbase);
                     } else {
                         encode_index(target, flags, index);
@@ -79,13 +86,28 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
                 break;
             case match_result_t::key_matched:
             case match_result_t::key_matched_dynamic:
+                // RFC 9204 4.3.2.  Insert with Name Reference
                 if (match_result_t::key_matched == state) {
                     flags |= qpack_static;
                 }
-                encode_name_reference(session, target, flags, index, value);
-                // RFC 9204 4.3.2.  Insert with Name Reference
                 if (qpack_indexing & flags) {
                     session->insert(name, value);
+                }
+                if (qpack_static & flags) {
+                    // static table
+                    encode_name_reference(session, target, flags, index, value);
+                } else {
+                    // dynamic table
+                    size_t dropped = 0;
+                    size_t respsize = sizeof(size_t);
+                    session->query(qpack_cmd_dropped, nullptr, 0, &dropped, respsize);
+                    if (dropped < index + 1) {
+                        encode_name_reference(session, target, flags, index, value);
+                    } else {
+                        // invalid index evicted
+                        // so encode literal name not name reference
+                        encode_name_value(session, target, flags, name, value);
+                    }
                 }
                 break;
             default:
@@ -104,8 +126,34 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
     return ret;
 }
 
-return_t qpack_encoder::decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                               std::string& value) {
+return_t qpack_encoder::decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
+                               uint32 flags) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        name.clear();
+        value.clear();
+
+        if ((nullptr == session) || (nullptr == source)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (qpack_quic_stream_header & flags) {
+            ret = decode_quic_stream_header(session, source, size, pos, name, value, flags);
+        } else if (qpack_quic_stream_encoder & flags) {
+            ret = decode_quic_stream_encoder(session, source, size, pos, name, value, flags);
+        } else if (qpack_quic_stream_decoder & flags) {
+            ret = decode_quic_stream_decoder(session, source, size, pos, name, value, flags);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t qpack_encoder::decode_quic_stream_encoder(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                                   std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == session) || (nullptr == source)) {
@@ -117,15 +165,128 @@ return_t qpack_encoder::decode(http_header_compression_session* session, const b
          * RFC 9204
          *  4.3.  Encoder Instructions
          *   001   5+ - 4.3.1.  Set Dynamic Table Capacity
-         *   1T    6+ - 4.3.2.  Insert with Name Reference
-         *   01H   5+ - 4.3.3.  Insert with Literal Name
-         *   000   5+ - 4.3.4.  Duplicate
+         *   1T    6+ - 4.3.2.  Insert with Name Reference / Figure 6: Insert Field Line -- Indexed Name
+         *   01H   5+ - 4.3.3.  Insert with Literal Name / Figure 7: Insert Field Line -- New Name
+         *   000   5+ - 4.3.4.  Duplicate / Figure 8: Duplicate
+         */
+        byte_t b = source[pos];
+        uint8 mask = 0;
+        uint8 prefix = 0;
+        uint32 flags = 0;
+        if (0x80 & b) {
+            mask = 0xc0;
+            prefix = 6;
+            flags |= (qpack_layout_name_reference | qpack_indexing);
+            if (0x40 & b) {
+                flags |= qpack_static;
+            }
+        } else if (0x40 & b) {
+            mask = 0x60;
+            prefix = 5;
+            flags |= (qpack_layout_name_value | qpack_indexing);
+            if (0x20 & b) {
+                flags |= qpack_huffman;
+            }
+        } else if (0x20 & b) {
+            mask = 0x20;
+            prefix = 5;
+            flags |= qpack_layout_capacity;
+        } else if (0xe0 & ~b) {
+            mask = 0x00;
+            prefix = 5;
+            flags |= (qpack_layout_duplicate | qpack_indexing);
+        }
+
+        size_t i = 0;
+        size_t idx = 0;
+        if (qpack_layout_capacity & flags) {
+            decode_int(source, pos, mask, prefix, i);
+            session->set_capacity(i);
+        } else if (qpack_layout_name_reference & flags) {
+            decode_int(source, pos, mask, prefix, i);
+            select(session, flags, i, name, value);
+            decode_string(source, pos, flags, value);
+        } else if (qpack_layout_name_value & flags) {
+            decode_name_reference(source, pos, flags, mask, prefix, name);
+            decode_string(source, pos, flags, value);
+        } else if (qpack_layout_duplicate & flags) {
+            decode_int(source, pos, mask, prefix, i);
+            select(session, flags, i, name, value);
+        }
+
+        if (qpack_indexing & flags) {
+            session->insert(name, value);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t qpack_encoder::decode_quic_stream_decoder(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                                   std::string& value, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if ((nullptr == session) || (nullptr == source)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        /**
+         * RFC 9204
          *  4.4.  Decoder Instructions
-         *   1     7+ - 4.4.1.  Section Acknowledgment
-         *   01    6+ - 4.4.2.  Stream Cancellation
-         *   00    6+ - 4.4.3.  Insert Count Increment
+         *   1     7+ - 4.4.1.  Section Acknowledgment / Figure 9: Section Acknowledgment
+         *   01    6+ - 4.4.2.  Stream Cancellation / Figure 10: Stream Cancellation
+         *   00    6+ - 4.4.3.  Insert Count Increment / Figure 11: Insert Count Increment
+         */
+        byte_t b = source[pos];
+        uint8 mask = 0;
+        uint8 prefix = 0;
+        uint32 flags = 0;
+        if (0x80 & b) {
+            mask = 0x80;
+            prefix = 7;
+            flags |= qpack_layout_ack;
+        } else if (0x40 & b) {
+            mask = 0x40;
+            prefix = 6;
+            flags |= qpack_layout_cancel;
+        } else if (0xc0 & ~b) {
+            mask = 0x00;
+            prefix = 6;
+            flags |= qpack_layout_inc;
+        }
+
+        size_t i = 0;
+        size_t idx = 0;
+        if (qpack_layout_ack & flags) {
+            decode_int(source, pos, mask, prefix, i);  // stream id
+        } else if (qpack_layout_cancel & flags) {
+            decode_int(source, pos, mask, prefix, i);  // stream id
+        } else if (qpack_layout_inc & flags) {
+            decode_int(source, pos, mask, prefix, i);  // increment
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t qpack_encoder::decode_quic_stream_header(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                                  std::string& value, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if ((nullptr == session) || (nullptr == source)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        /**
+         * RFC 9204
          *  4.5.  Field Line Representations
-         *  4.5.1.  Encoded Field Section Prefix
+         *  4.5.1.  Encoded Field Section Prefix / Figure 12: Encoded Field Section
          *        0   1   2   3   4   5   6   7
          *   +---+---+---+---+---+---+---+---+
          *   |   Required Insert Count (8+)  |
@@ -136,32 +297,104 @@ return_t qpack_encoder::decode(http_header_compression_session* session, const b
          *   +-------------------------------+
          *      Figure 12: Encoded Field Section
          *
-         *   1T    6+ - 4.5.2.  Indexed Field Line / Figure 13
-         *   0001  4+ - 4.5.3.  Indexed Field Line with Post-Base Index / Figure 14
-         *   01NT  4+ - 4.5.4.  Literal Field Line with Name Reference / Figure 15
-         *   0000N 3+ - 4.5.5.  Literal Field Line with Post-Base Name Reference / Figure 16
-         *   001NH 3+ - 4.5.6.  Literal Field Line with Literal Name / Figure 17
+         *   1T    6+ - 4.5.2.  Indexed Field Line / Figure 13: Indexed Field Line
+         *   0001  4+ - 4.5.3.  Indexed Field Line with Post-Base Index / Figure 14: Indexed Field Line with Post-Base Index
+         *   01NT  4+ - 4.5.4.  Literal Field Line with Name Reference / Figure 15: Literal Field Line with Name Reference
+         *   0000N 3+ - 4.5.5.  Literal Field Line with Post-Base Name Reference / Figure 16: Literal Field Line with Post-Base Name Reference
+         *   001NH 3+ - 4.5.6.  Literal Field Line with Literal Name / Figure 17: Literal Field Line with Literal Name
          */
-        byte_t b = source[pos];
-        uint8 mask = 0;
-        uint8 prefix = 0;
-        uint32 flags = 0;
-        if (0x80 & b) {
-            // index
-        } else if (0x10 & b) {
-            // post-base index
-        } else if (0x40 & b) {
-            // name reference
-        } else if (0xf0 & ~b) {
-            // post-base name reference
-        } else if (0x20 & b) {
-            // name value
+        size_t eic = 0;
+        uint8 sign = 0;
+        size_t deltabase = 0;
+        size_t ric = 0;
+        size_t base = 0;
+
+        if (0 == pos) {
+            decode_int(source, pos, 0, 8, eic);
+            sign = 0x80 & source[pos];
+            decode_int(source, pos, 0x80, 7, deltabase);
+
+            qpack_eic2ric(session->get_capacity(), session->get_entries(), eic, sign, deltabase, ric, base);
+
+            auto entries = session->get_entries();
+            if (ric != entries) {
+                ret = errorcode_t::mismatch;
+                __leave2;
+            }
+        } else if (pos >= 2) {
+            byte_t b = source[pos];
+            uint8 mask = 0;
+            uint8 prefix = 0;
+            uint32 flags = 0;
+            if (0x80 & b) {
+                // index
+                mask = 0xc0;
+                prefix = 6;
+                flags |= qpack_layout_index;
+                if (0x40 & b) {
+                    flags |= qpack_static;
+                }
+            } else if (0x40 & b) {
+                // name reference
+                mask = 0x70;
+                prefix = 4;
+                flags |= qpack_layout_name_reference;
+                if (0x20 & b) {
+                    flags |= qpack_intermediary;
+                }
+                if (0x10 & b) {
+                    flags |= qpack_static;
+                }
+            } else if (0x20 & b) {
+                // name value
+                mask = 0x38;
+                prefix = 3;
+                flags |= qpack_layout_name_value;
+                if (0x10 & b) {
+                    flags |= qpack_intermediary;
+                }
+                if (0x08 & b) {
+                    flags |= qpack_huffman;
+                }
+            } else if (0x10 & b) {
+                // post-base index
+                mask = 0x10;
+                prefix = 4;
+                flags |= (qpack_layout_index | qpack_postbase_index);
+            } else if (0xf0 & ~b) {
+                // post-base name reference
+                mask = 0x08;
+                prefix = 3;
+                flags |= (qpack_layout_name_reference | qpack_postbase_index);
+                if (0x08 & b) {
+                    flags |= qpack_intermediary;
+                }
+            }
+
+            size_t i = 0;
+            size_t idx = 0;
+            if (qpack_layout_index & flags) {
+                decode_int(source, pos, mask, prefix, i);
+                select(session, flags, i, name, value);
+            } else if (qpack_layout_name_reference & flags) {
+                decode_int(source, pos, mask, prefix, i);
+                select(session, flags, i, name, value);
+                decode_string(source, pos, flags, value);
+            } else if (qpack_layout_name_value & flags) {
+                pos++;
+                decode_string(source, pos, flags, name);
+                decode_string(source, pos, flags, value);
+            }
         }
     }
     __finally2 {
         // do nothing
     }
     return ret;
+}
+
+return_t qpack_encoder::insert(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
+    return encode(session, target, name, value, flags | qpack_indexing);
 }
 
 return_t qpack_encoder::sync(http_header_compression_session* session, binary_t& target, uint32 flags) {
@@ -184,14 +417,11 @@ return_t qpack_encoder::sync(http_header_compression_session* session, binary_t&
      */
     if (session) {
         size_t capacity = session->get_capacity();
-        size_t ric = 0;
+        size_t ric = session->get_entries();
         size_t base = 0;
         size_t eic = 0;
         bool sign = true;
         size_t deltabase = 0;
-
-        size_t respsize = sizeof(ric);
-        session->query(qpack_cmd_ric, nullptr, 0, &ric, respsize);
 
         if (qpack_postbase_index & flags) {
             base = 0;
@@ -210,10 +440,6 @@ return_t qpack_encoder::sync(http_header_compression_session* session, binary_t&
     }
 
     return ret;
-}
-
-return_t qpack_encoder::insert(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
-    return encode(session, target, name, value, flags | qpack_indexing);
 }
 
 qpack_encoder& qpack_encoder::encode_header(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,

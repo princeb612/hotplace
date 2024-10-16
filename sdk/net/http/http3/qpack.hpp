@@ -17,7 +17,27 @@
 namespace hotplace {
 namespace net {
 
-// studying
+/**
+ * @brief   Field Section Prefix
+ * @param   size_t capacity [in]
+ * @param   size_t ric [in]
+ * @param   size_t base [in]
+ * @param   size_t& eic [out]
+ * @param   bool& sign [out]
+ * @param   size_t& deltabase [out]
+ */
+return_t qpack_ric2eic(size_t capacity, size_t ric, size_t base, size_t& eic, bool& sign, size_t& deltabase);
+/**
+ * @brief   Field Section Prefix (reconstruct)
+ * @param   size_t capacity [in]
+ * @param   size_t tni [in] total number of inserts
+ * @param   size_t eic [in]
+ * @param   bool sign [in]
+ * @param   size_t deltabase [in]
+ * @param   size_t& ric [out]
+ * @param   size_t& base [out]
+ */
+return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_t deltabase, size_t& ric, size_t& base);
 
 class qpack_encoder : public http_header_compression {
    public:
@@ -44,8 +64,19 @@ class qpack_encoder : public http_header_compression {
      * @param   size_t& pos [in]
      * @param   std::string& name [in]
      * @param   std::string& value [in]
+     * @param   uint32 flags [inopt]
      */
-    virtual return_t decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    virtual return_t decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
+                            uint32 flags = 0);
+    /**
+     * @brief   encode (qpack_indexing flag)
+     * @param   http_header_compression_session* session [in]
+     * @param   binary_t& target [out]
+     * @param   const std::string& name [in]
+     * @param   const std::string& value [int]
+     * @param   uint32 flags [inopt]
+     */
+    return_t insert(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   synchronize
      * @param   http_header_compression_session* session [in] dynamic table
@@ -58,11 +89,6 @@ class qpack_encoder : public http_header_compression {
      *          qpackenc.sync -> generate the QPACK field section prefix
      */
     virtual return_t sync(http_header_compression_session* session, binary_t& target, uint32 flags = 0);
-
-    /**
-     * @brief   encode (qpack_indexing flag)
-     */
-    return_t insert(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
 
     /**
      * @brief   encode (header compression)
@@ -148,6 +174,14 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.4.3.  Insert Count Increment
      */
     qpack_encoder& increment(binary_t& target, size_t inc);
+
+   protected:
+    virtual return_t decode_quic_stream_encoder(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                                std::string& value, uint32 flags = 0);
+    virtual return_t decode_quic_stream_decoder(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                                std::string& value, uint32 flags = 0);
+    virtual return_t decode_quic_stream_header(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                               std::string& value, uint32 flags = 0);
 };
 
 class qpack_session : public http_header_compression_session {

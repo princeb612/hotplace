@@ -3,7 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *      simple https server implementation
+ *      simple HTTP/2 server implementation
  * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2
  *
  * Revision History

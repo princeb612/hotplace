@@ -46,22 +46,19 @@ typedef struct _OPTION {
     }
 } OPTION;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
-unsigned int count_evict = 0;
+unsigned int count_evict_encoder = 0;
+unsigned int count_evict_decoder = 0;
 
-void test_expect(binary_t& bin, const char* expect, bool flush, const char* text, ...) {
+void test_expect(binary_t& bin, const char* expect, const char* text, ...) {
     _logger->dump(bin);
 
     va_list ap;
     va_start(ap, text);
     _test_case.assert(base16_decode_rfc(expect) == bin, __FUNCTION__, text, ap);
     va_end(ap);
-
-    if (flush) {
-        bin.clear();
-    }
 }
 
-void test_dump(binary_t& bin, bool flush, const char* text, ...) {
+void test_dump(binary_t& bin, const char* text, ...) {
     if (text) {
         basic_stream bs;
         va_list ap;
@@ -72,30 +69,43 @@ void test_dump(binary_t& bin, bool flush, const char* text, ...) {
     } else {
         _logger->dump(bin);
     }
-    if (flush) {
-        bin.clear();
-    }
 }
 
-void debug_qpack(uint32 event, stream_t* s) {
+void debug_qpack_encoder(uint32 event, stream_t* s) {
     if (header_compression_event_evict & event) {
-        count_evict++;
+        count_evict_encoder++;
+    }
+    if (s) {
+        _logger->writeln("\e[1;34m%.*s\e[0m", (unsigned int)s->size(), s->data());
+    }
+};
+
+void debug_qpack_decoder(uint32 event, stream_t* s) {
+    if (header_compression_event_evict & event) {
+        count_evict_decoder++;
     }
     if (s) {
         _logger->writeln("\e[1;36m%.*s\e[0m", (unsigned int)s->size(), s->data());
     }
 };
 
-void tet_rfc9204_b() {
+void test_rfc9204_b() {
     _test_case.begin("RFC 9204 Appendix B");
 
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
-    qpack_session session;
+    qpack_session session_encoder;
+    qpack_session session_decoder;
     binary_t bin;
-    uint32 flags = 0;
+    uint32 flags_encoder = 0;
+    uint32 flags_decoder = 0;
+    size_t pos = 0;
+    std::string name;
+    std::string value;
 
-    session.trace(debug_qpack);
+    session_encoder.trace(debug_qpack_encoder);
+    session_decoder.trace(debug_qpack_decoder);
+    count_evict_encoder = 0;
 
     // B.1.  Literal Field Line with Name Reference
     {
@@ -113,16 +123,28 @@ void tet_rfc9204_b() {
          *                               ^-- acknowledged --^
          *                               Size=0
          */
-        flags = 0;
+        flags_encoder = 0;
         // field section
-        enc.encode(&session, bin, ":path", "/index.html", flags);
+        enc.encode(&session_encoder, bin, ":path", "/index.html", flags_encoder);
         // not inserted yet, RIC = 0
-        enc.sync(&session, bin, flags);
+        enc.sync(&session_encoder, bin, flags_encoder);
 
-        constexpr char text1[] = "B.1.  Literal Field Line with Name Reference";
-        const char* expect1 = "0000 510b 2f69 6e64 6578 2e68 746d 6c";
-        test_expect(bin, expect1, true, "%s #field section", text1);
-        _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s #table size", text1);
+        // debug
+        {
+            constexpr char text1[] = "B.1.  Literal Field Line with Name Reference";
+            const char* expect1 = "0000 510b 2f69 6e64 6578 2e68 746d 6c";
+            // 00000000 : 00 00 51 0B 2F 69 6E 64 65 78 2E 68 74 6D 6C -- | ..Q./index.html
+            test_expect(bin, expect1, "%s #field section", text1);
+            _test_case.assert(0 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
+
+            pos = 0;
+            ret = enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, qpack_quic_stream_header);  // field section prefix
+            _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "%s #field section prefix", text1);
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, qpack_quic_stream_header);  // field line
+            _test_case.assert((":path" == name) && ("/index.html" == value), __FUNCTION__, "%s #decode", text1);
+            _test_case.assert(0 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
+        }
+        bin.clear();
     }
     // B.2.  Dynamic Table
     {
@@ -142,20 +164,43 @@ void tet_rfc9204_b() {
          *                                  1   0  :path       /sample/path
          *                                 Size=106
          */
-        enc.set_dynamic_table_size(&session, bin, 220);
+        enc.set_capacity(&session_encoder, bin, 220);
+
+        flags_encoder = qpack_intermediary;
+        // insert field line
+        enc.insert(&session_encoder, bin, ":authority", "www.example.com", flags_encoder);  // abs 0
+        enc.insert(&session_encoder, bin, ":path", "/sample/path", flags_encoder);          // abs 1
 
         constexpr char text2[] = "B.2.  Dynamic Table";
-        const char* expect_b2_1 = "3fbd01";
-        test_expect(bin, expect_b2_1, true, "%s #capacity", text2);
+        // debug
+        {
+            _test_case.assert(2 == session_encoder.get_entries(), __FUNCTION__, "%s #entries", text2);
+            _test_case.assert(106 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
+            _test_case.assert(220 == session_encoder.get_capacity(), __FUNCTION__, "%s #capacity", text2);
 
-        flags = qpack_intermediary;
-        // insert field line
-        enc.insert(&session, bin, ":authority", "www.example.com", flags);  // abs 0
-        enc.insert(&session, bin, ":path", "/sample/path", flags);          // abs 1
+            const char* expect1 = "3fbd01 c00f 7777 772e 6578 616d 706c 652e 636f 6d c10c 2f73 616d 706c 652f 7061 7468";
+            // 00000000 : 3F BD 01 C0 0F 77 77 77 2E 65 78 61 6D 70 6C 65 | ?....www.example
+            // 00000010 : 2E 63 6F 6D C1 0C 2F 73 61 6D 70 6C 65 2F 70 61 | .com../sample/pa
+            // 00000020 : 74 68 -- -- -- -- -- -- -- -- -- -- -- -- -- -- | th
+            test_expect(bin, expect1, "%s #insert", text2);
+        }
+        // debug QPACK encoder stream
+        {
+            flags_decoder = qpack_quic_stream_encoder;
+            pos = 0;
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            _test_case.assert(220 == session_decoder.get_capacity(), __FUNCTION__, "%s #capacity", text2);
 
-        const char* expect1 = "c00f 7777 772e 6578 616d 706c 652e 636f 6d c10c 2f73 616d 706c 652f 7061 7468";
-        test_expect(bin, expect1, true, "%s #insert", text2);
-        _test_case.assert(106 == session.get_tablesize(), __FUNCTION__, "%s #table size", text2);
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            _test_case.assert(1 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text2);
+            _test_case.assert((":authority" == name) && ("www.example.com" == value), __FUNCTION__, "%s #decode", text2);
+
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            _test_case.assert(2 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text2);
+
+            _test_case.assert((":path" == name) && ("/sample/path" == value), __FUNCTION__, "%s #decode", text2);
+        }
+        bin.clear();
 
         /**
          *   Stream: 4
@@ -176,14 +221,30 @@ void tet_rfc9204_b() {
          */
 
         // field section
-        flags = qpack_postbase_index;
-        enc.encode(&session, bin, ":authority", "www.example.com", flags);
-        enc.encode(&session, bin, ":path", "/sample/path", flags);
-        enc.sync(&session, bin, flags);
+        flags_encoder = qpack_postbase_index;
+        enc.encode(&session_encoder, bin, ":authority", "www.example.com", flags_encoder);
+        enc.encode(&session_encoder, bin, ":path", "/sample/path", flags_encoder);
+        enc.sync(&session_encoder, bin, flags_encoder);
 
-        const char* expect2 = "0381 10 11";
-        test_expect(bin, expect2, true, "%s #field section", text2);
-        _test_case.assert(106 == session.get_tablesize(), __FUNCTION__, "%s #table size", text2);
+        // debug
+        {
+            const char* expect2 = "0381 10 11";
+            test_expect(bin, expect2, "%s #field section", text2);
+            _test_case.assert(106 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
+        }
+        {
+            flags_decoder = qpack_quic_stream_header;
+            pos = 0;
+            ret = enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);  // field section prefix
+            _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "%s #field section prefix", text2);
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);  // :authority
+            _test_case.assert((":authority" == name) && ("www.example.com" == value), __FUNCTION__, "%s #decode", text2);
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);  // :path
+            _test_case.assert((":path" == name) && ("/sample/path" == value), __FUNCTION__, "%s #decode", text2);
+
+            _test_case.assert(session_encoder.get_entries() == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text2);
+        }
+        bin.clear();
 
         /**
          *   Stream: Decoder
@@ -195,13 +256,16 @@ void tet_rfc9204_b() {
          *                                 ^-- acknowledged --^
          *                                 Size=106
          */
-
         uint32 streamid = 4;
         enc.ack(bin, streamid);
 
-        const char* expect3 = "84";
-        test_expect(bin, expect3, true, "%s #ack", text2);
-        _test_case.assert(106 == session.get_tablesize(), __FUNCTION__, "%s #table size", text2);
+        // debug
+        {
+            const char* expect3 = "84";
+            test_expect(bin, expect3, "%s #ack", text2);
+            _test_case.assert(106 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
+        }
+        bin.clear();
     }
     // B.3.  Speculative Insert
     {
@@ -218,13 +282,29 @@ void tet_rfc9204_b() {
          *                                  2   0  custom-key  custom-value
          *                                 Size=160
          */
-        flags = qpack_intermediary;
-        ret = enc.insert(&session, bin, "custom-key", "custom-value", flags);  // abs 2
+        flags_encoder = qpack_intermediary;
+        ret = enc.insert(&session_encoder, bin, "custom-key", "custom-value", flags_encoder);  // abs 2
 
         constexpr char text3[] = "B.3.  Speculative Insert";
-        const char* expect1 = "4a63 7573 746f 6d2d 6b65 790c 6375 7374 6f6d 2d76 616c 7565";
-        test_expect(bin, expect1, true, "%s #encode", text3);
-        _test_case.assert(160 == session.get_tablesize(), __FUNCTION__, "%s #table size", text3);
+        // debug
+        {
+            const char* expect1 = "4a63 7573 746f 6d2d 6b65 790c 6375 7374 6f6d 2d76 616c 7565";
+            // 00000000 : 4A 63 75 73 74 6F 6D 2D 6B 65 79 0C 63 75 73 74 | Jcustom-key.cust
+            // 00000010 : 6F 6D 2D 76 61 6C 75 65 -- -- -- -- -- -- -- -- | om-value
+            test_expect(bin, expect1, "%s #encode", text3);
+            _test_case.assert(3 == session_encoder.get_entries(), __FUNCTION__, "%s #entries", text3);
+            _test_case.assert(160 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
+        }
+        // debug QPACK encoder stream
+        {
+            flags_decoder = qpack_quic_stream_encoder;
+            pos = 0;
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            _test_case.assert(("custom-key" == name) && ("custom-value" == value), __FUNCTION__, "%s #decode", text3);
+            _test_case.assert(3 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text3);
+            _test_case.assert(160 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
+        }
+        bin.clear();
 
         /**
          *   Stream: Decoder
@@ -241,7 +321,8 @@ void tet_rfc9204_b() {
             enc.increment(bin, 1);  // stream id 1
         }
 
-        test_expect(bin, "01", true, "%s #increment", text3);
+        test_expect(bin, "01", "%s #increment", text3);
+        bin.clear();
     }
     // B.4.  Duplicate Instruction, Stream Cancellation
     {
@@ -261,15 +342,26 @@ void tet_rfc9204_b() {
          */
 
         // insert field line
-        flags = qpack_intermediary;
-        ret = enc.insert(&session, bin, ":authority", "www.example.com", flags);
+        flags_encoder = qpack_intermediary;
+        ret = enc.insert(&session_encoder, bin, ":authority", "www.example.com", flags_encoder);
 
         constexpr char text4[] = "B.4.  Duplicate Instruction, Stream Cancellation";
-        // check already_exist
-        _test_case.assert(errorcode_t::already_exist == ret, __FUNCTION__, "%s #duplicate", text4);
-        // check duplicate
-        test_expect(bin, "02", true, "%s #duplicate", text4);
-        _test_case.assert(217 == session.get_tablesize(), __FUNCTION__, "%s #table size", text4);
+        // debug
+        {
+            _test_case.assert(errorcode_t::already_exist == ret, __FUNCTION__, "%s #duplicate", text4);
+            _test_case.assert(4 == session_encoder.get_entries(), __FUNCTION__, "%s #entries", text4);  // is duplicated
+            test_expect(bin, "02", "%s #duplicate", text4);
+        }
+        // debug QPACK stream encoder
+        {
+            flags_decoder = qpack_quic_stream_encoder;
+            pos = 0;
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            _test_case.assert((":authority" == name) && ("www.example.com" == value), __FUNCTION__, "%s #decode", text4);
+            _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text4);
+            _test_case.assert(217 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text4);
+        }
+        bin.clear();
 
         /**
          *   Stream: 8
@@ -292,15 +384,33 @@ void tet_rfc9204_b() {
          *                                 Size=217
          */
 
-        flags = 0;
-        enc.encode(&session, bin, ":authority", "www.example.com", flags);
-        enc.encode(&session, bin, ":path", "/", flags);
-        enc.encode(&session, bin, "custom-key", "custom-value", flags);
-        enc.sync(&session, bin, flags);
+        flags_encoder = 0;
+        enc.encode(&session_encoder, bin, ":authority", "www.example.com", flags_encoder);
+        enc.encode(&session_encoder, bin, ":path", "/", flags_encoder);
+        enc.encode(&session_encoder, bin, "custom-key", "custom-value", flags_encoder);
+        enc.sync(&session_encoder, bin, flags_encoder);
 
-        const char* expect3 = "0500 80 c1 81";
-        test_expect(bin, expect3, true, "%s #field section", text4);
-        _test_case.assert(217 == session.get_tablesize(), __FUNCTION__, "%s #table size", text4);
+        // debug
+        {
+            _test_case.assert(4 == session_encoder.get_entries(), __FUNCTION__, "%s #entries", text4);
+
+            const char* expect3 = "0500 80 c1 81";
+            test_expect(bin, expect3, "%s #field section", text4);
+            _test_case.assert(217 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text4);
+
+            flags_decoder = qpack_quic_stream_header;
+            pos = 0;
+            ret = enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);  // field section prefix
+            _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "%s #field section prefix", text4);
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            _test_case.assert((":authority" == name) && ("www.example.com" == value), __FUNCTION__, "%s #decode", text4);
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            _test_case.assert((":path" == name) && ("/" == value), __FUNCTION__, "%s #decode", text4);
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            _test_case.assert(("custom-key" == name) && ("custom-value" == value), __FUNCTION__, "%s #decode", text4);
+            _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text4);
+        }
+        bin.clear();
 
         /**
          *   Stream: Decoder
@@ -318,8 +428,9 @@ void tet_rfc9204_b() {
         uint32 streamid = 8;
         enc.cancel(bin, streamid);
         const char* expect4 = "48";
-        test_expect(bin, expect4, true, "%s #cancel", text4);
-        _test_case.assert(217 == session.get_tablesize(), __FUNCTION__, "%s #table size", text4);
+        test_expect(bin, expect4, "%s #cancel", text4);
+        _test_case.assert(217 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text4);
+        bin.clear();
     }
     // B.5.  Dynamic Table Insert, Eviction
     {
@@ -339,17 +450,140 @@ void tet_rfc9204_b() {
          *                                  4   0  custom-key  custom-value2
          *                                 Size=215
          */
-        flags = qpack_name_reference;
-        enc.insert(&session, bin, "custom-key", "custom-value2", flags);  // abs 4, evict entry 0
-
         constexpr char text5[] = "B.5.  Dynamic Table Insert, Eviction";
-        _test_case.assert(1 == count_evict, __FUNCTION__, "%s #eviction", text5);
-        _test_case.assert(215 == session.get_tablesize(), __FUNCTION__, "%s #table size", text5);
+        { _test_case.assert(0 == count_evict_encoder, __FUNCTION__, "%s #eviction - before", text5); }
 
-        const char* expect = "810d 6375 7374 6f6d 2d76 616c 7565 32";
-        //   00000000 : 81 0D 63 75 73 74 6F 6D 2D 76 61 6C 75 65 32 -- | ..custom-value2
-        test_expect(bin, expect, true, "%s #insert", text5);
+        flags_encoder = qpack_name_reference;
+        enc.insert(&session_encoder, bin, "custom-key", "custom-value2", flags_encoder);  // abs 4, evict entry 0
+
+        // debug
+        {
+            _test_case.assert(1 == count_evict_encoder, __FUNCTION__, "%s #eviction - after", text5);
+            _test_case.assert(4 == session_encoder.get_entries(), __FUNCTION__, "%s #entries", text5);
+            _test_case.assert(215 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text5);
+
+            const char* expect = "810d 6375 7374 6f6d 2d76 616c 7565 32";
+            //   00000000 : 81 0D 63 75 73 74 6F 6D 2D 76 61 6C 75 65 32 -- | ..custom-value2
+            test_expect(bin, expect, "%s #insert", text5);
+        }
+        // debug QPACK stream encoder
+        {
+            flags_decoder = qpack_quic_stream_encoder;
+            pos = 0;
+            enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            _test_case.assert(("custom-key" == name) && ("custom-value2" == value), __FUNCTION__, "%s #decode", text5);
+            _test_case.assert(1 == count_evict_decoder, __FUNCTION__, "%s #eviction", text5);
+            _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text5);
+            _test_case.assert(215 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text5);
+        }
+        bin.clear();
     }
+}
+
+void test_zero_capacity() {
+    _test_case.begin("no dynamic table");
+    count_evict_encoder = 0;
+
+    return_t ret = errorcode_t::success;
+    qpack_encoder enc;
+    qpack_session session;
+    binary_t bin;
+    uint32 flags = 0;
+
+    // consider no dynamic table
+    //  - RFC 9204 5.  Configuration
+    //    SETTINGS_QPACK_MAX_TABLE_CAPACITY (0x01):  The default value is zero.
+
+    // debug
+    session.trace(debug_qpack_encoder);
+
+    flags = qpack_intermediary | qpack_name_reference;
+    enc.insert(&session, bin, ":authority", "www.example.com", flags);
+    enc.insert(&session, bin, ":path", "/sample/path", flags);
+    enc.insert(&session, bin, "custom-key", "custom-value", flags);
+    test_dump(bin, nullptr);
+    bin.clear();
+
+    constexpr char expect[] =
+        "37 03 63 75 73 74 6F 6D 2D 6B 65 79 0D 63 75 73"  // | 7.custom-key.cus
+        "74 6F 6D 2D 76 61 6C 75 65 32 -- -- -- -- -- --"  // | tom-value2
+        ;
+
+    enc.insert(&session, bin, "custom-key", "custom-value2", flags);
+    test_expect(bin, expect, nullptr);
+    _test_case.assert(0 == count_evict_encoder, __FUNCTION__, "#eviction check %u", count_evict_encoder);
+    _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "#table size %zi", session.get_tablesize());
+    bin.clear();
+}
+
+void test_useless_capacity() {
+    _test_case.begin("dynamic table capacity 32");
+    count_evict_encoder = 0;
+
+    return_t ret = errorcode_t::success;
+    qpack_encoder enc;
+    qpack_session session;
+    binary_t bin;
+    uint32 flags = 0;
+
+    // case sizeof_entry(name, value) < session->get_capacity()
+    // insertion impossible
+    session.set_capacity(32);
+
+    // debug
+    session.trace(debug_qpack_encoder);
+
+    flags = qpack_intermediary | qpack_name_reference;
+    enc.insert(&session, bin, ":authority", "www.example.com", flags);
+    enc.insert(&session, bin, ":path", "/sample/path", flags);
+    enc.insert(&session, bin, "custom-key", "custom-value", flags);
+    enc.insert(&session, bin, "custom-key", "custom-value2", flags);
+
+    _test_case.assert(0 == count_evict_encoder, __FUNCTION__, "#eviction check %u", count_evict_encoder);
+    _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "#table size %zi", session.get_tablesize());
+    _logger->dump(bin);
+}
+
+void test_small_capacity() {
+    _test_case.begin("dynamic table capacity 80");
+    count_evict_encoder = 0;
+
+    return_t ret = errorcode_t::success;
+    qpack_encoder enc;
+    qpack_session session;
+    binary_t bin;
+    uint32 flags = qpack_intermediary | qpack_name_reference;
+
+    // just 1 entry available space
+    // always evict older entry while insertion
+    session.set_capacity(80);
+
+    // debug
+    session.trace(debug_qpack_encoder);
+
+    auto test = [&](const std::string& name, const std::string& value, unsigned int evict_expect, const char* expect = nullptr) -> void {
+        enc.insert(&session, bin, name, value, flags);
+        _test_case.assert(evict_expect == count_evict_encoder, __FUNCTION__, "#eviction check %u", count_evict_encoder);
+        _test_case.assert((name.size() + value.size() + 32) == session.get_tablesize(), __FUNCTION__, "#table size %zi", session.get_tablesize());
+        if (expect) {
+            _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "#expect");
+        }
+        _logger->dump(bin);
+        bin.clear();
+    };
+
+    test(":authority", "www.example.com", 0);
+    test(":path", "/sample/path", 1);
+    test("custom-key", "custom-value", 2);
+
+    // literal name representation not name reference
+    // no reference 'custom-key' exist
+    // constexpr char expect[] =
+    //     "4A 63 75 73 74 6F 6D 2D 6B 65 79 0D 63 75 73 74"  // | Jcustom-key.cust
+    //     "6F 6D 2D 76 61 6C 75 65 32 -- -- -- -- -- -- --"  // | om-value2
+    //     ;
+    test("custom-key", "custom-value2", 3);
+    _logger->dump(bin);
 }
 
 int main(int argc, char** argv) {
@@ -367,7 +601,10 @@ int main(int argc, char** argv) {
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
 
-    tet_rfc9204_b();
+    test_rfc9204_b();
+    test_zero_capacity();
+    test_useless_capacity();
+    test_small_capacity();
 
     _logger->flush();
 

@@ -8,128 +8,13 @@
  * Date         Name                Description
  */
 
-#include <math.h>
-
 #include <sdk/net/http/http2/http_header_compression.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {
 
-return_t qpack_ric2eic(size_t capacity, size_t ric, size_t base, size_t& eic, bool& sign, size_t& deltabase) {
-    return_t ret = errorcode_t::success;
-    if (capacity) {
-        /* RFC 9204 4.5.1.1.  Required Insert Count
-         *  if (ReqInsertCount) EncInsertCount = (ReqInsertCount mod (2 * MaxEntries)) + 1
-         *  else EncInsertCount = 0;
-         */
-        if (0 == ric) {
-            eic = ric;
-        } else {
-            size_t maxentries = ::floor(capacity / 32);
-            eic = (ric % (2 * maxentries)) + 1;
-        }
-
-        /* RFC 9204 4.5.1.2.  Base
-         *  A Sign bit of 1 indicates that the Base is less than the Required Insert Count
-         *
-         *  if (0 == Sign) DeltaBase = Base - ReqInsertCount
-         *  else DeltaBase = ReqInsertCount - Base - 1
-         */
-        sign = (ric > base);
-        if (ric > base) {
-            deltabase = ric - base - 1;
-        } else {
-            deltabase = ric - base;
-        }
-    } else {
-        eic = 0;
-        sign = false;
-        deltabase = 0;
-    }
-
-    return ret;
-}
-
-return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_t deltabase, size_t& ric, size_t& base) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        /**
-         * RFC 9204 4.5.1.1.  Required Insert Count
-         *
-         * FullRange = 2 * MaxEntries
-         * if EncodedInsertCount == 0:
-         *    ReqInsertCount = 0
-         * else:
-         *    if EncodedInsertCount > FullRange:
-         *       Error
-         *    MaxValue = TotalNumberOfInserts + MaxEntries
-         *
-         *    # MaxWrapped is the largest possible value of
-         *    # ReqInsertCount that is 0 mod 2 * MaxEntries
-         *    MaxWrapped = floor(MaxValue / FullRange) * FullRange
-         *    ReqInsertCount = MaxWrapped + EncodedInsertCount - 1
-         *
-         *    # If ReqInsertCount exceeds MaxValue, the Encoder's value
-         *    # must have wrapped one fewer time
-         *    if ReqInsertCount > MaxValue:
-         *       if ReqInsertCount <= FullRange:
-         *          Error
-         *       ReqInsertCount -= FullRange
-         *
-         *    # Value of 0 must be encoded as 0.
-         *    if ReqInsertCount == 0:
-         *       Error
-         */
-        size_t maxentries = ::floor(capacity / 32);
-        eic = (ric % (2 * maxentries)) + 1;
-        size_t fullrange = 2 * maxentries;
-        if (0 == eic) {
-            ric = 0;
-        } else {
-            if (eic > fullrange) {
-                ret = errorcode_t::invalid_request;
-                __leave2;
-            }
-
-            size_t maxvalue = tni + maxentries;
-            size_t maxwrapped = ::floor(maxvalue / fullrange) * fullrange;
-            ric = maxwrapped + eic - 1;
-
-            if (ric > maxvalue) {
-                if (ric <= fullrange) {
-                    ret = errorcode_t::invalid_request;
-                    __leave2;
-                } else {
-                    ric -= fullrange;
-                }
-            }
-
-            if (0 == ric) {
-                ret = errorcode_t::invalid_request;
-                __leave2;
-            }
-
-            /* RFC 9204 4.5.1.2.  Base
-             *  A Sign bit of 1 indicates that the Base is less than the Required Insert Count
-             *
-             *  if (0 == Sign) Base = DeltaBase + ReqInsertCount
-             *  else Base = ReqInsertCount - DeltaBase - 1
-             */
-            if (0 == sign) {
-                base = deltabase + ric;
-            } else {
-                base = ric - deltabase - 1;
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-http_header_compression_session::http_header_compression_session() : _separate(false), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
+http_header_compression_session::http_header_compression_session() : _type(header_compression_hpack), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
 
 void http_header_compression_session::for_each(std::function<void(const std::string&, const std::string&)> v) {
     if (v) {
@@ -140,11 +25,11 @@ void http_header_compression_session::for_each(std::function<void(const std::str
 }
 
 bool http_header_compression_session::operator==(const http_header_compression_session& rhs) {
-    return (_separate == rhs._separate) && (_dynamic_map == rhs._dynamic_map);
+    return (_type == rhs._type) && (_dynamic_map == rhs._dynamic_map);
 }
 
 bool http_header_compression_session::operator!=(const http_header_compression_session& rhs) {
-    return (_separate != rhs._separate) || (_dynamic_map != rhs._dynamic_map);
+    return (_type != rhs._type) || (_dynamic_map != rhs._dynamic_map);
 }
 
 void http_header_compression_session::trace(std::function<void(uint32, stream_t*)> f) { _df = f; }
@@ -174,19 +59,19 @@ match_result_t http_header_compression_session::match(const std::string& name, c
 
     auto get_entry = [&](size_t ent, size_t& idx) -> void {
         /**
-         * get index from v.second
+         * get index from ent
          *
          * consider following cases
-         *  capacity = 3, _inserted = 2, _dropped = 0, table {1 0}, table.size = 2
-         *  capacity = 3, _inserted = 3, _dropped = 0, table {2 1 0}, table.size = 3
-         *  capacity = 3, _inserted = 4, _dropped = 1, table {3 2 1}, table.size = 3
-         *  capacity = 3, _inserted = 5, _dropped = 2, table {4 3 2}, table.size = 3
+         *  capacity = 3, _inserted = 2, _dropped = 0, table {1 0}, entries = 2
+         *  capacity = 3, _inserted = 3, _dropped = 0, table {2 1 0}, entries = 3
+         *  capacity = 3, _inserted = 4, _dropped = 1, table {3 2 1}, entries = 3
+         *  capacity = 3, _inserted = 5, _dropped = 2, table {4 3 2}, entries = 3
          *
          * conclusion
-         *  index = _inserted - _dropped - v.second + _dropped - 1 = _inserted - v.second - 1
+         *  index = entries - ent + _dropped - 1 = _inserted - _dropped - ent + _dropped - 1 = _inserted - ent - 1
          */
         idx = _inserted - ent - 1;
-        if (false == _separate) {
+        if (header_compression_hpack == _type) {
             /**
              * HPACK
              * RFC 7541 2.3.3.  Index Address Space
@@ -220,18 +105,21 @@ match_result_t http_header_compression_session::match(const std::string& name, c
     return state;
 }
 
-return_t http_header_compression_session::select(size_t index, std::string& name, std::string& value) {
+return_t http_header_compression_session::select(size_t index, uint32 flags, std::string& name, std::string& value) {
     return_t ret = errorcode_t::not_found;
 
     __try2 {
-        auto static_entries = http_resource::get_instance()->sizeof_hpack_static_table_entries();
-        if (index <= static_entries) {
-            __leave2;
-        }
-
-        if (false == _separate) {
+        if (header_compression_hpack == type()) {
             // HPACK
+            auto static_entries = http_resource::get_instance()->sizeof_hpack_static_table_entries();
+            if (index <= static_entries) {
+                __leave2;
+            }
             index -= (static_entries + 1);
+        } else if (header_compression_qpack == type()) {
+            if (qpack_postbase_index & flags) {
+                index = _inserted - _dropped - index - 1;
+            }
         }
 
         if (_dynamic_reversemap.size()) {
@@ -242,20 +130,22 @@ return_t http_header_compression_session::select(size_t index, std::string& name
              */
             const auto& t = _inserted - index - 1;
             auto riter = _dynamic_reversemap.find(t);
-            // never happen (_dynamic_reversemap.end() == riter)
-            const auto& pne = riter->second;  // pair(name, entry size)
-            const auto& nam = pne.first;
-            auto lbound = _dynamic_map.lower_bound(nam);
-            auto ubound = _dynamic_map.upper_bound(nam);
+            if (_dynamic_reversemap.end() != riter) {
+                const auto& pne = riter->second;  // pair(name, entry size)
+                const auto& nam = pne.first;
+                auto lbound = _dynamic_map.lower_bound(nam);
+                auto ubound = _dynamic_map.upper_bound(nam);
 
-            for (auto iter = lbound; iter != ubound; iter++) {
-                const auto& pve = iter->second;  // pair(value, entry)
-                const auto& val = pve.first;
-                const auto& ent = pve.second;
-                if (t == ent) {
-                    name = nam;
-                    value = val;
-                    break;
+                for (auto iter = lbound; iter != ubound; iter++) {
+                    const auto& pve = iter->second;  // pair(value, entry)
+                    const auto& val = pve.first;
+                    const auto& ent = pve.second;
+                    if (t == ent) {
+                        name = nam;
+                        value = val;
+                        ret = errorcode_t::success;
+                        break;
+                    }
                 }
             }
         }
@@ -273,20 +163,25 @@ return_t http_header_compression_session::insert(const std::string& name, const 
     // RFC 9204 3.2.1.  Dynamic Table Size
     size_t entrysize = 0;
     http_header_compression::sizeof_entry(name, value, entrysize);
-    _tablesize += entrysize;
 
-    evict();
+    if (entrysize < _capacity) {
+        _tablesize += entrysize;
 
-    _dynamic_map.insert({name, {value, _inserted}});
-    _dynamic_reversemap.insert({_inserted, {name, entrysize}});
+        evict();
 
-    if (_df) {
-        basic_stream bs;
-        bs.printf("insert entry[%zi] %s=%s", _inserted, name.c_str(), value.c_str());
-        _df(header_compression_event_insert, &bs);
+        _dynamic_map.insert({name, {value, _inserted}});
+        _dynamic_reversemap.insert({_inserted, {name, entrysize}});
+
+        if (_df) {
+            basic_stream bs;
+            bs.printf("insert entry[%zi] %s=%s", _inserted, name.c_str(), value.c_str());
+            _df(header_compression_event_insert, &bs);
+        }
+
+        _inserted++;
+    } else {
+        ret = errorcode_t::insufficient;
     }
-
-    _inserted++;
 
     return ret;
 }
@@ -340,6 +235,8 @@ void http_header_compression_session::set_capacity(uint32 capacity) {
     /**
      * RFC 9113 6.5.2.  Defined Settings
      *  SETTINGS_HEADER_TABLE_SIZE (0x01)
+     * RFC 9204 5.  Configuration
+     *  SETTINGS_QPACK_MAX_TABLE_CAPACITY (0x01)
      *
      * chrome request
      *   - http/2 frame type 4 SETTINGS
@@ -361,7 +258,11 @@ size_t http_header_compression_session::get_capacity() { return _capacity; }
 
 size_t http_header_compression_session::get_tablesize() { return _tablesize; }
 
+size_t http_header_compression_session::get_entries() { return _inserted - _dropped; }
+
 return_t http_header_compression_session::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
+
+uint8 http_header_compression_session::type() { return _type; }
 
 }  // namespace net
 }  // namespace hotplace

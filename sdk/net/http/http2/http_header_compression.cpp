@@ -21,12 +21,14 @@ http_header_compression::http_header_compression() : _safe_mask(false) {
 
 return_t http_header_compression::encode(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,
                                          uint32 flags) {
-    return errorcode_t::success;
+    return_t ret = errorcode_t::success;
+    return ret;
 }
 
 return_t http_header_compression::decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                         std::string& value) {
-    return errorcode_t::success;
+                                         std::string& value, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    return ret;
 }
 
 return_t http_header_compression::sync(http_header_compression_session* session, binary_t& target, uint32 flags) { return errorcode_t::success; }
@@ -207,7 +209,31 @@ return_t http_header_compression::decode_string(const byte_t* p, size_t& pos, ui
     return ret;
 }
 
-return_t http_header_compression::set_dynamic_table_size(http_header_compression_session* session, binary_t& target, uint8 maxsize) {
+return_t http_header_compression::decode_name_reference(const byte_t* p, size_t& pos, uint8 flags, uint8 mask, uint8 prefix, std::string& name) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == p) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        size_t namelen = 0;
+        decode_int(p, pos, mask, prefix, namelen);
+        if (qpack_huffman & flags) {
+            basic_stream bs;
+            _huffcode.decode(&bs, p + pos, namelen);
+            name = bs.c_str();
+        } else {
+            name.assign((char*)p + pos, namelen);
+        }
+        pos += namelen;
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t http_header_compression::set_capacity(http_header_compression_session* session, binary_t& target, uint8 maxsize) {
     /**
      * RFC 7541 Figure 12: Maximum Dynamic Table Size Change
      *   0   1   2   3   4   5   6   7
@@ -250,34 +276,48 @@ match_result_t http_header_compression::match(http_header_compression_session* s
     match_result_t state = match_result_t::not_matched;
     index = 0;
 
-    if (session) {
-        state = session->match(name, value, index, flags);
-    }
-    if (match_result_t::not_matched == state) {
-        static_table_t::iterator iter;
-        static_table_t::iterator liter;
-        static_table_t::iterator uiter;
+    __try2 {
+        if (nullptr == session) {
+            __leave2;
+        }
 
-        liter = _static_table.lower_bound(name);
-        uiter = _static_table.upper_bound(name);
+        // skip if qpack_static flag set
+        if (qpack_static & ~flags) {
+            // dynamic table
+            state = session->match(name, value, index, flags);
+        }
 
-        for (iter = liter; iter != uiter; iter++) {
-            if (iter == liter) {
-                index = iter->second.second;  // :path: /sample/path
-                state = match_result_t::key_matched;
-            }
-            if (value == iter->second.first) {
-                index = iter->second.second;
-                state = match_result_t::all_matched;
-                break;
+        // if not matched or qpack_static flag set
+        if (match_result_t::not_matched == state) {
+            // static table
+            static_table_t::iterator iter;
+            static_table_t::iterator liter;
+            static_table_t::iterator uiter;
+
+            liter = _static_table.lower_bound(name);
+            uiter = _static_table.upper_bound(name);
+
+            for (iter = liter; iter != uiter; iter++) {
+                if (iter == liter) {
+                    index = iter->second.second;  // :path: /sample/path
+                    state = match_result_t::key_matched;
+                }
+                if (value == iter->second.first) {
+                    index = iter->second.second;
+                    state = match_result_t::all_matched;
+                    break;
+                }
             }
         }
+    }
+    __finally2 {
+        // do nothing
     }
     return state;
 }
 
 return_t http_header_compression::select(http_header_compression_session* session, uint32 flags, size_t index, std::string& name, std::string& value) {
-    return_t ret = errorcode_t::success;
+    return_t ret = errorcode_t::not_found;
     __try2 {
         name.clear();
         value.clear();
@@ -287,9 +327,26 @@ return_t http_header_compression::select(http_header_compression_session* sessio
             __leave2;
         }
 
-        if (index > _static_table.size()) {
-            ret = session->select(index, name, value);
-        } else {
+        // skip if qpack_static flag set
+        if (qpack_static & ~flags) {
+            // dynamic table
+            if (header_compression_hpack == session->type()) {
+                if (index > _static_table.size()) {
+                    ret = session->select(index, flags, name, value);
+                }
+            } else {
+                ret = session->select(index, flags, name, value);
+            }
+        }
+
+        // post-base index in dynamic table
+        if (qpack_postbase_index & flags) {
+            __leave2;
+        }
+
+        // if not found or qpack_static flag set
+        if (errorcode_t::success != ret) {
+            // static table
             static_table_index_t::iterator iter = _static_table_index.find(index);
             if (_static_table_index.end() == iter) {
                 ret = errorcode_t::not_found;
@@ -298,6 +355,7 @@ return_t http_header_compression::select(http_header_compression_session* sessio
                 name = iter->second.first;
                 if ((hpack_layout_index | hpack_layout_name_value) & flags) {
                     value = iter->second.second;
+                    ret = errorcode_t::success;
                 }
             }
         }

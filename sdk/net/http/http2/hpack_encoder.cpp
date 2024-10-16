@@ -34,7 +34,7 @@ return_t hpack_encoder::encode(http_header_compression_session* session, binary_
 
         size_t index = 0;
 
-        state = match(session, 0, name, value, index);
+        state = match(session, 0, name, value, index);  // set flags = 0
         switch (state) {
             case match_result_t::all_matched:
             case match_result_t::all_matched_dynamic:
@@ -122,6 +122,9 @@ return_t hpack_encoder::decode(http_header_compression_session* session, const b
                 flags |= hpack_layout_name_value;
             }
         }
+
+        // do not handle hpack_layout_capacity here
+        // HTTP2 SETTINGS frame SETTINGS_HEADER_TABLE_SIZE (0x1)
 
         size_t i = 0;
         size_t idx = 0;

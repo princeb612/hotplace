@@ -15,7 +15,7 @@ namespace hotplace {
 namespace net {
 
 qpack_session::qpack_session() : http_header_compression_session() {
-    _separate = true;
+    _type = header_compression_qpack;
 
     // RFC 9204 5.  Configuration
     // SETTINGS_QPACK_MAX_TABLE_CAPACITY (0x01):  The default value is zero.
@@ -30,10 +30,6 @@ return_t qpack_session::query(int cmd, void* req, size_t reqsize, void* resp, si
             __leave2;
         }
         switch (cmd) {
-            case qpack_cmd_tablesize: {
-                respsize = sizeof(size_t);
-                memcpy(resp, &_tablesize, respsize);
-            } break;
             case qpack_cmd_inserted:
                 respsize = sizeof(size_t);
                 memcpy(resp, &_inserted, respsize);
@@ -46,22 +42,17 @@ return_t qpack_session::query(int cmd, void* req, size_t reqsize, void* resp, si
                 if (req && (sizeof(size_t) == reqsize)) {
                     respsize = sizeof(size_t);
                     size_t data = *(size_t*)req;
-                    size_t tablesize = _dynamic_map.size();
-                    if (data > tablesize) {
+                    size_t entries = _dynamic_map.size();
+                    if (data > entries) {
                         ret = errorcode_t::out_of_range;
                     } else {
-                        auto postbase = tablesize - data - 1;
+                        auto postbase = entries - data - 1;
                         memcpy(resp, &postbase, respsize);
                     }
                 } else {
                     ret = errorcode_t::bad_request;
                 }
                 break;
-            case qpack_cmd_ric: {
-                respsize = sizeof(size_t);
-                size_t ric = _dynamic_map.size();
-                memcpy(resp, &ric, respsize);
-            } break;
             default:
                 ret = errorcode_t::not_supported;
                 break;

@@ -1,11 +1,14 @@
 # history
 
+* Revision 626
+  * [tested] QPACK (RFC 9204)
+
 * Revision 625
- * [tested] RFC 9204 Appendix B.
- * [changed] QPACK RIC
+  * [tested] RFC 9204 Appendix B.
+  * [changed] QPACK RIC
 
 * Revision 624
- * [changed] QPACK duplicate
+  * [changed] QPACK duplicate
 
 * Revision 623
   * [tested] HPACK eviction
