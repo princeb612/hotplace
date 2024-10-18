@@ -400,31 +400,94 @@ const std::string variant::to_hex() const {
     return ret_value;
 }
 
-const binary_t variant::to_bin() const {
+const binary_t variant::to_bin(uint32 flags) const {
     binary_t bin;
-    to_binary(bin);
+    to_binary(bin, flags);
     return bin;
 }
 
 int variant::to_int() const { return t_to_int<int>(_vt); }
 
-return_t variant::to_binary(binary_t &target) const {
+return_t variant::to_binary(binary_t &target, uint32 flags) const {
     return_t ret = errorcode_t::success;
 
+    bool change_endian = (variant_flag_convendian & flags);
+
+    if (variant_flag_trunc & flags) {
+        target.clear();
+    }
+
+    byte_t *p = nullptr;
     switch (_vt.type) {
-        case TYPE_BINARY:
-        case TYPE_NSTRING:
-            target.clear();
-            binary_append(target, _vt.data.bstr, _vt.size);
+        case TYPE_INT8:
+        case TYPE_UINT8:
+            binary_push(target, _vt.data.ui8);
+            break;
+        case TYPE_INT16:
+        case TYPE_UINT16:
+        case TYPE_FP16:
+            if (change_endian) {
+                binary_append(target, _vt.data.ui16, hton16);
+            } else {
+                binary_append(target, _vt.data.ui16);
+            }
+            break;
+        case TYPE_INT24:
+        case TYPE_UINT24: {
+            uint24_t temp;
+            i32_b24(temp, _vt.data.ui32);
+            binary_append(target, temp.data, RTL_FIELD_SIZE(uint24_t, data));
+        } break;
+        case TYPE_INT32:
+        case TYPE_UINT32:
+            if (change_endian) {
+                binary_append(target, _vt.data.ui32, hton32);
+            } else {
+                binary_append(target, _vt.data.ui32);
+            }
+            break;
+        case TYPE_INT64:
+        case TYPE_UINT64:
+            if (change_endian) {
+                binary_append(target, _vt.data.ui64, hton64);
+            } else {
+                binary_append(target, _vt.data.ui64);
+            }
+            break;
+        case TYPE_INT128:
+        case TYPE_UINT128:
+            if (change_endian) {
+                binary_append(target, _vt.data.ui128, hton128);
+            } else {
+                binary_append(target, _vt.data.ui128);
+            }
+            break;
+        case TYPE_FLOAT:
+            if (change_endian) {
+                binary_append(target, _vt.data.f, hton32);
+            } else {
+                binary_append(target, _vt.data.f);
+            }
+            break;
+        case TYPE_DOUBLE:
+            if (change_endian) {
+                binary_append(target, _vt.data.d, hton64);
+            } else {
+                binary_append(target, _vt.data.d);
+            }
             break;
         case TYPE_STRING:
-            target.clear();
             binary_append(target, _vt.data.str);
             break;
+        case TYPE_BINARY:
+        case TYPE_NSTRING:
+            binary_append(target, _vt.data.bstr, _vt.size);
+            break;
         default:
-            ret = errorcode_t::mismatch;
+            ret = errorcode_t::not_supported;
             break;
     }
+
     return ret;
 }
 
@@ -531,78 +594,6 @@ return_t variant::to_string(std::string &target) const {
         } break;
         default:
             ret = errorcode_t::mismatch;
-            break;
-    }
-    return ret;
-}
-
-return_t variant::dump(binary_t &target, bool change_endian) const {
-    return_t ret = errorcode_t::success;
-    byte_t *p = nullptr;
-    switch (_vt.type) {
-        case TYPE_INT8:
-        case TYPE_UINT8:
-            binary_push(target, _vt.data.ui8);
-            break;
-        case TYPE_INT16:
-        case TYPE_UINT16:
-        case TYPE_FP16:
-            if (change_endian) {
-                binary_append(target, _vt.data.ui16, hton16);
-            } else {
-                binary_append(target, _vt.data.ui16);
-            }
-            break;
-        case TYPE_INT24:
-        case TYPE_UINT24: {
-            uint24_t temp;
-            i32_b24(temp, _vt.data.ui32);
-            binary_append(target, temp.data, RTL_FIELD_SIZE(uint24_t, data));
-        } break;
-        case TYPE_INT32:
-        case TYPE_UINT32:
-            if (change_endian) {
-                binary_append(target, _vt.data.ui32, hton32);
-            } else {
-                binary_append(target, _vt.data.ui32);
-            }
-            break;
-        case TYPE_INT64:
-        case TYPE_UINT64:
-            if (change_endian) {
-                binary_append(target, _vt.data.ui64, hton64);
-            } else {
-                binary_append(target, _vt.data.ui64);
-            }
-            break;
-        case TYPE_INT128:
-        case TYPE_UINT128:
-            if (change_endian) {
-                binary_append(target, _vt.data.ui128, hton128);
-            } else {
-                binary_append(target, _vt.data.ui128);
-            }
-            break;
-        case TYPE_FLOAT:
-            if (change_endian) {
-                binary_append(target, _vt.data.f, hton32);
-            } else {
-                binary_append(target, _vt.data.f);
-            }
-            break;
-        case TYPE_DOUBLE:
-            if (change_endian) {
-                binary_append(target, _vt.data.d, hton64);
-            } else {
-                binary_append(target, _vt.data.d);
-            }
-            break;
-        case TYPE_STRING:
-        case TYPE_BINARY:
-            binary_append(target, _vt.data.bstr, _vt.size);
-            break;
-        default:
-            // if necessary, ...
             break;
     }
     return ret;

@@ -117,6 +117,14 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             }
 
             req->add_content(frame.get_data());
+
+            constexpr char constexpr_content_type[] = "Content-Type";
+            constexpr char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
+
+            if (req->get_http_header().contains(constexpr_content_type, constexpr_url_encoded)) {
+                auto const& content = req->get_content();
+                req->get_http_uri().set_query(content);
+            }
         } else if (h2_frame_t::h2_frame_headers == hdr->type) {
             http2_frame_headers frame;
             frame.read(hdr, frame_size);
@@ -126,9 +134,13 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
                 _df(&bs);
             }
 
-            frame.read_compressed_header(frame.get_fragment(),
-                                         [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); });
-
+            auto inserter = [&](const std::string& name, const std::string& value) -> void {
+                if (":path" == name) {
+                    req->get_http_uri().open(value);
+                }
+                req->get_http_header().add(name, value);
+            };
+            frame.read_compressed_header(frame.get_fragment(), inserter);
         } else if (h2_frame_t::h2_frame_priority == hdr->type) {
             http2_frame_priority frame;
             frame.read(hdr, frame_size);
@@ -219,17 +231,12 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
                 _df(&bs);
             }
 
-            frame.read_compressed_header(frame.get_fragment(),
-                                         [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); });
+            auto reader = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
+            frame.read_compressed_header(frame.get_fragment(), reader);
         }
 
         if (completion) {
-            http_request* r = new http_request(*req);
-            r->set_version(2);
-            // get_http_header().get(":method")
-            // get_http_header().get(":path")
-            r->get_http_uri().open(r->get_http_header().get(":path"));
-            *request = r;
+            *request = new http_request(*req);
         }
         if (completion || reset) {
             _flags.erase(stream_id);

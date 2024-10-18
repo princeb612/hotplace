@@ -72,7 +72,7 @@ void for_each(container_t& c, typename std::function<void(typename container_t::
 template <typename container_t, typename stream_type>
 void print(const container_t& c, stream_type& s, const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ",
            const std::string& mark_epilogue = "]") {
-    auto func = [&](typename container_t::const_iterator iter, int where) -> void {
+    auto lambda = [&](typename container_t::const_iterator iter, int where) -> void {
         switch (where) {
             case seek_t::seek_begin:
                 s << mark_prologue << *iter;
@@ -85,13 +85,13 @@ void print(const container_t& c, stream_type& s, const std::string& mark_prologu
                 break;
         }
     };
-    for_each_const<container_t>(c, func);
+    for_each_const<container_t>(c, lambda);
 }
 
 template <typename container_t, typename stream_type>
 void print_pair(const container_t& c, stream_type& s, const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ",
                 const std::string& mark_epilogue = "]") {
-    auto func = [&](typename container_t::const_iterator iter, int where) -> void {
+    auto lambda = [&](typename container_t::const_iterator iter, int where) -> void {
         switch (where) {
             case seek_t::seek_begin:
                 s << mark_prologue << "{" << iter->first << "," << iter->second << "}";
@@ -104,7 +104,7 @@ void print_pair(const container_t& c, stream_type& s, const std::string& mark_pr
                 break;
         }
     };
-    for_each_const<container_t>(c, func);
+    for_each_const<container_t>(c, lambda);
 }
 
 /**
@@ -120,7 +120,7 @@ void print_pair(const container_t& c, stream_type& s, const std::string& mark_pr
 template <typename container_t, typename stream_type>
 void print_pair(const container_t& c, stream_type& s, std::function<void(typename container_t::const_iterator, stream_type&)> f,
                 const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ", const std::string& mark_epilogue = "]") {
-    auto func = [&](typename container_t::const_iterator iter, int where) -> void {
+    auto lambda = [&](typename container_t::const_iterator iter, int where) -> void {
         switch (where) {
             case seek_t::seek_begin:
                 s << mark_prologue << "{";
@@ -137,7 +137,7 @@ void print_pair(const container_t& c, stream_type& s, std::function<void(typenam
                 break;
         }
     };
-    for_each_const<container_t>(c, func);
+    for_each_const<container_t>(c, lambda);
 }
 
 /**

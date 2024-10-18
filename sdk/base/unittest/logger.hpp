@@ -65,7 +65,7 @@ class logger_builder {
 
    private:
     t_key_value<logger_t, uint16> _keyvalue;
-    t_skey_value<std::string> _skeyvalue;
+    skey_value _skeyvalue;
 };
 
 /**
@@ -92,7 +92,7 @@ class logger {
     critical_section _lock;
     logger_stream_map_t _logger_stream_map;
     t_key_value<logger_t, uint16> _keyvalue;
-    t_skey_value<std::string> _skeyvalue;
+    skey_value _skeyvalue;
 
     thread* _thread;
     bool _run;

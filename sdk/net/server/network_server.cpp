@@ -3,8 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *      TCP/TLS/UDP ... support
- *      DTLS not supported yet
+ *      TCP/TLS/UDP/DTLS ... support
  *
  *      bind socket and multiplexr.handle
  *                 TCP/TLS   DTLS
@@ -14,14 +13,6 @@
  *                 TCP/TLS   DTLS
  *          epoll     O       -
  *          IOCP      O       -
- *
- *             mux    type     accept_queue.push
- *          1) epoll  tcp/tls  network_routine.mux_connect->accept_routine
- *          2) epoll  dtls     not supported yet
- *          3) epoll  udp      N/A
- *          4) iocp   tcp/tls  accept_routine
- *          5) iocp   dtls     not supported yet
- *          6) iocp   udp      N/A
  *
  * Revision History
  * Date         Name                Description
@@ -60,7 +51,6 @@ struct _network_multiplexer_context_t {
     server_socket* svr_socket;
 
     semaphore tls_accept_mutex;
-    // semaphore cleanup_mutex;
     semaphore consumer_mutex;
     signalwait_threads network_threads;
 #if defined _WIN32 || defined _WIN64
@@ -913,7 +903,8 @@ return_t network_server::consumer_thread(void* user_context) {
         uint32 ret_wait = 0;
 
         while (true) {
-            ret_wait = handle->consumer_mutex.wait(100);
+            unsigned cooltime = handle->event_queue.size() ? 1 : 100;
+            ret_wait = handle->consumer_mutex.wait(cooltime);
             if (0 == ret_wait) {
                 break;
             }

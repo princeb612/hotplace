@@ -40,6 +40,7 @@ enum h2_frame_t {
     h2_frame_goaway = 0x7,         // RFC 7540 6.8. GOAWAY
     h2_frame_window_update = 0x8,  // RFC 7540 6.9. WINDOW_UPDATE
     h2_frame_continuation = 0x9,   // RFC 7540 6.10. CONTINUATION
+    h2_frame_altsvc = 0xa,         // RFC 7838 4.  The ALTSVC HTTP/2 Frame
 };
 
 /**
@@ -368,6 +369,28 @@ class http2_frame_continuation : public http2_frame {
     binary_t _fragment;
 };
 
+/**
+ * @brief   The ALTSVC HTTP/2 Frame
+ * @see
+ *          RFC 7838 4.  The ALTSVC HTTP/2 Frame
+ */
+class http2_alt_svc : public http2_frame {
+   public:
+    http2_alt_svc();
+    http2_alt_svc(const http2_alt_svc& rhs);
+
+    virtual return_t read(http2_frame_header_t const* header, size_t size);
+    virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
+
+    binary_t& get_origin();
+    binary_t& get_altsvc();
+
+   private:
+    binary_t _origin;  // Origin
+    binary_t _altsvc;  // Alt-Svc-Field-Value
+};
+
 extern const char constexpr_frame_length[];
 extern const char constexpr_frame_type[];
 extern const char constexpr_frame_flags[];
@@ -388,6 +411,9 @@ extern const char constexpr_frame_window_size_increment[];
 extern const char constexpr_frame_exclusive[];
 extern const char constexpr_frame_identifier[];
 extern const char constexpr_frame_value[];
+extern const char constexpr_frame_origin_len[];
+extern const char constexpr_frame_origin[];
+extern const char constexpr_frame_alt_svc_field_value[];
 
 }  // namespace net
 }  // namespace hotplace

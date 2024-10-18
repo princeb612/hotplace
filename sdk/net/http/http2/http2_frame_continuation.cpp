@@ -50,7 +50,7 @@ return_t http2_frame_continuation::read(http2_frame_header_t const* header, size
 
         pl.read(ptr_payload, get_payload_size());
 
-        pl.select(constexpr_frame_fragment)->get_variant().dump(_fragment, true);
+        pl.select(constexpr_frame_fragment)->get_variant().to_binary(_fragment);
     }
     __finally2 {
         // do nothing
@@ -65,7 +65,7 @@ return_t http2_frame_continuation::write(binary_t& frame) {
     pl << new payload_member(_fragment, constexpr_frame_fragment);
 
     binary_t bin_payload;
-    pl.dump(bin_payload);
+    pl.write(bin_payload);
 
     set_payload_size(bin_payload.size());
 
@@ -83,8 +83,8 @@ void http2_frame_continuation::dump(stream_t* s) {
         dump_memory(_fragment, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
         s->printf("\n");
 
-        http2_frame::read_compressed_header(
-            _fragment, [&](const std::string& name, const std::string& value) -> void { s->printf(" > %s: %s\n", name.c_str(), value.c_str()); });
+        auto lambda = [&](const std::string& name, const std::string& value) -> void { s->printf(" > %s: %s\n", name.c_str(), value.c_str()); };
+        http2_frame::read_compressed_header(_fragment, lambda);
     }
 }
 

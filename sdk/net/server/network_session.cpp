@@ -78,7 +78,7 @@ return_t network_session::ready_to_read() {
              *      Server: WSARecvFrom(..., &flags, &ov, ...)
              *      Server: GetQueuedCompletionStatus
              *      Server:     00000000 : 16 FE FF 00 00 00 00 00 00 00 00 00 C0 01 00 00 | ................
-             *      Server:     ; handshake 0x16, DTLS1_2_VERSION 0xFEFD
+             *      Server:     ; handshake 0x16, DTLS1_VERSION 0xFEFF (DTLS1_2_VERSION 0xFEFD)
              *      Server: DTLSv1_listen
              *      Server:     recvfrom - hang
              *      Client: SSL_connect

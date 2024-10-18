@@ -123,8 +123,12 @@ payload_member& payload_member::set_value_of(payload_member* member) {
     return *this;
 }
 
-payload_member& payload_member::dump(binary_t& bin) {
-    get_variant().dump(bin, get_change_endian());
+payload_member& payload_member::write(binary_t& bin) {
+    uint32 flags = 0;
+    if (get_change_endian()) {
+        flags |= variant_flag_convendian;
+    }
+    get_variant().to_binary(bin, flags);
     return *this;
 }
 
@@ -228,7 +232,7 @@ payload::~payload() { clear(); }
 
 payload& payload::operator<<(payload_member* member) {
     if (member) {
-        // dump
+        // members
         _members.push_back(member);
 
         // read(parse)
@@ -268,12 +272,12 @@ payload& payload::set_reference_value(const std::string& name, const std::string
     return *this;
 }
 
-return_t payload::dump(binary_t& bin) {
+return_t payload::write(binary_t& bin) {
     return_t ret = errorcode_t::success;
     for (auto item : _members) {
         bool condition = get_group_condition(item->get_group());
         if (condition) {
-            item->dump(bin);
+            item->write(bin);
         }
     }
     return ret;

@@ -280,17 +280,19 @@ return_t oauth2_credentials::revoke(const std::string& access_token) {
 
         std::string refresh_token;
         {
-            ret = _access_tokens.remove(access_token, [&](access_token_t* object) -> void {
+            auto lambda = [&](access_token_t* object) -> void {
                 refresh_token = object->refresh_token();
                 object->release();
-            });
+            };
+            ret = _access_tokens.remove(access_token, lambda);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
         }
 
         {
-            ret = _refresh_tokens.remove(refresh_token, [&](access_token_t* object) -> void { object->release(); });
+            auto lambda = [&](access_token_t* object) -> void { object->release(); };
+            ret = _refresh_tokens.remove(refresh_token, lambda);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -363,10 +365,11 @@ return_t oauth2_credentials::refresh(std::string& next_access_token, std::string
 void oauth2_credentials::revoke_if_expired() {
     critical_section_guard guard(_lock);
 
-    _expirable.expire([&](access_token_t* object) -> void {
+    auto lambda = [&](access_token_t* object) -> void {
         revoke(object->access_token());
         object->release();
-    });
+    };
+    _expirable.expire(lambda);
 }
 
 void oauth2_credentials::clear() {

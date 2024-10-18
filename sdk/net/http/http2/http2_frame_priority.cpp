@@ -77,7 +77,7 @@ return_t http2_frame_priority::write(binary_t& frame) {
     pl << new payload_member(dependency, true, constexpr_frame_stream_dependency) << new payload_member(_weight, constexpr_frame_weight);
 
     binary_t bin_payload;
-    pl.dump(bin_payload);
+    pl.write(bin_payload);
 
     set_payload_size(bin_payload.size());
 

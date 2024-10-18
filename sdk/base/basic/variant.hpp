@@ -241,6 +241,11 @@ struct variant_t {
     }
 };
 
+enum variant_control_flag_t {
+    variant_flag_trunc = (1 << 16),
+    variant_flag_convendian = (1 << 17),
+};
+
 class variant {
    public:
     variant();
@@ -318,13 +323,34 @@ class variant {
     variant& set_nstr_new(const char* value, size_t n);
     variant& set_binary_new(const binary_t& bin);
 
+    /**
+     * @brief   to string
+     */
     const std::string to_str() const;
+    /**
+     * @brief   to hexadecimal
+     */
     const std::string to_hex() const;
-    const binary_t to_bin() const;
+    /**
+     * @brief   to binary
+     * @param   uint32 flags [inopt] see variant_control_flag_t
+     */
+    const binary_t to_bin(uint32 flags = 0) const;
+    /**
+     * @brief   to integer
+     */
     int to_int() const;
-    return_t to_binary(binary_t& target) const;
+    /*
+     * @brief   to binary
+     * @param   binary_t& target [out]
+     * @param   uint32 flags [inopt] see variant_control_flag_t
+     */
+    return_t to_binary(binary_t& target, uint32 flags = 0) const;
+    /**
+     * @brief   to string
+     * @param   std::string& target [out]
+     */
     return_t to_string(std::string& target) const;
-    return_t dump(binary_t& target, bool change_endian) const;
 
     variant& operator=(const variant& source);
     variant& operator=(variant&& source);

@@ -50,7 +50,8 @@ huffman_coding &huffman_coding::learn() {
      * _btree   .. merge by weight until (1 == size()), see hc_comparator::operator
      */
 
-    _measure.for_each([&](hc_t const &t) -> void { _btree.insert(t); });
+    auto lambda = [&](hc_t const &t) -> void { _btree.insert(t); };
+    _measure.for_each(lambda);
 
     while (_btree.size() > 1) {
         hc_t k;

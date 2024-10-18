@@ -87,7 +87,7 @@ struct network_session_t {
 /**
  * @brief session data
  */
-class network_session_data : public t_skey_value<std::string> {
+class network_session_data : public skey_value {
    public:
     network_session_data() {}
     virtual ~network_session_data() {}

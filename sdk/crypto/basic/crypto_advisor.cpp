@@ -539,22 +539,24 @@ return_t crypto_advisor::md_for_each(std::function<void(const char*, uint32, voi
 return_t crypto_advisor::jose_for_each_algorithm(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
 
-    std::for_each(hint_jose_algorithms, hint_jose_algorithms + sizeof_hint_jose_algorithms, [&](const hint_jose_encryption_t& item) { return f(&item, user); });
+    auto lambda = [&](const hint_jose_encryption_t& item) { return f(&item, user); };
+    std::for_each(hint_jose_algorithms, hint_jose_algorithms + sizeof_hint_jose_algorithms, lambda);
     return ret;
 }
 
 return_t crypto_advisor::jose_for_each_encryption(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
 
-    std::for_each(hint_jose_encryptions, hint_jose_encryptions + sizeof_hint_jose_encryptions,
-                  [&](const hint_jose_encryption_t& item) { return f(&item, user); });
+    auto lambda = [&](const hint_jose_encryption_t& item) { return f(&item, user); };
+    std::for_each(hint_jose_encryptions, hint_jose_encryptions + sizeof_hint_jose_encryptions, lambda);
     return ret;
 }
 
 return_t crypto_advisor::jose_for_each_signature(std::function<void(const hint_signature_t*, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
 
-    std::for_each(hint_signatures, hint_signatures + sizeof_hint_signatures, [&](const hint_signature_t& item) { return f(&item, user); });
+    auto lambda = [&](const hint_signature_t& item) { return f(&item, user); };
+    std::for_each(hint_signatures, hint_signatures + sizeof_hint_signatures, lambda);
     return ret;
 }
 

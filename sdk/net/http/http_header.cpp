@@ -136,7 +136,8 @@ const char* http_header::get_token(const std::string& name, unsigned index, std:
 return_t http_header::get_headers(std::string& contents) {
     return_t ret = errorcode_t::success;
 
-    get_headers([&](const std::string& name, const std::string& value) -> void { contents += format("%s: %s\r\n", name.c_str(), value.c_str()); });
+    auto lambda = [&](const std::string& name, const std::string& value) -> void { contents += format("%s: %s\r\n", name.c_str(), value.c_str()); };
+    get_headers(lambda);
 
     return ret;
 }

@@ -137,9 +137,9 @@ return_t simple_http2_server(void*) {
             .enable_h2(true)         // enable HTTP/2
             .set_handler(consume_routine);
         builder.get_server_conf()
-            .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
-            .set(netserver_config_t::serverconf_concurrent_network, 2)
-            .set(netserver_config_t::serverconf_concurrent_consume, 2);
+            .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
+            .set(netserver_config_t::serverconf_concurrent_network, 4)
+            .set(netserver_config_t::serverconf_concurrent_consume, 4);
         if (option.verbose) {
             auto trace_handler = [](stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); };
             builder.trace(trace_handler);

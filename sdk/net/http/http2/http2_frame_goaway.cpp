@@ -55,7 +55,7 @@ return_t http2_frame_goaway::read(http2_frame_header_t const* header, size_t siz
 
         _last_id = t_to_int<uint32>(pl.select(constexpr_frame_last_stream_id));
         _errorcode = t_to_int<uint32>(pl.select(constexpr_frame_error_code));
-        pl.select(constexpr_frame_debug_data)->get_variant().dump(_debug, true);
+        pl.select(constexpr_frame_debug_data)->get_variant().to_binary(_debug);
     }
     __finally2 {
         // do nothing
@@ -71,7 +71,7 @@ return_t http2_frame_goaway::write(binary_t& frame) {
        << new payload_member(_debug, constexpr_frame_debug_data);
 
     binary_t bin_payload;
-    pl.dump(bin_payload);
+    pl.write(bin_payload);
 
     set_payload_size(bin_payload.size());
 

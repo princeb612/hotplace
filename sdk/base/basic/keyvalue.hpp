@@ -39,15 +39,15 @@ enum key_value_mode_t { kv_move = 0, kv_update, kv_keep };
  * @remarks
  */
 template <typename value_t = std::string>
-class t_skey_value {
+class t_stringkey_value {
    public:
     /**
      * @brief constructor
      * @param uint32 flags [inopt]
      */
-    t_skey_value<value_t>(uint32 flags = key_value_flag_t::key_value_case_sensitive) : _flags(flags), _order(0) {}
+    t_stringkey_value<value_t>(uint32 flags = key_value_flag_t::key_value_case_sensitive) : _flags(flags), _order(0) {}
 
-    t_skey_value<value_t>(const t_skey_value<value_t> &object) {
+    t_stringkey_value<value_t>(const t_stringkey_value<value_t> &object) {
         _keyvalues = object._keyvalues;
         _order_map = object._order_map;
         _reverse_order_map = object._reverse_order_map;
@@ -57,13 +57,13 @@ class t_skey_value {
     /**
      * @brief destructor
      */
-    ~t_skey_value<value_t>() {}
+    ~t_stringkey_value<value_t>() {}
 
     /**
      * @brief set
      * @param uint32 flags [in]
      */
-    t_skey_value<value_t> &set(uint32 flags) {
+    t_stringkey_value<value_t> &set(uint32 flags) {
         _flags = flags;
         return *this;
     }
@@ -261,7 +261,7 @@ class t_skey_value {
 
     /**
      * @brief   copy
-     * @param   t_skey_value&      rhs   [IN]
+     * @param   t_stringkey_value&      rhs   [IN]
      * @param   int             mode  [IN]
      * @return  error code (see error.hpp)
      * @remarks
@@ -272,7 +272,7 @@ class t_skey_value {
      *          result of kv1.copy (kv2, key_value_mode_t::kv_update) is kv1 [ ("key1", "value1"), ("key2", "item2"), ("key3", "item3") ]
      *          result of kv1.copy (kv2, key_value_mode_t::kv_keep)   is kv1 [ ("key1", "value1"), ("key2", "value2"), ("key3", "item3") ]
      */
-    return_t copy(t_skey_value<value_t> &rhs, int mode = key_value_mode_t::kv_update) {
+    return_t copy(t_stringkey_value<value_t> &rhs, int mode = key_value_mode_t::kv_update) {
         return_t ret = errorcode_t::success;
 
         critical_section_guard guard(rhs._lock);
@@ -325,11 +325,11 @@ class t_skey_value {
 
     /**
      * @brief   operator <<
-     * @param   t_skey_value& rhs [in]
-     * @return  t_skey_value&
+     * @param   t_stringkey_value& rhs [in]
+     * @return  t_stringkey_value&
      * @remarks copy with key_value_mode_t::kv_update
      */
-    t_skey_value<value_t> &operator<<(t_skey_value<value_t> &rhs) {
+    t_stringkey_value<value_t> &operator<<(t_stringkey_value<value_t> &rhs) {
         copy(rhs, key_value_mode_t::kv_update);
         return *this;
     }
@@ -353,7 +353,7 @@ class t_skey_value {
     uint32 _order;
 };
 
-typedef t_skey_value<std::string> skey_value;
+typedef t_stringkey_value<std::string> skey_value;
 
 template <typename key_t, typename value_t>
 class t_key_value {

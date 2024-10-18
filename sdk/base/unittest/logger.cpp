@@ -265,21 +265,23 @@ logger& logger::do_console(std::function<void(logger_item*)> f) {
 }
 
 logger& logger::do_console_vprintf(const char* fmt, va_list ap, bool lf) {
-    return do_console([&](logger_item* item) -> void {
+    auto lambda = [&](logger_item* item) -> void {
         item->bs.vprintf(fmt, ap);
         if (lf) {
             item->bs.printf("\n");
         }
-    });
+    };
+    return do_console(lambda);
 }
 
 logger& logger::do_console_raw(const char* buf, size_t bufsize, bool lf) {
-    return do_console([&](logger_item* item) -> void {
+    auto lambda = [&](logger_item* item) -> void {
         item->bs.write(buf, bufsize);
         if (lf) {
             item->bs.printf("\n");
         }
-    });
+    };
+    return do_console(lambda);
 }
 
 logger& logger::do_write(std::function<void(logger_item*)> f) {
@@ -306,44 +308,48 @@ logger& logger::do_write(std::function<void(logger_item*)> f) {
 }
 
 logger& logger::do_write_vprintf(const char* fmt, va_list ap, bool lf) {
-    return do_write([&](logger_item* item) -> void {
+    auto lambda = [&](logger_item* item) -> void {
         item->bs.vprintf(fmt, ap);
         if (lf) {
             item->bs.printf("\n");
         }
-    });
+    };
+    return do_write(lambda);
 }
 
 logger& logger::do_write_raw(const char* buf, size_t bufsize, bool lf) {
-    return do_write([&](logger_item* item) -> void {
+    auto lambda = [&](logger_item* item) -> void {
         item->bs.write(buf, bufsize);
         if (lf) {
             item->bs.printf("\n");
         }
-    });
+    };
+    return do_write(lambda);
 }
 
 logger& logger::do_dump(const byte_t* addr, size_t size, unsigned hexpart, unsigned indent, bool lf) {
     if (addr) {
-        do_write([&](logger_item* item) -> void {
+        auto lambda = [&](logger_item* item) -> void {
             dump_memory(addr, size, &item->bs, hexpart, indent, 0, dump_memory_flag_t::dump_notrunc);
             if (lf) {
                 item->bs.printf("\n");
             }
-        });
+        };
+        do_write(lambda);
     }
     return *this;
 }
 
 logger& logger::do_hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent, bool lf) {
     if (addr) {
-        do_write([&](logger_item* item) -> void {
+        auto lambda = [&](logger_item* item) -> void {
             item->bs.printf("%s\n", header.c_str());
             dump_memory(addr, size, &item->bs, hexpart, indent, 0, dump_memory_flag_t::dump_notrunc);
             if (lf) {
                 item->bs.printf("\n");
             }
-        });
+        };
+        do_write(lambda);
     }
     return *this;
 }

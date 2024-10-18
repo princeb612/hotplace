@@ -336,7 +336,8 @@ http_response& http_response::response_h2(network_session* session) {
             .set_encode_flags(hpack_wo_indexing | hpack_huffman)  // chrome test
             .encode_header(":status", format("%i", status_code()).c_str())
             .encode_header("content-type", content_type());
-        get_http_header().get_headers([&](const std::string& name, const std::string& value) -> void { hp.encode_header(name, value); });
+        auto lambda_enc_headder = [&](const std::string& name, const std::string& value) -> void { hp.encode_header(name, value); };
+        get_http_header().get_headers(lambda_enc_headder);
         if (encoding.size()) {
             hp.encode_header("content-encoding", encoding);
         } else {

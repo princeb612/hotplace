@@ -43,9 +43,9 @@ return_t trace(return_t errorcode) {
             dbg.close(handle);
 
             std::cout << stream << std::endl;
+            fflush(stdout);
         }
     }
-    fflush(stdout);
     return ret;
 }
 

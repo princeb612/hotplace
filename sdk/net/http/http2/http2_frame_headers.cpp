@@ -69,7 +69,7 @@ return_t http2_frame_headers::read(http2_frame_header_t const* header, size_t si
             _dependency = (temp & 0x7fffffff);
             _weight = t_to_int<uint8>(pl.select(constexpr_frame_weight));
         }
-        pl.select(constexpr_frame_fragment)->get_variant().dump(_fragment, true);
+        pl.select(constexpr_frame_fragment)->get_variant().to_binary(_fragment);
     }
     __finally2 {
         // do nothing
@@ -95,7 +95,7 @@ return_t http2_frame_headers::write(binary_t& frame) {
         .set_group(constexpr_frame_priority, (get_flags() & h2_flag_t::h2_flag_priority) ? true : false);
 
     binary_t bin_payload;
-    pl.dump(bin_payload);
+    pl.write(bin_payload);
 
     uint8 flags = get_flags();
     if (_padlen) {
@@ -128,8 +128,8 @@ void http2_frame_headers::dump(stream_t* s) {
         dump_memory(_fragment, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
         s->printf("\n");
 
-        http2_frame::read_compressed_header(
-            _fragment, [&](const std::string& name, const std::string& value) -> void { s->printf(" > %s: %s\n", name.c_str(), value.c_str()); });
+        auto lambda = [&](const std::string& name, const std::string& value) -> void { s->printf(" > %s: %s\n", name.c_str(), value.c_str()); };
+        http2_frame::read_compressed_header(_fragment, lambda);
     }
 }
 

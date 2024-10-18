@@ -18,10 +18,11 @@ namespace net {
 
 qpack_encoder::qpack_encoder() : http_header_compression() {
     // RFC 9204 Appendix A.  Static Table
-    http_resource::get_instance()->for_each_qpack_static_table([&](uint32 index, const char* name, const char* value) -> void {
+    auto lambda = [&](uint32 index, const char* name, const char* value) -> void {
         _static_table.insert(std::make_pair(name, std::make_pair(value ? value : "", index)));
         _static_table_index.insert(std::make_pair(index, std::make_pair(name, value ? value : "")));
-    });
+    };
+    http_resource::get_instance()->for_each_qpack_static_table(lambda);
 }
 
 return_t qpack_encoder::encode(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
@@ -144,6 +145,8 @@ return_t qpack_encoder::decode(http_header_compression_session* session, const b
             ret = decode_quic_stream_encoder(session, source, size, pos, name, value, flags);
         } else if (qpack_quic_stream_decoder & flags) {
             ret = decode_quic_stream_decoder(session, source, size, pos, name, value, flags);
+        } else {
+            ret = errorcode_t::bad_request;
         }
     }
     __finally2 {

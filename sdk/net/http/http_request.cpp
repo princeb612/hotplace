@@ -19,6 +19,9 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
+constexpr char constexpr_content_type[] = "Content-Type";
+constexpr char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
+
 http_request::http_request() : _encoder(nullptr), _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
 
 http_request::http_request(const http_request& object) {
@@ -116,8 +119,6 @@ return_t http_request::open(const char* request, size_t size_request, uint32 fla
 
         // RFC 2616 3.7 Media Types
         // RFC 2616 14.17 Content-Type
-        constexpr char constexpr_content_type[] = "Content-Type";
-        constexpr char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
         if (_content.empty()) {
             if (http_request_flag_t::http_request_compose & flags) {
                 if ((std::string::npos != uri.find("?")) && (false == _header.contains(constexpr_content_type, constexpr_url_encoded))) {

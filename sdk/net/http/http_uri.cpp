@@ -74,6 +74,7 @@ return_t http_uri::set_query(const char* query) {
         }
 
         // _query = query;
+
         ret = to_keyvalue(query, _query_kv);
     }
     __finally2 {

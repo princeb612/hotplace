@@ -814,8 +814,6 @@ return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, voi
         }
     }
     __finally2 {
-        fflush(stdout);
-
         // do nothing
     }
 

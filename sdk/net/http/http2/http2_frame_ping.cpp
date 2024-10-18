@@ -66,7 +66,7 @@ return_t http2_frame_ping::write(binary_t& frame) {
     pl << new payload_member(_opaque, true, constexpr_frame_opaque);
 
     binary_t bin_payload;
-    pl.dump(bin_payload);
+    pl.write(bin_payload);
 
     set_payload_size(bin_payload.size());
 

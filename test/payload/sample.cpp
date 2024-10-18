@@ -57,7 +57,7 @@ void test_payload_dump() {
            << new payload_member(pad, "pad", "pad");
 
         pl.set_group("pad", true);  // enable "pad" group
-        pl.dump(bin_padded);
+        pl.write(bin_padded);
         if (option.verbose) {
             _logger->dump(bin_padded);
         }
@@ -65,7 +65,7 @@ void test_payload_dump() {
                           "payload padded");  // 3 || "data" || 0x00001000 || "pad"
 
         pl.set_group("pad", false);  // disable "pad" group
-        pl.dump(bin_notpadded);
+        pl.write(bin_notpadded);
         if (option.verbose) {
             _logger->dump(bin_notpadded);
         }
@@ -87,11 +87,11 @@ void test_payload_parse() {
         pl.set_reference_value("pad", "padlen");
         pl.read(decoded);
         binary_t bin_dump;
-        pl.dump(bin_dump);
+        pl.write(bin_dump);
         _test_case.assert(bin_dump == decoded, __FUNCTION__, "read/parse");
 
         binary_t data2;
-        pl.select("data")->get_variant().dump(data2, true);
+        pl.select("data")->get_variant().to_binary(data2);
         _test_case.assert(data2 == strtobin("data"), __FUNCTION__, "read binary");
     }
 }
@@ -122,7 +122,7 @@ void test_payload_uint24() {
         pl << new payload_member(padlen, "padlen") << new payload_member(i32_24, "int32_24") << new payload_member(i32, true, "int32_32")
            << new payload_member(pad, "pad");
 
-        pl.dump(bin_payload);
+        pl.write(bin_payload);
         if (option.verbose) {
             _logger->dump(bin_payload);
         }
@@ -149,22 +149,36 @@ void test_payload_uint24() {
         _test_case.assert(0x100000 == i24.get(), __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
 
         binary_t bin_dump;
-        pl.dump(bin_dump);
+        pl.write(bin_dump);
         _test_case.assert(expect == bin_dump, __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
     }
 }
 
-void do_test_http2_frame(http2_frame* frame, const char* text, const char* expect) {
+void do_test_http2_frame(http2_frame* frame1, http2_frame* frame2, const char* text, const char* expect) {
     basic_stream bs;
-    binary_t bin_frame;
+    binary_t bin_f1;
+    binary_t bin_f2;
+    binary_t bin_expect = base16_decode_rfc(expect);
 
-    frame->write(bin_frame);
-    _logger->dump(bin_frame);
+    // write a composed http2_frame context into binary
+    frame1->write(bin_f1);
+    _logger->dump(bin_f1);
 
-    frame->dump(&bs);
+    // human-readable
+    frame1->dump(&bs);
     _logger->write(bs);
 
-    _test_case.assert(bin_frame == base16_decode_rfc(expect), __FUNCTION__, text);
+    // comparison
+    _test_case.assert(bin_f1 == bin_expect, __FUNCTION__, "%s #compose", text);
+
+    // read from bytestream
+    frame2->read((http2_frame_header_t*)&bin_expect[0], bin_expect.size());
+    frame2->write(bin_f2);
+
+    _logger->dump(bin_f2);
+
+    // comparison
+    _test_case.assert(bin_f1 == bin_f2, __FUNCTION__, "%s #read", text);
 }
 
 void test_http2_frame() {
@@ -178,11 +192,15 @@ void test_http2_frame() {
     http2_frame_settings frame_settings;
     frame_settings.add(h2_settings_enable_push, 0).add(h2_settings_max_concurrent_streams, 100).add(h2_settings_initial_window_size, 0xa00000);
 
-    const char* expect_settings =
-        "00 00 12 04 00 00 00 00 00 00 02 00 00 00 00 00"
-        "03 00 00 00 64 00 04 00 A0 00 00 -- -- -- -- --";
+    // test
+    {
+        const char* expect_settings =
+            "00 00 12 04 00 00 00 00 00 00 02 00 00 00 00 00"
+            "03 00 00 00 64 00 04 00 A0 00 00 -- -- -- -- --";
 
-    do_test_http2_frame(&frame_settings, "SETTINGS Frame", expect_settings);
+        http2_frame_settings frame;
+        do_test_http2_frame(&frame_settings, &frame, "SETTINGS Frame", expect_settings);
+    }
 
     // HEADERS
 
@@ -203,11 +221,15 @@ void test_http2_frame() {
     frame_headers.get_fragment() = hp.get_binary();
     frame_headers.set_hpack_encoder(&encoder).set_hpack_session(&session);  // dump
 
-    const char* expect_headers =
-        "00 00 11 01 00 00 00 00 01 82 87 85 41 8C F1 E3 "
-        "C2 E5 F2 3A 6B A0 AB 90 F4 FF";
+    // test
+    {
+        const char* expect_headers =
+            "00 00 11 01 00 00 00 00 01 82 87 85 41 8C F1 E3 "
+            "C2 E5 F2 3A 6B A0 AB 90 F4 FF";
 
-    do_test_http2_frame(&frame_headers, "HEADERS Frame", expect_headers);
+        http2_frame_headers frame;
+        do_test_http2_frame(&frame_headers, &frame, "HEADERS Frame", expect_headers);
+    }
 
     // CONTINUATION
 
@@ -219,11 +241,15 @@ void test_http2_frame() {
     frame_continuation.get_fragment() = hp.get_binary();
     frame_continuation.set_hpack_encoder(&encoder).set_hpack_session(&session);  // dump
 
-    const char* expect_continuation =
-        "00 00 14 09 04 00 00 00 01 40 88 25 A8 49 E9 5B "
-        "A9 7D 7F 89 25 A8 49 E9 5B B8 E8 B4 BF -- -- -- ";
+    // test
+    {
+        const char* expect_continuation =
+            "00 00 14 09 04 00 00 00 01 40 88 25 A8 49 E9 5B "
+            "A9 7D 7F 89 25 A8 49 E9 5B B8 E8 B4 BF -- -- -- ";
 
-    do_test_http2_frame(&frame_continuation, "CONTINUATION Frame", expect_continuation);
+        http2_frame_continuation frame;
+        do_test_http2_frame(&frame_continuation, &frame, "CONTINUATION Frame", expect_continuation);
+    }
 
     // DATA
 
@@ -231,11 +257,15 @@ void test_http2_frame() {
     frame_data.set_flags(h2_flag_end_stream).set_stream_id(1);
     frame_data.get_data() = strtobin("hello world");
 
-    const char* expect_data =
-        "00 00 0B 00 01 00 00 00 01 68 65 6C 6C 6F 20 77"
-        "6F 72 6C 64 -- -- -- -- -- -- -- -- -- -- -- --";
+    // test
+    {
+        const char* expect_data =
+            "00 00 0B 00 01 00 00 00 01 68 65 6C 6C 6F 20 77"
+            "6F 72 6C 64 -- -- -- -- -- -- -- -- -- -- -- --";
 
-    do_test_http2_frame(&frame_data, "DATA Frame", expect_data);
+        http2_frame_data frame;
+        do_test_http2_frame(&frame_data, &frame, "DATA Frame", expect_data);
+    }
 
     // GOAWAY
 
@@ -243,13 +273,34 @@ void test_http2_frame() {
     frame_goaway.set_stream_id(1);
     frame_goaway.get_fragment() = strtobin("protocol error cause of .... blah blah ...");
 
-    const char* expect_goaway =
-        "00 00 2A 01 00 00 00 00 01 70 72 6F 74 6F 63 6F "
-        "6C 20 65 72 72 6F 72 20 63 61 75 73 65 20 6F 66 "
-        "20 2E 2E 2E 2E 20 62 6C 61 68 20 62 6C 61 68 20 "
-        "2E 2E 2E -- -- -- -- -- -- -- -- -- -- -- -- -- ";
+    // test
+    {
+        const char* expect_goaway =
+            "00 00 2A 01 00 00 00 00 01 70 72 6F 74 6F 63 6F "
+            "6C 20 65 72 72 6F 72 20 63 61 75 73 65 20 6F 66 "
+            "20 2E 2E 2E 2E 20 62 6C 61 68 20 62 6C 61 68 20 "
+            "2E 2E 2E -- -- -- -- -- -- -- -- -- -- -- -- -- ";
 
-    do_test_http2_frame(&frame_goaway, "GOAWAY Frame", expect_goaway);
+        http2_frame_headers frame;
+        do_test_http2_frame(&frame_goaway, &frame, "GOAWAY Frame", expect_goaway);
+    }
+
+    // ALTSVC
+
+    http2_alt_svc frame_alt_svc;
+    frame_alt_svc.set_stream_id(1);
+    frame_alt_svc.get_origin() = strtobin("origin");
+    frame_alt_svc.get_altsvc() = strtobin("altsvc");
+
+    // test
+    {
+        const char* expect_altsvc =
+            "00 00 0E 0A 00 00 00 00 00 00 06 6F 72 69 67 69"
+            "6E 61 6C 74 73 76 63 -- -- -- -- -- -- -- -- --";
+
+        http2_alt_svc frame;
+        do_test_http2_frame(&frame_alt_svc, &frame, "ALTSVC Frame", expect_altsvc);
+    }
 }
 
 int main(int argc, char** argv) {

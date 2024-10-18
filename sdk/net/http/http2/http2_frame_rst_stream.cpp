@@ -66,7 +66,7 @@ return_t http2_frame_rst_stream::write(binary_t& frame) {
     pl << new payload_member(_errorcode, true, constexpr_frame_error_code);
 
     binary_t bin_payload;
-    pl.dump(bin_payload);
+    pl.write(bin_payload);
 
     set_payload_size(bin_payload.size());
 

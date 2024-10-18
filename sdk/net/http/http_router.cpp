@@ -119,7 +119,7 @@ return_t http_router::route(network_session* session, http_request* request, htt
         {
             critical_section_guard guard(_lock);
 
-            std::function<void(http_router_t&)> route_not_found = [&](http_router_t& route) -> void {
+            auto route_not_found = [&](http_router_t& route) -> void {
                 status_handler_map_t::iterator status_iter = _status_handler_map.find(404);
                 if (_status_handler_map.end() != status_iter) {
                     route = status_iter->second;

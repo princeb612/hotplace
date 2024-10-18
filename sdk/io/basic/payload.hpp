@@ -41,14 +41,14 @@ namespace io {
  *             << new payload_member(pad, "pad", "pad");
  *
  *          pl.set_group("pad", true); // enable "pad" group
- *          pl.dump(bin_padded);
+ *          pl.write(bin_padded);
  *          dump_memory(bin_padded, &bs);
  *          printf("%s\n", bs.c_str());
  *          _test_case.assert(12 == bin_padded.size(), __FUNCTION__, "payload padded");  // 3 || "data" || 0x00001000 || "pad"
  *          // 00000000 : 03 64 61 74 61 00 00 10 00 70 61 64 -- -- -- -- | .data....pad
  *
  *          pl.set_group("pad", false); // disable "pad" group
- *          pl.dump(bin_notpadded);
+ *          pl.write(bin_notpadded);
  *          dump_memory(bin_notpadded, &bs);
  *          printf("%s\n", bs.c_str());
  *          _test_case.assert(8 == bin_notpadded.size(), __FUNCTION__, "payload not padded");  // "data" || 0x00001000
@@ -91,7 +91,7 @@ class payload_member {
     payload_member* get_value_of();
     payload_member& set_value_of(payload_member* member);
 
-    payload_member& dump(binary_t& bin);
+    payload_member& write(binary_t& bin);
     payload_member& read(byte_t* ptr, size_t size_ptr, size_t* size_read);
     payload_member& reserve(uint16 size);
 
@@ -147,7 +147,7 @@ class payload {
      */
     payload& set_reference_value(const std::string& name, const std::string& ref);
 
-    return_t dump(binary_t& bin);
+    return_t write(binary_t& bin);
     return_t read(const binary_t& bin);
     return_t read(byte_t* p, size_t size);
 
@@ -167,7 +167,7 @@ class payload {
     size_t size_occupied();
     payload& clear();
 
-    // dump
+    // members
     std::list<payload_member*> _members;  // basic list
 
     // read(parse)

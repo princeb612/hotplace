@@ -215,7 +215,7 @@ void test_as_small_as_possible() {
         float f = float_from_fp16(item.fp16);
         double d = double_from_fp16(item.fp16);
         item.var.to_string(tostr);
-        item.var.dump(bin, true);
+        item.var.to_binary(bin, variant_flag_convendian);
         _logger->writeln(tostr);
         _logger->dump(bin);
         bool expect = (var.content().data.ui16 == item.fp16);

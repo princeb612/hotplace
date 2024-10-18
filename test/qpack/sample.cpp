@@ -9,20 +9,6 @@
  * Revision History
  * Date         Name                Description
  *
- * sketch
- *     insert field line
- *         insert(..., flags) {
- *             if (success == ret) { do_encode }
- *             else if (already_exist == ret) { return do_duplicate }
- *         }
- *     field section
- *         flags &= ~qpack_indexing;
- *         encode(..., flags);
- *         sync(...); // prefix
- *
- * TODO
- *  - understand RIC and Base (B.4)
- *  - decoder not implemented yet
  */
 
 #include <stdio.h>
@@ -397,7 +383,8 @@ void test_rfc9204_b() {
             const char* expect3 = "0500 80 c1 81";
             test_expect(bin, expect3, "%s #field section", text4);
             _test_case.assert(217 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text4);
-
+        }
+        {
             flags_decoder = qpack_quic_stream_header;
             pos = 0;
             ret = enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);  // field section prefix
@@ -511,12 +498,14 @@ void test_zero_capacity() {
 
     enc.insert(&session, bin, "custom-key", "custom-value2", flags);
     test_expect(bin, expect, nullptr);
+    _test_case.assert(0 == session.get_capacity(), __FUNCTION__, "#capacity %zi", session.get_capacity());
+    _test_case.assert(0 == session.get_entries(), __FUNCTION__, "#entries %zi", session.get_entries());
     _test_case.assert(0 == count_evict_encoder, __FUNCTION__, "#eviction check %u", count_evict_encoder);
     _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "#table size %zi", session.get_tablesize());
     bin.clear();
 }
 
-void test_useless_capacity() {
+void test_tiny_capacity() {
     _test_case.begin("dynamic table capacity 32");
     count_evict_encoder = 0;
 
@@ -539,6 +528,8 @@ void test_useless_capacity() {
     enc.insert(&session, bin, "custom-key", "custom-value", flags);
     enc.insert(&session, bin, "custom-key", "custom-value2", flags);
 
+    _test_case.assert(32 == session.get_capacity(), __FUNCTION__, "#capacity %zi", session.get_capacity());
+    _test_case.assert(0 == session.get_entries(), __FUNCTION__, "#entries %zi", session.get_entries());
     _test_case.assert(0 == count_evict_encoder, __FUNCTION__, "#eviction check %u", count_evict_encoder);
     _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "#table size %zi", session.get_tablesize());
     _logger->dump(bin);
@@ -554,7 +545,7 @@ void test_small_capacity() {
     binary_t bin;
     uint32 flags = qpack_intermediary | qpack_name_reference;
 
-    // just 1 entry available space
+    // assumption - just 1 entry available space
     // always evict older entry while insertion
     session.set_capacity(80);
 
@@ -563,6 +554,7 @@ void test_small_capacity() {
 
     auto test = [&](const std::string& name, const std::string& value, unsigned int evict_expect, const char* expect = nullptr) -> void {
         enc.insert(&session, bin, name, value, flags);
+        _test_case.assert(1 == session.get_entries(), __FUNCTION__, "#entries %zi", session.get_entries());
         _test_case.assert(evict_expect == count_evict_encoder, __FUNCTION__, "#eviction check %u", count_evict_encoder);
         _test_case.assert((name.size() + value.size() + 32) == session.get_tablesize(), __FUNCTION__, "#table size %zi", session.get_tablesize());
         if (expect) {
@@ -583,6 +575,8 @@ void test_small_capacity() {
     //     "6F 6D 2D 76 61 6C 75 65 32 -- -- -- -- -- -- --"  // | om-value2
     //     ;
     test("custom-key", "custom-value2", 3);
+
+    _test_case.assert(80 == session.get_capacity(), __FUNCTION__, "#capacity %zi", session.get_capacity());
     _logger->dump(bin);
 }
 
@@ -603,7 +597,7 @@ int main(int argc, char** argv) {
 
     test_rfc9204_b();
     test_zero_capacity();
-    test_useless_capacity();
+    test_tiny_capacity();
     test_small_capacity();
 
     _logger->flush();

@@ -89,7 +89,6 @@ return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_
          *       Error
          */
         size_t maxentries = ::floor(capacity / 32);
-        // eic = (ric % (2 * maxentries)) + 1;
         size_t fullrange = 2 * maxentries;
         if (0 == eic) {
             ric = 0;

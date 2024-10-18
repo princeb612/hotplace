@@ -30,10 +30,12 @@ namespace net {
 #define CONSTEXPR const
 #endif
 
+// RFC 7540 4.  HTTP Frames
 CONSTEXPR char constexpr_frame_length[] = "length";
 CONSTEXPR char constexpr_frame_type[] = "type";
 CONSTEXPR char constexpr_frame_flags[] = "flags";
 CONSTEXPR char constexpr_frame_stream_identifier[] = "stream identifier";
+// RFC 7540 6.  Frame Definitions
 CONSTEXPR char constexpr_frame_pad_length[] = "pad length";
 CONSTEXPR char constexpr_frame_data[] = "data";
 CONSTEXPR char constexpr_frame_padding[] = "padding";
@@ -47,10 +49,13 @@ CONSTEXPR char constexpr_frame_opaque[] = "opaque";
 CONSTEXPR char constexpr_frame_last_stream_id[] = "last stream id";
 CONSTEXPR char constexpr_frame_debug_data[] = "debug data";
 CONSTEXPR char constexpr_frame_window_size_increment[] = "window size increment";
-
 CONSTEXPR char constexpr_frame_exclusive[] = "exclusive";
 CONSTEXPR char constexpr_frame_identifier[] = "identifier";
 CONSTEXPR char constexpr_frame_value[] = "value";
+// RFC 7838 4.  The ALTSVC HTTP/2 Frame
+CONSTEXPR char constexpr_frame_origin_len[] = "origin-len";
+CONSTEXPR char constexpr_frame_origin[] = "origin";
+CONSTEXPR char constexpr_frame_alt_svc_field_value[] = "alt-svc-field-value";
 
 http2_frame::http2_frame() : _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_encoder(nullptr), _hpack_session(nullptr) {}
 
@@ -115,18 +120,19 @@ http2_frame& http2_frame::set_flags(uint8 flags) {
 
 http2_frame& http2_frame::set_stream_id(uint32 id) {
     switch (_type) {
-        case h2_frame_data:           // 6.1 DATA
-        case h2_frame_headers:        // 6.2 HEADERS
-        case h2_frame_priority:       // 6.3 PRIORITY
-        case h2_frame_rst_stream:     // 6.4 RST_STREAM
-        case h2_frame_push_promise:   // 6.6 PUSH_PROMISE
-        case h2_frame_goaway:         // 6.8 GOAWAY
-        case h2_frame_window_update:  // 6.9 WINDOW_UPDATE affected stream, entire connection (0)
-        case h2_frame_continuation:   // 6.10 CONTINUATION
+        case h2_frame_data:           // RFC 7540 6.1 DATA
+        case h2_frame_headers:        // RFC 7540 6.2 HEADERS
+        case h2_frame_priority:       // RFC 7540 6.3 PRIORITY
+        case h2_frame_rst_stream:     // RFC 7540 6.4 RST_STREAM
+        case h2_frame_push_promise:   // RFC 7540 6.6 PUSH_PROMISE
+        case h2_frame_goaway:         // RFC 7540 6.8 GOAWAY
+        case h2_frame_window_update:  // RFC 7540 6.9 WINDOW_UPDATE affected stream, entire connection (0)
+        case h2_frame_continuation:   // RFC 7540 6.10 CONTINUATION
             _stream_id = id;
             break;
-        case h2_frame_settings:  // 6.5 SETTINGS
-        case h2_frame_ping:      // 6.7 PING
+        case h2_frame_settings:  // RFC 7540 6.5 SETTINGS
+        case h2_frame_ping:      // RFC 7540 6.7 PING
+        case h2_frame_altsvc:    // RFC 7838 4.  The ALTSVC HTTP/2 Frame
         default:
             break;
     }
@@ -190,7 +196,7 @@ return_t http2_frame::write(binary_t& frame) {
     pl << new payload_member(uint32_24_t(_payload_size), constexpr_frame_length) << new payload_member((uint8)_type, constexpr_frame_type)
        << new payload_member((uint8)_flags, constexpr_frame_flags) << new payload_member((uint32)_stream_id, true, constexpr_frame_stream_identifier);
 
-    pl.dump(frame);
+    pl.write(frame);
 
     return ret;
 }
@@ -209,7 +215,8 @@ void http2_frame::dump(stream_t* s) {
         s->printf("\n");
         s->printf(" > %s [ ", constexpr_frame_flags);
 
-        resource->for_each_frame_flag_names(get_type(), get_flags(), [&](uint8 flag, const std::string& name) -> void { s->printf("%s ", name.c_str()); });
+        auto lambda = [&](uint8 flag, const std::string& name) -> void { s->printf("%s ", name.c_str()); };
+        resource->for_each_frame_flag_names(get_type(), get_flags(), lambda);
 
         s->printf("]\n");
     }
