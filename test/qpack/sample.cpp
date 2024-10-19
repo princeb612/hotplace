@@ -603,5 +603,6 @@ int main(int argc, char** argv) {
     _logger->flush();
 
     _test_case.report(5);
+    _cmdline->help();
     return _test_case.result();
 }

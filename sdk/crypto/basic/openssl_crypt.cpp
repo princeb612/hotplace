@@ -75,11 +75,13 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
     }
 
     ~_openssl_crypt_context_t() {
-        for_each(datamap.begin(), datamap.end(), [](std::pair<const crypt_item_t, binary_t> &item) {
+        auto lambda_data = [](std::pair<const crypt_item_t, binary_t> &item) {
             binary_t &data = item.second;
             std::fill(data.begin(), data.end(), 0);
-        });
-        for_each(variantmap.begin(), variantmap.end(), [](std::pair<const crypt_item_t, variant_t> &item) { item.second.data.i64 = 0; });
+        };
+        auto lambda_variant = [](std::pair<const crypt_item_t, variant_t> &item) { item.second.data.i64 = 0; };
+        for_each(datamap.begin(), datamap.end(), lambda_data);
+        for_each(variantmap.begin(), variantmap.end(), lambda_variant);
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
         EVP_CIPHER_CTX_free(encrypt_context);

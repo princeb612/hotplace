@@ -222,7 +222,9 @@ return_t http_response::respond(network_session* session) {
             get_response(bs);
             session->send(bs.data(), bs.size());
         } else if (2 == _version) {
-            response_h2(session);
+            binary_t bin;
+            get_response_h2(bin);
+            session->send(&bin[0], bin.size());
         }
     }
     __finally2 {
@@ -294,14 +296,23 @@ http_response& http_response::get_response(basic_stream& bs) {
                 bs.write(content(), content_size());
             }
         }
+        if (_df) {
+            basic_stream dbs;
+            datetime dt;
+            datetime_t t;
+            dt.getlocaltime(&t);
+
+            dbs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d\n", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
+            dump_memory(bs.data(), bs.size(), &dbs, 16, 2, 0, dump_notrunc);
+            dbs.printf("\n");
+
+            _df(&dbs);
+        }
     }
     return *this;
 }
 
-http_response& http_response::response_h2(network_session* session) {
-    binary_t bin;
-    basic_stream dbs;
-
+http_response& http_response::get_response_h2(binary_t& bin) {
     if ((2 == _version) && get_hpack_encoder() && get_hpack_session()) {
         std::string accept_encoding;
         std::string method;
@@ -330,13 +341,20 @@ http_response& http_response::response_h2(network_session* session) {
             }
         }
 
+        std::string altsvc_fieldvalue;
         hpack hp;
         hp.set_encoder(get_hpack_encoder())
             .set_session(get_hpack_session())
             .set_encode_flags(hpack_wo_indexing | hpack_huffman)  // chrome test
             .encode_header(":status", format("%i", status_code()).c_str())
             .encode_header("content-type", content_type());
-        auto lambda_enc_headder = [&](const std::string& name, const std::string& value) -> void { hp.encode_header(name, value); };
+        auto lambda_enc_headder = [&](const std::string& name, const std::string& value) -> void {
+            if ("Alt-Svc" == name) {
+                altsvc_fieldvalue = value;
+            } else {
+                hp.encode_header(name, value);
+            }
+        };
         get_http_header().get_headers(lambda_enc_headder);
         if (encoding.size()) {
             hp.encode_header("content-encoding", encoding);
@@ -368,45 +386,46 @@ http_response& http_response::response_h2(network_session* session) {
             }
         }
 
+        auto lambda_debug = [&](http2_frame* frame) -> void {
+            if (_df) {
+                basic_stream dbs;
+                datetime dt;
+                datetime_t t;
+                dt.getlocaltime(&t);
+
+                dbs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d\n", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
+                frame->dump(&dbs);
+                dbs.printf("\n");
+
+                _df(&dbs);
+            }
+        };
+
+        // ALT_SVC
+        if (altsvc_fieldvalue.size()) {
+            http2_frame_alt_svc alt_svc;
+            alt_svc.get_altsvc() = strtobin(altsvc_fieldvalue);
+
+            alt_svc.write(bin);
+
+            lambda_debug(&alt_svc);
+        }
+
+        // HEADERS
         {
             hp.encode_header("content-length", format("%zi", data.get_data().size()));
             headers.get_fragment() = hp.get_binary();
 
-            bin.clear();
             headers.write(bin);
-            session->send(&bin[0], bin.size());
 
-            if (_df) {
-                dbs.clear();
-                datetime dt;
-                datetime_t t;
-                dt.getlocaltime(&t);
-
-                dbs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d\n", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
-                headers.dump(&dbs);
-                dbs.printf("\n");
-
-                _df(&dbs);
-            }
+            lambda_debug(&headers);
         }
 
+        // DATA
         if (false == header_only) {
-            bin.clear();
             data.write(bin);
-            session->send(&bin[0], bin.size());
 
-            if (_df) {
-                dbs.clear();
-                datetime dt;
-                datetime_t t;
-                dt.getlocaltime(&t);
-
-                dbs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d\n", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
-                data.dump(&dbs);
-                dbs.printf("\n");
-
-                _df(&dbs);
-            }
+            lambda_debug(&data);
         }
     }
     return *this;

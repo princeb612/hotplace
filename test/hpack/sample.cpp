@@ -305,9 +305,10 @@ void decode(const binary_t& bin, hpack_session* session, hpack_session* session2
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         _logger->writeln("> dynamic table (receiver)");
-        session->for_each([](const std::string& name, const std::string& value) -> void { _logger->writeln("  - %s: %s", name.c_str(), value.c_str()); });
+        auto lambda = [](const std::string& name, const std::string& value) -> void { _logger->writeln("  - %s: %s", name.c_str(), value.c_str()); };
+        session->for_each(lambda);
         _logger->writeln("> dynamic table (sender)");
-        session2->for_each([](const std::string& name, const std::string& value) -> void { _logger->writeln("  - %s: %s", name.c_str(), value.c_str()); });
+        session2->for_each(lambda);
         fflush(stdout);
     }
 }
@@ -823,7 +824,7 @@ int main(int argc, char** argv) {
 
     cmdline.make_share(new t_cmdline_t<OPTION>);
 
-    *cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    *cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
     const OPTION& option = cmdline->value();

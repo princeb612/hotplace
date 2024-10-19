@@ -498,8 +498,8 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-s", "test slow pbkdf2/scrypt", [&](OPTION& o, char* param) -> void { o.test_slow_kdf = true; }).optional();
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-s", "test slow pbkdf2/scrypt", [](OPTION& o, char* param) -> void { o.test_slow_kdf = true; }).optional();
 
     _cmdline->parse(argc, argv);
 

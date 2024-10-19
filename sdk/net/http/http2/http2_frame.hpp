@@ -374,10 +374,10 @@ class http2_frame_continuation : public http2_frame {
  * @see
  *          RFC 7838 4.  The ALTSVC HTTP/2 Frame
  */
-class http2_alt_svc : public http2_frame {
+class http2_frame_alt_svc : public http2_frame {
    public:
-    http2_alt_svc();
-    http2_alt_svc(const http2_alt_svc& rhs);
+    http2_frame_alt_svc();
+    http2_frame_alt_svc(const http2_frame_alt_svc& rhs);
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);

@@ -287,8 +287,8 @@ void test_http2_frame() {
 
     // ALTSVC
 
-    http2_alt_svc frame_alt_svc;
-    frame_alt_svc.set_stream_id(1);
+    http2_frame_alt_svc frame_alt_svc;
+    frame_alt_svc.set_stream_id(1);  // ignore stream id
     frame_alt_svc.get_origin() = strtobin("origin");
     frame_alt_svc.get_altsvc() = strtobin("altsvc");
 
@@ -298,7 +298,7 @@ void test_http2_frame() {
             "00 00 0E 0A 00 00 00 00 00 00 06 6F 72 69 67 69"
             "6E 61 6C 74 73 76 63 -- -- -- -- -- -- -- -- --";
 
-        http2_alt_svc frame;
+        http2_frame_alt_svc frame;
         do_test_http2_frame(&frame_alt_svc, &frame, "ALTSVC Frame", expect_altsvc);
     }
 }
@@ -309,7 +309,7 @@ int main(int argc, char** argv) {
 #endif
     cmdline.make_share(new t_cmdline_t<OPTION>);
 
-    *cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    *cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
     const OPTION& option = cmdline->value();

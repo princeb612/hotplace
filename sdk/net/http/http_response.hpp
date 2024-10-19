@@ -74,7 +74,6 @@ class http_response {
      *          session->send((const char*)bs.data(), bs.size());
      */
     return_t respond(network_session* session);
-    http_response& response_h2(network_session* session);  // HTTP/2
     /**
      * @brief   Content-Type
      */
@@ -100,6 +99,7 @@ class http_response {
      * @brief   response
      */
     http_response& get_response(basic_stream& bs);  // HTTP/1.1
+    http_response& get_response_h2(binary_t& bin);  // HTTP/2
 
     virtual std::string get_version_str();
 

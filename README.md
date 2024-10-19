@@ -56,8 +56,6 @@
     * sdk/crypto/jose/
     * test/jose/
 * HTTP/1.1
-  * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
-  * RFC 1952 GZIP file format specification version 4.3
   * RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0
   * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
   * RFC 2069 An Extension to HTTP : Digest Access Authentication
@@ -152,6 +150,11 @@
     * sdk/net/tls/
     * test/tlsserver/
     * test/dtlsserver/
+
+* HTTP/1
+  * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
+  * RFC 1952 GZIP file format specification version 4.3
+    * Accept-Encoding, Content-Encoding
 
 * HTTP/2
   * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension

@@ -88,6 +88,10 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
 
                 http_response response(request);
                 basic_stream bs;
+                if (option.verbose) {
+                    auto lambda = [](stream_t *s) -> void { printf("\e[1;37m%.*s\e[0m", (unsigned int)s->size(), s->data()); };
+                    response.trace(lambda);
+                }
 
                 if (use_tls) {
                     // using http_router
@@ -102,15 +106,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
                                      option.port_tls, request->get_http_uri().get_uri(), status_code, http_resource::get_instance()->load(status_code).c_str());
                 }
 
-                if (option.verbose) {
-                    cprint("send %i", session_socket->event_socket);
-                    basic_stream resp;
-                    response.get_response(resp);
-                    _logger->dump(resp);
-                }
-
                 response.respond(session);
-                fflush(stdout);
             }
 
             break;
@@ -137,9 +133,7 @@ return_t simple_http_server(void *) {
             .enable_https(true)
             .set_port_https(option.port_tls)
             .set_tls_certificate("server.crt", "server.key")
-            .set_tls_cipher_list(
-                "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_"
-                "GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
+            .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
             .set_tls_verify_peer(0)
             .enable_ipv4(true)
             .enable_ipv6(true)
@@ -153,13 +147,13 @@ return_t simple_http_server(void *) {
         std::function<void(network_session *, http_request *, http_response *, http_router *)> default_handler =
             [&](network_session *session, http_request *request, http_response *response, http_router *router) -> void {
             basic_stream bs;
-            request->get_request(bs);
+            bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
         };
         std::function<void(network_session *, http_request *, http_response *, http_router *)> error_handler =
             [&](network_session *session, http_request *request, http_response *response, http_router *router) -> void {
             basic_stream bs;
-            request->get_request(bs);
+            bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
         };
 
@@ -226,9 +220,9 @@ int main(int argc, char **argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    *_cmdline << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [&](OPTION &o, char *param) -> void { o.port = atoi(param); }).preced().optional()
-              << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [&](OPTION &o, char *param) -> void { o.port_tls = atoi(param); }).preced().optional()
-              << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION &o, char *param) -> void { o.verbose = 1; }).optional();
+    *_cmdline << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION &o, char *param) -> void { o.port = atoi(param); }).preced().optional()
+              << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION &o, char *param) -> void { o.port_tls = atoi(param); }).preced().optional()
+              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional();
 
     _cmdline->parse(argc, argv);
 

@@ -1729,11 +1729,11 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = true; }).optional();
-    *_cmdline << t_cmdarg_t<OPTION>("-k", "dump keys", [&](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
-    *_cmdline << t_cmdarg_t<OPTION>("-b", "skip basic encoding", [&](OPTION& o, char* param) -> void { o.skip_cbor_basic = true; }).optional();
-    *_cmdline << t_cmdarg_t<OPTION>("-s", "skip validation w/ test vector", [&](OPTION& o, char* param) -> void { o.skip_validate = true; }).optional();
-    *_cmdline << t_cmdarg_t<OPTION>("-g", "skip self-generated message", [&](OPTION& o, char* param) -> void { o.skip_gen = true; }).optional();
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = true; }).optional();
+    *_cmdline << t_cmdarg_t<OPTION>("-k", "dump keys", [](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
+    *_cmdline << t_cmdarg_t<OPTION>("-b", "skip basic encoding", [](OPTION& o, char* param) -> void { o.skip_cbor_basic = true; }).optional();
+    *_cmdline << t_cmdarg_t<OPTION>("-s", "skip validation w/ test vector", [](OPTION& o, char* param) -> void { o.skip_validate = true; }).optional();
+    *_cmdline << t_cmdarg_t<OPTION>("-g", "skip self-generated message", [](OPTION& o, char* param) -> void { o.skip_gen = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

@@ -309,12 +309,12 @@ int main(int argc, char** argv) {
 
     constexpr char constexpr_helpmsg_rfc[] = R"(encode base16 from rfc style expression ex. "[1,2,3,4,5]" or "01:02:03:04:05" or "01 02 03 04 05")";
 
-    (*_cmdline) << t_cmdarg_t<OPTION>("-b64u", "decode base64url", [&](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-b64", "decode base64", [&](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-b16", "decode base16", [&](OPTION& o, char* param) -> void { o.set(decode_b16, param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-t", "plaintext", [&](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-rfc", constexpr_helpmsg_rfc, [&](OPTION& o, char* param) -> void { o.set(encode_b16_rfc, param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-out", "write to file", [&](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional()
+    (*_cmdline) << t_cmdarg_t<OPTION>("-b64u", "decode base64url", [](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-b64", "decode base64", [](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-b16", "decode base16", [](OPTION& o, char* param) -> void { o.set(decode_b16, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-t", "plaintext", [](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-rfc", constexpr_helpmsg_rfc, [](OPTION& o, char* param) -> void { o.set(encode_b16_rfc, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-out", "write to file", [](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     _cmdret = _cmdline->parse(argc, argv);

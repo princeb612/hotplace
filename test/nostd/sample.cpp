@@ -170,9 +170,10 @@ void test_btree() {
         // case.5
         {
             t_btree<testdata, t_type_comparator<testdata>> bt;
+            auto lambda = [](testdata& code) -> void { code.weight++; };
             for (auto b : sample) {
                 if (b) {
-                    bt.insert(testdata((byte_t)b), [](testdata& code) -> void { code.weight++; });
+                    bt.insert(testdata((byte_t)b), lambda);
                 }
             }
             _test_case.assert(15 == bt.size(), __FUNCTION__, "t_btree<structure, custom_compararor> insert and update");

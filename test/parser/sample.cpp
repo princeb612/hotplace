@@ -503,7 +503,7 @@ int main(int argc, char** argv) {
 #endif
     cmdline.make_share(new t_cmdline_t<OPTION>);
 
-    *cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    *cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
 
     cmdline->parse(argc, argv);
     const OPTION& option = cmdline->value();

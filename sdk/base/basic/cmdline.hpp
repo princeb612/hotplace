@@ -53,7 +53,7 @@ class t_cmdarg_t {
      * @example
      *      -in FILENAME
      *
-     *      cmd << t_cmdarg_t<OPTION> ("-in", "input", [&](OPTION& o, char* param) -> void { o.infile = param; }).preced ();
+     *      cmd << t_cmdarg_t<OPTION> ("-in", "input", [](OPTION& o, char* param) -> void { o.infile = param; }).preced ();
      */
     t_cmdarg_t& preced();
     /*
@@ -62,7 +62,7 @@ class t_cmdarg_t {
      * @example
      *      -keygen
      *
-     *      cmd << t_cmdarg_t<OPTION> ("-keygen", "generate key", [&](OPTION& o, char* param) -> void { o.keygen = true; }).optional ();
+     *      cmd << t_cmdarg_t<OPTION> ("-keygen", "generate key", [](OPTION& o, char* param) -> void { o.keygen = true; }).optional ();
      */
     t_cmdarg_t& optional();
 
@@ -146,9 +146,9 @@ return_t t_cmdarg_t<T>::bind(T& source, char* param) {
  *  t_cmdline_t<OPTION> cmdline;
  *
  *  cmdline
- *      << t_cmdarg_t<OPTION> ("-in", "input", [&](OPTION& o, char* param) -> void { o.infile = param; }).preced ()
- *      << t_cmdarg_t<OPTION> ("-out", "output", [&](OPTION& o, char* param) -> void { o.outfile = param; }).preced ()
- *      << t_cmdarg_t<OPTION> ("-keygen", "keygen", [&](OPTION& o, char* param) -> void { o.keygen = true; }).optional ();
+ *      << t_cmdarg_t<OPTION> ("-in", "input", [](OPTION& o, char* param) -> void { o.infile = param; }).preced ()
+ *      << t_cmdarg_t<OPTION> ("-out", "output", [](OPTION& o, char* param) -> void { o.outfile = param; }).preced ()
+ *      << t_cmdarg_t<OPTION> ("-keygen", "keygen", [](OPTION& o, char* param) -> void { o.keygen = true; }).optional ();
  *  ret = cmdline.parse (argc, argv);
  *  if (errorcode_t::success != ret) {
  *      cmdline.help ();

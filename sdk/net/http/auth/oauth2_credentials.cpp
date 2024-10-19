@@ -260,9 +260,11 @@ return_t oauth2_credentials::grant(std::string& access_token, std::string& refre
 
         __try_new_catch(token, new access_token_t(client_id, atoken, rtoken, expire), ret, __leave2);  // refcounter = 1
 
-        _access_tokens.insert(atoken, token, [](access_token_t* object) -> void {});
-        _refresh_tokens.insert(atoken, token, [](access_token_t* object) -> void { object->addref(); });
-        _expirable.insert(token->expire_time(), token, [](access_token_t* object) -> void { object->addref(); });
+        auto lambda_access = [](access_token_t* object) -> void {};
+        auto lambda_addref = [](access_token_t* object) -> void { object->addref(); };
+        _access_tokens.insert(atoken, token, lambda_access);
+        _refresh_tokens.insert(atoken, token, lambda_addref);           // refcounter++
+        _expirable.insert(token->expire_time(), token, lambda_addref);  // refcounter++
 
         access_token = atoken;
         refresh_token = rtoken;
@@ -375,9 +377,10 @@ void oauth2_credentials::revoke_if_expired() {
 void oauth2_credentials::clear() {
     critical_section_guard guard(_lock);
 
-    _access_tokens.clear([](access_token_t* object) -> void { object->release(); });
-    _refresh_tokens.clear([](access_token_t* object) -> void { object->release(); });
-    _expirable.clear([](access_token_t* object) -> void { object->release(); });
+    auto lambda = [](access_token_t* object) -> void { object->release(); };
+    _access_tokens.clear(lambda);
+    _refresh_tokens.clear(lambda);
+    _expirable.clear(lambda);
 
     _user_clientid.clear();
     _webapps.clear();

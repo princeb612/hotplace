@@ -52,6 +52,7 @@ add_subdirectory (udpserver2)
 add_subdirectory (dtlsserver)
 add_subdirectory (netclient)
 add_subdirectory (qpack)
+add_subdirectory (httpaltsvc)
 add_subdirectory (httpserver3)
 
 # odbc

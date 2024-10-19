@@ -21,14 +21,14 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http2_alt_svc::http2_alt_svc() : http2_frame(h2_frame_t::h2_frame_altsvc) {}
+http2_frame_alt_svc::http2_frame_alt_svc() : http2_frame(h2_frame_t::h2_frame_altsvc) {}
 
-http2_alt_svc::http2_alt_svc(const http2_alt_svc& rhs) : http2_frame(rhs) {
+http2_frame_alt_svc::http2_frame_alt_svc(const http2_frame_alt_svc& rhs) : http2_frame(rhs) {
     _origin = rhs._origin;
     _altsvc = rhs._altsvc;
 }
 
-return_t http2_alt_svc::read(http2_frame_header_t const* header, size_t size) {
+return_t http2_frame_alt_svc::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == header) {
@@ -67,7 +67,7 @@ return_t http2_alt_svc::read(http2_frame_header_t const* header, size_t size) {
     return ret;
 }
 
-return_t http2_alt_svc::write(binary_t& frame) {
+return_t http2_frame_alt_svc::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
 
     payload pl;
@@ -85,7 +85,7 @@ return_t http2_alt_svc::write(binary_t& frame) {
     return ret;
 }
 
-void http2_alt_svc::dump(stream_t* s) {
+void http2_frame_alt_svc::dump(stream_t* s) {
     if (s) {
         http2_frame::dump(s);
         s->printf(" > %s %u\n", constexpr_frame_origin_len, _origin.size());
@@ -98,9 +98,9 @@ void http2_alt_svc::dump(stream_t* s) {
     }
 }
 
-binary_t& http2_alt_svc::get_origin() { return _origin; }
+binary_t& http2_frame_alt_svc::get_origin() { return _origin; }
 
-binary_t& http2_alt_svc::get_altsvc() { return _altsvc; }
+binary_t& http2_frame_alt_svc::get_altsvc() { return _altsvc; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -15,7 +15,8 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_server::http_server() : _tlscert(nullptr), _dtlscert(nullptr), _tls(nullptr), _dtls(nullptr), _tls_server_socket(nullptr), _dtls_server_socket(nullptr) {
+http_server::http_server()
+    : _tlscert(nullptr), _dtlscert(nullptr), _tls(nullptr), _dtls(nullptr), _tls_server_socket(nullptr), _dtls_server_socket(nullptr), _user_context(nullptr) {
     get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 }
 

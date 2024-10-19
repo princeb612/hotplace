@@ -746,8 +746,8 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    *_cmdline << t_cmdarg_t<OPTION>("-d", "decode CBOR", [&](OPTION& o, char* param) -> void { o.content = param; }).preced().optional()
-              << t_cmdarg_t<OPTION>("-v", "verbose", [&](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+    *_cmdline << t_cmdarg_t<OPTION>("-d", "decode CBOR", [](OPTION& o, char* param) -> void { o.content = param; }).preced().optional()
+              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

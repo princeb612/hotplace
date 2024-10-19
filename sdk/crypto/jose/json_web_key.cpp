@@ -300,8 +300,8 @@ return_t json_web_key::write(crypto_key* crypto_key, char* buf, size_t* buflen, 
         crypto_key->for_each(json_writer, &mapper);
 
         std::string buffer;
-        auto func = [](char* data, std::string& buffer) -> void { buffer = data; };
-        jwk_serialize_t<std::string>(mapper, func, buffer);
+        auto lambda = [](char* data, std::string& buffer) -> void { buffer = data; };
+        jwk_serialize_t<std::string>(mapper, lambda, buffer);
 
         *buflen = buffer.size() + 1;
         if (buffer.size() + 1 > size_request) {
@@ -339,8 +339,8 @@ return_t json_web_key::write(crypto_key* crypto_key, std::string& buf, int flags
         mapper.flag = flags;
         crypto_key->for_each(json_writer, &mapper);
 
-        auto func = [](char* data, std::string& buffer) -> void { buffer = data; };
-        jwk_serialize_t<std::string>(mapper, func, buf);
+        auto lambda = [](char* data, std::string& buffer) -> void { buffer = data; };
+        jwk_serialize_t<std::string>(mapper, lambda, buf);
     }
     __finally2 {
         // do nothing
@@ -364,8 +364,8 @@ return_t json_web_key::write(crypto_key* crypto_key, stream_t* buf, int flags) {
         mapper.flag = flags;
         crypto_key->for_each(json_writer, &mapper);
 
-        auto func = [](char* data, stream_t*& stream) -> void { stream->printf("%s", data); };
-        jwk_serialize_t<stream_t*>(mapper, func, buf);
+        auto lambda = [](char* data, stream_t*& stream) -> void { stream->printf("%s", data); };
+        jwk_serialize_t<stream_t*>(mapper, lambda, buf);
     }
     __finally2 {
         // do nothing

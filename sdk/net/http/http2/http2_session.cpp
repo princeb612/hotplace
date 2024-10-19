@@ -184,7 +184,6 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             resp_settings.write(bin_resp);
 
             session->send((char*)&bin_resp[0], bin_resp.size());
-
         } else if (h2_frame_t::h2_frame_push_promise == hdr->type) {
             http2_frame_push_promise frame;
             frame.read(hdr, frame_size);
@@ -194,9 +193,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
                 _df(&bs);
             }
 
-            frame.read_compressed_header(frame.get_fragment(),
-                                         [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); });
-
+            auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
+            frame.read_compressed_header(frame.get_fragment(), lambda);
         } else if (h2_frame_t::h2_frame_ping == hdr->type) {
             http2_frame_ping frame;
             binary_t bin_resp;
@@ -231,8 +229,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
                 _df(&bs);
             }
 
-            auto reader = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
-            frame.read_compressed_header(frame.get_fragment(), reader);
+            auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
+            frame.read_compressed_header(frame.get_fragment(), lambda);
         }
 
         if (completion) {

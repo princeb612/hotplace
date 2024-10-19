@@ -127,10 +127,10 @@ http_server* http_server_builder::build() {
                         __leave2;
                     }
                     if (ipv4) {
-                        server->startup_server(1, AF_INET, port_https, _handler);
+                        server->startup_server(1, AF_INET, port_https, _handler, _user_context);
                     }
                     if (ipv6) {
-                        server->startup_server(1, AF_INET6, port_https, _handler);
+                        server->startup_server(1, AF_INET6, port_https, _handler, _user_context);
                     }
                 }
                 if (enable_h3) {
@@ -139,10 +139,10 @@ http_server* http_server_builder::build() {
                         __leave2;
                     }
                     if (ipv4) {
-                        server->startup_server(1, AF_INET, port_https, _handler);
+                        server->startup_server(1, AF_INET, port_https, _handler, _user_context);
                     }
                     if (ipv6) {
-                        server->startup_server(1, AF_INET6, port_https, _handler);
+                        server->startup_server(1, AF_INET6, port_https, _handler, _user_context);
                     }
                 }
             }
@@ -151,10 +151,10 @@ http_server* http_server_builder::build() {
                 uint16 port_http = get_server_conf().get(netserver_config_t::serverconf_port_http);
 
                 if (ipv4) {
-                    server->startup_server(0, AF_INET, port_http, _handler);
+                    server->startup_server(0, AF_INET, port_http, _handler, _user_context);
                 }
                 if (ipv6) {
-                    server->startup_server(0, AF_INET6, port_http, _handler);
+                    server->startup_server(0, AF_INET6, port_http, _handler, _user_context);
                 }
             }
 
