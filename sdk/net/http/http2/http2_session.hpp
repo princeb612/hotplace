@@ -22,18 +22,23 @@ namespace hotplace {
 namespace net {
 
 class http_server;
-class http2_session {
+class http2_session : public traceable {
    public:
     http2_session();
 
     /**
      * @brief   consume
+     * @param   uint32 type [in]
+     * @param   uint32 data_count [in]
+     * @param   void* data_array[] [in]
+     * @param   http_server* server [in]
+     * @param   http_request** request [outopt] can be nullptr if END_HEADERS, END_STREAM is not set
      */
     http2_session& consume(uint32 type, uint32 data_count, void* data_array[], http_server* server, http_request** request);
 
     hpack_session& get_hpack_session();
 
-    http2_session& trace(std::function<void(stream_t*)> f);
+    http2_session& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
 
    protected:
    private:
@@ -45,9 +50,6 @@ class http2_session {
     flags_t _flags;
     headers_t _headers;  // map<stream_identifier, http_request>
     hpack_session _hpack_session;
-
-    // debug
-    std::function<void(stream_t*)> _df;
 };
 
 }  // namespace net

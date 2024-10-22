@@ -276,9 +276,10 @@ enum errorcode_t {
     /* 0xef01008f 4009820303 */ internal_error_15,
     /* 0xef010090 4009820304 */ error_openssl_inside,
 
-    /* 0xef010100 4009820416 */ not_supported = 0xef010100,
+    /* 0xef010100 4009820416 */ not_supported = 0xef020000,
     /* 0xef010101 4009820417 */ low_security,
     /* 0xef010102 4009820418 */ debug,
+    /* 0xef010103 4009820419 */ do_nothing,
 };
 
 /*

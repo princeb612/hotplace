@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-hpack_session::hpack_session() : http_header_compression_session() {
+hpack_session::hpack_session() : http_header_compression_table_dynamic() {
     // _type = header_compression_hpack;
 
     // RFC 7540 6.5.2.  Defined SETTINGS Parameters

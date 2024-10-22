@@ -21,7 +21,7 @@
 namespace hotplace {
 namespace net {
 
-http2_session::http2_session() {}
+http2_session::http2_session() : traceable() {}
 
 http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data_array[], http_server* server, http_request** request) {
     return_t ret = errorcode_t::success;
@@ -33,7 +33,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             __leave2;
         }
 
-        if (_df) {
+        if (istraceable()) {
             network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
             basic_stream bs;
 
@@ -59,7 +59,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
                 default:
                     break;
             }
-            _df(&bs);
+            traceevent(category_header_compression, 0, &bs);
         }
 
         network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
@@ -68,8 +68,6 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         basic_stream bs;
 
         network_session* session = (network_session*)data_array[3];
-        hpack_encoder* encoder = &server->get_hpack_encoder();
-        hpack_session* hpsess = &session->get_http2_session().get_hpack_session();
 
         constexpr char preface[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
         const uint16 sizeof_preface = 24;
@@ -102,7 +100,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             req = &iter->second;
         } else {
             req = &_headers[stream_id];  // insert
-            (*req).set_hpack_encoder(encoder).set_hpack_session(hpsess).set_stream_id(stream_id).set_version(2);
+            (*req).set_hpack_session(&get_hpack_session()).set_stream_id(stream_id).set_version(2);
         }
 
         bool completion = (mask == (mask & flags)) ? true : false;
@@ -111,9 +109,9 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         if (h2_frame_t::h2_frame_data == hdr->type) {
             http2_frame_data frame;
             frame.read(hdr, frame_size);
-            if (_df) {
+            if (istraceable()) {
                 frame.dump(&bs);
-                _df(&bs);
+                traceevent(category_header_compression, 0, &bs);
             }
 
             req->add_content(frame.get_data());
@@ -128,48 +126,61 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         } else if (h2_frame_t::h2_frame_headers == hdr->type) {
             http2_frame_headers frame;
             frame.read(hdr, frame_size);
-            frame.set_hpack_encoder(encoder).set_hpack_session(&get_hpack_session());
-            if (_df) {
+            frame.set_hpack_session(&get_hpack_session());
+            if (istraceable()) {
                 frame.dump(&bs);
-                _df(&bs);
+                traceevent(category_header_compression, 0, &bs);
             }
 
-            auto inserter = [&](const std::string& name, const std::string& value) -> void {
+            auto lambda = [&](const std::string& name, const std::string& value) -> void {
                 if (":path" == name) {
                     req->get_http_uri().open(value);
                 }
                 req->get_http_header().add(name, value);
             };
-            frame.read_compressed_header(frame.get_fragment(), inserter);
+            frame.read_compressed_header(frame.get_fragment(), lambda);
         } else if (h2_frame_t::h2_frame_priority == hdr->type) {
             http2_frame_priority frame;
             frame.read(hdr, frame_size);
-            if (_df) {
+            if (istraceable()) {
                 frame.dump(&bs);
-                _df(&bs);
+                traceevent(category_header_compression, 0, &bs);
             }
         } else if (h2_frame_t::h2_frame_rst_stream == hdr->type) {
             http2_frame_rst_stream frame;
             frame.read(hdr, frame_size);
-            if (_df) {
+            if (istraceable()) {
                 frame.dump(&bs);
-                _df(&bs);
+                traceevent(category_header_compression, 0, &bs);
             }
             reset = true;
         } else if (h2_frame_t::h2_frame_settings == hdr->type) {
             http2_frame_settings frame;
             frame.read(hdr, frame_size);
-            if (_df) {
+            if (istraceable()) {
                 frame.dump(&bs);
-                _df(&bs);
+                traceevent(category_header_compression, 0, &bs);
             }
 
             // RFC 7541 6.5.2.  Defined SETTINGS Parameters
             // RFC 9113 6.5.2.  Defined Settings
             //                  SETTINGS_HEADER_TABLE_SIZE (0x01)
+            //
+            //  - http/2 frame type 4 SETTINGS
+            //  > length 0x18(24) type 4 flags 00 stream identifier 00000000
+            //  > flags [ ]
+            //  > identifier 1 value 65536 (0x00010000)
+            //  > identifier 2 value 0 (0x00000000)
+            //  > identifier 4 value 6291456 (0x00600000)
+            //  > identifier 6 value 262144 (0x00040000)
+
             uint32 table_size = 0;
             if (errorcode_t::success == frame.find(0x1, table_size)) {
                 get_hpack_session().set_capacity(table_size);
+            }
+            uint32 enable_push = 0;
+            if (errorcode_t::success == frame.find(0x2, enable_push)) {
+                server->get_http_router().get_http2_push().enable_push(enable_push ? true : false);
             }
 
             binary_t bin_resp;
@@ -187,10 +198,10 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         } else if (h2_frame_t::h2_frame_push_promise == hdr->type) {
             http2_frame_push_promise frame;
             frame.read(hdr, frame_size);
-            frame.set_hpack_encoder(encoder).set_hpack_session(&get_hpack_session());
-            if (_df) {
+            frame.set_hpack_session(&get_hpack_session());
+            if (istraceable()) {
                 frame.dump(&bs);
-                _df(&bs);
+                traceevent(category_header_compression, 0, &bs);
             }
 
             auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
@@ -199,9 +210,9 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             http2_frame_ping frame;
             binary_t bin_resp;
             frame.read(hdr, frame_size);
-            if (_df) {
+            if (istraceable()) {
                 frame.dump(&bs);
-                _df(&bs);
+                traceevent(category_header_compression, 0, &bs);
             }
             frame.set_flags(h2_flag_ack);
             frame.write(bin_resp);
@@ -209,30 +220,34 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         } else if (h2_frame_t::h2_frame_goaway == hdr->type) {
             http2_frame_goaway frame;
             frame.read(hdr, frame_size);
-            if (_df) {
+            if (istraceable()) {
                 frame.dump(&bs);
-                _df(&bs);
+                traceevent(category_header_compression, 0, &bs);
             }
         } else if (h2_frame_t::h2_frame_window_update == hdr->type) {
             http2_frame_window_update frame;
             frame.read(hdr, frame_size);
-            if (_df) {
+            if (istraceable()) {
                 frame.dump(&bs);
-                _df(&bs);
+                traceevent(category_header_compression, 0, &bs);
             }
         } else if (h2_frame_t::h2_frame_continuation == hdr->type) {
             http2_frame_continuation frame;
             frame.read(hdr, frame_size);
-            frame.set_hpack_encoder(encoder).set_hpack_session(&get_hpack_session());
-            if (_df) {
+            frame.set_hpack_session(&get_hpack_session());
+            if (istraceable()) {
                 frame.dump(&bs);
-                _df(&bs);
+                traceevent(category_header_compression, 0, &bs);
             }
 
             auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
             frame.read_compressed_header(frame.get_fragment(), lambda);
         }
 
+        /**
+         * if END_HEADERS and END_STREAM is set
+         * after handling DATA, HEADERS, CONTINUATION frames
+         */
         if (completion) {
             *request = new http_request(*req);
         }
@@ -249,8 +264,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
 
 hpack_session& http2_session::get_hpack_session() { return _hpack_session; }
 
-http2_session& http2_session::trace(std::function<void(stream_t*)> f) {
-    _df = f;
+http2_session& http2_session::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
+    settrace(f);
     return *this;
 }
 

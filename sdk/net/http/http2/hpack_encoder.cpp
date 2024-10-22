@@ -14,28 +14,22 @@
 namespace hotplace {
 namespace net {
 
-hpack_encoder::hpack_encoder() : http_header_compression() {
-    // RFC 7541 Appendix A.  Static Table Definition
-    // if (_static_table.empty()) ...
-    auto lambda = [&](uint32 index, const char* name, const char* value) -> void {
-        _static_table.insert(std::make_pair(name, std::make_pair(value ? value : "", index)));
-        _static_table_index.insert(std::make_pair(index, std::make_pair(name, value ? value : "")));
-    };
-    http_resource::get_instance()->for_each_hpack_static_table(lambda);
-}
+hpack_encoder::hpack_encoder() : http_header_compression() {}
 
-return_t hpack_encoder::encode(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
+return_t hpack_encoder::encode(http_header_compression_table_dynamic* dyntable, binary_t& target, const std::string& name, const std::string& value,
+                               uint32 flags) {
     return_t ret = errorcode_t::success;
     match_result_t state = match_result_t::not_matched;
     __try2 {
-        if (nullptr == session) {
+        if (nullptr == dyntable) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         size_t index = 0;
 
-        state = match(session, 0, name, value, index);  // set flags = 0
+        auto statable = hpack_static_table::get_instance();
+        state = matchall(statable, dyntable, 0, name, value, index);  // set flags = 0
         switch (state) {
             case match_result_t::all_matched:
             case match_result_t::all_matched_dynamic:
@@ -45,13 +39,13 @@ return_t hpack_encoder::encode(http_header_compression_session* session, binary_
             case match_result_t::key_matched_dynamic:
                 encode_indexed_name(target, flags, index, value);
                 if (hpack_indexing & flags) {
-                    session->insert(name, value);
+                    dyntable->insert(name, value);
                 }
                 break;
             default:
                 encode_name_value(target, flags, name, value);
                 if (hpack_indexing & flags) {
-                    session->insert(name, value);
+                    dyntable->insert(name, value);
                 }
                 break;
         }
@@ -62,11 +56,11 @@ return_t hpack_encoder::encode(http_header_compression_session* session, binary_
     return ret;
 }
 
-return_t hpack_encoder::decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+return_t hpack_encoder::decode(http_header_compression_table_dynamic* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
                                std::string& value) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if ((nullptr == session) || (nullptr == source)) {
+        if ((nullptr == dyntable) || (nullptr == source)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -127,14 +121,16 @@ return_t hpack_encoder::decode(http_header_compression_session* session, const b
         // do not handle hpack_layout_capacity here
         // HTTP2 SETTINGS frame SETTINGS_HEADER_TABLE_SIZE (0x1)
 
+        auto statable = hpack_static_table::get_instance();
+
         size_t i = 0;
         size_t idx = 0;
         if (hpack_layout_index & flags) {
             decode_int(source, pos, mask, prefix, i);
-            select(session, flags, i, name, value);
+            selectall(statable, dyntable, flags, i, name, value);
         } else if (hpack_layout_indexed_name & flags) {
             decode_int(source, pos, mask, prefix, i);
-            select(session, flags, i, name, value);
+            selectall(statable, dyntable, flags, i, name, value);
             decode_string(source, pos, flags, value);
         } else if (hpack_layout_name_value & flags) {
             pos++;
@@ -143,13 +139,13 @@ return_t hpack_encoder::decode(http_header_compression_session* session, const b
         }
 
         if (hpack_indexing & flags) {
-            auto r = match(session, 0, name, value, idx);
+            auto r = matchall(statable, dyntable, 0, name, value, idx);
             switch (r) {
                 case all_matched:
                 case all_matched_dynamic:
                     break;
                 default:
-                    session->insert(name, value);
+                    dyntable->insert(name, value);
                     break;
             }
         }
@@ -160,15 +156,15 @@ return_t hpack_encoder::decode(http_header_compression_session* session, const b
     return ret;
 }
 
-hpack_encoder& hpack_encoder::encode_header(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,
-                                            uint32 flags) {
-    encode(session, target, name, value, flags);
+hpack_encoder& hpack_encoder::encode_header(http_header_compression_table_dynamic* dyntable, binary_t& target, const std::string& name,
+                                            const std::string& value, uint32 flags) {
+    encode(dyntable, target, name, value, flags);
     return *this;
 }
 
-hpack_encoder& hpack_encoder::decode_header(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+hpack_encoder& hpack_encoder::decode_header(http_header_compression_table_dynamic* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
                                             std::string& value) {
-    decode(session, source, size, pos, name, value);
+    decode(dyntable, source, size, pos, name, value);
     return *this;
 }
 

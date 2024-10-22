@@ -27,6 +27,7 @@
 #include <sdk/io.hpp>
 #include <sdk/net/http/auth/oauth2.hpp>
 #include <sdk/net/http/html_documents.hpp>
+#include <sdk/net/http/http2/http2_push.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/http/http_authentication_resolver.hpp>
 
@@ -38,7 +39,8 @@ class http_router;
 typedef void (*http_request_handler_t)(network_session*, http_request*, http_response*, http_router*);
 typedef std::function<void(network_session*, http_request*, http_response*, http_router*)> http_request_function_t;
 
-class http_router {
+class http_router : public traceable {
+    friend class http_server;  // set_owner
    public:
     http_router();
     ~http_router();
@@ -80,6 +82,12 @@ class http_router {
 
     oauth2_provider& get_oauth2_provider();
 
+    http2_push& get_http2_push();
+
+    http_server* get_http_server();
+
+    http_router& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
+
    protected:
     /**
      * @brief   http_authenticate_provider
@@ -89,6 +97,8 @@ class http_router {
      * @return  result
      */
     bool get_auth_provider(http_request* request, http_response* response, http_authenticate_provider** provider);
+
+    void set_owner(http_server* server);
 
    private:
     void clear();
@@ -111,6 +121,8 @@ class http_router {
     http_authentication_resolver _resolver;
     oauth2_provider _oauth2;
     html_documents _http_documents;
+    http2_push _http2_push;
+    http_server* _http_server;
 };
 
 }  // namespace net

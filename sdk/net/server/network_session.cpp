@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-network_session::network_session(server_socket* serversocket) {
+network_session::network_session(server_socket* serversocket) : traceable() {
     _shared.make_share(this);
     serversocket->addref();
     _session.svr_socket = serversocket;
@@ -256,7 +256,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 
                     data_ready = true;
 
-                    if (_df) {
+                    if (istraceable()) {
                         basic_stream bs;
                         datetime dt;
                         datetime_t t;
@@ -266,7 +266,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
                         bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                         bs << "\n";
-                        _df(&bs);
+                        traceevent(category_net_session, 0, &bs);
                     }
 
                 } else {
@@ -292,7 +292,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
             q->push(get_priority(), this);
 #endif
 
-            if (_df && (errorcode_t::success == ret)) {
+            if (istraceable() && (errorcode_t::success == ret)) {
                 basic_stream bs;
                 datetime dt;
                 datetime_t t;
@@ -302,7 +302,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
                 bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                 bs << "\n";
-                _df(&bs);
+                traceevent(category_net_session, 0, &bs);
             }
         }
     }
@@ -358,7 +358,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 
                     data_ready = true;
 
-                    if (_df) {
+                    if (istraceable()) {
                         basic_stream bs;
                         datetime dt;
                         datetime_t t;
@@ -368,7 +368,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                         bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                         bs << "\n";
-                        _df(&bs);
+                        traceevent(category_net_session, 0, &bs);
                     }
                 }
 
@@ -397,7 +397,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
             q->push(get_priority(), this);
 #endif
 
-            if (_df && (errorcode_t::success == ret)) {
+            if (istraceable() && (errorcode_t::success == ret)) {
                 basic_stream bs;
                 datetime dt;
                 datetime_t t;
@@ -407,7 +407,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                 bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                 bs << "\n";
-                _df(&bs);
+                traceevent(category_net_session, 0, &bs);
             }
         }
     }
@@ -431,8 +431,8 @@ network_session_data* network_session::get_session_data() { return &_session_dat
 
 http2_session& network_session::get_http2_session() { return _http2_session; }
 
-network_session& network_session::trace(std::function<void(stream_t*)> f) {
-    _df = f;
+network_session& network_session::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
+    settrace(f);
     return *this;
 }
 

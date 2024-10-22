@@ -244,6 +244,7 @@ const error_description error_descriptions[] = {
     errordef(not_supported, "not supported"),
     errordef(low_security, "low security"),
     errordef(debug, "debug"),
+    errordef(do_nothing, "nothing to do"),
 };
 
 error_advisor error_advisor::_instance;

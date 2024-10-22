@@ -43,6 +43,8 @@ t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 t_shared_instance<http_server> _http_server;
 critical_section print_lock;
 
+void debug_handler(trace_category_t, uint32, stream_t* s) { _logger->writeln("%.*s", (unsigned int)s->size(), s->data()); };
+
 void cprint(const char* text, ...) {
     basic_stream bs;
     critical_section_guard guard(print_lock);
@@ -56,16 +58,6 @@ void cprint(const char* text, ...) {
     bs << _concolor.turnoff();
 
     _logger->writeln(bs);
-}
-
-void print(const char* text, ...) {
-    // valgrind
-    critical_section_guard guard(print_lock);
-    va_list ap;
-    va_start(ap, text);
-    vprintf(text, ap);
-    va_end(ap);
-    fflush(stdout);
 }
 
 void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
@@ -99,8 +91,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             if (request) {
                 http_response response(request);
                 if (option.verbose) {
-                    auto lambda = [](stream_t* s) -> void { print("\e[1;37m%.*s\e[0m", (unsigned int)s->size(), s->data()); };
-                    response.trace(lambda);
+                    response.trace(debug_handler);
                 }
                 _http_server->get_http_router().route(session, request, &response);
                 response.respond(session);
@@ -142,8 +133,7 @@ return_t simple_http2_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_network, 4)
             .set(netserver_config_t::serverconf_concurrent_consume, 4);
         if (option.verbose) {
-            auto lambda = [](stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); };
-            builder.trace(lambda);
+            builder.trace(debug_handler);
             builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
         }
         _http_server.make_share(builder.build());
@@ -215,6 +205,7 @@ return_t simple_http2_server(void*) {
             }
         };
 
+        // content-type, default document
         _http_server->get_http_router()
             .get_html_documents()
             .add_documents_root("/", ".")
@@ -223,8 +214,10 @@ return_t simple_http2_server(void*) {
             .add_content_type(".ico", "image/image/vnd.microsoft.icon")
             .add_content_type(".jpeg", "image/jpeg")
             .add_content_type(".json", "text/json")
+            .add_content_type(".js", "application/javascript")
             .set_default_document("index.html");
 
+        // router
         _http_server->get_http_router()
             .add("/api/html", api_response_html_handler)
             .add("/api/json", api_response_json_handler)
@@ -241,6 +234,7 @@ return_t simple_http2_server(void*) {
             // callback
             .add("/client/cb", cb_handler);
 
+        // authentication
         _http_server->get_http_router()
             .get_oauth2_provider()
             .add(new oauth2_authorization_code_grant_provider)
@@ -265,6 +259,9 @@ return_t simple_http2_server(void*) {
 
         resolver.get_oauth2_credentials().insert("s6BhdRkqt3", "gX1fBat3bV", "user", "testapp", cb_url.c_str(), std::list<std::string>());
         resolver.get_custom_credentials().add("user", "password");
+
+        // HTTP/2 Server Push
+        _http_server->get_http_router().get_http2_push().add("/auth.html", "/style.css");
 
         _http_server->start();
 

@@ -75,6 +75,7 @@
     * test/hpack/
     * test/httpserver2/
   * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
+  * RFC 7838 HTTP Alternative Services
   * RFC 9113 HTTP/2
     * sdk/net/http/http2/
     * sdk/net/tls/
@@ -174,7 +175,6 @@
 * HTTP/1.1
   * RFC 2817 Upgrading to TLS Within HTTP/1.1
 * HTTP/3
-  * RFC 7838 HTTP Alternative Services
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
   * RFC 9114 HTTP/3
 * ASN.1

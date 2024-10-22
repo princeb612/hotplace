@@ -15,7 +15,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_server_builder::http_server_builder() : _handler(nullptr), _user_context(nullptr) {
+http_server_builder::http_server_builder() : traceable(), _handler(nullptr), _user_context(nullptr) {
     get_server_conf()
         .set(netserver_config_t::serverconf_enable_ipv4, 0)
         .set(netserver_config_t::serverconf_enable_ipv6, 0)
@@ -95,8 +95,8 @@ http_server_builder& http_server_builder::set_handler(http_server_handler_t hand
     return *this;
 }
 
-http_server_builder& http_server_builder::trace(std::function<void(stream_t*)> f) {
-    _df = f;
+http_server_builder& http_server_builder::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
+    settrace(f);
     return *this;
 }
 

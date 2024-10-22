@@ -16,7 +16,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_router::http_router() {}
+http_router::http_router() : traceable(), _http_server(nullptr) {}
 
 http_router::~http_router() { clear(); }
 
@@ -132,8 +132,13 @@ return_t http_router::route(network_session* session, http_request* request, htt
             if (_handler_map.end() != iter) {
                 routing = iter->second;
             } else if (get_html_documents().test()) {
-                return_t check = get_html_documents().handler(uri, session, request, response);
+                return_t check = get_html_documents().compose(uri, response);
                 if (errorcode_t::success == check) {
+                    auto server = get_http_server();
+                    if (get_http2_push().is_promised(request, server)) {
+                        get_http2_push().push_promise(request, server, session);
+                        get_http2_push().push(request, server, session);
+                    }
                     __leave2;
                 } else {
                     route_not_found(routing);
@@ -207,6 +212,18 @@ bool http_router::get_auth_provider(http_request* request, http_response* respon
         // do nothing
     }
     return ret_value;
+}
+
+http2_push& http_router::get_http2_push() { return _http2_push; }
+
+http_server* http_router::get_http_server() { return _http_server; }
+
+void http_router::set_owner(http_server* server) { _http_server = server; }
+
+http_router& http_router::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
+    settrace(f);
+    get_http2_push().trace(f);
+    return *this;
 }
 
 }  // namespace net

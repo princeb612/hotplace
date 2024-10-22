@@ -98,7 +98,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             if (request) {
                 http_response response(request);
                 if (option.verbose) {
-                    auto lambda = [](stream_t* s) -> void { print("\e[1;37m%.*s\e[0m", (unsigned int)s->size(), s->data()); };
+                    auto lambda = [](trace_category_t, uint32, stream_t* s) -> void { print("\e[1;37m%.*s\e[0m", (unsigned int)s->size(), s->data()); };
                     response.trace(lambda);
                 }
                 _http_server->get_http_router().route(session, request, &response);
@@ -147,7 +147,7 @@ return_t simple_http2_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_network, 2)
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
         if (option.verbose) {
-            auto lambda = [](stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); };
+            auto lambda = [](trace_category_t, uint32, stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); };
             builder.trace(lambda);
             builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
         }
@@ -220,6 +220,7 @@ return_t simple_http2_server(void*) {
             }
         };
 
+        // content-type, default document
         _http_server->get_http_router()
             .get_html_documents()
             .add_documents_root("/", ".")
@@ -228,8 +229,10 @@ return_t simple_http2_server(void*) {
             .add_content_type(".ico", "image/image/vnd.microsoft.icon")
             .add_content_type(".jpeg", "image/jpeg")
             .add_content_type(".json", "text/json")
+            .add_content_type(".js", "application/javascript")
             .set_default_document("index.html");
 
+        // router
         _http_server->get_http_router()
             .add("/api/html", api_response_html_handler)
             .add("/api/json", api_response_json_handler)
@@ -246,6 +249,7 @@ return_t simple_http2_server(void*) {
             // callback
             .add("/client/cb", cb_handler);
 
+        // authentication
         _http_server->get_http_router()
             .get_oauth2_provider()
             .add(new oauth2_authorization_code_grant_provider)

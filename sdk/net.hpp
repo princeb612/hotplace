@@ -58,6 +58,7 @@
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
+#include <sdk/net/http/http2/http2_push.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>
 #include <sdk/net/http/http2/http_header_compression.hpp>
 

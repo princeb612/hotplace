@@ -204,12 +204,10 @@ void test_http2_frame() {
 
     // HEADERS
 
-    hpack hp;
-    hpack_encoder encoder;
+    hpack_stream hp;
     hpack_session session;  // dynamic table
     hp.get_binary().clear();
-    hp.set_encoder(&encoder)
-        .set_session(&session)
+    hp.set_session(&session)
         .set_encode_flags(hpack_indexing | hpack_huffman)
         .encode_header(":method", "GET")
         .encode_header(":scheme", "https")
@@ -219,7 +217,7 @@ void test_http2_frame() {
     http2_frame_headers frame_headers;
     frame_headers.set_flags(0).set_stream_id(1);
     frame_headers.get_fragment() = hp.get_binary();
-    frame_headers.set_hpack_encoder(&encoder).set_hpack_session(&session);  // dump
+    frame_headers.set_hpack_session(&session);  // dump
 
     // test
     {
@@ -239,7 +237,7 @@ void test_http2_frame() {
     http2_frame_continuation frame_continuation;
     frame_continuation.set_flags(h2_flag_end_headers).set_stream_id(1);
     frame_continuation.get_fragment() = hp.get_binary();
-    frame_continuation.set_hpack_encoder(&encoder).set_hpack_session(&session);  // dump
+    frame_continuation.set_hpack_session(&session);  // dump
 
     // test
     {

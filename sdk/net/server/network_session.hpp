@@ -96,7 +96,7 @@ class network_session_data : public skey_value {
 /**
  * @brief session
  */
-class network_session {
+class network_session : public traceable {
     friend class network_server;
 
    public:
@@ -193,7 +193,7 @@ class network_session {
     network_session_data* get_session_data();
     http2_session& get_http2_session();
 
-    network_session& trace(std::function<void(stream_t*)> f);
+    network_session& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
 
     return_t dgram_get_sockaddr(sockaddr_storage_t* addr);
 
@@ -207,8 +207,6 @@ class network_session {
     network_session_data _session_data;
 
     http2_session _http2_session;
-
-    std::function<void(stream_t*)> _df;
 
     t_shared_reference<network_session> _shared;
     critical_section _lock;

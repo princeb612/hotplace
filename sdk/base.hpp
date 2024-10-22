@@ -82,5 +82,6 @@
 /* unittest */
 #include <sdk/base/unittest/logger.hpp>
 #include <sdk/base/unittest/testcase.hpp>
+#include <sdk/base/unittest/traceable.hpp>
 
 #endif

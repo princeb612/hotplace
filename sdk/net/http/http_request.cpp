@@ -22,11 +22,10 @@ namespace net {
 constexpr char constexpr_content_type[] = "Content-Type";
 constexpr char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
 
-http_request::http_request() : _encoder(nullptr), _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
+http_request::http_request() : _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
 
 http_request::http_request(const http_request& object) {
     _shared.make_share(this);
-    _encoder = object._encoder;
     _hpsess = object._hpsess;
     _version = object._version;
     _stream_id = object._stream_id;
@@ -258,11 +257,6 @@ http_request& http_request::clear_content() {
     return *this;
 }
 
-http_request& http_request::set_hpack_encoder(hpack_encoder* encoder) {
-    _encoder = encoder;
-    return *this;
-}
-
 http_request& http_request::set_hpack_session(hpack_session* session) {
     _hpsess = session;
     return *this;
@@ -285,8 +279,6 @@ http_request& http_request::set_stream_id(uint32 stream_id) {
     _stream_id = stream_id;
     return *this;
 }
-
-hpack_encoder* http_request::get_hpack_encoder() { return _encoder; }
 
 hpack_session* http_request::get_hpack_session() { return _hpsess; }
 

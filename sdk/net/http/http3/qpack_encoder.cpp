@@ -16,32 +16,27 @@
 namespace hotplace {
 namespace net {
 
-qpack_encoder::qpack_encoder() : http_header_compression() {
-    // RFC 9204 Appendix A.  Static Table
-    auto lambda = [&](uint32 index, const char* name, const char* value) -> void {
-        _static_table.insert(std::make_pair(name, std::make_pair(value ? value : "", index)));
-        _static_table_index.insert(std::make_pair(index, std::make_pair(name, value ? value : "")));
-    };
-    http_resource::get_instance()->for_each_qpack_static_table(lambda);
-}
+qpack_encoder::qpack_encoder() : http_header_compression() {}
 
-return_t qpack_encoder::encode(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
+return_t qpack_encoder::encode(http_header_compression_table_dynamic* dyntable, binary_t& target, const std::string& name, const std::string& value,
+                               uint32 flags) {
     return_t ret = errorcode_t::success;
     match_result_t state = match_result_t::not_matched;
     __try2 {
-        if (nullptr == session) {
+        if (nullptr == dyntable) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         size_t index = 0;
 
-        if (0 == session->get_capacity()) {
+        if (0 == dyntable->get_capacity()) {
             // no dynamic table
             flags &= ~(qpack_indexing | qpack_name_reference);
         }
 
-        state = match(session, flags, name, value, index);  // flag effected - qpack_name_reference
+        auto statable = qpack_static_table::get_instance();
+        state = matchall(statable, dyntable, flags, name, value, index);  // flag effected - qpack_name_reference
         switch (state) {
             case match_result_t::all_matched:
             case match_result_t::all_matched_dynamic:
@@ -72,13 +67,13 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
                      *      - an encoded field section referencing the dynamic table entries including the duplicated entry
                      */
                     ret = errorcode_t::already_exist;
-                    session->insert(name, value);  // duplicate
+                    dyntable->insert(name, value);  // duplicate
                     duplicate(target, index);
                 } else {
                     if (qpack_postbase_index & flags) {
                         size_t postbase = 0;
                         size_t respsize = sizeof(size_t);
-                        session->query(qpack_cmd_postbase_index, &index, sizeof(index), &postbase, respsize);
+                        dyntable->query(qpack_cmd_postbase_index, &index, sizeof(index), &postbase, respsize);
                         encode_index(target, flags, postbase);
                     } else {
                         encode_index(target, flags, index);
@@ -92,31 +87,31 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
                     flags |= qpack_static;
                 }
                 if (qpack_indexing & flags) {
-                    session->insert(name, value);
+                    dyntable->insert(name, value);
                 }
                 if (qpack_static & flags) {
                     // static table
-                    encode_name_reference(session, target, flags, index, value);
+                    encode_name_reference(dyntable, target, flags, index, value);
                 } else {
                     // dynamic table
                     size_t dropped = 0;
                     size_t respsize = sizeof(size_t);
-                    session->query(qpack_cmd_dropped, nullptr, 0, &dropped, respsize);
+                    dyntable->query(qpack_cmd_dropped, nullptr, 0, &dropped, respsize);
                     if (dropped < index + 1) {
-                        encode_name_reference(session, target, flags, index, value);
+                        encode_name_reference(dyntable, target, flags, index, value);
                     } else {
                         // invalid index evicted
                         // so encode literal name not name reference
-                        encode_name_value(session, target, flags, name, value);
+                        encode_name_value(dyntable, target, flags, name, value);
                     }
                 }
                 break;
             default:
-                encode_name_value(session, target, flags, name, value);
+                encode_name_value(dyntable, target, flags, name, value);
                 // RFC 9204 4.3.3.  Insert with Literal Name
                 // ... adds an entry to the dynamic table ...
                 if (qpack_indexing & flags) {
-                    session->insert(name, value);
+                    dyntable->insert(name, value);
                 }
                 break;
         }
@@ -127,24 +122,24 @@ return_t qpack_encoder::encode(http_header_compression_session* session, binary_
     return ret;
 }
 
-return_t qpack_encoder::decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
-                               uint32 flags) {
+return_t qpack_encoder::decode(http_header_compression_table_dynamic* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                               std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         name.clear();
         value.clear();
 
-        if ((nullptr == session) || (nullptr == source)) {
+        if ((nullptr == dyntable) || (nullptr == source)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         if (qpack_quic_stream_header & flags) {
-            ret = decode_quic_stream_header(session, source, size, pos, name, value, flags);
+            ret = decode_quic_stream_header(dyntable, source, size, pos, name, value, flags);
         } else if (qpack_quic_stream_encoder & flags) {
-            ret = decode_quic_stream_encoder(session, source, size, pos, name, value, flags);
+            ret = decode_quic_stream_encoder(dyntable, source, size, pos, name, value, flags);
         } else if (qpack_quic_stream_decoder & flags) {
-            ret = decode_quic_stream_decoder(session, source, size, pos, name, value, flags);
+            ret = decode_quic_stream_decoder(dyntable, source, size, pos, name, value, flags);
         } else {
             ret = errorcode_t::bad_request;
         }
@@ -155,11 +150,11 @@ return_t qpack_encoder::decode(http_header_compression_session* session, const b
     return ret;
 }
 
-return_t qpack_encoder::decode_quic_stream_encoder(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                                   std::string& value, uint32 flags) {
+return_t qpack_encoder::decode_quic_stream_encoder(http_header_compression_table_dynamic* dyntable, const byte_t* source, size_t size, size_t& pos,
+                                                   std::string& name, std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if ((nullptr == session) || (nullptr == source)) {
+        if ((nullptr == dyntable) || (nullptr == source)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -200,25 +195,27 @@ return_t qpack_encoder::decode_quic_stream_encoder(http_header_compression_sessi
             flags |= (qpack_layout_duplicate | qpack_indexing);
         }
 
+        auto statable = qpack_static_table::get_instance();
+
         size_t i = 0;
         size_t idx = 0;
         if (qpack_layout_capacity & flags) {
             decode_int(source, pos, mask, prefix, i);
-            session->set_capacity(i);
+            dyntable->set_capacity(i);
         } else if (qpack_layout_name_reference & flags) {
             decode_int(source, pos, mask, prefix, i);
-            select(session, flags, i, name, value);
+            selectall(statable, dyntable, flags, i, name, value);
             decode_string(source, pos, flags, value);
         } else if (qpack_layout_name_value & flags) {
             decode_name_reference(source, pos, flags, mask, prefix, name);
             decode_string(source, pos, flags, value);
         } else if (qpack_layout_duplicate & flags) {
             decode_int(source, pos, mask, prefix, i);
-            select(session, flags, i, name, value);
+            selectall(statable, dyntable, flags, i, name, value);
         }
 
         if (qpack_indexing & flags) {
-            session->insert(name, value);
+            dyntable->insert(name, value);
         }
     }
     __finally2 {
@@ -227,11 +224,11 @@ return_t qpack_encoder::decode_quic_stream_encoder(http_header_compression_sessi
     return ret;
 }
 
-return_t qpack_encoder::decode_quic_stream_decoder(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                                   std::string& value, uint32 flags) {
+return_t qpack_encoder::decode_quic_stream_decoder(http_header_compression_table_dynamic* dyntable, const byte_t* source, size_t size, size_t& pos,
+                                                   std::string& name, std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if ((nullptr == session) || (nullptr == source)) {
+        if ((nullptr == dyntable) || (nullptr == source)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -277,11 +274,11 @@ return_t qpack_encoder::decode_quic_stream_decoder(http_header_compression_sessi
     return ret;
 }
 
-return_t qpack_encoder::decode_quic_stream_header(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                                  std::string& value, uint32 flags) {
+return_t qpack_encoder::decode_quic_stream_header(http_header_compression_table_dynamic* dyntable, const byte_t* source, size_t size, size_t& pos,
+                                                  std::string& name, std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if ((nullptr == session) || (nullptr == source)) {
+        if ((nullptr == dyntable) || (nullptr == source)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -317,9 +314,9 @@ return_t qpack_encoder::decode_quic_stream_header(http_header_compression_sessio
             sign = 0x80 & source[pos];
             decode_int(source, pos, 0x80, 7, deltabase);
 
-            qpack_eic2ric(session->get_capacity(), session->get_entries(), eic, sign, deltabase, ric, base);
+            qpack_eic2ric(dyntable->get_capacity(), dyntable->get_entries(), eic, sign, deltabase, ric, base);
 
-            auto entries = session->get_entries();
+            auto entries = dyntable->get_entries();
             if (ric != entries) {
                 ret = errorcode_t::mismatch;
                 __leave2;
@@ -374,14 +371,16 @@ return_t qpack_encoder::decode_quic_stream_header(http_header_compression_sessio
                 }
             }
 
+            auto statable = qpack_static_table::get_instance();
+
             size_t i = 0;
             size_t idx = 0;
             if (qpack_layout_index & flags) {
                 decode_int(source, pos, mask, prefix, i);
-                select(session, flags, i, name, value);
+                selectall(statable, dyntable, flags, i, name, value);
             } else if (qpack_layout_name_reference & flags) {
                 decode_int(source, pos, mask, prefix, i);
-                select(session, flags, i, name, value);
+                selectall(statable, dyntable, flags, i, name, value);
                 decode_string(source, pos, flags, value);
             } else if (qpack_layout_name_value & flags) {
                 pos++;
@@ -396,11 +395,12 @@ return_t qpack_encoder::decode_quic_stream_header(http_header_compression_sessio
     return ret;
 }
 
-return_t qpack_encoder::insert(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
-    return encode(session, target, name, value, flags | qpack_indexing);
+return_t qpack_encoder::insert(http_header_compression_table_dynamic* dyntable, binary_t& target, const std::string& name, const std::string& value,
+                               uint32 flags) {
+    return encode(dyntable, target, name, value, flags | qpack_indexing);
 }
 
-return_t qpack_encoder::sync(http_header_compression_session* session, binary_t& target, uint32 flags) {
+return_t qpack_encoder::sync(http_header_compression_table_dynamic* dyntable, binary_t& target, uint32 flags) {
     return_t ret = errorcode_t::success;
     /**
      * RFC 9204 4.5.1.  Encoded Field Section Prefix
@@ -418,9 +418,9 @@ return_t qpack_encoder::sync(http_header_compression_session* session, binary_t&
      *
      * 4.5.1.1.  Required Insert Count
      */
-    if (session) {
-        size_t capacity = session->get_capacity();
-        size_t ric = session->get_entries();
+    if (dyntable) {
+        size_t capacity = dyntable->get_capacity();
+        size_t ric = dyntable->get_entries();
         size_t base = 0;
         size_t eic = 0;
         bool sign = true;
@@ -445,15 +445,15 @@ return_t qpack_encoder::sync(http_header_compression_session* session, binary_t&
     return ret;
 }
 
-qpack_encoder& qpack_encoder::encode_header(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,
-                                            uint32 flags) {
-    encode(session, target, name, value, flags);
+qpack_encoder& qpack_encoder::encode_header(http_header_compression_table_dynamic* dyntable, binary_t& target, const std::string& name,
+                                            const std::string& value, uint32 flags) {
+    encode(dyntable, target, name, value, flags);
     return *this;
 }
 
-qpack_encoder& qpack_encoder::decode_header(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+qpack_encoder& qpack_encoder::decode_header(http_header_compression_table_dynamic* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
                                             std::string& value) {
-    decode(session, source, size, pos, name, value);
+    decode(dyntable, source, size, pos, name, value);
     return *this;
 }
 
@@ -498,9 +498,9 @@ qpack_encoder& qpack_encoder::encode_index(binary_t& target, uint32 flags, size_
     return *this;
 }
 
-qpack_encoder& qpack_encoder::encode_name_reference(http_header_compression_session* session, binary_t& target, uint32 flags, size_t index,
+qpack_encoder& qpack_encoder::encode_name_reference(http_header_compression_table_dynamic* dyntable, binary_t& target, uint32 flags, size_t index,
                                                     const std::string& value) {
-    if (session) {
+    if (dyntable) {
         uint8 mask = 0;
         uint8 prefix = 0;
 
@@ -579,9 +579,9 @@ qpack_encoder& qpack_encoder::encode_name_reference(http_header_compression_sess
     return *this;
 }
 
-qpack_encoder& qpack_encoder::encode_name_value(http_header_compression_session* session, binary_t& target, uint32 flags, const std::string& name,
+qpack_encoder& qpack_encoder::encode_name_value(http_header_compression_table_dynamic* dyntable, binary_t& target, uint32 flags, const std::string& name,
                                                 const std::string& value) {
-    if (session) {
+    if (dyntable) {
         uint8 mask = 0;
         uint8 prefix = 0;
 
@@ -638,7 +638,8 @@ qpack_encoder& qpack_encoder::encode_name_value(http_header_compression_session*
 
         encode_int(target, mask, prefix, name.size());
         if (qpack_huffman & flags) {
-            _huffcode.encode(target, name.c_str(), name.size());
+            auto huffcode = http_huffman_coding::get_instance();
+            huffcode->encode(target, name.c_str(), name.size());
         } else {
             target.insert(target.end(), name.begin(), name.end());
         }

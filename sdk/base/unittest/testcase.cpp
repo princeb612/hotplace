@@ -268,6 +268,10 @@ void test_case::test(return_t result, const char* test_function, const char* mes
                 color = console_color_t::yellow;
                 _total._count_low_security++;
                 break;
+            case errorcode_t::do_nothing:
+                color = console_color_t::white;
+                _total._count_trivial++;
+                break;
             default:
                 color = console_color_t::red;
                 _total._count_fail++;
@@ -301,6 +305,9 @@ void test_case::test(return_t result, const char* test_function, const char* mes
                 break;
             case errorcode_t::low_security:
                 status._test_stat._count_low_security++;
+                break;
+            case errorcode_t::do_nothing:
+                status._test_stat._count_trivial++;
                 break;
             default:
                 status._test_stat._count_fail++;

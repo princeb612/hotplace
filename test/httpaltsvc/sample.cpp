@@ -11,6 +11,7 @@
  *
  * test
  * curl https://localhost:9000/ -k -v
+ * curl https://localhost:9001/ -k -v
  */
 
 #include <signal.h>
@@ -105,18 +106,18 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
                 http_response response(request);
                 basic_stream bs;
                 if (option.verbose) {
-                    auto lambda = [&](stream_t *s) -> void {
+                    auto lambda = [&](trace_category_t, uint32, stream_t *s) -> void {
                         cprint("response %i", session_socket->event_socket);
                         _logger->writeln("%.*s", (unsigned int)s->size(), s->data());
                     };
                     response.trace(lambda);
                 }
 
+                // HTTP/3 not implemented yet ... (studying)
                 if ("HTTP/1.1" == request->get_version_str()) {
                     std::string altsvc_fieldvalue = format(R"(h2=":%i"; h3=":%i"; ma=2592000; persist=1)", option.port_h2, option.port_h3);
                     response.get_http_header().add("Alt-Svc", altsvc_fieldvalue);
                 } else if ("HTTP/2" == request->get_version_str()) {
-                    // HTTP/3 not implemented yet ... (studying)
                     std::string altsvc_fieldvalue = format(R"(h3=":%i"; ma=2592000; persist=1)", option.port_h3);
                     response.get_http_header().add("Alt-Svc", altsvc_fieldvalue);
                 }
@@ -156,24 +157,32 @@ void start_server(t_shared_instance<http_server> &server, const std::string vers
         .set(netserver_config_t::serverconf_concurrent_network, 2)
         .set(netserver_config_t::serverconf_concurrent_consume, 2);
     if (option.verbose) {
-        auto lambda = [](stream_t *s) -> void { printf("%.*s", (unsigned int)s->size(), s->data()); };
+        auto lambda = [](trace_category_t, uint32, stream_t *s) -> void { printf("%.*s", (unsigned int)s->size(), s->data()); };
         builder.trace(lambda);
         builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
     }
     server.make_share(builder.build());
 
+    // content-type, default document
     server->get_http_router()
         .get_html_documents()
         .add_documents_root("/", ".")
         .add_content_type(".html", "text/html")
         .add_content_type(".json", "text/json")
+        .add_content_type(".js", "application/javascript")
         .set_default_document("index.html");
+    // router
     server->get_http_router()
         .add("/api/html", api_response_html_handler)
         .add("/api/json", api_response_json_handler)
         .add("/api/test", default_handler)
         .add(404, error_handler);
     server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, option.packetsize);
+
+    // HTTP/2 Server Push
+    if ("HTTP/2" == version) {
+        server->get_http_router().get_http2_push().add("/", "/style.css").add("/index.html", "/style.css");
+    }
 
     server->start();
 }

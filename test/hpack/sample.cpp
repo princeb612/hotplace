@@ -34,7 +34,6 @@ typedef struct _OPTION {
 
 t_shared_instance<t_cmdline_t<OPTION> > cmdline;
 t_shared_instance<hpack_encoder> encoder;
-t_shared_instance<huffman_coding> huffman_instance;
 unsigned int count_evict_encoder = 0;
 unsigned int count_evict_decoder = 0;
 
@@ -52,7 +51,7 @@ void cprint(const char* text, ...) {
     _logger->writeln(bs);
 }
 
-void debug_hpack_encoder(uint32 event, stream_t* s) {
+void debug_hpack_encoder(trace_category_t, uint32 event, stream_t* s) {
     if (header_compression_event_evict & event) {
         count_evict_encoder++;
     }
@@ -61,7 +60,7 @@ void debug_hpack_encoder(uint32 event, stream_t* s) {
     }
 };
 
-void debug_hpack_decoder(uint32 event, stream_t* s) {
+void debug_hpack_decoder(trace_category_t, uint32 event, stream_t* s) {
     if (header_compression_event_evict & event) {
         count_evict_decoder++;
     }
@@ -78,13 +77,15 @@ void test_huffman_codes_routine(const char* sample, const char* expect) {
         basic_stream bs;
         binary_t bin;
 
-        (*huffman_instance).encode(&bs, (byte_t*)sample, strlen(sample));
+        auto huffcode = http_huffman_coding::get_instance();
+
+        huffcode->encode(&bs, (byte_t*)sample, strlen(sample));
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             _logger->writeln("%s", bs.c_str());
         }
 
-        (*huffman_instance).encode(bin, (byte_t*)sample, strlen(sample));
+        huffcode->encode(bin, (byte_t*)sample, strlen(sample));
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             _logger->dump(bin);
@@ -93,7 +94,7 @@ void test_huffman_codes_routine(const char* sample, const char* expect) {
         _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "encode %s", sample);
 
         bs.clear();
-        ret = (*huffman_instance).decode(&bs, &bin[0], bin.size());
+        ret = huffcode->decode(&bs, &bin[0], bin.size());
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             _logger->writeln("%s", bs.c_str());
@@ -285,7 +286,7 @@ void test_rfc7541_c_2() {
 void decode(const binary_t& bin, hpack_session* session, hpack_session* session2) {
     const OPTION& option = cmdline->value();
 
-    hpack hp;
+    hpack_stream hp;
     std::string name;
     std::string value;
     size_t pos = 0;
@@ -294,7 +295,7 @@ void decode(const binary_t& bin, hpack_session* session, hpack_session* session2
         _logger->writeln("> decode");
     }
 
-    hp.set_encoder(&*encoder).set_session(session);
+    hp.set_session(session);
     while (pos < bin.size()) {
         hp.decode_header(&bin[0], bin.size(), pos, name, value);
         if (option.verbose) {
@@ -318,7 +319,7 @@ void test_rfc7541_c_3() {
     _test_case.begin("RFC 7541 HPACK C.3. Request Examples without Huffman Coding");
     const OPTION& option = cmdline->value();
 
-    hpack hp;
+    hpack_stream hp;
     hpack_session session_encoder;  // dynamic table
     hpack_session session_decoder;  // dynamic table
     basic_stream bs;
@@ -328,8 +329,7 @@ void test_rfc7541_c_3() {
     // :scheme: http
     // :path: /
     // :authority: www.example.com
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
         .encode_header(":method", "GET")
         .encode_header(":scheme", "http")
@@ -357,8 +357,7 @@ void test_rfc7541_c_3() {
 
     // C.3.2.  Second Request
     hp.get_binary().clear();
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
         .encode_header(":method", "GET")
         .encode_header(":scheme", "http")
@@ -386,8 +385,7 @@ void test_rfc7541_c_3() {
 
     // C.3.3.  Third Request
     hp.get_binary().clear();
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
         .encode_header(":method", "GET")
         .encode_header(":scheme", "https")
@@ -421,14 +419,13 @@ void test_rfc7541_c_4() {
     _test_case.begin("RFC 7541 HPACK C.4. Request Examples with Huffman Coding");
     const OPTION& option = cmdline->value();
 
-    hpack hp;
+    hpack_stream hp;
     hpack_session session_encoder;  // dynamic table
     hpack_session session_decoder;  // dynamic table
     basic_stream bs;
 
     // C.4.1.  First Request
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
         .encode_header(":method", "GET")
         .encode_header(":scheme", "http")
@@ -452,8 +449,7 @@ void test_rfc7541_c_4() {
 
     // C.4.2.  Second Request
     hp.get_binary().clear();
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
         .encode_header(":method", "GET")
         .encode_header(":scheme", "http")
@@ -476,8 +472,7 @@ void test_rfc7541_c_4() {
 
     // C.4.3.  Third Request
     hp.get_binary().clear();
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
         .encode_header(":method", "GET")
         .encode_header(":scheme", "https")
@@ -506,7 +501,7 @@ void test_rfc7541_c_5() {
     _test_case.begin("RFC 7541 HPACK C.5. Response Examples without Huffman Coding");
     const OPTION& option = cmdline->value();
 
-    hpack hp;
+    hpack_stream hp;
     hpack_session session_encoder;  // dynamic table
     hpack_session session_decoder;  // dynamic table
     basic_stream bs;
@@ -519,8 +514,7 @@ void test_rfc7541_c_5() {
     session_decoder.trace(debug_hpack_decoder);
 
     // C.5.1.  First Response
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
         .encode_header(":status", "302")
         .encode_header("cache-control", "private")
@@ -547,8 +541,7 @@ void test_rfc7541_c_5() {
 
     // C.5.2.  Second Response
     hp.get_binary().clear();
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
         .encode_header(":status", "307")
         .encode_header("cache-control", "private")
@@ -572,8 +565,7 @@ void test_rfc7541_c_5() {
 
     // C.5.3.  Third Response
     hp.get_binary().clear();
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
         .encode_header(":status", "200")
         .encode_header("cache-control", "private")
@@ -610,7 +602,7 @@ void test_rfc7541_c_6() {
     _test_case.begin("RFC 7541 HPACK C.6. Response Examples with Huffman Coding");
     const OPTION& option = cmdline->value();
 
-    hpack hp;
+    hpack_stream hp;
     hpack_session session_encoder;  // dynamic table
     hpack_session session_decoder;  // dynamic table
     basic_stream bs;
@@ -624,8 +616,7 @@ void test_rfc7541_c_6() {
 
     // C.6.1.  First Response
     hp.get_binary().clear();
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
         .encode_header(":status", "302")
         .encode_header("cache-control", "private")
@@ -651,8 +642,7 @@ void test_rfc7541_c_6() {
 
     // C.6.2.  Second Response
     hp.get_binary().clear();
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
         .encode_header(":status", "307")
         .encode_header("cache-control", "private")
@@ -676,8 +666,7 @@ void test_rfc7541_c_6() {
 
     // C.6.3.  Third Response
     hp.get_binary().clear();
-    hp.set_encoder(&*encoder)
-        .set_session(&session_encoder)
+    hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
         .encode_header(":status", "200")
         .encode_header("cache-control", "private")
@@ -839,8 +828,7 @@ int main(int argc, char** argv) {
     _test_case.reset_time();
 
     // RFC 7541 Appendix B. Huffman Code
-    huffman_instance.make_share(new huffman_coding);
-    (*huffman_instance).imports(_h2hcodes);
+    auto huffcode = http_huffman_coding::get_instance();
     _test_case.assert(true, __FUNCTION__, "check loading time of HPACK Huffman Code");
 
     // RFC 7541 Appendix B. Huffman Code

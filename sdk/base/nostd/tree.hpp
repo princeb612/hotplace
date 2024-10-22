@@ -22,15 +22,12 @@
 
 namespace hotplace {
 
-// class huffman_coding;
 /**
  * @brief   t_btree
  * @refer   Data Structures and Algorithm Analysis in C++ - 4.3 The Search Tree ADT - Binary Search Trees
  */
 template <typename key_t, typename comparator_t = std::less<key_t>>
 class t_btree {
-    // friend class huffman_coding;
-
    private:
     struct bnode {
         key_t _key;

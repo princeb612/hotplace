@@ -2,7 +2,7 @@
 /**
  * @file {file}
  * @author  Soo Han, Kim (princeb612.kr@gmail.com)
- * @desc    see etc/udpclient
+ * @desc    UDP server using multiplexer
  * @sa      See in the following order : udpserver, udpserver2, dtlsserver
  *
  * Revision History

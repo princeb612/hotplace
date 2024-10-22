@@ -18,6 +18,7 @@
 #include <sdk/base/types.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
+#include <sdk/net/http/http_header.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 
 namespace hotplace {
@@ -116,7 +117,7 @@ typedef struct _http2_setting_t {
 
 #pragma pack(pop)
 
-class http2_frame {
+class http2_frame : public traceable {
    public:
     http2_frame();
     http2_frame(h2_frame_t type);
@@ -134,17 +135,32 @@ class http2_frame {
     http2_frame& set_flags(uint8 flags);
     http2_frame& set_stream_id(uint32 id);
 
-    http2_frame& load_hpack(hpack& hp);
-    http2_frame& set_hpack_encoder(hpack_encoder* encoder);
+    http2_frame& load_hpack(hpack_stream& hp);
     http2_frame& set_hpack_session(hpack_session* session);
-    hpack_encoder* get_hpack_encoder();
     hpack_session* get_hpack_session();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
+    /**
+     * @brief   read header
+     * @param   const byte_t* buf [in] binary stream
+     * @param   size_t size [in] size of binary stream
+     * @param   std::function<void(const std::string&, const std::string&)> v [in]
+     */
     virtual void read_compressed_header(const byte_t* buf, size_t size, std::function<void(const std::string&, const std::string&)> v);
     virtual void read_compressed_header(const binary_t& b, std::function<void(const std::string&, const std::string&)> v);
+    /**
+     * @brief   write header
+     * @param   binary_t& frag [out]
+     * @param   const std::string& name [in]
+     * @param   const std::string& value [in]
+     * @param   uint32 flags [inopt] hpack_indexing | hpack_huffman
+     * @return  error code (see error.hpp)
+     * @remarks HEADERS, CONTINUATION, PUSH_PROMISE fragment
+     */
+    virtual return_t write_compressed_header(binary_t& frag, const std::string& name, const std::string& value, uint32 flags = hpack_indexing | hpack_huffman);
+    virtual return_t write_compressed_header(http_header* header, binary_t& frag, uint32 flags = hpack_indexing | hpack_huffman);
 
    protected:
     return_t set_payload_size(uint32 size);
@@ -155,7 +171,6 @@ class http2_frame {
     uint8 _flags;
     uint32 _stream_id;
 
-    hpack_encoder* _hpack_encoder;
     hpack_session* _hpack_session;
 };
 

@@ -57,18 +57,17 @@ CONSTEXPR char constexpr_frame_origin_len[] = "origin-len";
 CONSTEXPR char constexpr_frame_origin[] = "origin";
 CONSTEXPR char constexpr_frame_alt_svc_field_value[] = "alt-svc-field-value";
 
-http2_frame::http2_frame() : _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_encoder(nullptr), _hpack_session(nullptr) {}
+http2_frame::http2_frame() : traceable(), _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_session(nullptr) {}
 
-http2_frame::http2_frame(h2_frame_t type) : _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_encoder(nullptr), _hpack_session(nullptr) {}
+http2_frame::http2_frame(h2_frame_t type) : traceable(), _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_session(nullptr) {}
 
-http2_frame::http2_frame(const http2_frame_header_t& header) { read(&header, sizeof(http2_frame_header_t)); }
+http2_frame::http2_frame(const http2_frame_header_t& header) : traceable() { read(&header, sizeof(http2_frame_header_t)); }
 
-http2_frame::http2_frame(const http2_frame& rhs) {
+http2_frame::http2_frame(const http2_frame& rhs) : traceable() {
     _payload_size = rhs._payload_size;
     _type = rhs._type;
     _flags = rhs._flags;
     _stream_id = rhs._stream_id;
-    _hpack_encoder = rhs._hpack_encoder;
     _hpack_session = rhs._hpack_session;
 }
 
@@ -139,14 +138,8 @@ http2_frame& http2_frame::set_stream_id(uint32 id) {
     return *this;
 }
 
-http2_frame& http2_frame::load_hpack(hpack& hp) {
-    _hpack_encoder = hp.get_encoder();
+http2_frame& http2_frame::load_hpack(hpack_stream& hp) {
     _hpack_session = hp.get_session();
-    return *this;
-}
-
-http2_frame& http2_frame::set_hpack_encoder(hpack_encoder* encoder) {
-    _hpack_encoder = encoder;
     return *this;
 }
 
@@ -154,8 +147,6 @@ http2_frame& http2_frame::set_hpack_session(hpack_session* session) {
     _hpack_session = session;
     return *this;
 }
-
-hpack_encoder* http2_frame::get_hpack_encoder() { return _hpack_encoder; }
 
 hpack_session* http2_frame::get_hpack_session() { return _hpack_session; }
 
@@ -223,13 +214,14 @@ void http2_frame::dump(stream_t* s) {
 }
 
 void http2_frame::read_compressed_header(const byte_t* buf, size_t size, std::function<void(const std::string&, const std::string&)> v) {
-    if (buf && v && get_hpack_encoder() && get_hpack_session()) {
+    if (buf && v && get_hpack_session()) {
         size_t pos = 0;
         std::string name;
         std::string value;
 
+        hpack_encoder encoder;
         while (pos < size) {
-            get_hpack_encoder()->decode_header(get_hpack_session(), buf, size, pos, name, value);
+            encoder.decode_header(get_hpack_session(), buf, size, pos, name, value);
             v(name, value);
         }
     }
@@ -237,6 +229,44 @@ void http2_frame::read_compressed_header(const byte_t* buf, size_t size, std::fu
 
 void http2_frame::read_compressed_header(const binary_t& b, std::function<void(const std::string&, const std::string&)> v) {
     read_compressed_header(&b[0], b.size(), v);
+}
+
+return_t http2_frame::write_compressed_header(binary_t& frag, const std::string& name, const std::string& value, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == get_hpack_session()) {
+            ret = errorcode_t::not_ready;
+            __leave2;
+        }
+        hpack_encoder encoder;
+        encoder.encode_header(get_hpack_session(), frag, name, value, flags);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t http2_frame::write_compressed_header(http_header* header, binary_t& frag, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == header) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (nullptr == get_hpack_session()) {
+            ret = errorcode_t::not_ready;
+            __leave2;
+        }
+
+        hpack_encoder encoder;
+        auto lambda = [&](const std::string& name, const std::string& value) -> void { encoder.encode_header(get_hpack_session(), frag, name, value, flags); };
+        header->get_headers(lambda);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 }  // namespace net

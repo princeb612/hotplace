@@ -16,7 +16,15 @@ using namespace io;
 namespace net {
 
 http_server::http_server()
-    : _tlscert(nullptr), _dtlscert(nullptr), _tls(nullptr), _dtls(nullptr), _tls_server_socket(nullptr), _dtls_server_socket(nullptr), _user_context(nullptr) {
+    : traceable(),
+      _tlscert(nullptr),
+      _dtlscert(nullptr),
+      _tls(nullptr),
+      _dtls(nullptr),
+      _tls_server_socket(nullptr),
+      _dtls_server_socket(nullptr),
+      _user_context(nullptr) {
+    get_http_router().set_owner(this);
     get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 }
 
@@ -194,7 +202,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
     size_t bufsize = (size_t)data_array[2];
 
 #if 0
-    if (_df) {
+    if (istraceable()) {
         network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
         basic_stream bs;
 
@@ -215,7 +223,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
             default:
                 break;
         }
-        _df(&bs);
+        traceevent(category_http_server, 0, &bs);
     }
 #endif
 
@@ -226,14 +234,20 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
         network_session* session = (network_session*)data_array[3];
         if (session) {
             if (get_server_conf().get(netserver_config_t::serverconf_trace_h2)) {
-                session->get_http2_session().trace(_df);
+                session->get_http2_session().settrace(this);
             }
             session->get_http2_session().consume(type, data_count, data_array, this, &h2request);
         }
         dispatch_data[4] = h2request;
     }
 
-    ret = _consumer(type, RTL_NUMBER_OF(dispatch_data), dispatch_data, callback_control, user_context);
+    /**
+     * HTTP/1.1 dispatch_data[4] not nullptr
+     * HTTP/2   dispatch_data[4] can be nullptr - if END_HEADERS, END_STREAM is not set
+     */
+    if (dispatch_data[4]) {
+        ret = _consumer(type, RTL_NUMBER_OF(dispatch_data), dispatch_data, callback_control, user_context);
+    }
 
     if (h2request) {
         h2request->release();
@@ -242,13 +256,14 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
     return ret;
 }
 
-http_server& http_server::trace(std::function<void(stream_t*)> f) {
-    _df = f;
+http_server& http_server::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
+    settrace(f);
     if (get_server_conf().get(netserver_config_t::serverconf_trace_ns)) {
         for (auto item : _http_handles) {
             network_server::trace(item, f);
         }
     }
+    get_http_router().trace(f);
     return *this;
 }
 
@@ -259,8 +274,6 @@ server_conf& http_server::get_server_conf() { return _conf; }
 http_protocol& http_server::get_http_protocol() { return _protocol; }
 
 http2_protocol& http_server::get_http2_protocol() { return _protocol2; }
-
-hpack_encoder& http_server::get_hpack_encoder() { return _hpack_encoder; }
 
 http_router& http_server::get_http_router() { return _router; }
 

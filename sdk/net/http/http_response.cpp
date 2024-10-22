@@ -19,15 +19,12 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_response::http_response() : _request(nullptr), _statuscode(0), _encoder(nullptr), _hpsess(nullptr), _version(1), _stream_id(0) {
-    _shared.make_share(this);
-}
+http_response::http_response() : traceable(), _request(nullptr), _statuscode(0), _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
 
-http_response::http_response(http_request* request) : _request(request), _statuscode(0), _encoder(nullptr), _hpsess(nullptr), _version(1), _stream_id(0) {
+http_response::http_response(http_request* request) : traceable(), _request(request), _statuscode(0), _hpsess(nullptr), _version(1), _stream_id(0) {
     _shared.make_share(this);
     if (request) {
         request->addref();
-        _encoder = request->get_hpack_encoder();
         _hpsess = request->get_hpack_session();
         _version = request->get_version();
         _stream_id = request->get_stream_id();
@@ -36,13 +33,12 @@ http_response::http_response(http_request* request) : _request(request), _status
     }
 }
 
-http_response::http_response(const http_response& object) {
+http_response::http_response(const http_response& object) : traceable() {
     _shared.make_share(this);
     _request = object._request;
     if (_request) {
         _request->addref();
     }
-    _encoder = object._encoder;
     _hpsess = object._hpsess;
     _version = object._version;
     _stream_id = object._stream_id;
@@ -209,6 +205,15 @@ http_response& http_response::compose(int status_code, const std::string& conten
     return *this;
 }
 
+http_response& http_response::compose(int status_code, const std::string& content_type, const binary_t& bin) {
+    close();
+
+    _content_type = content_type;
+    _content.write(&bin[0], bin.size());
+    _statuscode = status_code;
+    return *this;
+}
+
 return_t http_response::respond(network_session* session) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -296,7 +301,7 @@ http_response& http_response::get_response(basic_stream& bs) {
                 bs.write(content(), content_size());
             }
         }
-        if (_df) {
+        if (istraceable()) {
             basic_stream dbs;
             datetime dt;
             datetime_t t;
@@ -306,14 +311,14 @@ http_response& http_response::get_response(basic_stream& bs) {
             dump_memory(bs.data(), bs.size(), &dbs, 16, 2, 0, dump_notrunc);
             dbs.printf("\n");
 
-            _df(&dbs);
+            traceevent(category_http_response, 0, &dbs);
         }
     }
     return *this;
 }
 
 http_response& http_response::get_response_h2(binary_t& bin) {
-    if ((2 == _version) && get_hpack_encoder() && get_hpack_session()) {
+    if ((2 == _version) && get_hpack_session()) {
         std::string accept_encoding;
         std::string method;
         if (_request) {
@@ -342,14 +347,13 @@ http_response& http_response::get_response_h2(binary_t& bin) {
         }
 
         std::string altsvc_fieldvalue;
-        hpack hp;
-        hp.set_encoder(get_hpack_encoder())
-            .set_session(get_hpack_session())
+        hpack_stream hp;
+        hp.set_session(get_hpack_session())
             .set_encode_flags(hpack_wo_indexing | hpack_huffman)  // chrome test
             .encode_header(":status", format("%i", status_code()).c_str())
             .encode_header("content-type", content_type());
         auto lambda_enc_headder = [&](const std::string& name, const std::string& value) -> void {
-            if ("Alt-Svc" == name) {
+            if ("alt-svc" == name) {
                 altsvc_fieldvalue = value;
             } else {
                 hp.encode_header(name, value);
@@ -387,7 +391,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
         }
 
         auto lambda_debug = [&](http2_frame* frame) -> void {
-            if (_df) {
+            if (istraceable()) {
                 basic_stream dbs;
                 datetime dt;
                 datetime_t t;
@@ -397,11 +401,11 @@ http_response& http_response::get_response_h2(binary_t& bin) {
                 frame->dump(&dbs);
                 dbs.printf("\n");
 
-                _df(&dbs);
+                traceevent(category_http_response, 0, &dbs);
             }
         };
 
-        // ALT_SVC
+        // RFC 7838 4.  The ALTSVC HTTP/2 Frame
         if (altsvc_fieldvalue.size()) {
             http2_frame_alt_svc alt_svc;
             alt_svc.get_altsvc() = strtobin(altsvc_fieldvalue);
@@ -447,11 +451,6 @@ http_response& http_response::operator=(const http_response& object) {
     return *this;
 }
 
-http_response& http_response::set_hpack_encoder(hpack_encoder* encoder) {
-    _encoder = encoder;
-    return *this;
-}
-
 http_response& http_response::set_hpack_session(hpack_session* session) {
     _hpsess = session;
     return *this;
@@ -475,16 +474,14 @@ http_response& http_response::set_stream_id(uint32 stream_id) {
     return *this;
 }
 
-hpack_encoder* http_response::get_hpack_encoder() { return _encoder; }
-
 hpack_session* http_response::get_hpack_session() { return _hpsess; }
 
 uint8 http_response::get_version() { return _version; }
 
 uint32 http_response::get_stream_id() { return _stream_id; }
 
-http_response& http_response::trace(std::function<void(stream_t*)> f) {
-    _df = f;
+http_response& http_response::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
+    settrace(f);
     return *this;
 }
 

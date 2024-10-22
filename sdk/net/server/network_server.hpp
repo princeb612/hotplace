@@ -292,7 +292,7 @@ class network_server {
      */
     return_t close(network_multiplexer_context_t* handle);
 
-    static return_t trace(network_multiplexer_context_t* handle, std::function<void(stream_t*)> f);
+    static return_t trace(network_multiplexer_context_t* handle, std::function<void(trace_category_t, uint32, stream_t*)> f);
 
    protected:
     /**

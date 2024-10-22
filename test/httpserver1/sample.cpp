@@ -89,7 +89,10 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
                 http_response response(request);
                 basic_stream bs;
                 if (option.verbose) {
-                    auto lambda = [](stream_t *s) -> void { printf("\e[1;37m%.*s\e[0m", (unsigned int)s->size(), s->data()); };
+                    auto lambda = [&](trace_category_t, uint32, stream_t *s) -> void {
+                        cprint("response");
+                        _logger->writeln("%.*s", (unsigned int)s->size(), s->data());
+                    };
                     response.trace(lambda);
                 }
 
@@ -97,13 +100,36 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
                     // using http_router
                     _http_server->get_http_router().route(session, request, &response);
                 } else {
-                    // handle wo http_router
-                    response.get_http_header().add("Upgrade", "TLS/1.2, HTTP/1.1").add("Connection", "Upgrade");
-                    int status_code = 426;
-                    response.compose(status_code, "text/html",
-                                     "<html><body><a href='https://localhost:%d%s'>%d "
-                                     "%s</a><br></body></html>",
-                                     option.port_tls, request->get_http_uri().get_uri(), status_code, http_resource::get_instance()->load(status_code).c_str());
+                    /**
+                     * Upgrade : commonly used in upgrading HTTP/1.1 connections to WebSocket or HTTP/2.
+                     * Alt-Svc : HTTP/1.1 to HTTP/2 or QUIC
+                     *           does not mandate client behavior; it's a suggestion.
+                     * HSTS    : HTTP Strict Transport Security
+                     *           security mechanism enforcing HTTPS-only connections; prevents downgrade attacks.
+                     * ALPN    : negotiate the application protocol during the TLS handshake
+                     */
+                    if (0) {
+                        /* chrome, edge - not support upgrade */
+                        const std::string &connection = request->get_http_header().get("Connection");
+                        const std::string &upgrade = request->get_http_header().get("Upgrade");
+                        if (("Upgrade" == connection) && (upgrade.find("TLS/1.3"))) {
+                            // RFC 2817 3.3 Server Acceptance of Upgrade Request
+                            response.compose(101);  // Switching Protocols
+                        } else {
+                            // RFC 2817 4.2 Mandatory Advertisement
+                            response.get_http_header().add("Upgrade", "TLS/1.3, HTTP/1.1").add("Connection", "Upgrade");
+                            int status_code = 426;  // Upgrade Required
+                            response.compose(status_code, "text/html", "<html><body><a href='https://localhost:%d%s'>%d %s</a><br></body></html>",
+                                             option.port_tls, request->get_http_uri().get_uri(), status_code,
+                                             http_resource::get_instance()->load(status_code).c_str());
+                        }
+                    } else {
+                        /* 301 Move Permanently */
+                        std::string host = request->get_http_header().get("Host");
+                        replace(host, format(":%i", option.port), format(":%i", option.port_tls));
+                        response.get_http_header().add("Location", format("https://%s", host.c_str()));
+                        response.compose(301);
+                    }
                 }
 
                 response.respond(session);
@@ -162,6 +188,7 @@ return_t simple_http_server(void *) {
             .add_documents_root("/", ".")
             .add_content_type(".html", "text/html")
             .add_content_type(".json", "text/json")
+            .add_content_type(".js", "application/javascript")
             .set_default_document("index.html");
 
         _http_server

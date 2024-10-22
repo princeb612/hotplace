@@ -11,7 +11,6 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACK__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACK__
 
-#include <sdk/base/basic/huffman_coding.hpp>
 #include <sdk/net/http/http2/http_header_compression.hpp>
 
 namespace hotplace {
@@ -26,7 +25,7 @@ class qpack_encoder;
 /**
  * @brief   HPACK
  * @sample
- *          hpack hp;
+ *          hpack_stream hp;
  *          hpack_session session;
  *          hp
  *              .set_encoder(encoder)
@@ -37,35 +36,33 @@ class qpack_encoder;
  *          // do something dump_memory(hp.get_binary(), &bs);
  *          hp.get_binary().clear();
  */
-class hpack {
+class hpack_stream {
    public:
-    hpack();
-    ~hpack();
+    hpack_stream();
+    ~hpack_stream();
 
     /**
      * @brief   set
      * @remarks reduce repetition of the following values : session, binary, flags
      */
-    hpack& set_encoder(hpack_encoder* hp);
-    hpack& set_session(hpack_session* session);
+    hpack_stream& set_session(hpack_session* session);
 
     /**
      * @brief   get
      */
-    hpack_encoder* get_encoder();
     hpack_session* get_session();
 
     /**
      * @brief   set flags for encoding
      */
-    hpack& set_encode_flags(uint32 flags);
+    hpack_stream& set_encode_flags(uint32 flags);
     /**
      * @brief   encode
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] if zero, follows set_encode_flags
      * @sample
-     *          hpack hp;
+     *          hpack_stream hp;
      *          hpack_session session;
      *          hp
      *              .set_encoder(encoder)
@@ -75,7 +72,7 @@ class hpack {
      *              .encode_header(name2, value2);
      *              .encode_header("content-length", "123", hpack_wo_indexing | hpack_huffman);
      */
-    hpack& encode_header(const std::string& name, const std::string& value, uint32 flags = 0);
+    hpack_stream& encode_header(const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   encoded data
      */
@@ -84,10 +81,9 @@ class hpack {
     /**
      * @brief   decode
      */
-    hpack& decode_header(const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    hpack_stream& decode_header(const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
 
    private:
-    hpack_encoder* _encoder;
     hpack_session* _session;
     uint32 _flags;
     binary_t _bin;
@@ -116,44 +112,48 @@ class hpack_encoder : public http_header_compression {
 
     /**
      * @brief   encode (header compression)
-     * @param   http_header_compression_session* session [in] dynamic table
+     * @param   http_header_compression_table_dynamic* session [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] see http_header_compression_flag_t
+     * @return  error code (see error.hpp)
      */
-    virtual return_t encode(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+    virtual return_t encode(http_header_compression_table_dynamic* session, binary_t& target, const std::string& name, const std::string& value,
+                            uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_header_compression_session* session [in] dynamic table
+     * @param   http_header_compression_table_dynamic* session [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
      * @param   std::string& name [in]
      * @param   std::string& value [in]
+     * @return  error code (see error.hpp)
      */
-    virtual return_t decode(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    virtual return_t decode(http_header_compression_table_dynamic* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                            std::string& value);
 
     /**
      * @brief   encode (header compression)
-     * @param   http_header_compression_session* session [in] dynamic table
+     * @param   http_header_compression_table_dynamic* session [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] see http_header_compression_flag_t
      */
-    hpack_encoder& encode_header(http_header_compression_session* session, binary_t& target, const std::string& name, const std::string& value,
+    hpack_encoder& encode_header(http_header_compression_table_dynamic* session, binary_t& target, const std::string& name, const std::string& value,
                                  uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_header_compression_session* session [in] dynamic table
+     * @param   http_header_compression_table_dynamic* session [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
      * @param   std::string& name [in]
      * @param   std::string& value [in]
      */
-    hpack_encoder& decode_header(http_header_compression_session* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
+    hpack_encoder& decode_header(http_header_compression_table_dynamic* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
                                  std::string& value);
 
     /**
@@ -219,7 +219,7 @@ class hpack_encoder : public http_header_compression {
  * @brief   separate dynamic table per session
  * @sa      hpack_encoder
  */
-class hpack_session : public http_header_compression_session {
+class hpack_session : public http_header_compression_table_dynamic {
    public:
     hpack_session();
     /**
@@ -229,6 +229,7 @@ class hpack_session : public http_header_compression_session {
      * @param   size_t reqsize [in]
      * @param   void* resp [out]
      * @param   size_t& respsize [inout]
+     * @return  error code (see error.hpp)
      */
     virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
 };

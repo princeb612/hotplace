@@ -210,13 +210,16 @@ return_t simple_http_server(void*) {
             }
         };
 
+        // content-type, default document
         _http_server->get_http_router()
             .get_html_documents()
             .add_documents_root("/", ".")
             .add_content_type(".html", "text/html")
             .add_content_type(".json", "text/json")
+            .add_content_type(".js", "application/javascript")
             .set_default_document("index.html");
 
+        // router
         _http_server->get_http_router()
             .add("/api/html", api_response_html_handler)
             .add("/api/json", api_response_json_handler)
@@ -233,6 +236,7 @@ return_t simple_http_server(void*) {
             // callback
             .add("/client/cb", cb_handler);
 
+        // authentication
         _http_server->get_http_router()
             .get_oauth2_provider()
             .add(new oauth2_authorization_code_grant_provider)

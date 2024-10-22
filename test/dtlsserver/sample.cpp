@@ -2,9 +2,9 @@
 /**
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
- * @desc
+ * @desc    DTLS server using network_server
  *          openssl s_client -dtls1_2 -connect 127.0.0.1:9000
- * @sa      See in the following order : udpserver1, dtlsserver
+ * @sa      See in the following order : udpserver1, udpserver2, dtlsserver
  *
  * Revision History
  * Date         Name                Description

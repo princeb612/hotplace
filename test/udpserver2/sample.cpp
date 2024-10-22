@@ -2,7 +2,8 @@
 /**
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
- * @desc
+ * @desc    UDP server using network_server
+ * @sa      See in the following order : udpserver1, udpserver2, dtlsserver
  *
  * Revision History
  * Date         Name                Description

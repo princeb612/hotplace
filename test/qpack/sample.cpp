@@ -57,7 +57,7 @@ void test_dump(binary_t& bin, const char* text, ...) {
     }
 }
 
-void debug_qpack_encoder(uint32 event, stream_t* s) {
+void debug_qpack_encoder(trace_category_t, uint32 event, stream_t* s) {
     if (header_compression_event_evict & event) {
         count_evict_encoder++;
     }
@@ -66,7 +66,7 @@ void debug_qpack_encoder(uint32 event, stream_t* s) {
     }
 };
 
-void debug_qpack_decoder(uint32 event, stream_t* s) {
+void debug_qpack_decoder(trace_category_t, uint32 event, stream_t* s) {
     if (header_compression_event_evict & event) {
         count_evict_decoder++;
     }

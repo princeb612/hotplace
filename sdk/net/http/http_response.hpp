@@ -35,7 +35,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-class http_response {
+class http_response : public traceable {
    public:
     http_response();
     http_response(http_request* request);
@@ -64,6 +64,7 @@ class http_response {
     http_response& compose(int status_code);
     http_response& compose(int status_code, const char* content_type, const char* content, ...);
     http_response& compose(int status_code, const std::string& content_type, const char* content, ...);
+    http_response& compose(int status_code, const std::string& content_type, const binary_t& bin);
     /**
      * @brief   respond
      * @example
@@ -105,16 +106,14 @@ class http_response {
 
     http_response& operator=(const http_response& object);
 
-    http_response& set_hpack_encoder(hpack_encoder* encoder);
     http_response& set_hpack_session(hpack_session* session);
     http_response& set_version(uint8 version);
     http_response& set_stream_id(uint32 stream_id);
-    hpack_encoder* get_hpack_encoder();
     hpack_session* get_hpack_session();
     uint8 get_version();
     uint32 get_stream_id();
 
-    http_response& trace(std::function<void(stream_t*)> f);
+    http_response& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
 
     void addref();
     void release();
@@ -129,12 +128,9 @@ class http_response {
     basic_stream _content;
     int _statuscode;
 
-    hpack_encoder* _encoder;
     hpack_session* _hpsess;
     uint8 _version;
     uint32 _stream_id;
-
-    std::function<void(stream_t*)> _df;
 };
 
 }  // namespace net

@@ -166,6 +166,8 @@ class huffman_coding {
      */
     bool decodable();
 
+    size_t sizeof_codetable();
+
    protected:
     node_t *build(node_t **root = nullptr);
     void build(typename btree_t::node_t *&p);

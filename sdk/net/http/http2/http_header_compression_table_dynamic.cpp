@@ -14,9 +14,10 @@
 namespace hotplace {
 namespace net {
 
-http_header_compression_session::http_header_compression_session() : _type(header_compression_hpack), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
+http_header_compression_table_dynamic::http_header_compression_table_dynamic()
+    : traceable(), _type(header_compression_hpack), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
 
-void http_header_compression_session::for_each(std::function<void(const std::string&, const std::string&)> v) {
+void http_header_compression_table_dynamic::for_each(std::function<void(const std::string&, const std::string&)> v) {
     if (v) {
         for (auto item : _dynamic_map) {
             v(item.first, item.second.first);
@@ -24,17 +25,17 @@ void http_header_compression_session::for_each(std::function<void(const std::str
     }
 }
 
-bool http_header_compression_session::operator==(const http_header_compression_session& rhs) {
+bool http_header_compression_table_dynamic::operator==(const http_header_compression_table_dynamic& rhs) {
     return (_type == rhs._type) && (_dynamic_map == rhs._dynamic_map);
 }
 
-bool http_header_compression_session::operator!=(const http_header_compression_session& rhs) {
+bool http_header_compression_table_dynamic::operator!=(const http_header_compression_table_dynamic& rhs) {
     return (_type != rhs._type) || (_dynamic_map != rhs._dynamic_map);
 }
 
-void http_header_compression_session::trace(std::function<void(uint32, stream_t*)> f) { _df = f; }
+void http_header_compression_table_dynamic::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) { settrace(f); }
 
-match_result_t http_header_compression_session::match(const std::string& name, const std::string& value, size_t& index, uint32 flags) {
+match_result_t http_header_compression_table_dynamic::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
 
     auto lbound = _dynamic_map.lower_bound(name);
@@ -105,7 +106,7 @@ match_result_t http_header_compression_session::match(const std::string& name, c
     return state;
 }
 
-return_t http_header_compression_session::select(size_t index, uint32 flags, std::string& name, std::string& value) {
+return_t http_header_compression_table_dynamic::select(uint32 flags, size_t index, std::string& name, std::string& value) {
     return_t ret = errorcode_t::not_found;
 
     __try2 {
@@ -156,7 +157,7 @@ return_t http_header_compression_session::select(size_t index, uint32 flags, std
     return ret;
 }
 
-return_t http_header_compression_session::insert(const std::string& name, const std::string& value) {
+return_t http_header_compression_table_dynamic::insert(const std::string& name, const std::string& value) {
     return_t ret = errorcode_t::success;
 
     // RFC 7541 4.1.  Calculating Table Size
@@ -172,10 +173,10 @@ return_t http_header_compression_session::insert(const std::string& name, const 
         _dynamic_map.insert({name, {value, _inserted}});
         _dynamic_reversemap.insert({_inserted, {name, entrysize}});
 
-        if (_df) {
+        if (istraceable()) {
             basic_stream bs;
             bs.printf("insert entry[%zi] %s=%s", _inserted, name.c_str(), value.c_str());
-            _df(header_compression_event_insert, &bs);
+            traceevent(category_header_compression, header_compression_event_insert, &bs);
         }
 
         _inserted++;
@@ -186,7 +187,7 @@ return_t http_header_compression_session::insert(const std::string& name, const 
     return ret;
 }
 
-return_t http_header_compression_session::evict() {
+return_t http_header_compression_table_dynamic::evict() {
     return_t ret = errorcode_t::success;
 
     while (_dynamic_reversemap.size() && (_tablesize > _capacity)) {
@@ -213,10 +214,10 @@ return_t http_header_compression_session::evict() {
                 auto const& val = v.first;
                 auto const& ent = v.second;
                 if (ent == t) {
-                    if (_df) {
+                    if (istraceable()) {
                         basic_stream bs;
                         bs.printf("evict entry[%zi] %s=%s", entry, name.c_str(), val.c_str());
-                        _df(header_compression_event_evict, &bs);
+                        traceevent(category_header_compression, header_compression_event_evict, &bs);
                     }
                     _dynamic_map.erase(iter);
                     break;
@@ -231,7 +232,7 @@ return_t http_header_compression_session::evict() {
     return ret;
 }
 
-void http_header_compression_session::set_capacity(uint32 capacity) {
+void http_header_compression_table_dynamic::set_capacity(uint32 capacity) {
     /**
      * RFC 9113 6.5.2.  Defined Settings
      *  SETTINGS_HEADER_TABLE_SIZE (0x01)
@@ -254,15 +255,15 @@ void http_header_compression_session::set_capacity(uint32 capacity) {
     }
 }
 
-size_t http_header_compression_session::get_capacity() { return _capacity; }
+size_t http_header_compression_table_dynamic::get_capacity() { return _capacity; }
 
-size_t http_header_compression_session::get_tablesize() { return _tablesize; }
+size_t http_header_compression_table_dynamic::get_tablesize() { return _tablesize; }
 
-size_t http_header_compression_session::get_entries() { return _inserted - _dropped; }
+size_t http_header_compression_table_dynamic::get_entries() { return _inserted - _dropped; }
 
-return_t http_header_compression_session::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
+return_t http_header_compression_table_dynamic::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
 
-uint8 http_header_compression_session::type() { return _type; }
+uint8 http_header_compression_table_dynamic::type() { return _type; }
 
 }  // namespace net
 }  // namespace hotplace

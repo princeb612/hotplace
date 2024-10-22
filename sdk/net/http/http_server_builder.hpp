@@ -42,7 +42,7 @@ namespace net {
  *                 .set(netserver_config_t::serverconf_concurrent_consume, 4);
  *          http_server* server = builder.build();
  */
-class http_server_builder {
+class http_server_builder : public traceable {
    public:
     http_server_builder();
     ~http_server_builder();
@@ -64,7 +64,7 @@ class http_server_builder {
 
     http_server_builder& set_handler(http_server_handler_t handler, void* user_context = nullptr);
 
-    http_server_builder& trace(std::function<void(stream_t*)> f);
+    http_server_builder& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
 
     http_server* build();
     server_conf& get_server_conf();
@@ -79,8 +79,6 @@ class http_server_builder {
 
     http_server_handler_t _handler;
     void* _user_context;
-
-    std::function<void(stream_t*)> _df;
 };
 
 }  // namespace net

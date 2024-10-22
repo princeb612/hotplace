@@ -448,4 +448,6 @@ bool huffman_coding::decodable() {
     return ret;
 }
 
+size_t huffman_coding::sizeof_codetable() { return _codetable.size(); }
+
 }  // namespace hotplace

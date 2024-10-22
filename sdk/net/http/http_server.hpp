@@ -19,6 +19,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 
+#include <sdk/base/unittest/traceable.hpp>
 #include <sdk/net/basic/ipaddr_acl.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
@@ -28,7 +29,7 @@
 #include <sdk/net/tls/dtls_server_socket.hpp>
 #include <sdk/net/tls/tls.hpp>
 #include <sdk/net/tls/tls_server_socket.hpp>
-#include <sdk/net/types.hpp>  // ws2tcpip.h first
+#include <sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -39,7 +40,7 @@ typedef TYPE_CALLBACK_HANDLEREXV http_server_handler_t;
  * @brief   http server
  * @sa      http_server_builder
  */
-class http_server {
+class http_server : public traceable {
     friend class http_server_builder;
 
    public:
@@ -53,11 +54,9 @@ class http_server {
 
     http_protocol& get_http_protocol();
     http2_protocol& get_http2_protocol();
-    hpack_encoder& get_hpack_encoder();
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();
-
-    http_server& trace(std::function<void(stream_t*)> f);
+    http_server& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
 
    protected:
     http_server();
@@ -122,7 +121,6 @@ class http_server {
 
     // HTTP/2
     http2_protocol _protocol2;
-    hpack_encoder _hpack_encoder;
 
     // consume handler
     http_server_handler_t _consumer;
@@ -132,9 +130,6 @@ class http_server {
     http_router _router;
     typedef std::list<network_multiplexer_context_t*> http_handles_t;
     http_handles_t _http_handles;
-
-    // debug
-    std::function<void(stream_t*)> _df;
 };
 
 }  // namespace net
