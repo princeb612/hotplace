@@ -9,11 +9,14 @@
  */
 
 #include <sdk/base/system/critical_section.hpp>
+#include <sdk/io/basic/payload.hpp>
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/io/system/types.hpp>
+#include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
+#include <sdk/net/http/http_header.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/tls/tls.hpp>
 

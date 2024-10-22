@@ -17,7 +17,7 @@
 #include <map>
 #include <sdk/base/error.hpp>
 #include <sdk/base/nostd/tree.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/stream.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/template.hpp>
 #include <sdk/base/types.hpp>

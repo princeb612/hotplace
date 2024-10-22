@@ -135,9 +135,13 @@ return_t http_router::route(network_session* session, http_request* request, htt
                 return_t check = get_html_documents().compose(uri, response);
                 if (errorcode_t::success == check) {
                     auto server = get_http_server();
-                    if (get_http2_push().is_promised(request, server)) {
-                        get_http2_push().push_promise(request, server, session);
-                        get_http2_push().push(request, server, session);
+                    // RFC 7540 6.5.2.  Defined SETTINGS Parameters
+                    // SETTINGS_ENABLE_PUSH (0x2)
+                    if (session->get_http2_session().is_push_enabled()) {
+                        if (get_http2_serverpush().is_promised(request, server)) {
+                            get_http2_serverpush().push_promise(request, server, session);
+                            get_http2_serverpush().push(request, server, session);
+                        }
                     }
                     __leave2;
                 } else {
@@ -214,7 +218,7 @@ bool http_router::get_auth_provider(http_request* request, http_response* respon
     return ret_value;
 }
 
-http2_push& http_router::get_http2_push() { return _http2_push; }
+http2_serverpush& http_router::get_http2_serverpush() { return _http2_serverpush; }
 
 http_server* http_router::get_http_server() { return _http_server; }
 
@@ -222,7 +226,7 @@ void http_router::set_owner(http_server* server) { _http_server = server; }
 
 http_router& http_router::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
     settrace(f);
-    get_http2_push().trace(f);
+    get_http2_serverpush().trace(f);
     return *this;
 }
 

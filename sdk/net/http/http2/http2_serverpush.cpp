@@ -8,10 +8,12 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>  // basic_stream
 #include <sdk/io.hpp>
+#include <sdk/net/http/html_documents.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
-#include <sdk/net/http/http2/http2_push.hpp>
+#include <sdk/net/http/http2/http2_serverpush.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/http/http_server.hpp>
 
@@ -19,16 +21,9 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http2_push::http2_push() : traceable(), _enable_push(false) {}
+http2_serverpush::http2_serverpush() : traceable() {}
 
-http2_push& http2_push::enable_push(bool enable) {
-    _enable_push = enable;
-    return *this;
-}
-
-bool http2_push::is_push_enabled() { return _enable_push; }
-
-http2_push& http2_push::add(const char* uri, const char* file) {
+http2_serverpush& http2_serverpush::add(const char* uri, const char* file) {
     __try2 {
         if (nullptr == uri || nullptr == file) {
             __leave2;
@@ -41,20 +36,16 @@ http2_push& http2_push::add(const char* uri, const char* file) {
     return *this;
 }
 
-http2_push& http2_push::add(const std::string& uri, const std::string& file) {
+http2_serverpush& http2_serverpush::add(const std::string& uri, const std::string& file) {
     critical_section_guard guard(_lock);
     _server_push_map.insert({uri, file});
     return *this;
 }
 
-size_t http2_push::is_promised(http_request* request, http_server* server) {
+size_t http2_serverpush::is_promised(http_request* request, http_server* server) {
     size_t ret = 0;
     __try2 {
         if (nullptr == request || nullptr == server) {
-            __leave2;
-        }
-
-        if (false == is_push_enabled()) {
             __leave2;
         }
 
@@ -80,15 +71,11 @@ size_t http2_push::is_promised(http_request* request, http_server* server) {
     return ret;
 }
 
-return_t http2_push::push_promise(http_request* request, http_server* server, network_session* session) {
+return_t http2_serverpush::push_promise(http_request* request, http_server* server, network_session* session) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == request || nullptr == server || nullptr == session) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (false == is_push_enabled()) {
             __leave2;
         }
 
@@ -126,15 +113,11 @@ return_t http2_push::push_promise(http_request* request, http_server* server, ne
     return ret;
 }
 
-return_t http2_push::push(http_request* request, http_server* server, network_session* session) {
+return_t http2_serverpush::push(http_request* request, http_server* server, network_session* session) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == request || nullptr == server || nullptr == session) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (false == is_push_enabled()) {
             __leave2;
         }
 
@@ -174,8 +157,8 @@ return_t http2_push::push(http_request* request, http_server* server, network_se
     return ret;
 }
 
-return_t http2_push::do_push_promise(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session,
-                                     binary_t& stream) {
+return_t http2_serverpush::do_push_promise(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session,
+                                           binary_t& stream) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (0 == streamid || nullptr == request || nullptr == server || nullptr == session) {
@@ -215,8 +198,8 @@ return_t http2_push::do_push_promise(const std::string& promise, uint32 streamid
     return ret;
 }
 
-return_t http2_push::do_push(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session,
-                             http_response* response) {
+return_t http2_serverpush::do_push(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session,
+                                   http_response* response) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (0 == streamid || nullptr == request || nullptr == server || nullptr == session || nullptr == response) {
@@ -245,7 +228,7 @@ return_t http2_push::do_push(const std::string& promise, uint32 streamid, http_r
     return ret;
 }
 
-http2_push& http2_push::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
+http2_serverpush& http2_serverpush::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
     settrace(f);
     return *this;
 }

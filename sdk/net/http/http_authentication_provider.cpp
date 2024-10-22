@@ -11,6 +11,9 @@
 #include <sdk/crypto.hpp>
 #include <sdk/io.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
+#include <sdk/net/http/http_request.hpp>
+#include <sdk/net/http/http_response.hpp>
+#include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
 using namespace crypto;

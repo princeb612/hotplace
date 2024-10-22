@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>

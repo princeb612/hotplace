@@ -9,8 +9,16 @@
  */
 
 #include <sdk/io.hpp>
+#include <sdk/net/basic/tcp_client_socket.hpp>
+#include <sdk/net/basic/udp_client_socket.hpp>
 #include <sdk/net/http/http_client.hpp>
 #include <sdk/net/http/http_protocol.hpp>
+#include <sdk/net/http/http_request.hpp>
+#include <sdk/net/http/http_response.hpp>
+#include <sdk/net/server/network_protocol.hpp>
+#include <sdk/net/server/network_stream.hpp>
+#include <sdk/net/tls/dtls_client_socket.hpp>
+#include <sdk/net/tls/tls_client_socket.hpp>
 
 namespace hotplace {
 using namespace io;

@@ -15,13 +15,15 @@
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
-#include <sdk/net/http/http2/hpack.hpp>
-#include <sdk/net/http/http_request.hpp>
+#include <sdk/base/unittest/traceable.hpp>  // traceable
+#include <sdk/net/http/http2/hpack.hpp>     // hpack_session
+#include <sdk/net/http/http_request.hpp>    // http_request
 
 namespace hotplace {
 namespace net {
 
 class http_server;
+
 class http2_session : public traceable {
    public:
     http2_session();
@@ -40,6 +42,17 @@ class http2_session : public traceable {
 
     http2_session& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
 
+    /**
+     * @brief   enable push
+     * @remarks
+     *          RFC 7540 6.5.2.  Defined SETTINGS Parameters
+     *            SETTINGS_ENABLE_PUSH (0x2):
+     *              This setting can be used to disable server push (Section 8.2).
+     *              An endpoint MUST NOT send a PUSH_PROMISE frame if it receives this parameter set to a value of 0.
+     */
+    http2_session& enable_push(bool enable);
+    bool is_push_enabled();
+
    protected:
    private:
     critical_section _lock;
@@ -50,6 +63,7 @@ class http2_session : public traceable {
     flags_t _flags;
     headers_t _headers;  // map<stream_identifier, http_request>
     hpack_session _hpack_session;
+    bool _enable_push;
 };
 
 }  // namespace net

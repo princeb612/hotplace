@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP3_QPACK__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP3_QPACK__
 
-#include <sdk/net/http/http2/http_header_compression.hpp>
+#include <sdk/net/http/http2/http_header_compression.hpp>  // http_header_compression
 
 namespace hotplace {
 namespace net {

@@ -25,20 +25,17 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <sdk/io.hpp>
-#include <sdk/net/http/auth/basic_authentication_provider.hpp>
-#include <sdk/net/http/auth/basic_credentials.hpp>
-#include <sdk/net/http/auth/bearer_authentication_provider.hpp>
-#include <sdk/net/http/auth/bearer_credentials.hpp>
-#include <sdk/net/http/auth/custom_credentials.hpp>
-#include <sdk/net/http/auth/digest_access_authentication_provider.hpp>
-#include <sdk/net/http/auth/digest_credentials.hpp>
-#include <sdk/net/http/auth/oauth2.hpp>
-#include <sdk/net/http/auth/oauth2_credentials.hpp>
-#include <sdk/net/http/http_authentication_provider.hpp>
+#include <sdk/net/http/auth/basic_credentials.hpp>   // basic_credentials
+#include <sdk/net/http/auth/bearer_credentials.hpp>  // bearer_credentials
+#include <sdk/net/http/auth/custom_credentials.hpp>  // custom_credentials
+#include <sdk/net/http/auth/digest_credentials.hpp>  // digest_credentials
+#include <sdk/net/http/auth/oauth2_credentials.hpp>  // oauth2_credentials
 
 namespace hotplace {
 using namespace io;
 namespace net {
+
+class http_authenticate_provider;
 
 typedef std::function<bool(http_authenticate_provider*, network_session*, http_request* request, http_response* response)> authenticate_handler_t;
 

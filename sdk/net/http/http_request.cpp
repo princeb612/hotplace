@@ -11,6 +11,7 @@
  */
 
 #include <sdk/io.hpp>
+#include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>

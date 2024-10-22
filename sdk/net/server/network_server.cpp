@@ -19,8 +19,15 @@
  */
 
 #include <queue>
+#include <sdk/base/unittest/traceable.hpp>
 #include <sdk/io.hpp>
+#include <sdk/net/basic/tcp_server_socket.hpp>
+#include <sdk/net/basic/udp_server_socket.hpp>
+#include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_server.hpp>
+#include <sdk/net/server/network_session.hpp>
+#include <sdk/net/server/network_stream.hpp>
+#include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 using namespace io;

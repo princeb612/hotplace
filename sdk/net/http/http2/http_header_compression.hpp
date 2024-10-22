@@ -11,9 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
 #define __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
 
-#include <sdk/base/basic/huffman_coding.hpp>
-#include <sdk/base/unittest/traceable.hpp>
-#include <sdk/net/http/http2/http_header_compression.hpp>
+#include <sdk/base/basic/huffman_coding.hpp>  // huffman_coding
+#include <sdk/base/unittest/traceable.hpp>    // traceable
 
 namespace hotplace {
 namespace net {

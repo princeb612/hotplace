@@ -24,12 +24,13 @@
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
+#include <sdk/base/unittest/traceable.hpp>  // traceable
 #include <sdk/io.hpp>
-#include <sdk/net/http/auth/oauth2.hpp>
-#include <sdk/net/http/html_documents.hpp>
-#include <sdk/net/http/http2/http2_push.hpp>
+#include <sdk/net/http/auth/oauth2.hpp>             // oauth2_provider
+#include <sdk/net/http/html_documents.hpp>          // html_documents
+#include <sdk/net/http/http2/http2_serverpush.hpp>  // http2_serverpush
 #include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/http/http_authentication_resolver.hpp>
+#include <sdk/net/http/http_authentication_resolver.hpp>  // http_authentication_resolver
 
 namespace hotplace {
 using namespace io;
@@ -82,7 +83,7 @@ class http_router : public traceable {
 
     oauth2_provider& get_oauth2_provider();
 
-    http2_push& get_http2_push();
+    http2_serverpush& get_http2_serverpush();
 
     http_server* get_http_server();
 
@@ -121,7 +122,7 @@ class http_router : public traceable {
     http_authentication_resolver _resolver;
     oauth2_provider _oauth2;
     html_documents _http_documents;
-    http2_push _http2_push;
+    http2_serverpush _http2_serverpush;
     http_server* _http_server;
 };
 

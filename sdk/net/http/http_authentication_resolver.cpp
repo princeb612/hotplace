@@ -10,6 +10,11 @@
 
 #include <sdk/crypto.hpp>
 #include <sdk/io.hpp>
+#include <sdk/net/http/auth/basic_authentication_provider.hpp>
+#include <sdk/net/http/auth/bearer_authentication_provider.hpp>
+#include <sdk/net/http/auth/digest_access_authentication_provider.hpp>
+#include <sdk/net/http/auth/oauth2.hpp>
+#include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/http/http_authentication_resolver.hpp>
 
 namespace hotplace {

@@ -10,6 +10,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/net/http/http_protocol.hpp>
 
 namespace hotplace {

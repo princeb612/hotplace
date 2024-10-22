@@ -16,21 +16,25 @@
  *      nextnonce
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_PUSH__
-#define __HOTPLACE_SDK_NET_HTTP_HTTP2_PUSH__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_SERVERPUSH__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2_SERVERPUSH__
 
 #include <map>
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
+#include <sdk/base/unittest/traceable.hpp>  // traceable
 #include <sdk/io.hpp>
-#include <sdk/net/http/html_documents.hpp>
-#include <sdk/net/http/http2/http2_frame.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
+
+class http_request;
+class http_response;
+class http_server;
+class network_session;
 
 /**
  * @brief   HTTP/2 server push
@@ -68,32 +72,24 @@ namespace net {
  *          sketch
  *              server_push.add("/index.html", "/style.css").add("/index.html", "/blah.js");
  *
- *              if (server_push.is_promised(request)) {
- *                  // request for /index.html (stream 1)
- *                  // send  PUSH_PROMISE frame (stream 2, stream 3)
- *                  server_push.push_promise(request, server, session);
- *                  server_push.push(request, server, session);
+ *              if (session->get_http2_session().is_push_enabled()) {
+ *                  if (server_push.is_promised(request)) {
+ *                      // request for /index.html (stream 1)
+ *                      // send  PUSH_PROMISE frame (stream 2, stream 3)
+ *                      server_push.push_promise(request, server, session);
+ *                      server_push.push(request, server, session);
+ *                  }
  *              }
  */
-class http2_push : public traceable {
+class http2_serverpush : public traceable {
    public:
-    http2_push();
+    http2_serverpush();
 
-    /**
-     * @brief   enable push
-     * @remarks
-     *          RFC 7540 6.5.2.  Defined SETTINGS Parameters
-     *            SETTINGS_ENABLE_PUSH (0x2):
-     *              This setting can be used to disable server push (Section 8.2).
-     *              An endpoint MUST NOT send a PUSH_PROMISE frame if it receives this parameter set to a value of 0.
-     */
-    http2_push& enable_push(bool enable);
-    bool is_push_enabled();
     /**
      * @brief   HTTP/2 Server Push
      */
-    http2_push& add(const char* uri, const char* file);
-    http2_push& add(const std::string& uri, const std::string& file);
+    http2_serverpush& add(const char* uri, const char* file);
+    http2_serverpush& add(const std::string& uri, const std::string& file);
 
     /**
      * @brief   is promised
@@ -120,7 +116,7 @@ class http2_push : public traceable {
      */
     return_t push(http_request* request, http_server* server, network_session* session);
 
-    http2_push& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
+    http2_serverpush& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
 
    protected:
     return_t do_push_promise(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session,
@@ -130,7 +126,6 @@ class http2_push : public traceable {
 
     typedef std::multimap<std::string, std::string> server_push_map_t;
     critical_section _lock;
-    bool _enable_push;
     server_push_map_t _server_push_map;
 };
 

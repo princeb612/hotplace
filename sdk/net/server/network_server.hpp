@@ -16,11 +16,6 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <sdk/io.hpp>
-#include <sdk/net/basic/tcp_server_socket.hpp>
-#include <sdk/net/basic/udp_server_socket.hpp>
-#include <sdk/net/server/network_protocol.hpp>
-#include <sdk/net/server/network_session.hpp>
-#include <sdk/net/tls/tls.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {
@@ -73,6 +68,9 @@ typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(socket_t socket, sockaddr_st
 
 struct _network_multiplexer_context_t;
 typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
+
+class network_protocol;
+class server_socket;
 
 /**
  * @brief network_server

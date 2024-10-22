@@ -181,7 +181,7 @@ void start_server(t_shared_instance<http_server> &server, const std::string vers
 
     // HTTP/2 Server Push
     if ("HTTP/2" == version) {
-        server->get_http_router().get_http2_push().add("/", "/style.css").add("/index.html", "/style.css");
+        server->get_http_router().get_http2_serverpush().add("/", "/style.css").add("/index.html", "/style.css");
     }
 
     server->start();

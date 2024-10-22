@@ -261,7 +261,7 @@ return_t simple_http2_server(void*) {
         resolver.get_custom_credentials().add("user", "password");
 
         // HTTP/2 Server Push
-        _http_server->get_http_router().get_http2_push().add("/auth.html", "/style.css");
+        _http_server->get_http_router().get_http2_serverpush().add("/auth.html", "/style.css");
 
         _http_server->start();
 

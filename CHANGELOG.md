@@ -1,8 +1,10 @@
 # history
 
-* Revision 627, 628, 629
-  * [study] ALTSVC HTTP/2 Frame
+* Revision 629, 630
   * [study] HTTP/2 Server Push
+
+* Revision 627, 628
+  * [study] ALTSVC HTTP/2 Frame
 
 * Revision 626
   * [tested] QPACK (RFC 9204)

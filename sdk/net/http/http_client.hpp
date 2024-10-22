@@ -25,17 +25,16 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <sdk/io.hpp>
-#include <sdk/net/basic/tcp_client_socket.hpp>
-#include <sdk/net/basic/udp_client_socket.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/server/network_protocol.hpp>
-#include <sdk/net/tls/dtls_client_socket.hpp>
-#include <sdk/net/tls/tls_client_socket.hpp>
+#include <sdk/net/http/http_request.hpp>  // http_request
+#include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
+
+class http_response;
+class tcp_client_socket;
+class tls_client_socket;
 
 /**
  * @brief   simple client

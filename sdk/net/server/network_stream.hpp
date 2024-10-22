@@ -19,7 +19,9 @@
 namespace hotplace {
 namespace net {
 
+class network_protocol_group;
 class network_stream;
+
 /**
  * @brief stream data that produced and consumed by network_stream
  */

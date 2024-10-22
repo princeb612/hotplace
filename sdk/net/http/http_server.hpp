@@ -19,13 +19,12 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 
-#include <sdk/base/unittest/traceable.hpp>
-#include <sdk/net/basic/ipaddr_acl.hpp>
-#include <sdk/net/http/http2/hpack.hpp>
-#include <sdk/net/http/http2/http2_protocol.hpp>
-#include <sdk/net/http/http_protocol.hpp>
-#include <sdk/net/http/http_router.hpp>
-#include <sdk/net/server/network_server.hpp>
+#include <sdk/base/unittest/traceable.hpp>        // traceable
+#include <sdk/net/basic/ipaddr_acl.hpp>           // ipaddr_acl
+#include <sdk/net/http/http2/http2_protocol.hpp>  // http2_protocol
+#include <sdk/net/http/http_protocol.hpp>         // http_protocol
+#include <sdk/net/http/http_router.hpp>           // http_router
+#include <sdk/net/server/network_server.hpp>      // network_server
 #include <sdk/net/tls/dtls_server_socket.hpp>
 #include <sdk/net/tls/tls.hpp>
 #include <sdk/net/tls/tls_server_socket.hpp>

@@ -10,6 +10,8 @@
 
 #include <sdk/io.hpp>
 #include <sdk/net/http/html_documents.hpp>
+#include <sdk/net/http/http_request.hpp>
+#include <sdk/net/http/http_response.hpp>
 
 namespace hotplace {
 using namespace io;

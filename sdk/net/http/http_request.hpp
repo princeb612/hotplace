@@ -25,14 +25,15 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <sdk/io.hpp>
-#include <sdk/net/http/http2/hpack.hpp>
-#include <sdk/net/http/http_header.hpp>
-#include <sdk/net/http/http_uri.hpp>
+#include <sdk/net/http/http_header.hpp>  // http_header
+#include <sdk/net/http/http_uri.hpp>     // http_uri
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
+
+class hpack_session;
 
 enum http_request_flag_t {
     http_request_compose = (1 << 0),

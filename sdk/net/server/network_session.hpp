@@ -13,12 +13,8 @@
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 
 #include <sdk/io.hpp>
-#include <sdk/net/basic/tcp_server_socket.hpp>
-#include <sdk/net/basic/udp_server_socket.hpp>
-#include <sdk/net/http/http2/hpack.hpp>
-#include <sdk/net/http/http2/http2_session.hpp>
-#include <sdk/net/server/network_protocol.hpp>
-#include <sdk/net/server/network_stream.hpp>
+#include <sdk/net/http/http2/http2_session.hpp>  // http2_session
+#include <sdk/net/server/network_stream.hpp>     // network_stream
 #include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
@@ -57,6 +53,9 @@ struct network_session_buffer_t {
         }
     }
 };
+
+class network_protocol_group;
+class server_socket;
 
 /**
  * @sa

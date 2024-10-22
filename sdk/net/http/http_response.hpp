@@ -20,20 +20,18 @@
 #define __HOTPLACE_SDK_NET_HTTP_RESPONSE__
 
 #include <map>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
+#include <sdk/base/stream/basic_stream.hpp>  // basic_stream
+#include <sdk/base/unittest/traceable.hpp>   // traceable
 #include <sdk/io.hpp>
-#include <sdk/net/http/http2/hpack.hpp>
-#include <sdk/net/http/http_header.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_uri.hpp>
-#include <sdk/net/server/network_session.hpp>
+#include <sdk/net/http/http_header.hpp>  // http_header
 
 namespace hotplace {
 using namespace io;
 namespace net {
+
+class hpack_session;
+class http_request;
+class network_session;
 
 class http_response : public traceable {
    public:

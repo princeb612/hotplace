@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>
 

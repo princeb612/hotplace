@@ -14,14 +14,17 @@
 
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
+#include <sdk/net/http/http2/http2_serverpush.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>
+#include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/http/http_server.hpp>
+#include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-http2_session::http2_session() : traceable() {}
+http2_session::http2_session() : traceable(), _enable_push(false) {}
 
 http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data_array[], http_server* server, http_request** request) {
     return_t ret = errorcode_t::success;
@@ -180,7 +183,9 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             }
             uint32 enable_push = 0;
             if (errorcode_t::success == frame.find(0x2, enable_push)) {
-                server->get_http_router().get_http2_push().enable_push(enable_push ? true : false);
+                // RFC 7540 6.5.2.  Defined SETTINGS Parameters
+                // SETTINGS_ENABLE_PUSH (0x2)
+                session->get_http2_session().enable_push(enable_push ? true : false);
             }
 
             binary_t bin_resp;
@@ -268,6 +273,13 @@ http2_session& http2_session::trace(std::function<void(trace_category_t, uint32,
     settrace(f);
     return *this;
 }
+
+http2_session& http2_session::enable_push(bool enable) {
+    _enable_push = enable;
+    return *this;
+}
+
+bool http2_session::is_push_enabled() { return _enable_push; }
 
 }  // namespace net
 }  // namespace hotplace
