@@ -578,7 +578,7 @@ return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, cons
         // OSSL_set_max_threads openssl 3.2~
         // binding error workaround
 #if defined __linux__ || defined __APPLE__
-        DLSYMONLY(RTLD_DEFAULT, "OSSL_set_max_threads", OSSL_set_max_threads_ptr);
+        DLSYM(RTLD_DEFAULT, "OSSL_set_max_threads", OSSL_set_max_threads_ptr);
 #elif defined _WIN32 || defined _WIN64
         constexpr char crypto_module[] = "libssl-3-x64.dll";
         handle = GetModuleHandleA(crypto_module);
