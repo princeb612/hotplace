@@ -37,7 +37,13 @@ namespace odbc {
 
 enum sql_query_mode_t { sync_query = 0, async_query };
 
-}
+class odbc_connector;
+class odbc_diagnose;
+class odbc_field;
+class odbc_query;
+class odbc_record;
+
+}  // namespace odbc
 }  // namespace hotplace
 
 #endif

@@ -12,6 +12,7 @@
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
+#include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/tls/tls.hpp>
 

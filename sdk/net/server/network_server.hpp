@@ -69,9 +69,6 @@ typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(socket_t socket, sockaddr_st
 struct _network_multiplexer_context_t;
 typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
 
-class network_protocol;
-class server_socket;
-
 /**
  * @brief network_server
  * @remarks

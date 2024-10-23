@@ -77,15 +77,9 @@ static return_t get_crl(authenticode_context_t* context, X509* cert, authenticod
  */
 static return_t clear_crl(authenticode_context_t* context);
 
-authenticode_verifier::authenticode_verifier() {
-    openssl_startup();
-    openssl_thread_setup();
-}
+authenticode_verifier::authenticode_verifier() { openssl_startup(); }
 
-authenticode_verifier::~authenticode_verifier() {
-    openssl_thread_cleanup();
-    openssl_cleanup();
-}
+authenticode_verifier::~authenticode_verifier() { openssl_cleanup(); }
 
 return_t authenticode_verifier::add_engine(authenticode_context_t* handle, authenticode_plugin* engine) {
     return_t ret = errorcode_t::success;

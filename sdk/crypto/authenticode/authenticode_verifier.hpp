@@ -54,13 +54,11 @@ enum authenticode_flag_t {
  * @brief verifier
  * @example
  *        openssl_startup(); // begin of application
- *        openssl_thread_setup();
  *        authenticode_verifier verifier;
  *        verifier.open(&handle, filepath);
  *        verifier.add_trusted_rootcert(handle, "trust.crt", nullptr);
  *        verifier.verify_file(handle, filepathname, result);
  *        verifier.close(handle);
- *        openssl_thread_cleanup();
  *        openssl_cleanup(); // end of application
  */
 class authenticode_verifier {
@@ -75,9 +73,7 @@ class authenticode_verifier {
      * @remarks
      *      // check
      *      openssl_startup();
-     *      openssl_thread_setup();
      *      // ...
-     *      openssl_thread_cleanup();
      *      openssl_cleanup();
      */
     return_t open(authenticode_context_t** handle);

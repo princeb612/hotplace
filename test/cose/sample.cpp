@@ -1752,7 +1752,6 @@ int main(int argc, char** argv) {
     }
 
     openssl_startup();
-    openssl_thread_setup();
 
     test_eckey_compressed();
 
@@ -1816,7 +1815,7 @@ int main(int argc, char** argv) {
     // part 2 .. test JWK, CWK compatibility
     {
         // test crypto_key, crypto_keychain
-        // test_jose_from_cwk();
+        test_jose_from_cwk();
     }
 
     // part 3 https://github.com/cose-wg/Examples
@@ -1846,7 +1845,6 @@ int main(int argc, char** argv) {
     // part 5 CWT
     test_cwt_rfc8392();
 
-    openssl_thread_cleanup();
     openssl_cleanup();
 
     _logger->flush();

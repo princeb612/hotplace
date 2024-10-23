@@ -31,12 +31,12 @@
 #include <sdk/net/http/http2/http2_serverpush.hpp>  // http2_serverpush
 #include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/http/http_authentication_resolver.hpp>  // http_authentication_resolver
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
 
-class http_router;
 typedef void (*http_request_handler_t)(network_session*, http_request*, http_response*, http_router*);
 typedef std::function<void(network_session*, http_request*, http_response*, http_router*)> http_request_function_t;
 
@@ -49,10 +49,10 @@ class http_router : public traceable {
     /**
      * @brief   register a handler
      */
-    http_router& add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider = nullptr, bool upref = false);
-    http_router& add(const char* uri, http_request_function_t handler, http_authenticate_provider* auth_provider = nullptr, bool upref = false);
-    http_router& add(const std::string& uri, http_request_handler_t handler, http_authenticate_provider* auth_provider = nullptr, bool upref = false);
-    http_router& add(const std::string& uri, http_request_function_t handler, http_authenticate_provider* auth_provider = nullptr, bool upref = false);
+    http_router& add(const char* uri, http_request_handler_t handler, http_authentication_provider* auth_provider = nullptr, bool upref = false);
+    http_router& add(const char* uri, http_request_function_t handler, http_authentication_provider* auth_provider = nullptr, bool upref = false);
+    http_router& add(const std::string& uri, http_request_handler_t handler, http_authentication_provider* auth_provider = nullptr, bool upref = false);
+    http_router& add(const std::string& uri, http_request_function_t handler, http_authentication_provider* auth_provider = nullptr, bool upref = false);
     /**
      * @brief   register a handler
      * @sample
@@ -91,13 +91,13 @@ class http_router : public traceable {
 
    protected:
     /**
-     * @brief   http_authenticate_provider
+     * @brief   http_authentication_provider
      * @param   http_request* request [in]
      * @param   http_response* response [in]
-     * @param   http_authenticate_provider** provider [out]
+     * @param   http_authentication_provider** provider [out]
      * @return  result
      */
-    bool get_auth_provider(http_request* request, http_response* response, http_authenticate_provider** provider);
+    bool get_auth_provider(http_request* request, http_response* response, http_authentication_provider** provider);
 
     void set_owner(http_server* server);
 
@@ -112,7 +112,7 @@ class http_router : public traceable {
     } http_router_t;
     typedef std::map<std::string, http_router_t> handler_map_t;
     typedef std::map<int, http_router_t> status_handler_map_t;
-    typedef std::map<std::string, http_authenticate_provider*> authenticate_map_t;
+    typedef std::map<std::string, http_authentication_provider*> authenticate_map_t;
     typedef std::pair<authenticate_map_t::iterator, bool> authenticate_map_pib_t;
 
     critical_section _lock;

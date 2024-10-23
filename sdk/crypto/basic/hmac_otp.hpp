@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_HMACOTP__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_HMACOTP__
 
-#include <sdk/crypto/types.hpp>
+#include <sdk/crypto/basic/types.hpp>
 
 namespace hotplace {
 namespace crypto {

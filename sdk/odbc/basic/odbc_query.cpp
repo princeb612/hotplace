@@ -278,7 +278,7 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
         }
 #endif
         if (!SQL_SUCCEEDED(ret_sql)) {
-            ret = errorcode_t::fetch;
+            ret = errorcode_t::error_fetch;
             __leave2;
         }
 

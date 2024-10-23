@@ -29,7 +29,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-class bearer_authentication_provider : public http_authenticate_provider {
+class bearer_authentication_provider : public http_authentication_provider {
    public:
     bearer_authentication_provider(const std::string& realm);
     virtual ~bearer_authentication_provider();

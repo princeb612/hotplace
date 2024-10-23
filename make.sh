@@ -27,6 +27,7 @@ COMMENTS
     pch      - precompiled header
     prof     - gprof
     odbc     - ODBC feature
+    quic     - QUIC, HTTP/3 feature (requires openssl minimum version 3.2)
     redist   - redistribute MSYS2(MINGW) binaries
     shared   -
     test     - run examples
@@ -82,6 +83,8 @@ if [ ${#args[@]} -ne 0 ]; then
             SUPPORT_PCH=1
         elif [ $arg = 'prof' ]; then
             CXXFLAGS="${CXXFLAGS} -pg"
+        elif [ $arg = 'quic' ]; then
+            export SUPPORT_QUIC=1
         elif [ $arg = 'redist' ]; then
             do_redist=1
         elif [ $arg = 'shared' ]; then

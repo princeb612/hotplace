@@ -38,7 +38,7 @@ namespace net {
  *          Client
  *              Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
  */
-class basic_authentication_provider : public http_authenticate_provider {
+class basic_authentication_provider : public http_authentication_provider {
    public:
     basic_authentication_provider(const std::string& realm);
     virtual ~basic_authentication_provider();

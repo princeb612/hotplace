@@ -13,6 +13,7 @@
 
 #include <sdk/base/basic/huffman_coding.hpp>  // huffman_coding
 #include <sdk/base/unittest/traceable.hpp>    // traceable
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -64,14 +65,6 @@ enum http_header_compression_flag_t {
     qpack_quic_stream_decoder = (1 << 16),  // RFC 9204 4.4.  Decoder Instructions
     qpack_quic_stream_header = (1 << 17),   // RFC 9204 4.5.  Field Line Representations
 };
-
-enum http_header_compression_event_t {
-    header_compression_event_insert = 1,
-    header_compression_event_evict = 2,
-};
-
-class http_header_compression_table_static;
-class http_header_compression_table_dynamic;
 
 /**
  * @brief   HTTP header compression (HPACK, QPACK)

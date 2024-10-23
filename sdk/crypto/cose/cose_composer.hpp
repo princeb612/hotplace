@@ -16,17 +16,9 @@
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
-#include <sdk/crypto/cose/cbor_object_signing_encryption.hpp>
+#include <sdk/crypto/basic/types.hpp>
 #include <sdk/crypto/cose/types.hpp>
-#include <sdk/crypto/types.hpp>
-#include <sdk/io/cbor/cbor_array.hpp>
-#include <sdk/io/cbor/cbor_data.hpp>
-#include <sdk/io/cbor/cbor_encode.hpp>
-#include <sdk/io/cbor/cbor_map.hpp>
-#include <sdk/io/cbor/cbor_publisher.hpp>
-#include <sdk/io/cbor/cbor_reader.hpp>
-#include <sdk/io/cbor/concise_binary_object_representation.hpp>
+#include <sdk/io/cbor/cbor.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -49,12 +41,6 @@ enum cose_scope {
     cose_scope_children = (1 << 4),
     cose_scope_all = 0x11111111,
 };
-
-class cose_composer;
-class cose_countersigns;
-class cose_recipient;
-class cose_recipients;
-class cose_unsent;
 
 class cose_data {
     friend class cose_protected;
@@ -465,8 +451,6 @@ class cose_recipient {
     cose_composer* _composer;
     cbor_tag_t _cbor_tag;
 };
-typedef cose_recipient cose_layer;
-typedef cose_recipients cose_layers;
 
 class cose_unsent {
     friend class cose_recipient;

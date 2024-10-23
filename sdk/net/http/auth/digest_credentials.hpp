@@ -23,7 +23,7 @@
 namespace hotplace {
 namespace net {
 
-class http_authenticate_provider;
+class http_authentication_provider;
 using namespace io;
 class digest_credentials {
    public:
@@ -31,7 +31,7 @@ class digest_credentials {
 
     digest_credentials& add(const std::string& userid, const std::string& password);
     digest_credentials& add(const std::string& realm, const std::string& algorithm, const std::string& userid, const std::string& password);
-    bool verify(http_authenticate_provider* provider, skey_value& kv);
+    bool verify(http_authentication_provider* provider, skey_value& kv);
 
    private:
     critical_section _lock;

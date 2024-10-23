@@ -10,6 +10,8 @@
 
 #include <sdk/io.hpp>
 #include <sdk/net/http/http_server.hpp>
+#include <sdk/net/tls/dtls_server_socket.hpp>
+#include <sdk/net/tls/tls_server_socket.hpp>
 
 namespace hotplace {
 using namespace io;
@@ -223,7 +225,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
             default:
                 break;
         }
-        traceevent(category_http_server, 0, &bs);
+        traceevent(category_http_server, http_server_event_consume, &bs);
     }
 #endif
 

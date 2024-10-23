@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/traceable.hpp>
 
 namespace hotplace {
@@ -39,6 +40,19 @@ void traceable::traceevent(trace_category_t category, uint32 events, stream_t* s
     if (_df) {
         // operator () - invokes the target
         _df(category, events, s);
+    }
+}
+
+void traceable::traceevent(trace_category_t category, uint32 events, const char* fmt, ...) {
+    if (_df) {
+        basic_stream bs;
+        va_list ap;
+
+        va_start(ap, fmt);
+        bs.vprintf(fmt, ap);
+        va_end(ap);
+
+        _df(category, events, &bs);
     }
 }
 

@@ -209,17 +209,13 @@ int main(int argc, char** argv) {
 
     __try2 {
         openssl_startup();
-        openssl_thread_setup();
 
         test_hash_hmac_sign();
 
         test_nist_cavp_ecdsa();
         test_rfc6979_ecdsa();
     }
-    __finally2 {
-        openssl_thread_cleanup();
-        openssl_cleanup();
-    }
+    __finally2 { openssl_cleanup(); }
 
     _logger->flush();
 

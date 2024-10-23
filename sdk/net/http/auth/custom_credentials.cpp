@@ -28,7 +28,7 @@ custom_credentials& custom_credentials::add(const std::string& username, const s
     return *this;
 }
 
-bool custom_credentials::verify(http_authenticate_provider* provider, const std::string& username, const std::string& password) {
+bool custom_credentials::verify(http_authentication_provider* provider, const std::string& username, const std::string& password) {
     bool ret = false;
     critical_section_guard guard(_lock);
     openssl_digest dgst;

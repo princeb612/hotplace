@@ -144,11 +144,9 @@ int main(int argc, char** argv) {
     winsock_startup();
 #endif
     openssl_startup();
-    openssl_thread_setup();
 
     run_server();
 
-    openssl_thread_end();
     openssl_cleanup();
 
 #if defined _WIN32 || defined _WIN64

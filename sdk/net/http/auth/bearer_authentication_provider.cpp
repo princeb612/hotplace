@@ -18,7 +18,7 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-bearer_authentication_provider::bearer_authentication_provider(const std::string& realm) : http_authenticate_provider(realm) {}
+bearer_authentication_provider::bearer_authentication_provider(const std::string& realm) : http_authentication_provider(realm) {}
 
 bearer_authentication_provider::~bearer_authentication_provider() {}
 

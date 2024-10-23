@@ -17,6 +17,12 @@
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 
+#if defined __linux__
+#include <dlfcn.h>
+#include <sys/time.h>
+#include <unistd.h>
+#endif
+
 namespace hotplace {
 namespace crypto {
 
@@ -518,7 +524,6 @@ return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, const std::string& 
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* ctx = nullptr;
     int ret_openssl = 0;
-
     __try2 {
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
         if (0 == salt.size()) {
@@ -557,15 +562,33 @@ return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, const std::string& 
 return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, const binary_t& password, const binary_t& salt, const binary_t& ad,
                              const binary_t& secret, uint32 iteration_cost, uint32 parallel_cost, uint32 memory_cost) {
     return_t ret = errorcode_t::success;
-#if OPENSSL_VERSION_NUMBER >= 0x30200000L
+
+    void* handle = nullptr;
+    typedef int (*OSSL_set_max_threads_t)(OSSL_LIB_CTX * ctx, uint64_t max_threads);
+    OSSL_set_max_threads_t OSSL_set_max_threads_ptr = nullptr;
+
     int ret_openssl = 0;
     EVP_KDF* kdf = nullptr;
     EVP_KDF_CTX* ctx = nullptr;
     OSSL_LIB_CTX* lib_context = nullptr;
     OSSL_PARAM params[9], *p = params;
-    uint32 threads = 0;
+    unsigned int threads = 0;
 
     __try2 {
+        // OSSL_set_max_threads openssl 3.2~
+        // binding error workaround
+#if defined __linux__ || defined __APPLE__
+        DLSYMONLY(RTLD_DEFAULT, "OSSL_set_max_threads", OSSL_set_max_threads_ptr);
+#elif defined _WIN32 || defined _WIN64
+        constexpr char crypto_module[] = "libssl-3-x64.dll";
+        handle = GetModuleHandleA(crypto_module);
+        DLSYM(handle, "OSSL_set_max_threads", OSSL_set_max_threads_ptr);  // MINGW fails - TODO
+#endif
+        if (nullptr == OSSL_set_max_threads_ptr) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
         const char* id = nullptr;
         switch (mode) {
             case argon2_t::argon2d:
@@ -600,18 +623,29 @@ return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, cons
             ret = errorcode_t::internal_error;
             __leave2;
         }
+
         threads = parallel_cost;
-        ret_openssl = OSSL_set_max_threads(lib_context, parallel_cost);
+        ret_openssl = (*OSSL_set_max_threads_ptr)(lib_context, parallel_cost);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        uint64 max_threads = OSSL_get_max_threads(lib_context);
-        if (0 == max_threads) {
-            threads = 1;
-        } else if (max_threads < parallel_cost) {
-            threads = max_threads;
-        }
+
+#if OPENSSL_VERSION_NUMBER < 0x30200000L
+// do not reach here, just to avoid compile error
+#ifndef OSSL_KDF_PARAM_ARGON2_AD
+#define OSSL_KDF_PARAM_ARGON2_AD 0
+#endif
+#ifndef OSSL_KDF_PARAM_THREADS
+#define OSSL_KDF_PARAM_THREADS 0
+#endif
+#ifndef OSSL_KDF_PARAM_ARGON2_LANES
+#define OSSL_KDF_PARAM_ARGON2_LANES 0
+#endif
+#ifndef OSSL_KDF_PARAM_ARGON2_MEMCOST
+#define OSSL_KDF_PARAM_ARGON2_MEMCOST 0
+#endif
+#endif
 
         /* Set password */
         *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_PASSWORD, (void*)&password[0], password.size());
@@ -622,13 +656,13 @@ return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, cons
         /* Set optional secret */
         *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SECRET, (void*)&secret[0], secret.size());
         /* Set iteration count */
-        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ITER, &iteration_cost);
+        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ITER, (uint32_t*)&iteration_cost);
         /* Set threads performing derivation (can be decreased) */
         *p++ = OSSL_PARAM_construct_uint(OSSL_KDF_PARAM_THREADS, &threads);
         /* Set parallel cost */
-        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_LANES, &parallel_cost);
+        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_LANES, (uint32_t*)&parallel_cost);
         /* Set memory requirement */
-        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_MEMCOST, &memory_cost);
+        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_MEMCOST, (uint32_t*)&memory_cost);
         *p = OSSL_PARAM_construct_end();
 
         derived.resize(dlen);
@@ -645,9 +679,6 @@ return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, cons
             OSSL_LIB_CTX_free(lib_context);
         }
     }
-#else
-    ret = errorcode_t::not_supported;
-#endif
     return ret;
 }
 

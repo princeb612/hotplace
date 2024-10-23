@@ -159,7 +159,7 @@ class oauth2_provider {
     oauth2_provider& add(oauth2_grant_provider* provider);
     oauth2_provider& set(oauth2_provider_key_t key, const std::string& value);
     std::string get(oauth2_provider_key_t key);
-    oauth2_provider& set_token_endpoint_authentication(http_authenticate_provider* auth);
+    oauth2_provider& set_token_endpoint_authentication(http_authentication_provider* auth);
     oauth2_provider& apply(http_router& router);
 
    protected:
@@ -186,7 +186,7 @@ class oauth2_provider {
 
     std::map<oauth2_provider_key_t, std::string> _values;
 
-    http_authenticate_provider* _token_endpoint_authentication;
+    http_authentication_provider* _token_endpoint_authentication;
 };
 
 }  // namespace net

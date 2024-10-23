@@ -25,13 +25,11 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <sdk/io.hpp>
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
-
-class http_request;
-class http_response;
 
 class html_documents {
    public:

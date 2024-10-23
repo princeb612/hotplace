@@ -16,14 +16,8 @@
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
-#include <sdk/crypto/cose/cose_composer.hpp>
 #include <sdk/crypto/cose/types.hpp>
 #include <sdk/crypto/types.hpp>
-#include <sdk/io/cbor/cbor_data.hpp>
-#include <sdk/io/cbor/cbor_map.hpp>
-#include <sdk/io/cbor/cbor_publisher.hpp>
-#include <sdk/io/cbor/cbor_reader.hpp>
 
 namespace hotplace {
 using namespace io;

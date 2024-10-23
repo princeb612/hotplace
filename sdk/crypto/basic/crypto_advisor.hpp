@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <sdk/base/unittest/traceable.hpp>
 #include <sdk/crypto/basic/types.hpp>
 
 namespace hotplace {
@@ -32,7 +33,14 @@ enum advisor_feature_t {
     advisor_feature_unspecified = (1 << 9),
 };
 
-class crypto_advisor {
+/**
+ * @brief   advisor
+ * @sample
+ *          auto lambda = [&](trace_category_t, uint32, stream_t* s) -> void { do_somgthing(); };
+ *          crypto_advisor::trace(lambda);
+ *          auto advisor = crypto_advisor::get_instance();
+ */
+class crypto_advisor : public traceable {
    public:
     static crypto_advisor* get_instance();
 
@@ -532,7 +540,7 @@ class crypto_advisor {
      *     Ed25519, Ed448, X25519, X448
      */
     bool query_feature(const char* feature, uint32 spec = 0);
-    bool at_least_openssl_version(unsigned long osslver);
+    bool check_minimum_version(unsigned long osslver);
 
     /**
      * @brief   cookie secret
@@ -545,8 +553,11 @@ class crypto_advisor {
      */
     void get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret);
 
+    static void trace(std::function<void(trace_category_t category, uint32 events, stream_t* s)> f);
+
    protected:
-    return_t build_if_necessary();
+    return_t load();
+    return_t build();
     return_t cleanup();
 
    private:
@@ -625,6 +636,8 @@ class crypto_advisor {
     std::map<std::string, uint32> _versions;
 
     std::map<uint8, binary_t> _cookie_secret;
+
+    critical_section _lock;
 };
 
 extern const hint_cipher_t evp_cipher_methods[];

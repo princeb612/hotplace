@@ -610,7 +610,9 @@ int main(int argc, char** argv) {
 
     __try2 {
         openssl_startup();
-        openssl_thread_setup();
+
+        auto lambda = [&](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln("%.*s", (unsigned int)s->size(), s->data()); };
+        crypto_advisor::trace(lambda);
 
         test_features();
 
@@ -625,10 +627,7 @@ int main(int argc, char** argv) {
 
         test_aead_aes_cbc_hmac_sha2();
     }
-    __finally2 {
-        openssl_thread_cleanup();
-        openssl_cleanup();
-    }
+    __finally2 { openssl_cleanup(); }
 
     _logger->flush();
 

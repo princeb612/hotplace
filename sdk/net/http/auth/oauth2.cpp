@@ -391,7 +391,7 @@ std::string oauth2_provider::get(oauth2_provider_key_t key) {
     return ret_value;
 }
 
-oauth2_provider& oauth2_provider::set_token_endpoint_authentication(http_authenticate_provider* auth) {
+oauth2_provider& oauth2_provider::set_token_endpoint_authentication(http_authentication_provider* auth) {
     _token_endpoint_authentication = auth;
     return *this;
 }

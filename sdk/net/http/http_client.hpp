@@ -26,15 +26,12 @@
 #include <sdk/base/types.hpp>
 #include <sdk/io.hpp>
 #include <sdk/net/http/http_request.hpp>  // http_request
+#include <sdk/net/http/types.hpp>
 #include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
-
-class http_response;
-class tcp_client_socket;
-class tls_client_socket;
 
 /**
  * @brief   simple client

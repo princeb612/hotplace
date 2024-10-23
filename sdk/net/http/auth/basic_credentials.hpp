@@ -23,14 +23,14 @@
 namespace hotplace {
 namespace net {
 
-class http_authenticate_provider;
+class http_authentication_provider;
 class basic_credentials {
    public:
     basic_credentials();
 
     basic_credentials& add(const std::string& username, const std::string& password);
     basic_credentials& add(const std::string& challenge);
-    bool verify(http_authenticate_provider* provider, const std::string& credential);
+    bool verify(http_authentication_provider* provider, const std::string& credential);
 
    private:
     critical_section _lock;

@@ -23,13 +23,13 @@
 namespace hotplace {
 namespace net {
 
-class http_authenticate_provider;
+class http_authentication_provider;
 class bearer_credentials {
    public:
     bearer_credentials();
 
     bearer_credentials& add(const std::string& client_id, const std::string& access_token);
-    bool verify(http_authenticate_provider* provider, const std::string& token);
+    bool verify(http_authentication_provider* provider, const std::string& token);
 
    private:
     critical_section _lock;

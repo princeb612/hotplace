@@ -25,7 +25,7 @@ bearer_credentials& bearer_credentials::add(const std::string& client_id, const 
     return *this;
 }
 
-bool bearer_credentials::verify(http_authenticate_provider* provider, const std::string& token) {
+bool bearer_credentials::verify(http_authentication_provider* provider, const std::string& token) {
     bool ret = false;
 
     critical_section_guard guard(_lock);

@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_CRYPTO_EVP_KEY__
 
 #include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/crypto/types.hpp>
+#include <sdk/crypto/basic/types.hpp>
 
 namespace hotplace {
 namespace crypto {

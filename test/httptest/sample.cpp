@@ -381,7 +381,7 @@ void test_basic_authentication() {
  * calcuration routine
  * cf. see digest_access_authentication_provider::auth_digest_access (slightly different)
  */
-return_t calc_digest_digest_access(http_authenticate_provider *provider, network_session *session, http_request *request, skey_value &kv,
+return_t calc_digest_digest_access(http_authentication_provider *provider, network_session *session, http_request *request, skey_value &kv,
                                    std::string &digest_response) {
     return_t ret = errorcode_t::success;
     const OPTION &option = cmdline->value();
@@ -475,7 +475,7 @@ void test_digest_access_authentication(const char *alg = nullptr, unsigned long 
     bool support = true;
     if (ossl_minver) {
         crypto_advisor *advisor = crypto_advisor::get_instance();
-        support = advisor->at_least_openssl_version(*ossl_minver);
+        support = advisor->check_minimum_version(*ossl_minver);
     }
 
     if (support) {
@@ -917,7 +917,6 @@ int main(int argc, char **argv) {
     winsock_startup();
 #endif
     openssl_startup();
-    openssl_thread_setup();
 
     cmdline.make_share(new t_cmdline_t<OPTION>);
 
@@ -985,7 +984,6 @@ int main(int argc, char **argv) {
         test_bearer_token();
     }
 
-    openssl_thread_end();
     openssl_cleanup();
 
 #if defined _WIN32 || defined _WIN64

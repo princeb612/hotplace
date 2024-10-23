@@ -823,7 +823,6 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
 
     openssl_startup();
-    openssl_thread_setup();
 
     _test_case.reset_time();
 
@@ -850,7 +849,6 @@ int main(int argc, char** argv) {
     test_rfc7541_c_6();
     test_h2_header_frame_fragment();
 
-    openssl_thread_end();
     openssl_cleanup();
 
     _logger->flush();

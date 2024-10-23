@@ -144,7 +144,7 @@ return_t http2_serverpush::push(http_request* request, http_server* server, netw
             auto const& promise = q.front();
             q.pop();
 
-            http_response response;
+            http_response response(request);  // to refer accept-encoding
             auto test = do_push(promise, ++stream_id, request, server, session, &response);
             if (errorcode_t::success == test) {
                 response.respond(session);
@@ -188,7 +188,7 @@ return_t http2_serverpush::do_push_promise(const std::string& promise, uint32 st
             if (istraceable()) {
                 basic_stream bs;
                 frame.dump(&bs);
-                traceevent(category_http2_push, 0, &bs);
+                traceevent(category_http2_serverpush, http2_push_event_push_promise, &bs);
             }
         }
     }

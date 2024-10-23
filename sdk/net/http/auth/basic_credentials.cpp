@@ -37,7 +37,7 @@ basic_credentials& basic_credentials::add(const std::string& challenge) {
     return *this;
 }
 
-bool basic_credentials::verify(http_authenticate_provider* provider, const std::string& credential) {
+bool basic_credentials::verify(http_authentication_provider* provider, const std::string& credential) {
     bool ret = false;
 
     critical_section_guard guard(_lock);

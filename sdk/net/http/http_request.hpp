@@ -33,8 +33,6 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-class hpack_session;
-
 enum http_request_flag_t {
     http_request_compose = (1 << 0),
 };

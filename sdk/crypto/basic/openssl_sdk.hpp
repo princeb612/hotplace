@@ -12,7 +12,6 @@
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_SDK__
 
 #include <sdk/crypto/basic/types.hpp>
-#include <sdk/crypto/types.hpp>
 #include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {

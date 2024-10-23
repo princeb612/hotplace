@@ -126,6 +126,12 @@ typedef struct _jose_context_t {
     }
 } jose_context_t;
 
+class json_object_encryption;
+class json_object_signing;
+class json_object_signing_encryption;
+class json_web_key;
+class json_web_signature;
+
 }  // namespace crypto
 }  // namespace hotplace
 

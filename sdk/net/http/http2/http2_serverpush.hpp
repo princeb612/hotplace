@@ -26,15 +26,11 @@
 #include <sdk/base/types.hpp>
 #include <sdk/base/unittest/traceable.hpp>  // traceable
 #include <sdk/io.hpp>
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
-
-class http_request;
-class http_response;
-class http_server;
-class network_session;
 
 /**
  * @brief   HTTP/2 server push

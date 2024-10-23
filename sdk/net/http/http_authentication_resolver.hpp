@@ -30,14 +30,13 @@
 #include <sdk/net/http/auth/custom_credentials.hpp>  // custom_credentials
 #include <sdk/net/http/auth/digest_credentials.hpp>  // digest_credentials
 #include <sdk/net/http/auth/oauth2_credentials.hpp>  // oauth2_credentials
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
 
-class http_authenticate_provider;
-
-typedef std::function<bool(http_authenticate_provider*, network_session*, http_request* request, http_response* response)> authenticate_handler_t;
+typedef std::function<bool(http_authentication_provider*, network_session*, http_request* request, http_response* response)> authenticate_handler_t;
 
 class http_authentication_resolver {
    public:
@@ -45,13 +44,13 @@ class http_authentication_resolver {
 
     /**
      * @brief   resolve
-     * @param   http_authenticate_provider* provider [in]
+     * @param   http_authentication_provider* provider [in]
      * @param   network_session* session [in]
      * @param   http_request* request [in]
      * @param   http_response* response [in]
      * @return  result
      */
-    bool resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
+    bool resolve(http_authentication_provider* provider, network_session* session, http_request* request, http_response* response);
 
     /**
      * @brief   register handler
@@ -60,12 +59,12 @@ class http_authentication_resolver {
     http_authentication_resolver& basic_resolver(authenticate_handler_t resolver);
     /*
      * @brief   authenticate
-     * @param   http_authenticate_provider* provider [in]
+     * @param   http_authentication_provider* provider [in]
      * @param   http_response* response [in]
      * @remarks
      *          RFC2617 HTTP Authentication: Basic and Digest Access Authentication
      */
-    bool basic_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
+    bool basic_authenticate(http_authentication_provider* provider, network_session* session, http_request* request, http_response* response);
     /**
      * @brief   register handler
      * @param   authenticate_handler_t resolver [in]
@@ -73,13 +72,13 @@ class http_authentication_resolver {
     http_authentication_resolver& digest_resolver(authenticate_handler_t resolver);
     /*
      * @brief   authenticate
-     * @param   http_authenticate_provider* provider [in]
+     * @param   http_authentication_provider* provider [in]
      * @param   network_session* session [in]
      * @param   http_response* response [in]
      * @remarks
      *          RFC2617 HTTP Authentication: Basic and Digest Access Authentication
      */
-    bool digest_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
+    bool digest_authenticate(http_authentication_provider* provider, network_session* session, http_request* request, http_response* response);
     /**
      * @brief   register handler
      * @param   authenticate_handler_t resolver [in]
@@ -87,13 +86,13 @@ class http_authentication_resolver {
     http_authentication_resolver& bearer_resolver(authenticate_handler_t resolver);
     /*
      * @brief   authenticate
-     * @param   http_authenticate_provider* provider [in]
+     * @param   http_authentication_provider* provider [in]
      * @param   network_session* session [in]
      * @param   http_response* response [in]
      * @remarks
      *          RFC6750 The OAuth 2.0 Authorization Framework: Bearer Token Usage
      */
-    bool bearer_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
+    bool bearer_authenticate(http_authentication_provider* provider, network_session* session, http_request* request, http_response* response);
 
     /**
      * @brief   register handler
@@ -102,12 +101,12 @@ class http_authentication_resolver {
     http_authentication_resolver& custom_resolver(authenticate_handler_t resolver);
     /*
      * @brief   authenticate
-     * @param   http_authenticate_provider* provider [in]
+     * @param   http_authentication_provider* provider [in]
      * @param   http_response* response [in]
      * @remarks
      *          RFC2617 HTTP Authentication: Basic and Digest Access Authentication
      */
-    bool custom_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response);
+    bool custom_authenticate(http_authentication_provider* provider, network_session* session, http_request* request, http_response* response);
 
     basic_credentials& get_basic_credentials(const std::string& realm);
     digest_credentials& get_digest_credentials(const std::string& realm);

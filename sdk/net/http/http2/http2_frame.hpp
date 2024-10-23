@@ -17,11 +17,10 @@
 #include <sdk/base/types.hpp>
 #include <sdk/base/unittest/traceable.hpp>  // traceable
 #include <sdk/net/http/http2/hpack.hpp>     // hpack_stream
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {
-
-class http_header;
 
 /**
  * @brief   frame type

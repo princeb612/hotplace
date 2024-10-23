@@ -20,6 +20,7 @@
   * ASN.1 ![studying](https://img.shields.io/badge/studying-magenta)
 * link
   * [changelog](CHANGELOG.md)
+  * [devnotes](DEVNOTES.md)
   * [implemented](#implemented)
   * [applied](#applied)
   * [not applied](#not-applied)
@@ -81,6 +82,7 @@
     * sdk/net/tls/
     * test/payload/
     * test/hpack/
+    * test/http-altsvc/
     * test/httpserver2/
 * HTTP/3
   * RFC 9204 QPACK: Field Compression for HTTP/3
@@ -163,6 +165,7 @@
 * JOSE
   * RFC 7638 3.1.  Example JWK Thumbprint Computation
     * test/jose/
+
 * IEEE 754
   * half/single/double precision floating point
     * test/ieee754/
@@ -175,6 +178,8 @@
 * HTTP/1.1
   * RFC 2817 Upgrading to TLS Within HTTP/1.1
 * HTTP/3
+  * RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
+  * RFC 9001 Using TLS to Secure QUIC
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
   * RFC 9114 HTTP/3
 * ASN.1
@@ -248,39 +253,13 @@
   * build custom openssl (example)
     * install perl
       * $ sudo yum install perl
-    * download openssl
-      * $ wget https://www.openssl.org/source/openssl-1.1.1w.tar.gz
-    * extract and unzip
-      * $ tar xvfz openssl-1.1.1w.tar.gz
-    * cd
-      * $ cd openssl-1.1.1v
-    * prefix variable
-      * **never overwrite system libraries (must not set install_dir=/usr)**
-      * *RHEL openssl package customized (krb, kdf ??)*
-      * $ install_dir=somewhere/thirdparty
-    * configure linux ex.
-      * $ ./Configure linux-x86_64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=devrandom -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
-    * configure mingw ex.
-      * $ ./Configure mingw64 enable-idea enable-bf enable-seed --prefix=${install_dir} --with-rand-seed=os -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd shared
-    * make
-      * $ make
-    * openssl SEGV ctr_update - FC4, centos5
-      * $ touch crypto/rand/drbg_ctr.c
-      * $ make
-    * no thanks man pages
-      * $ make install_sw install_ssldirs
+  * cd thirdparty ; ./make.sh
 
 ### jansson
 
 * build custom jansson (example)
   * see https://github.com/akheron/jansson
-  * aclocal; autoheader; autoconf;
-  * libtoolize --automake --copy --force
-  * automake --foreign --copy --add-missing
-  * $ install_dir=somewhere/thirdparty
-  * ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
-  * make
-  * make install
+  * cd thirdparty ; ./make.sh
 
 ### FC4 custom toolchain
 

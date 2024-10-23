@@ -16,6 +16,7 @@
 #include <sdk/net/http/http2/http2_session.hpp>  // http2_session
 #include <sdk/net/server/network_stream.hpp>     // network_stream
 #include <sdk/net/tls/tls.hpp>
+#include <sdk/net/types.hpp>
 
 namespace hotplace {
 using namespace io;
@@ -53,9 +54,6 @@ struct network_session_buffer_t {
         }
     }
 };
-
-class network_protocol_group;
-class server_socket;
 
 /**
  * @sa

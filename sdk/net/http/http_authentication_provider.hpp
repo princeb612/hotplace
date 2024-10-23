@@ -25,15 +25,11 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <sdk/io.hpp>
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
-
-class http_authentication_resolver;
-class http_request;
-class http_response;
-class network_session;
 
 /**
  * @brief   authentication
@@ -48,9 +44,9 @@ class network_session;
  *              }
  *          }
  */
-class http_authenticate_provider {
+class http_authentication_provider {
    public:
-    http_authenticate_provider(const std::string& realm);
+    http_authentication_provider(const std::string& realm);
 
     /**
      * @brief   try
@@ -84,7 +80,7 @@ class http_authenticate_provider {
     std::string get_realm();
 
    protected:
-    t_shared_reference<http_authenticate_provider> _shared;
+    t_shared_reference<http_authentication_provider> _shared;
     std::string _realm;
 };
 

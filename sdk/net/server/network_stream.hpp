@@ -15,12 +15,10 @@
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
+#include <sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {
-
-class network_protocol_group;
-class network_stream;
 
 /**
  * @brief stream data that produced and consumed by network_stream

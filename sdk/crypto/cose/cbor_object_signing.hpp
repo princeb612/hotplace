@@ -16,8 +16,7 @@
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
-#include <sdk/crypto/cose/cbor_object_signing_encryption.hpp>
+#include <sdk/crypto/cose/types.hpp>
 
 namespace hotplace {
 namespace crypto {

@@ -65,6 +65,9 @@
 /* http/http3 */
 #include <sdk/net/http/http3/qpack.hpp>
 
+/* quic */
+#include <sdk/net/quic/quic.hpp>
+
 /* server */
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_server.hpp>

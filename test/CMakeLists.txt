@@ -53,7 +53,11 @@ add_subdirectory (dtlsserver)
 add_subdirectory (netclient)
 add_subdirectory (qpack)
 add_subdirectory (httpaltsvc)
+
+# QUIC, HTTP/3 feature
+if (SUPPORT_QUIC)
 add_subdirectory (httpserver3)
+endif ()
 
 # odbc
 if (SUPPORT_ODBC)

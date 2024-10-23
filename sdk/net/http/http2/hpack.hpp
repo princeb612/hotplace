@@ -11,7 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACK__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACK__
 
-#include <sdk/net/http/http2/http_header_compression.hpp>
+#include <sdk/net/http/http2/http_header_compression.hpp>  // http_header_compression
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

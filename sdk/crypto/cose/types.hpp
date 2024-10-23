@@ -18,13 +18,13 @@
 #include <sdk/base/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/types.hpp>
+#include <sdk/io/cbor/cbor.hpp>
 #include <sdk/io/cbor/cbor_array.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_encode.hpp>
 #include <sdk/io/cbor/cbor_map.hpp>
 #include <sdk/io/cbor/cbor_publisher.hpp>
 #include <sdk/io/cbor/cbor_reader.hpp>
-#include <sdk/io/cbor/concise_binary_object_representation.hpp>
 
 namespace hotplace {
 using namespace io;
@@ -104,6 +104,21 @@ struct _cose_context_t {
         // do nothing
     }
 };
+
+class cose_binary;
+class cose_composer;
+class cose_countersign;
+class cose_countersigns;
+class cose_protected;
+class cose_recipient;
+class cose_recipients;
+class cose_unprotected;
+class cose_unsent;
+
+class crypto_key;
+
+typedef cose_recipient cose_layer;
+typedef cose_recipients cose_layers;
 
 }  // namespace crypto
 }  // namespace hotplace

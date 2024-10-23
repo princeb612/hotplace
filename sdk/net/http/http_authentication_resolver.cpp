@@ -25,7 +25,7 @@ namespace net {
 http_authentication_resolver::http_authentication_resolver()
     : _basic_resolver(nullptr), _digest_resolver(nullptr), _bearer_resolver(nullptr), _custom_resolver(nullptr) {}
 
-bool http_authentication_resolver::resolve(http_authenticate_provider* provider, network_session* session, http_request* request, http_response* response) {
+bool http_authentication_resolver::resolve(http_authentication_provider* provider, network_session* session, http_request* request, http_response* response) {
     return provider->try_auth(this, session, request, response);
 }
 
@@ -34,7 +34,7 @@ http_authentication_resolver& http_authentication_resolver::basic_resolver(authe
     return *this;
 }
 
-bool http_authentication_resolver::basic_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
+bool http_authentication_resolver::basic_authenticate(http_authentication_provider* provider, network_session* session, http_request* request,
                                                       http_response* response) {
     bool ret_value = false;
     __try2 {
@@ -61,7 +61,7 @@ http_authentication_resolver& http_authentication_resolver::digest_resolver(auth
     return *this;
 }
 
-bool http_authentication_resolver::digest_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
+bool http_authentication_resolver::digest_authenticate(http_authentication_provider* provider, network_session* session, http_request* request,
                                                        http_response* response) {
     bool ret_value = false;
     __try2 {
@@ -98,7 +98,7 @@ http_authentication_resolver& http_authentication_resolver::bearer_resolver(auth
     return *this;
 }
 
-bool http_authentication_resolver::bearer_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
+bool http_authentication_resolver::bearer_authenticate(http_authentication_provider* provider, network_session* session, http_request* request,
                                                        http_response* response) {
     bool ret_value = false;
     if (_bearer_resolver) {
@@ -122,7 +122,7 @@ http_authentication_resolver& http_authentication_resolver::custom_resolver(auth
     return *this;
 }
 
-bool http_authentication_resolver::custom_authenticate(http_authenticate_provider* provider, network_session* session, http_request* request,
+bool http_authentication_resolver::custom_authenticate(http_authentication_provider* provider, network_session* session, http_request* request,
                                                        http_response* response) {
     bool ret_value = false;
     if (_custom_resolver) {

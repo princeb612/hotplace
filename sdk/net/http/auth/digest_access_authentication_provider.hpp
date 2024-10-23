@@ -52,7 +52,7 @@ namespace net {
  *                             opaque="5ccc069c403ebaf9f0171e9517f40e41",
  *                             qop=auth, nc=00000001, cnonce="3ceef920aacfb49e"
  */
-class digest_access_authentication_provider : public http_authenticate_provider {
+class digest_access_authentication_provider : public http_authentication_provider {
    public:
     /**
      * @brief   constructor

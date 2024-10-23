@@ -22,6 +22,7 @@
 #include <sdk/io/cbor/cbor_array.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_map.hpp>
+#include <sdk/io/cbor/cbor_object.hpp>
 #include <sdk/io/cbor/cbor_publisher.hpp>
 #include <sdk/io/cbor/cbor_reader.hpp>
 #include <sdk/io/stream/file_stream.hpp>

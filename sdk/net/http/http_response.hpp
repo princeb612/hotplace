@@ -24,14 +24,11 @@
 #include <sdk/base/unittest/traceable.hpp>   // traceable
 #include <sdk/io.hpp>
 #include <sdk/net/http/http_header.hpp>  // http_header
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 using namespace io;
 namespace net {
-
-class hpack_session;
-class http_request;
-class network_session;
 
 class http_response : public traceable {
    public:

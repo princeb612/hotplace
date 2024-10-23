@@ -498,7 +498,6 @@ int main(int argc, char** argv) {
 
     __try2 {
         openssl_startup();
-        openssl_thread_setup();
 
         test_hash_algorithms();
 
@@ -512,10 +511,7 @@ int main(int argc, char** argv) {
         test_totp_rfc6238(hash_algorithm_t::sha2_256);
         test_totp_rfc6238(hash_algorithm_t::sha2_512);
     }
-    __finally2 {
-        openssl_thread_cleanup();
-        openssl_cleanup();
-    }
+    __finally2 { openssl_cleanup(); }
 
     _logger->flush();
 

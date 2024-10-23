@@ -2161,7 +2161,6 @@ int main(int argc, char** argv) {
     }
 
     openssl_startup();
-    openssl_thread_setup();
 
     test_basic();
 
@@ -2226,7 +2225,6 @@ int main(int argc, char** argv) {
     test_rfc8037();
     test_okp();
 
-    openssl_thread_cleanup();
     openssl_cleanup();
 
     _logger->flush();

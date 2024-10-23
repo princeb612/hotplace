@@ -268,7 +268,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
                         bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                         bs << "\n";
-                        traceevent(category_net_session, 0, &bs);
+                        traceevent(category_net_session, net_session_event_produce, &bs);
                     }
 
                 } else {
@@ -304,7 +304,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
                 bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                 bs << "\n";
-                traceevent(category_net_session, 0, &bs);
+                traceevent(category_net_session, net_session_event_produce, &bs);
             }
         }
     }
@@ -370,7 +370,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                         bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                         bs << "\n";
-                        traceevent(category_net_session, 0, &bs);
+                        traceevent(category_net_session, net_session_event_produce, &bs);
                     }
                 }
 
@@ -409,7 +409,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                 bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                 bs << "\n";
-                traceevent(category_net_session, 0, &bs);
+                traceevent(category_net_session, net_session_event_produce, &bs);
             }
         }
     }

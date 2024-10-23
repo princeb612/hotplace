@@ -21,7 +21,6 @@
 namespace hotplace {
 namespace odbc {
 
-class odbc_query;
 class odbc_connector {
    public:
     /**

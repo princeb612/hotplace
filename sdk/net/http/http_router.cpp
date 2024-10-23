@@ -22,27 +22,27 @@ http_router::~http_router() { clear(); }
 
 void http_router::clear() {
     for (authenticate_map_t::iterator iter = _authenticate_map.begin(); iter != _authenticate_map.end(); iter++) {
-        http_authenticate_provider* provider = iter->second;
+        http_authentication_provider* provider = iter->second;
         provider->release();
     }
     _authenticate_map.clear();
 }
 
-http_router& http_router::add(const char* uri, http_request_handler_t handler, http_authenticate_provider* auth_provider, bool upref) {
+http_router& http_router::add(const char* uri, http_request_handler_t handler, http_authentication_provider* auth_provider, bool upref) {
     if (uri) {
         add(std::string(uri), handler, auth_provider, upref);
     }
     return *this;
 }
 
-http_router& http_router::add(const char* uri, http_request_function_t handler, http_authenticate_provider* auth_provider, bool upref) {
+http_router& http_router::add(const char* uri, http_request_function_t handler, http_authentication_provider* auth_provider, bool upref) {
     if (uri) {
         add(std::string(uri), handler, auth_provider, upref);
     }
     return *this;
 }
 
-http_router& http_router::add(const std::string& uri, http_request_handler_t handler, http_authenticate_provider* auth_provider, bool upref) {
+http_router& http_router::add(const std::string& uri, http_request_handler_t handler, http_authentication_provider* auth_provider, bool upref) {
     critical_section_guard guard(_lock);
 
     http_router_t route;
@@ -61,7 +61,7 @@ http_router& http_router::add(const std::string& uri, http_request_handler_t han
     return *this;
 }
 
-http_router& http_router::add(const std::string& uri, http_request_function_t handler, http_authenticate_provider* auth_provider, bool upref) {
+http_router& http_router::add(const std::string& uri, http_request_function_t handler, http_authentication_provider* auth_provider, bool upref) {
     critical_section_guard guard(_lock);
 
     http_router_t route;
@@ -98,7 +98,7 @@ http_router& http_router::add(int status_code, http_request_function_t handler) 
 
 return_t http_router::route(network_session* session, http_request* request, http_response* response) {
     return_t ret = errorcode_t::success;
-    http_authenticate_provider* provider = nullptr;
+    http_authentication_provider* provider = nullptr;
 
     __try2 {
         if (nullptr == request || nullptr == response) {
@@ -181,10 +181,10 @@ html_documents& http_router::get_html_documents() { return _http_documents; }
 
 oauth2_provider& http_router::get_oauth2_provider() { return _oauth2; }
 
-bool http_router::get_auth_provider(http_request* request, http_response* response, http_authenticate_provider** provider) {
+bool http_router::get_auth_provider(http_request* request, http_response* response, http_authentication_provider** provider) {
     bool ret_value = false;
     return_t ret = errorcode_t::success;
-    http_authenticate_provider* auth_provider = nullptr;
+    http_authentication_provider* auth_provider = nullptr;
 
     __try2 {
         if (nullptr == request || nullptr == response || nullptr == provider) {

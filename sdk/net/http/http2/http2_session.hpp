@@ -18,11 +18,10 @@
 #include <sdk/base/unittest/traceable.hpp>  // traceable
 #include <sdk/net/http/http2/hpack.hpp>     // hpack_session
 #include <sdk/net/http/http_request.hpp>    // http_request
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {
-
-class http_server;
 
 class http2_session : public traceable {
    public:

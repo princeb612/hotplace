@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLSCLIENTSOCKET__
 #define __HOTPLACE_SDK_NET_TLS_TLSCLIENTSOCKET__
 
-#include <sdk/net/basic/tcp_client_socket.hpp>
+#include <sdk/net/basic/tcp_client_socket.hpp>  // tcp_client_socket
 #include <sdk/net/tls/tls.hpp>
 #include <sdk/net/tls/x509cert.hpp>
 
@@ -26,7 +26,6 @@ namespace net {
  *  #endif
  *
  *      openssl_startup ();
- *      openssl_thread_setup ();
  *
  *      socket_t sock = 0;
  *
@@ -84,7 +83,6 @@ namespace net {
  *
  *      SSL_CTX_free(x509);
  *
- *      openssl_thread_cleanup ();
  *      openssl_cleanup ();
  *
  *  #if defined _WIN32 || defined _WIN64

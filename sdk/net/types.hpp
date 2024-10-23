@@ -58,6 +58,34 @@ enum tls_io_flag_t {
 struct _tls_context_t;
 typedef struct _tls_context_t tls_context_t;
 
+// net/basic
+class client_socket;
+class ipaddr_acl;
+class server_socket;
+class tcp_client_socket;
+class tcp_server_socket;
+class udp_client_socket;
+class udp_server_socket;
+
+// net/server
+class network_server;
+class network_session;
+class network_session_data;
+class network_session_manager;
+class network_stream;
+class network_stream_data;
+class network_protocol;
+class network_protocol_group;
+class server_conf;
+
+// net/tls
+class dtls_client_socket;
+class dtls_server_socket;
+class tls_client_socket;
+class tls_server_socket;
+class transport_layer_security;
+class x509cert;
+
 }  // namespace net
 }  // namespace hotplace
 

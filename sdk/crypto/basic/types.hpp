@@ -47,4 +47,25 @@
 #include <openssl/thread.h>
 #endif
 
+namespace hotplace {
+namespace crypto {
+
+class crypto_advisor;
+class crypto_key;
+class crypto_keychain;
+class crypto_key_object;
+class hmac_otp;
+class openssl_aead;
+class openssl_crypt;
+class openssl_digest;
+class openssl_hash;
+class openssl_kdf;
+class openssl_mac;
+class openssl_prng;
+class openssl_sign;
+class time_otp;
+
+}  // namespace crypto
+}  // namespace hotplace
+
 #endif

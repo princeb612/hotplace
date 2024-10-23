@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_PROTOCOL__
 #define __HOTPLACE_SDK_NET_HTTP_PROTOCOL__
 
+#include <sdk/net/http/types.hpp>
 #include <sdk/net/server/network_protocol.hpp>  // network_protocol
 
 namespace hotplace {

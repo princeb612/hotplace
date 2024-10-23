@@ -23,6 +23,7 @@
 #include <sdk/io/basic/zlib.hpp>
 
 /* CBOR */
+#include <sdk/io/cbor/cbor.hpp>
 #include <sdk/io/cbor/cbor_array.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_encode.hpp>
@@ -31,7 +32,6 @@
 #include <sdk/io/cbor/cbor_publisher.hpp>
 #include <sdk/io/cbor/cbor_reader.hpp>
 #include <sdk/io/cbor/cbor_visitor.hpp>
-#include <sdk/io/cbor/concise_binary_object_representation.hpp>
 
 /* stream */
 #include <sdk/io/stream/file_stream.hpp>

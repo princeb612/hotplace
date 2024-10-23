@@ -179,9 +179,13 @@ void openssl_startup() {
         openssl_startup_implementation();
     }
     openssl_refcount++;
+
+    openssl_thread_setup();
 }
 
 void openssl_cleanup() {
+    openssl_thread_cleanup();
+
     critical_section_guard guard(openssl_lock);
     if (openssl_refcount > 0) {
         openssl_refcount--;

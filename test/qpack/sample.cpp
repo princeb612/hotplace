@@ -18,6 +18,7 @@
 #include <sdk/sdk.hpp>
 
 using namespace hotplace;
+using namespace hotplace::crypto;
 using namespace hotplace::io;
 using namespace hotplace::net;
 
@@ -595,10 +596,14 @@ int main(int argc, char** argv) {
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
 
+    openssl_startup();
+
     test_rfc9204_b();
     test_zero_capacity();
     test_tiny_capacity();
     test_small_capacity();
+
+    openssl_cleanup();
 
     _logger->flush();
 
