@@ -12,6 +12,8 @@
  */
 
 #include <sdk/io/cbor/cbor_encode.hpp>
+#include <sdk/io/cbor/cbor_object.hpp>
+#include <sdk/io/stream/stream.hpp>
 #include <sdk/io/system/types.hpp>
 
 namespace hotplace {

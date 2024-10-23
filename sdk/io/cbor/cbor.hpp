@@ -134,13 +134,21 @@ enum cbor_flag_t {
     cbor_indef = 1,  // indefinite-length
 };
 
-class cbor_object;
-class cbor_data;
-class cbor_bstrings;
-class cbor_tstrings;
-class cbor_pair;
-class cbor_map;
+struct _cbor_reader_context_t;
+typedef struct _cbor_reader_context_t cbor_reader_context_t;
+
 class cbor_array;
+class cbor_bstrings;
+class cbor_concise_visitor;
+class cbor_data;
+class cbor_diagnostic_visitor;
+class cbor_encode;
+class cbor_map;
+class cbor_object;
+class cbor_pair;
+class cbor_publisher;
+class cbor_reader;
+class cbor_tstrings;
 class cbor_visitor;
 
 }  // namespace io

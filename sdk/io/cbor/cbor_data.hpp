@@ -19,20 +19,10 @@
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
-#include <sdk/io/cbor/cbor_object.hpp>
-#include <sdk/io/stream/stream.hpp>
+#include <sdk/io/cbor/cbor_object.hpp>  // cbor_object
 
 namespace hotplace {
 namespace io {
-
-class cbor_object;
-class cbor_data;
-class cbor_bstrings;
-class cbor_tstrings;
-class cbor_pair;
-class cbor_map;
-class cbor_array;
-class cbor_visitor;
 
 class cbor_data : public cbor_object {
     friend class cbor_pair;
