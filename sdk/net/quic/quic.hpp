@@ -36,7 +36,7 @@ namespace net {
 
 // OpenSSL 3.2~
 // https://docs.openssl.org/master/man7/ossl-guide-quic-introduction/
-// https://docs.openssl.org/master/man7/ossl-guide-quic-multi-stream/#writing-data-to-the-streams
+// https://docs.openssl.org/master/man7/ossl-guide-quic-multi-stream/
 
 // studying...
 

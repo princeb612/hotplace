@@ -14,9 +14,9 @@
 namespace hotplace {
 namespace net {
 
-http_header_compression_table_static::http_header_compression_table_static() {}
+http_static_table::http_static_table() {}
 
-match_result_t http_header_compression_table_static::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
+match_result_t http_static_table::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
     index = 0;
 
@@ -42,7 +42,7 @@ match_result_t http_header_compression_table_static::match(uint32 flags, const s
     return state;
 }
 
-return_t http_header_compression_table_static::select(uint32 flags, size_t index, std::string& name, std::string& value) {
+return_t http_static_table::select(uint32 flags, size_t index, std::string& name, std::string& value) {
     return_t ret = errorcode_t::not_found;
     __try2 {
         static_table_index_t::iterator iter = _static_table_index.find(index);
@@ -63,9 +63,9 @@ return_t http_header_compression_table_static::select(uint32 flags, size_t index
     return ret;
 }
 
-size_t http_header_compression_table_static::size() { return _static_table.size(); }
+size_t http_static_table::size() { return _static_table.size(); }
 
-void http_header_compression_table_static::load() {}
+void http_static_table::load() {}
 
 hpack_static_table hpack_static_table::_instance;
 
@@ -74,7 +74,7 @@ hpack_static_table* hpack_static_table::get_instance() {
     return &_instance;
 }
 
-hpack_static_table::hpack_static_table() : http_header_compression_table_static() {}
+hpack_static_table::hpack_static_table() : http_static_table() {}
 
 void hpack_static_table::load() {
     if (_static_table.empty()) {

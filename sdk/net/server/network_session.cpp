@@ -20,6 +20,7 @@ network_session::network_session(server_socket* serversocket) : traceable() {
     _shared.make_share(this);
     serversocket->addref();
     _session.svr_socket = serversocket;
+    addchain(&get_http2_session());
 }
 
 network_session::~network_session() {
@@ -432,11 +433,6 @@ server_socket* network_session::get_server_socket() { return _session.svr_socket
 network_session_data* network_session::get_session_data() { return &_session_data; }
 
 http2_session& network_session::get_http2_session() { return _http2_session; }
-
-network_session& network_session::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
-    settrace(f);
-    return *this;
-}
 
 return_t network_session::dgram_get_sockaddr(sockaddr_storage_t* addr) {
     return_t ret = errorcode_t::success;

@@ -59,7 +59,7 @@ void test_dump(binary_t& bin, const char* text, ...) {
 }
 
 void debug_qpack_encoder(trace_category_t, uint32 event, stream_t* s) {
-    if (header_compression_event_evict & event) {
+    if (header_compression_event_evict == event) {
         count_evict_encoder++;
     }
     if (s) {
@@ -68,7 +68,7 @@ void debug_qpack_encoder(trace_category_t, uint32 event, stream_t* s) {
 };
 
 void debug_qpack_decoder(trace_category_t, uint32 event, stream_t* s) {
-    if (header_compression_event_evict & event) {
+    if (header_compression_event_evict == event) {
         count_evict_decoder++;
     }
     if (s) {
@@ -90,8 +90,8 @@ void test_rfc9204_b() {
     std::string name;
     std::string value;
 
-    session_encoder.trace(debug_qpack_encoder);
-    session_decoder.trace(debug_qpack_decoder);
+    session_encoder.settrace(debug_qpack_encoder);
+    session_decoder.settrace(debug_qpack_decoder);
     count_evict_encoder = 0;
 
     // B.1.  Literal Field Line with Name Reference
@@ -126,8 +126,10 @@ void test_rfc9204_b() {
 
             pos = 0;
             ret = enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, qpack_quic_stream_header);  // field section prefix
+            session_decoder.commit();
             _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "%s #field section prefix", text1);
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, qpack_quic_stream_header);  // field line
+            session_decoder.commit();
             _test_case.assert((":path" == name) && ("/index.html" == value), __FUNCTION__, "%s #decode", text1);
             _test_case.assert(0 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
         }
@@ -176,13 +178,16 @@ void test_rfc9204_b() {
             flags_decoder = qpack_quic_stream_encoder;
             pos = 0;
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            session_decoder.commit();
             _test_case.assert(220 == session_decoder.get_capacity(), __FUNCTION__, "%s #capacity", text2);
 
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            session_decoder.commit();
             _test_case.assert(1 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text2);
             _test_case.assert((":authority" == name) && ("www.example.com" == value), __FUNCTION__, "%s #decode", text2);
 
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            session_decoder.commit();
             _test_case.assert(2 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text2);
 
             _test_case.assert((":path" == name) && ("/sample/path" == value), __FUNCTION__, "%s #decode", text2);
@@ -223,10 +228,13 @@ void test_rfc9204_b() {
             flags_decoder = qpack_quic_stream_header;
             pos = 0;
             ret = enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);  // field section prefix
+            session_decoder.commit();
             _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "%s #field section prefix", text2);
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);  // :authority
+            session_decoder.commit();
             _test_case.assert((":authority" == name) && ("www.example.com" == value), __FUNCTION__, "%s #decode", text2);
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);  // :path
+            session_decoder.commit();
             _test_case.assert((":path" == name) && ("/sample/path" == value), __FUNCTION__, "%s #decode", text2);
 
             _test_case.assert(session_encoder.get_entries() == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text2);
@@ -287,6 +295,7 @@ void test_rfc9204_b() {
             flags_decoder = qpack_quic_stream_encoder;
             pos = 0;
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            session_decoder.commit();
             _test_case.assert(("custom-key" == name) && ("custom-value" == value), __FUNCTION__, "%s #decode", text3);
             _test_case.assert(3 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text3);
             _test_case.assert(160 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
@@ -344,6 +353,7 @@ void test_rfc9204_b() {
             flags_decoder = qpack_quic_stream_encoder;
             pos = 0;
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            session_decoder.commit();
             _test_case.assert((":authority" == name) && ("www.example.com" == value), __FUNCTION__, "%s #decode", text4);
             _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text4);
             _test_case.assert(217 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text4);
@@ -389,12 +399,16 @@ void test_rfc9204_b() {
             flags_decoder = qpack_quic_stream_header;
             pos = 0;
             ret = enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);  // field section prefix
+            session_decoder.commit();
             _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "%s #field section prefix", text4);
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            session_decoder.commit();
             _test_case.assert((":authority" == name) && ("www.example.com" == value), __FUNCTION__, "%s #decode", text4);
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            session_decoder.commit();
             _test_case.assert((":path" == name) && ("/" == value), __FUNCTION__, "%s #decode", text4);
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            session_decoder.commit();
             _test_case.assert(("custom-key" == name) && ("custom-value" == value), __FUNCTION__, "%s #decode", text4);
             _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text4);
         }
@@ -459,6 +473,7 @@ void test_rfc9204_b() {
             flags_decoder = qpack_quic_stream_encoder;
             pos = 0;
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            session_decoder.commit();
             _test_case.assert(("custom-key" == name) && ("custom-value2" == value), __FUNCTION__, "%s #decode", text5);
             _test_case.assert(1 == count_evict_decoder, __FUNCTION__, "%s #eviction", text5);
             _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text5);
@@ -483,7 +498,7 @@ void test_zero_capacity() {
     //    SETTINGS_QPACK_MAX_TABLE_CAPACITY (0x01):  The default value is zero.
 
     // debug
-    session.trace(debug_qpack_encoder);
+    session.settrace(debug_qpack_encoder);
 
     flags = qpack_intermediary | qpack_name_reference;
     enc.insert(&session, bin, ":authority", "www.example.com", flags);
@@ -521,7 +536,7 @@ void test_tiny_capacity() {
     session.set_capacity(32);
 
     // debug
-    session.trace(debug_qpack_encoder);
+    session.settrace(debug_qpack_encoder);
 
     flags = qpack_intermediary | qpack_name_reference;
     enc.insert(&session, bin, ":authority", "www.example.com", flags);
@@ -551,7 +566,7 @@ void test_small_capacity() {
     session.set_capacity(80);
 
     // debug
-    session.trace(debug_qpack_encoder);
+    session.settrace(debug_qpack_encoder);
 
     auto test = [&](const std::string& name, const std::string& value, unsigned int evict_expect, const char* expect = nullptr) -> void {
         enc.insert(&session, bin, name, value, flags);

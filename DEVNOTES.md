@@ -9,13 +9,13 @@
 #### basic
 ```mermaid
 flowchart LR
-  A --> B;
-  A --> C;
   A[basic];
   B[unittest];
+  C[pattern];
+  A --> B;
+  A --> C;
   B --> B1[test_case];
   B --> B2[logger];
-  C[pattern];
   C --> C1[KMP];
   C --> C2[trie];
   C --> C3[suffixtree];
@@ -27,8 +27,11 @@ flowchart LR
 #### io
 ```mermaid
 flowchart LR
-  A[io] --> B[CBOR];
-  A -.-> C[ASN.1];
+  A --> B;
+  A -.-> C;
+  A[io];
+  B[CBOR];
+  C[ASN.1];
 ```
 
 - holding
@@ -37,9 +40,13 @@ flowchart LR
 #### crypto
 ```mermaid
 flowchart LR
-  A[crypto] --> B[JOSE];
-  A --> C1[CBOR];
-  C1 --> C2[COSE];
+  A[crypto];
+  B[JOSE];
+  C1[CBOR];
+  C2[COSE];
+  A --> B;
+  A --> C1;
+  C1 --> C2;
 ```
 
 #### net
@@ -61,8 +68,7 @@ flowchart LR
   B --> D1[HPACK];
   D1 --> D2[HTTP/2];
   B --> E1[QPACK];
-  E1 -.-> E2[QUIC];
-  E2 -.-> E3[HTTP/3];
+  E1 -.-> E2[HTTP/3];
 ```
 
 - TODO
@@ -93,11 +99,13 @@ flowchart LR
 - [ ] QUIC
 - [x] QPACK
   - [x] encoder
-  - [x] eviction
+  - [x] static table
+  - [x] dynamic table
 - [x] HPACK
   - [x] huffman coding
   - [x] encoder
-  - [x] eviction
+  - [x] static table
+  - [x] dynamic table
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)
   - [x] integration - network_server
@@ -124,12 +132,20 @@ flowchart LR
 - [x] COSE
   - [x] CBOR
   - [x] CWK
+    - [x] HMAC
+    - [x] RSA
+    - [x] EC
+    - [x] OKP
   - [x] encrypt
   - [x] sign
   - [x] mac
   - [ ] hash
 - [x] JOSE
   - [x] JWK
+    - [x] HMAC
+    - [x] RSA
+    - [x] EC
+    - [x] OKP
   - [x] JWA
   - [x] JWE
   - [x] JWS

@@ -26,6 +26,7 @@ http_server::http_server()
       _tls_server_socket(nullptr),
       _dtls_server_socket(nullptr),
       _user_context(nullptr) {
+    addchain(&get_http_router());
     get_http_router().set_owner(this);
     get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 }
@@ -210,17 +211,17 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
 
         switch (type) {
             case mux_connect:
-                bs.printf("connect %i\n", session_socket->cli_socket);
+                bs.printf("connect %i\n", session_socket->event_socket);
                 break;
             case mux_read: {
-                bs.printf("read %i\n", session_socket->cli_socket);
+                bs.printf("read %i\n", session_socket->event_socket);
                 byte_t* buf = (byte_t*)data_array[1];
                 size_t bufsize = (size_t)data_array[2];
                 dump_memory((byte_t*)buf, bufsize, &bs, 16, 2, 0, dump_memory_flag_t::dump_notrunc);
                 bs.printf("\n");
             } break;
             case mux_disconnect:
-                bs.printf("disconnect %i\n", session_socket->cli_socket);
+                bs.printf("disconnect %i\n", session_socket->event_socket);
                 break;
             default:
                 break;
@@ -258,15 +259,14 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
     return ret;
 }
 
-http_server& http_server::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
-    settrace(f);
+void http_server::settrace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
+    traceable::settrace(f);
+
     if (get_server_conf().get(netserver_config_t::serverconf_trace_ns)) {
         for (auto item : _http_handles) {
             network_server::trace(item, f);
         }
     }
-    get_http_router().trace(f);
-    return *this;
 }
 
 network_server& http_server::get_network_server() { return _server; }

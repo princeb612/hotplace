@@ -108,8 +108,6 @@ class http_response : public traceable {
     uint8 get_version();
     uint32 get_stream_id();
 
-    http_response& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
-
     void addref();
     void release();
 

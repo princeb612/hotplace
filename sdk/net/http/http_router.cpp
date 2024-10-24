@@ -16,7 +16,7 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_router::http_router() : traceable(), _http_server(nullptr) {}
+http_router::http_router() : traceable(), _http_server(nullptr) { addchain(&get_http2_serverpush()); }
 
 http_router::~http_router() { clear(); }
 
@@ -223,12 +223,6 @@ http2_serverpush& http_router::get_http2_serverpush() { return _http2_serverpush
 http_server* http_router::get_http_server() { return _http_server; }
 
 void http_router::set_owner(http_server* server) { _http_server = server; }
-
-http_router& http_router::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
-    settrace(f);
-    get_http2_serverpush().trace(f);
-    return *this;
-}
 
 }  // namespace net
 }  // namespace hotplace

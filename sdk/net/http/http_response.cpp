@@ -483,11 +483,6 @@ uint8 http_response::get_version() { return _version; }
 
 uint32 http_response::get_stream_id() { return _stream_id; }
 
-http_response& http_response::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
-    settrace(f);
-    return *this;
-}
-
 void http_response::addref() { _shared.addref(); }
 
 void http_response::release() { _shared.delref(); }

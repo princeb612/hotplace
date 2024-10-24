@@ -227,6 +227,7 @@ void http2_frame::read_compressed_header(const byte_t* buf, size_t size, std::fu
             encoder.decode_header(get_hpack_session(), buf, size, pos, name, value);
             v(name, value);
         }
+        get_hpack_session()->commit();
     }
 }
 
@@ -243,6 +244,7 @@ return_t http2_frame::write_compressed_header(binary_t& frag, const std::string&
         }
         hpack_encoder encoder;
         encoder.encode_header(get_hpack_session(), frag, name, value, flags);
+        get_hpack_session()->commit();
     }
     __finally2 {
         // do nothing
@@ -265,6 +267,7 @@ return_t http2_frame::write_compressed_header(http_header* header, binary_t& fra
         hpack_encoder encoder;
         auto lambda = [&](const std::string& name, const std::string& value) -> void { encoder.encode_header(get_hpack_session(), frag, name, value, flags); };
         header->get_headers(lambda);
+        get_hpack_session()->commit();
     }
     __finally2 {
         // do nothing

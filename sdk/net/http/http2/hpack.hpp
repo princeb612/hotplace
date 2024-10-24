@@ -21,12 +21,16 @@ namespace net {
 
 class hpack_encoder;
 class hpack_session;
-class qpack_encoder;
+
+template <typename DYNAMIC_T, typename ENCODER_T>
+class http_header_compression_stream;
+
+typedef http_header_compression_stream<hpack_session, hpack_encoder> hpack_stream;
 
 /**
  * @brief   HPACK
  * @sample
- *          hpack_stream hp;
+ *          http_header_compression_stream hp;
  *          hpack_session session;
  *          hp
  *              .set_encoder(encoder)
@@ -37,26 +41,33 @@ class qpack_encoder;
  *          // do something dump_memory(hp.get_binary(), &bs);
  *          hp.get_binary().clear();
  */
-class hpack_stream {
+template <typename DYNAMIC_T, typename ENCODER_T>
+class http_header_compression_stream {
    public:
-    hpack_stream();
-    ~hpack_stream();
+    http_header_compression_stream() : _session(nullptr), _flags(hpack_indexing | hpack_huffman), _autocommit(true) {}
+    ~http_header_compression_stream() {}
 
     /**
      * @brief   set
      * @remarks reduce repetition of the following values : session, binary, flags
      */
-    hpack_stream& set_session(hpack_session* session);
+    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& set_session(DYNAMIC_T* session) {
+        _session = session;
+        return *this;
+    }
 
     /**
      * @brief   get
      */
-    hpack_session* get_session();
+    DYNAMIC_T* get_session() { return _session; }
 
     /**
      * @brief   set flags for encoding
      */
-    hpack_stream& set_encode_flags(uint32 flags);
+    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& set_encode_flags(uint32 flags) {
+        _flags = flags;
+        return *this;
+    }
     /**
      * @brief   encode
      * @param   const std::string& name [in]
@@ -73,21 +84,52 @@ class hpack_stream {
      *              .encode_header(name2, value2);
      *              .encode_header("content-length", "123", hpack_wo_indexing | hpack_huffman);
      */
-    hpack_stream& encode_header(const std::string& name, const std::string& value, uint32 flags = 0);
-    /**
-     * @brief   encoded data
-     */
-    binary_t& get_binary();
+    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& encode_header(const std::string& name, const std::string& value, uint32 flags = 0) {
+        if (_session) {
+            ENCODER_T encoder;
+            encoder.encode_header(_session, _bin, name, value, flags ? flags : _flags);
+            if (_autocommit) {
+                commit();
+            }
+        }
+        return *this;
+    }
 
     /**
      * @brief   decode
      */
-    hpack_stream& decode_header(const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& decode_header(const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
+        if (_session) {
+            ENCODER_T encoder;
+            encoder.decode_header(_session, source, size, pos, name, value);
+            if (_autocommit) {
+                commit();
+            }
+        }
+        return *this;
+    }
+
+    /**
+     * @brief   encoded data
+     */
+    binary_t& get_binary() { return _bin; }
+
+    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& autocommit(bool enable = true) {
+        _autocommit = enable;
+        return *this;
+    }
+    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& commit() {
+        if (_session) {
+            _session->commit();
+        }
+        return *this;
+    }
 
    private:
-    hpack_session* _session;
+    DYNAMIC_T* _session;
     uint32 _flags;
     binary_t _bin;
+    bool _autocommit;
 };
 
 /**
@@ -113,49 +155,61 @@ class hpack_encoder : public http_header_compression {
 
     /**
      * @brief   encode (header compression)
-     * @param   http_header_compression_table_dynamic* session [in] dynamic table
+     * @param   http_dynamic_table* session [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] see http_header_compression_flag_t
      * @return  error code (see error.hpp)
      */
-    virtual return_t encode(http_header_compression_table_dynamic* session, binary_t& target, const std::string& name, const std::string& value,
-                            uint32 flags = 0);
+    virtual return_t encode(http_dynamic_table* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_header_compression_table_dynamic* session [in] dynamic table
+     * @param   http_dynamic_table* session [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
      * @param   std::string& name [in]
      * @param   std::string& value [in]
      * @return  error code (see error.hpp)
+     * @sample
+     *          pos = 0;
+     *          while (pos < streamsize) {
+     *              encoder.decode(session, stream, streamsize, pos, name, value, flags);
+     *          }
+     *          // keep the index until the decoder process is finished
+     *          // insert info dynamic table
+     *          session.commit();
      */
-    virtual return_t decode(http_header_compression_table_dynamic* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                            std::string& value);
+    virtual return_t decode(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
 
     /**
      * @brief   encode (header compression)
-     * @param   http_header_compression_table_dynamic* session [in] dynamic table
+     * @param   http_dynamic_table* session [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] see http_header_compression_flag_t
+     * @sample
+     *          pos = 0;
+     *          while (pos < target.size()) {
+     *              encoder.decode(session, &target[0], target.size(), pos, name, value, flags);
+     *          }
+     *          // keep the index until the decoder process is finished
+     *          // insert into dynamic table
+     *          session.commit();
      */
-    hpack_encoder& encode_header(http_header_compression_table_dynamic* session, binary_t& target, const std::string& name, const std::string& value,
-                                 uint32 flags = 0);
+    hpack_encoder& encode_header(http_dynamic_table* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_header_compression_table_dynamic* session [in] dynamic table
+     * @param   http_dynamic_table* session [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
      * @param   std::string& name [in]
      * @param   std::string& value [in]
      */
-    hpack_encoder& decode_header(http_header_compression_table_dynamic* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                 std::string& value);
+    hpack_encoder& decode_header(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
 
     /**
      * @brief   index
@@ -220,7 +274,7 @@ class hpack_encoder : public http_header_compression {
  * @brief   separate dynamic table per session
  * @sa      hpack_encoder
  */
-class hpack_session : public http_header_compression_table_dynamic {
+class hpack_session : public http_dynamic_table {
    public:
     hpack_session();
     /**

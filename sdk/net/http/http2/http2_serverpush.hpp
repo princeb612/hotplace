@@ -112,8 +112,6 @@ class http2_serverpush : public traceable {
      */
     return_t push(http_request* request, http_server* server, network_session* session);
 
-    http2_serverpush& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
-
    protected:
     return_t do_push_promise(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session,
                              binary_t& stream);

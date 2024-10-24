@@ -39,8 +39,6 @@ class http2_session : public traceable {
 
     hpack_session& get_hpack_session();
 
-    http2_session& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
-
     /**
      * @brief   enable push
      * @remarks

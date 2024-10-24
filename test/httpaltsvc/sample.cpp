@@ -36,8 +36,9 @@ typedef struct _OPTION {
     int port_h3;
     int packetsize;
     int verbose;
+    int log;
 
-    _OPTION() : port_h1(9000), port_h2(9001), port_h3(9002), packetsize(1 << 16), verbose(0) {}
+    _OPTION() : port_h1(9000), port_h2(9001), port_h3(9002), packetsize(1 << 16), verbose(0), log(0) {}
 } OPTION;
 
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
@@ -110,7 +111,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
                         cprint("response %i", session_socket->event_socket);
                         _logger->writeln("%.*s", (unsigned int)s->size(), s->data());
                     };
-                    response.trace(lambda);
+                    response.settrace(lambda);
                 }
 
                 // HTTP/3 not implemented yet ... (studying)
@@ -158,7 +159,7 @@ void start_server(t_shared_instance<http_server> &server, const std::string vers
         .set(netserver_config_t::serverconf_concurrent_consume, 2);
     if (option.verbose) {
         auto lambda = [](trace_category_t, uint32, stream_t *s) -> void { printf("%.*s", (unsigned int)s->size(), s->data()); };
-        builder.trace(lambda);
+        builder.settrace(lambda);
         builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
     }
     server.make_share(builder.build());
@@ -249,14 +250,18 @@ int main(int argc, char **argv) {
     *_cmdline << t_cmdarg_t<OPTION>("-1", "http/1.1 port (default 9000)", [](OPTION &o, char *param) -> void { o.port_h1 = atoi(param); }).preced().optional()
               << t_cmdarg_t<OPTION>("-2", "http/2   port (default 9001)", [](OPTION &o, char *param) -> void { o.port_h2 = atoi(param); }).preced().optional()
               << t_cmdarg_t<OPTION>("-p", "packet size (default 65535)", [](OPTION &o, char *param) -> void { o.packetsize = atoi(param); }).preced().optional()
-              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional();
+              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-l", "log", [](OPTION &o, char *param) -> void { o.log = 1; }).optional();
 
     _cmdline->parse(argc, argv);
 
     const OPTION &option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("server.log");
+    }
     _logger.make_share(builder.build());
 
     if (option.verbose) {

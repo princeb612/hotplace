@@ -50,6 +50,7 @@ enum category_http_response_event_t {
 enum category_header_compression_event_t {
     header_compression_event_insert = 1,  // insertion
     header_compression_event_evict = 2,   // eviction
+    header_compression_event_select = 3,  // select
 };
 
 enum category_http2_push_event_t {
@@ -93,12 +94,12 @@ class traceable {
      * @brief   settrace
      * @param   std::function<void(trace_category_t category, uint32 events, stream_t* s)> f [in]
      */
-    void settrace(std::function<void(trace_category_t category, uint32 events, stream_t* s)> f);
+    virtual void settrace(std::function<void(trace_category_t category, uint32 events, stream_t* s)> f);
     /**
      * @brief   settrace
      * @param   traceable* diag [in]
      */
-    void settrace(traceable* diag);
+    virtual void settrace(traceable* diag);
     /**
      * @brief   event
      * @param   trace_category_t category [in]
@@ -108,8 +109,26 @@ class traceable {
     void traceevent(trace_category_t category, uint32 events, stream_t*);
     void traceevent(trace_category_t category, uint32 events, const char* fmt, ...);
 
+    /**
+     * @brief   add
+     * @sample
+     *          class A : public traceable {
+     *             public:
+     *          };
+     *          class B : public traceable {
+     *             public:
+     *              B() { addchain(&a); }
+     *              A a;
+     *          };
+     *          void test() {
+     *              b.settrace(trace_handler); // call B::settrace, A::settrace
+     *          }
+     */
+    void addchain(traceable* tr);
+
    protected:
     std::function<void(trace_category_t, uint32, stream_t*)> _df;
+    std::list<traceable*> children;
 };
 
 }  // namespace hotplace

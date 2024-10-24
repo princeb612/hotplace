@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-// studying
+// ...
 
 }  // namespace net
 }  // namespace hotplace

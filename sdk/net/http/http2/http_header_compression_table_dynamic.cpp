@@ -14,10 +14,9 @@
 namespace hotplace {
 namespace net {
 
-http_header_compression_table_dynamic::http_header_compression_table_dynamic()
-    : traceable(), _type(header_compression_hpack), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
+http_dynamic_table::http_dynamic_table() : traceable(), _type(header_compression_hpack), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
 
-void http_header_compression_table_dynamic::for_each(std::function<void(const std::string&, const std::string&)> v) {
+void http_dynamic_table::for_each(std::function<void(const std::string&, const std::string&)> v) {
     if (v) {
         for (auto item : _dynamic_map) {
             v(item.first, item.second.first);
@@ -25,17 +24,11 @@ void http_header_compression_table_dynamic::for_each(std::function<void(const st
     }
 }
 
-bool http_header_compression_table_dynamic::operator==(const http_header_compression_table_dynamic& rhs) {
-    return (_type == rhs._type) && (_dynamic_map == rhs._dynamic_map);
-}
+bool http_dynamic_table::operator==(const http_dynamic_table& rhs) { return (_type == rhs._type) && (_dynamic_map == rhs._dynamic_map); }
 
-bool http_header_compression_table_dynamic::operator!=(const http_header_compression_table_dynamic& rhs) {
-    return (_type != rhs._type) || (_dynamic_map != rhs._dynamic_map);
-}
+bool http_dynamic_table::operator!=(const http_dynamic_table& rhs) { return (_type != rhs._type) || (_dynamic_map != rhs._dynamic_map); }
 
-void http_header_compression_table_dynamic::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) { settrace(f); }
-
-match_result_t http_header_compression_table_dynamic::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
+match_result_t http_dynamic_table::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
 
     auto lbound = _dynamic_map.lower_bound(name);
@@ -106,7 +99,7 @@ match_result_t http_header_compression_table_dynamic::match(uint32 flags, const 
     return state;
 }
 
-return_t http_header_compression_table_dynamic::select(uint32 flags, size_t index, std::string& name, std::string& value) {
+return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& name, std::string& value) {
     return_t ret = errorcode_t::not_found;
 
     __try2 {
@@ -150,6 +143,12 @@ return_t http_header_compression_table_dynamic::select(uint32 flags, size_t inde
                 }
             }
         }
+
+        if (errorcode_t::success == ret) {
+            basic_stream bs;
+            bs << "index [" << index << "] " << name << "=" << value;
+            traceevent(category_header_compression, header_compression_event_select, &bs);
+        }
     }
     __finally2 {
         // do nothing
@@ -157,37 +156,59 @@ return_t http_header_compression_table_dynamic::select(uint32 flags, size_t inde
     return ret;
 }
 
-return_t http_header_compression_table_dynamic::insert(const std::string& name, const std::string& value) {
+return_t http_dynamic_table::insert(const std::string& name, const std::string& value) {
     return_t ret = errorcode_t::success;
 
-    // RFC 7541 4.1.  Calculating Table Size
-    // RFC 9204 3.2.1.  Dynamic Table Size
-    size_t entrysize = 0;
-    http_header_compression::sizeof_entry(name, value, entrysize);
+    critical_section_guard guard(_lock);
 
-    if (entrysize < _capacity) {
-        _tablesize += entrysize;
+    commit_pair item;
+    item.name = name;
+    item.value = value;
+    _commit_queue.push(item);
 
-        evict();
+    return ret;
+}
 
-        _dynamic_map.insert({name, {value, _inserted}});
-        _dynamic_reversemap.insert({_inserted, {name, entrysize}});
+return_t http_dynamic_table::commit() {
+    return_t ret = errorcode_t::success;
 
-        if (istraceable()) {
-            basic_stream bs;
-            bs.printf("insert entry[%zi] %s=%s", _inserted, name.c_str(), value.c_str());
-            traceevent(category_header_compression, header_compression_event_insert, &bs);
+    critical_section_guard guard(_lock);
+    while (false == _commit_queue.empty()) {
+        commit_pair item = _commit_queue.front();
+        _commit_queue.pop();
+
+        auto const& name = item.name;
+        auto const& value = item.value;
+
+        // RFC 7541 4.1.  Calculating Table Size
+        // RFC 9204 3.2.1.  Dynamic Table Size
+        size_t entrysize = 0;
+        http_header_compression::sizeof_entry(name, value, entrysize);
+
+        if (entrysize < _capacity) {
+            _tablesize += entrysize;
+
+            evict();
+
+            _dynamic_map.insert({name, {value, _inserted}});
+            _dynamic_reversemap.insert({_inserted, {name, entrysize}});
+
+            if (istraceable()) {
+                basic_stream bs;
+                bs.printf("insert entry[%zi] %s=%s", _inserted, name.c_str(), value.c_str());
+                traceevent(category_header_compression, header_compression_event_insert, &bs);
+            }
+
+            _inserted++;
+        } else {
+            ret = errorcode_t::insufficient;
         }
-
-        _inserted++;
-    } else {
-        ret = errorcode_t::insufficient;
     }
 
     return ret;
 }
 
-return_t http_header_compression_table_dynamic::evict() {
+return_t http_dynamic_table::evict() {
     return_t ret = errorcode_t::success;
 
     while (_dynamic_reversemap.size() && (_tablesize > _capacity)) {
@@ -232,7 +253,7 @@ return_t http_header_compression_table_dynamic::evict() {
     return ret;
 }
 
-void http_header_compression_table_dynamic::set_capacity(uint32 capacity) {
+void http_dynamic_table::set_capacity(uint32 capacity) {
     /**
      * RFC 9113 6.5.2.  Defined Settings
      *  SETTINGS_HEADER_TABLE_SIZE (0x01)
@@ -255,15 +276,15 @@ void http_header_compression_table_dynamic::set_capacity(uint32 capacity) {
     }
 }
 
-size_t http_header_compression_table_dynamic::get_capacity() { return _capacity; }
+size_t http_dynamic_table::get_capacity() { return _capacity; }
 
-size_t http_header_compression_table_dynamic::get_tablesize() { return _tablesize; }
+size_t http_dynamic_table::get_tablesize() { return _tablesize; }
 
-size_t http_header_compression_table_dynamic::get_entries() { return _inserted - _dropped; }
+size_t http_dynamic_table::get_entries() { return _inserted - _dropped; }
 
-return_t http_header_compression_table_dynamic::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
+return_t http_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
 
-uint8 http_header_compression_table_dynamic::type() { return _type; }
+uint8 http_dynamic_table::type() { return _type; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -41,7 +41,7 @@ http_header& http_header::add(const std::string& name, const std::string& value)
         if (true == pib.second) {
             _names.push_back(key);
         } else {
-            pib.first->second = value;
+            // pib.first->second = value;
         }
     }
     __finally2 {

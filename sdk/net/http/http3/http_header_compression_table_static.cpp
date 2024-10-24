@@ -21,7 +21,7 @@ qpack_static_table* qpack_static_table::get_instance() {
     return &_instance;
 }
 
-qpack_static_table::qpack_static_table() : http_header_compression_table_static() {}
+qpack_static_table::qpack_static_table() : http_static_table() {}
 
 void qpack_static_table::load() {
     if (_static_table.empty()) {

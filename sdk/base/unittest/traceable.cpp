@@ -28,17 +28,24 @@ bool traceable::istraceable() {
     return ret;
 }
 
-void traceable::settrace(std::function<void(trace_category_t, uint32, stream_t*)> f) { _df = f; }
+void traceable::settrace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
+    _df = f;
+    for (auto item : children) {
+        item->settrace(f);
+    }
+}
 
 void traceable::settrace(traceable* diag) {
     if (diag) {
         _df = diag->_df;
+        for (auto item : children) {
+            item->settrace(diag);
+        }
     }
 }
 
 void traceable::traceevent(trace_category_t category, uint32 events, stream_t* s) {
     if (_df) {
-        // operator () - invokes the target
         _df(category, events, s);
     }
 }
@@ -53,6 +60,12 @@ void traceable::traceevent(trace_category_t category, uint32 events, const char*
         va_end(ap);
 
         _df(category, events, &bs);
+    }
+}
+
+void traceable::addchain(traceable* tr) {
+    if (tr) {
+        children.push_back(tr);
     }
 }
 

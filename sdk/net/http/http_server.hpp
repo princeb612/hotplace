@@ -54,7 +54,7 @@ class http_server : public traceable {
     http2_protocol& get_http2_protocol();
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();
-    http_server& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
+    virtual void settrace(std::function<void(trace_category_t, uint32, stream_t*)> f);
 
    protected:
     http_server();

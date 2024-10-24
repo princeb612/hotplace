@@ -87,8 +87,6 @@ class http_router : public traceable {
 
     http_server* get_http_server();
 
-    http_router& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
-
    protected:
     /**
      * @brief   http_authentication_provider

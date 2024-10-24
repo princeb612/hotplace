@@ -31,8 +31,9 @@ typedef struct _OPTION {
     int port;
     int port_tls;
     int verbose;
+    int log;
 
-    _OPTION() : port(8080), port_tls(9000), verbose(0) {}
+    _OPTION() : port(8080), port_tls(9000), verbose(0), log(0) {}
 } OPTION;
 
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
@@ -311,14 +312,18 @@ int main(int argc, char** argv) {
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     *_cmdline << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
               << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
-              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional();
 
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("server.log");
+    }
     _logger.make_share(builder.build());
 
     if (option.verbose) {

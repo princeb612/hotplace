@@ -64,8 +64,6 @@ class http_server_builder : public traceable {
 
     http_server_builder& set_handler(http_server_handler_t handler, void* user_context = nullptr);
 
-    http_server_builder& trace(std::function<void(trace_category_t, uint32, stream_t*)> f);
-
     http_server* build();
     server_conf& get_server_conf();
 

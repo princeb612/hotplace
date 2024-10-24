@@ -16,19 +16,18 @@ namespace net {
 
 http_header_compression::http_header_compression() : _safe_mask(false) {}
 
-return_t http_header_compression::encode(http_header_compression_table_dynamic* dyntable, binary_t& target, const std::string& name, const std::string& value,
+return_t http_header_compression::encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
+
+return_t http_header_compression::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
                                          uint32 flags) {
     return_t ret = errorcode_t::success;
     return ret;
 }
 
-return_t http_header_compression::decode(http_header_compression_table_dynamic* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                         std::string& value, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
-
-return_t http_header_compression::sync(http_header_compression_table_dynamic* dyntable, binary_t& target, uint32 flags) { return errorcode_t::success; }
+return_t http_header_compression::sync(http_dynamic_table* dyntable, binary_t& target, uint32 flags) { return errorcode_t::success; }
 
 return_t http_header_compression::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value) {
     return_t ret = errorcode_t::success;
@@ -232,7 +231,7 @@ return_t http_header_compression::decode_name_reference(const byte_t* p, size_t&
     return ret;
 }
 
-return_t http_header_compression::set_capacity(http_header_compression_table_dynamic* dyntable, binary_t& target, uint8 maxsize) {
+return_t http_header_compression::set_capacity(http_dynamic_table* dyntable, binary_t& target, uint8 maxsize) {
     /**
      * RFC 7541 Figure 12: Maximum Dynamic Table Size Change
      *   0   1   2   3   4   5   6   7
@@ -270,8 +269,8 @@ return_t http_header_compression::sizeof_entry(const std::string& name, const st
 
 void http_header_compression::safe_mask(bool enable) { _safe_mask = enable; }
 
-match_result_t http_header_compression::matchall(http_header_compression_table_static* statable, http_header_compression_table_dynamic* dyntable, uint32 flags,
-                                                 const std::string& name, const std::string& value, size_t& index) {
+match_result_t http_header_compression::matchall(http_static_table* statable, http_dynamic_table* dyntable, uint32 flags, const std::string& name,
+                                                 const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
     index = 0;
 
@@ -297,8 +296,8 @@ match_result_t http_header_compression::matchall(http_header_compression_table_s
     return state;
 }
 
-return_t http_header_compression::selectall(http_header_compression_table_static* statable, http_header_compression_table_dynamic* dyntable, uint32 flags,
-                                            size_t index, std::string& name, std::string& value) {
+return_t http_header_compression::selectall(http_static_table* statable, http_dynamic_table* dyntable, uint32 flags, size_t index, std::string& name,
+                                            std::string& value) {
     return_t ret = errorcode_t::not_found;
     name.clear();
     value.clear();

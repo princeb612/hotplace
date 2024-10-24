@@ -16,8 +16,7 @@ namespace net {
 
 hpack_encoder::hpack_encoder() : http_header_compression() {}
 
-return_t hpack_encoder::encode(http_header_compression_table_dynamic* dyntable, binary_t& target, const std::string& name, const std::string& value,
-                               uint32 flags) {
+return_t hpack_encoder::encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     match_result_t state = match_result_t::not_matched;
     __try2 {
@@ -40,12 +39,14 @@ return_t hpack_encoder::encode(http_header_compression_table_dynamic* dyntable, 
                 encode_indexed_name(target, flags, index, value);
                 if (hpack_indexing & flags) {
                     dyntable->insert(name, value);
+                    dyntable->commit();
                 }
                 break;
             default:
                 encode_name_value(target, flags, name, value);
                 if (hpack_indexing & flags) {
                     dyntable->insert(name, value);
+                    dyntable->commit();
                 }
                 break;
         }
@@ -56,8 +57,7 @@ return_t hpack_encoder::encode(http_header_compression_table_dynamic* dyntable, 
     return ret;
 }
 
-return_t hpack_encoder::decode(http_header_compression_table_dynamic* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                               std::string& value) {
+return_t hpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == dyntable) || (nullptr == source)) {
@@ -156,13 +156,12 @@ return_t hpack_encoder::decode(http_header_compression_table_dynamic* dyntable, 
     return ret;
 }
 
-hpack_encoder& hpack_encoder::encode_header(http_header_compression_table_dynamic* dyntable, binary_t& target, const std::string& name,
-                                            const std::string& value, uint32 flags) {
+hpack_encoder& hpack_encoder::encode_header(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
     encode(dyntable, target, name, value, flags);
     return *this;
 }
 
-hpack_encoder& hpack_encoder::decode_header(http_header_compression_table_dynamic* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
+hpack_encoder& hpack_encoder::decode_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
                                             std::string& value) {
     decode(dyntable, source, size, pos, name, value);
     return *this;

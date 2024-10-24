@@ -35,15 +35,81 @@ typedef struct _OPTION {
     int port;
     int port_tls;
     int verbose;
+    int log;
 
-    _OPTION() : port(8080), port_tls(9000), verbose(0) {}
+    _OPTION() : port(8080), port_tls(9000), verbose(0), log(0) {}
 } OPTION;
 
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 t_shared_instance<http_server> _http_server;
 critical_section print_lock;
 
-void debug_handler(trace_category_t, uint32, stream_t* s) { _logger->writeln("%.*s", (unsigned int)s->size(), s->data()); };
+void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
+    std::string ct;
+    std::string ev;
+    switch (category) {
+        case category_crypto:
+            ct = "crypto";
+            break;
+        case category_net_session:
+            ct = "network_session";
+            switch (event) {
+                case net_session_event_produce:
+                    ev = "produce";
+                    break;
+                case net_session_event_http2_consume:
+                    ev = "consume";
+                    break;
+            }
+            break;
+        case category_http_server:
+            ct = "http_server";
+            switch (event) {
+                case http_server_event_consume:
+                    ev = "consume";
+                    break;
+            }
+            break;
+        case category_http_request:
+            ct = "http_request";
+            break;
+        case category_http_response:
+            ct = "http_response";
+            switch (event) {
+                case http_response_event_getresponse:
+                    ev = "response";
+                    break;
+            }
+            break;
+        case category_header_compression:
+            ct = "hpack";
+            switch (event) {
+                case header_compression_event_insert:
+                    ev = "insert";
+                    break;
+                case header_compression_event_evict:
+                    ev = "evict";
+                    break;
+                case header_compression_event_select:
+                    ev = "select";
+                    break;
+            }
+            break;
+        case category_http2_serverpush:
+            ct = "server push";
+            switch (event) {
+                case http2_push_event_push_promise:
+                    ev = "push promise";
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+    basic_stream bs;
+    bs.printf("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned int)s->size(), s->data());
+    _logger->writeln(bs);
+};
 
 void cprint(const char* text, ...) {
     basic_stream bs;
@@ -91,7 +157,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             if (request) {
                 http_response response(request);
                 if (option.verbose) {
-                    response.trace(debug_handler);
+                    response.settrace(debug_handler);
                 }
                 _http_server->get_http_router().route(session, request, &response);
                 response.respond(session);
@@ -133,7 +199,7 @@ return_t simple_http2_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_network, 4)
             .set(netserver_config_t::serverconf_concurrent_consume, 4);
         if (option.verbose) {
-            builder.trace(debug_handler);
+            builder.settrace(debug_handler);
             builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
         }
         _http_server.make_share(builder.build());
@@ -310,14 +376,18 @@ int main(int argc, char** argv) {
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     *_cmdline << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
               << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
-              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional();
 
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("server.log");
+    }
     _logger.make_share(builder.build());
 
     if (option.verbose) {

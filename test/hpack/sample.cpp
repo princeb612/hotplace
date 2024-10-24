@@ -52,7 +52,7 @@ void cprint(const char* text, ...) {
 }
 
 void debug_hpack_encoder(trace_category_t, uint32 event, stream_t* s) {
-    if (header_compression_event_evict & event) {
+    if (header_compression_event_evict == event) {
         count_evict_encoder++;
     }
     if (s) {
@@ -61,7 +61,7 @@ void debug_hpack_encoder(trace_category_t, uint32 event, stream_t* s) {
 };
 
 void debug_hpack_decoder(trace_category_t, uint32 event, stream_t* s) {
-    if (header_compression_event_evict & event) {
+    if (header_compression_event_evict == event) {
         count_evict_decoder++;
     }
     if (s) {
@@ -510,8 +510,8 @@ void test_rfc7541_c_5() {
     // The HTTP/2 setting parameter SETTINGS_HEADER_TABLE_SIZE is set to the value of 256 octets
     session_encoder.set_capacity(256);
     session_decoder.set_capacity(256);
-    session_encoder.trace(debug_hpack_encoder);
-    session_decoder.trace(debug_hpack_decoder);
+    session_encoder.settrace(debug_hpack_encoder);
+    session_decoder.settrace(debug_hpack_decoder);
 
     // C.5.1.  First Response
     hp.set_session(&session_encoder)
@@ -611,8 +611,8 @@ void test_rfc7541_c_6() {
     // The HTTP/2 setting parameter SETTINGS_HEADER_TABLE_SIZE is set to the value of 256 octets
     session_encoder.set_capacity(256);
     session_decoder.set_capacity(256);
-    session_encoder.trace(debug_hpack_encoder);
-    session_decoder.trace(debug_hpack_decoder);
+    session_encoder.settrace(debug_hpack_encoder);
+    session_decoder.settrace(debug_hpack_decoder);
 
     // C.6.1.  First Response
     hp.get_binary().clear();
@@ -760,6 +760,7 @@ void test_h2_header_frame_fragment() {
             fflush(stdout);
         }
     }
+    session.commit();
     testvector _tv1[] = {
         {":method", "GET"},
         {":scheme", "https"},
@@ -794,6 +795,7 @@ void test_h2_header_frame_fragment() {
             _logger->writeln("> %s: %s", name.c_str(), value.c_str());
             fflush(stdout);
         }
+        session.commit();
     }
     testvector _tv2[] = {
         {":method", "GET"},

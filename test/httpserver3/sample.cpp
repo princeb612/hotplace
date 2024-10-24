@@ -34,8 +34,9 @@ typedef struct _OPTION {
     int port;
     int port_tls;
     int verbose;
+    int log;
 
-    _OPTION() : port(8080), port_tls(9000), verbose(0) {}
+    _OPTION() : port(8080), port_tls(9000), verbose(0), log(0) {}
 } OPTION;
 
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
@@ -99,7 +100,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 http_response response(request);
                 if (option.verbose) {
                     auto lambda = [](trace_category_t, uint32, stream_t* s) -> void { print("\e[1;37m%.*s\e[0m", (unsigned int)s->size(), s->data()); };
-                    response.trace(lambda);
+                    response.settrace(lambda);
                 }
                 _http_server->get_http_router().route(session, request, &response);
                 response.respond(session);
@@ -148,7 +149,7 @@ return_t simple_http2_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
         if (option.verbose) {
             auto lambda = [](trace_category_t, uint32, stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); };
-            builder.trace(lambda);
+            builder.settrace(lambda);
             builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
         }
         _http_server.make_share(builder.build());
@@ -322,14 +323,18 @@ int main(int argc, char** argv) {
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     *_cmdline << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
               << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
-              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional();
 
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("server.log");
+    }
     _logger.make_share(builder.build());
 
     if (option.verbose) {

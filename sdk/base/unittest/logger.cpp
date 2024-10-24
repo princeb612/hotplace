@@ -397,7 +397,10 @@ logger& logger::flush(bool check) {
         bool cond = true;
         if (bs.size()) {
             if (check) {
-                cond = (bs.size() >= flush_size) && (now - item->timestamp >= flush_time);
+                auto size = bs.size();
+                auto cond1 = (now - item->timestamp >= flush_time) && size;
+                auto cond2 = (size >= flush_size);
+                cond = cond1 || cond2;
             }
             if (cond) {
                 std::ofstream file(logfile.c_str(), std::ios::out | std::ios::app);

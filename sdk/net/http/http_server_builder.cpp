@@ -95,11 +95,6 @@ http_server_builder& http_server_builder::set_handler(http_server_handler_t hand
     return *this;
 }
 
-http_server_builder& http_server_builder::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
-    settrace(f);
-    return *this;
-}
-
 http_server* http_server_builder::build() {
     http_server* server = nullptr;
     return_t ret = errorcode_t::success;
@@ -165,7 +160,7 @@ http_server* http_server_builder::build() {
             }
         }
 
-        server->trace(_df);
+        server->settrace(_df);
     }
     __finally2 {
         // do nothing

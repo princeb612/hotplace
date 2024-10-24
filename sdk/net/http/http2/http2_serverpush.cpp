@@ -145,6 +145,7 @@ return_t http2_serverpush::push(http_request* request, http_server* server, netw
             q.pop();
 
             http_response response(request);  // to refer accept-encoding
+            response.settrace(this);
             auto test = do_push(promise, ++stream_id, request, server, session, &response);
             if (errorcode_t::success == test) {
                 response.respond(session);
@@ -218,7 +219,7 @@ return_t http2_serverpush::do_push(const std::string& promise, uint32 streamid, 
             __leave2;
         }
 
-        response->trace(_df);
+        response->settrace(_df);
         response->set_version(2).set_stream_id(streamid).set_hpack_session(&hpsess);
         response->compose(200, content_type, content);
     }
@@ -226,11 +227,6 @@ return_t http2_serverpush::do_push(const std::string& promise, uint32 streamid, 
         // do nothing
     }
     return ret;
-}
-
-http2_serverpush& http2_serverpush::trace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
-    settrace(f);
-    return *this;
 }
 
 }  // namespace net
