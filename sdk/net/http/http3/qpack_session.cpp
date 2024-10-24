@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-qpack_session::qpack_session() : http_header_compression_table_dynamic() {
+qpack_session::qpack_session() : http_dynamic_table() {
     _type = header_compression_qpack;
 
     // RFC 9204 5.  Configuration
