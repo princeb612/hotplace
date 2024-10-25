@@ -56,6 +56,7 @@ add_subdirectory (httpaltsvc)
 
 # QUIC, HTTP/3 feature
 if (SUPPORT_QUIC)
+add_subdirectory (quic)
 add_subdirectory (httpserver3)
 endif ()
 

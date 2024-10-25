@@ -137,11 +137,11 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
         }
 
         if (qpack_quic_stream_header & flags) {
-            ret = decode_quic_stream_header(dyntable, source, size, pos, name, value, flags);
+            ret = decode_http_stream(dyntable, source, size, pos, name, value, flags);
         } else if (qpack_quic_stream_encoder & flags) {
-            ret = decode_quic_stream_encoder(dyntable, source, size, pos, name, value, flags);
+            ret = decode_encoder_stream(dyntable, source, size, pos, name, value, flags);
         } else if (qpack_quic_stream_decoder & flags) {
-            ret = decode_quic_stream_decoder(dyntable, source, size, pos, name, value, flags);
+            ret = decode_decoder_stream(dyntable, source, size, pos, name, value, flags);
         } else {
             ret = errorcode_t::bad_request;
         }
@@ -152,8 +152,8 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
     return ret;
 }
 
-return_t qpack_encoder::decode_quic_stream_encoder(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                                   std::string& value, uint32 flags) {
+return_t qpack_encoder::decode_encoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                              std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == dyntable) || (nullptr == source)) {
@@ -226,8 +226,8 @@ return_t qpack_encoder::decode_quic_stream_encoder(http_dynamic_table* dyntable,
     return ret;
 }
 
-return_t qpack_encoder::decode_quic_stream_decoder(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                                   std::string& value, uint32 flags) {
+return_t qpack_encoder::decode_decoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
+                                              std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == dyntable) || (nullptr == source)) {
@@ -276,8 +276,8 @@ return_t qpack_encoder::decode_quic_stream_decoder(http_dynamic_table* dyntable,
     return ret;
 }
 
-return_t qpack_encoder::decode_quic_stream_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                                  std::string& value, uint32 flags) {
+return_t qpack_encoder::decode_http_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
+                                           uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == dyntable) || (nullptr == source)) {

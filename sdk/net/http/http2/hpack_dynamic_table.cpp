@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-hpack_session::hpack_session() : http_dynamic_table() {
+hpack_dynamic_table::hpack_dynamic_table() : http_dynamic_table() {
     // _type = header_compression_hpack;
 
     // RFC 7540 6.5.2.  Defined SETTINGS Parameters
@@ -23,7 +23,7 @@ hpack_session::hpack_session() : http_dynamic_table() {
     _capacity = 4096;
 }
 
-return_t hpack_session::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
+return_t hpack_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == resp) || (respsize < sizeof(size_t))) {

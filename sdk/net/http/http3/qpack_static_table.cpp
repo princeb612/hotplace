@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/http2/http_header_compression.hpp>
+#include <sdk/net/http/http3/qpack.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {

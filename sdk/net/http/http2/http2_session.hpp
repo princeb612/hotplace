@@ -16,7 +16,7 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <sdk/base/unittest/traceable.hpp>  // traceable
-#include <sdk/net/http/http2/hpack.hpp>     // hpack_session
+#include <sdk/net/http/http2/hpack.hpp>     // hpack_dynamic_table
 #include <sdk/net/http/http_request.hpp>    // http_request
 #include <sdk/net/http/types.hpp>
 
@@ -37,7 +37,7 @@ class http2_session : public traceable {
      */
     http2_session& consume(uint32 type, uint32 data_count, void* data_array[], http_server* server, http_request** request);
 
-    hpack_session& get_hpack_session();
+    hpack_dynamic_table& get_hpack_session();
 
     /**
      * @brief   enable push
@@ -59,7 +59,7 @@ class http2_session : public traceable {
     typedef std::pair<headers_t::iterator, bool> headers_pib_t;
     flags_t _flags;
     headers_t _headers;  // map<stream_identifier, http_request>
-    hpack_session _hpack_session;
+    hpack_dynamic_table _hpack_session;
     bool _enable_push;
 };
 

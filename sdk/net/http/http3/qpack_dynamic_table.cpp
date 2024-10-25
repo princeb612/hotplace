@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-qpack_session::qpack_session() : http_dynamic_table() {
+qpack_dynamic_table::qpack_dynamic_table() : http_dynamic_table() {
     _type = header_compression_qpack;
 
     // RFC 9204 5.  Configuration
@@ -22,7 +22,7 @@ qpack_session::qpack_session() : http_dynamic_table() {
     _capacity = 0;
 }
 
-return_t qpack_session::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
+return_t qpack_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == resp) || (respsize < sizeof(size_t))) {

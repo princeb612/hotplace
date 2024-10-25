@@ -1,6 +1,6 @@
 # history
 
-* Revision 633
+* Revision 635
 
 * Revision 629, 630
   * [study] HTTP/2 Server Push
@@ -28,7 +28,7 @@
   * [fixed] HPACK (changed parameter type to encode index over 255)
 
 * Revision 620
-  * [changed] faster match/select (hpack_session)
+  * [changed] faster match/select (hpack_dynamic_table)
 
 * Revision 617
   * [feature] DTLS on network_server (epoll/IOCP)

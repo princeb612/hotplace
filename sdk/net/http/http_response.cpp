@@ -454,7 +454,7 @@ http_response& http_response::operator=(const http_response& object) {
     return *this;
 }
 
-http_response& http_response::set_hpack_session(hpack_session* session) {
+http_response& http_response::set_hpack_session(hpack_dynamic_table* session) {
     _hpsess = session;
     return *this;
 }
@@ -477,7 +477,7 @@ http_response& http_response::set_stream_id(uint32 stream_id) {
     return *this;
 }
 
-hpack_session* http_response::get_hpack_session() { return _hpsess; }
+hpack_dynamic_table* http_response::get_hpack_session() { return _hpsess; }
 
 uint8 http_response::get_version() { return _version; }
 

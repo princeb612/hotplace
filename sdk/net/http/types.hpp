@@ -57,7 +57,8 @@ class http_server_builder;
 class http_uri;
 
 // net/http/http2
-class hpack_session;
+class hpack_encoder;
+class hpack_dynamic_table;
 class hpack_static_table;
 class http_header_compression;
 class http_static_table;
@@ -78,7 +79,18 @@ class http2_frame_window_update;
 class http2_protocol;
 class http2_serverpush;
 class http2_session;
+
+// net/http/http3
+class qpack_encoder;
+class qpack_dynamic_table;
 class qpack_static_table;
+
+// hpack_strea, qpack_stream
+template <typename DYNAMIC_T, typename ENCODER_T>
+class http_header_compression_stream;
+
+typedef http_header_compression_stream<hpack_dynamic_table, hpack_encoder> hpack_stream;
+typedef http_header_compression_stream<qpack_dynamic_table, qpack_encoder> qpack_stream;
 
 }  // namespace net
 }  // namespace hotplace

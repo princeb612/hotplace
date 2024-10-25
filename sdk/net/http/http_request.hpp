@@ -102,10 +102,10 @@ class http_request {
     http_request& add_content(const binary_t& bin);
     http_request& clear_content();
 
-    http_request& set_hpack_session(hpack_session* session);
+    http_request& set_hpack_session(hpack_dynamic_table* session);
     http_request& set_version(uint8 version);
     http_request& set_stream_id(uint32 stream_id);
-    hpack_session* get_hpack_session();
+    hpack_dynamic_table* get_hpack_session();
     uint8 get_version();
     uint32 get_stream_id();
 
@@ -122,7 +122,7 @@ class http_request {
     http_header _header;
     http_uri _uri;
 
-    hpack_session* _hpsess;
+    hpack_dynamic_table* _hpsess;
     uint8 _version;
     uint32 _stream_id;
 };

@@ -267,7 +267,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
     return *this;
 }
 
-hpack_session& http2_session::get_hpack_session() { return _hpack_session; }
+hpack_dynamic_table& http2_session::get_hpack_session() { return _hpack_session; }
 
 http2_session& http2_session::enable_push(bool enable) {
     _enable_push = enable;

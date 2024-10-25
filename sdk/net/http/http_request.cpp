@@ -258,7 +258,7 @@ http_request& http_request::clear_content() {
     return *this;
 }
 
-http_request& http_request::set_hpack_session(hpack_session* session) {
+http_request& http_request::set_hpack_session(hpack_dynamic_table* session) {
     _hpsess = session;
     return *this;
 }
@@ -281,7 +281,7 @@ http_request& http_request::set_stream_id(uint32 stream_id) {
     return *this;
 }
 
-hpack_session* http_request::get_hpack_session() { return _hpsess; }
+hpack_dynamic_table* http_request::get_hpack_session() { return _hpsess; }
 
 uint8 http_request::get_version() { return _version; }
 

@@ -101,10 +101,10 @@ class http_response : public traceable {
 
     http_response& operator=(const http_response& object);
 
-    http_response& set_hpack_session(hpack_session* session);
+    http_response& set_hpack_session(hpack_dynamic_table* session);
     http_response& set_version(uint8 version);
     http_response& set_stream_id(uint32 stream_id);
-    hpack_session* get_hpack_session();
+    hpack_dynamic_table* get_hpack_session();
     uint8 get_version();
     uint32 get_stream_id();
 
@@ -121,7 +121,7 @@ class http_response : public traceable {
     basic_stream _content;
     int _statuscode;
 
-    hpack_session* _hpsess;
+    hpack_dynamic_table* _hpsess;
     uint8 _version;
     uint32 _stream_id;
 };

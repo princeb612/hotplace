@@ -146,12 +146,12 @@ http2_frame& http2_frame::load_hpack(hpack_stream& hp) {
     return *this;
 }
 
-http2_frame& http2_frame::set_hpack_session(hpack_session* session) {
+http2_frame& http2_frame::set_hpack_session(hpack_dynamic_table* session) {
     _hpack_session = session;
     return *this;
 }
 
-hpack_session* http2_frame::get_hpack_session() { return _hpack_session; }
+hpack_dynamic_table* http2_frame::get_hpack_session() { return _hpack_session; }
 
 return_t http2_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;

@@ -205,7 +205,7 @@ void test_http2_frame() {
     // HEADERS
 
     hpack_stream hp;
-    hpack_session session;  // dynamic table
+    hpack_dynamic_table session;  // dynamic table
     hp.get_binary().clear();
     hp.set_session(&session)
         .set_encode_flags(hpack_indexing | hpack_huffman)

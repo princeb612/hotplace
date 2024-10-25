@@ -134,8 +134,8 @@ class http2_frame : public traceable {
     http2_frame& set_stream_id(uint32 id);
 
     http2_frame& load_hpack(hpack_stream& hp);
-    http2_frame& set_hpack_session(hpack_session* session);
-    hpack_session* get_hpack_session();
+    http2_frame& set_hpack_session(hpack_dynamic_table* session);
+    hpack_dynamic_table* get_hpack_session();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -169,7 +169,7 @@ class http2_frame : public traceable {
     uint8 _flags;
     uint32 _stream_id;
 
-    hpack_session* _hpack_session;
+    hpack_dynamic_table* _hpack_session;
 };
 
 /**

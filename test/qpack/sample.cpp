@@ -81,8 +81,8 @@ void test_rfc9204_b() {
 
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
-    qpack_session session_encoder;
-    qpack_session session_decoder;
+    qpack_dynamic_table session_encoder;
+    qpack_dynamic_table session_decoder;
     binary_t bin;
     uint32 flags_encoder = 0;
     uint32 flags_decoder = 0;
@@ -489,7 +489,7 @@ void test_zero_capacity() {
 
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
-    qpack_session session;
+    qpack_dynamic_table session;
     binary_t bin;
     uint32 flags = 0;
 
@@ -527,7 +527,7 @@ void test_tiny_capacity() {
 
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
-    qpack_session session;
+    qpack_dynamic_table session;
     binary_t bin;
     uint32 flags = 0;
 
@@ -557,7 +557,7 @@ void test_small_capacity() {
 
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
-    qpack_session session;
+    qpack_dynamic_table session;
     binary_t bin;
     uint32 flags = qpack_intermediary | qpack_name_reference;
 

@@ -118,7 +118,7 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
 
         if (_dynamic_reversemap.size()) {
             /**
-             * refer hpack_session::match
+             * refer hpack_dynamic_table::match
              * index = _inserted - v.second - 1
              * v.second = _inserted - index - 1
              */

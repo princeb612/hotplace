@@ -13,14 +13,10 @@
 
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http_header_compression.hpp>  // http_header_compression
+#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {
-
-class qpack_encoder;
-class qpack_session;
-
-typedef http_header_compression_stream<qpack_session, qpack_encoder> qpack_stream;
 
 /**
  * @brief   Field Section Prefix
@@ -193,17 +189,28 @@ class qpack_encoder : public http_header_compression {
     qpack_encoder& increment(binary_t& target, size_t inc);
 
    protected:
-    virtual return_t decode_quic_stream_encoder(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                                std::string& value, uint32 flags = 0);
-    virtual return_t decode_quic_stream_decoder(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                                std::string& value, uint32 flags = 0);
-    virtual return_t decode_quic_stream_header(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                               std::string& value, uint32 flags = 0);
+    virtual return_t decode_encoder_stream(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
+                                           uint32 flags = 0);
+    virtual return_t decode_decoder_stream(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
+                                           uint32 flags = 0);
+    virtual return_t decode_http_stream(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
+                                        uint32 flags = 0);
 };
 
-class qpack_session : public http_dynamic_table {
+class qpack_static_table : public http_static_table {
    public:
-    qpack_session();
+    static qpack_static_table* get_instance();
+
+   protected:
+    qpack_static_table();
+    virtual void load();
+
+    static qpack_static_table _instance;
+};
+
+class qpack_dynamic_table : public http_dynamic_table {
+   public:
+    qpack_dynamic_table();
     /**
      * @brief   QPACK query function
      * @param   int cmd [in] see header_compression_cmd_t

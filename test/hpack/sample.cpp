@@ -187,7 +187,7 @@ void test_rfc7541_c_2() {
     // C.2.1.  Literal Header Field with Indexing
     // "custom-key: custom-header"
     {
-        hpack_session session;  // dynamic table
+        hpack_dynamic_table session;  // dynamic table
         bin.clear();
         encoder->encode_header(&session, bin, "custom-key", "custom-header", hpack_indexing);
         if (option.verbose) {
@@ -213,7 +213,7 @@ void test_rfc7541_c_2() {
     // C.2.2.  Literal Header Field without Indexing
     // :path: /sample/path
     {
-        hpack_session session;  // dynamic table
+        hpack_dynamic_table session;  // dynamic table
         bin.clear();
         encoder->encode_header(&session, bin, ":path", "/sample/path", hpack_wo_indexing);
         if (option.verbose) {
@@ -236,7 +236,7 @@ void test_rfc7541_c_2() {
     // C.2.3.  Literal Header Field Never Indexed
     // password: secret
     {
-        hpack_session session;  // dynamic table
+        hpack_dynamic_table session;  // dynamic table
         bin.clear();
         encoder->encode_header(&session, bin, "password", "secret", hpack_never_indexed);
         if (option.verbose) {
@@ -262,7 +262,7 @@ void test_rfc7541_c_2() {
 
     // C.2.4.  Indexed Header Field
     {
-        hpack_session session;  // dynamic table
+        hpack_dynamic_table session;  // dynamic table
         bin.clear();
         encoder->encode_header(&session, bin, ":method", "GET");
         if (option.verbose) {
@@ -283,7 +283,7 @@ void test_rfc7541_c_2() {
     }
 }
 
-void decode(const binary_t& bin, hpack_session* session, hpack_session* session2) {
+void decode(const binary_t& bin, hpack_dynamic_table* session, hpack_dynamic_table* session2) {
     const OPTION& option = cmdline->value();
 
     hpack_stream hp;
@@ -303,6 +303,7 @@ void decode(const binary_t& bin, hpack_session* session, hpack_session* session2
             _logger->writeln("  > %s: %s", name.c_str(), value.c_str());
         }
     }
+    hp.commit();
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         _logger->writeln("> dynamic table (receiver)");
@@ -320,8 +321,8 @@ void test_rfc7541_c_3() {
     const OPTION& option = cmdline->value();
 
     hpack_stream hp;
-    hpack_session session_encoder;  // dynamic table
-    hpack_session session_decoder;  // dynamic table
+    hpack_dynamic_table session_encoder;  // dynamic table
+    hpack_dynamic_table session_decoder;  // dynamic table
     basic_stream bs;
 
     // C.3.1.  First Request
@@ -331,6 +332,7 @@ void test_rfc7541_c_3() {
     // :authority: www.example.com
     hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
+        .begin()
         .encode_header(":method", "GET")
         .encode_header(":scheme", "http")
         .encode_header(":path", "/")
@@ -356,9 +358,9 @@ void test_rfc7541_c_3() {
     _test_case.assert(57 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
     // C.3.2.  Second Request
-    hp.get_binary().clear();
     hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
+        .begin()
         .encode_header(":method", "GET")
         .encode_header(":scheme", "http")
         .encode_header(":path", "/")
@@ -384,9 +386,9 @@ void test_rfc7541_c_3() {
     _test_case.assert(110 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
 
     // C.3.3.  Third Request
-    hp.get_binary().clear();
     hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
+        .begin()
         .encode_header(":method", "GET")
         .encode_header(":scheme", "https")
         .encode_header(":path", "/index.html")
@@ -420,8 +422,8 @@ void test_rfc7541_c_4() {
     const OPTION& option = cmdline->value();
 
     hpack_stream hp;
-    hpack_session session_encoder;  // dynamic table
-    hpack_session session_decoder;  // dynamic table
+    hpack_dynamic_table session_encoder;  // dynamic table
+    hpack_dynamic_table session_decoder;  // dynamic table
     basic_stream bs;
 
     // C.4.1.  First Request
@@ -448,9 +450,9 @@ void test_rfc7541_c_4() {
     _test_case.assert(57 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
     // C.4.2.  Second Request
-    hp.get_binary().clear();
     hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
+        .begin()
         .encode_header(":method", "GET")
         .encode_header(":scheme", "http")
         .encode_header(":path", "/")
@@ -471,9 +473,9 @@ void test_rfc7541_c_4() {
     _test_case.assert(110 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
 
     // C.4.3.  Third Request
-    hp.get_binary().clear();
     hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
+        .begin()
         .encode_header(":method", "GET")
         .encode_header(":scheme", "https")
         .encode_header(":path", "/index.html")
@@ -502,8 +504,8 @@ void test_rfc7541_c_5() {
     const OPTION& option = cmdline->value();
 
     hpack_stream hp;
-    hpack_session session_encoder;  // dynamic table
-    hpack_session session_decoder;  // dynamic table
+    hpack_dynamic_table session_encoder;  // dynamic table
+    hpack_dynamic_table session_decoder;  // dynamic table
     basic_stream bs;
 
     // C.5.  Response Examples without Huffman Coding
@@ -540,9 +542,9 @@ void test_rfc7541_c_5() {
     _test_case.assert(222 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
     // C.5.2.  Second Response
-    hp.get_binary().clear();
     hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
+        .begin()
         .encode_header(":status", "307")
         .encode_header("cache-control", "private")
         .encode_header("date", "Mon, 21 Oct 2013 20:13:21 GMT")
@@ -564,9 +566,9 @@ void test_rfc7541_c_5() {
     _test_case.assert(1 == count_evict_decoder, __FUNCTION__, "%s #check eviction %u", text2, count_evict_decoder);
 
     // C.5.3.  Third Response
-    hp.get_binary().clear();
     hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing)
+        .begin()
         .encode_header(":status", "200")
         .encode_header("cache-control", "private")
         .encode_header("date", "Mon, 21 Oct 2013 20:13:22 GMT")
@@ -603,8 +605,8 @@ void test_rfc7541_c_6() {
     const OPTION& option = cmdline->value();
 
     hpack_stream hp;
-    hpack_session session_encoder;  // dynamic table
-    hpack_session session_decoder;  // dynamic table
+    hpack_dynamic_table session_encoder;  // dynamic table
+    hpack_dynamic_table session_decoder;  // dynamic table
     basic_stream bs;
 
     // C.6.  Response Examples with Huffman Coding
@@ -615,9 +617,9 @@ void test_rfc7541_c_6() {
     session_decoder.settrace(debug_hpack_decoder);
 
     // C.6.1.  First Response
-    hp.get_binary().clear();
     hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
+        .begin()
         .encode_header(":status", "302")
         .encode_header("cache-control", "private")
         .encode_header("date", "Mon, 21 Oct 2013 20:13:21 GMT")
@@ -641,9 +643,9 @@ void test_rfc7541_c_6() {
     _test_case.assert(222 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
     // C.6.2.  Second Response
-    hp.get_binary().clear();
     hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
+        .begin()
         .encode_header(":status", "307")
         .encode_header("cache-control", "private")
         .encode_header("date", "Mon, 21 Oct 2013 20:13:21 GMT")
@@ -665,9 +667,9 @@ void test_rfc7541_c_6() {
     _test_case.assert(6 == count_evict_decoder, __FUNCTION__, "%s #check eviction %u", text2, count_evict_decoder);
 
     // C.6.3.  Third Response
-    hp.get_binary().clear();
     hp.set_session(&session_encoder)
         .set_encode_flags(hpack_indexing | hpack_huffman)
+        .begin()
         .encode_header(":status", "200")
         .encode_header("cache-control", "private")
         .encode_header("date", "Mon, 21 Oct 2013 20:13:22 GMT")
@@ -707,7 +709,7 @@ void test_h2_header_frame_fragment() {
         const char* value;
     };
 
-    hpack_session session;
+    hpack_dynamic_table session;
     binary_t bin;
     size_t pos = 0;
     std::string name;
